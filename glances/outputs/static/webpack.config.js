@@ -16,7 +16,7 @@ module.exports = {
     optimization: {
         minimize: false,
     },
-    devtool: "#source-map",
+    devtool: "source-map",
     module: {
         rules: [
             {
@@ -41,18 +41,19 @@ module.exports = {
             },
             {
                 test: /\.css$/,
-                loader: "style-loader!css-loader",
-            },
-            {
-                test: /\.(png|jpg|gif|svg|ttf|woff|woff2|eot)$/,
-                loader: "url-loader",
-                options: {
-                    limit: 10000,
-                }
+                use: [{
+                    loader: "style-loader",
+                }, {
+                    loader: "css-loader",
+                }]
             },
             {
                 test: /\.html/,
-                loader: "ngtemplate-loader!html-loader"
+                use: [{
+                    loader: "ngtemplate-loader",
+                }, {
+                    loader: "html-loader",
+                }]
             }
         ],
     },

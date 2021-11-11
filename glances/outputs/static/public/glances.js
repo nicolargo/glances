@@ -1,198 +1,17 @@
-/******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
-/******/
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId]) {
-/******/ 			return installedModules[moduleId].exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			i: moduleId,
-/******/ 			l: false,
-/******/ 			exports: {}
-/******/ 		};
-/******/
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
-/******/ 		// Flag the module as loaded
-/******/ 		module.l = true;
-/******/
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/
-/******/
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-/******/
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-/******/
-/******/ 	// define getter function for harmony exports
-/******/ 	__webpack_require__.d = function(exports, name, getter) {
-/******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
-/******/ 		}
-/******/ 	};
-/******/
-/******/ 	// define __esModule on exports
-/******/ 	__webpack_require__.r = function(exports) {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
-/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/
-/******/ 	// create a fake namespace object
-/******/ 	// mode & 1: value is a module id, require it
-/******/ 	// mode & 2: merge all properties of value into the ns
-/******/ 	// mode & 4: return value when already ns object
-/******/ 	// mode & 8|1: behave like require
-/******/ 	__webpack_require__.t = function(value, mode) {
-/******/ 		if(mode & 1) value = __webpack_require__(value);
-/******/ 		if(mode & 8) return value;
-/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
-/******/ 		var ns = Object.create(null);
-/******/ 		__webpack_require__.r(ns);
-/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
-/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
-/******/ 		return ns;
-/******/ 	};
-/******/
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__webpack_require__.n = function(module) {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			function getDefault() { return module['default']; } :
-/******/ 			function getModuleExports() { return module; };
-/******/ 		__webpack_require__.d(getter, 'a', getter);
-/******/ 		return getter;
-/******/ 	};
-/******/
-/******/ 	// Object.prototype.hasOwnProperty.call
-/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-/******/
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
-/******/
-/******/
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./js/app.js");
-/******/ })
-/************************************************************************/
-/******/ ({
-
-/***/ "./css/bootstrap.less":
-/*!****************************!*\
-  !*** ./css/bootstrap.less ***!
-  \****************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
-/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_bootstrap_less__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !../node_modules/css-loader/dist/cjs.js!../node_modules/less-loader/dist/cjs.js!./bootstrap.less */ "./node_modules/css-loader/dist/cjs.js!./node_modules/less-loader/dist/cjs.js!./css/bootstrap.less");
-
-            
-
-var options = {};
-
-options.insert = "head";
-options.singleton = false;
-
-var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_bootstrap_less__WEBPACK_IMPORTED_MODULE_1__["default"], options);
-
-
-
-/* harmony default export */ __webpack_exports__["default"] = (_node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_bootstrap_less__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
-
-/***/ }),
-
-/***/ "./css/style.scss":
-/*!************************!*\
-  !*** ./css/style.scss ***!
-  \************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
-/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_style_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !../node_modules/css-loader/dist/cjs.js!../node_modules/sass-loader/dist/cjs.js!./style.scss */ "./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./css/style.scss");
-
-            
-
-var options = {};
-
-options.insert = "head";
-options.singleton = false;
-
-var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_style_scss__WEBPACK_IMPORTED_MODULE_1__["default"], options);
-
-
-
-/* harmony default export */ __webpack_exports__["default"] = (_node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_style_scss__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
-
-/***/ }),
-
-/***/ "./images/glances.png":
-/*!****************************!*\
-  !*** ./images/glances.png ***!
-  \****************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "87708faeed9a66b0fcdb40eaaf7c577a.png");
-
-/***/ }),
-
-/***/ "./js/app.js":
-/*!*******************!*\
-  !*** ./js/app.js ***!
-  \*******************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _css_bootstrap_less__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../css/bootstrap.less */ "./css/bootstrap.less");
-/* harmony import */ var _css_style_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../css/style.scss */ "./css/style.scss");
-/* harmony import */ var _module__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./module */ "./js/module.js");
-/* harmony import */ var _services__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./services */ "./js/services/index.js");
-/* harmony import */ var _components__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./components */ "./js/components/index.js");
-/* harmony import */ var _filters__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./filters */ "./js/filters.js");
-/* harmony import */ var _directives__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./directives */ "./js/directives.js");
-
-
-
-
-
-
-
-
-
-
-
-/***/ }),
+/******/ (() => { // webpackBootstrap
+/******/ 	var __webpack_modules__ = ({
 
 /***/ "./js/components/glances/component.js":
 /*!********************************************!*\
   !*** ./js/components/glances/component.js ***!
   \********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/glances/controller.js");
@@ -204,13 +23,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glances", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glances", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: 'vm',
     bindings: {
         refreshTime: "<"
     },
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default())
 }));
 
 
@@ -220,12 +39,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!*********************************************!*\
   !*** ./js/components/glances/controller.js ***!
   \*********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesController)
+/* harmony export */ });
 
 function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     var vm = this;
@@ -458,32 +278,17 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
 
 /***/ }),
 
-/***/ "./js/components/glances/view.html":
-/*!*****************************************!*\
-  !*** ./js/components/glances/view.html ***!
-  \*****************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div>\n    <div ng-if=\"!vm.dataLoaded\" class=\"container-fluid\" id=\"loading-page\">\n        <div class=\"glances-logo\"></div>\n        <div class=\"loader\">Loading...</div>\n    </div>\n\n    <glances-help ng-if=\"vm.arguments.help_tag\"></glances-help>\n\n    <div ng-if=\"vm.dataLoaded && !vm.arguments.help_tag\" class=\"container-fluid\">\n        <div class=\"top-plugin\">\n            <div class=\"row\">\n                <div class=\"col-sm-24\">\n                    <div class=\"pull-left\">\n                        <glances-plugin-system></glances-plugin-system>\n                    </div>\n                    <div class=\"pull-left\">\n                        <glances-plugin-ip></glances-plugin-ip>\n                    </div>\n                    <div class=\"pull-right\">\n                        <glances-plugin-uptime></glances-plugin-uptime>\n                    </div>\n                </div>\n                <div class=\"row\">\n                    <div class=\"col-sm-24\">\n                        <div class=\"pull-left\">\n                            <glances-plugin-cloud></glances-plugin-cloud>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n\n        <div class=\"row\">\n            <div class=\"hidden-xs hidden-sm hidden-md col-lg-6\" ng-if=\"!vm.arguments.disable_quicklook\">\n                <glances-plugin-quicklook></glances-plugin-quicklook>\n            </div>\n            <div class=\"col-sm-6 col-md-8 col-lg-6\" ng-if=\"!vm.arguments.disable_cpu && !vm.arguments.percpu\">\n                <glances-plugin-cpu></glances-plugin-cpu>\n            </div>\n            <div class=\"col-sm-12 col-md-8 col-lg-6\" ng-if=\"!vm.arguments.disable_cpu && vm.arguments.percpu\">\n                <glances-plugin-percpu></glances-plugin-percpu>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_gpu && vm.hasGpu\">\n                <glances-plugin-gpu></glances-plugin-gpu>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_mem\">\n                <glances-plugin-mem></glances-plugin-mem>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\"\n                 ng-if=\"!vm.arguments.disable_mem && !(!vm.arguments.disable_gpu && vm.hasGpu)\">\n                <glances-plugin-mem-more></glances-plugin-mem-more>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_memswap\">\n                <glances-plugin-memswap></glances-plugin-memswap>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_load\">\n                <glances-plugin-load></glances-plugin-load>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"col-sm-6 sidebar\" ng-if=\"!vm.arguments.disable_left_sidebar\">\n                <div class=\"table\">\n                    <glances-plugin-network id=\"plugin-network\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_network\"></glances-plugin-network>\n                    <glances-plugin-connections id=\"plugin-connections\" class=\"plugin table-row-group\" ng-if=\"vm.isLinux && !vm.arguments.disable_connections\"></glances-plugin-connections>\n                    <glances-plugin-wifi id=\"plugin-wifi\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_wifi\"></glances-plugin-wifi>\n                    <glances-plugin-ports id=\"plugin-ports\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_ports\"></glances-plugin-ports>\n                    <glances-plugin-diskio id=\"plugin-diskio\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_diskio\"></glances-plugin-diskio>\n                    <glances-plugin-fs id=\"plugin-fs\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_fs\"></glances-plugin-fs>\n                    <glances-plugin-irq id=\"plugin-irq\" class=\"plugin table-row-group\" ng-if=\"vm.arguments.enable_irq\"></glances-plugin-irq>\n                    <glances-plugin-folders id=\"plugin-folders\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_folders\"></glances-plugin-folders>\n                    <glances-plugin-raid id=\"plugin-raid\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.raid\"></glances-plugin-raid>\n                    <glances-plugin-sensors id=\"plugin-sensors\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_sensors\"></glances-plugin-sensors>\n                </div>\n            </div>\n            <div class=\"col-sm-18\">\n                <glances-plugin-docker ng-if=\"!vm.arguments.disable_docker\"></glances-plugin-docker>\n                <glances-plugin-alert ng-if=\"!vm.arguments.disable_alert\"></glances-plugin-alert>\n                <glances-plugin-process></glances-plugin-process>\n            </div>\n        </div>\n    </div>\n</div>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/glances/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/help/component.js":
 /*!*****************************************!*\
   !*** ./js/components/help/component.js ***!
   \*****************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/help/controller.js");
@@ -495,10 +300,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesHelp", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesHelp", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: 'vm',
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -508,12 +313,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!******************************************!*\
   !*** ./js/components/help/controller.js ***!
   \******************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesHelpController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesHelpController)
+/* harmony export */ });
 
 function GlancesHelpController($http) {
     var vm = this;
@@ -526,29 +332,11 @@ function GlancesHelpController($http) {
 
 /***/ }),
 
-/***/ "./js/components/help/view.html":
-/*!**************************************!*\
-  !*** ./js/components/help/view.html ***!
-  \**************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div class=\"container-fluid\">\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-24\">{{vm.help.version}} {{vm.help.psutil_version}}</div>\n    </div>\n    <div class=\"row\">&nbsp;</div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-24\">{{vm.help.configuration_file}}</div>\n    </div>\n    <div class=\"row\">&nbsp;</div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_auto}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_network}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_cpu}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_alert}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_mem}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.percpu}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_user}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_ip}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_proc}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_docker}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_io}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.view_network_io_combination}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_cpu_times}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.view_cumulative_network}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_diskio}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_filesytem_freespace}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_filesystem}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_vm.help}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_network}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.diskio_iops}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_sensors}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_top_menu}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_left_sidebar}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_amp}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_process_stats}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_irq}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_gpu}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_mean_gpu}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_quick_look}}</div>\n        <div class=\"col-sm-12 col-lg-6\"></div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_short_processname}}</div>\n        <div class=\"col-sm-12 col-lg-6\"></div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_ports}}</div>\n        <div class=\"col-sm-12 col-lg-6\"></div>\n    </div>\n\n</div>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/help/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/index.js":
 /*!********************************!*\
   !*** ./js/components/index.js ***!
   \********************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
@@ -623,11 +411,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!*************************************************!*\
   !*** ./js/components/plugin-alert/component.js ***!
   \*************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-alert/controller.js");
@@ -639,10 +429,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginAlert", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginAlert", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: 'vm',
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -652,12 +442,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!**************************************************!*\
   !*** ./js/components/plugin-alert/controller.js ***!
   \**************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginAlertController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginAlertController)
+/* harmony export */ });
 
 function GlancesPluginAlertController($scope, favicoService) {
     var vm = this;
@@ -726,32 +517,17 @@ function GlancesPluginAlertController($scope, favicoService) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-alert/view.html":
-/*!**********************************************!*\
-  !*** ./js/components/plugin-alert/view.html ***!
-  \**********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"alerts\">\n    <span class=\"title\" ng-if=\"!vm.hasAlerts()\">No warning or critical alert detected</span>\n    <span class=\"title\" ng-if=\"vm.hasAlerts()\">Warning or critical alerts (last {{vm.count()}} entries)</span>\n</section>\n<section id=\"alert\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\" ng-repeat=\"alert in vm.getAlerts()\">\n            <div class=\"table-cell text-left\">\n                {{alert.begin | date : 'yyyy-MM-dd H:mm:ss'}} ({{ alert.ongoing ? 'ongoing' : alert.duration }}) - <span\n                    ng-hide=\"alert.ongoing\">{{alert.level}} on</span> <span class=\"{{ alert.level | lowercase }}\">{{alert.name}}</span>\n                ({{alert.max| number:1 }})\n            </div>\n        </div>\n    </div>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-alert/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-amps/component.js":
 /*!************************************************!*\
   !*** ./js/components/plugin-amps/component.js ***!
   \************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-amps/controller.js");
@@ -763,10 +539,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginAmps", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginAmps", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: 'vm',
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -776,12 +552,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!*************************************************!*\
   !*** ./js/components/plugin-amps/controller.js ***!
   \*************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginAmpsController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginAmpsController)
+/* harmony export */ });
 
 function GlancesPluginAmpsController($scope, GlancesStats, favicoService) {
     var vm = this;
@@ -829,32 +606,17 @@ function GlancesPluginAmpsController($scope, GlancesStats, favicoService) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-amps/view.html":
-/*!*********************************************!*\
-  !*** ./js/components/plugin-amps/view.html ***!
-  \*********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"amps\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\" ng-repeat=\"process in vm.processes\">\n            <div class=\"table-cell text-left\" ng-class=\"vm.getNameDecoration(process)\">{{ process.name }}</div>\n            <div class=\"table-cell text-left\" ng-if=\"process.regex\">{{ process.count }}</div>\n            <div class=\"table-cell text-left process-result\" ng-bind-html=\"process.result|nl2br\"></div>\n        </div>\n    </div>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-amps/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-cloud/component.js":
 /*!*************************************************!*\
   !*** ./js/components/plugin-cloud/component.js ***!
   \*************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-cloud/controller.js");
@@ -866,10 +628,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginCloud", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginCloud", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: 'vm',
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -879,12 +641,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!**************************************************!*\
   !*** ./js/components/plugin-cloud/controller.js ***!
   \**************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginCloudController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginCloudController)
+/* harmony export */ });
 
 function GlancesPluginCloudController($scope, GlancesStats) {
     var vm = this;
@@ -913,32 +676,17 @@ function GlancesPluginCloudController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-cloud/view.html":
-/*!**********************************************!*\
-  !*** ./js/components/plugin-cloud/view.html ***!
-  \**********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"cloud\">\n    <span class=\"title\">{{ vm.provider }}</span> {{ vm.instance }}\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-cloud/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-connections/component.js":
 /*!*******************************************************!*\
   !*** ./js/components/plugin-connections/component.js ***!
   \*******************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-connections/controller.js");
@@ -950,10 +698,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginConnections", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginConnections", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -963,12 +711,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!********************************************************!*\
   !*** ./js/components/plugin-connections/controller.js ***!
   \********************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginConnectionsController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginConnectionsController)
+/* harmony export */ });
 
 function GlancesPluginConnectionsController($scope, GlancesStats) {
     var vm = this;
@@ -1014,32 +763,17 @@ function GlancesPluginConnectionsController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-connections/view.html":
-/*!****************************************************!*\
-  !*** ./js/components/plugin-connections/view.html ***!
-  \****************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div class=\"table-row\">\n    <div class=\"table-cell text-left title\">TCP CONNECTIONS</div>\n    <div class=\"table-cell\"></div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Listen</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.listen}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Initiated</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.initiated}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Established</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.established}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Terminated</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.terminated}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Tracked</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration('nf_conntrack_percent')\">{{vm.tracked.count}}/{{vm.tracked.max}}</div>\n</div>\n\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-connections/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-cpu/component.js":
 /*!***********************************************!*\
   !*** ./js/components/plugin-cpu/component.js ***!
   \***********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-cpu/controller.js");
@@ -1051,10 +785,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginCpu", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginCpu", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: 'vm',
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -1064,12 +798,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!************************************************!*\
   !*** ./js/components/plugin-cpu/controller.js ***!
   \************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginCpuController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginCpuController)
+/* harmony export */ });
 
 function GlancesPluginCpuController($scope, GlancesStats) {
     var vm = this;
@@ -1140,32 +875,17 @@ function GlancesPluginCpuController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-cpu/view.html":
-/*!********************************************!*\
-  !*** ./js/components/plugin-cpu/view.html ***!
-  \********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"cpu\" class=\"plugin\">\n    <div class=\"row\">\n        <div class=\"col-sm-24 col-md-12 col-lg-8\">\n            <div class=\"table\">\n                <div class=\"table-row\">\n                    <div class=\"table-cell text-left title\">CPU</div>\n                    <div class=\"table-cell\">{{ vm.total }}%</div>\n                </div>\n                <div class=\"table-row\">\n                    <div class=\"table-cell text-left\">user:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('user')\">\n                        {{ vm.user }}%\n                    </div>\n                </div>\n                <div class=\"table-row\">\n                    <div class=\"table-cell text-left\">system:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('system')\">\n                        {{ vm.system }}%\n                    </div>\n                </div>\n                <div class=\"table-row\">\n                    <div class=\"table-cell text-left\">idle:</div>\n                    <div class=\"table-cell\">{{ vm.idle }}%</div>\n                </div>\n            </div>\n        </div>\n        <div class=\"hidden-xs hidden-sm col-md-12 col-lg-8\">\n            <div class=\"table\">\n                <div class=\"table-row\" ng-show=\"vm.nice != undefined\">\n                    <div class=\"table-cell text-left\">nice:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.nice }}%\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-show=\"vm.irq != undefined\">\n                    <div class=\"table-cell text-left\">irq:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.irq }}%\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-show=\"vm.iowait != undefined\">\n                    <div class=\"table-cell text-left\">iowait:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('iowait')\">\n                        {{ vm.iowait }}%\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-show=\"vm.steal != undefined\">\n                    <div class=\"table-cell text-left\">steal:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('steal')\">\n                        {{ vm.steal }}%\n                    </div>\n                </div>\n            </div>\n        </div>\n        <div class=\"hidden-xs hidden-sm hidden-md col-lg-8\">\n            <div class=\"table\">\n                <div class=\"table-row\" ng-if=\"vm.ctx_switches\">\n                    <div class=\"table-cell text-left\">ctx_sw:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('ctx_switches')\">\n                        {{ vm.ctx_switches }}\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-if=\"vm.interrupts\">\n                    <div class=\"table-cell text-left\">inter:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.interrupts }}\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-if=\"vm.soft_interrupts\">\n                    <div class=\"table-cell text-left\">sw_int:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.soft_interrupts }}\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-if=\"!vm.isLinux && vm.syscalls\">\n                    <div class=\"table-cell text-left\">syscal:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.syscalls }}\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-cpu/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-diskio/component.js":
 /*!**************************************************!*\
   !*** ./js/components/plugin-diskio/component.js ***!
   \**************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-diskio/controller.js");
@@ -1177,10 +897,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginDiskio", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginDiskio", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: 'vm',
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -1190,12 +910,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!***************************************************!*\
   !*** ./js/components/plugin-diskio/controller.js ***!
   \***************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginDiskioController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginDiskioController)
+/* harmony export */ });
 
 function GlancesPluginDiskioController($scope, $filter, GlancesStats, ARGUMENTS) {
     var vm = this;
@@ -1236,32 +957,17 @@ function GlancesPluginDiskioController($scope, $filter, GlancesStats, ARGUMENTS)
 
 /***/ }),
 
-/***/ "./js/components/plugin-diskio/view.html":
-/*!***********************************************!*\
-  !*** ./js/components/plugin-diskio/view.html ***!
-  \***********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div class=\"table-row\" ng-if=\"vm.disks.length > 0\">\n    <div class=\"table-cell text-left title\">DISK I/O</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">R/s</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">W/s</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">IOR/s</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">IOW/s</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"disk in vm.disks\">\n    <div class=\"table-cell text-left\">{{(disk.alias ? disk.alias : disk.name) | min_size:9}}</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">{{disk.bitrate.txps }}</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">{{disk.bitrate.rxps }}</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">{{disk.count.txps }}</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">{{disk.count.rxps }}</div>\n</div>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-diskio/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-docker/component.js":
 /*!**************************************************!*\
   !*** ./js/components/plugin-docker/component.js ***!
   \**************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-docker/controller.js");
@@ -1273,10 +979,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginDocker", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginDocker", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -1286,12 +992,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!***************************************************!*\
   !*** ./js/components/plugin-docker/controller.js ***!
   \***************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginDockerController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginDockerController)
+/* harmony export */ });
 
 function GlancesPluginDockerController($scope, GlancesStats) {
     var vm = this;
@@ -1340,32 +1047,17 @@ function GlancesPluginDockerController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-docker/view.html":
-/*!***********************************************!*\
-  !*** ./js/components/plugin-docker/view.html ***!
-  \***********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"containers-plugin\" class=\"plugin\" ng-if=\"vm.containers.length\">\n    <span class=\"title\">CONTAINERS</span> {{ vm.containers.length }} (served by Docker {{ vm.version }})\n\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">Name</div>\n            <div class=\"table-cell\">Status</div>\n            <div class=\"table-cell\">CPU%</div>\n            <div class=\"table-cell\">MEM</div>\n            <div class=\"table-cell\">RSS</div>\n            <div class=\"table-cell\">IOR/s</div>\n            <div class=\"table-cell\">IOW/s</div>\n            <div class=\"table-cell\">RX/s</div>\n            <div class=\"table-cell\">TX/s</div>\n            <div class=\"table-cell text-left\">Command</div>\n        </div>\n        <div class=\"table-row\" ng-repeat=\"container in vm.containers track by container.id\">\n            <div class=\"table-cell text-left\">{{ container.name }}</div>\n            <div class=\"table-cell\" ng-class=\"container.status == 'Paused' ? 'careful' : 'ok'\">{{ container.status }}\n            </div>\n            <div class=\"table-cell\">{{ container.cpu | number:1 }}</div>\n            <div class=\"table-cell\">{{ container.memory | bytes }}</div>\n            <div class=\"table-cell\">{{ container.rss | bytes }}</div>\n            <div class=\"table-cell\">{{ container.ior / container.io_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.iow / container.io_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.rx / container.net_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.tx / container.net_time_since_update | bits }}</div>\n            <div class=\"table-cell text-left\">{{ container.command }}</div>\n        </div>\n    </div>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-docker/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-folders/component.js":
 /*!***************************************************!*\
   !*** ./js/components/plugin-folders/component.js ***!
   \***************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-folders/controller.js");
@@ -1377,10 +1069,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginFolders", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginFolders", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -1390,12 +1082,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!****************************************************!*\
   !*** ./js/components/plugin-folders/controller.js ***!
   \****************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginFoldersController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginFoldersController)
+/* harmony export */ });
 
 function GlancesPluginFoldersController($scope, GlancesStats) {
     var vm = this;
@@ -1449,32 +1142,17 @@ function GlancesPluginFoldersController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-folders/view.html":
-/*!************************************************!*\
-  !*** ./js/components/plugin-folders/view.html ***!
-  \************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div class=\"table-row\" ng-if=\"vm.folders.length > 0\">\n    <div class=\"table-cell text-left title\">FOLDERS</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">Size</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"folder in vm.folders\">\n    <div class=\"table-cell text-left\">{{ folder.path }}</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration(folder)\">{{ folder.size | bytes }}</div>\n</div>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-folders/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-fs/component.js":
 /*!**********************************************!*\
   !*** ./js/components/plugin-fs/component.js ***!
   \**********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-fs/controller.js");
@@ -1486,10 +1164,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginFs", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginFs", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: 'vm',
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -1499,12 +1177,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!***********************************************!*\
   !*** ./js/components/plugin-fs/controller.js ***!
   \***********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginFsController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginFsController)
+/* harmony export */ });
 
 function GlancesPluginFsController($scope, $filter, GlancesStats, ARGUMENTS) {
     var vm = this;
@@ -1559,32 +1238,17 @@ function GlancesPluginFsController($scope, $filter, GlancesStats, ARGUMENTS) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-fs/view.html":
-/*!*******************************************!*\
-  !*** ./js/components/plugin-fs/view.html ***!
-  \*******************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div class=\"table-row\">\n    <div class=\"table-cell text-left title\">FILE SYS</div>\n    <div class=\"table-cell\">\n        <span ng-show=\"!vm.arguments.fs_free_space\">Used</span>\n        <span ng-show=\"vm.arguments.fs_free_space\">Free</span>\n    </div>\n    <div class=\"table-cell\">Total</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"fs in vm.fileSystems\">\n    <div class=\"table-cell text-left\">{{ fs.shortMountPoint }} <span class=\"visible-lg-inline\"\n            ng-show=\"fs.name.length <= 20\">({{ fs.name }})</span>\n    </div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration(fs.mountPoint, 'used')\">\n        <span ng-show=\"!vm.arguments.fs_free_space\">{{ fs.used | bytes }}</span>\n        <span ng-show=\"vm.arguments.fs_free_space\">{{ fs.free | bytes }}</span>\n    </div>\n    <div class=\"table-cell\">{{ fs.size | bytes }}</div>\n</div>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-fs/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-gpu/component.js":
 /*!***********************************************!*\
   !*** ./js/components/plugin-gpu/component.js ***!
   \***********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-gpu/controller.js");
@@ -1596,10 +1260,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginGpu", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginGpu", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -1609,12 +1273,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!************************************************!*\
   !*** ./js/components/plugin-gpu/controller.js ***!
   \************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginGpuController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginGpuController)
+/* harmony export */ });
 
 function GlancesPluginGpuController($scope, GlancesStats, ARGUMENTS) {
     var vm = this;
@@ -1688,32 +1353,17 @@ function GlancesPluginGpuController($scope, GlancesStats, ARGUMENTS) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-gpu/view.html":
-/*!********************************************!*\
-  !*** ./js/components/plugin-gpu/view.html ***!
-  \********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"gpu\" class=\"plugin\">\n    <div class=\"gpu-name title\">\n        {{ vm.name }}\n    </div>\n    <div class=\"table\">\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">proc:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('proc')\" ng-if=\"vm.mean.proc != null\">{{ vm.mean.proc |\n                number : 0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"vm.mean.proc == null\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">mem:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('mem')\" ng-if=\"vm.mean.mem != null\">{{ vm.mean.mem | number :\n                0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"vm.mean.mem == null\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">temperature::</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('temperature')\" ng-if=\"vm.mean.temperature != null\">{{ vm.mean.temperature | number\n                :\n                0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"vm.mean.temperature == null\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"!arguments.meangpu && vm.gpus.length > 1\" ng-repeat=\"gpu in vm.gpus\">\n            <div class=\"table-cell text-left\">\n                {{ gpu.gpu_id }}:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'proc')\" ng-if=\"gpu.proc != null\">{{ gpu.proc | number : 0 }}%</span>\n                <span ng-if=\"gpu.proc == null\">N/A</span>\n                mem:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'mem')\" ng-if=\"gpu.mem != null\">{{ gpu.mem | number : 0 }}%</span>\n                <span ng-if=\"gpu.mem == null\">N/A</span>\n                temp:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'temperature')\" ng-if=\"gpu.temperature != null\">{{ gpu.temperature | number : 0 }}C</span>\n                <span ng-if=\"gpu.temperature == null\">N/A</span>\n            </div>\n        </div>\n    </div>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-gpu/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-ip/component.js":
 /*!**********************************************!*\
   !*** ./js/components/plugin-ip/component.js ***!
   \**********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-ip/controller.js");
@@ -1725,10 +1375,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginIp", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginIp", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -1738,12 +1388,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!***********************************************!*\
   !*** ./js/components/plugin-ip/controller.js ***!
   \***********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginIpController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginIpController)
+/* harmony export */ });
 
 function GlancesPluginIpController($scope, GlancesStats, ARGUMENTS) {
     var vm = this;
@@ -1777,32 +1428,17 @@ function GlancesPluginIpController($scope, GlancesStats, ARGUMENTS) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-ip/view.html":
-/*!*******************************************!*\
-  !*** ./js/components/plugin-ip/view.html ***!
-  \*******************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"ip\" ng-if=\"vm.address != undefined && !vm.arguments.disable_ip\">\n    &nbsp;-&nbsp;<span class=\"title\">IP</span>&nbsp;<span>{{ vm.address }}/{{ vm.maskCidr }}</span>&nbsp;<span\n        ng-if=\"vm.publicAddress\" class=\"title\">Pub</span>&nbsp;<span>{{ vm.publicAddress }}</span>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-ip/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-irq/component.js":
 /*!***********************************************!*\
   !*** ./js/components/plugin-irq/component.js ***!
   \***********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-irq/controller.js");
@@ -1814,10 +1450,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginIrq", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginIrq", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -1827,12 +1463,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!************************************************!*\
   !*** ./js/components/plugin-irq/controller.js ***!
   \************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginIrqController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginIrqController)
+/* harmony export */ });
 
 function GlancesPluginIrqController($scope, GlancesStats) {
     var vm = this;
@@ -1866,32 +1503,17 @@ function GlancesPluginIrqController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-irq/view.html":
-/*!********************************************!*\
-  !*** ./js/components/plugin-irq/view.html ***!
-  \********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div class=\"table-row\" ng-if=\"vm.irqs.length > 0\">\n    <div class=\"table-cell text-left title\">IRQ</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">Rate/s</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"irq in vm.irqs\">\n    <div class=\"table-cell text-left\">{{irq.irq_line}}</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\"><span>{{irq.irq_rate}}</span></div>\n</div>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-irq/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-load/component.js":
 /*!************************************************!*\
   !*** ./js/components/plugin-load/component.js ***!
   \************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-load/controller.js");
@@ -1903,10 +1525,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginLoad", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginLoad", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -1916,12 +1538,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!*************************************************!*\
   !*** ./js/components/plugin-load/controller.js ***!
   \*************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginLoadController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginLoadController)
+/* harmony export */ });
 
 function GlancesPluginLoadController($scope, GlancesStats) {
     var vm = this;
@@ -1962,32 +1585,17 @@ function GlancesPluginLoadController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-load/view.html":
-/*!*********************************************!*\
-  !*** ./js/components/plugin-load/view.html ***!
-  \*********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"load\" class=\"plugin\" ng-if=\"vm.cpucore != undefined\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left title\">LOAD</div>\n            <div class=\"table-cell\">{{ vm.cpucore }}-core</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">1 min:</div>\n            <div class=\"table-cell\">\n                {{ vm.min1 | number : 2}}\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">5 min:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getDecoration('min5')\">\n                {{ vm.min5 | number : 2}}\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">15 min:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getDecoration('min15')\">\n                {{ vm.min15 | number : 2}}\n            </div>\n        </div>\n    </div>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-load/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-mem-more/component.js":
 /*!****************************************************!*\
   !*** ./js/components/plugin-mem-more/component.js ***!
   \****************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-mem-more/controller.js");
@@ -1999,10 +1607,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginMemMore", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginMemMore", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -2012,12 +1620,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!*****************************************************!*\
   !*** ./js/components/plugin-mem-more/controller.js ***!
   \*****************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginMemMoreController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginMemMoreController)
+/* harmony export */ });
 
 function GlancesPluginMemMoreController($scope, GlancesStats) {
     var vm = this;
@@ -2048,32 +1657,17 @@ function GlancesPluginMemMoreController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-mem-more/view.html":
-/*!*************************************************!*\
-  !*** ./js/components/plugin-mem-more/view.html ***!
-  \*************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"mem-more\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\" ng-show=\"vm.active != undefined\">\n            <div class=\"table-cell text-left\">active:</div>\n            <div class=\"table-cell\">{{ vm.active | bytes }}</div>\n        </div>\n        <div class=\"table-row\" ng-show=\"vm.inactive != undefined\">\n            <div class=\"table-cell text-left\">inactive:</div>\n            <div class=\"table-cell\">{{ vm.inactive | bytes }}</div>\n        </div>\n        <div class=\"table-row\" ng-show=\"vm.buffers != undefined\">\n            <div class=\"table-cell text-left\">buffers:</div>\n            <div class=\"table-cell\">{{ vm.buffers | bytes }}</div>\n        </div>\n        <div class=\"table-row\" ng-show=\"vm.cached != undefined\">\n            <div class=\"table-cell text-left\">cached:</div>\n            <div class=\"table-cell\">{{ vm.cached | bytes }}</div>\n        </div>\n    </div>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-mem-more/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-mem/component.js":
 /*!***********************************************!*\
   !*** ./js/components/plugin-mem/component.js ***!
   \***********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-mem/controller.js");
@@ -2085,10 +1679,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginMem", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginMem", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -2098,12 +1692,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!************************************************!*\
   !*** ./js/components/plugin-mem/controller.js ***!
   \************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginMemController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginMemController)
+/* harmony export */ });
 
 function GlancesPluginMemController($scope, GlancesStats) {
     var vm = this;
@@ -2144,32 +1739,17 @@ function GlancesPluginMemController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-mem/view.html":
-/*!********************************************!*\
-  !*** ./js/components/plugin-mem/view.html ***!
-  \********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"mem\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left title\">MEM</div>\n            <div class=\"table-cell\">{{ vm.percent }}%</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">total:</div>\n            <div class=\"table-cell\">{{ vm.total | bytes }}</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">used:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getDecoration('used')\">\n                {{ vm.used | bytes:2 }}\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">free:</div>\n            <div class=\"table-cell\">{{ vm.free | bytes }}</div>\n        </div>\n    </div>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-mem/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-memswap/component.js":
 /*!***************************************************!*\
   !*** ./js/components/plugin-memswap/component.js ***!
   \***************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-memswap/controller.js");
@@ -2181,10 +1761,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginMemswap", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginMemswap", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -2194,12 +1774,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!****************************************************!*\
   !*** ./js/components/plugin-memswap/controller.js ***!
   \****************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginMemswapController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginMemswapController)
+/* harmony export */ });
 
 function GlancesPluginMemswapController($scope, GlancesStats) {
     var vm = this;
@@ -2240,32 +1821,17 @@ function GlancesPluginMemswapController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-memswap/view.html":
-/*!************************************************!*\
-  !*** ./js/components/plugin-memswap/view.html ***!
-  \************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"memswap\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left title\">SWAP</div>\n            <div class=\"table-cell\">{{ vm.percent }}%</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">total:</div>\n            <div class=\"table-cell\">{{ vm.total | bytes }}</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">used:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getDecoration('used')\">\n                {{ vm.used | bytes }}\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">free:</div>\n            <div class=\"table-cell\">{{ vm.free | bytes }}</div>\n        </div>\n    </div>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-memswap/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-network/component.js":
 /*!***************************************************!*\
   !*** ./js/components/plugin-network/component.js ***!
   \***************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-network/controller.js");
@@ -2277,10 +1843,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginNetwork", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginNetwork", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -2290,12 +1856,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!****************************************************!*\
   !*** ./js/components/plugin-network/controller.js ***!
   \****************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginNetworkController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginNetworkController)
+/* harmony export */ });
 
 function GlancesPluginNetworkController($scope, $filter, GlancesStats, ARGUMENTS) {
     var vm = this;
@@ -2340,32 +1907,17 @@ function GlancesPluginNetworkController($scope, $filter, GlancesStats, ARGUMENTS
 
 /***/ }),
 
-/***/ "./js/components/plugin-network/view.html":
-/*!************************************************!*\
-  !*** ./js/components/plugin-network/view.html ***!
-  \************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div class=\"table-row\">\n    <div class=\"table-cell text-left title\">NETWORK</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && !vm.arguments.network_sum\">Rx/s</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && !vm.arguments.network_sum\">Tx/s</div>\n\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && vm.arguments.network_sum\"></div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && vm.arguments.network_sum\">Rx+Tx/s</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && !vm.arguments.network_sum\">Rx</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && !vm.arguments.network_sum\">Tx</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && vm.arguments.network_sum\"></div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && vm.arguments.network_sum\">Rx+Tx</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"network in vm.networks track by network.interfaceName\">\n    <div class=\"table-cell text-left\">\n        <span class=\"visible-lg-inline\">{{ network.ifname }}</span>\n        <span class=\"hidden-lg\">{{ network.ifname | min_size }}</span>\n    </div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && !vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.rx / network.time_since_update | bytes) : (network.rx / network.time_since_update | bits) }}\n    </div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && !vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.tx / network.time_since_update | bytes) : (network.tx / network.time_since_update | bits) }}\n    </div>\n\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && vm.arguments.network_sum\"></div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.cx / network.time_since_update | bytes) : (network.cx / network.time_since_update | bits) }}\n    </div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && !vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.cumulativeRx | bytes) : (network.cumulativeRx | bits) }}\n    </div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && !vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.cumulativeTx | bytes) : (network.cumulativeTx | bits) }}\n    </div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && vm.arguments.network_sum\"></div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.cumulativeCx | bytes) : (network.cumulativeCx | bits) }}\n    </div>\n</div>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-network/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-percpu/component.js":
 /*!**************************************************!*\
   !*** ./js/components/plugin-percpu/component.js ***!
   \**************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-percpu/controller.js");
@@ -2377,10 +1929,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginPercpu", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginPercpu", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -2390,12 +1942,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!***************************************************!*\
   !*** ./js/components/plugin-percpu/controller.js ***!
   \***************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginPercpuController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginPercpuController)
+/* harmony export */ });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 
@@ -2431,7 +1984,7 @@ function GlancesPluginPercpuController($scope, GlancesStats, GlancesPluginHelper
             });
         }
 
-        vm.cpusChunks = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.chunk(cpus, 4);
+        vm.cpusChunks = lodash__WEBPACK_IMPORTED_MODULE_0___default().chunk(cpus, 4);
     };
 
     vm.getUserAlert = function (cpu) {
@@ -2446,32 +1999,17 @@ function GlancesPluginPercpuController($scope, GlancesStats, GlancesPluginHelper
 
 /***/ }),
 
-/***/ "./js/components/plugin-percpu/view.html":
-/*!***********************************************!*\
-  !*** ./js/components/plugin-percpu/view.html ***!
-  \***********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"percpu\" class=\"plugin\">\n    <div class=\"table\" ng-repeat=\"cpus in vm.cpusChunks\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left title\"><span ng-if=\"$first\">PER CPU</span></div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\">{{ percpu.total }}%</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">user:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\"\n                 ng-class=\"vm.getUserAlert(percpu)\">\n                {{ percpu.user }}%\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">system:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\"\n                 ng-class=\"vm.getSystemAlert(percpu)\">\n                {{ percpu.system }}%\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">idle:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\">{{ percpu.idle }}%</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"vm.cpus[0].iowait\">\n            <div class=\"table-cell text-left\">iowait:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\"\n                 ng-class=\"vm.getSystemAlert(percpu)\">\n                {{ percpu.iowait }}%\n            </div>\n        </div>\n        <div class=\"table-row\" ng-if=\"vm.cpus[0].steal\">\n            <div class=\"table-cell text-left\">steal:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\"\n                 ng-class=\"vm.getSystemAlert(percpu)\">\n                {{ percpu.steal }}%\n            </div>\n        </div>\n    </div>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-percpu/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-ports/component.js":
 /*!*************************************************!*\
   !*** ./js/components/plugin-ports/component.js ***!
   \*************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-ports/controller.js");
@@ -2483,10 +2021,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginPorts", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginPorts", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -2496,12 +2034,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!**************************************************!*\
   !*** ./js/components/plugin-ports/controller.js ***!
   \**************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginPortsController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginPortsController)
+/* harmony export */ });
 
 function GlancesPluginPortsController($scope, GlancesStats) {
     var vm = this;
@@ -2554,32 +2093,17 @@ function GlancesPluginPortsController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-ports/view.html":
-/*!**********************************************!*\
-  !*** ./js/components/plugin-ports/view.html ***!
-  \**********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div class=\"table-row\" ng-repeat=\"port in vm.ports\">\n    <div class=\"table-cell text-left\">{{(port.description ? port.description : port.host + ' ' + port.port) | min_size:\n        20}}\n    </div>\n    <div class=\"table-cell\"></div>\n    <div ng-switch=\"port.status\" ng-class=\"vm.getPortDecoration(port)\" class=\"table-cell\" ng-if=\"port.host\">\n        <span ng-switch-when=\"null\">Scanning</span>\n        <span ng-switch-when=\"false\">Timeout</span>\n        <span ng-switch-when=\"true\">Open</span>\n        <span ng-switch-default>{{port.status * 1000.0 | number:0}}ms</span>\n    </div>\n    <div ng-switch=\"port.status\" ng-class=\"vm.getWebDecoration(port)\" class=\"table-cell\" ng-if=\"port.url\">\n        <span ng-switch-when=\"null\">Scanning</span>\n        <span ng-switch-when=\"Error\">Error</span>\n        <span ng-switch-default>Code {{ port.status }}</span>\n    </div>\n</div>";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-ports/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-process/component.js":
 /*!***************************************************!*\
   !*** ./js/components/plugin-process/component.js ***!
   \***************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-process/controller.js");
@@ -2591,10 +2115,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginProcess", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginProcess", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -2604,12 +2128,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!****************************************************!*\
   !*** ./js/components/plugin-process/controller.js ***!
   \****************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginProcessController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginProcessController)
+/* harmony export */ });
 
 function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
     var vm = this;
@@ -2697,32 +2222,17 @@ function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-process/view.html":
-/*!************************************************!*\
-  !*** ./js/components/plugin-process/view.html ***!
-  \************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div ng-if=\"!vm.arguments.disable_process\">\n    <glances-plugin-processcount sorter=\"vm.sorter\"></glances-plugin-processcount>\n    <div class=\"row\" ng-if=\"!vm.arguments.disable_amps\">\n        <div class=\"col-lg-18\">\n            <glances-plugin-amps></glances-plugin-amps>\n        </div>\n    </div>\n    <glances-plugin-processlist sorter=\"vm.sorter\"></glances-plugin-processlist>\n</div>\n<div ng-if=\"vm.arguments.disable_process\">PROCESSES DISABLED (press 'z' to display)</div>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-process/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-processcount/component.js":
 /*!********************************************************!*\
   !*** ./js/components/plugin-processcount/component.js ***!
   \********************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-processcount/controller.js");
@@ -2734,13 +2244,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginProcesscount", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginProcesscount", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
     bindings: {
         sorter: "<"
     },
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -2750,12 +2260,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!*********************************************************!*\
   !*** ./js/components/plugin-processcount/controller.js ***!
   \*********************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginProcesscountController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginProcesscountController)
+/* harmony export */ });
 
 function GlancesPluginProcesscountController($scope, GlancesStats) {
     var vm = this;
@@ -2788,32 +2299,17 @@ function GlancesPluginProcesscountController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-processcount/view.html":
-/*!*****************************************************!*\
-  !*** ./js/components/plugin-processcount/view.html ***!
-  \*****************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"processcount\" class=\"plugin\">\n    <span class=\"title\">TASKS</span>\n    <span>{{ vm.total }} ({{ vm.thread }} thr),</span>\n    <span>{{ vm.running }} run,</span>\n    <span>{{ vm.sleeping }} slp,</span>\n    <span>{{ vm.stopped }} oth</span>\n    <span> sorted {{ vm.sorter.auto ? 'automatically' : '' }} by {{ vm.sorter.getColumnLabel(vm.sorter.column) }}, flat view</span>\n</section>";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-processcount/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-processlist/component.js":
 /*!*******************************************************!*\
   !*** ./js/components/plugin-processlist/component.js ***!
   \*******************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-processlist/controller.js");
@@ -2825,13 +2321,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginProcesslist", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginProcesslist", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
     bindings: {
         sorter: "<"
     },
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -2841,12 +2337,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!********************************************************!*\
   !*** ./js/components/plugin-processlist/controller.js ***!
   \********************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginProcesslistController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginProcesslistController)
+/* harmony export */ });
 
 function GlancesPluginProcesslistController($scope, GlancesStats, GlancesPluginHelper, $filter, CONFIG, ARGUMENTS) {
     var vm = this;
@@ -2942,32 +2439,17 @@ function GlancesPluginProcesslistController($scope, GlancesStats, GlancesPluginH
 
 /***/ }),
 
-/***/ "./js/components/plugin-processlist/view.html":
-/*!****************************************************!*\
-  !*** ./js/components/plugin-processlist/view.html ***!
-  \****************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"processlist-plugin\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div sortable-th sorter=\"vm.sorter\" column=\"cpu_percent\" class=\"table-cell\">CPU%</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"memory_percent\" class=\"table-cell\">MEM%</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">VIRT</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">RES</div>\n            <div class=\"table-cell\">PID</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"username\" class=\"table-cell text-left\">USER</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"timemillis\" class=\"table-cell hidden-xs hidden-sm\">TIME+</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"num_threads\" class=\"table-cell text-left hidden-xs hidden-sm\">THR</div>\n            <div class=\"table-cell\">NI</div>\n            <div class=\"table-cell\">S</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"io_read\" class=\"table-cell hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">IOR/s</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"io_write\" class=\"table-cell text-left hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">IOW/s</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"name\" class=\"table-cell text-left\">Command</div>\n        </div>\n        <div class=\"table-row\"\n             ng-repeat=\"process in vm.processes | orderBy:vm.sorter.column:vm.sorter.isReverseColumn(vm.sorter.column) | limitTo: vm.getLimit() track by process.pid\">\n            <div class=\"table-cell\" ng-class=\"vm.getCpuPercentAlert(process)\">{{ process.cpu_percent == -1 ? '?' : (process.cpu_percent | number:1) }}</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMemoryPercentAlert(process)\">{{ process.memory_percent == -1 ? '?' : (process.memory_percent | number:1) }}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">{{process.memvirt | bytes}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">{{process.memres | bytes}}</div>\n            <div class=\"table-cell\">{{process.pid}}</div>\n            <div class=\"table-cell text-left\">{{process.username}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-if=\"process.timeplus != '?'\">\n                <span ng-show=\"process.timeplus.hours > 0\" class=\"highlight\">{{ process.timeplus.hours }}h</span>{{\n                process.timeplus.minutes | leftPad:2:'0' }}:{{ process.timeplus.seconds | leftPad:2:'0' }}<span\n                    ng-show=\"process.timeplus.hours <= 0\">.{{ process.timeplus.milliseconds | leftPad:2:'0' }}</span>\n            </div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-if=\"process.timeplus == '?'\">?</div>\n            <div class=\"table-cell text-left hidden-xs hidden-sm\">{{ process.num_threads == -1 ? '?' : process.num_threads }}</div>\n            <div class=\"table-cell\" ng-class=\"{nice: process.isNice}\">{{process.nice | exclamation}}</div>\n            <div class=\"table-cell\" ng-class=\"{status: process.status == 'R'}\">{{process.status}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">{{process.io_read | bytes}}</div>\n            <div class=\"table-cell text-left hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">{{process.io_write | bytes}}</div>\n            <div class=\"table-cell text-left\" ng-show=\"vm.arguments.process_short_name\">{{process.name}}</div>\n            <div class=\"table-cell text-left\" ng-show=\"!vm.arguments.process_short_name\">{{process.cmdline}}</div>\n        </div>\n    </div>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-processlist/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-quicklook/component.js":
 /*!*****************************************************!*\
   !*** ./js/components/plugin-quicklook/component.js ***!
   \*****************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-quicklook/controller.js");
@@ -2979,10 +2461,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginQuicklook", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginQuicklook", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -2992,12 +2474,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!******************************************************!*\
   !*** ./js/components/plugin-quicklook/controller.js ***!
   \******************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginQuicklookController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginQuicklookController)
+/* harmony export */ });
 
 function GlancesPluginQuicklookController($scope, GlancesStats, ARGUMENTS) {
     var vm = this;
@@ -3052,32 +2535,17 @@ function GlancesPluginQuicklookController($scope, GlancesStats, ARGUMENTS) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-quicklook/view.html":
-/*!**************************************************!*\
-  !*** ./js/components/plugin-quicklook/view.html ***!
-  \**************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"quicklook-plugin\" class=\"plugin\">\n    <div class=\"cpu-name\">\n        {{ vm.cpu_name }}\n    </div>\n    <div class=\"table\">\n        <div class=\"table-row\" ng-if=\"!vm.arguments.percpu\">\n            <div class=\"table-cell text-left\">CPU</div>\n            <div class=\"table-cell\">\n                <div class=\"progress\">\n                    <div class=\"progress-bar progress-bar-{{ vm.getDecoration('cpu') }}\" role=\"progressbar\"\n                         aria-valuenow=\"{{ vm.cpu }}\" aria-valuemin=\"0\" aria-valuemax=\"100\"\n                         style=\"width: {{ vm.cpu }}%;\">\n                        &nbsp;\n                    </div>\n                </div>\n            </div>\n            <div class=\"table-cell\">\n                {{ vm.cpu }}%\n            </div>\n        </div>\n        <div class=\"table-row\" ng-if=\"vm.arguments.percpu\" ng-repeat=\"percpu in vm.percpus track by percpu.number\">\n            <div class=\"table-cell text-left\">CPU{{ percpu.number }}</div>\n            <div class=\"table-cell\">\n                <div class=\"progress\">\n                    <div class=\"progress-bar progress-bar-{{ vm.getDecoration('cpu') }}\" role=\"progressbar\"\n                         aria-valuenow=\"{{ percpu.total }}\" aria-valuemin=\"0\" aria-valuemax=\"100\"\n                         style=\"width: {{ percpu.total }}%;\">\n                        &nbsp;\n                    </div>\n                </div>\n            </div>\n            <div class=\"table-cell\">\n                {{ percpu.total }}%\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">MEM</div>\n            <div class=\"table-cell\">\n                <div class=\"progress\">\n                    <div class=\"progress-bar progress-bar-{{ vm.getDecoration('mem') }}\" role=\"progressbar\"\n                         aria-valuenow=\"{{ vm.mem }}\" aria-valuemin=\"0\" aria-valuemax=\"100\"\n                         style=\"width: {{ vm.mem }}%;\">\n                        &nbsp;\n                    </div>\n                </div>\n            </div>\n            <div class=\"table-cell\">\n                {{ vm.mem }}%\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">SWAP</div>\n            <div class=\"table-cell\">\n                <div class=\"progress\">\n                    <div class=\"progress-bar progress-bar-{{ vm.getDecoration('swap') }}\" role=\"progressbar\"\n                         aria-valuenow=\"{{ vm.swap }}\" aria-valuemin=\"0\" aria-valuemax=\"100\"\n                         style=\"width: {{ vm.swap }}%;\">\n                        &nbsp;\n                    </div>\n                </div>\n            </div>\n            <div class=\"table-cell\">\n                {{ vm.swap }}%\n            </div>\n        </div>\n    </div>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-quicklook/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-raid/component.js":
 /*!************************************************!*\
   !*** ./js/components/plugin-raid/component.js ***!
   \************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-raid/controller.js");
@@ -3089,10 +2557,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginRaid", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginRaid", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -3102,12 +2570,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!*************************************************!*\
   !*** ./js/components/plugin-raid/controller.js ***!
   \*************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginRaidController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginRaidController)
+/* harmony export */ });
 
 function GlancesPluginRaidController($scope, GlancesStats) {
     var vm = this;
@@ -3171,32 +2640,17 @@ function GlancesPluginRaidController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-raid/view.html":
-/*!*********************************************!*\
-  !*** ./js/components/plugin-raid/view.html ***!
-  \*********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div class=\"table-row\" ng-if=\"vm.hasDisks()\">\n    <div class=\"table-cell text-left title\">RAID disks</div>\n    <div class=\"table-cell\">Used</div>\n    <div class=\"table-cell\">Total</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"disk in vm.disks | orderBy:  'name'\">\n    <div class=\"table-cell text-left\">\n        {{ disk.type | uppercase }} {{ disk.name }}\n        <div class=\"warning\" ng-show=\"disk.degraded\">└─ Degraded mode</div>\n        <div ng-show=\"disk.degraded\"> &nbsp; &nbsp;└─ {{ disk.config }}</div>\n\n        <div class=\"critical\" ng-show=\"disk.inactive\">└─ Status {{ disk.status }}</div>\n        <div ng-show=\"disk.inactive\" ng-repeat=\"component in disk.components | orderBy:  'number'\">\n            &nbsp; &nbsp;{{ $last ? '└─' : '├─' }} disk {{ component.number }}: {{ component.name }}\n        </div>\n    </div>\n    <div class=\"table-cell\" ng-show=\"!disk.inactive\" ng-class=\"vm.getAlert(disk)\">{{ disk.used }}</div>\n    <div class=\"table-cell\" ng-show=\"!disk.inactive\" ng-class=\"vm.getAlert(disk)\">{{ disk.available }}</div>\n</div>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-raid/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-sensors/component.js":
 /*!***************************************************!*\
   !*** ./js/components/plugin-sensors/component.js ***!
   \***************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-sensors/controller.js");
@@ -3208,10 +2662,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginSensors", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginSensors", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -3221,12 +2675,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!****************************************************!*\
   !*** ./js/components/plugin-sensors/controller.js ***!
   \****************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginSensorsController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginSensorsController)
+/* harmony export */ });
 
 function GlancesPluginSensorsController($scope, GlancesStats, GlancesPluginHelper, ARGUMENTS) {
     var vm = this;
@@ -3268,32 +2723,17 @@ function GlancesPluginSensorsController($scope, GlancesStats, GlancesPluginHelpe
 
 /***/ }),
 
-/***/ "./js/components/plugin-sensors/view.html":
-/*!************************************************!*\
-  !*** ./js/components/plugin-sensors/view.html ***!
-  \************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div class=\"table-row\" ng-if=\"vm.sensors.length > 0\">\n    <div class=\"table-cell text-left title\">SENSORS</div>\n</div>\n\n<div class=\"table-row\" ng-repeat=\"sensor in vm.sensors\">\n    <div class=\"table-cell text-left\">{{ sensor.label }}</div>\n    <div class=\"table-cell\">{{ sensor.unit }}</div>\n    <div class=\"table-cell\" ng-class=\"vm.getAlert(sensor)\">{{ sensor.value }}</div>\n</div>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-sensors/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-system/component.js":
 /*!**************************************************!*\
   !*** ./js/components/plugin-system/component.js ***!
   \**************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-system/controller.js");
@@ -3305,10 +2745,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginSystem", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginSystem", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -3318,12 +2758,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!***************************************************!*\
   !*** ./js/components/plugin-system/controller.js ***!
   \***************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginSystemController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginSystemController)
+/* harmony export */ });
 
 function GlancesPluginSystemController($scope, GlancesStats) {
     var vm = this;
@@ -3364,32 +2805,17 @@ function GlancesPluginSystemController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-system/view.html":
-/*!***********************************************!*\
-  !*** ./js/components/plugin-system/view.html ***!
-  \***********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"system\">\n    <span ng-if=\"vm.isDisconnected\" class=\"critical\">Disconnected from</span>\n    <span class=\"title\">{{ vm.hostname }}</span>\n    <span ng-if=\"vm.isLinux\" class=\"hidden-xs hidden-sm\">({{ vm.humanReadableName }} / {{ vm.os.name }} {{ vm.os.version }})</span>\n    <span ng-if=\"!vm.isLinux\" class=\"hidden-xs hidden-sm\">({{ vm.os.name }} {{ vm.os.version }} {{ vm.platform }})</span>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-system/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-uptime/component.js":
 /*!**************************************************!*\
   !*** ./js/components/plugin-uptime/component.js ***!
   \**************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-uptime/controller.js");
@@ -3401,10 +2827,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginUptime", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginUptime", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -3414,12 +2840,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!***************************************************!*\
   !*** ./js/components/plugin-uptime/controller.js ***!
   \***************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginUptimeController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginUptimeController)
+/* harmony export */ });
 
 function GlancesPluginUptimeController($scope, GlancesStats) {
     var vm = this;
@@ -3441,32 +2868,17 @@ function GlancesPluginUptimeController($scope, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-uptime/view.html":
-/*!***********************************************!*\
-  !*** ./js/components/plugin-uptime/view.html ***!
-  \***********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<section id=\"uptime\">\n    <span>Uptime: {{ vm.value }}</span>\n</section>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-uptime/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/components/plugin-wifi/component.js":
 /*!************************************************!*\
   !*** ./js/components/plugin-wifi/component.js ***!
   \************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _controller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controller */ "./js/components/plugin-wifi/controller.js");
@@ -3478,10 +2890,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").component("glancesPluginWifi", {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").component("glancesPluginWifi", {
     controller: _controller__WEBPACK_IMPORTED_MODULE_1__["default"],
     controllerAs: "vm",
-    templateUrl: _view_html__WEBPACK_IMPORTED_MODULE_2___default.a,
+    templateUrl: (_view_html__WEBPACK_IMPORTED_MODULE_2___default()),
 }));
 
 
@@ -3491,12 +2903,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!*************************************************!*\
   !*** ./js/components/plugin-wifi/controller.js ***!
   \*************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GlancesPluginWifiController; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ GlancesPluginWifiController)
+/* harmony export */ });
 
 function GlancesPluginWifiController($scope, $filter, GlancesStats) {
     var vm = this;
@@ -3548,38 +2961,23 @@ function GlancesPluginWifiController($scope, $filter, GlancesStats) {
 
 /***/ }),
 
-/***/ "./js/components/plugin-wifi/view.html":
-/*!*********************************************!*\
-  !*** ./js/components/plugin-wifi/view.html ***!
-  \*********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// Module
-var code = "<div class=\"table-row\" ng-if=\"vm.hotspots.length > 0\">\n    <div class=\"table-cell text-left title\">WIFI</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">dBm</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"hotspot in vm.hotspots\">\n    <div class=\"table-cell text-left\">{{ hotspot.ssid|limitTo:20 }} <span ng-if=\"hotspot.encrypted\">{{ hotspot.encryption_type }}</span>\n    </div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration(hotspot, 'signal')\">{{ hotspot.signal }}</div>\n</div>\n";
-// Exports
-var _module_exports = code;;
-var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-wifi/view.html';
-window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
-module.exports = path;
-
-/***/ }),
-
 /***/ "./js/directives.js":
 /*!**************************!*\
   !*** ./js/directives.js ***!
   \**************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").directive("sortableTh", function () {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").directive("sortableTh", function () {
     return {
         restrict: 'A',
         scope: {
@@ -3593,7 +2991,7 @@ __webpack_require__.r(__webpack_exports__);
                 return scope.sorter.column;
             }, function (newValue, oldValue) {
 
-                if (angular__WEBPACK_IMPORTED_MODULE_0___default.a.isArray(newValue)) {
+                if (angular__WEBPACK_IMPORTED_MODULE_0___default().isArray(newValue)) {
                     if (newValue.indexOf(attrs.column) !== -1) {
                         element.addClass('sort');
                     } else {
@@ -3625,11 +3023,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!***********************!*\
   !*** ./js/filters.js ***!
   \***********************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
@@ -3695,7 +3095,7 @@ function bytesFilter() {
                         decimal_precision = 0;
                     }
                     else {
-                        decimal_precision = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.min([1, decimal_precision]);
+                        decimal_precision = lodash__WEBPACK_IMPORTED_MODULE_1___default().min([1, decimal_precision]);
                     }
                 }
                 else if (symbol == 'K') {
@@ -3721,7 +3121,7 @@ function leftPadFilter() {
     return function (value, length, chars) {
         length = length || 0;
         chars = chars || ' ';
-        return lodash__WEBPACK_IMPORTED_MODULE_1___default.a.padStart(value, length, chars);
+        return lodash__WEBPACK_IMPORTED_MODULE_1___default().padStart(value, length, chars);
     }
 }
 
@@ -3769,7 +3169,7 @@ function nl2brFilter($sce) {
     };
 }
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp")
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp")
     .filter("min_size", minSizeFilter)
     .filter("exclamation", exclamationFilter)
     .filter("bytes", bytesFilter)
@@ -3786,11 +3186,13 @@ function nl2brFilter($sce) {
 /*!**********************!*\
   !*** ./js/module.js ***!
   \**********************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var angular_hotkeys__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-hotkeys */ "./node_modules/angular-hotkeys/build/hotkeys.js");
@@ -3799,7 +3201,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp", ["cfp.hotkeys"])
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp", ["cfp.hotkeys"])
 
 .value("CONFIG", {})
 .value("ARGUMENTS", {})
@@ -3824,11 +3226,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!********************************!*\
   !*** ./js/services/favicon.js ***!
   \********************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var favico_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! favico.js */ "./node_modules/favico.js/favico.js");
@@ -3839,7 +3243,7 @@ __webpack_require__.r(__webpack_exports__);
 
 function favicoService () {
 
-    var favico = new favico_js__WEBPACK_IMPORTED_MODULE_1___default.a({
+    var favico = new (favico_js__WEBPACK_IMPORTED_MODULE_1___default())({
         animation: "none"
     });
 
@@ -3852,7 +3256,7 @@ function favicoService () {
     };
 }
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").service("favicoService", favicoService));
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").service("favicoService", favicoService));
 
 
 /***/ }),
@@ -3861,8 +3265,7 @@ function favicoService () {
 /*!******************************!*\
   !*** ./js/services/index.js ***!
   \******************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
@@ -3881,11 +3284,13 @@ __webpack_require__.r(__webpack_exports__);
 /*!**************************************!*\
   !*** ./js/services/plugin_helper.js ***!
   \**************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 
@@ -3934,7 +3339,7 @@ function GlancesPluginHelper () {
     return plugin;
 }
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").service("GlancesPluginHelper", GlancesPluginHelper));
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").service("GlancesPluginHelper", GlancesPluginHelper));
 
 
 /***/ }),
@@ -3943,11 +3348,13 @@ function GlancesPluginHelper () {
 /*!******************************!*\
   !*** ./js/services/stats.js ***!
   \******************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ "./node_modules/angular/index.js");
 /* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);
 
@@ -3990,10 +3397,10 @@ function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, CON
             GlancesPluginHelper.setLimits(response.data);
         });
         $http.get('api/3/config').then(function (response) {
-            angular__WEBPACK_IMPORTED_MODULE_0___default.a.extend(CONFIG, response.data);
+            angular__WEBPACK_IMPORTED_MODULE_0___default().extend(CONFIG, response.data);
         });
         $http.get('api/3/args').then(function (response) {
-            angular__WEBPACK_IMPORTED_MODULE_0___default.a.extend(ARGUMENTS, response.data);
+            angular__WEBPACK_IMPORTED_MODULE_0___default().extend(ARGUMENTS, response.data);
         });
 
         var loadPromise;
@@ -4022,7 +3429,7 @@ function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, CON
     };
 }
 
-/* harmony default export */ __webpack_exports__["default"] = (angular__WEBPACK_IMPORTED_MODULE_0___default.a.module("glancesApp").service("GlancesStats", GlancesStats));
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (angular__WEBPACK_IMPORTED_MODULE_0___default().module("glancesApp").service("GlancesStats", GlancesStats));
 
 
 /***/ }),
@@ -4031,8 +3438,7 @@ function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, CON
 /*!*******************************************************!*\
   !*** ./node_modules/angular-hotkeys/build/hotkeys.js ***!
   \*******************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ ((module, exports, __webpack_require__) => {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/*! 
  * angular-hotkeys v1.7.0
@@ -5693,7 +5099,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/*!
         !(__WEBPACK_AMD_DEFINE_RESULT__ = (function() {
             return Mousetrap;
         }).call(exports, __webpack_require__, exports, module),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
     }
 }) (window, document);
 
@@ -5704,12 +5110,11 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/*!
 /*!*****************************************!*\
   !*** ./node_modules/angular/angular.js ***!
   \*****************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/***/ (() => {
 
 /**
- * @license AngularJS v1.8.0
- * (c) 2010-2020 Google, Inc. http://angularjs.org
+ * @license AngularJS v1.8.2
+ * (c) 2010-2020 Google LLC. http://angularjs.org
  * License: MIT
  */
 (function(window) {'use strict';
@@ -5808,7 +5213,7 @@ function isValidObjectMaxDepth(maxDepth) {
 function minErr(module, ErrorConstructor) {
   ErrorConstructor = ErrorConstructor || Error;
 
-  var url = 'https://errors.angularjs.org/1.8.0/';
+  var url = 'https://errors.angularjs.org/1.8.2/';
   var regex = url.replace('.', '\\.') + '[\\s\\S]*';
   var errRegExp = new RegExp(regex, 'g');
 
@@ -7380,7 +6785,7 @@ function allowAutoBootstrap(document) {
     link.href = src.value;
 
     if (document.location.origin === link.origin) {
-      // Same-origin resources are always allowed, even for non-whitelisted schemes.
+      // Same-origin resources are always allowed, even for banned URL schemes.
       return true;
     }
     // Disabled bootstrapping unless angular.js was loaded from a known scheme used on the web.
@@ -8537,11 +7942,11 @@ function toDebugString(obj, maxDepth) {
 var version = {
   // These placeholder strings will be replaced by grunt's `build` task.
   // They need to be double- or single-quoted.
-  full: '1.8.0',
+  full: '1.8.2',
   major: 1,
   minor: 8,
-  dot: 0,
-  codeName: 'nested-vaccination'
+  dot: 2,
+  codeName: 'meteoric-mining'
 };
 
 
@@ -8692,7 +8097,7 @@ function publishExternalAPI(angular) {
       });
     }
   ])
-  .info({ angularVersion: '1.8.0' });
+  .info({ angularVersion: '1.8.2' });
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -14137,8 +13542,8 @@ function $TemplateCacheProvider() {
  *
  * Based on the context, other options may exist to mark a value as trusted / configure the behavior
  * of {@link ng.$sce}. For example, to restrict the `RESOURCE_URL` context to specific origins, use
- * the {@link $sceDelegateProvider#resourceUrlWhitelist resourceUrlWhitelist()}
- * and {@link $sceDelegateProvider#resourceUrlBlacklist resourceUrlBlacklist()}.
+ * the {@link $sceDelegateProvider#trustedResourceUrlList trustedResourceUrlList()}
+ * and {@link $sceDelegateProvider#bannedResourceUrlList bannedResourceUrlList()}.
  *
  * {@link ng.$sce#what-trusted-context-types-are-supported- Find out more about the different context types}.
  *
@@ -14147,7 +13552,7 @@ function $TemplateCacheProvider() {
  * By default, `$sce` will throw an error if it detects untrusted HTML content, and will not bind the
  * content.
  * However, if you include the {@link ngSanitize ngSanitize module}, it will try to sanitize the
- * potentially dangerous HTML, e.g. strip non-whitelisted tags and attributes when binding to
+ * potentially dangerous HTML, e.g. strip non-trusted tags and attributes when binding to
  * `innerHTML`.
  *
  * @example
@@ -14729,30 +14134,81 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
 
   /**
    * @ngdoc method
-   * @name $compileProvider#aHrefSanitizationWhitelist
+   * @name $compileProvider#aHrefSanitizationTrustedUrlList
    * @kind function
    *
    * @description
-   * Retrieves or overrides the default regular expression that is used for whitelisting of safe
+   * Retrieves or overrides the default regular expression that is used for determining trusted safe
    * urls during a[href] sanitization.
    *
    * The sanitization is a security measure aimed at preventing XSS attacks via html links.
    *
    * Any url about to be assigned to a[href] via data-binding is first normalized and turned into
-   * an absolute url. Afterwards, the url is matched against the `aHrefSanitizationWhitelist`
+   * an absolute url. Afterwards, the url is matched against the `aHrefSanitizationTrustedUrlList`
    * regular expression. If a match is found, the original url is written into the dom. Otherwise,
    * the absolute url is prefixed with `'unsafe:'` string and only then is it written into the DOM.
    *
-   * @param {RegExp=} regexp New regexp to whitelist urls with.
+   * @param {RegExp=} regexp New regexp to trust urls with.
    * @returns {RegExp|ng.$compileProvider} Current RegExp if called without value or self for
    *    chaining otherwise.
    */
-  this.aHrefSanitizationWhitelist = function(regexp) {
+  this.aHrefSanitizationTrustedUrlList = function(regexp) {
     if (isDefined(regexp)) {
-      $$sanitizeUriProvider.aHrefSanitizationWhitelist(regexp);
+      $$sanitizeUriProvider.aHrefSanitizationTrustedUrlList(regexp);
       return this;
     } else {
-      return $$sanitizeUriProvider.aHrefSanitizationWhitelist();
+      return $$sanitizeUriProvider.aHrefSanitizationTrustedUrlList();
+    }
+  };
+
+
+  /**
+   * @ngdoc method
+   * @name $compileProvider#aHrefSanitizationWhitelist
+   * @kind function
+   *
+   * @deprecated
+   * sinceVersion="1.8.1"
+   *
+   * This method is deprecated. Use {@link $compileProvider#aHrefSanitizationTrustedUrlList
+   * aHrefSanitizationTrustedUrlList} instead.
+   */
+  Object.defineProperty(this, 'aHrefSanitizationWhitelist', {
+    get: function() {
+      return this.aHrefSanitizationTrustedUrlList;
+    },
+    set: function(value) {
+      this.aHrefSanitizationTrustedUrlList = value;
+    }
+  });
+
+
+  /**
+   * @ngdoc method
+   * @name $compileProvider#imgSrcSanitizationTrustedUrlList
+   * @kind function
+   *
+   * @description
+   * Retrieves or overrides the default regular expression that is used for determining trusted safe
+   * urls during img[src] sanitization.
+   *
+   * The sanitization is a security measure aimed at prevent XSS attacks via html links.
+   *
+   * Any url about to be assigned to img[src] via data-binding is first normalized and turned into
+   * an absolute url. Afterwards, the url is matched against the `imgSrcSanitizationTrustedUrlList`
+   * regular expression. If a match is found, the original url is written into the dom. Otherwise,
+   * the absolute url is prefixed with `'unsafe:'` string and only then is it written into the DOM.
+   *
+   * @param {RegExp=} regexp New regexp to trust urls with.
+   * @returns {RegExp|ng.$compileProvider} Current RegExp if called without value or self for
+   *    chaining otherwise.
+   */
+  this.imgSrcSanitizationTrustedUrlList = function(regexp) {
+    if (isDefined(regexp)) {
+      $$sanitizeUriProvider.imgSrcSanitizationTrustedUrlList(regexp);
+      return this;
+    } else {
+      return $$sanitizeUriProvider.imgSrcSanitizationTrustedUrlList();
     }
   };
 
@@ -14762,29 +14218,20 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
    * @name $compileProvider#imgSrcSanitizationWhitelist
    * @kind function
    *
-   * @description
-   * Retrieves or overrides the default regular expression that is used for whitelisting of safe
-   * urls during img[src] sanitization.
+   * @deprecated
+   * sinceVersion="1.8.1"
    *
-   * The sanitization is a security measure aimed at prevent XSS attacks via html links.
-   *
-   * Any url about to be assigned to img[src] via data-binding is first normalized and turned into
-   * an absolute url. Afterwards, the url is matched against the `imgSrcSanitizationWhitelist`
-   * regular expression. If a match is found, the original url is written into the dom. Otherwise,
-   * the absolute url is prefixed with `'unsafe:'` string and only then is it written into the DOM.
-   *
-   * @param {RegExp=} regexp New regexp to whitelist urls with.
-   * @returns {RegExp|ng.$compileProvider} Current RegExp if called without value or self for
-   *    chaining otherwise.
+   * This method is deprecated. Use {@link $compileProvider#imgSrcSanitizationTrustedUrlList
+   * imgSrcSanitizationTrustedUrlList} instead.
    */
-  this.imgSrcSanitizationWhitelist = function(regexp) {
-    if (isDefined(regexp)) {
-      $$sanitizeUriProvider.imgSrcSanitizationWhitelist(regexp);
-      return this;
-    } else {
-      return $$sanitizeUriProvider.imgSrcSanitizationWhitelist();
+  Object.defineProperty(this, 'imgSrcSanitizationWhitelist', {
+    get: function() {
+      return this.imgSrcSanitizationTrustedUrlList;
+    },
+    set: function(value) {
+      this.imgSrcSanitizationTrustedUrlList = value;
     }
-  };
+  });
 
   /**
    * @ngdoc method
@@ -18036,7 +17483,7 @@ function $HttpProvider() {
 
   /**
    * @ngdoc property
-   * @name $httpProvider#xsrfWhitelistedOrigins
+   * @name $httpProvider#xsrfTrustedOrigins
    * @description
    *
    * Array containing URLs whose origins are trusted to receive the XSRF token. See the
@@ -18050,7 +17497,7 @@ function $HttpProvider() {
    * Examples: `http://example.com`, `https://api.example.com:9876`
    *
    * <div class="alert alert-warning">
-   *   It is not possible to whitelist specific URLs/paths. The `path`, `query` and `fragment` parts
+   *   It is not possible to trust specific URLs/paths. The `path`, `query` and `fragment` parts
    *   of a URL will be ignored. For example, `https://foo.com/path/bar?query=baz#fragment` will be
    *   treated as `https://foo.com`, meaning that **all** requests to URLs starting with
    *   `https://foo.com/` will include the XSRF token.
@@ -18061,9 +17508,9 @@ function $HttpProvider() {
    * ```js
    * // App served from `https://example.com/`.
    * angular.
-   *   module('xsrfWhitelistedOriginsExample', []).
+   *   module('xsrfTrustedOriginsExample', []).
    *   config(['$httpProvider', function($httpProvider) {
-   *     $httpProvider.xsrfWhitelistedOrigins.push('https://api.example.com');
+   *     $httpProvider.xsrfTrustedOrigins.push('https://api.example.com');
    *   }]).
    *   run(['$http', function($http) {
    *     // The XSRF token will be sent.
@@ -18074,7 +17521,27 @@ function $HttpProvider() {
    *   }]);
    * ```
    */
-  var xsrfWhitelistedOrigins = this.xsrfWhitelistedOrigins = [];
+  var xsrfTrustedOrigins = this.xsrfTrustedOrigins = [];
+
+  /**
+   * @ngdoc property
+   * @name $httpProvider#xsrfWhitelistedOrigins
+   * @description
+   *
+   * @deprecated
+   * sinceVersion="1.8.1"
+   *
+   * This property is deprecated. Use {@link $httpProvider#xsrfTrustedOrigins xsrfTrustedOrigins}
+   * instead.
+   */
+  Object.defineProperty(this, 'xsrfWhitelistedOrigins', {
+    get: function() {
+      return this.xsrfTrustedOrigins;
+    },
+    set: function(origins) {
+      this.xsrfTrustedOrigins = origins;
+    }
+  });
 
   this.$get = ['$browser', '$httpBackend', '$$cookieReader', '$cacheFactory', '$rootScope', '$q', '$injector', '$sce',
       function($browser, $httpBackend, $$cookieReader, $cacheFactory, $rootScope, $q, $injector, $sce) {
@@ -18102,7 +17569,7 @@ function $HttpProvider() {
     /**
      * A function to check request URLs against a list of allowed origins.
      */
-    var urlIsAllowedOrigin = urlIsAllowedOriginFactory(xsrfWhitelistedOrigins);
+    var urlIsAllowedOrigin = urlIsAllowedOriginFactory(xsrfTrustedOrigins);
 
     /**
      * @ngdoc service
@@ -18476,16 +17943,16 @@ function $HttpProvider() {
      * The header will &mdash; by default &mdash; **not** be set for cross-domain requests. This
      * prevents unauthorized servers (e.g. malicious or compromised 3rd-party APIs) from gaining
      * access to your users' XSRF tokens and exposing them to Cross Site Request Forgery. If you
-     * want to, you can whitelist additional origins to also receive the XSRF token, by adding them
-     * to {@link ng.$httpProvider#xsrfWhitelistedOrigins xsrfWhitelistedOrigins}. This might be
+     * want to, you can trust additional origins to also receive the XSRF token, by adding them
+     * to {@link ng.$httpProvider#xsrfTrustedOrigins xsrfTrustedOrigins}. This might be
      * useful, for example, if your application, served from `example.com`, needs to access your API
      * at `api.example.com`.
-     * See {@link ng.$httpProvider#xsrfWhitelistedOrigins $httpProvider.xsrfWhitelistedOrigins} for
+     * See {@link ng.$httpProvider#xsrfTrustedOrigins $httpProvider.xsrfTrustedOrigins} for
      * more details.
      *
      * <div class="alert alert-danger">
      *   **Warning**<br />
-     *   Only whitelist origins that you have control over and make sure you understand the
+     *   Only trusted origins that you have control over and make sure you understand the
      *   implications of doing so.
      * </div>
      *
@@ -18612,8 +18079,8 @@ function $HttpProvider() {
 <file name="script.js">
   angular.module('httpExample', [])
     .config(['$sceDelegateProvider', function($sceDelegateProvider) {
-      // We must whitelist the JSONP endpoint that we are using to show that we trust it
-      $sceDelegateProvider.resourceUrlWhitelist([
+      // We must add the JSONP endpoint that we are using to the trusted list to show that we trust it
+      $sceDelegateProvider.trustedResourceUrlList([
         'self',
         'https://angularjs.org/**'
       ]);
@@ -18870,8 +18337,8 @@ function $HttpProvider() {
      *
      * Note that, since JSONP requests are sensitive because the response is given full access to the browser,
      * the url must be declared, via {@link $sce} as a trusted resource URL.
-     * You can trust a URL by adding it to the whitelist via
-     * {@link $sceDelegateProvider#resourceUrlWhitelist  `$sceDelegateProvider.resourceUrlWhitelist`} or
+     * You can trust a URL by adding it to the trusted resource URL list via
+     * {@link $sceDelegateProvider#trustedResourceUrlList  `$sceDelegateProvider.trustedResourceUrlList`} or
      * by explicitly trusting the URL via {@link $sce#trustAsResourceUrl `$sce.trustAsResourceUrl(url)`}.
      *
      * You should avoid generating the URL for the JSONP request from user provided data.
@@ -25607,12 +25074,12 @@ function $RootScopeProvider() {
  */
 function $$SanitizeUriProvider() {
 
-  var aHrefSanitizationWhitelist = /^\s*(https?|s?ftp|mailto|tel|file):/,
-    imgSrcSanitizationWhitelist = /^\s*((https?|ftp|file|blob):|data:image\/)/;
+  var aHrefSanitizationTrustedUrlList = /^\s*(https?|s?ftp|mailto|tel|file):/,
+    imgSrcSanitizationTrustedUrlList = /^\s*((https?|ftp|file|blob):|data:image\/)/;
 
   /**
    * @description
-   * Retrieves or overrides the default regular expression that is used for whitelisting of safe
+   * Retrieves or overrides the default regular expression that is used for determining trusted safe
    * urls during a[href] sanitization.
    *
    * The sanitization is a security measure aimed at prevent XSS attacks via HTML anchor links.
@@ -25621,27 +25088,27 @@ function $$SanitizeUriProvider() {
    * the $sce.URL security context. When interpolation occurs a call is made to `$sce.trustAsUrl(url)`
    * which in turn may call `$$sanitizeUri(url, isMedia)` to sanitize the potentially malicious URL.
    *
-   * If the URL matches the `aHrefSanitizationWhitelist` regular expression, it is returned unchanged.
+   * If the URL matches the `aHrefSanitizationTrustedUrlList` regular expression, it is returned unchanged.
    *
    * If there is no match the URL is returned prefixed with `'unsafe:'` to ensure that when it is written
    * to the DOM it is inactive and potentially malicious code will not be executed.
    *
-   * @param {RegExp=} regexp New regexp to whitelist urls with.
+   * @param {RegExp=} regexp New regexp to trust urls with.
    * @returns {RegExp|ng.$compileProvider} Current RegExp if called without value or self for
    *    chaining otherwise.
    */
-  this.aHrefSanitizationWhitelist = function(regexp) {
+  this.aHrefSanitizationTrustedUrlList = function(regexp) {
     if (isDefined(regexp)) {
-      aHrefSanitizationWhitelist = regexp;
+      aHrefSanitizationTrustedUrlList = regexp;
       return this;
     }
-    return aHrefSanitizationWhitelist;
+    return aHrefSanitizationTrustedUrlList;
   };
 
 
   /**
    * @description
-   * Retrieves or overrides the default regular expression that is used for whitelisting of safe
+   * Retrieves or overrides the default regular expression that is used for determining trusted safe
    * urls during img[src] sanitization.
    *
    * The sanitization is a security measure aimed at prevent XSS attacks via HTML image src links.
@@ -25651,27 +25118,28 @@ function $$SanitizeUriProvider() {
    * `$sce.trustAsMediaUrl(url)` which in turn may call `$$sanitizeUri(url, isMedia)` to sanitize
    * the potentially malicious URL.
    *
-   * If the URL matches the `aImgSanitizationWhitelist` regular expression, it is returned unchanged.
+   * If the URL matches the `imgSrcSanitizationTrustedUrlList` regular expression, it is returned
+   * unchanged.
    *
    * If there is no match the URL is returned prefixed with `'unsafe:'` to ensure that when it is written
    * to the DOM it is inactive and potentially malicious code will not be executed.
    *
-   * @param {RegExp=} regexp New regexp to whitelist urls with.
+   * @param {RegExp=} regexp New regexp to trust urls with.
    * @returns {RegExp|ng.$compileProvider} Current RegExp if called without value or self for
    *    chaining otherwise.
    */
-  this.imgSrcSanitizationWhitelist = function(regexp) {
+  this.imgSrcSanitizationTrustedUrlList = function(regexp) {
     if (isDefined(regexp)) {
-      imgSrcSanitizationWhitelist = regexp;
+      imgSrcSanitizationTrustedUrlList = regexp;
       return this;
     }
-    return imgSrcSanitizationWhitelist;
+    return imgSrcSanitizationTrustedUrlList;
   };
 
   this.$get = function() {
     return function sanitizeUri(uri, isMediaUrl) {
       // if (!uri) return uri;
-      var regex = isMediaUrl ? imgSrcSanitizationWhitelist : aHrefSanitizationWhitelist;
+      var regex = isMediaUrl ? imgSrcSanitizationTrustedUrlList : aHrefSanitizationTrustedUrlList;
       var normalizedVal = urlResolve(uri && uri.trim()).href;
       if (normalizedVal !== '' && !normalizedVal.match(regex)) {
         return 'unsafe:' + normalizedVal;
@@ -25799,10 +25267,10 @@ function adjustMatchers(matchers) {
  * The default instance of `$sceDelegate` should work out of the box with little pain.  While you
  * can override it completely to change the behavior of `$sce`, the common case would
  * involve configuring the {@link ng.$sceDelegateProvider $sceDelegateProvider} instead by setting
- * your own whitelists and blacklists for trusting URLs used for loading AngularJS resources such as
- * templates.  Refer {@link ng.$sceDelegateProvider#resourceUrlWhitelist
- * $sceDelegateProvider.resourceUrlWhitelist} and {@link
- * ng.$sceDelegateProvider#resourceUrlBlacklist $sceDelegateProvider.resourceUrlBlacklist}
+ * your own trusted and banned resource lists for trusting URLs used for loading AngularJS resources
+ * such as templates.  Refer {@link ng.$sceDelegateProvider#trustedResourceUrlList
+ * $sceDelegateProvider.trustedResourceUrlList} and {@link
+ * ng.$sceDelegateProvider#bannedResourceUrlList $sceDelegateProvider.bannedResourceUrlList}
  */
 
 /**
@@ -25815,12 +25283,12 @@ function adjustMatchers(matchers) {
  * The `$sceDelegateProvider` provider allows developers to configure the {@link ng.$sceDelegate
  * $sceDelegate service}, used as a delegate for {@link ng.$sce Strict Contextual Escaping (SCE)}.
  *
- * The `$sceDelegateProvider` allows one to get/set the whitelists and blacklists used to ensure
- * that the URLs used for sourcing AngularJS templates and other script-running URLs are safe (all
- * places that use the `$sce.RESOURCE_URL` context). See
- * {@link ng.$sceDelegateProvider#resourceUrlWhitelist $sceDelegateProvider.resourceUrlWhitelist}
- * and
- * {@link ng.$sceDelegateProvider#resourceUrlBlacklist $sceDelegateProvider.resourceUrlBlacklist},
+ * The `$sceDelegateProvider` allows one to get/set the `trustedResourceUrlList` and
+ * `bannedResourceUrlList` used to ensure that the URLs used for sourcing AngularJS templates and
+ * other script-running URLs are safe (all places that use the `$sce.RESOURCE_URL` context). See
+ * {@link ng.$sceDelegateProvider#trustedResourceUrlList
+ * $sceDelegateProvider.trustedResourceUrlList} and
+ * {@link ng.$sceDelegateProvider#bannedResourceUrlList $sceDelegateProvider.bannedResourceUrlList},
  *
  * For the general details about this service in AngularJS, read the main page for {@link ng.$sce
  * Strict Contextual Escaping (SCE)}.
@@ -25836,64 +25304,117 @@ function adjustMatchers(matchers) {
  *
  * ```
  *  angular.module('myApp', []).config(function($sceDelegateProvider) {
- *    $sceDelegateProvider.resourceUrlWhitelist([
+ *    $sceDelegateProvider.trustedResourceUrlList([
  *      // Allow same origin resource loads.
  *      'self',
  *      // Allow loading from our assets domain.  Notice the difference between * and **.
  *      'http://srv*.assets.example.com/**'
  *    ]);
  *
- *    // The blacklist overrides the whitelist so the open redirect here is blocked.
- *    $sceDelegateProvider.resourceUrlBlacklist([
+ *    // The banned resource URL list overrides the trusted resource URL list so the open redirect
+ *    // here is blocked.
+ *    $sceDelegateProvider.bannedResourceUrlList([
  *      'http://myapp.example.com/clickThru**'
  *    ]);
  *  });
  * ```
- * Note that an empty whitelist will block every resource URL from being loaded, and will require
+ * Note that an empty trusted resource URL list will block every resource URL from being loaded, and will require
  * you to manually mark each one as trusted with `$sce.trustAsResourceUrl`. However, templates
  * requested by {@link ng.$templateRequest $templateRequest} that are present in
  * {@link ng.$templateCache $templateCache} will not go through this check. If you have a mechanism
  * to populate your templates in that cache at config time, then it is a good idea to remove 'self'
- * from that whitelist. This helps to mitigate the security impact of certain types of issues, like
- * for instance attacker-controlled `ng-includes`.
+ * from the trusted resource URL lsit. This helps to mitigate the security impact of certain types
+ * of issues, like for instance attacker-controlled `ng-includes`.
  */
 
 function $SceDelegateProvider() {
   this.SCE_CONTEXTS = SCE_CONTEXTS;
 
   // Resource URLs can also be trusted by policy.
-  var resourceUrlWhitelist = ['self'],
-      resourceUrlBlacklist = [];
+  var trustedResourceUrlList = ['self'],
+      bannedResourceUrlList = [];
+
+  /**
+   * @ngdoc method
+   * @name $sceDelegateProvider#trustedResourceUrlList
+   * @kind function
+   *
+   * @param {Array=} trustedResourceUrlList When provided, replaces the trustedResourceUrlList with
+   *     the value provided.  This must be an array or null.  A snapshot of this array is used so
+   *     further changes to the array are ignored.
+   *     Follow {@link ng.$sce#resourceUrlPatternItem this link} for a description of the items
+   *     allowed in this array.
+   *
+   * @return {Array} The currently set trusted resource URL array.
+   *
+   * @description
+   * Sets/Gets the list trusted of resource URLs.
+   *
+   * The **default value** when no `trustedResourceUrlList` has been explicitly set is `['self']`
+   * allowing only same origin resource requests.
+   *
+   * <div class="alert alert-warning">
+   * **Note:** the default `trustedResourceUrlList` of 'self' is not recommended if your app shares
+   * its origin with other apps! It is a good idea to limit it to only your application's directory.
+   * </div>
+   */
+  this.trustedResourceUrlList = function(value) {
+    if (arguments.length) {
+      trustedResourceUrlList = adjustMatchers(value);
+    }
+    return trustedResourceUrlList;
+  };
 
   /**
    * @ngdoc method
    * @name $sceDelegateProvider#resourceUrlWhitelist
    * @kind function
    *
-   * @param {Array=} whitelist When provided, replaces the resourceUrlWhitelist with the value
-   *     provided.  This must be an array or null.  A snapshot of this array is used so further
-   *     changes to the array are ignored.
-   *     Follow {@link ng.$sce#resourceUrlPatternItem this link} for a description of the items
-   *     allowed in this array.
+   * @deprecated
+   * sinceVersion="1.8.1"
    *
-   * @return {Array} The currently set whitelist array.
+   * This method is deprecated. Use {@link $sceDelegateProvider#trustedResourceUrlList
+   * trustedResourceUrlList} instead.
+   */
+  Object.defineProperty(this, 'resourceUrlWhitelist', {
+    get: function() {
+      return this.trustedResourceUrlList;
+    },
+    set: function(value) {
+      this.trustedResourceUrlList = value;
+    }
+  });
+
+  /**
+   * @ngdoc method
+   * @name $sceDelegateProvider#bannedResourceUrlList
+   * @kind function
+   *
+   * @param {Array=} bannedResourceUrlList When provided, replaces the `bannedResourceUrlList` with
+   *     the value provided. This must be an array or null. A snapshot of this array is used so
+   *     further changes to the array are ignored.</p><p>
+   *     Follow {@link ng.$sce#resourceUrlPatternItem this link} for a description of the items
+   *     allowed in this array.</p><p>
+   *     The typical usage for the `bannedResourceUrlList` is to **block
+   *     [open redirects](http://cwe.mitre.org/data/definitions/601.html)** served by your domain as
+   *     these would otherwise be trusted but actually return content from the redirected domain.
+   *     </p><p>
+   *     Finally, **the banned resource URL list overrides the trusted resource URL list** and has
+   *     the final say.
+   *
+   * @return {Array} The currently set `bannedResourceUrlList` array.
    *
    * @description
-   * Sets/Gets the whitelist of trusted resource URLs.
+   * Sets/Gets the `bannedResourceUrlList` of trusted resource URLs.
    *
-   * The **default value** when no whitelist has been explicitly set is `['self']` allowing only
-   * same origin resource requests.
-   *
-   * <div class="alert alert-warning">
-   * **Note:** the default whitelist of 'self' is not recommended if your app shares its origin
-   * with other apps! It is a good idea to limit it to only your application's directory.
-   * </div>
+   * The **default value** when no trusted resource URL list has been explicitly set is the empty
+   * array (i.e. there is no `bannedResourceUrlList`.)
    */
-  this.resourceUrlWhitelist = function(value) {
+  this.bannedResourceUrlList = function(value) {
     if (arguments.length) {
-      resourceUrlWhitelist = adjustMatchers(value);
+      bannedResourceUrlList = adjustMatchers(value);
     }
-    return resourceUrlWhitelist;
+    return bannedResourceUrlList;
   };
 
   /**
@@ -25901,32 +25422,20 @@ function $SceDelegateProvider() {
    * @name $sceDelegateProvider#resourceUrlBlacklist
    * @kind function
    *
-   * @param {Array=} blacklist When provided, replaces the resourceUrlBlacklist with the value
-   *     provided.  This must be an array or null.  A snapshot of this array is used so further
-   *     changes to the array are ignored.</p><p>
-   *     Follow {@link ng.$sce#resourceUrlPatternItem this link} for a description of the items
-   *     allowed in this array.</p><p>
-   *     The typical usage for the blacklist is to **block
-   *     [open redirects](http://cwe.mitre.org/data/definitions/601.html)** served by your domain as
-   *     these would otherwise be trusted but actually return content from the redirected domain.
-   *     </p><p>
-   *     Finally, **the blacklist overrides the whitelist** and has the final say.
+   * @deprecated
+   * sinceVersion="1.8.1"
    *
-   * @return {Array} The currently set blacklist array.
-   *
-   * @description
-   * Sets/Gets the blacklist of trusted resource URLs.
-   *
-   * The **default value** when no whitelist has been explicitly set is the empty array (i.e. there
-   * is no blacklist.)
+   * This method is deprecated. Use {@link $sceDelegateProvider#bannedResourceUrlList
+   * bannedResourceUrlList} instead.
    */
-
-  this.resourceUrlBlacklist = function(value) {
-    if (arguments.length) {
-      resourceUrlBlacklist = adjustMatchers(value);
+  Object.defineProperty(this, 'resourceUrlBlacklist', {
+    get: function() {
+      return this.bannedResourceUrlList;
+    },
+    set: function(value) {
+      this.bannedResourceUrlList = value;
     }
-    return resourceUrlBlacklist;
-  };
+  });
 
   this.$get = ['$injector', '$$sanitizeUri', function($injector, $$sanitizeUri) {
 
@@ -25951,17 +25460,17 @@ function $SceDelegateProvider() {
     function isResourceUrlAllowedByPolicy(url) {
       var parsedUrl = urlResolve(url.toString());
       var i, n, allowed = false;
-      // Ensure that at least one item from the whitelist allows this url.
-      for (i = 0, n = resourceUrlWhitelist.length; i < n; i++) {
-        if (matchUrl(resourceUrlWhitelist[i], parsedUrl)) {
+      // Ensure that at least one item from the trusted resource URL list allows this url.
+      for (i = 0, n = trustedResourceUrlList.length; i < n; i++) {
+        if (matchUrl(trustedResourceUrlList[i], parsedUrl)) {
           allowed = true;
           break;
         }
       }
       if (allowed) {
-        // Ensure that no item from the blacklist blocked this url.
-        for (i = 0, n = resourceUrlBlacklist.length; i < n; i++) {
-          if (matchUrl(resourceUrlBlacklist[i], parsedUrl)) {
+        // Ensure that no item from the banned resource URL list has blocked this url.
+        for (i = 0, n = bannedResourceUrlList.length; i < n; i++) {
+          if (matchUrl(bannedResourceUrlList[i], parsedUrl)) {
             allowed = false;
             break;
           }
@@ -26082,9 +25591,9 @@ function $SceDelegateProvider() {
      * The contexts that can be sanitized are $sce.MEDIA_URL, $sce.URL and $sce.HTML. The first two are available
      * by default, and the third one relies on the `$sanitize` service (which may be loaded through
      * the `ngSanitize` module). Furthermore, for $sce.RESOURCE_URL context, a plain string may be
-     * accepted if the resource url policy defined by {@link ng.$sceDelegateProvider#resourceUrlWhitelist
-     * `$sceDelegateProvider.resourceUrlWhitelist`} and {@link ng.$sceDelegateProvider#resourceUrlBlacklist
-     * `$sceDelegateProvider.resourceUrlBlacklist`} accepts that resource.
+     * accepted if the resource url policy defined by {@link ng.$sceDelegateProvider#trustedResourceUrlList
+     * `$sceDelegateProvider.trustedResourceUrlList`} and {@link ng.$sceDelegateProvider#bannedResourceUrlList
+     * `$sceDelegateProvider.bannedResourceUrlList`} accepts that resource.
      *
      * This function will throw if the safe type isn't appropriate for this context, or if the
      * value given cannot be accepted in the context (which might be caused by sanitization not
@@ -26178,9 +25687,9 @@ function $SceDelegateProvider() {
  *
  * To systematically block XSS security bugs, AngularJS treats all values as untrusted by default in
  * HTML or sensitive URL bindings. When binding untrusted values, AngularJS will automatically
- * run security checks on them (sanitizations, whitelists, depending on context), or throw when it
- * cannot guarantee the security of the result. That behavior depends strongly on contexts: HTML
- * can be sanitized, but template URLs cannot, for instance.
+ * run security checks on them (sanitizations, trusted URL resource, depending on context), or throw
+ * when it cannot guarantee the security of the result. That behavior depends strongly on contexts:
+ * HTML can be sanitized, but template URLs cannot, for instance.
  *
  * To illustrate this, consider the `ng-bind-html` directive. It renders its value directly as HTML:
  * we call that the *context*. When given an untrusted input, AngularJS will attempt to sanitize it
@@ -26259,8 +25768,8 @@ function $SceDelegateProvider() {
  * By default, AngularJS only loads templates from the same domain and protocol as the application
  * document.  This is done by calling {@link ng.$sce#getTrustedResourceUrl
  * $sce.getTrustedResourceUrl} on the template URL.  To load templates from other domains and/or
- * protocols, you may either {@link ng.$sceDelegateProvider#resourceUrlWhitelist whitelist
- * them} or {@link ng.$sce#trustAsResourceUrl wrap it} into a trusted value.
+ * protocols, you may either add them to the {@link ng.$sceDelegateProvider#trustedResourceUrlList
+ * trustedResourceUrlList} or {@link ng.$sce#trustAsResourceUrl wrap them} into trusted values.
  *
  * *Please note*:
  * The browser's
@@ -26288,8 +25797,8 @@ function $SceDelegateProvider() {
  * templates in `ng-include` from your application's domain without having to even know about SCE.
  * It blocks loading templates from other domains or loading templates over http from an https
  * served document.  You can change these by setting your own custom {@link
- * ng.$sceDelegateProvider#resourceUrlWhitelist whitelists} and {@link
- * ng.$sceDelegateProvider#resourceUrlBlacklist blacklists} for matching such URLs.
+ * ng.$sceDelegateProvider#trustedResourceUrlList trusted resource URL list} and {@link
+ * ng.$sceDelegateProvider#bannedResourceUrlList banned resource URL list} for matching such URLs.
  *
  * This significantly reduces the overhead.  It is far easier to pay the small overhead and have an
  * application that's secure and can be audited to verify that with much more ease than bolting
@@ -26304,7 +25813,7 @@ function $SceDelegateProvider() {
  * | `$sce.CSS`          | For CSS that's safe to source into the application.  Currently unused.  Feel free to use it in your own directives. |
  * | `$sce.MEDIA_URL`    | For URLs that are safe to render as media. Is automatically converted from string by sanitizing when needed. |
  * | `$sce.URL`          | For URLs that are safe to follow as links. Is automatically converted from string by sanitizing when needed. Note that `$sce.URL` makes a stronger statement about the URL than `$sce.MEDIA_URL` does and therefore contexts requiring values trusted for `$sce.URL` can be used anywhere that values trusted for `$sce.MEDIA_URL` are required.|
- * | `$sce.RESOURCE_URL` | For URLs that are not only safe to follow as links, but whose contents are also safe to include in your application.  Examples include `ng-include`, `src` / `ngSrc` bindings for tags other than `IMG` (e.g. `IFRAME`, `OBJECT`, etc.)  <br><br>Note that `$sce.RESOURCE_URL` makes a stronger statement about the URL than `$sce.URL` or `$sce.MEDIA_URL` do and therefore contexts requiring values trusted for `$sce.RESOURCE_URL` can be used anywhere that values trusted for `$sce.URL` or `$sce.MEDIA_URL` are required. <br><br> The {@link $sceDelegateProvider#resourceUrlWhitelist $sceDelegateProvider#resourceUrlWhitelist()} and {@link $sceDelegateProvider#resourceUrlBlacklist $sceDelegateProvider#resourceUrlBlacklist()} can be used to restrict trusted origins for `RESOURCE_URL` |
+ * | `$sce.RESOURCE_URL` | For URLs that are not only safe to follow as links, but whose contents are also safe to include in your application.  Examples include `ng-include`, `src` / `ngSrc` bindings for tags other than `IMG` (e.g. `IFRAME`, `OBJECT`, etc.)  <br><br>Note that `$sce.RESOURCE_URL` makes a stronger statement about the URL than `$sce.URL` or `$sce.MEDIA_URL` do and therefore contexts requiring values trusted for `$sce.RESOURCE_URL` can be used anywhere that values trusted for `$sce.URL` or `$sce.MEDIA_URL` are required. <br><br> The {@link $sceDelegateProvider#trustedResourceUrlList $sceDelegateProvider#trustedResourceUrlList()} and {@link $sceDelegateProvider#bannedResourceUrlList $sceDelegateProvider#bannedResourceUrlList()} can be used to restrict trusted origins for `RESOURCE_URL` |
  * | `$sce.JS`           | For JavaScript that is safe to execute in your application's context.  Currently unused.  Feel free to use it in your own directives. |
  *
  *
@@ -26322,7 +25831,7 @@ function $SceDelegateProvider() {
  * There are no CSS or JS context bindings in AngularJS currently, so their corresponding `$sce.trustAs`
  * functions aren't useful yet. This might evolve.
  *
- * ### Format of items in {@link ng.$sceDelegateProvider#resourceUrlWhitelist resourceUrlWhitelist}/{@link ng.$sceDelegateProvider#resourceUrlBlacklist Blacklist} <a name="resourceUrlPatternItem"></a>
+ * ### Format of items in {@link ng.$sceDelegateProvider#trustedResourceUrlList trustedResourceUrlList}/{@link ng.$sceDelegateProvider#bannedResourceUrlList bannedResourceUrlList} <a name="resourceUrlPatternItem"></a>
  *
  *  Each element in these arrays must be one of the following:
  *
@@ -26336,7 +25845,7 @@ function $SceDelegateProvider() {
  *      match themselves.
  *    - `*`: matches zero or more occurrences of any character other than one of the following 6
  *      characters: '`:`', '`/`', '`.`', '`?`', '`&`' and '`;`'.  It's a useful wildcard for use
- *      in a whitelist.
+ *      for matching resource URL lists.
  *    - `**`: matches zero or more occurrences of *any* character.  As such, it's not
  *      appropriate for use in a scheme, domain, etc. as it would match too much.  (e.g.
  *      http://**.example.com/ would match http://evil.com/?ignore=.example.com/ and that might
@@ -27140,10 +26649,10 @@ function $TemplateRequestProvider() {
         handleRequestFn.totalPendingRequests++;
 
         // We consider the template cache holds only trusted templates, so
-        // there's no need to go through whitelisting again for keys that already
-        // are included in there. This also makes AngularJS accept any script
-        // directive, no matter its name. However, we still need to unwrap trusted
-        // types.
+        // there's no need to go through adding the template again to the trusted
+        // resources for keys that already are included in there. This also makes
+        // AngularJS accept any script directive, no matter its name. However, we
+        // still need to unwrap trusted types.
         if (!isString(tpl) || isUndefined($templateCache.get(tpl))) {
           tpl = $sce.getTrustedResourceUrl(tpl);
         }
@@ -27548,20 +27057,20 @@ function urlIsSameOriginAsBaseUrl(requestUrl) {
 }
 
 /**
- * Create a function that can check a URL's origin against a list of allowed/whitelisted origins.
+ * Create a function that can check a URL's origin against a list of allowed/trusted origins.
  * The current location's origin is implicitly trusted.
  *
- * @param {string[]} whitelistedOriginUrls - A list of URLs (strings), whose origins are trusted.
+ * @param {string[]} trustedOriginUrls - A list of URLs (strings), whose origins are trusted.
  *
  * @returns {Function} - A function that receives a URL (string or parsed URL object) and returns
  *     whether it is of an allowed origin.
  */
-function urlIsAllowedOriginFactory(whitelistedOriginUrls) {
-  var parsedAllowedOriginUrls = [originUrl].concat(whitelistedOriginUrls.map(urlResolve));
+function urlIsAllowedOriginFactory(trustedOriginUrls) {
+  var parsedAllowedOriginUrls = [originUrl].concat(trustedOriginUrls.map(urlResolve));
 
   /**
    * Check whether the specified URL (string or parsed URL object) has an origin that is allowed
-   * based on a list of whitelisted-origin URLs. The current location's origin is implicitly
+   * based on a list of trusted-origin URLs. The current location's origin is implicitly
    * trusted.
    *
    * @param {string|Object} requestUrl - The URL to be checked (provided as a string that will be
@@ -35308,9 +34817,9 @@ var ngIfDirective = ['$animate', '$compile', function($animate, $compile) {
  * By default, the template URL is restricted to the same domain and protocol as the
  * application document. This is done by calling {@link $sce#getTrustedResourceUrl
  * $sce.getTrustedResourceUrl} on it. To load templates from other domains or protocols
- * you may either {@link ng.$sceDelegateProvider#resourceUrlWhitelist whitelist them} or
- * {@link $sce#trustAsResourceUrl wrap them} as trusted values. Refer to AngularJS's {@link
- * ng.$sce Strict Contextual Escaping}.
+ * you may either add them to your {@link ng.$sceDelegateProvider#trustedResourceUrlList trusted
+ * resource URL list} or {@link $sce#trustAsResourceUrl wrap them} as trusted values. Refer to
+ * AngularJS's {@link ng.$sce Strict Contextual Escaping}.
  *
  * In addition, the browser's
  * [Same Origin Policy](https://code.google.com/p/browsersec/wiki/Part2#Same-origin_policy_for_XMLHttpRequest)
@@ -42210,8 +41719,7 @@ $provide.value("$locale", {
 /*!***************************************!*\
   !*** ./node_modules/angular/index.js ***!
   \***************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 __webpack_require__(/*! ./angular */ "./node_modules/angular/angular.js");
 module.exports = angular;
@@ -42223,23 +41731,25 @@ module.exports = angular;
 /*!*********************************************************************************************************!*\
   !*** ./node_modules/css-loader/dist/cjs.js!./node_modules/less-loader/dist/cjs.js!./css/bootstrap.less ***!
   \*********************************************************************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_css_loader_dist_runtime_cssWithMappingToString_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../node_modules/css-loader/dist/runtime/cssWithMappingToString.js */ "./node_modules/css-loader/dist/runtime/cssWithMappingToString.js");
-/* harmony import */ var _node_modules_css_loader_dist_runtime_cssWithMappingToString_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_cssWithMappingToString_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../node_modules/css-loader/dist/runtime/sourceMaps.js */ "./node_modules/css-loader/dist/runtime/sourceMaps.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
 /* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__);
 // Imports
 
 
-var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()(_node_modules_css_loader_dist_runtime_cssWithMappingToString_js__WEBPACK_IMPORTED_MODULE_0___default.a);
+var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.i, "/*!\n * Bootstrap v3.3.7 (http://getbootstrap.com)\n * Copyright 2011-2016 Twitter, Inc.\n * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n */\n/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */\nhtml {\n  font-family: sans-serif;\n  -ms-text-size-adjust: 100%;\n  -webkit-text-size-adjust: 100%;\n}\nbody {\n  margin: 0;\n}\narticle,\naside,\ndetails,\nfigcaption,\nfigure,\nfooter,\nheader,\nhgroup,\nmain,\nmenu,\nnav,\nsection,\nsummary {\n  display: block;\n}\naudio,\ncanvas,\nprogress,\nvideo {\n  display: inline-block;\n  vertical-align: baseline;\n}\naudio:not([controls]) {\n  display: none;\n  height: 0;\n}\n[hidden],\ntemplate {\n  display: none;\n}\na {\n  background-color: transparent;\n}\na:active,\na:hover {\n  outline: 0;\n}\nabbr[title] {\n  border-bottom: none;\n  text-decoration: underline;\n  text-decoration: underline dotted;\n}\nb,\nstrong {\n  font-weight: bold;\n}\ndfn {\n  font-style: italic;\n}\nh1 {\n  font-size: 2em;\n  margin: 0.67em 0;\n}\nmark {\n  background: #ff0;\n  color: #000;\n}\nsmall {\n  font-size: 80%;\n}\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\nsup {\n  top: -0.5em;\n}\nsub {\n  bottom: -0.25em;\n}\nimg {\n  border: 0;\n}\nsvg:not(:root) {\n  overflow: hidden;\n}\nfigure {\n  margin: 1em 40px;\n}\nhr {\n  box-sizing: content-box;\n  height: 0;\n}\npre {\n  overflow: auto;\n}\ncode,\nkbd,\npre,\nsamp {\n  font-family: monospace, monospace;\n  font-size: 1em;\n}\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  color: inherit;\n  font: inherit;\n  margin: 0;\n}\nbutton {\n  overflow: visible;\n}\nbutton,\nselect {\n  text-transform: none;\n}\nbutton,\nhtml input[type=\"button\"],\ninput[type=\"reset\"],\ninput[type=\"submit\"] {\n  -webkit-appearance: button;\n  cursor: pointer;\n}\nbutton[disabled],\nhtml input[disabled] {\n  cursor: default;\n}\nbutton::-moz-focus-inner,\ninput::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\ninput {\n  line-height: normal;\n}\ninput[type=\"checkbox\"],\ninput[type=\"radio\"] {\n  box-sizing: border-box;\n  padding: 0;\n}\ninput[type=\"number\"]::-webkit-inner-spin-button,\ninput[type=\"number\"]::-webkit-outer-spin-button {\n  height: auto;\n}\ninput[type=\"search\"] {\n  -webkit-appearance: textfield;\n  box-sizing: content-box;\n}\ninput[type=\"search\"]::-webkit-search-cancel-button,\ninput[type=\"search\"]::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\nfieldset {\n  border: 1px solid #c0c0c0;\n  margin: 0 2px;\n  padding: 0.35em 0.625em 0.75em;\n}\nlegend {\n  border: 0;\n  padding: 0;\n}\ntextarea {\n  overflow: auto;\n}\noptgroup {\n  font-weight: bold;\n}\ntable {\n  border-collapse: collapse;\n  border-spacing: 0;\n}\ntd,\nth {\n  padding: 0;\n}\n* {\n  -webkit-box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  box-sizing: border-box;\n}\n*:before,\n*:after {\n  -webkit-box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  box-sizing: border-box;\n}\nhtml {\n  font-size: 10px;\n  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);\n}\nbody {\n  font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  line-height: 1.42857143;\n  color: #333333;\n  background-color: #fff;\n}\ninput,\nbutton,\nselect,\ntextarea {\n  font-family: inherit;\n  font-size: inherit;\n  line-height: inherit;\n}\na {\n  color: #337ab7;\n  text-decoration: none;\n}\na:hover,\na:focus {\n  color: #23527c;\n  text-decoration: underline;\n}\na:focus {\n  outline: 5px auto -webkit-focus-ring-color;\n  outline-offset: -2px;\n}\nfigure {\n  margin: 0;\n}\nimg {\n  vertical-align: middle;\n}\n.img-responsive {\n  display: block;\n  max-width: 100%;\n  height: auto;\n}\n.img-rounded {\n  border-radius: 6px;\n}\n.img-thumbnail {\n  padding: 4px;\n  line-height: 1.42857143;\n  background-color: #fff;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  -webkit-transition: all 0.2s ease-in-out;\n  -o-transition: all 0.2s ease-in-out;\n  transition: all 0.2s ease-in-out;\n  display: inline-block;\n  max-width: 100%;\n  height: auto;\n}\n.img-circle {\n  border-radius: 50%;\n}\nhr {\n  margin-top: 20px;\n  margin-bottom: 20px;\n  border: 0;\n  border-top: 1px solid #eeeeee;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  border: 0;\n}\n.sr-only-focusable:active,\n.sr-only-focusable:focus {\n  position: static;\n  width: auto;\n  height: auto;\n  margin: 0;\n  overflow: visible;\n  clip: auto;\n}\n[role=\"button\"] {\n  cursor: pointer;\n}\n.container {\n  padding-right: 15px;\n  padding-left: 15px;\n  margin-right: auto;\n  margin-left: auto;\n}\n@media (min-width: 768px) {\n  .container {\n    width: 750px;\n  }\n}\n@media (min-width: 992px) {\n  .container {\n    width: 970px;\n  }\n}\n@media (min-width: 1200px) {\n  .container {\n    width: 1170px;\n  }\n}\n.container-fluid {\n  padding-right: 15px;\n  padding-left: 15px;\n  margin-right: auto;\n  margin-left: auto;\n}\n.row {\n  margin-right: -15px;\n  margin-left: -15px;\n}\n.row-no-gutters {\n  margin-right: 0;\n  margin-left: 0;\n}\n.row-no-gutters [class*=\"col-\"] {\n  padding-right: 0;\n  padding-left: 0;\n}\n.col-xs-1,\n.col-sm-1,\n.col-md-1,\n.col-lg-1,\n.col-xs-2,\n.col-sm-2,\n.col-md-2,\n.col-lg-2,\n.col-xs-3,\n.col-sm-3,\n.col-md-3,\n.col-lg-3,\n.col-xs-4,\n.col-sm-4,\n.col-md-4,\n.col-lg-4,\n.col-xs-5,\n.col-sm-5,\n.col-md-5,\n.col-lg-5,\n.col-xs-6,\n.col-sm-6,\n.col-md-6,\n.col-lg-6,\n.col-xs-7,\n.col-sm-7,\n.col-md-7,\n.col-lg-7,\n.col-xs-8,\n.col-sm-8,\n.col-md-8,\n.col-lg-8,\n.col-xs-9,\n.col-sm-9,\n.col-md-9,\n.col-lg-9,\n.col-xs-10,\n.col-sm-10,\n.col-md-10,\n.col-lg-10,\n.col-xs-11,\n.col-sm-11,\n.col-md-11,\n.col-lg-11,\n.col-xs-12,\n.col-sm-12,\n.col-md-12,\n.col-lg-12,\n.col-xs-13,\n.col-sm-13,\n.col-md-13,\n.col-lg-13,\n.col-xs-14,\n.col-sm-14,\n.col-md-14,\n.col-lg-14,\n.col-xs-15,\n.col-sm-15,\n.col-md-15,\n.col-lg-15,\n.col-xs-16,\n.col-sm-16,\n.col-md-16,\n.col-lg-16,\n.col-xs-17,\n.col-sm-17,\n.col-md-17,\n.col-lg-17,\n.col-xs-18,\n.col-sm-18,\n.col-md-18,\n.col-lg-18,\n.col-xs-19,\n.col-sm-19,\n.col-md-19,\n.col-lg-19,\n.col-xs-20,\n.col-sm-20,\n.col-md-20,\n.col-lg-20,\n.col-xs-21,\n.col-sm-21,\n.col-md-21,\n.col-lg-21,\n.col-xs-22,\n.col-sm-22,\n.col-md-22,\n.col-lg-22,\n.col-xs-23,\n.col-sm-23,\n.col-md-23,\n.col-lg-23,\n.col-xs-24,\n.col-sm-24,\n.col-md-24,\n.col-lg-24 {\n  position: relative;\n  min-height: 1px;\n  padding-right: 15px;\n  padding-left: 15px;\n}\n.col-xs-1,\n.col-xs-2,\n.col-xs-3,\n.col-xs-4,\n.col-xs-5,\n.col-xs-6,\n.col-xs-7,\n.col-xs-8,\n.col-xs-9,\n.col-xs-10,\n.col-xs-11,\n.col-xs-12,\n.col-xs-13,\n.col-xs-14,\n.col-xs-15,\n.col-xs-16,\n.col-xs-17,\n.col-xs-18,\n.col-xs-19,\n.col-xs-20,\n.col-xs-21,\n.col-xs-22,\n.col-xs-23,\n.col-xs-24 {\n  float: left;\n}\n.col-xs-24 {\n  width: 100%;\n}\n.col-xs-23 {\n  width: 95.83333333%;\n}\n.col-xs-22 {\n  width: 91.66666667%;\n}\n.col-xs-21 {\n  width: 87.5%;\n}\n.col-xs-20 {\n  width: 83.33333333%;\n}\n.col-xs-19 {\n  width: 79.16666667%;\n}\n.col-xs-18 {\n  width: 75%;\n}\n.col-xs-17 {\n  width: 70.83333333%;\n}\n.col-xs-16 {\n  width: 66.66666667%;\n}\n.col-xs-15 {\n  width: 62.5%;\n}\n.col-xs-14 {\n  width: 58.33333333%;\n}\n.col-xs-13 {\n  width: 54.16666667%;\n}\n.col-xs-12 {\n  width: 50%;\n}\n.col-xs-11 {\n  width: 45.83333333%;\n}\n.col-xs-10 {\n  width: 41.66666667%;\n}\n.col-xs-9 {\n  width: 37.5%;\n}\n.col-xs-8 {\n  width: 33.33333333%;\n}\n.col-xs-7 {\n  width: 29.16666667%;\n}\n.col-xs-6 {\n  width: 25%;\n}\n.col-xs-5 {\n  width: 20.83333333%;\n}\n.col-xs-4 {\n  width: 16.66666667%;\n}\n.col-xs-3 {\n  width: 12.5%;\n}\n.col-xs-2 {\n  width: 8.33333333%;\n}\n.col-xs-1 {\n  width: 4.16666667%;\n}\n.col-xs-pull-24 {\n  right: 100%;\n}\n.col-xs-pull-23 {\n  right: 95.83333333%;\n}\n.col-xs-pull-22 {\n  right: 91.66666667%;\n}\n.col-xs-pull-21 {\n  right: 87.5%;\n}\n.col-xs-pull-20 {\n  right: 83.33333333%;\n}\n.col-xs-pull-19 {\n  right: 79.16666667%;\n}\n.col-xs-pull-18 {\n  right: 75%;\n}\n.col-xs-pull-17 {\n  right: 70.83333333%;\n}\n.col-xs-pull-16 {\n  right: 66.66666667%;\n}\n.col-xs-pull-15 {\n  right: 62.5%;\n}\n.col-xs-pull-14 {\n  right: 58.33333333%;\n}\n.col-xs-pull-13 {\n  right: 54.16666667%;\n}\n.col-xs-pull-12 {\n  right: 50%;\n}\n.col-xs-pull-11 {\n  right: 45.83333333%;\n}\n.col-xs-pull-10 {\n  right: 41.66666667%;\n}\n.col-xs-pull-9 {\n  right: 37.5%;\n}\n.col-xs-pull-8 {\n  right: 33.33333333%;\n}\n.col-xs-pull-7 {\n  right: 29.16666667%;\n}\n.col-xs-pull-6 {\n  right: 25%;\n}\n.col-xs-pull-5 {\n  right: 20.83333333%;\n}\n.col-xs-pull-4 {\n  right: 16.66666667%;\n}\n.col-xs-pull-3 {\n  right: 12.5%;\n}\n.col-xs-pull-2 {\n  right: 8.33333333%;\n}\n.col-xs-pull-1 {\n  right: 4.16666667%;\n}\n.col-xs-pull-0 {\n  right: auto;\n}\n.col-xs-push-24 {\n  left: 100%;\n}\n.col-xs-push-23 {\n  left: 95.83333333%;\n}\n.col-xs-push-22 {\n  left: 91.66666667%;\n}\n.col-xs-push-21 {\n  left: 87.5%;\n}\n.col-xs-push-20 {\n  left: 83.33333333%;\n}\n.col-xs-push-19 {\n  left: 79.16666667%;\n}\n.col-xs-push-18 {\n  left: 75%;\n}\n.col-xs-push-17 {\n  left: 70.83333333%;\n}\n.col-xs-push-16 {\n  left: 66.66666667%;\n}\n.col-xs-push-15 {\n  left: 62.5%;\n}\n.col-xs-push-14 {\n  left: 58.33333333%;\n}\n.col-xs-push-13 {\n  left: 54.16666667%;\n}\n.col-xs-push-12 {\n  left: 50%;\n}\n.col-xs-push-11 {\n  left: 45.83333333%;\n}\n.col-xs-push-10 {\n  left: 41.66666667%;\n}\n.col-xs-push-9 {\n  left: 37.5%;\n}\n.col-xs-push-8 {\n  left: 33.33333333%;\n}\n.col-xs-push-7 {\n  left: 29.16666667%;\n}\n.col-xs-push-6 {\n  left: 25%;\n}\n.col-xs-push-5 {\n  left: 20.83333333%;\n}\n.col-xs-push-4 {\n  left: 16.66666667%;\n}\n.col-xs-push-3 {\n  left: 12.5%;\n}\n.col-xs-push-2 {\n  left: 8.33333333%;\n}\n.col-xs-push-1 {\n  left: 4.16666667%;\n}\n.col-xs-push-0 {\n  left: auto;\n}\n.col-xs-offset-24 {\n  margin-left: 100%;\n}\n.col-xs-offset-23 {\n  margin-left: 95.83333333%;\n}\n.col-xs-offset-22 {\n  margin-left: 91.66666667%;\n}\n.col-xs-offset-21 {\n  margin-left: 87.5%;\n}\n.col-xs-offset-20 {\n  margin-left: 83.33333333%;\n}\n.col-xs-offset-19 {\n  margin-left: 79.16666667%;\n}\n.col-xs-offset-18 {\n  margin-left: 75%;\n}\n.col-xs-offset-17 {\n  margin-left: 70.83333333%;\n}\n.col-xs-offset-16 {\n  margin-left: 66.66666667%;\n}\n.col-xs-offset-15 {\n  margin-left: 62.5%;\n}\n.col-xs-offset-14 {\n  margin-left: 58.33333333%;\n}\n.col-xs-offset-13 {\n  margin-left: 54.16666667%;\n}\n.col-xs-offset-12 {\n  margin-left: 50%;\n}\n.col-xs-offset-11 {\n  margin-left: 45.83333333%;\n}\n.col-xs-offset-10 {\n  margin-left: 41.66666667%;\n}\n.col-xs-offset-9 {\n  margin-left: 37.5%;\n}\n.col-xs-offset-8 {\n  margin-left: 33.33333333%;\n}\n.col-xs-offset-7 {\n  margin-left: 29.16666667%;\n}\n.col-xs-offset-6 {\n  margin-left: 25%;\n}\n.col-xs-offset-5 {\n  margin-left: 20.83333333%;\n}\n.col-xs-offset-4 {\n  margin-left: 16.66666667%;\n}\n.col-xs-offset-3 {\n  margin-left: 12.5%;\n}\n.col-xs-offset-2 {\n  margin-left: 8.33333333%;\n}\n.col-xs-offset-1 {\n  margin-left: 4.16666667%;\n}\n.col-xs-offset-0 {\n  margin-left: 0%;\n}\n@media (min-width: 768px) {\n  .col-sm-1,\n  .col-sm-2,\n  .col-sm-3,\n  .col-sm-4,\n  .col-sm-5,\n  .col-sm-6,\n  .col-sm-7,\n  .col-sm-8,\n  .col-sm-9,\n  .col-sm-10,\n  .col-sm-11,\n  .col-sm-12,\n  .col-sm-13,\n  .col-sm-14,\n  .col-sm-15,\n  .col-sm-16,\n  .col-sm-17,\n  .col-sm-18,\n  .col-sm-19,\n  .col-sm-20,\n  .col-sm-21,\n  .col-sm-22,\n  .col-sm-23,\n  .col-sm-24 {\n    float: left;\n  }\n  .col-sm-24 {\n    width: 100%;\n  }\n  .col-sm-23 {\n    width: 95.83333333%;\n  }\n  .col-sm-22 {\n    width: 91.66666667%;\n  }\n  .col-sm-21 {\n    width: 87.5%;\n  }\n  .col-sm-20 {\n    width: 83.33333333%;\n  }\n  .col-sm-19 {\n    width: 79.16666667%;\n  }\n  .col-sm-18 {\n    width: 75%;\n  }\n  .col-sm-17 {\n    width: 70.83333333%;\n  }\n  .col-sm-16 {\n    width: 66.66666667%;\n  }\n  .col-sm-15 {\n    width: 62.5%;\n  }\n  .col-sm-14 {\n    width: 58.33333333%;\n  }\n  .col-sm-13 {\n    width: 54.16666667%;\n  }\n  .col-sm-12 {\n    width: 50%;\n  }\n  .col-sm-11 {\n    width: 45.83333333%;\n  }\n  .col-sm-10 {\n    width: 41.66666667%;\n  }\n  .col-sm-9 {\n    width: 37.5%;\n  }\n  .col-sm-8 {\n    width: 33.33333333%;\n  }\n  .col-sm-7 {\n    width: 29.16666667%;\n  }\n  .col-sm-6 {\n    width: 25%;\n  }\n  .col-sm-5 {\n    width: 20.83333333%;\n  }\n  .col-sm-4 {\n    width: 16.66666667%;\n  }\n  .col-sm-3 {\n    width: 12.5%;\n  }\n  .col-sm-2 {\n    width: 8.33333333%;\n  }\n  .col-sm-1 {\n    width: 4.16666667%;\n  }\n  .col-sm-pull-24 {\n    right: 100%;\n  }\n  .col-sm-pull-23 {\n    right: 95.83333333%;\n  }\n  .col-sm-pull-22 {\n    right: 91.66666667%;\n  }\n  .col-sm-pull-21 {\n    right: 87.5%;\n  }\n  .col-sm-pull-20 {\n    right: 83.33333333%;\n  }\n  .col-sm-pull-19 {\n    right: 79.16666667%;\n  }\n  .col-sm-pull-18 {\n    right: 75%;\n  }\n  .col-sm-pull-17 {\n    right: 70.83333333%;\n  }\n  .col-sm-pull-16 {\n    right: 66.66666667%;\n  }\n  .col-sm-pull-15 {\n    right: 62.5%;\n  }\n  .col-sm-pull-14 {\n    right: 58.33333333%;\n  }\n  .col-sm-pull-13 {\n    right: 54.16666667%;\n  }\n  .col-sm-pull-12 {\n    right: 50%;\n  }\n  .col-sm-pull-11 {\n    right: 45.83333333%;\n  }\n  .col-sm-pull-10 {\n    right: 41.66666667%;\n  }\n  .col-sm-pull-9 {\n    right: 37.5%;\n  }\n  .col-sm-pull-8 {\n    right: 33.33333333%;\n  }\n  .col-sm-pull-7 {\n    right: 29.16666667%;\n  }\n  .col-sm-pull-6 {\n    right: 25%;\n  }\n  .col-sm-pull-5 {\n    right: 20.83333333%;\n  }\n  .col-sm-pull-4 {\n    right: 16.66666667%;\n  }\n  .col-sm-pull-3 {\n    right: 12.5%;\n  }\n  .col-sm-pull-2 {\n    right: 8.33333333%;\n  }\n  .col-sm-pull-1 {\n    right: 4.16666667%;\n  }\n  .col-sm-pull-0 {\n    right: auto;\n  }\n  .col-sm-push-24 {\n    left: 100%;\n  }\n  .col-sm-push-23 {\n    left: 95.83333333%;\n  }\n  .col-sm-push-22 {\n    left: 91.66666667%;\n  }\n  .col-sm-push-21 {\n    left: 87.5%;\n  }\n  .col-sm-push-20 {\n    left: 83.33333333%;\n  }\n  .col-sm-push-19 {\n    left: 79.16666667%;\n  }\n  .col-sm-push-18 {\n    left: 75%;\n  }\n  .col-sm-push-17 {\n    left: 70.83333333%;\n  }\n  .col-sm-push-16 {\n    left: 66.66666667%;\n  }\n  .col-sm-push-15 {\n    left: 62.5%;\n  }\n  .col-sm-push-14 {\n    left: 58.33333333%;\n  }\n  .col-sm-push-13 {\n    left: 54.16666667%;\n  }\n  .col-sm-push-12 {\n    left: 50%;\n  }\n  .col-sm-push-11 {\n    left: 45.83333333%;\n  }\n  .col-sm-push-10 {\n    left: 41.66666667%;\n  }\n  .col-sm-push-9 {\n    left: 37.5%;\n  }\n  .col-sm-push-8 {\n    left: 33.33333333%;\n  }\n  .col-sm-push-7 {\n    left: 29.16666667%;\n  }\n  .col-sm-push-6 {\n    left: 25%;\n  }\n  .col-sm-push-5 {\n    left: 20.83333333%;\n  }\n  .col-sm-push-4 {\n    left: 16.66666667%;\n  }\n  .col-sm-push-3 {\n    left: 12.5%;\n  }\n  .col-sm-push-2 {\n    left: 8.33333333%;\n  }\n  .col-sm-push-1 {\n    left: 4.16666667%;\n  }\n  .col-sm-push-0 {\n    left: auto;\n  }\n  .col-sm-offset-24 {\n    margin-left: 100%;\n  }\n  .col-sm-offset-23 {\n    margin-left: 95.83333333%;\n  }\n  .col-sm-offset-22 {\n    margin-left: 91.66666667%;\n  }\n  .col-sm-offset-21 {\n    margin-left: 87.5%;\n  }\n  .col-sm-offset-20 {\n    margin-left: 83.33333333%;\n  }\n  .col-sm-offset-19 {\n    margin-left: 79.16666667%;\n  }\n  .col-sm-offset-18 {\n    margin-left: 75%;\n  }\n  .col-sm-offset-17 {\n    margin-left: 70.83333333%;\n  }\n  .col-sm-offset-16 {\n    margin-left: 66.66666667%;\n  }\n  .col-sm-offset-15 {\n    margin-left: 62.5%;\n  }\n  .col-sm-offset-14 {\n    margin-left: 58.33333333%;\n  }\n  .col-sm-offset-13 {\n    margin-left: 54.16666667%;\n  }\n  .col-sm-offset-12 {\n    margin-left: 50%;\n  }\n  .col-sm-offset-11 {\n    margin-left: 45.83333333%;\n  }\n  .col-sm-offset-10 {\n    margin-left: 41.66666667%;\n  }\n  .col-sm-offset-9 {\n    margin-left: 37.5%;\n  }\n  .col-sm-offset-8 {\n    margin-left: 33.33333333%;\n  }\n  .col-sm-offset-7 {\n    margin-left: 29.16666667%;\n  }\n  .col-sm-offset-6 {\n    margin-left: 25%;\n  }\n  .col-sm-offset-5 {\n    margin-left: 20.83333333%;\n  }\n  .col-sm-offset-4 {\n    margin-left: 16.66666667%;\n  }\n  .col-sm-offset-3 {\n    margin-left: 12.5%;\n  }\n  .col-sm-offset-2 {\n    margin-left: 8.33333333%;\n  }\n  .col-sm-offset-1 {\n    margin-left: 4.16666667%;\n  }\n  .col-sm-offset-0 {\n    margin-left: 0%;\n  }\n}\n@media (min-width: 992px) {\n  .col-md-1,\n  .col-md-2,\n  .col-md-3,\n  .col-md-4,\n  .col-md-5,\n  .col-md-6,\n  .col-md-7,\n  .col-md-8,\n  .col-md-9,\n  .col-md-10,\n  .col-md-11,\n  .col-md-12,\n  .col-md-13,\n  .col-md-14,\n  .col-md-15,\n  .col-md-16,\n  .col-md-17,\n  .col-md-18,\n  .col-md-19,\n  .col-md-20,\n  .col-md-21,\n  .col-md-22,\n  .col-md-23,\n  .col-md-24 {\n    float: left;\n  }\n  .col-md-24 {\n    width: 100%;\n  }\n  .col-md-23 {\n    width: 95.83333333%;\n  }\n  .col-md-22 {\n    width: 91.66666667%;\n  }\n  .col-md-21 {\n    width: 87.5%;\n  }\n  .col-md-20 {\n    width: 83.33333333%;\n  }\n  .col-md-19 {\n    width: 79.16666667%;\n  }\n  .col-md-18 {\n    width: 75%;\n  }\n  .col-md-17 {\n    width: 70.83333333%;\n  }\n  .col-md-16 {\n    width: 66.66666667%;\n  }\n  .col-md-15 {\n    width: 62.5%;\n  }\n  .col-md-14 {\n    width: 58.33333333%;\n  }\n  .col-md-13 {\n    width: 54.16666667%;\n  }\n  .col-md-12 {\n    width: 50%;\n  }\n  .col-md-11 {\n    width: 45.83333333%;\n  }\n  .col-md-10 {\n    width: 41.66666667%;\n  }\n  .col-md-9 {\n    width: 37.5%;\n  }\n  .col-md-8 {\n    width: 33.33333333%;\n  }\n  .col-md-7 {\n    width: 29.16666667%;\n  }\n  .col-md-6 {\n    width: 25%;\n  }\n  .col-md-5 {\n    width: 20.83333333%;\n  }\n  .col-md-4 {\n    width: 16.66666667%;\n  }\n  .col-md-3 {\n    width: 12.5%;\n  }\n  .col-md-2 {\n    width: 8.33333333%;\n  }\n  .col-md-1 {\n    width: 4.16666667%;\n  }\n  .col-md-pull-24 {\n    right: 100%;\n  }\n  .col-md-pull-23 {\n    right: 95.83333333%;\n  }\n  .col-md-pull-22 {\n    right: 91.66666667%;\n  }\n  .col-md-pull-21 {\n    right: 87.5%;\n  }\n  .col-md-pull-20 {\n    right: 83.33333333%;\n  }\n  .col-md-pull-19 {\n    right: 79.16666667%;\n  }\n  .col-md-pull-18 {\n    right: 75%;\n  }\n  .col-md-pull-17 {\n    right: 70.83333333%;\n  }\n  .col-md-pull-16 {\n    right: 66.66666667%;\n  }\n  .col-md-pull-15 {\n    right: 62.5%;\n  }\n  .col-md-pull-14 {\n    right: 58.33333333%;\n  }\n  .col-md-pull-13 {\n    right: 54.16666667%;\n  }\n  .col-md-pull-12 {\n    right: 50%;\n  }\n  .col-md-pull-11 {\n    right: 45.83333333%;\n  }\n  .col-md-pull-10 {\n    right: 41.66666667%;\n  }\n  .col-md-pull-9 {\n    right: 37.5%;\n  }\n  .col-md-pull-8 {\n    right: 33.33333333%;\n  }\n  .col-md-pull-7 {\n    right: 29.16666667%;\n  }\n  .col-md-pull-6 {\n    right: 25%;\n  }\n  .col-md-pull-5 {\n    right: 20.83333333%;\n  }\n  .col-md-pull-4 {\n    right: 16.66666667%;\n  }\n  .col-md-pull-3 {\n    right: 12.5%;\n  }\n  .col-md-pull-2 {\n    right: 8.33333333%;\n  }\n  .col-md-pull-1 {\n    right: 4.16666667%;\n  }\n  .col-md-pull-0 {\n    right: auto;\n  }\n  .col-md-push-24 {\n    left: 100%;\n  }\n  .col-md-push-23 {\n    left: 95.83333333%;\n  }\n  .col-md-push-22 {\n    left: 91.66666667%;\n  }\n  .col-md-push-21 {\n    left: 87.5%;\n  }\n  .col-md-push-20 {\n    left: 83.33333333%;\n  }\n  .col-md-push-19 {\n    left: 79.16666667%;\n  }\n  .col-md-push-18 {\n    left: 75%;\n  }\n  .col-md-push-17 {\n    left: 70.83333333%;\n  }\n  .col-md-push-16 {\n    left: 66.66666667%;\n  }\n  .col-md-push-15 {\n    left: 62.5%;\n  }\n  .col-md-push-14 {\n    left: 58.33333333%;\n  }\n  .col-md-push-13 {\n    left: 54.16666667%;\n  }\n  .col-md-push-12 {\n    left: 50%;\n  }\n  .col-md-push-11 {\n    left: 45.83333333%;\n  }\n  .col-md-push-10 {\n    left: 41.66666667%;\n  }\n  .col-md-push-9 {\n    left: 37.5%;\n  }\n  .col-md-push-8 {\n    left: 33.33333333%;\n  }\n  .col-md-push-7 {\n    left: 29.16666667%;\n  }\n  .col-md-push-6 {\n    left: 25%;\n  }\n  .col-md-push-5 {\n    left: 20.83333333%;\n  }\n  .col-md-push-4 {\n    left: 16.66666667%;\n  }\n  .col-md-push-3 {\n    left: 12.5%;\n  }\n  .col-md-push-2 {\n    left: 8.33333333%;\n  }\n  .col-md-push-1 {\n    left: 4.16666667%;\n  }\n  .col-md-push-0 {\n    left: auto;\n  }\n  .col-md-offset-24 {\n    margin-left: 100%;\n  }\n  .col-md-offset-23 {\n    margin-left: 95.83333333%;\n  }\n  .col-md-offset-22 {\n    margin-left: 91.66666667%;\n  }\n  .col-md-offset-21 {\n    margin-left: 87.5%;\n  }\n  .col-md-offset-20 {\n    margin-left: 83.33333333%;\n  }\n  .col-md-offset-19 {\n    margin-left: 79.16666667%;\n  }\n  .col-md-offset-18 {\n    margin-left: 75%;\n  }\n  .col-md-offset-17 {\n    margin-left: 70.83333333%;\n  }\n  .col-md-offset-16 {\n    margin-left: 66.66666667%;\n  }\n  .col-md-offset-15 {\n    margin-left: 62.5%;\n  }\n  .col-md-offset-14 {\n    margin-left: 58.33333333%;\n  }\n  .col-md-offset-13 {\n    margin-left: 54.16666667%;\n  }\n  .col-md-offset-12 {\n    margin-left: 50%;\n  }\n  .col-md-offset-11 {\n    margin-left: 45.83333333%;\n  }\n  .col-md-offset-10 {\n    margin-left: 41.66666667%;\n  }\n  .col-md-offset-9 {\n    margin-left: 37.5%;\n  }\n  .col-md-offset-8 {\n    margin-left: 33.33333333%;\n  }\n  .col-md-offset-7 {\n    margin-left: 29.16666667%;\n  }\n  .col-md-offset-6 {\n    margin-left: 25%;\n  }\n  .col-md-offset-5 {\n    margin-left: 20.83333333%;\n  }\n  .col-md-offset-4 {\n    margin-left: 16.66666667%;\n  }\n  .col-md-offset-3 {\n    margin-left: 12.5%;\n  }\n  .col-md-offset-2 {\n    margin-left: 8.33333333%;\n  }\n  .col-md-offset-1 {\n    margin-left: 4.16666667%;\n  }\n  .col-md-offset-0 {\n    margin-left: 0%;\n  }\n}\n@media (min-width: 1200px) {\n  .col-lg-1,\n  .col-lg-2,\n  .col-lg-3,\n  .col-lg-4,\n  .col-lg-5,\n  .col-lg-6,\n  .col-lg-7,\n  .col-lg-8,\n  .col-lg-9,\n  .col-lg-10,\n  .col-lg-11,\n  .col-lg-12,\n  .col-lg-13,\n  .col-lg-14,\n  .col-lg-15,\n  .col-lg-16,\n  .col-lg-17,\n  .col-lg-18,\n  .col-lg-19,\n  .col-lg-20,\n  .col-lg-21,\n  .col-lg-22,\n  .col-lg-23,\n  .col-lg-24 {\n    float: left;\n  }\n  .col-lg-24 {\n    width: 100%;\n  }\n  .col-lg-23 {\n    width: 95.83333333%;\n  }\n  .col-lg-22 {\n    width: 91.66666667%;\n  }\n  .col-lg-21 {\n    width: 87.5%;\n  }\n  .col-lg-20 {\n    width: 83.33333333%;\n  }\n  .col-lg-19 {\n    width: 79.16666667%;\n  }\n  .col-lg-18 {\n    width: 75%;\n  }\n  .col-lg-17 {\n    width: 70.83333333%;\n  }\n  .col-lg-16 {\n    width: 66.66666667%;\n  }\n  .col-lg-15 {\n    width: 62.5%;\n  }\n  .col-lg-14 {\n    width: 58.33333333%;\n  }\n  .col-lg-13 {\n    width: 54.16666667%;\n  }\n  .col-lg-12 {\n    width: 50%;\n  }\n  .col-lg-11 {\n    width: 45.83333333%;\n  }\n  .col-lg-10 {\n    width: 41.66666667%;\n  }\n  .col-lg-9 {\n    width: 37.5%;\n  }\n  .col-lg-8 {\n    width: 33.33333333%;\n  }\n  .col-lg-7 {\n    width: 29.16666667%;\n  }\n  .col-lg-6 {\n    width: 25%;\n  }\n  .col-lg-5 {\n    width: 20.83333333%;\n  }\n  .col-lg-4 {\n    width: 16.66666667%;\n  }\n  .col-lg-3 {\n    width: 12.5%;\n  }\n  .col-lg-2 {\n    width: 8.33333333%;\n  }\n  .col-lg-1 {\n    width: 4.16666667%;\n  }\n  .col-lg-pull-24 {\n    right: 100%;\n  }\n  .col-lg-pull-23 {\n    right: 95.83333333%;\n  }\n  .col-lg-pull-22 {\n    right: 91.66666667%;\n  }\n  .col-lg-pull-21 {\n    right: 87.5%;\n  }\n  .col-lg-pull-20 {\n    right: 83.33333333%;\n  }\n  .col-lg-pull-19 {\n    right: 79.16666667%;\n  }\n  .col-lg-pull-18 {\n    right: 75%;\n  }\n  .col-lg-pull-17 {\n    right: 70.83333333%;\n  }\n  .col-lg-pull-16 {\n    right: 66.66666667%;\n  }\n  .col-lg-pull-15 {\n    right: 62.5%;\n  }\n  .col-lg-pull-14 {\n    right: 58.33333333%;\n  }\n  .col-lg-pull-13 {\n    right: 54.16666667%;\n  }\n  .col-lg-pull-12 {\n    right: 50%;\n  }\n  .col-lg-pull-11 {\n    right: 45.83333333%;\n  }\n  .col-lg-pull-10 {\n    right: 41.66666667%;\n  }\n  .col-lg-pull-9 {\n    right: 37.5%;\n  }\n  .col-lg-pull-8 {\n    right: 33.33333333%;\n  }\n  .col-lg-pull-7 {\n    right: 29.16666667%;\n  }\n  .col-lg-pull-6 {\n    right: 25%;\n  }\n  .col-lg-pull-5 {\n    right: 20.83333333%;\n  }\n  .col-lg-pull-4 {\n    right: 16.66666667%;\n  }\n  .col-lg-pull-3 {\n    right: 12.5%;\n  }\n  .col-lg-pull-2 {\n    right: 8.33333333%;\n  }\n  .col-lg-pull-1 {\n    right: 4.16666667%;\n  }\n  .col-lg-pull-0 {\n    right: auto;\n  }\n  .col-lg-push-24 {\n    left: 100%;\n  }\n  .col-lg-push-23 {\n    left: 95.83333333%;\n  }\n  .col-lg-push-22 {\n    left: 91.66666667%;\n  }\n  .col-lg-push-21 {\n    left: 87.5%;\n  }\n  .col-lg-push-20 {\n    left: 83.33333333%;\n  }\n  .col-lg-push-19 {\n    left: 79.16666667%;\n  }\n  .col-lg-push-18 {\n    left: 75%;\n  }\n  .col-lg-push-17 {\n    left: 70.83333333%;\n  }\n  .col-lg-push-16 {\n    left: 66.66666667%;\n  }\n  .col-lg-push-15 {\n    left: 62.5%;\n  }\n  .col-lg-push-14 {\n    left: 58.33333333%;\n  }\n  .col-lg-push-13 {\n    left: 54.16666667%;\n  }\n  .col-lg-push-12 {\n    left: 50%;\n  }\n  .col-lg-push-11 {\n    left: 45.83333333%;\n  }\n  .col-lg-push-10 {\n    left: 41.66666667%;\n  }\n  .col-lg-push-9 {\n    left: 37.5%;\n  }\n  .col-lg-push-8 {\n    left: 33.33333333%;\n  }\n  .col-lg-push-7 {\n    left: 29.16666667%;\n  }\n  .col-lg-push-6 {\n    left: 25%;\n  }\n  .col-lg-push-5 {\n    left: 20.83333333%;\n  }\n  .col-lg-push-4 {\n    left: 16.66666667%;\n  }\n  .col-lg-push-3 {\n    left: 12.5%;\n  }\n  .col-lg-push-2 {\n    left: 8.33333333%;\n  }\n  .col-lg-push-1 {\n    left: 4.16666667%;\n  }\n  .col-lg-push-0 {\n    left: auto;\n  }\n  .col-lg-offset-24 {\n    margin-left: 100%;\n  }\n  .col-lg-offset-23 {\n    margin-left: 95.83333333%;\n  }\n  .col-lg-offset-22 {\n    margin-left: 91.66666667%;\n  }\n  .col-lg-offset-21 {\n    margin-left: 87.5%;\n  }\n  .col-lg-offset-20 {\n    margin-left: 83.33333333%;\n  }\n  .col-lg-offset-19 {\n    margin-left: 79.16666667%;\n  }\n  .col-lg-offset-18 {\n    margin-left: 75%;\n  }\n  .col-lg-offset-17 {\n    margin-left: 70.83333333%;\n  }\n  .col-lg-offset-16 {\n    margin-left: 66.66666667%;\n  }\n  .col-lg-offset-15 {\n    margin-left: 62.5%;\n  }\n  .col-lg-offset-14 {\n    margin-left: 58.33333333%;\n  }\n  .col-lg-offset-13 {\n    margin-left: 54.16666667%;\n  }\n  .col-lg-offset-12 {\n    margin-left: 50%;\n  }\n  .col-lg-offset-11 {\n    margin-left: 45.83333333%;\n  }\n  .col-lg-offset-10 {\n    margin-left: 41.66666667%;\n  }\n  .col-lg-offset-9 {\n    margin-left: 37.5%;\n  }\n  .col-lg-offset-8 {\n    margin-left: 33.33333333%;\n  }\n  .col-lg-offset-7 {\n    margin-left: 29.16666667%;\n  }\n  .col-lg-offset-6 {\n    margin-left: 25%;\n  }\n  .col-lg-offset-5 {\n    margin-left: 20.83333333%;\n  }\n  .col-lg-offset-4 {\n    margin-left: 16.66666667%;\n  }\n  .col-lg-offset-3 {\n    margin-left: 12.5%;\n  }\n  .col-lg-offset-2 {\n    margin-left: 8.33333333%;\n  }\n  .col-lg-offset-1 {\n    margin-left: 4.16666667%;\n  }\n  .col-lg-offset-0 {\n    margin-left: 0%;\n  }\n}\ntable {\n  background-color: transparent;\n}\ntable col[class*=\"col-\"] {\n  position: static;\n  display: table-column;\n  float: none;\n}\ntable td[class*=\"col-\"],\ntable th[class*=\"col-\"] {\n  position: static;\n  display: table-cell;\n  float: none;\n}\ncaption {\n  padding-top: 8px;\n  padding-bottom: 8px;\n  color: #777777;\n  text-align: left;\n}\nth {\n  text-align: left;\n}\n.table {\n  width: 100%;\n  max-width: 100%;\n  margin-bottom: 20px;\n}\n.table > thead > tr > th,\n.table > tbody > tr > th,\n.table > tfoot > tr > th,\n.table > thead > tr > td,\n.table > tbody > tr > td,\n.table > tfoot > tr > td {\n  padding: 8px;\n  line-height: 1.42857143;\n  vertical-align: top;\n  border-top: 1px solid #ddd;\n}\n.table > thead > tr > th {\n  vertical-align: bottom;\n  border-bottom: 2px solid #ddd;\n}\n.table > caption + thead > tr:first-child > th,\n.table > colgroup + thead > tr:first-child > th,\n.table > thead:first-child > tr:first-child > th,\n.table > caption + thead > tr:first-child > td,\n.table > colgroup + thead > tr:first-child > td,\n.table > thead:first-child > tr:first-child > td {\n  border-top: 0;\n}\n.table > tbody + tbody {\n  border-top: 2px solid #ddd;\n}\n.table .table {\n  background-color: #fff;\n}\n.table-condensed > thead > tr > th,\n.table-condensed > tbody > tr > th,\n.table-condensed > tfoot > tr > th,\n.table-condensed > thead > tr > td,\n.table-condensed > tbody > tr > td,\n.table-condensed > tfoot > tr > td {\n  padding: 5px;\n}\n.table-bordered {\n  border: 1px solid #ddd;\n}\n.table-bordered > thead > tr > th,\n.table-bordered > tbody > tr > th,\n.table-bordered > tfoot > tr > th,\n.table-bordered > thead > tr > td,\n.table-bordered > tbody > tr > td,\n.table-bordered > tfoot > tr > td {\n  border: 1px solid #ddd;\n}\n.table-bordered > thead > tr > th,\n.table-bordered > thead > tr > td {\n  border-bottom-width: 2px;\n}\n.table-striped > tbody > tr:nth-of-type(odd) {\n  background-color: #f9f9f9;\n}\n.table-hover > tbody > tr:hover {\n  background-color: #f5f5f5;\n}\n.table > thead > tr > td.active,\n.table > tbody > tr > td.active,\n.table > tfoot > tr > td.active,\n.table > thead > tr > th.active,\n.table > tbody > tr > th.active,\n.table > tfoot > tr > th.active,\n.table > thead > tr.active > td,\n.table > tbody > tr.active > td,\n.table > tfoot > tr.active > td,\n.table > thead > tr.active > th,\n.table > tbody > tr.active > th,\n.table > tfoot > tr.active > th {\n  background-color: #f5f5f5;\n}\n.table-hover > tbody > tr > td.active:hover,\n.table-hover > tbody > tr > th.active:hover,\n.table-hover > tbody > tr.active:hover > td,\n.table-hover > tbody > tr:hover > .active,\n.table-hover > tbody > tr.active:hover > th {\n  background-color: #e8e8e8;\n}\n.table > thead > tr > td.success,\n.table > tbody > tr > td.success,\n.table > tfoot > tr > td.success,\n.table > thead > tr > th.success,\n.table > tbody > tr > th.success,\n.table > tfoot > tr > th.success,\n.table > thead > tr.success > td,\n.table > tbody > tr.success > td,\n.table > tfoot > tr.success > td,\n.table > thead > tr.success > th,\n.table > tbody > tr.success > th,\n.table > tfoot > tr.success > th {\n  background-color: #dff0d8;\n}\n.table-hover > tbody > tr > td.success:hover,\n.table-hover > tbody > tr > th.success:hover,\n.table-hover > tbody > tr.success:hover > td,\n.table-hover > tbody > tr:hover > .success,\n.table-hover > tbody > tr.success:hover > th {\n  background-color: #d0e9c6;\n}\n.table > thead > tr > td.info,\n.table > tbody > tr > td.info,\n.table > tfoot > tr > td.info,\n.table > thead > tr > th.info,\n.table > tbody > tr > th.info,\n.table > tfoot > tr > th.info,\n.table > thead > tr.info > td,\n.table > tbody > tr.info > td,\n.table > tfoot > tr.info > td,\n.table > thead > tr.info > th,\n.table > tbody > tr.info > th,\n.table > tfoot > tr.info > th {\n  background-color: #d9edf7;\n}\n.table-hover > tbody > tr > td.info:hover,\n.table-hover > tbody > tr > th.info:hover,\n.table-hover > tbody > tr.info:hover > td,\n.table-hover > tbody > tr:hover > .info,\n.table-hover > tbody > tr.info:hover > th {\n  background-color: #c4e3f3;\n}\n.table > thead > tr > td.warning,\n.table > tbody > tr > td.warning,\n.table > tfoot > tr > td.warning,\n.table > thead > tr > th.warning,\n.table > tbody > tr > th.warning,\n.table > tfoot > tr > th.warning,\n.table > thead > tr.warning > td,\n.table > tbody > tr.warning > td,\n.table > tfoot > tr.warning > td,\n.table > thead > tr.warning > th,\n.table > tbody > tr.warning > th,\n.table > tfoot > tr.warning > th {\n  background-color: #fcf8e3;\n}\n.table-hover > tbody > tr > td.warning:hover,\n.table-hover > tbody > tr > th.warning:hover,\n.table-hover > tbody > tr.warning:hover > td,\n.table-hover > tbody > tr:hover > .warning,\n.table-hover > tbody > tr.warning:hover > th {\n  background-color: #faf2cc;\n}\n.table > thead > tr > td.danger,\n.table > tbody > tr > td.danger,\n.table > tfoot > tr > td.danger,\n.table > thead > tr > th.danger,\n.table > tbody > tr > th.danger,\n.table > tfoot > tr > th.danger,\n.table > thead > tr.danger > td,\n.table > tbody > tr.danger > td,\n.table > tfoot > tr.danger > td,\n.table > thead > tr.danger > th,\n.table > tbody > tr.danger > th,\n.table > tfoot > tr.danger > th {\n  background-color: #f2dede;\n}\n.table-hover > tbody > tr > td.danger:hover,\n.table-hover > tbody > tr > th.danger:hover,\n.table-hover > tbody > tr.danger:hover > td,\n.table-hover > tbody > tr:hover > .danger,\n.table-hover > tbody > tr.danger:hover > th {\n  background-color: #ebcccc;\n}\n.table-responsive {\n  min-height: 0.01%;\n  overflow-x: auto;\n}\n@media screen and (max-width: 767px) {\n  .table-responsive {\n    width: 100%;\n    margin-bottom: 15px;\n    overflow-y: hidden;\n    -ms-overflow-style: -ms-autohiding-scrollbar;\n    border: 1px solid #ddd;\n  }\n  .table-responsive > .table {\n    margin-bottom: 0;\n  }\n  .table-responsive > .table > thead > tr > th,\n  .table-responsive > .table > tbody > tr > th,\n  .table-responsive > .table > tfoot > tr > th,\n  .table-responsive > .table > thead > tr > td,\n  .table-responsive > .table > tbody > tr > td,\n  .table-responsive > .table > tfoot > tr > td {\n    white-space: nowrap;\n  }\n  .table-responsive > .table-bordered {\n    border: 0;\n  }\n  .table-responsive > .table-bordered > thead > tr > th:first-child,\n  .table-responsive > .table-bordered > tbody > tr > th:first-child,\n  .table-responsive > .table-bordered > tfoot > tr > th:first-child,\n  .table-responsive > .table-bordered > thead > tr > td:first-child,\n  .table-responsive > .table-bordered > tbody > tr > td:first-child,\n  .table-responsive > .table-bordered > tfoot > tr > td:first-child {\n    border-left: 0;\n  }\n  .table-responsive > .table-bordered > thead > tr > th:last-child,\n  .table-responsive > .table-bordered > tbody > tr > th:last-child,\n  .table-responsive > .table-bordered > tfoot > tr > th:last-child,\n  .table-responsive > .table-bordered > thead > tr > td:last-child,\n  .table-responsive > .table-bordered > tbody > tr > td:last-child,\n  .table-responsive > .table-bordered > tfoot > tr > td:last-child {\n    border-right: 0;\n  }\n  .table-responsive > .table-bordered > tbody > tr:last-child > th,\n  .table-responsive > .table-bordered > tfoot > tr:last-child > th,\n  .table-responsive > .table-bordered > tbody > tr:last-child > td,\n  .table-responsive > .table-bordered > tfoot > tr:last-child > td {\n    border-bottom: 0;\n  }\n}\n@-webkit-keyframes progress-bar-stripes {\n  from {\n    background-position: 40px 0;\n  }\n  to {\n    background-position: 0 0;\n  }\n}\n@keyframes progress-bar-stripes {\n  from {\n    background-position: 40px 0;\n  }\n  to {\n    background-position: 0 0;\n  }\n}\n.progress {\n  height: 20px;\n  margin-bottom: 20px;\n  overflow: hidden;\n  background-color: #f5f5f5;\n  border-radius: 4px;\n  -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);\n  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);\n}\n.progress-bar {\n  float: left;\n  width: 0%;\n  height: 100%;\n  font-size: 12px;\n  line-height: 20px;\n  color: #fff;\n  text-align: center;\n  background-color: #337ab7;\n  -webkit-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);\n  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);\n  -webkit-transition: width 0.6s ease;\n  -o-transition: width 0.6s ease;\n  transition: width 0.6s ease;\n}\n.progress-striped .progress-bar,\n.progress-bar-striped {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-size: 40px 40px;\n}\n.progress.active .progress-bar,\n.progress-bar.active {\n  -webkit-animation: progress-bar-stripes 2s linear infinite;\n  -o-animation: progress-bar-stripes 2s linear infinite;\n  animation: progress-bar-stripes 2s linear infinite;\n}\n.progress-bar-success {\n  background-color: #5cb85c;\n}\n.progress-striped .progress-bar-success {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.progress-bar-info {\n  background-color: #5bc0de;\n}\n.progress-striped .progress-bar-info {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.progress-bar-warning {\n  background-color: #f0ad4e;\n}\n.progress-striped .progress-bar-warning {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.progress-bar-danger {\n  background-color: #d9534f;\n}\n.progress-striped .progress-bar-danger {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.clearfix:before,\n.clearfix:after,\n.container:before,\n.container:after,\n.container-fluid:before,\n.container-fluid:after,\n.row:before,\n.row:after {\n  display: table;\n  content: \" \";\n}\n.clearfix:after,\n.container:after,\n.container-fluid:after,\n.row:after {\n  clear: both;\n}\n.center-block {\n  display: block;\n  margin-right: auto;\n  margin-left: auto;\n}\n.pull-right {\n  float: right !important;\n}\n.pull-left {\n  float: left !important;\n}\n.hide {\n  display: none !important;\n}\n.show {\n  display: block !important;\n}\n.invisible {\n  visibility: hidden;\n}\n.text-hide {\n  font: 0/0 a;\n  color: transparent;\n  text-shadow: none;\n  background-color: transparent;\n  border: 0;\n}\n.hidden {\n  display: none !important;\n}\n.affix {\n  position: fixed;\n}\n@-ms-viewport {\n  width: device-width;\n}\n.visible-xs,\n.visible-sm,\n.visible-md,\n.visible-lg {\n  display: none !important;\n}\n.visible-xs-block,\n.visible-xs-inline,\n.visible-xs-inline-block,\n.visible-sm-block,\n.visible-sm-inline,\n.visible-sm-inline-block,\n.visible-md-block,\n.visible-md-inline,\n.visible-md-inline-block,\n.visible-lg-block,\n.visible-lg-inline,\n.visible-lg-inline-block {\n  display: none !important;\n}\n@media (max-width: 767px) {\n  .visible-xs {\n    display: block !important;\n  }\n  table.visible-xs {\n    display: table !important;\n  }\n  tr.visible-xs {\n    display: table-row !important;\n  }\n  th.visible-xs,\n  td.visible-xs {\n    display: table-cell !important;\n  }\n}\n@media (max-width: 767px) {\n  .visible-xs-block {\n    display: block !important;\n  }\n}\n@media (max-width: 767px) {\n  .visible-xs-inline {\n    display: inline !important;\n  }\n}\n@media (max-width: 767px) {\n  .visible-xs-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm {\n    display: block !important;\n  }\n  table.visible-sm {\n    display: table !important;\n  }\n  tr.visible-sm {\n    display: table-row !important;\n  }\n  th.visible-sm,\n  td.visible-sm {\n    display: table-cell !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm-block {\n    display: block !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm-inline {\n    display: inline !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md {\n    display: block !important;\n  }\n  table.visible-md {\n    display: table !important;\n  }\n  tr.visible-md {\n    display: table-row !important;\n  }\n  th.visible-md,\n  td.visible-md {\n    display: table-cell !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md-block {\n    display: block !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md-inline {\n    display: inline !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg {\n    display: block !important;\n  }\n  table.visible-lg {\n    display: table !important;\n  }\n  tr.visible-lg {\n    display: table-row !important;\n  }\n  th.visible-lg,\n  td.visible-lg {\n    display: table-cell !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg-block {\n    display: block !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg-inline {\n    display: inline !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (max-width: 767px) {\n  .hidden-xs {\n    display: none !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .hidden-sm {\n    display: none !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .hidden-md {\n    display: none !important;\n  }\n}\n@media (min-width: 1200px) {\n  .hidden-lg {\n    display: none !important;\n  }\n}\n.visible-print {\n  display: none !important;\n}\n@media print {\n  .visible-print {\n    display: block !important;\n  }\n  table.visible-print {\n    display: table !important;\n  }\n  tr.visible-print {\n    display: table-row !important;\n  }\n  th.visible-print,\n  td.visible-print {\n    display: table-cell !important;\n  }\n}\n.visible-print-block {\n  display: none !important;\n}\n@media print {\n  .visible-print-block {\n    display: block !important;\n  }\n}\n.visible-print-inline {\n  display: none !important;\n}\n@media print {\n  .visible-print-inline {\n    display: inline !important;\n  }\n}\n.visible-print-inline-block {\n  display: none !important;\n}\n@media print {\n  .visible-print-inline-block {\n    display: inline-block !important;\n  }\n}\n@media print {\n  .hidden-print {\n    display: none !important;\n  }\n}\n", "",{"version":3,"sources":["webpack://./css/bootstrap.less","webpack://./node_modules/bootstrap/less/normalize.less","webpack://./node_modules/bootstrap/less/scaffolding.less","webpack://./node_modules/bootstrap/less/mixins/vendor-prefixes.less","webpack://./node_modules/bootstrap/less/mixins/tab-focus.less","webpack://./node_modules/bootstrap/less/mixins/image.less","webpack://./node_modules/bootstrap/less/grid.less","webpack://./node_modules/bootstrap/less/mixins/grid.less","webpack://./node_modules/bootstrap/less/mixins/grid-framework.less","webpack://./node_modules/bootstrap/less/tables.less","webpack://./node_modules/bootstrap/less/mixins/table-row.less","webpack://./node_modules/bootstrap/less/progress-bars.less","webpack://./node_modules/bootstrap/less/mixins/gradients.less","webpack://./node_modules/bootstrap/less/mixins/progress-bar.less","webpack://./node_modules/bootstrap/less/mixins/clearfix.less","webpack://./node_modules/bootstrap/less/utilities.less","webpack://./node_modules/bootstrap/less/mixins/center-block.less","webpack://./node_modules/bootstrap/less/mixins/hide-text.less","webpack://./node_modules/bootstrap/less/responsive-utilities.less","webpack://./node_modules/bootstrap/less/mixins/responsive-visibility.less"],"names":[],"mappings":"AAAA;;;;EAIE;AACF,2EAA2E;ACK3E;EACE,uBAAA;EACA,0BAAA;EACA,8BAAA;ADHF;ACUA;EACE,SAAA;ADRF;ACqBA;;;;;;;;;;;;;EAaE,cAAA;ADnBF;AC2BA;;;;EAIE,qBAAA;EACA,wBAAA;ADzBF;ACiCA;EACE,aAAA;EACA,SAAA;AD/BF;ACuCA;;EAEE,aAAA;ADrCF;AC+CA;EACE,6BAAA;AD7CF;ACqDA;;EAEE,UAAA;ADnDF;AC8DA;EACE,mBAAA;EACA,0BAAA;EACA,iCAAA;AD5DF;ACmEA;;EAEE,iBAAA;ADjEF;ACwEA;EACE,kBAAA;ADtEF;AC8EA;EACE,cAAA;EACA,gBAAA;AD5EF;ACmFA;EACE,gBAAA;EACA,WAAA;ADjFF;ACwFA;EACE,cAAA;ADtFF;AC6FA;;EAEE,cAAA;EACA,cAAA;EACA,kBAAA;EACA,wBAAA;AD3FF;AC8FA;EACE,WAAA;AD5FF;AC+FA;EACE,eAAA;AD7FF;ACuGA;EACE,SAAA;ADrGF;AC4GA;EACE,gBAAA;AD1GF;ACoHA;EACE,gBAAA;ADlHF;ACyHA;EACE,uBAAA;EACA,SAAA;ADvHF;AC8HA;EACE,cAAA;AD5HF;ACmIA;;;;EAIE,iCAAA;EACA,cAAA;ADjIF;ACmJA;;;;;EAKE,cAAA;EACA,aAAA;EACA,SAAA;ADjJF;ACwJA;EACE,iBAAA;ADtJF;ACgKA;;EAEE,oBAAA;AD9JF;ACyKA;;;;EAIE,0BAAA;EACA,eAAA;ADvKF;AC8KA;;EAEE,eAAA;AD5KF;ACmLA;;EAEE,SAAA;EACA,UAAA;ADjLF;ACyLA;EACE,mBAAA;ADvLF;ACkMA;;EAEE,sBAAA;EACA,UAAA;ADhMF;ACyMA;;EAEE,YAAA;ADvMF;AC+MA;EACE,6BAAA;EACA,uBAAA;AD7MF;ACsNA;;EAEE,wBAAA;ADpNF;AC2NA;EACE,yBAAA;EACA,aAAA;EACA,8BAAA;ADzNF;ACiOA;EACE,SAAA;EACA,UAAA;AD/NF;ACsOA;EACE,cAAA;ADpOF;AC4OA;EACE,iBAAA;AD1OF;ACoPA;EACE,yBAAA;EACA,iBAAA;ADlPF;ACqPA;;EAEE,UAAA;ADnPF;AE9KA;ECkEE,8BAAA;EACG,2BAAA;EACK,sBAAA;AH+GV;AEhLA;;EC+DE,8BAAA;EACG,2BAAA;EACK,sBAAA;AHqHV;AE9KA;EACE,eAAA;EACA,6CAAA;AFgLF;AE7KA;EACE,2DAAA;EACA,eAAA;EACA,uBAAA;EACA,cAAA;EACA,sBAAA;AF+KF;AE3KA;;;;EAIE,oBAAA;EACA,kBAAA;EACA,oBAAA;AF6KF;AEvKA;EACE,cAAA;EACA,qBAAA;AFyKF;AEvKE;;EAEE,cAAA;EACA,0BAAA;AFyKJ;AEtKE;EEnDA,0CAAA;EACA,oBAAA;AJ4NF;AE/JA;EACE,SAAA;AFiKF;AE3JA;EACE,sBAAA;AF6JF;AEzJA;EG1EE,cAAA;EACA,eAAA;EACA,YAAA;ALsOF;AEzJA;EACE,kBAAA;AF2JF;AErJA;EACE,YAAA;EACA,uBAAA;EACA,sBAAA;EACA,sBAAA;EACA,kBAAA;EC+FA,wCAAA;EACK,mCAAA;EACG,gCAAA;EE5LR,qBAAA;EACA,eAAA;EACA,YAAA;ALsPF;AErJA;EACE,kBAAA;AFuJF;AEjJA;EACE,gBAAA;EACA,mBAAA;EACA,SAAA;EACA,6BAAA;AFmJF;AE3IA;EACE,kBAAA;EACA,UAAA;EACA,WAAA;EACA,UAAA;EACA,YAAA;EACA,gBAAA;EACA,sBAAA;EACA,SAAA;AF6IF;AErIE;;EAEE,gBAAA;EACA,WAAA;EACA,YAAA;EACA,SAAA;EACA,iBAAA;EACA,UAAA;AFuIJ;AE5HA;EACE,eAAA;AF8HF;AMpRA;ECHE,mBAAA;EACA,kBAAA;EACA,kBAAA;EACA,iBAAA;AP0RF;AMvRE;EAAA;IACE,YAAA;EN0RF;AACF;AMzRE;EAAA;IACE,YAAA;EN4RF;AACF;AM3RE;EAAA;IACE,aAAA;EN8RF;AACF;AMrRA;ECvBE,mBAAA;EACA,kBAAA;EACA,kBAAA;EACA,iBAAA;AP+SF;AMlRA;ECvBE,mBAAA;EACA,kBAAA;AP4SF;AMlRA;EACE,eAAA;EACA,cAAA;ANoRF;AMtRA;EAKI,gBAAA;EACA,eAAA;ANoRJ;AQpUC;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EAiBK,kBAAA;EAEA,eAAA;EAEA,mBAAA;EACA,kBAAA;ARmZN;AQzaC;;;;;;;;;;;;;;;;;;;;;;;;EAuCK,WAAA;AR4ZN;AQncC;EA+CG,WAAA;ARuZJ;AQtcC;EA+CG,mBAAA;AR0ZJ;AQzcC;EA+CG,mBAAA;AR6ZJ;AQ5cC;EA+CG,YAAA;ARgaJ;AQ/cC;EA+CG,mBAAA;ARmaJ;AQldC;EA+CG,mBAAA;ARsaJ;AQrdC;EA+CG,UAAA;ARyaJ;AQxdC;EA+CG,mBAAA;AR4aJ;AQ3dC;EA+CG,mBAAA;AR+aJ;AQ9dC;EA+CG,YAAA;ARkbJ;AQjeC;EA+CG,mBAAA;ARqbJ;AQpeC;EA+CG,mBAAA;ARwbJ;AQveC;EA+CG,UAAA;AR2bJ;AQ1eC;EA+CG,mBAAA;AR8bJ;AQ7eC;EA+CG,mBAAA;ARicJ;AQhfC;EA+CG,YAAA;ARocJ;AQnfC;EA+CG,mBAAA;ARucJ;AQtfC;EA+CG,mBAAA;AR0cJ;AQzfC;EA+CG,UAAA;AR6cJ;AQ5fC;EA+CG,mBAAA;ARgdJ;AQ/fC;EA+CG,mBAAA;ARmdJ;AQlgBC;EA+CG,YAAA;ARsdJ;AQrgBC;EA+CG,kBAAA;ARydJ;AQxgBC;EA+CG,kBAAA;AR4dJ;AQ3gBC;EA8DG,WAAA;ARgdJ;AQ9gBC;EA8DG,mBAAA;ARmdJ;AQjhBC;EA8DG,mBAAA;ARsdJ;AQphBC;EA8DG,YAAA;ARydJ;AQvhBC;EA8DG,mBAAA;AR4dJ;AQ1hBC;EA8DG,mBAAA;AR+dJ;AQ7hBC;EA8DG,UAAA;ARkeJ;AQhiBC;EA8DG,mBAAA;ARqeJ;AQniBC;EA8DG,mBAAA;ARweJ;AQtiBC;EA8DG,YAAA;AR2eJ;AQziBC;EA8DG,mBAAA;AR8eJ;AQ5iBC;EA8DG,mBAAA;ARifJ;AQ/iBC;EA8DG,UAAA;ARofJ;AQljBC;EA8DG,mBAAA;ARufJ;AQrjBC;EA8DG,mBAAA;AR0fJ;AQxjBC;EA8DG,YAAA;AR6fJ;AQ3jBC;EA8DG,mBAAA;ARggBJ;AQ9jBC;EA8DG,mBAAA;ARmgBJ;AQjkBC;EA8DG,UAAA;ARsgBJ;AQpkBC;EA8DG,mBAAA;ARygBJ;AQvkBC;EA8DG,mBAAA;AR4gBJ;AQ1kBC;EA8DG,YAAA;AR+gBJ;AQ7kBC;EA8DG,kBAAA;ARkhBJ;AQhlBC;EA8DG,kBAAA;ARqhBJ;AQnlBC;EAmEG,WAAA;ARmhBJ;AQtlBC;EAoDG,UAAA;ARqiBJ;AQzlBC;EAoDG,kBAAA;ARwiBJ;AQ5lBC;EAoDG,kBAAA;AR2iBJ;AQ/lBC;EAoDG,WAAA;AR8iBJ;AQlmBC;EAoDG,kBAAA;ARijBJ;AQrmBC;EAoDG,kBAAA;ARojBJ;AQxmBC;EAoDG,SAAA;ARujBJ;AQ3mBC;EAoDG,kBAAA;AR0jBJ;AQ9mBC;EAoDG,kBAAA;AR6jBJ;AQjnBC;EAoDG,WAAA;ARgkBJ;AQpnBC;EAoDG,kBAAA;ARmkBJ;AQvnBC;EAoDG,kBAAA;ARskBJ;AQ1nBC;EAoDG,SAAA;ARykBJ;AQ7nBC;EAoDG,kBAAA;AR4kBJ;AQhoBC;EAoDG,kBAAA;AR+kBJ;AQnoBC;EAoDG,WAAA;ARklBJ;AQtoBC;EAoDG,kBAAA;ARqlBJ;AQzoBC;EAoDG,kBAAA;ARwlBJ;AQ5oBC;EAoDG,SAAA;AR2lBJ;AQ/oBC;EAoDG,kBAAA;AR8lBJ;AQlpBC;EAoDG,kBAAA;ARimBJ;AQrpBC;EAoDG,WAAA;ARomBJ;AQxpBC;EAoDG,iBAAA;ARumBJ;AQ3pBC;EAoDG,iBAAA;AR0mBJ;AQ9pBC;EAyDG,UAAA;ARwmBJ;AQjqBC;EAwEG,iBAAA;AR4lBJ;AQpqBC;EAwEG,yBAAA;AR+lBJ;AQvqBC;EAwEG,yBAAA;ARkmBJ;AQ1qBC;EAwEG,kBAAA;ARqmBJ;AQ7qBC;EAwEG,yBAAA;ARwmBJ;AQhrBC;EAwEG,yBAAA;AR2mBJ;AQnrBC;EAwEG,gBAAA;AR8mBJ;AQtrBC;EAwEG,yBAAA;ARinBJ;AQzrBC;EAwEG,yBAAA;ARonBJ;AQ5rBC;EAwEG,kBAAA;ARunBJ;AQ/rBC;EAwEG,yBAAA;AR0nBJ;AQlsBC;EAwEG,yBAAA;AR6nBJ;AQrsBC;EAwEG,gBAAA;ARgoBJ;AQxsBC;EAwEG,yBAAA;ARmoBJ;AQ3sBC;EAwEG,yBAAA;ARsoBJ;AQ9sBC;EAwEG,kBAAA;ARyoBJ;AQjtBC;EAwEG,yBAAA;AR4oBJ;AQptBC;EAwEG,yBAAA;AR+oBJ;AQvtBC;EAwEG,gBAAA;ARkpBJ;AQ1tBC;EAwEG,yBAAA;ARqpBJ;AQ7tBC;EAwEG,yBAAA;ARwpBJ;AQhuBC;EAwEG,kBAAA;AR2pBJ;AQnuBC;EAwEG,wBAAA;AR8pBJ;AQtuBC;EAwEG,wBAAA;ARiqBJ;AQzuBC;EAwEG,eAAA;ARoqBJ;AMnqBA;EEzEC;;;;;;;;;;;;;;;;;;;;;;;;IAuCK,WAAA;ERguBJ;EQvwBD;IA+CG,WAAA;ER2tBF;EQ1wBD;IA+CG,mBAAA;ER8tBF;EQ7wBD;IA+CG,mBAAA;ERiuBF;EQhxBD;IA+CG,YAAA;ERouBF;EQnxBD;IA+CG,mBAAA;ERuuBF;EQtxBD;IA+CG,mBAAA;ER0uBF;EQzxBD;IA+CG,UAAA;ER6uBF;EQ5xBD;IA+CG,mBAAA;ERgvBF;EQ/xBD;IA+CG,mBAAA;ERmvBF;EQlyBD;IA+CG,YAAA;ERsvBF;EQryBD;IA+CG,mBAAA;ERyvBF;EQxyBD;IA+CG,mBAAA;ER4vBF;EQ3yBD;IA+CG,UAAA;ER+vBF;EQ9yBD;IA+CG,mBAAA;ERkwBF;EQjzBD;IA+CG,mBAAA;ERqwBF;EQpzBD;IA+CG,YAAA;ERwwBF;EQvzBD;IA+CG,mBAAA;ER2wBF;EQ1zBD;IA+CG,mBAAA;ER8wBF;EQ7zBD;IA+CG,UAAA;ERixBF;EQh0BD;IA+CG,mBAAA;ERoxBF;EQn0BD;IA+CG,mBAAA;ERuxBF;EQt0BD;IA+CG,YAAA;ER0xBF;EQz0BD;IA+CG,kBAAA;ER6xBF;EQ50BD;IA+CG,kBAAA;ERgyBF;EQ/0BD;IA8DG,WAAA;ERoxBF;EQl1BD;IA8DG,mBAAA;ERuxBF;EQr1BD;IA8DG,mBAAA;ER0xBF;EQx1BD;IA8DG,YAAA;ER6xBF;EQ31BD;IA8DG,mBAAA;ERgyBF;EQ91BD;IA8DG,mBAAA;ERmyBF;EQj2BD;IA8DG,UAAA;ERsyBF;EQp2BD;IA8DG,mBAAA;ERyyBF;EQv2BD;IA8DG,mBAAA;ER4yBF;EQ12BD;IA8DG,YAAA;ER+yBF;EQ72BD;IA8DG,mBAAA;ERkzBF;EQh3BD;IA8DG,mBAAA;ERqzBF;EQn3BD;IA8DG,UAAA;ERwzBF;EQt3BD;IA8DG,mBAAA;ER2zBF;EQz3BD;IA8DG,mBAAA;ER8zBF;EQ53BD;IA8DG,YAAA;ERi0BF;EQ/3BD;IA8DG,mBAAA;ERo0BF;EQl4BD;IA8DG,mBAAA;ERu0BF;EQr4BD;IA8DG,UAAA;ER00BF;EQx4BD;IA8DG,mBAAA;ER60BF;EQ34BD;IA8DG,mBAAA;ERg1BF;EQ94BD;IA8DG,YAAA;ERm1BF;EQj5BD;IA8DG,kBAAA;ERs1BF;EQp5BD;IA8DG,kBAAA;ERy1BF;EQv5BD;IAmEG,WAAA;ERu1BF;EQ15BD;IAoDG,UAAA;ERy2BF;EQ75BD;IAoDG,kBAAA;ER42BF;EQh6BD;IAoDG,kBAAA;ER+2BF;EQn6BD;IAoDG,WAAA;ERk3BF;EQt6BD;IAoDG,kBAAA;ERq3BF;EQz6BD;IAoDG,kBAAA;ERw3BF;EQ56BD;IAoDG,SAAA;ER23BF;EQ/6BD;IAoDG,kBAAA;ER83BF;EQl7BD;IAoDG,kBAAA;ERi4BF;EQr7BD;IAoDG,WAAA;ERo4BF;EQx7BD;IAoDG,kBAAA;ERu4BF;EQ37BD;IAoDG,kBAAA;ER04BF;EQ97BD;IAoDG,SAAA;ER64BF;EQj8BD;IAoDG,kBAAA;ERg5BF;EQp8BD;IAoDG,kBAAA;ERm5BF;EQv8BD;IAoDG,WAAA;ERs5BF;EQ18BD;IAoDG,kBAAA;ERy5BF;EQ78BD;IAoDG,kBAAA;ER45BF;EQh9BD;IAoDG,SAAA;ER+5BF;EQn9BD;IAoDG,kBAAA;ERk6BF;EQt9BD;IAoDG,kBAAA;ERq6BF;EQz9BD;IAoDG,WAAA;ERw6BF;EQ59BD;IAoDG,iBAAA;ER26BF;EQ/9BD;IAoDG,iBAAA;ER86BF;EQl+BD;IAyDG,UAAA;ER46BF;EQr+BD;IAwEG,iBAAA;ERg6BF;EQx+BD;IAwEG,yBAAA;ERm6BF;EQ3+BD;IAwEG,yBAAA;ERs6BF;EQ9+BD;IAwEG,kBAAA;ERy6BF;EQj/BD;IAwEG,yBAAA;ER46BF;EQp/BD;IAwEG,yBAAA;ER+6BF;EQv/BD;IAwEG,gBAAA;ERk7BF;EQ1/BD;IAwEG,yBAAA;ERq7BF;EQ7/BD;IAwEG,yBAAA;ERw7BF;EQhgCD;IAwEG,kBAAA;ER27BF;EQngCD;IAwEG,yBAAA;ER87BF;EQtgCD;IAwEG,yBAAA;ERi8BF;EQzgCD;IAwEG,gBAAA;ERo8BF;EQ5gCD;IAwEG,yBAAA;ERu8BF;EQ/gCD;IAwEG,yBAAA;ER08BF;EQlhCD;IAwEG,kBAAA;ER68BF;EQrhCD;IAwEG,yBAAA;ERg9BF;EQxhCD;IAwEG,yBAAA;ERm9BF;EQ3hCD;IAwEG,gBAAA;ERs9BF;EQ9hCD;IAwEG,yBAAA;ERy9BF;EQjiCD;IAwEG,yBAAA;ER49BF;EQpiCD;IAwEG,kBAAA;ER+9BF;EQviCD;IAwEG,wBAAA;ERk+BF;EQ1iCD;IAwEG,wBAAA;ERq+BF;EQ7iCD;IAwEG,eAAA;ERw+BF;AACF;AM/9BA;EElFC;;;;;;;;;;;;;;;;;;;;;;;;IAuCK,WAAA;ERqiCJ;EQ5kCD;IA+CG,WAAA;ERgiCF;EQ/kCD;IA+CG,mBAAA;ERmiCF;EQllCD;IA+CG,mBAAA;ERsiCF;EQrlCD;IA+CG,YAAA;ERyiCF;EQxlCD;IA+CG,mBAAA;ER4iCF;EQ3lCD;IA+CG,mBAAA;ER+iCF;EQ9lCD;IA+CG,UAAA;ERkjCF;EQjmCD;IA+CG,mBAAA;ERqjCF;EQpmCD;IA+CG,mBAAA;ERwjCF;EQvmCD;IA+CG,YAAA;ER2jCF;EQ1mCD;IA+CG,mBAAA;ER8jCF;EQ7mCD;IA+CG,mBAAA;ERikCF;EQhnCD;IA+CG,UAAA;ERokCF;EQnnCD;IA+CG,mBAAA;ERukCF;EQtnCD;IA+CG,mBAAA;ER0kCF;EQznCD;IA+CG,YAAA;ER6kCF;EQ5nCD;IA+CG,mBAAA;ERglCF;EQ/nCD;IA+CG,mBAAA;ERmlCF;EQloCD;IA+CG,UAAA;ERslCF;EQroCD;IA+CG,mBAAA;ERylCF;EQxoCD;IA+CG,mBAAA;ER4lCF;EQ3oCD;IA+CG,YAAA;ER+lCF;EQ9oCD;IA+CG,kBAAA;ERkmCF;EQjpCD;IA+CG,kBAAA;ERqmCF;EQppCD;IA8DG,WAAA;ERylCF;EQvpCD;IA8DG,mBAAA;ER4lCF;EQ1pCD;IA8DG,mBAAA;ER+lCF;EQ7pCD;IA8DG,YAAA;ERkmCF;EQhqCD;IA8DG,mBAAA;ERqmCF;EQnqCD;IA8DG,mBAAA;ERwmCF;EQtqCD;IA8DG,UAAA;ER2mCF;EQzqCD;IA8DG,mBAAA;ER8mCF;EQ5qCD;IA8DG,mBAAA;ERinCF;EQ/qCD;IA8DG,YAAA;ERonCF;EQlrCD;IA8DG,mBAAA;ERunCF;EQrrCD;IA8DG,mBAAA;ER0nCF;EQxrCD;IA8DG,UAAA;ER6nCF;EQ3rCD;IA8DG,mBAAA;ERgoCF;EQ9rCD;IA8DG,mBAAA;ERmoCF;EQjsCD;IA8DG,YAAA;ERsoCF;EQpsCD;IA8DG,mBAAA;ERyoCF;EQvsCD;IA8DG,mBAAA;ER4oCF;EQ1sCD;IA8DG,UAAA;ER+oCF;EQ7sCD;IA8DG,mBAAA;ERkpCF;EQhtCD;IA8DG,mBAAA;ERqpCF;EQntCD;IA8DG,YAAA;ERwpCF;EQttCD;IA8DG,kBAAA;ER2pCF;EQztCD;IA8DG,kBAAA;ER8pCF;EQ5tCD;IAmEG,WAAA;ER4pCF;EQ/tCD;IAoDG,UAAA;ER8qCF;EQluCD;IAoDG,kBAAA;ERirCF;EQruCD;IAoDG,kBAAA;ERorCF;EQxuCD;IAoDG,WAAA;ERurCF;EQ3uCD;IAoDG,kBAAA;ER0rCF;EQ9uCD;IAoDG,kBAAA;ER6rCF;EQjvCD;IAoDG,SAAA;ERgsCF;EQpvCD;IAoDG,kBAAA;ERmsCF;EQvvCD;IAoDG,kBAAA;ERssCF;EQ1vCD;IAoDG,WAAA;ERysCF;EQ7vCD;IAoDG,kBAAA;ER4sCF;EQhwCD;IAoDG,kBAAA;ER+sCF;EQnwCD;IAoDG,SAAA;ERktCF;EQtwCD;IAoDG,kBAAA;ERqtCF;EQzwCD;IAoDG,kBAAA;ERwtCF;EQ5wCD;IAoDG,WAAA;ER2tCF;EQ/wCD;IAoDG,kBAAA;ER8tCF;EQlxCD;IAoDG,kBAAA;ERiuCF;EQrxCD;IAoDG,SAAA;ERouCF;EQxxCD;IAoDG,kBAAA;ERuuCF;EQ3xCD;IAoDG,kBAAA;ER0uCF;EQ9xCD;IAoDG,WAAA;ER6uCF;EQjyCD;IAoDG,iBAAA;ERgvCF;EQpyCD;IAoDG,iBAAA;ERmvCF;EQvyCD;IAyDG,UAAA;ERivCF;EQ1yCD;IAwEG,iBAAA;ERquCF;EQ7yCD;IAwEG,yBAAA;ERwuCF;EQhzCD;IAwEG,yBAAA;ER2uCF;EQnzCD;IAwEG,kBAAA;ER8uCF;EQtzCD;IAwEG,yBAAA;ERivCF;EQzzCD;IAwEG,yBAAA;ERovCF;EQ5zCD;IAwEG,gBAAA;ERuvCF;EQ/zCD;IAwEG,yBAAA;ER0vCF;EQl0CD;IAwEG,yBAAA;ER6vCF;EQr0CD;IAwEG,kBAAA;ERgwCF;EQx0CD;IAwEG,yBAAA;ERmwCF;EQ30CD;IAwEG,yBAAA;ERswCF;EQ90CD;IAwEG,gBAAA;ERywCF;EQj1CD;IAwEG,yBAAA;ER4wCF;EQp1CD;IAwEG,yBAAA;ER+wCF;EQv1CD;IAwEG,kBAAA;ERkxCF;EQ11CD;IAwEG,yBAAA;ERqxCF;EQ71CD;IAwEG,yBAAA;ERwxCF;EQh2CD;IAwEG,gBAAA;ER2xCF;EQn2CD;IAwEG,yBAAA;ER8xCF;EQt2CD;IAwEG,yBAAA;ERiyCF;EQz2CD;IAwEG,kBAAA;ERoyCF;EQ52CD;IAwEG,wBAAA;ERuyCF;EQ/2CD;IAwEG,wBAAA;ER0yCF;EQl3CD;IAwEG,eAAA;ER6yCF;AACF;AM3xCA;EE3FC;;;;;;;;;;;;;;;;;;;;;;;;IAuCK,WAAA;ER02CJ;EQj5CD;IA+CG,WAAA;ERq2CF;EQp5CD;IA+CG,mBAAA;ERw2CF;EQv5CD;IA+CG,mBAAA;ER22CF;EQ15CD;IA+CG,YAAA;ER82CF;EQ75CD;IA+CG,mBAAA;ERi3CF;EQh6CD;IA+CG,mBAAA;ERo3CF;EQn6CD;IA+CG,UAAA;ERu3CF;EQt6CD;IA+CG,mBAAA;ER03CF;EQz6CD;IA+CG,mBAAA;ER63CF;EQ56CD;IA+CG,YAAA;ERg4CF;EQ/6CD;IA+CG,mBAAA;ERm4CF;EQl7CD;IA+CG,mBAAA;ERs4CF;EQr7CD;IA+CG,UAAA;ERy4CF;EQx7CD;IA+CG,mBAAA;ER44CF;EQ37CD;IA+CG,mBAAA;ER+4CF;EQ97CD;IA+CG,YAAA;ERk5CF;EQj8CD;IA+CG,mBAAA;ERq5CF;EQp8CD;IA+CG,mBAAA;ERw5CF;EQv8CD;IA+CG,UAAA;ER25CF;EQ18CD;IA+CG,mBAAA;ER85CF;EQ78CD;IA+CG,mBAAA;ERi6CF;EQh9CD;IA+CG,YAAA;ERo6CF;EQn9CD;IA+CG,kBAAA;ERu6CF;EQt9CD;IA+CG,kBAAA;ER06CF;EQz9CD;IA8DG,WAAA;ER85CF;EQ59CD;IA8DG,mBAAA;ERi6CF;EQ/9CD;IA8DG,mBAAA;ERo6CF;EQl+CD;IA8DG,YAAA;ERu6CF;EQr+CD;IA8DG,mBAAA;ER06CF;EQx+CD;IA8DG,mBAAA;ER66CF;EQ3+CD;IA8DG,UAAA;ERg7CF;EQ9+CD;IA8DG,mBAAA;ERm7CF;EQj/CD;IA8DG,mBAAA;ERs7CF;EQp/CD;IA8DG,YAAA;ERy7CF;EQv/CD;IA8DG,mBAAA;ER47CF;EQ1/CD;IA8DG,mBAAA;ER+7CF;EQ7/CD;IA8DG,UAAA;ERk8CF;EQhgDD;IA8DG,mBAAA;ERq8CF;EQngDD;IA8DG,mBAAA;ERw8CF;EQtgDD;IA8DG,YAAA;ER28CF;EQzgDD;IA8DG,mBAAA;ER88CF;EQ5gDD;IA8DG,mBAAA;ERi9CF;EQ/gDD;IA8DG,UAAA;ERo9CF;EQlhDD;IA8DG,mBAAA;ERu9CF;EQrhDD;IA8DG,mBAAA;ER09CF;EQxhDD;IA8DG,YAAA;ER69CF;EQ3hDD;IA8DG,kBAAA;ERg+CF;EQ9hDD;IA8DG,kBAAA;ERm+CF;EQjiDD;IAmEG,WAAA;ERi+CF;EQpiDD;IAoDG,UAAA;ERm/CF;EQviDD;IAoDG,kBAAA;ERs/CF;EQ1iDD;IAoDG,kBAAA;ERy/CF;EQ7iDD;IAoDG,WAAA;ER4/CF;EQhjDD;IAoDG,kBAAA;ER+/CF;EQnjDD;IAoDG,kBAAA;ERkgDF;EQtjDD;IAoDG,SAAA;ERqgDF;EQzjDD;IAoDG,kBAAA;ERwgDF;EQ5jDD;IAoDG,kBAAA;ER2gDF;EQ/jDD;IAoDG,WAAA;ER8gDF;EQlkDD;IAoDG,kBAAA;ERihDF;EQrkDD;IAoDG,kBAAA;ERohDF;EQxkDD;IAoDG,SAAA;ERuhDF;EQ3kDD;IAoDG,kBAAA;ER0hDF;EQ9kDD;IAoDG,kBAAA;ER6hDF;EQjlDD;IAoDG,WAAA;ERgiDF;EQplDD;IAoDG,kBAAA;ERmiDF;EQvlDD;IAoDG,kBAAA;ERsiDF;EQ1lDD;IAoDG,SAAA;ERyiDF;EQ7lDD;IAoDG,kBAAA;ER4iDF;EQhmDD;IAoDG,kBAAA;ER+iDF;EQnmDD;IAoDG,WAAA;ERkjDF;EQtmDD;IAoDG,iBAAA;ERqjDF;EQzmDD;IAoDG,iBAAA;ERwjDF;EQ5mDD;IAyDG,UAAA;ERsjDF;EQ/mDD;IAwEG,iBAAA;ER0iDF;EQlnDD;IAwEG,yBAAA;ER6iDF;EQrnDD;IAwEG,yBAAA;ERgjDF;EQxnDD;IAwEG,kBAAA;ERmjDF;EQ3nDD;IAwEG,yBAAA;ERsjDF;EQ9nDD;IAwEG,yBAAA;ERyjDF;EQjoDD;IAwEG,gBAAA;ER4jDF;EQpoDD;IAwEG,yBAAA;ER+jDF;EQvoDD;IAwEG,yBAAA;ERkkDF;EQ1oDD;IAwEG,kBAAA;ERqkDF;EQ7oDD;IAwEG,yBAAA;ERwkDF;EQhpDD;IAwEG,yBAAA;ER2kDF;EQnpDD;IAwEG,gBAAA;ER8kDF;EQtpDD;IAwEG,yBAAA;ERilDF;EQzpDD;IAwEG,yBAAA;ERolDF;EQ5pDD;IAwEG,kBAAA;ERulDF;EQ/pDD;IAwEG,yBAAA;ER0lDF;EQlqDD;IAwEG,yBAAA;ER6lDF;EQrqDD;IAwEG,gBAAA;ERgmDF;EQxqDD;IAwEG,yBAAA;ERmmDF;EQ3qDD;IAwEG,yBAAA;ERsmDF;EQ9qDD;IAwEG,kBAAA;ERymDF;EQjrDD;IAwEG,wBAAA;ER4mDF;EQprDD;IAwEG,wBAAA;ER+mDF;EQvrDD;IAwEG,eAAA;ERknDF;AACF;ASprDA;EACE,6BAAA;ATsrDF;ASvrDA;EAQI,gBAAA;EACA,qBAAA;EACA,WAAA;ATkrDJ;AS7qDI;;EACE,gBAAA;EACA,mBAAA;EACA,WAAA;ATgrDN;AS3qDA;EACE,gBAAA;EACA,mBAAA;EACA,cAAA;EACA,gBAAA;AT6qDF;AS1qDA;EACE,gBAAA;AT4qDF;AStqDA;EACE,WAAA;EACA,eAAA;EACA,mBAAA;ATwqDF;AS3qDA;;;;;;EAWQ,YAAA;EACA,uBAAA;EACA,mBAAA;EACA,0BAAA;ATwqDR;AStrDA;EAoBI,sBAAA;EACA,6BAAA;ATqqDJ;AS1rDA;;;;;;EA8BQ,aAAA;AToqDR;ASlsDA;EAoCI,0BAAA;ATiqDJ;ASrsDA;EAyCI,sBAAA;AT+pDJ;ASxpDA;;;;;;EAOQ,YAAA;ATypDR;AS9oDA;EACE,sBAAA;ATgpDF;ASjpDA;;;;;;EAQQ,sBAAA;ATipDR;ASzpDA;;EAeM,wBAAA;AT8oDN;ASpoDA;EAEI,yBAAA;ATqoDJ;AS5nDA;EAEI,yBAAA;AT6nDJ;AU5wDE;;;;;;;;;;;;EAOI,yBAAA;AVmxDN;AU7wDE;;;;;EAMI,yBAAA;AV8wDN;AUjyDE;;;;;;;;;;;;EAOI,yBAAA;AVwyDN;AUlyDE;;;;;EAMI,yBAAA;AVmyDN;AUtzDE;;;;;;;;;;;;EAOI,yBAAA;AV6zDN;AUvzDE;;;;;EAMI,yBAAA;AVwzDN;AU30DE;;;;;;;;;;;;EAOI,yBAAA;AVk1DN;AU50DE;;;;;EAMI,yBAAA;AV60DN;AUh2DE;;;;;;;;;;;;EAOI,yBAAA;AVu2DN;AUj2DE;;;;;EAMI,yBAAA;AVk2DN;AS9sDA;EACE,iBAAA;EACA,gBAAA;ATgtDF;AS9sDE;EAAA;IACE,WAAA;IACA,mBAAA;IACA,kBAAA;IACA,4CAAA;IACA,sBAAA;ETitDF;ESttDA;IASI,gBAAA;ETgtDJ;ESztDA;;;;;;IAkBU,mBAAA;ET+sDV;ESjuDA;IA0BI,SAAA;ET0sDJ;ESpuDA;;;;;;IAmCU,cAAA;ETysDV;ES5uDA;;;;;;IAuCU,eAAA;ET6sDV;ESpvDA;;;;IAoDU,gBAAA;ETssDV;AACF;AWh6DA;EACE;IAAQ,2BAAA;EXm6DR;EWl6DA;IAAQ,wBAAA;EXq6DR;AACF;AWl6DA;EACE;IAAQ,2BAAA;EXq6DR;EWp6DA;IAAQ,wBAAA;EXu6DR;AACF;AWh6DA;EACE,YAAA;EACA,mBAAA;EACA,gBAAA;EACA,yBAAA;EACA,kBAAA;ERsCA,sDAAA;EACQ,8CAAA;AH63DV;AW/5DA;EACE,WAAA;EACA,SAAA;EACA,YAAA;EACA,eAAA;EACA,iBAAA;EACA,WAAA;EACA,kBAAA;EACA,yBAAA;ERyBA,sDAAA;EACQ,8CAAA;EAyHR,mCAAA;EACK,8BAAA;EACG,2BAAA;AHixDV;AW55DA;;ECDI,6MAAA;EACA,wMAAA;EACA,qMAAA;EDEF,0BAAA;AXg6DF;AWz5DA;;ER5CE,0DAAA;EACK,qDAAA;EACG,kDAAA;AHy8DV;AWt5DA;EEvEE,yBAAA;Abg+DF;Aa79DE;EDgDE,6MAAA;EACA,wMAAA;EACA,qMAAA;AZg7DJ;AW15DA;EE3EE,yBAAA;Abw+DF;Aar+DE;EDgDE,6MAAA;EACA,wMAAA;EACA,qMAAA;AZw7DJ;AW95DA;EE/EE,yBAAA;Abg/DF;Aa7+DE;EDgDE,6MAAA;EACA,wMAAA;EACA,qMAAA;AZg8DJ;AWl6DA;EEnFE,yBAAA;Abw/DF;Aar/DE;EDgDE,6MAAA;EACA,wMAAA;EACA,qMAAA;AZw8DJ;Acn/DE;;;;;;;;EAEE,cAAA;EACA,YAAA;Ad2/DJ;Acz/DE;;;;EACE,WAAA;Ad8/DJ;AepgEA;ECVE,cAAA;EACA,kBAAA;EACA,iBAAA;AhBihEF;AetgEA;EACE,uBAAA;AfwgEF;AetgEA;EACE,sBAAA;AfwgEF;AehgEA;EACE,wBAAA;AfkgEF;AehgEA;EACE,yBAAA;AfkgEF;AehgEA;EACE,kBAAA;AfkgEF;AehgEA;EEzBE,WAAA;EACA,kBAAA;EACA,iBAAA;EACA,6BAAA;EACA,SAAA;AjB4hEF;Ae9/DA;EACE,wBAAA;AfggEF;Aez/DA;EACE,eAAA;Af2/DF;AkB5hEA;EACE,mBAAA;AlB8hEF;AkBxhEA;;;;EClBE,wBAAA;AnBgjEF;AkBvhEA;;;;;;;;;;;;EAYE,wBAAA;AlByhEF;AkBrhEE;EAAA;ICjDA,yBAAA;EnB0kEA;EmBzkEA;IAAU,yBAAA;EnB4kEV;EmB3kEA;IAAU,6BAAA;EnB8kEV;EmB7kEA;;IACU,8BAAA;EnBglEV;AACF;AkB/hEE;EAAA;IACE,yBAAA;ElBkiEF;AACF;AkB/hEE;EAAA;IACE,0BAAA;ElBkiEF;AACF;AkB/hEE;EAAA;IACE,gCAAA;ElBkiEF;AACF;AkB9hEE;EAAA;ICtEA,yBAAA;EnBwmEA;EmBvmEA;IAAU,yBAAA;EnB0mEV;EmBzmEA;IAAU,6BAAA;EnB4mEV;EmB3mEA;;IACU,8BAAA;EnB8mEV;AACF;AkBxiEE;EAAA;IACE,yBAAA;ElB2iEF;AACF;AkBxiEE;EAAA;IACE,0BAAA;ElB2iEF;AACF;AkBxiEE;EAAA;IACE,gCAAA;ElB2iEF;AACF;AkBviEE;EAAA;IC3FA,yBAAA;EnBsoEA;EmBroEA;IAAU,yBAAA;EnBwoEV;EmBvoEA;IAAU,6BAAA;EnB0oEV;EmBzoEA;;IACU,8BAAA;EnB4oEV;AACF;AkBjjEE;EAAA;IACE,yBAAA;ElBojEF;AACF;AkBjjEE;EAAA;IACE,0BAAA;ElBojEF;AACF;AkBjjEE;EAAA;IACE,gCAAA;ElBojEF;AACF;AkBhjEE;EAAA;IChHA,yBAAA;EnBoqEA;EmBnqEA;IAAU,yBAAA;EnBsqEV;EmBrqEA;IAAU,6BAAA;EnBwqEV;EmBvqEA;;IACU,8BAAA;EnB0qEV;AACF;AkB1jEE;EAAA;IACE,yBAAA;ElB6jEF;AACF;AkB1jEE;EAAA;IACE,0BAAA;ElB6jEF;AACF;AkB1jEE;EAAA;IACE,gCAAA;ElB6jEF;AACF;AkBzjEE;EAAA;IC7HA,wBAAA;EnB0rEA;AACF;AkBzjEE;EAAA;IClIA,wBAAA;EnB+rEA;AACF;AkBzjEE;EAAA;ICvIA,wBAAA;EnBosEA;AACF;AkBzjEE;EAAA;IC5IA,wBAAA;EnBysEA;AACF;AkBnjEA;ECvJE,wBAAA;AnB6sEF;AkBnjEE;EAAA;IClKA,yBAAA;EnBytEA;EmBxtEA;IAAU,yBAAA;EnB2tEV;EmB1tEA;IAAU,6BAAA;EnB6tEV;EmB5tEA;;IACU,8BAAA;EnB+tEV;AACF;AkB9jEA;EACE,wBAAA;AlBgkEF;AkB9jEE;EAAA;IACE,yBAAA;ElBikEF;AACF;AkB/jEA;EACE,wBAAA;AlBikEF;AkB/jEE;EAAA;IACE,0BAAA;ElBkkEF;AACF;AkBhkEA;EACE,wBAAA;AlBkkEF;AkBhkEE;EAAA;IACE,gCAAA;ElBmkEF;AACF;AkB/jEE;EAAA;ICrLA,wBAAA;EnBwvEA;AACF","sourcesContent":["/*!\n * Bootstrap v3.3.7 (http://getbootstrap.com)\n * Copyright 2011-2016 Twitter, Inc.\n * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n */\n/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */\nhtml {\n  font-family: sans-serif;\n  -ms-text-size-adjust: 100%;\n  -webkit-text-size-adjust: 100%;\n}\nbody {\n  margin: 0;\n}\narticle,\naside,\ndetails,\nfigcaption,\nfigure,\nfooter,\nheader,\nhgroup,\nmain,\nmenu,\nnav,\nsection,\nsummary {\n  display: block;\n}\naudio,\ncanvas,\nprogress,\nvideo {\n  display: inline-block;\n  vertical-align: baseline;\n}\naudio:not([controls]) {\n  display: none;\n  height: 0;\n}\n[hidden],\ntemplate {\n  display: none;\n}\na {\n  background-color: transparent;\n}\na:active,\na:hover {\n  outline: 0;\n}\nabbr[title] {\n  border-bottom: none;\n  text-decoration: underline;\n  text-decoration: underline dotted;\n}\nb,\nstrong {\n  font-weight: bold;\n}\ndfn {\n  font-style: italic;\n}\nh1 {\n  font-size: 2em;\n  margin: 0.67em 0;\n}\nmark {\n  background: #ff0;\n  color: #000;\n}\nsmall {\n  font-size: 80%;\n}\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\nsup {\n  top: -0.5em;\n}\nsub {\n  bottom: -0.25em;\n}\nimg {\n  border: 0;\n}\nsvg:not(:root) {\n  overflow: hidden;\n}\nfigure {\n  margin: 1em 40px;\n}\nhr {\n  box-sizing: content-box;\n  height: 0;\n}\npre {\n  overflow: auto;\n}\ncode,\nkbd,\npre,\nsamp {\n  font-family: monospace, monospace;\n  font-size: 1em;\n}\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  color: inherit;\n  font: inherit;\n  margin: 0;\n}\nbutton {\n  overflow: visible;\n}\nbutton,\nselect {\n  text-transform: none;\n}\nbutton,\nhtml input[type=\"button\"],\ninput[type=\"reset\"],\ninput[type=\"submit\"] {\n  -webkit-appearance: button;\n  cursor: pointer;\n}\nbutton[disabled],\nhtml input[disabled] {\n  cursor: default;\n}\nbutton::-moz-focus-inner,\ninput::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\ninput {\n  line-height: normal;\n}\ninput[type=\"checkbox\"],\ninput[type=\"radio\"] {\n  box-sizing: border-box;\n  padding: 0;\n}\ninput[type=\"number\"]::-webkit-inner-spin-button,\ninput[type=\"number\"]::-webkit-outer-spin-button {\n  height: auto;\n}\ninput[type=\"search\"] {\n  -webkit-appearance: textfield;\n  box-sizing: content-box;\n}\ninput[type=\"search\"]::-webkit-search-cancel-button,\ninput[type=\"search\"]::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\nfieldset {\n  border: 1px solid #c0c0c0;\n  margin: 0 2px;\n  padding: 0.35em 0.625em 0.75em;\n}\nlegend {\n  border: 0;\n  padding: 0;\n}\ntextarea {\n  overflow: auto;\n}\noptgroup {\n  font-weight: bold;\n}\ntable {\n  border-collapse: collapse;\n  border-spacing: 0;\n}\ntd,\nth {\n  padding: 0;\n}\n* {\n  -webkit-box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  box-sizing: border-box;\n}\n*:before,\n*:after {\n  -webkit-box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  box-sizing: border-box;\n}\nhtml {\n  font-size: 10px;\n  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);\n}\nbody {\n  font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  line-height: 1.42857143;\n  color: #333333;\n  background-color: #fff;\n}\ninput,\nbutton,\nselect,\ntextarea {\n  font-family: inherit;\n  font-size: inherit;\n  line-height: inherit;\n}\na {\n  color: #337ab7;\n  text-decoration: none;\n}\na:hover,\na:focus {\n  color: #23527c;\n  text-decoration: underline;\n}\na:focus {\n  outline: 5px auto -webkit-focus-ring-color;\n  outline-offset: -2px;\n}\nfigure {\n  margin: 0;\n}\nimg {\n  vertical-align: middle;\n}\n.img-responsive {\n  display: block;\n  max-width: 100%;\n  height: auto;\n}\n.img-rounded {\n  border-radius: 6px;\n}\n.img-thumbnail {\n  padding: 4px;\n  line-height: 1.42857143;\n  background-color: #fff;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  -webkit-transition: all 0.2s ease-in-out;\n  -o-transition: all 0.2s ease-in-out;\n  transition: all 0.2s ease-in-out;\n  display: inline-block;\n  max-width: 100%;\n  height: auto;\n}\n.img-circle {\n  border-radius: 50%;\n}\nhr {\n  margin-top: 20px;\n  margin-bottom: 20px;\n  border: 0;\n  border-top: 1px solid #eeeeee;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  border: 0;\n}\n.sr-only-focusable:active,\n.sr-only-focusable:focus {\n  position: static;\n  width: auto;\n  height: auto;\n  margin: 0;\n  overflow: visible;\n  clip: auto;\n}\n[role=\"button\"] {\n  cursor: pointer;\n}\n.container {\n  padding-right: 15px;\n  padding-left: 15px;\n  margin-right: auto;\n  margin-left: auto;\n}\n@media (min-width: 768px) {\n  .container {\n    width: 750px;\n  }\n}\n@media (min-width: 992px) {\n  .container {\n    width: 970px;\n  }\n}\n@media (min-width: 1200px) {\n  .container {\n    width: 1170px;\n  }\n}\n.container-fluid {\n  padding-right: 15px;\n  padding-left: 15px;\n  margin-right: auto;\n  margin-left: auto;\n}\n.row {\n  margin-right: -15px;\n  margin-left: -15px;\n}\n.row-no-gutters {\n  margin-right: 0;\n  margin-left: 0;\n}\n.row-no-gutters [class*=\"col-\"] {\n  padding-right: 0;\n  padding-left: 0;\n}\n.col-xs-1,\n.col-sm-1,\n.col-md-1,\n.col-lg-1,\n.col-xs-2,\n.col-sm-2,\n.col-md-2,\n.col-lg-2,\n.col-xs-3,\n.col-sm-3,\n.col-md-3,\n.col-lg-3,\n.col-xs-4,\n.col-sm-4,\n.col-md-4,\n.col-lg-4,\n.col-xs-5,\n.col-sm-5,\n.col-md-5,\n.col-lg-5,\n.col-xs-6,\n.col-sm-6,\n.col-md-6,\n.col-lg-6,\n.col-xs-7,\n.col-sm-7,\n.col-md-7,\n.col-lg-7,\n.col-xs-8,\n.col-sm-8,\n.col-md-8,\n.col-lg-8,\n.col-xs-9,\n.col-sm-9,\n.col-md-9,\n.col-lg-9,\n.col-xs-10,\n.col-sm-10,\n.col-md-10,\n.col-lg-10,\n.col-xs-11,\n.col-sm-11,\n.col-md-11,\n.col-lg-11,\n.col-xs-12,\n.col-sm-12,\n.col-md-12,\n.col-lg-12,\n.col-xs-13,\n.col-sm-13,\n.col-md-13,\n.col-lg-13,\n.col-xs-14,\n.col-sm-14,\n.col-md-14,\n.col-lg-14,\n.col-xs-15,\n.col-sm-15,\n.col-md-15,\n.col-lg-15,\n.col-xs-16,\n.col-sm-16,\n.col-md-16,\n.col-lg-16,\n.col-xs-17,\n.col-sm-17,\n.col-md-17,\n.col-lg-17,\n.col-xs-18,\n.col-sm-18,\n.col-md-18,\n.col-lg-18,\n.col-xs-19,\n.col-sm-19,\n.col-md-19,\n.col-lg-19,\n.col-xs-20,\n.col-sm-20,\n.col-md-20,\n.col-lg-20,\n.col-xs-21,\n.col-sm-21,\n.col-md-21,\n.col-lg-21,\n.col-xs-22,\n.col-sm-22,\n.col-md-22,\n.col-lg-22,\n.col-xs-23,\n.col-sm-23,\n.col-md-23,\n.col-lg-23,\n.col-xs-24,\n.col-sm-24,\n.col-md-24,\n.col-lg-24 {\n  position: relative;\n  min-height: 1px;\n  padding-right: 15px;\n  padding-left: 15px;\n}\n.col-xs-1,\n.col-xs-2,\n.col-xs-3,\n.col-xs-4,\n.col-xs-5,\n.col-xs-6,\n.col-xs-7,\n.col-xs-8,\n.col-xs-9,\n.col-xs-10,\n.col-xs-11,\n.col-xs-12,\n.col-xs-13,\n.col-xs-14,\n.col-xs-15,\n.col-xs-16,\n.col-xs-17,\n.col-xs-18,\n.col-xs-19,\n.col-xs-20,\n.col-xs-21,\n.col-xs-22,\n.col-xs-23,\n.col-xs-24 {\n  float: left;\n}\n.col-xs-24 {\n  width: 100%;\n}\n.col-xs-23 {\n  width: 95.83333333%;\n}\n.col-xs-22 {\n  width: 91.66666667%;\n}\n.col-xs-21 {\n  width: 87.5%;\n}\n.col-xs-20 {\n  width: 83.33333333%;\n}\n.col-xs-19 {\n  width: 79.16666667%;\n}\n.col-xs-18 {\n  width: 75%;\n}\n.col-xs-17 {\n  width: 70.83333333%;\n}\n.col-xs-16 {\n  width: 66.66666667%;\n}\n.col-xs-15 {\n  width: 62.5%;\n}\n.col-xs-14 {\n  width: 58.33333333%;\n}\n.col-xs-13 {\n  width: 54.16666667%;\n}\n.col-xs-12 {\n  width: 50%;\n}\n.col-xs-11 {\n  width: 45.83333333%;\n}\n.col-xs-10 {\n  width: 41.66666667%;\n}\n.col-xs-9 {\n  width: 37.5%;\n}\n.col-xs-8 {\n  width: 33.33333333%;\n}\n.col-xs-7 {\n  width: 29.16666667%;\n}\n.col-xs-6 {\n  width: 25%;\n}\n.col-xs-5 {\n  width: 20.83333333%;\n}\n.col-xs-4 {\n  width: 16.66666667%;\n}\n.col-xs-3 {\n  width: 12.5%;\n}\n.col-xs-2 {\n  width: 8.33333333%;\n}\n.col-xs-1 {\n  width: 4.16666667%;\n}\n.col-xs-pull-24 {\n  right: 100%;\n}\n.col-xs-pull-23 {\n  right: 95.83333333%;\n}\n.col-xs-pull-22 {\n  right: 91.66666667%;\n}\n.col-xs-pull-21 {\n  right: 87.5%;\n}\n.col-xs-pull-20 {\n  right: 83.33333333%;\n}\n.col-xs-pull-19 {\n  right: 79.16666667%;\n}\n.col-xs-pull-18 {\n  right: 75%;\n}\n.col-xs-pull-17 {\n  right: 70.83333333%;\n}\n.col-xs-pull-16 {\n  right: 66.66666667%;\n}\n.col-xs-pull-15 {\n  right: 62.5%;\n}\n.col-xs-pull-14 {\n  right: 58.33333333%;\n}\n.col-xs-pull-13 {\n  right: 54.16666667%;\n}\n.col-xs-pull-12 {\n  right: 50%;\n}\n.col-xs-pull-11 {\n  right: 45.83333333%;\n}\n.col-xs-pull-10 {\n  right: 41.66666667%;\n}\n.col-xs-pull-9 {\n  right: 37.5%;\n}\n.col-xs-pull-8 {\n  right: 33.33333333%;\n}\n.col-xs-pull-7 {\n  right: 29.16666667%;\n}\n.col-xs-pull-6 {\n  right: 25%;\n}\n.col-xs-pull-5 {\n  right: 20.83333333%;\n}\n.col-xs-pull-4 {\n  right: 16.66666667%;\n}\n.col-xs-pull-3 {\n  right: 12.5%;\n}\n.col-xs-pull-2 {\n  right: 8.33333333%;\n}\n.col-xs-pull-1 {\n  right: 4.16666667%;\n}\n.col-xs-pull-0 {\n  right: auto;\n}\n.col-xs-push-24 {\n  left: 100%;\n}\n.col-xs-push-23 {\n  left: 95.83333333%;\n}\n.col-xs-push-22 {\n  left: 91.66666667%;\n}\n.col-xs-push-21 {\n  left: 87.5%;\n}\n.col-xs-push-20 {\n  left: 83.33333333%;\n}\n.col-xs-push-19 {\n  left: 79.16666667%;\n}\n.col-xs-push-18 {\n  left: 75%;\n}\n.col-xs-push-17 {\n  left: 70.83333333%;\n}\n.col-xs-push-16 {\n  left: 66.66666667%;\n}\n.col-xs-push-15 {\n  left: 62.5%;\n}\n.col-xs-push-14 {\n  left: 58.33333333%;\n}\n.col-xs-push-13 {\n  left: 54.16666667%;\n}\n.col-xs-push-12 {\n  left: 50%;\n}\n.col-xs-push-11 {\n  left: 45.83333333%;\n}\n.col-xs-push-10 {\n  left: 41.66666667%;\n}\n.col-xs-push-9 {\n  left: 37.5%;\n}\n.col-xs-push-8 {\n  left: 33.33333333%;\n}\n.col-xs-push-7 {\n  left: 29.16666667%;\n}\n.col-xs-push-6 {\n  left: 25%;\n}\n.col-xs-push-5 {\n  left: 20.83333333%;\n}\n.col-xs-push-4 {\n  left: 16.66666667%;\n}\n.col-xs-push-3 {\n  left: 12.5%;\n}\n.col-xs-push-2 {\n  left: 8.33333333%;\n}\n.col-xs-push-1 {\n  left: 4.16666667%;\n}\n.col-xs-push-0 {\n  left: auto;\n}\n.col-xs-offset-24 {\n  margin-left: 100%;\n}\n.col-xs-offset-23 {\n  margin-left: 95.83333333%;\n}\n.col-xs-offset-22 {\n  margin-left: 91.66666667%;\n}\n.col-xs-offset-21 {\n  margin-left: 87.5%;\n}\n.col-xs-offset-20 {\n  margin-left: 83.33333333%;\n}\n.col-xs-offset-19 {\n  margin-left: 79.16666667%;\n}\n.col-xs-offset-18 {\n  margin-left: 75%;\n}\n.col-xs-offset-17 {\n  margin-left: 70.83333333%;\n}\n.col-xs-offset-16 {\n  margin-left: 66.66666667%;\n}\n.col-xs-offset-15 {\n  margin-left: 62.5%;\n}\n.col-xs-offset-14 {\n  margin-left: 58.33333333%;\n}\n.col-xs-offset-13 {\n  margin-left: 54.16666667%;\n}\n.col-xs-offset-12 {\n  margin-left: 50%;\n}\n.col-xs-offset-11 {\n  margin-left: 45.83333333%;\n}\n.col-xs-offset-10 {\n  margin-left: 41.66666667%;\n}\n.col-xs-offset-9 {\n  margin-left: 37.5%;\n}\n.col-xs-offset-8 {\n  margin-left: 33.33333333%;\n}\n.col-xs-offset-7 {\n  margin-left: 29.16666667%;\n}\n.col-xs-offset-6 {\n  margin-left: 25%;\n}\n.col-xs-offset-5 {\n  margin-left: 20.83333333%;\n}\n.col-xs-offset-4 {\n  margin-left: 16.66666667%;\n}\n.col-xs-offset-3 {\n  margin-left: 12.5%;\n}\n.col-xs-offset-2 {\n  margin-left: 8.33333333%;\n}\n.col-xs-offset-1 {\n  margin-left: 4.16666667%;\n}\n.col-xs-offset-0 {\n  margin-left: 0%;\n}\n@media (min-width: 768px) {\n  .col-sm-1,\n  .col-sm-2,\n  .col-sm-3,\n  .col-sm-4,\n  .col-sm-5,\n  .col-sm-6,\n  .col-sm-7,\n  .col-sm-8,\n  .col-sm-9,\n  .col-sm-10,\n  .col-sm-11,\n  .col-sm-12,\n  .col-sm-13,\n  .col-sm-14,\n  .col-sm-15,\n  .col-sm-16,\n  .col-sm-17,\n  .col-sm-18,\n  .col-sm-19,\n  .col-sm-20,\n  .col-sm-21,\n  .col-sm-22,\n  .col-sm-23,\n  .col-sm-24 {\n    float: left;\n  }\n  .col-sm-24 {\n    width: 100%;\n  }\n  .col-sm-23 {\n    width: 95.83333333%;\n  }\n  .col-sm-22 {\n    width: 91.66666667%;\n  }\n  .col-sm-21 {\n    width: 87.5%;\n  }\n  .col-sm-20 {\n    width: 83.33333333%;\n  }\n  .col-sm-19 {\n    width: 79.16666667%;\n  }\n  .col-sm-18 {\n    width: 75%;\n  }\n  .col-sm-17 {\n    width: 70.83333333%;\n  }\n  .col-sm-16 {\n    width: 66.66666667%;\n  }\n  .col-sm-15 {\n    width: 62.5%;\n  }\n  .col-sm-14 {\n    width: 58.33333333%;\n  }\n  .col-sm-13 {\n    width: 54.16666667%;\n  }\n  .col-sm-12 {\n    width: 50%;\n  }\n  .col-sm-11 {\n    width: 45.83333333%;\n  }\n  .col-sm-10 {\n    width: 41.66666667%;\n  }\n  .col-sm-9 {\n    width: 37.5%;\n  }\n  .col-sm-8 {\n    width: 33.33333333%;\n  }\n  .col-sm-7 {\n    width: 29.16666667%;\n  }\n  .col-sm-6 {\n    width: 25%;\n  }\n  .col-sm-5 {\n    width: 20.83333333%;\n  }\n  .col-sm-4 {\n    width: 16.66666667%;\n  }\n  .col-sm-3 {\n    width: 12.5%;\n  }\n  .col-sm-2 {\n    width: 8.33333333%;\n  }\n  .col-sm-1 {\n    width: 4.16666667%;\n  }\n  .col-sm-pull-24 {\n    right: 100%;\n  }\n  .col-sm-pull-23 {\n    right: 95.83333333%;\n  }\n  .col-sm-pull-22 {\n    right: 91.66666667%;\n  }\n  .col-sm-pull-21 {\n    right: 87.5%;\n  }\n  .col-sm-pull-20 {\n    right: 83.33333333%;\n  }\n  .col-sm-pull-19 {\n    right: 79.16666667%;\n  }\n  .col-sm-pull-18 {\n    right: 75%;\n  }\n  .col-sm-pull-17 {\n    right: 70.83333333%;\n  }\n  .col-sm-pull-16 {\n    right: 66.66666667%;\n  }\n  .col-sm-pull-15 {\n    right: 62.5%;\n  }\n  .col-sm-pull-14 {\n    right: 58.33333333%;\n  }\n  .col-sm-pull-13 {\n    right: 54.16666667%;\n  }\n  .col-sm-pull-12 {\n    right: 50%;\n  }\n  .col-sm-pull-11 {\n    right: 45.83333333%;\n  }\n  .col-sm-pull-10 {\n    right: 41.66666667%;\n  }\n  .col-sm-pull-9 {\n    right: 37.5%;\n  }\n  .col-sm-pull-8 {\n    right: 33.33333333%;\n  }\n  .col-sm-pull-7 {\n    right: 29.16666667%;\n  }\n  .col-sm-pull-6 {\n    right: 25%;\n  }\n  .col-sm-pull-5 {\n    right: 20.83333333%;\n  }\n  .col-sm-pull-4 {\n    right: 16.66666667%;\n  }\n  .col-sm-pull-3 {\n    right: 12.5%;\n  }\n  .col-sm-pull-2 {\n    right: 8.33333333%;\n  }\n  .col-sm-pull-1 {\n    right: 4.16666667%;\n  }\n  .col-sm-pull-0 {\n    right: auto;\n  }\n  .col-sm-push-24 {\n    left: 100%;\n  }\n  .col-sm-push-23 {\n    left: 95.83333333%;\n  }\n  .col-sm-push-22 {\n    left: 91.66666667%;\n  }\n  .col-sm-push-21 {\n    left: 87.5%;\n  }\n  .col-sm-push-20 {\n    left: 83.33333333%;\n  }\n  .col-sm-push-19 {\n    left: 79.16666667%;\n  }\n  .col-sm-push-18 {\n    left: 75%;\n  }\n  .col-sm-push-17 {\n    left: 70.83333333%;\n  }\n  .col-sm-push-16 {\n    left: 66.66666667%;\n  }\n  .col-sm-push-15 {\n    left: 62.5%;\n  }\n  .col-sm-push-14 {\n    left: 58.33333333%;\n  }\n  .col-sm-push-13 {\n    left: 54.16666667%;\n  }\n  .col-sm-push-12 {\n    left: 50%;\n  }\n  .col-sm-push-11 {\n    left: 45.83333333%;\n  }\n  .col-sm-push-10 {\n    left: 41.66666667%;\n  }\n  .col-sm-push-9 {\n    left: 37.5%;\n  }\n  .col-sm-push-8 {\n    left: 33.33333333%;\n  }\n  .col-sm-push-7 {\n    left: 29.16666667%;\n  }\n  .col-sm-push-6 {\n    left: 25%;\n  }\n  .col-sm-push-5 {\n    left: 20.83333333%;\n  }\n  .col-sm-push-4 {\n    left: 16.66666667%;\n  }\n  .col-sm-push-3 {\n    left: 12.5%;\n  }\n  .col-sm-push-2 {\n    left: 8.33333333%;\n  }\n  .col-sm-push-1 {\n    left: 4.16666667%;\n  }\n  .col-sm-push-0 {\n    left: auto;\n  }\n  .col-sm-offset-24 {\n    margin-left: 100%;\n  }\n  .col-sm-offset-23 {\n    margin-left: 95.83333333%;\n  }\n  .col-sm-offset-22 {\n    margin-left: 91.66666667%;\n  }\n  .col-sm-offset-21 {\n    margin-left: 87.5%;\n  }\n  .col-sm-offset-20 {\n    margin-left: 83.33333333%;\n  }\n  .col-sm-offset-19 {\n    margin-left: 79.16666667%;\n  }\n  .col-sm-offset-18 {\n    margin-left: 75%;\n  }\n  .col-sm-offset-17 {\n    margin-left: 70.83333333%;\n  }\n  .col-sm-offset-16 {\n    margin-left: 66.66666667%;\n  }\n  .col-sm-offset-15 {\n    margin-left: 62.5%;\n  }\n  .col-sm-offset-14 {\n    margin-left: 58.33333333%;\n  }\n  .col-sm-offset-13 {\n    margin-left: 54.16666667%;\n  }\n  .col-sm-offset-12 {\n    margin-left: 50%;\n  }\n  .col-sm-offset-11 {\n    margin-left: 45.83333333%;\n  }\n  .col-sm-offset-10 {\n    margin-left: 41.66666667%;\n  }\n  .col-sm-offset-9 {\n    margin-left: 37.5%;\n  }\n  .col-sm-offset-8 {\n    margin-left: 33.33333333%;\n  }\n  .col-sm-offset-7 {\n    margin-left: 29.16666667%;\n  }\n  .col-sm-offset-6 {\n    margin-left: 25%;\n  }\n  .col-sm-offset-5 {\n    margin-left: 20.83333333%;\n  }\n  .col-sm-offset-4 {\n    margin-left: 16.66666667%;\n  }\n  .col-sm-offset-3 {\n    margin-left: 12.5%;\n  }\n  .col-sm-offset-2 {\n    margin-left: 8.33333333%;\n  }\n  .col-sm-offset-1 {\n    margin-left: 4.16666667%;\n  }\n  .col-sm-offset-0 {\n    margin-left: 0%;\n  }\n}\n@media (min-width: 992px) {\n  .col-md-1,\n  .col-md-2,\n  .col-md-3,\n  .col-md-4,\n  .col-md-5,\n  .col-md-6,\n  .col-md-7,\n  .col-md-8,\n  .col-md-9,\n  .col-md-10,\n  .col-md-11,\n  .col-md-12,\n  .col-md-13,\n  .col-md-14,\n  .col-md-15,\n  .col-md-16,\n  .col-md-17,\n  .col-md-18,\n  .col-md-19,\n  .col-md-20,\n  .col-md-21,\n  .col-md-22,\n  .col-md-23,\n  .col-md-24 {\n    float: left;\n  }\n  .col-md-24 {\n    width: 100%;\n  }\n  .col-md-23 {\n    width: 95.83333333%;\n  }\n  .col-md-22 {\n    width: 91.66666667%;\n  }\n  .col-md-21 {\n    width: 87.5%;\n  }\n  .col-md-20 {\n    width: 83.33333333%;\n  }\n  .col-md-19 {\n    width: 79.16666667%;\n  }\n  .col-md-18 {\n    width: 75%;\n  }\n  .col-md-17 {\n    width: 70.83333333%;\n  }\n  .col-md-16 {\n    width: 66.66666667%;\n  }\n  .col-md-15 {\n    width: 62.5%;\n  }\n  .col-md-14 {\n    width: 58.33333333%;\n  }\n  .col-md-13 {\n    width: 54.16666667%;\n  }\n  .col-md-12 {\n    width: 50%;\n  }\n  .col-md-11 {\n    width: 45.83333333%;\n  }\n  .col-md-10 {\n    width: 41.66666667%;\n  }\n  .col-md-9 {\n    width: 37.5%;\n  }\n  .col-md-8 {\n    width: 33.33333333%;\n  }\n  .col-md-7 {\n    width: 29.16666667%;\n  }\n  .col-md-6 {\n    width: 25%;\n  }\n  .col-md-5 {\n    width: 20.83333333%;\n  }\n  .col-md-4 {\n    width: 16.66666667%;\n  }\n  .col-md-3 {\n    width: 12.5%;\n  }\n  .col-md-2 {\n    width: 8.33333333%;\n  }\n  .col-md-1 {\n    width: 4.16666667%;\n  }\n  .col-md-pull-24 {\n    right: 100%;\n  }\n  .col-md-pull-23 {\n    right: 95.83333333%;\n  }\n  .col-md-pull-22 {\n    right: 91.66666667%;\n  }\n  .col-md-pull-21 {\n    right: 87.5%;\n  }\n  .col-md-pull-20 {\n    right: 83.33333333%;\n  }\n  .col-md-pull-19 {\n    right: 79.16666667%;\n  }\n  .col-md-pull-18 {\n    right: 75%;\n  }\n  .col-md-pull-17 {\n    right: 70.83333333%;\n  }\n  .col-md-pull-16 {\n    right: 66.66666667%;\n  }\n  .col-md-pull-15 {\n    right: 62.5%;\n  }\n  .col-md-pull-14 {\n    right: 58.33333333%;\n  }\n  .col-md-pull-13 {\n    right: 54.16666667%;\n  }\n  .col-md-pull-12 {\n    right: 50%;\n  }\n  .col-md-pull-11 {\n    right: 45.83333333%;\n  }\n  .col-md-pull-10 {\n    right: 41.66666667%;\n  }\n  .col-md-pull-9 {\n    right: 37.5%;\n  }\n  .col-md-pull-8 {\n    right: 33.33333333%;\n  }\n  .col-md-pull-7 {\n    right: 29.16666667%;\n  }\n  .col-md-pull-6 {\n    right: 25%;\n  }\n  .col-md-pull-5 {\n    right: 20.83333333%;\n  }\n  .col-md-pull-4 {\n    right: 16.66666667%;\n  }\n  .col-md-pull-3 {\n    right: 12.5%;\n  }\n  .col-md-pull-2 {\n    right: 8.33333333%;\n  }\n  .col-md-pull-1 {\n    right: 4.16666667%;\n  }\n  .col-md-pull-0 {\n    right: auto;\n  }\n  .col-md-push-24 {\n    left: 100%;\n  }\n  .col-md-push-23 {\n    left: 95.83333333%;\n  }\n  .col-md-push-22 {\n    left: 91.66666667%;\n  }\n  .col-md-push-21 {\n    left: 87.5%;\n  }\n  .col-md-push-20 {\n    left: 83.33333333%;\n  }\n  .col-md-push-19 {\n    left: 79.16666667%;\n  }\n  .col-md-push-18 {\n    left: 75%;\n  }\n  .col-md-push-17 {\n    left: 70.83333333%;\n  }\n  .col-md-push-16 {\n    left: 66.66666667%;\n  }\n  .col-md-push-15 {\n    left: 62.5%;\n  }\n  .col-md-push-14 {\n    left: 58.33333333%;\n  }\n  .col-md-push-13 {\n    left: 54.16666667%;\n  }\n  .col-md-push-12 {\n    left: 50%;\n  }\n  .col-md-push-11 {\n    left: 45.83333333%;\n  }\n  .col-md-push-10 {\n    left: 41.66666667%;\n  }\n  .col-md-push-9 {\n    left: 37.5%;\n  }\n  .col-md-push-8 {\n    left: 33.33333333%;\n  }\n  .col-md-push-7 {\n    left: 29.16666667%;\n  }\n  .col-md-push-6 {\n    left: 25%;\n  }\n  .col-md-push-5 {\n    left: 20.83333333%;\n  }\n  .col-md-push-4 {\n    left: 16.66666667%;\n  }\n  .col-md-push-3 {\n    left: 12.5%;\n  }\n  .col-md-push-2 {\n    left: 8.33333333%;\n  }\n  .col-md-push-1 {\n    left: 4.16666667%;\n  }\n  .col-md-push-0 {\n    left: auto;\n  }\n  .col-md-offset-24 {\n    margin-left: 100%;\n  }\n  .col-md-offset-23 {\n    margin-left: 95.83333333%;\n  }\n  .col-md-offset-22 {\n    margin-left: 91.66666667%;\n  }\n  .col-md-offset-21 {\n    margin-left: 87.5%;\n  }\n  .col-md-offset-20 {\n    margin-left: 83.33333333%;\n  }\n  .col-md-offset-19 {\n    margin-left: 79.16666667%;\n  }\n  .col-md-offset-18 {\n    margin-left: 75%;\n  }\n  .col-md-offset-17 {\n    margin-left: 70.83333333%;\n  }\n  .col-md-offset-16 {\n    margin-left: 66.66666667%;\n  }\n  .col-md-offset-15 {\n    margin-left: 62.5%;\n  }\n  .col-md-offset-14 {\n    margin-left: 58.33333333%;\n  }\n  .col-md-offset-13 {\n    margin-left: 54.16666667%;\n  }\n  .col-md-offset-12 {\n    margin-left: 50%;\n  }\n  .col-md-offset-11 {\n    margin-left: 45.83333333%;\n  }\n  .col-md-offset-10 {\n    margin-left: 41.66666667%;\n  }\n  .col-md-offset-9 {\n    margin-left: 37.5%;\n  }\n  .col-md-offset-8 {\n    margin-left: 33.33333333%;\n  }\n  .col-md-offset-7 {\n    margin-left: 29.16666667%;\n  }\n  .col-md-offset-6 {\n    margin-left: 25%;\n  }\n  .col-md-offset-5 {\n    margin-left: 20.83333333%;\n  }\n  .col-md-offset-4 {\n    margin-left: 16.66666667%;\n  }\n  .col-md-offset-3 {\n    margin-left: 12.5%;\n  }\n  .col-md-offset-2 {\n    margin-left: 8.33333333%;\n  }\n  .col-md-offset-1 {\n    margin-left: 4.16666667%;\n  }\n  .col-md-offset-0 {\n    margin-left: 0%;\n  }\n}\n@media (min-width: 1200px) {\n  .col-lg-1,\n  .col-lg-2,\n  .col-lg-3,\n  .col-lg-4,\n  .col-lg-5,\n  .col-lg-6,\n  .col-lg-7,\n  .col-lg-8,\n  .col-lg-9,\n  .col-lg-10,\n  .col-lg-11,\n  .col-lg-12,\n  .col-lg-13,\n  .col-lg-14,\n  .col-lg-15,\n  .col-lg-16,\n  .col-lg-17,\n  .col-lg-18,\n  .col-lg-19,\n  .col-lg-20,\n  .col-lg-21,\n  .col-lg-22,\n  .col-lg-23,\n  .col-lg-24 {\n    float: left;\n  }\n  .col-lg-24 {\n    width: 100%;\n  }\n  .col-lg-23 {\n    width: 95.83333333%;\n  }\n  .col-lg-22 {\n    width: 91.66666667%;\n  }\n  .col-lg-21 {\n    width: 87.5%;\n  }\n  .col-lg-20 {\n    width: 83.33333333%;\n  }\n  .col-lg-19 {\n    width: 79.16666667%;\n  }\n  .col-lg-18 {\n    width: 75%;\n  }\n  .col-lg-17 {\n    width: 70.83333333%;\n  }\n  .col-lg-16 {\n    width: 66.66666667%;\n  }\n  .col-lg-15 {\n    width: 62.5%;\n  }\n  .col-lg-14 {\n    width: 58.33333333%;\n  }\n  .col-lg-13 {\n    width: 54.16666667%;\n  }\n  .col-lg-12 {\n    width: 50%;\n  }\n  .col-lg-11 {\n    width: 45.83333333%;\n  }\n  .col-lg-10 {\n    width: 41.66666667%;\n  }\n  .col-lg-9 {\n    width: 37.5%;\n  }\n  .col-lg-8 {\n    width: 33.33333333%;\n  }\n  .col-lg-7 {\n    width: 29.16666667%;\n  }\n  .col-lg-6 {\n    width: 25%;\n  }\n  .col-lg-5 {\n    width: 20.83333333%;\n  }\n  .col-lg-4 {\n    width: 16.66666667%;\n  }\n  .col-lg-3 {\n    width: 12.5%;\n  }\n  .col-lg-2 {\n    width: 8.33333333%;\n  }\n  .col-lg-1 {\n    width: 4.16666667%;\n  }\n  .col-lg-pull-24 {\n    right: 100%;\n  }\n  .col-lg-pull-23 {\n    right: 95.83333333%;\n  }\n  .col-lg-pull-22 {\n    right: 91.66666667%;\n  }\n  .col-lg-pull-21 {\n    right: 87.5%;\n  }\n  .col-lg-pull-20 {\n    right: 83.33333333%;\n  }\n  .col-lg-pull-19 {\n    right: 79.16666667%;\n  }\n  .col-lg-pull-18 {\n    right: 75%;\n  }\n  .col-lg-pull-17 {\n    right: 70.83333333%;\n  }\n  .col-lg-pull-16 {\n    right: 66.66666667%;\n  }\n  .col-lg-pull-15 {\n    right: 62.5%;\n  }\n  .col-lg-pull-14 {\n    right: 58.33333333%;\n  }\n  .col-lg-pull-13 {\n    right: 54.16666667%;\n  }\n  .col-lg-pull-12 {\n    right: 50%;\n  }\n  .col-lg-pull-11 {\n    right: 45.83333333%;\n  }\n  .col-lg-pull-10 {\n    right: 41.66666667%;\n  }\n  .col-lg-pull-9 {\n    right: 37.5%;\n  }\n  .col-lg-pull-8 {\n    right: 33.33333333%;\n  }\n  .col-lg-pull-7 {\n    right: 29.16666667%;\n  }\n  .col-lg-pull-6 {\n    right: 25%;\n  }\n  .col-lg-pull-5 {\n    right: 20.83333333%;\n  }\n  .col-lg-pull-4 {\n    right: 16.66666667%;\n  }\n  .col-lg-pull-3 {\n    right: 12.5%;\n  }\n  .col-lg-pull-2 {\n    right: 8.33333333%;\n  }\n  .col-lg-pull-1 {\n    right: 4.16666667%;\n  }\n  .col-lg-pull-0 {\n    right: auto;\n  }\n  .col-lg-push-24 {\n    left: 100%;\n  }\n  .col-lg-push-23 {\n    left: 95.83333333%;\n  }\n  .col-lg-push-22 {\n    left: 91.66666667%;\n  }\n  .col-lg-push-21 {\n    left: 87.5%;\n  }\n  .col-lg-push-20 {\n    left: 83.33333333%;\n  }\n  .col-lg-push-19 {\n    left: 79.16666667%;\n  }\n  .col-lg-push-18 {\n    left: 75%;\n  }\n  .col-lg-push-17 {\n    left: 70.83333333%;\n  }\n  .col-lg-push-16 {\n    left: 66.66666667%;\n  }\n  .col-lg-push-15 {\n    left: 62.5%;\n  }\n  .col-lg-push-14 {\n    left: 58.33333333%;\n  }\n  .col-lg-push-13 {\n    left: 54.16666667%;\n  }\n  .col-lg-push-12 {\n    left: 50%;\n  }\n  .col-lg-push-11 {\n    left: 45.83333333%;\n  }\n  .col-lg-push-10 {\n    left: 41.66666667%;\n  }\n  .col-lg-push-9 {\n    left: 37.5%;\n  }\n  .col-lg-push-8 {\n    left: 33.33333333%;\n  }\n  .col-lg-push-7 {\n    left: 29.16666667%;\n  }\n  .col-lg-push-6 {\n    left: 25%;\n  }\n  .col-lg-push-5 {\n    left: 20.83333333%;\n  }\n  .col-lg-push-4 {\n    left: 16.66666667%;\n  }\n  .col-lg-push-3 {\n    left: 12.5%;\n  }\n  .col-lg-push-2 {\n    left: 8.33333333%;\n  }\n  .col-lg-push-1 {\n    left: 4.16666667%;\n  }\n  .col-lg-push-0 {\n    left: auto;\n  }\n  .col-lg-offset-24 {\n    margin-left: 100%;\n  }\n  .col-lg-offset-23 {\n    margin-left: 95.83333333%;\n  }\n  .col-lg-offset-22 {\n    margin-left: 91.66666667%;\n  }\n  .col-lg-offset-21 {\n    margin-left: 87.5%;\n  }\n  .col-lg-offset-20 {\n    margin-left: 83.33333333%;\n  }\n  .col-lg-offset-19 {\n    margin-left: 79.16666667%;\n  }\n  .col-lg-offset-18 {\n    margin-left: 75%;\n  }\n  .col-lg-offset-17 {\n    margin-left: 70.83333333%;\n  }\n  .col-lg-offset-16 {\n    margin-left: 66.66666667%;\n  }\n  .col-lg-offset-15 {\n    margin-left: 62.5%;\n  }\n  .col-lg-offset-14 {\n    margin-left: 58.33333333%;\n  }\n  .col-lg-offset-13 {\n    margin-left: 54.16666667%;\n  }\n  .col-lg-offset-12 {\n    margin-left: 50%;\n  }\n  .col-lg-offset-11 {\n    margin-left: 45.83333333%;\n  }\n  .col-lg-offset-10 {\n    margin-left: 41.66666667%;\n  }\n  .col-lg-offset-9 {\n    margin-left: 37.5%;\n  }\n  .col-lg-offset-8 {\n    margin-left: 33.33333333%;\n  }\n  .col-lg-offset-7 {\n    margin-left: 29.16666667%;\n  }\n  .col-lg-offset-6 {\n    margin-left: 25%;\n  }\n  .col-lg-offset-5 {\n    margin-left: 20.83333333%;\n  }\n  .col-lg-offset-4 {\n    margin-left: 16.66666667%;\n  }\n  .col-lg-offset-3 {\n    margin-left: 12.5%;\n  }\n  .col-lg-offset-2 {\n    margin-left: 8.33333333%;\n  }\n  .col-lg-offset-1 {\n    margin-left: 4.16666667%;\n  }\n  .col-lg-offset-0 {\n    margin-left: 0%;\n  }\n}\ntable {\n  background-color: transparent;\n}\ntable col[class*=\"col-\"] {\n  position: static;\n  display: table-column;\n  float: none;\n}\ntable td[class*=\"col-\"],\ntable th[class*=\"col-\"] {\n  position: static;\n  display: table-cell;\n  float: none;\n}\ncaption {\n  padding-top: 8px;\n  padding-bottom: 8px;\n  color: #777777;\n  text-align: left;\n}\nth {\n  text-align: left;\n}\n.table {\n  width: 100%;\n  max-width: 100%;\n  margin-bottom: 20px;\n}\n.table > thead > tr > th,\n.table > tbody > tr > th,\n.table > tfoot > tr > th,\n.table > thead > tr > td,\n.table > tbody > tr > td,\n.table > tfoot > tr > td {\n  padding: 8px;\n  line-height: 1.42857143;\n  vertical-align: top;\n  border-top: 1px solid #ddd;\n}\n.table > thead > tr > th {\n  vertical-align: bottom;\n  border-bottom: 2px solid #ddd;\n}\n.table > caption + thead > tr:first-child > th,\n.table > colgroup + thead > tr:first-child > th,\n.table > thead:first-child > tr:first-child > th,\n.table > caption + thead > tr:first-child > td,\n.table > colgroup + thead > tr:first-child > td,\n.table > thead:first-child > tr:first-child > td {\n  border-top: 0;\n}\n.table > tbody + tbody {\n  border-top: 2px solid #ddd;\n}\n.table .table {\n  background-color: #fff;\n}\n.table-condensed > thead > tr > th,\n.table-condensed > tbody > tr > th,\n.table-condensed > tfoot > tr > th,\n.table-condensed > thead > tr > td,\n.table-condensed > tbody > tr > td,\n.table-condensed > tfoot > tr > td {\n  padding: 5px;\n}\n.table-bordered {\n  border: 1px solid #ddd;\n}\n.table-bordered > thead > tr > th,\n.table-bordered > tbody > tr > th,\n.table-bordered > tfoot > tr > th,\n.table-bordered > thead > tr > td,\n.table-bordered > tbody > tr > td,\n.table-bordered > tfoot > tr > td {\n  border: 1px solid #ddd;\n}\n.table-bordered > thead > tr > th,\n.table-bordered > thead > tr > td {\n  border-bottom-width: 2px;\n}\n.table-striped > tbody > tr:nth-of-type(odd) {\n  background-color: #f9f9f9;\n}\n.table-hover > tbody > tr:hover {\n  background-color: #f5f5f5;\n}\n.table > thead > tr > td.active,\n.table > tbody > tr > td.active,\n.table > tfoot > tr > td.active,\n.table > thead > tr > th.active,\n.table > tbody > tr > th.active,\n.table > tfoot > tr > th.active,\n.table > thead > tr.active > td,\n.table > tbody > tr.active > td,\n.table > tfoot > tr.active > td,\n.table > thead > tr.active > th,\n.table > tbody > tr.active > th,\n.table > tfoot > tr.active > th {\n  background-color: #f5f5f5;\n}\n.table-hover > tbody > tr > td.active:hover,\n.table-hover > tbody > tr > th.active:hover,\n.table-hover > tbody > tr.active:hover > td,\n.table-hover > tbody > tr:hover > .active,\n.table-hover > tbody > tr.active:hover > th {\n  background-color: #e8e8e8;\n}\n.table > thead > tr > td.success,\n.table > tbody > tr > td.success,\n.table > tfoot > tr > td.success,\n.table > thead > tr > th.success,\n.table > tbody > tr > th.success,\n.table > tfoot > tr > th.success,\n.table > thead > tr.success > td,\n.table > tbody > tr.success > td,\n.table > tfoot > tr.success > td,\n.table > thead > tr.success > th,\n.table > tbody > tr.success > th,\n.table > tfoot > tr.success > th {\n  background-color: #dff0d8;\n}\n.table-hover > tbody > tr > td.success:hover,\n.table-hover > tbody > tr > th.success:hover,\n.table-hover > tbody > tr.success:hover > td,\n.table-hover > tbody > tr:hover > .success,\n.table-hover > tbody > tr.success:hover > th {\n  background-color: #d0e9c6;\n}\n.table > thead > tr > td.info,\n.table > tbody > tr > td.info,\n.table > tfoot > tr > td.info,\n.table > thead > tr > th.info,\n.table > tbody > tr > th.info,\n.table > tfoot > tr > th.info,\n.table > thead > tr.info > td,\n.table > tbody > tr.info > td,\n.table > tfoot > tr.info > td,\n.table > thead > tr.info > th,\n.table > tbody > tr.info > th,\n.table > tfoot > tr.info > th {\n  background-color: #d9edf7;\n}\n.table-hover > tbody > tr > td.info:hover,\n.table-hover > tbody > tr > th.info:hover,\n.table-hover > tbody > tr.info:hover > td,\n.table-hover > tbody > tr:hover > .info,\n.table-hover > tbody > tr.info:hover > th {\n  background-color: #c4e3f3;\n}\n.table > thead > tr > td.warning,\n.table > tbody > tr > td.warning,\n.table > tfoot > tr > td.warning,\n.table > thead > tr > th.warning,\n.table > tbody > tr > th.warning,\n.table > tfoot > tr > th.warning,\n.table > thead > tr.warning > td,\n.table > tbody > tr.warning > td,\n.table > tfoot > tr.warning > td,\n.table > thead > tr.warning > th,\n.table > tbody > tr.warning > th,\n.table > tfoot > tr.warning > th {\n  background-color: #fcf8e3;\n}\n.table-hover > tbody > tr > td.warning:hover,\n.table-hover > tbody > tr > th.warning:hover,\n.table-hover > tbody > tr.warning:hover > td,\n.table-hover > tbody > tr:hover > .warning,\n.table-hover > tbody > tr.warning:hover > th {\n  background-color: #faf2cc;\n}\n.table > thead > tr > td.danger,\n.table > tbody > tr > td.danger,\n.table > tfoot > tr > td.danger,\n.table > thead > tr > th.danger,\n.table > tbody > tr > th.danger,\n.table > tfoot > tr > th.danger,\n.table > thead > tr.danger > td,\n.table > tbody > tr.danger > td,\n.table > tfoot > tr.danger > td,\n.table > thead > tr.danger > th,\n.table > tbody > tr.danger > th,\n.table > tfoot > tr.danger > th {\n  background-color: #f2dede;\n}\n.table-hover > tbody > tr > td.danger:hover,\n.table-hover > tbody > tr > th.danger:hover,\n.table-hover > tbody > tr.danger:hover > td,\n.table-hover > tbody > tr:hover > .danger,\n.table-hover > tbody > tr.danger:hover > th {\n  background-color: #ebcccc;\n}\n.table-responsive {\n  min-height: 0.01%;\n  overflow-x: auto;\n}\n@media screen and (max-width: 767px) {\n  .table-responsive {\n    width: 100%;\n    margin-bottom: 15px;\n    overflow-y: hidden;\n    -ms-overflow-style: -ms-autohiding-scrollbar;\n    border: 1px solid #ddd;\n  }\n  .table-responsive > .table {\n    margin-bottom: 0;\n  }\n  .table-responsive > .table > thead > tr > th,\n  .table-responsive > .table > tbody > tr > th,\n  .table-responsive > .table > tfoot > tr > th,\n  .table-responsive > .table > thead > tr > td,\n  .table-responsive > .table > tbody > tr > td,\n  .table-responsive > .table > tfoot > tr > td {\n    white-space: nowrap;\n  }\n  .table-responsive > .table-bordered {\n    border: 0;\n  }\n  .table-responsive > .table-bordered > thead > tr > th:first-child,\n  .table-responsive > .table-bordered > tbody > tr > th:first-child,\n  .table-responsive > .table-bordered > tfoot > tr > th:first-child,\n  .table-responsive > .table-bordered > thead > tr > td:first-child,\n  .table-responsive > .table-bordered > tbody > tr > td:first-child,\n  .table-responsive > .table-bordered > tfoot > tr > td:first-child {\n    border-left: 0;\n  }\n  .table-responsive > .table-bordered > thead > tr > th:last-child,\n  .table-responsive > .table-bordered > tbody > tr > th:last-child,\n  .table-responsive > .table-bordered > tfoot > tr > th:last-child,\n  .table-responsive > .table-bordered > thead > tr > td:last-child,\n  .table-responsive > .table-bordered > tbody > tr > td:last-child,\n  .table-responsive > .table-bordered > tfoot > tr > td:last-child {\n    border-right: 0;\n  }\n  .table-responsive > .table-bordered > tbody > tr:last-child > th,\n  .table-responsive > .table-bordered > tfoot > tr:last-child > th,\n  .table-responsive > .table-bordered > tbody > tr:last-child > td,\n  .table-responsive > .table-bordered > tfoot > tr:last-child > td {\n    border-bottom: 0;\n  }\n}\n@-webkit-keyframes progress-bar-stripes {\n  from {\n    background-position: 40px 0;\n  }\n  to {\n    background-position: 0 0;\n  }\n}\n@keyframes progress-bar-stripes {\n  from {\n    background-position: 40px 0;\n  }\n  to {\n    background-position: 0 0;\n  }\n}\n.progress {\n  height: 20px;\n  margin-bottom: 20px;\n  overflow: hidden;\n  background-color: #f5f5f5;\n  border-radius: 4px;\n  -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);\n  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);\n}\n.progress-bar {\n  float: left;\n  width: 0%;\n  height: 100%;\n  font-size: 12px;\n  line-height: 20px;\n  color: #fff;\n  text-align: center;\n  background-color: #337ab7;\n  -webkit-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);\n  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);\n  -webkit-transition: width 0.6s ease;\n  -o-transition: width 0.6s ease;\n  transition: width 0.6s ease;\n}\n.progress-striped .progress-bar,\n.progress-bar-striped {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-size: 40px 40px;\n}\n.progress.active .progress-bar,\n.progress-bar.active {\n  -webkit-animation: progress-bar-stripes 2s linear infinite;\n  -o-animation: progress-bar-stripes 2s linear infinite;\n  animation: progress-bar-stripes 2s linear infinite;\n}\n.progress-bar-success {\n  background-color: #5cb85c;\n}\n.progress-striped .progress-bar-success {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.progress-bar-info {\n  background-color: #5bc0de;\n}\n.progress-striped .progress-bar-info {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.progress-bar-warning {\n  background-color: #f0ad4e;\n}\n.progress-striped .progress-bar-warning {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.progress-bar-danger {\n  background-color: #d9534f;\n}\n.progress-striped .progress-bar-danger {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.clearfix:before,\n.clearfix:after,\n.container:before,\n.container:after,\n.container-fluid:before,\n.container-fluid:after,\n.row:before,\n.row:after {\n  display: table;\n  content: \" \";\n}\n.clearfix:after,\n.container:after,\n.container-fluid:after,\n.row:after {\n  clear: both;\n}\n.center-block {\n  display: block;\n  margin-right: auto;\n  margin-left: auto;\n}\n.pull-right {\n  float: right !important;\n}\n.pull-left {\n  float: left !important;\n}\n.hide {\n  display: none !important;\n}\n.show {\n  display: block !important;\n}\n.invisible {\n  visibility: hidden;\n}\n.text-hide {\n  font: 0/0 a;\n  color: transparent;\n  text-shadow: none;\n  background-color: transparent;\n  border: 0;\n}\n.hidden {\n  display: none !important;\n}\n.affix {\n  position: fixed;\n}\n@-ms-viewport {\n  width: device-width;\n}\n.visible-xs,\n.visible-sm,\n.visible-md,\n.visible-lg {\n  display: none !important;\n}\n.visible-xs-block,\n.visible-xs-inline,\n.visible-xs-inline-block,\n.visible-sm-block,\n.visible-sm-inline,\n.visible-sm-inline-block,\n.visible-md-block,\n.visible-md-inline,\n.visible-md-inline-block,\n.visible-lg-block,\n.visible-lg-inline,\n.visible-lg-inline-block {\n  display: none !important;\n}\n@media (max-width: 767px) {\n  .visible-xs {\n    display: block !important;\n  }\n  table.visible-xs {\n    display: table !important;\n  }\n  tr.visible-xs {\n    display: table-row !important;\n  }\n  th.visible-xs,\n  td.visible-xs {\n    display: table-cell !important;\n  }\n}\n@media (max-width: 767px) {\n  .visible-xs-block {\n    display: block !important;\n  }\n}\n@media (max-width: 767px) {\n  .visible-xs-inline {\n    display: inline !important;\n  }\n}\n@media (max-width: 767px) {\n  .visible-xs-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm {\n    display: block !important;\n  }\n  table.visible-sm {\n    display: table !important;\n  }\n  tr.visible-sm {\n    display: table-row !important;\n  }\n  th.visible-sm,\n  td.visible-sm {\n    display: table-cell !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm-block {\n    display: block !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm-inline {\n    display: inline !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md {\n    display: block !important;\n  }\n  table.visible-md {\n    display: table !important;\n  }\n  tr.visible-md {\n    display: table-row !important;\n  }\n  th.visible-md,\n  td.visible-md {\n    display: table-cell !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md-block {\n    display: block !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md-inline {\n    display: inline !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg {\n    display: block !important;\n  }\n  table.visible-lg {\n    display: table !important;\n  }\n  tr.visible-lg {\n    display: table-row !important;\n  }\n  th.visible-lg,\n  td.visible-lg {\n    display: table-cell !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg-block {\n    display: block !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg-inline {\n    display: inline !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (max-width: 767px) {\n  .hidden-xs {\n    display: none !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .hidden-sm {\n    display: none !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .hidden-md {\n    display: none !important;\n  }\n}\n@media (min-width: 1200px) {\n  .hidden-lg {\n    display: none !important;\n  }\n}\n.visible-print {\n  display: none !important;\n}\n@media print {\n  .visible-print {\n    display: block !important;\n  }\n  table.visible-print {\n    display: table !important;\n  }\n  tr.visible-print {\n    display: table-row !important;\n  }\n  th.visible-print,\n  td.visible-print {\n    display: table-cell !important;\n  }\n}\n.visible-print-block {\n  display: none !important;\n}\n@media print {\n  .visible-print-block {\n    display: block !important;\n  }\n}\n.visible-print-inline {\n  display: none !important;\n}\n@media print {\n  .visible-print-inline {\n    display: inline !important;\n  }\n}\n.visible-print-inline-block {\n  display: none !important;\n}\n@media print {\n  .visible-print-inline-block {\n    display: inline-block !important;\n  }\n}\n@media print {\n  .hidden-print {\n    display: none !important;\n  }\n}\n","// stylelint-disable\n\n/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */\n\n//\n// 1. Set default font family to sans-serif.\n// 2. Prevent iOS and IE text size adjust after device orientation change,\n//    without disabling user zoom.\n//\n\nhtml {\n  font-family: sans-serif; // 1\n  -ms-text-size-adjust: 100%; // 2\n  -webkit-text-size-adjust: 100%; // 2\n}\n\n//\n// Remove default margin.\n//\n\nbody {\n  margin: 0;\n}\n\n// HTML5 display definitions\n// ==========================================================================\n\n//\n// Correct `block` display not defined for any HTML5 element in IE 8/9.\n// Correct `block` display not defined for `details` or `summary` in IE 10/11\n// and Firefox.\n// Correct `block` display not defined for `main` in IE 11.\n//\n\narticle,\naside,\ndetails,\nfigcaption,\nfigure,\nfooter,\nheader,\nhgroup,\nmain,\nmenu,\nnav,\nsection,\nsummary {\n  display: block;\n}\n\n//\n// 1. Correct `inline-block` display not defined in IE 8/9.\n// 2. Normalize vertical alignment of `progress` in Chrome, Firefox, and Opera.\n//\n\naudio,\ncanvas,\nprogress,\nvideo {\n  display: inline-block; // 1\n  vertical-align: baseline; // 2\n}\n\n//\n// Prevent modern browsers from displaying `audio` without controls.\n// Remove excess height in iOS 5 devices.\n//\n\naudio:not([controls]) {\n  display: none;\n  height: 0;\n}\n\n//\n// Address `[hidden]` styling not present in IE 8/9/10.\n// Hide the `template` element in IE 8/9/10/11, Safari, and Firefox < 22.\n//\n\n[hidden],\ntemplate {\n  display: none;\n}\n\n// Links\n// ==========================================================================\n\n//\n// Remove the gray background color from active links in IE 10.\n//\n\na {\n  background-color: transparent;\n}\n\n//\n// Improve readability of focused elements when they are also in an\n// active/hover state.\n//\n\na:active,\na:hover {\n  outline: 0;\n}\n\n// Text-level semantics\n// ==========================================================================\n\n//\n// 1. Remove the bottom border in Chrome 57- and Firefox 39-.\n// 2. Add the correct text decoration in Chrome, Edge, IE, Opera, and Safari.\n//\n\nabbr[title] {\n  border-bottom: none; // 1\n  text-decoration: underline; // 2\n  text-decoration: underline dotted; // 2\n}\n\n//\n// Address style set to `bolder` in Firefox 4+, Safari, and Chrome.\n//\n\nb,\nstrong {\n  font-weight: bold;\n}\n\n//\n// Address styling not present in Safari and Chrome.\n//\n\ndfn {\n  font-style: italic;\n}\n\n//\n// Address variable `h1` font-size and margin within `section` and `article`\n// contexts in Firefox 4+, Safari, and Chrome.\n//\n\nh1 {\n  font-size: 2em;\n  margin: 0.67em 0;\n}\n\n//\n// Address styling not present in IE 8/9.\n//\n\nmark {\n  background: #ff0;\n  color: #000;\n}\n\n//\n// Address inconsistent and variable font size in all browsers.\n//\n\nsmall {\n  font-size: 80%;\n}\n\n//\n// Prevent `sub` and `sup` affecting `line-height` in all browsers.\n//\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsup {\n  top: -0.5em;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\n// Embedded content\n// ==========================================================================\n\n//\n// Remove border when inside `a` element in IE 8/9/10.\n//\n\nimg {\n  border: 0;\n}\n\n//\n// Correct overflow not hidden in IE 9/10/11.\n//\n\nsvg:not(:root) {\n  overflow: hidden;\n}\n\n// Grouping content\n// ==========================================================================\n\n//\n// Address margin not present in IE 8/9 and Safari.\n//\n\nfigure {\n  margin: 1em 40px;\n}\n\n//\n// Address differences between Firefox and other browsers.\n//\n\nhr {\n  box-sizing: content-box;\n  height: 0;\n}\n\n//\n// Contain overflow in all browsers.\n//\n\npre {\n  overflow: auto;\n}\n\n//\n// Address odd `em`-unit font size rendering in all browsers.\n//\n\ncode,\nkbd,\npre,\nsamp {\n  font-family: monospace, monospace;\n  font-size: 1em;\n}\n\n// Forms\n// ==========================================================================\n\n//\n// Known limitation: by default, Chrome and Safari on OS X allow very limited\n// styling of `select`, unless a `border` property is set.\n//\n\n//\n// 1. Correct color not being inherited.\n//    Known issue: affects color of disabled elements.\n// 2. Correct font properties not being inherited.\n// 3. Address margins set differently in Firefox 4+, Safari, and Chrome.\n//\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  color: inherit; // 1\n  font: inherit; // 2\n  margin: 0; // 3\n}\n\n//\n// Address `overflow` set to `hidden` in IE 8/9/10/11.\n//\n\nbutton {\n  overflow: visible;\n}\n\n//\n// Address inconsistent `text-transform` inheritance for `button` and `select`.\n// All other form control elements do not inherit `text-transform` values.\n// Correct `button` style inheritance in Firefox, IE 8/9/10/11, and Opera.\n// Correct `select` style inheritance in Firefox.\n//\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n//\n// 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio`\n//    and `video` controls.\n// 2. Correct inability to style clickable `input` types in iOS.\n// 3. Improve usability and consistency of cursor style between image-type\n//    `input` and others.\n//\n\nbutton,\nhtml input[type=\"button\"], // 1\ninput[type=\"reset\"],\ninput[type=\"submit\"] {\n  -webkit-appearance: button; // 2\n  cursor: pointer; // 3\n}\n\n//\n// Re-set default cursor for disabled elements.\n//\n\nbutton[disabled],\nhtml input[disabled] {\n  cursor: default;\n}\n\n//\n// Remove inner padding and border in Firefox 4+.\n//\n\nbutton::-moz-focus-inner,\ninput::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\n//\n// Address Firefox 4+ setting `line-height` on `input` using `!important` in\n// the UA stylesheet.\n//\n\ninput {\n  line-height: normal;\n}\n\n//\n// It's recommended that you don't attempt to style these elements.\n// Firefox's implementation doesn't respect box-sizing, padding, or width.\n//\n// 1. Address box sizing set to `content-box` in IE 8/9/10.\n// 2. Remove excess padding in IE 8/9/10.\n//\n\ninput[type=\"checkbox\"],\ninput[type=\"radio\"] {\n  box-sizing: border-box; // 1\n  padding: 0; // 2\n}\n\n//\n// Fix the cursor style for Chrome's increment/decrement buttons. For certain\n// `font-size` values of the `input`, it causes the cursor style of the\n// decrement button to change from `default` to `text`.\n//\n\ninput[type=\"number\"]::-webkit-inner-spin-button,\ninput[type=\"number\"]::-webkit-outer-spin-button {\n  height: auto;\n}\n\n//\n// 1. Address `appearance` set to `searchfield` in Safari and Chrome.\n// 2. Address `box-sizing` set to `border-box` in Safari and Chrome.\n//\n\ninput[type=\"search\"] {\n  -webkit-appearance: textfield; // 1\n  box-sizing: content-box; //2\n}\n\n//\n// Remove inner padding and search cancel button in Safari and Chrome on OS X.\n// Safari (but not Chrome) clips the cancel button when the search input has\n// padding (and `textfield` appearance).\n//\n\ninput[type=\"search\"]::-webkit-search-cancel-button,\ninput[type=\"search\"]::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n//\n// Define consistent border, margin, and padding.\n//\n\nfieldset {\n  border: 1px solid #c0c0c0;\n  margin: 0 2px;\n  padding: 0.35em 0.625em 0.75em;\n}\n\n//\n// 1. Correct `color` not being inherited in IE 8/9/10/11.\n// 2. Remove padding so people aren't caught out if they zero out fieldsets.\n//\n\nlegend {\n  border: 0; // 1\n  padding: 0; // 2\n}\n\n//\n// Remove default vertical scrollbar in IE 8/9/10/11.\n//\n\ntextarea {\n  overflow: auto;\n}\n\n//\n// Don't inherit the `font-weight` (applied by a rule above).\n// NOTE: the default cannot safely be changed in Chrome and Safari on OS X.\n//\n\noptgroup {\n  font-weight: bold;\n}\n\n// Tables\n// ==========================================================================\n\n//\n// Remove most spacing between table cells.\n//\n\ntable {\n  border-collapse: collapse;\n  border-spacing: 0;\n}\n\ntd,\nth {\n  padding: 0;\n}\n","//\n// Scaffolding\n// --------------------------------------------------\n\n\n// Reset the box-sizing\n//\n// Heads up! This reset may cause conflicts with some third-party widgets.\n// For recommendations on resolving such conflicts, see\n// https://getbootstrap.com/docs/3.4/getting-started/#third-box-sizing\n* {\n  .box-sizing(border-box);\n}\n*:before,\n*:after {\n  .box-sizing(border-box);\n}\n\n\n// Body reset\n\nhtml {\n  font-size: 10px;\n  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);\n}\n\nbody {\n  font-family: @font-family-base;\n  font-size: @font-size-base;\n  line-height: @line-height-base;\n  color: @text-color;\n  background-color: @body-bg;\n}\n\n// Reset fonts for relevant elements\ninput,\nbutton,\nselect,\ntextarea {\n  font-family: inherit;\n  font-size: inherit;\n  line-height: inherit;\n}\n\n\n// Links\n\na {\n  color: @link-color;\n  text-decoration: none;\n\n  &:hover,\n  &:focus {\n    color: @link-hover-color;\n    text-decoration: @link-hover-decoration;\n  }\n\n  &:focus {\n    .tab-focus();\n  }\n}\n\n\n// Figures\n//\n// We reset this here because previously Normalize had no `figure` margins. This\n// ensures we don't break anyone's use of the element.\n\nfigure {\n  margin: 0;\n}\n\n\n// Images\n\nimg {\n  vertical-align: middle;\n}\n\n// Responsive images (ensure images don't scale beyond their parents)\n.img-responsive {\n  .img-responsive();\n}\n\n// Rounded corners\n.img-rounded {\n  border-radius: @border-radius-large;\n}\n\n// Image thumbnails\n//\n// Heads up! This is mixin-ed into thumbnails.less for `.thumbnail`.\n.img-thumbnail {\n  padding: @thumbnail-padding;\n  line-height: @line-height-base;\n  background-color: @thumbnail-bg;\n  border: 1px solid @thumbnail-border;\n  border-radius: @thumbnail-border-radius;\n  .transition(all .2s ease-in-out);\n\n  // Keep them at most 100% wide\n  .img-responsive(inline-block);\n}\n\n// Perfect circle\n.img-circle {\n  border-radius: 50%; // set radius in percents\n}\n\n\n// Horizontal rules\n\nhr {\n  margin-top: @line-height-computed;\n  margin-bottom: @line-height-computed;\n  border: 0;\n  border-top: 1px solid @hr-border;\n}\n\n\n// Only display content to screen readers\n//\n// See: https://a11yproject.com/posts/how-to-hide-content\n\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  border: 0;\n}\n\n// Use in conjunction with .sr-only to only display content when it's focused.\n// Useful for \"Skip to main content\" links; see https://www.w3.org/TR/2013/NOTE-WCAG20-TECHS-20130905/G1\n// Credit: HTML5 Boilerplate\n\n.sr-only-focusable {\n  &:active,\n  &:focus {\n    position: static;\n    width: auto;\n    height: auto;\n    margin: 0;\n    overflow: visible;\n    clip: auto;\n  }\n}\n\n\n// iOS \"clickable elements\" fix for role=\"button\"\n//\n// Fixes \"clickability\" issue (and more generally, the firing of events such as focus as well)\n// for traditionally non-focusable elements with role=\"button\"\n// see https://developer.mozilla.org/en-US/docs/Web/Events/click#Safari_Mobile\n\n[role=\"button\"] {\n  cursor: pointer;\n}\n","// stylelint-disable indentation, property-no-vendor-prefix, selector-no-vendor-prefix\n\n// Vendor Prefixes\n//\n// All vendor mixins are deprecated as of v3.2.0 due to the introduction of\n// Autoprefixer in our Gruntfile. They have been removed in v4.\n\n// - Animations\n// - Backface visibility\n// - Box shadow\n// - Box sizing\n// - Content columns\n// - Hyphens\n// - Placeholder text\n// - Transformations\n// - Transitions\n// - User Select\n\n\n// Animations\n.animation(@animation) {\n  -webkit-animation: @animation;\n       -o-animation: @animation;\n          animation: @animation;\n}\n.animation-name(@name) {\n  -webkit-animation-name: @name;\n          animation-name: @name;\n}\n.animation-duration(@duration) {\n  -webkit-animation-duration: @duration;\n          animation-duration: @duration;\n}\n.animation-timing-function(@timing-function) {\n  -webkit-animation-timing-function: @timing-function;\n          animation-timing-function: @timing-function;\n}\n.animation-delay(@delay) {\n  -webkit-animation-delay: @delay;\n          animation-delay: @delay;\n}\n.animation-iteration-count(@iteration-count) {\n  -webkit-animation-iteration-count: @iteration-count;\n          animation-iteration-count: @iteration-count;\n}\n.animation-direction(@direction) {\n  -webkit-animation-direction: @direction;\n          animation-direction: @direction;\n}\n.animation-fill-mode(@fill-mode) {\n  -webkit-animation-fill-mode: @fill-mode;\n          animation-fill-mode: @fill-mode;\n}\n\n// Backface visibility\n// Prevent browsers from flickering when using CSS 3D transforms.\n// Default value is `visible`, but can be changed to `hidden`\n\n.backface-visibility(@visibility) {\n  -webkit-backface-visibility: @visibility;\n     -moz-backface-visibility: @visibility;\n          backface-visibility: @visibility;\n}\n\n// Drop shadows\n//\n// Note: Deprecated `.box-shadow()` as of v3.1.0 since all of Bootstrap's\n// supported browsers that have box shadow capabilities now support it.\n\n.box-shadow(@shadow) {\n  -webkit-box-shadow: @shadow; // iOS <4.3 & Android <4.1\n          box-shadow: @shadow;\n}\n\n// Box sizing\n.box-sizing(@boxmodel) {\n  -webkit-box-sizing: @boxmodel;\n     -moz-box-sizing: @boxmodel;\n          box-sizing: @boxmodel;\n}\n\n// CSS3 Content Columns\n.content-columns(@column-count; @column-gap: @grid-gutter-width) {\n  -webkit-column-count: @column-count;\n     -moz-column-count: @column-count;\n          column-count: @column-count;\n  -webkit-column-gap: @column-gap;\n     -moz-column-gap: @column-gap;\n          column-gap: @column-gap;\n}\n\n// Optional hyphenation\n.hyphens(@mode: auto) {\n  -webkit-hyphens: @mode;\n     -moz-hyphens: @mode;\n      -ms-hyphens: @mode; // IE10+\n       -o-hyphens: @mode;\n          hyphens: @mode;\n  word-wrap: break-word;\n}\n\n// Placeholder text\n.placeholder(@color: @input-color-placeholder) {\n  // Firefox\n  &::-moz-placeholder {\n    color: @color;\n    opacity: 1; // Override Firefox's unusual default opacity; see https://github.com/twbs/bootstrap/pull/11526\n  }\n  &:-ms-input-placeholder { color: @color; } // Internet Explorer 10+\n  &::-webkit-input-placeholder  { color: @color; } // Safari and Chrome\n}\n\n// Transformations\n.scale(@ratio) {\n  -webkit-transform: scale(@ratio);\n      -ms-transform: scale(@ratio); // IE9 only\n       -o-transform: scale(@ratio);\n          transform: scale(@ratio);\n}\n.scale(@ratioX; @ratioY) {\n  -webkit-transform: scale(@ratioX, @ratioY);\n      -ms-transform: scale(@ratioX, @ratioY); // IE9 only\n       -o-transform: scale(@ratioX, @ratioY);\n          transform: scale(@ratioX, @ratioY);\n}\n.scaleX(@ratio) {\n  -webkit-transform: scaleX(@ratio);\n      -ms-transform: scaleX(@ratio); // IE9 only\n       -o-transform: scaleX(@ratio);\n          transform: scaleX(@ratio);\n}\n.scaleY(@ratio) {\n  -webkit-transform: scaleY(@ratio);\n      -ms-transform: scaleY(@ratio); // IE9 only\n       -o-transform: scaleY(@ratio);\n          transform: scaleY(@ratio);\n}\n.skew(@x; @y) {\n  -webkit-transform: skewX(@x) skewY(@y);\n      -ms-transform: skewX(@x) skewY(@y); // See https://github.com/twbs/bootstrap/issues/4885; IE9+\n       -o-transform: skewX(@x) skewY(@y);\n          transform: skewX(@x) skewY(@y);\n}\n.translate(@x; @y) {\n  -webkit-transform: translate(@x, @y);\n      -ms-transform: translate(@x, @y); // IE9 only\n       -o-transform: translate(@x, @y);\n          transform: translate(@x, @y);\n}\n.translate3d(@x; @y; @z) {\n  -webkit-transform: translate3d(@x, @y, @z);\n          transform: translate3d(@x, @y, @z);\n}\n.rotate(@degrees) {\n  -webkit-transform: rotate(@degrees);\n      -ms-transform: rotate(@degrees); // IE9 only\n       -o-transform: rotate(@degrees);\n          transform: rotate(@degrees);\n}\n.rotateX(@degrees) {\n  -webkit-transform: rotateX(@degrees);\n      -ms-transform: rotateX(@degrees); // IE9 only\n       -o-transform: rotateX(@degrees);\n          transform: rotateX(@degrees);\n}\n.rotateY(@degrees) {\n  -webkit-transform: rotateY(@degrees);\n      -ms-transform: rotateY(@degrees); // IE9 only\n       -o-transform: rotateY(@degrees);\n          transform: rotateY(@degrees);\n}\n.perspective(@perspective) {\n  -webkit-perspective: @perspective;\n     -moz-perspective: @perspective;\n          perspective: @perspective;\n}\n.perspective-origin(@perspective) {\n  -webkit-perspective-origin: @perspective;\n     -moz-perspective-origin: @perspective;\n          perspective-origin: @perspective;\n}\n.transform-origin(@origin) {\n  -webkit-transform-origin: @origin;\n     -moz-transform-origin: @origin;\n      -ms-transform-origin: @origin; // IE9 only\n          transform-origin: @origin;\n}\n\n\n// Transitions\n\n.transition(@transition) {\n  -webkit-transition: @transition;\n       -o-transition: @transition;\n          transition: @transition;\n}\n.transition-property(@transition-property) {\n  -webkit-transition-property: @transition-property;\n          transition-property: @transition-property;\n}\n.transition-delay(@transition-delay) {\n  -webkit-transition-delay: @transition-delay;\n          transition-delay: @transition-delay;\n}\n.transition-duration(@transition-duration) {\n  -webkit-transition-duration: @transition-duration;\n          transition-duration: @transition-duration;\n}\n.transition-timing-function(@timing-function) {\n  -webkit-transition-timing-function: @timing-function;\n          transition-timing-function: @timing-function;\n}\n.transition-transform(@transition) {\n  -webkit-transition: -webkit-transform @transition;\n     -moz-transition: -moz-transform @transition;\n       -o-transition: -o-transform @transition;\n          transition: transform @transition;\n}\n\n\n// User select\n// For selecting text on the page\n\n.user-select(@select) {\n  -webkit-user-select: @select;\n     -moz-user-select: @select;\n      -ms-user-select: @select; // IE10+\n          user-select: @select;\n}\n","// WebKit-style focus\n\n.tab-focus() {\n  // WebKit-specific. Other browsers will keep their default outline style.\n  // (Initially tried to also force default via `outline: initial`,\n  // but that seems to erroneously remove the outline in Firefox altogether.)\n  outline: 5px auto -webkit-focus-ring-color;\n  outline-offset: -2px;\n}\n","// stylelint-disable media-feature-name-no-vendor-prefix, media-feature-parentheses-space-inside, media-feature-name-no-unknown, indentation, at-rule-name-space-after\n\n// Responsive image\n//\n// Keep images from scaling beyond the width of their parents.\n.img-responsive(@display: block) {\n  display: @display;\n  max-width: 100%; // Part 1: Set a maximum relative to the parent\n  height: auto; // Part 2: Scale the height according to the width, otherwise you get stretching\n}\n\n\n// Retina image\n//\n// Short retina mixin for setting background-image and -size. Note that the\n// spelling of `min--moz-device-pixel-ratio` is intentional.\n.img-retina(@file-1x; @file-2x; @width-1x; @height-1x) {\n  background-image: url(\"@{file-1x}\");\n\n  @media\n  only screen and (-webkit-min-device-pixel-ratio: 2),\n  only screen and ( min--moz-device-pixel-ratio: 2),\n  only screen and ( -o-min-device-pixel-ratio: 2/1),\n  only screen and ( min-device-pixel-ratio: 2),\n  only screen and ( min-resolution: 192dpi),\n  only screen and ( min-resolution: 2dppx) {\n    background-image: url(\"@{file-2x}\");\n    background-size: @width-1x @height-1x;\n  }\n}\n","//\n// Grid system\n// --------------------------------------------------\n\n\n// Container widths\n//\n// Set the container width, and override it for fixed navbars in media queries.\n\n.container {\n  .container-fixed();\n\n  @media (min-width: @screen-sm-min) {\n    width: @container-sm;\n  }\n  @media (min-width: @screen-md-min) {\n    width: @container-md;\n  }\n  @media (min-width: @screen-lg-min) {\n    width: @container-lg;\n  }\n}\n\n\n// Fluid container\n//\n// Utilizes the mixin meant for fixed width containers, but without any defined\n// width for fluid, full width layouts.\n\n.container-fluid {\n  .container-fixed();\n}\n\n\n// Row\n//\n// Rows contain and clear the floats of your columns.\n\n.row {\n  .make-row();\n}\n\n.row-no-gutters {\n  margin-right: 0;\n  margin-left: 0;\n\n  [class*=\"col-\"] {\n    padding-right: 0;\n    padding-left: 0;\n  }\n}\n\n\n// Columns\n//\n// Common styles for small and large grid columns\n\n.make-grid-columns();\n\n\n// Extra small grid\n//\n// Columns, offsets, pushes, and pulls for extra small devices like\n// smartphones.\n\n.make-grid(xs);\n\n\n// Small grid\n//\n// Columns, offsets, pushes, and pulls for the small device range, from phones\n// to tablets.\n\n@media (min-width: @screen-sm-min) {\n  .make-grid(sm);\n}\n\n\n// Medium grid\n//\n// Columns, offsets, pushes, and pulls for the desktop device range.\n\n@media (min-width: @screen-md-min) {\n  .make-grid(md);\n}\n\n\n// Large grid\n//\n// Columns, offsets, pushes, and pulls for the large desktop device range.\n\n@media (min-width: @screen-lg-min) {\n  .make-grid(lg);\n}\n","// Grid system\n//\n// Generate semantic grid columns with these mixins.\n\n// Centered container element\n.container-fixed(@gutter: @grid-gutter-width) {\n  padding-right: ceil((@gutter / 2));\n  padding-left: floor((@gutter / 2));\n  margin-right: auto;\n  margin-left: auto;\n  &:extend(.clearfix all);\n}\n\n// Creates a wrapper for a series of columns\n.make-row(@gutter: @grid-gutter-width) {\n  margin-right: floor((@gutter / -2));\n  margin-left: ceil((@gutter / -2));\n  &:extend(.clearfix all);\n}\n\n// Generate the extra small columns\n.make-xs-column(@columns; @gutter: @grid-gutter-width) {\n  position: relative;\n  float: left;\n  width: percentage((@columns / @grid-columns));\n  min-height: 1px;\n  padding-right: (@gutter / 2);\n  padding-left: (@gutter / 2);\n}\n.make-xs-column-offset(@columns) {\n  margin-left: percentage((@columns / @grid-columns));\n}\n.make-xs-column-push(@columns) {\n  left: percentage((@columns / @grid-columns));\n}\n.make-xs-column-pull(@columns) {\n  right: percentage((@columns / @grid-columns));\n}\n\n// Generate the small columns\n.make-sm-column(@columns; @gutter: @grid-gutter-width) {\n  position: relative;\n  min-height: 1px;\n  padding-right: (@gutter / 2);\n  padding-left: (@gutter / 2);\n\n  @media (min-width: @screen-sm-min) {\n    float: left;\n    width: percentage((@columns / @grid-columns));\n  }\n}\n.make-sm-column-offset(@columns) {\n  @media (min-width: @screen-sm-min) {\n    margin-left: percentage((@columns / @grid-columns));\n  }\n}\n.make-sm-column-push(@columns) {\n  @media (min-width: @screen-sm-min) {\n    left: percentage((@columns / @grid-columns));\n  }\n}\n.make-sm-column-pull(@columns) {\n  @media (min-width: @screen-sm-min) {\n    right: percentage((@columns / @grid-columns));\n  }\n}\n\n// Generate the medium columns\n.make-md-column(@columns; @gutter: @grid-gutter-width) {\n  position: relative;\n  min-height: 1px;\n  padding-right: (@gutter / 2);\n  padding-left: (@gutter / 2);\n\n  @media (min-width: @screen-md-min) {\n    float: left;\n    width: percentage((@columns / @grid-columns));\n  }\n}\n.make-md-column-offset(@columns) {\n  @media (min-width: @screen-md-min) {\n    margin-left: percentage((@columns / @grid-columns));\n  }\n}\n.make-md-column-push(@columns) {\n  @media (min-width: @screen-md-min) {\n    left: percentage((@columns / @grid-columns));\n  }\n}\n.make-md-column-pull(@columns) {\n  @media (min-width: @screen-md-min) {\n    right: percentage((@columns / @grid-columns));\n  }\n}\n\n// Generate the large columns\n.make-lg-column(@columns; @gutter: @grid-gutter-width) {\n  position: relative;\n  min-height: 1px;\n  padding-right: (@gutter / 2);\n  padding-left: (@gutter / 2);\n\n  @media (min-width: @screen-lg-min) {\n    float: left;\n    width: percentage((@columns / @grid-columns));\n  }\n}\n.make-lg-column-offset(@columns) {\n  @media (min-width: @screen-lg-min) {\n    margin-left: percentage((@columns / @grid-columns));\n  }\n}\n.make-lg-column-push(@columns) {\n  @media (min-width: @screen-lg-min) {\n    left: percentage((@columns / @grid-columns));\n  }\n}\n.make-lg-column-pull(@columns) {\n  @media (min-width: @screen-lg-min) {\n    right: percentage((@columns / @grid-columns));\n  }\n}\n","// Framework grid generation\n//\n// Used only by Bootstrap to generate the correct number of grid classes given\n// any value of `@grid-columns`.\n\n.make-grid-columns() {\n  // Common styles for all sizes of grid columns, widths 1-12\n  .col(@index) { // initial\n    @item: ~\".col-xs-@{index}, .col-sm-@{index}, .col-md-@{index}, .col-lg-@{index}\";\n    .col((@index + 1), @item);\n  }\n  .col(@index, @list) when (@index =< @grid-columns) { // general; \"=<\" isn't a typo\n    @item: ~\".col-xs-@{index}, .col-sm-@{index}, .col-md-@{index}, .col-lg-@{index}\";\n    .col((@index + 1), ~\"@{list}, @{item}\");\n  }\n  .col(@index, @list) when (@index > @grid-columns) { // terminal\n    @{list} {\n      position: relative;\n      // Prevent columns from collapsing when empty\n      min-height: 1px;\n      // Inner gutter via padding\n      padding-right: floor((@grid-gutter-width / 2));\n      padding-left: ceil((@grid-gutter-width / 2));\n    }\n  }\n  .col(1); // kickstart it\n}\n\n.float-grid-columns(@class) {\n  .col(@index) { // initial\n    @item: ~\".col-@{class}-@{index}\";\n    .col((@index + 1), @item);\n  }\n  .col(@index, @list) when (@index =< @grid-columns) { // general\n    @item: ~\".col-@{class}-@{index}\";\n    .col((@index + 1), ~\"@{list}, @{item}\");\n  }\n  .col(@index, @list) when (@index > @grid-columns) { // terminal\n    @{list} {\n      float: left;\n    }\n  }\n  .col(1); // kickstart it\n}\n\n.calc-grid-column(@index, @class, @type) when (@type = width) and (@index > 0) {\n  .col-@{class}-@{index} {\n    width: percentage((@index / @grid-columns));\n  }\n}\n.calc-grid-column(@index, @class, @type) when (@type = push) and (@index > 0) {\n  .col-@{class}-push-@{index} {\n    left: percentage((@index / @grid-columns));\n  }\n}\n.calc-grid-column(@index, @class, @type) when (@type = push) and (@index = 0) {\n  .col-@{class}-push-0 {\n    left: auto;\n  }\n}\n.calc-grid-column(@index, @class, @type) when (@type = pull) and (@index > 0) {\n  .col-@{class}-pull-@{index} {\n    right: percentage((@index / @grid-columns));\n  }\n}\n.calc-grid-column(@index, @class, @type) when (@type = pull) and (@index = 0) {\n  .col-@{class}-pull-0 {\n    right: auto;\n  }\n}\n.calc-grid-column(@index, @class, @type) when (@type = offset) {\n  .col-@{class}-offset-@{index} {\n    margin-left: percentage((@index / @grid-columns));\n  }\n}\n\n// Basic looping in LESS\n.loop-grid-columns(@index, @class, @type) when (@index >= 0) {\n  .calc-grid-column(@index, @class, @type);\n  // next iteration\n  .loop-grid-columns((@index - 1), @class, @type);\n}\n\n// Create grid for specific class\n.make-grid(@class) {\n  .float-grid-columns(@class);\n  .loop-grid-columns(@grid-columns, @class, width);\n  .loop-grid-columns(@grid-columns, @class, pull);\n  .loop-grid-columns(@grid-columns, @class, push);\n  .loop-grid-columns(@grid-columns, @class, offset);\n}\n","// stylelint-disable selector-max-type, selector-max-compound-selectors, selector-no-qualifying-type\n\n//\n// Tables\n// --------------------------------------------------\n\n\ntable {\n  background-color: @table-bg;\n\n  // Table cell sizing\n  //\n  // Reset default table behavior\n\n  col[class*=\"col-\"] {\n    position: static; // Prevent border hiding in Firefox and IE9-11 (see https://github.com/twbs/bootstrap/issues/11623)\n    display: table-column;\n    float: none;\n  }\n\n  td,\n  th {\n    &[class*=\"col-\"] {\n      position: static; // Prevent border hiding in Firefox and IE9-11 (see https://github.com/twbs/bootstrap/issues/11623)\n      display: table-cell;\n      float: none;\n    }\n  }\n}\n\ncaption {\n  padding-top: @table-cell-padding;\n  padding-bottom: @table-cell-padding;\n  color: @text-muted;\n  text-align: left;\n}\n\nth {\n  text-align: left;\n}\n\n\n// Baseline styles\n\n.table {\n  width: 100%;\n  max-width: 100%;\n  margin-bottom: @line-height-computed;\n  // Cells\n  > thead,\n  > tbody,\n  > tfoot {\n    > tr {\n      > th,\n      > td {\n        padding: @table-cell-padding;\n        line-height: @line-height-base;\n        vertical-align: top;\n        border-top: 1px solid @table-border-color;\n      }\n    }\n  }\n  // Bottom align for column headings\n  > thead > tr > th {\n    vertical-align: bottom;\n    border-bottom: 2px solid @table-border-color;\n  }\n  // Remove top border from thead by default\n  > caption + thead,\n  > colgroup + thead,\n  > thead:first-child {\n    > tr:first-child {\n      > th,\n      > td {\n        border-top: 0;\n      }\n    }\n  }\n  // Account for multiple tbody instances\n  > tbody + tbody {\n    border-top: 2px solid @table-border-color;\n  }\n\n  // Nesting\n  .table {\n    background-color: @body-bg;\n  }\n}\n\n\n// Condensed table w/ half padding\n\n.table-condensed {\n  > thead,\n  > tbody,\n  > tfoot {\n    > tr {\n      > th,\n      > td {\n        padding: @table-condensed-cell-padding;\n      }\n    }\n  }\n}\n\n\n// Bordered version\n//\n// Add borders all around the table and between all the columns.\n\n.table-bordered {\n  border: 1px solid @table-border-color;\n  > thead,\n  > tbody,\n  > tfoot {\n    > tr {\n      > th,\n      > td {\n        border: 1px solid @table-border-color;\n      }\n    }\n  }\n  > thead > tr {\n    > th,\n    > td {\n      border-bottom-width: 2px;\n    }\n  }\n}\n\n\n// Zebra-striping\n//\n// Default zebra-stripe styles (alternating gray and transparent backgrounds)\n\n.table-striped {\n  > tbody > tr:nth-of-type(odd) {\n    background-color: @table-bg-accent;\n  }\n}\n\n\n// Hover effect\n//\n// Placed here since it has to come after the potential zebra striping\n\n.table-hover {\n  > tbody > tr:hover {\n    background-color: @table-bg-hover;\n  }\n}\n\n\n// Table backgrounds\n//\n// Exact selectors below required to override `.table-striped` and prevent\n// inheritance to nested tables.\n\n// Generate the contextual variants\n.table-row-variant(active; @table-bg-active);\n.table-row-variant(success; @state-success-bg);\n.table-row-variant(info; @state-info-bg);\n.table-row-variant(warning; @state-warning-bg);\n.table-row-variant(danger; @state-danger-bg);\n\n\n// Responsive tables\n//\n// Wrap your tables in `.table-responsive` and we'll make them mobile friendly\n// by enabling horizontal scrolling. Only applies <768px. Everything above that\n// will display normally.\n\n.table-responsive {\n  min-height: .01%; // Workaround for IE9 bug (see https://github.com/twbs/bootstrap/issues/14837)\n  overflow-x: auto;\n\n  @media screen and (max-width: @screen-xs-max) {\n    width: 100%;\n    margin-bottom: (@line-height-computed * .75);\n    overflow-y: hidden;\n    -ms-overflow-style: -ms-autohiding-scrollbar;\n    border: 1px solid @table-border-color;\n\n    // Tighten up spacing\n    > .table {\n      margin-bottom: 0;\n\n      // Ensure the content doesn't wrap\n      > thead,\n      > tbody,\n      > tfoot {\n        > tr {\n          > th,\n          > td {\n            white-space: nowrap;\n          }\n        }\n      }\n    }\n\n    // Special overrides for the bordered tables\n    > .table-bordered {\n      border: 0;\n\n      // Nuke the appropriate borders so that the parent can handle them\n      > thead,\n      > tbody,\n      > tfoot {\n        > tr {\n          > th:first-child,\n          > td:first-child {\n            border-left: 0;\n          }\n          > th:last-child,\n          > td:last-child {\n            border-right: 0;\n          }\n        }\n      }\n\n      // Only nuke the last row's bottom-border in `tbody` and `tfoot` since\n      // chances are there will be only one `tr` in a `thead` and that would\n      // remove the border altogether.\n      > tbody,\n      > tfoot {\n        > tr:last-child {\n          > th,\n          > td {\n            border-bottom: 0;\n          }\n        }\n      }\n\n    }\n  }\n}\n","// Tables\n\n.table-row-variant(@state; @background) {\n  // Exact selectors below required to override `.table-striped` and prevent\n  // inheritance to nested tables.\n  .table > thead > tr,\n  .table > tbody > tr,\n  .table > tfoot > tr {\n    > td.@{state},\n    > th.@{state},\n    &.@{state} > td,\n    &.@{state} > th {\n      background-color: @background;\n    }\n  }\n\n  // Hover states for `.table-hover`\n  // Note: this is not available for cells or rows within `thead` or `tfoot`.\n  .table-hover > tbody > tr {\n    > td.@{state}:hover,\n    > th.@{state}:hover,\n    &.@{state}:hover > td,\n    &:hover > .@{state},\n    &.@{state}:hover > th {\n      background-color: darken(@background, 5%);\n    }\n  }\n}\n","// stylelint-disable at-rule-no-vendor-prefix\n\n//\n// Progress bars\n// --------------------------------------------------\n\n\n// Bar animations\n// -------------------------\n\n// WebKit\n@-webkit-keyframes progress-bar-stripes {\n  from  { background-position: 40px 0; }\n  to    { background-position: 0 0; }\n}\n\n// Spec and IE10+\n@keyframes progress-bar-stripes {\n  from  { background-position: 40px 0; }\n  to    { background-position: 0 0; }\n}\n\n\n// Bar itself\n// -------------------------\n\n// Outer container\n.progress {\n  height: @line-height-computed;\n  margin-bottom: @line-height-computed;\n  overflow: hidden;\n  background-color: @progress-bg;\n  border-radius: @progress-border-radius;\n  .box-shadow(inset 0 1px 2px rgba(0, 0, 0, .1));\n}\n\n// Bar of progress\n.progress-bar {\n  float: left;\n  width: 0%;\n  height: 100%;\n  font-size: @font-size-small;\n  line-height: @line-height-computed;\n  color: @progress-bar-color;\n  text-align: center;\n  background-color: @progress-bar-bg;\n  .box-shadow(inset 0 -1px 0 rgba(0, 0, 0, .15));\n  .transition(width .6s ease);\n}\n\n// Striped bars\n//\n// `.progress-striped .progress-bar` is deprecated as of v3.2.0 in favor of the\n// `.progress-bar-striped` class, which you just add to an existing\n// `.progress-bar`.\n.progress-striped .progress-bar,\n.progress-bar-striped {\n  #gradient > .striped();\n  background-size: 40px 40px;\n}\n\n// Call animation for the active one\n//\n// `.progress.active .progress-bar` is deprecated as of v3.2.0 in favor of the\n// `.progress-bar.active` approach.\n.progress.active .progress-bar,\n.progress-bar.active {\n  .animation(progress-bar-stripes 2s linear infinite);\n}\n\n\n// Variations\n// -------------------------\n\n.progress-bar-success {\n  .progress-bar-variant(@progress-bar-success-bg);\n}\n\n.progress-bar-info {\n  .progress-bar-variant(@progress-bar-info-bg);\n}\n\n.progress-bar-warning {\n  .progress-bar-variant(@progress-bar-warning-bg);\n}\n\n.progress-bar-danger {\n  .progress-bar-variant(@progress-bar-danger-bg);\n}\n","// stylelint-disable value-no-vendor-prefix, selector-max-id\n\n#gradient {\n\n  // Horizontal gradient, from left to right\n  //\n  // Creates two color stops, start and end, by specifying a color and position for each color stop.\n  // Color stops are not available in IE9 and below.\n  .horizontal(@start-color: #555; @end-color: #333; @start-percent: 0%; @end-percent: 100%) {\n    background-image: -webkit-linear-gradient(left, @start-color @start-percent, @end-color @end-percent); // Safari 5.1-6, Chrome 10+\n    background-image: -o-linear-gradient(left, @start-color @start-percent, @end-color @end-percent); // Opera 12\n    background-image: linear-gradient(to right, @start-color @start-percent, @end-color @end-percent); // Standard, IE10, Firefox 16+, Opera 12.10+, Safari 7+, Chrome 26+\n    filter: e(%(\"progid:DXImageTransform.Microsoft.gradient(startColorstr='%d', endColorstr='%d', GradientType=1)\", argb(@start-color), argb(@end-color))); // IE9 and down\n    background-repeat: repeat-x;\n  }\n\n  // Vertical gradient, from top to bottom\n  //\n  // Creates two color stops, start and end, by specifying a color and position for each color stop.\n  // Color stops are not available in IE9 and below.\n  .vertical(@start-color: #555; @end-color: #333; @start-percent: 0%; @end-percent: 100%) {\n    background-image: -webkit-linear-gradient(top, @start-color @start-percent, @end-color @end-percent);  // Safari 5.1-6, Chrome 10+\n    background-image: -o-linear-gradient(top, @start-color @start-percent, @end-color @end-percent);  // Opera 12\n    background-image: linear-gradient(to bottom, @start-color @start-percent, @end-color @end-percent); // Standard, IE10, Firefox 16+, Opera 12.10+, Safari 7+, Chrome 26+\n    filter: e(%(\"progid:DXImageTransform.Microsoft.gradient(startColorstr='%d', endColorstr='%d', GradientType=0)\", argb(@start-color), argb(@end-color))); // IE9 and down\n    background-repeat: repeat-x;\n  }\n\n  .directional(@start-color: #555; @end-color: #333; @deg: 45deg) {\n    background-image: -webkit-linear-gradient(@deg, @start-color, @end-color); // Safari 5.1-6, Chrome 10+\n    background-image: -o-linear-gradient(@deg, @start-color, @end-color); // Opera 12\n    background-image: linear-gradient(@deg, @start-color, @end-color); // Standard, IE10, Firefox 16+, Opera 12.10+, Safari 7+, Chrome 26+\n    background-repeat: repeat-x;\n  }\n  .horizontal-three-colors(@start-color: #00b3ee; @mid-color: #7a43b6; @color-stop: 50%; @end-color: #c3325f) {\n    background-image: -webkit-linear-gradient(left, @start-color, @mid-color @color-stop, @end-color);\n    background-image: -o-linear-gradient(left, @start-color, @mid-color @color-stop, @end-color);\n    background-image: linear-gradient(to right, @start-color, @mid-color @color-stop, @end-color);\n    filter: e(%(\"progid:DXImageTransform.Microsoft.gradient(startColorstr='%d', endColorstr='%d', GradientType=1)\", argb(@start-color), argb(@end-color))); // IE9 and down, gets no color-stop at all for proper fallback\n    background-repeat: no-repeat;\n  }\n  .vertical-three-colors(@start-color: #00b3ee; @mid-color: #7a43b6; @color-stop: 50%; @end-color: #c3325f) {\n    background-image: -webkit-linear-gradient(@start-color, @mid-color @color-stop, @end-color);\n    background-image: -o-linear-gradient(@start-color, @mid-color @color-stop, @end-color);\n    background-image: linear-gradient(@start-color, @mid-color @color-stop, @end-color);\n    filter: e(%(\"progid:DXImageTransform.Microsoft.gradient(startColorstr='%d', endColorstr='%d', GradientType=0)\", argb(@start-color), argb(@end-color))); // IE9 and down, gets no color-stop at all for proper fallback\n    background-repeat: no-repeat;\n  }\n  .radial(@inner-color: #555; @outer-color: #333) {\n    background-image: -webkit-radial-gradient(circle, @inner-color, @outer-color);\n    background-image: radial-gradient(circle, @inner-color, @outer-color);\n    background-repeat: no-repeat;\n  }\n  .striped(@color: rgba(255, 255, 255, .15); @angle: 45deg) {\n    background-image: -webkit-linear-gradient(@angle, @color 25%, transparent 25%, transparent 50%, @color 50%, @color 75%, transparent 75%, transparent);\n    background-image: -o-linear-gradient(@angle, @color 25%, transparent 25%, transparent 50%, @color 50%, @color 75%, transparent 75%, transparent);\n    background-image: linear-gradient(@angle, @color 25%, transparent 25%, transparent 50%, @color 50%, @color 75%, transparent 75%, transparent);\n  }\n}\n","// Progress bars\n\n.progress-bar-variant(@color) {\n  background-color: @color;\n\n  // Deprecated parent class requirement as of v3.2.0\n  .progress-striped & {\n    #gradient > .striped();\n  }\n}\n","// Clearfix\n//\n// For modern browsers\n// 1. The space content is one way to avoid an Opera bug when the\n//    contenteditable attribute is included anywhere else in the document.\n//    Otherwise it causes space to appear at the top and bottom of elements\n//    that are clearfixed.\n// 2. The use of `table` rather than `block` is only necessary if using\n//    `:before` to contain the top-margins of child elements.\n//\n// Source: http://nicolasgallagher.com/micro-clearfix-hack/\n\n.clearfix() {\n  &:before,\n  &:after {\n    display: table; // 2\n    content: \" \"; // 1\n  }\n  &:after {\n    clear: both;\n  }\n}\n","// stylelint-disable declaration-no-important\n\n//\n// Utility classes\n// --------------------------------------------------\n\n\n// Floats\n// -------------------------\n\n.clearfix {\n  .clearfix();\n}\n.center-block {\n  .center-block();\n}\n.pull-right {\n  float: right !important;\n}\n.pull-left {\n  float: left !important;\n}\n\n\n// Toggling content\n// -------------------------\n\n// Note: Deprecated .hide in favor of .hidden or .sr-only (as appropriate) in v3.0.1\n.hide {\n  display: none !important;\n}\n.show {\n  display: block !important;\n}\n.invisible {\n  visibility: hidden;\n}\n.text-hide {\n  .text-hide();\n}\n\n\n// Hide from screenreaders and browsers\n//\n// Credit: HTML5 Boilerplate\n\n.hidden {\n  display: none !important;\n}\n\n\n// For Affix plugin\n// -------------------------\n\n.affix {\n  position: fixed;\n}\n","// Center-align a block level element\n\n.center-block() {\n  display: block;\n  margin-right: auto;\n  margin-left: auto;\n}\n","// stylelint-disable font-family-name-quotes, font-family-no-missing-generic-family-keyword\n\n// CSS image replacement\n//\n// Heads up! v3 launched with only `.hide-text()`, but per our pattern for\n// mixins being reused as classes with the same name, this doesn't hold up. As\n// of v3.0.1 we have added `.text-hide()` and deprecated `.hide-text()`.\n//\n// Source: https://github.com/h5bp/html5-boilerplate/commit/aa0396eae757\n\n// Deprecated as of v3.0.1 (has been removed in v4)\n.hide-text() {\n  font: ~\"0/0\" a;\n  color: transparent;\n  text-shadow: none;\n  background-color: transparent;\n  border: 0;\n}\n\n// New mixin to use as of v3.0.1\n.text-hide() {\n  .hide-text();\n}\n","// stylelint-disable declaration-no-important, at-rule-no-vendor-prefix\n\n//\n// Responsive: Utility classes\n// --------------------------------------------------\n\n\n// IE10 in Windows (Phone) 8\n//\n// Support for responsive views via media queries is kind of borked in IE10, for\n// Surface/desktop in split view and for Windows Phone 8. This particular fix\n// must be accompanied by a snippet of JavaScript to sniff the user agent and\n// apply some conditional CSS to *only* the Surface/desktop Windows 8. Look at\n// our Getting Started page for more information on this bug.\n//\n// For more information, see the following:\n//\n// Issue: https://github.com/twbs/bootstrap/issues/10497\n// Docs: https://getbootstrap.com/docs/3.4/getting-started/#support-ie10-width\n// Source: https://timkadlec.com/2013/01/windows-phone-8-and-device-width/\n// Source: https://timkadlec.com/2012/10/ie10-snap-mode-and-responsive-design/\n\n@-ms-viewport {\n  width: device-width;\n}\n\n\n// Visibility utilities\n// Note: Deprecated .visible-xs, .visible-sm, .visible-md, and .visible-lg as of v3.2.0\n.visible-xs,\n.visible-sm,\n.visible-md,\n.visible-lg {\n  .responsive-invisibility();\n}\n\n.visible-xs-block,\n.visible-xs-inline,\n.visible-xs-inline-block,\n.visible-sm-block,\n.visible-sm-inline,\n.visible-sm-inline-block,\n.visible-md-block,\n.visible-md-inline,\n.visible-md-inline-block,\n.visible-lg-block,\n.visible-lg-inline,\n.visible-lg-inline-block {\n  display: none !important;\n}\n\n.visible-xs {\n  @media (max-width: @screen-xs-max) {\n    .responsive-visibility();\n  }\n}\n.visible-xs-block {\n  @media (max-width: @screen-xs-max) {\n    display: block !important;\n  }\n}\n.visible-xs-inline {\n  @media (max-width: @screen-xs-max) {\n    display: inline !important;\n  }\n}\n.visible-xs-inline-block {\n  @media (max-width: @screen-xs-max) {\n    display: inline-block !important;\n  }\n}\n\n.visible-sm {\n  @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {\n    .responsive-visibility();\n  }\n}\n.visible-sm-block {\n  @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {\n    display: block !important;\n  }\n}\n.visible-sm-inline {\n  @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {\n    display: inline !important;\n  }\n}\n.visible-sm-inline-block {\n  @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {\n    display: inline-block !important;\n  }\n}\n\n.visible-md {\n  @media (min-width: @screen-md-min) and (max-width: @screen-md-max) {\n    .responsive-visibility();\n  }\n}\n.visible-md-block {\n  @media (min-width: @screen-md-min) and (max-width: @screen-md-max) {\n    display: block !important;\n  }\n}\n.visible-md-inline {\n  @media (min-width: @screen-md-min) and (max-width: @screen-md-max) {\n    display: inline !important;\n  }\n}\n.visible-md-inline-block {\n  @media (min-width: @screen-md-min) and (max-width: @screen-md-max) {\n    display: inline-block !important;\n  }\n}\n\n.visible-lg {\n  @media (min-width: @screen-lg-min) {\n    .responsive-visibility();\n  }\n}\n.visible-lg-block {\n  @media (min-width: @screen-lg-min) {\n    display: block !important;\n  }\n}\n.visible-lg-inline {\n  @media (min-width: @screen-lg-min) {\n    display: inline !important;\n  }\n}\n.visible-lg-inline-block {\n  @media (min-width: @screen-lg-min) {\n    display: inline-block !important;\n  }\n}\n\n.hidden-xs {\n  @media (max-width: @screen-xs-max) {\n    .responsive-invisibility();\n  }\n}\n.hidden-sm {\n  @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {\n    .responsive-invisibility();\n  }\n}\n.hidden-md {\n  @media (min-width: @screen-md-min) and (max-width: @screen-md-max) {\n    .responsive-invisibility();\n  }\n}\n.hidden-lg {\n  @media (min-width: @screen-lg-min) {\n    .responsive-invisibility();\n  }\n}\n\n\n// Print utilities\n//\n// Media queries are placed on the inside to be mixin-friendly.\n\n// Note: Deprecated .visible-print as of v3.2.0\n.visible-print {\n  .responsive-invisibility();\n\n  @media print {\n    .responsive-visibility();\n  }\n}\n.visible-print-block {\n  display: none !important;\n\n  @media print {\n    display: block !important;\n  }\n}\n.visible-print-inline {\n  display: none !important;\n\n  @media print {\n    display: inline !important;\n  }\n}\n.visible-print-inline-block {\n  display: none !important;\n\n  @media print {\n    display: inline-block !important;\n  }\n}\n\n.hidden-print {\n  @media print {\n    .responsive-invisibility();\n  }\n}\n","// stylelint-disable declaration-no-important\n\n.responsive-visibility() {\n  display: block !important;\n  table&  { display: table !important; }\n  tr&     { display: table-row !important; }\n  th&,\n  td&     { display: table-cell !important; }\n}\n\n.responsive-invisibility() {\n  display: none !important;\n}\n"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, "/*!\n * Bootstrap v3.3.7 (http://getbootstrap.com)\n * Copyright 2011-2016 Twitter, Inc.\n * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n */\n/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */\nhtml {\n  font-family: sans-serif;\n  -ms-text-size-adjust: 100%;\n  -webkit-text-size-adjust: 100%;\n}\nbody {\n  margin: 0;\n}\narticle,\naside,\ndetails,\nfigcaption,\nfigure,\nfooter,\nheader,\nhgroup,\nmain,\nmenu,\nnav,\nsection,\nsummary {\n  display: block;\n}\naudio,\ncanvas,\nprogress,\nvideo {\n  display: inline-block;\n  vertical-align: baseline;\n}\naudio:not([controls]) {\n  display: none;\n  height: 0;\n}\n[hidden],\ntemplate {\n  display: none;\n}\na {\n  background-color: transparent;\n}\na:active,\na:hover {\n  outline: 0;\n}\nabbr[title] {\n  border-bottom: none;\n  text-decoration: underline;\n  text-decoration: underline dotted;\n}\nb,\nstrong {\n  font-weight: bold;\n}\ndfn {\n  font-style: italic;\n}\nh1 {\n  font-size: 2em;\n  margin: 0.67em 0;\n}\nmark {\n  background: #ff0;\n  color: #000;\n}\nsmall {\n  font-size: 80%;\n}\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\nsup {\n  top: -0.5em;\n}\nsub {\n  bottom: -0.25em;\n}\nimg {\n  border: 0;\n}\nsvg:not(:root) {\n  overflow: hidden;\n}\nfigure {\n  margin: 1em 40px;\n}\nhr {\n  box-sizing: content-box;\n  height: 0;\n}\npre {\n  overflow: auto;\n}\ncode,\nkbd,\npre,\nsamp {\n  font-family: monospace, monospace;\n  font-size: 1em;\n}\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  color: inherit;\n  font: inherit;\n  margin: 0;\n}\nbutton {\n  overflow: visible;\n}\nbutton,\nselect {\n  text-transform: none;\n}\nbutton,\nhtml input[type=\"button\"],\ninput[type=\"reset\"],\ninput[type=\"submit\"] {\n  -webkit-appearance: button;\n  cursor: pointer;\n}\nbutton[disabled],\nhtml input[disabled] {\n  cursor: default;\n}\nbutton::-moz-focus-inner,\ninput::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\ninput {\n  line-height: normal;\n}\ninput[type=\"checkbox\"],\ninput[type=\"radio\"] {\n  box-sizing: border-box;\n  padding: 0;\n}\ninput[type=\"number\"]::-webkit-inner-spin-button,\ninput[type=\"number\"]::-webkit-outer-spin-button {\n  height: auto;\n}\ninput[type=\"search\"] {\n  -webkit-appearance: textfield;\n  box-sizing: content-box;\n}\ninput[type=\"search\"]::-webkit-search-cancel-button,\ninput[type=\"search\"]::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\nfieldset {\n  border: 1px solid #c0c0c0;\n  margin: 0 2px;\n  padding: 0.35em 0.625em 0.75em;\n}\nlegend {\n  border: 0;\n  padding: 0;\n}\ntextarea {\n  overflow: auto;\n}\noptgroup {\n  font-weight: bold;\n}\ntable {\n  border-collapse: collapse;\n  border-spacing: 0;\n}\ntd,\nth {\n  padding: 0;\n}\n* {\n  -webkit-box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  box-sizing: border-box;\n}\n*:before,\n*:after {\n  -webkit-box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  box-sizing: border-box;\n}\nhtml {\n  font-size: 10px;\n  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);\n}\nbody {\n  font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  line-height: 1.42857143;\n  color: #333333;\n  background-color: #fff;\n}\ninput,\nbutton,\nselect,\ntextarea {\n  font-family: inherit;\n  font-size: inherit;\n  line-height: inherit;\n}\na {\n  color: #337ab7;\n  text-decoration: none;\n}\na:hover,\na:focus {\n  color: #23527c;\n  text-decoration: underline;\n}\na:focus {\n  outline: 5px auto -webkit-focus-ring-color;\n  outline-offset: -2px;\n}\nfigure {\n  margin: 0;\n}\nimg {\n  vertical-align: middle;\n}\n.img-responsive {\n  display: block;\n  max-width: 100%;\n  height: auto;\n}\n.img-rounded {\n  border-radius: 6px;\n}\n.img-thumbnail {\n  padding: 4px;\n  line-height: 1.42857143;\n  background-color: #fff;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  -webkit-transition: all 0.2s ease-in-out;\n  -o-transition: all 0.2s ease-in-out;\n  transition: all 0.2s ease-in-out;\n  display: inline-block;\n  max-width: 100%;\n  height: auto;\n}\n.img-circle {\n  border-radius: 50%;\n}\nhr {\n  margin-top: 20px;\n  margin-bottom: 20px;\n  border: 0;\n  border-top: 1px solid #eeeeee;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  border: 0;\n}\n.sr-only-focusable:active,\n.sr-only-focusable:focus {\n  position: static;\n  width: auto;\n  height: auto;\n  margin: 0;\n  overflow: visible;\n  clip: auto;\n}\n[role=\"button\"] {\n  cursor: pointer;\n}\n.container {\n  padding-right: 15px;\n  padding-left: 15px;\n  margin-right: auto;\n  margin-left: auto;\n}\n@media (min-width: 768px) {\n  .container {\n    width: 750px;\n  }\n}\n@media (min-width: 992px) {\n  .container {\n    width: 970px;\n  }\n}\n@media (min-width: 1200px) {\n  .container {\n    width: 1170px;\n  }\n}\n.container-fluid {\n  padding-right: 15px;\n  padding-left: 15px;\n  margin-right: auto;\n  margin-left: auto;\n}\n.row {\n  margin-right: -15px;\n  margin-left: -15px;\n}\n.row-no-gutters {\n  margin-right: 0;\n  margin-left: 0;\n}\n.row-no-gutters [class*=\"col-\"] {\n  padding-right: 0;\n  padding-left: 0;\n}\n.col-xs-1,\n.col-sm-1,\n.col-md-1,\n.col-lg-1,\n.col-xs-2,\n.col-sm-2,\n.col-md-2,\n.col-lg-2,\n.col-xs-3,\n.col-sm-3,\n.col-md-3,\n.col-lg-3,\n.col-xs-4,\n.col-sm-4,\n.col-md-4,\n.col-lg-4,\n.col-xs-5,\n.col-sm-5,\n.col-md-5,\n.col-lg-5,\n.col-xs-6,\n.col-sm-6,\n.col-md-6,\n.col-lg-6,\n.col-xs-7,\n.col-sm-7,\n.col-md-7,\n.col-lg-7,\n.col-xs-8,\n.col-sm-8,\n.col-md-8,\n.col-lg-8,\n.col-xs-9,\n.col-sm-9,\n.col-md-9,\n.col-lg-9,\n.col-xs-10,\n.col-sm-10,\n.col-md-10,\n.col-lg-10,\n.col-xs-11,\n.col-sm-11,\n.col-md-11,\n.col-lg-11,\n.col-xs-12,\n.col-sm-12,\n.col-md-12,\n.col-lg-12,\n.col-xs-13,\n.col-sm-13,\n.col-md-13,\n.col-lg-13,\n.col-xs-14,\n.col-sm-14,\n.col-md-14,\n.col-lg-14,\n.col-xs-15,\n.col-sm-15,\n.col-md-15,\n.col-lg-15,\n.col-xs-16,\n.col-sm-16,\n.col-md-16,\n.col-lg-16,\n.col-xs-17,\n.col-sm-17,\n.col-md-17,\n.col-lg-17,\n.col-xs-18,\n.col-sm-18,\n.col-md-18,\n.col-lg-18,\n.col-xs-19,\n.col-sm-19,\n.col-md-19,\n.col-lg-19,\n.col-xs-20,\n.col-sm-20,\n.col-md-20,\n.col-lg-20,\n.col-xs-21,\n.col-sm-21,\n.col-md-21,\n.col-lg-21,\n.col-xs-22,\n.col-sm-22,\n.col-md-22,\n.col-lg-22,\n.col-xs-23,\n.col-sm-23,\n.col-md-23,\n.col-lg-23,\n.col-xs-24,\n.col-sm-24,\n.col-md-24,\n.col-lg-24 {\n  position: relative;\n  min-height: 1px;\n  padding-right: 15px;\n  padding-left: 15px;\n}\n.col-xs-1,\n.col-xs-2,\n.col-xs-3,\n.col-xs-4,\n.col-xs-5,\n.col-xs-6,\n.col-xs-7,\n.col-xs-8,\n.col-xs-9,\n.col-xs-10,\n.col-xs-11,\n.col-xs-12,\n.col-xs-13,\n.col-xs-14,\n.col-xs-15,\n.col-xs-16,\n.col-xs-17,\n.col-xs-18,\n.col-xs-19,\n.col-xs-20,\n.col-xs-21,\n.col-xs-22,\n.col-xs-23,\n.col-xs-24 {\n  float: left;\n}\n.col-xs-24 {\n  width: 100%;\n}\n.col-xs-23 {\n  width: 95.83333333%;\n}\n.col-xs-22 {\n  width: 91.66666667%;\n}\n.col-xs-21 {\n  width: 87.5%;\n}\n.col-xs-20 {\n  width: 83.33333333%;\n}\n.col-xs-19 {\n  width: 79.16666667%;\n}\n.col-xs-18 {\n  width: 75%;\n}\n.col-xs-17 {\n  width: 70.83333333%;\n}\n.col-xs-16 {\n  width: 66.66666667%;\n}\n.col-xs-15 {\n  width: 62.5%;\n}\n.col-xs-14 {\n  width: 58.33333333%;\n}\n.col-xs-13 {\n  width: 54.16666667%;\n}\n.col-xs-12 {\n  width: 50%;\n}\n.col-xs-11 {\n  width: 45.83333333%;\n}\n.col-xs-10 {\n  width: 41.66666667%;\n}\n.col-xs-9 {\n  width: 37.5%;\n}\n.col-xs-8 {\n  width: 33.33333333%;\n}\n.col-xs-7 {\n  width: 29.16666667%;\n}\n.col-xs-6 {\n  width: 25%;\n}\n.col-xs-5 {\n  width: 20.83333333%;\n}\n.col-xs-4 {\n  width: 16.66666667%;\n}\n.col-xs-3 {\n  width: 12.5%;\n}\n.col-xs-2 {\n  width: 8.33333333%;\n}\n.col-xs-1 {\n  width: 4.16666667%;\n}\n.col-xs-pull-24 {\n  right: 100%;\n}\n.col-xs-pull-23 {\n  right: 95.83333333%;\n}\n.col-xs-pull-22 {\n  right: 91.66666667%;\n}\n.col-xs-pull-21 {\n  right: 87.5%;\n}\n.col-xs-pull-20 {\n  right: 83.33333333%;\n}\n.col-xs-pull-19 {\n  right: 79.16666667%;\n}\n.col-xs-pull-18 {\n  right: 75%;\n}\n.col-xs-pull-17 {\n  right: 70.83333333%;\n}\n.col-xs-pull-16 {\n  right: 66.66666667%;\n}\n.col-xs-pull-15 {\n  right: 62.5%;\n}\n.col-xs-pull-14 {\n  right: 58.33333333%;\n}\n.col-xs-pull-13 {\n  right: 54.16666667%;\n}\n.col-xs-pull-12 {\n  right: 50%;\n}\n.col-xs-pull-11 {\n  right: 45.83333333%;\n}\n.col-xs-pull-10 {\n  right: 41.66666667%;\n}\n.col-xs-pull-9 {\n  right: 37.5%;\n}\n.col-xs-pull-8 {\n  right: 33.33333333%;\n}\n.col-xs-pull-7 {\n  right: 29.16666667%;\n}\n.col-xs-pull-6 {\n  right: 25%;\n}\n.col-xs-pull-5 {\n  right: 20.83333333%;\n}\n.col-xs-pull-4 {\n  right: 16.66666667%;\n}\n.col-xs-pull-3 {\n  right: 12.5%;\n}\n.col-xs-pull-2 {\n  right: 8.33333333%;\n}\n.col-xs-pull-1 {\n  right: 4.16666667%;\n}\n.col-xs-pull-0 {\n  right: auto;\n}\n.col-xs-push-24 {\n  left: 100%;\n}\n.col-xs-push-23 {\n  left: 95.83333333%;\n}\n.col-xs-push-22 {\n  left: 91.66666667%;\n}\n.col-xs-push-21 {\n  left: 87.5%;\n}\n.col-xs-push-20 {\n  left: 83.33333333%;\n}\n.col-xs-push-19 {\n  left: 79.16666667%;\n}\n.col-xs-push-18 {\n  left: 75%;\n}\n.col-xs-push-17 {\n  left: 70.83333333%;\n}\n.col-xs-push-16 {\n  left: 66.66666667%;\n}\n.col-xs-push-15 {\n  left: 62.5%;\n}\n.col-xs-push-14 {\n  left: 58.33333333%;\n}\n.col-xs-push-13 {\n  left: 54.16666667%;\n}\n.col-xs-push-12 {\n  left: 50%;\n}\n.col-xs-push-11 {\n  left: 45.83333333%;\n}\n.col-xs-push-10 {\n  left: 41.66666667%;\n}\n.col-xs-push-9 {\n  left: 37.5%;\n}\n.col-xs-push-8 {\n  left: 33.33333333%;\n}\n.col-xs-push-7 {\n  left: 29.16666667%;\n}\n.col-xs-push-6 {\n  left: 25%;\n}\n.col-xs-push-5 {\n  left: 20.83333333%;\n}\n.col-xs-push-4 {\n  left: 16.66666667%;\n}\n.col-xs-push-3 {\n  left: 12.5%;\n}\n.col-xs-push-2 {\n  left: 8.33333333%;\n}\n.col-xs-push-1 {\n  left: 4.16666667%;\n}\n.col-xs-push-0 {\n  left: auto;\n}\n.col-xs-offset-24 {\n  margin-left: 100%;\n}\n.col-xs-offset-23 {\n  margin-left: 95.83333333%;\n}\n.col-xs-offset-22 {\n  margin-left: 91.66666667%;\n}\n.col-xs-offset-21 {\n  margin-left: 87.5%;\n}\n.col-xs-offset-20 {\n  margin-left: 83.33333333%;\n}\n.col-xs-offset-19 {\n  margin-left: 79.16666667%;\n}\n.col-xs-offset-18 {\n  margin-left: 75%;\n}\n.col-xs-offset-17 {\n  margin-left: 70.83333333%;\n}\n.col-xs-offset-16 {\n  margin-left: 66.66666667%;\n}\n.col-xs-offset-15 {\n  margin-left: 62.5%;\n}\n.col-xs-offset-14 {\n  margin-left: 58.33333333%;\n}\n.col-xs-offset-13 {\n  margin-left: 54.16666667%;\n}\n.col-xs-offset-12 {\n  margin-left: 50%;\n}\n.col-xs-offset-11 {\n  margin-left: 45.83333333%;\n}\n.col-xs-offset-10 {\n  margin-left: 41.66666667%;\n}\n.col-xs-offset-9 {\n  margin-left: 37.5%;\n}\n.col-xs-offset-8 {\n  margin-left: 33.33333333%;\n}\n.col-xs-offset-7 {\n  margin-left: 29.16666667%;\n}\n.col-xs-offset-6 {\n  margin-left: 25%;\n}\n.col-xs-offset-5 {\n  margin-left: 20.83333333%;\n}\n.col-xs-offset-4 {\n  margin-left: 16.66666667%;\n}\n.col-xs-offset-3 {\n  margin-left: 12.5%;\n}\n.col-xs-offset-2 {\n  margin-left: 8.33333333%;\n}\n.col-xs-offset-1 {\n  margin-left: 4.16666667%;\n}\n.col-xs-offset-0 {\n  margin-left: 0%;\n}\n@media (min-width: 768px) {\n  .col-sm-1,\n  .col-sm-2,\n  .col-sm-3,\n  .col-sm-4,\n  .col-sm-5,\n  .col-sm-6,\n  .col-sm-7,\n  .col-sm-8,\n  .col-sm-9,\n  .col-sm-10,\n  .col-sm-11,\n  .col-sm-12,\n  .col-sm-13,\n  .col-sm-14,\n  .col-sm-15,\n  .col-sm-16,\n  .col-sm-17,\n  .col-sm-18,\n  .col-sm-19,\n  .col-sm-20,\n  .col-sm-21,\n  .col-sm-22,\n  .col-sm-23,\n  .col-sm-24 {\n    float: left;\n  }\n  .col-sm-24 {\n    width: 100%;\n  }\n  .col-sm-23 {\n    width: 95.83333333%;\n  }\n  .col-sm-22 {\n    width: 91.66666667%;\n  }\n  .col-sm-21 {\n    width: 87.5%;\n  }\n  .col-sm-20 {\n    width: 83.33333333%;\n  }\n  .col-sm-19 {\n    width: 79.16666667%;\n  }\n  .col-sm-18 {\n    width: 75%;\n  }\n  .col-sm-17 {\n    width: 70.83333333%;\n  }\n  .col-sm-16 {\n    width: 66.66666667%;\n  }\n  .col-sm-15 {\n    width: 62.5%;\n  }\n  .col-sm-14 {\n    width: 58.33333333%;\n  }\n  .col-sm-13 {\n    width: 54.16666667%;\n  }\n  .col-sm-12 {\n    width: 50%;\n  }\n  .col-sm-11 {\n    width: 45.83333333%;\n  }\n  .col-sm-10 {\n    width: 41.66666667%;\n  }\n  .col-sm-9 {\n    width: 37.5%;\n  }\n  .col-sm-8 {\n    width: 33.33333333%;\n  }\n  .col-sm-7 {\n    width: 29.16666667%;\n  }\n  .col-sm-6 {\n    width: 25%;\n  }\n  .col-sm-5 {\n    width: 20.83333333%;\n  }\n  .col-sm-4 {\n    width: 16.66666667%;\n  }\n  .col-sm-3 {\n    width: 12.5%;\n  }\n  .col-sm-2 {\n    width: 8.33333333%;\n  }\n  .col-sm-1 {\n    width: 4.16666667%;\n  }\n  .col-sm-pull-24 {\n    right: 100%;\n  }\n  .col-sm-pull-23 {\n    right: 95.83333333%;\n  }\n  .col-sm-pull-22 {\n    right: 91.66666667%;\n  }\n  .col-sm-pull-21 {\n    right: 87.5%;\n  }\n  .col-sm-pull-20 {\n    right: 83.33333333%;\n  }\n  .col-sm-pull-19 {\n    right: 79.16666667%;\n  }\n  .col-sm-pull-18 {\n    right: 75%;\n  }\n  .col-sm-pull-17 {\n    right: 70.83333333%;\n  }\n  .col-sm-pull-16 {\n    right: 66.66666667%;\n  }\n  .col-sm-pull-15 {\n    right: 62.5%;\n  }\n  .col-sm-pull-14 {\n    right: 58.33333333%;\n  }\n  .col-sm-pull-13 {\n    right: 54.16666667%;\n  }\n  .col-sm-pull-12 {\n    right: 50%;\n  }\n  .col-sm-pull-11 {\n    right: 45.83333333%;\n  }\n  .col-sm-pull-10 {\n    right: 41.66666667%;\n  }\n  .col-sm-pull-9 {\n    right: 37.5%;\n  }\n  .col-sm-pull-8 {\n    right: 33.33333333%;\n  }\n  .col-sm-pull-7 {\n    right: 29.16666667%;\n  }\n  .col-sm-pull-6 {\n    right: 25%;\n  }\n  .col-sm-pull-5 {\n    right: 20.83333333%;\n  }\n  .col-sm-pull-4 {\n    right: 16.66666667%;\n  }\n  .col-sm-pull-3 {\n    right: 12.5%;\n  }\n  .col-sm-pull-2 {\n    right: 8.33333333%;\n  }\n  .col-sm-pull-1 {\n    right: 4.16666667%;\n  }\n  .col-sm-pull-0 {\n    right: auto;\n  }\n  .col-sm-push-24 {\n    left: 100%;\n  }\n  .col-sm-push-23 {\n    left: 95.83333333%;\n  }\n  .col-sm-push-22 {\n    left: 91.66666667%;\n  }\n  .col-sm-push-21 {\n    left: 87.5%;\n  }\n  .col-sm-push-20 {\n    left: 83.33333333%;\n  }\n  .col-sm-push-19 {\n    left: 79.16666667%;\n  }\n  .col-sm-push-18 {\n    left: 75%;\n  }\n  .col-sm-push-17 {\n    left: 70.83333333%;\n  }\n  .col-sm-push-16 {\n    left: 66.66666667%;\n  }\n  .col-sm-push-15 {\n    left: 62.5%;\n  }\n  .col-sm-push-14 {\n    left: 58.33333333%;\n  }\n  .col-sm-push-13 {\n    left: 54.16666667%;\n  }\n  .col-sm-push-12 {\n    left: 50%;\n  }\n  .col-sm-push-11 {\n    left: 45.83333333%;\n  }\n  .col-sm-push-10 {\n    left: 41.66666667%;\n  }\n  .col-sm-push-9 {\n    left: 37.5%;\n  }\n  .col-sm-push-8 {\n    left: 33.33333333%;\n  }\n  .col-sm-push-7 {\n    left: 29.16666667%;\n  }\n  .col-sm-push-6 {\n    left: 25%;\n  }\n  .col-sm-push-5 {\n    left: 20.83333333%;\n  }\n  .col-sm-push-4 {\n    left: 16.66666667%;\n  }\n  .col-sm-push-3 {\n    left: 12.5%;\n  }\n  .col-sm-push-2 {\n    left: 8.33333333%;\n  }\n  .col-sm-push-1 {\n    left: 4.16666667%;\n  }\n  .col-sm-push-0 {\n    left: auto;\n  }\n  .col-sm-offset-24 {\n    margin-left: 100%;\n  }\n  .col-sm-offset-23 {\n    margin-left: 95.83333333%;\n  }\n  .col-sm-offset-22 {\n    margin-left: 91.66666667%;\n  }\n  .col-sm-offset-21 {\n    margin-left: 87.5%;\n  }\n  .col-sm-offset-20 {\n    margin-left: 83.33333333%;\n  }\n  .col-sm-offset-19 {\n    margin-left: 79.16666667%;\n  }\n  .col-sm-offset-18 {\n    margin-left: 75%;\n  }\n  .col-sm-offset-17 {\n    margin-left: 70.83333333%;\n  }\n  .col-sm-offset-16 {\n    margin-left: 66.66666667%;\n  }\n  .col-sm-offset-15 {\n    margin-left: 62.5%;\n  }\n  .col-sm-offset-14 {\n    margin-left: 58.33333333%;\n  }\n  .col-sm-offset-13 {\n    margin-left: 54.16666667%;\n  }\n  .col-sm-offset-12 {\n    margin-left: 50%;\n  }\n  .col-sm-offset-11 {\n    margin-left: 45.83333333%;\n  }\n  .col-sm-offset-10 {\n    margin-left: 41.66666667%;\n  }\n  .col-sm-offset-9 {\n    margin-left: 37.5%;\n  }\n  .col-sm-offset-8 {\n    margin-left: 33.33333333%;\n  }\n  .col-sm-offset-7 {\n    margin-left: 29.16666667%;\n  }\n  .col-sm-offset-6 {\n    margin-left: 25%;\n  }\n  .col-sm-offset-5 {\n    margin-left: 20.83333333%;\n  }\n  .col-sm-offset-4 {\n    margin-left: 16.66666667%;\n  }\n  .col-sm-offset-3 {\n    margin-left: 12.5%;\n  }\n  .col-sm-offset-2 {\n    margin-left: 8.33333333%;\n  }\n  .col-sm-offset-1 {\n    margin-left: 4.16666667%;\n  }\n  .col-sm-offset-0 {\n    margin-left: 0%;\n  }\n}\n@media (min-width: 992px) {\n  .col-md-1,\n  .col-md-2,\n  .col-md-3,\n  .col-md-4,\n  .col-md-5,\n  .col-md-6,\n  .col-md-7,\n  .col-md-8,\n  .col-md-9,\n  .col-md-10,\n  .col-md-11,\n  .col-md-12,\n  .col-md-13,\n  .col-md-14,\n  .col-md-15,\n  .col-md-16,\n  .col-md-17,\n  .col-md-18,\n  .col-md-19,\n  .col-md-20,\n  .col-md-21,\n  .col-md-22,\n  .col-md-23,\n  .col-md-24 {\n    float: left;\n  }\n  .col-md-24 {\n    width: 100%;\n  }\n  .col-md-23 {\n    width: 95.83333333%;\n  }\n  .col-md-22 {\n    width: 91.66666667%;\n  }\n  .col-md-21 {\n    width: 87.5%;\n  }\n  .col-md-20 {\n    width: 83.33333333%;\n  }\n  .col-md-19 {\n    width: 79.16666667%;\n  }\n  .col-md-18 {\n    width: 75%;\n  }\n  .col-md-17 {\n    width: 70.83333333%;\n  }\n  .col-md-16 {\n    width: 66.66666667%;\n  }\n  .col-md-15 {\n    width: 62.5%;\n  }\n  .col-md-14 {\n    width: 58.33333333%;\n  }\n  .col-md-13 {\n    width: 54.16666667%;\n  }\n  .col-md-12 {\n    width: 50%;\n  }\n  .col-md-11 {\n    width: 45.83333333%;\n  }\n  .col-md-10 {\n    width: 41.66666667%;\n  }\n  .col-md-9 {\n    width: 37.5%;\n  }\n  .col-md-8 {\n    width: 33.33333333%;\n  }\n  .col-md-7 {\n    width: 29.16666667%;\n  }\n  .col-md-6 {\n    width: 25%;\n  }\n  .col-md-5 {\n    width: 20.83333333%;\n  }\n  .col-md-4 {\n    width: 16.66666667%;\n  }\n  .col-md-3 {\n    width: 12.5%;\n  }\n  .col-md-2 {\n    width: 8.33333333%;\n  }\n  .col-md-1 {\n    width: 4.16666667%;\n  }\n  .col-md-pull-24 {\n    right: 100%;\n  }\n  .col-md-pull-23 {\n    right: 95.83333333%;\n  }\n  .col-md-pull-22 {\n    right: 91.66666667%;\n  }\n  .col-md-pull-21 {\n    right: 87.5%;\n  }\n  .col-md-pull-20 {\n    right: 83.33333333%;\n  }\n  .col-md-pull-19 {\n    right: 79.16666667%;\n  }\n  .col-md-pull-18 {\n    right: 75%;\n  }\n  .col-md-pull-17 {\n    right: 70.83333333%;\n  }\n  .col-md-pull-16 {\n    right: 66.66666667%;\n  }\n  .col-md-pull-15 {\n    right: 62.5%;\n  }\n  .col-md-pull-14 {\n    right: 58.33333333%;\n  }\n  .col-md-pull-13 {\n    right: 54.16666667%;\n  }\n  .col-md-pull-12 {\n    right: 50%;\n  }\n  .col-md-pull-11 {\n    right: 45.83333333%;\n  }\n  .col-md-pull-10 {\n    right: 41.66666667%;\n  }\n  .col-md-pull-9 {\n    right: 37.5%;\n  }\n  .col-md-pull-8 {\n    right: 33.33333333%;\n  }\n  .col-md-pull-7 {\n    right: 29.16666667%;\n  }\n  .col-md-pull-6 {\n    right: 25%;\n  }\n  .col-md-pull-5 {\n    right: 20.83333333%;\n  }\n  .col-md-pull-4 {\n    right: 16.66666667%;\n  }\n  .col-md-pull-3 {\n    right: 12.5%;\n  }\n  .col-md-pull-2 {\n    right: 8.33333333%;\n  }\n  .col-md-pull-1 {\n    right: 4.16666667%;\n  }\n  .col-md-pull-0 {\n    right: auto;\n  }\n  .col-md-push-24 {\n    left: 100%;\n  }\n  .col-md-push-23 {\n    left: 95.83333333%;\n  }\n  .col-md-push-22 {\n    left: 91.66666667%;\n  }\n  .col-md-push-21 {\n    left: 87.5%;\n  }\n  .col-md-push-20 {\n    left: 83.33333333%;\n  }\n  .col-md-push-19 {\n    left: 79.16666667%;\n  }\n  .col-md-push-18 {\n    left: 75%;\n  }\n  .col-md-push-17 {\n    left: 70.83333333%;\n  }\n  .col-md-push-16 {\n    left: 66.66666667%;\n  }\n  .col-md-push-15 {\n    left: 62.5%;\n  }\n  .col-md-push-14 {\n    left: 58.33333333%;\n  }\n  .col-md-push-13 {\n    left: 54.16666667%;\n  }\n  .col-md-push-12 {\n    left: 50%;\n  }\n  .col-md-push-11 {\n    left: 45.83333333%;\n  }\n  .col-md-push-10 {\n    left: 41.66666667%;\n  }\n  .col-md-push-9 {\n    left: 37.5%;\n  }\n  .col-md-push-8 {\n    left: 33.33333333%;\n  }\n  .col-md-push-7 {\n    left: 29.16666667%;\n  }\n  .col-md-push-6 {\n    left: 25%;\n  }\n  .col-md-push-5 {\n    left: 20.83333333%;\n  }\n  .col-md-push-4 {\n    left: 16.66666667%;\n  }\n  .col-md-push-3 {\n    left: 12.5%;\n  }\n  .col-md-push-2 {\n    left: 8.33333333%;\n  }\n  .col-md-push-1 {\n    left: 4.16666667%;\n  }\n  .col-md-push-0 {\n    left: auto;\n  }\n  .col-md-offset-24 {\n    margin-left: 100%;\n  }\n  .col-md-offset-23 {\n    margin-left: 95.83333333%;\n  }\n  .col-md-offset-22 {\n    margin-left: 91.66666667%;\n  }\n  .col-md-offset-21 {\n    margin-left: 87.5%;\n  }\n  .col-md-offset-20 {\n    margin-left: 83.33333333%;\n  }\n  .col-md-offset-19 {\n    margin-left: 79.16666667%;\n  }\n  .col-md-offset-18 {\n    margin-left: 75%;\n  }\n  .col-md-offset-17 {\n    margin-left: 70.83333333%;\n  }\n  .col-md-offset-16 {\n    margin-left: 66.66666667%;\n  }\n  .col-md-offset-15 {\n    margin-left: 62.5%;\n  }\n  .col-md-offset-14 {\n    margin-left: 58.33333333%;\n  }\n  .col-md-offset-13 {\n    margin-left: 54.16666667%;\n  }\n  .col-md-offset-12 {\n    margin-left: 50%;\n  }\n  .col-md-offset-11 {\n    margin-left: 45.83333333%;\n  }\n  .col-md-offset-10 {\n    margin-left: 41.66666667%;\n  }\n  .col-md-offset-9 {\n    margin-left: 37.5%;\n  }\n  .col-md-offset-8 {\n    margin-left: 33.33333333%;\n  }\n  .col-md-offset-7 {\n    margin-left: 29.16666667%;\n  }\n  .col-md-offset-6 {\n    margin-left: 25%;\n  }\n  .col-md-offset-5 {\n    margin-left: 20.83333333%;\n  }\n  .col-md-offset-4 {\n    margin-left: 16.66666667%;\n  }\n  .col-md-offset-3 {\n    margin-left: 12.5%;\n  }\n  .col-md-offset-2 {\n    margin-left: 8.33333333%;\n  }\n  .col-md-offset-1 {\n    margin-left: 4.16666667%;\n  }\n  .col-md-offset-0 {\n    margin-left: 0%;\n  }\n}\n@media (min-width: 1200px) {\n  .col-lg-1,\n  .col-lg-2,\n  .col-lg-3,\n  .col-lg-4,\n  .col-lg-5,\n  .col-lg-6,\n  .col-lg-7,\n  .col-lg-8,\n  .col-lg-9,\n  .col-lg-10,\n  .col-lg-11,\n  .col-lg-12,\n  .col-lg-13,\n  .col-lg-14,\n  .col-lg-15,\n  .col-lg-16,\n  .col-lg-17,\n  .col-lg-18,\n  .col-lg-19,\n  .col-lg-20,\n  .col-lg-21,\n  .col-lg-22,\n  .col-lg-23,\n  .col-lg-24 {\n    float: left;\n  }\n  .col-lg-24 {\n    width: 100%;\n  }\n  .col-lg-23 {\n    width: 95.83333333%;\n  }\n  .col-lg-22 {\n    width: 91.66666667%;\n  }\n  .col-lg-21 {\n    width: 87.5%;\n  }\n  .col-lg-20 {\n    width: 83.33333333%;\n  }\n  .col-lg-19 {\n    width: 79.16666667%;\n  }\n  .col-lg-18 {\n    width: 75%;\n  }\n  .col-lg-17 {\n    width: 70.83333333%;\n  }\n  .col-lg-16 {\n    width: 66.66666667%;\n  }\n  .col-lg-15 {\n    width: 62.5%;\n  }\n  .col-lg-14 {\n    width: 58.33333333%;\n  }\n  .col-lg-13 {\n    width: 54.16666667%;\n  }\n  .col-lg-12 {\n    width: 50%;\n  }\n  .col-lg-11 {\n    width: 45.83333333%;\n  }\n  .col-lg-10 {\n    width: 41.66666667%;\n  }\n  .col-lg-9 {\n    width: 37.5%;\n  }\n  .col-lg-8 {\n    width: 33.33333333%;\n  }\n  .col-lg-7 {\n    width: 29.16666667%;\n  }\n  .col-lg-6 {\n    width: 25%;\n  }\n  .col-lg-5 {\n    width: 20.83333333%;\n  }\n  .col-lg-4 {\n    width: 16.66666667%;\n  }\n  .col-lg-3 {\n    width: 12.5%;\n  }\n  .col-lg-2 {\n    width: 8.33333333%;\n  }\n  .col-lg-1 {\n    width: 4.16666667%;\n  }\n  .col-lg-pull-24 {\n    right: 100%;\n  }\n  .col-lg-pull-23 {\n    right: 95.83333333%;\n  }\n  .col-lg-pull-22 {\n    right: 91.66666667%;\n  }\n  .col-lg-pull-21 {\n    right: 87.5%;\n  }\n  .col-lg-pull-20 {\n    right: 83.33333333%;\n  }\n  .col-lg-pull-19 {\n    right: 79.16666667%;\n  }\n  .col-lg-pull-18 {\n    right: 75%;\n  }\n  .col-lg-pull-17 {\n    right: 70.83333333%;\n  }\n  .col-lg-pull-16 {\n    right: 66.66666667%;\n  }\n  .col-lg-pull-15 {\n    right: 62.5%;\n  }\n  .col-lg-pull-14 {\n    right: 58.33333333%;\n  }\n  .col-lg-pull-13 {\n    right: 54.16666667%;\n  }\n  .col-lg-pull-12 {\n    right: 50%;\n  }\n  .col-lg-pull-11 {\n    right: 45.83333333%;\n  }\n  .col-lg-pull-10 {\n    right: 41.66666667%;\n  }\n  .col-lg-pull-9 {\n    right: 37.5%;\n  }\n  .col-lg-pull-8 {\n    right: 33.33333333%;\n  }\n  .col-lg-pull-7 {\n    right: 29.16666667%;\n  }\n  .col-lg-pull-6 {\n    right: 25%;\n  }\n  .col-lg-pull-5 {\n    right: 20.83333333%;\n  }\n  .col-lg-pull-4 {\n    right: 16.66666667%;\n  }\n  .col-lg-pull-3 {\n    right: 12.5%;\n  }\n  .col-lg-pull-2 {\n    right: 8.33333333%;\n  }\n  .col-lg-pull-1 {\n    right: 4.16666667%;\n  }\n  .col-lg-pull-0 {\n    right: auto;\n  }\n  .col-lg-push-24 {\n    left: 100%;\n  }\n  .col-lg-push-23 {\n    left: 95.83333333%;\n  }\n  .col-lg-push-22 {\n    left: 91.66666667%;\n  }\n  .col-lg-push-21 {\n    left: 87.5%;\n  }\n  .col-lg-push-20 {\n    left: 83.33333333%;\n  }\n  .col-lg-push-19 {\n    left: 79.16666667%;\n  }\n  .col-lg-push-18 {\n    left: 75%;\n  }\n  .col-lg-push-17 {\n    left: 70.83333333%;\n  }\n  .col-lg-push-16 {\n    left: 66.66666667%;\n  }\n  .col-lg-push-15 {\n    left: 62.5%;\n  }\n  .col-lg-push-14 {\n    left: 58.33333333%;\n  }\n  .col-lg-push-13 {\n    left: 54.16666667%;\n  }\n  .col-lg-push-12 {\n    left: 50%;\n  }\n  .col-lg-push-11 {\n    left: 45.83333333%;\n  }\n  .col-lg-push-10 {\n    left: 41.66666667%;\n  }\n  .col-lg-push-9 {\n    left: 37.5%;\n  }\n  .col-lg-push-8 {\n    left: 33.33333333%;\n  }\n  .col-lg-push-7 {\n    left: 29.16666667%;\n  }\n  .col-lg-push-6 {\n    left: 25%;\n  }\n  .col-lg-push-5 {\n    left: 20.83333333%;\n  }\n  .col-lg-push-4 {\n    left: 16.66666667%;\n  }\n  .col-lg-push-3 {\n    left: 12.5%;\n  }\n  .col-lg-push-2 {\n    left: 8.33333333%;\n  }\n  .col-lg-push-1 {\n    left: 4.16666667%;\n  }\n  .col-lg-push-0 {\n    left: auto;\n  }\n  .col-lg-offset-24 {\n    margin-left: 100%;\n  }\n  .col-lg-offset-23 {\n    margin-left: 95.83333333%;\n  }\n  .col-lg-offset-22 {\n    margin-left: 91.66666667%;\n  }\n  .col-lg-offset-21 {\n    margin-left: 87.5%;\n  }\n  .col-lg-offset-20 {\n    margin-left: 83.33333333%;\n  }\n  .col-lg-offset-19 {\n    margin-left: 79.16666667%;\n  }\n  .col-lg-offset-18 {\n    margin-left: 75%;\n  }\n  .col-lg-offset-17 {\n    margin-left: 70.83333333%;\n  }\n  .col-lg-offset-16 {\n    margin-left: 66.66666667%;\n  }\n  .col-lg-offset-15 {\n    margin-left: 62.5%;\n  }\n  .col-lg-offset-14 {\n    margin-left: 58.33333333%;\n  }\n  .col-lg-offset-13 {\n    margin-left: 54.16666667%;\n  }\n  .col-lg-offset-12 {\n    margin-left: 50%;\n  }\n  .col-lg-offset-11 {\n    margin-left: 45.83333333%;\n  }\n  .col-lg-offset-10 {\n    margin-left: 41.66666667%;\n  }\n  .col-lg-offset-9 {\n    margin-left: 37.5%;\n  }\n  .col-lg-offset-8 {\n    margin-left: 33.33333333%;\n  }\n  .col-lg-offset-7 {\n    margin-left: 29.16666667%;\n  }\n  .col-lg-offset-6 {\n    margin-left: 25%;\n  }\n  .col-lg-offset-5 {\n    margin-left: 20.83333333%;\n  }\n  .col-lg-offset-4 {\n    margin-left: 16.66666667%;\n  }\n  .col-lg-offset-3 {\n    margin-left: 12.5%;\n  }\n  .col-lg-offset-2 {\n    margin-left: 8.33333333%;\n  }\n  .col-lg-offset-1 {\n    margin-left: 4.16666667%;\n  }\n  .col-lg-offset-0 {\n    margin-left: 0%;\n  }\n}\ntable {\n  background-color: transparent;\n}\ntable col[class*=\"col-\"] {\n  position: static;\n  display: table-column;\n  float: none;\n}\ntable td[class*=\"col-\"],\ntable th[class*=\"col-\"] {\n  position: static;\n  display: table-cell;\n  float: none;\n}\ncaption {\n  padding-top: 8px;\n  padding-bottom: 8px;\n  color: #777777;\n  text-align: left;\n}\nth {\n  text-align: left;\n}\n.table {\n  width: 100%;\n  max-width: 100%;\n  margin-bottom: 20px;\n}\n.table > thead > tr > th,\n.table > tbody > tr > th,\n.table > tfoot > tr > th,\n.table > thead > tr > td,\n.table > tbody > tr > td,\n.table > tfoot > tr > td {\n  padding: 8px;\n  line-height: 1.42857143;\n  vertical-align: top;\n  border-top: 1px solid #ddd;\n}\n.table > thead > tr > th {\n  vertical-align: bottom;\n  border-bottom: 2px solid #ddd;\n}\n.table > caption + thead > tr:first-child > th,\n.table > colgroup + thead > tr:first-child > th,\n.table > thead:first-child > tr:first-child > th,\n.table > caption + thead > tr:first-child > td,\n.table > colgroup + thead > tr:first-child > td,\n.table > thead:first-child > tr:first-child > td {\n  border-top: 0;\n}\n.table > tbody + tbody {\n  border-top: 2px solid #ddd;\n}\n.table .table {\n  background-color: #fff;\n}\n.table-condensed > thead > tr > th,\n.table-condensed > tbody > tr > th,\n.table-condensed > tfoot > tr > th,\n.table-condensed > thead > tr > td,\n.table-condensed > tbody > tr > td,\n.table-condensed > tfoot > tr > td {\n  padding: 5px;\n}\n.table-bordered {\n  border: 1px solid #ddd;\n}\n.table-bordered > thead > tr > th,\n.table-bordered > tbody > tr > th,\n.table-bordered > tfoot > tr > th,\n.table-bordered > thead > tr > td,\n.table-bordered > tbody > tr > td,\n.table-bordered > tfoot > tr > td {\n  border: 1px solid #ddd;\n}\n.table-bordered > thead > tr > th,\n.table-bordered > thead > tr > td {\n  border-bottom-width: 2px;\n}\n.table-striped > tbody > tr:nth-of-type(odd) {\n  background-color: #f9f9f9;\n}\n.table-hover > tbody > tr:hover {\n  background-color: #f5f5f5;\n}\n.table > thead > tr > td.active,\n.table > tbody > tr > td.active,\n.table > tfoot > tr > td.active,\n.table > thead > tr > th.active,\n.table > tbody > tr > th.active,\n.table > tfoot > tr > th.active,\n.table > thead > tr.active > td,\n.table > tbody > tr.active > td,\n.table > tfoot > tr.active > td,\n.table > thead > tr.active > th,\n.table > tbody > tr.active > th,\n.table > tfoot > tr.active > th {\n  background-color: #f5f5f5;\n}\n.table-hover > tbody > tr > td.active:hover,\n.table-hover > tbody > tr > th.active:hover,\n.table-hover > tbody > tr.active:hover > td,\n.table-hover > tbody > tr:hover > .active,\n.table-hover > tbody > tr.active:hover > th {\n  background-color: #e8e8e8;\n}\n.table > thead > tr > td.success,\n.table > tbody > tr > td.success,\n.table > tfoot > tr > td.success,\n.table > thead > tr > th.success,\n.table > tbody > tr > th.success,\n.table > tfoot > tr > th.success,\n.table > thead > tr.success > td,\n.table > tbody > tr.success > td,\n.table > tfoot > tr.success > td,\n.table > thead > tr.success > th,\n.table > tbody > tr.success > th,\n.table > tfoot > tr.success > th {\n  background-color: #dff0d8;\n}\n.table-hover > tbody > tr > td.success:hover,\n.table-hover > tbody > tr > th.success:hover,\n.table-hover > tbody > tr.success:hover > td,\n.table-hover > tbody > tr:hover > .success,\n.table-hover > tbody > tr.success:hover > th {\n  background-color: #d0e9c6;\n}\n.table > thead > tr > td.info,\n.table > tbody > tr > td.info,\n.table > tfoot > tr > td.info,\n.table > thead > tr > th.info,\n.table > tbody > tr > th.info,\n.table > tfoot > tr > th.info,\n.table > thead > tr.info > td,\n.table > tbody > tr.info > td,\n.table > tfoot > tr.info > td,\n.table > thead > tr.info > th,\n.table > tbody > tr.info > th,\n.table > tfoot > tr.info > th {\n  background-color: #d9edf7;\n}\n.table-hover > tbody > tr > td.info:hover,\n.table-hover > tbody > tr > th.info:hover,\n.table-hover > tbody > tr.info:hover > td,\n.table-hover > tbody > tr:hover > .info,\n.table-hover > tbody > tr.info:hover > th {\n  background-color: #c4e3f3;\n}\n.table > thead > tr > td.warning,\n.table > tbody > tr > td.warning,\n.table > tfoot > tr > td.warning,\n.table > thead > tr > th.warning,\n.table > tbody > tr > th.warning,\n.table > tfoot > tr > th.warning,\n.table > thead > tr.warning > td,\n.table > tbody > tr.warning > td,\n.table > tfoot > tr.warning > td,\n.table > thead > tr.warning > th,\n.table > tbody > tr.warning > th,\n.table > tfoot > tr.warning > th {\n  background-color: #fcf8e3;\n}\n.table-hover > tbody > tr > td.warning:hover,\n.table-hover > tbody > tr > th.warning:hover,\n.table-hover > tbody > tr.warning:hover > td,\n.table-hover > tbody > tr:hover > .warning,\n.table-hover > tbody > tr.warning:hover > th {\n  background-color: #faf2cc;\n}\n.table > thead > tr > td.danger,\n.table > tbody > tr > td.danger,\n.table > tfoot > tr > td.danger,\n.table > thead > tr > th.danger,\n.table > tbody > tr > th.danger,\n.table > tfoot > tr > th.danger,\n.table > thead > tr.danger > td,\n.table > tbody > tr.danger > td,\n.table > tfoot > tr.danger > td,\n.table > thead > tr.danger > th,\n.table > tbody > tr.danger > th,\n.table > tfoot > tr.danger > th {\n  background-color: #f2dede;\n}\n.table-hover > tbody > tr > td.danger:hover,\n.table-hover > tbody > tr > th.danger:hover,\n.table-hover > tbody > tr.danger:hover > td,\n.table-hover > tbody > tr:hover > .danger,\n.table-hover > tbody > tr.danger:hover > th {\n  background-color: #ebcccc;\n}\n.table-responsive {\n  min-height: 0.01%;\n  overflow-x: auto;\n}\n@media screen and (max-width: 767px) {\n  .table-responsive {\n    width: 100%;\n    margin-bottom: 15px;\n    overflow-y: hidden;\n    -ms-overflow-style: -ms-autohiding-scrollbar;\n    border: 1px solid #ddd;\n  }\n  .table-responsive > .table {\n    margin-bottom: 0;\n  }\n  .table-responsive > .table > thead > tr > th,\n  .table-responsive > .table > tbody > tr > th,\n  .table-responsive > .table > tfoot > tr > th,\n  .table-responsive > .table > thead > tr > td,\n  .table-responsive > .table > tbody > tr > td,\n  .table-responsive > .table > tfoot > tr > td {\n    white-space: nowrap;\n  }\n  .table-responsive > .table-bordered {\n    border: 0;\n  }\n  .table-responsive > .table-bordered > thead > tr > th:first-child,\n  .table-responsive > .table-bordered > tbody > tr > th:first-child,\n  .table-responsive > .table-bordered > tfoot > tr > th:first-child,\n  .table-responsive > .table-bordered > thead > tr > td:first-child,\n  .table-responsive > .table-bordered > tbody > tr > td:first-child,\n  .table-responsive > .table-bordered > tfoot > tr > td:first-child {\n    border-left: 0;\n  }\n  .table-responsive > .table-bordered > thead > tr > th:last-child,\n  .table-responsive > .table-bordered > tbody > tr > th:last-child,\n  .table-responsive > .table-bordered > tfoot > tr > th:last-child,\n  .table-responsive > .table-bordered > thead > tr > td:last-child,\n  .table-responsive > .table-bordered > tbody > tr > td:last-child,\n  .table-responsive > .table-bordered > tfoot > tr > td:last-child {\n    border-right: 0;\n  }\n  .table-responsive > .table-bordered > tbody > tr:last-child > th,\n  .table-responsive > .table-bordered > tfoot > tr:last-child > th,\n  .table-responsive > .table-bordered > tbody > tr:last-child > td,\n  .table-responsive > .table-bordered > tfoot > tr:last-child > td {\n    border-bottom: 0;\n  }\n}\n@-webkit-keyframes progress-bar-stripes {\n  from {\n    background-position: 40px 0;\n  }\n  to {\n    background-position: 0 0;\n  }\n}\n@keyframes progress-bar-stripes {\n  from {\n    background-position: 40px 0;\n  }\n  to {\n    background-position: 0 0;\n  }\n}\n.progress {\n  height: 20px;\n  margin-bottom: 20px;\n  overflow: hidden;\n  background-color: #f5f5f5;\n  border-radius: 4px;\n  -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);\n  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);\n}\n.progress-bar {\n  float: left;\n  width: 0%;\n  height: 100%;\n  font-size: 12px;\n  line-height: 20px;\n  color: #fff;\n  text-align: center;\n  background-color: #337ab7;\n  -webkit-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);\n  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);\n  -webkit-transition: width 0.6s ease;\n  -o-transition: width 0.6s ease;\n  transition: width 0.6s ease;\n}\n.progress-striped .progress-bar,\n.progress-bar-striped {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-size: 40px 40px;\n}\n.progress.active .progress-bar,\n.progress-bar.active {\n  -webkit-animation: progress-bar-stripes 2s linear infinite;\n  -o-animation: progress-bar-stripes 2s linear infinite;\n  animation: progress-bar-stripes 2s linear infinite;\n}\n.progress-bar-success {\n  background-color: #5cb85c;\n}\n.progress-striped .progress-bar-success {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.progress-bar-info {\n  background-color: #5bc0de;\n}\n.progress-striped .progress-bar-info {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.progress-bar-warning {\n  background-color: #f0ad4e;\n}\n.progress-striped .progress-bar-warning {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.progress-bar-danger {\n  background-color: #d9534f;\n}\n.progress-striped .progress-bar-danger {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.clearfix:before,\n.clearfix:after,\n.container:before,\n.container:after,\n.container-fluid:before,\n.container-fluid:after,\n.row:before,\n.row:after {\n  display: table;\n  content: \" \";\n}\n.clearfix:after,\n.container:after,\n.container-fluid:after,\n.row:after {\n  clear: both;\n}\n.center-block {\n  display: block;\n  margin-right: auto;\n  margin-left: auto;\n}\n.pull-right {\n  float: right !important;\n}\n.pull-left {\n  float: left !important;\n}\n.hide {\n  display: none !important;\n}\n.show {\n  display: block !important;\n}\n.invisible {\n  visibility: hidden;\n}\n.text-hide {\n  font: 0/0 a;\n  color: transparent;\n  text-shadow: none;\n  background-color: transparent;\n  border: 0;\n}\n.hidden {\n  display: none !important;\n}\n.affix {\n  position: fixed;\n}\n@-ms-viewport {\n  width: device-width;\n}\n.visible-xs,\n.visible-sm,\n.visible-md,\n.visible-lg {\n  display: none !important;\n}\n.visible-xs-block,\n.visible-xs-inline,\n.visible-xs-inline-block,\n.visible-sm-block,\n.visible-sm-inline,\n.visible-sm-inline-block,\n.visible-md-block,\n.visible-md-inline,\n.visible-md-inline-block,\n.visible-lg-block,\n.visible-lg-inline,\n.visible-lg-inline-block {\n  display: none !important;\n}\n@media (max-width: 767px) {\n  .visible-xs {\n    display: block !important;\n  }\n  table.visible-xs {\n    display: table !important;\n  }\n  tr.visible-xs {\n    display: table-row !important;\n  }\n  th.visible-xs,\n  td.visible-xs {\n    display: table-cell !important;\n  }\n}\n@media (max-width: 767px) {\n  .visible-xs-block {\n    display: block !important;\n  }\n}\n@media (max-width: 767px) {\n  .visible-xs-inline {\n    display: inline !important;\n  }\n}\n@media (max-width: 767px) {\n  .visible-xs-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm {\n    display: block !important;\n  }\n  table.visible-sm {\n    display: table !important;\n  }\n  tr.visible-sm {\n    display: table-row !important;\n  }\n  th.visible-sm,\n  td.visible-sm {\n    display: table-cell !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm-block {\n    display: block !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm-inline {\n    display: inline !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md {\n    display: block !important;\n  }\n  table.visible-md {\n    display: table !important;\n  }\n  tr.visible-md {\n    display: table-row !important;\n  }\n  th.visible-md,\n  td.visible-md {\n    display: table-cell !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md-block {\n    display: block !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md-inline {\n    display: inline !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg {\n    display: block !important;\n  }\n  table.visible-lg {\n    display: table !important;\n  }\n  tr.visible-lg {\n    display: table-row !important;\n  }\n  th.visible-lg,\n  td.visible-lg {\n    display: table-cell !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg-block {\n    display: block !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg-inline {\n    display: inline !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (max-width: 767px) {\n  .hidden-xs {\n    display: none !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .hidden-sm {\n    display: none !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .hidden-md {\n    display: none !important;\n  }\n}\n@media (min-width: 1200px) {\n  .hidden-lg {\n    display: none !important;\n  }\n}\n.visible-print {\n  display: none !important;\n}\n@media print {\n  .visible-print {\n    display: block !important;\n  }\n  table.visible-print {\n    display: table !important;\n  }\n  tr.visible-print {\n    display: table-row !important;\n  }\n  th.visible-print,\n  td.visible-print {\n    display: table-cell !important;\n  }\n}\n.visible-print-block {\n  display: none !important;\n}\n@media print {\n  .visible-print-block {\n    display: block !important;\n  }\n}\n.visible-print-inline {\n  display: none !important;\n}\n@media print {\n  .visible-print-inline {\n    display: inline !important;\n  }\n}\n.visible-print-inline-block {\n  display: none !important;\n}\n@media print {\n  .visible-print-inline-block {\n    display: inline-block !important;\n  }\n}\n@media print {\n  .hidden-print {\n    display: none !important;\n  }\n}\n", "",{"version":3,"sources":["webpack://./css/bootstrap.less","webpack://./node_modules/bootstrap/less/normalize.less","webpack://./node_modules/bootstrap/less/scaffolding.less","webpack://./node_modules/bootstrap/less/mixins/vendor-prefixes.less","webpack://./node_modules/bootstrap/less/mixins/tab-focus.less","webpack://./node_modules/bootstrap/less/mixins/image.less","webpack://./node_modules/bootstrap/less/grid.less","webpack://./node_modules/bootstrap/less/mixins/grid.less","webpack://./node_modules/bootstrap/less/mixins/border-radius.less","webpack://./node_modules/bootstrap/less/mixins/grid-framework.less","webpack://./node_modules/bootstrap/less/tables.less","webpack://./node_modules/bootstrap/less/mixins/table-row.less","webpack://./node_modules/bootstrap/less/progress-bars.less","webpack://./node_modules/bootstrap/less/mixins/gradients.less","webpack://./node_modules/bootstrap/less/mixins/progress-bar.less","webpack://./node_modules/bootstrap/less/mixins/clearfix.less","webpack://./node_modules/bootstrap/less/utilities.less","webpack://./node_modules/bootstrap/less/mixins/center-block.less","webpack://./node_modules/bootstrap/less/mixins/hide-text.less","webpack://./node_modules/bootstrap/less/responsive-utilities.less","webpack://./node_modules/bootstrap/less/mixins/responsive-visibility.less"],"names":[],"mappings":"AAAA;;;;EAIE;AACF,2EAA2E;ACK3E;EACE,uBAAA;EACA,0BAAA;EACA,8BAAA;ADHF;ACUA;EACE,SAAA;ADRF;ACqBA;;;;;;;;;;;;;EAaE,cAAA;ADnBF;AC2BA;;;;EAIE,qBAAA;EACA,wBAAA;ADzBF;ACiCA;EACE,aAAA;EACA,SAAA;AD/BF;ACuCA;;EAEE,aAAA;ADrCF;AC+CA;EACE,6BAAA;AD7CF;ACqDA;;EAEE,UAAA;ADnDF;AC8DA;EACE,mBAAA;EACA,0BAAA;EACA,iCAAA;AD5DF;ACmEA;;EAEE,iBAAA;ADjEF;ACwEA;EACE,kBAAA;ADtEF;AC8EA;EACE,cAAA;EACA,gBAAA;AD5EF;ACmFA;EACE,gBAAA;EACA,WAAA;ADjFF;ACwFA;EACE,cAAA;ADtFF;AC6FA;;EAEE,cAAA;EACA,cAAA;EACA,kBAAA;EACA,wBAAA;AD3FF;AC8FA;EACE,WAAA;AD5FF;AC+FA;EACE,eAAA;AD7FF;ACuGA;EACE,SAAA;ADrGF;AC4GA;EACE,gBAAA;AD1GF;ACoHA;EACE,gBAAA;ADlHF;ACyHA;EACE,uBAAA;EACA,SAAA;ADvHF;AC8HA;EACE,cAAA;AD5HF;ACmIA;;;;EAIE,iCAAA;EACA,cAAA;ADjIF;ACmJA;;;;;EAKE,cAAA;EACA,aAAA;EACA,SAAA;ADjJF;ACwJA;EACE,iBAAA;ADtJF;ACgKA;;EAEE,oBAAA;AD9JF;ACyKA;;;;EAIE,0BAAA;EACA,eAAA;ADvKF;AC8KA;;EAEE,eAAA;AD5KF;ACmLA;;EAEE,SAAA;EACA,UAAA;ADjLF;ACyLA;EACE,mBAAA;ADvLF;ACkMA;;EAEE,sBAAA;EACA,UAAA;ADhMF;ACyMA;;EAEE,YAAA;ADvMF;AC+MA;EACE,6BAAA;EACA,uBAAA;AD7MF;ACsNA;;EAEE,wBAAA;ADpNF;AC2NA;EACE,yBAAA;EACA,aAAA;EACA,8BAAA;ADzNF;ACiOA;EACE,SAAA;EACA,UAAA;AD/NF;ACsOA;EACE,cAAA;ADpOF;AC4OA;EACE,iBAAA;AD1OF;ACoPA;EACE,yBAAA;EACA,iBAAA;ADlPF;ACqPA;;EAEE,UAAA;ADnPF;AE9KA;ECkEE,8BAAA;EACG,2BAAA;EACK,sBAAA;AH+GV;AEhLA;;EC+DE,8BAAA;EACG,2BAAA;EACK,sBAAA;AHqHV;AE9KA;EACE,eAAA;EACA,6CAAA;AFgLF;AE7KA;EACE,2DAAA;EACA,eAAA;EACA,uBAAA;EACA,cAAA;EACA,sBAAA;AF+KF;AE3KA;;;;EAIE,oBAAA;EACA,kBAAA;EACA,oBAAA;AF6KF;AEvKA;EACE,cAAA;EACA,qBAAA;AFyKF;AEvKE;;EAEE,cAAA;EACA,0BAAA;AFyKJ;AEtKE;EEnDA,0CAAA;EACA,oBAAA;AJ4NF;AE/JA;EACE,SAAA;AFiKF;AE3JA;EACE,sBAAA;AF6JF;AEzJA;EG1EE,cAAA;EACA,eAAA;EACA,YAAA;ALsOF;AEzJA;EACE,kBAAA;AF2JF;AErJA;EACE,YAAA;EACA,uBAAA;EACA,sBAAA;EACA,sBAAA;EACA,kBAAA;EC+FA,wCAAA;EACK,mCAAA;EACG,gCAAA;EE5LR,qBAAA;EACA,eAAA;EACA,YAAA;ALsPF;AErJA;EACE,kBAAA;AFuJF;AEjJA;EACE,gBAAA;EACA,mBAAA;EACA,SAAA;EACA,6BAAA;AFmJF;AE3IA;EACE,kBAAA;EACA,UAAA;EACA,WAAA;EACA,UAAA;EACA,YAAA;EACA,gBAAA;EACA,sBAAA;EACA,SAAA;AF6IF;AErIE;;EAEE,gBAAA;EACA,WAAA;EACA,YAAA;EACA,SAAA;EACA,iBAAA;EACA,UAAA;AFuIJ;AE5HA;EACE,eAAA;AF8HF;AMpRA;ECHE,mBAAA;EACA,kBAAA;EACA,kBAAA;EACA,iBAAA;AP0RF;AMvRE;EAAA;IACE,YAAA;EN0RF;AACF;AMzRE;EAAA;IACE,YAAA;EN4RF;AACF;AM3RE;EAAA;IACE,aAAA;EN8RF;AACF;AMrRA;ECvBE,mBAAA;EACA,kBAAA;EACA,kBAAA;EACA,iBAAA;AP+SF;AMlRA;ECvBE,mBAAA;EACA,kBAAA;AP4SF;AMlRA;EACE,eAAA;EACA,cAAA;ANoRF;AMtRA;EAKI,gBAAA;EACA,eAAA;ANoRJ;AQpUC;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;ECiBK,kBAAA;EAEA,eAAA;EAEA,mBAAA;EACA,kBAAA;ATmZN;AQzaC;;;;;;;;;;;;;;;;;;;;;;;;ECuCK,WAAA;AT4ZN;AQncC;EC+CG,WAAA;ATuZJ;AQtcC;EC+CG,mBAAA;AT0ZJ;AQzcC;EC+CG,mBAAA;AT6ZJ;AQ5cC;EC+CG,YAAA;ATgaJ;AQ/cC;EC+CG,mBAAA;ATmaJ;AQldC;EC+CG,mBAAA;ATsaJ;AQrdC;EC+CG,UAAA;ATyaJ;AQxdC;EC+CG,mBAAA;AT4aJ;AQ3dC;EC+CG,mBAAA;AT+aJ;AQ9dC;EC+CG,YAAA;ATkbJ;AQjeC;EC+CG,mBAAA;ATqbJ;AQpeC;EC+CG,mBAAA;ATwbJ;AQveC;EC+CG,UAAA;AT2bJ;AQ1eC;EC+CG,mBAAA;AT8bJ;AQ7eC;EC+CG,mBAAA;ATicJ;AQhfC;EC+CG,YAAA;ATocJ;AQnfC;EC+CG,mBAAA;ATucJ;AQtfC;EC+CG,mBAAA;AT0cJ;AQzfC;EC+CG,UAAA;AT6cJ;AQ5fC;EC+CG,mBAAA;ATgdJ;AQ/fC;EC+CG,mBAAA;ATmdJ;AQlgBC;EC+CG,YAAA;ATsdJ;AQrgBC;EC+CG,kBAAA;ATydJ;AQxgBC;EC+CG,kBAAA;AT4dJ;AQ3gBC;EC8DG,WAAA;ATgdJ;AQ9gBC;EC8DG,mBAAA;ATmdJ;AQjhBC;EC8DG,mBAAA;ATsdJ;AQphBC;EC8DG,YAAA;ATydJ;AQvhBC;EC8DG,mBAAA;AT4dJ;AQ1hBC;EC8DG,mBAAA;AT+dJ;AQ7hBC;EC8DG,UAAA;ATkeJ;AQhiBC;EC8DG,mBAAA;ATqeJ;AQniBC;EC8DG,mBAAA;ATweJ;AQtiBC;EC8DG,YAAA;AT2eJ;AQziBC;EC8DG,mBAAA;AT8eJ;AQ5iBC;EC8DG,mBAAA;ATifJ;AQ/iBC;EC8DG,UAAA;ATofJ;AQljBC;EC8DG,mBAAA;ATufJ;AQrjBC;EC8DG,mBAAA;AT0fJ;AQxjBC;EC8DG,YAAA;AT6fJ;AQ3jBC;EC8DG,mBAAA;ATggBJ;AQ9jBC;EC8DG,mBAAA;ATmgBJ;AQjkBC;EC8DG,UAAA;ATsgBJ;AQpkBC;EC8DG,mBAAA;ATygBJ;AQvkBC;EC8DG,mBAAA;AT4gBJ;AQ1kBC;EC8DG,YAAA;AT+gBJ;AQ7kBC;EC8DG,kBAAA;ATkhBJ;AQhlBC;EC8DG,kBAAA;ATqhBJ;AQnlBC;ECmEG,WAAA;ATmhBJ;AQtlBC;ECoDG,UAAA;ATqiBJ;AQzlBC;ECoDG,kBAAA;ATwiBJ;AQ5lBC;ECoDG,kBAAA;AT2iBJ;AQ/lBC;ECoDG,WAAA;AT8iBJ;AQlmBC;ECoDG,kBAAA;ATijBJ;AQrmBC;ECoDG,kBAAA;ATojBJ;AQxmBC;ECoDG,SAAA;ATujBJ;AQ3mBC;ECoDG,kBAAA;AT0jBJ;AQ9mBC;ECoDG,kBAAA;AT6jBJ;AQjnBC;ECoDG,WAAA;ATgkBJ;AQpnBC;ECoDG,kBAAA;ATmkBJ;AQvnBC;ECoDG,kBAAA;ATskBJ;AQ1nBC;ECoDG,SAAA;ATykBJ;AQ7nBC;ECoDG,kBAAA;AT4kBJ;AQhoBC;ECoDG,kBAAA;AT+kBJ;AQnoBC;ECoDG,WAAA;ATklBJ;AQtoBC;ECoDG,kBAAA;ATqlBJ;AQzoBC;ECoDG,kBAAA;ATwlBJ;AQ5oBC;ECoDG,SAAA;AT2lBJ;AQ/oBC;ECoDG,kBAAA;AT8lBJ;AQlpBC;ECoDG,kBAAA;ATimBJ;AQrpBC;ECoDG,WAAA;ATomBJ;AQxpBC;ECoDG,iBAAA;ATumBJ;AQ3pBC;ECoDG,iBAAA;AT0mBJ;AQ9pBC;ECyDG,UAAA;ATwmBJ;AQjqBC;ECwEG,iBAAA;AT4lBJ;AQpqBC;ECwEG,yBAAA;AT+lBJ;AQvqBC;ECwEG,yBAAA;ATkmBJ;AQ1qBC;ECwEG,kBAAA;ATqmBJ;AQ7qBC;ECwEG,yBAAA;ATwmBJ;AQhrBC;ECwEG,yBAAA;AT2mBJ;AQnrBC;ECwEG,gBAAA;AT8mBJ;AQtrBC;ECwEG,yBAAA;ATinBJ;AQzrBC;ECwEG,yBAAA;ATonBJ;AQ5rBC;ECwEG,kBAAA;ATunBJ;AQ/rBC;ECwEG,yBAAA;AT0nBJ;AQlsBC;ECwEG,yBAAA;AT6nBJ;AQrsBC;ECwEG,gBAAA;ATgoBJ;AQxsBC;ECwEG,yBAAA;ATmoBJ;AQ3sBC;ECwEG,yBAAA;ATsoBJ;AQ9sBC;ECwEG,kBAAA;ATyoBJ;AQjtBC;ECwEG,yBAAA;AT4oBJ;AQptBC;ECwEG,yBAAA;AT+oBJ;AQvtBC;ECwEG,gBAAA;ATkpBJ;AQ1tBC;ECwEG,yBAAA;ATqpBJ;AQ7tBC;ECwEG,yBAAA;ATwpBJ;AQhuBC;ECwEG,kBAAA;AT2pBJ;AQnuBC;ECwEG,wBAAA;AT8pBJ;AQtuBC;ECwEG,wBAAA;ATiqBJ;AQzuBC;ECwEG,eAAA;AToqBJ;AMnqBA;EEzEC;;;;;;;;;;;;;;;;;;;;;;;;ICuCK,WAAA;ETguBJ;EQvwBD;IC+CG,WAAA;ET2tBF;EQ1wBD;IC+CG,mBAAA;ET8tBF;EQ7wBD;IC+CG,mBAAA;ETiuBF;EQhxBD;IC+CG,YAAA;ETouBF;EQnxBD;IC+CG,mBAAA;ETuuBF;EQtxBD;IC+CG,mBAAA;ET0uBF;EQzxBD;IC+CG,UAAA;ET6uBF;EQ5xBD;IC+CG,mBAAA;ETgvBF;EQ/xBD;IC+CG,mBAAA;ETmvBF;EQlyBD;IC+CG,YAAA;ETsvBF;EQryBD;IC+CG,mBAAA;ETyvBF;EQxyBD;IC+CG,mBAAA;ET4vBF;EQ3yBD;IC+CG,UAAA;ET+vBF;EQ9yBD;IC+CG,mBAAA;ETkwBF;EQjzBD;IC+CG,mBAAA;ETqwBF;EQpzBD;IC+CG,YAAA;ETwwBF;EQvzBD;IC+CG,mBAAA;ET2wBF;EQ1zBD;IC+CG,mBAAA;ET8wBF;EQ7zBD;IC+CG,UAAA;ETixBF;EQh0BD;IC+CG,mBAAA;EToxBF;EQn0BD;IC+CG,mBAAA;ETuxBF;EQt0BD;IC+CG,YAAA;ET0xBF;EQz0BD;IC+CG,kBAAA;ET6xBF;EQ50BD;IC+CG,kBAAA;ETgyBF;EQ/0BD;IC8DG,WAAA;EToxBF;EQl1BD;IC8DG,mBAAA;ETuxBF;EQr1BD;IC8DG,mBAAA;ET0xBF;EQx1BD;IC8DG,YAAA;ET6xBF;EQ31BD;IC8DG,mBAAA;ETgyBF;EQ91BD;IC8DG,mBAAA;ETmyBF;EQj2BD;IC8DG,UAAA;ETsyBF;EQp2BD;IC8DG,mBAAA;ETyyBF;EQv2BD;IC8DG,mBAAA;ET4yBF;EQ12BD;IC8DG,YAAA;ET+yBF;EQ72BD;IC8DG,mBAAA;ETkzBF;EQh3BD;IC8DG,mBAAA;ETqzBF;EQn3BD;IC8DG,UAAA;ETwzBF;EQt3BD;IC8DG,mBAAA;ET2zBF;EQz3BD;IC8DG,mBAAA;ET8zBF;EQ53BD;IC8DG,YAAA;ETi0BF;EQ/3BD;IC8DG,mBAAA;ETo0BF;EQl4BD;IC8DG,mBAAA;ETu0BF;EQr4BD;IC8DG,UAAA;ET00BF;EQx4BD;IC8DG,mBAAA;ET60BF;EQ34BD;IC8DG,mBAAA;ETg1BF;EQ94BD;IC8DG,YAAA;ETm1BF;EQj5BD;IC8DG,kBAAA;ETs1BF;EQp5BD;IC8DG,kBAAA;ETy1BF;EQv5BD;ICmEG,WAAA;ETu1BF;EQ15BD;ICoDG,UAAA;ETy2BF;EQ75BD;ICoDG,kBAAA;ET42BF;EQh6BD;ICoDG,kBAAA;ET+2BF;EQn6BD;ICoDG,WAAA;ETk3BF;EQt6BD;ICoDG,kBAAA;ETq3BF;EQz6BD;ICoDG,kBAAA;ETw3BF;EQ56BD;ICoDG,SAAA;ET23BF;EQ/6BD;ICoDG,kBAAA;ET83BF;EQl7BD;ICoDG,kBAAA;ETi4BF;EQr7BD;ICoDG,WAAA;ETo4BF;EQx7BD;ICoDG,kBAAA;ETu4BF;EQ37BD;ICoDG,kBAAA;ET04BF;EQ97BD;ICoDG,SAAA;ET64BF;EQj8BD;ICoDG,kBAAA;ETg5BF;EQp8BD;ICoDG,kBAAA;ETm5BF;EQv8BD;ICoDG,WAAA;ETs5BF;EQ18BD;ICoDG,kBAAA;ETy5BF;EQ78BD;ICoDG,kBAAA;ET45BF;EQh9BD;ICoDG,SAAA;ET+5BF;EQn9BD;ICoDG,kBAAA;ETk6BF;EQt9BD;ICoDG,kBAAA;ETq6BF;EQz9BD;ICoDG,WAAA;ETw6BF;EQ59BD;ICoDG,iBAAA;ET26BF;EQ/9BD;ICoDG,iBAAA;ET86BF;EQl+BD;ICyDG,UAAA;ET46BF;EQr+BD;ICwEG,iBAAA;ETg6BF;EQx+BD;ICwEG,yBAAA;ETm6BF;EQ3+BD;ICwEG,yBAAA;ETs6BF;EQ9+BD;ICwEG,kBAAA;ETy6BF;EQj/BD;ICwEG,yBAAA;ET46BF;EQp/BD;ICwEG,yBAAA;ET+6BF;EQv/BD;ICwEG,gBAAA;ETk7BF;EQ1/BD;ICwEG,yBAAA;ETq7BF;EQ7/BD;ICwEG,yBAAA;ETw7BF;EQhgCD;ICwEG,kBAAA;ET27BF;EQngCD;ICwEG,yBAAA;ET87BF;EQtgCD;ICwEG,yBAAA;ETi8BF;EQzgCD;ICwEG,gBAAA;ETo8BF;EQ5gCD;ICwEG,yBAAA;ETu8BF;EQ/gCD;ICwEG,yBAAA;ET08BF;EQlhCD;ICwEG,kBAAA;ET68BF;EQrhCD;ICwEG,yBAAA;ETg9BF;EQxhCD;ICwEG,yBAAA;ETm9BF;EQ3hCD;ICwEG,gBAAA;ETs9BF;EQ9hCD;ICwEG,yBAAA;ETy9BF;EQjiCD;ICwEG,yBAAA;ET49BF;EQpiCD;ICwEG,kBAAA;ET+9BF;EQviCD;ICwEG,wBAAA;ETk+BF;EQ1iCD;ICwEG,wBAAA;ETq+BF;EQ7iCD;ICwEG,eAAA;ETw+BF;AACF;AM/9BA;EElFC;;;;;;;;;;;;;;;;;;;;;;;;ICuCK,WAAA;ETqiCJ;EQ5kCD;IC+CG,WAAA;ETgiCF;EQ/kCD;IC+CG,mBAAA;ETmiCF;EQllCD;IC+CG,mBAAA;ETsiCF;EQrlCD;IC+CG,YAAA;ETyiCF;EQxlCD;IC+CG,mBAAA;ET4iCF;EQ3lCD;IC+CG,mBAAA;ET+iCF;EQ9lCD;IC+CG,UAAA;ETkjCF;EQjmCD;IC+CG,mBAAA;ETqjCF;EQpmCD;IC+CG,mBAAA;ETwjCF;EQvmCD;IC+CG,YAAA;ET2jCF;EQ1mCD;IC+CG,mBAAA;ET8jCF;EQ7mCD;IC+CG,mBAAA;ETikCF;EQhnCD;IC+CG,UAAA;ETokCF;EQnnCD;IC+CG,mBAAA;ETukCF;EQtnCD;IC+CG,mBAAA;ET0kCF;EQznCD;IC+CG,YAAA;ET6kCF;EQ5nCD;IC+CG,mBAAA;ETglCF;EQ/nCD;IC+CG,mBAAA;ETmlCF;EQloCD;IC+CG,UAAA;ETslCF;EQroCD;IC+CG,mBAAA;ETylCF;EQxoCD;IC+CG,mBAAA;ET4lCF;EQ3oCD;IC+CG,YAAA;ET+lCF;EQ9oCD;IC+CG,kBAAA;ETkmCF;EQjpCD;IC+CG,kBAAA;ETqmCF;EQppCD;IC8DG,WAAA;ETylCF;EQvpCD;IC8DG,mBAAA;ET4lCF;EQ1pCD;IC8DG,mBAAA;ET+lCF;EQ7pCD;IC8DG,YAAA;ETkmCF;EQhqCD;IC8DG,mBAAA;ETqmCF;EQnqCD;IC8DG,mBAAA;ETwmCF;EQtqCD;IC8DG,UAAA;ET2mCF;EQzqCD;IC8DG,mBAAA;ET8mCF;EQ5qCD;IC8DG,mBAAA;ETinCF;EQ/qCD;IC8DG,YAAA;ETonCF;EQlrCD;IC8DG,mBAAA;ETunCF;EQrrCD;IC8DG,mBAAA;ET0nCF;EQxrCD;IC8DG,UAAA;ET6nCF;EQ3rCD;IC8DG,mBAAA;ETgoCF;EQ9rCD;IC8DG,mBAAA;ETmoCF;EQjsCD;IC8DG,YAAA;ETsoCF;EQpsCD;IC8DG,mBAAA;ETyoCF;EQvsCD;IC8DG,mBAAA;ET4oCF;EQ1sCD;IC8DG,UAAA;ET+oCF;EQ7sCD;IC8DG,mBAAA;ETkpCF;EQhtCD;IC8DG,mBAAA;ETqpCF;EQntCD;IC8DG,YAAA;ETwpCF;EQttCD;IC8DG,kBAAA;ET2pCF;EQztCD;IC8DG,kBAAA;ET8pCF;EQ5tCD;ICmEG,WAAA;ET4pCF;EQ/tCD;ICoDG,UAAA;ET8qCF;EQluCD;ICoDG,kBAAA;ETirCF;EQruCD;ICoDG,kBAAA;ETorCF;EQxuCD;ICoDG,WAAA;ETurCF;EQ3uCD;ICoDG,kBAAA;ET0rCF;EQ9uCD;ICoDG,kBAAA;ET6rCF;EQjvCD;ICoDG,SAAA;ETgsCF;EQpvCD;ICoDG,kBAAA;ETmsCF;EQvvCD;ICoDG,kBAAA;ETssCF;EQ1vCD;ICoDG,WAAA;ETysCF;EQ7vCD;ICoDG,kBAAA;ET4sCF;EQhwCD;ICoDG,kBAAA;ET+sCF;EQnwCD;ICoDG,SAAA;ETktCF;EQtwCD;ICoDG,kBAAA;ETqtCF;EQzwCD;ICoDG,kBAAA;ETwtCF;EQ5wCD;ICoDG,WAAA;ET2tCF;EQ/wCD;ICoDG,kBAAA;ET8tCF;EQlxCD;ICoDG,kBAAA;ETiuCF;EQrxCD;ICoDG,SAAA;ETouCF;EQxxCD;ICoDG,kBAAA;ETuuCF;EQ3xCD;ICoDG,kBAAA;ET0uCF;EQ9xCD;ICoDG,WAAA;ET6uCF;EQjyCD;ICoDG,iBAAA;ETgvCF;EQpyCD;ICoDG,iBAAA;ETmvCF;EQvyCD;ICyDG,UAAA;ETivCF;EQ1yCD;ICwEG,iBAAA;ETquCF;EQ7yCD;ICwEG,yBAAA;ETwuCF;EQhzCD;ICwEG,yBAAA;ET2uCF;EQnzCD;ICwEG,kBAAA;ET8uCF;EQtzCD;ICwEG,yBAAA;ETivCF;EQzzCD;ICwEG,yBAAA;ETovCF;EQ5zCD;ICwEG,gBAAA;ETuvCF;EQ/zCD;ICwEG,yBAAA;ET0vCF;EQl0CD;ICwEG,yBAAA;ET6vCF;EQr0CD;ICwEG,kBAAA;ETgwCF;EQx0CD;ICwEG,yBAAA;ETmwCF;EQ30CD;ICwEG,yBAAA;ETswCF;EQ90CD;ICwEG,gBAAA;ETywCF;EQj1CD;ICwEG,yBAAA;ET4wCF;EQp1CD;ICwEG,yBAAA;ET+wCF;EQv1CD;ICwEG,kBAAA;ETkxCF;EQ11CD;ICwEG,yBAAA;ETqxCF;EQ71CD;ICwEG,yBAAA;ETwxCF;EQh2CD;ICwEG,gBAAA;ET2xCF;EQn2CD;ICwEG,yBAAA;ET8xCF;EQt2CD;ICwEG,yBAAA;ETiyCF;EQz2CD;ICwEG,kBAAA;EToyCF;EQ52CD;ICwEG,wBAAA;ETuyCF;EQ/2CD;ICwEG,wBAAA;ET0yCF;EQl3CD;ICwEG,eAAA;ET6yCF;AACF;AM3xCA;EE3FC;;;;;;;;;;;;;;;;;;;;;;;;ICuCK,WAAA;ET02CJ;EQj5CD;IC+CG,WAAA;ETq2CF;EQp5CD;IC+CG,mBAAA;ETw2CF;EQv5CD;IC+CG,mBAAA;ET22CF;EQ15CD;IC+CG,YAAA;ET82CF;EQ75CD;IC+CG,mBAAA;ETi3CF;EQh6CD;IC+CG,mBAAA;ETo3CF;EQn6CD;IC+CG,UAAA;ETu3CF;EQt6CD;IC+CG,mBAAA;ET03CF;EQz6CD;IC+CG,mBAAA;ET63CF;EQ56CD;IC+CG,YAAA;ETg4CF;EQ/6CD;IC+CG,mBAAA;ETm4CF;EQl7CD;IC+CG,mBAAA;ETs4CF;EQr7CD;IC+CG,UAAA;ETy4CF;EQx7CD;IC+CG,mBAAA;ET44CF;EQ37CD;IC+CG,mBAAA;ET+4CF;EQ97CD;IC+CG,YAAA;ETk5CF;EQj8CD;IC+CG,mBAAA;ETq5CF;EQp8CD;IC+CG,mBAAA;ETw5CF;EQv8CD;IC+CG,UAAA;ET25CF;EQ18CD;IC+CG,mBAAA;ET85CF;EQ78CD;IC+CG,mBAAA;ETi6CF;EQh9CD;IC+CG,YAAA;ETo6CF;EQn9CD;IC+CG,kBAAA;ETu6CF;EQt9CD;IC+CG,kBAAA;ET06CF;EQz9CD;IC8DG,WAAA;ET85CF;EQ59CD;IC8DG,mBAAA;ETi6CF;EQ/9CD;IC8DG,mBAAA;ETo6CF;EQl+CD;IC8DG,YAAA;ETu6CF;EQr+CD;IC8DG,mBAAA;ET06CF;EQx+CD;IC8DG,mBAAA;ET66CF;EQ3+CD;IC8DG,UAAA;ETg7CF;EQ9+CD;IC8DG,mBAAA;ETm7CF;EQj/CD;IC8DG,mBAAA;ETs7CF;EQp/CD;IC8DG,YAAA;ETy7CF;EQv/CD;IC8DG,mBAAA;ET47CF;EQ1/CD;IC8DG,mBAAA;ET+7CF;EQ7/CD;IC8DG,UAAA;ETk8CF;EQhgDD;IC8DG,mBAAA;ETq8CF;EQngDD;IC8DG,mBAAA;ETw8CF;EQtgDD;IC8DG,YAAA;ET28CF;EQzgDD;IC8DG,mBAAA;ET88CF;EQ5gDD;IC8DG,mBAAA;ETi9CF;EQ/gDD;IC8DG,UAAA;ETo9CF;EQlhDD;IC8DG,mBAAA;ETu9CF;EQrhDD;IC8DG,mBAAA;ET09CF;EQxhDD;IC8DG,YAAA;ET69CF;EQ3hDD;IC8DG,kBAAA;ETg+CF;EQ9hDD;IC8DG,kBAAA;ETm+CF;EQjiDD;ICmEG,WAAA;ETi+CF;EQpiDD;ICoDG,UAAA;ETm/CF;EQviDD;ICoDG,kBAAA;ETs/CF;EQ1iDD;ICoDG,kBAAA;ETy/CF;EQ7iDD;ICoDG,WAAA;ET4/CF;EQhjDD;ICoDG,kBAAA;ET+/CF;EQnjDD;ICoDG,kBAAA;ETkgDF;EQtjDD;ICoDG,SAAA;ETqgDF;EQzjDD;ICoDG,kBAAA;ETwgDF;EQ5jDD;ICoDG,kBAAA;ET2gDF;EQ/jDD;ICoDG,WAAA;ET8gDF;EQlkDD;ICoDG,kBAAA;ETihDF;EQrkDD;ICoDG,kBAAA;ETohDF;EQxkDD;ICoDG,SAAA;ETuhDF;EQ3kDD;ICoDG,kBAAA;ET0hDF;EQ9kDD;ICoDG,kBAAA;ET6hDF;EQjlDD;ICoDG,WAAA;ETgiDF;EQplDD;ICoDG,kBAAA;ETmiDF;EQvlDD;ICoDG,kBAAA;ETsiDF;EQ1lDD;ICoDG,SAAA;ETyiDF;EQ7lDD;ICoDG,kBAAA;ET4iDF;EQhmDD;ICoDG,kBAAA;ET+iDF;EQnmDD;ICoDG,WAAA;ETkjDF;EQtmDD;ICoDG,iBAAA;ETqjDF;EQzmDD;ICoDG,iBAAA;ETwjDF;EQ5mDD;ICyDG,UAAA;ETsjDF;EQ/mDD;ICwEG,iBAAA;ET0iDF;EQlnDD;ICwEG,yBAAA;ET6iDF;EQrnDD;ICwEG,yBAAA;ETgjDF;EQxnDD;ICwEG,kBAAA;ETmjDF;EQ3nDD;ICwEG,yBAAA;ETsjDF;EQ9nDD;ICwEG,yBAAA;ETyjDF;EQjoDD;ICwEG,gBAAA;ET4jDF;EQpoDD;ICwEG,yBAAA;ET+jDF;EQvoDD;ICwEG,yBAAA;ETkkDF;EQ1oDD;ICwEG,kBAAA;ETqkDF;EQ7oDD;ICwEG,yBAAA;ETwkDF;EQhpDD;ICwEG,yBAAA;ET2kDF;EQnpDD;ICwEG,gBAAA;ET8kDF;EQtpDD;ICwEG,yBAAA;ETilDF;EQzpDD;ICwEG,yBAAA;ETolDF;EQ5pDD;ICwEG,kBAAA;ETulDF;EQ/pDD;ICwEG,yBAAA;ET0lDF;EQlqDD;ICwEG,yBAAA;ET6lDF;EQrqDD;ICwEG,gBAAA;ETgmDF;EQxqDD;ICwEG,yBAAA;ETmmDF;EQ3qDD;ICwEG,yBAAA;ETsmDF;EQ9qDD;ICwEG,kBAAA;ETymDF;EQjrDD;ICwEG,wBAAA;ET4mDF;EQprDD;ICwEG,wBAAA;ET+mDF;EQvrDD;ICwEG,eAAA;ETknDF;AACF;AUprDA;EACE,6BAAA;AVsrDF;AUvrDA;EAQI,gBAAA;EACA,qBAAA;EACA,WAAA;AVkrDJ;AU7qDI;;EACE,gBAAA;EACA,mBAAA;EACA,WAAA;AVgrDN;AU3qDA;EACE,gBAAA;EACA,mBAAA;EACA,cAAA;EACA,gBAAA;AV6qDF;AU1qDA;EACE,gBAAA;AV4qDF;AUtqDA;EACE,WAAA;EACA,eAAA;EACA,mBAAA;AVwqDF;AU3qDA;;;;;;EAWQ,YAAA;EACA,uBAAA;EACA,mBAAA;EACA,0BAAA;AVwqDR;AUtrDA;EAoBI,sBAAA;EACA,6BAAA;AVqqDJ;AU1rDA;;;;;;EA8BQ,aAAA;AVoqDR;AUlsDA;EAoCI,0BAAA;AViqDJ;AUrsDA;EAyCI,sBAAA;AV+pDJ;AUxpDA;;;;;;EAOQ,YAAA;AVypDR;AU9oDA;EACE,sBAAA;AVgpDF;AUjpDA;;;;;;EAQQ,sBAAA;AVipDR;AUzpDA;;EAeM,wBAAA;AV8oDN;AUpoDA;EAEI,yBAAA;AVqoDJ;AU5nDA;EAEI,yBAAA;AV6nDJ;AW5wDE;;;;;;;;;;;;EAOI,yBAAA;AXmxDN;AW7wDE;;;;;EAMI,yBAAA;AX8wDN;AWjyDE;;;;;;;;;;;;EAOI,yBAAA;AXwyDN;AWlyDE;;;;;EAMI,yBAAA;AXmyDN;AWtzDE;;;;;;;;;;;;EAOI,yBAAA;AX6zDN;AWvzDE;;;;;EAMI,yBAAA;AXwzDN;AW30DE;;;;;;;;;;;;EAOI,yBAAA;AXk1DN;AW50DE;;;;;EAMI,yBAAA;AX60DN;AWh2DE;;;;;;;;;;;;EAOI,yBAAA;AXu2DN;AWj2DE;;;;;EAMI,yBAAA;AXk2DN;AU9sDA;EACE,iBAAA;EACA,gBAAA;AVgtDF;AU9sDE;EAAA;IACE,WAAA;IACA,mBAAA;IACA,kBAAA;IACA,4CAAA;IACA,sBAAA;EVitDF;EUttDA;IASI,gBAAA;EVgtDJ;EUztDA;;;;;;IAkBU,mBAAA;EV+sDV;EUjuDA;IA0BI,SAAA;EV0sDJ;EUpuDA;;;;;;IAmCU,cAAA;EVysDV;EU5uDA;;;;;;IAuCU,eAAA;EV6sDV;EUpvDA;;;;IAoDU,gBAAA;EVssDV;AACF;AYh6DA;EACE;IAAQ,2BAAA;EZm6DR;EYl6DA;IAAQ,wBAAA;EZq6DR;AACF;AYl6DA;EACE;IAAQ,2BAAA;EZq6DR;EYp6DA;IAAQ,wBAAA;EZu6DR;AACF;AYh6DA;EACE,YAAA;EACA,mBAAA;EACA,gBAAA;EACA,yBAAA;EACA,kBAAA;ETsCA,sDAAA;EACQ,8CAAA;AH63DV;AY/5DA;EACE,WAAA;EACA,SAAA;EACA,YAAA;EACA,eAAA;EACA,iBAAA;EACA,WAAA;EACA,kBAAA;EACA,yBAAA;ETyBA,sDAAA;EACQ,8CAAA;EAyHR,mCAAA;EACK,8BAAA;EACG,2BAAA;AHixDV;AY55DA;;ECDI,6MAAA;EACA,wMAAA;EACA,qMAAA;EDEF,0BAAA;AZg6DF;AYz5DA;;ET5CE,0DAAA;EACK,qDAAA;EACG,kDAAA;AHy8DV;AYt5DA;EEvEE,yBAAA;Adg+DF;Ac79DE;EDgDE,6MAAA;EACA,wMAAA;EACA,qMAAA;Abg7DJ;AY15DA;EE3EE,yBAAA;Adw+DF;Acr+DE;EDgDE,6MAAA;EACA,wMAAA;EACA,qMAAA;Abw7DJ;AY95DA;EE/EE,yBAAA;Adg/DF;Ac7+DE;EDgDE,6MAAA;EACA,wMAAA;EACA,qMAAA;Abg8DJ;AYl6DA;EEnFE,yBAAA;Adw/DF;Acr/DE;EDgDE,6MAAA;EACA,wMAAA;EACA,qMAAA;Abw8DJ;Aen/DE;;;;;;;;EAEE,cAAA;EACA,YAAA;Af2/DJ;Aez/DE;;;;EACE,WAAA;Af8/DJ;AgBpgEA;ECVE,cAAA;EACA,kBAAA;EACA,iBAAA;AjBihEF;AgBtgEA;EACE,uBAAA;AhBwgEF;AgBtgEA;EACE,sBAAA;AhBwgEF;AgBhgEA;EACE,wBAAA;AhBkgEF;AgBhgEA;EACE,yBAAA;AhBkgEF;AgBhgEA;EACE,kBAAA;AhBkgEF;AgBhgEA;EEzBE,WAAA;EACA,kBAAA;EACA,iBAAA;EACA,6BAAA;EACA,SAAA;AlB4hEF;AgB9/DA;EACE,wBAAA;AhBggEF;AgBz/DA;EACE,eAAA;AhB2/DF;AmB5hEA;EACE,mBAAA;AnB8hEF;AmBxhEA;;;;EClBE,wBAAA;ApBgjEF;AmBvhEA;;;;;;;;;;;;EAYE,wBAAA;AnByhEF;AmBrhEE;EAAA;ICjDA,yBAAA;EpB0kEA;EoBzkEA;IAAU,yBAAA;EpB4kEV;EoB3kEA;IAAU,6BAAA;EpB8kEV;EoB7kEA;;IACU,8BAAA;EpBglEV;AACF;AmB/hEE;EAAA;IACE,yBAAA;EnBkiEF;AACF;AmB/hEE;EAAA;IACE,0BAAA;EnBkiEF;AACF;AmB/hEE;EAAA;IACE,gCAAA;EnBkiEF;AACF;AmB9hEE;EAAA;ICtEA,yBAAA;EpBwmEA;EoBvmEA;IAAU,yBAAA;EpB0mEV;EoBzmEA;IAAU,6BAAA;EpB4mEV;EoB3mEA;;IACU,8BAAA;EpB8mEV;AACF;AmBxiEE;EAAA;IACE,yBAAA;EnB2iEF;AACF;AmBxiEE;EAAA;IACE,0BAAA;EnB2iEF;AACF;AmBxiEE;EAAA;IACE,gCAAA;EnB2iEF;AACF;AmBviEE;EAAA;IC3FA,yBAAA;EpBsoEA;EoBroEA;IAAU,yBAAA;EpBwoEV;EoBvoEA;IAAU,6BAAA;EpB0oEV;EoBzoEA;;IACU,8BAAA;EpB4oEV;AACF;AmBjjEE;EAAA;IACE,yBAAA;EnBojEF;AACF;AmBjjEE;EAAA;IACE,0BAAA;EnBojEF;AACF;AmBjjEE;EAAA;IACE,gCAAA;EnBojEF;AACF;AmBhjEE;EAAA;IChHA,yBAAA;EpBoqEA;EoBnqEA;IAAU,yBAAA;EpBsqEV;EoBrqEA;IAAU,6BAAA;EpBwqEV;EoBvqEA;;IACU,8BAAA;EpB0qEV;AACF;AmB1jEE;EAAA;IACE,yBAAA;EnB6jEF;AACF;AmB1jEE;EAAA;IACE,0BAAA;EnB6jEF;AACF;AmB1jEE;EAAA;IACE,gCAAA;EnB6jEF;AACF;AmBzjEE;EAAA;IC7HA,wBAAA;EpB0rEA;AACF;AmBzjEE;EAAA;IClIA,wBAAA;EpB+rEA;AACF;AmBzjEE;EAAA;ICvIA,wBAAA;EpBosEA;AACF;AmBzjEE;EAAA;IC5IA,wBAAA;EpBysEA;AACF;AmBnjEA;ECvJE,wBAAA;ApB6sEF;AmBnjEE;EAAA;IClKA,yBAAA;EpBytEA;EoBxtEA;IAAU,yBAAA;EpB2tEV;EoB1tEA;IAAU,6BAAA;EpB6tEV;EoB5tEA;;IACU,8BAAA;EpB+tEV;AACF;AmB9jEA;EACE,wBAAA;AnBgkEF;AmB9jEE;EAAA;IACE,yBAAA;EnBikEF;AACF;AmB/jEA;EACE,wBAAA;AnBikEF;AmB/jEE;EAAA;IACE,0BAAA;EnBkkEF;AACF;AmBhkEA;EACE,wBAAA;AnBkkEF;AmBhkEE;EAAA;IACE,gCAAA;EnBmkEF;AACF;AmB/jEE;EAAA;ICrLA,wBAAA;EpBwvEA;AACF","sourcesContent":["/*!\n * Bootstrap v3.3.7 (http://getbootstrap.com)\n * Copyright 2011-2016 Twitter, Inc.\n * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n */\n/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */\nhtml {\n  font-family: sans-serif;\n  -ms-text-size-adjust: 100%;\n  -webkit-text-size-adjust: 100%;\n}\nbody {\n  margin: 0;\n}\narticle,\naside,\ndetails,\nfigcaption,\nfigure,\nfooter,\nheader,\nhgroup,\nmain,\nmenu,\nnav,\nsection,\nsummary {\n  display: block;\n}\naudio,\ncanvas,\nprogress,\nvideo {\n  display: inline-block;\n  vertical-align: baseline;\n}\naudio:not([controls]) {\n  display: none;\n  height: 0;\n}\n[hidden],\ntemplate {\n  display: none;\n}\na {\n  background-color: transparent;\n}\na:active,\na:hover {\n  outline: 0;\n}\nabbr[title] {\n  border-bottom: none;\n  text-decoration: underline;\n  text-decoration: underline dotted;\n}\nb,\nstrong {\n  font-weight: bold;\n}\ndfn {\n  font-style: italic;\n}\nh1 {\n  font-size: 2em;\n  margin: 0.67em 0;\n}\nmark {\n  background: #ff0;\n  color: #000;\n}\nsmall {\n  font-size: 80%;\n}\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\nsup {\n  top: -0.5em;\n}\nsub {\n  bottom: -0.25em;\n}\nimg {\n  border: 0;\n}\nsvg:not(:root) {\n  overflow: hidden;\n}\nfigure {\n  margin: 1em 40px;\n}\nhr {\n  box-sizing: content-box;\n  height: 0;\n}\npre {\n  overflow: auto;\n}\ncode,\nkbd,\npre,\nsamp {\n  font-family: monospace, monospace;\n  font-size: 1em;\n}\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  color: inherit;\n  font: inherit;\n  margin: 0;\n}\nbutton {\n  overflow: visible;\n}\nbutton,\nselect {\n  text-transform: none;\n}\nbutton,\nhtml input[type=\"button\"],\ninput[type=\"reset\"],\ninput[type=\"submit\"] {\n  -webkit-appearance: button;\n  cursor: pointer;\n}\nbutton[disabled],\nhtml input[disabled] {\n  cursor: default;\n}\nbutton::-moz-focus-inner,\ninput::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\ninput {\n  line-height: normal;\n}\ninput[type=\"checkbox\"],\ninput[type=\"radio\"] {\n  box-sizing: border-box;\n  padding: 0;\n}\ninput[type=\"number\"]::-webkit-inner-spin-button,\ninput[type=\"number\"]::-webkit-outer-spin-button {\n  height: auto;\n}\ninput[type=\"search\"] {\n  -webkit-appearance: textfield;\n  box-sizing: content-box;\n}\ninput[type=\"search\"]::-webkit-search-cancel-button,\ninput[type=\"search\"]::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\nfieldset {\n  border: 1px solid #c0c0c0;\n  margin: 0 2px;\n  padding: 0.35em 0.625em 0.75em;\n}\nlegend {\n  border: 0;\n  padding: 0;\n}\ntextarea {\n  overflow: auto;\n}\noptgroup {\n  font-weight: bold;\n}\ntable {\n  border-collapse: collapse;\n  border-spacing: 0;\n}\ntd,\nth {\n  padding: 0;\n}\n* {\n  -webkit-box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  box-sizing: border-box;\n}\n*:before,\n*:after {\n  -webkit-box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  box-sizing: border-box;\n}\nhtml {\n  font-size: 10px;\n  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);\n}\nbody {\n  font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  line-height: 1.42857143;\n  color: #333333;\n  background-color: #fff;\n}\ninput,\nbutton,\nselect,\ntextarea {\n  font-family: inherit;\n  font-size: inherit;\n  line-height: inherit;\n}\na {\n  color: #337ab7;\n  text-decoration: none;\n}\na:hover,\na:focus {\n  color: #23527c;\n  text-decoration: underline;\n}\na:focus {\n  outline: 5px auto -webkit-focus-ring-color;\n  outline-offset: -2px;\n}\nfigure {\n  margin: 0;\n}\nimg {\n  vertical-align: middle;\n}\n.img-responsive {\n  display: block;\n  max-width: 100%;\n  height: auto;\n}\n.img-rounded {\n  border-radius: 6px;\n}\n.img-thumbnail {\n  padding: 4px;\n  line-height: 1.42857143;\n  background-color: #fff;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  -webkit-transition: all 0.2s ease-in-out;\n  -o-transition: all 0.2s ease-in-out;\n  transition: all 0.2s ease-in-out;\n  display: inline-block;\n  max-width: 100%;\n  height: auto;\n}\n.img-circle {\n  border-radius: 50%;\n}\nhr {\n  margin-top: 20px;\n  margin-bottom: 20px;\n  border: 0;\n  border-top: 1px solid #eeeeee;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  border: 0;\n}\n.sr-only-focusable:active,\n.sr-only-focusable:focus {\n  position: static;\n  width: auto;\n  height: auto;\n  margin: 0;\n  overflow: visible;\n  clip: auto;\n}\n[role=\"button\"] {\n  cursor: pointer;\n}\n.container {\n  padding-right: 15px;\n  padding-left: 15px;\n  margin-right: auto;\n  margin-left: auto;\n}\n@media (min-width: 768px) {\n  .container {\n    width: 750px;\n  }\n}\n@media (min-width: 992px) {\n  .container {\n    width: 970px;\n  }\n}\n@media (min-width: 1200px) {\n  .container {\n    width: 1170px;\n  }\n}\n.container-fluid {\n  padding-right: 15px;\n  padding-left: 15px;\n  margin-right: auto;\n  margin-left: auto;\n}\n.row {\n  margin-right: -15px;\n  margin-left: -15px;\n}\n.row-no-gutters {\n  margin-right: 0;\n  margin-left: 0;\n}\n.row-no-gutters [class*=\"col-\"] {\n  padding-right: 0;\n  padding-left: 0;\n}\n.col-xs-1,\n.col-sm-1,\n.col-md-1,\n.col-lg-1,\n.col-xs-2,\n.col-sm-2,\n.col-md-2,\n.col-lg-2,\n.col-xs-3,\n.col-sm-3,\n.col-md-3,\n.col-lg-3,\n.col-xs-4,\n.col-sm-4,\n.col-md-4,\n.col-lg-4,\n.col-xs-5,\n.col-sm-5,\n.col-md-5,\n.col-lg-5,\n.col-xs-6,\n.col-sm-6,\n.col-md-6,\n.col-lg-6,\n.col-xs-7,\n.col-sm-7,\n.col-md-7,\n.col-lg-7,\n.col-xs-8,\n.col-sm-8,\n.col-md-8,\n.col-lg-8,\n.col-xs-9,\n.col-sm-9,\n.col-md-9,\n.col-lg-9,\n.col-xs-10,\n.col-sm-10,\n.col-md-10,\n.col-lg-10,\n.col-xs-11,\n.col-sm-11,\n.col-md-11,\n.col-lg-11,\n.col-xs-12,\n.col-sm-12,\n.col-md-12,\n.col-lg-12,\n.col-xs-13,\n.col-sm-13,\n.col-md-13,\n.col-lg-13,\n.col-xs-14,\n.col-sm-14,\n.col-md-14,\n.col-lg-14,\n.col-xs-15,\n.col-sm-15,\n.col-md-15,\n.col-lg-15,\n.col-xs-16,\n.col-sm-16,\n.col-md-16,\n.col-lg-16,\n.col-xs-17,\n.col-sm-17,\n.col-md-17,\n.col-lg-17,\n.col-xs-18,\n.col-sm-18,\n.col-md-18,\n.col-lg-18,\n.col-xs-19,\n.col-sm-19,\n.col-md-19,\n.col-lg-19,\n.col-xs-20,\n.col-sm-20,\n.col-md-20,\n.col-lg-20,\n.col-xs-21,\n.col-sm-21,\n.col-md-21,\n.col-lg-21,\n.col-xs-22,\n.col-sm-22,\n.col-md-22,\n.col-lg-22,\n.col-xs-23,\n.col-sm-23,\n.col-md-23,\n.col-lg-23,\n.col-xs-24,\n.col-sm-24,\n.col-md-24,\n.col-lg-24 {\n  position: relative;\n  min-height: 1px;\n  padding-right: 15px;\n  padding-left: 15px;\n}\n.col-xs-1,\n.col-xs-2,\n.col-xs-3,\n.col-xs-4,\n.col-xs-5,\n.col-xs-6,\n.col-xs-7,\n.col-xs-8,\n.col-xs-9,\n.col-xs-10,\n.col-xs-11,\n.col-xs-12,\n.col-xs-13,\n.col-xs-14,\n.col-xs-15,\n.col-xs-16,\n.col-xs-17,\n.col-xs-18,\n.col-xs-19,\n.col-xs-20,\n.col-xs-21,\n.col-xs-22,\n.col-xs-23,\n.col-xs-24 {\n  float: left;\n}\n.col-xs-24 {\n  width: 100%;\n}\n.col-xs-23 {\n  width: 95.83333333%;\n}\n.col-xs-22 {\n  width: 91.66666667%;\n}\n.col-xs-21 {\n  width: 87.5%;\n}\n.col-xs-20 {\n  width: 83.33333333%;\n}\n.col-xs-19 {\n  width: 79.16666667%;\n}\n.col-xs-18 {\n  width: 75%;\n}\n.col-xs-17 {\n  width: 70.83333333%;\n}\n.col-xs-16 {\n  width: 66.66666667%;\n}\n.col-xs-15 {\n  width: 62.5%;\n}\n.col-xs-14 {\n  width: 58.33333333%;\n}\n.col-xs-13 {\n  width: 54.16666667%;\n}\n.col-xs-12 {\n  width: 50%;\n}\n.col-xs-11 {\n  width: 45.83333333%;\n}\n.col-xs-10 {\n  width: 41.66666667%;\n}\n.col-xs-9 {\n  width: 37.5%;\n}\n.col-xs-8 {\n  width: 33.33333333%;\n}\n.col-xs-7 {\n  width: 29.16666667%;\n}\n.col-xs-6 {\n  width: 25%;\n}\n.col-xs-5 {\n  width: 20.83333333%;\n}\n.col-xs-4 {\n  width: 16.66666667%;\n}\n.col-xs-3 {\n  width: 12.5%;\n}\n.col-xs-2 {\n  width: 8.33333333%;\n}\n.col-xs-1 {\n  width: 4.16666667%;\n}\n.col-xs-pull-24 {\n  right: 100%;\n}\n.col-xs-pull-23 {\n  right: 95.83333333%;\n}\n.col-xs-pull-22 {\n  right: 91.66666667%;\n}\n.col-xs-pull-21 {\n  right: 87.5%;\n}\n.col-xs-pull-20 {\n  right: 83.33333333%;\n}\n.col-xs-pull-19 {\n  right: 79.16666667%;\n}\n.col-xs-pull-18 {\n  right: 75%;\n}\n.col-xs-pull-17 {\n  right: 70.83333333%;\n}\n.col-xs-pull-16 {\n  right: 66.66666667%;\n}\n.col-xs-pull-15 {\n  right: 62.5%;\n}\n.col-xs-pull-14 {\n  right: 58.33333333%;\n}\n.col-xs-pull-13 {\n  right: 54.16666667%;\n}\n.col-xs-pull-12 {\n  right: 50%;\n}\n.col-xs-pull-11 {\n  right: 45.83333333%;\n}\n.col-xs-pull-10 {\n  right: 41.66666667%;\n}\n.col-xs-pull-9 {\n  right: 37.5%;\n}\n.col-xs-pull-8 {\n  right: 33.33333333%;\n}\n.col-xs-pull-7 {\n  right: 29.16666667%;\n}\n.col-xs-pull-6 {\n  right: 25%;\n}\n.col-xs-pull-5 {\n  right: 20.83333333%;\n}\n.col-xs-pull-4 {\n  right: 16.66666667%;\n}\n.col-xs-pull-3 {\n  right: 12.5%;\n}\n.col-xs-pull-2 {\n  right: 8.33333333%;\n}\n.col-xs-pull-1 {\n  right: 4.16666667%;\n}\n.col-xs-pull-0 {\n  right: auto;\n}\n.col-xs-push-24 {\n  left: 100%;\n}\n.col-xs-push-23 {\n  left: 95.83333333%;\n}\n.col-xs-push-22 {\n  left: 91.66666667%;\n}\n.col-xs-push-21 {\n  left: 87.5%;\n}\n.col-xs-push-20 {\n  left: 83.33333333%;\n}\n.col-xs-push-19 {\n  left: 79.16666667%;\n}\n.col-xs-push-18 {\n  left: 75%;\n}\n.col-xs-push-17 {\n  left: 70.83333333%;\n}\n.col-xs-push-16 {\n  left: 66.66666667%;\n}\n.col-xs-push-15 {\n  left: 62.5%;\n}\n.col-xs-push-14 {\n  left: 58.33333333%;\n}\n.col-xs-push-13 {\n  left: 54.16666667%;\n}\n.col-xs-push-12 {\n  left: 50%;\n}\n.col-xs-push-11 {\n  left: 45.83333333%;\n}\n.col-xs-push-10 {\n  left: 41.66666667%;\n}\n.col-xs-push-9 {\n  left: 37.5%;\n}\n.col-xs-push-8 {\n  left: 33.33333333%;\n}\n.col-xs-push-7 {\n  left: 29.16666667%;\n}\n.col-xs-push-6 {\n  left: 25%;\n}\n.col-xs-push-5 {\n  left: 20.83333333%;\n}\n.col-xs-push-4 {\n  left: 16.66666667%;\n}\n.col-xs-push-3 {\n  left: 12.5%;\n}\n.col-xs-push-2 {\n  left: 8.33333333%;\n}\n.col-xs-push-1 {\n  left: 4.16666667%;\n}\n.col-xs-push-0 {\n  left: auto;\n}\n.col-xs-offset-24 {\n  margin-left: 100%;\n}\n.col-xs-offset-23 {\n  margin-left: 95.83333333%;\n}\n.col-xs-offset-22 {\n  margin-left: 91.66666667%;\n}\n.col-xs-offset-21 {\n  margin-left: 87.5%;\n}\n.col-xs-offset-20 {\n  margin-left: 83.33333333%;\n}\n.col-xs-offset-19 {\n  margin-left: 79.16666667%;\n}\n.col-xs-offset-18 {\n  margin-left: 75%;\n}\n.col-xs-offset-17 {\n  margin-left: 70.83333333%;\n}\n.col-xs-offset-16 {\n  margin-left: 66.66666667%;\n}\n.col-xs-offset-15 {\n  margin-left: 62.5%;\n}\n.col-xs-offset-14 {\n  margin-left: 58.33333333%;\n}\n.col-xs-offset-13 {\n  margin-left: 54.16666667%;\n}\n.col-xs-offset-12 {\n  margin-left: 50%;\n}\n.col-xs-offset-11 {\n  margin-left: 45.83333333%;\n}\n.col-xs-offset-10 {\n  margin-left: 41.66666667%;\n}\n.col-xs-offset-9 {\n  margin-left: 37.5%;\n}\n.col-xs-offset-8 {\n  margin-left: 33.33333333%;\n}\n.col-xs-offset-7 {\n  margin-left: 29.16666667%;\n}\n.col-xs-offset-6 {\n  margin-left: 25%;\n}\n.col-xs-offset-5 {\n  margin-left: 20.83333333%;\n}\n.col-xs-offset-4 {\n  margin-left: 16.66666667%;\n}\n.col-xs-offset-3 {\n  margin-left: 12.5%;\n}\n.col-xs-offset-2 {\n  margin-left: 8.33333333%;\n}\n.col-xs-offset-1 {\n  margin-left: 4.16666667%;\n}\n.col-xs-offset-0 {\n  margin-left: 0%;\n}\n@media (min-width: 768px) {\n  .col-sm-1,\n  .col-sm-2,\n  .col-sm-3,\n  .col-sm-4,\n  .col-sm-5,\n  .col-sm-6,\n  .col-sm-7,\n  .col-sm-8,\n  .col-sm-9,\n  .col-sm-10,\n  .col-sm-11,\n  .col-sm-12,\n  .col-sm-13,\n  .col-sm-14,\n  .col-sm-15,\n  .col-sm-16,\n  .col-sm-17,\n  .col-sm-18,\n  .col-sm-19,\n  .col-sm-20,\n  .col-sm-21,\n  .col-sm-22,\n  .col-sm-23,\n  .col-sm-24 {\n    float: left;\n  }\n  .col-sm-24 {\n    width: 100%;\n  }\n  .col-sm-23 {\n    width: 95.83333333%;\n  }\n  .col-sm-22 {\n    width: 91.66666667%;\n  }\n  .col-sm-21 {\n    width: 87.5%;\n  }\n  .col-sm-20 {\n    width: 83.33333333%;\n  }\n  .col-sm-19 {\n    width: 79.16666667%;\n  }\n  .col-sm-18 {\n    width: 75%;\n  }\n  .col-sm-17 {\n    width: 70.83333333%;\n  }\n  .col-sm-16 {\n    width: 66.66666667%;\n  }\n  .col-sm-15 {\n    width: 62.5%;\n  }\n  .col-sm-14 {\n    width: 58.33333333%;\n  }\n  .col-sm-13 {\n    width: 54.16666667%;\n  }\n  .col-sm-12 {\n    width: 50%;\n  }\n  .col-sm-11 {\n    width: 45.83333333%;\n  }\n  .col-sm-10 {\n    width: 41.66666667%;\n  }\n  .col-sm-9 {\n    width: 37.5%;\n  }\n  .col-sm-8 {\n    width: 33.33333333%;\n  }\n  .col-sm-7 {\n    width: 29.16666667%;\n  }\n  .col-sm-6 {\n    width: 25%;\n  }\n  .col-sm-5 {\n    width: 20.83333333%;\n  }\n  .col-sm-4 {\n    width: 16.66666667%;\n  }\n  .col-sm-3 {\n    width: 12.5%;\n  }\n  .col-sm-2 {\n    width: 8.33333333%;\n  }\n  .col-sm-1 {\n    width: 4.16666667%;\n  }\n  .col-sm-pull-24 {\n    right: 100%;\n  }\n  .col-sm-pull-23 {\n    right: 95.83333333%;\n  }\n  .col-sm-pull-22 {\n    right: 91.66666667%;\n  }\n  .col-sm-pull-21 {\n    right: 87.5%;\n  }\n  .col-sm-pull-20 {\n    right: 83.33333333%;\n  }\n  .col-sm-pull-19 {\n    right: 79.16666667%;\n  }\n  .col-sm-pull-18 {\n    right: 75%;\n  }\n  .col-sm-pull-17 {\n    right: 70.83333333%;\n  }\n  .col-sm-pull-16 {\n    right: 66.66666667%;\n  }\n  .col-sm-pull-15 {\n    right: 62.5%;\n  }\n  .col-sm-pull-14 {\n    right: 58.33333333%;\n  }\n  .col-sm-pull-13 {\n    right: 54.16666667%;\n  }\n  .col-sm-pull-12 {\n    right: 50%;\n  }\n  .col-sm-pull-11 {\n    right: 45.83333333%;\n  }\n  .col-sm-pull-10 {\n    right: 41.66666667%;\n  }\n  .col-sm-pull-9 {\n    right: 37.5%;\n  }\n  .col-sm-pull-8 {\n    right: 33.33333333%;\n  }\n  .col-sm-pull-7 {\n    right: 29.16666667%;\n  }\n  .col-sm-pull-6 {\n    right: 25%;\n  }\n  .col-sm-pull-5 {\n    right: 20.83333333%;\n  }\n  .col-sm-pull-4 {\n    right: 16.66666667%;\n  }\n  .col-sm-pull-3 {\n    right: 12.5%;\n  }\n  .col-sm-pull-2 {\n    right: 8.33333333%;\n  }\n  .col-sm-pull-1 {\n    right: 4.16666667%;\n  }\n  .col-sm-pull-0 {\n    right: auto;\n  }\n  .col-sm-push-24 {\n    left: 100%;\n  }\n  .col-sm-push-23 {\n    left: 95.83333333%;\n  }\n  .col-sm-push-22 {\n    left: 91.66666667%;\n  }\n  .col-sm-push-21 {\n    left: 87.5%;\n  }\n  .col-sm-push-20 {\n    left: 83.33333333%;\n  }\n  .col-sm-push-19 {\n    left: 79.16666667%;\n  }\n  .col-sm-push-18 {\n    left: 75%;\n  }\n  .col-sm-push-17 {\n    left: 70.83333333%;\n  }\n  .col-sm-push-16 {\n    left: 66.66666667%;\n  }\n  .col-sm-push-15 {\n    left: 62.5%;\n  }\n  .col-sm-push-14 {\n    left: 58.33333333%;\n  }\n  .col-sm-push-13 {\n    left: 54.16666667%;\n  }\n  .col-sm-push-12 {\n    left: 50%;\n  }\n  .col-sm-push-11 {\n    left: 45.83333333%;\n  }\n  .col-sm-push-10 {\n    left: 41.66666667%;\n  }\n  .col-sm-push-9 {\n    left: 37.5%;\n  }\n  .col-sm-push-8 {\n    left: 33.33333333%;\n  }\n  .col-sm-push-7 {\n    left: 29.16666667%;\n  }\n  .col-sm-push-6 {\n    left: 25%;\n  }\n  .col-sm-push-5 {\n    left: 20.83333333%;\n  }\n  .col-sm-push-4 {\n    left: 16.66666667%;\n  }\n  .col-sm-push-3 {\n    left: 12.5%;\n  }\n  .col-sm-push-2 {\n    left: 8.33333333%;\n  }\n  .col-sm-push-1 {\n    left: 4.16666667%;\n  }\n  .col-sm-push-0 {\n    left: auto;\n  }\n  .col-sm-offset-24 {\n    margin-left: 100%;\n  }\n  .col-sm-offset-23 {\n    margin-left: 95.83333333%;\n  }\n  .col-sm-offset-22 {\n    margin-left: 91.66666667%;\n  }\n  .col-sm-offset-21 {\n    margin-left: 87.5%;\n  }\n  .col-sm-offset-20 {\n    margin-left: 83.33333333%;\n  }\n  .col-sm-offset-19 {\n    margin-left: 79.16666667%;\n  }\n  .col-sm-offset-18 {\n    margin-left: 75%;\n  }\n  .col-sm-offset-17 {\n    margin-left: 70.83333333%;\n  }\n  .col-sm-offset-16 {\n    margin-left: 66.66666667%;\n  }\n  .col-sm-offset-15 {\n    margin-left: 62.5%;\n  }\n  .col-sm-offset-14 {\n    margin-left: 58.33333333%;\n  }\n  .col-sm-offset-13 {\n    margin-left: 54.16666667%;\n  }\n  .col-sm-offset-12 {\n    margin-left: 50%;\n  }\n  .col-sm-offset-11 {\n    margin-left: 45.83333333%;\n  }\n  .col-sm-offset-10 {\n    margin-left: 41.66666667%;\n  }\n  .col-sm-offset-9 {\n    margin-left: 37.5%;\n  }\n  .col-sm-offset-8 {\n    margin-left: 33.33333333%;\n  }\n  .col-sm-offset-7 {\n    margin-left: 29.16666667%;\n  }\n  .col-sm-offset-6 {\n    margin-left: 25%;\n  }\n  .col-sm-offset-5 {\n    margin-left: 20.83333333%;\n  }\n  .col-sm-offset-4 {\n    margin-left: 16.66666667%;\n  }\n  .col-sm-offset-3 {\n    margin-left: 12.5%;\n  }\n  .col-sm-offset-2 {\n    margin-left: 8.33333333%;\n  }\n  .col-sm-offset-1 {\n    margin-left: 4.16666667%;\n  }\n  .col-sm-offset-0 {\n    margin-left: 0%;\n  }\n}\n@media (min-width: 992px) {\n  .col-md-1,\n  .col-md-2,\n  .col-md-3,\n  .col-md-4,\n  .col-md-5,\n  .col-md-6,\n  .col-md-7,\n  .col-md-8,\n  .col-md-9,\n  .col-md-10,\n  .col-md-11,\n  .col-md-12,\n  .col-md-13,\n  .col-md-14,\n  .col-md-15,\n  .col-md-16,\n  .col-md-17,\n  .col-md-18,\n  .col-md-19,\n  .col-md-20,\n  .col-md-21,\n  .col-md-22,\n  .col-md-23,\n  .col-md-24 {\n    float: left;\n  }\n  .col-md-24 {\n    width: 100%;\n  }\n  .col-md-23 {\n    width: 95.83333333%;\n  }\n  .col-md-22 {\n    width: 91.66666667%;\n  }\n  .col-md-21 {\n    width: 87.5%;\n  }\n  .col-md-20 {\n    width: 83.33333333%;\n  }\n  .col-md-19 {\n    width: 79.16666667%;\n  }\n  .col-md-18 {\n    width: 75%;\n  }\n  .col-md-17 {\n    width: 70.83333333%;\n  }\n  .col-md-16 {\n    width: 66.66666667%;\n  }\n  .col-md-15 {\n    width: 62.5%;\n  }\n  .col-md-14 {\n    width: 58.33333333%;\n  }\n  .col-md-13 {\n    width: 54.16666667%;\n  }\n  .col-md-12 {\n    width: 50%;\n  }\n  .col-md-11 {\n    width: 45.83333333%;\n  }\n  .col-md-10 {\n    width: 41.66666667%;\n  }\n  .col-md-9 {\n    width: 37.5%;\n  }\n  .col-md-8 {\n    width: 33.33333333%;\n  }\n  .col-md-7 {\n    width: 29.16666667%;\n  }\n  .col-md-6 {\n    width: 25%;\n  }\n  .col-md-5 {\n    width: 20.83333333%;\n  }\n  .col-md-4 {\n    width: 16.66666667%;\n  }\n  .col-md-3 {\n    width: 12.5%;\n  }\n  .col-md-2 {\n    width: 8.33333333%;\n  }\n  .col-md-1 {\n    width: 4.16666667%;\n  }\n  .col-md-pull-24 {\n    right: 100%;\n  }\n  .col-md-pull-23 {\n    right: 95.83333333%;\n  }\n  .col-md-pull-22 {\n    right: 91.66666667%;\n  }\n  .col-md-pull-21 {\n    right: 87.5%;\n  }\n  .col-md-pull-20 {\n    right: 83.33333333%;\n  }\n  .col-md-pull-19 {\n    right: 79.16666667%;\n  }\n  .col-md-pull-18 {\n    right: 75%;\n  }\n  .col-md-pull-17 {\n    right: 70.83333333%;\n  }\n  .col-md-pull-16 {\n    right: 66.66666667%;\n  }\n  .col-md-pull-15 {\n    right: 62.5%;\n  }\n  .col-md-pull-14 {\n    right: 58.33333333%;\n  }\n  .col-md-pull-13 {\n    right: 54.16666667%;\n  }\n  .col-md-pull-12 {\n    right: 50%;\n  }\n  .col-md-pull-11 {\n    right: 45.83333333%;\n  }\n  .col-md-pull-10 {\n    right: 41.66666667%;\n  }\n  .col-md-pull-9 {\n    right: 37.5%;\n  }\n  .col-md-pull-8 {\n    right: 33.33333333%;\n  }\n  .col-md-pull-7 {\n    right: 29.16666667%;\n  }\n  .col-md-pull-6 {\n    right: 25%;\n  }\n  .col-md-pull-5 {\n    right: 20.83333333%;\n  }\n  .col-md-pull-4 {\n    right: 16.66666667%;\n  }\n  .col-md-pull-3 {\n    right: 12.5%;\n  }\n  .col-md-pull-2 {\n    right: 8.33333333%;\n  }\n  .col-md-pull-1 {\n    right: 4.16666667%;\n  }\n  .col-md-pull-0 {\n    right: auto;\n  }\n  .col-md-push-24 {\n    left: 100%;\n  }\n  .col-md-push-23 {\n    left: 95.83333333%;\n  }\n  .col-md-push-22 {\n    left: 91.66666667%;\n  }\n  .col-md-push-21 {\n    left: 87.5%;\n  }\n  .col-md-push-20 {\n    left: 83.33333333%;\n  }\n  .col-md-push-19 {\n    left: 79.16666667%;\n  }\n  .col-md-push-18 {\n    left: 75%;\n  }\n  .col-md-push-17 {\n    left: 70.83333333%;\n  }\n  .col-md-push-16 {\n    left: 66.66666667%;\n  }\n  .col-md-push-15 {\n    left: 62.5%;\n  }\n  .col-md-push-14 {\n    left: 58.33333333%;\n  }\n  .col-md-push-13 {\n    left: 54.16666667%;\n  }\n  .col-md-push-12 {\n    left: 50%;\n  }\n  .col-md-push-11 {\n    left: 45.83333333%;\n  }\n  .col-md-push-10 {\n    left: 41.66666667%;\n  }\n  .col-md-push-9 {\n    left: 37.5%;\n  }\n  .col-md-push-8 {\n    left: 33.33333333%;\n  }\n  .col-md-push-7 {\n    left: 29.16666667%;\n  }\n  .col-md-push-6 {\n    left: 25%;\n  }\n  .col-md-push-5 {\n    left: 20.83333333%;\n  }\n  .col-md-push-4 {\n    left: 16.66666667%;\n  }\n  .col-md-push-3 {\n    left: 12.5%;\n  }\n  .col-md-push-2 {\n    left: 8.33333333%;\n  }\n  .col-md-push-1 {\n    left: 4.16666667%;\n  }\n  .col-md-push-0 {\n    left: auto;\n  }\n  .col-md-offset-24 {\n    margin-left: 100%;\n  }\n  .col-md-offset-23 {\n    margin-left: 95.83333333%;\n  }\n  .col-md-offset-22 {\n    margin-left: 91.66666667%;\n  }\n  .col-md-offset-21 {\n    margin-left: 87.5%;\n  }\n  .col-md-offset-20 {\n    margin-left: 83.33333333%;\n  }\n  .col-md-offset-19 {\n    margin-left: 79.16666667%;\n  }\n  .col-md-offset-18 {\n    margin-left: 75%;\n  }\n  .col-md-offset-17 {\n    margin-left: 70.83333333%;\n  }\n  .col-md-offset-16 {\n    margin-left: 66.66666667%;\n  }\n  .col-md-offset-15 {\n    margin-left: 62.5%;\n  }\n  .col-md-offset-14 {\n    margin-left: 58.33333333%;\n  }\n  .col-md-offset-13 {\n    margin-left: 54.16666667%;\n  }\n  .col-md-offset-12 {\n    margin-left: 50%;\n  }\n  .col-md-offset-11 {\n    margin-left: 45.83333333%;\n  }\n  .col-md-offset-10 {\n    margin-left: 41.66666667%;\n  }\n  .col-md-offset-9 {\n    margin-left: 37.5%;\n  }\n  .col-md-offset-8 {\n    margin-left: 33.33333333%;\n  }\n  .col-md-offset-7 {\n    margin-left: 29.16666667%;\n  }\n  .col-md-offset-6 {\n    margin-left: 25%;\n  }\n  .col-md-offset-5 {\n    margin-left: 20.83333333%;\n  }\n  .col-md-offset-4 {\n    margin-left: 16.66666667%;\n  }\n  .col-md-offset-3 {\n    margin-left: 12.5%;\n  }\n  .col-md-offset-2 {\n    margin-left: 8.33333333%;\n  }\n  .col-md-offset-1 {\n    margin-left: 4.16666667%;\n  }\n  .col-md-offset-0 {\n    margin-left: 0%;\n  }\n}\n@media (min-width: 1200px) {\n  .col-lg-1,\n  .col-lg-2,\n  .col-lg-3,\n  .col-lg-4,\n  .col-lg-5,\n  .col-lg-6,\n  .col-lg-7,\n  .col-lg-8,\n  .col-lg-9,\n  .col-lg-10,\n  .col-lg-11,\n  .col-lg-12,\n  .col-lg-13,\n  .col-lg-14,\n  .col-lg-15,\n  .col-lg-16,\n  .col-lg-17,\n  .col-lg-18,\n  .col-lg-19,\n  .col-lg-20,\n  .col-lg-21,\n  .col-lg-22,\n  .col-lg-23,\n  .col-lg-24 {\n    float: left;\n  }\n  .col-lg-24 {\n    width: 100%;\n  }\n  .col-lg-23 {\n    width: 95.83333333%;\n  }\n  .col-lg-22 {\n    width: 91.66666667%;\n  }\n  .col-lg-21 {\n    width: 87.5%;\n  }\n  .col-lg-20 {\n    width: 83.33333333%;\n  }\n  .col-lg-19 {\n    width: 79.16666667%;\n  }\n  .col-lg-18 {\n    width: 75%;\n  }\n  .col-lg-17 {\n    width: 70.83333333%;\n  }\n  .col-lg-16 {\n    width: 66.66666667%;\n  }\n  .col-lg-15 {\n    width: 62.5%;\n  }\n  .col-lg-14 {\n    width: 58.33333333%;\n  }\n  .col-lg-13 {\n    width: 54.16666667%;\n  }\n  .col-lg-12 {\n    width: 50%;\n  }\n  .col-lg-11 {\n    width: 45.83333333%;\n  }\n  .col-lg-10 {\n    width: 41.66666667%;\n  }\n  .col-lg-9 {\n    width: 37.5%;\n  }\n  .col-lg-8 {\n    width: 33.33333333%;\n  }\n  .col-lg-7 {\n    width: 29.16666667%;\n  }\n  .col-lg-6 {\n    width: 25%;\n  }\n  .col-lg-5 {\n    width: 20.83333333%;\n  }\n  .col-lg-4 {\n    width: 16.66666667%;\n  }\n  .col-lg-3 {\n    width: 12.5%;\n  }\n  .col-lg-2 {\n    width: 8.33333333%;\n  }\n  .col-lg-1 {\n    width: 4.16666667%;\n  }\n  .col-lg-pull-24 {\n    right: 100%;\n  }\n  .col-lg-pull-23 {\n    right: 95.83333333%;\n  }\n  .col-lg-pull-22 {\n    right: 91.66666667%;\n  }\n  .col-lg-pull-21 {\n    right: 87.5%;\n  }\n  .col-lg-pull-20 {\n    right: 83.33333333%;\n  }\n  .col-lg-pull-19 {\n    right: 79.16666667%;\n  }\n  .col-lg-pull-18 {\n    right: 75%;\n  }\n  .col-lg-pull-17 {\n    right: 70.83333333%;\n  }\n  .col-lg-pull-16 {\n    right: 66.66666667%;\n  }\n  .col-lg-pull-15 {\n    right: 62.5%;\n  }\n  .col-lg-pull-14 {\n    right: 58.33333333%;\n  }\n  .col-lg-pull-13 {\n    right: 54.16666667%;\n  }\n  .col-lg-pull-12 {\n    right: 50%;\n  }\n  .col-lg-pull-11 {\n    right: 45.83333333%;\n  }\n  .col-lg-pull-10 {\n    right: 41.66666667%;\n  }\n  .col-lg-pull-9 {\n    right: 37.5%;\n  }\n  .col-lg-pull-8 {\n    right: 33.33333333%;\n  }\n  .col-lg-pull-7 {\n    right: 29.16666667%;\n  }\n  .col-lg-pull-6 {\n    right: 25%;\n  }\n  .col-lg-pull-5 {\n    right: 20.83333333%;\n  }\n  .col-lg-pull-4 {\n    right: 16.66666667%;\n  }\n  .col-lg-pull-3 {\n    right: 12.5%;\n  }\n  .col-lg-pull-2 {\n    right: 8.33333333%;\n  }\n  .col-lg-pull-1 {\n    right: 4.16666667%;\n  }\n  .col-lg-pull-0 {\n    right: auto;\n  }\n  .col-lg-push-24 {\n    left: 100%;\n  }\n  .col-lg-push-23 {\n    left: 95.83333333%;\n  }\n  .col-lg-push-22 {\n    left: 91.66666667%;\n  }\n  .col-lg-push-21 {\n    left: 87.5%;\n  }\n  .col-lg-push-20 {\n    left: 83.33333333%;\n  }\n  .col-lg-push-19 {\n    left: 79.16666667%;\n  }\n  .col-lg-push-18 {\n    left: 75%;\n  }\n  .col-lg-push-17 {\n    left: 70.83333333%;\n  }\n  .col-lg-push-16 {\n    left: 66.66666667%;\n  }\n  .col-lg-push-15 {\n    left: 62.5%;\n  }\n  .col-lg-push-14 {\n    left: 58.33333333%;\n  }\n  .col-lg-push-13 {\n    left: 54.16666667%;\n  }\n  .col-lg-push-12 {\n    left: 50%;\n  }\n  .col-lg-push-11 {\n    left: 45.83333333%;\n  }\n  .col-lg-push-10 {\n    left: 41.66666667%;\n  }\n  .col-lg-push-9 {\n    left: 37.5%;\n  }\n  .col-lg-push-8 {\n    left: 33.33333333%;\n  }\n  .col-lg-push-7 {\n    left: 29.16666667%;\n  }\n  .col-lg-push-6 {\n    left: 25%;\n  }\n  .col-lg-push-5 {\n    left: 20.83333333%;\n  }\n  .col-lg-push-4 {\n    left: 16.66666667%;\n  }\n  .col-lg-push-3 {\n    left: 12.5%;\n  }\n  .col-lg-push-2 {\n    left: 8.33333333%;\n  }\n  .col-lg-push-1 {\n    left: 4.16666667%;\n  }\n  .col-lg-push-0 {\n    left: auto;\n  }\n  .col-lg-offset-24 {\n    margin-left: 100%;\n  }\n  .col-lg-offset-23 {\n    margin-left: 95.83333333%;\n  }\n  .col-lg-offset-22 {\n    margin-left: 91.66666667%;\n  }\n  .col-lg-offset-21 {\n    margin-left: 87.5%;\n  }\n  .col-lg-offset-20 {\n    margin-left: 83.33333333%;\n  }\n  .col-lg-offset-19 {\n    margin-left: 79.16666667%;\n  }\n  .col-lg-offset-18 {\n    margin-left: 75%;\n  }\n  .col-lg-offset-17 {\n    margin-left: 70.83333333%;\n  }\n  .col-lg-offset-16 {\n    margin-left: 66.66666667%;\n  }\n  .col-lg-offset-15 {\n    margin-left: 62.5%;\n  }\n  .col-lg-offset-14 {\n    margin-left: 58.33333333%;\n  }\n  .col-lg-offset-13 {\n    margin-left: 54.16666667%;\n  }\n  .col-lg-offset-12 {\n    margin-left: 50%;\n  }\n  .col-lg-offset-11 {\n    margin-left: 45.83333333%;\n  }\n  .col-lg-offset-10 {\n    margin-left: 41.66666667%;\n  }\n  .col-lg-offset-9 {\n    margin-left: 37.5%;\n  }\n  .col-lg-offset-8 {\n    margin-left: 33.33333333%;\n  }\n  .col-lg-offset-7 {\n    margin-left: 29.16666667%;\n  }\n  .col-lg-offset-6 {\n    margin-left: 25%;\n  }\n  .col-lg-offset-5 {\n    margin-left: 20.83333333%;\n  }\n  .col-lg-offset-4 {\n    margin-left: 16.66666667%;\n  }\n  .col-lg-offset-3 {\n    margin-left: 12.5%;\n  }\n  .col-lg-offset-2 {\n    margin-left: 8.33333333%;\n  }\n  .col-lg-offset-1 {\n    margin-left: 4.16666667%;\n  }\n  .col-lg-offset-0 {\n    margin-left: 0%;\n  }\n}\ntable {\n  background-color: transparent;\n}\ntable col[class*=\"col-\"] {\n  position: static;\n  display: table-column;\n  float: none;\n}\ntable td[class*=\"col-\"],\ntable th[class*=\"col-\"] {\n  position: static;\n  display: table-cell;\n  float: none;\n}\ncaption {\n  padding-top: 8px;\n  padding-bottom: 8px;\n  color: #777777;\n  text-align: left;\n}\nth {\n  text-align: left;\n}\n.table {\n  width: 100%;\n  max-width: 100%;\n  margin-bottom: 20px;\n}\n.table > thead > tr > th,\n.table > tbody > tr > th,\n.table > tfoot > tr > th,\n.table > thead > tr > td,\n.table > tbody > tr > td,\n.table > tfoot > tr > td {\n  padding: 8px;\n  line-height: 1.42857143;\n  vertical-align: top;\n  border-top: 1px solid #ddd;\n}\n.table > thead > tr > th {\n  vertical-align: bottom;\n  border-bottom: 2px solid #ddd;\n}\n.table > caption + thead > tr:first-child > th,\n.table > colgroup + thead > tr:first-child > th,\n.table > thead:first-child > tr:first-child > th,\n.table > caption + thead > tr:first-child > td,\n.table > colgroup + thead > tr:first-child > td,\n.table > thead:first-child > tr:first-child > td {\n  border-top: 0;\n}\n.table > tbody + tbody {\n  border-top: 2px solid #ddd;\n}\n.table .table {\n  background-color: #fff;\n}\n.table-condensed > thead > tr > th,\n.table-condensed > tbody > tr > th,\n.table-condensed > tfoot > tr > th,\n.table-condensed > thead > tr > td,\n.table-condensed > tbody > tr > td,\n.table-condensed > tfoot > tr > td {\n  padding: 5px;\n}\n.table-bordered {\n  border: 1px solid #ddd;\n}\n.table-bordered > thead > tr > th,\n.table-bordered > tbody > tr > th,\n.table-bordered > tfoot > tr > th,\n.table-bordered > thead > tr > td,\n.table-bordered > tbody > tr > td,\n.table-bordered > tfoot > tr > td {\n  border: 1px solid #ddd;\n}\n.table-bordered > thead > tr > th,\n.table-bordered > thead > tr > td {\n  border-bottom-width: 2px;\n}\n.table-striped > tbody > tr:nth-of-type(odd) {\n  background-color: #f9f9f9;\n}\n.table-hover > tbody > tr:hover {\n  background-color: #f5f5f5;\n}\n.table > thead > tr > td.active,\n.table > tbody > tr > td.active,\n.table > tfoot > tr > td.active,\n.table > thead > tr > th.active,\n.table > tbody > tr > th.active,\n.table > tfoot > tr > th.active,\n.table > thead > tr.active > td,\n.table > tbody > tr.active > td,\n.table > tfoot > tr.active > td,\n.table > thead > tr.active > th,\n.table > tbody > tr.active > th,\n.table > tfoot > tr.active > th {\n  background-color: #f5f5f5;\n}\n.table-hover > tbody > tr > td.active:hover,\n.table-hover > tbody > tr > th.active:hover,\n.table-hover > tbody > tr.active:hover > td,\n.table-hover > tbody > tr:hover > .active,\n.table-hover > tbody > tr.active:hover > th {\n  background-color: #e8e8e8;\n}\n.table > thead > tr > td.success,\n.table > tbody > tr > td.success,\n.table > tfoot > tr > td.success,\n.table > thead > tr > th.success,\n.table > tbody > tr > th.success,\n.table > tfoot > tr > th.success,\n.table > thead > tr.success > td,\n.table > tbody > tr.success > td,\n.table > tfoot > tr.success > td,\n.table > thead > tr.success > th,\n.table > tbody > tr.success > th,\n.table > tfoot > tr.success > th {\n  background-color: #dff0d8;\n}\n.table-hover > tbody > tr > td.success:hover,\n.table-hover > tbody > tr > th.success:hover,\n.table-hover > tbody > tr.success:hover > td,\n.table-hover > tbody > tr:hover > .success,\n.table-hover > tbody > tr.success:hover > th {\n  background-color: #d0e9c6;\n}\n.table > thead > tr > td.info,\n.table > tbody > tr > td.info,\n.table > tfoot > tr > td.info,\n.table > thead > tr > th.info,\n.table > tbody > tr > th.info,\n.table > tfoot > tr > th.info,\n.table > thead > tr.info > td,\n.table > tbody > tr.info > td,\n.table > tfoot > tr.info > td,\n.table > thead > tr.info > th,\n.table > tbody > tr.info > th,\n.table > tfoot > tr.info > th {\n  background-color: #d9edf7;\n}\n.table-hover > tbody > tr > td.info:hover,\n.table-hover > tbody > tr > th.info:hover,\n.table-hover > tbody > tr.info:hover > td,\n.table-hover > tbody > tr:hover > .info,\n.table-hover > tbody > tr.info:hover > th {\n  background-color: #c4e3f3;\n}\n.table > thead > tr > td.warning,\n.table > tbody > tr > td.warning,\n.table > tfoot > tr > td.warning,\n.table > thead > tr > th.warning,\n.table > tbody > tr > th.warning,\n.table > tfoot > tr > th.warning,\n.table > thead > tr.warning > td,\n.table > tbody > tr.warning > td,\n.table > tfoot > tr.warning > td,\n.table > thead > tr.warning > th,\n.table > tbody > tr.warning > th,\n.table > tfoot > tr.warning > th {\n  background-color: #fcf8e3;\n}\n.table-hover > tbody > tr > td.warning:hover,\n.table-hover > tbody > tr > th.warning:hover,\n.table-hover > tbody > tr.warning:hover > td,\n.table-hover > tbody > tr:hover > .warning,\n.table-hover > tbody > tr.warning:hover > th {\n  background-color: #faf2cc;\n}\n.table > thead > tr > td.danger,\n.table > tbody > tr > td.danger,\n.table > tfoot > tr > td.danger,\n.table > thead > tr > th.danger,\n.table > tbody > tr > th.danger,\n.table > tfoot > tr > th.danger,\n.table > thead > tr.danger > td,\n.table > tbody > tr.danger > td,\n.table > tfoot > tr.danger > td,\n.table > thead > tr.danger > th,\n.table > tbody > tr.danger > th,\n.table > tfoot > tr.danger > th {\n  background-color: #f2dede;\n}\n.table-hover > tbody > tr > td.danger:hover,\n.table-hover > tbody > tr > th.danger:hover,\n.table-hover > tbody > tr.danger:hover > td,\n.table-hover > tbody > tr:hover > .danger,\n.table-hover > tbody > tr.danger:hover > th {\n  background-color: #ebcccc;\n}\n.table-responsive {\n  min-height: 0.01%;\n  overflow-x: auto;\n}\n@media screen and (max-width: 767px) {\n  .table-responsive {\n    width: 100%;\n    margin-bottom: 15px;\n    overflow-y: hidden;\n    -ms-overflow-style: -ms-autohiding-scrollbar;\n    border: 1px solid #ddd;\n  }\n  .table-responsive > .table {\n    margin-bottom: 0;\n  }\n  .table-responsive > .table > thead > tr > th,\n  .table-responsive > .table > tbody > tr > th,\n  .table-responsive > .table > tfoot > tr > th,\n  .table-responsive > .table > thead > tr > td,\n  .table-responsive > .table > tbody > tr > td,\n  .table-responsive > .table > tfoot > tr > td {\n    white-space: nowrap;\n  }\n  .table-responsive > .table-bordered {\n    border: 0;\n  }\n  .table-responsive > .table-bordered > thead > tr > th:first-child,\n  .table-responsive > .table-bordered > tbody > tr > th:first-child,\n  .table-responsive > .table-bordered > tfoot > tr > th:first-child,\n  .table-responsive > .table-bordered > thead > tr > td:first-child,\n  .table-responsive > .table-bordered > tbody > tr > td:first-child,\n  .table-responsive > .table-bordered > tfoot > tr > td:first-child {\n    border-left: 0;\n  }\n  .table-responsive > .table-bordered > thead > tr > th:last-child,\n  .table-responsive > .table-bordered > tbody > tr > th:last-child,\n  .table-responsive > .table-bordered > tfoot > tr > th:last-child,\n  .table-responsive > .table-bordered > thead > tr > td:last-child,\n  .table-responsive > .table-bordered > tbody > tr > td:last-child,\n  .table-responsive > .table-bordered > tfoot > tr > td:last-child {\n    border-right: 0;\n  }\n  .table-responsive > .table-bordered > tbody > tr:last-child > th,\n  .table-responsive > .table-bordered > tfoot > tr:last-child > th,\n  .table-responsive > .table-bordered > tbody > tr:last-child > td,\n  .table-responsive > .table-bordered > tfoot > tr:last-child > td {\n    border-bottom: 0;\n  }\n}\n@-webkit-keyframes progress-bar-stripes {\n  from {\n    background-position: 40px 0;\n  }\n  to {\n    background-position: 0 0;\n  }\n}\n@keyframes progress-bar-stripes {\n  from {\n    background-position: 40px 0;\n  }\n  to {\n    background-position: 0 0;\n  }\n}\n.progress {\n  height: 20px;\n  margin-bottom: 20px;\n  overflow: hidden;\n  background-color: #f5f5f5;\n  border-radius: 4px;\n  -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);\n  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);\n}\n.progress-bar {\n  float: left;\n  width: 0%;\n  height: 100%;\n  font-size: 12px;\n  line-height: 20px;\n  color: #fff;\n  text-align: center;\n  background-color: #337ab7;\n  -webkit-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);\n  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);\n  -webkit-transition: width 0.6s ease;\n  -o-transition: width 0.6s ease;\n  transition: width 0.6s ease;\n}\n.progress-striped .progress-bar,\n.progress-bar-striped {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-size: 40px 40px;\n}\n.progress.active .progress-bar,\n.progress-bar.active {\n  -webkit-animation: progress-bar-stripes 2s linear infinite;\n  -o-animation: progress-bar-stripes 2s linear infinite;\n  animation: progress-bar-stripes 2s linear infinite;\n}\n.progress-bar-success {\n  background-color: #5cb85c;\n}\n.progress-striped .progress-bar-success {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.progress-bar-info {\n  background-color: #5bc0de;\n}\n.progress-striped .progress-bar-info {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.progress-bar-warning {\n  background-color: #f0ad4e;\n}\n.progress-striped .progress-bar-warning {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.progress-bar-danger {\n  background-color: #d9534f;\n}\n.progress-striped .progress-bar-danger {\n  background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);\n}\n.clearfix:before,\n.clearfix:after,\n.container:before,\n.container:after,\n.container-fluid:before,\n.container-fluid:after,\n.row:before,\n.row:after {\n  display: table;\n  content: \" \";\n}\n.clearfix:after,\n.container:after,\n.container-fluid:after,\n.row:after {\n  clear: both;\n}\n.center-block {\n  display: block;\n  margin-right: auto;\n  margin-left: auto;\n}\n.pull-right {\n  float: right !important;\n}\n.pull-left {\n  float: left !important;\n}\n.hide {\n  display: none !important;\n}\n.show {\n  display: block !important;\n}\n.invisible {\n  visibility: hidden;\n}\n.text-hide {\n  font: 0/0 a;\n  color: transparent;\n  text-shadow: none;\n  background-color: transparent;\n  border: 0;\n}\n.hidden {\n  display: none !important;\n}\n.affix {\n  position: fixed;\n}\n@-ms-viewport {\n  width: device-width;\n}\n.visible-xs,\n.visible-sm,\n.visible-md,\n.visible-lg {\n  display: none !important;\n}\n.visible-xs-block,\n.visible-xs-inline,\n.visible-xs-inline-block,\n.visible-sm-block,\n.visible-sm-inline,\n.visible-sm-inline-block,\n.visible-md-block,\n.visible-md-inline,\n.visible-md-inline-block,\n.visible-lg-block,\n.visible-lg-inline,\n.visible-lg-inline-block {\n  display: none !important;\n}\n@media (max-width: 767px) {\n  .visible-xs {\n    display: block !important;\n  }\n  table.visible-xs {\n    display: table !important;\n  }\n  tr.visible-xs {\n    display: table-row !important;\n  }\n  th.visible-xs,\n  td.visible-xs {\n    display: table-cell !important;\n  }\n}\n@media (max-width: 767px) {\n  .visible-xs-block {\n    display: block !important;\n  }\n}\n@media (max-width: 767px) {\n  .visible-xs-inline {\n    display: inline !important;\n  }\n}\n@media (max-width: 767px) {\n  .visible-xs-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm {\n    display: block !important;\n  }\n  table.visible-sm {\n    display: table !important;\n  }\n  tr.visible-sm {\n    display: table-row !important;\n  }\n  th.visible-sm,\n  td.visible-sm {\n    display: table-cell !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm-block {\n    display: block !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm-inline {\n    display: inline !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .visible-sm-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md {\n    display: block !important;\n  }\n  table.visible-md {\n    display: table !important;\n  }\n  tr.visible-md {\n    display: table-row !important;\n  }\n  th.visible-md,\n  td.visible-md {\n    display: table-cell !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md-block {\n    display: block !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md-inline {\n    display: inline !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .visible-md-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg {\n    display: block !important;\n  }\n  table.visible-lg {\n    display: table !important;\n  }\n  tr.visible-lg {\n    display: table-row !important;\n  }\n  th.visible-lg,\n  td.visible-lg {\n    display: table-cell !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg-block {\n    display: block !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg-inline {\n    display: inline !important;\n  }\n}\n@media (min-width: 1200px) {\n  .visible-lg-inline-block {\n    display: inline-block !important;\n  }\n}\n@media (max-width: 767px) {\n  .hidden-xs {\n    display: none !important;\n  }\n}\n@media (min-width: 768px) and (max-width: 991px) {\n  .hidden-sm {\n    display: none !important;\n  }\n}\n@media (min-width: 992px) and (max-width: 1199px) {\n  .hidden-md {\n    display: none !important;\n  }\n}\n@media (min-width: 1200px) {\n  .hidden-lg {\n    display: none !important;\n  }\n}\n.visible-print {\n  display: none !important;\n}\n@media print {\n  .visible-print {\n    display: block !important;\n  }\n  table.visible-print {\n    display: table !important;\n  }\n  tr.visible-print {\n    display: table-row !important;\n  }\n  th.visible-print,\n  td.visible-print {\n    display: table-cell !important;\n  }\n}\n.visible-print-block {\n  display: none !important;\n}\n@media print {\n  .visible-print-block {\n    display: block !important;\n  }\n}\n.visible-print-inline {\n  display: none !important;\n}\n@media print {\n  .visible-print-inline {\n    display: inline !important;\n  }\n}\n.visible-print-inline-block {\n  display: none !important;\n}\n@media print {\n  .visible-print-inline-block {\n    display: inline-block !important;\n  }\n}\n@media print {\n  .hidden-print {\n    display: none !important;\n  }\n}\n","// stylelint-disable\n\n/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */\n\n//\n// 1. Set default font family to sans-serif.\n// 2. Prevent iOS and IE text size adjust after device orientation change,\n//    without disabling user zoom.\n//\n\nhtml {\n  font-family: sans-serif; // 1\n  -ms-text-size-adjust: 100%; // 2\n  -webkit-text-size-adjust: 100%; // 2\n}\n\n//\n// Remove default margin.\n//\n\nbody {\n  margin: 0;\n}\n\n// HTML5 display definitions\n// ==========================================================================\n\n//\n// Correct `block` display not defined for any HTML5 element in IE 8/9.\n// Correct `block` display not defined for `details` or `summary` in IE 10/11\n// and Firefox.\n// Correct `block` display not defined for `main` in IE 11.\n//\n\narticle,\naside,\ndetails,\nfigcaption,\nfigure,\nfooter,\nheader,\nhgroup,\nmain,\nmenu,\nnav,\nsection,\nsummary {\n  display: block;\n}\n\n//\n// 1. Correct `inline-block` display not defined in IE 8/9.\n// 2. Normalize vertical alignment of `progress` in Chrome, Firefox, and Opera.\n//\n\naudio,\ncanvas,\nprogress,\nvideo {\n  display: inline-block; // 1\n  vertical-align: baseline; // 2\n}\n\n//\n// Prevent modern browsers from displaying `audio` without controls.\n// Remove excess height in iOS 5 devices.\n//\n\naudio:not([controls]) {\n  display: none;\n  height: 0;\n}\n\n//\n// Address `[hidden]` styling not present in IE 8/9/10.\n// Hide the `template` element in IE 8/9/10/11, Safari, and Firefox < 22.\n//\n\n[hidden],\ntemplate {\n  display: none;\n}\n\n// Links\n// ==========================================================================\n\n//\n// Remove the gray background color from active links in IE 10.\n//\n\na {\n  background-color: transparent;\n}\n\n//\n// Improve readability of focused elements when they are also in an\n// active/hover state.\n//\n\na:active,\na:hover {\n  outline: 0;\n}\n\n// Text-level semantics\n// ==========================================================================\n\n//\n// 1. Remove the bottom border in Chrome 57- and Firefox 39-.\n// 2. Add the correct text decoration in Chrome, Edge, IE, Opera, and Safari.\n//\n\nabbr[title] {\n  border-bottom: none; // 1\n  text-decoration: underline; // 2\n  text-decoration: underline dotted; // 2\n}\n\n//\n// Address style set to `bolder` in Firefox 4+, Safari, and Chrome.\n//\n\nb,\nstrong {\n  font-weight: bold;\n}\n\n//\n// Address styling not present in Safari and Chrome.\n//\n\ndfn {\n  font-style: italic;\n}\n\n//\n// Address variable `h1` font-size and margin within `section` and `article`\n// contexts in Firefox 4+, Safari, and Chrome.\n//\n\nh1 {\n  font-size: 2em;\n  margin: 0.67em 0;\n}\n\n//\n// Address styling not present in IE 8/9.\n//\n\nmark {\n  background: #ff0;\n  color: #000;\n}\n\n//\n// Address inconsistent and variable font size in all browsers.\n//\n\nsmall {\n  font-size: 80%;\n}\n\n//\n// Prevent `sub` and `sup` affecting `line-height` in all browsers.\n//\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsup {\n  top: -0.5em;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\n// Embedded content\n// ==========================================================================\n\n//\n// Remove border when inside `a` element in IE 8/9/10.\n//\n\nimg {\n  border: 0;\n}\n\n//\n// Correct overflow not hidden in IE 9/10/11.\n//\n\nsvg:not(:root) {\n  overflow: hidden;\n}\n\n// Grouping content\n// ==========================================================================\n\n//\n// Address margin not present in IE 8/9 and Safari.\n//\n\nfigure {\n  margin: 1em 40px;\n}\n\n//\n// Address differences between Firefox and other browsers.\n//\n\nhr {\n  box-sizing: content-box;\n  height: 0;\n}\n\n//\n// Contain overflow in all browsers.\n//\n\npre {\n  overflow: auto;\n}\n\n//\n// Address odd `em`-unit font size rendering in all browsers.\n//\n\ncode,\nkbd,\npre,\nsamp {\n  font-family: monospace, monospace;\n  font-size: 1em;\n}\n\n// Forms\n// ==========================================================================\n\n//\n// Known limitation: by default, Chrome and Safari on OS X allow very limited\n// styling of `select`, unless a `border` property is set.\n//\n\n//\n// 1. Correct color not being inherited.\n//    Known issue: affects color of disabled elements.\n// 2. Correct font properties not being inherited.\n// 3. Address margins set differently in Firefox 4+, Safari, and Chrome.\n//\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  color: inherit; // 1\n  font: inherit; // 2\n  margin: 0; // 3\n}\n\n//\n// Address `overflow` set to `hidden` in IE 8/9/10/11.\n//\n\nbutton {\n  overflow: visible;\n}\n\n//\n// Address inconsistent `text-transform` inheritance for `button` and `select`.\n// All other form control elements do not inherit `text-transform` values.\n// Correct `button` style inheritance in Firefox, IE 8/9/10/11, and Opera.\n// Correct `select` style inheritance in Firefox.\n//\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n//\n// 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio`\n//    and `video` controls.\n// 2. Correct inability to style clickable `input` types in iOS.\n// 3. Improve usability and consistency of cursor style between image-type\n//    `input` and others.\n//\n\nbutton,\nhtml input[type=\"button\"], // 1\ninput[type=\"reset\"],\ninput[type=\"submit\"] {\n  -webkit-appearance: button; // 2\n  cursor: pointer; // 3\n}\n\n//\n// Re-set default cursor for disabled elements.\n//\n\nbutton[disabled],\nhtml input[disabled] {\n  cursor: default;\n}\n\n//\n// Remove inner padding and border in Firefox 4+.\n//\n\nbutton::-moz-focus-inner,\ninput::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\n//\n// Address Firefox 4+ setting `line-height` on `input` using `!important` in\n// the UA stylesheet.\n//\n\ninput {\n  line-height: normal;\n}\n\n//\n// It's recommended that you don't attempt to style these elements.\n// Firefox's implementation doesn't respect box-sizing, padding, or width.\n//\n// 1. Address box sizing set to `content-box` in IE 8/9/10.\n// 2. Remove excess padding in IE 8/9/10.\n//\n\ninput[type=\"checkbox\"],\ninput[type=\"radio\"] {\n  box-sizing: border-box; // 1\n  padding: 0; // 2\n}\n\n//\n// Fix the cursor style for Chrome's increment/decrement buttons. For certain\n// `font-size` values of the `input`, it causes the cursor style of the\n// decrement button to change from `default` to `text`.\n//\n\ninput[type=\"number\"]::-webkit-inner-spin-button,\ninput[type=\"number\"]::-webkit-outer-spin-button {\n  height: auto;\n}\n\n//\n// 1. Address `appearance` set to `searchfield` in Safari and Chrome.\n// 2. Address `box-sizing` set to `border-box` in Safari and Chrome.\n//\n\ninput[type=\"search\"] {\n  -webkit-appearance: textfield; // 1\n  box-sizing: content-box; //2\n}\n\n//\n// Remove inner padding and search cancel button in Safari and Chrome on OS X.\n// Safari (but not Chrome) clips the cancel button when the search input has\n// padding (and `textfield` appearance).\n//\n\ninput[type=\"search\"]::-webkit-search-cancel-button,\ninput[type=\"search\"]::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n//\n// Define consistent border, margin, and padding.\n//\n\nfieldset {\n  border: 1px solid #c0c0c0;\n  margin: 0 2px;\n  padding: 0.35em 0.625em 0.75em;\n}\n\n//\n// 1. Correct `color` not being inherited in IE 8/9/10/11.\n// 2. Remove padding so people aren't caught out if they zero out fieldsets.\n//\n\nlegend {\n  border: 0; // 1\n  padding: 0; // 2\n}\n\n//\n// Remove default vertical scrollbar in IE 8/9/10/11.\n//\n\ntextarea {\n  overflow: auto;\n}\n\n//\n// Don't inherit the `font-weight` (applied by a rule above).\n// NOTE: the default cannot safely be changed in Chrome and Safari on OS X.\n//\n\noptgroup {\n  font-weight: bold;\n}\n\n// Tables\n// ==========================================================================\n\n//\n// Remove most spacing between table cells.\n//\n\ntable {\n  border-collapse: collapse;\n  border-spacing: 0;\n}\n\ntd,\nth {\n  padding: 0;\n}\n","//\n// Scaffolding\n// --------------------------------------------------\n\n\n// Reset the box-sizing\n//\n// Heads up! This reset may cause conflicts with some third-party widgets.\n// For recommendations on resolving such conflicts, see\n// https://getbootstrap.com/docs/3.4/getting-started/#third-box-sizing\n* {\n  .box-sizing(border-box);\n}\n*:before,\n*:after {\n  .box-sizing(border-box);\n}\n\n\n// Body reset\n\nhtml {\n  font-size: 10px;\n  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);\n}\n\nbody {\n  font-family: @font-family-base;\n  font-size: @font-size-base;\n  line-height: @line-height-base;\n  color: @text-color;\n  background-color: @body-bg;\n}\n\n// Reset fonts for relevant elements\ninput,\nbutton,\nselect,\ntextarea {\n  font-family: inherit;\n  font-size: inherit;\n  line-height: inherit;\n}\n\n\n// Links\n\na {\n  color: @link-color;\n  text-decoration: none;\n\n  &:hover,\n  &:focus {\n    color: @link-hover-color;\n    text-decoration: @link-hover-decoration;\n  }\n\n  &:focus {\n    .tab-focus();\n  }\n}\n\n\n// Figures\n//\n// We reset this here because previously Normalize had no `figure` margins. This\n// ensures we don't break anyone's use of the element.\n\nfigure {\n  margin: 0;\n}\n\n\n// Images\n\nimg {\n  vertical-align: middle;\n}\n\n// Responsive images (ensure images don't scale beyond their parents)\n.img-responsive {\n  .img-responsive();\n}\n\n// Rounded corners\n.img-rounded {\n  border-radius: @border-radius-large;\n}\n\n// Image thumbnails\n//\n// Heads up! This is mixin-ed into thumbnails.less for `.thumbnail`.\n.img-thumbnail {\n  padding: @thumbnail-padding;\n  line-height: @line-height-base;\n  background-color: @thumbnail-bg;\n  border: 1px solid @thumbnail-border;\n  border-radius: @thumbnail-border-radius;\n  .transition(all .2s ease-in-out);\n\n  // Keep them at most 100% wide\n  .img-responsive(inline-block);\n}\n\n// Perfect circle\n.img-circle {\n  border-radius: 50%; // set radius in percents\n}\n\n\n// Horizontal rules\n\nhr {\n  margin-top: @line-height-computed;\n  margin-bottom: @line-height-computed;\n  border: 0;\n  border-top: 1px solid @hr-border;\n}\n\n\n// Only display content to screen readers\n//\n// See: https://a11yproject.com/posts/how-to-hide-content\n\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  border: 0;\n}\n\n// Use in conjunction with .sr-only to only display content when it's focused.\n// Useful for \"Skip to main content\" links; see https://www.w3.org/TR/2013/NOTE-WCAG20-TECHS-20130905/G1\n// Credit: HTML5 Boilerplate\n\n.sr-only-focusable {\n  &:active,\n  &:focus {\n    position: static;\n    width: auto;\n    height: auto;\n    margin: 0;\n    overflow: visible;\n    clip: auto;\n  }\n}\n\n\n// iOS \"clickable elements\" fix for role=\"button\"\n//\n// Fixes \"clickability\" issue (and more generally, the firing of events such as focus as well)\n// for traditionally non-focusable elements with role=\"button\"\n// see https://developer.mozilla.org/en-US/docs/Web/Events/click#Safari_Mobile\n\n[role=\"button\"] {\n  cursor: pointer;\n}\n","// stylelint-disable indentation, property-no-vendor-prefix, selector-no-vendor-prefix\n\n// Vendor Prefixes\n//\n// All vendor mixins are deprecated as of v3.2.0 due to the introduction of\n// Autoprefixer in our Gruntfile. They have been removed in v4.\n\n// - Animations\n// - Backface visibility\n// - Box shadow\n// - Box sizing\n// - Content columns\n// - Hyphens\n// - Placeholder text\n// - Transformations\n// - Transitions\n// - User Select\n\n\n// Animations\n.animation(@animation) {\n  -webkit-animation: @animation;\n       -o-animation: @animation;\n          animation: @animation;\n}\n.animation-name(@name) {\n  -webkit-animation-name: @name;\n          animation-name: @name;\n}\n.animation-duration(@duration) {\n  -webkit-animation-duration: @duration;\n          animation-duration: @duration;\n}\n.animation-timing-function(@timing-function) {\n  -webkit-animation-timing-function: @timing-function;\n          animation-timing-function: @timing-function;\n}\n.animation-delay(@delay) {\n  -webkit-animation-delay: @delay;\n          animation-delay: @delay;\n}\n.animation-iteration-count(@iteration-count) {\n  -webkit-animation-iteration-count: @iteration-count;\n          animation-iteration-count: @iteration-count;\n}\n.animation-direction(@direction) {\n  -webkit-animation-direction: @direction;\n          animation-direction: @direction;\n}\n.animation-fill-mode(@fill-mode) {\n  -webkit-animation-fill-mode: @fill-mode;\n          animation-fill-mode: @fill-mode;\n}\n\n// Backface visibility\n// Prevent browsers from flickering when using CSS 3D transforms.\n// Default value is `visible`, but can be changed to `hidden`\n\n.backface-visibility(@visibility) {\n  -webkit-backface-visibility: @visibility;\n     -moz-backface-visibility: @visibility;\n          backface-visibility: @visibility;\n}\n\n// Drop shadows\n//\n// Note: Deprecated `.box-shadow()` as of v3.1.0 since all of Bootstrap's\n// supported browsers that have box shadow capabilities now support it.\n\n.box-shadow(@shadow) {\n  -webkit-box-shadow: @shadow; // iOS <4.3 & Android <4.1\n          box-shadow: @shadow;\n}\n\n// Box sizing\n.box-sizing(@boxmodel) {\n  -webkit-box-sizing: @boxmodel;\n     -moz-box-sizing: @boxmodel;\n          box-sizing: @boxmodel;\n}\n\n// CSS3 Content Columns\n.content-columns(@column-count; @column-gap: @grid-gutter-width) {\n  -webkit-column-count: @column-count;\n     -moz-column-count: @column-count;\n          column-count: @column-count;\n  -webkit-column-gap: @column-gap;\n     -moz-column-gap: @column-gap;\n          column-gap: @column-gap;\n}\n\n// Optional hyphenation\n.hyphens(@mode: auto) {\n  -webkit-hyphens: @mode;\n     -moz-hyphens: @mode;\n      -ms-hyphens: @mode; // IE10+\n       -o-hyphens: @mode;\n          hyphens: @mode;\n  word-wrap: break-word;\n}\n\n// Placeholder text\n.placeholder(@color: @input-color-placeholder) {\n  // Firefox\n  &::-moz-placeholder {\n    color: @color;\n    opacity: 1; // Override Firefox's unusual default opacity; see https://github.com/twbs/bootstrap/pull/11526\n  }\n  &:-ms-input-placeholder { color: @color; } // Internet Explorer 10+\n  &::-webkit-input-placeholder  { color: @color; } // Safari and Chrome\n}\n\n// Transformations\n.scale(@ratio) {\n  -webkit-transform: scale(@ratio);\n      -ms-transform: scale(@ratio); // IE9 only\n       -o-transform: scale(@ratio);\n          transform: scale(@ratio);\n}\n.scale(@ratioX; @ratioY) {\n  -webkit-transform: scale(@ratioX, @ratioY);\n      -ms-transform: scale(@ratioX, @ratioY); // IE9 only\n       -o-transform: scale(@ratioX, @ratioY);\n          transform: scale(@ratioX, @ratioY);\n}\n.scaleX(@ratio) {\n  -webkit-transform: scaleX(@ratio);\n      -ms-transform: scaleX(@ratio); // IE9 only\n       -o-transform: scaleX(@ratio);\n          transform: scaleX(@ratio);\n}\n.scaleY(@ratio) {\n  -webkit-transform: scaleY(@ratio);\n      -ms-transform: scaleY(@ratio); // IE9 only\n       -o-transform: scaleY(@ratio);\n          transform: scaleY(@ratio);\n}\n.skew(@x; @y) {\n  -webkit-transform: skewX(@x) skewY(@y);\n      -ms-transform: skewX(@x) skewY(@y); // See https://github.com/twbs/bootstrap/issues/4885; IE9+\n       -o-transform: skewX(@x) skewY(@y);\n          transform: skewX(@x) skewY(@y);\n}\n.translate(@x; @y) {\n  -webkit-transform: translate(@x, @y);\n      -ms-transform: translate(@x, @y); // IE9 only\n       -o-transform: translate(@x, @y);\n          transform: translate(@x, @y);\n}\n.translate3d(@x; @y; @z) {\n  -webkit-transform: translate3d(@x, @y, @z);\n          transform: translate3d(@x, @y, @z);\n}\n.rotate(@degrees) {\n  -webkit-transform: rotate(@degrees);\n      -ms-transform: rotate(@degrees); // IE9 only\n       -o-transform: rotate(@degrees);\n          transform: rotate(@degrees);\n}\n.rotateX(@degrees) {\n  -webkit-transform: rotateX(@degrees);\n      -ms-transform: rotateX(@degrees); // IE9 only\n       -o-transform: rotateX(@degrees);\n          transform: rotateX(@degrees);\n}\n.rotateY(@degrees) {\n  -webkit-transform: rotateY(@degrees);\n      -ms-transform: rotateY(@degrees); // IE9 only\n       -o-transform: rotateY(@degrees);\n          transform: rotateY(@degrees);\n}\n.perspective(@perspective) {\n  -webkit-perspective: @perspective;\n     -moz-perspective: @perspective;\n          perspective: @perspective;\n}\n.perspective-origin(@perspective) {\n  -webkit-perspective-origin: @perspective;\n     -moz-perspective-origin: @perspective;\n          perspective-origin: @perspective;\n}\n.transform-origin(@origin) {\n  -webkit-transform-origin: @origin;\n     -moz-transform-origin: @origin;\n      -ms-transform-origin: @origin; // IE9 only\n          transform-origin: @origin;\n}\n\n\n// Transitions\n\n.transition(@transition) {\n  -webkit-transition: @transition;\n       -o-transition: @transition;\n          transition: @transition;\n}\n.transition-property(@transition-property) {\n  -webkit-transition-property: @transition-property;\n          transition-property: @transition-property;\n}\n.transition-delay(@transition-delay) {\n  -webkit-transition-delay: @transition-delay;\n          transition-delay: @transition-delay;\n}\n.transition-duration(@transition-duration) {\n  -webkit-transition-duration: @transition-duration;\n          transition-duration: @transition-duration;\n}\n.transition-timing-function(@timing-function) {\n  -webkit-transition-timing-function: @timing-function;\n          transition-timing-function: @timing-function;\n}\n.transition-transform(@transition) {\n  -webkit-transition: -webkit-transform @transition;\n     -moz-transition: -moz-transform @transition;\n       -o-transition: -o-transform @transition;\n          transition: transform @transition;\n}\n\n\n// User select\n// For selecting text on the page\n\n.user-select(@select) {\n  -webkit-user-select: @select;\n     -moz-user-select: @select;\n      -ms-user-select: @select; // IE10+\n          user-select: @select;\n}\n","// WebKit-style focus\n\n.tab-focus() {\n  // WebKit-specific. Other browsers will keep their default outline style.\n  // (Initially tried to also force default via `outline: initial`,\n  // but that seems to erroneously remove the outline in Firefox altogether.)\n  outline: 5px auto -webkit-focus-ring-color;\n  outline-offset: -2px;\n}\n","// stylelint-disable media-feature-name-no-vendor-prefix, media-feature-parentheses-space-inside, media-feature-name-no-unknown, indentation, at-rule-name-space-after\n\n// Responsive image\n//\n// Keep images from scaling beyond the width of their parents.\n.img-responsive(@display: block) {\n  display: @display;\n  max-width: 100%; // Part 1: Set a maximum relative to the parent\n  height: auto; // Part 2: Scale the height according to the width, otherwise you get stretching\n}\n\n\n// Retina image\n//\n// Short retina mixin for setting background-image and -size. Note that the\n// spelling of `min--moz-device-pixel-ratio` is intentional.\n.img-retina(@file-1x; @file-2x; @width-1x; @height-1x) {\n  background-image: url(\"@{file-1x}\");\n\n  @media\n  only screen and (-webkit-min-device-pixel-ratio: 2),\n  only screen and ( min--moz-device-pixel-ratio: 2),\n  only screen and ( -o-min-device-pixel-ratio: 2/1),\n  only screen and ( min-device-pixel-ratio: 2),\n  only screen and ( min-resolution: 192dpi),\n  only screen and ( min-resolution: 2dppx) {\n    background-image: url(\"@{file-2x}\");\n    background-size: @width-1x @height-1x;\n  }\n}\n","//\n// Grid system\n// --------------------------------------------------\n\n\n// Container widths\n//\n// Set the container width, and override it for fixed navbars in media queries.\n\n.container {\n  .container-fixed();\n\n  @media (min-width: @screen-sm-min) {\n    width: @container-sm;\n  }\n  @media (min-width: @screen-md-min) {\n    width: @container-md;\n  }\n  @media (min-width: @screen-lg-min) {\n    width: @container-lg;\n  }\n}\n\n\n// Fluid container\n//\n// Utilizes the mixin meant for fixed width containers, but without any defined\n// width for fluid, full width layouts.\n\n.container-fluid {\n  .container-fixed();\n}\n\n\n// Row\n//\n// Rows contain and clear the floats of your columns.\n\n.row {\n  .make-row();\n}\n\n.row-no-gutters {\n  margin-right: 0;\n  margin-left: 0;\n\n  [class*=\"col-\"] {\n    padding-right: 0;\n    padding-left: 0;\n  }\n}\n\n\n// Columns\n//\n// Common styles for small and large grid columns\n\n.make-grid-columns();\n\n\n// Extra small grid\n//\n// Columns, offsets, pushes, and pulls for extra small devices like\n// smartphones.\n\n.make-grid(xs);\n\n\n// Small grid\n//\n// Columns, offsets, pushes, and pulls for the small device range, from phones\n// to tablets.\n\n@media (min-width: @screen-sm-min) {\n  .make-grid(sm);\n}\n\n\n// Medium grid\n//\n// Columns, offsets, pushes, and pulls for the desktop device range.\n\n@media (min-width: @screen-md-min) {\n  .make-grid(md);\n}\n\n\n// Large grid\n//\n// Columns, offsets, pushes, and pulls for the large desktop device range.\n\n@media (min-width: @screen-lg-min) {\n  .make-grid(lg);\n}\n","// Grid system\n//\n// Generate semantic grid columns with these mixins.\n\n// Centered container element\n.container-fixed(@gutter: @grid-gutter-width) {\n  padding-right: ceil((@gutter / 2));\n  padding-left: floor((@gutter / 2));\n  margin-right: auto;\n  margin-left: auto;\n  &:extend(.clearfix all);\n}\n\n// Creates a wrapper for a series of columns\n.make-row(@gutter: @grid-gutter-width) {\n  margin-right: floor((@gutter / -2));\n  margin-left: ceil((@gutter / -2));\n  &:extend(.clearfix all);\n}\n\n// Generate the extra small columns\n.make-xs-column(@columns; @gutter: @grid-gutter-width) {\n  position: relative;\n  float: left;\n  width: percentage((@columns / @grid-columns));\n  min-height: 1px;\n  padding-right: (@gutter / 2);\n  padding-left: (@gutter / 2);\n}\n.make-xs-column-offset(@columns) {\n  margin-left: percentage((@columns / @grid-columns));\n}\n.make-xs-column-push(@columns) {\n  left: percentage((@columns / @grid-columns));\n}\n.make-xs-column-pull(@columns) {\n  right: percentage((@columns / @grid-columns));\n}\n\n// Generate the small columns\n.make-sm-column(@columns; @gutter: @grid-gutter-width) {\n  position: relative;\n  min-height: 1px;\n  padding-right: (@gutter / 2);\n  padding-left: (@gutter / 2);\n\n  @media (min-width: @screen-sm-min) {\n    float: left;\n    width: percentage((@columns / @grid-columns));\n  }\n}\n.make-sm-column-offset(@columns) {\n  @media (min-width: @screen-sm-min) {\n    margin-left: percentage((@columns / @grid-columns));\n  }\n}\n.make-sm-column-push(@columns) {\n  @media (min-width: @screen-sm-min) {\n    left: percentage((@columns / @grid-columns));\n  }\n}\n.make-sm-column-pull(@columns) {\n  @media (min-width: @screen-sm-min) {\n    right: percentage((@columns / @grid-columns));\n  }\n}\n\n// Generate the medium columns\n.make-md-column(@columns; @gutter: @grid-gutter-width) {\n  position: relative;\n  min-height: 1px;\n  padding-right: (@gutter / 2);\n  padding-left: (@gutter / 2);\n\n  @media (min-width: @screen-md-min) {\n    float: left;\n    width: percentage((@columns / @grid-columns));\n  }\n}\n.make-md-column-offset(@columns) {\n  @media (min-width: @screen-md-min) {\n    margin-left: percentage((@columns / @grid-columns));\n  }\n}\n.make-md-column-push(@columns) {\n  @media (min-width: @screen-md-min) {\n    left: percentage((@columns / @grid-columns));\n  }\n}\n.make-md-column-pull(@columns) {\n  @media (min-width: @screen-md-min) {\n    right: percentage((@columns / @grid-columns));\n  }\n}\n\n// Generate the large columns\n.make-lg-column(@columns; @gutter: @grid-gutter-width) {\n  position: relative;\n  min-height: 1px;\n  padding-right: (@gutter / 2);\n  padding-left: (@gutter / 2);\n\n  @media (min-width: @screen-lg-min) {\n    float: left;\n    width: percentage((@columns / @grid-columns));\n  }\n}\n.make-lg-column-offset(@columns) {\n  @media (min-width: @screen-lg-min) {\n    margin-left: percentage((@columns / @grid-columns));\n  }\n}\n.make-lg-column-push(@columns) {\n  @media (min-width: @screen-lg-min) {\n    left: percentage((@columns / @grid-columns));\n  }\n}\n.make-lg-column-pull(@columns) {\n  @media (min-width: @screen-lg-min) {\n    right: percentage((@columns / @grid-columns));\n  }\n}\n","// Single side border-radius\n\n.border-top-radius(@radius) {\n  border-top-left-radius: @radius;\n  border-top-right-radius: @radius;\n}\n.border-right-radius(@radius) {\n  border-top-right-radius: @radius;\n  border-bottom-right-radius: @radius;\n}\n.border-bottom-radius(@radius) {\n  border-bottom-right-radius: @radius;\n  border-bottom-left-radius: @radius;\n}\n.border-left-radius(@radius) {\n  border-top-left-radius: @radius;\n  border-bottom-left-radius: @radius;\n}\n","// Framework grid generation\n//\n// Used only by Bootstrap to generate the correct number of grid classes given\n// any value of `@grid-columns`.\n\n.make-grid-columns() {\n  // Common styles for all sizes of grid columns, widths 1-12\n  .col(@index) { // initial\n    @item: ~\".col-xs-@{index}, .col-sm-@{index}, .col-md-@{index}, .col-lg-@{index}\";\n    .col((@index + 1), @item);\n  }\n  .col(@index, @list) when (@index =< @grid-columns) { // general; \"=<\" isn't a typo\n    @item: ~\".col-xs-@{index}, .col-sm-@{index}, .col-md-@{index}, .col-lg-@{index}\";\n    .col((@index + 1), ~\"@{list}, @{item}\");\n  }\n  .col(@index, @list) when (@index > @grid-columns) { // terminal\n    @{list} {\n      position: relative;\n      // Prevent columns from collapsing when empty\n      min-height: 1px;\n      // Inner gutter via padding\n      padding-right: floor((@grid-gutter-width / 2));\n      padding-left: ceil((@grid-gutter-width / 2));\n    }\n  }\n  .col(1); // kickstart it\n}\n\n.float-grid-columns(@class) {\n  .col(@index) { // initial\n    @item: ~\".col-@{class}-@{index}\";\n    .col((@index + 1), @item);\n  }\n  .col(@index, @list) when (@index =< @grid-columns) { // general\n    @item: ~\".col-@{class}-@{index}\";\n    .col((@index + 1), ~\"@{list}, @{item}\");\n  }\n  .col(@index, @list) when (@index > @grid-columns) { // terminal\n    @{list} {\n      float: left;\n    }\n  }\n  .col(1); // kickstart it\n}\n\n.calc-grid-column(@index, @class, @type) when (@type = width) and (@index > 0) {\n  .col-@{class}-@{index} {\n    width: percentage((@index / @grid-columns));\n  }\n}\n.calc-grid-column(@index, @class, @type) when (@type = push) and (@index > 0) {\n  .col-@{class}-push-@{index} {\n    left: percentage((@index / @grid-columns));\n  }\n}\n.calc-grid-column(@index, @class, @type) when (@type = push) and (@index = 0) {\n  .col-@{class}-push-0 {\n    left: auto;\n  }\n}\n.calc-grid-column(@index, @class, @type) when (@type = pull) and (@index > 0) {\n  .col-@{class}-pull-@{index} {\n    right: percentage((@index / @grid-columns));\n  }\n}\n.calc-grid-column(@index, @class, @type) when (@type = pull) and (@index = 0) {\n  .col-@{class}-pull-0 {\n    right: auto;\n  }\n}\n.calc-grid-column(@index, @class, @type) when (@type = offset) {\n  .col-@{class}-offset-@{index} {\n    margin-left: percentage((@index / @grid-columns));\n  }\n}\n\n// Basic looping in LESS\n.loop-grid-columns(@index, @class, @type) when (@index >= 0) {\n  .calc-grid-column(@index, @class, @type);\n  // next iteration\n  .loop-grid-columns((@index - 1), @class, @type);\n}\n\n// Create grid for specific class\n.make-grid(@class) {\n  .float-grid-columns(@class);\n  .loop-grid-columns(@grid-columns, @class, width);\n  .loop-grid-columns(@grid-columns, @class, pull);\n  .loop-grid-columns(@grid-columns, @class, push);\n  .loop-grid-columns(@grid-columns, @class, offset);\n}\n","// stylelint-disable selector-max-type, selector-max-compound-selectors, selector-no-qualifying-type\n\n//\n// Tables\n// --------------------------------------------------\n\n\ntable {\n  background-color: @table-bg;\n\n  // Table cell sizing\n  //\n  // Reset default table behavior\n\n  col[class*=\"col-\"] {\n    position: static; // Prevent border hiding in Firefox and IE9-11 (see https://github.com/twbs/bootstrap/issues/11623)\n    display: table-column;\n    float: none;\n  }\n\n  td,\n  th {\n    &[class*=\"col-\"] {\n      position: static; // Prevent border hiding in Firefox and IE9-11 (see https://github.com/twbs/bootstrap/issues/11623)\n      display: table-cell;\n      float: none;\n    }\n  }\n}\n\ncaption {\n  padding-top: @table-cell-padding;\n  padding-bottom: @table-cell-padding;\n  color: @text-muted;\n  text-align: left;\n}\n\nth {\n  text-align: left;\n}\n\n\n// Baseline styles\n\n.table {\n  width: 100%;\n  max-width: 100%;\n  margin-bottom: @line-height-computed;\n  // Cells\n  > thead,\n  > tbody,\n  > tfoot {\n    > tr {\n      > th,\n      > td {\n        padding: @table-cell-padding;\n        line-height: @line-height-base;\n        vertical-align: top;\n        border-top: 1px solid @table-border-color;\n      }\n    }\n  }\n  // Bottom align for column headings\n  > thead > tr > th {\n    vertical-align: bottom;\n    border-bottom: 2px solid @table-border-color;\n  }\n  // Remove top border from thead by default\n  > caption + thead,\n  > colgroup + thead,\n  > thead:first-child {\n    > tr:first-child {\n      > th,\n      > td {\n        border-top: 0;\n      }\n    }\n  }\n  // Account for multiple tbody instances\n  > tbody + tbody {\n    border-top: 2px solid @table-border-color;\n  }\n\n  // Nesting\n  .table {\n    background-color: @body-bg;\n  }\n}\n\n\n// Condensed table w/ half padding\n\n.table-condensed {\n  > thead,\n  > tbody,\n  > tfoot {\n    > tr {\n      > th,\n      > td {\n        padding: @table-condensed-cell-padding;\n      }\n    }\n  }\n}\n\n\n// Bordered version\n//\n// Add borders all around the table and between all the columns.\n\n.table-bordered {\n  border: 1px solid @table-border-color;\n  > thead,\n  > tbody,\n  > tfoot {\n    > tr {\n      > th,\n      > td {\n        border: 1px solid @table-border-color;\n      }\n    }\n  }\n  > thead > tr {\n    > th,\n    > td {\n      border-bottom-width: 2px;\n    }\n  }\n}\n\n\n// Zebra-striping\n//\n// Default zebra-stripe styles (alternating gray and transparent backgrounds)\n\n.table-striped {\n  > tbody > tr:nth-of-type(odd) {\n    background-color: @table-bg-accent;\n  }\n}\n\n\n// Hover effect\n//\n// Placed here since it has to come after the potential zebra striping\n\n.table-hover {\n  > tbody > tr:hover {\n    background-color: @table-bg-hover;\n  }\n}\n\n\n// Table backgrounds\n//\n// Exact selectors below required to override `.table-striped` and prevent\n// inheritance to nested tables.\n\n// Generate the contextual variants\n.table-row-variant(active; @table-bg-active);\n.table-row-variant(success; @state-success-bg);\n.table-row-variant(info; @state-info-bg);\n.table-row-variant(warning; @state-warning-bg);\n.table-row-variant(danger; @state-danger-bg);\n\n\n// Responsive tables\n//\n// Wrap your tables in `.table-responsive` and we'll make them mobile friendly\n// by enabling horizontal scrolling. Only applies <768px. Everything above that\n// will display normally.\n\n.table-responsive {\n  min-height: .01%; // Workaround for IE9 bug (see https://github.com/twbs/bootstrap/issues/14837)\n  overflow-x: auto;\n\n  @media screen and (max-width: @screen-xs-max) {\n    width: 100%;\n    margin-bottom: (@line-height-computed * .75);\n    overflow-y: hidden;\n    -ms-overflow-style: -ms-autohiding-scrollbar;\n    border: 1px solid @table-border-color;\n\n    // Tighten up spacing\n    > .table {\n      margin-bottom: 0;\n\n      // Ensure the content doesn't wrap\n      > thead,\n      > tbody,\n      > tfoot {\n        > tr {\n          > th,\n          > td {\n            white-space: nowrap;\n          }\n        }\n      }\n    }\n\n    // Special overrides for the bordered tables\n    > .table-bordered {\n      border: 0;\n\n      // Nuke the appropriate borders so that the parent can handle them\n      > thead,\n      > tbody,\n      > tfoot {\n        > tr {\n          > th:first-child,\n          > td:first-child {\n            border-left: 0;\n          }\n          > th:last-child,\n          > td:last-child {\n            border-right: 0;\n          }\n        }\n      }\n\n      // Only nuke the last row's bottom-border in `tbody` and `tfoot` since\n      // chances are there will be only one `tr` in a `thead` and that would\n      // remove the border altogether.\n      > tbody,\n      > tfoot {\n        > tr:last-child {\n          > th,\n          > td {\n            border-bottom: 0;\n          }\n        }\n      }\n\n    }\n  }\n}\n","// Tables\n\n.table-row-variant(@state; @background) {\n  // Exact selectors below required to override `.table-striped` and prevent\n  // inheritance to nested tables.\n  .table > thead > tr,\n  .table > tbody > tr,\n  .table > tfoot > tr {\n    > td.@{state},\n    > th.@{state},\n    &.@{state} > td,\n    &.@{state} > th {\n      background-color: @background;\n    }\n  }\n\n  // Hover states for `.table-hover`\n  // Note: this is not available for cells or rows within `thead` or `tfoot`.\n  .table-hover > tbody > tr {\n    > td.@{state}:hover,\n    > th.@{state}:hover,\n    &.@{state}:hover > td,\n    &:hover > .@{state},\n    &.@{state}:hover > th {\n      background-color: darken(@background, 5%);\n    }\n  }\n}\n","// stylelint-disable at-rule-no-vendor-prefix\n\n//\n// Progress bars\n// --------------------------------------------------\n\n\n// Bar animations\n// -------------------------\n\n// WebKit\n@-webkit-keyframes progress-bar-stripes {\n  from  { background-position: 40px 0; }\n  to    { background-position: 0 0; }\n}\n\n// Spec and IE10+\n@keyframes progress-bar-stripes {\n  from  { background-position: 40px 0; }\n  to    { background-position: 0 0; }\n}\n\n\n// Bar itself\n// -------------------------\n\n// Outer container\n.progress {\n  height: @line-height-computed;\n  margin-bottom: @line-height-computed;\n  overflow: hidden;\n  background-color: @progress-bg;\n  border-radius: @progress-border-radius;\n  .box-shadow(inset 0 1px 2px rgba(0, 0, 0, .1));\n}\n\n// Bar of progress\n.progress-bar {\n  float: left;\n  width: 0%;\n  height: 100%;\n  font-size: @font-size-small;\n  line-height: @line-height-computed;\n  color: @progress-bar-color;\n  text-align: center;\n  background-color: @progress-bar-bg;\n  .box-shadow(inset 0 -1px 0 rgba(0, 0, 0, .15));\n  .transition(width .6s ease);\n}\n\n// Striped bars\n//\n// `.progress-striped .progress-bar` is deprecated as of v3.2.0 in favor of the\n// `.progress-bar-striped` class, which you just add to an existing\n// `.progress-bar`.\n.progress-striped .progress-bar,\n.progress-bar-striped {\n  #gradient > .striped();\n  background-size: 40px 40px;\n}\n\n// Call animation for the active one\n//\n// `.progress.active .progress-bar` is deprecated as of v3.2.0 in favor of the\n// `.progress-bar.active` approach.\n.progress.active .progress-bar,\n.progress-bar.active {\n  .animation(progress-bar-stripes 2s linear infinite);\n}\n\n\n// Variations\n// -------------------------\n\n.progress-bar-success {\n  .progress-bar-variant(@progress-bar-success-bg);\n}\n\n.progress-bar-info {\n  .progress-bar-variant(@progress-bar-info-bg);\n}\n\n.progress-bar-warning {\n  .progress-bar-variant(@progress-bar-warning-bg);\n}\n\n.progress-bar-danger {\n  .progress-bar-variant(@progress-bar-danger-bg);\n}\n","// stylelint-disable value-no-vendor-prefix, selector-max-id\n\n#gradient {\n\n  // Horizontal gradient, from left to right\n  //\n  // Creates two color stops, start and end, by specifying a color and position for each color stop.\n  // Color stops are not available in IE9 and below.\n  .horizontal(@start-color: #555; @end-color: #333; @start-percent: 0%; @end-percent: 100%) {\n    background-image: -webkit-linear-gradient(left, @start-color @start-percent, @end-color @end-percent); // Safari 5.1-6, Chrome 10+\n    background-image: -o-linear-gradient(left, @start-color @start-percent, @end-color @end-percent); // Opera 12\n    background-image: linear-gradient(to right, @start-color @start-percent, @end-color @end-percent); // Standard, IE10, Firefox 16+, Opera 12.10+, Safari 7+, Chrome 26+\n    filter: e(%(\"progid:DXImageTransform.Microsoft.gradient(startColorstr='%d', endColorstr='%d', GradientType=1)\", argb(@start-color), argb(@end-color))); // IE9 and down\n    background-repeat: repeat-x;\n  }\n\n  // Vertical gradient, from top to bottom\n  //\n  // Creates two color stops, start and end, by specifying a color and position for each color stop.\n  // Color stops are not available in IE9 and below.\n  .vertical(@start-color: #555; @end-color: #333; @start-percent: 0%; @end-percent: 100%) {\n    background-image: -webkit-linear-gradient(top, @start-color @start-percent, @end-color @end-percent);  // Safari 5.1-6, Chrome 10+\n    background-image: -o-linear-gradient(top, @start-color @start-percent, @end-color @end-percent);  // Opera 12\n    background-image: linear-gradient(to bottom, @start-color @start-percent, @end-color @end-percent); // Standard, IE10, Firefox 16+, Opera 12.10+, Safari 7+, Chrome 26+\n    filter: e(%(\"progid:DXImageTransform.Microsoft.gradient(startColorstr='%d', endColorstr='%d', GradientType=0)\", argb(@start-color), argb(@end-color))); // IE9 and down\n    background-repeat: repeat-x;\n  }\n\n  .directional(@start-color: #555; @end-color: #333; @deg: 45deg) {\n    background-image: -webkit-linear-gradient(@deg, @start-color, @end-color); // Safari 5.1-6, Chrome 10+\n    background-image: -o-linear-gradient(@deg, @start-color, @end-color); // Opera 12\n    background-image: linear-gradient(@deg, @start-color, @end-color); // Standard, IE10, Firefox 16+, Opera 12.10+, Safari 7+, Chrome 26+\n    background-repeat: repeat-x;\n  }\n  .horizontal-three-colors(@start-color: #00b3ee; @mid-color: #7a43b6; @color-stop: 50%; @end-color: #c3325f) {\n    background-image: -webkit-linear-gradient(left, @start-color, @mid-color @color-stop, @end-color);\n    background-image: -o-linear-gradient(left, @start-color, @mid-color @color-stop, @end-color);\n    background-image: linear-gradient(to right, @start-color, @mid-color @color-stop, @end-color);\n    filter: e(%(\"progid:DXImageTransform.Microsoft.gradient(startColorstr='%d', endColorstr='%d', GradientType=1)\", argb(@start-color), argb(@end-color))); // IE9 and down, gets no color-stop at all for proper fallback\n    background-repeat: no-repeat;\n  }\n  .vertical-three-colors(@start-color: #00b3ee; @mid-color: #7a43b6; @color-stop: 50%; @end-color: #c3325f) {\n    background-image: -webkit-linear-gradient(@start-color, @mid-color @color-stop, @end-color);\n    background-image: -o-linear-gradient(@start-color, @mid-color @color-stop, @end-color);\n    background-image: linear-gradient(@start-color, @mid-color @color-stop, @end-color);\n    filter: e(%(\"progid:DXImageTransform.Microsoft.gradient(startColorstr='%d', endColorstr='%d', GradientType=0)\", argb(@start-color), argb(@end-color))); // IE9 and down, gets no color-stop at all for proper fallback\n    background-repeat: no-repeat;\n  }\n  .radial(@inner-color: #555; @outer-color: #333) {\n    background-image: -webkit-radial-gradient(circle, @inner-color, @outer-color);\n    background-image: radial-gradient(circle, @inner-color, @outer-color);\n    background-repeat: no-repeat;\n  }\n  .striped(@color: rgba(255, 255, 255, .15); @angle: 45deg) {\n    background-image: -webkit-linear-gradient(@angle, @color 25%, transparent 25%, transparent 50%, @color 50%, @color 75%, transparent 75%, transparent);\n    background-image: -o-linear-gradient(@angle, @color 25%, transparent 25%, transparent 50%, @color 50%, @color 75%, transparent 75%, transparent);\n    background-image: linear-gradient(@angle, @color 25%, transparent 25%, transparent 50%, @color 50%, @color 75%, transparent 75%, transparent);\n  }\n}\n","// Progress bars\n\n.progress-bar-variant(@color) {\n  background-color: @color;\n\n  // Deprecated parent class requirement as of v3.2.0\n  .progress-striped & {\n    #gradient > .striped();\n  }\n}\n","// Clearfix\n//\n// For modern browsers\n// 1. The space content is one way to avoid an Opera bug when the\n//    contenteditable attribute is included anywhere else in the document.\n//    Otherwise it causes space to appear at the top and bottom of elements\n//    that are clearfixed.\n// 2. The use of `table` rather than `block` is only necessary if using\n//    `:before` to contain the top-margins of child elements.\n//\n// Source: http://nicolasgallagher.com/micro-clearfix-hack/\n\n.clearfix() {\n  &:before,\n  &:after {\n    display: table; // 2\n    content: \" \"; // 1\n  }\n  &:after {\n    clear: both;\n  }\n}\n","// stylelint-disable declaration-no-important\n\n//\n// Utility classes\n// --------------------------------------------------\n\n\n// Floats\n// -------------------------\n\n.clearfix {\n  .clearfix();\n}\n.center-block {\n  .center-block();\n}\n.pull-right {\n  float: right !important;\n}\n.pull-left {\n  float: left !important;\n}\n\n\n// Toggling content\n// -------------------------\n\n// Note: Deprecated .hide in favor of .hidden or .sr-only (as appropriate) in v3.0.1\n.hide {\n  display: none !important;\n}\n.show {\n  display: block !important;\n}\n.invisible {\n  visibility: hidden;\n}\n.text-hide {\n  .text-hide();\n}\n\n\n// Hide from screenreaders and browsers\n//\n// Credit: HTML5 Boilerplate\n\n.hidden {\n  display: none !important;\n}\n\n\n// For Affix plugin\n// -------------------------\n\n.affix {\n  position: fixed;\n}\n","// Center-align a block level element\n\n.center-block() {\n  display: block;\n  margin-right: auto;\n  margin-left: auto;\n}\n","// stylelint-disable font-family-name-quotes, font-family-no-missing-generic-family-keyword\n\n// CSS image replacement\n//\n// Heads up! v3 launched with only `.hide-text()`, but per our pattern for\n// mixins being reused as classes with the same name, this doesn't hold up. As\n// of v3.0.1 we have added `.text-hide()` and deprecated `.hide-text()`.\n//\n// Source: https://github.com/h5bp/html5-boilerplate/commit/aa0396eae757\n\n// Deprecated as of v3.0.1 (has been removed in v4)\n.hide-text() {\n  font: ~\"0/0\" a;\n  color: transparent;\n  text-shadow: none;\n  background-color: transparent;\n  border: 0;\n}\n\n// New mixin to use as of v3.0.1\n.text-hide() {\n  .hide-text();\n}\n","// stylelint-disable declaration-no-important, at-rule-no-vendor-prefix\n\n//\n// Responsive: Utility classes\n// --------------------------------------------------\n\n\n// IE10 in Windows (Phone) 8\n//\n// Support for responsive views via media queries is kind of borked in IE10, for\n// Surface/desktop in split view and for Windows Phone 8. This particular fix\n// must be accompanied by a snippet of JavaScript to sniff the user agent and\n// apply some conditional CSS to *only* the Surface/desktop Windows 8. Look at\n// our Getting Started page for more information on this bug.\n//\n// For more information, see the following:\n//\n// Issue: https://github.com/twbs/bootstrap/issues/10497\n// Docs: https://getbootstrap.com/docs/3.4/getting-started/#support-ie10-width\n// Source: https://timkadlec.com/2013/01/windows-phone-8-and-device-width/\n// Source: https://timkadlec.com/2012/10/ie10-snap-mode-and-responsive-design/\n\n@-ms-viewport {\n  width: device-width;\n}\n\n\n// Visibility utilities\n// Note: Deprecated .visible-xs, .visible-sm, .visible-md, and .visible-lg as of v3.2.0\n.visible-xs,\n.visible-sm,\n.visible-md,\n.visible-lg {\n  .responsive-invisibility();\n}\n\n.visible-xs-block,\n.visible-xs-inline,\n.visible-xs-inline-block,\n.visible-sm-block,\n.visible-sm-inline,\n.visible-sm-inline-block,\n.visible-md-block,\n.visible-md-inline,\n.visible-md-inline-block,\n.visible-lg-block,\n.visible-lg-inline,\n.visible-lg-inline-block {\n  display: none !important;\n}\n\n.visible-xs {\n  @media (max-width: @screen-xs-max) {\n    .responsive-visibility();\n  }\n}\n.visible-xs-block {\n  @media (max-width: @screen-xs-max) {\n    display: block !important;\n  }\n}\n.visible-xs-inline {\n  @media (max-width: @screen-xs-max) {\n    display: inline !important;\n  }\n}\n.visible-xs-inline-block {\n  @media (max-width: @screen-xs-max) {\n    display: inline-block !important;\n  }\n}\n\n.visible-sm {\n  @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {\n    .responsive-visibility();\n  }\n}\n.visible-sm-block {\n  @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {\n    display: block !important;\n  }\n}\n.visible-sm-inline {\n  @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {\n    display: inline !important;\n  }\n}\n.visible-sm-inline-block {\n  @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {\n    display: inline-block !important;\n  }\n}\n\n.visible-md {\n  @media (min-width: @screen-md-min) and (max-width: @screen-md-max) {\n    .responsive-visibility();\n  }\n}\n.visible-md-block {\n  @media (min-width: @screen-md-min) and (max-width: @screen-md-max) {\n    display: block !important;\n  }\n}\n.visible-md-inline {\n  @media (min-width: @screen-md-min) and (max-width: @screen-md-max) {\n    display: inline !important;\n  }\n}\n.visible-md-inline-block {\n  @media (min-width: @screen-md-min) and (max-width: @screen-md-max) {\n    display: inline-block !important;\n  }\n}\n\n.visible-lg {\n  @media (min-width: @screen-lg-min) {\n    .responsive-visibility();\n  }\n}\n.visible-lg-block {\n  @media (min-width: @screen-lg-min) {\n    display: block !important;\n  }\n}\n.visible-lg-inline {\n  @media (min-width: @screen-lg-min) {\n    display: inline !important;\n  }\n}\n.visible-lg-inline-block {\n  @media (min-width: @screen-lg-min) {\n    display: inline-block !important;\n  }\n}\n\n.hidden-xs {\n  @media (max-width: @screen-xs-max) {\n    .responsive-invisibility();\n  }\n}\n.hidden-sm {\n  @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {\n    .responsive-invisibility();\n  }\n}\n.hidden-md {\n  @media (min-width: @screen-md-min) and (max-width: @screen-md-max) {\n    .responsive-invisibility();\n  }\n}\n.hidden-lg {\n  @media (min-width: @screen-lg-min) {\n    .responsive-invisibility();\n  }\n}\n\n\n// Print utilities\n//\n// Media queries are placed on the inside to be mixin-friendly.\n\n// Note: Deprecated .visible-print as of v3.2.0\n.visible-print {\n  .responsive-invisibility();\n\n  @media print {\n    .responsive-visibility();\n  }\n}\n.visible-print-block {\n  display: none !important;\n\n  @media print {\n    display: block !important;\n  }\n}\n.visible-print-inline {\n  display: none !important;\n\n  @media print {\n    display: inline !important;\n  }\n}\n.visible-print-inline-block {\n  display: none !important;\n\n  @media print {\n    display: inline-block !important;\n  }\n}\n\n.hidden-print {\n  @media print {\n    .responsive-invisibility();\n  }\n}\n","// stylelint-disable declaration-no-important\n\n.responsive-visibility() {\n  display: block !important;\n  table&  { display: table !important; }\n  tr&     { display: table-row !important; }\n  th&,\n  td&     { display: table-cell !important; }\n}\n\n.responsive-invisibility() {\n  display: none !important;\n}\n"],"sourceRoot":""}]);
 // Exports
-/* harmony default export */ __webpack_exports__["default"] = (___CSS_LOADER_EXPORT___);
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
 
 /***/ }),
@@ -42248,29 +41758,30 @@ ___CSS_LOADER_EXPORT___.push([module.i, "/*!\n * Bootstrap v3.3.7 (http://getboo
 /*!*****************************************************************************************************!*\
   !*** ./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./css/style.scss ***!
   \*****************************************************************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_css_loader_dist_runtime_cssWithMappingToString_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../node_modules/css-loader/dist/runtime/cssWithMappingToString.js */ "./node_modules/css-loader/dist/runtime/cssWithMappingToString.js");
-/* harmony import */ var _node_modules_css_loader_dist_runtime_cssWithMappingToString_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_cssWithMappingToString_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../node_modules/css-loader/dist/runtime/sourceMaps.js */ "./node_modules/css-loader/dist/runtime/sourceMaps.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
 /* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../node_modules/css-loader/dist/runtime/getUrl.js */ "./node_modules/css-loader/dist/runtime/getUrl.js");
 /* harmony import */ var _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _images_glances_png__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../images/glances.png */ "./images/glances.png");
 // Imports
 
 
 
-
-var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()(_node_modules_css_loader_dist_runtime_cssWithMappingToString_js__WEBPACK_IMPORTED_MODULE_0___default.a);
-var ___CSS_LOADER_URL_REPLACEMENT_0___ = _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2___default()(_images_glances_png__WEBPACK_IMPORTED_MODULE_3__["default"]);
+var ___CSS_LOADER_URL_IMPORT_0___ = new URL(/* asset import */ __webpack_require__(/*! ../images/glances.png */ "./images/glances.png"), __webpack_require__.b);
+var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
+var ___CSS_LOADER_URL_REPLACEMENT_0___ = _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2___default()(___CSS_LOADER_URL_IMPORT_0___);
 // Module
-___CSS_LOADER_EXPORT___.push([module.i, "body {\n  background: black;\n  color: #BBB;\n  font-family: \"Lucida Sans Typewriter\", \"Lucida Console\", Monaco, \"Bitstream Vera Sans Mono\", monospace; }\n\n.table {\n  display: table;\n  width: 100%;\n  max-width: 100%; }\n\n.table-row-group {\n  display: table-row-group; }\n\n.table-row {\n  display: table-row; }\n\n.table-cell {\n  display: table-cell;\n  text-align: right; }\n\n.row {\n  margin-right: 0px; }\n\n.top-plugin {\n  margin-bottom: 20px; }\n\n.plugin {\n  margin-bottom: 20px; }\n\n.plugin.table-row-group .table-row:last-child .table-cell {\n  padding-bottom: 20px; }\n\n.underline {\n  text-decoration: underline; }\n\n.bold {\n  font-weight: bold; }\n\n.sort {\n  font-weight: bold;\n  color: white; }\n\n.sortable {\n  cursor: pointer; }\n\n.text-right {\n  text-align: right; }\n\n.text-left {\n  text-align: left; }\n\n.sidebar .table-cell:not(.text-left) {\n  padding-left: 10px; }\n\n/* Theme */\n.title {\n  font-weight: bold;\n  color: white; }\n\n.highlight {\n  font-weight: bold;\n  color: #5D4062; }\n\n.ok, .status, .process {\n  color: #3E7B04;\n  /*font-weight: bold;*/ }\n\n.ok_log {\n  background-color: #3E7B04;\n  color: white;\n  /*font-weight: bold;*/ }\n\n.max {\n  color: #3E7B04;\n  font-weight: bold; }\n\n.careful {\n  color: #295183;\n  font-weight: bold; }\n\n.careful_log {\n  background-color: #295183;\n  color: white;\n  font-weight: bold; }\n\n.warning, .nice {\n  color: #5D4062;\n  font-weight: bold; }\n\n.warning_log {\n  background-color: #5D4062;\n  color: white;\n  font-weight: bold; }\n\n.critical {\n  color: #A30000;\n  font-weight: bold; }\n\n.critical_log {\n  background-color: #A30000;\n  color: white;\n  font-weight: bold; }\n\n/* Plugins */\n#processlist-plugin .table-cell {\n  padding: 0px 5px 0px 5px;\n  white-space: nowrap; }\n\n#containers-plugin .table-cell {\n  padding: 0px 10px 0px 10px;\n  white-space: nowrap; }\n\n#quicklook-plugin .progress {\n  margin-bottom: 0px;\n  min-width: 100px;\n  background-color: #000;\n  height: 12px;\n  border-radius: 0px;\n  text-align: right; }\n\n#quicklook-plugin .progress-bar-ok {\n  background-color: #3E7B04; }\n\n#quicklook-plugin .progress-bar-careful {\n  background-color: #295183; }\n\n#quicklook-plugin .progress-bar-warning {\n  background-color: #5D4062; }\n\n#quicklook-plugin .progress-bar-critical {\n  background-color: #A30000; }\n\n#quicklook-plugin .cpu-name {\n  white-space: nowrap;\n  overflow: hidden;\n  width: 100%;\n  text-overflow: ellipsis; }\n\n#amps .process-result {\n  max-width: 300px;\n  overflow: hidden;\n  white-space: pre-wrap;\n  padding-left: 10px;\n  text-overflow: ellipsis; }\n\n#gpu .gpu-name {\n  white-space: nowrap;\n  overflow: hidden;\n  width: 100%;\n  text-overflow: ellipsis; }\n\n/* Loading page */\n#loading-page .glances-logo {\n  background: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ") no-repeat center center;\n  background-size: contain; }\n\n@media (max-width: 750px) {\n  #loading-page .glances-logo {\n    height: 400px; } }\n\n@media (min-width: 750px) {\n  #loading-page .glances-logo {\n    height: 500px; } }\n\n/*\nLoading animation\nsource : https://github.com/lukehaas/css-loaders\n*/\n#loading-page .loader:before,\n#loading-page .loader:after,\n#loading-page .loader {\n  border-radius: 50%;\n  width: 1em;\n  height: 1em;\n  -webkit-animation-fill-mode: both;\n  animation-fill-mode: both;\n  -webkit-animation: loader 1.8s infinite ease-in-out;\n  animation: loader 1.8s infinite ease-in-out; }\n\n#loading-page .loader {\n  margin: auto;\n  font-size: 10px;\n  position: relative;\n  text-indent: -9999em;\n  -webkit-animation-delay: 0.16s;\n  animation-delay: 0.16s; }\n\n#loading-page .loader:before {\n  left: -3.5em; }\n\n#loading-page .loader:after {\n  left: 3.5em;\n  -webkit-animation-delay: 0.32s;\n  animation-delay: 0.32s; }\n\n#loading-page .loader:before,\n#loading-page .loader:after {\n  content: '';\n  position: absolute;\n  top: 0; }\n\n@-webkit-keyframes loader {\n  0%, 80%, 100% {\n    box-shadow: 0 2.5em 0 -1.3em #56CA69; }\n  40% {\n    box-shadow: 0 2.5em 0 0 #56CA69; } }\n\n@keyframes loader {\n  0%, 80%, 100% {\n    box-shadow: 0 2.5em 0 -1.3em #56CA69; }\n  40% {\n    box-shadow: 0 2.5em 0 0 #56CA69; } }\n", "",{"version":3,"sources":["webpack://./css/style.scss"],"names":[],"mappings":"AAAA;EACI,iBAAiB;EACjB,WAAW;EACX,sGAAsG,EAAA;;AAG1G;EACI,cAAc;EACd,WAAW;EACX,eAAc,EAAA;;AAElB;EACI,wBACJ,EAAA;;AACA;EACI,kBAAkB,EAAA;;AAEtB;EACI,mBAAmB;EACnB,iBAAiB,EAAA;;AAGrB;EACI,iBAAiB,EAAA;;AAGrB;EACI,mBAAmB,EAAA;;AAGvB;EACI,mBAAmB,EAAA;;AAEvB;EACI,oBAAoB,EAAA;;AAGxB;EACI,0BACJ,EAAA;;AACA;EACI,iBAAiB,EAAA;;AAErB;EACI,iBAAiB;EACjB,YAAY,EAAA;;AAEhB;EACI,eAAe,EAAA;;AAEnB;EACI,iBAAiB,EAAA;;AAErB;EACI,gBAAgB,EAAA;;AAEpB;EACI,kBAAkB,EAAA;;AAGtB,UAAA;AAEA;EACI,iBAAiB;EACjB,YAAY,EAAA;;AAEhB;EACI,iBAAiB;EACjB,cAAc,EAAA;;AAElB;EACI,cAAc;EACd,qBAAA,EAAsB;;AAE1B;EACI,yBAAyB;EACzB,YAAY;EACZ,qBAAA,EAAsB;;AAE1B;EACI,cAAc;EACd,iBAAiB,EAAA;;AAErB;EACI,cAAc;EACd,iBAAiB,EAAA;;AAErB;EACI,yBAAyB;EACzB,YAAY;EACZ,iBAAiB,EAAA;;AAErB;EACI,cAAc;EACd,iBAAiB,EAAA;;AAErB;EACI,yBAAyB;EACzB,YAAY;EACZ,iBAAiB,EAAA;;AAErB;EACI,cAAc;EACd,iBAAiB,EAAA;;AAErB;EACI,yBAAyB;EACzB,YAAY;EACZ,iBAAiB,EAAA;;AAGrB,YAAA;AACA;EACI,wBAAwB;EACxB,mBAAmB,EAAA;;AAEvB;EACI,0BAA0B;EAC1B,mBAAmB,EAAA;;AAGvB;EAEQ,kBAAkB;EAClB,gBAAgB;EAChB,sBAAsB;EACtB,YAAY;EACZ,kBAAkB;EAClB,iBAAiB,EAAA;;AAPzB;EAUQ,yBAAyB,EAAA;;AAVjC;EAaQ,yBAAyB,EAAA;;AAbjC;EAgBQ,yBAAyB,EAAA;;AAhBjC;EAmBQ,yBAAyB,EAAA;;AAnBjC;EAsBQ,mBAAmB;EACnB,gBAAgB;EAChB,WAAW;EACX,uBAAuB,EAAA;;AAI/B;EACI,gBAAgB;EAChB,gBAAgB;EAChB,qBAAqB;EACrB,kBAAkB;EAClB,uBAAuB,EAAA;;AAG3B;EACI,mBAAmB;EACnB,gBAAgB;EAChB,WAAW;EACX,uBAAuB,EAAA;;AAG3B,iBAAA;AAEA;EACI,2EAAgE;EAChE,wBAAwB,EAAA;;AAG5B;EACI;IACI,aAAa,EAAA,EAChB;;AAEL;EACI;IACI,aAAa,EAAA,EAChB;;AAIL;;;CAjBC;AAqBD;;;EAGI,kBAAkB;EAClB,UAAU;EACV,WAAW;EACX,iCAAiC;EACjC,yBAAyB;EACzB,mDAAmD;EACnD,2CAA2C,EAAA;;AAE/C;EACI,YAAY;EACZ,eAAe;EACf,kBAAkB;EAClB,oBAAoB;EACpB,8BAA8B;EAC9B,sBAAsB,EAAA;;AAE1B;EACI,YAAY,EAAA;;AAEhB;EACI,WAAW;EACX,8BAA8B;EAC9B,sBAAsB,EAAA;;AAE1B;;EAEI,WAAW;EACX,kBAAkB;EAClB,MAAM,EAAA;;AAEV;EACI;IACI,oCAAoC,EAAA;EAExC;IACI,+BAA+B,EAAA,EAAA;;AAGvC;EACI;IACI,oCAAoC,EAAA;EAExC;IACI,+BAA+B,EAAA,EAAA","sourcesContent":["body {\n    background: black;\n    color: #BBB;\n    font-family: \"Lucida Sans Typewriter\", \"Lucida Console\", Monaco, \"Bitstream Vera Sans Mono\", monospace;\n}\n\n.table {\n    display: table;\n    width: 100%;\n    max-width:100%;\n}\n.table-row-group {\n    display: table-row-group\n}\n.table-row {\n    display: table-row;\n}\n.table-cell {\n    display: table-cell;\n    text-align: right;\n}\n\n.row {\n    margin-right: 0px;\n}\n\n.top-plugin {\n    margin-bottom: 20px;\n}\n\n.plugin {\n    margin-bottom: 20px;\n}\n.plugin.table-row-group .table-row:last-child .table-cell {\n    padding-bottom: 20px;\n}\n\n.underline {\n    text-decoration: underline\n}\n.bold {\n    font-weight: bold;\n}\n.sort {\n    font-weight: bold;\n    color: white;\n}\n.sortable {\n    cursor: pointer;\n}\n.text-right {\n    text-align: right;\n}\n.text-left {\n    text-align: left;\n}\n.sidebar .table-cell:not(.text-left) {\n    padding-left: 10px;\n}\n\n/* Theme */\n\n.title {\n    font-weight: bold;\n    color: white;\n}\n.highlight {\n    font-weight: bold;\n    color: #5D4062;\n}\n.ok, .status, .process {\n    color: #3E7B04;\n    /*font-weight: bold;*/\n}\n.ok_log {\n    background-color: #3E7B04;\n    color: white;\n    /*font-weight: bold;*/\n}\n.max {\n    color: #3E7B04;\n    font-weight: bold;\n}\n.careful {\n    color: #295183;\n    font-weight: bold;\n}\n.careful_log {\n    background-color: #295183;\n    color: white;\n    font-weight: bold;\n}\n.warning, .nice {\n    color: #5D4062;\n    font-weight: bold;\n}\n.warning_log {\n    background-color: #5D4062;\n    color: white;\n    font-weight: bold;\n}\n.critical {\n    color: #A30000;\n    font-weight: bold;\n}\n.critical_log {\n    background-color: #A30000;\n    color: white;\n    font-weight: bold;\n}\n\n/* Plugins */\n#processlist-plugin .table-cell {\n    padding: 0px 5px 0px 5px;\n    white-space: nowrap;\n}\n#containers-plugin .table-cell {\n    padding: 0px 10px 0px 10px;\n    white-space: nowrap;\n}\n\n#quicklook-plugin {\n    .progress {\n        margin-bottom: 0px;\n        min-width: 100px;\n        background-color: #000;\n        height: 12px;\n        border-radius: 0px;\n        text-align: right;\n    }\n    .progress-bar-ok {\n        background-color: #3E7B04;\n    }\n    .progress-bar-careful {\n        background-color: #295183;\n    }\n    .progress-bar-warning {\n        background-color: #5D4062;\n    }\n    .progress-bar-critical {\n        background-color: #A30000;\n    }\n    .cpu-name {\n        white-space: nowrap;\n        overflow: hidden;\n        width: 100%;\n        text-overflow: ellipsis;\n    }\n}\n\n#amps .process-result {\n    max-width: 300px;\n    overflow: hidden;\n    white-space: pre-wrap;\n    padding-left: 10px;\n    text-overflow: ellipsis;\n}\n\n#gpu .gpu-name {\n    white-space: nowrap;\n    overflow: hidden;\n    width: 100%;\n    text-overflow: ellipsis;\n}\n\n/* Loading page */\n\n#loading-page .glances-logo {\n    background: url('../images/glances.png') no-repeat center center;\n    background-size: contain;\n}\n\n@media (max-width: 750px) {\n    #loading-page .glances-logo {\n        height: 400px;\n    }\n}\n@media (min-width: 750px) {\n    #loading-page .glances-logo {\n        height: 500px;\n    }\n}\n\n\n/*\nLoading animation\nsource : https://github.com/lukehaas/css-loaders\n*/\n#loading-page .loader:before,\n#loading-page .loader:after,\n#loading-page .loader {\n    border-radius: 50%;\n    width: 1em;\n    height: 1em;\n    -webkit-animation-fill-mode: both;\n    animation-fill-mode: both;\n    -webkit-animation: loader 1.8s infinite ease-in-out;\n    animation: loader 1.8s infinite ease-in-out;\n}\n#loading-page .loader {\n    margin: auto;\n    font-size: 10px;\n    position: relative;\n    text-indent: -9999em;\n    -webkit-animation-delay: 0.16s;\n    animation-delay: 0.16s;\n}\n#loading-page .loader:before {\n    left: -3.5em;\n}\n#loading-page .loader:after {\n    left: 3.5em;\n    -webkit-animation-delay: 0.32s;\n    animation-delay: 0.32s;\n}\n#loading-page .loader:before,\n#loading-page .loader:after {\n    content: '';\n    position: absolute;\n    top: 0;\n}\n@-webkit-keyframes loader {\n    0%, 80%, 100% {\n        box-shadow: 0 2.5em 0 -1.3em #56CA69;\n    }\n    40% {\n        box-shadow: 0 2.5em 0 0 #56CA69;\n    }\n}\n@keyframes loader {\n    0%, 80%, 100% {\n        box-shadow: 0 2.5em 0 -1.3em #56CA69;\n    }\n    40% {\n        box-shadow: 0 2.5em 0 0 #56CA69;\n    }\n}\n"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, "body {\n  background: black;\n  color: #BBB;\n  font-family: \"Lucida Sans Typewriter\", \"Lucida Console\", Monaco, \"Bitstream Vera Sans Mono\", monospace; }\n\n.table {\n  display: table;\n  width: 100%;\n  max-width: 100%; }\n\n.table-row-group {\n  display: table-row-group; }\n\n.table-row {\n  display: table-row; }\n\n.table-cell {\n  display: table-cell;\n  text-align: right; }\n\n.row {\n  margin-right: 0px; }\n\n.top-plugin {\n  margin-bottom: 20px; }\n\n.plugin {\n  margin-bottom: 20px; }\n\n.plugin.table-row-group .table-row:last-child .table-cell {\n  padding-bottom: 20px; }\n\n.underline {\n  text-decoration: underline; }\n\n.bold {\n  font-weight: bold; }\n\n.sort {\n  font-weight: bold;\n  color: white; }\n\n.sortable {\n  cursor: pointer; }\n\n.text-right {\n  text-align: right; }\n\n.text-left {\n  text-align: left; }\n\n.sidebar .table-cell:not(.text-left) {\n  padding-left: 10px; }\n\n/* Theme */\n.title {\n  font-weight: bold;\n  color: white; }\n\n.highlight {\n  font-weight: bold;\n  color: #5D4062; }\n\n.ok, .status, .process {\n  color: #3E7B04;\n  /*font-weight: bold;*/ }\n\n.ok_log {\n  background-color: #3E7B04;\n  color: white;\n  /*font-weight: bold;*/ }\n\n.max {\n  color: #3E7B04;\n  font-weight: bold; }\n\n.careful {\n  color: #295183;\n  font-weight: bold; }\n\n.careful_log {\n  background-color: #295183;\n  color: white;\n  font-weight: bold; }\n\n.warning, .nice {\n  color: #5D4062;\n  font-weight: bold; }\n\n.warning_log {\n  background-color: #5D4062;\n  color: white;\n  font-weight: bold; }\n\n.critical {\n  color: #A30000;\n  font-weight: bold; }\n\n.critical_log {\n  background-color: #A30000;\n  color: white;\n  font-weight: bold; }\n\n/* Plugins */\n#processlist-plugin .table-cell {\n  padding: 0px 5px 0px 5px;\n  white-space: nowrap; }\n\n#containers-plugin .table-cell {\n  padding: 0px 10px 0px 10px;\n  white-space: nowrap; }\n\n#quicklook-plugin .progress {\n  margin-bottom: 0px;\n  min-width: 100px;\n  background-color: #000;\n  height: 12px;\n  border-radius: 0px;\n  text-align: right; }\n\n#quicklook-plugin .progress-bar-ok {\n  background-color: #3E7B04; }\n\n#quicklook-plugin .progress-bar-careful {\n  background-color: #295183; }\n\n#quicklook-plugin .progress-bar-warning {\n  background-color: #5D4062; }\n\n#quicklook-plugin .progress-bar-critical {\n  background-color: #A30000; }\n\n#quicklook-plugin .cpu-name {\n  white-space: nowrap;\n  overflow: hidden;\n  width: 100%;\n  text-overflow: ellipsis; }\n\n#amps .process-result {\n  max-width: 300px;\n  overflow: hidden;\n  white-space: pre-wrap;\n  padding-left: 10px;\n  text-overflow: ellipsis; }\n\n#gpu .gpu-name {\n  white-space: nowrap;\n  overflow: hidden;\n  width: 100%;\n  text-overflow: ellipsis; }\n\n/* Loading page */\n#loading-page .glances-logo {\n  background: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ") no-repeat center center;\n  background-size: contain; }\n\n@media (max-width: 750px) {\n  #loading-page .glances-logo {\n    height: 400px; } }\n\n@media (min-width: 750px) {\n  #loading-page .glances-logo {\n    height: 500px; } }\n\n/*\nLoading animation\nsource : https://github.com/lukehaas/css-loaders\n*/\n#loading-page .loader:before,\n#loading-page .loader:after,\n#loading-page .loader {\n  border-radius: 50%;\n  width: 1em;\n  height: 1em;\n  -webkit-animation-fill-mode: both;\n  animation-fill-mode: both;\n  -webkit-animation: loader 1.8s infinite ease-in-out;\n  animation: loader 1.8s infinite ease-in-out; }\n\n#loading-page .loader {\n  margin: auto;\n  font-size: 10px;\n  position: relative;\n  text-indent: -9999em;\n  -webkit-animation-delay: 0.16s;\n  animation-delay: 0.16s; }\n\n#loading-page .loader:before {\n  left: -3.5em; }\n\n#loading-page .loader:after {\n  left: 3.5em;\n  -webkit-animation-delay: 0.32s;\n  animation-delay: 0.32s; }\n\n#loading-page .loader:before,\n#loading-page .loader:after {\n  content: '';\n  position: absolute;\n  top: 0; }\n\n@-webkit-keyframes loader {\n  0%, 80%, 100% {\n    box-shadow: 0 2.5em 0 -1.3em #56CA69; }\n  40% {\n    box-shadow: 0 2.5em 0 0 #56CA69; } }\n\n@keyframes loader {\n  0%, 80%, 100% {\n    box-shadow: 0 2.5em 0 -1.3em #56CA69; }\n  40% {\n    box-shadow: 0 2.5em 0 0 #56CA69; } }\n", "",{"version":3,"sources":["webpack://./css/style.scss"],"names":[],"mappings":"AAAA;EACI,iBAAiB;EACjB,WAAW;EACX,sGAAsG,EAAA;;AAG1G;EACI,cAAc;EACd,WAAW;EACX,eAAc,EAAA;;AAElB;EACI,wBACJ,EAAA;;AACA;EACI,kBAAkB,EAAA;;AAEtB;EACI,mBAAmB;EACnB,iBAAiB,EAAA;;AAGrB;EACI,iBAAiB,EAAA;;AAGrB;EACI,mBAAmB,EAAA;;AAGvB;EACI,mBAAmB,EAAA;;AAEvB;EACI,oBAAoB,EAAA;;AAGxB;EACI,0BACJ,EAAA;;AACA;EACI,iBAAiB,EAAA;;AAErB;EACI,iBAAiB;EACjB,YAAY,EAAA;;AAEhB;EACI,eAAe,EAAA;;AAEnB;EACI,iBAAiB,EAAA;;AAErB;EACI,gBAAgB,EAAA;;AAEpB;EACI,kBAAkB,EAAA;;AAGtB,UAAA;AAEA;EACI,iBAAiB;EACjB,YAAY,EAAA;;AAEhB;EACI,iBAAiB;EACjB,cAAc,EAAA;;AAElB;EACI,cAAc;EACd,qBAAA,EAAsB;;AAE1B;EACI,yBAAyB;EACzB,YAAY;EACZ,qBAAA,EAAsB;;AAE1B;EACI,cAAc;EACd,iBAAiB,EAAA;;AAErB;EACI,cAAc;EACd,iBAAiB,EAAA;;AAErB;EACI,yBAAyB;EACzB,YAAY;EACZ,iBAAiB,EAAA;;AAErB;EACI,cAAc;EACd,iBAAiB,EAAA;;AAErB;EACI,yBAAyB;EACzB,YAAY;EACZ,iBAAiB,EAAA;;AAErB;EACI,cAAc;EACd,iBAAiB,EAAA;;AAErB;EACI,yBAAyB;EACzB,YAAY;EACZ,iBAAiB,EAAA;;AAGrB,YAAA;AACA;EACI,wBAAwB;EACxB,mBAAmB,EAAA;;AAEvB;EACI,0BAA0B;EAC1B,mBAAmB,EAAA;;AAGvB;EAEQ,kBAAkB;EAClB,gBAAgB;EAChB,sBAAsB;EACtB,YAAY;EACZ,kBAAkB;EAClB,iBAAiB,EAAA;;AAPzB;EAUQ,yBAAyB,EAAA;;AAVjC;EAaQ,yBAAyB,EAAA;;AAbjC;EAgBQ,yBAAyB,EAAA;;AAhBjC;EAmBQ,yBAAyB,EAAA;;AAnBjC;EAsBQ,mBAAmB;EACnB,gBAAgB;EAChB,WAAW;EACX,uBAAuB,EAAA;;AAI/B;EACI,gBAAgB;EAChB,gBAAgB;EAChB,qBAAqB;EACrB,kBAAkB;EAClB,uBAAuB,EAAA;;AAG3B;EACI,mBAAmB;EACnB,gBAAgB;EAChB,WAAW;EACX,uBAAuB,EAAA;;AAG3B,iBAAA;AAEA;EACI,2EAAgE;EAChE,wBAAwB,EAAA;;AAG5B;EACI;IACI,aAAa,EAAA,EAChB;;AAEL;EACI;IACI,aAAa,EAAA,EAChB;;AAIL;;;CAjBC;AAqBD;;;EAGI,kBAAkB;EAClB,UAAU;EACV,WAAW;EACX,iCAAiC;EACjC,yBAAyB;EACzB,mDAAmD;EACnD,2CAA2C,EAAA;;AAE/C;EACI,YAAY;EACZ,eAAe;EACf,kBAAkB;EAClB,oBAAoB;EACpB,8BAA8B;EAC9B,sBAAsB,EAAA;;AAE1B;EACI,YAAY,EAAA;;AAEhB;EACI,WAAW;EACX,8BAA8B;EAC9B,sBAAsB,EAAA;;AAE1B;;EAEI,WAAW;EACX,kBAAkB;EAClB,MAAM,EAAA;;AAEV;EACI;IACI,oCAAoC,EAAA;EAExC;IACI,+BAA+B,EAAA,EAAA;;AAGvC;EACI;IACI,oCAAoC,EAAA;EAExC;IACI,+BAA+B,EAAA,EAAA","sourcesContent":["body {\n    background: black;\n    color: #BBB;\n    font-family: \"Lucida Sans Typewriter\", \"Lucida Console\", Monaco, \"Bitstream Vera Sans Mono\", monospace;\n}\n\n.table {\n    display: table;\n    width: 100%;\n    max-width:100%;\n}\n.table-row-group {\n    display: table-row-group\n}\n.table-row {\n    display: table-row;\n}\n.table-cell {\n    display: table-cell;\n    text-align: right;\n}\n\n.row {\n    margin-right: 0px;\n}\n\n.top-plugin {\n    margin-bottom: 20px;\n}\n\n.plugin {\n    margin-bottom: 20px;\n}\n.plugin.table-row-group .table-row:last-child .table-cell {\n    padding-bottom: 20px;\n}\n\n.underline {\n    text-decoration: underline\n}\n.bold {\n    font-weight: bold;\n}\n.sort {\n    font-weight: bold;\n    color: white;\n}\n.sortable {\n    cursor: pointer;\n}\n.text-right {\n    text-align: right;\n}\n.text-left {\n    text-align: left;\n}\n.sidebar .table-cell:not(.text-left) {\n    padding-left: 10px;\n}\n\n/* Theme */\n\n.title {\n    font-weight: bold;\n    color: white;\n}\n.highlight {\n    font-weight: bold;\n    color: #5D4062;\n}\n.ok, .status, .process {\n    color: #3E7B04;\n    /*font-weight: bold;*/\n}\n.ok_log {\n    background-color: #3E7B04;\n    color: white;\n    /*font-weight: bold;*/\n}\n.max {\n    color: #3E7B04;\n    font-weight: bold;\n}\n.careful {\n    color: #295183;\n    font-weight: bold;\n}\n.careful_log {\n    background-color: #295183;\n    color: white;\n    font-weight: bold;\n}\n.warning, .nice {\n    color: #5D4062;\n    font-weight: bold;\n}\n.warning_log {\n    background-color: #5D4062;\n    color: white;\n    font-weight: bold;\n}\n.critical {\n    color: #A30000;\n    font-weight: bold;\n}\n.critical_log {\n    background-color: #A30000;\n    color: white;\n    font-weight: bold;\n}\n\n/* Plugins */\n#processlist-plugin .table-cell {\n    padding: 0px 5px 0px 5px;\n    white-space: nowrap;\n}\n#containers-plugin .table-cell {\n    padding: 0px 10px 0px 10px;\n    white-space: nowrap;\n}\n\n#quicklook-plugin {\n    .progress {\n        margin-bottom: 0px;\n        min-width: 100px;\n        background-color: #000;\n        height: 12px;\n        border-radius: 0px;\n        text-align: right;\n    }\n    .progress-bar-ok {\n        background-color: #3E7B04;\n    }\n    .progress-bar-careful {\n        background-color: #295183;\n    }\n    .progress-bar-warning {\n        background-color: #5D4062;\n    }\n    .progress-bar-critical {\n        background-color: #A30000;\n    }\n    .cpu-name {\n        white-space: nowrap;\n        overflow: hidden;\n        width: 100%;\n        text-overflow: ellipsis;\n    }\n}\n\n#amps .process-result {\n    max-width: 300px;\n    overflow: hidden;\n    white-space: pre-wrap;\n    padding-left: 10px;\n    text-overflow: ellipsis;\n}\n\n#gpu .gpu-name {\n    white-space: nowrap;\n    overflow: hidden;\n    width: 100%;\n    text-overflow: ellipsis;\n}\n\n/* Loading page */\n\n#loading-page .glances-logo {\n    background: url('../images/glances.png') no-repeat center center;\n    background-size: contain;\n}\n\n@media (max-width: 750px) {\n    #loading-page .glances-logo {\n        height: 400px;\n    }\n}\n@media (min-width: 750px) {\n    #loading-page .glances-logo {\n        height: 500px;\n    }\n}\n\n\n/*\nLoading animation\nsource : https://github.com/lukehaas/css-loaders\n*/\n#loading-page .loader:before,\n#loading-page .loader:after,\n#loading-page .loader {\n    border-radius: 50%;\n    width: 1em;\n    height: 1em;\n    -webkit-animation-fill-mode: both;\n    animation-fill-mode: both;\n    -webkit-animation: loader 1.8s infinite ease-in-out;\n    animation: loader 1.8s infinite ease-in-out;\n}\n#loading-page .loader {\n    margin: auto;\n    font-size: 10px;\n    position: relative;\n    text-indent: -9999em;\n    -webkit-animation-delay: 0.16s;\n    animation-delay: 0.16s;\n}\n#loading-page .loader:before {\n    left: -3.5em;\n}\n#loading-page .loader:after {\n    left: 3.5em;\n    -webkit-animation-delay: 0.32s;\n    animation-delay: 0.32s;\n}\n#loading-page .loader:before,\n#loading-page .loader:after {\n    content: '';\n    position: absolute;\n    top: 0;\n}\n@-webkit-keyframes loader {\n    0%, 80%, 100% {\n        box-shadow: 0 2.5em 0 -1.3em #56CA69;\n    }\n    40% {\n        box-shadow: 0 2.5em 0 0 #56CA69;\n    }\n}\n@keyframes loader {\n    0%, 80%, 100% {\n        box-shadow: 0 2.5em 0 -1.3em #56CA69;\n    }\n    40% {\n        box-shadow: 0 2.5em 0 0 #56CA69;\n    }\n}\n"],"sourceRoot":""}]);
 // Exports
-/* harmony default export */ __webpack_exports__["default"] = (___CSS_LOADER_EXPORT___);
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
 
 /***/ }),
@@ -42279,8 +41790,7 @@ ___CSS_LOADER_EXPORT___.push([module.i, "body {\n  background: black;\n  color: 
 /*!*****************************************************!*\
   !*** ./node_modules/css-loader/dist/runtime/api.js ***!
   \*****************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ ((module) => {
 
 "use strict";
 
@@ -42289,37 +41799,55 @@ ___CSS_LOADER_EXPORT___.push([module.i, "body {\n  background: black;\n  color: 
   MIT License http://www.opensource.org/licenses/mit-license.php
   Author Tobias Koppers @sokra
 */
-// css base code, injected by the css-loader
-// eslint-disable-next-line func-names
 module.exports = function (cssWithMappingToString) {
   var list = []; // return the list of modules as css string
 
   list.toString = function toString() {
     return this.map(function (item) {
-      var content = cssWithMappingToString(item);
+      var content = "";
+      var needLayer = typeof item[5] !== "undefined";
+
+      if (item[4]) {
+        content += "@supports (".concat(item[4], ") {");
+      }
 
       if (item[2]) {
-        return "@media ".concat(item[2], " {").concat(content, "}");
+        content += "@media ".concat(item[2], " {");
+      }
+
+      if (needLayer) {
+        content += "@layer".concat(item[5].length > 0 ? " ".concat(item[5]) : "", " {");
+      }
+
+      content += cssWithMappingToString(item);
+
+      if (needLayer) {
+        content += "}";
+      }
+
+      if (item[2]) {
+        content += "}";
+      }
+
+      if (item[4]) {
+        content += "}";
       }
 
       return content;
     }).join("");
   }; // import a list of modules into the list
-  // eslint-disable-next-line func-names
 
 
-  list.i = function (modules, mediaQuery, dedupe) {
+  list.i = function i(modules, media, dedupe, supports, layer) {
     if (typeof modules === "string") {
-      // eslint-disable-next-line no-param-reassign
-      modules = [[null, modules, ""]];
+      modules = [[null, modules, undefined]];
     }
 
     var alreadyImportedModules = {};
 
     if (dedupe) {
-      for (var i = 0; i < this.length; i++) {
-        // eslint-disable-next-line prefer-destructuring
-        var id = this[i][0];
+      for (var k = 0; k < this.length; k++) {
+        var id = this[k][0];
 
         if (id != null) {
           alreadyImportedModules[id] = true;
@@ -42327,19 +41855,37 @@ module.exports = function (cssWithMappingToString) {
       }
     }
 
-    for (var _i = 0; _i < modules.length; _i++) {
-      var item = [].concat(modules[_i]);
+    for (var _k = 0; _k < modules.length; _k++) {
+      var item = [].concat(modules[_k]);
 
       if (dedupe && alreadyImportedModules[item[0]]) {
-        // eslint-disable-next-line no-continue
         continue;
       }
 
-      if (mediaQuery) {
-        if (!item[2]) {
-          item[2] = mediaQuery;
+      if (typeof layer !== "undefined") {
+        if (typeof item[5] === "undefined") {
+          item[5] = layer;
         } else {
-          item[2] = "".concat(mediaQuery, " and ").concat(item[2]);
+          item[1] = "@layer".concat(item[5].length > 0 ? " ".concat(item[5]) : "", " {").concat(item[1], "}");
+          item[5] = layer;
+        }
+      }
+
+      if (media) {
+        if (!item[2]) {
+          item[2] = media;
+        } else {
+          item[1] = "@media ".concat(item[2], " {").concat(item[1], "}");
+          item[2] = media;
+        }
+      }
+
+      if (supports) {
+        if (!item[4]) {
+          item[4] = "".concat(supports);
+        } else {
+          item[1] = "@supports (".concat(item[4], ") {").concat(item[1], "}");
+          item[4] = supports;
         }
       }
 
@@ -42352,39 +41898,63 @@ module.exports = function (cssWithMappingToString) {
 
 /***/ }),
 
-/***/ "./node_modules/css-loader/dist/runtime/cssWithMappingToString.js":
-/*!************************************************************************!*\
-  !*** ./node_modules/css-loader/dist/runtime/cssWithMappingToString.js ***!
-  \************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ "./node_modules/css-loader/dist/runtime/getUrl.js":
+/*!********************************************************!*\
+  !*** ./node_modules/css-loader/dist/runtime/getUrl.js ***!
+  \********************************************************/
+/***/ ((module) => {
 
 "use strict";
 
 
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+module.exports = function (url, options) {
+  if (!options) {
+    options = {};
+  }
 
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+  if (!url) {
+    return url;
+  }
 
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+  url = String(url.__esModule ? url.default : url); // If url is already wrapped in quotes, remove them
 
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+  if (/^['"].*['"]$/.test(url)) {
+    url = url.slice(1, -1);
+  }
 
-function _iterableToArrayLimit(arr, i) { var _i = arr && (typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]); if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+  if (options.hash) {
+    url += options.hash;
+  } // Should url be wrapped?
+  // See https://drafts.csswg.org/css-values-3/#urls
 
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-module.exports = function cssWithMappingToString(item) {
-  var _item = _slicedToArray(item, 4),
-      content = _item[1],
-      cssMapping = _item[3];
+  if (/["'() \t\n]|(%20)/.test(url) || options.needQuotes) {
+    return "\"".concat(url.replace(/"/g, '\\"').replace(/\n/g, "\\n"), "\"");
+  }
+
+  return url;
+};
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/dist/runtime/sourceMaps.js":
+/*!************************************************************!*\
+  !*** ./node_modules/css-loader/dist/runtime/sourceMaps.js ***!
+  \************************************************************/
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = function (item) {
+  var content = item[1];
+  var cssMapping = item[3];
 
   if (!cssMapping) {
     return content;
   }
 
   if (typeof btoa === "function") {
-    // eslint-disable-next-line no-undef
     var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(cssMapping))));
     var data = "sourceMappingURL=data:application/json;charset=utf-8;base64,".concat(base64);
     var sourceMapping = "/*# ".concat(data, " */");
@@ -42399,57 +41969,11 @@ module.exports = function cssWithMappingToString(item) {
 
 /***/ }),
 
-/***/ "./node_modules/css-loader/dist/runtime/getUrl.js":
-/*!********************************************************!*\
-  !*** ./node_modules/css-loader/dist/runtime/getUrl.js ***!
-  \********************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function (url, options) {
-  if (!options) {
-    // eslint-disable-next-line no-param-reassign
-    options = {};
-  } // eslint-disable-next-line no-underscore-dangle, no-param-reassign
-
-
-  url = url && url.__esModule ? url.default : url;
-
-  if (typeof url !== "string") {
-    return url;
-  } // If url is already wrapped in quotes, remove them
-
-
-  if (/^['"].*['"]$/.test(url)) {
-    // eslint-disable-next-line no-param-reassign
-    url = url.slice(1, -1);
-  }
-
-  if (options.hash) {
-    // eslint-disable-next-line no-param-reassign
-    url += options.hash;
-  } // Should url be wrapped?
-  // See https://drafts.csswg.org/css-values-3/#urls
-
-
-  if (/["'() \t\n]/.test(url) || options.needQuotes) {
-    return "\"".concat(url.replace(/"/g, '\\"').replace(/\n/g, "\\n"), "\"");
-  }
-
-  return url;
-};
-
-/***/ }),
-
 /***/ "./node_modules/favico.js/favico.js":
 /*!******************************************!*\
   !*** ./node_modules/favico.js/favico.js ***!
   \******************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ ((module, exports) => {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
  * @license MIT
@@ -43297,7 +42821,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
 		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = (function () {
 			return Favico;
 		}).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	}
 	// CommonJS
 	else {}
@@ -43311,10 +42835,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
 /*!***************************************!*\
   !*** ./node_modules/lodash/lodash.js ***!
   \***************************************/
-/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global, module) {var __WEBPACK_AMD_DEFINE_RESULT__;/**
+/* module decorator */ module = __webpack_require__.nmd(module);
+var __WEBPACK_AMD_DEFINE_RESULT__;/**
  * @license
  * Lodash <https://lodash.com/>
  * Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
@@ -43743,7 +43267,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
       freeParseInt = parseInt;
 
   /** Detect free variable `global` from Node.js. */
-  var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
+  var freeGlobal = typeof __webpack_require__.g == 'object' && __webpack_require__.g && __webpack_require__.g.Object === Object && __webpack_require__.g;
 
   /** Detect free variable `self`. */
   var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
@@ -43755,7 +43279,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
   var freeExports =  true && exports && !exports.nodeType && exports;
 
   /** Detect free variable `module`. */
-  var freeModule = freeExports && typeof module == 'object' && module && !module.nodeType && module;
+  var freeModule = freeExports && "object" == 'object' && module && !module.nodeType && module;
 
   /** Detect the popular CommonJS extension `module.exports`. */
   var moduleExports = freeModule && freeModule.exports === freeExports;
@@ -60510,13 +60034,602 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
     !(__WEBPACK_AMD_DEFINE_RESULT__ = (function() {
       return _;
     }).call(exports, __webpack_require__, exports, module),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
   }
   // Check for `exports` after `define` in case a build optimizer adds it.
   else {}
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../webpack/buildin/global.js */ "./node_modules/webpack/buildin/global.js"), __webpack_require__(/*! ./../webpack/buildin/module.js */ "./node_modules/webpack/buildin/module.js")(module)))
+
+/***/ }),
+
+/***/ "./js/components/glances/view.html":
+/*!*****************************************!*\
+  !*** ./js/components/glances/view.html ***!
+  \*****************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div>\n    <div ng-if=\"!vm.dataLoaded\" class=\"container-fluid\" id=\"loading-page\">\n        <div class=\"glances-logo\"></div>\n        <div class=\"loader\">Loading...</div>\n    </div>\n\n    <glances-help ng-if=\"vm.arguments.help_tag\"></glances-help>\n\n    <div ng-if=\"vm.dataLoaded && !vm.arguments.help_tag\" class=\"container-fluid\">\n        <div class=\"top-plugin\">\n            <div class=\"row\">\n                <div class=\"col-sm-24\">\n                    <div class=\"pull-left\">\n                        <glances-plugin-system></glances-plugin-system>\n                    </div>\n                    <div class=\"pull-left\">\n                        <glances-plugin-ip></glances-plugin-ip>\n                    </div>\n                    <div class=\"pull-right\">\n                        <glances-plugin-uptime></glances-plugin-uptime>\n                    </div>\n                </div>\n                <div class=\"row\">\n                    <div class=\"col-sm-24\">\n                        <div class=\"pull-left\">\n                            <glances-plugin-cloud></glances-plugin-cloud>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n\n        <div class=\"row\">\n            <div class=\"hidden-xs hidden-sm hidden-md col-lg-6\" ng-if=\"!vm.arguments.disable_quicklook\">\n                <glances-plugin-quicklook></glances-plugin-quicklook>\n            </div>\n            <div class=\"col-sm-6 col-md-8 col-lg-6\" ng-if=\"!vm.arguments.disable_cpu && !vm.arguments.percpu\">\n                <glances-plugin-cpu></glances-plugin-cpu>\n            </div>\n            <div class=\"col-sm-12 col-md-8 col-lg-6\" ng-if=\"!vm.arguments.disable_cpu && vm.arguments.percpu\">\n                <glances-plugin-percpu></glances-plugin-percpu>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_gpu && vm.hasGpu\">\n                <glances-plugin-gpu></glances-plugin-gpu>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_mem\">\n                <glances-plugin-mem></glances-plugin-mem>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\"\n                 ng-if=\"!vm.arguments.disable_mem && !(!vm.arguments.disable_gpu && vm.hasGpu)\">\n                <glances-plugin-mem-more></glances-plugin-mem-more>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_memswap\">\n                <glances-plugin-memswap></glances-plugin-memswap>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_load\">\n                <glances-plugin-load></glances-plugin-load>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"col-sm-6 sidebar\" ng-if=\"!vm.arguments.disable_left_sidebar\">\n                <div class=\"table\">\n                    <glances-plugin-network id=\"plugin-network\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_network\"></glances-plugin-network>\n                    <glances-plugin-connections id=\"plugin-connections\" class=\"plugin table-row-group\" ng-if=\"vm.isLinux && !vm.arguments.disable_connections\"></glances-plugin-connections>\n                    <glances-plugin-wifi id=\"plugin-wifi\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_wifi\"></glances-plugin-wifi>\n                    <glances-plugin-ports id=\"plugin-ports\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_ports\"></glances-plugin-ports>\n                    <glances-plugin-diskio id=\"plugin-diskio\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_diskio\"></glances-plugin-diskio>\n                    <glances-plugin-fs id=\"plugin-fs\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_fs\"></glances-plugin-fs>\n                    <glances-plugin-irq id=\"plugin-irq\" class=\"plugin table-row-group\" ng-if=\"vm.arguments.enable_irq\"></glances-plugin-irq>\n                    <glances-plugin-folders id=\"plugin-folders\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_folders\"></glances-plugin-folders>\n                    <glances-plugin-raid id=\"plugin-raid\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.raid\"></glances-plugin-raid>\n                    <glances-plugin-sensors id=\"plugin-sensors\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_sensors\"></glances-plugin-sensors>\n                </div>\n            </div>\n            <div class=\"col-sm-18\">\n                <glances-plugin-docker ng-if=\"!vm.arguments.disable_docker\"></glances-plugin-docker>\n                <glances-plugin-alert ng-if=\"!vm.arguments.disable_alert\"></glances-plugin-alert>\n                <glances-plugin-process></glances-plugin-process>\n            </div>\n        </div>\n    </div>\n</div>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/glances/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/help/view.html":
+/*!**************************************!*\
+  !*** ./js/components/help/view.html ***!
+  \**************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div class=\"container-fluid\">\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-24\">{{vm.help.version}} {{vm.help.psutil_version}}</div>\n    </div>\n    <div class=\"row\">&nbsp;</div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-24\">{{vm.help.configuration_file}}</div>\n    </div>\n    <div class=\"row\">&nbsp;</div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_auto}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_network}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_cpu}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_alert}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_mem}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.percpu}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_user}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_ip}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_proc}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_docker}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_io}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.view_network_io_combination}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_cpu_times}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.view_cumulative_network}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_diskio}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_filesytem_freespace}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_filesystem}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_vm.help}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_network}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.diskio_iops}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_sensors}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_top_menu}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_left_sidebar}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_amp}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_process_stats}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_irq}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_gpu}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_mean_gpu}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_quick_look}}</div>\n        <div class=\"col-sm-12 col-lg-6\"></div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_short_processname}}</div>\n        <div class=\"col-sm-12 col-lg-6\"></div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_ports}}</div>\n        <div class=\"col-sm-12 col-lg-6\"></div>\n    </div>\n\n</div>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/help/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-alert/view.html":
+/*!**********************************************!*\
+  !*** ./js/components/plugin-alert/view.html ***!
+  \**********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"alerts\">\n    <span class=\"title\" ng-if=\"!vm.hasAlerts()\">No warning or critical alert detected</span>\n    <span class=\"title\" ng-if=\"vm.hasAlerts()\">Warning or critical alerts (last {{vm.count()}} entries)</span>\n</section>\n<section id=\"alert\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\" ng-repeat=\"alert in vm.getAlerts()\">\n            <div class=\"table-cell text-left\">\n                {{alert.begin | date : 'yyyy-MM-dd H:mm:ss'}} ({{ alert.ongoing ? 'ongoing' : alert.duration }}) - <span\n                    ng-hide=\"alert.ongoing\">{{alert.level}} on</span> <span class=\"{{ alert.level | lowercase }}\">{{alert.name}}</span>\n                ({{alert.max| number:1 }})\n            </div>\n        </div>\n    </div>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-alert/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-amps/view.html":
+/*!*********************************************!*\
+  !*** ./js/components/plugin-amps/view.html ***!
+  \*********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"amps\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\" ng-repeat=\"process in vm.processes\">\n            <div class=\"table-cell text-left\" ng-class=\"vm.getNameDecoration(process)\">{{ process.name }}</div>\n            <div class=\"table-cell text-left\" ng-if=\"process.regex\">{{ process.count }}</div>\n            <div class=\"table-cell text-left process-result\" ng-bind-html=\"process.result|nl2br\"></div>\n        </div>\n    </div>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-amps/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-cloud/view.html":
+/*!**********************************************!*\
+  !*** ./js/components/plugin-cloud/view.html ***!
+  \**********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"cloud\">\n    <span class=\"title\">{{ vm.provider }}</span> {{ vm.instance }}\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-cloud/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-connections/view.html":
+/*!****************************************************!*\
+  !*** ./js/components/plugin-connections/view.html ***!
+  \****************************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div class=\"table-row\">\n    <div class=\"table-cell text-left title\">TCP CONNECTIONS</div>\n    <div class=\"table-cell\"></div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Listen</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.listen}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Initiated</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.initiated}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Established</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.established}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Terminated</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.terminated}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Tracked</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration('nf_conntrack_percent')\">{{vm.tracked.count}}/{{vm.tracked.max}}</div>\n</div>\n\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-connections/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-cpu/view.html":
+/*!********************************************!*\
+  !*** ./js/components/plugin-cpu/view.html ***!
+  \********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"cpu\" class=\"plugin\">\n    <div class=\"row\">\n        <div class=\"col-sm-24 col-md-12 col-lg-8\">\n            <div class=\"table\">\n                <div class=\"table-row\">\n                    <div class=\"table-cell text-left title\">CPU</div>\n                    <div class=\"table-cell\">{{ vm.total }}%</div>\n                </div>\n                <div class=\"table-row\">\n                    <div class=\"table-cell text-left\">user:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('user')\">\n                        {{ vm.user }}%\n                    </div>\n                </div>\n                <div class=\"table-row\">\n                    <div class=\"table-cell text-left\">system:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('system')\">\n                        {{ vm.system }}%\n                    </div>\n                </div>\n                <div class=\"table-row\">\n                    <div class=\"table-cell text-left\">idle:</div>\n                    <div class=\"table-cell\">{{ vm.idle }}%</div>\n                </div>\n            </div>\n        </div>\n        <div class=\"hidden-xs hidden-sm col-md-12 col-lg-8\">\n            <div class=\"table\">\n                <div class=\"table-row\" ng-show=\"vm.nice != undefined\">\n                    <div class=\"table-cell text-left\">nice:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.nice }}%\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-show=\"vm.irq != undefined\">\n                    <div class=\"table-cell text-left\">irq:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.irq }}%\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-show=\"vm.iowait != undefined\">\n                    <div class=\"table-cell text-left\">iowait:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('iowait')\">\n                        {{ vm.iowait }}%\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-show=\"vm.steal != undefined\">\n                    <div class=\"table-cell text-left\">steal:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('steal')\">\n                        {{ vm.steal }}%\n                    </div>\n                </div>\n            </div>\n        </div>\n        <div class=\"hidden-xs hidden-sm hidden-md col-lg-8\">\n            <div class=\"table\">\n                <div class=\"table-row\" ng-if=\"vm.ctx_switches\">\n                    <div class=\"table-cell text-left\">ctx_sw:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('ctx_switches')\">\n                        {{ vm.ctx_switches }}\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-if=\"vm.interrupts\">\n                    <div class=\"table-cell text-left\">inter:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.interrupts }}\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-if=\"vm.soft_interrupts\">\n                    <div class=\"table-cell text-left\">sw_int:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.soft_interrupts }}\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-if=\"!vm.isLinux && vm.syscalls\">\n                    <div class=\"table-cell text-left\">syscal:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.syscalls }}\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-cpu/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-diskio/view.html":
+/*!***********************************************!*\
+  !*** ./js/components/plugin-diskio/view.html ***!
+  \***********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div class=\"table-row\" ng-if=\"vm.disks.length > 0\">\n    <div class=\"table-cell text-left title\">DISK I/O</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">R/s</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">W/s</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">IOR/s</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">IOW/s</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"disk in vm.disks\">\n    <div class=\"table-cell text-left\">{{(disk.alias ? disk.alias : disk.name) | min_size:9}}</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">{{disk.bitrate.txps }}</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">{{disk.bitrate.rxps }}</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">{{disk.count.txps }}</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">{{disk.count.rxps }}</div>\n</div>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-diskio/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-docker/view.html":
+/*!***********************************************!*\
+  !*** ./js/components/plugin-docker/view.html ***!
+  \***********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"containers-plugin\" class=\"plugin\" ng-if=\"vm.containers.length\">\n    <span class=\"title\">CONTAINERS</span> {{ vm.containers.length }} (served by Docker {{ vm.version }})\n\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">Name</div>\n            <div class=\"table-cell\">Status</div>\n            <div class=\"table-cell\">CPU%</div>\n            <div class=\"table-cell\">MEM</div>\n            <div class=\"table-cell\">RSS</div>\n            <div class=\"table-cell\">IOR/s</div>\n            <div class=\"table-cell\">IOW/s</div>\n            <div class=\"table-cell\">RX/s</div>\n            <div class=\"table-cell\">TX/s</div>\n            <div class=\"table-cell text-left\">Command</div>\n        </div>\n        <div class=\"table-row\" ng-repeat=\"container in vm.containers track by container.id\">\n            <div class=\"table-cell text-left\">{{ container.name }}</div>\n            <div class=\"table-cell\" ng-class=\"container.status == 'Paused' ? 'careful' : 'ok'\">{{ container.status }}\n            </div>\n            <div class=\"table-cell\">{{ container.cpu | number:1 }}</div>\n            <div class=\"table-cell\">{{ container.memory | bytes }}</div>\n            <div class=\"table-cell\">{{ container.rss | bytes }}</div>\n            <div class=\"table-cell\">{{ container.ior / container.io_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.iow / container.io_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.rx / container.net_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.tx / container.net_time_since_update | bits }}</div>\n            <div class=\"table-cell text-left\">{{ container.command }}</div>\n        </div>\n    </div>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-docker/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-folders/view.html":
+/*!************************************************!*\
+  !*** ./js/components/plugin-folders/view.html ***!
+  \************************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div class=\"table-row\" ng-if=\"vm.folders.length > 0\">\n    <div class=\"table-cell text-left title\">FOLDERS</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">Size</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"folder in vm.folders\">\n    <div class=\"table-cell text-left\">{{ folder.path }}</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration(folder)\">{{ folder.size | bytes }}</div>\n</div>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-folders/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-fs/view.html":
+/*!*******************************************!*\
+  !*** ./js/components/plugin-fs/view.html ***!
+  \*******************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div class=\"table-row\">\n    <div class=\"table-cell text-left title\">FILE SYS</div>\n    <div class=\"table-cell\">\n        <span ng-show=\"!vm.arguments.fs_free_space\">Used</span>\n        <span ng-show=\"vm.arguments.fs_free_space\">Free</span>\n    </div>\n    <div class=\"table-cell\">Total</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"fs in vm.fileSystems\">\n    <div class=\"table-cell text-left\">{{ fs.shortMountPoint }} <span class=\"visible-lg-inline\"\n            ng-show=\"fs.name.length <= 20\">({{ fs.name }})</span>\n    </div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration(fs.mountPoint, 'used')\">\n        <span ng-show=\"!vm.arguments.fs_free_space\">{{ fs.used | bytes }}</span>\n        <span ng-show=\"vm.arguments.fs_free_space\">{{ fs.free | bytes }}</span>\n    </div>\n    <div class=\"table-cell\">{{ fs.size | bytes }}</div>\n</div>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-fs/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-gpu/view.html":
+/*!********************************************!*\
+  !*** ./js/components/plugin-gpu/view.html ***!
+  \********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"gpu\" class=\"plugin\">\n    <div class=\"gpu-name title\">\n        {{ vm.name }}\n    </div>\n    <div class=\"table\">\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">proc:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('proc')\" ng-if=\"vm.mean.proc != null\">{{ vm.mean.proc |\n                number : 0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"vm.mean.proc == null\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">mem:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('mem')\" ng-if=\"vm.mean.mem != null\">{{ vm.mean.mem | number :\n                0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"vm.mean.mem == null\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">temperature::</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('temperature')\" ng-if=\"vm.mean.temperature != null\">{{ vm.mean.temperature | number\n                :\n                0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"vm.mean.temperature == null\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"!arguments.meangpu && vm.gpus.length > 1\" ng-repeat=\"gpu in vm.gpus\">\n            <div class=\"table-cell text-left\">\n                {{ gpu.gpu_id }}:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'proc')\" ng-if=\"gpu.proc != null\">{{ gpu.proc | number : 0 }}%</span>\n                <span ng-if=\"gpu.proc == null\">N/A</span>\n                mem:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'mem')\" ng-if=\"gpu.mem != null\">{{ gpu.mem | number : 0 }}%</span>\n                <span ng-if=\"gpu.mem == null\">N/A</span>\n                temp:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'temperature')\" ng-if=\"gpu.temperature != null\">{{ gpu.temperature | number : 0 }}C</span>\n                <span ng-if=\"gpu.temperature == null\">N/A</span>\n            </div>\n        </div>\n    </div>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-gpu/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-ip/view.html":
+/*!*******************************************!*\
+  !*** ./js/components/plugin-ip/view.html ***!
+  \*******************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"ip\" ng-if=\"vm.address != undefined && !vm.arguments.disable_ip\">\n    &nbsp;-&nbsp;<span class=\"title\">IP</span>&nbsp;<span>{{ vm.address }}/{{ vm.maskCidr }}</span>&nbsp;<span\n        ng-if=\"vm.publicAddress\" class=\"title\">Pub</span>&nbsp;<span>{{ vm.publicAddress }}</span>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-ip/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-irq/view.html":
+/*!********************************************!*\
+  !*** ./js/components/plugin-irq/view.html ***!
+  \********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div class=\"table-row\" ng-if=\"vm.irqs.length > 0\">\n    <div class=\"table-cell text-left title\">IRQ</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">Rate/s</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"irq in vm.irqs\">\n    <div class=\"table-cell text-left\">{{irq.irq_line}}</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\"><span>{{irq.irq_rate}}</span></div>\n</div>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-irq/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-load/view.html":
+/*!*********************************************!*\
+  !*** ./js/components/plugin-load/view.html ***!
+  \*********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"load\" class=\"plugin\" ng-if=\"vm.cpucore != undefined\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left title\">LOAD</div>\n            <div class=\"table-cell\">{{ vm.cpucore }}-core</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">1 min:</div>\n            <div class=\"table-cell\">\n                {{ vm.min1 | number : 2}}\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">5 min:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getDecoration('min5')\">\n                {{ vm.min5 | number : 2}}\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">15 min:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getDecoration('min15')\">\n                {{ vm.min15 | number : 2}}\n            </div>\n        </div>\n    </div>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-load/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-mem-more/view.html":
+/*!*************************************************!*\
+  !*** ./js/components/plugin-mem-more/view.html ***!
+  \*************************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"mem-more\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\" ng-show=\"vm.active != undefined\">\n            <div class=\"table-cell text-left\">active:</div>\n            <div class=\"table-cell\">{{ vm.active | bytes }}</div>\n        </div>\n        <div class=\"table-row\" ng-show=\"vm.inactive != undefined\">\n            <div class=\"table-cell text-left\">inactive:</div>\n            <div class=\"table-cell\">{{ vm.inactive | bytes }}</div>\n        </div>\n        <div class=\"table-row\" ng-show=\"vm.buffers != undefined\">\n            <div class=\"table-cell text-left\">buffers:</div>\n            <div class=\"table-cell\">{{ vm.buffers | bytes }}</div>\n        </div>\n        <div class=\"table-row\" ng-show=\"vm.cached != undefined\">\n            <div class=\"table-cell text-left\">cached:</div>\n            <div class=\"table-cell\">{{ vm.cached | bytes }}</div>\n        </div>\n    </div>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-mem-more/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-mem/view.html":
+/*!********************************************!*\
+  !*** ./js/components/plugin-mem/view.html ***!
+  \********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"mem\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left title\">MEM</div>\n            <div class=\"table-cell\">{{ vm.percent }}%</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">total:</div>\n            <div class=\"table-cell\">{{ vm.total | bytes }}</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">used:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getDecoration('used')\">\n                {{ vm.used | bytes:2 }}\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">free:</div>\n            <div class=\"table-cell\">{{ vm.free | bytes }}</div>\n        </div>\n    </div>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-mem/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-memswap/view.html":
+/*!************************************************!*\
+  !*** ./js/components/plugin-memswap/view.html ***!
+  \************************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"memswap\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left title\">SWAP</div>\n            <div class=\"table-cell\">{{ vm.percent }}%</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">total:</div>\n            <div class=\"table-cell\">{{ vm.total | bytes }}</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">used:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getDecoration('used')\">\n                {{ vm.used | bytes }}\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">free:</div>\n            <div class=\"table-cell\">{{ vm.free | bytes }}</div>\n        </div>\n    </div>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-memswap/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-network/view.html":
+/*!************************************************!*\
+  !*** ./js/components/plugin-network/view.html ***!
+  \************************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div class=\"table-row\">\n    <div class=\"table-cell text-left title\">NETWORK</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && !vm.arguments.network_sum\">Rx/s</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && !vm.arguments.network_sum\">Tx/s</div>\n\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && vm.arguments.network_sum\"></div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && vm.arguments.network_sum\">Rx+Tx/s</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && !vm.arguments.network_sum\">Rx</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && !vm.arguments.network_sum\">Tx</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && vm.arguments.network_sum\"></div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && vm.arguments.network_sum\">Rx+Tx</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"network in vm.networks track by network.interfaceName\">\n    <div class=\"table-cell text-left\">\n        <span class=\"visible-lg-inline\">{{ network.ifname }}</span>\n        <span class=\"hidden-lg\">{{ network.ifname | min_size }}</span>\n    </div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && !vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.rx / network.time_since_update | bytes) : (network.rx / network.time_since_update | bits) }}\n    </div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && !vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.tx / network.time_since_update | bytes) : (network.tx / network.time_since_update | bits) }}\n    </div>\n\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && vm.arguments.network_sum\"></div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.cx / network.time_since_update | bytes) : (network.cx / network.time_since_update | bits) }}\n    </div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && !vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.cumulativeRx | bytes) : (network.cumulativeRx | bits) }}\n    </div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && !vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.cumulativeTx | bytes) : (network.cumulativeTx | bits) }}\n    </div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && vm.arguments.network_sum\"></div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.cumulativeCx | bytes) : (network.cumulativeCx | bits) }}\n    </div>\n</div>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-network/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-percpu/view.html":
+/*!***********************************************!*\
+  !*** ./js/components/plugin-percpu/view.html ***!
+  \***********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"percpu\" class=\"plugin\">\n    <div class=\"table\" ng-repeat=\"cpus in vm.cpusChunks\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left title\"><span ng-if=\"$first\">PER CPU</span></div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\">{{ percpu.total }}%</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">user:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\"\n                 ng-class=\"vm.getUserAlert(percpu)\">\n                {{ percpu.user }}%\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">system:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\"\n                 ng-class=\"vm.getSystemAlert(percpu)\">\n                {{ percpu.system }}%\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">idle:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\">{{ percpu.idle }}%</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"vm.cpus[0].iowait\">\n            <div class=\"table-cell text-left\">iowait:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\"\n                 ng-class=\"vm.getSystemAlert(percpu)\">\n                {{ percpu.iowait }}%\n            </div>\n        </div>\n        <div class=\"table-row\" ng-if=\"vm.cpus[0].steal\">\n            <div class=\"table-cell text-left\">steal:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\"\n                 ng-class=\"vm.getSystemAlert(percpu)\">\n                {{ percpu.steal }}%\n            </div>\n        </div>\n    </div>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-percpu/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-ports/view.html":
+/*!**********************************************!*\
+  !*** ./js/components/plugin-ports/view.html ***!
+  \**********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div class=\"table-row\" ng-repeat=\"port in vm.ports\">\n    <div class=\"table-cell text-left\">{{(port.description ? port.description : port.host + ' ' + port.port) | min_size:\n        20}}\n    </div>\n    <div class=\"table-cell\"></div>\n    <div ng-switch=\"port.status\" ng-class=\"vm.getPortDecoration(port)\" class=\"table-cell\" ng-if=\"port.host\">\n        <span ng-switch-when=\"null\">Scanning</span>\n        <span ng-switch-when=\"false\">Timeout</span>\n        <span ng-switch-when=\"true\">Open</span>\n        <span ng-switch-default>{{port.status * 1000.0 | number:0}}ms</span>\n    </div>\n    <div ng-switch=\"port.status\" ng-class=\"vm.getWebDecoration(port)\" class=\"table-cell\" ng-if=\"port.url\">\n        <span ng-switch-when=\"null\">Scanning</span>\n        <span ng-switch-when=\"Error\">Error</span>\n        <span ng-switch-default>Code {{ port.status }}</span>\n    </div>\n</div>";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-ports/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-process/view.html":
+/*!************************************************!*\
+  !*** ./js/components/plugin-process/view.html ***!
+  \************************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div ng-if=\"!vm.arguments.disable_process\">\n    <glances-plugin-processcount sorter=\"vm.sorter\"></glances-plugin-processcount>\n    <div class=\"row\" ng-if=\"!vm.arguments.disable_amps\">\n        <div class=\"col-lg-18\">\n            <glances-plugin-amps></glances-plugin-amps>\n        </div>\n    </div>\n    <glances-plugin-processlist sorter=\"vm.sorter\"></glances-plugin-processlist>\n</div>\n<div ng-if=\"vm.arguments.disable_process\">PROCESSES DISABLED (press 'z' to display)</div>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-process/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-processcount/view.html":
+/*!*****************************************************!*\
+  !*** ./js/components/plugin-processcount/view.html ***!
+  \*****************************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"processcount\" class=\"plugin\">\n    <span class=\"title\">TASKS</span>\n    <span>{{ vm.total }} ({{ vm.thread }} thr),</span>\n    <span>{{ vm.running }} run,</span>\n    <span>{{ vm.sleeping }} slp,</span>\n    <span>{{ vm.stopped }} oth</span>\n    <span> sorted {{ vm.sorter.auto ? 'automatically' : '' }} by {{ vm.sorter.getColumnLabel(vm.sorter.column) }}, flat view</span>\n</section>";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-processcount/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-processlist/view.html":
+/*!****************************************************!*\
+  !*** ./js/components/plugin-processlist/view.html ***!
+  \****************************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"processlist-plugin\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div sortable-th sorter=\"vm.sorter\" column=\"cpu_percent\" class=\"table-cell\">CPU%</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"memory_percent\" class=\"table-cell\">MEM%</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">VIRT</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">RES</div>\n            <div class=\"table-cell\">PID</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"username\" class=\"table-cell text-left\">USER</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"timemillis\" class=\"table-cell hidden-xs hidden-sm\">TIME+</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"num_threads\" class=\"table-cell text-left hidden-xs hidden-sm\">THR</div>\n            <div class=\"table-cell\">NI</div>\n            <div class=\"table-cell\">S</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"io_read\" class=\"table-cell hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">IOR/s</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"io_write\" class=\"table-cell text-left hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">IOW/s</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"name\" class=\"table-cell text-left\">Command</div>\n        </div>\n        <div class=\"table-row\"\n             ng-repeat=\"process in vm.processes | orderBy:vm.sorter.column:vm.sorter.isReverseColumn(vm.sorter.column) | limitTo: vm.getLimit() track by process.pid\">\n            <div class=\"table-cell\" ng-class=\"vm.getCpuPercentAlert(process)\">{{ process.cpu_percent == -1 ? '?' : (process.cpu_percent | number:1) }}</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMemoryPercentAlert(process)\">{{ process.memory_percent == -1 ? '?' : (process.memory_percent | number:1) }}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">{{process.memvirt | bytes}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">{{process.memres | bytes}}</div>\n            <div class=\"table-cell\">{{process.pid}}</div>\n            <div class=\"table-cell text-left\">{{process.username}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-if=\"process.timeplus != '?'\">\n                <span ng-show=\"process.timeplus.hours > 0\" class=\"highlight\">{{ process.timeplus.hours }}h</span>{{\n                process.timeplus.minutes | leftPad:2:'0' }}:{{ process.timeplus.seconds | leftPad:2:'0' }}<span\n                    ng-show=\"process.timeplus.hours <= 0\">.{{ process.timeplus.milliseconds | leftPad:2:'0' }}</span>\n            </div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-if=\"process.timeplus == '?'\">?</div>\n            <div class=\"table-cell text-left hidden-xs hidden-sm\">{{ process.num_threads == -1 ? '?' : process.num_threads }}</div>\n            <div class=\"table-cell\" ng-class=\"{nice: process.isNice}\">{{process.nice | exclamation}}</div>\n            <div class=\"table-cell\" ng-class=\"{status: process.status == 'R'}\">{{process.status}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">{{process.io_read | bytes}}</div>\n            <div class=\"table-cell text-left hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">{{process.io_write | bytes}}</div>\n            <div class=\"table-cell text-left\" ng-show=\"vm.arguments.process_short_name\">{{process.name}}</div>\n            <div class=\"table-cell text-left\" ng-show=\"!vm.arguments.process_short_name\">{{process.cmdline}}</div>\n        </div>\n    </div>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-processlist/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-quicklook/view.html":
+/*!**************************************************!*\
+  !*** ./js/components/plugin-quicklook/view.html ***!
+  \**************************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"quicklook-plugin\" class=\"plugin\">\n    <div class=\"cpu-name\">\n        {{ vm.cpu_name }}\n    </div>\n    <div class=\"table\">\n        <div class=\"table-row\" ng-if=\"!vm.arguments.percpu\">\n            <div class=\"table-cell text-left\">CPU</div>\n            <div class=\"table-cell\">\n                <div class=\"progress\">\n                    <div class=\"progress-bar progress-bar-{{ vm.getDecoration('cpu') }}\" role=\"progressbar\"\n                         aria-valuenow=\"{{ vm.cpu }}\" aria-valuemin=\"0\" aria-valuemax=\"100\"\n                         style=\"width: {{ vm.cpu }}%;\">\n                        &nbsp;\n                    </div>\n                </div>\n            </div>\n            <div class=\"table-cell\">\n                {{ vm.cpu }}%\n            </div>\n        </div>\n        <div class=\"table-row\" ng-if=\"vm.arguments.percpu\" ng-repeat=\"percpu in vm.percpus track by percpu.number\">\n            <div class=\"table-cell text-left\">CPU{{ percpu.number }}</div>\n            <div class=\"table-cell\">\n                <div class=\"progress\">\n                    <div class=\"progress-bar progress-bar-{{ vm.getDecoration('cpu') }}\" role=\"progressbar\"\n                         aria-valuenow=\"{{ percpu.total }}\" aria-valuemin=\"0\" aria-valuemax=\"100\"\n                         style=\"width: {{ percpu.total }}%;\">\n                        &nbsp;\n                    </div>\n                </div>\n            </div>\n            <div class=\"table-cell\">\n                {{ percpu.total }}%\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">MEM</div>\n            <div class=\"table-cell\">\n                <div class=\"progress\">\n                    <div class=\"progress-bar progress-bar-{{ vm.getDecoration('mem') }}\" role=\"progressbar\"\n                         aria-valuenow=\"{{ vm.mem }}\" aria-valuemin=\"0\" aria-valuemax=\"100\"\n                         style=\"width: {{ vm.mem }}%;\">\n                        &nbsp;\n                    </div>\n                </div>\n            </div>\n            <div class=\"table-cell\">\n                {{ vm.mem }}%\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">SWAP</div>\n            <div class=\"table-cell\">\n                <div class=\"progress\">\n                    <div class=\"progress-bar progress-bar-{{ vm.getDecoration('swap') }}\" role=\"progressbar\"\n                         aria-valuenow=\"{{ vm.swap }}\" aria-valuemin=\"0\" aria-valuemax=\"100\"\n                         style=\"width: {{ vm.swap }}%;\">\n                        &nbsp;\n                    </div>\n                </div>\n            </div>\n            <div class=\"table-cell\">\n                {{ vm.swap }}%\n            </div>\n        </div>\n    </div>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-quicklook/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-raid/view.html":
+/*!*********************************************!*\
+  !*** ./js/components/plugin-raid/view.html ***!
+  \*********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div class=\"table-row\" ng-if=\"vm.hasDisks()\">\n    <div class=\"table-cell text-left title\">RAID disks</div>\n    <div class=\"table-cell\">Used</div>\n    <div class=\"table-cell\">Total</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"disk in vm.disks | orderBy:  'name'\">\n    <div class=\"table-cell text-left\">\n        {{ disk.type | uppercase }} {{ disk.name }}\n        <div class=\"warning\" ng-show=\"disk.degraded\">└─ Degraded mode</div>\n        <div ng-show=\"disk.degraded\"> &nbsp; &nbsp;└─ {{ disk.config }}</div>\n\n        <div class=\"critical\" ng-show=\"disk.inactive\">└─ Status {{ disk.status }}</div>\n        <div ng-show=\"disk.inactive\" ng-repeat=\"component in disk.components | orderBy:  'number'\">\n            &nbsp; &nbsp;{{ $last ? '└─' : '├─' }} disk {{ component.number }}: {{ component.name }}\n        </div>\n    </div>\n    <div class=\"table-cell\" ng-show=\"!disk.inactive\" ng-class=\"vm.getAlert(disk)\">{{ disk.used }}</div>\n    <div class=\"table-cell\" ng-show=\"!disk.inactive\" ng-class=\"vm.getAlert(disk)\">{{ disk.available }}</div>\n</div>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-raid/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-sensors/view.html":
+/*!************************************************!*\
+  !*** ./js/components/plugin-sensors/view.html ***!
+  \************************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div class=\"table-row\" ng-if=\"vm.sensors.length > 0\">\n    <div class=\"table-cell text-left title\">SENSORS</div>\n</div>\n\n<div class=\"table-row\" ng-repeat=\"sensor in vm.sensors\">\n    <div class=\"table-cell text-left\">{{ sensor.label }}</div>\n    <div class=\"table-cell\">{{ sensor.unit }}</div>\n    <div class=\"table-cell\" ng-class=\"vm.getAlert(sensor)\">{{ sensor.value }}</div>\n</div>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-sensors/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-system/view.html":
+/*!***********************************************!*\
+  !*** ./js/components/plugin-system/view.html ***!
+  \***********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"system\">\n    <span ng-if=\"vm.isDisconnected\" class=\"critical\">Disconnected from</span>\n    <span class=\"title\">{{ vm.hostname }}</span>\n    <span ng-if=\"vm.isLinux\" class=\"hidden-xs hidden-sm\">({{ vm.humanReadableName }} / {{ vm.os.name }} {{ vm.os.version }})</span>\n    <span ng-if=\"!vm.isLinux\" class=\"hidden-xs hidden-sm\">({{ vm.os.name }} {{ vm.os.version }} {{ vm.platform }})</span>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-system/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-uptime/view.html":
+/*!***********************************************!*\
+  !*** ./js/components/plugin-uptime/view.html ***!
+  \***********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<section id=\"uptime\">\n    <span>Uptime: {{ vm.value }}</span>\n</section>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-uptime/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./js/components/plugin-wifi/view.html":
+/*!*********************************************!*\
+  !*** ./js/components/plugin-wifi/view.html ***!
+  \*********************************************/
+/***/ ((module) => {
+
+// Module
+var code = "<div class=\"table-row\" ng-if=\"vm.hotspots.length > 0\">\n    <div class=\"table-cell text-left title\">WIFI</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">dBm</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"hotspot in vm.hotspots\">\n    <div class=\"table-cell text-left\">{{ hotspot.ssid|limitTo:20 }} <span ng-if=\"hotspot.encrypted\">{{ hotspot.encryption_type }}</span>\n    </div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration(hotspot, 'signal')\">{{ hotspot.signal }}</div>\n</div>\n";
+// Exports
+var _module_exports =code;;
+var path = '/Users/fbrutel/dev/glances/glances/outputs/static/js/components/plugin-wifi/view.html';
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, _module_exports) }]);
+module.exports = path;
+
+/***/ }),
+
+/***/ "./css/bootstrap.less":
+/*!****************************!*\
+  !*** ./css/bootstrap.less ***!
+  \****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !../node_modules/style-loader/dist/runtime/styleDomAPI.js */ "./node_modules/style-loader/dist/runtime/styleDomAPI.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! !../node_modules/style-loader/dist/runtime/insertBySelector.js */ "./node_modules/style-loader/dist/runtime/insertBySelector.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! !../node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js */ "./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! !../node_modules/style-loader/dist/runtime/insertStyleElement.js */ "./node_modules/style-loader/dist/runtime/insertStyleElement.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! !../node_modules/style-loader/dist/runtime/styleTagTransform.js */ "./node_modules/style-loader/dist/runtime/styleTagTransform.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_bootstrap_less__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! !!../node_modules/css-loader/dist/cjs.js!../node_modules/less-loader/dist/cjs.js!./bootstrap.less */ "./node_modules/css-loader/dist/cjs.js!./node_modules/less-loader/dist/cjs.js!./css/bootstrap.less");
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+
+var options = {};
+
+options.styleTagTransform = (_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default());
+options.setAttributes = (_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default());
+
+      options.insert = _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default().bind(null, "head");
+    
+options.domAPI = (_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default());
+options.insertStyleElement = (_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default());
+
+var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_bootstrap_less__WEBPACK_IMPORTED_MODULE_6__["default"], options);
+
+
+
+
+       /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_bootstrap_less__WEBPACK_IMPORTED_MODULE_6__["default"] && _node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_bootstrap_less__WEBPACK_IMPORTED_MODULE_6__["default"].locals ? _node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_bootstrap_less__WEBPACK_IMPORTED_MODULE_6__["default"].locals : undefined);
+
+
+/***/ }),
+
+/***/ "./css/style.scss":
+/*!************************!*\
+  !*** ./css/style.scss ***!
+  \************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !../node_modules/style-loader/dist/runtime/styleDomAPI.js */ "./node_modules/style-loader/dist/runtime/styleDomAPI.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! !../node_modules/style-loader/dist/runtime/insertBySelector.js */ "./node_modules/style-loader/dist/runtime/insertBySelector.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! !../node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js */ "./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! !../node_modules/style-loader/dist/runtime/insertStyleElement.js */ "./node_modules/style-loader/dist/runtime/insertStyleElement.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! !../node_modules/style-loader/dist/runtime/styleTagTransform.js */ "./node_modules/style-loader/dist/runtime/styleTagTransform.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_style_scss__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! !!../node_modules/css-loader/dist/cjs.js!../node_modules/sass-loader/dist/cjs.js!./style.scss */ "./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./css/style.scss");
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+
+var options = {};
+
+options.styleTagTransform = (_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default());
+options.setAttributes = (_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default());
+
+      options.insert = _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default().bind(null, "head");
+    
+options.domAPI = (_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default());
+options.insertStyleElement = (_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default());
+
+var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_style_scss__WEBPACK_IMPORTED_MODULE_6__["default"], options);
+
+
+
+
+       /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_style_scss__WEBPACK_IMPORTED_MODULE_6__["default"] && _node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_style_scss__WEBPACK_IMPORTED_MODULE_6__["default"].locals ? _node_modules_css_loader_dist_cjs_js_node_modules_sass_loader_dist_cjs_js_style_scss__WEBPACK_IMPORTED_MODULE_6__["default"].locals : undefined);
+
 
 /***/ }),
 
@@ -60524,59 +60637,18 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
 /*!****************************************************************************!*\
   !*** ./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js ***!
   \****************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ ((module) => {
 
 "use strict";
 
 
-var isOldIE = function isOldIE() {
-  var memo;
-  return function memorize() {
-    if (typeof memo === 'undefined') {
-      // Test for IE <= 9 as proposed by Browserhacks
-      // @see http://browserhacks.com/#hack-e71d8692f65334173fee715c222cb805
-      // Tests for existence of standard globals is to allow style-loader
-      // to operate correctly into non-standard environments
-      // @see https://github.com/webpack-contrib/style-loader/issues/177
-      memo = Boolean(window && document && document.all && !window.atob);
-    }
-
-    return memo;
-  };
-}();
-
-var getTarget = function getTarget() {
-  var memo = {};
-  return function memorize(target) {
-    if (typeof memo[target] === 'undefined') {
-      var styleTarget = document.querySelector(target); // Special case to return head of iframe instead of iframe itself
-
-      if (window.HTMLIFrameElement && styleTarget instanceof window.HTMLIFrameElement) {
-        try {
-          // This will throw an exception if access to iframe is blocked
-          // due to cross-origin restrictions
-          styleTarget = styleTarget.contentDocument.head;
-        } catch (e) {
-          // istanbul ignore next
-          styleTarget = null;
-        }
-      }
-
-      memo[target] = styleTarget;
-    }
-
-    return memo[target];
-  };
-}();
-
-var stylesInDom = [];
+var stylesInDOM = [];
 
 function getIndexByIdentifier(identifier) {
   var result = -1;
 
-  for (var i = 0; i < stylesInDom.length; i++) {
-    if (stylesInDom[i].identifier === identifier) {
+  for (var i = 0; i < stylesInDOM.length; i++) {
+    if (stylesInDOM[i].identifier === identifier) {
       result = i;
       break;
     }
@@ -60595,20 +60667,24 @@ function modulesToDom(list, options) {
     var count = idCountMap[id] || 0;
     var identifier = "".concat(id, " ").concat(count);
     idCountMap[id] = count + 1;
-    var index = getIndexByIdentifier(identifier);
+    var indexByIdentifier = getIndexByIdentifier(identifier);
     var obj = {
       css: item[1],
       media: item[2],
-      sourceMap: item[3]
+      sourceMap: item[3],
+      supports: item[4],
+      layer: item[5]
     };
 
-    if (index !== -1) {
-      stylesInDom[index].references++;
-      stylesInDom[index].updater(obj);
+    if (indexByIdentifier !== -1) {
+      stylesInDOM[indexByIdentifier].references++;
+      stylesInDOM[indexByIdentifier].updater(obj);
     } else {
-      stylesInDom.push({
+      var updater = addElementStyle(obj, options);
+      options.byIndex = i;
+      stylesInDOM.splice(i, 0, {
         identifier: identifier,
-        updater: addStyle(obj, options),
+        updater: updater,
         references: 1
       });
     }
@@ -60619,165 +60695,36 @@ function modulesToDom(list, options) {
   return identifiers;
 }
 
-function insertStyleElement(options) {
-  var style = document.createElement('style');
-  var attributes = options.attributes || {};
+function addElementStyle(obj, options) {
+  var api = options.domAPI(options);
+  api.update(obj);
 
-  if (typeof attributes.nonce === 'undefined') {
-    var nonce =  true ? __webpack_require__.nc : undefined;
-
-    if (nonce) {
-      attributes.nonce = nonce;
-    }
-  }
-
-  Object.keys(attributes).forEach(function (key) {
-    style.setAttribute(key, attributes[key]);
-  });
-
-  if (typeof options.insert === 'function') {
-    options.insert(style);
-  } else {
-    var target = getTarget(options.insert || 'head');
-
-    if (!target) {
-      throw new Error("Couldn't find a style target. This probably means that the value for the 'insert' parameter is invalid.");
-    }
-
-    target.appendChild(style);
-  }
-
-  return style;
-}
-
-function removeStyleElement(style) {
-  // istanbul ignore if
-  if (style.parentNode === null) {
-    return false;
-  }
-
-  style.parentNode.removeChild(style);
-}
-/* istanbul ignore next  */
-
-
-var replaceText = function replaceText() {
-  var textStore = [];
-  return function replace(index, replacement) {
-    textStore[index] = replacement;
-    return textStore.filter(Boolean).join('\n');
-  };
-}();
-
-function applyToSingletonTag(style, index, remove, obj) {
-  var css = remove ? '' : obj.media ? "@media ".concat(obj.media, " {").concat(obj.css, "}") : obj.css; // For old IE
-
-  /* istanbul ignore if  */
-
-  if (style.styleSheet) {
-    style.styleSheet.cssText = replaceText(index, css);
-  } else {
-    var cssNode = document.createTextNode(css);
-    var childNodes = style.childNodes;
-
-    if (childNodes[index]) {
-      style.removeChild(childNodes[index]);
-    }
-
-    if (childNodes.length) {
-      style.insertBefore(cssNode, childNodes[index]);
-    } else {
-      style.appendChild(cssNode);
-    }
-  }
-}
-
-function applyToTag(style, options, obj) {
-  var css = obj.css;
-  var media = obj.media;
-  var sourceMap = obj.sourceMap;
-
-  if (media) {
-    style.setAttribute('media', media);
-  } else {
-    style.removeAttribute('media');
-  }
-
-  if (sourceMap && typeof btoa !== 'undefined') {
-    css += "\n/*# sourceMappingURL=data:application/json;base64,".concat(btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))), " */");
-  } // For old IE
-
-  /* istanbul ignore if  */
-
-
-  if (style.styleSheet) {
-    style.styleSheet.cssText = css;
-  } else {
-    while (style.firstChild) {
-      style.removeChild(style.firstChild);
-    }
-
-    style.appendChild(document.createTextNode(css));
-  }
-}
-
-var singleton = null;
-var singletonCounter = 0;
-
-function addStyle(obj, options) {
-  var style;
-  var update;
-  var remove;
-
-  if (options.singleton) {
-    var styleIndex = singletonCounter++;
-    style = singleton || (singleton = insertStyleElement(options));
-    update = applyToSingletonTag.bind(null, style, styleIndex, false);
-    remove = applyToSingletonTag.bind(null, style, styleIndex, true);
-  } else {
-    style = insertStyleElement(options);
-    update = applyToTag.bind(null, style, options);
-
-    remove = function remove() {
-      removeStyleElement(style);
-    };
-  }
-
-  update(obj);
-  return function updateStyle(newObj) {
+  var updater = function updater(newObj) {
     if (newObj) {
-      if (newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap) {
+      if (newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap && newObj.supports === obj.supports && newObj.layer === obj.layer) {
         return;
       }
 
-      update(obj = newObj);
+      api.update(obj = newObj);
     } else {
-      remove();
+      api.remove();
     }
   };
+
+  return updater;
 }
 
 module.exports = function (list, options) {
-  options = options || {}; // Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
-  // tags it will allow on a page
-
-  if (!options.singleton && typeof options.singleton !== 'boolean') {
-    options.singleton = isOldIE();
-  }
-
+  options = options || {};
   list = list || [];
   var lastIdentifiers = modulesToDom(list, options);
   return function update(newList) {
     newList = newList || [];
 
-    if (Object.prototype.toString.call(newList) !== '[object Array]') {
-      return;
-    }
-
     for (var i = 0; i < lastIdentifiers.length; i++) {
       var identifier = lastIdentifiers[i];
       var index = getIndexByIdentifier(identifier);
-      stylesInDom[index].references--;
+      stylesInDOM[index].references--;
     }
 
     var newLastIdentifiers = modulesToDom(newList, options);
@@ -60787,10 +60734,10 @@ module.exports = function (list, options) {
 
       var _index = getIndexByIdentifier(_identifier);
 
-      if (stylesInDom[_index].references === 0) {
-        stylesInDom[_index].updater();
+      if (stylesInDOM[_index].references === 0) {
+        stylesInDOM[_index].updater();
 
-        stylesInDom.splice(_index, 1);
+        stylesInDOM.splice(_index, 1);
       }
     }
 
@@ -60800,69 +60747,383 @@ module.exports = function (list, options) {
 
 /***/ }),
 
-/***/ "./node_modules/webpack/buildin/global.js":
-/*!***********************************!*\
-  !*** (webpack)/buildin/global.js ***!
-  \***********************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/***/ "./node_modules/style-loader/dist/runtime/insertBySelector.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/style-loader/dist/runtime/insertBySelector.js ***!
+  \********************************************************************/
+/***/ ((module) => {
 
-var g;
+"use strict";
 
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
 
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || new Function("return this")();
-} catch (e) {
-	// This works if the window reference is available
-	if (typeof window === "object") g = window;
+var memo = {};
+/* istanbul ignore next  */
+
+function getTarget(target) {
+  if (typeof memo[target] === "undefined") {
+    var styleTarget = document.querySelector(target); // Special case to return head of iframe instead of iframe itself
+
+    if (window.HTMLIFrameElement && styleTarget instanceof window.HTMLIFrameElement) {
+      try {
+        // This will throw an exception if access to iframe is blocked
+        // due to cross-origin restrictions
+        styleTarget = styleTarget.contentDocument.head;
+      } catch (e) {
+        // istanbul ignore next
+        styleTarget = null;
+      }
+    }
+
+    memo[target] = styleTarget;
+  }
+
+  return memo[target];
+}
+/* istanbul ignore next  */
+
+
+function insertBySelector(insert, style) {
+  var target = getTarget(insert);
+
+  if (!target) {
+    throw new Error("Couldn't find a style target. This probably means that the value for the 'insert' parameter is invalid.");
+  }
+
+  target.appendChild(style);
 }
 
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
+module.exports = insertBySelector;
 
 /***/ }),
 
-/***/ "./node_modules/webpack/buildin/module.js":
-/*!***********************************!*\
-  !*** (webpack)/buildin/module.js ***!
-  \***********************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/***/ "./node_modules/style-loader/dist/runtime/insertStyleElement.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/style-loader/dist/runtime/insertStyleElement.js ***!
+  \**********************************************************************/
+/***/ ((module) => {
 
-module.exports = function(module) {
-	if (!module.webpackPolyfill) {
-		module.deprecate = function() {};
-		module.paths = [];
-		// module.parent = undefined by default
-		if (!module.children) module.children = [];
-		Object.defineProperty(module, "loaded", {
-			enumerable: true,
-			get: function() {
-				return module.l;
-			}
-		});
-		Object.defineProperty(module, "id", {
-			enumerable: true,
-			get: function() {
-				return module.i;
-			}
-		});
-		module.webpackPolyfill = 1;
-	}
-	return module;
-};
+"use strict";
 
+
+/* istanbul ignore next  */
+function insertStyleElement(options) {
+  var element = document.createElement("style");
+  options.setAttributes(element, options.attributes);
+  options.insert(element, options.options);
+  return element;
+}
+
+module.exports = insertStyleElement;
+
+/***/ }),
+
+/***/ "./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js":
+/*!**********************************************************************************!*\
+  !*** ./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js ***!
+  \**********************************************************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+"use strict";
+
+
+/* istanbul ignore next  */
+function setAttributesWithoutAttributes(styleElement) {
+  var nonce =  true ? __webpack_require__.nc : 0;
+
+  if (nonce) {
+    styleElement.setAttribute("nonce", nonce);
+  }
+}
+
+module.exports = setAttributesWithoutAttributes;
+
+/***/ }),
+
+/***/ "./node_modules/style-loader/dist/runtime/styleDomAPI.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/style-loader/dist/runtime/styleDomAPI.js ***!
+  \***************************************************************/
+/***/ ((module) => {
+
+"use strict";
+
+
+/* istanbul ignore next  */
+function apply(styleElement, options, obj) {
+  var css = "";
+
+  if (obj.supports) {
+    css += "@supports (".concat(obj.supports, ") {");
+  }
+
+  if (obj.media) {
+    css += "@media ".concat(obj.media, " {");
+  }
+
+  var needLayer = typeof obj.layer !== "undefined";
+
+  if (needLayer) {
+    css += "@layer".concat(obj.layer.length > 0 ? " ".concat(obj.layer) : "", " {");
+  }
+
+  css += obj.css;
+
+  if (needLayer) {
+    css += "}";
+  }
+
+  if (obj.media) {
+    css += "}";
+  }
+
+  if (obj.supports) {
+    css += "}";
+  }
+
+  var sourceMap = obj.sourceMap;
+
+  if (sourceMap && typeof btoa !== "undefined") {
+    css += "\n/*# sourceMappingURL=data:application/json;base64,".concat(btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))), " */");
+  } // For old IE
+
+  /* istanbul ignore if  */
+
+
+  options.styleTagTransform(css, styleElement, options.options);
+}
+
+function removeStyleElement(styleElement) {
+  // istanbul ignore if
+  if (styleElement.parentNode === null) {
+    return false;
+  }
+
+  styleElement.parentNode.removeChild(styleElement);
+}
+/* istanbul ignore next  */
+
+
+function domAPI(options) {
+  var styleElement = options.insertStyleElement(options);
+  return {
+    update: function update(obj) {
+      apply(styleElement, options, obj);
+    },
+    remove: function remove() {
+      removeStyleElement(styleElement);
+    }
+  };
+}
+
+module.exports = domAPI;
+
+/***/ }),
+
+/***/ "./node_modules/style-loader/dist/runtime/styleTagTransform.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/style-loader/dist/runtime/styleTagTransform.js ***!
+  \*********************************************************************/
+/***/ ((module) => {
+
+"use strict";
+
+
+/* istanbul ignore next  */
+function styleTagTransform(css, styleElement) {
+  if (styleElement.styleSheet) {
+    styleElement.styleSheet.cssText = css;
+  } else {
+    while (styleElement.firstChild) {
+      styleElement.removeChild(styleElement.firstChild);
+    }
+
+    styleElement.appendChild(document.createTextNode(css));
+  }
+}
+
+module.exports = styleTagTransform;
+
+/***/ }),
+
+/***/ "./images/glances.png":
+/*!****************************!*\
+  !*** ./images/glances.png ***!
+  \****************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+"use strict";
+module.exports = __webpack_require__.p + "87708faeed9a66b0fcdb.png";
 
 /***/ })
 
-/******/ });
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			id: moduleId,
+/******/ 			loaded: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = __webpack_modules__;
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__webpack_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/global */
+/******/ 	(() => {
+/******/ 		__webpack_require__.g = (function() {
+/******/ 			if (typeof globalThis === 'object') return globalThis;
+/******/ 			try {
+/******/ 				return this || new Function('return this')();
+/******/ 			} catch (e) {
+/******/ 				if (typeof window === 'object') return window;
+/******/ 			}
+/******/ 		})();
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/node module decorator */
+/******/ 	(() => {
+/******/ 		__webpack_require__.nmd = (module) => {
+/******/ 			module.paths = [];
+/******/ 			if (!module.children) module.children = [];
+/******/ 			return module;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/publicPath */
+/******/ 	(() => {
+/******/ 		var scriptUrl;
+/******/ 		if (__webpack_require__.g.importScripts) scriptUrl = __webpack_require__.g.location + "";
+/******/ 		var document = __webpack_require__.g.document;
+/******/ 		if (!scriptUrl && document) {
+/******/ 			if (document.currentScript)
+/******/ 				scriptUrl = document.currentScript.src
+/******/ 			if (!scriptUrl) {
+/******/ 				var scripts = document.getElementsByTagName("script");
+/******/ 				if(scripts.length) scriptUrl = scripts[scripts.length - 1].src
+/******/ 			}
+/******/ 		}
+/******/ 		// When supporting browsers where an automatic publicPath is not supported you must specify an output.publicPath manually via configuration
+/******/ 		// or pass an empty string ("") and set the __webpack_public_path__ variable from your code to use your own logic.
+/******/ 		if (!scriptUrl) throw new Error("Automatic publicPath is not supported in this browser");
+/******/ 		scriptUrl = scriptUrl.replace(/#.*$/, "").replace(/\?.*$/, "").replace(/\/[^\/]+$/, "/");
+/******/ 		__webpack_require__.p = scriptUrl;
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/jsonp chunk loading */
+/******/ 	(() => {
+/******/ 		__webpack_require__.b = document.baseURI || self.location.href;
+/******/ 		
+/******/ 		// object to store loaded and loading chunks
+/******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
+/******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
+/******/ 		var installedChunks = {
+/******/ 			"main": 0
+/******/ 		};
+/******/ 		
+/******/ 		// no chunk on demand loading
+/******/ 		
+/******/ 		// no prefetching
+/******/ 		
+/******/ 		// no preloaded
+/******/ 		
+/******/ 		// no HMR
+/******/ 		
+/******/ 		// no HMR manifest
+/******/ 		
+/******/ 		// no on chunks loaded
+/******/ 		
+/******/ 		// no jsonp function
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+/*!*******************!*\
+  !*** ./js/app.js ***!
+  \*******************/
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _css_bootstrap_less__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../css/bootstrap.less */ "./css/bootstrap.less");
+/* harmony import */ var _css_style_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../css/style.scss */ "./css/style.scss");
+/* harmony import */ var _module__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./module */ "./js/module.js");
+/* harmony import */ var _services__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./services */ "./js/services/index.js");
+/* harmony import */ var _components__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./components */ "./js/components/index.js");
+/* harmony import */ var _filters__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./filters */ "./js/filters.js");
+/* harmony import */ var _directives__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./directives */ "./js/directives.js");
+
+
+
+
+
+
+
+
+
+
+})();
+
+/******/ })()
+;
 //# sourceMappingURL=glances.map.js
