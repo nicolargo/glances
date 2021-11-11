@@ -36,7 +36,7 @@ docs: venv-dev
 
 docs-server: docs
 	(sleep 2 && sensible-browser "http://localhost:$(PORT)") &
-	cd docs/_build/html/ && ./venv/bin/python -m SimpleHTTPServer $(PORT)
+	cd docs/_build/html/ && ../../../venv/bin/python -m http.server $(PORT)
 
 webui: venv-dev
 	cd glances/outputs/static/ && npm install && npm audit fix && npm run build

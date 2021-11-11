@@ -261,6 +261,9 @@ The following commands (key pressed) are supported while in Glances:
 ``c``
     Sort processes by CPU usage
 
+``C``
+    Enable/disable cloud stats
+
 ``d``
     Show/hide disk I/O stats
 
@@ -282,6 +285,9 @@ The following commands (key pressed) are supported while in Glances:
 ``g``
     Generate graphs for current history
 
+``G``
+    Enable/disable GPU stats
+
 ``h``
     Show/hide the help screen
 
@@ -292,6 +298,9 @@ The following commands (key pressed) are supported while in Glances:
     Show/hide IP module
 
 ``k``
+    Kill selected process
+
+``K``
     Show/hide TCP connections
 
 ``l``
@@ -312,6 +321,9 @@ The following commands (key pressed) are supported while in Glances:
 ``p``
     Sort processes by name
 
+``P``
+    Enable/Disable ports stats
+
 ``q|ESC|CTRL-C``
     Quit the current Glances session
 
@@ -326,6 +338,9 @@ The following commands (key pressed) are supported while in Glances:
 
 ``s``
     Show/hide sensors stats
+
+``S``
+    Enable/disable spark lines
 
 ``t``
     Sort process by CPU times (TIME+)
@@ -373,10 +388,27 @@ The following commands (key pressed) are supported while in Glances:
 
 ``6``
     Enable/disable mean GPU mode
+
+``9``
+    Switch UI theme between black and white
+
 ``/``
     Switch between process command line or command name
+
 ``F5``
     Refresh stats in curses user interface
+
+``LEFT``
+    Navigation leff through process sort
+
+``RIGHT``
+    Navigation right through process sort
+
+``UP``
+    Up in the processes list
+
+``DOWN``
+    Down in the processes list
 
 In the Glances client browser (accessible through the ``--browser``
 command line argument):
