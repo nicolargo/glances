@@ -132,9 +132,10 @@ def main():
 
     # Log Glances and psutil version
     logger.info('Start Glances {}'.format(__version__))
-    logger.info('{} {} and psutil {} detected'.format(
+    logger.info('{} {} ({}) and psutil {} detected'.format(
         platform.python_implementation(),
         platform.python_version(),
+        sys.executable,
         psutil_version))
 
     # Share global var
