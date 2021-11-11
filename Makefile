@@ -39,7 +39,7 @@ docs-server: docs
 	cd docs/_build/html/ && ./venv/bin/python -m SimpleHTTPServer $(PORT)
 
 webui: venv-dev
-	cd glances/outputs/static/ && npm install && npm audit fix && npm run build
+	cd glances/outputs/static/ && npm ci && npm run build
 
 run: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf
