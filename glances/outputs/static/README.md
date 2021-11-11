@@ -7,7 +7,7 @@ You must run the following command from the `glances/outputs/static/` directory.
 ## Install dependencies
 
 ```bash
-$ npm install
+$ npm ci
 ```
 
 ## Build assets
