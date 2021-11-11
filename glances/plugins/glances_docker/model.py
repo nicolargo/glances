@@ -488,12 +488,15 @@ class PluginModel(GlancesPluginModel):
             # XML/RPC API, which would otherwise be overly difficult work
             # for users of the API
             try:
+                new_io_service_bytes_recursive = iocounters['io_service_bytes_recursive']
+                old_io_service_bytes_recursive = self.iocounters_old[container_id]['io_service_bytes_recursive']
+
                 # Read IOR and IOW value in the structure list of dict
-                ior = [i for i in iocounters['io_service_bytes_recursive'] if i['op'] == 'Read'][0]['value']
-                iow = [i for i in iocounters['io_service_bytes_recursive'] if i['op'] == 'Write'][0]['value']
-                ior_old = [i for i in self.iocounters_old[container_id]['io_service_bytes_recursive'] if i['op'] == 'Read'][0]['value']
-                iow_old = [i for i in self.iocounters_old[container_id]['io_service_bytes_recursive'] if i['op'] == 'Write'][0]['value']
-            except (TypeError, IndexError, KeyError) as e:
+                ior = [i for i in new_io_service_bytes_recursive if i['op'].lower() == 'read'][0]['value']
+                iow = [i for i in new_io_service_bytes_recursive if i['op'].lower() == 'write'][0]['value']
+                ior_old = [i for i in old_io_service_bytes_recursive if i['op'].lower() == 'read'][0]['value']
+                iow_old = [i for i in old_io_service_bytes_recursive if i['op'].lower() == 'write'][0]['value']
+            except (TypeError, IndexError, KeyError, AttributeError) as e:
                 # all_stats do not have io information
                 logger.debug("docker plugin - Cannot grab block IO usage for container {} ({})".format(container_id, e))
             else:
