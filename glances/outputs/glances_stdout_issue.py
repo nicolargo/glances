@@ -19,14 +19,16 @@
 
 """Issue interface class."""
 
-import time
+import os
 import sys
+import platform
 import shutil
 
-from glances.logger import logger
-from glances.compat import printandflush
 from glances.timer import Counter
 from glances import __version__, psutil_version
+
+import psutil
+import glances
 
 try:
     TERMINAL_WIDTH = shutil.get_terminal_size(fallback=(79, 24)).columns
@@ -64,13 +66,17 @@ class GlancesStdoutIssue(object):
         pass
 
     def print_version(self):
-        msg = 'Glances version {} with PsUtil {}'.format(
+        sys.stdout.write('=' * 79 + '\n')
+        sys.stdout.write('Glances {} ({})\n'.format(
             colors.BLUE + __version__ + colors.NO,
-            colors.BLUE + psutil_version + colors.NO)
-        sys.stdout.write('='*len(msg) + '\n')
-        sys.stdout.write(msg)
-        sys.stdout.write(colors.NO + '\n')
-        sys.stdout.write('='*len(msg) + '\n')
+            os.path.realpath(glances.__file__)))
+        sys.stdout.write('Python {} ({})\n'.format(
+            colors.BLUE + platform.python_version() + colors.NO,
+            sys.executable))
+        sys.stdout.write('PsUtil {} ({})\n'.format(
+            colors.BLUE + psutil_version + colors.NO,
+            os.path.realpath(psutil.__file__)))
+        sys.stdout.write('=' * 79 + '\n')
         sys.stdout.flush()
 
     def print_issue(self, plugin, result, message):
