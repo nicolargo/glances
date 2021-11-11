@@ -2,19 +2,23 @@
 const webpack = require("webpack");
 const path = require("path");
 
-const CleanWebpackPlugin = require("clean-webpack-plugin");
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
+    mode: 'development',
     entry: "./js/app.js",
     output: {
         path: path.join(__dirname, "public"),
         filename: "glances.js",
         sourceMapFilename: "glances.map.js",
     },
+    optimization: {
+        minimize: false,
+    },
     devtool: "#source-map",
     module: {
-        loaders: [
+        rules: [
             {
                 test: /\.scss$/,
                 use: [{
@@ -49,17 +53,15 @@ module.exports = {
             {
                 test: /\.html/,
                 loader: "ngtemplate-loader!html-loader"
-            },
-            {
-                test: require.resolve("angular"),
-                loader: "exports-loader?window.angular"
-            },
+            }
         ],
     },
     plugins: [
-        new CleanWebpackPlugin("./public/*.*"),
-        new CopyWebpackPlugin([
-            { from: "./images/favicon.ico" }
-        ]),
+        new CleanWebpackPlugin(),
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: "./images/favicon.ico" }
+            ]
+        }),
     ]
 };
