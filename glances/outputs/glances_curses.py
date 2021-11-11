@@ -58,6 +58,7 @@ class _GlancesCurses(object):
         # '4' > Enable or disable quicklook
         # '5' > Enable or disable top menu
         '6': {'switch': 'meangpu'},
+        '9': {'switch': 'theme_white'},
         '/': {'switch': 'process_short_name'},
         'a': {'sort_key': 'auto'},
         'A': {'switch': 'disable_amps'},
@@ -395,6 +396,9 @@ class _GlancesCurses(object):
                 self.disable_top()
             else:
                 self.enable_top()
+        elif self.pressedkey == ord('9'):
+            # '9' > Theme from black to white and reverse
+            self._init_colors()
         elif self.pressedkey == ord('e'):
             # 'e' > Enable/Disable process extended
             self.args.enable_process_extended = not self.args.enable_process_extended
