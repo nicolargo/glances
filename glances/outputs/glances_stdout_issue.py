@@ -23,6 +23,7 @@ import os
 import sys
 import platform
 import shutil
+import time
 
 from glances.timer import Counter
 from glances import __version__, psutil_version
@@ -66,7 +67,7 @@ class GlancesStdoutIssue(object):
         pass
 
     def print_version(self):
-        sys.stdout.write('=' * 79 + '\n')
+        sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
         sys.stdout.write('Glances {} ({})\n'.format(
             colors.BLUE + __version__ + colors.NO,
             os.path.realpath(glances.__file__)))
@@ -76,7 +77,7 @@ class GlancesStdoutIssue(object):
         sys.stdout.write('PsUtil {} ({})\n'.format(
             colors.BLUE + psutil_version + colors.NO,
             os.path.realpath(psutil.__file__)))
-        sys.stdout.write('=' * 79 + '\n')
+        sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
         sys.stdout.flush()
 
     def print_issue(self, plugin, result, message):
@@ -91,6 +92,18 @@ class GlancesStdoutIssue(object):
         """Display issue
         """
         self.print_version()
+
+        for plugin in sorted(stats._plugins):
+            if stats._plugins[plugin].is_disable():
+                continue
+            try:
+                # Update the stats
+                stats._plugins[plugin].update()
+            except Exception as e:
+                pass
+
+        time.sleep(3)
+
         for plugin in sorted(stats._plugins):
             if stats._plugins[plugin].is_disable():
                 # If current plugin is disable
