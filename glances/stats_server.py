@@ -51,7 +51,7 @@ class GlancesStatsServer(GlancesStats):
     def _set_stats(self, input_stats):
         """Set the stats to the input_stats one."""
         # Build the all_stats with the get_raw() method of the plugins
-        return {p: self._plugins[p].get_raw() for p in self._plugins if self._plugins[p].is_enable()}
+        return {p: self._plugins[p].get_raw() for p in self._plugins if self._plugins[p].is_enabled()}
 
     def getAll(self):
         """Return the stats as a list."""
