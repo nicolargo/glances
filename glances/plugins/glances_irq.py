@@ -90,7 +90,7 @@ class Plugin(GlancesPlugin):
 
         # Only available on GNU/Linux
         # Only process if stats exist and display plugin enable...
-        if not LINUX or not self.stats or self.is_disable():
+        if not LINUX or not self.stats or self.is_disabled():
             return ret
 
         # Max size for the interface name

@@ -279,7 +279,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and plugin not disable
-        if not self.stats or self.args.percpu or self.is_disable():
+        if not self.stats or self.args.percpu or self.is_disabled():
             return ret
 
         # If user stat is not here, display only idle / total CPU usage (for

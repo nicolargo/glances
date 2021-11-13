@@ -173,7 +173,7 @@ class GlancesPlugin(object):
             d = getattr(self.args, 'enable_' + plugin_name, True)
         return d is False
 
-    def is_disable(self, plugin_name=None):
+    def is_disabled(self, plugin_name=None):
         """Return true if plugin is disabled."""
         return not self.is_enable(plugin_name=plugin_name)
 
