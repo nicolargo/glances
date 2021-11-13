@@ -570,7 +570,7 @@ class Plugin(GlancesPlugin):
         # Only process if stats exist (and non null) and display plugin enable...
         if not self.stats \
            or 'containers' not in self.stats or len(self.stats['containers']) == 0 \
-           or self.is_disable():
+           or self.is_disabled():
             return ret
 
         # Build the string message

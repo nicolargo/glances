@@ -168,7 +168,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or import_error_tag or self.is_disable():
+        if not self.stats or import_error_tag or self.is_disabled():
             return ret
 
         # Max size for the interface name
