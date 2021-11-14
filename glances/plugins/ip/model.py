@@ -114,7 +114,7 @@ class PluginModel(GlancesPluginModel):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or self.is_disable() or import_error_tag:
+        if not self.stats or self.is_disabled() or import_error_tag:
             return ret
 
         # Build the string message

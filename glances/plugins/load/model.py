@@ -160,7 +160,7 @@ class PluginModel(GlancesPluginModel):
         ret = []
 
         # Only process if stats exist, not empty (issue #871) and plugin not disabled
-        if not self.stats or (self.stats == {}) or self.is_disable():
+        if not self.stats or (self.stats == {}) or self.is_disabled():
             return ret
 
         # Build the string message

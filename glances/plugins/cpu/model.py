@@ -264,7 +264,7 @@ class PluginModel(GlancesPluginModel):
         ret = []
 
         # Only process if stats exist and plugin not disable
-        if not self.stats or self.args.percpu or self.is_disable():
+        if not self.stats or self.args.percpu or self.is_disabled():
             return ret
 
         # Build the string message

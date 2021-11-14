@@ -63,7 +63,7 @@ class GlancesStdout(object):
         for plugin, attribute in self.plugins_list:
             # Check if the plugin exist and is enable
             if plugin in stats.getPluginsList() and \
-               stats.get_plugin(plugin).is_enable():
+               stats.get_plugin(plugin).is_enabled():
                 stat = stats.get_plugin(plugin).get_export()
             else:
                 continue

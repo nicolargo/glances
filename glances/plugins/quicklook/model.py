@@ -111,7 +111,7 @@ class PluginModel(GlancesPluginModel):
         ret = []
 
         # Only process if stats exist...
-        if not self.stats or self.is_disable():
+        if not self.stats or self.is_disabled():
             return ret
 
         # Define the data: Bar (default behavor) or Sparkline
