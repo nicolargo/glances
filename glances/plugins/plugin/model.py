@@ -163,7 +163,7 @@ class GlancesPluginModel(object):
         """Return the key of the list."""
         return None
 
-    def is_enable(self, plugin_name=None):
+    def is_enabled(self, plugin_name=None):
         """Return true if plugin is enabled."""
         if not plugin_name:
             plugin_name = self.plugin_name
@@ -173,9 +173,9 @@ class GlancesPluginModel(object):
             d = getattr(self.args, 'enable_' + plugin_name, True)
         return d is False
 
-    def is_disable(self, plugin_name=None):
+    def is_disabled(self, plugin_name=None):
         """Return true if plugin is disabled."""
-        return not self.is_enable(plugin_name=plugin_name)
+        return not self.is_enabled(plugin_name=plugin_name)
 
     def _json_dumps(self, d):
         """Return the object 'd' in a JSON format.
@@ -1146,7 +1146,7 @@ class GlancesPluginModel(object):
         """
 
         def wrapper(self, *args, **kw):
-            if self.is_enable() and (self.refresh_timer.finished() or self.stats == self.get_init_value):
+            if self.is_enabled() and (self.refresh_timer.finished() or self.stats == self.get_init_value):
                 # Run the method
                 ret = fct(self, *args, **kw)
                 # Reset the timer

@@ -205,7 +205,7 @@ class GlancesStats(object):
         Return: list of plugin name
         """
         if enable:
-            return [p for p in self._plugins if self._plugins[p].is_enable()]
+            return [p for p in self._plugins if self._plugins[p].is_enabled()]
         else:
             return [p for p in self._plugins]
 
@@ -233,7 +233,7 @@ class GlancesStats(object):
         # For standalone and server modes
         # For each plugins, call the update method
         for p in self._plugins:
-            if self._plugins[p].is_disable():
+            if self._plugins[p].is_disabled():
                 # If current plugin is disable
                 # then continue to next plugin
                 continue

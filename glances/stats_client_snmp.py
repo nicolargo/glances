@@ -100,7 +100,7 @@ class GlancesStatsClientSNMP(GlancesStats):
         """Update the stats using SNMP."""
         # For each plugins, call the update method
         for p in self._plugins:
-            if self._plugins[p].is_disable():
+            if self._plugins[p].is_disabled():
                 # If current plugin is disable
                 # then continue to next plugin
                 continue

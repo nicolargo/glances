@@ -107,7 +107,7 @@ class PluginModel(GlancesPluginModel):
         # Init the return message
         ret = []
 
-        if not self.stats or self.stats == {} or self.is_disable():
+        if not self.stats or self.stats == {} or self.is_disabled():
             return ret
 
         # Generate the output
