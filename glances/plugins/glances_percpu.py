@@ -78,11 +78,11 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if not self.stats or not self.args.percpu or self.is_disable():
+        if not self.stats or not self.args.percpu or self.is_disabled():
             return ret
 
         # Build the string message
-        if self.is_disable('quicklook'):
+        if self.is_disabled('quicklook'):
             msg = '{:7}'.format('PER CPU')
             ret.append(self.curse_add_line(msg, "TITLE"))
 
@@ -96,7 +96,7 @@ class Plugin(GlancesPlugin):
         # Per CPU stats displayed per column
         for cpu in self.stats:
             ret.append(self.curse_new_line())
-            if self.is_disable('quicklook'):
+            if self.is_disabled('quicklook'):
                 try:
                     msg = '{:6.1f}%'.format(cpu['total'])
                 except TypeError:

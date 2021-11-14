@@ -94,7 +94,7 @@ class GlancesStdoutIssue(object):
         self.print_version()
 
         for plugin in sorted(stats._plugins):
-            if stats._plugins[plugin].is_disable():
+            if stats._plugins[plugin].is_disabled():
                 continue
             try:
                 # Update the stats
@@ -105,7 +105,7 @@ class GlancesStdoutIssue(object):
         time.sleep(3)
 
         for plugin in sorted(stats._plugins):
-            if stats._plugins[plugin].is_disable():
+            if stats._plugins[plugin].is_disabled():
                 # If current plugin is disable
                 # then continue to next plugin
                 result = colors.NO + '[N/A]'.rjust(19 - len(plugin))
