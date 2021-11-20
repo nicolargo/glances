@@ -29,7 +29,7 @@ import sys
 # Global name
 # Version should start and end with a numerical char
 # See https://packaging.python.org/specifications/core-metadata/#version
-__version__ = '3.2.4_beta03'
+__version__ = '3.2.5_beta01'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
 
@@ -147,4 +147,4 @@ def main():
     core = GlancesMain()
 
     # Glances can be ran in standalone, client or server mode
-    start(config=core.get_config(), args= core.get_args())
+    start(config=core.get_config(), args=core.get_args())
