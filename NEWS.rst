@@ -6,9 +6,37 @@
 Version 3.2.4
 ===============
 
-Version under development. Please consult the roadmap here:
+Bugs corrected:
 
-    https://github.com/nicolargo/glances/milestone/53
+    * Failure to start on Apple M1 Max #1939
+    * Influxdb2 via SSL #1934
+    * Update WebUI (security patch). Thanks to @notFloran.
+    * Swith from black <> white theme with the '9' hotkey - Related to issue #976
+    * Fix: Docker plugin - Invalid IO stats with Arch Linux #1945
+    * Bug Fix: Docker plugin - Network stats not being displayed #1944
+    * Fix Grafana CPU temperature panel #1954
+    * is_disabled name fix #1949
+    * Fix tipo in documentation #1932
+    * distutils is deprecated in Python 3.10 #1923
+    * Separate battery percentages #1920
+    * Update docs and correct make docs-server target in Makefile
+
+Enhancement requests:
+
+    * Improve --issue by displaying the second update iteration and not the first one. More relevant
+    * Improve --issue option with Python version and paths
+    * Correct an issue on idle display
+    * Refactor Mem + MemSwap Curse
+    * Refactor CPU Curses code
+
+Contributors for this version:
+    * Nicolargo
+    * RazCrimson
+    * Floran Brutel
+    * H4ckerxx44
+    * Mohamad Mansour
+    * Néfix Estrada
+    * Zameer Manji
 
 ===============
 Version 3.2.3.1
