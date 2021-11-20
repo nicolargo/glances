@@ -389,8 +389,8 @@
           "tags": [
             {
               "key": "hostname",
-              "operator": "=",
-              "value": "XPS13-9333"
+              "operator": "=~",
+              "value": "/^$host$/"
             }
           ],
           "target": ""
@@ -2190,8 +2190,8 @@
             {
               "condition": "AND",
               "key": "hostname",
-              "operator": "=",
-              "value": "XPS13-9333"
+              "operator": "=~",
+              "value": "/^$host$/"
             }
           ]
         }
