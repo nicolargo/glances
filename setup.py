@@ -41,7 +41,7 @@ def get_data_files():
 
 
 def get_install_requires():
-    requires = ['psutil>=5.3.0', 'defusedxml', 'future']
+    requires = ['psutil>=5.3.0', 'defusedxml', 'future', 'packaging']
     if sys.platform.startswith('win'):
         requires.append('bottle')
         requires.append('requests')
