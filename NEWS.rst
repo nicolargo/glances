@@ -3,12 +3,12 @@
 ==============================================================================
 
 ===============
-Version 3.2.5
+Version 3.2.4.1
 ===============
 
-Version under development, see roadmap here:
+Bugs corrected:
 
-    https://github.com/nicolargo/glances/milestone/55
+    * Missing packaging dependency when using pip install #1955
 
 ===============
 Version 3.2.4
