@@ -1005,27 +1005,34 @@ class GlancesPluginModel(object):
             return []
 
         # Check if a shortname is defined
-        if 'short_name' in self.fields_description[key]:
+        if key in self.fields_description and \
+           'short_name' in self.fields_description[key]:
             key_name = self.fields_description[key]['short_name']
         else:
             key_name = key
 
         # Check if unit is defined and get the short unit char in the unit_sort dict
-        if 'unit' in self.fields_description[key] and self.fields_description[key]['unit'] in fields_unit_short:
+        if key in self.fields_description and \
+           'unit' in self.fields_description[key] and \
+           self.fields_description[key]['unit'] in fields_unit_short:
             # Get the shortname
             unit_short = fields_unit_short[self.fields_description[key]['unit']]
         else:
             unit_short = ''
 
         # Check if unit is defined and get the unit type unit_type dict
-        if 'unit' in self.fields_description[key] and self.fields_description[key]['unit'] in fields_unit_type:
+        if key in self.fields_description and \
+           'unit' in self.fields_description[key] and \
+           self.fields_description[key]['unit'] in fields_unit_type:
             # Get the shortname
             unit_type = fields_unit_type[self.fields_description[key]['unit']]
         else:
             unit_type = 'float'
 
         # Is it a rate ? Yes, compute it thanks to the time_since_update key
-        if 'rate' in self.fields_description[key] and self.fields_description[key]['rate'] is True:
+        if key in self.fields_description and \
+           'rate' in self.fields_description[key] and \
+           self.fields_description[key]['rate'] is True:
             value = self.stats[key] // self.stats['time_since_update']
         else:
             value = self.stats[key]
