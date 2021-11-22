@@ -17,9 +17,9 @@ Glances - An eye on your system
     :target: https://pepy.tech/project/glances
     :alt: Pypi downloads
 
-.. image:: https://img.shields.io/travis/nicolargo/glances/master.svg?maxAge=3600&label=Linux%20/%20BSD%20/%20macOS
-    :target: https://travis-ci.org/nicolargo/glances
-    :alt: Linux tests (Travis)
+.. image:: https://github.com/nicolargo/glances/actions/workflows/test.yml/badge.svg
+    :target: https://github.com/nicolargo/glances/actions
+    :alt: Linux tests (GitHub Actions)
 
 .. image:: https://img.shields.io/appveyor/ci/nicolargo/glances/master.svg?maxAge=3600&label=Windows
     :target: https://ci.appveyor.com/project/nicolargo/glances
