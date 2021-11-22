@@ -11,6 +11,14 @@ Version under development, see roadmap here:
     https://github.com/nicolargo/glances/milestone/55
 
 ===============
+Version 3.2.4.1
+===============
+
+Bugs corrected:
+
+    * Missing packaging dependency when using pip install #1955
+
+===============
 Version 3.2.4
 ===============
 

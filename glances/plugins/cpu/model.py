@@ -65,7 +65,15 @@ another while ensuring that the tasks do not conflict.',
                    'unit': 'percent'},
     'soft_interrupts': {'description': 'number of software interrupts per second. Always set to \
 0 on Windows and SunOS.',
-                        'unit': 'percent'},
+                        'unit': 'number',
+                        'rate': True,
+                        'min_symbol': 'K',
+                        'short_name': 'sw_int'},
+    'syscalls': {'description': 'number of system calls per second. Always 0 on Linux OS.',
+                 'unit': 'number',
+                 'rate': True,
+                 'min_symbol': 'K',
+                 'short_name': 'sw_int'},
     'cpucore': {'description': 'Total number of CPU core.',
                 'unit': 'number'},
     'time_since_update': {'description': 'Number of seconds since last update.',
@@ -106,9 +114,9 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the CPU plugin."""
         super(PluginModel, self).__init__(args=args,
-                                     config=config,
-                                     items_history_list=items_history_list,
-                                     fields_description=fields_description)
+                                          config=config,
+                                          items_history_list=items_history_list,
+                                          fields_description=fields_description)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -252,7 +260,9 @@ class PluginModel(GlancesPluginModel):
         # Alert only but depend on Core number
         for key in ['ctx_switches']:
             if key in self.stats:
-                self.views[key]['decoration'] = self.get_alert(self.stats[key], maximum=100 * self.stats['cpucore'], header=key)
+                self.views[key]['decoration'] = self.get_alert(self.stats[key],
+                                                               maximum=100 * self.stats['cpucore'],
+                                                               header=key)
         # Optional
         for key in ['nice', 'irq', 'idle', 'steal', 'ctx_switches', 'interrupts', 'soft_interrupts', 'syscalls']:
             if key in self.stats:
