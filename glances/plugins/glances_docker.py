@@ -24,11 +24,11 @@ import threading
 import time
 from copy import deepcopy
 
-from glances.logger import logger
 from glances.compat import iterkeys, itervalues, nativestr
-from glances.timer import getTimeSinceLastUpdate
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.processes import sort_stats as sort_stats_processes, glances_processes
+from glances.timer import getTimeSinceLastUpdate
 
 # Docker-py library (optional and Linux-only)
 # https://github.com/docker/docker-py
