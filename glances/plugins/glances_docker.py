@@ -323,12 +323,6 @@ class Plugin(GlancesPlugin):
         """
         cpu_stats = {'total': 0.0}
 
-        # Read the stats
-        # For each container, you will find a pseudo-file cpuacct.stat,
-        # containing the CPU usage accumulated by the processes of the container.
-        # Those times are expressed in ticks of 1/USER_HZ of a second.
-        # On x86 systems, USER_HZ is 100.
-
         try:
             cpu = {
                 'system': all_stats['cpu_stats']['system_cpu_usage'],
