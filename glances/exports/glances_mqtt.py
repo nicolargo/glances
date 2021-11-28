@@ -39,7 +39,7 @@ class Export(GlancesExport):
         """Init the MQTT export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Mandatories configuration keys (additional to host and port)
+        # Mandatory configuration keys (additional to host and port)
         self.user = None
         self.password = None
         self.topic = None
@@ -102,9 +102,9 @@ class Export(GlancesExport):
             for sensor, value in zip(columns, points):
                 try:
                     sensor = [whitelisted(name) for name in sensor.split('.')]
-                    tobeexport = [self.topic, self.hostname, name]
-                    tobeexport.extend(sensor)
-                    topic = '/'.join(tobeexport)
+                    to_export = [self.topic, self.hostname, name]
+                    to_export.extend(sensor)
+                    topic = '/'.join(to_export)
 
                     self.client.publish(topic, value)
                 except Exception as e:
@@ -118,14 +118,14 @@ class Export(GlancesExport):
                 output_value = dict()
                 for key in sensor_values:
                     split_key = key.split('.')
-                    
+
                     # Add the parent keys if they don't exist
                     current_level = output_value
                     for depth in range(len(split_key) - 1):
                         if split_key[depth] not in current_level:
                             current_level[split_key[depth]] = dict()
                         current_level = current_level[split_key[depth]]
-                        
+
                     # Add the value
                     current_level[split_key[len(split_key) - 1]] = sensor_values[key]
 
@@ -133,4 +133,4 @@ class Export(GlancesExport):
                 self.client.publish(topic, json_value)
             except Exception as e:
                 logger.error("Can not export stats to MQTT server (%s)" % e)
-            
+
