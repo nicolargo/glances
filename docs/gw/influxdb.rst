@@ -114,7 +114,7 @@ Note: if you want to use SSL, please set 'protocol=https'.
 Grafana
 -------
 
-For Grafana users, Glances provides a dedicated `dashboard`_.
+For Grafana users, Glances provides a dedicated for `InfluxQL`_ or `Flux`_ InfluxDB datasource.
 
 .. image:: ../_static/glances-influxdb.png
 
@@ -122,4 +122,5 @@ To use it, just import the file in your ``Grafana`` web interface.
 
 .. image:: ../_static/grafana.png
 
-.. _dashboard: https://github.com/nicolargo/glances/blob/master/conf/glances-grafana.json
+.. _InfluxQL: https://github.com/nicolargo/glances/blob/master/conf/glances-grafana-influxql.json
+.. _Flux: https://github.com/nicolargo/glances/blob/master/conf/glances-grafana-flux.json
