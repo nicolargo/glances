@@ -572,7 +572,7 @@ class _GlancesCurses(object):
             "SNMP": Client is connected to a SNMP server
             "Disconnected": Client is disconnected from the server
 
-        :return True if the stats have been displayed else False if the help have been displayed
+        :return: True if the stats have been displayed else False if the help have been displayed
         """
         # Init the internal line/column for Glances Curses
         self.init_line_column()
