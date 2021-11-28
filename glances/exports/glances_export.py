@@ -33,7 +33,7 @@ class GlancesExport(object):
 
     """Main class for Glances export IF."""
 
-    # For the moment, only thoses plugins can be exported
+    # For the moment, only the below plugins can be exported
     # @TODO: remove this part and make all plugins exportable (see issue #1556)
     # @TODO: also make this list configurable by the user (see issue #1443)
     exportable_plugins = ['cpu',
@@ -62,8 +62,8 @@ class GlancesExport(object):
         self.config = config
         self.args = args
 
-        # By default export is disable
-        # Had to be set to True in the __init__ class of child
+        # By default export is disabled
+        # Needs to be set to True in the __init__ class of child
         self.export_enable = False
 
         # Mandatory for (most of) the export module
@@ -92,8 +92,8 @@ class GlancesExport(object):
         """Load the export <section> configuration in the Glances configuration file.
 
         :param section: name of the export section to load
-        :param mandatories: a list of mandatories parameters to load
-        :param options: a list of optionnals parameters to load
+        :param mandatories: a list of mandatory parameters to load
+        :param options: a list of optional parameters to load
 
         :returns: Boolean -- True if section is found
         """
@@ -139,29 +139,26 @@ class GlancesExport(object):
     def parse_tags(self, tags):
         """Parse tags into a dict.
 
-        input tags: a comma separated list of 'key:value' pairs.
-            Example: foo:bar,spam:eggs
-        output dtags: a dict of tags.
-            Example: {'foo': 'bar', 'spam': 'eggs'}
+        :param tags: a comma separated list of 'key:value' pairs. Example: foo:bar,spam:eggs
+        :return: a dict of tags. Example: {'foo': 'bar', 'spam': 'eggs'}
         """
-        dtags = {}
+        d_tags = {}
         if tags:
             try:
-                dtags = dict([x.split(':') for x in tags.split(',')])
+                d_tags = dict([x.split(':') for x in tags.split(',')])
             except ValueError:
                 # one of the 'key:value' pairs was missing
                 logger.info('Invalid tags passed: %s', tags)
-                dtags = {}
+                d_tags = {}
 
-        return dtags
+        return d_tags
 
     def update(self, stats):
         """Update stats to a server.
 
-        The method builds two lists: names and values
-        and calls the export method to export the stats.
+        The method builds two lists: names and values and calls the export method to export the stats.
 
-        Note: this class can be overwrite (for example in CSV and Graph).
+        Note: this class can be overwritten (for example in CSV and Graph).
         """
         if not self.export_enable:
             return False

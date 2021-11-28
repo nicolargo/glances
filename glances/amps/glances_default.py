@@ -21,7 +21,7 @@ r"""
 Default AMP
 =========
 
-Monitor a process by executing a command line. This is the default AMP's behavor
+Monitor a process by executing a command line. This is the default AMP's behavior
 if no AMP script is found.
 
 Configuration file example
@@ -75,7 +75,7 @@ class Amp(GlancesAmp):
                 sum([p['memory_percent'] for p in process_list])))
             return self.result()
         # Run command(s)
-        # Comman separated commands can be executed
+        # Comma separated commands can be executed
         try:
             msg = ''
             for cmd in res.split(';'):

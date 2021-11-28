@@ -38,7 +38,7 @@ class Export(GlancesExport):
         """Init the ZeroMQ export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Mandatories configuration keys (additional to host and port)
+        # Mandatory configuration keys (additional to host and port)
         self.prefix = None
 
         # Optionals configuration keys

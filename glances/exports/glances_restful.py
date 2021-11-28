@@ -37,7 +37,7 @@ class Export(GlancesExport):
         """Init the RESTful export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Mandatories configuration keys (additional to host and port)
+        # Mandatory configuration keys (additional to host and port)
         self.protocol = None
         self.path = None
 
