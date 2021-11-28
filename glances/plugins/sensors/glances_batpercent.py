@@ -57,7 +57,7 @@ class Plugin(GlancesPlugin):
 
         # Init the sensor class
         try:
-            self.glancesgrabbat = GlancesGrabBat()
+            self.glances_grab_bat = GlancesGrabBat()
         except Exception as e:
             logger.error("Can not init battery class ({})".format(e))
             global batinfo_tag
@@ -78,12 +78,12 @@ class Plugin(GlancesPlugin):
 
         if self.input_method == 'local':
             # Update stats
-            self.glancesgrabbat.update()
-            stats = self.glancesgrabbat.get()
+            self.glances_grab_bat.update()
+            stats = self.glances_grab_bat.get()
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
-            # Not avalaible
+            # Not available
             pass
 
         # Update the stats
@@ -143,14 +143,14 @@ class GlancesGrabBat(object):
         if not batinfo_tag or not self.bat.stat:
             return []
 
-        # Init the bsum (sum of percent)
+        # Init the b_sum (sum of percent)
         # and Loop over batteries (yes a computer could have more than 1 battery)
-        bsum = 0
+        b_sum = 0
         for b in self.bat.stat:
             try:
-                bsum += int(b.capacity)
+                b_sum += int(b.capacity)
             except ValueError:
                 return []
 
         # Return the global percent
-        return int(bsum / len(self.bat.stat))
+        return int(b_sum / len(self.bat.stat))

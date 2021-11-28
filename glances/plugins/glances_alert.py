@@ -29,8 +29,8 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 # Static decision tree for the global alert message
 # - msg: Message to be displayed (result of the decision tree)
-# - threasholds: a list of stats to take into account
-# - thresholds_min: minimal value of the threasholds sum
+# - thresholds: a list of stats to take into account
+# - thresholds_min: minimal value of the thresholds sum
 # -                 0: OK
 # -                 1: CAREFUL
 # -                 2: WARNING
@@ -98,7 +98,7 @@ tree_new = {
                     # iotop is an awesome tool for identifying io offenders. Two things to note:
                     # unless you've already installed iotop, it's probably not already on your system.
                     # Recommendation: install it before you need it - - it's no fun trying to install a troubleshooting
-                    # tool on an overloaded machine (iotop requies a Linux of 2.62 or above)
+                    # tool on an overloaded machine (iotop requires a Linux of 2.62 or above)
                     '_msg': "I/O issue"
                 }
             }
@@ -108,9 +108,9 @@ tree_new = {
                 '_yes': {
                     'cpu_user': {
                         '_yes': {
-                            # We expect the usertime percentage to be high.
+                            # We expect the user-time percentage to be high.
                             # There's most likely a program or service you've configured on you server that's hogging CPU.
-                            # Checking the % user time just confirms this. When you see that the % usertime is high,
+                            # Checking the % user time just confirms this. When you see that the % user-time is high,
                             # it's time to see what executable is monopolizing the CPU
                             # Once you've confirmed that the % usertime is high, check the process list(also provided by top).
                             # Be default, top sorts the process list by % CPU, so you can just look at the top process or processes.
@@ -163,7 +163,7 @@ tree_new = {
 def global_message():
     """Parse the decision tree and return the message.
 
-    Note: message corresponding to the current threasholds values
+    Note: message corresponding to the current thresholds values
     """
     # Compute the weight for each item in the tree
     current_thresholds = glances_thresholds.get()
@@ -171,7 +171,7 @@ def global_message():
         i['weight'] = sum([current_thresholds[t].value() for t in i['thresholds'] if t in current_thresholds])
     themax = max(tree, key=lambda d: d['weight'])
     if themax['weight'] >= themax['thresholds_min']:
-        # Check if the weight is > to the minimal threashold value
+        # Check if the weight is > to the minimal threshold value
         return themax['msg']
     else:
         return tree[0]['msg']
