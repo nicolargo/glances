@@ -51,7 +51,7 @@ class Plugin(GlancesPlugin):
 
         # Init the sensor class
         start_duration.reset()
-        self.glancesgrabsensors = GlancesGrabSensors()
+        self.glances_grab_sensors = GlancesGrabSensors()
         logger.debug("Generic sensor plugin init duration: {} seconds".format(start_duration.get()))
 
         # Instance for the HDDTemp Plugin in order to display the hard disks
@@ -63,7 +63,7 @@ class Plugin(GlancesPlugin):
         # Instance for the BatPercent in order to display the batteries
         # capacities
         start_duration.reset()
-        self.batpercent_plugin = BatPercentPlugin(args=args, config=config)
+        self.bat_percent_plugin = BatPercentPlugin(args=args, config=config)
         logger.debug("Battery sensor plugin init duration: {} seconds".format(start_duration.get()))
 
         # We want to display the stat in the curse interface
@@ -90,7 +90,7 @@ class Plugin(GlancesPlugin):
             stats = []
             # Get the temperature
             try:
-                temperature = self.__set_type(self.glancesgrabsensors.get('temperature_core'),
+                temperature = self.__set_type(self.glances_grab_sensors.get('temperature_core'),
                                               'temperature_core')
             except Exception as e:
                 logger.error("Cannot grab sensors temperatures (%s)" % e)
@@ -99,7 +99,7 @@ class Plugin(GlancesPlugin):
                 stats.extend(temperature)
             # Get the FAN speed
             try:
-                fan_speed = self.__set_type(self.glancesgrabsensors.get('fan_speed'),
+                fan_speed = self.__set_type(self.glances_grab_sensors.get('fan_speed'),
                                             'fan_speed')
             except Exception as e:
                 logger.error("Cannot grab FAN speed (%s)" % e)
@@ -108,8 +108,7 @@ class Plugin(GlancesPlugin):
                 stats.extend(fan_speed)
             # Update HDDtemp stats
             try:
-                hddtemp = self.__set_type(self.hddtemp_plugin.update(),
-                                          'temperature_hdd')
+                hddtemp = self.__set_type(self.hddtemp_plugin.update(), 'temperature_hdd')
             except Exception as e:
                 logger.error("Cannot grab HDD temperature (%s)" % e)
             else:
@@ -117,13 +116,12 @@ class Plugin(GlancesPlugin):
                 stats.extend(hddtemp)
             # Update batteries stats
             try:
-                batpercent = self.__set_type(self.batpercent_plugin.update(),
-                                             'battery')
+                bat_percent = self.__set_type(self.bat_percent_plugin.update(), 'battery')
             except Exception as e:
                 logger.error("Cannot grab battery percent (%s)" % e)
             else:
                 # Append Batteries %
-                stats.extend(batpercent)
+                stats.extend(bat_percent)
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -169,7 +167,7 @@ class Plugin(GlancesPlugin):
         # Call the father's method
         super(Plugin, self).update_views()
 
-        # Add specifics informations
+        # Add specifics information
         # Alert
         for i in self.stats:
             if not i['value']:
@@ -254,10 +252,10 @@ class GlancesGrabSensors(object):
         """Init sensors stats."""
         # Temperatures
         self.init_temp = False
-        self.stemps = {}
+        self.sensor_temps = {}
         try:
             # psutil>=5.1.0, Linux-only
-            self.stemps = psutil.sensors_temperatures()
+            self.sensor_temps = psutil.sensors_temperatures()
         except AttributeError:
             logger.debug("Cannot grab temperatures. Platform not supported.")
         else:
@@ -268,10 +266,10 @@ class GlancesGrabSensors(object):
 
         # Fans
         self.init_fan = False
-        self.sfans = {}
+        self.sensor_fans = {}
         try:
             # psutil>=5.2.0, Linux-only
-            self.sfans = psutil.sensors_fans()
+            self.sensor_fans = psutil.sensors_fans()
         except AttributeError:
             logger.debug("Cannot grab fans speed. Platform not supported.")
         else:
@@ -309,20 +307,20 @@ class GlancesGrabSensors(object):
         """
         ret = []
         if type == SENSOR_TEMP_UNIT and self.init_temp:
-            input_list = self.stemps
-            self.stemps = psutil.sensors_temperatures()
+            input_list = self.sensor_temps
+            self.sensor_temps = psutil.sensors_temperatures()
         elif type == SENSOR_FAN_UNIT and self.init_fan:
-            input_list = self.sfans
-            self.sfans = psutil.sensors_fans()
+            input_list = self.sensor_fans
+            self.sensor_fans = psutil.sensors_fans()
         else:
             return ret
-        for chipname, chip in iteritems(input_list):
+        for chip_name, chip in iteritems(input_list):
             i = 1
             for feature in chip:
                 sensors_current = {}
                 # Sensor name
                 if feature.label == '':
-                    sensors_current['label'] = chipname + ' ' + str(i)
+                    sensors_current['label'] = chip_name + ' ' + str(i)
                 else:
                     sensors_current['label'] = feature.label
                 # Sensors value, limit and unit

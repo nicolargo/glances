@@ -732,6 +732,6 @@ def sort_stats(stats):
         sort_by = 'memory_usage'
         sort_by_secondary = 'cpu_percent'
     sort_stats_processes(stats['containers'],
-                         sortedby=sort_by,
-                         sortedby_secondary=sort_by_secondary)
+                         sorted_by=sort_by,
+                         sorted_by_secondary=sort_by_secondary)
     return stats

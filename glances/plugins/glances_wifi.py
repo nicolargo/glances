@@ -86,11 +86,11 @@ class Plugin(GlancesPlugin):
 
             # Grab network interface stat using the psutil net_io_counter method
             try:
-                netiocounters = psutil.net_io_counters(pernic=True)
+                net_io_counters = psutil.net_io_counters(pernic=True)
             except UnicodeDecodeError:
                 return stats
 
-            for net in netiocounters:
+            for net in net_io_counters:
                 # Do not take hidden interface into account
                 if self.is_hide(net):
                     continue
@@ -104,7 +104,7 @@ class Plugin(GlancesPlugin):
                     pass
                 except Exception as e:
                     # Other error
-                    logger.debug("WIFI plugin: Can not grab cellule stats ({})".format(e))
+                    logger.debug("WIFI plugin: Can not grab cell stats ({})".format(e))
                     pass
                 else:
                     for wifi_cell in wifi_cells:
@@ -156,7 +156,7 @@ class Plugin(GlancesPlugin):
         # Call the father's method
         super(Plugin, self).update_views()
 
-        # Add specifics informations
+        # Add specifics information
         # Alert on signal thresholds
         for i in self.stats:
             self.views[i[self.get_key()]]['signal']['decoration'] = self.get_alert(i['signal'])
@@ -172,11 +172,11 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Max size for the interface name
-        ifname_max_width = max_width - 5
+        if_name_max_width = max_width - 5
 
         # Build the string message
         # Header
-        msg = '{:{width}}'.format('WIFI', width=ifname_max_width)
+        msg = '{:{width}}'.format('WIFI', width=if_name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = '{:>7}'.format('dBm')
         ret.append(self.curse_add_line(msg))
@@ -189,19 +189,19 @@ class Plugin(GlancesPlugin):
                 continue
             ret.append(self.curse_new_line())
             # New hotspot
-            hotspotname = i['ssid']
+            hotspot_name = i['ssid']
             # Add the encryption type (if it is available)
             if i['encrypted']:
-                hotspotname += ' {}'.format(i['encryption_type'])
-            # Cut hotspotname if it is too long
-            if len(hotspotname) > ifname_max_width:
-                hotspotname = '_' + hotspotname[-ifname_max_width + 1:]
+                hotspot_name += ' {}'.format(i['encryption_type'])
+            # Cut hotspot_name if it is too long
+            if len(hotspot_name) > if_name_max_width:
+                hotspot_name = '_' + hotspot_name[-if_name_max_width + 1:]
             # Add the new hotspot to the message
-            msg = '{:{width}}'.format(nativestr(hotspotname),
-                                      width=ifname_max_width)
+            msg = '{:{width}}'.format(nativestr(hotspot_name),
+                                      width=if_name_max_width)
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format(i['signal'],
-                                 width=ifname_max_width)
+                                 width=if_name_max_width)
             ret.append(self.curse_add_line(msg,
                                            self.get_views(item=i[self.get_key()],
                                                           key='signal',
