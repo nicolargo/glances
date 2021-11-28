@@ -54,9 +54,7 @@ class colors:
 
 class GlancesStdoutIssue(object):
 
-    """
-    This class manages the Issue display.
-    """
+    """This class manages the Issue display."""
 
     def __init__(self, config=None, args=None):
         # Init
@@ -89,8 +87,7 @@ class GlancesStdoutIssue(object):
     def update(self,
                stats,
                duration=3):
-        """Display issue
-        """
+        """Display issue"""
         self.print_version()
 
         for plugin in sorted(stats._plugins):

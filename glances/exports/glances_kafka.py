@@ -38,10 +38,10 @@ class Export(GlancesExport):
         """Init the Kafka export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Mandatories configuration keys (additional to host and port)
+        # Mandatory configuration keys (additional to host and port)
         self.topic = None
 
-        # Optionals configuration keys
+        # Optional configuration keys
         self.compression = None
         self.tags = None
 

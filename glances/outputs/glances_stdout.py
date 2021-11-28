@@ -27,9 +27,7 @@ from glances.compat import printandflush
 
 class GlancesStdout(object):
 
-    """
-    This class manages the Stdout display.
-    """
+    """This class manages the Stdout display."""
 
     def __init__(self, config=None, args=None):
         # Init
@@ -41,7 +39,9 @@ class GlancesStdout(object):
 
     def build_list(self):
         """Return a list of tuples taken from self.args.stdout
-        [(plugin, attribute), ... ]"""
+
+        :return: A list of tuples. Example -[(plugin, attribute), ... ]
+        """
         ret = []
         for p in self.args.stdout.split(','):
             if '.' in p:
@@ -58,6 +58,7 @@ class GlancesStdout(object):
                stats,
                duration=3):
         """Display stats to stdout.
+
         Refresh every duration second.
         """
         for plugin, attribute in self.plugins_list:

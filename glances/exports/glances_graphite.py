@@ -37,10 +37,10 @@ class Export(GlancesExport):
         """Init the Graphite export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Mandatories configuration keys (additional to host and port)
+        # Mandatory configuration keys (additional to host and port)
         # N/A
 
-        # Optionals configuration keys
+        # Optional configuration keys
         self.debug = False
         self.prefix = None
         self.system_name = None

@@ -37,10 +37,10 @@ class Export(GlancesExport):
         """Init the CouchDB export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Mandatories configuration keys (additional to host and port)
+        # Mandatory configuration keys (additional to host and port)
         self.db = None
 
-        # Optionals configuration keys
+        # Optional configuration keys
         self.user = None
         self.password = None
 
@@ -102,8 +102,8 @@ class Export(GlancesExport):
         data['type'] = name
         data['time'] = couchdb.mapping.DateTimeField()._to_json(datetime.now())
 
-        # Write input to the CouchDB database
-        # Result can be view: http://127.0.0.1:5984/_utils
+        # Write data to the CouchDB database
+        # Result can be seen at: http://127.0.0.1:5984/_utils
         try:
             self.client[self.db].save(data)
         except Exception as e:
