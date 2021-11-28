@@ -69,7 +69,9 @@ if PY3:
 
     def to_ascii(s):
         """Convert the bytes string to a ASCII string
-        Usefull to remove accent (diacritics)"""
+
+        Useful to remove accent (diacritics)
+        """
         if isinstance(s, binary_type):
             return s.decode()
         return s.encode('ascii', 'ignore').decode()
@@ -165,7 +167,9 @@ else:
 
     def to_ascii(s):
         """Convert the unicode 's' to a ASCII string
-        Usefull to remove accent (diacritics)"""
+
+        Useful to remove accent (diacritics)
+        """
         if isinstance(s, binary_type):
             return s
         return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore')
@@ -224,7 +228,7 @@ def subsample(data, sampling):
 
     Data should be a list of numerical itervalues
 
-    Return a subsampled list of sampling lenght
+    :return a sub-sampled list of sampling length
     """
     if len(data) <= sampling:
         return data
@@ -237,16 +241,16 @@ def time_serie_subsample(data, sampling):
 
     Data should be a list of set (time, value)
 
-    Return a subsampled list of sampling length
+    :return a sub-sampled list of sampling length
     """
     if len(data) <= sampling:
         return data
     t = [t[0] for t in data]
     v = [t[1] for t in data]
     sampling_length = int(round(len(data) / float(sampling)))
-    t_subsampled = [t[s * sampling_length:(s + 1) * sampling_length][0] for s in range(0, sampling)]
-    v_subsampled = [mean(v[s * sampling_length:(s + 1) * sampling_length]) for s in range(0, sampling)]
-    return list(zip(t_subsampled, v_subsampled))
+    t_sub_sampled = [t[s * sampling_length:(s + 1) * sampling_length][0] for s in range(0, sampling)]
+    v_sub_sampled = [mean(v[s * sampling_length:(s + 1) * sampling_length]) for s in range(0, sampling)]
+    return list(zip(t_sub_sampled, v_sub_sampled))
 
 
 def to_fahrenheit(celsius):
@@ -255,13 +259,14 @@ def to_fahrenheit(celsius):
 
 
 def is_admin():
-    """
+    """Return if current user is an admin or not
+
+    The inner function fails unless you have Windows XP SP2 or higher.
+    The failure causes a traceback to be printed and this function to return False.
+
     https://stackoverflow.com/a/19719292
-    @return: True if the current user is an 'Admin' whatever that
-    means (root on Unix), otherwise False.
-    Warning: The inner function fails unless you have Windows XP SP2 or
-    higher. The failure causes a traceback to be printed and this
-    function to return False.
+
+    :return: True if the current user is an 'Admin' whatever that means (root on Unix), otherwise False.
     """
 
     if os.name == 'nt':

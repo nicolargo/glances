@@ -68,6 +68,7 @@ class GlancesFilter(object):
     @filter.setter
     def filter(self, value):
         """Set the filter (as a sting) and compute the regular expression
+
         A filter could be one of the following:
         - python > Process name of cmd start with python
         - .*python.* > Process name of cmd contain python
@@ -111,7 +112,8 @@ class GlancesFilter(object):
 
     def is_filtered(self, process):
         """Return True if the process item match the current filter
-        The proces item is a dict.
+
+        :param process: A dict corresponding to the process item.
         """
         if self.filter is None:
             # No filter => Not filtered
@@ -142,8 +144,6 @@ class GlancesFilter(object):
         try:
             return self._filter_re.match(value) is None
         except (AttributeError, TypeError):
-            # AttributeError
-            # Filter processes crashs with a bad regular expression pattern (issue #665)
-            # TypeError
-            # Filter processes crashs if value is None (issue #1105)
+            # AttributeError -  Filter processes crashes with a bad regular expression pattern (issue #665)
+            # TypeError - Filter processes crashes if value is None (issue #1105)
             return False

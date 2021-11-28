@@ -48,7 +48,7 @@ class GlancesStatsClientSNMP(GlancesStats):
         # Init the arguments
         self.args = args
 
-        # OS name is used because OID is differents between system
+        # OS name is used because OID is different between system
         self.os_name = None
 
         # Load AMPs, plugins and exports modules
@@ -60,7 +60,7 @@ class GlancesStatsClientSNMP(GlancesStats):
         from glances.snmp import GlancesSNMPClient
 
         # Create an instance of the SNMP client
-        clientsnmp = GlancesSNMPClient(host=self.args.client,
+        snmp_client = GlancesSNMPClient(host=self.args.client,
                                        port=self.args.snmp_port,
                                        version=self.args.snmp_version,
                                        community=self.args.snmp_community,
@@ -68,10 +68,10 @@ class GlancesStatsClientSNMP(GlancesStats):
                                        auth=self.args.snmp_auth)
 
         # If we cannot grab the hostname, then exit...
-        ret = clientsnmp.get_by_oid("1.3.6.1.2.1.1.5.0") != {}
+        ret = snmp_client.get_by_oid("1.3.6.1.2.1.1.5.0") != {}
         if ret:
             # Get the OS name (need to grab the good OID...)
-            oid_os_name = clientsnmp.get_by_oid("1.3.6.1.2.1.1.1.0")
+            oid_os_name = snmp_client.get_by_oid("1.3.6.1.2.1.1.1.0")
             try:
                 self.system_name = self.get_system_name(oid_os_name['1.3.6.1.2.1.1.1.0'])
                 logger.info("SNMP system name detected: {}".format(self.system_name))

@@ -86,15 +86,15 @@ class GlancesStats(object):
         """Wrapper to load: plugins and export modules."""
 
         # Init the plugins dict
-        # Active plugins dictionnary
+        # Active plugins dictionary
         self._plugins = collections.defaultdict(dict)
         # Load the plugins
         self.load_plugins(args=args)
 
         # Init the export modules dict
-        # Active exporters dictionnary
+        # Active exporters dictionary
         self._exports = collections.defaultdict(dict)
-        # All available exporters dictionnary
+        # All available exporters dictionary
         self._exports_all = collections.defaultdict(dict)
         # Load the export modules
         self.load_exports(args=args)
@@ -204,7 +204,7 @@ class GlancesStats(object):
         if enable is True, only return the active exporters (default)
         if enable is False, return all the exporters
 
-        Return: list of export module name
+        :return: list of export module names
         """
         if enable:
             return [e for e in self._exports]
@@ -262,9 +262,9 @@ class GlancesStats(object):
         return {p: self._plugins[p].get_raw() for p in self._plugins}
 
     def getAllExports(self, plugin_list=None):
-        """
-        Return all the stats to be exported (list).
-        Default behavor is to export all the stat
+        """Return all the stats to be exported (list).
+
+        Default behavior is to export all the stat
         if plugin_list is provided, only export stats of given plugin (list)
         """
         if plugin_list is None:
@@ -273,9 +273,9 @@ class GlancesStats(object):
         return [self._plugins[p].get_export() for p in self._plugins]
 
     def getAllExportsAsDict(self, plugin_list=None):
-        """
-        Return all the stats to be exported (list).
-        Default behavor is to export all the stat
+        """Return all the stats to be exported (list).
+
+        Default behavior is to export all the stat
         if plugin_list is provided, only export stats of given plugin (list)
         """
         if plugin_list is None:
@@ -288,9 +288,9 @@ class GlancesStats(object):
         return [self._plugins[p].limits for p in self._plugins]
 
     def getAllLimitsAsDict(self, plugin_list=None):
-        """
-        Return all the stats limits (dict).
-        Default behavor is to export all the limits
+        """Return all the stats limits (dict).
+
+        Default behavior is to export all the limits
         if plugin_list is provided, only export limits of given plugin (list)
         """
         if plugin_list is None:

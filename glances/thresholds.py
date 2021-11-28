@@ -27,8 +27,9 @@ from functools import total_ordering
 
 class GlancesThresholds(object):
     """Class to manage thresholds dict for all Glances plugins:
+
     key: Glances stats (example: cpu_user)
-    value: Threasold* instance
+    value: Threshold instance
     """
 
     threshold_list = ['OK', 'CAREFUL', 'WARNING', 'CRITICAL']
@@ -60,7 +61,7 @@ class GlancesThresholds(object):
             return True
 
 
-# Global variable uses to share thresholds between Glances componants
+# Global variable uses to share thresholds between Glances components
 glances_thresholds = GlancesThresholds()
 
 

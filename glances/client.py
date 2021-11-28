@@ -107,11 +107,11 @@ class GlancesClient(object):
             # Fallback to SNMP
             self.client_mode = 'snmp'
             logger.error("Connection to Glances server failed ({} {})".format(err.errno, err.strerror))
-            fallbackmsg = 'No Glances server found on {}. Trying fallback to SNMP...'.format(self.uri)
+            fall_back_msg = 'No Glances server found on {}. Trying fallback to SNMP...'.format(self.uri)
             if not self.return_to_browser:
-                print(fallbackmsg)
+                print(fall_back_msg)
             else:
-                logger.info(fallbackmsg)
+                logger.info(fall_back_msg)
         except ProtocolError as err:
             # Other errors
             msg = "Connection to server {} failed".format(self.uri)
@@ -240,15 +240,15 @@ class GlancesClient(object):
             self.end()
             return self.client_mode
 
-        exitkey = False
+        exit_key = False
         try:
-            while True and not exitkey:
+            while True and not exit_key:
                 # Update the stats
                 cs_status = self.update()
 
                 # Update the screen
                 if not self.quiet:
-                    exitkey = self.screen.update(self.stats,
+                    exit_key = self.screen.update(self.stats,
                                                  cs_status=cs_status,
                                                  return_to_browser=self.return_to_browser)
 
