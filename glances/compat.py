@@ -228,7 +228,7 @@ def subsample(data, sampling):
 
     Data should be a list of numerical itervalues
 
-    :return a sub-sampled list of sampling length
+    :return: a sub-sampled list of sampling length
     """
     if len(data) <= sampling:
         return data
@@ -241,7 +241,7 @@ def time_serie_subsample(data, sampling):
 
     Data should be a list of set (time, value)
 
-    :return a sub-sampled list of sampling length
+    :return: a sub-sampled list of sampling length
     """
     if len(data) <= sampling:
         return data

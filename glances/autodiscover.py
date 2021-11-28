@@ -118,7 +118,7 @@ class GlancesAutoDiscoverListener(object):
 
         Note: the return code will never be used
 
-        :return True if the zeroconf client is a Glances server
+        :return: True if the zeroconf client is a Glances server
         """
         if srv_type != zeroconf_type:
             return False

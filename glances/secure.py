@@ -28,7 +28,7 @@ def secure_popen(cmd):
 
     Multiple command should be seperated with a &&
 
-    :return the result of the commands
+    :return: the result of the commands
     """
     ret = ''
 
