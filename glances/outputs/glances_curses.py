@@ -323,7 +323,7 @@ class _GlancesCurses(object):
         }
 
     def set_cursor(self, value):
-        """Configure the curse cursor apparence.
+        """Configure the curse cursor appearance.
 
         0: invisible
         1: visible
@@ -526,8 +526,10 @@ class _GlancesCurses(object):
 
     def __get_stat_display(self, stats, layer):
         """Return a dict of dict with all the stats display.
-        stats: Global stats dict
-        layer: ~ cs_status
+        # TODO: Drop extra parameter
+
+        :param stats: Global stats dict
+        :param layer: ~ cs_status
             "None": standalone or server mode
             "Connected": Client is connected to a Glances server
             "SNMP": Client is connected to a SNMP server
@@ -562,16 +564,14 @@ class _GlancesCurses(object):
     def display(self, stats, cs_status=None):
         """Display stats on the screen.
 
-        stats: Stats database to display
-        cs_status:
+        :param stats: Stats database to display
+        :param cs_status:
             "None": standalone or server mode
             "Connected": Client is connected to a Glances server
             "SNMP": Client is connected to a SNMP server
             "Disconnected": Client is disconnected from the server
 
-        Return:
-            True if the stats have been displayed
-            False if the help have been displayed
+        :return True if the stats have been displayed else False if the help have been displayed
         """
         # Init the internal line/column for Glances Curses
         self.init_line_column()
@@ -579,7 +579,7 @@ class _GlancesCurses(object):
         # Update the stats messages
         ###########################
 
-        # Get all the plugins but quicklook and proceslist
+        # Get all the plugins but quicklook and process list
         self.args.cs_status = cs_status
         __stat_display = self.__get_stat_display(stats, layer=cs_status)
 
@@ -624,7 +624,7 @@ class _GlancesCurses(object):
 
         # =====================================
         # Display first line (system+ip+uptime)
-        # Optionnaly: Cloud on second line
+        # Optionally: Cloud on second line
         # =====================================
         self.__display_header(__stat_display)
 
@@ -853,8 +853,8 @@ class _GlancesCurses(object):
         """
         Display a centered popup.
 
-        popup_type='info'
-         Just an infotmation popup, no user interaction
+         popup_type: ='info'
+         Just an information popup, no user interaction
          Display a centered popup with the given message during duration seconds
          If size_x and size_y: set the popup size
          else set it automatically
@@ -905,19 +905,19 @@ class _GlancesCurses(object):
             self.wait(duration * 1000)
             return True
         elif popup_type == 'input':
-            # Create a subwindow for the text field
-            subpop = popup.derwin(1, input_size, 2, 2 + len(m))
-            subpop.attron(self.colors_list['FILTER'])
+            # Create a sub-window for the text field
+            sub_pop = popup.derwin(1, input_size, 2, 2 + len(m))
+            sub_pop.attron(self.colors_list['FILTER'])
             # Init the field with the current value
             if input_value is not None:
-                subpop.addnstr(0, 0, input_value, len(input_value))
+                sub_pop.addnstr(0, 0, input_value, len(input_value))
             # Display the popup
             popup.refresh()
-            subpop.refresh()
-            # Create the textbox inside the subwindows
+            sub_pop.refresh()
+            # Create the textbox inside the sub-windows
             self.set_cursor(2)
             self.term_window.keypad(1)
-            textbox = GlancesTextbox(subpop, insert_mode=True)
+            textbox = GlancesTextbox(sub_pop, insert_mode=True)
             textbox.edit()
             self.set_cursor(0)
             # self.term_window.keypad(0)
@@ -929,18 +929,18 @@ class _GlancesCurses(object):
                 logger.debug("User centers an empty string")
                 return None
         elif popup_type == 'yesno':
-            # # Create a subwindow for the text field
-            subpop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)
-            subpop.attron(self.colors_list['FILTER'])
+            # # Create a sub-window for the text field
+            sub_pop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)
+            sub_pop.attron(self.colors_list['FILTER'])
             # Init the field with the current value
-            subpop.addnstr(0, 0, '', 0)
+            sub_pop.addnstr(0, 0, '', 0)
             # Display the popup
             popup.refresh()
-            subpop.refresh()
-            # Create the textbox inside the subwindows
+            sub_pop.refresh()
+            # Create the textbox inside the sub-windows
             self.set_cursor(2)
             self.term_window.keypad(1)
-            textbox = GlancesTextboxYesNo(subpop, insert_mode=False)
+            textbox = GlancesTextboxYesNo(sub_pop, insert_mode=False)
             textbox.edit()
             self.set_cursor(0)
             # self.term_window.keypad(0)
@@ -953,10 +953,11 @@ class _GlancesCurses(object):
                        add_space=0):
         """Display the plugin_stats on the screen.
 
-        If display_optional=True display the optional stats
-        If display_additional=True display additionnal stats
-        max_y: do not display line > max_y
-        add_space: add x space (line) after the plugin
+        :param plugin_stats:
+        :param display_optional: display the optional stats if True
+        :param display_additional: display additional stats if True
+        :param max_y: do not display line > max_y
+        :param add_space: add x space (line) after the plugin
         """
         # Exit if:
         # - the plugin_stats message is empty
@@ -1011,11 +1012,11 @@ class _GlancesCurses(object):
             if not display_additional and m['additional']:
                 continue
             # Is it possible to display the stat with the current screen size
-            # !!! Crach if not try/except... Why ???
+            # !!! Crash if not try/except... Why ???
             try:
                 self.term_window.addnstr(y, x,
                                          m['msg'],
-                                         # Do not disply outside the screen
+                                         # Do not display outside the screen
                                          screen_x - x,
                                          self.colors_list[m['decoration']])
             except Exception:
@@ -1049,8 +1050,8 @@ class _GlancesCurses(object):
     def flush(self, stats, cs_status=None):
         """Clear and update the screen.
 
-        stats: Stats database to display
-        cs_status:
+        :param stats: Stats database to display
+        :param cs_status:
             "None": standalone or server mode
             "Connected": Client is connected to the server
             "Disconnected": Client is disconnected from the server
@@ -1065,20 +1066,17 @@ class _GlancesCurses(object):
                return_to_browser=False):
         """Update the screen.
 
-        INPUT
-        stats: Stats database to display
-        duration: duration of the loop
-        cs_status:
+        :param stats: Stats database to display
+        :param duration: duration of the loop
+        :param cs_status:
             "None": standalone or server mode
             "Connected": Client is connected to the server
             "Disconnected": Client is disconnected from the server
-        return_to_browser:
+        :param return_to_browser:
             True: Do not exist, return to the browser list
             False: Exit and return to the shell
 
-        OUTPUT
-        True: Exit key has been pressed
-        False: Others cases...
+        :return: True if exit key has been pressed else False
         """
         # Flush display
         self.flush(stats, cs_status=cs_status)
@@ -1139,7 +1137,7 @@ class _GlancesCurses(object):
             return c
 
     def get_stats_display_height(self, curse_msg):
-        r"""Return the height of the formatted curses message.
+        """Return the height of the formatted curses message.
 
         The height is defined by the number of '\n' (new line).
         """

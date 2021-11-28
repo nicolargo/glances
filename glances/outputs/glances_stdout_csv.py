@@ -27,9 +27,7 @@ from glances.globals import printandflush
 
 class GlancesStdoutCsv(object):
 
-    """
-    This class manages the StdoutCsv display.
-    """
+    """This class manages the StdoutCsv display."""
 
     separator = ','
     na = 'N/A'
@@ -47,7 +45,9 @@ class GlancesStdoutCsv(object):
 
     def build_list(self):
         """Return a list of tuples taken from self.args.stdout
-        [(plugin, attribute), ... ]"""
+
+        :return: A list of tuples. Example -[(plugin, attribute), ... ]
+        """
         ret = []
         for p in self.args.stdout_csv.split(','):
             if '.' in p:
@@ -110,6 +110,7 @@ class GlancesStdoutCsv(object):
                stats,
                duration=3):
         """Display stats to stdout.
+
         Refresh every duration second.
         """
         # Build the stats list

@@ -47,7 +47,7 @@ class GlancesAmp(object):
     EMAIL = '?'
 
     def __init__(self, name=None, args=None):
-        """Init AMP classe."""
+        """Init AMP class."""
         logger.debug("AMP - Init {} version {}".format(self.NAME, self.VERSION))
 
         # AMP name (= module name without glances_)
@@ -69,7 +69,7 @@ class GlancesAmp(object):
     def load_config(self, config):
         """Load AMP parameters from the configuration file."""
 
-        # Read AMP confifuration.
+        # Read AMP configuration.
         # For ex, the AMP foo should have the following section:
         #
         # [foo]
@@ -77,12 +77,11 @@ class GlancesAmp(object):
         # regex=\/usr\/bin\/nginx
         # refresh=60
         #
-        # and optionnaly:
+        # and optionally:
         #
         # one_line=false
         # option1=opt1
-        # ...
-        #
+
         amp_section = 'amp_' + self.amp_name
         if (hasattr(config, 'has_section') and
                 config.has_section(amp_section)):
@@ -137,7 +136,7 @@ class GlancesAmp(object):
         return self.get('refresh')
 
     def one_line(self):
-        """Return True|False if the AMP shoukd be displayed in oneline (one_lineline=true|false)."""
+        """Return True|False if the AMP should be displayed in one line (one_line=true|false)."""
         ret = self.get('one_line')
         if ret is None:
             return False
@@ -149,7 +148,9 @@ class GlancesAmp(object):
         return self.timer.get()
 
     def should_update(self):
-        """Return True is the AMP should be updated:
+        """Return True is the AMP should be updated
+
+        Conditions for update:
         - AMP is enable
         - only update every 'refresh' seconds
         """
@@ -177,7 +178,8 @@ class GlancesAmp(object):
 
     def set_result(self, result, separator=''):
         """Store the result (string) into the result key of the AMP
-        if one_line is true then replace \n by separator
+
+        If one_line is true then it replaces `\n` by the separator
         """
         if self.one_line():
             self.configs['result'] = u(result).replace('\n', separator)

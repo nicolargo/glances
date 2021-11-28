@@ -38,10 +38,10 @@ class Export(GlancesExport):
         """Init the Riemann export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Mandatories configuration keys (additional to host and port)
+        # Mandatory configuration keys (additional to host and port)
         # N/A
 
-        # Optionals configuration keys
+        # Optional configuration keys
         # N/A
 
         # Load the Riemann configuration

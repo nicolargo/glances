@@ -35,12 +35,12 @@ class Export(GlancesExport):
         """Init the InfluxDB export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Mandatories configuration keys (additional to host and port)
+        # Mandatory configuration keys (additional to host and port)
         self.org = None
         self.bucket = None
         self.token = None
 
-        # Optionals configuration keys
+        # Optional configuration keys
         self.protocol = 'http'
         self.prefix = None
         self.tags = None
@@ -94,7 +94,10 @@ class Export(GlancesExport):
         return write_client
 
     def _normalize(self, name, columns, points):
-        """Normalize data for the InfluxDB's data model."""
+        """Normalize data for the InfluxDB's data model.
+
+        :return: a list of measurements.
+        """
         ret = []
 
         # Build initial dict by crossing columns and point

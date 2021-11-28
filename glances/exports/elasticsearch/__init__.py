@@ -37,7 +37,7 @@ class Export(GlancesExport):
         """Init the ES export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Mandatories configuration keys (additional to host and port)
+        # Mandatory configuration keys (additional to host and port)
         self.index = None
 
         # Load the ES configuration file
@@ -76,14 +76,14 @@ class Export(GlancesExport):
         # Create DB input
         # https://elasticsearch-py.readthedocs.io/en/master/helpers.html
         actions = []
-        dtnow = datetime.utcnow().isoformat('T')
+        dt_now = datetime.utcnow().isoformat('T')
         action = {
             "_index": index,
-            "_id": '{}.{}'.format(name, dtnow),
+            "_id": '{}.{}'.format(name, dt_now),
             "_type": 'glances-{}'.format(name),
             "_source": {
                 "plugin": name,
-                "timestamp": dtnow
+                "timestamp": dt_now
             }
         }
         action['_source'].update(zip(columns, [str(p) for p in points]))
