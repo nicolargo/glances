@@ -53,7 +53,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
         try:
             (basic, _, encoded) = headers.get('Authorization').partition(' ')
         except Exception:
-            # Client did not ask for authentidaction
+            # Client did not ask for authentication
             # If server need it then exit
             return not self.server.isAuth
         else:
@@ -61,7 +61,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
             (basic, _, encoded) = headers.get('Authorization').partition(' ')
             assert basic == 'Basic', 'Only basic authentication supported'
             # Encoded portion of the header is a string
-            # Need to convert to bytestring
+            # Need to convert to byte-string
             encoded_byte_string = encoded.encode()
             # Decode base64 byte string to a decoded byte string
             decoded_bytes = b64decode(encoded_byte_string)

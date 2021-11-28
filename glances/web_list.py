@@ -59,7 +59,7 @@ class GlancesWebList(object):
                 new_web = {}
                 postfix = 'web_%s_' % str(i)
 
-                # Read mandatories configuration key: host
+                # Read mandatory configuration key: host
                 new_web['url'] = config.get_value(self._section, '%s%s' % (postfix, 'url'))
                 if new_web['url'] is None:
                     continue
@@ -97,17 +97,17 @@ class GlancesWebList(object):
 
                 # Indice
                 new_web['indice'] = 'web_' + str(i)
-                
+
                 # ssl_verify
-                new_web['ssl_verify'] = config.get_value(self._section, 
+                new_web['ssl_verify'] = config.get_value(self._section,
                                                         '%sssl_verify' % postfix,
                                                          default=True)
                 # Proxy
-                http_proxy = config.get_value(self._section, 
+                http_proxy = config.get_value(self._section,
                                                 '%shttp_proxy' % postfix,
                                                 default=None)
-                
-                https_proxy = config.get_value(self._section, 
+
+                https_proxy = config.get_value(self._section,
                                                 '%shttps_proxy' % postfix,
                                                 default=None)
 
