@@ -26,8 +26,8 @@ Monitor the Nginx process using the status page.
 How to read the stats
 ---------------------
 
-Active connections – Number of all open connections. This doesn’t mean number of users.
-A single user, for a single pageview can open many concurrent connections to your server.
+Active connections – Number of all open connections. This doesn't mean number of users.
+A single user, for a single page-view can open many concurrent connections to your server.
 Server accepts handled requests – This shows three values.
     First is total accepted connections.
     Second is total handled connections. Usually first 2 values are same.
