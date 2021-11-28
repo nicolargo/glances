@@ -21,7 +21,7 @@ r"""
 SystemV AMP
 ===========
 
-Monitor the state of the Syste V init system and service.
+Monitor the state of the System V init system and service.
 
 How to read the stats
 ---------------------
