@@ -39,7 +39,7 @@ class Export(GlancesExport):
         """Init the RabbitMQ export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Mandatories configuration keys (additional to host and port)
+        # Mandatory configuration keys (additional to host and port)
         self.user = None
         self.password = None
         self.queue = None

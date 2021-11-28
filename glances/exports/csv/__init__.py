@@ -49,7 +49,7 @@ class Export(GlancesExport):
         else:
             # A CSV file already exit, append new data
             file_mode = 'a'
-            # Header will be check later
+            # Header will be checked later
             # Get the existing one
             try:
                 self.csv_file = open_csv_file(self.csv_filename, 'r')
@@ -115,8 +115,8 @@ class Export(GlancesExport):
                 self.writer.writerow(csv_header)
             # File already exist, check if header are compatible
             if self.old_header != csv_header:
-                # Header are differents, log an error and do not write data
-                logger.error("Cannot append data to existing CSV file. Headers are differents.")
+                # Header are different, log an error and do not write data
+                logger.error("Cannot append data to existing CSV file. Headers are different.")
                 logger.debug("Old header: {}".format(self.old_header))
                 logger.debug("New header: {}".format(csv_header))
             else:

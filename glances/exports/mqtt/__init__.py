@@ -39,7 +39,7 @@ class Export(GlancesExport):
         """Init the MQTT export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Mandatories configuration keys (additional to host and port)
+        # Mandatory configuration keys (additional to host and port)
         self.user = None
         self.password = None
         self.topic = None
@@ -102,9 +102,9 @@ class Export(GlancesExport):
             for sensor, value in zip(columns, points):
                 try:
                     sensor = [whitelisted(name) for name in sensor.split('.')]
-                    tobeexport = [self.topic, self.hostname, name]
-                    tobeexport.extend(sensor)
-                    topic = '/'.join(tobeexport)
+                    to_export = [self.topic, self.hostname, name]
+                    to_export.extend(sensor)
+                    topic = '/'.join(to_export)
 
                     self.client.publish(topic, value)
                 except Exception as e:

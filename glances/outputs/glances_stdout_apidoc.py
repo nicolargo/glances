@@ -184,9 +184,7 @@ def print_limits(stats):
 
 class GlancesStdoutApiDoc(object):
 
-    """
-    This class manages the fields description display.
-    """
+    """This class manages the fields description display."""
 
     def __init__(self, config=None, args=None):
         # Init
@@ -199,8 +197,7 @@ class GlancesStdoutApiDoc(object):
     def update(self,
                stats,
                duration=1):
-        """Display issue
-        """
+        """Display issue"""
 
         # Display header
         print(APIDOC_HEADER)

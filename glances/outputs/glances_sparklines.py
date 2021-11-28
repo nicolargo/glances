@@ -43,7 +43,7 @@ except (UnicodeEncodeError, TypeError) as e:
 
 class Sparkline(object):
 
-    r"""Manage sparklines (see https://pypi.org/project/sparklines/)."""
+    """Manage sparklines (see https://pypi.org/project/sparklines/)."""
 
     def __init__(self, size, pre_char='[', post_char=']', empty_char=' ', with_text=True):
         # If the sparklines python module available ?
@@ -64,7 +64,7 @@ class Sparkline(object):
 
     @property
     def size(self, with_decoration=False):
-        # Return the sparkine size, with or without decoration
+        # Return the sparkline size, with or without decoration
         if with_decoration:
             return self.__size
         if self.__with_text:
