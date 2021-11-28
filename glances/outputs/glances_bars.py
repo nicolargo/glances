@@ -26,7 +26,7 @@ from math import modf
 
 class Bar(object):
 
-    r"""Manage bar (progression or status).
+    """Manage bar (progression or status).
 
     import sys
     import time
