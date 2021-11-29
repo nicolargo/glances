@@ -42,9 +42,20 @@ def seconds_to_hms(input_seconds):
     return hours, minutes, seconds
 
 
-def split_cmdline(cmdline):
-    """Return path, cmd and arguments for a process cmdline."""
-    path, cmd = os.path.split(cmdline[0])
+def split_cmdline(bare_process_name, cmdline):
+    """Return path, cmd and arguments for a process cmdline based on bare_process_name.
+
+    If first argument of cmdline starts with the bare_process_name then
+    cmdline will just be considered cmd and path will be empty (see https://github.com/nicolargo/glances/issues/1795)
+
+    :param bare_process_name: Name of the process from psutil
+    :param cmdline: cmdline from psutil
+    :return: Tuple with three strings, which are path, cmd and arguments of the process
+    """
+    if cmdline[0].startswith(bare_process_name):
+        path, cmd = "", cmdline[0]
+    else:
+        path, cmd = os.path.split(cmdline[0])
     arguments = ' '.join(cmdline[1:])
     return path, cmd, arguments
 
@@ -392,16 +403,14 @@ class Plugin(GlancesPlugin):
         ret.append(self._get_process_curses_io_write(p, selected, args))
 
         # Command line
-        # If no command line for the process is available, fallback to
-        # the bare process name instead
-        if 'cmdline' in p:
-            cmdline = p['cmdline']
-        else:
-            cmdline = '?'
+        # If no command line for the process is available, fallback to the bare process name instead
+        bare_process_name = p['name']
+        cmdline = p.get('cmdline', '?')
+
         try:
             process_decoration = 'PROCESS_SELECTED' if (selected and args.is_standalone) else 'PROCESS'
             if cmdline:
-                path, cmd, arguments = split_cmdline(cmdline)
+                path, cmd, arguments = split_cmdline(bare_process_name, cmdline)
                 # Manage end of line in arguments (see #1692)
                 arguments.replace('\r\n', ' ')
                 arguments.replace('\n', ' ')
@@ -418,7 +427,7 @@ class Plugin(GlancesPlugin):
                     msg = ' ' + self.layout_stat['command'].format(arguments)
                     ret.append(self.curse_add_line(msg, splittable=True))
             else:
-                msg = self.layout_stat['name'].format(p['name'])
+                msg = self.layout_stat['name'].format(bare_process_name)
                 ret.append(self.curse_add_line(msg, decoration=process_decoration, splittable=True))
         except (TypeError, UnicodeEncodeError) as e:
             # Avoid crash after running fine for several hours #1335
