@@ -58,7 +58,9 @@ class AmpsList(object):
 
         # Display a warning (deprecated) message if the monitor section exist
         if "monitor" in self.config.sections():
-            logger.warning("A deprecated [monitor] section exists in the Glances configuration file. You should use the new Applications Monitoring Process module instead (http://glances.readthedocs.io/en/develop/aoa/amps.html).")
+            logger.warning(
+                "A deprecated [monitor] section exists in the Glances configuration file. You should use the new Applications Monitoring Process module instead (http://glances.readthedocs.io/en/develop/aoa/amps.html)."
+            )
 
         header = "glances_"
         # For each AMP scrip, call the load_config method
@@ -125,9 +127,7 @@ class AmpsList(object):
 
             if len(amps_list) > 0:
                 # At least one process is matching the regex
-                logger.debug("AMPS: {} processes {} detected ({})".format(len(amps_list),
-                                                                          k,
-                                                                          amps_list))
+                logger.debug("AMPS: {} processes {} detected ({})".format(len(amps_list), k, amps_list))
                 # Call the AMP update method
                 thread = threading.Thread(target=v.update_wrapper, args=[amps_list])
                 thread.start()
@@ -150,20 +150,20 @@ class AmpsList(object):
             # Search in both cmdline and name (for kernel thread, see #1261)
             for p in processlist:
                 add_it = False
-                if (re.search(amp_value.regex(), p['name']) is not None):
+                if re.search(amp_value.regex(), p['name']) is not None:
                     add_it = True
                 else:
                     if p['cmdline'] is None:
                         # See issue #1689 (thanks to @darylkell)
                         continue
                     for c in p['cmdline']:
-                        if (re.search(amp_value.regex(), c) is not None):
+                        if re.search(amp_value.regex(), c) is not None:
                             add_it = True
                             break
                 if add_it:
-                    ret.append({'pid': p['pid'],
-                                'cpu_percent': p['cpu_percent'],
-                                'memory_percent': p['memory_percent']})
+                    ret.append(
+                        {'pid': p['pid'], 'cpu_percent': p['cpu_percent'], 'memory_percent': p['memory_percent']}
+                    )
 
         except (TypeError, KeyError) as e:
             logger.debug("Can not build AMPS list ({})".format(e))

@@ -46,9 +46,9 @@ class Export(GlancesExport):
         self.tls = 'true'
 
         # Load the MQTT configuration file
-        self.export_enable = self.load_conf('mqtt',
-                                            mandatories=['host', 'password'],
-                                            options=['port', 'user', 'topic', 'tls', 'topic_structure'])
+        self.export_enable = self.load_conf(
+            'mqtt', mandatories=['host', 'password'], options=['port', 'user', 'topic', 'tls', 'topic_structure']
+        )
         if not self.export_enable:
             exit('Missing MQTT config')
 
@@ -58,7 +58,7 @@ class Export(GlancesExport):
         self.port = int(self.port) or 8883
         self.topic = self.topic or 'glances'
         self.user = self.user or 'glances'
-        self.tls = (self.tls and self.tls.lower() == 'true')
+        self.tls = self.tls and self.tls.lower() == 'true'
 
         self.topic_structure = (self.topic_structure or 'per-metric').lower()
         if self.topic_structure not in ['per-metric', 'per-plugin']:
@@ -73,14 +73,11 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
         try:
-            client = paho.Client(client_id='glances_' + self.hostname,
-                                 clean_session=False)
-            client.username_pw_set(username=self.user,
-                                   password=self.password)
+            client = paho.Client(client_id='glances_' + self.hostname, clean_session=False)
+            client.username_pw_set(username=self.user, password=self.password)
             if self.tls:
                 client.tls_set(certs.where())
-            client.connect(host=self.host,
-                           port=self.port)
+            client.connect(host=self.host, port=self.port)
             client.loop_start()
             return client
         except Exception as e:
@@ -93,9 +90,7 @@ class Export(GlancesExport):
         WHITELIST = '_-' + string.ascii_letters + string.digits
         SUBSTITUTE = '_'
 
-        def whitelisted(s,
-                        whitelist=WHITELIST,
-                        substitute=SUBSTITUTE):
+        def whitelisted(s, whitelist=WHITELIST, substitute=SUBSTITUTE):
             return ''.join(c if c in whitelist else substitute for c in s)
 
         if self.topic_structure == 'per-metric':
@@ -133,4 +128,3 @@ class Export(GlancesExport):
                 self.client.publish(topic, json_value)
             except Exception as e:
                 logger.error("Can not export stats to MQTT server (%s)" % e)
-

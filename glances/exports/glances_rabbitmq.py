@@ -50,11 +50,9 @@ class Export(GlancesExport):
         # N/A
 
         # Load the rabbitMQ configuration file
-        self.export_enable = self.load_conf('rabbitmq',
-                                            mandatories=['host', 'port',
-                                                         'user', 'password',
-                                                         'queue'],
-                                            options=['protocol'])
+        self.export_enable = self.load_conf(
+            'rabbitmq', mandatories=['host', 'port', 'user', 'password', 'queue'], options=['protocol']
+        )
         if not self.export_enable:
             sys.exit(2)
 
@@ -78,11 +76,8 @@ class Export(GlancesExport):
 
         try:
             parameters = pika.URLParameters(
-                self.protocol +
-                '://' + self.user +
-                ':' + self.password +
-                '@' + self.host +
-                ':' + self.port + '/')
+                self.protocol + '://' + self.user + ':' + self.password + '@' + self.host + ':' + self.port + '/'
+            )
             connection = pika.BlockingConnection(parameters)
             channel = connection.channel()
             return channel
@@ -92,8 +87,7 @@ class Export(GlancesExport):
 
     def export(self, name, columns, points):
         """Write the points in RabbitMQ."""
-        data = ('hostname=' + self.hostname + ', name=' + name +
-                ', dateinfo=' + datetime.datetime.utcnow().isoformat())
+        data = 'hostname=' + self.hostname + ', name=' + name + ', dateinfo=' + datetime.datetime.utcnow().isoformat()
         for i in range(len(columns)):
             if not isinstance(points[i], Number):
                 continue

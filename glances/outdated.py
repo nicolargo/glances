@@ -51,11 +51,7 @@ class Outdated(object):
         self.cache_file = os.path.join(self.cache_dir, 'glances-version.db')
 
         # Set default value...
-        self.data = {
-            u'installed_version': __version__,
-            u'latest_version': '0.0',
-            u'refresh_date': datetime.now()
-        }
+        self.data = {u'installed_version': __version__, u'latest_version': '0.0', u'refresh_date': datetime.now()}
         # Read the configuration file
         self.load_config(config)
         logger.debug("Check Glances version up-to-date: {}".format(not self.args.disable_check_update))
@@ -67,8 +63,7 @@ class Outdated(object):
         """Load outdated parameter in the global section of the configuration file."""
 
         global_section = 'global'
-        if (hasattr(config, 'has_section') and
-                config.has_section(global_section)):
+        if hasattr(config, 'has_section') and config.has_section(global_section):
             self.args.disable_check_update = config.get_value(global_section, 'check_update').lower() == 'false'
         else:
             logger.debug("Cannot find section {} in the configuration file".format(global_section))
@@ -113,7 +108,9 @@ class Outdated(object):
             # Check is disabled by configuration
             return False
 
-        logger.debug("Check Glances version (installed: {} / latest: {})".format(self.installed_version(), self.latest_version()))
+        logger.debug(
+            "Check Glances version (installed: {} / latest: {})".format(self.installed_version(), self.latest_version())
+        )
         return Version(self.latest_version()) > Version(self.installed_version())
 
     def _load_cache(self):
@@ -128,8 +125,10 @@ class Outdated(object):
             logger.debug("Cannot read version from cache file: {} ({})".format(self.cache_file, e))
         else:
             logger.debug("Read version from cache file")
-            if (cached_data['installed_version'] != self.installed_version() or
-                    datetime.now() - cached_data['refresh_date'] > max_refresh_date):
+            if (
+                cached_data['installed_version'] != self.installed_version()
+                or datetime.now() - cached_data['refresh_date'] > max_refresh_date
+            ):
                 # Reset the cache if:
                 # - the installed version is different
                 # - the refresh_date is > max_refresh_date

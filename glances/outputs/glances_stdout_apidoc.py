@@ -84,9 +84,15 @@ def print_plugin_description(plugin, stat):
         print('Fields descriptions:')
         print('')
         for field, description in iteritems(stat.fields_description):
-            print('* **{}**: {} (unit is *{}*)'.format(field,
-                    description['description'][:-1] if description['description'].endswith('.') else description['description'],
-                    description['unit']))
+            print(
+                '* **{}**: {} (unit is *{}*)'.format(
+                    field,
+                    description['description'][:-1]
+                    if description['description'].endswith('.')
+                    else description['description'],
+                    description['unit'],
+                )
+            )
         print('')
     else:
         logger.error('No fields_description variable defined for plugin {}'.format(plugin))
@@ -194,9 +200,7 @@ class GlancesStdoutApiDoc(object):
     def end(self):
         pass
 
-    def update(self,
-               stats,
-               duration=1):
+    def update(self, stats, duration=1):
         """Display issue"""
 
         # Display header

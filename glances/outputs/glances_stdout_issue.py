@@ -66,27 +66,22 @@ class GlancesStdoutIssue(object):
 
     def print_version(self):
         sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
-        sys.stdout.write('Glances {} ({})\n'.format(
-            colors.BLUE + __version__ + colors.NO,
-            os.path.realpath(glances.__file__)))
-        sys.stdout.write('Python {} ({})\n'.format(
-            colors.BLUE + platform.python_version() + colors.NO,
-            sys.executable))
-        sys.stdout.write('PsUtil {} ({})\n'.format(
-            colors.BLUE + psutil_version + colors.NO,
-            os.path.realpath(psutil.__file__)))
+        sys.stdout.write(
+            'Glances {} ({})\n'.format(colors.BLUE + __version__ + colors.NO, os.path.realpath(glances.__file__))
+        )
+        sys.stdout.write('Python {} ({})\n'.format(colors.BLUE + platform.python_version() + colors.NO, sys.executable))
+        sys.stdout.write(
+            'PsUtil {} ({})\n'.format(colors.BLUE + psutil_version + colors.NO, os.path.realpath(psutil.__file__))
+        )
         sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
         sys.stdout.flush()
 
     def print_issue(self, plugin, result, message):
-        sys.stdout.write('{}{}{}'.format(
-            colors.BLUE + plugin, result, message))
+        sys.stdout.write('{}{}{}'.format(colors.BLUE + plugin, result, message))
         sys.stdout.write(colors.NO + '\n')
         sys.stdout.flush()
 
-    def update(self,
-               stats,
-               duration=3):
+    def update(self, stats, duration=3):
         """Display issue"""
         self.print_version()
 
@@ -122,21 +117,19 @@ class GlancesStdoutIssue(object):
             except Exception as e:
                 stat_error = e
             if stat_error is None:
-                result = (colors.GREEN +
-                          '[OK]   ' +
-                          colors.BLUE +
-                          ' {:.5f}s '.format(counter.get())).rjust(41 - len(plugin))
+                result = (colors.GREEN + '[OK]   ' + colors.BLUE + ' {:.5f}s '.format(counter.get())).rjust(
+                    41 - len(plugin)
+                )
                 if isinstance(stat, list) and len(stat) > 0 and 'key' in stat[0]:
                     key = 'key={} '.format(stat[0]['key'])
-                    message = colors.ORANGE + key + colors.NO + str(stat)[0:TERMINAL_WIDTH-41-len(key)]
+                    message = colors.ORANGE + key + colors.NO + str(stat)[0 : TERMINAL_WIDTH - 41 - len(key)]
                 else:
-                    message = colors.NO + str(stat)[0:TERMINAL_WIDTH-41]
+                    message = colors.NO + str(stat)[0 : TERMINAL_WIDTH - 41]
             else:
-                result = (colors.RED +
-                          '[ERROR]' +
-                          colors.BLUE +
-                          ' {:.5f}s '.format(counter.get())).rjust(41 - len(plugin))
-                message = colors.NO + str(stat_error)[0:TERMINAL_WIDTH-41]
+                result = (colors.RED + '[ERROR]' + colors.BLUE + ' {:.5f}s '.format(counter.get())).rjust(
+                    41 - len(plugin)
+                )
+                message = colors.NO + str(stat_error)[0 : TERMINAL_WIDTH - 41]
             self.print_issue(plugin, result, message)
 
         # Return True to exit directly (no refresh)
