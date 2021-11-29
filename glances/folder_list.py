@@ -104,7 +104,7 @@ class FolderList(object):
                                                          key + 'refresh',
                                                          default=self.__default_refresh))
             self.timer_folders.append(Timer(value['refresh']))
-            # Thesholds
+            # Thresholds
             for i in ['careful', 'warning', 'critical']:
                 # Read threshold
                 value[i] = self.config.get_value(section, key + i)
@@ -194,17 +194,17 @@ class FolderList(object):
         """Return the monitored list (list of dict)."""
         return self.__folder_list
 
-    def set(self, newlist):
+    def set(self, new_list):
         """Set the monitored list (list of dict)."""
-        self.__folder_list = newlist
+        self.__folder_list = new_list
 
     def getAll(self):
         # Deprecated: use get()
         return self.get()
 
-    def setAll(self, newlist):
+    def setAll(self, new_list):
         # Deprecated: use set()
-        self.set(newlist)
+        self.set(new_list)
 
     def path(self, item):
         """Return the path of the item number (item)."""

@@ -73,8 +73,8 @@ class GlancesSNMPClient(object):
 
         One request per OID list.
 
-        * oid: oid list
-        > Return a dict
+        :param oid: oid list
+        :return: a dict
         """
         if self.version == '3':
             errorIndication, errorStatus, errorIndex, varBinds = self.cmdGen.getCmd(

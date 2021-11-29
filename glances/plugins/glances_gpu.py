@@ -28,7 +28,7 @@ try:
     import py3nvml.py3nvml as pynvml
 except Exception as e:
     import_error_tag = True
-    # Display debu message if import KeyError
+    # Display debug message if import KeyError
     logger.warning("Missing Python Lib ({}), Nvidia GPU plugin is disabled".format(e))
 else:
     import_error_tag = False
@@ -55,7 +55,7 @@ class Plugin(GlancesPlugin):
                                      config=config,
                                      stats_init_value=[])
 
-        # Init the NVidia API
+        # Init the Nvidia API
         self.init_nvidia()
 
         # We want to display the stat in the curse interface
@@ -138,7 +138,7 @@ class Plugin(GlancesPlugin):
         # Call the father's method
         super(Plugin, self).update_views()
 
-        # Add specifics informations
+        # Add specifics information
         # Alert
         for i in self.stats:
             # Init the views for the current GPU
@@ -277,7 +277,7 @@ class Plugin(GlancesPlugin):
 
         for index, device_handle in enumerate(self.device_handles):
             device_stats = dict()
-            # Dictionnary key is the GPU_ID
+            # Dictionary key is the GPU_ID
             device_stats['key'] = self.get_key()
             # GPU id (for multiple GPU, start at 0)
             device_stats['gpu_id'] = index

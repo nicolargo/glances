@@ -78,7 +78,7 @@ def end():
         # ...after starting the server mode (issue #1175)
         pass
 
-    logger.info("Glances stopped (keypressed: CTRL-C)")
+    logger.info("Glances stopped (key pressed: CTRL-C)")
 
     # The end...
     sys.exit(0)
@@ -142,7 +142,7 @@ def main():
     global core
 
     # Create the Glances main instance
-    # Glances options from the command line are readed first (in __init__)
+    # Glances options from the command line are read first (in __init__)
     # then the options from the config file (in parse_args)
     core = GlancesMain()
 

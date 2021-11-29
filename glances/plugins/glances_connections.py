@@ -131,7 +131,7 @@ class Plugin(GlancesPlugin):
         # Call the father's method
         super(Plugin, self).update_views()
 
-        # Add specifics informations
+        # Add specific information
         try:
             # Alert and log
             if self.nf_conntrack_enabled:
