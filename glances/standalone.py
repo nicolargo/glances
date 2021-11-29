@@ -67,7 +67,7 @@ class GlancesStandalone(object):
             logger.debug("Extended stats for top process are enabled")
             glances_processes.enable_extended()
 
-        # Manage optionnal process filter
+        # Manage optional process filter
         if args.process_filter is not None:
             glances_processes.process_filter = args.process_filter
 
@@ -75,7 +75,7 @@ class GlancesStandalone(object):
             # Ignore kernel threads in process list
             glances_processes.disable_kernel_threads()
 
-        # Initial system informations update
+        # Initial system information update
         start_duration.reset()
         self.stats.update()
         logger.debug("First stats update duration: {} seconds".format(start_duration.get()))
@@ -123,7 +123,8 @@ class GlancesStandalone(object):
 
     def serve_issue(self):
         """Special mode for the --issue option
-        Update is done in the sceen.update function
+
+        Update is done in the screen.update function
         """
         ret = not self.screen.update(self.stats)
         self.end()
@@ -132,7 +133,7 @@ class GlancesStandalone(object):
     def __serve_once(self):
         """Main loop for the CLI.
 
-        return True if we should continue (no exit key has been pressed)
+        :return: True if we should continue (no exit key has been pressed)
         """
         # Update stats
         # Start a counter used to compute the time needed
@@ -155,8 +156,7 @@ class GlancesStandalone(object):
         if not self.quiet:
             # The update function return True if an exit key 'q' or 'ESC'
             # has been pressed.
-            ret = not self.screen.update(self.stats,
-                                         duration=adapted_refresh)
+            ret = not self.screen.update(self.stats, duration=adapted_refresh)
         else:
             # Nothing is displayed
             # Break should be done via a signal (CTRL-C)

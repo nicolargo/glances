@@ -179,7 +179,6 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_cpu(self, p, selected, args):
         """Return process CPU curses"""
-        ret = ''
         if key_exist_value_not_none_not_v('cpu_percent', p, ''):
             cpu_layout = self.layout_stat['cpu'] if p['cpu_percent'] < 100 else self.layout_stat['cpu_no_digit']
             if args.disable_irix and self.nb_log_core != 0:
@@ -200,7 +199,6 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_mem(self, p, selected, args):
         """Return process MEM curses"""
-        ret = ''
         if key_exist_value_not_none_not_v('memory_percent', p, ''):
             msg = self.layout_stat['mem'].format(p['memory_percent'])
             alert = self.get_alert(p['memory_percent'],
@@ -216,7 +214,6 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_vms(self, p, selected, args):
         """Return process VMS curses"""
-        ret = ''
         if key_exist_value_not_none_not_v('memory_info', p, ''):
             msg = self.layout_stat['virt'].format(
                 self.auto_unit(p['memory_info'][1], low_precision=False))
@@ -228,7 +225,6 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_rss(self, p, selected, args):
         """Return process RSS curses"""
-        ret = ''
         if key_exist_value_not_none_not_v('memory_info', p, ''):
             msg = self.layout_stat['res'].format(
                 self.auto_unit(p['memory_info'][0], low_precision=False))
@@ -240,7 +236,6 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_username(self, p, selected, args):
         """Return process username curses"""
-        ret = ''
         if 'username' in p:
             # docker internal users are displayed as ints only, therefore str()
             # Correct issue #886 on Windows OS
@@ -253,7 +248,6 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_time(self, p, selected, args):
         """Return process time curses"""
-        ret = ''
         try:
             # Sum user and system time
             user_system_time = p['cpu_times'][0] + p['cpu_times'][1]
@@ -284,7 +278,6 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_thread(self, p, selected, args):
         """Return process thread curses"""
-        ret = ''
         if 'num_threads' in p:
             num_threads = p['num_threads']
             if num_threads is None:
@@ -298,7 +291,6 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_nice(self, p, selected, args):
         """Return process nice curses"""
-        ret = ''
         if 'nice' in p:
             nice = p['nice']
             if nice is None:
@@ -313,7 +305,6 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_status(self, p, selected, args):
         """Return process status curses"""
-        ret = ''
         if 'status' in p:
             status = p['status']
             msg = self.layout_stat['status'].format(status)
@@ -328,7 +319,6 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_io(self, p, selected, args, rorw='ior'):
         """Return process IO Read or Write curses"""
-        ret = ''
         if 'io_counters' in p and \
            p['io_counters'][4] == 1 and \
            p['time_since_update'] != 0:
@@ -364,7 +354,7 @@ class PluginModel(GlancesPluginModel):
         """
         ret = [self.curse_new_line()]
         # When a process is selected:
-        # * display a special caracter at the beginning of the line
+        # * display a special character at the beginning of the line
         # * underline the command name
         if args.is_standalone:
             ret.append(self.curse_add_line('>' if selected else ' ', 'SELECTED'))
@@ -430,7 +420,7 @@ class PluginModel(GlancesPluginModel):
                 msg = self.layout_stat['name'].format(p['name'])
                 ret.append(self.curse_add_line(msg, decoration=process_decoration, splittable=True))
         except (TypeError, UnicodeEncodeError) as e:
-            # Avoid crach after running fine for several hours #1335
+            # Avoid crash after running fine for several hours #1335
             logger.debug("Can not decode command line '{}' ({})".format(cmdline, e))
             ret.append(self.curse_add_line('', splittable=True))
 
@@ -467,7 +457,7 @@ class PluginModel(GlancesPluginModel):
                 ret.append(self.curse_new_line())
                 msg = xpad + 'Open: ' + msg
                 ret.append(self.curse_add_line(msg, splittable=True))
-            # Fouth line is IO nice level (only Linux and Windows OS)
+            # Fourth line is IO nice level (only Linux and Windows OS)
             if 'ionice' in p and \
                p['ionice'] is not None \
                and hasattr(p['ionice'], 'ioclass'):
@@ -589,10 +579,10 @@ class PluginModel(GlancesPluginModel):
         """
         Build the sum message (only when filter is on) and add it to the ret dict.
 
-        * ret: list of string where the message is added
-        * sep_char: define the line separation char
-        * mmm: display min, max, mean or current (if mmm=None)
-        * args: Glances args
+        :param ret: list of string where the message is added
+        :param sep_char: define the line separation char
+        :param mmm: display min, max, mean or current (if mmm=None)
+        :param args: Glances args
         """
         ret.append(self.curse_new_line())
         if mmm is None:
@@ -695,8 +685,8 @@ class PluginModel(GlancesPluginModel):
     def __sum_stats(self, key, indice=None, mmm=None):
         """Return the sum of the stats value for the given key.
 
-        * indice: If indice is set, get the p[key][indice]
-        * mmm: display min, max, mean or current (if mmm=None)
+        :param indice: If indice is set, get the p[key][indice]
+        :param mmm: display min, max, mean or current (if mmm=None)
         """
         # Compute stats summary
         ret = 0
@@ -743,9 +733,9 @@ class PluginModel(GlancesPluginModel):
             ret += str(indice)
         return ret
 
-    def __sort_stats(self, sortedby=None):
-        """Return the stats (dict) sorted by (sortedby)."""
-        return sort_stats(self.stats, sortedby,
+    def __sort_stats(self, sorted_by=None):
+        """Return the stats (dict) sorted by (sorted_by)."""
+        return sort_stats(self.stats, sorted_by,
                           reverse=glances_processes.sort_reverse)
 
     def __max_pid_size(self):

@@ -112,7 +112,7 @@ class PluginModel(GlancesPluginModel):
     def update(self):
         """Update network stats using the input method.
 
-        Stats is a list of dict (one dict per interface)
+        :return: list of stats dict (one dict per interface)
         """
         # Init new stats
         stats = self.get_init_value()
@@ -122,16 +122,16 @@ class PluginModel(GlancesPluginModel):
 
             # Grab network interface stat using the psutil net_io_counter method
             try:
-                netiocounters = psutil.net_io_counters(pernic=True)
+                net_io_counters = psutil.net_io_counters(pernic=True)
             except UnicodeDecodeError as e:
                 logger.debug('Can not get network interface counters ({})'.format(e))
                 return self.stats
 
             # Grab interface's status (issue #765)
             # Grab interface's speed (issue #718)
-            netstatus = {}
+            net_status = {}
             try:
-                netstatus = psutil.net_if_stats()
+                net_status = psutil.net_if_stats()
             except OSError as e:
                 # see psutil #797/glances #1106
                 logger.debug('Can not get network interface status ({})'.format(e))
@@ -140,7 +140,7 @@ class PluginModel(GlancesPluginModel):
             if not hasattr(self, 'network_old'):
                 # First call, we init the network_old var
                 try:
-                    self.network_old = netiocounters
+                    self.network_old = net_io_counters
                 except (IOError, UnboundLocalError):
                     pass
                 return self.stats
@@ -151,11 +151,11 @@ class PluginModel(GlancesPluginModel):
             time_since_update = getTimeSinceLastUpdate('net')
 
             # Loop over interfaces
-            network_new = netiocounters
+            network_new = net_io_counters
             for net in network_new:
                 # Do not take hidden interface into account
                 # or KeyError: 'eth0' when interface is not connected #1348
-                if self.is_hide(net) or net not in netstatus:
+                if self.is_hide(net) or net not in net_status:
                     continue
                 try:
                     cumulative_rx = network_new[net].bytes_recv
@@ -174,10 +174,10 @@ class PluginModel(GlancesPluginModel):
                                'cumulative_cx': cumulative_cx,
                                'cx': cx,
                                # Interface status
-                               'is_up': netstatus[net].isup,
+                               'is_up': net_status[net].isup,
                                # Interface speed in Mbps, convert it to bps
                                # Can be always 0 on some OSes
-                               'speed': netstatus[net].speed * 1048576,
+                               'speed': net_status[net].speed * 1048576,
                                # Set the key for the dict
                                'key': self.get_key()
                                }
@@ -195,17 +195,15 @@ class PluginModel(GlancesPluginModel):
 
             # SNMP bulk command to get all network interface in one shot
             try:
-                netiocounters = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
-                                                    bulk=True)
+                net_io_counters = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name], bulk=True)
             except KeyError:
-                netiocounters = self.get_stats_snmp(snmp_oid=snmp_oid['default'],
-                                                    bulk=True)
+                net_io_counters = self.get_stats_snmp(snmp_oid=snmp_oid['default'], bulk=True)
 
             # Previous network interface stats are stored in the network_old variable
             if not hasattr(self, 'network_old'):
                 # First call, we init the network_old var
                 try:
-                    self.network_old = netiocounters
+                    self.network_old = net_io_counters
                 except (IOError, UnboundLocalError):
                     pass
             else:
@@ -213,7 +211,7 @@ class PluginModel(GlancesPluginModel):
                 time_since_update = getTimeSinceLastUpdate('net')
 
                 # Loop over interfaces
-                network_new = netiocounters
+                network_new = net_io_counters
 
                 for net in network_new:
                     # Do not take hidden interface into account
@@ -269,17 +267,17 @@ class PluginModel(GlancesPluginModel):
         # Check if the stats should be hidden
         self.update_views_hidden()
 
-        # Add specifics informations
+        # Add specifics information
         # Alert
         for i in self.get_raw():
-            ifrealname = i['interface_name'].split(':')[0]
+            if_real_name = i['interface_name'].split(':')[0]
             # Convert rate in bps (to be able to compare to interface speed)
             bps_rx = int(i['rx'] // i['time_since_update'] * 8)
             bps_tx = int(i['tx'] // i['time_since_update'] * 8)
 
-            # Decorate the bitrate with the configuration file thresolds
-            alert_rx = self.get_alert(bps_rx, header=ifrealname + '_rx')
-            alert_tx = self.get_alert(bps_tx, header=ifrealname + '_tx')
+            # Decorate the bitrate with the configuration file thresholds
+            alert_rx = self.get_alert(bps_rx, header=if_real_name + '_rx')
+            alert_tx = self.get_alert(bps_tx, header=if_real_name + '_tx')
             # If nothing is define in the configuration file...
             # ... then use the interface speed (not available on all systems)
             if alert_rx == 'DEFAULT' and 'speed' in i and i['speed'] != 0:
@@ -343,12 +341,12 @@ class PluginModel(GlancesPluginModel):
             # Format stats
             # Is there an alias for the interface name ?
             if i['alias'] is None:
-                ifname = i['interface_name'].split(':')[0]
+                if_name = i['interface_name'].split(':')[0]
             else:
-                ifname = i['alias']
-            if len(ifname) > name_max_width:
+                if_name = i['alias']
+            if len(if_name) > name_max_width:
                 # Cut interface name if it is too long
-                ifname = '_' + ifname[-name_max_width + 1:]
+                if_name = '_' + if_name[-name_max_width + 1:]
 
             if args.byte:
                 # Bytes per second (for dummy)
@@ -372,7 +370,7 @@ class PluginModel(GlancesPluginModel):
 
             # New line
             ret.append(self.curse_new_line())
-            msg = '{:{width}}'.format(ifname, width=name_max_width)
+            msg = '{:{width}}'.format(if_name, width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if args.network_sum:
                 msg = '{:>14}'.format(sx)

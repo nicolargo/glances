@@ -36,11 +36,11 @@ except ImportError as e:
 else:
     import_error_tag = False
 
-# List of online services to retreive public IP address
+# List of online services to retrieve public IP address
 # List of tuple (url, json, key)
 # - url: URL of the Web site
 # - json: service return a JSON (True) or string (False)
-# - key: key of the IP addresse in the JSON structure
+# - key: key of the IP address in the JSON structure
 urls = [('https://ip.42.pl/raw', False, None),
         ('https://httpbin.org/ip', True, 'origin'),
         ('https://jsonip.com', True, 'ip'),
@@ -69,7 +69,7 @@ class PluginModel(GlancesPluginModel):
     def update(self):
         """Update IP stats using the input method.
 
-        Stats is dict
+        :return: the stats dict
         """
         # Init new stats
         stats = self.get_init_value()
@@ -103,7 +103,7 @@ class PluginModel(GlancesPluginModel):
         # Call the father's method
         super(PluginModel, self).update_views()
 
-        # Add specifics informations
+        # Add specifics information
         # Optional
         for key in iterkeys(self.stats):
             self.views[key]['optional'] = True

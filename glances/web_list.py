@@ -59,7 +59,7 @@ class GlancesWebList(object):
                 new_web = {}
                 postfix = 'web_%s_' % str(i)
 
-                # Read mandatories configuration key: host
+                # Read mandatory configuration key: host
                 new_web['url'] = config.get_value(self._section, '%s%s' % (postfix, 'url'))
                 if new_web['url'] is None:
                     continue

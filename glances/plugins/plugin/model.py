@@ -78,7 +78,7 @@ class GlancesPluginModel(object):
         A plugin should implement:
         - the reset method: to set your self.stats variable to {} or []
         - the update method: where your self.stats variable is set
-        and optionnaly:
+        and optionally:
         - the get_key method: set the key of the dict (only for list of dict)
         - all others methods you want to overwrite
 
@@ -96,7 +96,7 @@ class GlancesPluginModel(object):
         # Init the args
         self.args = args
 
-        # Init the default alignement (for curses)
+        # Init the default alignment (for curses)
         self._align = 'left'
 
         # Init the input method
@@ -107,7 +107,7 @@ class GlancesPluginModel(object):
         self.items_history_list = items_history_list
         self.stats_history = self.init_stats_history()
 
-        # Init the limits (configuration keys) dictionnary
+        # Init the limits (configuration keys) dictionary
         self._limits = dict()
         if config is not None:
             logger.debug('Load section {} in {}'.format(self.plugin_name,
@@ -151,7 +151,7 @@ class GlancesPluginModel(object):
     def reset(self):
         """Reset the stats.
 
-        This method should be overwrited by childs' classes.
+        This method should be overwritten by child classes.
         """
         self.stats = self.get_init_value()
 
@@ -218,8 +218,7 @@ class GlancesPluginModel(object):
             for i in self.get_items_history_list():
                 if isinstance(self.get_export(), list):
                     # Stats is a list of data
-                    # Iter throught it (for exemple, iter throught network
-                    # interface)
+                    # Iter through it (for example, iter through network interface)
                     for l_export in self.get_export():
                         self.stats_history.add(
                             nativestr(l_export[item_name]) + '_' + nativestr(i['name']),
@@ -340,7 +339,7 @@ class GlancesPluginModel(object):
                 re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key])
             )))
         except TypeError:
-            # Correect "Starting an alias with a number causes a crash #1885"
+            # Correct "Starting an alias with a number causes a crash #1885"
             return sorted(self.stats, key=lambda stat: tuple(map(
                 lambda part: part.lower(),
                 re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key])
@@ -365,7 +364,7 @@ class GlancesPluginModel(object):
         from glances.snmp import GlancesSNMPClient
 
         # Init the SNMP request
-        clientsnmp = GlancesSNMPClient(host=self.args.client,
+        snmp_client = GlancesSNMPClient(host=self.args.client,
                                        port=self.args.snmp_port,
                                        version=self.args.snmp_version,
                                        community=self.args.snmp_community)
@@ -374,12 +373,12 @@ class GlancesPluginModel(object):
         ret = {}
         if bulk:
             # Bulk request
-            snmpresult = clientsnmp.getbulk_by_oid(0, 10, itervalues(*snmp_oid))
+            snmp_result = snmp_client.getbulk_by_oid(0, 10, itervalues(*snmp_oid))
 
             if len(snmp_oid) == 1:
                 # Bulk command for only one OID
                 # Note: key is the item indexed but the OID result
-                for item in snmpresult:
+                for item in snmp_result:
                     if iterkeys(item)[0].startswith(itervalues(snmp_oid)[0]):
                         ret[iterkeys(snmp_oid)[0] + iterkeys(item)
                             [0].split(itervalues(snmp_oid)[0])[1]] = itervalues(item)[0]
@@ -387,7 +386,7 @@ class GlancesPluginModel(object):
                 # Build the internal dict with the SNMP result
                 # Note: key is the first item in the snmp_oid
                 index = 1
-                for item in snmpresult:
+                for item in snmp_result:
                     item_stats = {}
                     item_key = None
                     for key in iterkeys(snmp_oid):
@@ -402,11 +401,11 @@ class GlancesPluginModel(object):
                     index += 1
         else:
             # Simple get request
-            snmpresult = clientsnmp.get_by_oid(itervalues(*snmp_oid))
+            snmp_result = snmp_client.get_by_oid(itervalues(*snmp_oid))
 
             # Build the internal dict with the SNMP result
             for key in iterkeys(snmp_oid):
-                ret[key] = snmpresult[snmp_oid[key]]
+                ret[key] = snmp_result[snmp_oid[key]]
 
         return ret
 
@@ -463,7 +462,9 @@ class GlancesPluginModel(object):
                 return None
 
     def update_views_hidden(self):
-        """If the self.hide_zero is set then update the hidden field of the view
+        """Update the hidden views
+
+        If the self.hide_zero is set then update the hidden field of the view
         It will check if all fields values are already be different from 0
         In this case, the hidden field is set to True
 
@@ -494,7 +495,6 @@ class GlancesPluginModel(object):
             #
             # Warning: This code has never been tested because
             # no plugin with dict instance use the hidden function...
-            #                       vvvv
             #
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for key in listkeys(self.get_raw()):
@@ -726,7 +726,7 @@ class GlancesPluginModel(object):
         log_str = ""
         if self.get_limit_log(stat_name=stat_name, default_action=log):
             # Add _LOG to the return string
-            # So stats will be highlited with a specific color
+            # So stats will be highlighted with a specific color
             log_str = "_LOG"
             # Add the log to the list
             glances_events.add(ret, stat_name.upper(), value)
@@ -746,11 +746,7 @@ class GlancesPluginModel(object):
         """Manage the threshold for the current stat."""
         glances_thresholds.add(stat_name, trigger)
 
-    def manage_action(self,
-                      stat_name,
-                      trigger,
-                      header,
-                      action_key):
+    def manage_action(self, stat_name, trigger, header, action_key):
         """Manage the action for the current stat."""
         # Here is a command line for the current trigger ?
         try:
@@ -765,9 +761,9 @@ class GlancesPluginModel(object):
                 action_key = header
 
             # A command line is available for the current alert
-            # 1) Build the {{mustache}} dictionnary
+            # 1) Build the {{mustache}} dictionary
             if isinstance(self.get_stats_action(), list):
-                # If the stats are stored in a list of dict (fs plugin for exemple)
+                # If the stats are stored in a list of dict (fs plugin for example)
                 # Return the dict for the current header
                 mustache_dict = {}
                 for item in self.get_stats_action():
@@ -796,42 +792,42 @@ class GlancesPluginModel(object):
                               action_key=action_key,
                               log=True)
 
-    def is_limit(self, criticity, stat_name=""):
-        """Return true if the criticity limit exist for the given stat_name"""
+    def is_limit(self, criticality, stat_name=""):
+        """Return true if the criticality limit exist for the given stat_name"""
         if stat_name == "":
-            return self.plugin_name + '_' + criticity in self._limits
+            return self.plugin_name + '_' + criticality in self._limits
         else:
-            return stat_name + '_' + criticity in self._limits
+            return stat_name + '_' + criticality in self._limits
 
-    def get_limit(self, criticity, stat_name=""):
+    def get_limit(self, criticality, stat_name=""):
         """Return the limit value for the alert."""
         # Get the limit for stat + header
-        # Exemple: network_wlan0_rx_careful
+        # Example: network_wlan0_rx_careful
         try:
-            limit = self._limits[stat_name + '_' + criticity]
+            limit = self._limits[stat_name + '_' + criticality]
         except KeyError:
             # Try fallback to plugin default limit
-            # Exemple: network_careful
-            limit = self._limits[self.plugin_name + '_' + criticity]
+            # Example: network_careful
+            limit = self._limits[self.plugin_name + '_' + criticality]
 
-        # logger.debug("{} {} value is {}".format(stat_name, criticity, limit))
+        # logger.debug("{} {} value is {}".format(stat_name, criticality, limit))
 
         # Return the limiter
         return limit
 
-    def get_limit_action(self, criticity, stat_name=""):
+    def get_limit_action(self, criticality, stat_name=""):
         """Return the tuple (action, repeat) for the alert.
 
         - action is a command line
         - repeat is a bool
         """
         # Get the action for stat + header
-        # Exemple: network_wlan0_rx_careful_action
+        # Example: network_wlan0_rx_careful_action
         # Action key available ?
-        ret = [(stat_name + '_' + criticity + '_action', False),
-               (stat_name + '_' + criticity + '_action_repeat', True),
-               (self.plugin_name + '_' + criticity + '_action', False),
-               (self.plugin_name + '_' + criticity + '_action_repeat', True)]
+        ret = [(stat_name + '_' + criticality + '_action', False),
+               (stat_name + '_' + criticality + '_action_repeat', True),
+               (self.plugin_name + '_' + criticality + '_action', False),
+               (self.plugin_name + '_' + criticality + '_action_repeat', True)]
         for r in ret:
             if r[0] in self._limits:
                 return self._limits[r[0]], r[1]
@@ -842,16 +838,16 @@ class GlancesPluginModel(object):
     def get_limit_log(self, stat_name, default_action=False):
         """Return the log tag for the alert."""
         # Get the log tag for stat + header
-        # Exemple: network_wlan0_rx_log
+        # Example: network_wlan0_rx_log
         try:
             log_tag = self._limits[stat_name + '_log']
         except KeyError:
             # Try fallback to plugin default log
-            # Exemple: network_log
+            # Example: network_log
             try:
                 log_tag = self._limits[self.plugin_name + '_log']
             except KeyError:
-                # By defaukt, log are disabled
+                # By default, log are disabled
                 return default_action
 
         # Return the action list
@@ -877,10 +873,11 @@ class GlancesPluginModel(object):
 
     def is_show(self, value, header=""):
         """Return True if the value is in the show configuration list.
+
         If the show value is empty, return True (show by default)
 
         The show configuration list is defined in the glances.conf file.
-        It is a comma separed list of regexp.
+        It is a comma separated list of regexp.
         Example for diskio:
         show=sda.*
         """
@@ -894,7 +891,7 @@ class GlancesPluginModel(object):
         """Return True if the value is in the hide configuration list.
 
         The hide configuration list is defined in the glances.conf file.
-        It is a comma separed list of regexp.
+        It is a comma separated list of regexp.
         Example for diskio:
         hide=sda2,sda5,loop.*
         """
@@ -902,7 +899,7 @@ class GlancesPluginModel(object):
         return any(j for j in [re.match(i, value) for i in self.get_conf_value('hide', header=header)])
 
     def has_alias(self, header):
-        """Return the alias name for the relative header or None if nonexist."""
+        """Return the alias name for the relative header it it exists otherwise None."""
         try:
             # Force to lower case (issue #1126)
             return self._limits[self.plugin_name + '_' + header.lower() + '_' + 'alias'][0]
@@ -961,13 +958,13 @@ class GlancesPluginModel(object):
                 OK_LOG: Value is OK and logged
                 CAREFUL: Value is CAREFUL and non logged
                 CAREFUL_LOG: Value is CAREFUL and logged
-                WARNING: Value is WARINING and non logged
-                WARNING_LOG: Value is WARINING and logged
+                WARNING: Value is WARNING and non logged
+                WARNING_LOG: Value is WARNING and logged
                 CRITICAL: Value is CRITICAL and non logged
                 CRITICAL_LOG: Value is CRITICAL and logged
             optional: True if the stat is optional (display only if space is available)
             additional: True if the stat is additional (display only if space is available after optional)
-            spittable: Line can be splitted to fit on the screen (default is not)
+            spittable: Line can be split to fit on the screen (default is not)
         """
         return {'msg': msg,
                 'decoration': decoration,
@@ -1096,7 +1093,7 @@ class GlancesPluginModel(object):
 
         :low_precision: returns less decimal places potentially (default is False)
                         sacrificing precision for more readability.
-        :min_symbol: Do not approache if number < min_symbol (default is K)
+        :min_symbol: Do not approach if number < min_symbol (default is K)
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         if min_symbol in symbols:
@@ -1147,6 +1144,7 @@ class GlancesPluginModel(object):
 
     def _check_decorator(fct):
         """Check decorator for update method.
+
         It checks:
         - if the plugin is enabled.
         - if the refresh_timer is finished
@@ -1180,6 +1178,6 @@ class GlancesPluginModel(object):
             return ret
         return wrapper
 
-    # Mandatory to call the decorator in childs' classes
+    # Mandatory to call the decorator in child classes
     _check_decorator = staticmethod(_check_decorator)
     _log_result_decorator = staticmethod(_log_result_decorator)

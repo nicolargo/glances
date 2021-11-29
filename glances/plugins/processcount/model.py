@@ -75,10 +75,10 @@ class PluginModel(GlancesPluginModel):
             glances_processes.update()
 
             # Return the processes count
-            stats = glances_processes.getcount()
+            stats = glances_processes.get_count()
         elif self.input_method == 'snmp':
             # Update stats using SNMP
-            # Not avalaible
+            # Not availaible
             pass
 
         # Update the stats

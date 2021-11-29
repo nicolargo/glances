@@ -36,7 +36,7 @@ import psutil
 # The OIDs are as follows (for the first disk)
 # Path where the disk is mounted: .1.3.6.1.4.1.2021.9.1.2.1
 # Path of the device for the partition: .1.3.6.1.4.1.2021.9.1.3.1
-# Total size of the disk/partion (kBytes): .1.3.6.1.4.1.2021.9.1.6.1
+# Total size of the disk/partition (kBytes): .1.3.6.1.4.1.2021.9.1.6.1
 # Available space on the disk: .1.3.6.1.4.1.2021.9.1.7.1
 # Used space on the disk: .1.3.6.1.4.1.2021.9.1.8.1
 # Percentage of space used on disk: .1.3.6.1.4.1.2021.9.1.9.1
@@ -102,10 +102,10 @@ class PluginModel(GlancesPluginModel):
             except (UnicodeDecodeError, PermissionError):
                 return self.stats
 
-            # Optionnal hack to allow logicals mounts points (issue #448)
-            for fstype in self.get_conf_value('allow'):
+            # Optional hack to allow logical mounts points (issue #448)
+            for fs_type in self.get_conf_value('allow'):
                 try:
-                    fs_stat += [f for f in psutil.disk_partitions(all=True) if f.fstype.find(fstype) >= 0]
+                    fs_stat += [f for f in psutil.disk_partitions(all=True) if f.fstype.find(fs_type) >= 0]
                 except UnicodeDecodeError:
                     return self.stats
 
@@ -193,7 +193,7 @@ class PluginModel(GlancesPluginModel):
         # Call the father's method
         super(PluginModel, self).update_views()
 
-        # Add specifics informations
+        # Add specifics information
         # Alert
         for i in self.stats:
             self.views[i[self.get_key()]]['used']['decoration'] = self.get_alert(

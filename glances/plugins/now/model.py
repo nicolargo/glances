@@ -57,7 +57,7 @@ class PluginModel(GlancesPluginModel):
         if self.strftime:
             self.stats = strftime(self.strftime)
         else:
-            if (len(tzname[1]) > 6):
+            if len(tzname[1]) > 6:
                 self.stats = strftime('%Y-%m-%d %H:%M:%S %z')
             else:
                 self.stats = strftime('%Y-%m-%d %H:%M:%S %Z')

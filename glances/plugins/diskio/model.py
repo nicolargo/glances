@@ -136,7 +136,7 @@ class PluginModel(GlancesPluginModel):
                 # Add the dict key
                 diskstat['key'] = self.get_key()
 
-                # Ad dthe current disk stat to the list
+                # Add the current disk stat to the list
                 stats.append(diskstat)
 
             # Save stats to compute next bitrate
@@ -162,7 +162,7 @@ class PluginModel(GlancesPluginModel):
         # Check if the stats should be hidden
         self.update_views_hidden()
 
-        # Add specifics informations
+        # Add specifics information
         # Alert
         for i in self.get_raw():
             disk_real_name = i['disk_name']

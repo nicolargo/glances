@@ -104,8 +104,7 @@ class PluginModel(GlancesPluginModel):
                 # percent: the percentage usage
                 # sin: the number of bytes the system has swapped in from disk (cumulative)
                 # sout: the number of bytes the system has swapped out from disk (cumulative)
-                for swap in ['total', 'used', 'free', 'percent',
-                             'sin', 'sout']:
+                for swap in ['total', 'used', 'free', 'percent', 'sin', 'sout']:
                     if hasattr(sm_stats, swap):
                         stats[swap] = getattr(sm_stats, swap)
 
@@ -129,12 +128,9 @@ class PluginModel(GlancesPluginModel):
                         # thus to run more programs by swapping unused memory
                         # zone (page) to a disk file.
                         if fs == 'Virtual Memory':
-                            stats['total'] = int(
-                                fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
-                            stats['used'] = int(
-                                fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
-                            stats['percent'] = float(
-                                stats['used'] * 100 / stats['total'])
+                            stats['total'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
+                            stats['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
+                            stats['percent'] = float(stats['used'] * 100 / stats['total'])
                             stats['free'] = stats['total'] - stats['used']
                             break
             else:
@@ -166,7 +162,7 @@ class PluginModel(GlancesPluginModel):
         # Call the father's method
         super(PluginModel, self).update_views()
 
-        # Add specifics informations
+        # Add specifics information
         # Alert and log
         if 'used' in self.stats and 'total' in self.stats and 'percent' in self.stats:
             self.views['percent']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])

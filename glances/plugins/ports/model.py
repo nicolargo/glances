@@ -304,7 +304,7 @@ class ThreadScanner(threading.Thread):
         ret = None
 
         # Create the ping command
-        # Use the system ping command because it already have the steacky bit set
+        # Use the system ping command because it already have the sticky bit set
         # Python can not create ICMP packet with non root right
         if WINDOWS:
             timeout_opt = '-w'
@@ -332,7 +332,7 @@ class ThreadScanner(threading.Thread):
             else:
                 port['status'] = False
         except subprocess.CalledProcessError:
-            # Correct issue #1084: No Offline status for timeouted ports
+            # Correct issue #1084: No Offline status for timed-out ports
             port['status'] = False
         except Exception as e:
             logger.debug("{}: Error while pinging host {} ({})".format(self.plugin_name, port['host'], e))

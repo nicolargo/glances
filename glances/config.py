@@ -121,7 +121,7 @@ class Config(object):
         self.config_filename = 'glances.conf'
         self._loaded_config_file = None
 
-        # Re patern for optimize research of `foo`
+        # Re pattern for optimize research of `foo`
         self.re_pattern = re.compile(r'(\`.+?\`)')
 
         try:

@@ -24,9 +24,6 @@ from glances.plugins.plugin.model import GlancesPluginModel
 import psutil
 
 # Fields description
-
-            # - phys: physical cores only (hyper thread CPUs are excluded)
-            # - log: logical CPUs in the system
 fields_description = {
     'phys': {'description': 'Number of physical cores (hyper thread CPUs are excluded).',
              'unit': 'number'},
@@ -72,7 +69,7 @@ class PluginModel(GlancesPluginModel):
             # Return a dict with:
             # - phys: physical cores only (hyper thread CPUs are excluded)
             # - log: logical CPUs in the system
-            # Return None if undefine
+            # Return None if undefined
             try:
                 stats["phys"] = psutil.cpu_count(logical=False)
                 stats["log"] = psutil.cpu_count()

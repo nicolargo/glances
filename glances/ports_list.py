@@ -63,7 +63,7 @@ class GlancesPortsList(object):
             refresh = int(config.get_value(self._section, 'refresh', default=self._default_refresh))
             timeout = int(config.get_value(self._section, 'timeout', default=self._default_timeout))
 
-            # Add default gateway on top of the ports_list lits
+            # Add default gateway on top of the ports_list lists
             default_gateway = config.get_value(self._section, 'port_default_gateway', default='False')
             if default_gateway.lower().startswith('true') and netifaces_tag:
                 new_port = {}
@@ -87,7 +87,7 @@ class GlancesPortsList(object):
                 new_port = {}
                 postfix = 'port_%s_' % str(i)
 
-                # Read mandatories configuration key: host
+                # Read mandatory configuration key: host
                 new_port['host'] = config.get_value(self._section, '%s%s' % (postfix, 'host'))
 
                 if new_port['host'] is None:
