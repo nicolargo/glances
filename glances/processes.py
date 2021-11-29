@@ -162,7 +162,7 @@ class GlancesProcesses(object):
 
         From `man 5 proc`:
         The default value for this file, 32768, results in the same range of
-        PIDs as on earlier kernels. On 32-bit platfroms, 32768 is the maximum
+        PIDs as on earlier kernels. On 32-bit platforms, 32768 is the maximum
         value for pid_max. On 64-bit systems, pid_max can be set to any value
         up to 2^22 (PID_MAX_LIMIT, approximately 4 million).
 
@@ -271,19 +271,17 @@ class GlancesProcesses(object):
 
         # Grab standard stats
         #####################
-        sorted_attrs = ['cpu_percent', 'cpu_times',
-                          'memory_percent', 'name',
-                          'status', 'status', 'num_threads']
+        sorted_attrs = ['cpu_percent', 'cpu_times', 'memory_percent', 'name', 'status', 'status', 'num_threads']
         displayed_attr = ['memory_info', 'nice', 'pid', 'ppid']
         cached_attrs = ['cmdline', 'username']
 
-        # Some stats are optionals
+        # Some stats are optional
         if not self.disable_io_counters:
             sorted_attrs.append('io_counters')
         if not self.disable_gids:
             displayed_attr.append('gids')
         # Some stats are not sort key
-        # An optimisation can be done be only grabed displayed_attr
+        # An optimisation can be done be only grabbed displayed_attr
         # for displayed processes (but only in standalone mode...)
         sorted_attrs.extend(displayed_attr)
         # Some stats are cached (not necessary to be refreshed every time)
@@ -307,9 +305,7 @@ class GlancesProcesses(object):
                             not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0)]
 
         # Sort the processes list by the current sort_key
-        self.processlist = sort_stats(self.processlist,
-                                      sortedby=self.sort_key,
-                                      reverse=True)
+        self.processlist = sort_stats(self.processlist, sorted_by=self.sort_key, reverse=True)
 
         # Update the processcount
         self.update_processcount(self.processlist)
@@ -385,8 +381,7 @@ class GlancesProcesses(object):
             # If io_tag = 0 > Access denied or first time (display "?")
             # If io_tag = 1 > No access denied (display the IO rate)
             if 'io_counters' in proc and proc['io_counters'] is not None:
-                io_new = [proc['io_counters'].read_bytes,
-                          proc['io_counters'].write_bytes]
+                io_new = [proc['io_counters'].read_bytes, proc['io_counters'].write_bytes]
                 # For IO rate computation
                 # Append saved IO r/w bytes
                 try:
@@ -409,7 +404,7 @@ class GlancesProcesses(object):
                 if proc['pid'] not in self.processlist_cache:
                     try:
                         self.processlist_cache[proc['pid']]= psutil.Process(pid=proc['pid']).as_dict(attrs=cached_attrs,
-                                                                                                    ad_value=None)
+                                                                                                     ad_value=None)
                     except psutil.NoSuchProcess:
                         pass
                 # Add cached value to current stat
@@ -425,17 +420,17 @@ class GlancesProcesses(object):
         self.processlist = [p for p in self.processlist if not (self._filter.is_filtered(p))]
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
-        # Usefull to highlight the processes with maximum values
+        # Useful to highlight the processes with maximum values
         for k in self._max_values_list:
             values_list = [i[k] for i in self.processlist if i[k] is not None]
-            if values_list != []:
+            if values_list:
                 self.set_max_values(k, max(values_list))
 
-    def getcount(self):
+    def get_count(self):
         """Get the number of processes."""
         return self.processcount
 
-    def getlist(self, sortedby=None):
+    def getlist(self, sorted_by=None):
         """Get the processlist."""
         return self.processlist
 
@@ -468,50 +463,54 @@ def weighted(value):
 
 
 def _sort_io_counters(process,
-                      sortedby='io_counters',
-                      sortedby_secondary='memory_percent'):
+                      sorted_by='io_counters',
+                      sorted_by_secondary='memory_percent'):
     """Specific case for io_counters
-    Sum of io_r + io_w"""
-    return process[sortedby][0] - process[sortedby][2] + process[sortedby][1] - process[sortedby][3]
+
+    :return: Sum of io_r + io_w
+    """
+    return process[sorted_by][0] - process[sorted_by][2] + process[sorted_by][1] - process[sorted_by][3]
 
 
 def _sort_cpu_times(process,
-                    sortedby='cpu_times',
-                    sortedby_secondary='memory_percent'):
+                    sorted_by='cpu_times',
+                    sorted_by_secondary='memory_percent'):
     """ Specific case for cpu_times
+
     Patch for "Sorting by process time works not as expected #1321"
     By default PsUtil only takes user time into account
     see (https://github.com/giampaolo/psutil/issues/1339)
-    The following implementation takes user and system time into account"""
-    return process[sortedby][0] + process[sortedby][1]
+    The following implementation takes user and system time into account
+    """
+    return process[sorted_by][0] + process[sorted_by][1]
 
 
-def _sort_lambda(sortedby='cpu_percent',
-                 sortedby_secondary='memory_percent'):
-    """Return a sort lambda function for the sortedbykey"""
+def _sort_lambda(sorted_by='cpu_percent',
+                 sorted_by_secondary='memory_percent'):
+    """Return a sort lambda function for the sorted_by key"""
     ret = None
-    if sortedby == 'io_counters':
+    if sorted_by == 'io_counters':
         ret = _sort_io_counters
-    elif sortedby == 'cpu_times':
+    elif sorted_by == 'cpu_times':
         ret = _sort_cpu_times
     return ret
 
 
 def sort_stats(stats,
-               sortedby='cpu_percent',
-               sortedby_secondary='memory_percent',
+               sorted_by='cpu_percent',
+               sorted_by_secondary='memory_percent',
                reverse=True):
-    """Return the stats (dict) sorted by (sortedby).
+    """Return the stats (dict) sorted by (sorted_by).
 
     Reverse the sort if reverse is True.
     """
-    if sortedby is None and sortedby_secondary is None:
+    if sorted_by is None and sorted_by_secondary is None:
         # No need to sort...
         return stats
 
     # Check if a specific sort should be done
-    sort_lambda = _sort_lambda(sortedby=sortedby,
-                               sortedby_secondary=sortedby_secondary)
+    sort_lambda = _sort_lambda(sorted_by=sorted_by,
+                               sorted_by_secondary=sorted_by_secondary)
 
     if sort_lambda is not None:
         # Specific sort
@@ -520,13 +519,13 @@ def sort_stats(stats,
         except Exception:
             # If an error is detected, fallback to cpu_percent
             stats.sort(key=lambda process: (weighted(process['cpu_percent']),
-                                            weighted(process[sortedby_secondary])),
+                                            weighted(process[sorted_by_secondary])),
                        reverse=reverse)
     else:
         # Standard sort
         try:
-            stats.sort(key=lambda process: (weighted(process[sortedby]),
-                                            weighted(process[sortedby_secondary])),
+            stats.sort(key=lambda process: (weighted(process[sorted_by]),
+                                            weighted(process[sorted_by_secondary])),
                        reverse=reverse)
         except (KeyError, TypeError):
             # Fallback to name

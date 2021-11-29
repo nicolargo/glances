@@ -37,7 +37,7 @@ class GlancesWebServer(object):
             # Ignore kernel threads in process list
             glances_processes.disable_kernel_threads()
 
-        # Initial system informations update
+        # Initial system information update
         self.stats.update()
 
         # Init the Bottle Web server

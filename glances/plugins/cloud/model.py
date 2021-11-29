@@ -34,7 +34,7 @@ try:
     import requests
 except ImportError as e:
     import_error_tag = True
-    # Display debu message if import KeyError
+    # Display debug message if import error
     logger.warning("Missing Python Lib ({}), Cloud plugin is disabled".format(e))
 else:
     import_error_tag = False
@@ -43,7 +43,7 @@ else:
 class PluginModel(GlancesPluginModel):
     """Glances' cloud plugin.
 
-    The goal of this plugin is to retreive additional information
+    The goal of this plugin is to retrieve additional information
     concerning the datacenter where the host is connected.
 
     See https://github.com/nicolargo/glances/issues/1029
@@ -61,7 +61,7 @@ class PluginModel(GlancesPluginModel):
         # Init the stats
         self.reset()
 
-        # Init thread to grab OpenStack stats asynchroniously
+        # Init thread to grab OpenStack stats asynchronously
         self.OPENSTACK = ThreadOpenStack()
 
         # Run the thread

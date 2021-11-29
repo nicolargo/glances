@@ -86,6 +86,7 @@ class Outdated(object):
 
     def get_pypi_version(self):
         """Wrapper to get the latest PyPI version (async)
+
         The data are stored in a cached file
         Only update online once a week
         """

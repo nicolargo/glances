@@ -267,7 +267,7 @@ Examples of use:
 
         # Load the configuration file, if it exists
         # This function should be called after the parse_args
-        # because the configration file path can be defined
+        # because the configuration file path can be defined
         self.config = Config(args.conf_file)
 
         # Debug mode

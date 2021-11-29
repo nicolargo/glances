@@ -116,8 +116,9 @@ class GlancesAutoDiscoverListener(object):
     def add_service(self, zeroconf, srv_type, srv_name):
         """Method called when a new Zeroconf client is detected.
 
-        Return True if the zeroconf client is a Glances server
         Note: the return code will never be used
+
+        :return: True if the zeroconf client is a Glances server
         """
         if srv_type != zeroconf_type:
             return False
@@ -226,9 +227,9 @@ class GlancesAutoDiscoverClient(object):
                 # address (only one address) is replaced by addresses (list of addresses)
                 self.info = ServiceInfo(
                     zeroconf_type,
-                    name = '{}:{}.{}'.format(hostname,
-                                             args.port,
-                                             zeroconf_type),
+                    name='{}:{}.{}'.format(hostname,
+                                           args.port,
+                                           zeroconf_type),
                     addresses=[socket.inet_pton(address_family, zeroconf_bind_address)],
                     port=args.port,
                     weight=0,

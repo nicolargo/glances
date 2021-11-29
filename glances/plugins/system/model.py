@@ -100,7 +100,7 @@ class PluginModel(GlancesPluginModel):
     def update(self):
         """Update the host/system info using the input method.
 
-        Return the stats (dict)
+        :return: the stats dict
         """
         # Init new stats
         stats = self.get_init_value()
@@ -150,7 +150,7 @@ class PluginModel(GlancesPluginModel):
                     snmp_oid=snmp_oid[self.short_system_name])
             except KeyError:
                 stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
-            # Default behavor: display all the information
+            # Default behavior: display all the information
             stats['os_name'] = stats['system_name']
             # Windows OS tips
             if self.short_system_name == 'windows':

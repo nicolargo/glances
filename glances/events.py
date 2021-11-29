@@ -125,7 +125,7 @@ class GlancesEvents(object):
                       proc_list, proc_desc, peak_time):
         """Add a new item in the log list.
 
-        Item is added only if the criticity (event_state) is WARNING or CRITICAL.
+        Item is added only if the criticality (event_state) is WARNING or CRITICAL.
         """
         if event_state == "WARNING" or event_state == "CRITICAL":
             # Define the automatic process sort key
@@ -146,7 +146,7 @@ class GlancesEvents(object):
                 1,  # COUNT
                 [],  # TOP 3 PROCESS LIST
                 proc_desc,  # MONITORED PROCESSES DESC
-                glances_processes.sort_key]  # TOP PROCESS SORTKEY
+                glances_processes.sort_key]  # TOP PROCESS SORT KEY
 
             # Add the item to the list
             self.events_list.insert(0, item)
@@ -167,10 +167,10 @@ class GlancesEvents(object):
             self.reset_process_sort()
 
             # Set the end of the events
-            endtime = time.mktime(datetime.now().timetuple())
-            if endtime - self.events_list[event_index][0] > peak_time:
+            end_time = time.mktime(datetime.now().timetuple())
+            if end_time - self.events_list[event_index][0] > peak_time:
                 # If event is > peak_time seconds
-                self.events_list[event_index][1] = endtime
+                self.events_list[event_index][1] = end_time
             else:
                 # If event <= peak_time seconds, ignore
                 self.events_list.remove(self.events_list[event_index])
@@ -196,7 +196,7 @@ class GlancesEvents(object):
             # TOP PROCESS LIST (only for CRITICAL ALERT)
             if event_state == "CRITICAL":
                 events_sort_key = self.get_event_sort_key(event_type)
-                # Sort the current process list to retreive the TOP 3 processes
+                # Sort the current process list to retrieve the TOP 3 processes
                 self.events_list[event_index][9] = sort_stats(proc_list,
                                                               events_sort_key)[0:3]
                 self.events_list[event_index][11] = events_sort_key

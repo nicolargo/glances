@@ -56,7 +56,7 @@ class GlancesClientBrowser(object):
         self.screen = GlancesCursesBrowser(args=self.args)
 
     def load(self):
-        """Load server and password list from the confiuration file."""
+        """Load server and password list from the configuration file."""
         # Init the static server list (if defined)
         self.static_server = GlancesStaticServer(config=self.config)
 
@@ -92,9 +92,7 @@ class GlancesClientBrowser(object):
             return 'http://{}:{}'.format(server['ip'], server['port'])
 
     def __update_stats(self, server):
-        """
-        Update stats for the given server (picked from the server list)
-        """
+        """Update stats for the given server (picked from the server list)"""
         # Get the server URI
         uri = self.__get_uri(server)
 
@@ -147,9 +145,7 @@ class GlancesClientBrowser(object):
         return server
 
     def __display_server(self, server):
-        """
-        Connect and display the given server
-        """
+        """Connect and display the given server"""
         # Display the Glances client for the selected server
         logger.debug("Selected server {}".format(server))
 
@@ -217,15 +213,15 @@ class GlancesClientBrowser(object):
         """Main client loop."""
         # No need to update the server list
         # It's done by the GlancesAutoDiscoverListener class (autodiscover.py)
-        # Or define staticaly in the configuration file (module static_list.py)
+        # Or define statically in the configuration file (module static_list.py)
         # For each server in the list, grab elementary stats (CPU, LOAD, MEM, OS...)
         thread_list = {}
-        while self.screen.is_end == False:
+        while not self.screen.is_end:
             logger.debug("Iter through the following server list: {}".format(self.get_servers_list()))
             for v in self.get_servers_list():
                 key = v["key"]
                 thread = thread_list.get(key, None)
-                if thread is None or thread.is_alive() == False:
+                if thread is None or thread.is_alive() is False:
                     thread = threading.Thread(target=self.__update_stats, args=[v])
                     thread_list[key] = thread
                     thread.start()

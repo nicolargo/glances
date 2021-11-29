@@ -38,7 +38,7 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Init the list of AMP (classe define in the glances/amps_list.py script)
+        # Init the list of AMP (classes define in the glances/amps_list.py script)
         self.glances_amps = glancesAmpsList(self.args, self.config)
 
     def get_key(self):

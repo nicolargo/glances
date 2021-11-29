@@ -136,7 +136,7 @@ class AmpsList(object):
                 # Set the process number to 0
                 v.set_count(0)
                 if v.count_min() is not None and v.count_min() > 0:
-                    # Only display the "No running process message" if countmin is defined
+                    # Only display the "No running process message" if count_min is defined
                     v.set_result("No running process")
 
         return self.__amps_dict

@@ -113,10 +113,10 @@ def get_smart_data():
             if attribute is None:
                 pass
             else:
-                attribdict = convert_attribute_to_dict(attribute)
+                attrib_dict = convert_attribute_to_dict(attribute)
 
                 # we will use the attribute number as the key
-                num = attribdict.pop('num', None)
+                num = attrib_dict.pop('num', None)
                 try:
                     assert num is not None
                 except Exception as e:
@@ -124,16 +124,12 @@ def get_smart_data():
                     logger.debug('Smart plugin error - Skip the attribute {} ({})'.format(attribute, e))
                     continue
 
-                stats[-1][num] = attribdict
+                stats[-1][num] = attrib_dict
     return stats
 
 
 class PluginModel(GlancesPluginModel):
-    """
-    Glances' HDD SMART plugin.
-
-    stats is a list of dicts
-    """
+    """Glances' HDD SMART plugin."""
 
     def __init__(self,
                  args=None,
