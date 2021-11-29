@@ -236,7 +236,7 @@ class Plugin(GlancesPlugin):
             stats['total'] = 100 - stats['idle']
 
         else:
-            # Default behavor
+            # Default behavior
             try:
                 stats = self.get_stats_snmp(
                     snmp_oid=snmp_oid[self.short_system_name])
@@ -260,7 +260,7 @@ class Plugin(GlancesPlugin):
         # Call the father's method
         super(Plugin, self).update_views()
 
-        # Add specifics informations
+        # Add specifics information
         # Alert and log
         for key in ['user', 'system', 'iowait', 'total']:
             if key in self.stats:
@@ -288,7 +288,7 @@ class Plugin(GlancesPlugin):
             return ret
 
         # If user stat is not here, display only idle / total CPU usage (for
-        # exemple on Windows OS)
+        # example on Windows OS)
         idle_tag = 'user' not in self.stats
 
         # First line
@@ -345,7 +345,7 @@ class Plugin(GlancesPlugin):
         ret.extend(self.curse_add_stat('soft_interrupts', width=15, header='  '))
 
         # Fourth line
-        # iowat + steal + syscalls
+        # iowait + steal + syscalls
         ret.append(self.curse_new_line())
         # IOWait CPU
         ret.extend(self.curse_add_stat('iowait', width=15))

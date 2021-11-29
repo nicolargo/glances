@@ -52,7 +52,7 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
-        """Update the foldered list."""
+        """Update the folders list."""
         # Init new stats
         stats = self.get_init_value()
 
@@ -62,7 +62,7 @@ class Plugin(GlancesPlugin):
             if self.glances_folders is None:
                 return self.stats
 
-            # Update the foldered list (result of command)
+            # Update the folders list (result of command)
             self.glances_folders.update()
 
             # Put it on the stats var
@@ -138,7 +138,6 @@ class Plugin(GlancesPlugin):
                 msg = '{:>9}'.format(self.auto_unit(i['size']))
             except (TypeError, ValueError):
                 msg = '{:>9}'.format(i['size'])
-            ret.append(self.curse_add_line(msg, self.get_alert(i,
-                                                               header='folder_' + i['indice'])))
+            ret.append(self.curse_add_line(msg, self.get_alert(i, header='folder_' + i['indice'])))
 
         return ret

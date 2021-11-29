@@ -35,6 +35,7 @@ physical cores multiplied by the number of threads that can run on each core.',
             'unit': 'number'},
 }
 
+
 class Plugin(GlancesPlugin):
     """Glances CPU core plugin.
 
@@ -71,7 +72,7 @@ class Plugin(GlancesPlugin):
             # Return a dict with:
             # - phys: physical cores only (hyper thread CPUs are excluded)
             # - log: logical CPUs in the system
-            # Return None if undefine
+            # Return None if undefined
             try:
                 stats["phys"] = psutil.cpu_count(logical=False)
                 stats["log"] = psutil.cpu_count()

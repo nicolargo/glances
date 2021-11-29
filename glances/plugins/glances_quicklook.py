@@ -99,7 +99,7 @@ class Plugin(GlancesPlugin):
         # Call the father's method
         super(Plugin, self).update_views()
 
-        # Add specifics informations
+        # Add specifics information
         # Alert only
         for key in ['cpu', 'mem', 'swap']:
             if key in self.stats:
@@ -114,16 +114,14 @@ class Plugin(GlancesPlugin):
         if not self.stats or self.is_disabled():
             return ret
 
-        # Define the data: Bar (default behavor) or Sparkline
+        # Define the data: Bar (default behavior) or Sparkline
         sparkline_tag = False
         if self.args.sparkline and self.history_enable() and not self.args.client:
             data = Sparkline(max_width)
             sparkline_tag = data.available
         if not sparkline_tag:
             # Fallback to bar if Sparkline module is not installed
-            data = Bar(max_width,
-                       percentage_char=self.get_conf_value('percentage_char',
-                                                           default=['|'])[0])
+            data = Bar(max_width, percentage_char=self.get_conf_value('percentage_char', default=['|'])[0])
 
         # Build the string message
         if 'cpu_name' in self.stats and 'cpu_hz_current' in self.stats and 'cpu_hz' in self.stats:
@@ -176,16 +174,13 @@ class Plugin(GlancesPlugin):
         return ret
 
     def _msg_create_line(self, msg, data, key):
-        """Create a new line to the Quickview."""
-        ret = []
-
-        ret.append(self.curse_add_line(msg))
-        ret.append(self.curse_add_line(data.pre_char, decoration='BOLD'))
-        ret.append(self.curse_add_line(data.get(), self.get_views(key=key, option='decoration')))
-        ret.append(self.curse_add_line(data.post_char, decoration='BOLD'))
-        ret.append(self.curse_add_line('  '))
-
-        return ret
+        """Create a new line to the Quick view."""
+        return [
+            self.curse_add_line(msg),
+            self.curse_add_line(data.pre_char, decoration='BOLD'),
+            self.curse_add_line(data.get(), self.get_views(key=key, option='decoration')),
+            self.curse_add_line(data.post_char, decoration='BOLD'), self.curse_add_line('  ')
+        ]
 
     def _hz_to_ghz(self, hz):
         """Convert Hz to Ghz."""

@@ -38,9 +38,9 @@ class GlancesActions(object):
 
     def __init__(self, args=None):
         """Init GlancesActions class."""
-        # Dict with the criticity status
+        # Dict with the criticality status
         # - key: stat_name
-        # - value: criticity
+        # - value: criticality
         # Goal: avoid to execute the same command twice
         self.status = {}
 
@@ -52,35 +52,35 @@ class GlancesActions(object):
             self.start_timer = Timer(3)
 
     def get(self, stat_name):
-        """Get the stat_name criticity."""
+        """Get the stat_name criticality."""
         try:
             return self.status[stat_name]
         except KeyError:
             return None
 
-    def set(self, stat_name, criticity):
-        """Set the stat_name to criticity."""
-        self.status[stat_name] = criticity
+    def set(self, stat_name, criticality):
+        """Set the stat_name to criticality."""
+        self.status[stat_name] = criticality
 
-    def run(self, stat_name, criticity, commands, repeat, mustache_dict=None):
+    def run(self, stat_name, criticality, commands, repeat, mustache_dict=None):
         """Run the commands (in background).
 
-        - stats_name: plugin_name (+ header)
-        - criticity: criticity of the trigger
-        - commands: a list of command line with optional {{mustache}}
-        - If True, then repeat the action
-        - mustache_dict: Plugin stats (can be use within {{mustache}})
+        :param stat_name: plugin_name (+ header)
+        :param criticality: criticality of the trigger
+        :param commands: a list of command line with optional {{mustache}}
+        :param repeat: If True, then repeat the action
+        :param  mustache_dict: Plugin stats (can be use within {{mustache}})
 
-        Return True if the commands have been ran.
+        :return: True if the commands have been ran.
         """
-        if (self.get(stat_name) == criticity and not repeat) or \
+        if (self.get(stat_name) == criticality and not repeat) or \
            not self.start_timer.finished():
             # Action already executed => Exit
             return False
 
         logger.debug("{} action {} for {} ({}) with stats {}".format(
             "Repeat" if repeat else "Run",
-            commands, stat_name, criticity, mustache_dict))
+            commands, stat_name, criticality, mustache_dict))
 
         # Run all actions in background
         for cmd in commands:
@@ -91,19 +91,19 @@ class GlancesActions(object):
                 cmd_full = cmd
             # Execute the action
             logger.info("Action triggered for {} ({}): {}".format(stat_name,
-                                                                  criticity,
+                                                                  criticality,
                                                                   cmd_full))
             try:
                 ret = secure_popen(cmd_full)
             except OSError as e:
                 logger.error("Action error for {} ({}): {}".format(stat_name,
-                                                                   criticity,
+                                                                   criticality,
                                                                    e))
             else:
                 logger.debug("Action result for {} ({}): {}".format(stat_name,
-                                                                    criticity, 
+                                                                    criticality,
                                                                     ret))
 
-        self.set(stat_name, criticity)
+        self.set(stat_name, criticality)
 
         return True

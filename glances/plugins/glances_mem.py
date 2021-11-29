@@ -132,7 +132,7 @@ class Plugin(GlancesPlugin):
             # percent: the percentage usage calculated as (total - available) / total * 100.
             # used: memory used, calculated differently depending on the platform and designed for informational
             # purposes only.
-            # free: memory not being used at all (zeroed) that is readily available; note that this doesn’t
+            # free: memory not being used at all (zeroed) that is readily available; note that this doesn't
             # reflect the actual memory available (use ‘available’ instead).
             # Platform-specific fields:
             # active: (UNIX): memory currently in use or very recently used, and so it is in RAM.
@@ -177,7 +177,7 @@ class Plugin(GlancesPlugin):
                             stats['free'] = stats['total'] - stats['used']
                             break
             else:
-                # Default behavor for others OS
+                # Default behavior for others OS
                 stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
 
                 if stats['total'] == '':
@@ -207,7 +207,7 @@ class Plugin(GlancesPlugin):
         # Call the father's method
         super(Plugin, self).update_views()
 
-        # Add specifics informations
+        # Add specifics information
         # Alert and log
         self.views['percent']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
         # Optional
@@ -258,7 +258,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         # Free memory usage
         ret.extend(self.curse_add_stat('free', width=15))
-         # Cached memory usage
+        # Cached memory usage
         ret.extend(self.curse_add_stat('cached', width=18, header='  '))
 
         return ret

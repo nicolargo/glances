@@ -56,7 +56,8 @@ class GlancesPasswordList(GlancesPassword):
         return password_dict
 
     def get_password(self, host=None):
-        """
+        """Get the password from a Glances client or server.
+
         If host=None, return the current server list (dict).
         Else, return the host's password (or the default one if defined or None)
         """
