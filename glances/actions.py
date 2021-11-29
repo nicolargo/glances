@@ -73,14 +73,15 @@ class GlancesActions(object):
 
         :return: True if the commands have been ran.
         """
-        if (self.get(stat_name) == criticality and not repeat) or \
-           not self.start_timer.finished():
+        if (self.get(stat_name) == criticality and not repeat) or not self.start_timer.finished():
             # Action already executed => Exit
             return False
 
-        logger.debug("{} action {} for {} ({}) with stats {}".format(
-            "Repeat" if repeat else "Run",
-            commands, stat_name, criticality, mustache_dict))
+        logger.debug(
+            "{} action {} for {} ({}) with stats {}".format(
+                "Repeat" if repeat else "Run", commands, stat_name, criticality, mustache_dict
+            )
+        )
 
         # Run all actions in background
         for cmd in commands:
@@ -90,19 +91,13 @@ class GlancesActions(object):
             else:
                 cmd_full = cmd
             # Execute the action
-            logger.info("Action triggered for {} ({}): {}".format(stat_name,
-                                                                  criticality,
-                                                                  cmd_full))
+            logger.info("Action triggered for {} ({}): {}".format(stat_name, criticality, cmd_full))
             try:
                 ret = secure_popen(cmd_full)
             except OSError as e:
-                logger.error("Action error for {} ({}): {}".format(stat_name,
-                                                                   criticality,
-                                                                   e))
+                logger.error("Action error for {} ({}): {}".format(stat_name, criticality, e))
             else:
-                logger.debug("Action result for {} ({}): {}".format(stat_name,
-                                                                    criticality,
-                                                                    ret))
+                logger.debug("Action result for {} ({}): {}".format(stat_name, criticality, ret))
 
         self.set(stat_name, criticality)
 

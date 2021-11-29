@@ -58,7 +58,7 @@ class GlancesStats(object):
         # Check if the attribute starts with 'get'
         if item.startswith('getViews'):
             # Get the plugin name
-            plugname = item[len('getViews'):].lower()
+            plugname = item[len('getViews') :].lower()
             # Get the plugin instance
             plugin = self._plugins[plugname]
             if hasattr(plugin, 'get_json_views'):
@@ -69,7 +69,7 @@ class GlancesStats(object):
                 raise AttributeError(item)
         elif item.startswith('get'):
             # Get the plugin name
-            plugname = item[len('get'):].lower()
+            plugname = item[len('get') :].lower()
             # Get the plugin instance
             plugin = self._plugins[plugname]
             if hasattr(plugin, 'get_stats'):
@@ -107,7 +107,7 @@ class GlancesStats(object):
         # The key is the plugin name
         # for example, the file glances_xxx.py
         # generate self._plugins_list["xxx"] = ...
-        name = plugin_script[len(self.header):-3].lower()
+        name = plugin_script[len(self.header) : -3].lower()
 
         # Loaf the plugin class
         try:
@@ -122,29 +122,21 @@ class GlancesStats(object):
             logger.error(traceback.format_exc())
             # Disable the plugin
             if args is not None:
-                setattr(args,
-                        'disable_' + name,
-                        False)
+                setattr(args, 'disable_' + name, False)
         else:
             # Set the disable_<name> to False by default
             if args is not None:
-                setattr(args,
-                        'disable_' + name,
-                        getattr(args, 'disable_' + name, False))
+                setattr(args, 'disable_' + name, getattr(args, 'disable_' + name, False))
 
     def load_plugins(self, args=None):
         """Load all plugins in the 'plugins' folder."""
         start_duration = Counter()
         for item in os.listdir(plugins_path):
-            if (item.startswith(self.header) and
-                    item.endswith(".py") and
-                    item != (self.header + "plugin.py")):
+            if item.startswith(self.header) and item.endswith(".py") and item != (self.header + "plugin.py"):
                 # Load the plugin
                 start_duration.reset()
-                self._load_plugin(os.path.basename(item),
-                                  args=args, config=self.config)
-                logger.debug("Plugin {} started in {} seconds".format(item,
-                                                                      start_duration.get()))
+                self._load_plugin(os.path.basename(item), args=args, config=self.config)
+                logger.debug("Plugin {} started in {} seconds".format(item, start_duration.get()))
 
         # Log plugins list
         logger.debug("Active plugins list: {}".format(self.getPluginsList()))
@@ -157,16 +149,16 @@ class GlancesStats(object):
         # Build the export module available list
         args_var = vars(locals()['args'])
         for item in os.listdir(exports_path):
-            export_name = os.path.basename(item)[len(header):-3].lower()
-            if (item.startswith(header) and
-                    item.endswith(".py") and
-                    item != (header + "export.py") and
-                    item != (header + "history.py")):
+            export_name = os.path.basename(item)[len(header) : -3].lower()
+            if (
+                item.startswith(header)
+                and item.endswith(".py")
+                and item != (header + "export.py")
+                and item != (header + "history.py")
+            ):
                 self._exports_all[export_name] = os.path.basename(item)[:-3]
                 # Set the disable_<name> to False by default
-                setattr(self.args,
-                        'export_' + export_name,
-                        getattr(self.args, 'export_' + export_name, False))
+                setattr(self.args, 'export_' + export_name, getattr(self.args, 'export_' + export_name, False))
 
         # Aim is to check if the export module should be loaded
         for export_name in self._exports_all:
@@ -177,8 +169,7 @@ class GlancesStats(object):
                 # The key is the module name
                 # for example, the file glances_xxx.py
                 # generate self._exports_list["xxx"] = ...
-                self._exports[export_name] = export_module.Export(args=args,
-                                                                  config=self.config)
+                self._exports[export_name] = export_module.Export(args=args, config=self.config)
                 self._exports_all[export_name] = self._exports[export_name]
 
         # Log plugins list
@@ -247,8 +238,7 @@ class GlancesStats(object):
 
         for e in self._exports:
             logger.debug("Export stats using the %s module" % e)
-            thread = threading.Thread(target=self._exports[e].update,
-                                      args=(input_stats,))
+            thread = threading.Thread(target=self._exports[e].update, args=(input_stats,))
             thread.start()
 
         return True

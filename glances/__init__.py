@@ -45,6 +45,7 @@ except ImportError:
 from glances.logger import logger
 from glances.main import GlancesMain
 from glances.timer import Counter
+
 # Check locale
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -132,11 +133,11 @@ def main():
 
     # Log Glances and psutil version
     logger.info('Start Glances {}'.format(__version__))
-    logger.info('{} {} ({}) and psutil {} detected'.format(
-        platform.python_implementation(),
-        platform.python_version(),
-        sys.executable,
-        psutil_version))
+    logger.info(
+        '{} {} ({}) and psutil {} detected'.format(
+            platform.python_implementation(), platform.python_version(), sys.executable, psutil_version
+        )
+    )
 
     # Share global var
     global core

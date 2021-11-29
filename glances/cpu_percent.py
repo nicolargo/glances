@@ -30,11 +30,7 @@ class CpuPercent(object):
     """Get and store the CPU percent."""
 
     def __init__(self, cached_timer_cpu=3):
-        self.cpu_info = {
-            'cpu_name': None,
-            'cpu_hz_current': None,
-            'cpu_hz': None
-        }
+        self.cpu_info = {'cpu_name': None, 'cpu_hz_current': None, 'cpu_hz': None}
         self.cpu_percent = 0
         self.percpu_percent = []
 
@@ -109,14 +105,15 @@ class CpuPercent(object):
         # Never update more than 1 time per cached_timer_cpu
         if self.timer_percpu.finished():
             self.percpu_percent = []
-            for cpu_number, cputimes in enumerate(psutil.cpu_times_percent(interval=0.0,
-                                                                           percpu=True)):
-                cpu = {'key': self.get_key(),
-                       'cpu_number': cpu_number,
-                       'total': round(100 - cputimes.idle, 1),
-                       'user': cputimes.user,
-                       'system': cputimes.system,
-                       'idle': cputimes.idle}
+            for cpu_number, cputimes in enumerate(psutil.cpu_times_percent(interval=0.0, percpu=True)):
+                cpu = {
+                    'key': self.get_key(),
+                    'cpu_number': cpu_number,
+                    'total': round(100 - cputimes.idle, 1),
+                    'user': cputimes.user,
+                    'system': cputimes.system,
+                    'idle': cputimes.idle,
+                }
                 # The following stats are for API purposes only
                 if hasattr(cputimes, 'nice'):
                     cpu['nice'] = cputimes.nice

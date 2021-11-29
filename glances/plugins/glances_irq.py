@@ -35,9 +35,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
-                                     config=config,
-                                     stats_init_value=[])
+        super(Plugin, self).__init__(args=args, config=config, stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -69,9 +67,7 @@ class Plugin(GlancesPlugin):
             pass
 
         # Get the TOP 5 (by rate/s)
-        stats = sorted(stats,
-                       key=operator.itemgetter('irq_rate'),
-                       reverse=True)[:5]
+        stats = sorted(stats, key=operator.itemgetter('irq_rate'), reverse=True)[:5]
 
         # Update the stats
         self.stats = stats
@@ -105,8 +101,7 @@ class Plugin(GlancesPlugin):
 
         for i in self.stats:
             ret.append(self.curse_new_line())
-            msg = '{:{width}}'.format(i['irq_line'][:name_max_width],
-                                      width=name_max_width)
+            msg = '{:{width}}'.format(i['irq_line'][:name_max_width], width=name_max_width)
             ret.append(self.curse_add_line(msg))
             msg = '{:>9}'.format(str(i['irq_rate']))
             ret.append(self.curse_add_line(msg))
@@ -173,7 +168,7 @@ class GlancesIRQ(object):
         """
         splitted_line = line.split()
         try:
-            ret = sum(map(int, splitted_line[1:(self.cpu_number + 1)]))
+            ret = sum(map(int, splitted_line[1 : (self.cpu_number + 1)]))
         except ValueError:
             # Correct issue #1007 on some conf (Raspberry Pi with Raspbian)
             ret = 0
@@ -197,14 +192,13 @@ class GlancesIRQ(object):
                     irq_line = self.__humanname(line)
                     current_irqs = self.__sum(line)
                     irq_rate = int(
-                        current_irqs - self.lasts.get(irq_line)
-                        if self.lasts.get(irq_line)
-                        else 0 // time_since_update)
+                        current_irqs - self.lasts.get(irq_line) if self.lasts.get(irq_line) else 0 // time_since_update
+                    )
                     irq_current = {
                         'irq_line': irq_line,
                         'irq_rate': irq_rate,
                         'key': self.get_key(),
-                        'time_since_update': time_since_update
+                        'time_since_update': time_since_update,
                     }
                     self.stats.append(irq_current)
                     self.lasts[irq_line] = current_irqs

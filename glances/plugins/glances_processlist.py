@@ -88,14 +88,12 @@ class Plugin(GlancesPlugin):
         'ior': '{:>4} ',
         'iow': '{:<4} ',
         'command': '{}',
-        'name': '[{}]'
+        'name': '[{}]',
     }
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
-                                     config=config,
-                                     stats_init_value=[])
+        super(Plugin, self).__init__(args=args, config=config, stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -121,7 +119,9 @@ class Plugin(GlancesPlugin):
             if 'processlist' in config.as_dict() and 'sort_key' in config.as_dict()['processlist']:
                 logger.debug(
                     'Configuration overwrites processes sort key by {}'.format(
-                        config.as_dict()['processlist']['sort_key']))
+                        config.as_dict()['processlist']['sort_key']
+                    )
+                )
                 glances_processes.set_sort_key(config.as_dict()['processlist']['sort_key'], False)
 
         # The default sort key could also be overwrite by command line (see #1903)
@@ -183,15 +183,15 @@ class Plugin(GlancesPlugin):
         if key_exist_value_not_none_not_v('cpu_percent', p, ''):
             cpu_layout = self.layout_stat['cpu'] if p['cpu_percent'] < 100 else self.layout_stat['cpu_no_digit']
             if args.disable_irix and self.nb_log_core != 0:
-                msg = cpu_layout.format(
-                    p['cpu_percent'] / float(self.nb_log_core))
+                msg = cpu_layout.format(p['cpu_percent'] / float(self.nb_log_core))
             else:
                 msg = cpu_layout.format(p['cpu_percent'])
-            alert = self.get_alert(p['cpu_percent'],
-                                   highlight_zero=False,
-                                   is_max=(p['cpu_percent'] ==
-                                           self.max_values['cpu_percent']),
-                                   header="cpu")
+            alert = self.get_alert(
+                p['cpu_percent'],
+                highlight_zero=False,
+                is_max=(p['cpu_percent'] == self.max_values['cpu_percent']),
+                header="cpu",
+            )
             ret = self.curse_add_line(msg, alert)
         else:
             msg = self.layout_header['cpu'].format('?')
@@ -202,11 +202,12 @@ class Plugin(GlancesPlugin):
         """Return process MEM curses"""
         if key_exist_value_not_none_not_v('memory_percent', p, ''):
             msg = self.layout_stat['mem'].format(p['memory_percent'])
-            alert = self.get_alert(p['memory_percent'],
-                                   highlight_zero=False,
-                                   is_max=(p['memory_percent'] ==
-                                           self.max_values['memory_percent']),
-                                   header="mem")
+            alert = self.get_alert(
+                p['memory_percent'],
+                highlight_zero=False,
+                is_max=(p['memory_percent'] == self.max_values['memory_percent']),
+                header="mem",
+            )
             ret = self.curse_add_line(msg, alert)
         else:
             msg = self.layout_header['mem'].format('?')
@@ -216,8 +217,7 @@ class Plugin(GlancesPlugin):
     def _get_process_curses_vms(self, p, selected, args):
         """Return process VMS curses"""
         if key_exist_value_not_none_not_v('memory_info', p, ''):
-            msg = self.layout_stat['virt'].format(
-                self.auto_unit(p['memory_info'][1], low_precision=False))
+            msg = self.layout_stat['virt'].format(self.auto_unit(p['memory_info'][1], low_precision=False))
             ret = self.curse_add_line(msg, optional=True)
         else:
             msg = self.layout_header['virt'].format('?')
@@ -227,8 +227,7 @@ class Plugin(GlancesPlugin):
     def _get_process_curses_rss(self, p, selected, args):
         """Return process RSS curses"""
         if key_exist_value_not_none_not_v('memory_info', p, ''):
-            msg = self.layout_stat['res'].format(
-                self.auto_unit(p['memory_info'][0], low_precision=False))
+            msg = self.layout_stat['res'].format(self.auto_unit(p['memory_info'][0], low_precision=False))
             ret = self.curse_add_line(msg, optional=True)
         else:
             msg = self.layout_header['res'].format('?')
@@ -270,9 +269,7 @@ class Plugin(GlancesPlugin):
                 msg = '{}:{}'.format(minutes, seconds)
             msg = self.layout_stat['time'].format(msg)
             if hours > 0:
-                ret = self.curse_add_line(msg,
-                                          decoration='CPU_TIME',
-                                          optional=True)
+                ret = self.curse_add_line(msg, decoration='CPU_TIME', optional=True)
             else:
                 ret = self.curse_add_line(msg, optional=True)
         return ret
@@ -297,8 +294,7 @@ class Plugin(GlancesPlugin):
             if nice is None:
                 nice = '?'
             msg = self.layout_stat['nice'].format(nice)
-            ret = self.curse_add_line(msg,
-                                      decoration=self.get_nice_alert(nice))
+            ret = self.curse_add_line(msg, decoration=self.get_nice_alert(nice))
         else:
             msg = self.layout_header['nice'].format('?')
             ret = self.curse_add_line(msg)
@@ -320,19 +316,17 @@ class Plugin(GlancesPlugin):
 
     def _get_process_curses_io(self, p, selected, args, rorw='ior'):
         """Return process IO Read or Write curses"""
-        if 'io_counters' in p and \
-           p['io_counters'][4] == 1 and \
-           p['time_since_update'] != 0:
+        if 'io_counters' in p and p['io_counters'][4] == 1 and p['time_since_update'] != 0:
             # Display rate if stats is available and io_tag ([4]) == 1
             # IO
-            io = int((p['io_counters'][0 if rorw == 'ior' else 1] - p['io_counters']
-                      [2 if rorw == 'ior' else 3]) / p['time_since_update'])
+            io = int(
+                (p['io_counters'][0 if rorw == 'ior' else 1] - p['io_counters'][2 if rorw == 'ior' else 3])
+                / p['time_since_update']
+            )
             if io == 0:
                 msg = self.layout_stat[rorw].format("0")
             else:
-                msg = self.layout_stat[rorw].format(
-                    self.auto_unit(io,
-                                   low_precision=True))
+                msg = self.layout_stat[rorw].format(self.auto_unit(io, low_precision=True))
             ret = self.curse_add_line(msg, optional=True, additional=True)
         else:
             msg = self.layout_header[rorw].format("?")
@@ -408,12 +402,10 @@ class Plugin(GlancesPlugin):
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = self.layout_stat['command'].format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
-                    ret.append(self.curse_add_line(
-                        cmd, decoration=process_decoration, splittable=True))
+                    ret.append(self.curse_add_line(cmd, decoration=process_decoration, splittable=True))
                 else:
                     msg = self.layout_stat['command'].format(cmd)
-                    ret.append(self.curse_add_line(
-                        msg, decoration=process_decoration, splittable=True))
+                    ret.append(self.curse_add_line(msg, decoration=process_decoration, splittable=True))
                 if arguments:
                     msg = ' ' + self.layout_stat['command'].format(arguments)
                     ret.append(self.curse_add_line(msg, splittable=True))
@@ -435,8 +427,7 @@ class Plugin(GlancesPlugin):
                 msg = xpad + 'CPU affinity: ' + str(len(p['cpu_affinity'])) + ' cores'
                 ret.append(self.curse_add_line(msg, splittable=True))
             # Second line is memory info
-            if 'memory_info' in p and \
-               p['memory_info'] is not None:
+            if 'memory_info' in p and p['memory_info'] is not None:
                 ret.append(self.curse_new_line())
                 msg = '{}Memory info: {}'.format(xpad, p['memory_info'])
                 if 'memory_swap' in p and p['memory_swap'] is not None:
@@ -459,9 +450,7 @@ class Plugin(GlancesPlugin):
                 msg = xpad + 'Open: ' + msg
                 ret.append(self.curse_add_line(msg, splittable=True))
             # Fourth line is IO nice level (only Linux and Windows OS)
-            if 'ionice' in p and \
-               p['ionice'] is not None \
-               and hasattr(p['ionice'], 'ioclass'):
+            if 'ionice' in p and p['ionice'] is not None and hasattr(p['ionice'], 'ioclass'):
                 ret.append(self.curse_new_line())
                 msg = xpad + 'IO nice: '
                 k = 'Class is '
@@ -515,8 +504,7 @@ class Plugin(GlancesPlugin):
         # Loop over processes (sorted by the sort key previously compute)
         i = 0
         for p in self.__sort_stats(process_sort_key):
-            ret.extend(self.get_process_curses_data(
-                p, i == args.cursor_position, args))
+            ret.extend(self.get_process_curses_data(p, i == args.cursor_position, args))
             i += 1
 
         # A filter is set Display the stats summaries
@@ -553,9 +541,9 @@ class Plugin(GlancesPlugin):
         msg = self.layout_header['user'].format('USER')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
         msg = self.layout_header['time'].format('TIME+')
-        ret.append(self.curse_add_line(msg,
-                                       sort_style if process_sort_key == 'cpu_times' else 'DEFAULT',
-                                       optional=True))
+        ret.append(
+            self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_times' else 'DEFAULT', optional=True)
+        )
         msg = self.layout_header['thread'].format('THR')
         ret.append(self.curse_add_line(msg))
         msg = self.layout_header['nice'].format('NI')
@@ -563,17 +551,18 @@ class Plugin(GlancesPlugin):
         msg = self.layout_header['status'].format('S')
         ret.append(self.curse_add_line(msg))
         msg = self.layout_header['ior'].format('R/s')
-        ret.append(self.curse_add_line(msg,
-                                       sort_style if process_sort_key == 'io_counters' else 'DEFAULT',
-                                       optional=True,
-                                       additional=True))
+        ret.append(
+            self.curse_add_line(
+                msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
+            )
+        )
         msg = self.layout_header['iow'].format('W/s')
-        ret.append(self.curse_add_line(msg,
-                                       sort_style if process_sort_key == 'io_counters' else 'DEFAULT',
-                                       optional=True,
-                                       additional=True))
-        msg = self.layout_header['command'].format('Command',
-                                                   "('k' to kill)" if args.is_standalone else "")
+        ret.append(
+            self.curse_add_line(
+                msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
+            )
+        )
+        msg = self.layout_header['command'].format('Command', "('k' to kill)" if args.is_standalone else "")
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
     def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):
@@ -591,27 +580,26 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_new_line())
         # CPU percent sum
         msg = self.layout_stat['cpu'].format(self.__sum_stats('cpu_percent', mmm=mmm))
-        ret.append(self.curse_add_line(msg,
-                                       decoration=self.__mmm_deco(mmm)))
+        ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm)))
         # MEM percent sum
         msg = self.layout_stat['mem'].format(self.__sum_stats('memory_percent', mmm=mmm))
-        ret.append(self.curse_add_line(msg,
-                                       decoration=self.__mmm_deco(mmm)))
+        ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm)))
         # VIRT and RES memory sum
-        if 'memory_info' in self.stats[0] and \
-           self.stats[0]['memory_info'] is not None and self.stats[0]['memory_info'] != '':
+        if (
+            'memory_info' in self.stats[0]
+            and self.stats[0]['memory_info'] is not None
+            and self.stats[0]['memory_info'] != ''
+        ):
             # VMS
-            msg = self.layout_stat['virt'].format(self.auto_unit(self.__sum_stats('memory_info', indice=1, mmm=mmm),
-                                                                 low_precision=False))
-            ret.append(self.curse_add_line(msg,
-                                           decoration=self.__mmm_deco(mmm),
-                                           optional=True))
+            msg = self.layout_stat['virt'].format(
+                self.auto_unit(self.__sum_stats('memory_info', indice=1, mmm=mmm), low_precision=False)
+            )
+            ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True))
             # RSS
-            msg = self.layout_stat['res'].format(self.auto_unit(self.__sum_stats('memory_info', indice=0, mmm=mmm),
-                                                                low_precision=False))
-            ret.append(self.curse_add_line(msg,
-                                           decoration=self.__mmm_deco(mmm),
-                                           optional=True))
+            msg = self.layout_stat['res'].format(
+                self.auto_unit(self.__sum_stats('memory_info', indice=0, mmm=mmm), low_precision=False)
+            )
+            ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True))
         else:
             msg = self.layout_header['virt'].format('')
             ret.append(self.curse_add_line(msg))
@@ -638,25 +626,25 @@ class Plugin(GlancesPlugin):
         # IO read/write
         if 'io_counters' in self.stats[0] and mmm is None:
             # IO read
-            io_rs = int((self.__sum_stats('io_counters', 0) - self.__sum_stats('io_counters',
-                        indice=2, mmm=mmm)) / self.stats[0]['time_since_update'])
+            io_rs = int(
+                (self.__sum_stats('io_counters', 0) - self.__sum_stats('io_counters', indice=2, mmm=mmm))
+                / self.stats[0]['time_since_update']
+            )
             if io_rs == 0:
                 msg = self.layout_stat['ior'].format('0')
             else:
                 msg = self.layout_stat['ior'].format(self.auto_unit(io_rs, low_precision=True))
-            ret.append(self.curse_add_line(msg,
-                                           decoration=self.__mmm_deco(mmm),
-                                           optional=True, additional=True))
+            ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True, additional=True))
             # IO write
-            io_ws = int((self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters',
-                        indice=3, mmm=mmm)) / self.stats[0]['time_since_update'])
+            io_ws = int(
+                (self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters', indice=3, mmm=mmm))
+                / self.stats[0]['time_since_update']
+            )
             if io_ws == 0:
                 msg = self.layout_stat['iow'].format('0')
             else:
                 msg = self.layout_stat['iow'].format(self.auto_unit(io_ws, low_precision=True))
-            ret.append(self.curse_add_line(msg,
-                                           decoration=self.__mmm_deco(mmm),
-                                           optional=True, additional=True))
+            ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True, additional=True))
         else:
             msg = self.layout_header['ior'].format('')
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
@@ -736,8 +724,7 @@ class Plugin(GlancesPlugin):
 
     def __sort_stats(self, sorted_by=None):
         """Return the stats (dict) sorted by (sorted_by)."""
-        return sort_stats(self.stats, sorted_by,
-                          reverse=glances_processes.sort_reverse)
+        return sort_stats(self.stats, sorted_by, reverse=glances_processes.sort_reverse)
 
     def __max_pid_size(self):
         """Return the maximum PID size in number of char."""
