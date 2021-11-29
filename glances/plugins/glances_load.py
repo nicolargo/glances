@@ -90,7 +90,7 @@ class Plugin(GlancesPlugin):
         """Get load average. On both Linux and Windows thanks to PsUtil"""
         try:
             return psutil.getloadavg()
-        except AttributeError:
+        except (AttributeError, OSError):
             pass
         try:
             return os.getloadavg()
