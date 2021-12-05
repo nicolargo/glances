@@ -108,12 +108,10 @@ class GlancesCursesBrowser(_GlancesCurses):
         stats_list = None
         if self._stats_list is not None:
             stats_list = self._stats_list
-            stats_list.sort(reverse = self._revesed_sorting,
-                            key = lambda x: { 'UNKNOWN' : 0,
-                                              'OFFLINE' : 1,
-                                              'PROTECTED' : 2,
-                                              'SNMP' : 3,
-                                              'ONLINE': 4 }.get(x['status'], 99))
+            stats_list.sort(
+                reverse=self._revesed_sorting,
+                key=lambda x: {'UNKNOWN': 0, 'OFFLINE': 1, 'PROTECTED': 2, 'SNMP': 3, 'ONLINE': 4}.get(x['status'], 99),
+            )
         else:
             stats_list = stats
 
@@ -124,7 +122,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         if 0 <= self.cursor_position - 1:
             self.cursor_position -= 1
         else:
-            if self._current_page - 1 < 0 :
+            if self._current_page - 1 < 0:
                 self._current_page = self._page_max - 1
                 self.cursor_position = (len(stats) - 1) % self._page_max_lines
             else:
@@ -175,7 +173,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             self.is_end = True
         elif self.pressedkey == 10:
             # 'ENTER' > Run Glances on the selected server
-            self.active_server =  self._current_page * self._page_max_lines + self.cursor_position
+            self.active_server = self._current_page * self._page_max_lines + self.cursor_position
             logger.debug("Server {}/{} selected".format(self.active_server, len(stats)))
         elif self.pressedkey == curses.KEY_UP or self.pressedkey == 65:
             # 'UP' > Up in the server list
@@ -213,11 +211,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         # Return the key code
         return self.pressedkey
 
-    def update(self,
-               stats,
-               duration=3,
-               cs_status=None,
-               return_to_browser=False):
+    def update(self, stats, duration=3, cs_status=None, return_to_browser=False):
         """Update the servers' list screen.
 
         Wait for __refresh_time sec / catch key every 100 ms.
@@ -238,8 +232,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             # Getkey
             pressedkey = self.__catch_key(stats)
             # Is it an exit or select server key ?
-            exitkey = (
-                pressedkey == ord('\x1b') or pressedkey == ord('q') or pressedkey == 10)
+            exitkey = pressedkey == ord('\x1b') or pressedkey == ord('q') or pressedkey == 10
             if not exitkey and pressedkey > -1:
                 # Redraw display
                 self.flush(stats)
@@ -290,24 +283,16 @@ class GlancesCursesBrowser(_GlancesCurses):
         if self.args.disable_autodiscover:
             msg += ' (auto discover is disabled)'
         if screen_y > 1:
-            self.term_window.addnstr(y, x,
-                                     msg,
-                                     screen_x - x,
-                                     self.colors_list['TITLE'])
+            self.term_window.addnstr(y, x, msg, screen_x - x, self.colors_list['TITLE'])
 
             msg = '{}'.format(self._get_status_count(stats))
-            self.term_window.addnstr(y + 1, x,
-                                     msg,
-                                     screen_x - x)
+            self.term_window.addnstr(y + 1, x, msg, screen_x - x)
 
         if stats_len > stats_max and screen_y > 2:
-            msg = '{} servers displayed.({}/{}) {}'.format(self.get_pagelines(stats),
-                                                            self._current_page + 1,
-                                                            self._page_max,
-                                                            self._get_status_count(stats))
-            self.term_window.addnstr(y + 1, x,
-                                     msg,
-                                     screen_x - x)
+            msg = '{} servers displayed.({}/{}) {}'.format(
+                self.get_pagelines(stats), self._current_page + 1, self._page_max, self._get_status_count(stats)
+            )
+            self.term_window.addnstr(y + 1, x, msg, screen_x - x)
 
         if stats_len == 0:
             return False
@@ -334,10 +319,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         xc = x + 2
         for cpt, c in enumerate(column_def):
             if xc < screen_x and y < screen_y and c[1] is not None:
-                self.term_window.addnstr(y, xc,
-                                         c[1],
-                                         screen_x - x,
-                                         self.colors_list['BOLD'])
+                self.term_window.addnstr(y, xc, c[1], screen_x - x, self.colors_list['BOLD'])
                 xc += c[2] + self.space_between_column
         y += 1
 
@@ -364,8 +346,7 @@ class GlancesCursesBrowser(_GlancesCurses):
                 try:
                     server_stat[c[0]] = v[c[0]]
                 except KeyError as e:
-                    logger.debug(
-                        "Cannot grab stats {} from server (KeyError: {})".format(c[0], e))
+                    logger.debug("Cannot grab stats {} from server (KeyError: {})".format(c[0], e))
                     server_stat[c[0]] = '?'
                 # Display alias instead of name
                 try:
@@ -381,16 +362,14 @@ class GlancesCursesBrowser(_GlancesCurses):
             # Is the line selected ?
             if line == self.cursor:
                 # Display cursor
-                self.term_window.addnstr(
-                    y, xc, ">", screen_x - xc, self.colors_list['BOLD'])
+                self.term_window.addnstr(y, xc, ">", screen_x - xc, self.colors_list['BOLD'])
 
             # Display the line
             xc += 2
             for c in column_def:
                 if xc < screen_x and y < screen_y and c[1] is not None:
                     # Display server stats
-                    self.term_window.addnstr(
-                        y, xc, format(server_stat[c[0]]), c[2], self.colors_list[v['status']])
+                    self.term_window.addnstr(y, xc, format(server_stat[c[0]]), c[2], self.colors_list[v['status']])
                     xc += c[2] + self.space_between_column
                 cpt += 1
             # Next line, next server...

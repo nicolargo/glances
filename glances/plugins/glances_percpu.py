@@ -23,12 +23,10 @@ from glances.cpu_percent import cpu_percent
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # Define the history items list
-items_history_list = [{'name': 'user',
-                       'description': 'User CPU usage',
-                       'y_unit': '%'},
-                      {'name': 'system',
-                       'description': 'System CPU usage',
-                       'y_unit': '%'}]
+items_history_list = [
+    {'name': 'user', 'description': 'User CPU usage', 'y_unit': '%'},
+    {'name': 'system', 'description': 'System CPU usage', 'y_unit': '%'},
+]
 
 
 class Plugin(GlancesPlugin):
@@ -40,10 +38,9 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
-                                     config=config,
-                                     items_history_list=items_history_list,
-                                     stats_init_value=[])
+        super(Plugin, self).__init__(
+            args=args, config=config, items_history_list=items_history_list, stats_init_value=[]
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -110,8 +107,6 @@ class Plugin(GlancesPlugin):
                     msg = '{:6.1f}%'.format(cpu[stat])
                 except TypeError:
                     msg = '{:>6}%'.format('?')
-                ret.append(self.curse_add_line(msg,
-                                               self.get_alert(cpu[stat],
-                                                              header=stat)))
+                ret.append(self.curse_add_line(msg, self.get_alert(cpu[stat], header=stat)))
 
         return ret

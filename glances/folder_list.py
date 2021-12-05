@@ -100,9 +100,7 @@ class FolderList(object):
 
             # Optional conf keys
             # Refresh time
-            value['refresh'] = int(self.config.get_value(section,
-                                                         key + 'refresh',
-                                                         default=self.__default_refresh))
+            value['refresh'] = int(self.config.get_value(section, key + 'refresh', default=self.__default_refresh))
             self.timer_folders.append(Timer(value['refresh']))
             # Thresholds
             for i in ['careful', 'warning', 'critical']:

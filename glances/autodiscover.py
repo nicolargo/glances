@@ -26,12 +26,8 @@ from glances.globals import BSD
 from glances.logger import logger
 
 try:
-    from zeroconf import (
-        __version__ as __zeroconf_version,
-        ServiceBrowser,
-        ServiceInfo,
-        Zeroconf
-    )
+    from zeroconf import __version__ as __zeroconf_version, ServiceBrowser, ServiceInfo, Zeroconf
+
     zeroconf_tag = True
 except ImportError:
     zeroconf_tag = False
@@ -78,10 +74,10 @@ class AutoDiscovered(object):
             'username': 'glances',  # Default username
             'password': '',  # Default password
             'status': 'UNKNOWN',  # Server status: 'UNKNOWN', 'OFFLINE', 'ONLINE', 'PROTECTED'
-            'type': 'DYNAMIC'}  # Server type: 'STATIC' or 'DYNAMIC'
+            'type': 'DYNAMIC',
+        }  # Server type: 'STATIC' or 'DYNAMIC'
         self._server_list.append(new_server)
-        logger.debug("Updated servers list (%s servers): %s" %
-                     (len(self._server_list), self._server_list))
+        logger.debug("Updated servers list (%s servers): %s" % (len(self._server_list), self._server_list))
 
     def remove_server(self, name):
         """Remove a server from the dict."""
@@ -90,11 +86,9 @@ class AutoDiscovered(object):
                 try:
                     self._server_list.remove(i)
                     logger.debug("Remove server %s from the list" % name)
-                    logger.debug("Updated servers list (%s servers): %s" % (
-                        len(self._server_list), self._server_list))
+                    logger.debug("Updated servers list (%s servers): %s" % (len(self._server_list), self._server_list))
                 except ValueError:
-                    logger.error(
-                        "Cannot remove server %s from the list" % name)
+                    logger.error("Cannot remove server %s from the list" % name)
 
 
 class GlancesAutoDiscoverListener(object):
@@ -122,8 +116,7 @@ class GlancesAutoDiscoverListener(object):
         """
         if srv_type != zeroconf_type:
             return False
-        logger.debug("Check new Zeroconf server: %s / %s" %
-                     (srv_type, srv_name))
+        logger.debug("Check new Zeroconf server: %s / %s" % (srv_type, srv_name))
         info = zeroconf.get_service_info(srv_type, srv_name)
         if info and (info.addresses or info.parsed_addresses):
             address = info.addresses[0] if info.addresses else info.parsed_addresses[0]
@@ -132,8 +125,7 @@ class GlancesAutoDiscoverListener(object):
 
             # Add server to the global dict
             self.servers.add_server(srv_name, new_server_ip, new_server_port)
-            logger.info("New Glances server detected (%s from %s:%s)" %
-                        (srv_name, new_server_ip, new_server_port))
+            logger.info("New Glances server detected (%s from %s:%s)" % (srv_name, new_server_ip, new_server_port))
         else:
             logger.warning("New Glances server detected, but failed to be get Zeroconf ServiceInfo ")
         return True
@@ -141,8 +133,7 @@ class GlancesAutoDiscoverListener(object):
     def remove_service(self, zeroconf, srv_type, srv_name):
         """Remove the server from the list."""
         self.servers.remove_server(srv_name)
-        logger.info(
-            "Glances server %s removed from the autodetect list" % srv_name)
+        logger.info("Glances server %s removed from the autodetect list" % srv_name)
 
 
 class GlancesAutoDiscoverServer(object):
@@ -159,8 +150,7 @@ class GlancesAutoDiscoverServer(object):
                 self.zeroconf_enable_tag = False
             else:
                 self.listener = GlancesAutoDiscoverListener()
-                self.browser = ServiceBrowser(
-                    self.zeroconf, zeroconf_type, self.listener)
+                self.browser = ServiceBrowser(self.zeroconf, zeroconf_type, self.listener)
                 self.zeroconf_enable_tag = True
         else:
             logger.error("Cannot start autodiscover mode (Zeroconf lib is not installed)")
@@ -213,29 +203,27 @@ class GlancesAutoDiscoverClient(object):
             try:
                 self.info = ServiceInfo(
                     zeroconf_type,
-                    '{}:{}.{}'.format(hostname,
-                                      args.port,
-                                      zeroconf_type),
+                    '{}:{}.{}'.format(hostname, args.port, zeroconf_type),
                     address=socket.inet_pton(address_family, zeroconf_bind_address),
                     port=args.port,
                     weight=0,
                     priority=0,
                     properties={},
-                    server=hostname)
+                    server=hostname,
+                )
             except TypeError:
                 # Manage issue 1663 with breaking change on ServiceInfo method
                 # address (only one address) is replaced by addresses (list of addresses)
                 self.info = ServiceInfo(
                     zeroconf_type,
-                    name='{}:{}.{}'.format(hostname,
-                                           args.port,
-                                           zeroconf_type),
+                    name='{}:{}.{}'.format(hostname, args.port, zeroconf_type),
                     addresses=[socket.inet_pton(address_family, zeroconf_bind_address)],
                     port=args.port,
                     weight=0,
                     priority=0,
                     properties={},
-                    server=hostname)
+                    server=hostname,
+                )
             try:
                 self.zeroconf.register_service(self.info)
             except Exception as e:
@@ -249,6 +237,7 @@ class GlancesAutoDiscoverClient(object):
     def find_active_ip_address():
         """Try to find the active IP addresses."""
         import netifaces
+
         # Interface of the default gateway
         gateway_itf = netifaces.gateways()['default'][netifaces.AF_INET][1]
         # IP address for the interface

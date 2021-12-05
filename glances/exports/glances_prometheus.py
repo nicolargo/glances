@@ -40,9 +40,7 @@ class Export(GlancesExport):
         super(Export, self).__init__(config=config, args=args)
 
         # Load the Prometheus configuration file section
-        self.export_enable = self.load_conf('prometheus',
-                                            mandatories=['host', 'port', 'labels'],
-                                            options=['prefix'])
+        self.export_enable = self.load_conf('prometheus', mandatories=['host', 'port', 'labels'], options=['prefix'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -89,8 +87,7 @@ class Export(GlancesExport):
             labels = self.parse_tags(self.labels)
             # Manage an internal dict between metric name and Gauge
             if metric_name not in self._metric_dict:
-                self._metric_dict[metric_name] = Gauge(metric_name, k,
-                                                       labelnames=listkeys(labels))
+                self._metric_dict[metric_name] = Gauge(metric_name, k, labelnames=listkeys(labels))
             # Write the value
             if hasattr(self._metric_dict[metric_name], 'labels'):
                 # Add the labels (see issue #1255)

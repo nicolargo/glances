@@ -29,9 +29,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
-                                     config=config,
-                                     stats_init_value=[])
+        super(Plugin, self).__init__(args=args, config=config, stats_init_value=[])
         self.args = args
         self.config = config
 
@@ -54,16 +52,19 @@ class Plugin(GlancesPlugin):
 
         if self.input_method == 'local':
             for k, v in iteritems(self.glances_amps.update()):
-                stats.append({'key': self.get_key(),
-                              'name': v.NAME,
-                              'result': v.result(),
-                              'refresh': v.refresh(),
-                              'timer': v.time_until_refresh(),
-                              'count': v.count(),
-                              'countmin': v.count_min(),
-                              'countmax': v.count_max(),
-                              'regex': v.regex() is not None},
-                              )
+                stats.append(
+                    {
+                        'key': self.get_key(),
+                        'name': v.NAME,
+                        'result': v.result(),
+                        'refresh': v.refresh(),
+                        'timer': v.time_until_refresh(),
+                        'count': v.count(),
+                        'countmin': v.count_min(),
+                        'countmax': v.count_max(),
+                        'regex': v.regex() is not None,
+                    },
+                )
         else:
             # Not available in SNMP mode
             pass

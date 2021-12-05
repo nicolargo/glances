@@ -49,7 +49,9 @@ class GlancesStatsClient(GlancesStats):
                 plugin = __import__(header + item)
             except ImportError:
                 # Server plugin can not be imported from the client side
-                logger.error("Can not import {} plugin. Please upgrade your Glances client/server version.".format(item))
+                logger.error(
+                    "Can not import {} plugin. Please upgrade your Glances client/server version.".format(item)
+                )
             else:
                 # Add the plugin to the dictionary
                 # The key is the plugin name

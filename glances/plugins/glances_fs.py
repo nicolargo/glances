@@ -41,27 +41,33 @@ import psutil
 # Used space on the disk: .1.3.6.1.4.1.2021.9.1.8.1
 # Percentage of space used on disk: .1.3.6.1.4.1.2021.9.1.9.1
 # Percentage of inodes used on disk: .1.3.6.1.4.1.2021.9.1.10.1
-snmp_oid = {'default': {'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
-                        'device_name': '1.3.6.1.4.1.2021.9.1.3',
-                        'size': '1.3.6.1.4.1.2021.9.1.6',
-                        'used': '1.3.6.1.4.1.2021.9.1.8',
-                        'percent': '1.3.6.1.4.1.2021.9.1.9'},
-            'windows': {'mnt_point': '1.3.6.1.2.1.25.2.3.1.3',
-                        'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
-                        'size': '1.3.6.1.2.1.25.2.3.1.5',
-                        'used': '1.3.6.1.2.1.25.2.3.1.6'},
-            'netapp': {'mnt_point': '1.3.6.1.4.1.789.1.5.4.1.2',
-                       'device_name': '1.3.6.1.4.1.789.1.5.4.1.10',
-                       'size': '1.3.6.1.4.1.789.1.5.4.1.3',
-                       'used': '1.3.6.1.4.1.789.1.5.4.1.4',
-                       'percent': '1.3.6.1.4.1.789.1.5.4.1.6'}}
+snmp_oid = {
+    'default': {
+        'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
+        'device_name': '1.3.6.1.4.1.2021.9.1.3',
+        'size': '1.3.6.1.4.1.2021.9.1.6',
+        'used': '1.3.6.1.4.1.2021.9.1.8',
+        'percent': '1.3.6.1.4.1.2021.9.1.9',
+    },
+    'windows': {
+        'mnt_point': '1.3.6.1.2.1.25.2.3.1.3',
+        'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
+        'size': '1.3.6.1.2.1.25.2.3.1.5',
+        'used': '1.3.6.1.2.1.25.2.3.1.6',
+    },
+    'netapp': {
+        'mnt_point': '1.3.6.1.4.1.789.1.5.4.1.2',
+        'device_name': '1.3.6.1.4.1.789.1.5.4.1.10',
+        'size': '1.3.6.1.4.1.789.1.5.4.1.3',
+        'used': '1.3.6.1.4.1.789.1.5.4.1.4',
+        'percent': '1.3.6.1.4.1.789.1.5.4.1.6',
+    },
+}
 snmp_oid['esxi'] = snmp_oid['windows']
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
-items_history_list = [{'name': 'percent',
-                       'description': 'File system usage in percent',
-                       'y_unit': '%'}]
+items_history_list = [{'name': 'percent', 'description': 'File system usage in percent', 'y_unit': '%'}]
 
 
 class Plugin(GlancesPlugin):
@@ -72,10 +78,9 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
-                                     config=config,
-                                     items_history_list=items_history_list,
-                                     stats_init_value=[])
+        super(Plugin, self).__init__(
+            args=args, config=config, items_history_list=items_history_list, stats_init_value=[]
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -131,7 +136,8 @@ class Plugin(GlancesPlugin):
                     'used': fs_usage.used,
                     'free': fs_usage.free,
                     'percent': fs_usage.percent,
-                    'key': self.get_key()}
+                    'key': self.get_key(),
+                }
                 stats.append(fs_current)
 
         elif self.input_method == 'snmp':
@@ -139,11 +145,9 @@ class Plugin(GlancesPlugin):
 
             # SNMP bulk command to get all file system in one shot
             try:
-                fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
-                                              bulk=True)
+                fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name], bulk=True)
             except KeyError:
-                fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid['default'],
-                                              bulk=True)
+                fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid['default'], bulk=True)
 
             # Loop over fs
             if self.short_system_name in ('windows', 'esxi'):
@@ -161,7 +165,8 @@ class Plugin(GlancesPlugin):
                         'size': size,
                         'used': used,
                         'percent': percent,
-                        'key': self.get_key()}
+                        'key': self.get_key(),
+                    }
                     # Do not take hidden file system into account
                     if self.is_hide(fs_current['mnt_point']):
                         continue
@@ -176,7 +181,8 @@ class Plugin(GlancesPlugin):
                         'size': int(fs_stat[fs]['size']) * 1024,
                         'used': int(fs_stat[fs]['used']) * 1024,
                         'percent': float(fs_stat[fs]['percent']),
-                        'key': self.get_key()}
+                        'key': self.get_key(),
+                    }
                     # Do not take hidden file system into account
                     if self.is_hide(fs_current['mnt_point']) or self.is_hide(fs_current['device_name']):
                         continue
@@ -197,7 +203,8 @@ class Plugin(GlancesPlugin):
         # Alert
         for i in self.stats:
             self.views[i[self.get_key()]]['used']['decoration'] = self.get_alert(
-                current=i['size'] - i['free'], maximum=i['size'], header=i['mnt_point'])
+                current=i['size'] - i['free'], maximum=i['size'], header=i['mnt_point']
+            )
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -228,25 +235,24 @@ class Plugin(GlancesPlugin):
             # New line
             ret.append(self.curse_new_line())
             if i['device_name'] == '' or i['device_name'] == 'none':
-                mnt_point = i['mnt_point'][-name_max_width + 1:]
+                mnt_point = i['mnt_point'][-name_max_width + 1 :]
             elif len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= name_max_width - 3:
                 # If possible concatenate mode info... Glances touch inside :)
                 mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
             elif len(i['mnt_point']) > name_max_width:
                 # Cut mount point name if it is too long
-                mnt_point = '_' + i['mnt_point'][-name_max_width + 1:]
+                mnt_point = '_' + i['mnt_point'][-name_max_width + 1 :]
             else:
                 mnt_point = i['mnt_point']
-            msg = '{:{width}}'.format(nativestr(mnt_point),
-                                      width=name_max_width)
+            msg = '{:{width}}'.format(nativestr(mnt_point), width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if args.fs_free_space:
                 msg = '{:>7}'.format(self.auto_unit(i['free']))
             else:
                 msg = '{:>7}'.format(self.auto_unit(i['used']))
-            ret.append(self.curse_add_line(msg, self.get_views(item=i[self.get_key()],
-                                                               key='used',
-                                                               option='decoration')))
+            ret.append(
+                self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='used', option='decoration'))
+            )
             msg = '{:>7}'.format(self.auto_unit(i['size']))
             ret.append(self.curse_add_line(msg))
 
