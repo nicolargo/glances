@@ -38,10 +38,7 @@ class Bar(object):
         sys.stdout.flush()
     """
 
-    def __init__(self, size,
-                 percentage_char='|', empty_char=' ',
-                 pre_char='[', post_char=']',
-                 with_text=True):
+    def __init__(self, size, percentage_char='|', empty_char=' ', pre_char='[', post_char=']', with_text=True):
         # Build curses_bars
         self.__curses_bars = [empty_char] * 5 + [percentage_char] * 5
         # Bar size

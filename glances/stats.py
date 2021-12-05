@@ -59,7 +59,7 @@ class GlancesStats(object):
         # Check if the attribute starts with 'get'
         if item.startswith('getViews'):
             # Get the plugin name
-            plugname = item[len('getViews'):].lower()
+            plugname = item[len('getViews') :].lower()
             # Get the plugin instance
             plugin = self._plugins[plugname]
             if hasattr(plugin, 'get_json_views'):
@@ -70,7 +70,7 @@ class GlancesStats(object):
                 raise AttributeError(item)
         elif item.startswith('get'):
             # Get the plugin name
-            plugname = item[len('get'):].lower()
+            plugname = item[len('get') :].lower()
             # Get the plugin instance
             plugin = self._plugins[plugname]
             if hasattr(plugin, 'get_stats'):
@@ -128,15 +128,11 @@ class GlancesStats(object):
             logger.error(traceback.format_exc())
             # Disable the plugin
             if args is not None:
-                setattr(args,
-                        'disable_' + name,
-                        False)
+                setattr(args, 'disable_' + name, False)
         else:
             # Set the disable_<name> to False by default
             if args is not None:
-                setattr(args,
-                        'disable_' + name,
-                        getattr(args, 'disable_' + name, False))
+                setattr(args, 'disable_' + name, getattr(args, 'disable_' + name, False))
 
     def load_plugins(self, args=None):
         """Load all plugins in the 'plugins' folder."""
@@ -148,10 +144,8 @@ class GlancesStats(object):
                item != 'plugin':
                 # Load the plugin
                 start_duration.reset()
-                self._load_plugin(os.path.basename(item),
-                                  args=args, config=self.config)
-                logger.debug("Plugin {} started in {} seconds".format(item,
-                                                                      start_duration.get()))
+                self._load_plugin(os.path.basename(item), args=args, config=self.config)
+                logger.debug("Plugin {} started in {} seconds".format(item, start_duration.get()))
 
         # Log plugins list
         logger.debug("Active plugins list: {}".format(self.getPluginsList()))
@@ -258,8 +252,7 @@ class GlancesStats(object):
 
         for e in self._exports:
             logger.debug("Export stats using the %s module" % e)
-            thread = threading.Thread(target=self._exports[e].update,
-                                      args=(input_stats,))
+            thread = threading.Thread(target=self._exports[e].update, args=(input_stats,))
             thread.start()
 
         return True

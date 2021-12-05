@@ -38,40 +38,39 @@ import psutil
 # 'key': 'interface_name'}
 # Fields description
 fields_description = {
-    'interface_name': {'description': 'Interface name.',
-                       'unit': 'string'},
-    'alias': {'description': 'Interface alias name (optional).',
-              'unit': 'string'},
-    'rx': {'description': 'The received/input rate (in bit per second).',
-           'unit': 'bps'},
-    'tx': {'description': 'The sent/output rate (in bit per second).',
-           'unit': 'bps'},
-    'cumulative_rx': {'description': 'The number of bytes received through the interface (cumulative).',
-                      'unit': 'bytes'},
-    'cumulative_tx': {'description': 'The number of bytes sent through the interface (cumulative).',
-                      'unit': 'bytes'},
-    'speed': {'description': 'Maximum interface speed (in bit per second). Can return 0 on some operating-system.',
-              'unit': 'bps'},
-    'is_up': {'description': 'Is the interface up ?',
-              'unit': 'bool'},
-    'time_since_update': {'description': 'Number of seconds since last update.',
-                          'unit': 'seconds'},
+    'interface_name': {'description': 'Interface name.', 'unit': 'string'},
+    'alias': {'description': 'Interface alias name (optional).', 'unit': 'string'},
+    'rx': {'description': 'The received/input rate (in bit per second).', 'unit': 'bps'},
+    'tx': {'description': 'The sent/output rate (in bit per second).', 'unit': 'bps'},
+    'cumulative_rx': {
+        'description': 'The number of bytes received through the interface (cumulative).',
+        'unit': 'bytes',
+    },
+    'cumulative_tx': {'description': 'The number of bytes sent through the interface (cumulative).', 'unit': 'bytes'},
+    'speed': {
+        'description': 'Maximum interface speed (in bit per second). Can return 0 on some operating-system.',
+        'unit': 'bps',
+    },
+    'is_up': {'description': 'Is the interface up ?', 'unit': 'bool'},
+    'time_since_update': {'description': 'Number of seconds since last update.', 'unit': 'seconds'},
 }
 
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
 # Dict key = interface_name
-snmp_oid = {'default': {'interface_name': '1.3.6.1.2.1.2.2.1.2',
-                        'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
-                        'cumulative_tx': '1.3.6.1.2.1.2.2.1.16'}}
+snmp_oid = {
+    'default': {
+        'interface_name': '1.3.6.1.2.1.2.2.1.2',
+        'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
+        'cumulative_tx': '1.3.6.1.2.1.2.2.1.16',
+    }
+}
 
 # Define the history items list
-items_history_list = [{'name': 'rx',
-                       'description': 'Download rate per second',
-                       'y_unit': 'bit/s'},
-                      {'name': 'tx',
-                       'description': 'Upload rate per second',
-                       'y_unit': 'bit/s'}]
+items_history_list = [
+    {'name': 'rx', 'description': 'Download rate per second', 'y_unit': 'bit/s'},
+    {'name': 'tx', 'description': 'Upload rate per second', 'y_unit': 'bit/s'},
+]
 
 
 class PluginModel(GlancesPluginModel):
@@ -93,8 +92,7 @@ class PluginModel(GlancesPluginModel):
 
         # Hide stats if it has never been != 0
         if config is not None:
-            self.hide_zero = config.get_bool_value(
-                self.plugin_name, 'hide_zero', default=False)
+            self.hide_zero = config.get_bool_value(self.plugin_name, 'hide_zero', default=False)
         else:
             self.hide_zero = False
         self.hide_zero_fields = ['rx', 'tx']
@@ -244,7 +242,8 @@ class PluginModel(GlancesPluginModel):
                             'cumulative_tx': cumulative_tx,
                             'tx': tx,
                             'cumulative_cx': cumulative_cx,
-                            'cx': cx}
+                            'cx': cx,
+                        }
                     except KeyError:
                         continue
                     else:
@@ -281,13 +280,9 @@ class PluginModel(GlancesPluginModel):
             # If nothing is define in the configuration file...
             # ... then use the interface speed (not available on all systems)
             if alert_rx == 'DEFAULT' and 'speed' in i and i['speed'] != 0:
-                alert_rx = self.get_alert(current=bps_rx,
-                                          maximum=i['speed'],
-                                          header='rx')
+                alert_rx = self.get_alert(current=bps_rx, maximum=i['speed'], header='rx')
             if alert_tx == 'DEFAULT' and 'speed' in i and i['speed'] != 0:
-                alert_tx = self.get_alert(current=bps_tx,
-                                          maximum=i['speed'],
-                                          header='tx')
+                alert_tx = self.get_alert(current=bps_tx, maximum=i['speed'], header='tx')
             # then decorates
             self.views[i[self.get_key()]]['rx']['decoration'] = alert_rx
             self.views[i[self.get_key()]]['tx']['decoration'] = alert_tx
@@ -346,7 +341,7 @@ class PluginModel(GlancesPluginModel):
                 if_name = i['alias']
             if len(if_name) > name_max_width:
                 # Cut interface name if it is too long
-                if_name = '_' + if_name[-name_max_width + 1:]
+                if_name = '_' + if_name[-name_max_width + 1 :]
 
             if args.byte:
                 # Bytes per second (for dummy)
@@ -360,13 +355,17 @@ class PluginModel(GlancesPluginModel):
             if args.network_cumul:
                 rx = self.auto_unit(int(i['cumulative_rx'] * to_bit)) + unit
                 tx = self.auto_unit(int(i['cumulative_tx'] * to_bit)) + unit
-                sx = self.auto_unit(int(i['cumulative_rx'] * to_bit) +
-                                    int(i['cumulative_tx'] * to_bit)) + unit
+                sx = self.auto_unit(int(i['cumulative_rx'] * to_bit) + int(i['cumulative_tx'] * to_bit)) + unit
             else:
                 rx = self.auto_unit(int(i['rx'] // i['time_since_update'] * to_bit)) + unit
                 tx = self.auto_unit(int(i['tx'] // i['time_since_update'] * to_bit)) + unit
-                sx = self.auto_unit(int(i['rx'] // i['time_since_update'] * to_bit) +
-                                    int(i['tx'] // i['time_since_update'] * to_bit)) + unit
+                sx = (
+                    self.auto_unit(
+                        int(i['rx'] // i['time_since_update'] * to_bit)
+                        + int(i['tx'] // i['time_since_update'] * to_bit)
+                    )
+                    + unit
+                )
 
             # New line
             ret.append(self.curse_new_line())
@@ -377,10 +376,12 @@ class PluginModel(GlancesPluginModel):
                 ret.append(self.curse_add_line(msg))
             else:
                 msg = '{:>7}'.format(rx)
-                ret.append(self.curse_add_line(
-                    msg, self.get_views(item=i[self.get_key()], key='rx', option='decoration')))
+                ret.append(
+                    self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='rx', option='decoration'))
+                )
                 msg = '{:>7}'.format(tx)
-                ret.append(self.curse_add_line(
-                    msg, self.get_views(item=i[self.get_key()], key='tx', option='decoration')))
+                ret.append(
+                    self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='tx', option='decoration'))
+                )
 
         return ret

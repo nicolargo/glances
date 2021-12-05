@@ -45,9 +45,7 @@ class Export(GlancesExport):
         # N/A
 
         # Load the Riemann configuration
-        self.export_enable = self.load_conf('riemann',
-                                            mandatories=['host', 'port'],
-                                            options=[])
+        self.export_enable = self.load_conf('riemann', mandatories=['host', 'port'], options=[])
         if not self.export_enable:
             sys.exit(2)
 

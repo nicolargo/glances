@@ -41,14 +41,17 @@ except ImportError:
 
 def compress(func):
     """Compress result with deflate algorithm if the client ask for it."""
+
     def wrapper(*args, **kwargs):
         """Wrapper that take one function and return the compressed result."""
         ret = func(*args, **kwargs)
-        logger.debug('Receive {} {} request with header: {}'.format(
-            request.method,
-            request.url,
-            ['{}: {}'.format(h, request.headers.get(h)) for h in request.headers.keys()]
-        ))
+        logger.debug(
+            'Receive {} {} request with header: {}'.format(
+                request.method,
+                request.url,
+                ['{}: {}'.format(h, request.headers.get(h)) for h in request.headers.keys()],
+            )
+        )
         if 'deflate' in request.headers.get('Accept-Encoding', ''):
             response.headers['Content-Encoding'] = 'deflate'
             ret = deflate_compress(ret)
@@ -59,11 +62,9 @@ def compress(func):
     def deflate_compress(data, compress_level=6):
         """Compress given data using the DEFLATE algorithm"""
         # Init compression
-        zobj = zlib.compressobj(compress_level,
-                                zlib.DEFLATED,
-                                zlib.MAX_WBITS,
-                                zlib.DEF_MEM_LEVEL,
-                                zlib.Z_DEFAULT_STRATEGY)
+        zobj = zlib.compressobj(
+            compress_level, zlib.DEFLATED, zlib.MAX_WBITS, zlib.DEF_MEM_LEVEL, zlib.Z_DEFAULT_STRATEGY
+        )
 
         # Return compressed object
         return zobj.compress(b(data)) + zobj.flush()
@@ -96,8 +97,7 @@ class GlancesBottle(object):
         self.load_config(config)
 
         # Set the bind URL
-        self.bind_url = 'http://{}:{}/'.format(self.args.bind_address,
-                                               self.args.port)
+        self.bind_url = 'http://{}:{}/'.format(self.args.bind_address, self.args.port)
 
         # Init Bottle
         self._app = Bottle()
@@ -136,6 +136,7 @@ class GlancesBottle(object):
         """Check if a username/password combination is valid."""
         if username == self.args.username:
             from glances.password import GlancesPassword
+
             pwd = GlancesPassword()
             return pwd.check_password(self.args.password, pwd.sha256_hash(password))
         else:
@@ -144,44 +145,31 @@ class GlancesBottle(object):
     def _route(self):
         """Define route."""
         # REST API
-        self._app.route('/api/%s/config' % self.API_VERSION, method="GET",
-                        callback=self._api_config)
-        self._app.route('/api/%s/config/<item>' % self.API_VERSION, method="GET",
-                        callback=self._api_config_item)
-        self._app.route('/api/%s/args' % self.API_VERSION, method="GET",
-                        callback=self._api_args)
-        self._app.route('/api/%s/args/<item>' % self.API_VERSION, method="GET",
-                        callback=self._api_args_item)
-        self._app.route('/api/%s/help' % self.API_VERSION, method="GET",
-                        callback=self._api_help)
-        self._app.route('/api/%s/pluginslist' % self.API_VERSION, method="GET",
-                        callback=self._api_plugins)
-        self._app.route('/api/%s/all' % self.API_VERSION, method="GET",
-                        callback=self._api_all)
-        self._app.route('/api/%s/all/limits' % self.API_VERSION, method="GET",
-                        callback=self._api_all_limits)
-        self._app.route('/api/%s/all/views' % self.API_VERSION, method="GET",
-                        callback=self._api_all_views)
-        self._app.route('/api/%s/<plugin>' % self.API_VERSION, method="GET",
-                        callback=self._api)
-        self._app.route('/api/%s/<plugin>/history' % self.API_VERSION, method="GET",
-                        callback=self._api_history)
-        self._app.route('/api/%s/<plugin>/history/<nb:int>' % self.API_VERSION, method="GET",
-                        callback=self._api_history)
-        self._app.route('/api/%s/<plugin>/limits' % self.API_VERSION, method="GET",
-                        callback=self._api_limits)
-        self._app.route('/api/%s/<plugin>/views' % self.API_VERSION, method="GET",
-                        callback=self._api_views)
-        self._app.route('/api/%s/<plugin>/<item>' % self.API_VERSION, method="GET",
-                        callback=self._api_item)
-        self._app.route('/api/%s/<plugin>/<item>/history' % self.API_VERSION, method="GET",
-                        callback=self._api_item_history)
-        self._app.route('/api/%s/<plugin>/<item>/history/<nb:int>' % self.API_VERSION, method="GET",
-                        callback=self._api_item_history)
-        self._app.route('/api/%s/<plugin>/<item>/<value>' % self.API_VERSION, method="GET",
-                        callback=self._api_value)
-        bindmsg = 'Glances RESTful API Server started on {}api/{}/'.format(self.bind_url,
-                                                                           self.API_VERSION)
+        self._app.route('/api/%s/config' % self.API_VERSION, method="GET", callback=self._api_config)
+        self._app.route('/api/%s/config/<item>' % self.API_VERSION, method="GET", callback=self._api_config_item)
+        self._app.route('/api/%s/args' % self.API_VERSION, method="GET", callback=self._api_args)
+        self._app.route('/api/%s/args/<item>' % self.API_VERSION, method="GET", callback=self._api_args_item)
+        self._app.route('/api/%s/help' % self.API_VERSION, method="GET", callback=self._api_help)
+        self._app.route('/api/%s/pluginslist' % self.API_VERSION, method="GET", callback=self._api_plugins)
+        self._app.route('/api/%s/all' % self.API_VERSION, method="GET", callback=self._api_all)
+        self._app.route('/api/%s/all/limits' % self.API_VERSION, method="GET", callback=self._api_all_limits)
+        self._app.route('/api/%s/all/views' % self.API_VERSION, method="GET", callback=self._api_all_views)
+        self._app.route('/api/%s/<plugin>' % self.API_VERSION, method="GET", callback=self._api)
+        self._app.route('/api/%s/<plugin>/history' % self.API_VERSION, method="GET", callback=self._api_history)
+        self._app.route(
+            '/api/%s/<plugin>/history/<nb:int>' % self.API_VERSION, method="GET", callback=self._api_history
+        )
+        self._app.route('/api/%s/<plugin>/limits' % self.API_VERSION, method="GET", callback=self._api_limits)
+        self._app.route('/api/%s/<plugin>/views' % self.API_VERSION, method="GET", callback=self._api_views)
+        self._app.route('/api/%s/<plugin>/<item>' % self.API_VERSION, method="GET", callback=self._api_item)
+        self._app.route(
+            '/api/%s/<plugin>/<item>/history' % self.API_VERSION, method="GET", callback=self._api_item_history
+        )
+        self._app.route(
+            '/api/%s/<plugin>/<item>/history/<nb:int>' % self.API_VERSION, method="GET", callback=self._api_item_history
+        )
+        self._app.route('/api/%s/<plugin>/<item>/<value>' % self.API_VERSION, method="GET", callback=self._api_value)
+        bindmsg = 'Glances RESTful API Server started on {}api/{}/'.format(self.bind_url, self.API_VERSION)
         logger.info(bindmsg)
 
         # WEB UI
@@ -210,14 +198,10 @@ class GlancesBottle(object):
             # Try to open the Glances Web UI in the default Web browser if:
             # 1) --open-web-browser option is used
             # 2) Glances standalone mode is running on Windows OS
-            webbrowser.open(self.bind_url,
-                            new=2,
-                            autoraise=1)
+            webbrowser.open(self.bind_url, new=2, autoraise=1)
 
         try:
-            self._app.run(host=self.args.bind_address,
-                          port=self.args.port,
-                          quiet=not self.args.debug)
+            self._app.run(host=self.args.bind_address, port=self.args.port, quiet=not self.args.debug)
         except socket.error as e:
             logger.critical('Error: Can not ran Glances Web server ({})'.format(e))
 
@@ -488,7 +472,9 @@ class GlancesBottle(object):
                 ret = self.stats.get_plugin(plugin).get_stats_value(item, value)
 
             if ret is None:
-                abort(404, "Cannot get item %s(%s=%s) in plugin %s" % ('history ' if history else '', item, value, plugin))
+                abort(
+                    404, "Cannot get item %s(%s=%s) in plugin %s" % ('history ' if history else '', item, value, plugin)
+                )
 
         return ret
 
@@ -618,7 +604,9 @@ class EnableCors(object):
             # set CORS headers
             response.headers['Access-Control-Allow-Origin'] = '*'
             response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
-            response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
+            response.headers[
+                'Access-Control-Allow-Headers'
+            ] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
 
             if request.method != 'OPTIONS':
                 # actual request; reply with the actual response

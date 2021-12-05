@@ -29,24 +29,31 @@ from glances.globals import iteritems
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # SNMP OID
-snmp_oid = {'default': {'hostname': '1.3.6.1.2.1.1.5.0',
-                        'system_name': '1.3.6.1.2.1.1.1.0'},
-            'netapp': {'hostname': '1.3.6.1.2.1.1.5.0',
-                       'system_name': '1.3.6.1.2.1.1.1.0',
-                       'platform': '1.3.6.1.4.1.789.1.1.5.0'}}
+snmp_oid = {
+    'default': {'hostname': '1.3.6.1.2.1.1.5.0', 'system_name': '1.3.6.1.2.1.1.1.0'},
+    'netapp': {
+        'hostname': '1.3.6.1.2.1.1.5.0',
+        'system_name': '1.3.6.1.2.1.1.1.0',
+        'platform': '1.3.6.1.4.1.789.1.1.5.0',
+    },
+}
 
 # SNMP to human read
 # Dict (key: OS short name) of dict (reg exp OID to human)
 # Windows:
 # http://msdn.microsoft.com/en-us/library/windows/desktop/ms724832%28v=vs.85%29.aspx
-snmp_to_human = {'windows': {'Windows Version 10.0': 'Windows 10 or Server 2016',
-                             'Windows Version 6.3': 'Windows 8.1 or Server 2012R2',
-                             'Windows Version 6.2': 'Windows 8 or Server 2012',
-                             'Windows Version 6.1': 'Windows 7 or Server 2008R2',
-                             'Windows Version 6.0': 'Windows Vista or Server 2008',
-                             'Windows Version 5.2': 'Windows XP 64bits or 2003 server',
-                             'Windows Version 5.1': 'Windows XP',
-                             'Windows Version 5.0': 'Windows 2000'}}
+snmp_to_human = {
+    'windows': {
+        'Windows Version 10.0': 'Windows 10 or Server 2016',
+        'Windows Version 6.3': 'Windows 8.1 or Server 2012R2',
+        'Windows Version 6.2': 'Windows 8 or Server 2012',
+        'Windows Version 6.1': 'Windows 7 or Server 2008R2',
+        'Windows Version 6.0': 'Windows Vista or Server 2008',
+        'Windows Version 5.2': 'Windows XP 64bits or 2003 server',
+        'Windows Version 5.1': 'Windows XP',
+        'Windows Version 5.0': 'Windows 2000',
+    }
+}
 
 
 def _linux_os_release():
@@ -121,8 +128,7 @@ class PluginModel(GlancesPluginModel):
                     else:
                         stats['linux_distro'] = ' '.join(linux_distro[:2])
                 stats['os_version'] = platform.release()
-            elif (stats['os_name'].endswith('BSD') or
-                  stats['os_name'] == 'SunOS'):
+            elif stats['os_name'].endswith('BSD') or stats['os_name'] == 'SunOS':
                 stats['os_version'] = platform.release()
             elif stats['os_name'] == "Darwin":
                 stats['os_version'] = platform.mac_ver()[0]
@@ -139,15 +145,13 @@ class PluginModel(GlancesPluginModel):
             if stats['os_name'] == "Linux":
                 stats['hr_name'] = stats['linux_distro']
             else:
-                stats['hr_name'] = '{} {}'.format(
-                    stats['os_name'], stats['os_version'])
+                stats['hr_name'] = '{} {}'.format(stats['os_name'], stats['os_version'])
             stats['hr_name'] += ' {}'.format(stats['platform'])
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             try:
-                stats = self.get_stats_snmp(
-                    snmp_oid=snmp_oid[self.short_system_name])
+                stats = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name])
             except KeyError:
                 stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
             # Default behavior: display all the information
@@ -193,15 +197,12 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg, "TITLE"))
         # System info
         if self.stats['os_name'] == "Linux" and self.stats['linux_distro']:
-            msg = ' ({} {} / {} {})'.format(self.stats['linux_distro'],
-                                            self.stats['platform'],
-                                            self.stats['os_name'],
-                                            self.stats['os_version'])
+            msg = ' ({} {} / {} {})'.format(
+                self.stats['linux_distro'], self.stats['platform'], self.stats['os_name'], self.stats['os_version']
+            )
         else:
             try:
-                msg = ' ({} {} {})'.format(self.stats['os_name'],
-                                           self.stats['os_version'],
-                                           self.stats['platform'])
+                msg = ' ({} {} {})'.format(self.stats['os_name'], self.stats['os_version'], self.stats['platform'])
             except Exception:
                 msg = ' ({})'.format(self.stats['os_name'])
         ret.append(self.curse_add_line(msg, optional=True))

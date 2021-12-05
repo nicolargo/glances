@@ -25,11 +25,12 @@ import psutil
 
 # Fields description
 fields_description = {
-    'phys': {'description': 'Number of physical cores (hyper thread CPUs are excluded).',
-             'unit': 'number'},
-    'log': {'description': 'Number of logical CPUs. A logical CPU is the number of \
+    'phys': {'description': 'Number of physical cores (hyper thread CPUs are excluded).', 'unit': 'number'},
+    'log': {
+        'description': 'Number of logical CPUs. A logical CPU is the number of \
 physical cores multiplied by the number of threads that can run on each core.',
-            'unit': 'number'},
+        'unit': 'number',
+    },
 }
 
 

@@ -60,11 +60,7 @@ def __secure_popen(cmd):
     for sub_cmd in cmd.split('|'):
         # Split by space ' '
         sub_cmd_split = [i for i in sub_cmd.split(' ') if i]
-        p = Popen(sub_cmd_split,
-                  shell=False,
-                  stdin=sub_cmd_stdin,
-                  stdout=PIPE,
-                  stderr=PIPE)
+        p = Popen(sub_cmd_split, shell=False, stdin=sub_cmd_stdin, stdout=PIPE, stderr=PIPE)
         if p_last is not None:
             # Allow p_last to receive a SIGPIPE if p exits.
             p_last.stdout.close()

@@ -43,9 +43,7 @@ class Export(GlancesExport):
         self.prefix = None
 
         # Load the configuration file
-        self.export_enable = self.load_conf('statsd',
-                                            mandatories=['host', 'port'],
-                                            options=['prefix'])
+        self.export_enable = self.load_conf('statsd', mandatories=['host', 'port'], options=['prefix'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -60,12 +58,8 @@ class Export(GlancesExport):
         """Init the connection to the Statsd server."""
         if not self.export_enable:
             return None
-        logger.info(
-            "Stats will be exported to StatsD server: {}:{}".format(self.host,
-                                                                    self.port))
-        return StatsClient(self.host,
-                           int(self.port),
-                           prefix=self.prefix)
+        logger.info("Stats will be exported to StatsD server: {}:{}".format(self.host, self.port))
+        return StatsClient(self.host, int(self.port), prefix=self.prefix)
 
     def export(self, name, columns, points):
         """Export the stats to the Statsd server."""
@@ -75,8 +69,7 @@ class Export(GlancesExport):
             stat_name = '{}.{}'.format(name, columns[i])
             stat_value = points[i]
             try:
-                self.client.gauge(normalize(stat_name),
-                                  stat_value)
+                self.client.gauge(normalize(stat_name), stat_value)
             except Exception as e:
                 logger.error("Can not export stats to Statsd (%s)" % e)
         logger.debug("Export {} stats to Statsd".format(name))

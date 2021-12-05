@@ -27,42 +27,39 @@ import psutil
 
 # Fields description
 fields_description = {
-    'total': {'description': 'Total swap memory.',
-              'unit': 'bytes',
-              'min_symbol': 'K'},
-    'used': {'description': 'Used swap memory.',
-             'unit': 'bytes',
-             'min_symbol': 'K'},
-    'free': {'description': 'Free swap memory.',
-             'unit': 'bytes',
-             'min_symbol': 'K'},
-    'percent': {'description': 'Used swap memory in percentage.',
-                'unit': 'percent'},
-    'sin': {'description': 'The number of bytes the system has swapped in from disk (cumulative).',
-            'unit': 'bytes',
-            'min_symbol': 'K'},
-    'sout': {'description': 'The number of bytes the system has swapped out from disk (cumulative).',
-             'unit': 'bytes',
-             'min_symbol': 'K'},
-    'time_since_update': {'description': 'Number of seconds since last update.',
-                          'unit': 'seconds'},
+    'total': {'description': 'Total swap memory.', 'unit': 'bytes', 'min_symbol': 'K'},
+    'used': {'description': 'Used swap memory.', 'unit': 'bytes', 'min_symbol': 'K'},
+    'free': {'description': 'Free swap memory.', 'unit': 'bytes', 'min_symbol': 'K'},
+    'percent': {'description': 'Used swap memory in percentage.', 'unit': 'percent'},
+    'sin': {
+        'description': 'The number of bytes the system has swapped in from disk (cumulative).',
+        'unit': 'bytes',
+        'min_symbol': 'K',
+    },
+    'sout': {
+        'description': 'The number of bytes the system has swapped out from disk (cumulative).',
+        'unit': 'bytes',
+        'min_symbol': 'K',
+    },
+    'time_since_update': {'description': 'Number of seconds since last update.', 'unit': 'seconds'},
 }
 
 # SNMP OID
 # Total Swap Size: .1.3.6.1.4.1.2021.4.3.0
 # Available Swap Space: .1.3.6.1.4.1.2021.4.4.0
-snmp_oid = {'default': {'total': '1.3.6.1.4.1.2021.4.3.0',
-                        'free': '1.3.6.1.4.1.2021.4.4.0'},
-            'windows': {'mnt_point': '1.3.6.1.2.1.25.2.3.1.3',
-                        'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
-                        'size': '1.3.6.1.2.1.25.2.3.1.5',
-                        'used': '1.3.6.1.2.1.25.2.3.1.6'}}
+snmp_oid = {
+    'default': {'total': '1.3.6.1.4.1.2021.4.3.0', 'free': '1.3.6.1.4.1.2021.4.4.0'},
+    'windows': {
+        'mnt_point': '1.3.6.1.2.1.25.2.3.1.3',
+        'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
+        'size': '1.3.6.1.2.1.25.2.3.1.5',
+        'used': '1.3.6.1.2.1.25.2.3.1.6',
+    },
+}
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
-items_history_list = [{'name': 'percent',
-                       'description': 'Swap memory usage',
-                       'y_unit': '%'}]
+items_history_list = [{'name': 'percent', 'description': 'Swap memory usage', 'y_unit': '%'}]
 
 
 class PluginModel(GlancesPluginModel):
@@ -117,8 +114,7 @@ class PluginModel(GlancesPluginModel):
             if self.short_system_name == 'windows':
                 # Mem stats for Windows OS are stored in the FS table
                 try:
-                    fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
-                                                  bulk=True)
+                    fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name], bulk=True)
                 except KeyError:
                     self.reset()
                 else:
@@ -149,8 +145,7 @@ class PluginModel(GlancesPluginModel):
 
                 # percent: the percentage usage calculated as (total -
                 # available) / total * 100.
-                stats['percent'] = float(
-                    (stats['total'] - stats['free']) / stats['total'] * 100)
+                stats['percent'] = float((stats['total'] - stats['free']) / stats['total'] * 100)
 
         # Update the stats
         self.stats = stats
@@ -184,8 +179,7 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg))
         # Percent memory usage
         msg = '{:>6.1%}'.format(self.stats['percent'] / 100)
-        ret.append(self.curse_add_line(
-            msg, self.get_views(key='percent', option='decoration')))
+        ret.append(self.curse_add_line(msg, self.get_views(key='percent', option='decoration')))
 
         # Second line
         # total

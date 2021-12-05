@@ -90,8 +90,7 @@ class PluginModel(GlancesPluginModel):
             stats = []
             # Get the temperature
             try:
-                temperature = self.__set_type(self.glances_grab_sensors.get('temperature_core'),
-                                              'temperature_core')
+                temperature = self.__set_type(self.glances_grab_sensors.get('temperature_core'), 'temperature_core')
             except Exception as e:
                 logger.error("Cannot grab sensors temperatures (%s)" % e)
             else:
@@ -99,8 +98,7 @@ class PluginModel(GlancesPluginModel):
                 stats.extend(temperature)
             # Get the FAN speed
             try:
-                fan_speed = self.__set_type(self.glances_grab_sensors.get('fan_speed'),
-                                            'fan_speed')
+                fan_speed = self.__set_type(self.glances_grab_sensors.get('fan_speed'), 'fan_speed')
             except Exception as e:
                 logger.error("Cannot grab FAN speed (%s)" % e)
             else:
@@ -185,11 +183,9 @@ class PluginModel(GlancesPluginModel):
                 else:
                     alert = 'OK'
             elif i['type'] == 'battery':
-                alert = self.get_alert(current=100 - i['value'],
-                                       header=i['type'])
+                alert = self.get_alert(current=100 - i['value'], header=i['type'])
             else:
-                alert = self.get_alert(current=i['value'],
-                                       header=i['type'])
+                alert = self.get_alert(current=i['value'], header=i['type'])
             # Set the alert in the view
             self.views[i[self.get_key()]]['value']['decoration'] = alert
 
@@ -216,18 +212,15 @@ class PluginModel(GlancesPluginModel):
                 continue
             # New line
             ret.append(self.curse_new_line())
-            msg = '{:{width}}'.format(i["label"][:name_max_width],
-                                      width=name_max_width)
+            msg = '{:{width}}'.format(i["label"][:name_max_width], width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if i['value'] in (b'ERR', b'SLP', b'UNK', b'NOS'):
                 msg = '{:>13}'.format(i['value'])
-                ret.append(self.curse_add_line(
-                    msg, self.get_views(item=i[self.get_key()],
-                                        key='value',
-                                        option='decoration')))
+                ret.append(
+                    self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='value', option='decoration'))
+                )
             else:
-                if (args.fahrenheit and i['type'] != 'battery' and
-                        i['type'] != 'fan_speed'):
+                if args.fahrenheit and i['type'] != 'battery' and i['type'] != 'fan_speed':
                     value = to_fahrenheit(i['value'])
                     unit = 'F'
                 else:
@@ -235,10 +228,11 @@ class PluginModel(GlancesPluginModel):
                     unit = i['unit']
                 try:
                     msg = '{:>13.0f}{}'.format(value, unit)
-                    ret.append(self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()],
-                                            key='value',
-                                            option='decoration')))
+                    ret.append(
+                        self.curse_add_line(
+                            msg, self.get_views(item=i[self.get_key()], key='value', option='decoration')
+                        )
+                    )
                 except (TypeError, ValueError):
                     pass
 

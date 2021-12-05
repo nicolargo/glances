@@ -37,9 +37,7 @@ from glances.thresholds import glances_thresholds
 from glances.timer import Counter, Timer
 
 
-fields_unit_short = {
-    'percent': '%'
-}
+fields_unit_short = {'percent': '%'}
 
 fields_unit_type = {
     'percent': 'float',
@@ -53,7 +51,7 @@ fields_unit_type = {
     'second': 'int',
     'seconds': 'int',
     'byte': 'int',
-    'bytes': 'int'
+    'bytes': 'int',
 }
 
 
@@ -110,8 +108,7 @@ class GlancesPluginModel(object):
         # Init the limits (configuration keys) dictionary
         self._limits = dict()
         if config is not None:
-            logger.debug('Load section {} in {}'.format(self.plugin_name,
-                                                        config.config_file_paths()))
+            logger.debug('Load section {} in {}'.format(self.plugin_name, config.config_file_paths()))
             self.load_limits(config=config)
 
         # Init the actions
@@ -188,9 +185,7 @@ class GlancesPluginModel(object):
             return json.dumps(d, ensure_ascii=False)
 
     def history_enable(self):
-        return self.args is not None and \
-            not self.args.disable_history and \
-            self.get_items_history_list() is not None
+        return self.args is not None and not self.args.disable_history and self.get_items_history_list() is not None
 
     def init_stats_history(self):
         """Init the stats history (dict of GlancesAttribute)."""
@@ -224,14 +219,17 @@ class GlancesPluginModel(object):
                             nativestr(l_export[item_name]) + '_' + nativestr(i['name']),
                             l_export[i['name']],
                             description=i['description'],
-                            history_max_size=self._limits['history_size'])
+                            history_max_size=self._limits['history_size'],
+                        )
                 else:
                     # Stats is not a list
                     # Add the item to the history directly
-                    self.stats_history.add(nativestr(i['name']),
-                                           self.get_export()[i['name']],
-                                           description=i['description'],
-                                           history_max_size=self._limits['history_size'])
+                    self.stats_history.add(
+                        nativestr(i['name']),
+                        self.get_export()[i['name']],
+                        description=i['description'],
+                        history_max_size=self._limits['history_size'],
+                    )
 
     def get_items_history_list(self):
         """Return the items history list."""
@@ -334,16 +332,23 @@ class GlancesPluginModel(object):
         """Get the stats sorted by an alias (if present) or key."""
         key = self.get_key()
         try:
-            return sorted(self.stats, key=lambda stat: tuple(map(
-                lambda part: int(part) if part.isdigit() else part.lower(),
-                re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key])
-            )))
+            return sorted(
+                self.stats,
+                key=lambda stat: tuple(
+                    map(
+                        lambda part: int(part) if part.isdigit() else part.lower(),
+                        re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key]),
+                    )
+                ),
+            )
         except TypeError:
             # Correct "Starting an alias with a number causes a crash #1885"
-            return sorted(self.stats, key=lambda stat: tuple(map(
-                lambda part: part.lower(),
-                re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key])
-            )))
+            return sorted(
+                self.stats,
+                key=lambda stat: tuple(
+                    map(lambda part: part.lower(), re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key]))
+                ),
+            )
 
     @short_system_name.setter
     def short_system_name(self, short_name):
@@ -364,10 +369,12 @@ class GlancesPluginModel(object):
         from glances.snmp import GlancesSNMPClient
 
         # Init the SNMP request
-        snmp_client = GlancesSNMPClient(host=self.args.client,
-                                       port=self.args.snmp_port,
-                                       version=self.args.snmp_version,
-                                       community=self.args.snmp_community)
+        snmp_client = GlancesSNMPClient(
+            host=self.args.client,
+            port=self.args.snmp_port,
+            version=self.args.snmp_version,
+            community=self.args.snmp_community,
+        )
 
         # Process the SNMP request
         ret = {}
@@ -380,8 +387,9 @@ class GlancesPluginModel(object):
                 # Note: key is the item indexed but the OID result
                 for item in snmp_result:
                     if iterkeys(item)[0].startswith(itervalues(snmp_oid)[0]):
-                        ret[iterkeys(snmp_oid)[0] + iterkeys(item)
-                            [0].split(itervalues(snmp_oid)[0])[1]] = itervalues(item)[0]
+                        ret[iterkeys(snmp_oid)[0] + iterkeys(item)[0].split(itervalues(snmp_oid)[0])[1]] = itervalues(
+                            item
+                        )[0]
             else:
                 # Build the internal dict with the SNMP result
                 # Note: key is the first item in the snmp_oid
@@ -457,8 +465,7 @@ class GlancesPluginModel(object):
             try:
                 return self._json_dumps({value: [i for i in self.stats if i[item] == value]})
             except (KeyError, ValueError) as e:
-                logger.error(
-                    "Cannot get item({})=value({}) ({})".format(item, value, e))
+                logger.error("Cannot get item({})=value({}) ({})".format(item, value, e))
                 return None
 
     def update_views_hidden(self):
@@ -479,18 +486,14 @@ class GlancesPluginModel(object):
         """
         if not self.hide_zero:
             return False
-        if (isinstance(self.get_raw(), list) and
-                self.get_raw() is not None and
-                self.get_key() is not None):
+        if isinstance(self.get_raw(), list) and self.get_raw() is not None and self.get_key() is not None:
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
                 if any([i[f] for f in self.hide_zero_fields]):
                     for f in self.hide_zero_fields:
-                        self.views[i[self.get_key(
-                        )]][f]['_zero'] = self.views[i[self.get_key()]][f]['hidden']
+                        self.views[i[self.get_key()]][f]['_zero'] = self.views[i[self.get_key()]][f]['hidden']
                 for f in self.hide_zero_fields:
-                    self.views[i[self.get_key(
-                    )]][f]['hidden'] = self.views[i[self.get_key()]][f]['_zero'] and i[f] == 0
+                    self.views[i[self.get_key()]][f]['hidden'] = self.views[i[self.get_key()]][f]['_zero'] and i[f] == 0
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             #
             # Warning: This code has never been tested because
@@ -520,30 +523,36 @@ class GlancesPluginModel(object):
         """
         ret = {}
 
-        if (isinstance(self.get_raw(), list) and
-                self.get_raw() is not None and
-                self.get_key() is not None):
+        if isinstance(self.get_raw(), list) and self.get_raw() is not None and self.get_key() is not None:
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
                 # i[self.get_key()] is the interface name (example for NETWORK)
                 ret[i[self.get_key()]] = {}
                 for key in listkeys(i):
-                    value = {'decoration': 'DEFAULT',
-                             'optional': False,
-                             'additional': False,
-                             'splittable': False,
-                             'hidden': False,
-                             '_zero': self.views[i[self.get_key()]][key]['_zero'] if i[self.get_key()] in self.views and key in self.views[i[self.get_key()]] and 'zero' in self.views[i[self.get_key()]][key] else True}
+                    value = {
+                        'decoration': 'DEFAULT',
+                        'optional': False,
+                        'additional': False,
+                        'splittable': False,
+                        'hidden': False,
+                        '_zero': self.views[i[self.get_key()]][key]['_zero']
+                        if i[self.get_key()] in self.views
+                        and key in self.views[i[self.get_key()]]
+                        and 'zero' in self.views[i[self.get_key()]][key]
+                        else True,
+                    }
                     ret[i[self.get_key()]][key] = value
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for key in listkeys(self.get_raw()):
-                value = {'decoration': 'DEFAULT',
-                         'optional': False,
-                         'additional': False,
-                         'splittable': False,
-                         'hidden': False,
-                         '_zero': self.views[key]['_zero'] if key in self.views and '_zero' in self.views[key] else True}
+                value = {
+                    'decoration': 'DEFAULT',
+                    'optional': False,
+                    'additional': False,
+                    'splittable': False,
+                    'hidden': False,
+                    '_zero': self.views[key]['_zero'] if key in self.views and '_zero' in self.views[key] else True,
+                }
                 ret[key] = value
 
         self.views = ret
@@ -656,21 +665,23 @@ class GlancesPluginModel(object):
         return self.stats
 
     def get_stat_name(self, header=""):
-        """"Return the stat name with an optional header"""
+        """ "Return the stat name with an optional header"""
         ret = self.plugin_name
         if header != "":
             ret += '_' + header
         return ret
 
-    def get_alert(self,
-                  current=0,
-                  minimum=0,
-                  maximum=100,
-                  highlight_zero=True,
-                  is_max=False,
-                  header="",
-                  action_key=None,
-                  log=False):
+    def get_alert(
+        self,
+        current=0,
+        minimum=0,
+        maximum=100,
+        highlight_zero=True,
+        is_max=False,
+        header="",
+        action_key=None,
+        log=False,
+    ):
         """Return the alert status relative to a current value.
 
         Use this function for minor stats.
@@ -740,9 +751,7 @@ class GlancesPluginModel(object):
         # Default is 'OK'
         return ret + log_str
 
-    def manage_threshold(self,
-                         stat_name,
-                         trigger):
+    def manage_threshold(self, stat_name, trigger):
         """Manage the threshold for the current stat."""
         glances_thresholds.add(stat_name, trigger)
 
@@ -774,23 +783,13 @@ class GlancesPluginModel(object):
                 # Use the stats dict
                 mustache_dict = self.get_stats_action()
             # 2) Run the action
-            self.actions.run(
-                stat_name, trigger,
-                command, repeat, mustache_dict=mustache_dict)
+            self.actions.run(stat_name, trigger, command, repeat, mustache_dict=mustache_dict)
 
-    def get_alert_log(self,
-                      current=0,
-                      minimum=0,
-                      maximum=100,
-                      header="",
-                      action_key=None):
+    def get_alert_log(self, current=0, minimum=0, maximum=100, header="", action_key=None):
         """Get the alert log."""
-        return self.get_alert(current=current,
-                              minimum=minimum,
-                              maximum=maximum,
-                              header=header,
-                              action_key=action_key,
-                              log=True)
+        return self.get_alert(
+            current=current, minimum=minimum, maximum=maximum, header=header, action_key=action_key, log=True
+        )
 
     def is_limit(self, criticality, stat_name=""):
         """Return true if the criticality limit exist for the given stat_name"""
@@ -824,10 +823,12 @@ class GlancesPluginModel(object):
         # Get the action for stat + header
         # Example: network_wlan0_rx_careful_action
         # Action key available ?
-        ret = [(stat_name + '_' + criticality + '_action', False),
-               (stat_name + '_' + criticality + '_action_repeat', True),
-               (self.plugin_name + '_' + criticality + '_action', False),
-               (self.plugin_name + '_' + criticality + '_action_repeat', True)]
+        ret = [
+            (stat_name + '_' + criticality + '_action', False),
+            (stat_name + '_' + criticality + '_action_repeat', True),
+            (self.plugin_name + '_' + criticality + '_action', False),
+            (self.plugin_name + '_' + criticality + '_action_repeat', True),
+        ]
         for r in ret:
             if r[0] in self._limits:
                 return self._limits[r[0]], r[1]
@@ -928,19 +929,13 @@ class GlancesPluginModel(object):
             align_curse = self._align
 
         if max_width is not None:
-            ret = {'display': display_curse,
-                   'msgdict': self.msg_curse(args, max_width=max_width),
-                   'align': align_curse}
+            ret = {'display': display_curse, 'msgdict': self.msg_curse(args, max_width=max_width), 'align': align_curse}
         else:
-            ret = {'display': display_curse,
-                   'msgdict': self.msg_curse(args),
-                   'align': align_curse}
+            ret = {'display': display_curse, 'msgdict': self.msg_curse(args), 'align': align_curse}
 
         return ret
 
-    def curse_add_line(self, msg, decoration="DEFAULT",
-                       optional=False, additional=False,
-                       splittable=False):
+    def curse_add_line(self, msg, decoration="DEFAULT", optional=False, additional=False, splittable=False):
         """Return a dict with.
 
         Where:
@@ -966,18 +961,19 @@ class GlancesPluginModel(object):
             additional: True if the stat is additional (display only if space is available after optional)
             spittable: Line can be split to fit on the screen (default is not)
         """
-        return {'msg': msg,
-                'decoration': decoration,
-                'optional': optional,
-                'additional': additional,
-                'splittable': splittable}
+        return {
+            'msg': msg,
+            'decoration': decoration,
+            'optional': optional,
+            'additional': additional,
+            'splittable': splittable,
+        }
 
     def curse_new_line(self):
         """Go to a new line."""
         return self.curse_add_line('\n')
 
-    def curse_add_stat(self, key, width=None,
-                       header='', separator='', trailer=''):
+    def curse_add_stat(self, key, width=None, header='', separator='', trailer=''):
         """Return a list of dict messages with the 'key: value' result
 
           <=== width ===>
@@ -1002,34 +998,39 @@ class GlancesPluginModel(object):
             return []
 
         # Check if a shortname is defined
-        if key in self.fields_description and \
-           'short_name' in self.fields_description[key]:
+        if key in self.fields_description and 'short_name' in self.fields_description[key]:
             key_name = self.fields_description[key]['short_name']
         else:
             key_name = key
 
         # Check if unit is defined and get the short unit char in the unit_sort dict
-        if key in self.fields_description and \
-           'unit' in self.fields_description[key] and \
-           self.fields_description[key]['unit'] in fields_unit_short:
+        if (
+            key in self.fields_description
+            and 'unit' in self.fields_description[key]
+            and self.fields_description[key]['unit'] in fields_unit_short
+        ):
             # Get the shortname
             unit_short = fields_unit_short[self.fields_description[key]['unit']]
         else:
             unit_short = ''
 
         # Check if unit is defined and get the unit type unit_type dict
-        if key in self.fields_description and \
-           'unit' in self.fields_description[key] and \
-           self.fields_description[key]['unit'] in fields_unit_type:
+        if (
+            key in self.fields_description
+            and 'unit' in self.fields_description[key]
+            and self.fields_description[key]['unit'] in fields_unit_type
+        ):
             # Get the shortname
             unit_type = fields_unit_type[self.fields_description[key]['unit']]
         else:
             unit_type = 'float'
 
         # Is it a rate ? Yes, compute it thanks to the time_since_update key
-        if key in self.fields_description and \
-           'rate' in self.fields_description[key] and \
-           self.fields_description[key]['rate'] is True:
+        if (
+            key in self.fields_description
+            and 'rate' in self.fields_description[key]
+            and self.fields_description[key]['rate'] is True
+        ):
             value = self.stats[key] // self.stats['time_since_update']
         else:
             value = self.stats[key]
@@ -1039,29 +1040,37 @@ class GlancesPluginModel(object):
             if unit_type == 'float':
                 msg_value = '{:.1f}{}'.format(value, unit_short) + trailer
             elif 'min_symbol' in self.fields_description[key]:
-                msg_value = '{}{}'.format(self.auto_unit(int(value),
-                                                         min_symbol=self.fields_description[key]['min_symbol']),
-                                          unit_short) + trailer
+                msg_value = (
+                    '{}{}'.format(
+                        self.auto_unit(int(value), min_symbol=self.fields_description[key]['min_symbol']), unit_short
+                    )
+                    + trailer
+                )
             else:
                 msg_value = '{}{}'.format(int(value), unit_short) + trailer
         else:
             # Define the size of the message
             # item will be on the left
             # value will be on the right
-            msg_item = header + '{:{width}}'.format(key_name, width=width-7) + separator
+            msg_item = header + '{:{width}}'.format(key_name, width=width - 7) + separator
             if unit_type == 'float':
                 msg_value = '{:5.1f}{}'.format(value, unit_short) + trailer
             elif 'min_symbol' in self.fields_description[key]:
-                msg_value = '{:>5}{}'.format(self.auto_unit(int(value),
-                                                            min_symbol=self.fields_description[key]['min_symbol']),
-                                             unit_short) + trailer
+                msg_value = (
+                    '{:>5}{}'.format(
+                        self.auto_unit(int(value), min_symbol=self.fields_description[key]['min_symbol']), unit_short
+                    )
+                    + trailer
+                )
             else:
                 msg_value = '{:>5}{}'.format(int(value), unit_short) + trailer
         decoration = self.get_views(key=key, option='decoration')
         optional = self.get_views(key=key, option='optional')
 
-        return [self.curse_add_line(msg_item, optional=optional),
-                self.curse_add_line(msg_value, decoration=decoration, optional=optional)]
+        return [
+            self.curse_add_line(msg_item, optional=optional),
+            self.curse_add_line(msg_value, decoration=decoration, optional=optional),
+        ]
 
     @property
     def align(self):
@@ -1076,10 +1085,7 @@ class GlancesPluginModel(object):
         """
         self._align = value
 
-    def auto_unit(self, number,
-                  low_precision=False,
-                  min_symbol='K'
-                  ):
+    def auto_unit(self, number, low_precision=False, min_symbol='K'):
         """Make a nice human-readable string out of number.
 
         Number of decimal places increases as quantity approaches 1.
@@ -1097,7 +1103,7 @@ class GlancesPluginModel(object):
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         if min_symbol in symbols:
-            symbols = symbols[symbols.index(min_symbol):]
+            symbols = symbols[symbols.index(min_symbol) :]
         prefix = {
             'Y': 1208925819614629174706176,
             'Z': 1180591620717411303424,
@@ -1106,7 +1112,7 @@ class GlancesPluginModel(object):
             'T': 1099511627776,
             'G': 1073741824,
             'M': 1048576,
-            'K': 1024
+            'K': 1024,
         }
 
         for symbol in reversed(symbols):
@@ -1124,8 +1130,7 @@ class GlancesPluginModel(object):
                         decimal_precision = min(1, decimal_precision)
                 elif symbol in 'K':
                     decimal_precision = 0
-                return '{:.{decimal}f}{symbol}'.format(
-                    value, decimal=decimal_precision, symbol=symbol)
+                return '{:.{decimal}f}{symbol}'.format(value, decimal=decimal_precision, symbol=symbol)
         return '{!s}'.format(number)
 
     def trend_msg(self, trend, significant=1):
@@ -1162,10 +1167,12 @@ class GlancesPluginModel(object):
                 # Return the last result available
                 ret = self.stats
             return ret
+
         return wrapper
 
     def _log_result_decorator(fct):
         """Log (DEBUG) the result of the function fct."""
+
         def wrapper(*args, **kw):
             counter = Counter()
             ret = fct(*args, **kw)
@@ -1176,6 +1183,7 @@ class GlancesPluginModel(object):
                 fct.__name__, ret,
                 duration))
             return ret
+
         return wrapper
 
     # Mandatory to call the decorator in child classes

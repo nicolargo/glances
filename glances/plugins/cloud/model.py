@@ -111,14 +111,12 @@ class PluginModel(GlancesPluginModel):
             return ret
 
         # Generate the output
-        if 'instance-type' in self.stats \
-           and 'instance-id' in self.stats \
-           and 'region' in self.stats:
+        if 'instance-type' in self.stats and 'instance-id' in self.stats and 'region' in self.stats:
             msg = 'Cloud '
             ret.append(self.curse_add_line(msg, "TITLE"))
-            msg = '{} instance {} ({})'.format(self.stats['instance-type'],
-                                               self.stats['instance-id'],
-                                               self.stats['region'])
+            msg = '{} instance {} ({})'.format(
+                self.stats['instance-type'], self.stats['instance-id'], self.stats['region']
+            )
             ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration
@@ -135,10 +133,12 @@ class ThreadOpenStack(threading.Thread):
 
     # https://docs.openstack.org/nova/latest/user/metadata-service.html
     OPENSTACK_API_URL = 'http://169.254.169.254/latest/meta-data'
-    OPENSTACK_API_METADATA = {'ami-id': 'ami-id',
-                              'instance-id': 'instance-id',
-                              'instance-type': 'instance-type',
-                              'region': 'placement/availability-zone'}
+    OPENSTACK_API_METADATA = {
+        'ami-id': 'ami-id',
+        'instance-id': 'instance-id',
+        'instance-type': 'instance-type',
+        'region': 'placement/availability-zone',
+    }
 
     def __init__(self):
         """Init the class."""

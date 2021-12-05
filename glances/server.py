@@ -36,7 +36,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
 
     """Main XML-RPC handler."""
 
-    rpc_paths = ('/RPC2', )
+    rpc_paths = ('/RPC2',)
 
     def end_headers(self):
         # Hack to add a specific header
@@ -76,6 +76,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
         # Check username and password in the dictionary
         if username in self.server.user_dict:
             from glances.password import GlancesPassword
+
             pwd = GlancesPassword()
             return pwd.check_password(self.server.user_dict[username], password)
         else:
@@ -102,8 +103,7 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
 
     finished = False
 
-    def __init__(self, bind_address, bind_port=61209,
-                 requestHandler=GlancesXMLRPCHandler):
+    def __init__(self, bind_address, bind_port=61209, requestHandler=GlancesXMLRPCHandler):
 
         self.bind_address = bind_address
         self.bind_port = bind_port
@@ -130,9 +130,7 @@ class GlancesInstance(object):
 
     """All the methods of this class are published as XML-RPC methods."""
 
-    def __init__(self,
-                 config=None,
-                 args=None):
+    def __init__(self, config=None, args=None):
         # Init stats
         self.stats = GlancesStatsServer(config=config, args=args)
 
@@ -197,10 +195,7 @@ class GlancesServer(object):
 
     """This class creates and manages the TCP server."""
 
-    def __init__(self,
-                 requestHandler=GlancesXMLRPCHandler,
-                 config=None,
-                 args=None):
+    def __init__(self, requestHandler=GlancesXMLRPCHandler, config=None, args=None):
         # Args
         self.args = args
 

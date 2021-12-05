@@ -57,8 +57,7 @@ class GlancesClient(object):
 
         # Build the URI
         if args.password != "":
-            self.uri = 'http://{}:{}@{}:{}'.format(args.username, args.password,
-                                                   args.client, args.port)
+            self.uri = 'http://{}:{}@{}:{}'.format(args.username, args.password, args.client, args.port)
         else:
             self.uri = 'http://{}:{}'.format(args.client, args.port)
         logger.debug("Try to connect to {}".format(self.uri))
@@ -130,8 +129,12 @@ class GlancesClient(object):
                 self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
                 logger.debug("Client version: {} / Server version: {}".format(__version__, client_version))
             else:
-                self.log_and_exit(('Client and server not compatible: '
-                                   'Client version: {} / Server version: {}'.format(__version__, client_version)))
+                self.log_and_exit(
+                    (
+                        'Client and server not compatible: '
+                        'Client version: {} / Server version: {}'.format(__version__, client_version)
+                    )
+                )
                 return False
 
         return True
@@ -248,9 +251,9 @@ class GlancesClient(object):
 
                 # Update the screen
                 if not self.quiet:
-                    exit_key = self.screen.update(self.stats,
-                                                 cs_status=cs_status,
-                                                 return_to_browser=self.return_to_browser)
+                    exit_key = self.screen.update(
+                        self.stats, cs_status=cs_status, return_to_browser=self.return_to_browser
+                    )
 
                 # Export stats using export modules
                 self.stats.export(self.stats)

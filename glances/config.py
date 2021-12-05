@@ -58,13 +58,11 @@ def user_cache_dir():
     - Windows: {%LOCALAPPDATA%,%APPDATA%}\glances\cache
     """
     if WINDOWS:
-        path = os.path.join(os.environ.get('LOCALAPPDATA') or os.environ.get('APPDATA'),
-                            'glances', 'cache')
+        path = os.path.join(os.environ.get('LOCALAPPDATA') or os.environ.get('APPDATA'), 'glances', 'cache')
     elif MACOS:
         path = os.path.expanduser('~/Library/Caches/glances')
     else:
-        path = os.path.join(os.environ.get('XDG_CACHE_HOME') or os.path.expanduser('~/.cache'),
-                            'glances')
+        path = os.path.join(os.environ.get('XDG_CACHE_HOME') or os.path.expanduser('~/.cache'), 'glances')
 
     return path
 
@@ -205,16 +203,26 @@ class Config(object):
         self.set_default_cwc('cpu', 'steal')
         # By default I/O wait should be lower than 1/number of CPU cores
         iowait_bottleneck = (1.0 / multiprocessing.cpu_count()) * 100.0
-        self.set_default_cwc('cpu', 'iowait',
-                             [str(iowait_bottleneck - (iowait_bottleneck * 0.20)),
-                              str(iowait_bottleneck - (iowait_bottleneck * 0.10)),
-                              str(iowait_bottleneck)])
+        self.set_default_cwc(
+            'cpu',
+            'iowait',
+            [
+                str(iowait_bottleneck - (iowait_bottleneck * 0.20)),
+                str(iowait_bottleneck - (iowait_bottleneck * 0.10)),
+                str(iowait_bottleneck),
+            ],
+        )
         # Context switches bottleneck identification #1212
         ctx_switches_bottleneck = (500000 * 0.10) * multiprocessing.cpu_count()
-        self.set_default_cwc('cpu', 'ctx_switches',
-                             [str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.20)),
-                              str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.10)),
-                              str(ctx_switches_bottleneck)])
+        self.set_default_cwc(
+            'cpu',
+            'ctx_switches',
+            [
+                str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.20)),
+                str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.10)),
+                str(ctx_switches_bottleneck),
+            ],
+        )
 
         # Per-CPU
         if not self.parser.has_section('percpu'):
@@ -287,9 +295,7 @@ class Config(object):
         """Return info about the existence of a section."""
         return self.parser.has_section(section)
 
-    def set_default_cwc(self, section,
-                        option_header=None,
-                        cwc=['50', '70', '90']):
+    def set_default_cwc(self, section, option_header=None, cwc=['50', '70', '90']):
         """Set default values for careful, warning and critical."""
         if option_header is None:
             header = ''
@@ -299,14 +305,12 @@ class Config(object):
         self.set_default(section, header + 'warning', cwc[1])
         self.set_default(section, header + 'critical', cwc[2])
 
-    def set_default(self, section, option,
-                    default):
+    def set_default(self, section, option, default):
         """If the option did not exist, create a default value."""
         if not self.parser.has_option(section, option):
             self.parser.set(section, option, default)
 
-    def get_value(self, section, option,
-                  default=None):
+    def get_value(self, section, option, default=None):
         """Get the value of an option, if it exists.
 
         If it did not exist, then return the default value.

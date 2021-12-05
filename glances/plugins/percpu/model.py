@@ -23,12 +23,10 @@ from glances.cpu_percent import cpu_percent
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Define the history items list
-items_history_list = [{'name': 'user',
-                       'description': 'User CPU usage',
-                       'y_unit': '%'},
-                      {'name': 'system',
-                       'description': 'System CPU usage',
-                       'y_unit': '%'}]
+items_history_list = [
+    {'name': 'user', 'description': 'User CPU usage', 'y_unit': '%'},
+    {'name': 'system', 'description': 'System CPU usage', 'y_unit': '%'},
+]
 
 
 class PluginModel(GlancesPluginModel):
@@ -110,8 +108,6 @@ class PluginModel(GlancesPluginModel):
                     msg = '{:6.1f}%'.format(cpu[stat])
                 except TypeError:
                     msg = '{:>6}%'.format('?')
-                ret.append(self.curse_add_line(msg,
-                                               self.get_alert(cpu[stat],
-                                                              header=stat)))
+                ret.append(self.curse_add_line(msg, self.get_alert(cpu[stat], header=stat)))
 
         return ret

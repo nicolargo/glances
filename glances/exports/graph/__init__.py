@@ -41,21 +41,14 @@ class Export(GlancesExport):
         super(Export, self).__init__(config=config, args=args)
 
         # Load the Graph configuration file section (is exists)
-        self.export_enable = self.load_conf('graph',
-                                            options=['path',
-                                                     'generate_every',
-                                                     'width',
-                                                     'height',
-                                                     'style'])
+        self.export_enable = self.load_conf('graph', options=['path', 'generate_every', 'width', 'height', 'style'])
 
         # Manage options (command line arguments overwrite configuration file)
         self.path = args.export_graph_path or self.path
         self.generate_every = int(getattr(self, 'generate_every', 0))
         self.width = int(getattr(self, 'width', 800))
         self.height = int(getattr(self, 'height', 600))
-        self.style = getattr(pygal.style,
-                             getattr(self, 'style', 'DarkStyle'),
-                             pygal.style.DarkStyle)
+        self.style = getattr(pygal.style, getattr(self, 'style', 'DarkStyle'), pygal.style.DarkStyle)
 
         # Create export folder
         try:
@@ -125,16 +118,17 @@ class Export(GlancesExport):
         if data == {}:
             return False
 
-        chart = DateTimeLine(title=title.capitalize(),
-                             width=self.width,
-                             height=self.height,
-                             style=self.style,
-                             show_dots=False,
-                             legend_at_bottom=True,
-                             x_label_rotation=20,
-                             x_value_formatter=lambda dt: dt.strftime('%Y/%m/%d %H:%M:%S'))
+        chart = DateTimeLine(
+            title=title.capitalize(),
+            width=self.width,
+            height=self.height,
+            style=self.style,
+            show_dots=False,
+            legend_at_bottom=True,
+            x_label_rotation=20,
+            x_value_formatter=lambda dt: dt.strftime('%Y/%m/%d %H:%M:%S'),
+        )
         for k, v in iteritems(time_serie_subsample(data, self.width)):
             chart.add(k, v)
-        chart.render_to_file(os.path.join(self.path,
-                                          title + '.svg'))
+        chart.render_to_file(os.path.join(self.path, title + '.svg'))
         return True

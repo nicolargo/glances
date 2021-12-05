@@ -52,7 +52,7 @@ class GlancesAmp(object):
 
         # AMP name (= module name without glances_)
         if name is None:
-            self.amp_name = self.__class__.__module__[len('glances_'):]
+            self.amp_name = self.__class__.__module__[len('glances_') :]
         else:
             self.amp_name = name
 
@@ -83,8 +83,7 @@ class GlancesAmp(object):
         # option1=opt1
 
         amp_section = 'amp_' + self.amp_name
-        if (hasattr(config, 'has_section') and
-                config.has_section(amp_section)):
+        if hasattr(config, 'has_section') and config.has_section(amp_section):
             logger.debug("AMP - {}: Load configuration".format(self.NAME))
             for param, _ in config.items(amp_section):
                 try:
@@ -102,7 +101,11 @@ class GlancesAmp(object):
             # Refresh option is mandatory
             for k in ['refresh']:
                 if k not in self.configs:
-                    logger.warning("AMP - {}: Can not find configuration key {} in section {} (the AMP will be disabled)".format(self.NAME, k, self.amp_name))
+                    logger.warning(
+                        "AMP - {}: Can not find configuration key {} in section {} (the AMP will be disabled)".format(
+                            self.NAME, k, self.amp_name
+                        )
+                    )
                     self.configs['enable'] = 'false'
         else:
             logger.debug("AMP - {} is disabled".format(self.NAME))
@@ -187,7 +190,7 @@ class GlancesAmp(object):
             self.configs['result'] = u(result)
 
     def result(self):
-        """ Return the result of the AMP (as a string)"""
+        """Return the result of the AMP (as a string)"""
         ret = self.get('result')
         if ret is not None:
             ret = u(ret)

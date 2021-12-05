@@ -65,15 +65,16 @@ class GlancesWebList(object):
                     continue
                 url_parse = urlparse(new_web['url'])
                 if not bool(url_parse.scheme) or not bool(url_parse.netloc):
-                    logger.error('Bad URL (%s) in the [%s] section of configuration file.' % (new_web['url'],
-                                                                                              self._section))
+                    logger.error(
+                        'Bad URL (%s) in the [%s] section of configuration file.' % (new_web['url'], self._section)
+                    )
                     continue
 
                 # Read optionals configuration keys
                 # Default description is the URL without the http://
-                new_web['description'] = config.get_value(self._section,
-                                                          '%sdescription' % postfix,
-                                                          default="%s" % url_parse.netloc)
+                new_web['description'] = config.get_value(
+                    self._section, '%sdescription' % postfix, default="%s" % url_parse.netloc
+                )
 
                 # Default status
                 new_web['status'] = None
@@ -83,14 +84,10 @@ class GlancesWebList(object):
                 new_web['refresh'] = refresh
 
                 # Timeout in second
-                new_web['timeout'] = int(config.get_value(self._section,
-                                                          '%stimeout' % postfix,
-                                                          default=timeout))
+                new_web['timeout'] = int(config.get_value(self._section, '%stimeout' % postfix, default=timeout))
 
                 # RTT warning
-                new_web['rtt_warning'] = config.get_value(self._section,
-                                                          '%srtt_warning' % postfix,
-                                                          default=None)
+                new_web['rtt_warning'] = config.get_value(self._section, '%srtt_warning' % postfix, default=None)
                 if new_web['rtt_warning'] is not None:
                     # Convert to second
                     new_web['rtt_warning'] = int(new_web['rtt_warning']) / 1000.0
@@ -99,23 +96,16 @@ class GlancesWebList(object):
                 new_web['indice'] = 'web_' + str(i)
 
                 # ssl_verify
-                new_web['ssl_verify'] = config.get_value(self._section,
-                                                        '%sssl_verify' % postfix,
-                                                         default=True)
+                new_web['ssl_verify'] = config.get_value(self._section, '%sssl_verify' % postfix, default=True)
                 # Proxy
-                http_proxy = config.get_value(self._section,
-                                                '%shttp_proxy' % postfix,
-                                                default=None)
+                http_proxy = config.get_value(self._section, '%shttp_proxy' % postfix, default=None)
 
-                https_proxy = config.get_value(self._section,
-                                                '%shttps_proxy' % postfix,
-                                                default=None)
+                https_proxy = config.get_value(self._section, '%shttps_proxy' % postfix, default=None)
 
                 if https_proxy is None and http_proxy is None:
                     new_web['proxies'] = None
                 else:
-                    new_web['proxies'] = {'http' : http_proxy,
-                                          'https' : https_proxy }
+                    new_web['proxies'] = {'http': http_proxy, 'https': https_proxy}
 
                 # Add the server to the list
                 logger.debug("Add Web URL %s to the static list" % new_web['url'])

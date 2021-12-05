@@ -26,6 +26,7 @@ from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
 import psutil
+
 # Use the Wifi Python lib (https://pypi.python.org/pypi/wifi)
 # Linux-only
 try:
@@ -113,7 +114,7 @@ class PluginModel(GlancesPluginModel):
                             'signal': wifi_cell.signal,
                             'quality': wifi_cell.quality,
                             'encrypted': wifi_cell.encrypted,
-                            'encryption_type': wifi_cell.encryption_type if wifi_cell.encrypted else None
+                            'encryption_type': wifi_cell.encryption_type if wifi_cell.encrypted else None,
                         }
                         # Add the hotspot to the list
                         stats.append(hotspot)
@@ -159,7 +160,9 @@ class PluginModel(GlancesPluginModel):
         # Alert on signal thresholds
         for i in self.stats:
             self.views[i[self.get_key()]]['signal']['decoration'] = self.get_alert(i['signal'])
-            self.views[i[self.get_key()]]['quality']['decoration'] = self.views[i[self.get_key()]]['signal']['decoration']
+            self.views[i[self.get_key()]]['quality']['decoration'] = self.views[i[self.get_key()]]['signal'][
+                'decoration'
+            ]
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -194,16 +197,13 @@ class PluginModel(GlancesPluginModel):
                 hotspot_name += ' {}'.format(i['encryption_type'])
             # Cut hotspot_name if it is too long
             if len(hotspot_name) > if_name_max_width:
-                hotspot_name = '_' + hotspot_name[-if_name_max_width + 1:]
+                hotspot_name = '_' + hotspot_name[-if_name_max_width + 1 :]
             # Add the new hotspot to the message
-            msg = '{:{width}}'.format(nativestr(hotspot_name),
-                                      width=if_name_max_width)
+            msg = '{:{width}}'.format(nativestr(hotspot_name), width=if_name_max_width)
             ret.append(self.curse_add_line(msg))
-            msg = '{:>7}'.format(i['signal'],
-                                 width=if_name_max_width)
-            ret.append(self.curse_add_line(msg,
-                                           self.get_views(item=i[self.get_key()],
-                                                          key='signal',
-                                                          option='decoration')))
+            msg = '{:>7}'.format(i['signal'], width=if_name_max_width)
+            ret.append(
+                self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='signal', option='decoration'))
+            )
 
         return ret

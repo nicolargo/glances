@@ -54,17 +54,14 @@ class GlancesStdout(object):
     def end(self):
         pass
 
-    def update(self,
-               stats,
-               duration=3):
+    def update(self, stats, duration=3):
         """Display stats to stdout.
 
         Refresh every duration second.
         """
         for plugin, attribute in self.plugins_list:
             # Check if the plugin exist and is enable
-            if plugin in stats.getPluginsList() and \
-               stats.get_plugin(plugin).is_enabled():
+            if plugin in stats.getPluginsList() and stats.get_plugin(plugin).is_enabled():
                 stat = stats.get_plugin(plugin).get_export()
             else:
                 continue
@@ -72,8 +69,7 @@ class GlancesStdout(object):
             if attribute is not None:
                 # With attribute
                 try:
-                    printandflush("{}.{}: {}".format(plugin, attribute,
-                                                     stat[attribute]))
+                    printandflush("{}.{}: {}".format(plugin, attribute, stat[attribute]))
                 except KeyError as err:
                     logger.error("Can not display stat {}.{} ({})".format(plugin, attribute, err))
             else:

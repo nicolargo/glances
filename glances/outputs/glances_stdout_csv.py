@@ -69,17 +69,12 @@ class GlancesStdoutCsv(object):
         else:
             if isinstance(stat, dict):
                 for k in stat.keys():
-                    line += '{}.{}{}'.format(plugin,
-                                             str(k),
-                                             self.separator)
+                    line += '{}.{}{}'.format(plugin, str(k), self.separator)
             elif isinstance(stat, list):
                 for i in stat:
                     if isinstance(i, dict) and 'key' in i:
                         for k in i.keys():
-                            line += '{}.{}.{}{}'.format(plugin,
-                                                        str(i[i['key']]),
-                                                        str(k),
-                                                        self.separator)
+                            line += '{}.{}.{}{}'.format(plugin, str(i[i['key']]), str(k), self.separator)
             else:
                 line += '{}{}'.format(plugin, self.separator)
 
@@ -90,8 +85,7 @@ class GlancesStdoutCsv(object):
         line = ''
 
         if attribute is not None:
-            line += '{}{}'.format(str(stat.get(attribute, self.na)),
-                                  self.separator)
+            line += '{}{}'.format(str(stat.get(attribute, self.na)), self.separator)
         else:
             if isinstance(stat, dict):
                 for v in stat.values():
@@ -106,9 +100,7 @@ class GlancesStdoutCsv(object):
 
         return line
 
-    def update(self,
-               stats,
-               duration=3):
+    def update(self, stats, duration=3):
         """Display stats to stdout.
 
         Refresh every duration second.
@@ -117,8 +109,7 @@ class GlancesStdoutCsv(object):
         line = ''
         for plugin, attribute in self.plugins_list:
             # Check if the plugin exist and is enable
-            if plugin in stats.getPluginsList() and \
-               stats.get_plugin(plugin).is_enabled():
+            if plugin in stats.getPluginsList() and stats.get_plugin(plugin).is_enabled():
                 stat = stats.get_plugin(plugin).get_export()
             else:
                 continue

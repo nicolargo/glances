@@ -46,6 +46,7 @@ if PY3:
 
     # Correct issue #1025 by monkey path the xmlrpc lib
     from defusedxml.xmlrpc import monkey_patch
+
     monkey_patch()
 
     input = input
@@ -121,12 +122,12 @@ if PY3:
     def system_exec(command):
         """Execute a system command and return the result as a str"""
         try:
-            res = subprocess.run(command.split(' '),
-                                 stdout=subprocess.PIPE).stdout.decode('utf-8')
+            res = subprocess.run(command.split(' '), stdout=subprocess.PIPE).stdout.decode('utf-8')
         except Exception as e:
             logger.debug('Can not evaluate command {} ({})'.format(command, e))
             res = ''
         return res.rstrip()
+
 
 else:
     from future.utils import bytes_to_native_str as n
@@ -140,6 +141,7 @@ else:
 
     # Correct issue #1025 by monkey path the xmlrpc lib
     from defusedxml.xmlrpc import monkey_patch
+
     monkey_patch()
 
     input = raw_input
@@ -233,7 +235,7 @@ def subsample(data, sampling):
     if len(data) <= sampling:
         return data
     sampling_length = int(round(len(data) / float(sampling)))
-    return [mean(data[s * sampling_length:(s + 1) * sampling_length]) for s in range(0, sampling)]
+    return [mean(data[s * sampling_length : (s + 1) * sampling_length]) for s in range(0, sampling)]
 
 
 def time_serie_subsample(data, sampling):
@@ -248,8 +250,8 @@ def time_serie_subsample(data, sampling):
     t = [t[0] for t in data]
     v = [t[1] for t in data]
     sampling_length = int(round(len(data) / float(sampling)))
-    t_sub_sampled = [t[s * sampling_length:(s + 1) * sampling_length][0] for s in range(0, sampling)]
-    v_sub_sampled = [mean(v[s * sampling_length:(s + 1) * sampling_length]) for s in range(0, sampling)]
+    t_sub_sampled = [t[s * sampling_length : (s + 1) * sampling_length][0] for s in range(0, sampling)]
+    v_sub_sampled = [mean(v[s * sampling_length : (s + 1) * sampling_length]) for s in range(0, sampling)]
     return list(zip(t_sub_sampled, v_sub_sampled))
 
 
@@ -272,6 +274,7 @@ def is_admin():
     if os.name == 'nt':
         import ctypes
         import traceback
+
         # WARNING: requires Windows XP SP2 or higher!
         try:
             return ctypes.windll.shell32.IsUserAnAdmin()
