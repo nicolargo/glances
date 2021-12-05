@@ -64,8 +64,8 @@ class PluginModel(GlancesPluginModel):
         """Disable extended stats."""
         glances_processes.disable_extended()
 
-    @GlancesPlugin._check_decorator
-    @GlancesPlugin._log_result_decorator
+    @GlancesPluginModel._check_decorator
+    @GlancesPluginModel._log_result_decorator
     def update(self):
         """Update processes stats using the input method."""
         # Init new stats
