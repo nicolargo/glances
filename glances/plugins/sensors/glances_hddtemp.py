@@ -35,18 +35,12 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
-                                     config=config,
-                                     stats_init_value=[])
+        super(Plugin, self).__init__(args=args, config=config, stats_init_value=[])
 
         # Init the sensor class
-        hddtemp_host = self.get_conf_value("host",
-                                           default=["127.0.0.1"])[0]
-        hddtemp_port = int(self.get_conf_value("port",
-                                               default="7634"))
-        self.hddtemp = GlancesGrabHDDTemp(args=args,
-                                          host=hddtemp_host,
-                                          port=hddtemp_port)
+        hddtemp_host = self.get_conf_value("host", default=["127.0.0.1"])[0]
+        hddtemp_port = int(self.get_conf_value("port", default="7634"))
+        self.hddtemp = GlancesGrabHDDTemp(args=args, host=hddtemp_host, port=hddtemp_port)
 
         # We do not want to display the stat in a dedicated area
         # The HDD temp is displayed within the sensors plugin

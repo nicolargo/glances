@@ -21,8 +21,8 @@
 
 from datetime import datetime
 
-class GlancesAttribute(object):
 
+class GlancesAttribute(object):
     def __init__(self, name, description='', history_max_size=None):
         """Init the attribute
 
@@ -47,6 +47,7 @@ class GlancesAttribute(object):
     """
     Properties for the attribute name
     """
+
     @property
     def name(self):
         return self._name
@@ -58,6 +59,7 @@ class GlancesAttribute(object):
     """
     Properties for the attribute description
     """
+
     @property
     def description(self):
         return self._description
@@ -69,6 +71,7 @@ class GlancesAttribute(object):
     """
     Properties for the attribute value
     """
+
     @property
     def value(self):
         if self.history_len() > 0:
@@ -88,6 +91,7 @@ class GlancesAttribute(object):
     """
     Properties for the attribute history
     """
+
     @property
     def history(self):
         return self._history

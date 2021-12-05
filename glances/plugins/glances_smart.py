@@ -99,16 +99,17 @@ def get_smart_data():
         devlist = DeviceList()
     except TypeError as e:
         # Catch error  (see #1806)
-        logger.debug(
-            'Smart plugin error - Can not grab device list ({})'.format(e))
+        logger.debug('Smart plugin error - Can not grab device list ({})'.format(e))
         global import_error_tag
         import_error_tag = True
         return stats
 
     for dev in devlist.devices:
-        stats.append({
-            'DeviceName': '{} {}'.format(dev.name, dev.model),
-        })
+        stats.append(
+            {
+                'DeviceName': '{} {}'.format(dev.name, dev.model),
+            }
+        )
         for attribute in dev.attributes:
             if attribute is None:
                 pass
@@ -134,10 +135,7 @@ class Plugin(GlancesPlugin):
     stats is a list of dicts
     """
 
-    def __init__(self,
-                 args=None,
-                 config=None,
-                 stats_init_value=[]):
+    def __init__(self, args=None, config=None, stats_init_value=[]):
         """Init the plugin."""
         # check if user is admin
         if not is_admin():
@@ -186,20 +184,19 @@ class Plugin(GlancesPlugin):
         name_max_width = max_width - 6
 
         # Header
-        msg = '{:{width}}'.format('SMART disks',
-                                  width=name_max_width)
+        msg = '{:{width}}'.format('SMART disks', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Data
         for device_stat in self.stats:
             # New line
             ret.append(self.curse_new_line())
-            msg = '{:{width}}'.format(device_stat['DeviceName'][:max_width],
-                                      width=max_width)
+            msg = '{:{width}}'.format(device_stat['DeviceName'][:max_width], width=max_width)
             ret.append(self.curse_add_line(msg))
             for smart_stat in sorted([i for i in device_stat.keys() if i != 'DeviceName'], key=int):
                 ret.append(self.curse_new_line())
-                msg = ' {:{width}}'.format(device_stat[smart_stat]['name'][:name_max_width-1].replace('_', ' '),
-                                           width=name_max_width-1)
+                msg = ' {:{width}}'.format(
+                    device_stat[smart_stat]['name'][: name_max_width - 1].replace('_', ' '), width=name_max_width - 1
+                )
                 ret.append(self.curse_add_line(msg))
                 msg = '{:>8}'.format(device_stat[smart_stat]['raw'])
                 ret.append(self.curse_add_line(msg))

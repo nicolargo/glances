@@ -99,8 +99,7 @@ class GlancesEvents(object):
         if glances_processes.auto_sort:
             glances_processes.set_sort_key('auto')
 
-    def add(self, event_state, event_type, event_value,
-            proc_list=None, proc_desc="", peak_time=6):
+    def add(self, event_state, event_type, event_value, proc_list=None, proc_desc="", peak_time=6):
         """Add a new item to the logs list.
 
         If 'event' is a 'new one', add it at the beginning of the list.
@@ -113,17 +112,14 @@ class GlancesEvents(object):
         event_index = self.__event_exist(event_type)
         if event_index < 0:
             # Event did not exist, add it
-            self._create_event(event_state, event_type, event_value,
-                               proc_list, proc_desc, peak_time)
+            self._create_event(event_state, event_type, event_value, proc_list, proc_desc, peak_time)
         else:
             # Event exist, update it
-            self._update_event(event_index, event_state, event_type, event_value,
-                               proc_list, proc_desc, peak_time)
+            self._update_event(event_index, event_state, event_type, event_value, proc_list, proc_desc, peak_time)
 
         return self.len()
 
-    def _create_event(self, event_state, event_type, event_value,
-                      proc_list, proc_desc, peak_time):
+    def _create_event(self, event_state, event_type, event_value, proc_list, proc_desc, peak_time):
         """Add a new item in the log list.
 
         Item is added only if the criticality (event_state) is WARNING or CRITICAL.
@@ -147,7 +143,8 @@ class GlancesEvents(object):
                 1,  # COUNT
                 [],  # TOP 3 PROCESS LIST
                 proc_desc,  # MONITORED PROCESSES DESC
-                glances_processes.sort_key]  # TOP PROCESS SORT KEY
+                glances_processes.sort_key,
+            ]  # TOP PROCESS SORT KEY
 
             # Add the item to the list
             self.events_list.insert(0, item)
@@ -160,8 +157,7 @@ class GlancesEvents(object):
         else:
             return False
 
-    def _update_event(self, event_index, event_state, event_type, event_value,
-                      proc_list, proc_desc, peak_time):
+    def _update_event(self, event_index, event_state, event_type, event_value, proc_list, proc_desc, peak_time):
         """Update an event in the list"""
         if event_state == "OK" or event_state == "CAREFUL":
             # Reset the automatic process sort key
@@ -183,23 +179,19 @@ class GlancesEvents(object):
             if event_state == "CRITICAL":
                 self.events_list[event_index][2] = event_state
             # Min value
-            self.events_list[event_index][6] = min(self.events_list[event_index][6],
-                                                   event_value)
+            self.events_list[event_index][6] = min(self.events_list[event_index][6], event_value)
             # Max value
-            self.events_list[event_index][4] = max(self.events_list[event_index][4],
-                                                   event_value)
+            self.events_list[event_index][4] = max(self.events_list[event_index][4], event_value)
             # Average value
             self.events_list[event_index][7] += event_value
             self.events_list[event_index][8] += 1
-            self.events_list[event_index][5] = (self.events_list[event_index][7] /
-                                                self.events_list[event_index][8])
+            self.events_list[event_index][5] = self.events_list[event_index][7] / self.events_list[event_index][8]
 
             # TOP PROCESS LIST (only for CRITICAL ALERT)
             if event_state == "CRITICAL":
                 events_sort_key = self.get_event_sort_key(event_type)
                 # Sort the current process list to retrieve the TOP 3 processes
-                self.events_list[event_index][9] = sort_stats(proc_list,
-                                                              events_sort_key)[0:3]
+                self.events_list[event_index][9] = sort_stats(proc_list, events_sort_key)[0:3]
                 self.events_list[event_index][11] = events_sort_key
 
             # MONITORED PROCESSES DESC

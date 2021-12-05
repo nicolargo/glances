@@ -34,14 +34,10 @@ class GlancesHistory(object):
         """
         self.stats_history = {}
 
-    def add(self, key, value,
-            description='',
-            history_max_size=None):
+    def add(self, key, value, description='', history_max_size=None):
         """Add an new item (key, value) to the current history."""
         if key not in self.stats_history:
-            self.stats_history[key] = GlancesAttribute(key,
-                                                       description=description,
-                                                       history_max_size=history_max_size)
+            self.stats_history[key] = GlancesAttribute(key, description=description, history_max_size=history_max_size)
         self.stats_history[key].value = value
 
     def reset(self):

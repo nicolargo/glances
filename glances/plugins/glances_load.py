@@ -29,38 +29,44 @@ from glances.logger import logger
 
 # Fields description
 fields_description = {
-    'min1': {'description': 'Average sum of the number of processes \
+    'min1': {
+        'description': 'Average sum of the number of processes \
 waiting in the run-queue plus the number currently executing \
 over 1 minute.',
-             'unit': 'float'},
-    'min5': {'description': 'Average sum of the number of processes \
+        'unit': 'float',
+    },
+    'min5': {
+        'description': 'Average sum of the number of processes \
 waiting in the run-queue plus the number currently executing \
 over 5 minutes.',
-             'unit': 'float'},
-    'min15': {'description': 'Average sum of the number of processes \
+        'unit': 'float',
+    },
+    'min15': {
+        'description': 'Average sum of the number of processes \
 waiting in the run-queue plus the number currently executing \
 over 15 minutes.',
-              'unit': 'float'},
-    'cpucore': {'description': 'Total number of CPU core.',
-                'unit': 'number'},
+        'unit': 'float',
+    },
+    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
 }
 
 # SNMP OID
 # 1 minute Load: .1.3.6.1.4.1.2021.10.1.3.1
 # 5 minute Load: .1.3.6.1.4.1.2021.10.1.3.2
 # 15 minute Load: .1.3.6.1.4.1.2021.10.1.3.3
-snmp_oid = {'min1': '1.3.6.1.4.1.2021.10.1.3.1',
-            'min5': '1.3.6.1.4.1.2021.10.1.3.2',
-            'min15': '1.3.6.1.4.1.2021.10.1.3.3'}
+snmp_oid = {
+    'min1': '1.3.6.1.4.1.2021.10.1.3.1',
+    'min5': '1.3.6.1.4.1.2021.10.1.3.2',
+    'min15': '1.3.6.1.4.1.2021.10.1.3.3',
+}
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
-items_history_list = [{'name': 'min1',
-                       'description': '1 minute load'},
-                      {'name': 'min5',
-                       'description': '5 minutes load'},
-                      {'name': 'min15',
-                       'description': '15 minutes load'}]
+items_history_list = [
+    {'name': 'min1', 'description': '1 minute load'},
+    {'name': 'min5', 'description': '5 minutes load'},
+    {'name': 'min15', 'description': '15 minutes load'},
+]
 
 
 class Plugin(GlancesPlugin):
@@ -71,10 +77,9 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
-                                     config=config,
-                                     items_history_list=items_history_list,
-                                     fields_description=fields_description)
+        super(Plugin, self).__init__(
+            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -112,10 +117,7 @@ class Plugin(GlancesPlugin):
             if load is None:
                 stats = self.get_init_value()
             else:
-                stats = {'min1': load[0],
-                         'min5': load[1],
-                         'min15': load[2],
-                         'cpucore': self.nb_log_core}
+                stats = {'min1': load[0], 'min5': load[1], 'min15': load[2], 'cpucore': self.nb_log_core}
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -145,11 +147,11 @@ class Plugin(GlancesPlugin):
         # Add specifics informations
         try:
             # Alert and log
-            self.views['min15']['decoration'] = self.get_alert_log(self.stats['min15'],
-                                                                   maximum=100 * self.stats['cpucore'])
+            self.views['min15']['decoration'] = self.get_alert_log(
+                self.stats['min15'], maximum=100 * self.stats['cpucore']
+            )
             # Alert only
-            self.views['min5']['decoration'] = self.get_alert(self.stats['min5'],
-                                                              maximum=100 * self.stats['cpucore'])
+            self.views['min5']['decoration'] = self.get_alert(self.stats['min5'], maximum=100 * self.stats['cpucore'])
         except KeyError:
             # try/except mandatory for Windows compatibility (no load stats)
             pass
@@ -186,8 +188,6 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg))
             else:
                 # Alert is only for 5 and 15 min
-                ret.append(self.curse_add_line(
-                    msg, self.get_views(key='min{}'.format(load_time),
-                                        option='decoration')))
+                ret.append(self.curse_add_line(msg, self.get_views(key='min{}'.format(load_time), option='decoration')))
 
         return ret
