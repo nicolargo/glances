@@ -35,6 +35,7 @@ from glances.plugins.plugin.model import GlancesPluginModel
 
 try:
     import requests
+
     requests_tag = True
 except ImportError as e:
     requests_tag = False
@@ -56,8 +57,10 @@ class PluginModel(GlancesPluginModel):
         self.display_curse = True
 
         # Init stats
-        self.stats = GlancesPortsList(config=config, args=args).get_ports_list() + \
-            GlancesWebList(config=config, args=args).get_web_list()
+        self.stats = (
+            GlancesPortsList(config=config, args=args).get_ports_list()
+            + GlancesWebList(config=config, args=args).get_web_list()
+        )
 
         # Global Thread running all the scans
         self._thread = None
@@ -107,9 +110,11 @@ class PluginModel(GlancesPluginModel):
             ret = 'CAREFUL'
         elif port['status'] == 0:
             ret = 'CRITICAL'
-        elif (isinstance(port['status'], (float, int)) and
-              port['rtt_warning'] is not None and
-              port['status'] > port['rtt_warning']):
+        elif (
+            isinstance(port['status'], (float, int))
+            and port['rtt_warning'] is not None
+            and port['status'] > port['rtt_warning']
+        ):
             ret = 'WARNING'
 
         # Get stat name
@@ -119,10 +124,7 @@ class PluginModel(GlancesPluginModel):
         self.manage_threshold(stat_name, ret)
 
         # Manage action
-        self.manage_action(stat_name,
-                           ret.lower(),
-                           header,
-                           port[self.get_key()])
+        self.manage_action(stat_name, ret.lower(), header, port[self.get_key()])
 
         return ret
 
@@ -143,10 +145,7 @@ class PluginModel(GlancesPluginModel):
         self.manage_threshold(stat_name, ret)
 
         # Manage action
-        self.manage_action(stat_name,
-                           ret.lower(),
-                           header,
-                           web[self.get_key()])
+        self.manage_action(stat_name, ret.lower(), header, web[self.get_key()])
 
         return ret
 
@@ -177,17 +176,13 @@ class PluginModel(GlancesPluginModel):
                     # Convert second to ms
                     status = '{0:.0f}ms'.format(p['status'] * 1000.0)
 
-                msg = '{:{width}}'.format(p['description'][0:name_max_width],
-                                          width=name_max_width)
+                msg = '{:{width}}'.format(p['description'][0:name_max_width], width=name_max_width)
                 ret.append(self.curse_add_line(msg))
                 msg = '{:>9}'.format(status)
-                ret.append(self.curse_add_line(msg,
-                                               self.get_ports_alert(p,
-                                                                    header=p['indice'] + '_rtt')))
+                ret.append(self.curse_add_line(msg, self.get_ports_alert(p, header=p['indice'] + '_rtt')))
                 ret.append(self.curse_new_line())
             elif 'url' in p:
-                msg = '{:{width}}'.format(p['description'][0:name_max_width],
-                                          width=name_max_width)
+                msg = '{:{width}}'.format(p['description'][0:name_max_width], width=name_max_width)
                 ret.append(self.curse_add_line(msg))
                 if isinstance(p['status'], numbers.Number):
                     status = 'Code {}'.format(p['status'])
@@ -196,9 +191,7 @@ class PluginModel(GlancesPluginModel):
                 else:
                     status = p['status']
                 msg = '{:>9}'.format(status)
-                ret.append(self.curse_add_line(msg,
-                                               self.get_web_alert(p,
-                                                                  header=p['indice'] + '_rtt')))
+                ret.append(self.curse_add_line(msg, self.get_web_alert(p, header=p['indice'] + '_rtt')))
                 ret.append(self.curse_new_line())
 
         # Delete the last empty line
@@ -269,11 +262,13 @@ class ThreadScanner(threading.Thread):
     def _web_scan(self, web):
         """Scan the  Web/URL (dict) and update the status key."""
         try:
-            req = requests.head(web['url'],
-                                allow_redirects=True,
-                                verify=web['ssl_verify'],
-                                proxies=web['proxies'],
-                                timeout=web['timeout'])
+            req = requests.head(
+                web['url'],
+                allow_redirects=True,
+                verify=web['ssl_verify'],
+                proxies=web['proxies'],
+                timeout=web['timeout'],
+            )
         except Exception as e:
             logger.debug(e)
             web['status'] = 'Error'
@@ -318,10 +313,14 @@ class ThreadScanner(threading.Thread):
             count_opt = '-c'
         # Build the command line
         # Note: Only string are allowed
-        cmd = ['ping',
-               count_opt, '1',
-               timeout_opt, str(self._resolv_name(port['timeout'])),
-               self._resolv_name(port['host'])]
+        cmd = [
+            'ping',
+            count_opt,
+            '1',
+            timeout_opt,
+            str(self._resolv_name(port['timeout'])),
+            self._resolv_name(port['host']),
+        ]
         fnull = open(os.devnull, 'w')
 
         try:

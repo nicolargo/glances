@@ -35,12 +35,10 @@ else:
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
-items_history_list = [{'name': 'proc',
-                       'description': 'GPU processor',
-                       'y_unit': '%'},
-                      {'name': 'mem',
-                       'description': 'Memory consumption',
-                       'y_unit': '%'}]
+items_history_list = [
+    {'name': 'proc', 'description': 'GPU processor', 'y_unit': '%'},
+    {'name': 'mem', 'description': 'Memory consumption', 'y_unit': '%'},
+]
 
 
 class PluginModel(GlancesPluginModel):
@@ -142,9 +140,7 @@ class PluginModel(GlancesPluginModel):
         # Alert
         for i in self.stats:
             # Init the views for the current GPU
-            self.views[i[self.get_key()]] = {'proc': {},
-                                             'mem': {},
-                                             'temperature': {}}
+            self.views[i[self.get_key()]] = {'proc': {}, 'mem': {}, 'temperature': {}}
             # Processor alert
             if 'proc' in i:
                 alert = self.get_alert(i['proc'], header='proc')
@@ -203,10 +199,11 @@ class PluginModel(GlancesPluginModel):
             else:
                 msg = '{:13}'.format('proc:')
             ret.append(self.curse_add_line(msg))
-            ret.append(self.curse_add_line(
-                mean_proc_msg, self.get_views(item=gpu_stats[self.get_key()],
-                                              key='proc',
-                                              option='decoration')))
+            ret.append(
+                self.curse_add_line(
+                    mean_proc_msg, self.get_views(item=gpu_stats[self.get_key()], key='proc', option='decoration')
+                )
+            )
             # New line
             ret.append(self.curse_new_line())
             # GPU MEM
@@ -221,10 +218,11 @@ class PluginModel(GlancesPluginModel):
             else:
                 msg = '{:13}'.format('mem:')
             ret.append(self.curse_add_line(msg))
-            ret.append(self.curse_add_line(
-                mean_mem_msg, self.get_views(item=gpu_stats[self.get_key()],
-                                             key='mem',
-                                             option='decoration')))
+            ret.append(
+                self.curse_add_line(
+                    mean_mem_msg, self.get_views(item=gpu_stats[self.get_key()], key='mem', option='decoration')
+                )
+            )
             # New line
             ret.append(self.curse_new_line())
             # GPU TEMPERATURE
@@ -237,17 +235,18 @@ class PluginModel(GlancesPluginModel):
                 if args.fahrenheit:
                     mean_temperature = to_fahrenheit(mean_temperature)
                     unit = 'F'
-                mean_temperature_msg = '{:>3.0f}{}'.format(mean_temperature,
-                                                           unit)
+                mean_temperature_msg = '{:>3.0f}{}'.format(mean_temperature, unit)
             if len(self.stats) > 1:
                 msg = '{:13}'.format('temp mean:')
             else:
                 msg = '{:13}'.format('temperature:')
             ret.append(self.curse_add_line(msg))
-            ret.append(self.curse_add_line(
-                mean_temperature_msg, self.get_views(item=gpu_stats[self.get_key()],
-                                                     key='temperature',
-                                                     option='decoration')))
+            ret.append(
+                self.curse_add_line(
+                    mean_temperature_msg,
+                    self.get_views(item=gpu_stats[self.get_key()], key='temperature', option='decoration'),
+                )
+            )
         else:
             # Multi GPU
             # Temperature is not displayed in this mode...
@@ -264,9 +263,7 @@ class PluginModel(GlancesPluginModel):
                     mem_msg = '{:>3.0f}%'.format(gpu_stats['mem'])
                 except (ValueError, TypeError):
                     mem_msg = '{:>4}'.format('N/A')
-                msg = '{}: {} mem: {}'.format(id_msg,
-                                              proc_msg,
-                                              mem_msg)
+                msg = '{}: {} mem: {}'.format(id_msg, proc_msg, mem_msg)
                 ret.append(self.curse_add_line(msg))
 
         return ret
@@ -341,7 +338,6 @@ def get_proc(device_handle):
 def get_temperature(device_handle):
     """Get GPU device CPU consumption in percent."""
     try:
-        return pynvml.nvmlDeviceGetTemperature(device_handle,
-                                               pynvml.NVML_TEMPERATURE_GPU)
+        return pynvml.nvmlDeviceGetTemperature(device_handle, pynvml.NVML_TEMPERATURE_GPU)
     except pynvml.NVMLError:
         return None

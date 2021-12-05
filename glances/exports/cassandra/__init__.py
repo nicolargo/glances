@@ -52,13 +52,11 @@ class Export(GlancesExport):
         self.password = None
 
         # Load the Cassandra configuration file section
-        self.export_enable = self.load_conf('cassandra',
-                                            mandatories=['host', 'port', 'keyspace'],
-                                            options=['protocol_version',
-                                                     'replication_factor',
-                                                     'table',
-                                                     'username',
-                                                     'password'])
+        self.export_enable = self.load_conf(
+            'cassandra',
+            mandatories=['host', 'port', 'keyspace'],
+            options=['protocol_version', 'replication_factor', 'table', 'username', 'password'],
+        )
         if not self.export_enable:
             sys.exit(2)
 
@@ -71,15 +69,16 @@ class Export(GlancesExport):
             return None
 
         # if username and/or password are not set the connection will try to connect with no auth
-        auth_provider = PlainTextAuthProvider(
-            username=self.username, password=self.password)
+        auth_provider = PlainTextAuthProvider(username=self.username, password=self.password)
 
         # Cluster
         try:
-            cluster = Cluster([self.host],
-                              port=int(self.port),
-                              protocol_version=int(self.protocol_version),
-                              auth_provider=auth_provider)
+            cluster = Cluster(
+                [self.host],
+                port=int(self.port),
+                protocol_version=int(self.protocol_version),
+                auth_provider=auth_provider,
+            )
             session = cluster.connect()
         except Exception as e:
             logger.critical("Cannot connect to Cassandra cluster '%s:%s' (%s)" % (self.host, self.port, e))
@@ -90,17 +89,25 @@ class Export(GlancesExport):
             session.set_keyspace(self.keyspace)
         except InvalidRequest as e:
             logger.info("Create keyspace {} on the Cassandra cluster".format(self.keyspace))
-            c = "CREATE KEYSPACE %s WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '%s' }" % (self.keyspace, self.replication_factor)
+            c = "CREATE KEYSPACE %s WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '%s' }" % (
+                self.keyspace,
+                self.replication_factor,
+            )
             session.execute(c)
             session.set_keyspace(self.keyspace)
 
         logger.info(
             "Stats will be exported to Cassandra cluster {} ({}) in keyspace {}".format(
-                cluster.metadata.cluster_name, cluster.metadata.all_hosts(), self.keyspace))
+                cluster.metadata.cluster_name, cluster.metadata.all_hosts(), self.keyspace
+            )
+        )
 
         # Table
         try:
-            session.execute("CREATE TABLE %s (plugin text, time timeuuid, stat map<text,float>, PRIMARY KEY (plugin, time)) WITH CLUSTERING ORDER BY (time DESC)" % self.table)
+            session.execute(
+                "CREATE TABLE %s (plugin text, time timeuuid, stat map<text,float>, PRIMARY KEY (plugin, time)) WITH CLUSTERING ORDER BY (time DESC)"
+                % self.table
+            )
         except Exception:
             logger.debug("Cassandra table %s already exist" % self.table)
 
@@ -118,10 +125,7 @@ class Export(GlancesExport):
 
             stmt = "INSERT INTO {} (plugin, time, stat) VALUES (?, ?, ?)".format(self.table)
             query = self.session.prepare(stmt)
-            self.session.execute(
-                query,
-                (name, uuid_from_time(datetime.now()), data)
-            )
+            self.session.execute(query, (name, uuid_from_time(datetime.now()), data))
         except Exception as e:
             logger.error("Cannot export {} stats to Cassandra ({})".format(name, e))
 

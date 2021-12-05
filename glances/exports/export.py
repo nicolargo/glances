@@ -36,26 +36,28 @@ class GlancesExport(object):
     # For the moment, only the below plugins can be exported
     # @TODO: remove this part and make all plugins exportable (see issue #1556)
     # @TODO: also make this list configurable by the user (see issue #1443)
-    exportable_plugins = ['cpu',
-                          'percpu',
-                          'load',
-                          'mem',
-                          'memswap',
-                          'network',
-                          'diskio',
-                          'fs',
-                          'processcount',
-                          'ip',
-                          'system',
-                          'uptime',
-                          'sensors',
-                          'docker',
-                          'gpu']
+    exportable_plugins = [
+        'cpu',
+        'percpu',
+        'load',
+        'mem',
+        'memswap',
+        'network',
+        'diskio',
+        'fs',
+        'processcount',
+        'ip',
+        'system',
+        'uptime',
+        'sensors',
+        'docker',
+        'gpu',
+    ]
 
     def __init__(self, config=None, args=None):
         """Init the export class."""
         # Export name (= module name without glances_)
-        self.export_name = self.__class__.__module__[len('glances_'):]
+        self.export_name = self.__class__.__module__[len('glances_') :]
         logger.debug("Init export module %s" % self.export_name)
 
         # Init the config & args

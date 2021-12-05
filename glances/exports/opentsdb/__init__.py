@@ -44,9 +44,7 @@ class Export(GlancesExport):
         self.tags = None
 
         # Load the configuration file
-        self.export_enable = self.load_conf('opentsdb',
-                                            mandatories=['host', 'port'],
-                                            options=['prefix', 'tags'])
+        self.export_enable = self.load_conf('opentsdb', mandatories=['host', 'port'], options=['prefix', 'tags'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -63,9 +61,7 @@ class Export(GlancesExport):
             return None
 
         try:
-            db = potsdb.Client(self.host,
-                               port=int(self.port),
-                               check_host=True)
+            db = potsdb.Client(self.host, port=int(self.port), check_host=True)
         except Exception as e:
             logger.critical("Cannot connect to OpenTSDB server %s:%s (%s)" % (self.host, self.port, e))
             sys.exit(2)

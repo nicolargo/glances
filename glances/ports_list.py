@@ -28,6 +28,7 @@ from glances.globals import BSD
 if not BSD:
     try:
         import netifaces
+
         netifaces_tag = True
     except ImportError:
         netifaces_tag = False
@@ -95,12 +96,10 @@ class GlancesPortsList(object):
 
                 # Read optionals configuration keys
                 # Port is set to 0 by default. 0 mean ICMP check instead of TCP check
-                new_port['port'] = config.get_value(self._section,
-                                                    '%s%s' % (postfix, 'port'),
-                                                    0)
-                new_port['description'] = config.get_value(self._section,
-                                                           '%sdescription' % postfix,
-                                                           default="%s:%s" % (new_port['host'], new_port['port']))
+                new_port['port'] = config.get_value(self._section, '%s%s' % (postfix, 'port'), 0)
+                new_port['description'] = config.get_value(
+                    self._section, '%sdescription' % postfix, default="%s:%s" % (new_port['host'], new_port['port'])
+                )
 
                 # Default status
                 new_port['status'] = None
@@ -109,14 +108,10 @@ class GlancesPortsList(object):
                 new_port['refresh'] = refresh
 
                 # Timeout in second
-                new_port['timeout'] = int(config.get_value(self._section,
-                                                           '%stimeout' % postfix,
-                                                           default=timeout))
+                new_port['timeout'] = int(config.get_value(self._section, '%stimeout' % postfix, default=timeout))
 
                 # RTT warning
-                new_port['rtt_warning'] = config.get_value(self._section,
-                                                           '%srtt_warning' % postfix,
-                                                           default=None)
+                new_port['rtt_warning'] = config.get_value(self._section, '%srtt_warning' % postfix, default=None)
                 if new_port['rtt_warning'] is not None:
                     # Convert to second
                     new_port['rtt_warning'] = int(new_port['rtt_warning']) / 1000.0

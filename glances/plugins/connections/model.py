@@ -41,18 +41,20 @@ class PluginModel(GlancesPluginModel):
     stats is a dict
     """
 
-    status_list = [psutil.CONN_LISTEN,
-                   psutil.CONN_ESTABLISHED]
-    initiated_states = [psutil.CONN_SYN_SENT,
-                        psutil.CONN_SYN_RECV]
-    terminated_states = [psutil.CONN_FIN_WAIT1,
-                         psutil.CONN_FIN_WAIT2,
-                         psutil.CONN_TIME_WAIT,
-                         psutil.CONN_CLOSE,
-                         psutil.CONN_CLOSE_WAIT,
-                         psutil.CONN_LAST_ACK]
-    conntrack = {'nf_conntrack_count': '/proc/sys/net/netfilter/nf_conntrack_count',
-                 'nf_conntrack_max': '/proc/sys/net/netfilter/nf_conntrack_max'}
+    status_list = [psutil.CONN_LISTEN, psutil.CONN_ESTABLISHED]
+    initiated_states = [psutil.CONN_SYN_SENT, psutil.CONN_SYN_RECV]
+    terminated_states = [
+        psutil.CONN_FIN_WAIT1,
+        psutil.CONN_FIN_WAIT2,
+        psutil.CONN_TIME_WAIT,
+        psutil.CONN_CLOSE,
+        psutil.CONN_CLOSE_WAIT,
+        psutil.CONN_LAST_ACK,
+    ]
+    conntrack = {
+        'nf_conntrack_count': '/proc/sys/net/netfilter/nf_conntrack_count',
+        'nf_conntrack_max': '/proc/sys/net/netfilter/nf_conntrack_max',
+    }
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
@@ -167,11 +169,10 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_new_line())
             msg = '{:{width}}'.format(nativestr(s).capitalize(), width=len(s))
             ret.append(self.curse_add_line(msg))
-            msg = '{:>{width}}'.format('{:0.0f}/{:0.0f}'.format(self.stats['nf_conntrack_count'],
-                                                                self.stats['nf_conntrack_max']),
-                                       width=max_width - len(s) + 2)
-            ret.append(self.curse_add_line(msg,
-                                           self.get_views(key='nf_conntrack_percent',
-                                                          option='decoration')))
+            msg = '{:>{width}}'.format(
+                '{:0.0f}/{:0.0f}'.format(self.stats['nf_conntrack_count'], self.stats['nf_conntrack_max']),
+                width=max_width - len(s) + 2,
+            )
+            ret.append(self.curse_add_line(msg, self.get_views(key='nf_conntrack_percent', option='decoration')))
 
         return ret

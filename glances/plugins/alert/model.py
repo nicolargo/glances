@@ -24,6 +24,7 @@ from datetime import datetime
 from glances.logger import logger
 from glances.events import glances_events
 from glances.thresholds import glances_thresholds
+
 # from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -35,34 +36,21 @@ from glances.plugins.plugin.model import GlancesPluginModel
 # -                 1: CAREFUL
 # -                 2: WARNING
 # -                 3: CRITICAL
-tree = [{'msg': 'No warning or critical alert detected',
-         'thresholds': [],
-         'thresholds_min': 0},
-        {'msg': 'High CPU user mode',
-         'thresholds': ['cpu_user'],
-         'thresholds_min': 2},
-        {'msg': 'High CPU kernel usage',
-         'thresholds': ['cpu_system'],
-         'thresholds_min': 2},
-        {'msg': 'High CPU I/O waiting',
-         'thresholds': ['cpu_iowait'],
-         'thresholds_min': 2},
-        {'msg': 'Large CPU stolen time. System running the hypervisor is too busy.',
-         'thresholds': ['cpu_steal'],
-         'thresholds_min': 2},
-        {'msg': 'High CPU niced value',
-         'thresholds': ['cpu_niced'],
-         'thresholds_min': 2},
-        {'msg': 'System overloaded in the last 5 minutes',
-         'thresholds': ['load'],
-         'thresholds_min': 2},
-        {'msg': 'High swap (paging) usage',
-         'thresholds': ['memswap'],
-         'thresholds_min': 2},
-        {'msg': 'High memory consumption',
-         'thresholds': ['mem'],
-         'thresholds_min': 2},
-        ]
+tree = [
+    {'msg': 'No warning or critical alert detected', 'thresholds': [], 'thresholds_min': 0},
+    {'msg': 'High CPU user mode', 'thresholds': ['cpu_user'], 'thresholds_min': 2},
+    {'msg': 'High CPU kernel usage', 'thresholds': ['cpu_system'], 'thresholds_min': 2},
+    {'msg': 'High CPU I/O waiting', 'thresholds': ['cpu_iowait'], 'thresholds_min': 2},
+    {
+        'msg': 'Large CPU stolen time. System running the hypervisor is too busy.',
+        'thresholds': ['cpu_steal'],
+        'thresholds_min': 2,
+    },
+    {'msg': 'High CPU niced value', 'thresholds': ['cpu_niced'], 'thresholds_min': 2},
+    {'msg': 'System overloaded in the last 5 minutes', 'thresholds': ['load'], 'thresholds_min': 2},
+    {'msg': 'High swap (paging) usage', 'thresholds': ['memswap'], 'thresholds_min': 2},
+    {'msg': 'High memory consumption', 'thresholds': ['mem'], 'thresholds_min': 2},
+]
 
 # TODO: change the algo to use the following decision tree
 # Source: Inspire by https://scoutapm.com/blog/slow_server_flow_chart
@@ -74,7 +62,7 @@ tree = [{'msg': 'No warning or critical alert detected',
 # - 2: WARNING
 # - 3: CRITICAL
 tree_new = {
-    'cpu_iowait':  {
+    'cpu_iowait': {
         '_yes': {
             'memswap': {
                 '_yes': {
@@ -84,13 +72,13 @@ tree_new = {
                             # business-as-usual or not. For example, a memory leak can be satisfactorily addressed by a one-time or periodic
                             # restart of the process.
                             # - if memory usage seems anomalous: kill the offending processes.
-                            # - if memory usage seems business-as-usual: add RAM to the server, or split high-memory using services to other servers.
+                            # - if memory usage seems business-as-usual: add RAM to the server, or split high-memory using services to other servers.
                             '_msg': "Memory issue"
                         },
                         '_no': {
                             # ???
                             '_msg': "Swap issue"
-                        }
+                        },
                     }
                 },
                 '_no': {
@@ -100,7 +88,7 @@ tree_new = {
                     # Recommendation: install it before you need it - - it's no fun trying to install a troubleshooting
                     # tool on an overloaded machine (iotop requires a Linux of 2.62 or above)
                     '_msg': "I/O issue"
-                }
+                },
             }
         },
         '_no': {
@@ -128,11 +116,9 @@ tree_new = {
                                 '_yes': {
                                     '_msg': "CPU issue with stolen time. System running the hypervisor may be too busy."
                                 },
-                                '_no': {
-                                    '_msg': "CPU issue with system process(es)"
-                                }
+                                '_no': {'_msg': "CPU issue with system process(es)"},
                             }
-                        }
+                        },
                     }
                 },
                 '_no': {
@@ -152,10 +138,10 @@ tree_new = {
                         # to(or being attempted to be read from) and lsof can give you a mapping of those file descriptors to
                         # network connections.
                         '_msg': "External issue"
-                    }
-                }
+                    },
+                },
             }
-        }
+        },
     }
 }
 
@@ -226,8 +212,7 @@ class PluginModel(GlancesPluginModel):
             # Duration
             if alert[1] > 0:
                 # If finished display duration
-                msg = ' ({})'.format(datetime.fromtimestamp(alert[1]) -
-                                     datetime.fromtimestamp(alert[0]))
+                msg = ' ({})'.format(datetime.fromtimestamp(alert[1]) - datetime.fromtimestamp(alert[0]))
             else:
                 msg = ' (ongoing)'
             ret.append(self.curse_add_line(msg))
@@ -244,8 +229,7 @@ class PluginModel(GlancesPluginModel):
             if self.approx_equal(alert[6], alert[4], tolerance=0.1):
                 msg = ' ({:.1f})'.format(alert[5])
             else:
-                msg = ' (Min:{:.1f} Mean:{:.1f} Max:{:.1f})'.format(
-                    alert[6], alert[5], alert[4])
+                msg = ' (Min:{:.1f} Mean:{:.1f} Max:{:.1f})'.format(alert[6], alert[5], alert[4])
             ret.append(self.curse_add_line(msg))
             # Top processes
             top_process = ', '.join([p['name'] for p in alert[9]])

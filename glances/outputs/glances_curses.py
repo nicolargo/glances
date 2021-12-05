@@ -34,11 +34,9 @@ try:
     import curses.panel
     from curses.textpad import Textbox
 except ImportError:
-    logger.critical(
-        "Curses module not found. Glances cannot start in standalone mode.")
+    logger.critical("Curses module not found. Glances cannot start in standalone mode.")
     if WINDOWS:
-        logger.critical(
-            "For Windows you can try installing windows-curses with pip install.")
+        logger.critical("For Windows you can try installing windows-curses with pip install.")
     sys.exit(1)
 
 
@@ -113,8 +111,20 @@ class _GlancesCurses(object):
     _quicklook_max_width = 68
 
     # Define left sidebar
-    _left_sidebar = ['network', 'connections', 'wifi', 'ports', 'diskio', 'fs',
-                     'irq', 'folders', 'raid', 'smart', 'sensors', 'now']
+    _left_sidebar = [
+        'network',
+        'connections',
+        'wifi',
+        'ports',
+        'diskio',
+        'fs',
+        'irq',
+        'folders',
+        'raid',
+        'smart',
+        'sensors',
+        'now',
+    ]
     _left_sidebar_min_width = 23
     _left_sidebar_max_width = 34
 
@@ -209,8 +219,7 @@ class _GlancesCurses(object):
         try:
             if hasattr(curses, 'start_color'):
                 curses.start_color()
-                logger.debug(
-                    'Curses interface compatible with {} colors'.format(curses.COLORS))
+                logger.debug('Curses interface compatible with {} colors'.format(curses.COLORS))
             if hasattr(curses, 'use_default_colors'):
                 curses.use_default_colors()
         except Exception as e:
@@ -319,7 +328,7 @@ class _GlancesCurses(object):
             'WARNING_LOG': self.ifWARNING_color,
             'CRITICAL_LOG': self.ifCRITICAL_color,
             'PASSWORD': curses.A_PROTECT,
-            'SELECTED': self.selected_color
+            'SELECTED': self.selected_color,
         }
 
     def set_cursor(self, value):
@@ -356,27 +365,27 @@ class _GlancesCurses(object):
                 option = '_'.join(self._hotkeys[hotkey]['switch'].split('_')[1:])
                 if self._hotkeys[hotkey]['switch'].startswith('disable_'):
                     # disable_ switch
-                    if getattr(self.args,
-                               self._hotkeys[hotkey]['switch']):
+                    if getattr(self.args, self._hotkeys[hotkey]['switch']):
                         enable(self.args, option)
                     else:
                         disable(self.args, option)
                 elif self._hotkeys[hotkey]['switch'].startswith('enable_'):
                     # enable_ switch
-                    if getattr(self.args,
-                               self._hotkeys[hotkey]['switch']):
+                    if getattr(self.args, self._hotkeys[hotkey]['switch']):
                         disable(self.args, option)
                     else:
                         enable(self.args, option)
                 else:
                     # Others switchs options (with no enable_ or disable_)
-                    setattr(self.args,
-                            self._hotkeys[hotkey]['switch'],
-                            not getattr(self.args,
-                                        self._hotkeys[hotkey]['switch']))
+                    setattr(
+                        self.args,
+                        self._hotkeys[hotkey]['switch'],
+                        not getattr(self.args, self._hotkeys[hotkey]['switch']),
+                    )
             if self.pressedkey == ord(hotkey) and 'sort_key' in self._hotkeys[hotkey]:
-                glances_processes.set_sort_key(self._hotkeys[hotkey]['sort_key'],
-                                               self._hotkeys[hotkey]['sort_key'] == 'auto')
+                glances_processes.set_sort_key(
+                    self._hotkeys[hotkey]['sort_key'], self._hotkeys[hotkey]['sort_key'] == 'auto'
+                )
 
         # Other actions...
         if self.pressedkey == ord('\n'):
@@ -451,8 +460,7 @@ class _GlancesCurses(object):
             if return_to_browser:
                 logger.info("Stop Glances client and return to the browser")
             else:
-                logger.info(
-                    "Stop Glances (keypressed: {})".format(self.pressedkey))
+                logger.info("Stop Glances (keypressed: {})".format(self.pressedkey))
         elif self.pressedkey == curses.KEY_F5:
             # "F5" manual refresh requested
             pass
@@ -550,14 +558,11 @@ class _GlancesCurses(object):
             # Compute the plugin max size
             plugin_max_width = None
             if p in self._left_sidebar:
-                plugin_max_width = max(self._left_sidebar_min_width,
-                                       self.term_window.getmaxyx()[1] - 105)
-                plugin_max_width = min(self._left_sidebar_max_width,
-                                       plugin_max_width)
+                plugin_max_width = max(self._left_sidebar_min_width, self.term_window.getmaxyx()[1] - 105)
+                plugin_max_width = min(self._left_sidebar_max_width, plugin_max_width)
 
             # Get the view
-            ret[p] = stats.get_plugin(p).get_stats_display(args=self.args,
-                                                           max_width=plugin_max_width)
+            ret[p] = stats.get_plugin(p).get_stats_display(args=self.args, max_width=plugin_max_width)
 
         return ret
 
@@ -585,15 +590,17 @@ class _GlancesCurses(object):
 
         # Adapt number of processes to the available space
         max_processes_displayed = (
-            self.term_window.getmaxyx()[0] - 11 -
-            (0 if 'docker' not in __stat_display else
-                self.get_stats_display_height(__stat_display["docker"])) -
-            (0 if 'processcount' not in __stat_display else
-                self.get_stats_display_height(__stat_display["processcount"])) -
-            (0 if 'amps' not in __stat_display else
-                self.get_stats_display_height(__stat_display["amps"])) -
-            (0 if 'alert' not in __stat_display else
-                self.get_stats_display_height(__stat_display["alert"])))
+            self.term_window.getmaxyx()[0]
+            - 11
+            - (0 if 'docker' not in __stat_display else self.get_stats_display_height(__stat_display["docker"]))
+            - (
+                0
+                if 'processcount' not in __stat_display
+                else self.get_stats_display_height(__stat_display["processcount"])
+            )
+            - (0 if 'amps' not in __stat_display else self.get_stats_display_height(__stat_display["amps"]))
+            - (0 if 'alert' not in __stat_display else self.get_stats_display_height(__stat_display["alert"]))
+        )
 
         try:
             if self.args.enable_process_extended:
@@ -602,14 +609,12 @@ class _GlancesCurses(object):
             pass
         if max_processes_displayed < 0:
             max_processes_displayed = 0
-        if (glances_processes.max_processes is None or
-                glances_processes.max_processes != max_processes_displayed):
+        if glances_processes.max_processes is None or glances_processes.max_processes != max_processes_displayed:
             logger.debug("Set number of displayed processes to {}".format(max_processes_displayed))
             glances_processes.max_processes = max_processes_displayed
 
         # Get the processlist
-        __stat_display["processlist"] = stats.get_plugin(
-            'processlist').get_stats_display(args=self.args)
+        __stat_display["processlist"] = stats.get_plugin('processlist').get_stats_display(args=self.args)
 
         # Display the stats on the curses interface
         ###########################################
@@ -617,8 +622,7 @@ class _GlancesCurses(object):
         # Help screen (on top of the other stats)
         if self.args.help_tag:
             # Display the stats...
-            self.display_plugin(
-                stats.get_plugin('help').get_stats_display(args=self.args))
+            self.display_plugin(stats.get_plugin('help').get_stats_display(args=self.args))
             # ... and exit
             return False
 
@@ -651,17 +655,18 @@ class _GlancesCurses(object):
         # Only in standalone mode (cs_status is None)
         if self.edit_filter and cs_status is None:
             new_filter = self.display_popup(
-                'Process filter pattern: \n\n' +
-                'Examples:\n' +
-                '- python\n' +
-                '- .*python.*\n' +
-                '- /usr/lib.*\n' +
-                '- name:.*nautilus.*\n' +
-                '- cmdline:.*glances.*\n' +
-                '- username:nicolargo\n' +
-                '- username:^root        ',
+                'Process filter pattern: \n\n'
+                + 'Examples:\n'
+                + '- python\n'
+                + '- .*python.*\n'
+                + '- /usr/lib.*\n'
+                + '- name:.*nautilus.*\n'
+                + '- cmdline:.*glances.*\n'
+                + '- username:nicolargo\n'
+                + '- username:^root        ',
                 popup_type='input',
-                input_value=glances_processes.process_filter_input)
+                input_value=glances_processes.process_filter_input,
+            )
             glances_processes.process_filter = new_filter
         elif self.edit_filter and cs_status is not None:
             self.display_popup('Process filter only available in standalone mode')
@@ -670,26 +675,27 @@ class _GlancesCurses(object):
         # Display kill process confirmation popup
         # Only in standalone mode (cs_status is None)
         if self.kill_process and cs_status is None:
-            selected_process_raw = stats.get_plugin('processlist').get_raw()[
-                self.args.cursor_position]
+            selected_process_raw = stats.get_plugin('processlist').get_raw()[self.args.cursor_position]
             confirm = self.display_popup(
                 'Kill process: {} (pid: {}) ?\n\nConfirm ([y]es/[n]o): '.format(
-                    selected_process_raw['name'],
-                    selected_process_raw['pid']),
-                popup_type='yesno')
+                    selected_process_raw['name'], selected_process_raw['pid']
+                ),
+                popup_type='yesno',
+            )
             if confirm.lower().startswith('y'):
                 try:
                     ret_kill = glances_processes.kill(selected_process_raw['pid'])
                 except Exception as e:
-                    logger.error('Can not kill process {} ({})'.format(
-                        selected_process_raw['name'], e))
+                    logger.error('Can not kill process {} ({})'.format(selected_process_raw['name'], e))
                 else:
-                    logger.info('Kill signal has been sent to process {} (return code: {})'.format(
-                        selected_process_raw['name'], ret_kill))
+                    logger.info(
+                        'Kill signal has been sent to process {} (return code: {})'.format(
+                            selected_process_raw['name'], ret_kill
+                        )
+                    )
 
         elif self.kill_process and cs_status is not None:
-            self.display_popup(
-                'Kill process only available in standalone mode')
+            self.display_popup('Kill process only available in standalone mode')
         self.kill_process = False
 
         # Display graph generation popup
@@ -711,17 +717,15 @@ class _GlancesCurses(object):
         for i in ['system', 'ip', 'uptime']:
             if i in stat_display:
                 l_uptime += self.get_stats_display_width(stat_display[i])
-        self.display_plugin(
-            stat_display["system"],
-            display_optional=(self.term_window.getmaxyx()[1] >= l_uptime))
+        self.display_plugin(stat_display["system"], display_optional=(self.term_window.getmaxyx()[1] >= l_uptime))
         self.space_between_column = 3
         if 'ip' in stat_display:
             self.new_column()
             self.display_plugin(stat_display["ip"])
         self.new_column()
         self.display_plugin(
-            stat_display["uptime"],
-            add_space=-(self.get_stats_display_width(stat_display["cloud"]) != 0))
+            stat_display["uptime"], add_space=-(self.get_stats_display_width(stat_display["cloud"]) != 0)
+        )
         # Second line (optional)
         self.init_column()
         self.new_line()
@@ -741,24 +745,33 @@ class _GlancesCurses(object):
         # Dict for plugins width
         plugin_widths = {}
         for p in self._top:
-            plugin_widths[p] = self.get_stats_display_width(stat_display.get(p, 0)) if hasattr(self.args, 'disable_' + p) else 0
+            plugin_widths[p] = (
+                self.get_stats_display_width(stat_display.get(p, 0)) if hasattr(self.args, 'disable_' + p) else 0
+            )
 
         # Width of all plugins
         stats_width = sum(itervalues(plugin_widths))
 
         # Number of plugin but quicklook
-        stats_number = sum([int(stat_display[p]['msgdict'] != []) for p in self._top if not getattr(self.args, 'disable_' + p)])
+        stats_number = sum(
+            [int(stat_display[p]['msgdict'] != []) for p in self._top if not getattr(self.args, 'disable_' + p)]
+        )
 
         if not self.args.disable_quicklook:
             # Quick look is in the place !
             if self.args.full_quicklook:
-                quicklook_width = self.term_window.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column)
+                quicklook_width = self.term_window.getmaxyx()[1] - (
+                    stats_width + 8 + stats_number * self.space_between_column
+                )
             else:
-                quicklook_width = min(self.term_window.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column),
-                                      self._quicklook_max_width - 5)
+                quicklook_width = min(
+                    self.term_window.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column),
+                    self._quicklook_max_width - 5,
+                )
             try:
-                stat_display["quicklook"] = stats.get_plugin(
-                    'quicklook').get_stats_display(max_width=quicklook_width, args=self.args)
+                stat_display["quicklook"] = stats.get_plugin('quicklook').get_stats_display(
+                    max_width=quicklook_width, args=self.args
+                )
             except AttributeError as e:
                 logger.debug("Quicklook plugin not available (%s)" % e)
             else:
@@ -779,9 +792,15 @@ class _GlancesCurses(object):
                 # No space ? Remove optional stats
                 if self.space_between_column < 3:
                     plugin_display_optional[p] = False
-                    plugin_widths[p] = self.get_stats_display_width(stat_display[p], without_option=True) if hasattr(self.args, 'disable_' + p) else 0
+                    plugin_widths[p] = (
+                        self.get_stats_display_width(stat_display[p], without_option=True)
+                        if hasattr(self.args, 'disable_' + p)
+                        else 0
+                    )
                     stats_width = sum(itervalues(plugin_widths)) + 1
-                    self.space_between_column = max(1, int((self.term_window.getmaxyx()[1] - stats_width) / (stats_number - 1)))
+                    self.space_between_column = max(
+                        1, int((self.term_window.getmaxyx()[1] - stats_width) / (stats_number - 1))
+                    )
         else:
             self.space_between_column = 0
 
@@ -790,8 +809,7 @@ class _GlancesCurses(object):
             if p == 'quicklook':
                 continue
             if p in stat_display:
-                self.display_plugin(stat_display[p],
-                                    display_optional=plugin_display_optional[p])
+                self.display_plugin(stat_display[p], display_optional=plugin_display_optional[p])
             if p != 'load':
                 # Skip last column
                 self.new_column()
@@ -810,8 +828,7 @@ class _GlancesCurses(object):
             return
 
         for p in self._left_sidebar:
-            if ((hasattr(self.args, 'enable_' + p) or
-                 hasattr(self.args, 'disable_' + p)) and p in stat_display):
+            if (hasattr(self.args, 'enable_' + p) or hasattr(self.args, 'disable_' + p)) and p in stat_display:
                 self.new_line()
                 self.display_plugin(stat_display[p])
 
@@ -830,26 +847,26 @@ class _GlancesCurses(object):
         # Display right sidebar
         self.new_column()
         for p in self._right_sidebar:
-            if ((hasattr(self.args, 'enable_' + p) or
-                 hasattr(self.args, 'disable_' + p)) and p in stat_display):
+            if (hasattr(self.args, 'enable_' + p) or hasattr(self.args, 'disable_' + p)) and p in stat_display:
                 if p not in p:
                     # Catch for issue #1470
                     continue
                 self.new_line()
                 if p == 'processlist':
-                    self.display_plugin(stat_display['processlist'],
-                                        display_optional=(self.term_window.getmaxyx()[1] > 102),
-                                        display_additional=(not MACOS),
-                                        max_y=(self.term_window.getmaxyx()[0] - self.get_stats_display_height(stat_display['alert']) - 2))
+                    self.display_plugin(
+                        stat_display['processlist'],
+                        display_optional=(self.term_window.getmaxyx()[1] > 102),
+                        display_additional=(not MACOS),
+                        max_y=(
+                            self.term_window.getmaxyx()[0] - self.get_stats_display_height(stat_display['alert']) - 2
+                        ),
+                    )
                 else:
                     self.display_plugin(stat_display[p])
 
-    def display_popup(self, message,
-                      size_x=None, size_y=None,
-                      duration=3,
-                      popup_type='info',
-                      input_size=30,
-                      input_value=None):
+    def display_popup(
+        self, message, size_x=None, size_y=None, duration=3, popup_type='info', input_size=30, input_value=None
+    ):
         """
         Display a centered popup.
 
@@ -922,8 +939,7 @@ class _GlancesCurses(object):
             self.set_cursor(0)
             # self.term_window.keypad(0)
             if textbox.gather() != '':
-                logger.debug(
-                    "User enters the following string: %s" % textbox.gather())
+                logger.debug("User enters the following string: %s" % textbox.gather())
                 return textbox.gather()[:-1]
             else:
                 logger.debug("User centers an empty string")
@@ -946,11 +962,7 @@ class _GlancesCurses(object):
             # self.term_window.keypad(0)
             return textbox.gather()
 
-    def display_plugin(self, plugin_stats,
-                       display_optional=True,
-                       display_additional=True,
-                       max_y=65535,
-                       add_space=0):
+    def display_plugin(self, plugin_stats, display_optional=True, display_additional=True, max_y=65535, add_space=0):
         """Display the plugin_stats on the screen.
 
         :param plugin_stats:
@@ -1014,11 +1026,14 @@ class _GlancesCurses(object):
             # Is it possible to display the stat with the current screen size
             # !!! Crash if not try/except... Why ???
             try:
-                self.term_window.addnstr(y, x,
-                                         m['msg'],
-                                         # Do not display outside the screen
-                                         screen_x - x,
-                                         self.colors_list[m['decoration']])
+                self.term_window.addnstr(
+                    y,
+                    x,
+                    m['msg'],
+                    # Do not display outside the screen
+                    screen_x - x,
+                    self.colors_list[m['decoration']],
+                )
             except Exception:
                 pass
             else:
@@ -1036,8 +1051,7 @@ class _GlancesCurses(object):
                     x_max = x
 
         # Compute the next Glances column/line position
-        self.next_column = max(
-            self.next_column, x_max + self.space_between_column)
+        self.next_column = max(self.next_column, x_max + self.space_between_column)
         self.next_line = max(self.next_line, y + self.space_between_line)
 
         # Have empty lines after the plugins
@@ -1059,11 +1073,7 @@ class _GlancesCurses(object):
         self.erase()
         self.display(stats, cs_status=cs_status)
 
-    def update(self,
-               stats,
-               duration=3,
-               cs_status=None,
-               return_to_browser=False):
+    def update(self, stats, duration=3, cs_status=None, return_to_browser=False):
         """Update the screen.
 
         :param stats: Stats database to display
@@ -1095,7 +1105,7 @@ class _GlancesCurses(object):
         while not countdown.finished() and not isexitkey:
             # Getkey
             pressedkey = self.__catch_key(return_to_browser=return_to_browser)
-            isexitkey = (pressedkey == ord('\x1b') or pressedkey == ord('q'))
+            isexitkey = pressedkey == ord('\x1b') or pressedkey == ord('q')
 
             if pressedkey == curses.KEY_F5:
                 # Were asked to refresh
@@ -1124,12 +1134,27 @@ class _GlancesCurses(object):
         try:
             if without_option:
                 # Size without options
-                c = len(max(''.join([(u(u(nativestr(i['msg'])).encode('ascii', 'replace')) if not i['optional'] else "")
-                                     for i in curse_msg['msgdict']]).split('\n'), key=len))
+                c = len(
+                    max(
+                        ''.join(
+                            [
+                                (u(u(nativestr(i['msg'])).encode('ascii', 'replace')) if not i['optional'] else "")
+                                for i in curse_msg['msgdict']
+                            ]
+                        ).split('\n'),
+                        key=len,
+                    )
+                )
             else:
                 # Size with all options
-                c = len(max(''.join([u(u(nativestr(i['msg'])).encode('ascii', 'replace'))
-                                     for i in curse_msg['msgdict']]).split('\n'), key=len))
+                c = len(
+                    max(
+                        ''.join(
+                            [u(u(nativestr(i['msg'])).encode('ascii', 'replace')) for i in curse_msg['msgdict']]
+                        ).split('\n'),
+                        key=len,
+                    )
+                )
         except Exception as e:
             logger.debug('ERROR: Can not compute plugin width ({})'.format(e))
             return 0
@@ -1165,7 +1190,6 @@ class GlancesCursesClient(_GlancesCurses):
 
 
 class GlancesTextbox(Textbox, object):
-
     def __init__(self, *args, **kwargs):
         super(GlancesTextbox, self).__init__(*args, **kwargs)
 
@@ -1178,7 +1202,6 @@ class GlancesTextbox(Textbox, object):
 
 
 class GlancesTextboxYesNo(Textbox, object):
-
     def __init__(self, *args, **kwargs):
         super(GlancesTextboxYesNo, self).__init__(*args, **kwargs)
 

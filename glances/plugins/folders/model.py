@@ -82,14 +82,11 @@ class PluginModel(GlancesPluginModel):
         else:
             ret = 'OK'
 
-            if stat['critical'] is not None and \
-               stat['size'] > int(stat['critical']) * 1000000:
+            if stat['critical'] is not None and stat['size'] > int(stat['critical']) * 1000000:
                 ret = 'CRITICAL'
-            elif stat['warning'] is not None and \
-                    stat['size'] > int(stat['warning']) * 1000000:
+            elif stat['warning'] is not None and stat['size'] > int(stat['warning']) * 1000000:
                 ret = 'WARNING'
-            elif stat['careful'] is not None and \
-                    stat['size'] > int(stat['careful']) * 1000000:
+            elif stat['careful'] is not None and stat['size'] > int(stat['careful']) * 1000000:
                 ret = 'CAREFUL'
 
         # Get stat name
@@ -99,10 +96,7 @@ class PluginModel(GlancesPluginModel):
         self.manage_threshold(stat_name, ret)
 
         # Manage action
-        self.manage_action(stat_name,
-                           ret.lower(),
-                           header,
-                           stat[self.get_key()])
+        self.manage_action(stat_name, ret.lower(), header, stat[self.get_key()])
 
         return ret
 
@@ -119,8 +113,7 @@ class PluginModel(GlancesPluginModel):
         name_max_width = max_width - 7
 
         # Header
-        msg = '{:{width}}'.format('FOLDERS',
-                                  width=name_max_width)
+        msg = '{:{width}}'.format('FOLDERS', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         # Data
@@ -128,11 +121,10 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_new_line())
             if len(i['path']) > name_max_width:
                 # Cut path if it is too long
-                path = '_' + i['path'][-name_max_width + 1:]
+                path = '_' + i['path'][-name_max_width + 1 :]
             else:
                 path = i['path']
-            msg = '{:{width}}'.format(nativestr(path),
-                                      width=name_max_width)
+            msg = '{:{width}}'.format(nativestr(path), width=name_max_width)
             ret.append(self.curse_add_line(msg))
             try:
                 msg = '{:>9}'.format(self.auto_unit(i['size']))

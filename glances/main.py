@@ -107,157 +107,370 @@ Examples of use:
             prog='glances',
             conflict_handler='resolve',
             formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog=self.example_of_use)
-        parser.add_argument(
-            '-V', '--version', action='version', version=version)
-        parser.add_argument('-d', '--debug', action='store_true', default=False,
-                            dest='debug', help='enable debug mode')
-        parser.add_argument('-C', '--config', dest='conf_file',
-                            help='path to the configuration file')
+            epilog=self.example_of_use,
+        )
+        parser.add_argument('-V', '--version', action='version', version=version)
+        parser.add_argument('-d', '--debug', action='store_true', default=False, dest='debug', help='enable debug mode')
+        parser.add_argument('-C', '--config', dest='conf_file', help='path to the configuration file')
         # Disable plugin
-        parser.add_argument('--modules-list', '--module-list',
-                            action='store_true', default=False,
-                            dest='modules_list',
-                            help='display modules (plugins & exports) list and exit')
-        parser.add_argument('--disable-plugin', '--disable-plugins', dest='disable_plugin',
-                            help='disable plugin (comma separed list)')
-        parser.add_argument('--enable-plugin', '--enable-plugins', dest='enable_plugin',
-                            help='enable plugin (comma separed list)')
-        parser.add_argument('--disable-process', action='store_true', default=False,
-                            dest='disable_process', help='disable process module')
+        parser.add_argument(
+            '--modules-list',
+            '--module-list',
+            action='store_true',
+            default=False,
+            dest='modules_list',
+            help='display modules (plugins & exports) list and exit',
+        )
+        parser.add_argument(
+            '--disable-plugin', '--disable-plugins', dest='disable_plugin', help='disable plugin (comma separed list)'
+        )
+        parser.add_argument(
+            '--enable-plugin', '--enable-plugins', dest='enable_plugin', help='enable plugin (comma separed list)'
+        )
+        parser.add_argument(
+            '--disable-process',
+            action='store_true',
+            default=False,
+            dest='disable_process',
+            help='disable process module',
+        )
         # Enable or disable option
-        parser.add_argument('--disable-webui', action='store_true', default=False,
-                            dest='disable_webui', help='disable the Web Interface')
-        parser.add_argument('--light', '--enable-light', action='store_true',
-                            default=False, dest='enable_light',
-                            help='light mode for Curses UI (disable all but top menu)')
-        parser.add_argument('-0', '--disable-irix', action='store_true', default=False,
-                            dest='disable_irix', help='task\'s cpu usage will be divided by the total number of CPUs')
-        parser.add_argument('-1', '--percpu', action='store_true', default=False,
-                            dest='percpu', help='start Glances in per CPU mode')
-        parser.add_argument('-2', '--disable-left-sidebar', action='store_true',
-                            default=False, dest='disable_left_sidebar',
-                            help='disable network, disk I/O, FS and sensors modules')
-        parser.add_argument('-3', '--disable-quicklook', action='store_true', default=False,
-                            dest='disable_quicklook', help='disable quick look module')
-        parser.add_argument('-4', '--full-quicklook', action='store_true', default=False,
-                            dest='full_quicklook', help='disable all but quick look and load')
-        parser.add_argument('-5', '--disable-top', action='store_true',
-                            default=False, dest='disable_top',
-                            help='disable top menu (QL, CPU, MEM, SWAP and LOAD)')
-        parser.add_argument('-6', '--meangpu', action='store_true', default=False,
-                            dest='meangpu', help='start Glances in mean GPU mode')
-        parser.add_argument('--disable-history', action='store_true', default=False,
-                            dest='disable_history', help='disable stats history')
-        parser.add_argument('--disable-bold', action='store_true', default=False,
-                            dest='disable_bold', help='disable bold mode in the terminal')
-        parser.add_argument('--disable-bg', action='store_true', default=False,
-                            dest='disable_bg', help='disable background colors in the terminal')
-        parser.add_argument('--enable-irq', action='store_true', default=False,
-                            dest='enable_irq', help='enable IRQ module'),
-        parser.add_argument('--enable-process-extended', action='store_true', default=False,
-                            dest='enable_process_extended', help='enable extended stats on top process')
+        parser.add_argument(
+            '--disable-webui',
+            action='store_true',
+            default=False,
+            dest='disable_webui',
+            help='disable the Web Interface',
+        )
+        parser.add_argument(
+            '--light',
+            '--enable-light',
+            action='store_true',
+            default=False,
+            dest='enable_light',
+            help='light mode for Curses UI (disable all but top menu)',
+        )
+        parser.add_argument(
+            '-0',
+            '--disable-irix',
+            action='store_true',
+            default=False,
+            dest='disable_irix',
+            help='task\'s cpu usage will be divided by the total number of CPUs',
+        )
+        parser.add_argument(
+            '-1', '--percpu', action='store_true', default=False, dest='percpu', help='start Glances in per CPU mode'
+        )
+        parser.add_argument(
+            '-2',
+            '--disable-left-sidebar',
+            action='store_true',
+            default=False,
+            dest='disable_left_sidebar',
+            help='disable network, disk I/O, FS and sensors modules',
+        )
+        parser.add_argument(
+            '-3',
+            '--disable-quicklook',
+            action='store_true',
+            default=False,
+            dest='disable_quicklook',
+            help='disable quick look module',
+        )
+        parser.add_argument(
+            '-4',
+            '--full-quicklook',
+            action='store_true',
+            default=False,
+            dest='full_quicklook',
+            help='disable all but quick look and load',
+        )
+        parser.add_argument(
+            '-5',
+            '--disable-top',
+            action='store_true',
+            default=False,
+            dest='disable_top',
+            help='disable top menu (QL, CPU, MEM, SWAP and LOAD)',
+        )
+        parser.add_argument(
+            '-6', '--meangpu', action='store_true', default=False, dest='meangpu', help='start Glances in mean GPU mode'
+        )
+        parser.add_argument(
+            '--disable-history',
+            action='store_true',
+            default=False,
+            dest='disable_history',
+            help='disable stats history',
+        )
+        parser.add_argument(
+            '--disable-bold',
+            action='store_true',
+            default=False,
+            dest='disable_bold',
+            help='disable bold mode in the terminal',
+        )
+        parser.add_argument(
+            '--disable-bg',
+            action='store_true',
+            default=False,
+            dest='disable_bg',
+            help='disable background colors in the terminal',
+        )
+        parser.add_argument(
+            '--enable-irq', action='store_true', default=False, dest='enable_irq', help='enable IRQ module'
+        ),
+        parser.add_argument(
+            '--enable-process-extended',
+            action='store_true',
+            default=False,
+            dest='enable_process_extended',
+            help='enable extended stats on top process',
+        )
         # Sort processes list
-        parser.add_argument('--sort-processes', dest='sort_processes_key',
-                            choices=sort_processes_key_list,
-                            help='Sort processes by: {}'.format(', '.join(sort_processes_key_list)))
+        parser.add_argument(
+            '--sort-processes',
+            dest='sort_processes_key',
+            choices=sort_processes_key_list,
+            help='Sort processes by: {}'.format(', '.join(sort_processes_key_list)),
+        )
         # Export modules feature
-        parser.add_argument('--export', dest='export',
-                            help='enable export module (comma separed list)')
-        parser.add_argument('--export-csv-file',
-                            default='./glances.csv',
-                            dest='export_csv_file',
-                            help='file path for CSV exporter')
-        parser.add_argument('--export-csv-overwrite', action='store_true', default=False,
-                            dest='export_csv_overwrite', help='overwrite existing CSV file')
-        parser.add_argument('--export-json-file',
-                            default='./glances.json',
-                            dest='export_json_file',
-                            help='file path for JSON exporter')
-        parser.add_argument('--export-graph-path',
-                            default=tempfile.gettempdir(),
-                            dest='export_graph_path',
-                            help='Folder for Graph exporter')
+        parser.add_argument('--export', dest='export', help='enable export module (comma separed list)')
+        parser.add_argument(
+            '--export-csv-file', default='./glances.csv', dest='export_csv_file', help='file path for CSV exporter'
+        )
+        parser.add_argument(
+            '--export-csv-overwrite',
+            action='store_true',
+            default=False,
+            dest='export_csv_overwrite',
+            help='overwrite existing CSV file',
+        )
+        parser.add_argument(
+            '--export-json-file', default='./glances.json', dest='export_json_file', help='file path for JSON exporter'
+        )
+        parser.add_argument(
+            '--export-graph-path',
+            default=tempfile.gettempdir(),
+            dest='export_graph_path',
+            help='Folder for Graph exporter',
+        )
         # Client/Server option
-        parser.add_argument('-c', '--client', dest='client',
-                            help='connect to a Glances server by IPv4/IPv6 address or hostname')
-        parser.add_argument('-s', '--server', action='store_true', default=False,
-                            dest='server', help='run Glances in server mode')
-        parser.add_argument('--browser', action='store_true', default=False,
-                            dest='browser', help='start the client browser (list of servers)')
-        parser.add_argument('--disable-autodiscover', action='store_true', default=False,
-                            dest='disable_autodiscover', help='disable autodiscover feature')
-        parser.add_argument('-p', '--port', default=None, type=int, dest='port',
-                            help='define the client/server TCP port [default: {}]'.format(self.server_port))
-        parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
-                            help='bind server to the given IPv4/IPv6 address or hostname')
-        parser.add_argument('--username', action='store_true', default=False, dest='username_prompt',
-                            help='define a client/server username')
-        parser.add_argument('--password', action='store_true', default=False, dest='password_prompt',
-                            help='define a client/server password')
-        parser.add_argument('-u', dest='username_used',
-                            help='use the given client/server username')
-        parser.add_argument('--snmp-community', default='public', dest='snmp_community',
-                            help='SNMP community')
-        parser.add_argument('--snmp-port', default=161, type=int,
-                            dest='snmp_port', help='SNMP port')
-        parser.add_argument('--snmp-version', default='2c', dest='snmp_version',
-                            help='SNMP version (1, 2c or 3)')
-        parser.add_argument('--snmp-user', default='private', dest='snmp_user',
-                            help='SNMP username (only for SNMPv3)')
-        parser.add_argument('--snmp-auth', default='password', dest='snmp_auth',
-                            help='SNMP authentication key (only for SNMPv3)')
-        parser.add_argument('--snmp-force', action='store_true', default=False,
-                            dest='snmp_force', help='force SNMP mode')
-        parser.add_argument('-t', '--time', default=self.DEFAULT_REFRESH_TIME, type=float,
-                            dest='time', help='set minumum refresh rate in seconds [default: {} sec]'.format(
-                                self.DEFAULT_REFRESH_TIME))
-        parser.add_argument('-w', '--webserver', action='store_true', default=False,
-                            dest='webserver', help='run Glances in web server mode (bottle needed)')
-        parser.add_argument('--cached-time', default=self.cached_time, type=int,
-                            dest='cached_time', help='set the server cache time [default: {} sec]'.format(
-                                self.cached_time))
-        parser.add_argument('--open-web-browser', action='store_true', default=False,
-                            dest='open_web_browser', help='try to open the Web UI in the default Web browser')
+        parser.add_argument(
+            '-c', '--client', dest='client', help='connect to a Glances server by IPv4/IPv6 address or hostname'
+        )
+        parser.add_argument(
+            '-s', '--server', action='store_true', default=False, dest='server', help='run Glances in server mode'
+        )
+        parser.add_argument(
+            '--browser',
+            action='store_true',
+            default=False,
+            dest='browser',
+            help='start the client browser (list of servers)',
+        )
+        parser.add_argument(
+            '--disable-autodiscover',
+            action='store_true',
+            default=False,
+            dest='disable_autodiscover',
+            help='disable autodiscover feature',
+        )
+        parser.add_argument(
+            '-p',
+            '--port',
+            default=None,
+            type=int,
+            dest='port',
+            help='define the client/server TCP port [default: {}]'.format(self.server_port),
+        )
+        parser.add_argument(
+            '-B',
+            '--bind',
+            default='0.0.0.0',
+            dest='bind_address',
+            help='bind server to the given IPv4/IPv6 address or hostname',
+        )
+        parser.add_argument(
+            '--username',
+            action='store_true',
+            default=False,
+            dest='username_prompt',
+            help='define a client/server username',
+        )
+        parser.add_argument(
+            '--password',
+            action='store_true',
+            default=False,
+            dest='password_prompt',
+            help='define a client/server password',
+        )
+        parser.add_argument('-u', dest='username_used', help='use the given client/server username')
+        parser.add_argument('--snmp-community', default='public', dest='snmp_community', help='SNMP community')
+        parser.add_argument('--snmp-port', default=161, type=int, dest='snmp_port', help='SNMP port')
+        parser.add_argument('--snmp-version', default='2c', dest='snmp_version', help='SNMP version (1, 2c or 3)')
+        parser.add_argument('--snmp-user', default='private', dest='snmp_user', help='SNMP username (only for SNMPv3)')
+        parser.add_argument(
+            '--snmp-auth', default='password', dest='snmp_auth', help='SNMP authentication key (only for SNMPv3)'
+        )
+        parser.add_argument(
+            '--snmp-force', action='store_true', default=False, dest='snmp_force', help='force SNMP mode'
+        )
+        parser.add_argument(
+            '-t',
+            '--time',
+            default=self.DEFAULT_REFRESH_TIME,
+            type=float,
+            dest='time',
+            help='set minumum refresh rate in seconds [default: {} sec]'.format(self.DEFAULT_REFRESH_TIME),
+        )
+        parser.add_argument(
+            '-w',
+            '--webserver',
+            action='store_true',
+            default=False,
+            dest='webserver',
+            help='run Glances in web server mode (bottle needed)',
+        )
+        parser.add_argument(
+            '--cached-time',
+            default=self.cached_time,
+            type=int,
+            dest='cached_time',
+            help='set the server cache time [default: {} sec]'.format(self.cached_time),
+        )
+        parser.add_argument(
+            '--open-web-browser',
+            action='store_true',
+            default=False,
+            dest='open_web_browser',
+            help='try to open the Web UI in the default Web browser',
+        )
         # Display options
-        parser.add_argument('-q', '--quiet', default=False, action='store_true',
-                            dest='quiet', help='do not display the curses interface')
-        parser.add_argument('-f', '--process-filter', default=None, type=str,
-                            dest='process_filter', help='set the process filter pattern (regular expression)')
-        parser.add_argument('--process-short-name', action='store_true', default=True,
-                            dest='process_short_name', help='force short name for processes name')
-        parser.add_argument('--process-long-name', action='store_false', default=False,
-                            dest='process_short_name', help='force long name for processes name')
-        parser.add_argument('--stdout', default=None,
-                            dest='stdout', help='display stats to stdout, one stat per line (comma separated list of plugins/plugins.attribute)')
-        parser.add_argument('--stdout-csv', default=None,
-                            dest='stdout_csv', help='display stats to stdout, csv format (comma separated list of plugins/plugins.attribute)')
-        parser.add_argument('--issue', default=None, action='store_true',
-                            dest='stdout_issue', help='test all plugins and exit (please copy/paste the output if you open an issue)')
-        parser.add_argument('--api-doc', default=None, action='store_true',
-                            dest='stdout_apidoc', help='display fields descriptions')
+        parser.add_argument(
+            '-q',
+            '--quiet',
+            default=False,
+            action='store_true',
+            dest='quiet',
+            help='do not display the curses interface',
+        )
+        parser.add_argument(
+            '-f',
+            '--process-filter',
+            default=None,
+            type=str,
+            dest='process_filter',
+            help='set the process filter pattern (regular expression)',
+        )
+        parser.add_argument(
+            '--process-short-name',
+            action='store_true',
+            default=True,
+            dest='process_short_name',
+            help='force short name for processes name',
+        )
+        parser.add_argument(
+            '--process-long-name',
+            action='store_false',
+            default=False,
+            dest='process_short_name',
+            help='force long name for processes name',
+        )
+        parser.add_argument(
+            '--stdout',
+            default=None,
+            dest='stdout',
+            help='display stats to stdout, one stat per line (comma separated list of plugins/plugins.attribute)',
+        )
+        parser.add_argument(
+            '--stdout-csv',
+            default=None,
+            dest='stdout_csv',
+            help='display stats to stdout, csv format (comma separated list of plugins/plugins.attribute)',
+        )
+        parser.add_argument(
+            '--issue',
+            default=None,
+            action='store_true',
+            dest='stdout_issue',
+            help='test all plugins and exit (please copy/paste the output if you open an issue)',
+        )
+        parser.add_argument(
+            '--api-doc', default=None, action='store_true', dest='stdout_apidoc', help='display fields descriptions'
+        )
         if not WINDOWS:
-            parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
-                                dest='no_kernel_threads', help='hide kernel threads in process list (not available on Windows)')
-        parser.add_argument('-b', '--byte', action='store_true', default=False,
-                            dest='byte', help='display network rate in byte per second')
-        parser.add_argument('--diskio-show-ramfs', action='store_true', default=False,
-                            dest='diskio_show_ramfs', help='show RAM Fs in the DiskIO plugin')
-        parser.add_argument('--diskio-iops', action='store_true', default=False,
-                            dest='diskio_iops', help='show IO per second in the DiskIO plugin')
-        parser.add_argument('--fahrenheit', action='store_true', default=False,
-                            dest='fahrenheit', help='display temperature in Fahrenheit (default is Celsius)')
-        parser.add_argument('--fs-free-space', action='store_true', default=False,
-                            dest='fs_free_space', help='display FS free space instead of used')
-        parser.add_argument('--sparkline', action='store_true', default=False,
-                            dest='sparkline', help='display sparklines instead of bar in the curses interface')
-        parser.add_argument('--theme-white', action='store_true', default=False,
-                            dest='theme_white', help='optimize display colors for white background')
+            parser.add_argument(
+                '--hide-kernel-threads',
+                action='store_true',
+                default=False,
+                dest='no_kernel_threads',
+                help='hide kernel threads in process list (not available on Windows)',
+            )
+        parser.add_argument(
+            '-b',
+            '--byte',
+            action='store_true',
+            default=False,
+            dest='byte',
+            help='display network rate in byte per second',
+        )
+        parser.add_argument(
+            '--diskio-show-ramfs',
+            action='store_true',
+            default=False,
+            dest='diskio_show_ramfs',
+            help='show RAM Fs in the DiskIO plugin',
+        )
+        parser.add_argument(
+            '--diskio-iops',
+            action='store_true',
+            default=False,
+            dest='diskio_iops',
+            help='show IO per second in the DiskIO plugin',
+        )
+        parser.add_argument(
+            '--fahrenheit',
+            action='store_true',
+            default=False,
+            dest='fahrenheit',
+            help='display temperature in Fahrenheit (default is Celsius)',
+        )
+        parser.add_argument(
+            '--fs-free-space',
+            action='store_true',
+            default=False,
+            dest='fs_free_space',
+            help='display FS free space instead of used',
+        )
+        parser.add_argument(
+            '--sparkline',
+            action='store_true',
+            default=False,
+            dest='sparkline',
+            help='display sparklines instead of bar in the curses interface',
+        )
+        parser.add_argument(
+            '--theme-white',
+            action='store_true',
+            default=False,
+            dest='theme_white',
+            help='optimize display colors for white background',
+        )
         # Globals options
-        parser.add_argument('--disable-check-update', action='store_true', default=False,
-                            dest='disable_check_update', help='disable online Glances version ckeck')
-        parser.add_argument('--strftime', dest='strftime_format', default='',
-                            help='strftime format string for displaying current date in standalone mode')
+        parser.add_argument(
+            '--disable-check-update',
+            action='store_true',
+            default=False,
+            dest='disable_check_update',
+            help='disable online Glances version ckeck',
+        )
+        parser.add_argument(
+            '--strftime',
+            dest='strftime_format',
+            default='',
+            help='strftime format string for displaying current date in standalone mode',
+        )
 
         return parser
 
@@ -273,16 +486,16 @@ Examples of use:
         # Debug mode
         if args.debug:
             from logging import DEBUG
+
             logger.setLevel(DEBUG)
         else:
             from warnings import simplefilter
+
             simplefilter("ignore")
 
         # Plugins refresh rate
         if self.config.has_section('global'):
-            global_refresh = self.config.get_float_value('global',
-                                                         'refresh',
-                                                         default=self.DEFAULT_REFRESH_TIME)
+            global_refresh = self.config.get_float_value('global', 'refresh', default=self.DEFAULT_REFRESH_TIME)
         if args.time == self.DEFAULT_REFRESH_TIME:
             args.time = global_refresh
         logger.debug('Global refresh rate is set to {} seconds'.format(args.time))
@@ -290,8 +503,7 @@ Examples of use:
         # Plugins disable/enable
         # Allow users to disable plugins from the glances.conf (issue #1378)
         for s in self.config.sections():
-            if self.config.has_section(s) \
-               and (self.config.get_bool_value(s, 'disable', False)):
+            if self.config.has_section(s) and (self.config.get_bool_value(s, 'disable', False)):
                 disable(args, s)
                 logger.debug('{} disabled by the configuration file'.format(s))
         # The configuration key can be overwrite from the command line
@@ -315,7 +527,9 @@ Examples of use:
                 args.port = self.server_port
         # Port in the -c URI #996
         if args.client is not None:
-            args.client, args.port = (x if x else y for (x, y) in zip(args.client.partition(':')[::2], (args.client, args.port)))
+            args.client, args.port = (
+                x if x else y for (x, y) in zip(args.client.partition(':')[::2], (args.client, args.port))
+            )
 
         # Autodiscover
         if args.disable_autodiscover:
@@ -331,14 +545,11 @@ Examples of use:
             args.password_prompt = True
             # Prompt username
             if args.server:
-                args.username = self.__get_username(
-                    description='Define the Glances server username: ')
+                args.username = self.__get_username(description='Define the Glances server username: ')
             elif args.webserver:
-                args.username = self.__get_username(
-                    description='Define the Glances webserver username: ')
+                args.username = self.__get_username(description='Define the Glances webserver username: ')
             elif args.client:
-                args.username = self.__get_username(
-                    description='Enter the Glances server username: ')
+                args.username = self.__get_username(description='Enter the Glances server username: ')
         else:
             if args.username_used:
                 # A username has been set using the -u option ?
@@ -351,22 +562,22 @@ Examples of use:
             # Interactive or file password
             if args.server:
                 args.password = self.__get_password(
-                    description='Define the Glances server password ({} username): '.format(
-                        args.username),
+                    description='Define the Glances server password ({} username): '.format(args.username),
                     confirm=True,
-                    username=args.username)
+                    username=args.username,
+                )
             elif args.webserver:
                 args.password = self.__get_password(
-                    description='Define the Glances webserver password ({} username): '.format(
-                        args.username),
+                    description='Define the Glances webserver password ({} username): '.format(args.username),
                     confirm=True,
-                    username=args.username)
+                    username=args.username,
+                )
             elif args.client:
                 args.password = self.__get_password(
-                    description='Enter the Glances server password ({} username): '.format(
-                        args.username),
+                    description='Enter the Glances server password ({} username): '.format(args.username),
                     clear=True,
-                    username=args.username)
+                    username=args.username,
+                )
         else:
             # Default is no password
             args.password = self.password
@@ -426,8 +637,7 @@ Examples of use:
 
         # Filter is only available in standalone mode
         if args.process_filter is not None and not self.is_standalone():
-            logger.critical(
-                "Process filter is only available in standalone mode")
+            logger.critical("Process filter is only available in standalone mode")
             sys.exit(2)
 
         # Disable HDDTemp if sensors are disabled
@@ -446,10 +656,7 @@ Examples of use:
 
     def is_standalone(self):
         """Return True if Glances is running in standalone mode."""
-        return (not self.args.client and
-                not self.args.browser and
-                not self.args.server and
-                not self.args.webserver)
+        return not self.args.client and not self.args.browser and not self.args.server and not self.args.webserver
 
     def is_client(self):
         """Return True if Glances is running in client mode."""
@@ -483,13 +690,13 @@ Examples of use:
         """Read an username from the command line."""
         return input(description)
 
-    def __get_password(self, description='',
-                       confirm=False, clear=False, username='glances'):
+    def __get_password(self, description='', confirm=False, clear=False, username='glances'):
         """Read a password from the command line.
 
         - if confirm = True, with confirmation
         - if clear = True, plain (clear password)
         """
         from glances.password import GlancesPassword
+
         password = GlancesPassword(username=username)
         return password.get_password(description, confirm, clear)

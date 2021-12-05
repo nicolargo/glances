@@ -70,9 +70,11 @@ class Amp(GlancesAmp):
         if res is None:
             # Set the default message if command return None
             # Default sum of CPU and MEM for the matching regex
-            self.set_result('CPU: {:.1f}% | MEM: {:.1f}%'.format(
-                sum([p['cpu_percent'] for p in process_list]),
-                sum([p['memory_percent'] for p in process_list])))
+            self.set_result(
+                'CPU: {:.1f}% | MEM: {:.1f}%'.format(
+                    sum([p['cpu_percent'] for p in process_list]), sum([p['memory_percent'] for p in process_list])
+                )
+            )
             return self.result()
         # Run command(s)
         # Comma separated commands can be executed

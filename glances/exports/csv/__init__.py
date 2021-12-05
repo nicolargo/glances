@@ -94,16 +94,14 @@ class Export(GlancesExport):
                 for stat in all_stats[plugin]:
                     # First line: header
                     if self.first_line:
-                        csv_header += ('{}_{}_{}'.format(
-                            plugin, self.get_item_key(stat), item) for item in stat)
+                        csv_header += ('{}_{}_{}'.format(plugin, self.get_item_key(stat), item) for item in stat)
                     # Others lines: stats
                     csv_data += itervalues(stat)
             elif isinstance(all_stats[plugin], dict):
                 # First line: header
                 if self.first_line:
                     fieldnames = iterkeys(all_stats[plugin])
-                    csv_header += ('{}_{}'.format(plugin, fieldname)
-                                   for fieldname in fieldnames)
+                    csv_header += ('{}_{}'.format(plugin, fieldname) for fieldname in fieldnames)
                 # Others lines: stats
                 csv_data += itervalues(all_stats[plugin])
 

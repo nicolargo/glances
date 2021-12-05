@@ -45,9 +45,7 @@ class Export(GlancesExport):
         # N/A
 
         # Load the ZeroMQ configuration file section ([export_zeromq])
-        self.export_enable = self.load_conf('zeromq',
-                                            mandatories=['host', 'port', 'prefix'],
-                                            options=[])
+        self.export_enable = self.load_conf('zeromq', mandatories=['host', 'port', 'prefix'], options=[])
         if not self.export_enable:
             sys.exit(2)
 
@@ -96,9 +94,7 @@ class Export(GlancesExport):
         # - First frame containing the following prefix (STRING)
         # - Second frame with the Glances plugin name (STRING)
         # - Third frame with the Glances plugin stats (JSON)
-        message = [b(self.prefix),
-                   b(name),
-                   asbytes(json.dumps(data))]
+        message = [b(self.prefix), b(name), asbytes(json.dumps(data))]
 
         # Write data to the ZeroMQ bus
         # Result can be view: tcp://host:port

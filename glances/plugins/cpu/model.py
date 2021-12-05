@@ -30,33 +30,47 @@ import psutil
 
 # Fields description
 fields_description = {
-    'total': {'description': 'Sum of all CPU percentages (except idle).',
-              'unit': 'percent'},
-    'system': {'description': 'percent time spent in kernel space. System CPU time is the \
+    'total': {'description': 'Sum of all CPU percentages (except idle).', 'unit': 'percent'},
+    'system': {
+        'description': 'percent time spent in kernel space. System CPU time is the \
 time spent running code in the Operating System kernel.',
-               'unit': 'percent'},
-    'user': {'description': 'CPU percent time spent in user space. \
+        'unit': 'percent',
+    },
+    'user': {
+        'description': 'CPU percent time spent in user space. \
 User CPU time is the time spent on the processor running your program\'s code (or code in libraries).',
-             'unit': 'percent'},
-    'iowait': {'description': '*(Linux)*: percent time spent by the CPU waiting for I/O \
+        'unit': 'percent',
+    },
+    'iowait': {
+        'description': '*(Linux)*: percent time spent by the CPU waiting for I/O \
 operations to complete.',
-               'unit': 'percent'},
-    'idle': {'description': 'percent of CPU used by any program. Every program or task \
+        'unit': 'percent',
+    },
+    'idle': {
+        'description': 'percent of CPU used by any program. Every program or task \
 that runs on a computer system occupies a certain amount of processing \
 time on the CPU. If the CPU has completed all tasks it is idle.',
-             'unit': 'percent'},
-    'irq': {'description': '*(Linux and BSD)*: percent time spent servicing/handling \
+        'unit': 'percent',
+    },
+    'irq': {
+        'description': '*(Linux and BSD)*: percent time spent servicing/handling \
 hardware/software interrupts. Time servicing interrupts (hardware + \
 software).',
-            'unit': 'percent'},
-    'nice': {'description': '*(Unix)*: percent time occupied by user level processes with \
+        'unit': 'percent',
+    },
+    'nice': {
+        'description': '*(Unix)*: percent time occupied by user level processes with \
 a positive nice value. The time the CPU has spent running users\' \
 processes that have been *niced*.',
-             'unit': 'percent'},
-    'steal': {'description': '*(Linux)*: percentage of time a virtual CPU waits for a real \
+        'unit': 'percent',
+    },
+    'steal': {
+        'description': '*(Linux)*: percentage of time a virtual CPU waits for a real \
 CPU while the hypervisor is servicing another virtual processor.',
-              'unit': 'percent'},
-    'ctx_switches': {'description': 'number of context switches (voluntary + involuntary) per \
+        'unit': 'percent',
+    },
+    'ctx_switches': {
+        'description': 'number of context switches (voluntary + involuntary) per \
 second. A context switch is a procedure that a computer\'s CPU (central \
 processing unit) follows to change from one task (or process) to \
 another while ensuring that the tasks do not conflict.',
@@ -65,43 +79,48 @@ another while ensuring that the tasks do not conflict.',
                    'unit': 'percent'},
     'soft_interrupts': {'description': 'number of software interrupts per second. Always set to \
 0 on Windows and SunOS.',
-                        'unit': 'number',
-                        'rate': True,
-                        'min_symbol': 'K',
-                        'short_name': 'sw_int'},
-    'syscalls': {'description': 'number of system calls per second. Always 0 on Linux OS.',
-                 'unit': 'number',
-                 'rate': True,
-                 'min_symbol': 'K',
-                 'short_name': 'sw_int'},
-    'cpucore': {'description': 'Total number of CPU core.',
-                'unit': 'number'},
-    'time_since_update': {'description': 'Number of seconds since last update.',
-                          'unit': 'seconds'},
+        'unit': 'number',
+        'rate': True,
+        'min_symbol': 'K',
+        'short_name': 'sw_int',
+    },
+    'syscalls': {
+        'description': 'number of system calls per second. Always 0 on Linux OS.',
+        'unit': 'number',
+        'rate': True,
+        'min_symbol': 'K',
+        'short_name': 'sw_int',
+    },
+    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
+    'time_since_update': {'description': 'Number of seconds since last update.', 'unit': 'seconds'},
 }
 
 # SNMP OID
 # percentage of user CPU time: .1.3.6.1.4.1.2021.11.9.0
 # percentages of system CPU time: .1.3.6.1.4.1.2021.11.10.0
 # percentages of idle CPU time: .1.3.6.1.4.1.2021.11.11.0
-snmp_oid = {'default': {'user': '1.3.6.1.4.1.2021.11.9.0',
-                        'system': '1.3.6.1.4.1.2021.11.10.0',
-                        'idle': '1.3.6.1.4.1.2021.11.11.0'},
-            'windows': {'percent': '1.3.6.1.2.1.25.3.3.1.2'},
-            'esxi': {'percent': '1.3.6.1.2.1.25.3.3.1.2'},
-            'netapp': {'system': '1.3.6.1.4.1.789.1.2.1.3.0',
-                       'idle': '1.3.6.1.4.1.789.1.2.1.5.0',
-                       'cpucore': '1.3.6.1.4.1.789.1.2.1.6.0'}}
+snmp_oid = {
+    'default': {
+        'user': '1.3.6.1.4.1.2021.11.9.0',
+        'system': '1.3.6.1.4.1.2021.11.10.0',
+        'idle': '1.3.6.1.4.1.2021.11.11.0',
+    },
+    'windows': {'percent': '1.3.6.1.2.1.25.3.3.1.2'},
+    'esxi': {'percent': '1.3.6.1.2.1.25.3.3.1.2'},
+    'netapp': {
+        'system': '1.3.6.1.4.1.789.1.2.1.3.0',
+        'idle': '1.3.6.1.4.1.789.1.2.1.5.0',
+        'cpucore': '1.3.6.1.4.1.789.1.2.1.6.0',
+    },
+}
 
 # Define the history items list
 # - 'name' define the stat identifier
 # - 'y_unit' define the Y label
-items_history_list = [{'name': 'user',
-                       'description': 'User CPU usage',
-                       'y_unit': '%'},
-                      {'name': 'system',
-                       'description': 'System CPU usage',
-                       'y_unit': '%'}]
+items_history_list = [
+    {'name': 'user', 'description': 'User CPU usage', 'y_unit': '%'},
+    {'name': 'system', 'description': 'System CPU usage', 'y_unit': '%'},
+]
 
 
 class PluginModel(GlancesPluginModel):
@@ -206,8 +225,7 @@ class PluginModel(GlancesPluginModel):
             # You can find the CPU utilization of windows system by querying the oid
             # Give also the number of core (number of element in the table)
             try:
-                cpu_stats = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
-                                                bulk=True)
+                cpu_stats = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name], bulk=True)
             except KeyError:
                 self.reset()
 
@@ -226,11 +244,9 @@ class PluginModel(GlancesPluginModel):
         else:
             # Default behavior
             try:
-                stats = self.get_stats_snmp(
-                    snmp_oid=snmp_oid[self.short_system_name])
+                stats = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name])
             except KeyError:
-                stats = self.get_stats_snmp(
-                    snmp_oid=snmp_oid['default'])
+                stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
 
             if stats['idle'] == '':
                 self.reset()
@@ -295,16 +311,13 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg))
         # Total CPU usage
         msg = '{:5.1f}%'.format(self.stats['total'])
-        ret.append(self.curse_add_line(
-            msg, self.get_views(key='total', option='decoration')))
+        ret.append(self.curse_add_line(msg, self.get_views(key='total', option='decoration')))
         # Idle CPU
         if 'idle' in self.stats and not idle_tag:
             msg = '  {:8}'.format('idle:')
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle',
-                                                                        option='optional')))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle', option='optional')))
             msg = '{:5.1f}%'.format(self.stats['idle'])
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle',
-                                                                        option='optional')))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle', option='optional')))
         # ctx_switches
         if 'ctx_switches' in self.stats:
             msg = '  {:8}'.format('ctx_sw:')

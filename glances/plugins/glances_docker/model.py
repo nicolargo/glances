@@ -63,9 +63,7 @@ else:
 #                       {'name': 'io_w',
 #                        'description': 'Container IO bytes write per second',
 #                        'y_unit': 'Bps'}]
-items_history_list = [{'name': 'cpu_percent',
-                       'description': 'Container CPU consumption in %',
-                       'y_unit': '%'}]
+items_history_list = [{'name': 'cpu_percent', 'description': 'Container CPU consumption in %', 'y_unit': '%'}]
 
 # List of key to remove before export
 export_exclude_list = ['cpu', 'io', 'memory', 'network']
@@ -221,7 +219,9 @@ class PluginModel(GlancesPluginModel):
                 if container.id not in self.thread_list:
                     # Thread did not exist in the internal dict
                     # Create it and add it to the internal dict
-                    logger.debug("{} plugin - Create thread for container {}".format(self.plugin_name, container.id[:12]))
+                    logger.debug(
+                        "{} plugin - Create thread for container {}".format(self.plugin_name, container.id[:12])
+                    )
                     t = ThreadDockerGrabber(container)
                     self.thread_list[container.id] = t
                     t.start()
@@ -277,8 +277,9 @@ class PluginModel(GlancesPluginModel):
                     container_stats['cpu'] = self.get_docker_cpu(container.id, self.thread_list[container.id].stats)
                     container_stats['cpu_percent'] = container_stats['cpu'].get('total', None)
                     # MEM
-                    container_stats['memory'] = self.get_docker_memory(container.id,
-                                                                       self.thread_list[container.id].stats)
+                    container_stats['memory'] = self.get_docker_memory(
+                        container.id, self.thread_list[container.id].stats
+                    )
                     container_stats['memory_usage'] = container_stats['memory'].get('usage', None)
                     if container_stats['memory'].get('cache', None) is not None:
                         container_stats['memory_usage'] -= container_stats['memory']['cache']
@@ -287,8 +288,9 @@ class PluginModel(GlancesPluginModel):
                     container_stats['io_r'] = container_stats['io'].get('ior', None)
                     container_stats['io_w'] = container_stats['io'].get('iow', None)
                     # NET
-                    container_stats['network'] = self.get_docker_network(container.id,
-                                                                         self.thread_list[container.id].stats)
+                    container_stats['network'] = self.get_docker_network(
+                        container.id, self.thread_list[container.id].stats
+                    )
                     container_stats['network_rx'] = container_stats['network'].get('rx', None)
                     container_stats['network_tx'] = container_stats['network'].get('tx', None)
                 else:
@@ -327,11 +329,11 @@ class PluginModel(GlancesPluginModel):
         try:
             cpu = {
                 'system': all_stats['cpu_stats']['system_cpu_usage'],
-                'total': all_stats['cpu_stats']['cpu_usage']['total_usage']
+                'total': all_stats['cpu_stats']['cpu_usage']['total_usage'],
             }
             precpu = {
                 'system': all_stats['precpu_stats']['system_cpu_usage'],
-                'total': all_stats['precpu_stats']['cpu_usage']['total_usage']
+                'total': all_stats['precpu_stats']['cpu_usage']['total_usage'],
             }
             # Issue #1857
             # If either precpu_stats.online_cpus or cpu_stats.online_cpus is nil
@@ -341,8 +343,7 @@ class PluginModel(GlancesPluginModel):
             if cpu['nb_core'] is None:
                 cpu['nb_core'] = len(all_stats['cpu_stats']['cpu_usage']['percpu_usage'] or [])
         except KeyError as e:
-            logger.debug(
-                "docker plugin - Cannot grab CPU usage for container {} ({})".format(container_id, e))
+            logger.debug("docker plugin - Cannot grab CPU usage for container {} ({})".format(container_id, e))
             logger.debug(all_stats)
         else:
             try:
@@ -351,8 +352,7 @@ class PluginModel(GlancesPluginModel):
                 # CPU usage % = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
                 cpu_stats['total'] = (cpu_delta / system_cpu_delta) * cpu['nb_core'] * 100.0
             except TypeError as e:
-                logger.debug(
-                    "docker plugin - Cannot compute CPU usage for container {} ({})".format(container_id, e))
+                logger.debug("docker plugin - Cannot compute CPU usage for container {} ({})".format(container_id, e))
                 logger.debug(all_stats)
 
         # Return the stats
@@ -419,7 +419,9 @@ class PluginModel(GlancesPluginModel):
             network_new['cumulative_tx'] = net_stats["eth0"]["tx_bytes"]
         except KeyError as e:
             # all_stats do not have INTERFACE information
-            logger.debug("docker plugin - Cannot grab network interface usage for container {} ({})".format(container_id, e))
+            logger.debug(
+                "docker plugin - Cannot grab network interface usage for container {} ({})".format(container_id, e)
+            )
             logger.debug(all_stats)
         else:
             network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net_{}'.format(container_id))
@@ -508,9 +510,7 @@ class PluginModel(GlancesPluginModel):
             # CPU alert
             if 'cpu' in i and 'total' in i['cpu']:
                 # Looking for specific CPU container threshold in the conf file
-                alert = self.get_alert(i['cpu']['total'],
-                                       header=i['name'] + '_cpu',
-                                       action_key=i['name'])
+                alert = self.get_alert(i['cpu']['total'], header=i['name'] + '_cpu', action_key=i['name'])
                 if alert == 'DEFAULT':
                     # Not found ? Get back to default CPU threshold value
                     alert = self.get_alert(i['cpu']['total'], header='cpu')
@@ -518,15 +518,12 @@ class PluginModel(GlancesPluginModel):
             # MEM alert
             if 'memory' in i and 'usage' in i['memory']:
                 # Looking for specific MEM container threshold in the conf file
-                alert = self.get_alert(i['memory']['usage'],
-                                       maximum=i['memory']['limit'],
-                                       header=i['name'] + '_mem',
-                                       action_key=i['name'])
+                alert = self.get_alert(
+                    i['memory']['usage'], maximum=i['memory']['limit'], header=i['name'] + '_mem', action_key=i['name']
+                )
                 if alert == 'DEFAULT':
                     # Not found ? Get back to default MEM threshold value
-                    alert = self.get_alert(i['memory']['usage'],
-                                           maximum=i['memory']['limit'],
-                                           header='mem')
+                    alert = self.get_alert(i['memory']['usage'], maximum=i['memory']['limit'], header='mem')
                 self.views[i[self.get_key()]]['mem']['decoration'] = alert
 
         return True
@@ -537,9 +534,7 @@ class PluginModel(GlancesPluginModel):
         ret = []
 
         # Only process if stats exist (and non null) and display plugin enable...
-        if not self.stats \
-                or 'containers' not in self.stats or len(self.stats['containers']) == 0 \
-                or self.is_disabled():
+        if not self.stats or 'containers' not in self.stats or len(self.stats['containers']) == 0 or self.is_disabled():
             return ret
 
         # Build the string message
@@ -555,12 +550,10 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_new_line())
         # Get the maximum containers name
         # Max size is configurable. See feature request #1723.
-        name_max_width = min(self.config.get_int_value('docker',
-                                                       'max_name_size',
-                                                       default=20)
-                             if self.config is not None else 20,
-                             len(max(self.stats['containers'],
-                                     key=lambda x: len(x['name']))['name']))
+        name_max_width = min(
+            self.config.get_int_value('docker', 'max_name_size', default=20) if self.config is not None else 20,
+            len(max(self.stats['containers'], key=lambda x: len(x['name']))['name']),
+        )
         msg = ' {:{width}}'.format('Name', width=name_max_width)
         ret.append(self.curse_add_line(msg))
         msg = '{:>10}'.format('Status')
@@ -585,8 +578,7 @@ class PluginModel(GlancesPluginModel):
         for container in self.stats['containers']:
             ret.append(self.curse_new_line())
             # Name
-            ret.append(self.curse_add_line(self._msg_name(container=container,
-                                                          max_width=name_max_width)))
+            ret.append(self.curse_add_line(self._msg_name(container=container, max_width=name_max_width)))
             # Status
             status = self.container_alert(container['Status'])
             msg = '{:>10}'.format(container['Status'][0:10])
@@ -596,17 +588,13 @@ class PluginModel(GlancesPluginModel):
                 msg = '{:>6.1f}'.format(container['cpu']['total'])
             except KeyError:
                 msg = '{:>6}'.format('_')
-            ret.append(self.curse_add_line(msg, self.get_views(item=container['name'],
-                                                               key='cpu',
-                                                               option='decoration')))
+            ret.append(self.curse_add_line(msg, self.get_views(item=container['name'], key='cpu', option='decoration')))
             # MEM
             try:
                 msg = '{:>7}'.format(self.auto_unit(container['memory']['usage']))
             except KeyError:
                 msg = '{:>7}'.format('_')
-            ret.append(self.curse_add_line(msg, self.get_views(item=container['name'],
-                                                               key='mem',
-                                                               option='decoration')))
+            ret.append(self.curse_add_line(msg, self.get_views(item=container['name'], key='mem', option='decoration')))
             try:
                 msg = '{:>7}'.format(self.auto_unit(container['memory']['limit']))
             except KeyError:
@@ -632,8 +620,12 @@ class PluginModel(GlancesPluginModel):
                 unit = 'b'
             for r in ['rx', 'tx']:
                 try:
-                    value = self.auto_unit(
-                        int(container['network'][r] // container['network']['time_since_update'] * to_bit)) + unit
+                    value = (
+                        self.auto_unit(
+                            int(container['network'][r] // container['network']['time_since_update'] * to_bit)
+                        )
+                        + unit
+                    )
                     msg = '{:>7}'.format(value)
                 except KeyError:
                     msg = '{:>7}'.format('_')
@@ -651,7 +643,7 @@ class PluginModel(GlancesPluginModel):
         """Build the container name."""
         name = container['name']
         if len(name) > max_width:
-            name = '_' + name[-max_width + 1:]
+            name = '_' + name[-max_width + 1 :]
         else:
             name = name[:max_width]
         return ' {:{width}}'.format(name, width=max_width)
@@ -732,7 +724,5 @@ def sort_stats(stats):
     if glances_processes.sort_key.startswith('memory'):
         sort_by = 'memory_usage'
         sort_by_secondary = 'cpu_percent'
-    sort_stats_processes(stats['containers'],
-                         sorted_by=sort_by,
-                         sorted_by_secondary=sort_by_secondary)
+    sort_stats_processes(stats['containers'], sorted_by=sort_by, sorted_by_secondary=sort_by_secondary)
     return stats

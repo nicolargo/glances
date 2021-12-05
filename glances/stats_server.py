@@ -28,9 +28,7 @@ class GlancesStatsServer(GlancesStats):
 
     """This class stores, updates and gives stats for the server."""
 
-    def __init__(self,
-                 config=None,
-                 args=None):
+    def __init__(self, config=None, args=None):
         # Init the stats
         super(GlancesStatsServer, self).__init__(config=config, args=args)
 

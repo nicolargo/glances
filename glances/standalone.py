@@ -116,10 +116,8 @@ class GlancesStandalone(object):
 
     def display_modules_list(self):
         """Display modules list"""
-        print("Plugins list: {}".format(
-            ', '.join(sorted(self.stats.getPluginsList(enable=False)))))
-        print("Exporters list: {}".format(
-            ', '.join(sorted(self.stats.getExportsList(enable=False)))))
+        print("Plugins list: {}".format(', '.join(sorted(self.stats.getPluginsList(enable=False)))))
+        print("Exporters list: {}".format(', '.join(sorted(self.stats.getExportsList(enable=False)))))
 
     def serve_issue(self):
         """Special mode for the --issue option
@@ -184,6 +182,9 @@ class GlancesStandalone(object):
 
         # Check Glances version versus PyPI one
         if self.outdated.is_outdated():
-            print("You are using Glances version {}, however version {} is available.".format(
-                self.outdated.installed_version(), self.outdated.latest_version()))
+            print(
+                "You are using Glances version {}, however version {} is available.".format(
+                    self.outdated.installed_version(), self.outdated.latest_version()
+                )
+            )
             print("You should consider upgrading using: pip install --upgrade glances")

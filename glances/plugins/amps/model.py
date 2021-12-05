@@ -54,16 +54,19 @@ class PluginModel(GlancesPluginModel):
 
         if self.input_method == 'local':
             for k, v in iteritems(self.glances_amps.update()):
-                stats.append({'key': self.get_key(),
-                              'name': v.NAME,
-                              'result': v.result(),
-                              'refresh': v.refresh(),
-                              'timer': v.time_until_refresh(),
-                              'count': v.count(),
-                              'countmin': v.count_min(),
-                              'countmax': v.count_max(),
-                              'regex': v.regex() is not None},
-                              )
+                stats.append(
+                    {
+                        'key': self.get_key(),
+                        'name': v.NAME,
+                        'result': v.result(),
+                        'refresh': v.refresh(),
+                        'timer': v.time_until_refresh(),
+                        'count': v.count(),
+                        'countmin': v.count_min(),
+                        'countmax': v.count_max(),
+                        'regex': v.regex() is not None,
+                    },
+                )
         else:
             # Not available in SNMP mode
             pass

@@ -26,13 +26,15 @@ from glances.globals import iteritems
 from glances.logger import logger
 
 # SNMP OID regexp pattern to short system name dict
-oid_to_short_system_name = {'.*Linux.*': 'linux',
-                            '.*Darwin.*': 'mac',
-                            '.*BSD.*': 'bsd',
-                            '.*Windows.*': 'windows',
-                            '.*Cisco.*': 'cisco',
-                            '.*VMware ESXi.*': 'esxi',
-                            '.*NetApp.*': 'netapp'}
+oid_to_short_system_name = {
+    '.*Linux.*': 'linux',
+    '.*Darwin.*': 'mac',
+    '.*BSD.*': 'bsd',
+    '.*Windows.*': 'windows',
+    '.*Cisco.*': 'cisco',
+    '.*VMware ESXi.*': 'esxi',
+    '.*NetApp.*': 'netapp',
+}
 
 
 class GlancesStatsClientSNMP(GlancesStats):
@@ -60,12 +62,14 @@ class GlancesStatsClientSNMP(GlancesStats):
         from glances.snmp import GlancesSNMPClient
 
         # Create an instance of the SNMP client
-        snmp_client = GlancesSNMPClient(host=self.args.client,
-                                       port=self.args.snmp_port,
-                                       version=self.args.snmp_version,
-                                       community=self.args.snmp_community,
-                                       user=self.args.snmp_user,
-                                       auth=self.args.snmp_auth)
+        snmp_client = GlancesSNMPClient(
+            host=self.args.client,
+            port=self.args.snmp_port,
+            version=self.args.snmp_version,
+            community=self.args.snmp_community,
+            user=self.args.snmp_user,
+            auth=self.args.snmp_auth,
+        )
 
         # If we cannot grab the hostname, then exit...
         ret = snmp_client.get_by_oid("1.3.6.1.2.1.1.5.0") != {}

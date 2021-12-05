@@ -45,11 +45,7 @@ class Export(GlancesExport):
         self.system_name = None
 
         # Load the configuration file
-        self.export_enable = self.load_conf('graphite',
-                                            mandatories=['host',
-                                                         'port'],
-                                            options=['prefix',
-                                                     'system_name'])
+        self.export_enable = self.load_conf('graphite', mandatories=['host', 'port'], options=['prefix', 'system_name'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -72,27 +68,27 @@ class Export(GlancesExport):
 
         try:
             if self.system_name is None:
-                client = GraphiteClient(graphite_server=self.host,
-                                        graphite_port=self.port,
-                                        prefix=self.prefix,
-                                        lowercase_metric_names=True,
-                                        debug=self.debug)
+                client = GraphiteClient(
+                    graphite_server=self.host,
+                    graphite_port=self.port,
+                    prefix=self.prefix,
+                    lowercase_metric_names=True,
+                    debug=self.debug,
+                )
             else:
-                client = GraphiteClient(graphite_server=self.host,
-                                        graphite_port=self.port,
-                                        prefix=self.prefix,
-                                        system_name=self.system_name,
-                                        lowercase_metric_names=True,
-                                        debug=self.debug)
+                client = GraphiteClient(
+                    graphite_server=self.host,
+                    graphite_port=self.port,
+                    prefix=self.prefix,
+                    system_name=self.system_name,
+                    lowercase_metric_names=True,
+                    debug=self.debug,
+                )
         except Exception as e:
-            logger.error("Can not write data to Graphite server: {}:{} ({})".format(self.host,
-                                                                                    self.port,
-                                                                                    e))
+            logger.error("Can not write data to Graphite server: {}:{} ({})".format(self.host, self.port, e))
             client = None
         else:
-            logger.info(
-                "Stats will be exported to Graphite server: {}:{}".format(self.host,
-                                                                          self.port))
+            logger.info("Stats will be exported to Graphite server: {}:{}".format(self.host, self.port))
 
         return client
 
@@ -100,12 +96,8 @@ class Export(GlancesExport):
         """Export the stats to the Graphite server."""
         if self.client is None:
             return False
-        before_filtering_dict = dict(zip(
-            [normalize('{}.{}'.format(name, i)) for i in columns],
-            points))
-        after_filtering_dict = dict(
-            filter(lambda i: isinstance(i[1], Number),
-                   before_filtering_dict.items()))
+        before_filtering_dict = dict(zip([normalize('{}.{}'.format(name, i)) for i in columns], points))
+        after_filtering_dict = dict(filter(lambda i: isinstance(i[1], Number), before_filtering_dict.items()))
         try:
             self.client.send_dict(after_filtering_dict)
         except Exception as e:

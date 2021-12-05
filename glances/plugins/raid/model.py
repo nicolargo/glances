@@ -90,8 +90,7 @@ class PluginModel(GlancesPluginModel):
         name_max_width = max_width - 12
 
         # Header
-        msg = '{:{width}}'.format('RAID disks',
-                                  width=name_max_width)
+        msg = '{:{width}}'.format('RAID disks', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = '{:>7}'.format('Used')
         ret.append(self.curse_add_line(msg))
@@ -103,16 +102,17 @@ class PluginModel(GlancesPluginModel):
             # New line
             ret.append(self.curse_new_line())
             # Display the current status
-            status = self.raid_alert(self.stats[array]['status'],
-                                     self.stats[array]['used'],
-                                     self.stats[array]['available'],
-                                     self.stats[array]['type'])
+            status = self.raid_alert(
+                self.stats[array]['status'],
+                self.stats[array]['used'],
+                self.stats[array]['available'],
+                self.stats[array]['type'],
+            )
             # Data: RAID type name | disk used | disk available
             array_type = self.stats[array]['type'].upper() if self.stats[array]['type'] is not None else 'UNKNOWN'
             # Build the full name = array type + array name
             full_name = '{} {}'.format(array_type, array)
-            msg = '{:{width}}'.format(full_name,
-                                      width=name_max_width)
+            msg = '{:{width}}'.format(full_name, width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if self.stats[array]['type'] == 'raid0' and self.stats[array]['status'] == 'active':
                 msg = '{:>7}'.format(len(self.stats[array]['components']))

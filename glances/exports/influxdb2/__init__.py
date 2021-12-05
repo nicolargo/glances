@@ -47,13 +47,11 @@ class Export(GlancesExport):
         self.hostname = None
 
         # Load the InfluxDB configuration file
-        self.export_enable = self.load_conf('influxdb2',
-                                            mandatories=['host', 'port',
-                                                         'user', 'password',
-                                                         'org', 'bucket', 'token'],
-                                            options=['protocol',
-                                                     'prefix',
-                                                     'tags'])
+        self.export_enable = self.load_conf(
+            'influxdb2',
+            mandatories=['host', 'port', 'user', 'password', 'org', 'bucket', 'token'],
+            options=['protocol', 'prefix', 'tags'],
+        )
         if not self.export_enable:
             sys.exit(2)
 
@@ -71,26 +69,27 @@ class Export(GlancesExport):
         url = '{}://{}:{}'.format(self.protocol, self.host, self.port)
         try:
             # See docs: https://influxdb-client.readthedocs.io/en/stable/api.html#influxdbclient
-            client = InfluxDBClient(url=url,
-                                    enable_gzip=False,
-                                    verify_ssl=False,
-                                    org=self.org,
-                                    token=self.token)
+            client = InfluxDBClient(url=url, enable_gzip=False, verify_ssl=False, org=self.org, token=self.token)
         except Exception as e:
             logger.critical("Cannot connect to InfluxDB server '%s' (%s)" % (url, e))
             sys.exit(2)
         else:
-            logger.info("Connected to InfluxDB server version {} ({})".format(client.health().version,
-                                                                              client.health().message))
+            logger.info(
+                "Connected to InfluxDB server version {} ({})".format(client.health().version, client.health().message)
+            )
 
         # Create the write client
-        write_client = client.write_api(write_options=WriteOptions(batch_size=500,
-                                                                   flush_interval=10000,
-                                                                   jitter_interval=2000,
-                                                                   retry_interval=5000,
-                                                                   max_retries=5,
-                                                                   max_retry_delay=30000,
-                                                                   exponential_base=2))
+        write_client = client.write_api(
+            write_options=WriteOptions(
+                batch_size=500,
+                flush_interval=10000,
+                jitter_interval=2000,
+                retry_interval=5000,
+                max_retries=5,
+                max_retry_delay=30000,
+                exponential_base=2,
+            )
+        )
         return write_client
 
     def _normalize(self, name, columns, points):
@@ -112,9 +111,11 @@ class Export(GlancesExport):
         for measurement in keys_list:
             # Manage field
             if measurement is not None:
-                fields = {k.replace('{}.'.format(measurement), ''): data_dict[k]
-                          for k in data_dict
-                          if k.startswith('{}.'.format(measurement))}
+                fields = {
+                    k.replace('{}.'.format(measurement), ''): data_dict[k]
+                    for k in data_dict
+                    if k.startswith('{}.'.format(measurement))
+                }
             else:
                 fields = data_dict
             # Transform to InfluxDB datamodel
@@ -143,9 +144,7 @@ class Export(GlancesExport):
             # Add the hostname as a tag
             tags['hostname'] = self.hostname
             # Add the measurement to the list
-            ret.append({'measurement': name,
-                        'tags': tags,
-                        'fields': fields})
+            ret.append({'measurement': name, 'tags': tags, 'fields': fields})
         return ret
 
     def export(self, name, columns, points):
@@ -158,10 +157,7 @@ class Export(GlancesExport):
             logger.debug("Cannot export empty {} stats to InfluxDB".format(name))
         else:
             try:
-                self.client.write(self.bucket,
-                                  self.org,
-                                  self._normalize(name, columns, points),
-                                  time_precision="s")
+                self.client.write(self.bucket, self.org, self._normalize(name, columns, points), time_precision="s")
             except Exception as e:
                 # Log level set to debug instead of error (see: issue #1561)
                 logger.debug("Cannot export {} stats to InfluxDB ({})".format(name, e))

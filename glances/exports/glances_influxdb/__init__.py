@@ -48,13 +48,9 @@ class Export(GlancesExport):
         self.hostname = None
 
         # Load the InfluxDB configuration file
-        self.export_enable = self.load_conf('influxdb',
-                                            mandatories=['host', 'port',
-                                                         'user', 'password',
-                                                         'db'],
-                                            options=['protocol',
-                                                     'prefix',
-                                                     'tags'])
+        self.export_enable = self.load_conf(
+            'influxdb', mandatories=['host', 'port', 'user', 'password', 'db'], options=['protocol', 'prefix', 'tags']
+        )
         if not self.export_enable:
             sys.exit(2)
 
@@ -76,21 +72,22 @@ class Export(GlancesExport):
             ssl = False
 
         try:
-            db = InfluxDBClient(host=self.host,
-                                port=self.port,
-                                ssl=ssl,
-                                verify_ssl=False,
-                                username=self.user,
-                                password=self.password,
-                                database=self.db)
+            db = InfluxDBClient(
+                host=self.host,
+                port=self.port,
+                ssl=ssl,
+                verify_ssl=False,
+                username=self.user,
+                password=self.password,
+                database=self.db,
+            )
             get_all_db = [i['name'] for i in db.get_list_database()]
         except InfluxDBClientError as e:
             logger.critical("Cannot connect to InfluxDB database '%s' (%s)" % (self.db, e))
             sys.exit(2)
 
         if self.db in get_all_db:
-            logger.info(
-                "Stats will be exported to InfluxDB server: {}".format(db._baseurl))
+            logger.info("Stats will be exported to InfluxDB server: {}".format(db._baseurl))
         else:
             logger.critical("InfluxDB database '%s' did not exist. Please create it" % self.db)
             sys.exit(2)
@@ -116,9 +113,11 @@ class Export(GlancesExport):
         for measurement in keys_list:
             # Manage field
             if measurement is not None:
-                fields = {k.replace('{}.'.format(measurement), ''): data_dict[k]
-                          for k in data_dict
-                          if k.startswith('{}.'.format(measurement))}
+                fields = {
+                    k.replace('{}.'.format(measurement), ''): data_dict[k]
+                    for k in data_dict
+                    if k.startswith('{}.'.format(measurement))
+                }
             else:
                 fields = data_dict
             # Transform to InfluxDB data model
@@ -147,9 +146,7 @@ class Export(GlancesExport):
             # Add the hostname as a tag
             tags['hostname'] = self.hostname
             # Add the measurement to the list
-            ret.append({'measurement': name,
-                        'tags': tags,
-                        'fields': fields})
+            ret.append({'measurement': name, 'tags': tags, 'fields': fields})
         return ret
 
     def export(self, name, columns, points):
@@ -162,8 +159,7 @@ class Export(GlancesExport):
             logger.debug("Cannot export empty {} stats to InfluxDB".format(name))
         else:
             try:
-                self.client.write_points(self._normalize(name, columns, points),
-                                         time_precision="s")
+                self.client.write_points(self._normalize(name, columns, points), time_precision="s")
             except Exception as e:
                 # Log level set to debug instead of error (see: issue #1561)
                 logger.debug("Cannot export {} stats to InfluxDB ({})".format(name, e))

@@ -29,12 +29,10 @@ import psutil
 
 
 # Define the history items list
-items_history_list = [{'name': 'read_bytes',
-                       'description': 'Bytes read per second',
-                       'y_unit': 'B/s'},
-                      {'name': 'write_bytes',
-                       'description': 'Bytes write per second',
-                       'y_unit': 'B/s'}]
+items_history_list = [
+    {'name': 'read_bytes', 'description': 'Bytes read per second', 'y_unit': 'B/s'},
+    {'name': 'write_bytes', 'description': 'Bytes write per second', 'y_unit': 'B/s'},
+]
 
 
 class PluginModel(GlancesPluginModel):
@@ -55,8 +53,7 @@ class PluginModel(GlancesPluginModel):
 
         # Hide stats if it has never been != 0
         if config is not None:
-            self.hide_zero = config.get_bool_value(
-                self.plugin_name, 'hide_zero', default=False)
+            self.hide_zero = config.get_bool_value(self.plugin_name, 'hide_zero', default=False)
         else:
             self.hide_zero = False
         self.hide_zero_fields = ['read_bytes', 'write_bytes']
@@ -127,7 +124,8 @@ class PluginModel(GlancesPluginModel):
                         'read_count': 0,
                         'write_count': 0,
                         'read_bytes': 0,
-                        'write_bytes': 0}
+                        'write_bytes': 0,
+                    }
 
                 # Add alias if exist (define in the configuration file)
                 if self.has_alias(disk) is not None:
@@ -166,10 +164,12 @@ class PluginModel(GlancesPluginModel):
         # Alert
         for i in self.get_raw():
             disk_real_name = i['disk_name']
-            self.views[i[self.get_key()]]['read_bytes']['decoration'] = self.get_alert(int(i['read_bytes'] // i['time_since_update']),
-                                                                                       header=disk_real_name + '_rx')
-            self.views[i[self.get_key()]]['write_bytes']['decoration'] = self.get_alert(int(i['write_bytes'] // i['time_since_update']),
-                                                                                        header=disk_real_name + '_tx')
+            self.views[i[self.get_key()]]['read_bytes']['decoration'] = self.get_alert(
+                int(i['read_bytes'] // i['time_since_update']), header=disk_real_name + '_rx'
+            )
+            self.views[i[self.get_key()]]['write_bytes']['decoration'] = self.get_alert(
+                int(i['write_bytes'] // i['time_since_update']), header=disk_real_name + '_tx'
+            )
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -210,41 +210,40 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_new_line())
             if len(disk_name) > name_max_width:
                 # Cut disk name if it is too long
-                disk_name = '_' + disk_name[-name_max_width+1:]
-            msg = '{:{width}}'.format(nativestr(disk_name),
-                                      width=name_max_width+1)
+                disk_name = '_' + disk_name[-name_max_width + 1 :]
+            msg = '{:{width}}'.format(nativestr(disk_name), width=name_max_width + 1)
             ret.append(self.curse_add_line(msg))
             if args.diskio_iops:
                 # count
-                txps = self.auto_unit(
-                    int(i['read_count'] // i['time_since_update']))
-                rxps = self.auto_unit(
-                    int(i['write_count'] // i['time_since_update']))
+                txps = self.auto_unit(int(i['read_count'] // i['time_since_update']))
+                rxps = self.auto_unit(int(i['write_count'] // i['time_since_update']))
                 msg = '{:>7}'.format(txps)
-                ret.append(self.curse_add_line(msg,
-                                               self.get_views(item=i[self.get_key()],
-                                                              key='read_count',
-                                                              option='decoration')))
+                ret.append(
+                    self.curse_add_line(
+                        msg, self.get_views(item=i[self.get_key()], key='read_count', option='decoration')
+                    )
+                )
                 msg = '{:>7}'.format(rxps)
-                ret.append(self.curse_add_line(msg,
-                                               self.get_views(item=i[self.get_key()],
-                                                              key='write_count',
-                                                              option='decoration')))
+                ret.append(
+                    self.curse_add_line(
+                        msg, self.get_views(item=i[self.get_key()], key='write_count', option='decoration')
+                    )
+                )
             else:
                 # Bitrate
-                txps = self.auto_unit(
-                    int(i['read_bytes'] // i['time_since_update']))
-                rxps = self.auto_unit(
-                    int(i['write_bytes'] // i['time_since_update']))
+                txps = self.auto_unit(int(i['read_bytes'] // i['time_since_update']))
+                rxps = self.auto_unit(int(i['write_bytes'] // i['time_since_update']))
                 msg = '{:>7}'.format(txps)
-                ret.append(self.curse_add_line(msg,
-                                               self.get_views(item=i[self.get_key()],
-                                                              key='read_bytes',
-                                                              option='decoration')))
+                ret.append(
+                    self.curse_add_line(
+                        msg, self.get_views(item=i[self.get_key()], key='read_bytes', option='decoration')
+                    )
+                )
                 msg = '{:>7}'.format(rxps)
-                ret.append(self.curse_add_line(msg,
-                                               self.get_views(item=i[self.get_key()],
-                                                              key='write_bytes',
-                                                              option='decoration')))
+                ret.append(
+                    self.curse_add_line(
+                        msg, self.get_views(item=i[self.get_key()], key='write_bytes', option='decoration')
+                    )
+                )
 
         return ret

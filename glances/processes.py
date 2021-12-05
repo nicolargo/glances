@@ -27,12 +27,7 @@ from glances.logger import logger
 import psutil
 
 # This constant defines the list of available processes sort key
-sort_processes_key_list = ['cpu_percent',
-                           'memory_percent',
-                           'username',
-                           'cpu_times',
-                           'io_counters',
-                           'name']
+sort_processes_key_list = ['cpu_percent', 'memory_percent', 'username', 'cpu_times', 'io_counters', 'name']
 
 
 class GlancesProcesses(object):
@@ -114,11 +109,7 @@ class GlancesProcesses(object):
 
     def reset_processcount(self):
         """Reset the global process count"""
-        self.processcount = {'total': 0,
-                             'running': 0,
-                             'sleeping': 0,
-                             'thread': 0,
-                             'pid_max': None}
+        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0, 'pid_max': None}
 
     def update_processcount(self, plist):
         """Update the global process count from the current processes list"""
@@ -127,11 +118,9 @@ class GlancesProcesses(object):
         # For each key in the processcount dict
         # count the number of processes with the same status
         for k in iterkeys(self.processcount):
-            self.processcount[k] = len(list(filter(lambda v: v['status'] is k,
-                                                   plist)))
+            self.processcount[k] = len(list(filter(lambda v: v['status'] is k, plist)))
         # Compute thread
-        self.processcount['thread'] = sum(i['num_threads'] for i in plist
-                                          if i['num_threads'] is not None)
+        self.processcount['thread'] = sum(i['num_threads'] for i in plist if i['num_threads'] is not None)
         # Compute total
         self.processcount['total'] = len(plist)
 
@@ -294,15 +283,17 @@ class GlancesProcesses(object):
             is_cached = True
 
         # Build the processes stats list (it is why we need psutil>=5.3.0)
-        self.processlist = [p.info
-                            for p in psutil.process_iter(attrs=sorted_attrs,
-                                                         ad_value=None)
-                            # OS-related processes filter
-                            if not (BSD and p.info['name'] == 'idle') and
-                            not (WINDOWS and p.info['name'] == 'System Idle Process') and
-                            not (MACOS and p.info['name'] == 'kernel_task') and
-                            # Kernel threads filter
-                            not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0)]
+        self.processlist = [
+            p.info
+            for p in psutil.process_iter(attrs=sorted_attrs, ad_value=None)
+            # OS-related processes filter
+            if not (BSD and p.info['name'] == 'idle')
+            and not (WINDOWS and p.info['name'] == 'System Idle Process')
+            and not (MACOS and p.info['name'] == 'kernel_task')
+            and
+            # Kernel threads filter
+            not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0)
+        ]
 
         # Sort the processes list by the current sort_key
         self.processlist = sort_stats(self.processlist, sorted_by=self.sort_key, reverse=True)
@@ -326,8 +317,7 @@ class GlancesProcesses(object):
                 extended = {}
                 try:
                     top_process = psutil.Process(proc['pid'])
-                    extended_stats = ['cpu_affinity', 'ionice',
-                                      'num_ctx_switches']
+                    extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
                     if LINUX:
                         # num_fds only avalable on Unix system (see issue #1351)
                         extended_stats += ['num_fds']
@@ -335,8 +325,7 @@ class GlancesProcesses(object):
                         extended_stats += ['num_handles']
 
                     # Get the extended stats
-                    extended = top_process.as_dict(attrs=extended_stats,
-                                                   ad_value=None)
+                    extended = top_process.as_dict(attrs=extended_stats, ad_value=None)
 
                     if LINUX:
                         try:
@@ -403,8 +392,9 @@ class GlancesProcesses(object):
                 # Grab cached values (in case of a new incoming process)
                 if proc['pid'] not in self.processlist_cache:
                     try:
-                        self.processlist_cache[proc['pid']]= psutil.Process(pid=proc['pid']).as_dict(attrs=cached_attrs,
-                                                                                                     ad_value=None)
+                        self.processlist_cache[proc['pid']] = psutil.Process(pid=proc['pid']).as_dict(
+                            attrs=cached_attrs, ad_value=None
+                        )
                     except psutil.NoSuchProcess:
                         pass
                 # Add cached value to current stat
@@ -414,7 +404,7 @@ class GlancesProcesses(object):
                     pass
             else:
                 # Save values to cache
-                self.processlist_cache[proc['pid']] = { cached: proc[cached] for cached in cached_attrs }
+                self.processlist_cache[proc['pid']] = {cached: proc[cached] for cached in cached_attrs}
 
         # Apply filter
         self.processlist = [p for p in self.processlist if not (self._filter.is_filtered(p))]
@@ -462,9 +452,7 @@ def weighted(value):
     return -float('inf') if value is None else value
 
 
-def _sort_io_counters(process,
-                      sorted_by='io_counters',
-                      sorted_by_secondary='memory_percent'):
+def _sort_io_counters(process, sorted_by='io_counters', sorted_by_secondary='memory_percent'):
     """Specific case for io_counters
 
     :return: Sum of io_r + io_w
@@ -472,10 +460,8 @@ def _sort_io_counters(process,
     return process[sorted_by][0] - process[sorted_by][2] + process[sorted_by][1] - process[sorted_by][3]
 
 
-def _sort_cpu_times(process,
-                    sorted_by='cpu_times',
-                    sorted_by_secondary='memory_percent'):
-    """ Specific case for cpu_times
+def _sort_cpu_times(process, sorted_by='cpu_times', sorted_by_secondary='memory_percent'):
+    """Specific case for cpu_times
 
     Patch for "Sorting by process time works not as expected #1321"
     By default PsUtil only takes user time into account
@@ -485,8 +471,7 @@ def _sort_cpu_times(process,
     return process[sorted_by][0] + process[sorted_by][1]
 
 
-def _sort_lambda(sorted_by='cpu_percent',
-                 sorted_by_secondary='memory_percent'):
+def _sort_lambda(sorted_by='cpu_percent', sorted_by_secondary='memory_percent'):
     """Return a sort lambda function for the sorted_by key"""
     ret = None
     if sorted_by == 'io_counters':
@@ -496,10 +481,7 @@ def _sort_lambda(sorted_by='cpu_percent',
     return ret
 
 
-def sort_stats(stats,
-               sorted_by='cpu_percent',
-               sorted_by_secondary='memory_percent',
-               reverse=True):
+def sort_stats(stats, sorted_by='cpu_percent', sorted_by_secondary='memory_percent', reverse=True):
     """Return the stats (dict) sorted by (sorted_by).
 
     Reverse the sort if reverse is True.
@@ -509,8 +491,7 @@ def sort_stats(stats,
         return stats
 
     # Check if a specific sort should be done
-    sort_lambda = _sort_lambda(sorted_by=sorted_by,
-                               sorted_by_secondary=sorted_by_secondary)
+    sort_lambda = _sort_lambda(sorted_by=sorted_by, sorted_by_secondary=sorted_by_secondary)
 
     if sort_lambda is not None:
         # Specific sort
@@ -518,19 +499,20 @@ def sort_stats(stats,
             stats.sort(key=sort_lambda, reverse=reverse)
         except Exception:
             # If an error is detected, fallback to cpu_percent
-            stats.sort(key=lambda process: (weighted(process['cpu_percent']),
-                                            weighted(process[sorted_by_secondary])),
-                       reverse=reverse)
+            stats.sort(
+                key=lambda process: (weighted(process['cpu_percent']), weighted(process[sorted_by_secondary])),
+                reverse=reverse,
+            )
     else:
         # Standard sort
         try:
-            stats.sort(key=lambda process: (weighted(process[sorted_by]),
-                                            weighted(process[sorted_by_secondary])),
-                       reverse=reverse)
+            stats.sort(
+                key=lambda process: (weighted(process[sorted_by]), weighted(process[sorted_by_secondary])),
+                reverse=reverse,
+            )
         except (KeyError, TypeError):
             # Fallback to name
-            stats.sort(key=lambda process: process['name'] if process['name'] is not None else '~',
-                       reverse=False)
+            stats.sort(key=lambda process: process['name'] if process['name'] is not None else '~', reverse=False)
 
     return stats
 

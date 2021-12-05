@@ -45,9 +45,7 @@ class Export(GlancesExport):
         self.password = None
 
         # Load the Cassandra configuration file section
-        self.export_enable = self.load_conf('couchdb',
-                                            mandatories=['host', 'port', 'db'],
-                                            options=['user', 'password'])
+        self.export_enable = self.load_conf('couchdb', mandatories=['host', 'port', 'db'], options=['user', 'password'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -60,13 +58,9 @@ class Export(GlancesExport):
             return None
 
         if self.user is None:
-            server_uri = 'http://{}:{}/'.format(self.host,
-                                                self.port)
+            server_uri = 'http://{}:{}/'.format(self.host, self.port)
         else:
-            server_uri = 'http://{}:{}@{}:{}/'.format(self.user,
-                                                      self.password,
-                                                      self.host,
-                                                      self.port)
+            server_uri = 'http://{}:{}@{}:{}/'.format(self.user, self.password, self.host, self.port)
 
         try:
             s = couchdb.Server(server_uri)
