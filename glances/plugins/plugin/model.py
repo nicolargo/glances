@@ -58,12 +58,7 @@ fields_unit_type = {
 class GlancesPluginModel(object):
     """Main class for Glances plugin model."""
 
-    def __init__(self,
-                 args=None,
-                 config=None,
-                 items_history_list=None,
-                 stats_init_value={},
-                 fields_description=None):
+    def __init__(self, args=None, config=None, items_history_list=None, stats_init_value={}, fields_description=None):
         """Init the plugin of plugins model class.
 
         All Glances' plugins model should inherit from this class. Most of the
@@ -1177,11 +1172,11 @@ class GlancesPluginModel(object):
             counter = Counter()
             ret = fct(*args, **kw)
             duration = counter.get()
-            logger.debug("{} {} {} return {} in {} seconds".format(
-                args[0].__class__.__name__,
-                args[0].__class__.__module__,
-                fct.__name__, ret,
-                duration))
+            logger.debug(
+                "{} {} {} return {} in {} seconds".format(
+                    args[0].__class__.__name__, args[0].__class__.__module__, fct.__name__, ret, duration
+                )
+            )
             return ret
 
         return wrapper
