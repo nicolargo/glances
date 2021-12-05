@@ -41,9 +41,7 @@ class Export(GlancesExport):
         self.index = None
 
         # Load the ES configuration file
-        self.export_enable = self.load_conf('elasticsearch',
-                                            mandatories=['host', 'port', 'index'],
-                                            options=[])
+        self.export_enable = self.load_conf('elasticsearch', mandatories=['host', 'port', 'index'], options=[])
         if not self.export_enable:
             sys.exit(2)
 
@@ -70,8 +68,7 @@ class Export(GlancesExport):
         logger.debug("Export {} stats to ElasticSearch".format(name))
 
         # Generate index name with the index field + current day
-        index = '{}-{}'.format(self.index,
-                               datetime.utcnow().strftime("%Y.%m.%d"))
+        index = '{}-{}'.format(self.index, datetime.utcnow().strftime("%Y.%m.%d"))
 
         # Create DB input
         # https://elasticsearch-py.readthedocs.io/en/master/helpers.html
@@ -81,16 +78,12 @@ class Export(GlancesExport):
             "_index": index,
             "_id": '{}.{}'.format(name, dt_now),
             "_type": 'glances-{}'.format(name),
-            "_source": {
-                "plugin": name,
-                "timestamp": dt_now
-            }
+            "_source": {"plugin": name, "timestamp": dt_now},
         }
         action['_source'].update(zip(columns, [str(p) for p in points]))
         actions.append(action)
 
-        logger.debug(
-            "Exporting the following object to elasticsearch: {}".format(action))
+        logger.debug("Exporting the following object to elasticsearch: {}".format(action))
 
         # Write input to the ES index
         try:

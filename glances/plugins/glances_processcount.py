@@ -23,18 +23,12 @@ from glances.processes import glances_processes
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # Define the history items list
-items_history_list = [{'name': 'total',
-                       'description': 'Total number of processes',
-                       'y_unit': ''},
-                      {'name': 'running',
-                       'description': 'Total number of running processes',
-                       'y_unit': ''},
-                      {'name': 'sleeping',
-                       'description': 'Total number of sleeping processes',
-                       'y_unit': ''},
-                      {'name': 'thread',
-                       'description': 'Total number of threads',
-                       'y_unit': ''}]
+items_history_list = [
+    {'name': 'total', 'description': 'Total number of processes', 'y_unit': ''},
+    {'name': 'running', 'description': 'Total number of running processes', 'y_unit': ''},
+    {'name': 'sleeping', 'description': 'Total number of sleeping processes', 'y_unit': ''},
+    {'name': 'thread', 'description': 'Total number of threads', 'y_unit': ''},
+]
 
 
 class Plugin(GlancesPlugin):
@@ -43,19 +37,19 @@ class Plugin(GlancesPlugin):
     stats is a list
     """
 
-    sort_for_human = {'io_counters': 'disk IO',
-                      'cpu_percent': 'CPU consumption',
-                      'memory_percent': 'memory consumption',
-                      'cpu_times': 'process time',
-                      'username': 'user name',
-                      'name': 'process name',
-                      None: 'None'}
+    sort_for_human = {
+        'io_counters': 'disk IO',
+        'cpu_percent': 'CPU consumption',
+        'memory_percent': 'memory consumption',
+        'cpu_times': 'process time',
+        'username': 'user name',
+        'name': 'process name',
+        None: 'None',
+    }
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
-                                     config=config,
-                                     items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args, config=config, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

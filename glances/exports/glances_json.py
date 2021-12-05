@@ -50,10 +50,7 @@ class Export(GlancesExport):
         if name == self.plugins_to_export()[0] and self.buffer != {}:
             # One whole loop has been completed
             # Flush stats to file
-            logger.debug("Exporting stats ({}) to JSON file ({})".format(
-                listkeys(self.buffer),
-                self.json_filename)
-            )
+            logger.debug("Exporting stats ({}) to JSON file ({})".format(listkeys(self.buffer), self.json_filename))
 
             # Export stats to JSON file
             if PY3:

@@ -46,11 +46,9 @@ class Export(GlancesExport):
         self.tags = None
 
         # Load the Kafka configuration file section
-        self.export_enable = self.load_conf('kafka',
-                                            mandatories=['host', 'port',
-                                                         'topic'],
-                                            options=['compression',
-                                                     'tags'])
+        self.export_enable = self.load_conf(
+            'kafka', mandatories=['host', 'port', 'topic'], options=['compression', 'tags']
+        )
         if not self.export_enable:
             sys.exit(2)
 
@@ -66,9 +64,11 @@ class Export(GlancesExport):
         server_uri = '{}:{}'.format(self.host, self.port)
 
         try:
-            s = KafkaProducer(bootstrap_servers=server_uri,
-                              value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-                              compression_type=self.compression)
+            s = KafkaProducer(
+                bootstrap_servers=server_uri,
+                value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                compression_type=self.compression,
+            )
         except Exception as e:
             logger.critical("Cannot connect to Kafka server %s (%s)" % (server_uri, e))
             sys.exit(2)
@@ -90,10 +90,12 @@ class Export(GlancesExport):
         # key=<plugin name>
         # value=JSON dict
         try:
-            self.client.send(self.topic,
-                             # Kafka key name needs to be bytes #1593
-                             key=name.encode('utf-8'),
-                             value=data)
+            self.client.send(
+                self.topic,
+                # Kafka key name needs to be bytes #1593
+                key=name.encode('utf-8'),
+                value=data,
+            )
         except Exception as e:
             logger.error("Cannot export {} stats to Kafka ({})".format(name, e))
 
