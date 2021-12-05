@@ -56,6 +56,14 @@ class Plugin(GlancesPlugin):
 
         # Note: 'glances_processes' is already init in the glances_processes.py script
 
+    def enable_extended(self):
+        """Enable extended stats."""
+        glances_processes.enable_extended()
+
+    def disable_extended(self):
+        """Disable extended stats."""
+        glances_processes.disable_extended()
+
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
