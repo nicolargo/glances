@@ -117,18 +117,14 @@ class GlancesPluginView(object):
         """
         if not self.hide_zero:
             return False
-        if (isinstance(self.get_raw(), list) and
-                self.get_raw() is not None and
-                self.get_key() is not None):
+        if isinstance(self.get_raw(), list) and self.get_raw() is not None and self.get_key() is not None:
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
                 if any([i[f] for f in self.hide_zero_fields]):
                     for f in self.hide_zero_fields:
-                        self.views[i[self.get_key(
-                        )]][f]['_zero'] = self.views[i[self.get_key()]][f]['hidden']
+                        self.views[i[self.get_key()]][f]['_zero'] = self.views[i[self.get_key()]][f]['hidden']
                 for f in self.hide_zero_fields:
-                    self.views[i[self.get_key(
-                    )]][f]['hidden'] = self.views[i[self.get_key()]][f]['_zero'] and i[f] == 0
+                    self.views[i[self.get_key()]][f]['hidden'] = self.views[i[self.get_key()]][f]['_zero'] and i[f] == 0
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             #
             # Warning: This code has never been tested because
@@ -159,30 +155,36 @@ class GlancesPluginView(object):
         """
         ret = {}
 
-        if (isinstance(self.get_raw(), list) and
-                self.get_raw() is not None and
-                self.get_key() is not None):
+        if isinstance(self.get_raw(), list) and self.get_raw() is not None and self.get_key() is not None:
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
                 # i[self.get_key()] is the interface name (example for NETWORK)
                 ret[i[self.get_key()]] = {}
                 for key in listkeys(i):
-                    value = {'decoration': 'DEFAULT',
-                             'optional': False,
-                             'additional': False,
-                             'splittable': False,
-                             'hidden': False,
-                             '_zero': self.views[i[self.get_key()]][key]['_zero'] if i[self.get_key()] in self.views and key in self.views[i[self.get_key()]] and 'zero' in self.views[i[self.get_key()]][key] else True}
+                    value = {
+                        'decoration': 'DEFAULT',
+                        'optional': False,
+                        'additional': False,
+                        'splittable': False,
+                        'hidden': False,
+                        '_zero': self.views[i[self.get_key()]][key]['_zero']
+                        if i[self.get_key()] in self.views
+                        and key in self.views[i[self.get_key()]]
+                        and 'zero' in self.views[i[self.get_key()]][key]
+                        else True,
+                    }
                     ret[i[self.get_key()]][key] = value
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for key in listkeys(self.get_raw()):
-                value = {'decoration': 'DEFAULT',
-                         'optional': False,
-                         'additional': False,
-                         'splittable': False,
-                         'hidden': False,
-                         '_zero': self.views[key]['_zero'] if key in self.views and '_zero' in self.views[key] else True}
+                value = {
+                    'decoration': 'DEFAULT',
+                    'optional': False,
+                    'additional': False,
+                    'splittable': False,
+                    'hidden': False,
+                    '_zero': self.views[key]['_zero'] if key in self.views and '_zero' in self.views[key] else True,
+                }
                 ret[key] = value
 
         self.views = ret
@@ -243,19 +245,13 @@ class GlancesPluginView(object):
             align_curse = self._align
 
         if max_width is not None:
-            ret = {'display': display_curse,
-                   'msgdict': self.msg_curse(args, max_width=max_width),
-                   'align': align_curse}
+            ret = {'display': display_curse, 'msgdict': self.msg_curse(args, max_width=max_width), 'align': align_curse}
         else:
-            ret = {'display': display_curse,
-                   'msgdict': self.msg_curse(args),
-                   'align': align_curse}
+            ret = {'display': display_curse, 'msgdict': self.msg_curse(args), 'align': align_curse}
 
         return ret
 
-    def curse_add_line(self, msg, decoration="DEFAULT",
-                       optional=False, additional=False,
-                       splittable=False):
+    def curse_add_line(self, msg, decoration="DEFAULT", optional=False, additional=False, splittable=False):
         """Return a dict with.
 
         Where:
@@ -281,18 +277,19 @@ class GlancesPluginView(object):
             additional: True if the stat is additional (display only if space is available after optional)
             spittable: Line can be splitted to fit on the screen (default is not)
         """
-        return {'msg': msg,
-                'decoration': decoration,
-                'optional': optional,
-                'additional': additional,
-                'splittable': splittable}
+        return {
+            'msg': msg,
+            'decoration': decoration,
+            'optional': optional,
+            'additional': additional,
+            'splittable': splittable,
+        }
 
     def curse_new_line(self):
         """Go to a new line."""
         return self.curse_add_line('\n')
 
-    def curse_add_stat(self, key, width=None,
-                       header='', separator='', trailer=''):
+    def curse_add_stat(self, key, width=None, header='', separator='', trailer=''):
         """Return a list of dict messages with the 'key: value' result
 
           <=== width ===>
@@ -347,29 +344,37 @@ class GlancesPluginView(object):
             if unit_type == 'float':
                 msg_value = '{:.1f}{}'.format(value, unit_short) + trailer
             elif 'min_symbol' in self.fields_description[key]:
-                msg_value = '{}{}'.format(self.auto_unit(int(value),
-                                                         min_symbol=self.fields_description[key]['min_symbol']),
-                                          unit_short) + trailer
+                msg_value = (
+                    '{}{}'.format(
+                        self.auto_unit(int(value), min_symbol=self.fields_description[key]['min_symbol']), unit_short
+                    )
+                    + trailer
+                )
             else:
                 msg_value = '{}{}'.format(int(value), unit_short) + trailer
         else:
             # Define the size of the message
             # item will be on the left
             # value will be on the right
-            msg_item = header + '{:{width}}'.format(key_name, width=width-7) + separator
+            msg_item = header + '{:{width}}'.format(key_name, width=width - 7) + separator
             if unit_type == 'float':
                 msg_value = '{:5.1f}{}'.format(value, unit_short) + trailer
             elif 'min_symbol' in self.fields_description[key]:
-                msg_value = '{:>5}{}'.format(self.auto_unit(int(value),
-                                                            min_symbol=self.fields_description[key]['min_symbol']),
-                                             unit_short) + trailer
+                msg_value = (
+                    '{:>5}{}'.format(
+                        self.auto_unit(int(value), min_symbol=self.fields_description[key]['min_symbol']), unit_short
+                    )
+                    + trailer
+                )
             else:
                 msg_value = '{:>5}{}'.format(int(value), unit_short) + trailer
         decoration = self.get_views(key=key, option='decoration')
         optional = self.get_views(key=key, option='optional')
 
-        return [self.curse_add_line(msg_item, optional=optional),
-                self.curse_add_line(msg_value, decoration=decoration, optional=optional)]
+        return [
+            self.curse_add_line(msg_item, optional=optional),
+            self.curse_add_line(msg_value, decoration=decoration, optional=optional),
+        ]
 
     @property
     def align(self):
@@ -384,10 +389,7 @@ class GlancesPluginView(object):
         """
         self._align = value
 
-    def auto_unit(self, number,
-                  low_precision=False,
-                  min_symbol='K'
-                  ):
+    def auto_unit(self, number, low_precision=False, min_symbol='K'):
         """Make a nice human-readable string out of number.
 
         Number of decimal places increases as quantity approaches 1.
@@ -405,7 +407,7 @@ class GlancesPluginView(object):
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         if min_symbol in symbols:
-            symbols = symbols[symbols.index(min_symbol):]
+            symbols = symbols[symbols.index(min_symbol) :]
         prefix = {
             'Y': 1208925819614629174706176,
             'Z': 1180591620717411303424,
@@ -414,7 +416,7 @@ class GlancesPluginView(object):
             'T': 1099511627776,
             'G': 1073741824,
             'M': 1048576,
-            'K': 1024
+            'K': 1024,
         }
 
         for symbol in reversed(symbols):
@@ -432,8 +434,7 @@ class GlancesPluginView(object):
                         decimal_precision = min(1, decimal_precision)
                 elif symbol in 'K':
                     decimal_precision = 0
-                return '{:.{decimal}f}{symbol}'.format(
-                    value, decimal=decimal_precision, symbol=symbol)
+                return '{:.{decimal}f}{symbol}'.format(value, decimal=decimal_precision, symbol=symbol)
         return '{!s}'.format(number)
 
     def trend_msg(self, trend, significant=1):

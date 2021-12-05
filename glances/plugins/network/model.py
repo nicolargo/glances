@@ -81,11 +81,13 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args,
-                                     config=config,
-                                     items_history_list=items_history_list,
-                                     fields_description=fields_description,
-                                     stats_init_value=[])
+        super(PluginModel, self).__init__(
+            args=args,
+            config=config,
+            items_history_list=items_history_list,
+            fields_description=fields_description,
+            stats_init_value=[],
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -162,23 +164,24 @@ class PluginModel(GlancesPluginModel):
                     rx = cumulative_rx - self.network_old[net].bytes_recv
                     tx = cumulative_tx - self.network_old[net].bytes_sent
                     cx = rx + tx
-                    netstat = {'interface_name': net,
-                               'alias': self.has_alias(net),
-                               'time_since_update': time_since_update,
-                               'cumulative_rx': cumulative_rx,
-                               'rx': rx,
-                               'cumulative_tx': cumulative_tx,
-                               'tx': tx,
-                               'cumulative_cx': cumulative_cx,
-                               'cx': cx,
-                               # Interface status
-                               'is_up': net_status[net].isup,
-                               # Interface speed in Mbps, convert it to bps
-                               # Can be always 0 on some OSes
-                               'speed': net_status[net].speed * 1048576,
-                               # Set the key for the dict
-                               'key': self.get_key()
-                               }
+                    netstat = {
+                        'interface_name': net,
+                        'alias': self.has_alias(net),
+                        'time_since_update': time_since_update,
+                        'cumulative_rx': cumulative_rx,
+                        'rx': rx,
+                        'cumulative_tx': cumulative_tx,
+                        'tx': tx,
+                        'cumulative_cx': cumulative_cx,
+                        'cx': cx,
+                        # Interface status
+                        'is_up': net_status[net].isup,
+                        # Interface speed in Mbps, convert it to bps
+                        # Can be always 0 on some OSes
+                        'speed': net_status[net].speed * 1048576,
+                        # Set the key for the dict
+                        'key': self.get_key(),
+                    }
                 except KeyError:
                     continue
                 else:

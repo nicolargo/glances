@@ -74,10 +74,11 @@ CPU while the hypervisor is servicing another virtual processor.',
 second. A context switch is a procedure that a computer\'s CPU (central \
 processing unit) follows to change from one task (or process) to \
 another while ensuring that the tasks do not conflict.',
-                     'unit': 'percent'},
-    'interrupts': {'description': 'number of interrupts per second.',
-                   'unit': 'percent'},
-    'soft_interrupts': {'description': 'number of software interrupts per second. Always set to \
+        'unit': 'percent',
+    },
+    'interrupts': {'description': 'number of interrupts per second.', 'unit': 'percent'},
+    'soft_interrupts': {
+        'description': 'number of software interrupts per second. Always set to \
 0 on Windows and SunOS.',
         'unit': 'number',
         'rate': True,
@@ -132,10 +133,9 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the CPU plugin."""
-        super(PluginModel, self).__init__(args=args,
-                                          config=config,
-                                          items_history_list=items_history_list,
-                                          fields_description=fields_description)
+        super(PluginModel, self).__init__(
+            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -276,9 +276,9 @@ class PluginModel(GlancesPluginModel):
         # Alert only but depend on Core number
         for key in ['ctx_switches']:
             if key in self.stats:
-                self.views[key]['decoration'] = self.get_alert(self.stats[key],
-                                                               maximum=100 * self.stats['cpucore'],
-                                                               header=key)
+                self.views[key]['decoration'] = self.get_alert(
+                    self.stats[key], maximum=100 * self.stats['cpucore'], header=key
+                )
         # Optional
         for key in ['nice', 'irq', 'idle', 'steal', 'ctx_switches', 'interrupts', 'soft_interrupts', 'syscalls']:
             if key in self.stats:
@@ -322,11 +322,16 @@ class PluginModel(GlancesPluginModel):
         if 'ctx_switches' in self.stats:
             msg = '  {:8}'.format('ctx_sw:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='ctx_switches', option='optional')))
-            msg = '{:>5}'.format(self.auto_unit(int(self.stats['ctx_switches'] // self.stats['time_since_update']),
-                                                min_symbol='K'))
-            ret.append(self.curse_add_line(
-                msg, self.get_views(key='ctx_switches', option='decoration'),
-                optional=self.get_views(key='ctx_switches', option='optional')))
+            msg = '{:>5}'.format(
+                self.auto_unit(int(self.stats['ctx_switches'] // self.stats['time_since_update']), min_symbol='K')
+            )
+            ret.append(
+                self.curse_add_line(
+                    msg,
+                    self.get_views(key='ctx_switches', option='decoration'),
+                    optional=self.get_views(key='ctx_switches', option='optional'),
+                )
+            )
 
         # New line
         ret.append(self.curse_new_line())
@@ -335,8 +340,7 @@ class PluginModel(GlancesPluginModel):
             msg = '{:8}'.format('user:')
             ret.append(self.curse_add_line(msg))
             msg = '{:5.1f}%'.format(self.stats['user'])
-            ret.append(self.curse_add_line(
-                msg, self.get_views(key='user', option='decoration')))
+            ret.append(self.curse_add_line(msg, self.get_views(key='user', option='decoration')))
         elif 'idle' in self.stats:
             msg = '{:8}'.format('idle:')
             ret.append(self.curse_add_line(msg))
@@ -362,8 +366,7 @@ class PluginModel(GlancesPluginModel):
             msg = '{:8}'.format('system:')
             ret.append(self.curse_add_line(msg))
             msg = '{:5.1f}%'.format(self.stats['system'])
-            ret.append(self.curse_add_line(
-                msg, self.get_views(key='system', option='decoration')))
+            ret.append(self.curse_add_line(msg, self.get_views(key='system', option='decoration')))
         else:
             msg = '{:8}'.format('core:')
             ret.append(self.curse_add_line(msg))
@@ -372,11 +375,9 @@ class PluginModel(GlancesPluginModel):
         # Nice CPU
         if 'nice' in self.stats:
             msg = '  {:8}'.format('nice:')
-            ret.append(self.curse_add_line(
-                msg, optional=self.get_views(key='nice', option='optional')))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
             msg = '{:5.1f}%'.format(self.stats['nice'])
-            ret.append(self.curse_add_line(
-                msg, optional=self.get_views(key='nice', option='optional')))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
         # soft_interrupts
         if 'soft_interrupts' in self.stats:
             msg = '  {:8}'.format('sw_int:')
@@ -390,20 +391,27 @@ class PluginModel(GlancesPluginModel):
         # IOWait CPU
         if 'iowait' in self.stats:
             msg = '{:8}'.format('iowait:')
-            ret.append(self.curse_add_line(
-                msg, optional=self.get_views(key='iowait', option='optional')))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='iowait', option='optional')))
             msg = '{:5.1f}%'.format(self.stats['iowait'])
-            ret.append(self.curse_add_line(
-                msg, self.get_views(key='iowait', option='decoration'),
-                optional=self.get_views(key='iowait', option='optional')))
+            ret.append(
+                self.curse_add_line(
+                    msg,
+                    self.get_views(key='iowait', option='decoration'),
+                    optional=self.get_views(key='iowait', option='optional'),
+                )
+            )
         # Steal CPU usage
         if 'steal' in self.stats:
             msg = '  {:8}'.format('steal:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='steal', option='optional')))
             msg = '{:5.1f}%'.format(self.stats['steal'])
-            ret.append(self.curse_add_line(
-                msg, self.get_views(key='steal', option='decoration'),
-                optional=self.get_views(key='steal', option='optional')))
+            ret.append(
+                self.curse_add_line(
+                    msg,
+                    self.get_views(key='steal', option='decoration'),
+                    optional=self.get_views(key='steal', option='optional'),
+                )
+            )
         # syscalls
         # syscalls: number of system calls since boot. Always set to 0 on Linux. (do not display)
         if 'syscalls' in self.stats and not LINUX:

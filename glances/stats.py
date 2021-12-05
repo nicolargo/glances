@@ -139,9 +139,7 @@ class GlancesStats(object):
         start_duration = Counter()
 
         for item in os.listdir(plugins_path):
-            if os.path.isdir(os.path.join(plugins_path, item)) and  \
-               not item.startswith('__') and \
-               item != 'plugin':
+            if os.path.isdir(os.path.join(plugins_path, item)) and not item.startswith('__') and item != 'plugin':
                 # Load the plugin
                 start_duration.reset()
                 self._load_plugin(os.path.basename(item), args=args, config=self.config)
@@ -154,11 +152,11 @@ class GlancesStats(object):
         """Load all exporters in the 'exports' folder."""
         start_duration = Counter()
 
-        if args is None: return False
+        if args is None:
+            return False
 
         for item in os.listdir(exports_path):
-            if os.path.isdir(os.path.join(exports_path, item)) and  \
-               not item.startswith('__'):
+            if os.path.isdir(os.path.join(exports_path, item)) and not item.startswith('__'):
                 # Load the exporter
                 start_duration.reset()
                 if item.startswith('glances_'):
@@ -168,23 +166,19 @@ class GlancesStats(object):
                 else:
                     exporter_name = os.path.basename(item)
                 # Set the disable_<name> to False by default
-                setattr(self.args,
-                        'export_' + exporter_name,
-                        getattr(self.args, 'export_' + exporter_name, False))
+                setattr(self.args, 'export_' + exporter_name, getattr(self.args, 'export_' + exporter_name, False))
                 # We should import the module
                 if getattr(self.args, 'export_' + exporter_name, False):
                     # Import the export module
                     export_module = import_module(item)
                     # Add the exporter instance to the active exporters dictionary
-                    self._exports[exporter_name] = export_module.Export(args=args,
-                                                                        config=self.config)
+                    self._exports[exporter_name] = export_module.Export(args=args, config=self.config)
                     # Add the exporter instance to the available exporters dictionary
                     self._exports_all[exporter_name] = self._exports[exporter_name]
                 else:
                     # Add the exporter name to the available exporters dictionary
                     self._exports_all[exporter_name] = exporter_name
-                logger.debug("Exporter {} started in {} seconds".format(exporter_name,
-                                                                        start_duration.get()))
+                logger.debug("Exporter {} started in {} seconds".format(exporter_name, start_duration.get()))
 
         # Log plugins list
         logger.debug("Active exports modules list: {}".format(self.getExportsList()))

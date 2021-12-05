@@ -43,10 +43,9 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args,
-                                     config=config,
-                                     items_history_list=items_history_list,
-                                     stats_init_value=[])
+        super(PluginModel, self).__init__(
+            args=args, config=config, items_history_list=items_history_list, stats_init_value=[]
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -108,14 +107,10 @@ class PluginModel(GlancesPluginModel):
                     diskstat = {
                         'time_since_update': time_since_update,
                         'disk_name': disk,
-                        'read_count': diskio[disk].read_count - \
-                                      self.diskio_old[disk].read_count,
-                        'write_count': diskio[disk].write_count - \
-                                       self.diskio_old[disk].write_count,
-                        'read_bytes': diskio[disk].read_bytes - \
-                                      self.diskio_old[disk].read_bytes,
-                        'write_bytes': diskio[disk].write_bytes - \
-                                       self.diskio_old[disk].write_bytes
+                        'read_count': diskio[disk].read_count - self.diskio_old[disk].read_count,
+                        'write_count': diskio[disk].write_count - self.diskio_old[disk].write_count,
+                        'read_bytes': diskio[disk].read_bytes - self.diskio_old[disk].read_bytes,
+                        'write_bytes': diskio[disk].write_bytes - self.diskio_old[disk].write_bytes,
                     }
                 except (KeyError, AttributeError):
                     diskstat = {
