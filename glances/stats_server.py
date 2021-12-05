@@ -22,6 +22,7 @@
 import collections
 
 from glances.stats import GlancesStats
+from glances.logger import logger
 
 
 class GlancesStatsServer(GlancesStats):
@@ -42,6 +43,10 @@ class GlancesStatsServer(GlancesStats):
 
         # Force update of all the stats
         super(GlancesStatsServer, self).update()
+
+        # Disable the extended processes stats because it cause an high CPU load
+        logger.info("Disable extended processes stats in server mode")
+        self._plugins['processcount'].disable_extended()
 
         # Build all_stats variable (concatenation of all the stats)
         self.all_stats = self._set_stats(input_stats)
