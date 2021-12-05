@@ -122,7 +122,7 @@ To install Glances, simply use ``pip``:
     pip install --user glances
 
 *Note*: Python headers are required to install `psutil`_, a Glances
-dependencie. For example, on Debian/Ubuntu you need to install first
+dependency. For example, on Debian/Ubuntu you need to install first
 the *python-dev* package (*python-devel* on Fedora/CentOS/RHEL).
 For Windows, just install psutil from the binary installation file.
 
