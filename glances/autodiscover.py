@@ -118,15 +118,16 @@ class GlancesAutoDiscoverListener(object):
             return False
         logger.debug("Check new Zeroconf server: %s / %s" % (srv_type, srv_name))
         info = zeroconf.get_service_info(srv_type, srv_name)
-        if info:
-            new_server_ip = socket.inet_ntoa(info.address)
+        if info and (info.addresses or info.parsed_addresses):
+            address = info.addresses[0] if info.addresses else info.parsed_addresses[0]
+            new_server_ip = socket.inet_ntoa(address)
             new_server_port = info.port
 
             # Add server to the global dict
             self.servers.add_server(srv_name, new_server_ip, new_server_port)
             logger.info("New Glances server detected (%s from %s:%s)" % (srv_name, new_server_ip, new_server_port))
         else:
-            logger.warning("New Glances server detected, but Zeroconf info failed to be grabbed")
+            logger.warning("New Glances server detected, but failed to be get Zeroconf ServiceInfo ")
         return True
 
     def remove_service(self, zeroconf, srv_type, srv_name):
