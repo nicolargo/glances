@@ -56,8 +56,9 @@ class GlancesThresholds(object):
         if threshold_description not in self.threshold_list:
             return False
         else:
-            self._thresholds[stat_name] = getattr(self.current_module,
-                                                  'GlancesThreshold' + threshold_description.capitalize())()
+            self._thresholds[stat_name] = getattr(
+                self.current_module, 'GlancesThreshold' + threshold_description.capitalize()
+            )()
             return True
 
 
@@ -93,29 +94,25 @@ class GlancesThresholdOk(_GlancesThreshold):
 
     """Ok Threshold class"""
 
-    _threshold = {'description': 'OK',
-                  'value': 0}
+    _threshold = {'description': 'OK', 'value': 0}
 
 
 class GlancesThresholdCareful(_GlancesThreshold):
 
     """Careful Threshold class"""
 
-    _threshold = {'description': 'CAREFUL',
-                  'value': 1}
+    _threshold = {'description': 'CAREFUL', 'value': 1}
 
 
 class GlancesThresholdWarning(_GlancesThreshold):
 
     """Warning Threshold class"""
 
-    _threshold = {'description': 'WARNING',
-                  'value': 2}
+    _threshold = {'description': 'WARNING', 'value': 2}
 
 
 class GlancesThresholdCritical(_GlancesThreshold):
 
     """Warning Threshold class"""
 
-    _threshold = {'description': 'CRITICAL',
-                  'value': 3}
+    _threshold = {'description': 'CRITICAL', 'value': 3}

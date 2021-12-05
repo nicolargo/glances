@@ -30,18 +30,12 @@ import psutil
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
-items_history_list = [{'name': 'cpu',
-                       'description': 'CPU percent usage',
-                       'y_unit': '%'},
-                      {'name': 'percpu',
-                       'description': 'PERCPU percent usage',
-                       'y_unit': '%'},
-                      {'name': 'mem',
-                       'description': 'MEM percent usage',
-                       'y_unit': '%'},
-                      {'name': 'swap',
-                       'description': 'SWAP percent usage',
-                       'y_unit': '%'}]
+items_history_list = [
+    {'name': 'cpu', 'description': 'CPU percent usage', 'y_unit': '%'},
+    {'name': 'percpu', 'description': 'PERCPU percent usage', 'y_unit': '%'},
+    {'name': 'mem', 'description': 'MEM percent usage', 'y_unit': '%'},
+    {'name': 'swap', 'description': 'SWAP percent usage', 'y_unit': '%'},
+]
 
 
 class Plugin(GlancesPlugin):
@@ -52,9 +46,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None, config=None):
         """Init the quicklook plugin."""
-        super(Plugin, self).__init__(args=args,
-                                     config=config,
-                                     items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args, config=config, items_history_list=items_history_list)
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -82,7 +74,9 @@ class Plugin(GlancesPlugin):
             # Get additional information
             cpu_info = cpu_percent.get_info()
             stats['cpu_name'] = cpu_info['cpu_name']
-            stats['cpu_hz_current'] = self._mhz_to_hz(cpu_info['cpu_hz_current']) if cpu_info['cpu_hz_current'] is not None else None
+            stats['cpu_hz_current'] = (
+                self._mhz_to_hz(cpu_info['cpu_hz_current']) if cpu_info['cpu_hz_current'] is not None else None
+            )
             stats['cpu_hz'] = self._mhz_to_hz(cpu_info['cpu_hz']) if cpu_info['cpu_hz'] is not None else None
 
         elif self.input_method == 'snmp':
@@ -127,8 +121,9 @@ class Plugin(GlancesPlugin):
         if 'cpu_name' in self.stats and 'cpu_hz_current' in self.stats and 'cpu_hz' in self.stats:
             msg_name = self.stats['cpu_name']
             if self.stats['cpu_hz_current'] and self.stats['cpu_hz']:
-                msg_freq = ' - {:.2f}/{:.2f}GHz'.format(self._hz_to_ghz(self.stats['cpu_hz_current']),
-                                                        self._hz_to_ghz(self.stats['cpu_hz']))
+                msg_freq = ' - {:.2f}/{:.2f}GHz'.format(
+                    self._hz_to_ghz(self.stats['cpu_hz_current']), self._hz_to_ghz(self.stats['cpu_hz'])
+                )
             else:
                 msg_freq = ''
             if len(msg_name + msg_freq) - 6 <= max_width:
@@ -179,7 +174,8 @@ class Plugin(GlancesPlugin):
             self.curse_add_line(msg),
             self.curse_add_line(data.pre_char, decoration='BOLD'),
             self.curse_add_line(data.get(), self.get_views(key=key, option='decoration')),
-            self.curse_add_line(data.post_char, decoration='BOLD'), self.curse_add_line('  ')
+            self.curse_add_line(data.post_char, decoration='BOLD'),
+            self.curse_add_line('  '),
         ]
 
     def _hz_to_ghz(self, hz):
