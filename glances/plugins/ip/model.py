@@ -42,10 +42,11 @@ else:
 # - json: service return a JSON (True) or string (False)
 # - key: key of the IP address in the JSON structure
 urls = [
-    ('https://ip.42.pl/raw', False, None),
+    #  glances_ip.py plugin relies on low rating / malicious site domain #1975
+    # ('https://ip.42.pl/raw', False, None),
     ('https://httpbin.org/ip', True, 'origin'),
-    ('https://jsonip.com', True, 'ip'),
     ('https://api.ipify.org/?format=json', True, 'ip'),
+    ('https://ipv4.jsonip.com', True, 'ip'),
 ]
 
 
