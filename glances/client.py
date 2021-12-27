@@ -22,12 +22,14 @@
 import json
 import socket
 import sys
+import time
 
 from glances import __version__
 from glances.compat import Fault, ProtocolError, ServerProxy, Transport
 from glances.logger import logger
 from glances.stats_client import GlancesStatsClient
 from glances.outputs.glances_curses import GlancesCursesClient
+from glances.timer import Counter
 
 
 class GlancesClientTransport(Transport):
@@ -46,8 +48,9 @@ class GlancesClient(object):
         # Store the arg/config
         self.args = args
         self.config = config
-        # Quiet mode
+
         self._quiet = args.quiet
+        self.refresh_time = args.time
 
         # Default client mode
         self._client_mode = 'glances'
@@ -247,16 +250,31 @@ class GlancesClient(object):
         try:
             while True and not exit_key:
                 # Update the stats
+                counter = Counter()
                 cs_status = self.update()
-
-                # Update the screen
-                if not self.quiet:
-                    exit_key = self.screen.update(
-                        self.stats, cs_status=cs_status, return_to_browser=self.return_to_browser
-                    )
+                logger.debug('Stats updated duration: {} seconds'.format(counter.get()))
 
                 # Export stats using export modules
+                counter_export = Counter()
                 self.stats.export(self.stats)
+                logger.debug('Stats exported duration: {} seconds'.format(counter_export.get()))
+
+                # Patch for issue1326 to avoid < 0 refresh
+                adapted_refresh = self.refresh_time - counter.get()
+                adapted_refresh = adapted_refresh if adapted_refresh > 0 else 0
+
+                # Update the screen
+                print(adapted_refresh)
+                if not self.quiet:
+                    exit_key = self.screen.update(
+                        self.stats,
+                        duration=adapted_refresh,
+                        cs_status=cs_status,
+                        return_to_browser=self.return_to_browser
+                    )
+                else:
+                    # In quiet mode, we only wait adapated_refresh seconds
+                    time.sleep(adapted_refresh)
         except Exception as e:
             logger.critical(e)
             self.end()
