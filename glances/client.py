@@ -264,7 +264,6 @@ class GlancesClient(object):
                 adapted_refresh = adapted_refresh if adapted_refresh > 0 else 0
 
                 # Update the screen
-                print(adapted_refresh)
                 if not self.quiet:
                     exit_key = self.screen.update(
                         self.stats,
