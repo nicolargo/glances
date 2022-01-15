@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -12,7 +12,7 @@
 # Glances is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
+# GNU Lesser General Public License 1for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
@@ -145,6 +145,7 @@ class GlancesBottle(object):
     def _route(self):
         """Define route."""
         # REST API
+        self._app.route('/api/%s/status' % self.API_VERSION, method="GET", callback=self._api_status)
         self._app.route('/api/%s/config' % self.API_VERSION, method="GET", callback=self._api_config)
         self._app.route('/api/%s/config/<item>' % self.API_VERSION, method="GET", callback=self._api_config_item)
         self._app.route('/api/%s/args' % self.API_VERSION, method="GET", callback=self._api_args)
@@ -225,6 +226,19 @@ class GlancesBottle(object):
         """Bottle callback for resources files."""
         # Return the static file
         return static_file(filepath, root=self.STATIC_PATH)
+
+    @compress
+    def _api_status(self):
+        """Glances API RESTful implementation.
+
+        Return a 200 status code.
+        This entry point should be used to check the API health.
+
+        See related issue:  Web server health check endpoint #1988
+        """
+        response.status = 200
+
+        return None
 
     @compress
     def _api_help(self):

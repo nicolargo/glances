@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -53,12 +53,28 @@ def indent_stat(stat, indent='    '):
         return indent + pformat(stat).replace('\n', '\n' + indent)
 
 
+def print_api_status():
+    sub_title = 'GET API status'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('')
+    print('This entry point should be used to check the API status.')
+    print('It will return nothing but a 200 return code if everythin is OK.')
+    print('')
+    print('Get the Rest API status:')
+    print('')
+    print('    # curl -I {}/status'.format(API_URL))
+    print(indent_stat('HTTP/1.0 200 OK'))
+    print('')
+
+
+
 def print_plugins_list(stat):
     sub_title = 'GET plugins list'
     print(sub_title)
     print('-' * len(sub_title))
     print('')
-    print('Get the plugins list::')
+    print('Get the plugins list:')
     print('')
     print('    # curl {}/pluginslist'.format(API_URL))
     print(indent_stat(stat))
@@ -71,7 +87,7 @@ def print_plugin_export(plugin, stat_export):
     print('-' * len(sub_title))
     print('')
 
-    print('Get plugin stats::')
+    print('Get plugin stats:')
     print('')
     print('    # curl {}/{}'.format(API_URL, plugin))
     print(indent_stat(stat_export))
@@ -115,7 +131,7 @@ def print_plugin_item_value(plugin, stat, stat_export):
             value = stat_item[item][0]
         else:
             value = stat_item[item]
-        print('Get a specific field::')
+        print('Get a specific field:')
         print('')
         print('    # curl {}/{}/{}'.format(API_URL, plugin, item))
         print(indent_stat(stat_item))
@@ -133,7 +149,7 @@ def print_all():
     print(sub_title)
     print('-' * len(sub_title))
     print('')
-    print('Get all Glances stats::')
+    print('Get all Glances stats:')
     print('')
     print('    # curl {}/all'.format(API_URL))
     print('    Return a very big dictionnary (avoid using this request, performances will be poor)...')
@@ -149,17 +165,17 @@ def print_history(stats):
     print(sub_title)
     print('-' * len(sub_title))
     print('')
-    print('History of a plugin::')
+    print('History of a plugin:')
     print('')
     print('    # curl {}/cpu/history'.format(API_URL))
     print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history(nb=3))))
     print('')
-    print('Limit history to last 2 values::')
+    print('Limit history to last 2 values:')
     print('')
     print('    # curl {}/cpu/history/2'.format(API_URL))
     print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history(nb=2))))
     print('')
-    print('History for a specific field::')
+    print('History for a specific field:')
     print('')
     print('    # curl {}/cpu/system/history'.format(API_URL))
     print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history('system'))))
@@ -176,12 +192,12 @@ def print_limits(stats):
     print(sub_title)
     print('-' * len(sub_title))
     print('')
-    print('All limits/thresholds::')
+    print('All limits/thresholds:')
     print('')
     print('    # curl {}/all/limits'.format(API_URL))
     print(indent_stat(stats.getAllLimitsAsDict()))
     print('')
-    print('Limits/thresholds for the cpu plugin::')
+    print('Limits/thresholds for the cpu plugin:')
     print('')
     print('    # curl {}/cpu/limits'.format(API_URL))
     print(indent_stat(stats.get_plugin('cpu').limits))
@@ -205,6 +221,9 @@ class GlancesStdoutApiDoc(object):
 
         # Display header
         print(APIDOC_HEADER)
+
+        # Display API status
+        print_api_status()
 
         # Display plugins list
         print_plugins_list(sorted(stats._plugins))
