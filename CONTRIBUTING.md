@@ -58,7 +58,7 @@ Example:
 > 2. This is the second step
 > 3. Further steps, etc.
 >
-> Screenshot (if usefull)
+> Screenshot (if useful)
 >
 > Any other information you want to share that is relevant to the issue being
 > reported. This might include the lines of code that you have identified as
