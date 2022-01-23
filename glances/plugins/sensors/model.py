@@ -27,6 +27,7 @@ from glances.globals import iteritems, to_fahrenheit
 from glances.timer import Counter
 from glances.plugins.sensors.sensor.glances_batpercent import PluginModel as BatPercentPluginModel
 from glances.plugins.sensors.sensor.glances_hddtemp import PluginModel as HddTempPluginModel
+from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.plugin.model import GlancesPluginModel
 
 SENSOR_TEMP_UNIT = 'C'
@@ -187,6 +188,18 @@ class PluginModel(GlancesPluginModel):
             # Set the alert in the view
             self.views[i[self.get_key()]]['value']['decoration'] = alert
 
+    def battery_trend(self, stats):
+        """Return the trend characterr for the battery"""
+        if 'status' not in stats:
+            return ''
+        if stats['status'].startswith('Charg'):
+            return unicode_message('ARROW_UP')
+        elif stats['status'].startswith('Discharg'):
+            return unicode_message('ARROW_DOWN')
+        elif stats['status'].startswith('Full'):
+            return unicode_message('CHECK')
+        return ''
+
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
@@ -213,19 +226,22 @@ class PluginModel(GlancesPluginModel):
             msg = '{:{width}}'.format(i["label"][:name_max_width], width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if i['value'] in (b'ERR', b'SLP', b'UNK', b'NOS'):
-                msg = '{:>13}'.format(i['value'])
+                msg = '{:>14}'.format(i['value'])
                 ret.append(
                     self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='value', option='decoration'))
                 )
             else:
                 if args.fahrenheit and i['type'] != 'battery' and i['type'] != 'fan_speed':
+                    trend = ''
                     value = to_fahrenheit(i['value'])
                     unit = 'F'
                 else:
+                    trend = self.battery_trend(i)
                     value = i['value']
                     unit = i['unit']
                 try:
-                    msg = '{:>13.0f}{}'.format(value, unit)
+                    msg = '{:.0f}{}{}'.format(value, unit, trend)
+                    msg = '{:>14}'.format(msg)
                     ret.append(
                         self.curse_add_line(
                             msg, self.get_views(item=i[self.get_key()], key='value', option='decoration')

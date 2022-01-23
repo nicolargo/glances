@@ -28,13 +28,18 @@ import json
 import copy
 from operator import itemgetter
 
+<<<<<<< HEAD:glances/plugins/plugin/model.py
 from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr
+=======
+from glances.compat import iterkeys, itervalues, listkeys, map, mean, nativestr, u
+>>>>>>> develop:glances/plugins/glances_plugin.py
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.events import glances_events
 from glances.thresholds import glances_thresholds
 from glances.timer import Counter, Timer
+from glances.outputs.glances_unicode import unicode_message
 
 
 fields_unit_short = {'percent': '%'}
@@ -1137,9 +1142,9 @@ class GlancesPluginModel(object):
         if trend is None:
             ret = ' '
         elif trend > significant:
-            ret = '/'
+            ret = unicode_message('ARROW_UP', self.args)
         elif trend < -significant:
-            ret = '\\'
+            ret = unicode_message('ARROW_DOWN', self.args)
         return ret
 
     def _check_decorator(fct):
