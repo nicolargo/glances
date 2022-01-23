@@ -26,6 +26,7 @@ from glances.logger import logger
 from glances.globals import WINDOWS
 from glances.compat import key_exist_value_not_none_not_v
 from glances.processes import glances_processes, sort_stats
+from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -363,7 +364,8 @@ class Plugin(GlancesPlugin):
         # * display a special character at the beginning of the line
         # * underline the command name
         if args.is_standalone:
-            ret.append(self.curse_add_line('>' if selected else ' ', 'SELECTED'))
+            ret.append(self.curse_add_line(unicode_message('PROCESS_SELECTOR') if selected else ' ',
+                                           'SELECTED'))
 
         # CPU
         ret.append(self._get_process_curses_cpu(p, selected, args))

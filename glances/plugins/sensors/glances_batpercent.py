@@ -119,12 +119,24 @@ class GlancesGrabBat(object):
             #     'unit': '%'}]
             for b in self.bat.stat:
                 self.bat_list.append(
-                    {'label': 'BAT {}'.format(b.path.split('/')[-1]), 'value': b.capacity, 'unit': '%'}
+                    {
+                        'label': 'BAT {}'.format(b.path.split('/')[-1]),
+                        'value': b.capacity,
+                        'unit': '%',
+                        'status': b.status
+                    }
                 )
         elif psutil_tag and hasattr(self.bat.sensors_battery(), 'percent'):
             # Use psutil to grab the stats
             # Give directly the battery percent
-            self.bat_list = [{'label': 'Battery', 'value': int(self.bat.sensors_battery().percent), 'unit': '%'}]
+            self.bat_list = [
+                {
+                    'label': 'Battery',
+                    'value': int(self.bat.sensors_battery().percent),
+                    'unit': '%',
+                    'status': 'Charging' if self.bat.sensors_battery().power_plugged else 'Discharging'
+                }
+            ]
 
     def get(self):
         """Get the stats."""
