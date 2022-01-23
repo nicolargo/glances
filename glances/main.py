@@ -451,6 +451,13 @@ Examples of use:
             help='display sparklines instead of bar in the curses interface',
         )
         parser.add_argument(
+            '--disable-unicode',
+            action='store_true',
+            default=False,
+            dest='disable_unicode',
+            help='disable unicode characters in the curses interface',
+        )
+        parser.add_argument(
             '--theme-white',
             action='store_true',
             default=False,

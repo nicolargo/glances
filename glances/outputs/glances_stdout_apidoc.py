@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -51,6 +51,22 @@ def indent_stat(stat, indent='    '):
         return indent + pformat(stat[0:2]).replace('\n', '\n' + indent)
     else:
         return indent + pformat(stat).replace('\n', '\n' + indent)
+
+
+def print_api_status():
+    sub_title = 'GET API status'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('')
+    print('This entry point should be used to check the API status.')
+    print('It will return nothing but a 200 return code if everythin is OK.')
+    print('')
+    print('Get the Rest API status::')
+    print('')
+    print('    # curl -I {}/status'.format(API_URL))
+    print(indent_stat('HTTP/1.0 200 OK'))
+    print('')
+
 
 
 def print_plugins_list(stat):
@@ -205,6 +221,9 @@ class GlancesStdoutApiDoc(object):
 
         # Display header
         print(APIDOC_HEADER)
+
+        # Display API status
+        print_api_status()
 
         # Display plugins list
         print_plugins_list(sorted(stats._plugins))
