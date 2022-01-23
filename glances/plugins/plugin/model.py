@@ -28,11 +28,7 @@ import json
 import copy
 from operator import itemgetter
 
-<<<<<<< HEAD:glances/plugins/plugin/model.py
 from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr
-=======
-from glances.compat import iterkeys, itervalues, listkeys, map, mean, nativestr, u
->>>>>>> develop:glances/plugins/glances_plugin.py
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger

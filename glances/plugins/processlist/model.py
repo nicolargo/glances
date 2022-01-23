@@ -25,14 +25,9 @@ import copy
 from glances.logger import logger
 from glances.globals import WINDOWS, key_exist_value_not_none_not_v
 from glances.processes import glances_processes, sort_stats
-<<<<<<< HEAD:glances/plugins/processlist/model.py
+from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.core.model import PluginModel as CorePluginModel
 from glances.plugins.plugin.model import GlancesPluginModel
-=======
-from glances.outputs.glances_unicode import unicode_message
-from glances.plugins.glances_core import Plugin as CorePlugin
-from glances.plugins.glances_plugin import GlancesPlugin
->>>>>>> develop:glances/plugins/glances_processlist.py
 
 
 def seconds_to_hms(input_seconds):
