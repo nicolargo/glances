@@ -24,7 +24,7 @@ import sys
 import tempfile
 
 from glances import __version__, psutil_version
-from glances.compat import input, disable, enable
+from glances.compat import input, disable, enable, PY3
 from glances.config import Config
 from glances.globals import WINDOWS
 from glances.processes import sort_processes_key_list
@@ -359,6 +359,13 @@ Examples of use:
             help='set the server cache time [default: {} sec]'.format(self.cached_time),
         )
         parser.add_argument(
+            '--stop-after',
+            default=None,
+            type=int,
+            dest='stop_after',
+            help='stop Glances after n refresh',
+        )
+        parser.add_argument(
             '--open-web-browser',
             action='store_true',
             default=False,
@@ -414,6 +421,13 @@ Examples of use:
             action='store_true',
             dest='stdout_issue',
             help='test all plugins and exit (please copy/paste the output if you open an issue)',
+        )
+        parser.add_argument(
+            '--trace-malloc',
+            default=False,
+            action='store_true',
+            dest='trace_malloc',
+            help='test memory leak with tracemalloc (python 3.4 or higher needed)',
         )
         parser.add_argument(
             '--api-doc', default=None, action='store_true', dest='stdout_apidoc', help='display fields descriptions'
@@ -667,9 +681,14 @@ Examples of use:
             sys.exit(2)
 
         # Disable HDDTemp if sensors are disabled
-        if getattr(args, 'disable_sensors', False):
-            disable(args, 'hddtemp')
+        if getattr(self.args, 'disable_sensors', False):
+            disable(self.args, 'hddtemp')
             logger.debug("Sensors and HDDTemp are disabled")
+
+        if getattr(self.args, 'trace_malloc', True) and not PY3:
+            self.args.trace_malloc = False
+            logger.critical("trace_malloc is only available with Python 3")
+            sys.exit(2)
 
         # Let the plugins known the Glances mode
         self.args.is_standalone = self.is_standalone()

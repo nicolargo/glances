@@ -42,6 +42,7 @@ except ImportError:
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
+from glances.compat import PY3
 from glances.logger import logger
 from glances.main import GlancesMain
 from glances.timer import Counter
@@ -64,6 +65,9 @@ if psutil_version_info < psutil_min_version:
     print('psutil 5.3.0 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
+# Trac malloc is only available on Python 3.4 or higher
+if PY3:
+    import tracemalloc
 
 def __signal_handler(signal, frame):
     """Callback for CTRL-C."""
@@ -81,6 +85,8 @@ def end():
 
     logger.info("Glances stopped (key pressed: CTRL-C)")
 
+
+
     # The end...
     sys.exit(0)
 
@@ -90,6 +96,9 @@ def start(config, args):
 
     # Load mode
     global mode
+
+    if args.trace_malloc:
+        tracemalloc.start()
 
     start_duration = Counter()
 
@@ -117,6 +126,14 @@ def start(config, args):
     else:
         # Serve forever
         mode.serve_forever()
+
+    if args.trace_malloc:
+        # See more options here: https://docs.python.org/3/library/tracemalloc.html
+        snapshot = tracemalloc.take_snapshot()
+        top_stats = snapshot.statistics("lineno")
+        print("[ Trace malloc - Top 10 ]")
+        for stat in top_stats[:10]:
+            print(stat)
 
     # Shutdown
     mode.end()
