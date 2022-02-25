@@ -705,7 +705,7 @@ Examples of use:
             if not self.args.stop_after:
                 self.args.stop_after = 60
             self.args.time = 1
-            self.disable_history = True
+            self.args.disable_history = True
 
         # Let the plugins known the Glances mode
         self.args.is_standalone = self.is_standalone()
