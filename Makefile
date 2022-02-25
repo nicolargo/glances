@@ -76,8 +76,11 @@ profiling: venv venv-dev
 	@echo "Please complete and run: sudo ./venv/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s --pid <GLANCES PID>"
 
 trace-malloc: venv
-	@echo "Test is running, please wait ~ 30 secondes..."
+	@echo "Malloc test is running, please wait ~30 secondes..."
 	./venv/bin/python -m glances -C ./conf/glances.conf --trace-malloc --stop-after 15 --quiet
+
+memory-leak: venv
+	./venv/bin/python -m glances -C ./conf/glances.conf --memory-leak
 
 release-note:
 	git --no-pager log $(LASTTAG)..HEAD --first-parent --pretty=format:"* %s"
