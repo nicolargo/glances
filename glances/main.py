@@ -427,7 +427,14 @@ Examples of use:
             default=False,
             action='store_true',
             dest='trace_malloc',
-            help='test memory leak with tracemalloc (python 3.4 or higher needed)',
+            help='trace memory allocation and display it at the end of the process (python 3.4 or higher needed)',
+        )
+        parser.add_argument(
+            '--memory-leak',
+            default=False,
+            action='store_true',
+            dest='memory_leak',
+            help='test memory leak (python 3.4 or higher needed)',
         )
         parser.add_argument(
             '--api-doc', default=None, action='store_true', dest='stdout_apidoc', help='display fields descriptions'
@@ -685,10 +692,20 @@ Examples of use:
             disable(self.args, 'hddtemp')
             logger.debug("Sensors and HDDTemp are disabled")
 
-        if getattr(self.args, 'trace_malloc', True) and not PY3:
-            self.args.trace_malloc = False
-            logger.critical("trace_malloc is only available with Python 3")
+        if getattr(self.args, 'trace_malloc', True) and not (PY3 or self.is_standalone()):
+            logger.critical("Option --trace-malloc is only available with Python 3 and terminal mode")
             sys.exit(2)
+
+        if getattr(self.args, 'memory_leak', True) and not (PY3 or self.is_standalone()):
+            logger.critical("Option --memory-leak is only available with Python 3 and terminal mode")
+            sys.exit(2)
+        else:
+            logger.info('Memory leak detection enabled')
+            self.args.quiet = True
+            if not self.args.stop_after:
+                self.args.stop_after = 60
+            self.args.time = 1
+            self.disable_history = True
 
         # Let the plugins known the Glances mode
         self.args.is_standalone = self.is_standalone()
