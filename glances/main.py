@@ -698,7 +698,7 @@ Examples of use:
         if getattr(self.args, 'memory_leak', True) and not self.is_standalone():
             logger.critical("Option --memory-leak is only available in the terminal mode")
             sys.exit(2)
-        else:
+        elif getattr(self.args, 'memory_leak', True) and (PY3 or self.is_standalone()):
             logger.info('Memory leak detection enabled')
             self.args.quiet = True
             if not self.args.stop_after:
