@@ -42,6 +42,7 @@ except ImportError:
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
+from glances.compat import PY3
 from glances.logger import logger
 from glances.main import GlancesMain
 from glances.timer import Counter
@@ -64,6 +65,9 @@ if psutil_version_info < psutil_min_version:
     print('psutil 5.3.0 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
+# Trac malloc is only available on Python 3.4 or higher
+if PY3:
+    import tracemalloc
 
 def __signal_handler(signal, frame):
     """Callback for CTRL-C."""
@@ -81,6 +85,8 @@ def end():
 
     logger.info("Glances stopped (key pressed: CTRL-C)")
 
+
+
     # The end...
     sys.exit(0)
 
@@ -90,6 +96,9 @@ def start(config, args):
 
     # Load mode
     global mode
+
+    if args.trace_malloc or args.memory_leak:
+        tracemalloc.start()
 
     start_duration = Counter()
 
@@ -111,12 +120,41 @@ def start(config, args):
 
     # Start the main loop
     logger.debug("Glances started in {} seconds".format(start_duration.get()))
+    if args.stop_after:
+        logger.info('Glances will be stopped in ~{} seconds'.format(
+            args.stop_after * args.time * args.memory_leak * 2))
+
+    if args.memory_leak:
+        print('Memory leak detection, please wait ~{} seconds...'.format(
+            args.stop_after * args.time * args.memory_leak * 2))
+        # First run without dump to fill the memory
+        mode.serve_n(args.stop_after)
+        # Then start the memory-leak loop
+        snapshot_begin = tracemalloc.take_snapshot()
+
     if args.stdout_issue or args.stdout_apidoc:
         # Serve once for issue/test mode
         mode.serve_issue()
     else:
         # Serve forever
         mode.serve_forever()
+
+    if args.memory_leak:
+        snapshot_end = tracemalloc.take_snapshot()
+        snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
+        memory_leak = sum([s.size_diff for s in snapshot_diff])
+        print("Memory comsumption: {0:.1f}KB (see log for details)".format(
+            memory_leak / 1000))
+        logger.info("Memory consumption (top 5):")
+        for stat in snapshot_diff[:5]:
+            logger.info(stat)
+    elif args.trace_malloc:
+        # See more options here: https://docs.python.org/3/library/tracemalloc.html
+        snapshot = tracemalloc.take_snapshot()
+        top_stats = snapshot.statistics("filename")
+        print("[ Trace malloc - Top 10 ]")
+        for stat in top_stats[:10]:
+            print(stat)
 
     # Shutdown
     mode.end()

@@ -122,10 +122,16 @@ Examples of use:
             help='display modules (plugins & exports) list and exit',
         )
         parser.add_argument(
-            '--disable-plugin', '--disable-plugins', dest='disable_plugin', help='disable plugin (comma separed list)'
+            '--disable-plugin',
+            '--disable-plugins',
+            dest='disable_plugin',
+            help='disable plugin (comma separed list)'
         )
         parser.add_argument(
-            '--enable-plugin', '--enable-plugins', dest='enable_plugin', help='enable plugin (comma separed list)'
+            '--enable-plugin',
+            '--enable-plugins',
+            dest='enable_plugin',
+            help='enable plugin (comma separed list)'
         )
         parser.add_argument(
             '--disable-process',
@@ -218,7 +224,11 @@ Examples of use:
             help='disable background colors in the terminal',
         )
         parser.add_argument(
-            '--enable-irq', action='store_true', default=False, dest='enable_irq', help='enable IRQ module'
+            '--enable-irq',
+            action='store_true',
+            default=False,
+            dest='enable_irq',
+            help='enable IRQ module'
         ),
         parser.add_argument(
             '--enable-process-extended',
@@ -227,6 +237,14 @@ Examples of use:
             dest='enable_process_extended',
             help='enable extended stats on top process',
         )
+        parser.add_argument(
+            '--separator',
+            '--enable-separator',
+            action='store_true',
+            default=False,
+            dest='enable_separator',
+            help='enable separator in the UI'
+        ),
         # Sort processes list
         parser.add_argument(
             '--sort-processes',
@@ -340,6 +358,13 @@ Examples of use:
             help='set the server cache time [default: {} sec]'.format(self.cached_time),
         )
         parser.add_argument(
+            '--stop-after',
+            default=None,
+            type=int,
+            dest='stop_after',
+            help='stop Glances after n refresh',
+        )
+        parser.add_argument(
             '--open-web-browser',
             action='store_true',
             default=False,
@@ -395,6 +420,20 @@ Examples of use:
             action='store_true',
             dest='stdout_issue',
             help='test all plugins and exit (please copy/paste the output if you open an issue)',
+        )
+        parser.add_argument(
+            '--trace-malloc',
+            default=False,
+            action='store_true',
+            dest='trace_malloc',
+            help='trace memory allocation and display it at the end of the process (python 3.4 or higher needed)',
+        )
+        parser.add_argument(
+            '--memory-leak',
+            default=False,
+            action='store_true',
+            dest='memory_leak',
+            help='test memory leak (python 3.4 or higher needed)',
         )
         parser.add_argument(
             '--api-doc', default=None, action='store_true', dest='stdout_apidoc', help='display fields descriptions'
@@ -648,9 +687,24 @@ Examples of use:
             sys.exit(2)
 
         # Disable HDDTemp if sensors are disabled
-        if getattr(args, 'disable_sensors', False):
-            disable(args, 'hddtemp')
+        if getattr(self.args, 'disable_sensors', False):
+            disable(self.args, 'hddtemp')
             logger.debug("Sensors and HDDTemp are disabled")
+
+        if getattr(self.args, 'trace_malloc', True) and not self.is_standalone():
+            logger.critical("Option --trace-malloc is only available in the terminal mode")
+            sys.exit(2)
+
+        if getattr(self.args, 'memory_leak', True) and not self.is_standalone():
+            logger.critical("Option --memory-leak is only available in the terminal mode")
+            sys.exit(2)
+        else:
+            logger.info('Memory leak detection enabled')
+            self.args.quiet = True
+            if not self.args.stop_after:
+                self.args.stop_after = 60
+            self.args.time = 1
+            self.args.disable_history = True
 
         # Let the plugins known the Glances mode
         self.args.is_standalone = self.is_standalone()
