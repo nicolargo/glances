@@ -26,6 +26,7 @@ from glances.globals import MACOS, WINDOWS, nativestr, u, itervalues, enable, di
 from glances.logger import logger
 from glances.events import glances_events
 from glances.processes import glances_processes, sort_processes_key_list
+from glances.outputs.glances_unicode import unicode_message
 from glances.timer import Timer
 
 # Import curses library for "normal" operating system
@@ -524,13 +525,25 @@ class _GlancesCurses(object):
         self.column = 0
         self.next_column = 0
 
-    def new_line(self):
+    def new_line(self, separator=False):
         """New line in the curses interface."""
         self.line = self.next_line
 
     def new_column(self):
         """New column in the curses interface."""
         self.column = self.next_column
+
+    def separator_line(self, color='TITLE'):
+        """New separator line in the curses interface."""
+        if not self.args.enable_separator:
+            return
+        self.new_line()
+        self.line -= 1
+        line_width = self.term_window.getmaxyx()[1] - self.column
+        self.term_window.addnstr(self.line, self.column,
+                                    unicode_message('MEDIUM_LINE', self.args) * line_width,
+                                    line_width,
+                                    self.colors_list[color])
 
     def __get_stat_display(self, stats, layer):
         """Return a dict of dict with all the stats display.
@@ -631,11 +644,14 @@ class _GlancesCurses(object):
         # Optionally: Cloud on second line
         # =====================================
         self.__display_header(__stat_display)
+        self.separator_line()
 
         # ==============================================================
         # Display second line (<SUMMARY>+CPU|PERCPU+<GPU>+LOAD+MEM+SWAP)
         # ==============================================================
         self.__display_top(__stat_display, stats)
+        self.init_column()
+        self.separator_line()
 
         # ==================================================================
         # Display left sidebar (NETWORK+PORTS+DISKIO+FS+SENSORS+Current time)
@@ -724,12 +740,14 @@ class _GlancesCurses(object):
             self.display_plugin(stat_display["ip"])
         self.new_column()
         self.display_plugin(
-            stat_display["uptime"], add_space=-(self.get_stats_display_width(stat_display["cloud"]) != 0)
+            stat_display["uptime"],
+            add_space=-(self.get_stats_display_width(stat_display["cloud"]) != 0)
         )
-        # Second line (optional)
         self.init_column()
-        self.new_line()
-        self.display_plugin(stat_display["cloud"])
+        if self.get_stats_display_width(stat_display["cloud"]) != 0:
+            # Second line (optional)
+            self.new_line()
+            self.display_plugin(stat_display["cloud"])
 
     def __display_top(self, stat_display, stats):
         """Display the second line in the Curses interface.

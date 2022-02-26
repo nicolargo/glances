@@ -165,12 +165,21 @@ class GlancesStandalone(object):
 
     def serve_forever(self):
         """Wrapper to the serve_forever function."""
-        # loop = True
-        # while loop:
-        #     loop = self.__serve_once()
-        while self.__serve_once():
-            pass
-        self.end()
+        if self.args.stop_after:
+            for _ in range(self.args.stop_after):
+                if not self.__serve_once():
+                    break
+        else:
+            while self.__serve_once():
+                pass
+        # self.end()
+
+    def serve_n(self, n=1):
+        """Serve n time."""
+        for _ in range(n):
+            if not self.__serve_once():
+                break
+        # self.end()
 
     def end(self):
         """End of the standalone CLI."""

@@ -26,8 +26,9 @@ _unicode_message = {
     'ARROW_DOWN': [u'\u2193', u'v'],
     'CHECK': [u'\u2713', u''],
     'PROCESS_SELECTOR': [u'>', u'>'],
+    'MEDIUM_LINE': [u'\u23AF', u'-'],
+    'LOW_LINE': [u'\u2581', u'_'],
 }
-
 
 def unicode_message(key, args=None):
     """Return the unicode message for the given key."""

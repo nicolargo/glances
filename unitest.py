@@ -21,6 +21,7 @@
 """Glances unitary tests suite."""
 
 import time
+from tracemalloc import Snapshot
 import unittest
 import sys
 
@@ -41,16 +42,19 @@ from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.secure import secure_popen
+from glances.compat import PY3
 
 # Global variables
 # =================
 
 # Init Glances core
 core = GlancesMain()
+test_config = core.get_config()
+test_args = core.get_args()
 
 # Init Glances stats
-stats = GlancesStats(config=core.get_config(),
-                     args=core.get_args())
+stats = GlancesStats(config=test_config,
+                     args=test_args)
 
 # Unitest class
 # ==============
@@ -387,6 +391,49 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
         self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
         self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
+
+    def test_200_memory_leak(self):
+        """Memory leak check"""
+        # Only available in PY3
+        if not PY3:
+            return
+        import tracemalloc
+        print('INFO: [TEST_200] Memory leak check')
+        tracemalloc.start()
+        # 3 iterations just to init the stats and fill the memory
+        for _ in range(3):
+            stats.update()
+
+        # Start the memory leak check
+        snapshot_begin = tracemalloc.take_snapshot()
+        for _ in range(3):
+            stats.update()
+        snapshot_end = tracemalloc.take_snapshot()
+        snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
+        memory_leak = sum([s.size_diff for s in snapshot_diff])
+        print('INFO: Memory leak: {} bytes'.format(memory_leak))
+
+        # snapshot_begin = tracemalloc.take_snapshot()
+        for _ in range(30):
+            stats.update()
+        snapshot_end = tracemalloc.take_snapshot()
+        snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
+        memory_leak = sum([s.size_diff for s in snapshot_diff])
+        print('INFO: Memory leak: {} bytes'.format(memory_leak))
+
+        # snapshot_begin = tracemalloc.take_snapshot()
+        for _ in range(300):
+            stats.update()
+        snapshot_end = tracemalloc.take_snapshot()
+        snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
+        memory_leak = sum([s.size_diff for s in snapshot_diff])
+        print('INFO: Memory leak: {} bytes'.format(memory_leak))
+        snapshot_top = snapshot_end.compare_to(snapshot_begin, 'traceback')
+        print("Memory consumption (top 5):")
+        for stat in snapshot_top[:5]:
+            print(stat)
+            for line in stat.traceback.format():
+                print(line)
 
     def test_999_the_end(self):
         """Free all the stats"""

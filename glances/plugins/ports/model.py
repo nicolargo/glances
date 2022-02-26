@@ -334,6 +334,8 @@ class ThreadScanner(threading.Thread):
         except Exception as e:
             logger.debug("{}: Error while pinging host {} ({})".format(self.plugin_name, port['host'], e))
 
+        fnull.close()
+
         return ret
 
     def _port_scan_tcp(self, port):
