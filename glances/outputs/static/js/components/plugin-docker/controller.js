@@ -17,6 +17,7 @@ export default function GlancesPluginDockerController($scope, GlancesStats) {
                 'id': containerData.Id,
                 'name': containerData.name,
                 'status': containerData.Status,
+                'uptime': containerData.Uptime,
                 'cpu': containerData.cpu.total,
                 'memory': containerData.memory.usage != undefined ? containerData.memory.usage : '?',
                 'rss': containerData.memory.rss != undefined ? containerData.memory.rss : '?',
