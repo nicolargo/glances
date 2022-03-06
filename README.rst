@@ -250,7 +250,7 @@ To install the binary package:
 
 .. code-block:: console
 
-    # pkg install py37-glances
+    # pkg install py38-glances
 
 To install Glances from ports:
 
