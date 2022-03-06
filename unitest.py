@@ -21,7 +21,6 @@
 """Glances unitary tests suite."""
 
 import time
-from tracemalloc import Snapshot
 import unittest
 
 from glances.main import GlancesMain
@@ -38,6 +37,9 @@ from glances.plugins.glances_plugin import GlancesPlugin
 from glances.compat import subsample, range
 from glances.secure import secure_popen
 from glances.compat import PY3
+
+if PY3:
+    from tracemalloc import Snapshot
 
 # Global variables
 # =================
