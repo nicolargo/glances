@@ -29,6 +29,7 @@ from glances.processes import glances_processes, sort_stats
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.programs import processes_to_programs
 
 
 def seconds_to_hms(input_seconds):
@@ -156,6 +157,9 @@ class Plugin(GlancesPlugin):
             # Note: Update is done in the processcount plugin
             # Just return the processes list
             stats = glances_processes.getlist()
+            if self.args.programs:
+                stats = processes_to_programs(stats)
+
 
         elif self.input_method == 'snmp':
             # No SNMP grab for processes

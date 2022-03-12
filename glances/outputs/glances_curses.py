@@ -77,6 +77,7 @@ class _GlancesCurses(object):
         'h': {'switch': 'help_tag'},
         'i': {'sort_key': 'io_counters'},
         'I': {'switch': 'disable_ip'},
+        'j': {'switch': 'programs'},
         # 'k' > Kill selected process
         'K': {'switch': 'disable_connections'},
         'l': {'switch': 'disable_alert'},

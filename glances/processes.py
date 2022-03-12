@@ -23,6 +23,7 @@ from glances.compat import iterkeys
 from glances.globals import BSD, LINUX, MACOS, WINDOWS
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.filter import GlancesFilter
+from glances.programs import processes_to_programs
 from glances.logger import logger
 
 import psutil

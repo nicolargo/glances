@@ -141,16 +141,17 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
 
         # Display sort information
+        msg = 'Programs' if self.args.programs else 'Threads'
         try:
             sort_human = self.sort_for_human[glances_processes.sort_key]
         except KeyError:
             sort_human = glances_processes.sort_key
         if glances_processes.auto_sort:
-            msg = 'sorted automatically'
+            msg += ' sorted automatically'
             ret.append(self.curse_add_line(msg))
             msg = ' by {}'.format(sort_human)
         else:
-            msg = 'sorted by {}'.format(sort_human)
+            msg += ' sorted by {}'.format(sort_human)
         ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration

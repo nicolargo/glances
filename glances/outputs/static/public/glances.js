@@ -94,6 +94,14 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
         }
     });
 
+    // j => Processes are display per program name (not per thread)
+    hotkeys.add({
+        combo: 'j',
+        callback: function () {
+            ARGUMENTS.programs = !ARGUMENTS.programs;
+        }
+    });
+
     // k => Show/hide connections stats
     hotkeys.add({
         combo: 'k',

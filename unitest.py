@@ -34,6 +34,7 @@ from glances.thresholds import GlancesThresholdWarning
 from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.programs import processes_to_programs
 from glances.compat import subsample, range
 from glances.secure import secure_popen
 from glances.compat import PY3
@@ -282,6 +283,16 @@ class TestGlances(unittest.TestCase):
             self.assertTrue(stat in stats_grab[0].keys(), msg='Cannot find key: %s' % stat)
 
         print('INFO: SMART stats: %s' % stats_grab)
+
+    def test_017_programs(self):
+        """Check Programs function (it's not a plugin)."""
+        # stats_to_check = [ ]
+        print('INFO: [TEST_010] Check PROGRAM stats')
+        stats_grab = processes_to_programs(stats.get_plugin('processlist').get_raw())
+        self.assertTrue(type(stats_grab) is list, msg='Programs stats is not a list')
+        print('INFO: PROGRAM list stats: %s items in the list' % len(stats_grab))
+        # Check if number of processes in the list equal counter
+        # self.assertEqual(total, len(stats_grab))
 
     def test_094_thresholds(self):
         """Test thresholds classes"""
