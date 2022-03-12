@@ -253,6 +253,14 @@ Examples of use:
             choices=sort_processes_key_list,
             help='Sort processes by: {}'.format(', '.join(sort_processes_key_list)),
         )
+        # Display processes list by program name and not by thread
+        parser.add_argument(
+            '--programs',
+            action='store_true',
+            default=False,
+            dest='programs',
+            help='Show processes as programs (not threads)',
+        )
         # Export modules feature
         parser.add_argument('--export', dest='export', help='enable export module (comma separed list)')
         parser.add_argument(

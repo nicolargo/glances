@@ -59,6 +59,9 @@ You can also set the sort key in the UI:
    * - i
      - --sort-processes io_counters
      - Sort by DISK I/O
+   * - j
+     - --programs
+     - Processes are display per program name (not per thread)
    * - m
      - --sort-processes memory_percent
      - Sort by MEM
