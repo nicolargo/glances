@@ -110,7 +110,7 @@ class Plugin(GlancesPlugin):
         self.view_data['show_hide_raid_plugin'] = msg_col.format('R', 'Show/hide RAID plugin')
         self.view_data['show_hide_wifi_module'] = msg_col2.format('W', 'Show/hide Wifi module')
         self.view_data['enable_disable_all_but_quick_look_and_load_module'] = msg_col2.format('4', 'Enable/disable all but quick look and load module')
-        self.view_data['programs'] = msg_col2.format('j', 'Show processes as programs')
+        self.view_data['programs'] = msg_col2.format('j', 'Accumulate processes by program')
 
 
     def get_view_data(self, args=None):

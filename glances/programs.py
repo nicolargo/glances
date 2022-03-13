@@ -24,30 +24,22 @@ sort_programs_key_list = ['cpu_percent', 'memory_percent', 'cpu_times', 'io_coun
 
 
 def processes_to_programs(processes):
-    """Convert a list of processes to a list of programs.
-
-    Each program is a dict containing the following keys:
-    - 'name': program name
-    - 'cpu_percent': process cpu percent (sum of all processes)
-    - 'memory_percent': process memory percent (sum of all processes)
-    - 'cpu_times': process cpu times (sum of all processes)
-    - 'memory_info': process memory info (sum of all processes)
-    - 'io_counters': process io counters (sum of all processes)
-    - 'children': list of children processes
-    """
+    """Convert a list of processes to a list of programs."""
     # Start to build a dict of programs (key is program name)
     programs_dict = {}
+    key = 'name'
     for p in processes:
-        if p['name'] not in programs_dict:
+        if p[key] not in programs_dict:
             # Create a new entry in the dict (new program)
-            programs_dict[p['name']] = {
+            programs_dict[p[key]] = {
+                'time_since_update': p['time_since_update'],
+                'num_threads': p['num_threads'],
                 'cpu_percent': p['cpu_percent'],
                 'memory_percent': p['memory_percent'],
                 'cpu_times': p['cpu_times'],
                 'memory_info': p['memory_info'],
                 'io_counters': p['io_counters'],
-                'children': [p['pid']],
-                'time_since_update': p['time_since_update'],
+                'childrens': [p['pid']],
                 # Others keys are not used
                 # but should be set to be compliant with the existing process_list
                 'name': p['name'],
@@ -59,16 +51,17 @@ def processes_to_programs(processes):
             }
         else:
             # Update a existing entry in the dict (existing program)
-            programs_dict[p['name']]['cpu_percent'] += p['cpu_percent']
-            programs_dict[p['name']]['memory_percent'] += p['memory_percent']
-            programs_dict[p['name']]['cpu_times'] += p['cpu_times']
-            programs_dict[p['name']]['memory_info'] += p['memory_info']
-            programs_dict[p['name']]['io_counters'] += p['io_counters']
-            programs_dict[p['name']]['children'].append(p['pid'])
+            programs_dict[p[key]]['num_threads'] += p['num_threads']
+            programs_dict[p[key]]['cpu_percent'] += p['cpu_percent']
+            programs_dict[p[key]]['memory_percent'] += p['memory_percent']
+            programs_dict[p[key]]['cpu_times'] += p['cpu_times']
+            programs_dict[p[key]]['memory_info'] += p['memory_info']
+            programs_dict[p[key]]['io_counters'] += p['io_counters']
+            programs_dict[p[key]]['childrens'].append(p['pid'])
             # If all the subprocess has the same value, display it
-            programs_dict[p['name']]['username'] = p['username'] if p['username'] == programs_dict[p['name']]['username'] else '_'
-            programs_dict[p['name']]['nice'] = p['nice'] if p['nice'] == programs_dict[p['name']]['nice'] else '_'
-            programs_dict[p['name']]['status'] = p['status'] if p['status'] == programs_dict[p['name']]['status'] else '_'
+            programs_dict[p[key]]['username'] = p['username'] if p['username'] == programs_dict[p[key]]['username'] else '_'
+            programs_dict[p[key]]['nice'] = p['nice'] if p['nice'] == programs_dict[p[key]]['nice'] else '_'
+            programs_dict[p[key]]['status'] = p['status'] if p['status'] == programs_dict[p[key]]['status'] else '_'
 
     # Convert the dict to a list of programs
     return [programs_dict[p] for p in programs_dict]

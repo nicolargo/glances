@@ -46,7 +46,7 @@ export default function GlancesController($scope, GlancesStats, hotkeys, ARGUMEN
         }
     });
 
-    // j => Processes are display per program name (not per thread)
+    // j => Accumulate processes by program
     hotkeys.add({
         combo: 'j',
         callback: function () {
