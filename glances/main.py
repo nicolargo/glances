@@ -256,10 +256,11 @@ Examples of use:
         # Display processes list by program name and not by thread
         parser.add_argument(
             '--programs',
+            '--program',
             action='store_true',
             default=False,
             dest='programs',
-            help='Show processes as programs (not threads)',
+            help='Accumulate processes by program',
         )
         # Export modules feature
         parser.add_argument('--export', dest='export', help='enable export module (comma separed list)')

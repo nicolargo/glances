@@ -692,7 +692,7 @@ class _GlancesCurses(object):
 
         # Display kill process confirmation popup
         # Only in standalone mode (cs_status is None)
-        if self.kill_process and cs_status is None:
+        if self.kill_process and cs_status is None and not self.args.programs:
             selected_process_raw = stats.get_plugin('processlist').get_raw()[self.args.cursor_position]
             confirm = self.display_popup(
                 'Kill process: {} (pid: {}) ?\n\nConfirm ([y]es/[n]o): '.format(
@@ -713,7 +713,7 @@ class _GlancesCurses(object):
                     )
 
         elif self.kill_process and cs_status is not None:
-            self.display_popup('Kill process only available in standalone mode')
+            self.display_popup('Kill process only available for local processes')
         self.kill_process = False
 
         # Display graph generation popup
