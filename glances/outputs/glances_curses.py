@@ -693,7 +693,8 @@ class _GlancesCurses(object):
         # Display kill process confirmation popup
         # Only in standalone mode (cs_status is None)
         if self.kill_process and cs_status is None:
-            self.kill_process(stats.get_plugin('processlist').get_raw()[self.args.cursor_position])
+            logger.info(stats.get_plugin('processlist').get_raw()[self.args.cursor_position])
+            self.kill(stats.get_plugin('processlist').get_raw()[self.args.cursor_position])
         elif self.kill_process and cs_status is not None:
             self.display_popup('Kill process only available for local processes')
         self.kill_process = False
@@ -704,7 +705,7 @@ class _GlancesCurses(object):
 
         return True
 
-    def kill_process(self, process):
+    def kill(self, process):
         """Kill a process, or a list of process if the process has a childrens field.
 
         :param process
