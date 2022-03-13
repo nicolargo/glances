@@ -349,7 +349,7 @@ Examples of use:
             default=self.DEFAULT_REFRESH_TIME,
             type=float,
             dest='time',
-            help='set minumum refresh rate in seconds [default: {} sec]'.format(self.DEFAULT_REFRESH_TIME),
+            help='set minimum refresh rate in seconds [default: {} sec]'.format(self.DEFAULT_REFRESH_TIME),
         )
         parser.add_argument(
             '-w',
