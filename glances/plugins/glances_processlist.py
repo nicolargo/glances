@@ -591,7 +591,7 @@ class Plugin(GlancesPlugin):
         if not self.args.programs:
             msg = self.layout_header['command'].format('Command', "('k' to kill)" if args.is_standalone else "")
         else:
-            msg = self.layout_header['command'].format('Programs', "(kill not available)")
+            msg = self.layout_header['command'].format('Programs', "('k' to kill)" if args.is_standalone else "")
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
     def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):

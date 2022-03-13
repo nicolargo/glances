@@ -692,26 +692,8 @@ class _GlancesCurses(object):
 
         # Display kill process confirmation popup
         # Only in standalone mode (cs_status is None)
-        if self.kill_process and cs_status is None and not self.args.programs:
-            selected_process_raw = stats.get_plugin('processlist').get_raw()[self.args.cursor_position]
-            confirm = self.display_popup(
-                'Kill process: {} (pid: {}) ?\n\nConfirm ([y]es/[n]o): '.format(
-                    selected_process_raw['name'], selected_process_raw['pid']
-                ),
-                popup_type='yesno',
-            )
-            if confirm.lower().startswith('y'):
-                try:
-                    ret_kill = glances_processes.kill(selected_process_raw['pid'])
-                except Exception as e:
-                    logger.error('Can not kill process {} ({})'.format(selected_process_raw['name'], e))
-                else:
-                    logger.info(
-                        'Kill signal has been sent to process {} (return code: {})'.format(
-                            selected_process_raw['name'], ret_kill
-                        )
-                    )
-
+        if self.kill_process and cs_status is None:
+            self.kill_process(stats.get_plugin('processlist').get_raw()[self.args.cursor_position])
         elif self.kill_process and cs_status is not None:
             self.display_popup('Kill process only available for local processes')
         self.kill_process = False
@@ -721,6 +703,40 @@ class _GlancesCurses(object):
             self.display_popup('Generate graph in {}'.format(self.args.export_graph_path))
 
         return True
+
+    def kill_process(self, process):
+        """Kill a process, or a list of process if the process has a childrens field.
+
+        :param process
+        :return: None
+        """
+        logger.debug("Selected process to kill: {}".format(process))
+
+        if 'childrens' in process:
+            pid_to_kill = process['childrens']
+        else:
+            pid_to_kill = [process['pid']]
+
+        confirm = self.display_popup(
+            'Kill process: {} (pid: {}) ?\n\nConfirm ([y]es/[n]o): '.format(
+                process['name'],
+                ', '.join(map(str,pid_to_kill)),
+            ),
+            popup_type='yesno',
+        )
+
+        if confirm.lower().startswith('y'):
+            for pid in pid_to_kill:
+                try:
+                    ret_kill = glances_processes.kill(pid)
+                except Exception as e:
+                    logger.error('Can not kill process {} ({})'.format(pid, e))
+                else:
+                    logger.info(
+                        'Kill signal has been sent to process {} (return code: {})'.format(
+                            pid, ret_kill
+                        )
+                    )
 
     def __display_header(self, stat_display):
         """Display the firsts lines (header) in the Curses interface.
