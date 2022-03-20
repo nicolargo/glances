@@ -33,196 +33,111 @@ from datetime import datetime
 
 from glances.logger import logger
 
-PY3 = sys.version_info[0] == 3
+import queue
+from configparser import ConfigParser, NoOptionError, NoSectionError
+from statistics import mean
+from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
+from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
+from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 
-if PY3:
-    import queue
-    from configparser import ConfigParser, NoOptionError, NoSectionError
-    from statistics import mean
-    from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
-    from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-    from urllib.request import urlopen
-    from urllib.error import HTTPError, URLError
-    from urllib.parse import urlparse
+# Correct issue #1025 by monkey path the xmlrpc lib
+from defusedxml.xmlrpc import monkey_patch
 
-    # Correct issue #1025 by monkey path the xmlrpc lib
-    from defusedxml.xmlrpc import monkey_patch
+monkey_patch()
 
-    monkey_patch()
+input = input
+range = range
+map = map
 
-    input = input
-    range = range
-    map = map
+text_type = str
+binary_type = bytes
+bool_type = bool
+long = int
 
-    text_type = str
-    binary_type = bytes
-    bool_type = bool
-    long = int
+PermissionError = OSError
 
-    PermissionError = OSError
+viewkeys = operator.methodcaller('keys')
+viewvalues = operator.methodcaller('values')
+viewitems = operator.methodcaller('items')
 
-    viewkeys = operator.methodcaller('keys')
-    viewvalues = operator.methodcaller('values')
-    viewitems = operator.methodcaller('items')
 
-    def printandflush(string):
-        """Print and flush (used by stdout* outputs modules)"""
-        print(string, flush=True)
+def printandflush(string):
+    """Print and flush (used by stdout* outputs modules)"""
+    print(string, flush=True)
 
-    def to_ascii(s):
-        """Convert the bytes string to a ASCII string
 
-        Useful to remove accent (diacritics)
-        """
-        if isinstance(s, binary_type):
-            return s.decode()
-        return s.encode('ascii', 'ignore').decode()
+def to_ascii(s):
+    """Convert the bytes string to a ASCII string
 
-    def listitems(d):
-        return list(d.items())
+    Useful to remove accent (diacritics)
+    """
+    if isinstance(s, binary_type):
+        return s.decode()
+    return s.encode('ascii', 'ignore').decode()
 
-    def listkeys(d):
-        return list(d.keys())
 
-    def listvalues(d):
-        return list(d.values())
+def listitems(d):
+    return list(d.items())
 
-    def iteritems(d):
-        return iter(d.items())
 
-    def iterkeys(d):
-        return iter(d.keys())
+def listkeys(d):
+    return list(d.keys())
 
-    def itervalues(d):
-        return iter(d.values())
 
-    def u(s, errors='replace'):
-        if isinstance(s, text_type):
-            return s
-        return s.decode('utf-8', errors=errors)
+def listvalues(d):
+    return list(d.values())
 
-    def b(s, errors='replace'):
-        if isinstance(s, binary_type):
-            return s
-        return s.encode('utf-8', errors=errors)
 
-    def n(s):
-        '''Only in Python 2...
-        from future.utils import bytes_to_native_str as n
-        '''
+def iteritems(d):
+    return iter(d.items())
+
+
+def iterkeys(d):
+    return iter(d.keys())
+
+
+def itervalues(d):
+    return iter(d.values())
+
+
+def u(s, errors='replace'):
+    if isinstance(s, text_type):
         return s
+    return s.decode('utf-8', errors=errors)
 
-    def nativestr(s, errors='replace'):
-        if isinstance(s, text_type):
-            return s
-        elif isinstance(s, (int, float)):
-            return s.__str__()
-        else:
-            return s.decode('utf-8', errors=errors)
 
-    def system_exec(command):
-        """Execute a system command and return the result as a str"""
-        try:
-            res = subprocess.run(command.split(' '), stdout=subprocess.PIPE).stdout.decode('utf-8')
-        except Exception as e:
-            logger.debug('Can not evaluate command {} ({})'.format(command, e))
-            res = ''
-        return res.rstrip()
+def b(s, errors='replace'):
+    if isinstance(s, binary_type):
+        return s
+    return s.encode('utf-8', errors=errors)
 
-else:
+
+def n(s):
+    '''Only in Python 2...
     from future.utils import bytes_to_native_str as n
-    import Queue as queue
-    from itertools import imap as map
-    from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError, NoSectionError
-    from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-    from xmlrpclib import Fault, ProtocolError, ServerProxy, Transport, Server
-    from urllib2 import urlopen, HTTPError, URLError
-    from urlparse import urlparse
+    '''
+    return s
 
-    # Correct issue #1025 by monkey path the xmlrpc lib
-    from defusedxml.xmlrpc import monkey_patch
 
-    monkey_patch()
-
-    input = raw_input
-    range = xrange
-    ConfigParser.read_file = ConfigParser.readfp
-
-    text_type = unicode
-    binary_type = str
-    bool_type = types.BooleanType
-    long = long
-
-    PermissionError = OSError
-
-    viewkeys = operator.methodcaller('viewkeys')
-    viewvalues = operator.methodcaller('viewvalues')
-    viewitems = operator.methodcaller('viewitems')
-
-    def printandflush(string):
-        """Print and flush (used by stdout* outputs modules)"""
-        print(string)
-        sys.stdout.flush()
-
-    def mean(numbers):
-        return float(sum(numbers)) / max(len(numbers), 1)
-
-    def to_ascii(s):
-        """Convert the unicode 's' to a ASCII string
-
-        Useful to remove accent (diacritics)
-        """
-        if isinstance(s, binary_type):
-            return s
-        return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore')
-
-    def listitems(d):
-        return d.items()
-
-    def listkeys(d):
-        return d.keys()
-
-    def listvalues(d):
-        return d.values()
-
-    def iteritems(d):
-        return d.iteritems()
-
-    def iterkeys(d):
-        return d.iterkeys()
-
-    def itervalues(d):
-        return d.itervalues()
-
-    def u(s, errors='replace'):
-        if isinstance(s, text_type):
-            return s.encode('utf-8', errors=errors)
+def nativestr(s, errors='replace'):
+    if isinstance(s, text_type):
+        return s
+    elif isinstance(s, (int, float)):
+        return s.__str__()
+    else:
         return s.decode('utf-8', errors=errors)
 
-    def b(s, errors='replace'):
-        if isinstance(s, binary_type):
-            return s
-        return s.encode('utf-8', errors=errors)
 
-    def nativestr(s, errors='replace'):
-        if isinstance(s, binary_type):
-            return s
-        elif isinstance(s, (int, float)):
-            return s.__str__()
-        else:
-            return s.encode('utf-8', errors=errors)
-
-    def system_exec(command):
-        """Execute a system command and return the resul as a str"""
-        try:
-            res = subprocess.check_output(command.split(' '))
-        except Exception as e:
-            logger.debug('Can not execute command {} ({})'.format(command, e))
-            res = ''
-        return res.rstrip()
-
-
-# Globals functions for both Python 2 and 3
+def system_exec(command):
+    """Execute a system command and return the result as a str"""
+    try:
+        res = subprocess.run(command.split(' '), stdout=subprocess.PIPE).stdout.decode('utf-8')
+    except Exception as e:
+        logger.debug('Can not evaluate command {} ({})'.format(command, e))
+        res = ''
+    return res.rstrip()
 
 
 def subsample(data, sampling):
