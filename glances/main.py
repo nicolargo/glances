@@ -252,6 +252,15 @@ Examples of use:
             choices=sort_processes_key_list,
             help='Sort processes by: {}'.format(', '.join(sort_processes_key_list)),
         )
+        # Display processes list by program name and not by thread
+        parser.add_argument(
+            '--programs',
+            '--program',
+            action='store_true',
+            default=False,
+            dest='programs',
+            help='Accumulate processes by program',
+        )
         # Export modules feature
         parser.add_argument('--export', dest='export', help='enable export module (comma separed list)')
         parser.add_argument(
@@ -340,7 +349,7 @@ Examples of use:
             default=self.DEFAULT_REFRESH_TIME,
             type=float,
             dest='time',
-            help='set minumum refresh rate in seconds [default: {} sec]'.format(self.DEFAULT_REFRESH_TIME),
+            help='set minimum refresh rate in seconds [default: {} sec]'.format(self.DEFAULT_REFRESH_TIME),
         )
         parser.add_argument(
             '-w',

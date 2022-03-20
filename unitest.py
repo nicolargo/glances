@@ -21,7 +21,6 @@
 """Glances unitary tests suite."""
 
 import time
-from tracemalloc import Snapshot
 import unittest
 import sys
 
@@ -41,8 +40,11 @@ from glances.thresholds import GlancesThresholdWarning
 from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.programs import processes_to_programs
+from glances.compat import subsample, range
 from glances.secure import secure_popen
-from glances.compat import PY3
+
+from tracemalloc import Snapshot
 
 # Global variables
 # =================
@@ -286,6 +288,16 @@ class TestGlances(unittest.TestCase):
 
         print('INFO: SMART stats: %s' % stats_grab)
 
+    def test_017_programs(self):
+        """Check Programs function (it's not a plugin)."""
+        # stats_to_check = [ ]
+        print('INFO: [TEST_010] Check PROGRAM stats')
+        stats_grab = processes_to_programs(stats.get_plugin('processlist').get_raw())
+        self.assertTrue(type(stats_grab) is list, msg='Programs stats is not a list')
+        print('INFO: PROGRAM list stats: %s items in the list' % len(stats_grab))
+        # Check if number of processes in the list equal counter
+        # self.assertEqual(total, len(stats_grab))
+
     def test_094_thresholds(self):
         """Test thresholds classes"""
         print('INFO: [TEST_094] Thresholds')
@@ -394,9 +406,6 @@ class TestGlances(unittest.TestCase):
 
     def test_200_memory_leak(self):
         """Memory leak check"""
-        # Only available in PY3
-        if not PY3:
-            return
         import tracemalloc
         print('INFO: [TEST_200] Memory leak check')
         tracemalloc.start()

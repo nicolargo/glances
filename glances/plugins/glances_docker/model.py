@@ -23,7 +23,9 @@ import os
 import threading
 import time
 from copy import deepcopy
+from dateutil import parser
 
+from glances.compat import iterkeys, itervalues, nativestr, pretty_date
 from glances.logger import logger
 from glances.globals import iterkeys, itervalues, nativestr
 from glances.timer import getTimeSinceLastUpdate
@@ -291,6 +293,8 @@ class PluginModel(GlancesPluginModel):
                     )
                     container_stats['network_rx'] = container_stats['network'].get('rx', None)
                     container_stats['network_tx'] = container_stats['network'].get('tx', None)
+                    # Uptime
+                    container_stats['Uptime'] = pretty_date(parser.parse(container.attrs['State']['StartedAt']).replace(tzinfo=None))
                 else:
                     container_stats['cpu'] = {}
                     container_stats['cpu_percent'] = None
@@ -302,6 +306,7 @@ class PluginModel(GlancesPluginModel):
                     container_stats['network'] = {}
                     container_stats['network_rx'] = None
                     container_stats['network_tx'] = None
+                    container_stats['Uptime'] = None
                 # Add current container stats to the stats list
                 stats['containers'].append(container_stats)
 
@@ -556,6 +561,8 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg))
         msg = '{:>10}'.format('Status')
         ret.append(self.curse_add_line(msg))
+        msg = '{:>10}'.format('Uptime')
+        ret.append(self.curse_add_line(msg))
         msg = '{:>6}'.format('CPU%')
         ret.append(self.curse_add_line(msg))
         msg = '{:>7}'.format('MEM')
@@ -580,6 +587,12 @@ class PluginModel(GlancesPluginModel):
             # Status
             status = self.container_alert(container['Status'])
             msg = '{:>10}'.format(container['Status'][0:10])
+            ret.append(self.curse_add_line(msg, status))
+            # Uptime
+            if container['Uptime']:
+                msg = '{:>10}'.format(container['Uptime'])
+            else:
+                msg = '{:>10}'.format('_')
             ret.append(self.curse_add_line(msg, status))
             # CPU
             try:
@@ -712,7 +725,7 @@ class ThreadDockerGrabber(threading.Thread):
 
     def stopped(self):
         """Return True is the thread is stopped."""
-        return self._stopper.isSet()
+        return self._stopper.is_set()
 
 
 def sort_stats(stats):
