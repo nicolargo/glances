@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -28,6 +28,7 @@ from glances.processes import glances_processes, sort_stats
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.core.model import PluginModel as CorePluginModel
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.programs import processes_to_programs
 
 
 def seconds_to_hms(input_seconds):
@@ -155,6 +156,9 @@ class PluginModel(GlancesPluginModel):
             # Note: Update is done in the processcount plugin
             # Just return the processes list
             stats = glances_processes.getlist()
+            if self.args.programs:
+                stats = processes_to_programs(stats)
+
 
         elif self.input_method == 'snmp':
             # No SNMP grab for processes
@@ -375,7 +379,15 @@ class PluginModel(GlancesPluginModel):
         ret.append(self._get_process_curses_rss(p, selected, args))
 
         # PID
-        msg = self.layout_stat['pid'].format(p['pid'], width=self.__max_pid_size())
+        if not self.args.programs:
+            # Display processes, so the PID should be displayed
+            msg = self.layout_stat['pid'].format(p['pid'],
+                                                 width=self.__max_pid_size())
+        else:
+            # Display programs, so the PID should not be displayed
+            # Instead displays the number of childrens
+            msg = self.layout_stat['pid'].format(len(p['childrens']) if 'childrens' in p else '_',
+                                                 width=self.__max_pid_size())
         ret.append(self.curse_add_line(msg))
 
         # USER
@@ -546,7 +558,10 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg, optional=True))
         msg = self.layout_header['res'].format('RES')
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = self.layout_header['pid'].format('PID', width=self.__max_pid_size())
+        if not self.args.programs:
+            msg = self.layout_header['pid'].format('PID', width=self.__max_pid_size())
+        else:
+            msg = self.layout_header['pid'].format('NPROCS', width=self.__max_pid_size())
         ret.append(self.curse_add_line(msg))
         msg = self.layout_header['user'].format('USER')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
@@ -572,7 +587,10 @@ class PluginModel(GlancesPluginModel):
                 msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
             )
         )
-        msg = self.layout_header['command'].format('Command', "('k' to kill)" if args.is_standalone else "")
+        if not self.args.programs:
+            msg = self.layout_header['command'].format('Command', "('k' to kill)" if args.is_standalone else "")
+        else:
+            msg = self.layout_header['command'].format('Programs', "('k' to kill)" if args.is_standalone else "")
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
     def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):

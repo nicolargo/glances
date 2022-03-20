@@ -94,6 +94,14 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
         }
     });
 
+    // j => Accumulate processes by program
+    hotkeys.add({
+        combo: 'j',
+        callback: function () {
+            ARGUMENTS.programs = !ARGUMENTS.programs;
+        }
+    });
+
     // k => Show/hide connections stats
     hotkeys.add({
         combo: 'k',
@@ -1018,6 +1026,7 @@ function GlancesPluginDockerController($scope, GlancesStats) {
                 'id': containerData.Id,
                 'name': containerData.name,
                 'status': containerData.Status,
+                'uptime': containerData.Uptime,
                 'cpu': containerData.cpu.total,
                 'memory': containerData.memory.usage != undefined ? containerData.memory.usage : '?',
                 'rss': containerData.memory.rss != undefined ? containerData.memory.rss : '?',
@@ -60178,7 +60187,7 @@ module.exports = path;
 /***/ ((module) => {
 
 // Module
-var code = "<section id=\"containers-plugin\" class=\"plugin\" ng-if=\"vm.containers.length\">\n    <span class=\"title\">CONTAINERS</span> {{ vm.containers.length }} (served by Docker {{ vm.version }})\n\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">Name</div>\n            <div class=\"table-cell\">Status</div>\n            <div class=\"table-cell\">CPU%</div>\n            <div class=\"table-cell\">MEM</div>\n            <div class=\"table-cell\">RSS</div>\n            <div class=\"table-cell\">IOR/s</div>\n            <div class=\"table-cell\">IOW/s</div>\n            <div class=\"table-cell\">RX/s</div>\n            <div class=\"table-cell\">TX/s</div>\n            <div class=\"table-cell text-left\">Command</div>\n        </div>\n        <div class=\"table-row\" ng-repeat=\"container in vm.containers track by container.id\">\n            <div class=\"table-cell text-left\">{{ container.name }}</div>\n            <div class=\"table-cell\" ng-class=\"container.status == 'Paused' ? 'careful' : 'ok'\">{{ container.status }}\n            </div>\n            <div class=\"table-cell\">{{ container.cpu | number:1 }}</div>\n            <div class=\"table-cell\">{{ container.memory | bytes }}</div>\n            <div class=\"table-cell\">{{ container.rss | bytes }}</div>\n            <div class=\"table-cell\">{{ container.ior / container.io_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.iow / container.io_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.rx / container.net_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.tx / container.net_time_since_update | bits }}</div>\n            <div class=\"table-cell text-left\">{{ container.command }}</div>\n        </div>\n    </div>\n</section>\n";
+var code = "<section id=\"containers-plugin\" class=\"plugin\" ng-if=\"vm.containers.length\">\n    <span class=\"title\">CONTAINERS</span> {{ vm.containers.length }} (served by Docker {{ vm.version }})\n\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">Name</div>\n            <div class=\"table-cell\">Status</div>\n            <div class=\"table-cell\">Uptime</div>\n            <div class=\"table-cell\">CPU%</div>\n            <div class=\"table-cell\">MEM</div>\n            <div class=\"table-cell\">RSS</div>\n            <div class=\"table-cell\">IOR/s</div>\n            <div class=\"table-cell\">IOW/s</div>\n            <div class=\"table-cell\">RX/s</div>\n            <div class=\"table-cell\">TX/s</div>\n            <div class=\"table-cell text-left\">Command</div>\n        </div>\n        <div class=\"table-row\" ng-repeat=\"container in vm.containers track by container.id\">\n            <div class=\"table-cell text-left\">{{ container.name }}</div>\n            <div class=\"table-cell\" ng-class=\"container.status == 'Paused' ? 'careful' : 'ok'\">{{ container.status }}\n            </div>\n            <div class=\"table-cell\" ng-class=\"container.status == 'Paused' ? 'careful' : 'ok'\">{{ container.uptime }}\n            </div>\n            <div class=\"table-cell\">{{ container.cpu | number:1 }}</div>\n            <div class=\"table-cell\">{{ container.memory | bytes }}</div>\n            <div class=\"table-cell\">{{ container.rss | bytes }}</div>\n            <div class=\"table-cell\">{{ container.ior / container.io_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.iow / container.io_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.rx / container.net_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.tx / container.net_time_since_update | bits }}</div>\n            <div class=\"table-cell text-left\">{{ container.command }}</div>\n        </div>\n    </div>\n</section>\n";
 // Exports
 var _module_exports =code;;
 var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-docker/view.html';

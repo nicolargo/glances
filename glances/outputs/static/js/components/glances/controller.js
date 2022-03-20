@@ -46,6 +46,14 @@ export default function GlancesController($scope, GlancesStats, hotkeys, ARGUMEN
         }
     });
 
+    // j => Accumulate processes by program
+    hotkeys.add({
+        combo: 'j',
+        callback: function () {
+            ARGUMENTS.programs = !ARGUMENTS.programs;
+        }
+    });
+
     // k => Show/hide connections stats
     hotkeys.add({
         combo: 'k',

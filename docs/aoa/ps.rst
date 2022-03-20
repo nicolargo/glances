@@ -59,6 +59,9 @@ You can also set the sort key in the UI:
    * - i
      - --sort-processes io_counters
      - Sort by DISK I/O
+   * - j
+     - --programs
+     - Accumulate processes by program
    * - m
      - --sort-processes memory_percent
      - Sort by MEM
@@ -108,7 +111,7 @@ Columns display
 
                           The non-swapped physical memory a process is
                           using (what's currently in the physical memory).
-``PID``                   Process ID
+``PID``                   Process ID (column is replaced by NPROCS in accumulated mode)
 ``USER``                  User ID
 ``THR``                   Threads number of the process
 ``TIME+``                 Cumulative CPU time used by the process
@@ -132,8 +135,6 @@ Columns display
                           User can switch to the process name by
                           pressing on the ``'/'`` key
 ========================= ==============================================
-
-Source: Thanks to the Peteris Ņikiforovs's blog.
 
 Process filtering
 -----------------
@@ -180,3 +181,11 @@ In curses/standalone mode, you can select a process using ``UP`` and ``DOWN`` an
     configuration file under the ``[processlist]`` section. It is also
     possible to define limit for Nice values (comma separated list).
     For example: nice_warning=-20,-19,-18
+
+Accumulated per program — key 'j'
+---------------------------------
+
+When activated ('j' hotkey or --programs option in the command line), processes are merged
+to display which programs are active. The columns show the accumulated cpu consumption, the
+accumulated virtual and resident memory consumption, the accumulated transferred data I/O.
+The PID columns is replaced by a NPROCS column which is the number of processes.
