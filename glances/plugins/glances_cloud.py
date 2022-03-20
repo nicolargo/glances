@@ -189,4 +189,4 @@ class ThreadOpenStack(threading.Thread):
 
     def stopped(self):
         """Return True is the thread is stopped."""
-        return self._stopper.isSet()
+        return self._stopper.is_set()
