@@ -122,16 +122,10 @@ Examples of use:
             help='display modules (plugins & exports) list and exit',
         )
         parser.add_argument(
-            '--disable-plugin',
-            '--disable-plugins',
-            dest='disable_plugin',
-            help='disable plugin (comma separed list)'
+            '--disable-plugin', '--disable-plugins', dest='disable_plugin', help='disable plugin (comma separed list)'
         )
         parser.add_argument(
-            '--enable-plugin',
-            '--enable-plugins',
-            dest='enable_plugin',
-            help='enable plugin (comma separed list)'
+            '--enable-plugin', '--enable-plugins', dest='enable_plugin', help='enable plugin (comma separed list)'
         )
         parser.add_argument(
             '--disable-process',
@@ -224,11 +218,7 @@ Examples of use:
             help='disable background colors in the terminal',
         )
         parser.add_argument(
-            '--enable-irq',
-            action='store_true',
-            default=False,
-            dest='enable_irq',
-            help='enable IRQ module'
+            '--enable-irq', action='store_true', default=False, dest='enable_irq', help='enable IRQ module'
         ),
         parser.add_argument(
             '--enable-process-extended',
@@ -243,7 +233,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='enable_separator',
-            help='enable separator in the UI'
+            help='enable separator in the UI',
         ),
         # Sort processes list
         parser.add_argument(

@@ -159,7 +159,6 @@ class PluginModel(GlancesPluginModel):
             if self.args.programs:
                 stats = processes_to_programs(stats)
 
-
         elif self.input_method == 'snmp':
             # No SNMP grab for processes
             pass
@@ -367,8 +366,7 @@ class PluginModel(GlancesPluginModel):
         # * display a special character at the beginning of the line
         # * underline the command name
         if args.is_standalone:
-            ret.append(self.curse_add_line(unicode_message('PROCESS_SELECTOR') if selected else ' ',
-                                           'SELECTED'))
+            ret.append(self.curse_add_line(unicode_message('PROCESS_SELECTOR') if selected else ' ', 'SELECTED'))
 
         # CPU
         ret.append(self._get_process_curses_cpu(p, selected, args))
@@ -381,13 +379,13 @@ class PluginModel(GlancesPluginModel):
         # PID
         if not self.args.programs:
             # Display processes, so the PID should be displayed
-            msg = self.layout_stat['pid'].format(p['pid'],
-                                                 width=self.__max_pid_size())
+            msg = self.layout_stat['pid'].format(p['pid'], width=self.__max_pid_size())
         else:
             # Display programs, so the PID should not be displayed
             # Instead displays the number of childrens
-            msg = self.layout_stat['pid'].format(len(p['childrens']) if 'childrens' in p else '_',
-                                                 width=self.__max_pid_size())
+            msg = self.layout_stat['pid'].format(
+                len(p['childrens']) if 'childrens' in p else '_', width=self.__max_pid_size()
+            )
         ret.append(self.curse_add_line(msg))
 
         # USER

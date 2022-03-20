@@ -294,7 +294,9 @@ class PluginModel(GlancesPluginModel):
                     container_stats['network_rx'] = container_stats['network'].get('rx', None)
                     container_stats['network_tx'] = container_stats['network'].get('tx', None)
                     # Uptime
-                    container_stats['Uptime'] = pretty_date(parser.parse(container.attrs['State']['StartedAt']).replace(tzinfo=None))
+                    container_stats['Uptime'] = pretty_date(
+                        parser.parse(container.attrs['State']['StartedAt']).replace(tzinfo=None)
+                    )
                 else:
                     container_stats['cpu'] = {}
                     container_stats['cpu_percent'] = None

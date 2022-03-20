@@ -269,7 +269,7 @@ class GlancesClient(object):
                         self.stats,
                         duration=adapted_refresh,
                         cs_status=cs_status,
-                        return_to_browser=self.return_to_browser
+                        return_to_browser=self.return_to_browser,
                     )
                 else:
                     # In quiet mode, we only wait adapated_refresh seconds

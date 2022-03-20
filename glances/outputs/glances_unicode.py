@@ -30,6 +30,7 @@ _unicode_message = {
     'LOW_LINE': [u'\u2581', u'_'],
 }
 
+
 def unicode_message(key, args=None):
     """Return the unicode message for the given key."""
     if args and hasattr(args, 'disable_unicode') and args.disable_unicode:
