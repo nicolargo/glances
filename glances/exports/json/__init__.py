@@ -3,7 +3,7 @@
 import sys
 import json
 
-from glances.globals import PY3, listkeys
+from glances.globals import listkeys
 from glances.logger import logger
 from glances.exports.export import GlancesExport
 
@@ -21,12 +21,8 @@ class Export(GlancesExport):
 
         # Set the JSON output file
         try:
-            if PY3:
-                self.json_file = open(self.json_filename, 'w')
-                self.json_file.close()
-            else:
-                self.json_file = open(self.json_filename, 'wb')
-                self.json_file.close()
+            self.json_file = open(self.json_filename, 'w')
+            self.json_file.close()
         except IOError as e:
             logger.critical("Cannot create the JSON file: {}".format(e))
             sys.exit(2)
@@ -53,12 +49,8 @@ class Export(GlancesExport):
             logger.debug("Exporting stats ({}) to JSON file ({})".format(listkeys(self.buffer), self.json_filename))
 
             # Export stats to JSON file
-            if PY3:
-                with open(self.json_filename, "w") as self.json_file:
-                    self.json_file.write("{}\n".format(json.dumps(self.buffer)))
-            else:
-                with open(self.json_filename, "wb") as self.json_file:
-                    self.json_file.write("{}\n".format(json.dumps(self.buffer)))
+            with open(self.json_filename, "w") as self.json_file:
+                self.json_file.write("{}\n".format(json.dumps(self.buffer)))
 
             # Reset buffer
             self.buffer = {}

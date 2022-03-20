@@ -42,7 +42,6 @@ except ImportError:
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
-from glances.compat import PY3
 from glances.logger import logger
 from glances.main import GlancesMain
 from glances.timer import Counter
@@ -66,8 +65,7 @@ if psutil_version_info < psutil_min_version:
     sys.exit(1)
 
 # Trac malloc is only available on Python 3.4 or higher
-if PY3:
-    import tracemalloc
+import tracemalloc
 
 
 def __signal_handler(signal, frame):

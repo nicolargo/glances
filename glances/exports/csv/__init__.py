@@ -24,7 +24,7 @@ import csv
 import sys
 import time
 
-from glances.globals import PY3, iterkeys, itervalues
+from glances.globals import iterkeys, itervalues
 from glances.logger import logger
 from glances.exports.export import GlancesExport
 
@@ -129,8 +129,4 @@ class Export(GlancesExport):
 
 
 def open_csv_file(file_name, file_mode):
-    if PY3:
-        csv_file = open(file_name, file_mode, newline='')
-    else:
-        csv_file = open(file_name, file_mode + 'b')
-    return csv_file
+    return open(file_name, file_mode, newline='')
