@@ -129,7 +129,6 @@ if PY3:
             res = ''
         return res.rstrip()
 
-
 else:
     from future.utils import bytes_to_native_str as n
     import Queue as queue

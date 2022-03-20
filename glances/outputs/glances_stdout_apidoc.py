@@ -68,7 +68,6 @@ def print_api_status():
     print('')
 
 
-
 def print_plugins_list(stat):
     sub_title = 'GET plugins list'
     print(sub_title)

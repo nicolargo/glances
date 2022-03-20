@@ -101,7 +101,9 @@ class Plugin(GlancesPlugin):
         self.view_data['enable_disable_gpu'] = msg_col.format('G', 'Enable/disable gpu plugin')
         self.view_data['enable_disable_mean_gpu'] = msg_col2.format('6', 'Enable/disable mean gpu')
         self.view_data['edit_pattern_filter'] = 'ENTER: Edit the process filter pattern'
-        self.view_data['enable_disable_application_monitor_process'] = msg_col2.format('A','Enable/disable application monitoring process' )
+        self.view_data['enable_disable_application_monitor_process'] = msg_col2.format(
+            'A', 'Enable/disable application monitoring process'
+        )
         self.view_data['erase_current_process_filter'] = msg_col.format('E', 'Erase current process filter')
         self.view_data['show_hide_tcp_connection'] = msg_col.format('K', 'Show/hide TCP connections')
         self.view_data['kill_process'] = msg_col2.format('k', 'Kill process')
@@ -109,9 +111,10 @@ class Plugin(GlancesPlugin):
         self.view_data['show_hide_current_time'] = msg_col2.format('N', 'Show/hide current time')
         self.view_data['show_hide_raid_plugin'] = msg_col.format('R', 'Show/hide RAID plugin')
         self.view_data['show_hide_wifi_module'] = msg_col2.format('W', 'Show/hide Wifi module')
-        self.view_data['enable_disable_all_but_quick_look_and_load_module'] = msg_col2.format('4', 'Enable/disable all but quick look and load module')
+        self.view_data['enable_disable_all_but_quick_look_and_load_module'] = msg_col2.format(
+            '4', 'Enable/disable all but quick look and load module'
+        )
         self.view_data['programs'] = msg_col2.format('j', 'Accumulate processes by program')
-
 
     def get_view_data(self, args=None):
         """Return the view."""
