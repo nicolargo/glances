@@ -541,10 +541,13 @@ class _GlancesCurses(object):
         self.new_line()
         self.line -= 1
         line_width = self.term_window.getmaxyx()[1] - self.column
-        self.term_window.addnstr(self.line, self.column,
-                                    unicode_message('MEDIUM_LINE', self.args) * line_width,
-                                    line_width,
-                                    self.colors_list[color])
+        self.term_window.addnstr(
+            self.line,
+            self.column,
+            unicode_message('MEDIUM_LINE', self.args) * line_width,
+            line_width,
+            self.colors_list[color],
+        )
 
     def __get_stat_display(self, stats, layer):
         """Return a dict of dict with all the stats display.
@@ -720,7 +723,7 @@ class _GlancesCurses(object):
         confirm = self.display_popup(
             'Kill process: {} (pid: {}) ?\n\nConfirm ([y]es/[n]o): '.format(
                 process['name'],
-                ', '.join(map(str,pid_to_kill)),
+                ', '.join(map(str, pid_to_kill)),
             ),
             popup_type='yesno',
         )
@@ -732,11 +735,7 @@ class _GlancesCurses(object):
                 except Exception as e:
                     logger.error('Can not kill process {} ({})'.format(pid, e))
                 else:
-                    logger.info(
-                        'Kill signal has been sent to process {} (return code: {})'.format(
-                            pid, ret_kill
-                        )
-                    )
+                    logger.info('Kill signal has been sent to process {} (return code: {})'.format(pid, ret_kill))
 
     def __display_header(self, stat_display):
         """Display the firsts lines (header) in the Curses interface.
@@ -758,8 +757,7 @@ class _GlancesCurses(object):
             self.display_plugin(stat_display["ip"])
         self.new_column()
         self.display_plugin(
-            stat_display["uptime"],
-            add_space=-(self.get_stats_display_width(stat_display["cloud"]) != 0)
+            stat_display["uptime"], add_space=-(self.get_stats_display_width(stat_display["cloud"]) != 0)
         )
         self.init_column()
         if self.get_stats_display_width(stat_display["cloud"]) != 0:

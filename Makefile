@@ -29,10 +29,10 @@ test: venv
 	./venv/bin/python ./unitest.py
 	./venv/bin/python ./unitest-restful.py
 	./venv/bin/python ./unitest-xmlrpc.py
-	./venv/bin/python -m black ./glances --check
+	./venv/bin/python -m black ./glances --check --exclude outputs/static
 
 format: venv
-	./venv/bin/python -m black ./glances
+	./venv/bin/python -m black ./glances --exclude outputs/static
 
 docs: venv-dev
 	./venv/bin/python -m glances -C ./conf/glances.conf --api-doc > ./docs/api.rst

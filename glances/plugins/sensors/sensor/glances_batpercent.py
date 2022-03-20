@@ -123,7 +123,7 @@ class GlancesGrabBat(object):
                         'label': 'BAT {}'.format(b.path.split('/')[-1]),
                         'value': b.capacity,
                         'unit': '%',
-                        'status': b.status
+                        'status': b.status,
                     }
                 )
         elif psutil_tag and hasattr(self.bat.sensors_battery(), 'percent'):
@@ -134,7 +134,7 @@ class GlancesGrabBat(object):
                     'label': 'Battery',
                     'value': int(self.bat.sensors_battery().percent),
                     'unit': '%',
-                    'status': 'Charging' if self.bat.sensors_battery().power_plugged else 'Discharging'
+                    'status': 'Charging' if self.bat.sensors_battery().power_plugged else 'Discharging',
                 }
             ]
 

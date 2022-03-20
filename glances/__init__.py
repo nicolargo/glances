@@ -69,6 +69,7 @@ if psutil_version_info < psutil_min_version:
 if PY3:
     import tracemalloc
 
+
 def __signal_handler(signal, frame):
     """Callback for CTRL-C."""
     end()
@@ -84,8 +85,6 @@ def end():
         pass
 
     logger.info("Glances stopped (key pressed: CTRL-C)")
-
-
 
     # The end...
     sys.exit(0)
@@ -121,12 +120,14 @@ def start(config, args):
     # Start the main loop
     logger.debug("Glances started in {} seconds".format(start_duration.get()))
     if args.stop_after:
-        logger.info('Glances will be stopped in ~{} seconds'.format(
-            args.stop_after * args.time * args.memory_leak * 2))
+        logger.info('Glances will be stopped in ~{} seconds'.format(args.stop_after * args.time * args.memory_leak * 2))
 
     if args.memory_leak:
-        print('Memory leak detection, please wait ~{} seconds...'.format(
-            args.stop_after * args.time * args.memory_leak * 2))
+        print(
+            'Memory leak detection, please wait ~{} seconds...'.format(
+                args.stop_after * args.time * args.memory_leak * 2
+            )
+        )
         # First run without dump to fill the memory
         mode.serve_n(args.stop_after)
         # Then start the memory-leak loop
@@ -143,8 +144,7 @@ def start(config, args):
         snapshot_end = tracemalloc.take_snapshot()
         snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
         memory_leak = sum([s.size_diff for s in snapshot_diff])
-        print("Memory comsumption: {0:.1f}KB (see log for details)".format(
-            memory_leak / 1000))
+        print("Memory comsumption: {0:.1f}KB (see log for details)".format(memory_leak / 1000))
         logger.info("Memory consumption (top 5):")
         for stat in snapshot_diff[:5]:
             logger.info(stat)
