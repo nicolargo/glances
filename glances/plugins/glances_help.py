@@ -83,6 +83,7 @@ class Plugin(GlancesPlugin):
         self.view_data['show_hide_filesystem'] = msg_col.format('f', 'Show/hide filesystem stats')
         self.view_data['view_cumulative_network'] = msg_col2.format('U', 'View cumulative network I/O')
         self.view_data['show_hide_network'] = msg_col.format('n', 'Show/hide network stats')
+        self.view_data['show_hide_time'] = msg_col.format('N', 'Show/hide current time')
         self.view_data['show_hide_filesytem_freespace'] = msg_col2.format('F', 'Show filesystem free space')
         self.view_data['show_hide_sensors'] = msg_col.format('s', 'Show/hide sensors stats')
         self.view_data['generate_graphs'] = msg_col2.format('g', 'Generate graphs for current history')
