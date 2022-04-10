@@ -3,6 +3,12 @@
 ==============================================================================
 
 ===============
+Version 3.2.6
+===============
+
+Under development: see roadmap here https://github.com/nicolargo/glances/milestone/58
+
+===============
 Version 3.2.5
 ===============
 
