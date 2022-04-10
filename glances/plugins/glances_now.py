@@ -69,6 +69,9 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
+        if not self.stats or self.is_disabled():
+            return ret
+
         # Build the string message
         # 23 is the padding for the process list
         msg = '{:23}'.format(self.stats)
