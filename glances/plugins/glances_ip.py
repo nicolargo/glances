@@ -57,6 +57,7 @@ class Plugin(GlancesPlugin):
     """
 
     _default_public_refresh_interval = 300
+    _default_public_ip_disabled = ["False"]
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
@@ -70,6 +71,9 @@ class Plugin(GlancesPlugin):
         self.public_address_refresh_interval = self.get_conf_value(
             "public_refresh_interval", default=self._default_public_refresh_interval
         )
+
+        public_ip_disabled = self.get_conf_value("public_ip_disabled", default=self._default_public_ip_disabled)
+        self.public_ip_disabled = True if public_ip_disabled == ["True"] else False
 
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
@@ -94,7 +98,9 @@ class Plugin(GlancesPlugin):
                 mask = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['netmask']
 
                 time_since_update = getTimeSinceLastUpdate('public-ip')
-                if self.stats.get('address') != address or time_since_update > self.public_address_refresh_interval:
+                if not self.public_ip_disabled and (
+                    self.stats.get('address') != address or time_since_update > self.public_address_refresh_interval
+                ):
                     self.public_address = PublicIpAddress().get()
             except (KeyError, AttributeError) as e:
                 logger.debug("Cannot grab IP information: {}".format(e))
