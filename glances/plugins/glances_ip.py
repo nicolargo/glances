@@ -24,7 +24,7 @@ from json import loads
 
 from glances.compat import iterkeys, urlopen, queue
 from glances.logger import logger
-from glances.timer import Timer
+from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # Import plugin specific dependency
@@ -56,6 +56,8 @@ class Plugin(GlancesPlugin):
     stats is a dict
     """
 
+    _default_public_refresh_interval = 300
+
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args, config=config)
@@ -63,9 +65,11 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Get the public IP address once (not for each refresh)
-        if not import_error_tag:
-            self.public_address = PublicIpAddress().get()
+        # For public IP address
+        self.public_address = ""
+        self.public_address_refresh_interval = self.get_conf_value(
+            "public_refresh_interval", default=self._default_public_refresh_interval
+        )
 
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
@@ -83,15 +87,24 @@ class Plugin(GlancesPlugin):
                 default_gw = netifaces.gateways()['default'][netifaces.AF_INET]
             except (KeyError, AttributeError) as e:
                 logger.debug("Cannot grab the default gateway ({})".format(e))
+                return {}
+
+            try:
+                address = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['addr']
+                mask = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['netmask']
+
+                time_since_update = getTimeSinceLastUpdate('public-ip')
+                if self.stats.get('address') != address or time_since_update > self.public_address_refresh_interval:
+                    self.public_address = PublicIpAddress().get()
+            except (KeyError, AttributeError) as e:
+                logger.debug("Cannot grab IP information: {}".format(e))
             else:
-                try:
-                    stats['address'] = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['addr']
-                    stats['mask'] = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['netmask']
-                    stats['mask_cidr'] = self.ip_to_cidr(stats['mask'])
-                    stats['gateway'] = netifaces.gateways()['default'][netifaces.AF_INET][0]
-                    stats['public_address'] = self.public_address
-                except (KeyError, AttributeError) as e:
-                    logger.debug("Cannot grab IP information: {}".format(e))
+                stats['address'] = address
+                stats['mask'] = mask
+                stats['mask_cidr'] = self.ip_to_cidr(stats['mask'])
+                stats['gateway'] = default_gw[0]
+                stats['public_address'] = self.public_address
+
         elif self.input_method == 'snmp':
             # Not implemented yet
             pass
@@ -138,7 +151,7 @@ class Plugin(GlancesPlugin):
             # Add KeyError exception (see https://github.com/nicolargo/glances/issues/1469)
             pass
         else:
-            if self.stats['public_address'] is not None:
+            if self.stats['public_address']:
                 msg = ' Pub '
                 ret.append(self.curse_add_line(msg, 'TITLE'))
                 ret.append(self.curse_add_line(msg_pub))
