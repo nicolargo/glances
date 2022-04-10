@@ -6,9 +6,32 @@
 Version 3.2.5
 ===============
 
-Version under development, see roadmap here:
+Enhancement requests:
 
-    https://github.com/nicolargo/glances/milestone/55
+    * Add a Accumulated per program function to the Glances process list needs test new feature plugin/ps #2015
+    * Including battery and AC adapter health in Glances enhancement new feature #1049
+    * Display uptime of a docker container enhancement plugin/docker #2004
+    * Add a code formatter enhancement #1964
+
+Bugs corrected:
+
+    * Threading.Event.isSet is deprecated in Python 3.10 #2017
+    * Fix code scanning alert - Clear-text logging of sensitive information security #2006
+    * The gpu temperature unit are displayed incorrectly in web ui bug #2002
+    * Doc for 'alert' Restfull/JSON API response documentation #1994
+    * Show the spinning state of a disk documentation #1993
+    * Web server status check endpoint enhancement #1988
+    * --time parameter being ignored for client/server mode bug #1978
+    * Amp with pipe do not work documentation #1976
+    * glances_ip.py plugin relies on low rating / malicious site domain bug security #1975
+    * "N" command freezes/unfreezes the current time instead of show/hide bug #1974
+    * Missing commands in help "h" screen enhancement needs contributor #1973
+    * Grafana dashboards not displayed with influxdb2 enhancement needs contributor #1960
+    * Glances reports different amounts of used memory than free -m or top documentation #1924
+    * Missing: Help command doesn't have info on TCP Connections bug documentation enhancement needs contributor #1675
+    * Docstring convention documentation enhancement #940
+
+Thanks for the bug report and the patch: @RazCrimson, @Karthikeyan Singaravelan, @Moldavite, @ledwards
 
 ===============
 Version 3.2.4.1
