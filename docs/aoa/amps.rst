@@ -50,7 +50,7 @@ less than countmin):
 .. image:: ../_static/amp-python-warning.png
 
 If the regex option is not defined, the AMP will be executed every refresh
-time and the process count will not be displayed (countmin and countmax will 
+time and the process count will not be displayed (countmin and countmax will
 be ignored).
 
 For example:
@@ -62,6 +62,26 @@ For example:
     refresh=30
     one_line=false
     command=sysctl net.netfilter.nf_conntrack_count;sysctl net.netfilter.nf_conntrack_max
+
+For security reason, pipe is not directly allowed in a AMP command but you create a sheel
+script with your command:
+
+.. code-block:: ini
+
+    $ cat /usr/local/bin/mycommand.sh
+    #!/bin/sh
+    ps -aux | wc -l
+
+and use it in the amps:
+
+.. code-block:: ini
+
+    [amp_amptest]
+    enable=true
+    regex=.*
+    refresh=15
+    one_line=false
+    command=/usr/local/bin/mycommand.sh
 
 User defined AMP
 ----------------
