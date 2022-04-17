@@ -54,6 +54,15 @@ Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can
 add new plugins or exports modules.
 
+Social networks
+===============
+
+.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/twitter-icon.png
+    :target: https://twitter.com/nicolargo
+   
+.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/reddit.png
+    :target: https://www.reddit.com/r/glances/
+
 Requirements
 ============
 
