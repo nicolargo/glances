@@ -425,6 +425,10 @@ class GlancesPluginModel(object):
         """Return the stats object in JSON format."""
         return self._json_dumps(self.stats)
 
+    def get_json(self):
+        """Return the stats object in JSON format."""
+        return self.get_stats()
+
     def get_stats_item(self, item):
         """Return the stats object for a specific item in JSON format.
 
