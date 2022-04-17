@@ -25,6 +25,7 @@ from json import loads
 from glances.globals import iterkeys, urlopen, queue
 from glances.logger import logger
 from glances.timer import Timer
+from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Import plugin specific dependency
