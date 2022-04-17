@@ -51,7 +51,6 @@ class GlancesPasswordList(GlancesPassword):
 
             # Password list loaded
             logger.info("%s password(s) loaded from the configuration file" % len(password_dict))
-            logger.debug("Password dictionary: %s" % password_dict)
 
         return password_dict
 

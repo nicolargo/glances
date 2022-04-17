@@ -29,7 +29,7 @@ import sys
 # Global name
 # Version should start and end with a numerical char
 # See https://packaging.python.org/specifications/core-metadata/#version
-__version__ = '3.2.5_beta01'
+__version__ = '3.2.6_beta01'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
 
@@ -66,6 +66,7 @@ if psutil_version_info < psutil_min_version:
 
 # Trac malloc is only available on Python 3.4 or higher
 import tracemalloc
+
 
 
 def __signal_handler(signal, frame):
