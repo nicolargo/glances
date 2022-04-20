@@ -1,3 +1,4 @@
 psutil>=5.3.0
 defusedxml
 packaging
+rich

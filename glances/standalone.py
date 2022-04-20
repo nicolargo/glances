@@ -27,6 +27,7 @@ from glances.logger import logger
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
+from glances.outputs.glances_rich import GlancesRich
 from glances.outputs.glances_stdout import GlancesStdout
 from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
 from glances.outputs.glances_stdout_issue import GlancesStdoutIssue
@@ -105,7 +106,8 @@ class GlancesStandalone(object):
             glances_processes.max_processes = 50
 
             # Init screen
-            self.screen = GlancesCursesStandalone(config=config, args=args)
+            # self.screen = GlancesCursesStandalone(config=config, args=args)
+            self.screen = GlancesRich(config=config, args=args)
 
         # Check the latest Glances version
         self.outdated = Outdated(config=config, args=args)

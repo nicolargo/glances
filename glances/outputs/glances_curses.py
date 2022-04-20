@@ -1161,7 +1161,7 @@ class _GlancesCurses(object):
 
     def wait(self, delay=100):
         """Wait delay in ms"""
-        curses.napms(100)
+        curses.napms(delay)
 
     def get_stats_display_width(self, curse_msg, without_option=False):
         """Return the width of the formatted curses message."""
