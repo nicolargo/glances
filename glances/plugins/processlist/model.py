@@ -523,7 +523,7 @@ class PluginModel(GlancesPluginModel):
         # Process list
         # Loop over processes (sorted by the sort key previously compute)
         i = 0
-        for p in self.__sort_stats(process_sort_key):
+        for p in self.__sort_stats(process_sort_key)[:glances_processes.max_processes]:
             ret.extend(self.get_process_curses_data(p, i == args.cursor_position, args))
             i += 1
 
