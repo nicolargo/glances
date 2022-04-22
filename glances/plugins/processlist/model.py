@@ -505,7 +505,7 @@ class PluginModel(GlancesPluginModel):
 
         return ret
 
-    def msg_curse(self, args=None, max_width=None):
+    def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []

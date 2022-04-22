@@ -26,6 +26,7 @@ from glances.logger import logger
 from glances.keyboard import KBHit
 from glances.timer import Timer
 from glances.compat import nativestr, u
+from glances.processes import glances_processes, sort_processes_key_list
 
 # Import curses library for "normal" operating system
 try:
@@ -40,8 +41,12 @@ except ImportError:
     sys.exit(1)
 
 # Define plugins order in TUI menu
-_top = [
+_top_left = [
     'quicklook',
+
+]
+
+_top_right = [
     'cpu',
     'percpu',
     'gpu',
@@ -64,7 +69,7 @@ _bottom_left = [
     'sensors',
     'now',
 ]
-_bottom_left_max_width = 34
+_bottom_left_width = 34
 
 _bottom_right = [
     'docker',
@@ -87,8 +92,11 @@ class GlancesRich(object):
         # Init keyboard
         self.kb = KBHit()
 
+        # Init cursor
+        self.args.cursor_position = 0
+
         # Init the screen
-        self.console = Console()
+        self.console = Console(soft_wrap=True)
         self.layout = Layout()
         self.live = Live(console=self.console, screen=True, auto_refresh=False)
 
@@ -146,41 +154,51 @@ class GlancesRich(object):
         # Update the layout
         self.layout.split_column(
             Layout(name='top',
-                   size=stats_display['cpu']['height']),
-            Layout(name='bottom'),
+                   size=stats_display['cpu']['height'],
+                   renderable=False),
+            Layout(name='bottom',
+                   renderable=False),
         )
         self.layout['top'].split_row(
-            # Layout(
-            #     Panel(stats_display['quicklook']['data'],
-            #           title=stats_display['quicklook']['title'],
-            #           subtitle=stats_display['quicklook']['subtitle'],
-            #           height=stats_display['quicklook']['height']),
-            #     name='quicklook'
-            # ),
+            Layout(name='top_left',
+                   #size=TODO,
+                   renderable=False),
+            Layout(name='top_right',
+                   renderable=False)
+        )
+        self.layout['top_left'].split_row(
+            *[Layout(
+                Panel(stats_display[p]['data'],
+                      title=stats_display[p]['title'],
+                      subtitle=stats_display[p]['subtitle'],
+                      height=stats_display[p]['height']),
+                name=p) for p in _top_left
+              if stats_display[p]['display'] and len(stats_display[p]['data']) > 0]
+        )
+        self.layout['top_right'].split_row(
             *[Layout(
                 Panel(stats_display[p]['data'],
                       title=stats_display[p]['title'],
                       subtitle=stats_display[p]['subtitle'],
                       height=stats_display[p]['height']),
                 name=p,
-                size=stats_display[p]['width']) for p in _top[1:]
+                size=stats_display[p]['width']) for p in _top_right
               if stats_display[p]['display'] and len(stats_display[p]['data']) > 0]
         )
         self.layout['bottom'].split_row(
             Layout(name='bottom_left',
-                #    size=_bottom_left_max_width
-                   ),
-            Layout(name='bottom_right')
+                   renderable=False,
+                   size=_bottom_left_width + 8),
+            Layout(name='bottom_right',
+                   renderable=False)
         )
         # _bottom_left
         self.layout['bottom_left'].split_column(
             *[Layout(
                 Panel(stats_display[p]['data'],
                       title=stats_display[p]['title'],
-                      subtitle=stats_display[p]['subtitle'],
-                      height=stats_display[p]['height']
-                      ),
-                # height=stats_display[p]['height'],
+                      subtitle=stats_display[p]['subtitle']),
+                size=stats_display[p]['height'],
                 name=p) for p in _bottom_left
               if stats_display[p]['display'] and len(stats_display[p]['data']) > 0]
         )
@@ -188,8 +206,8 @@ class GlancesRich(object):
             *[Layout(
                 Panel(stats_display[p]['data'],
                       title=stats_display[p]['title'],
-                      subtitle=stats_display[p]['subtitle'],
-                      height=stats_display[p]['height']),
+                      subtitle=stats_display[p]['subtitle']),
+                size=stats_display[p]['height'],
                 name=p) for p in _bottom_right
               if stats_display[p]['display'] and len(stats_display[p]['data']) > 0]
         )
@@ -203,19 +221,23 @@ class GlancesRich(object):
     def _plugin_to_rich(self, stats, plugin):
         """Return a Rich representation of the plugin"""
         ret = {'title': '', 'subtitle': '', 'data': '', 'width': 0, 'height': 0, 'display': False}
-        if plugin not in ['quicklook', 'processlist']:
-            # 'quicklook', 'processlist': Should be done later (we need to get the stats of others plugins)
-            if stats.get_plugin(plugin):
-                stat_display =stats.get_plugin(plugin).get_stats_display(args=self.args,
-                                                                         max_width=_bottom_left_max_width)
-                stat_repr = [i['msg'] for i in stat_display['msgdict']]
-                ret['title'] =  plugin.capitalize()
-                ret['data'] = ''.join(stat_repr)
-                ret['width'] = self._get_width(stat_display) + 4 # +4 for borders
-                ret['height'] = self._get_height(stat_display) + 2 # +2 for borders
-                ret['display'] = stat_display['display']
-                if plugin == 'diskio':
-                    logger.info(ret)
+        if stats.get_plugin(plugin):
+            _max_width = None
+            if plugin == 'processlist':
+                # @TODO: do not work..
+                glances_processes.max_processes = 10
+            elif plugin in _bottom_left:
+                _max_width = _bottom_left_width
+            stat_display = stats.get_plugin(plugin).get_stats_display(args=self.args,
+                                                                      max_width=_max_width)
+            stat_repr = [i['msg'] for i in stat_display['msgdict']]
+            ret['title'] =  plugin.capitalize()
+            ret['data'] = ''.join(stat_repr)
+            ret['width'] = self._get_width(stat_display) + 4 # +4 for borders
+            ret['height'] = self._get_height(stat_display) + 2 # +2 for borders
+            ret['display'] = stat_display['display']
+            if plugin == 'diskio':
+                logger.info(ret)
         return ret
 
     def _get_width(self, stats_display, without_option=False):
