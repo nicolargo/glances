@@ -33,6 +33,7 @@ from glances.processes import glances_processes, sort_processes_key_list
 try:
     from rich.panel import Panel
     from rich.panel import Padding
+    from rich.measure import Measurement
     from rich.layout import Layout
     from rich.console import Console
     from rich.live import Live
@@ -149,8 +150,14 @@ class GlancesRich(object):
         """Update the layout with the stats"""
         # Get the stats and apply the Rich transformation
         stats_display = self.plugins_to_rich(stats)
+        self._create_main_layout(stats_display)
+        self._update_top_layout(stats, stats_display)
+        self._update_middle_left_layout(stats, stats_display)
+        self._update_middle_right_layout(stats, stats_display)
+        self._update_bottom_layout(stats, stats_display)
 
-        # Update the layout
+    def _create_main_layout(self, stats_display):
+        # Create the layout
         self.layout.split_column(
             Layout(name='top',
                    size=stats_display['cpu']['height'],
@@ -161,28 +168,41 @@ class GlancesRich(object):
                    size=stats_display['now']['height'],
                    renderable=False),
         )
-
-        renderable = []
-        for p in _top:
-            if stats_display[p]['display'] and len(stats_display[p]['data']) > 0:
-                if p == 'quicklook':
-                    r = Layout(name=p)
-                else:
-                    r = Layout(Panel(stats_display[p]['data'],
-                                     title=stats_display[p]['title'],
-                                     subtitle=stats_display[p]['subtitle']),
-                               size=stats_display[p]['width'],
-                               name=p)
-                renderable.append(r)
-        self.layout['top'].split_row(*renderable)
-
         self.layout['middle'].split_row(
             Layout(name='middle_left',
-                   renderable=False,
-                   size=_middle_left_width + 8),
+                   size=_middle_left_width + 8,
+                   renderable=False),
             Layout(name='middle_right',
                    renderable=False)
         )
+
+    def _update_top_layout(self, stats, stats_display):
+        """Update the top layout"""
+        renderable = []
+        for p in _top:
+            # The quicklook plugin will be ignore...
+            if stats_display[p]['display'] and len(stats_display[p]['data']) > 0 and p != 'quicklook':
+                r = Layout(Panel(stats_display[p]['data'],
+                                 title=stats_display[p]['title'],
+                                 subtitle=stats_display[p]['subtitle']),
+                           size=stats_display[p]['width'],
+                           name=p)
+                renderable.append(r)
+        # ... and added here after the others.
+        if stats_display['quicklook']['display'] and len(stats_display['quicklook']['data']) > 0:
+            # @TODO: why - 13 ???
+            max_width = self.console.width - sum([i.size for i in renderable]) - 13
+            stats_display['quicklook'] = self._plugin_to_rich(stats, 'quicklook', max_width=max_width)
+            r = Layout(Panel(stats_display['quicklook']['data'],
+                             title=stats_display['quicklook']['title'],
+                             subtitle=stats_display['quicklook']['subtitle']),
+                       size=stats_display['quicklook']['width'],
+                       name='quicklook')
+            renderable.insert(0, r)
+        self.layout['top'].split_row(*renderable)
+
+    def _update_middle_left_layout(self, stats, stats_display):
+        """Update the middle left layout"""
         self.layout['middle_left'].split_column(
             *[Layout(
                 Panel(stats_display[p]['data'],
@@ -191,37 +211,45 @@ class GlancesRich(object):
                 size=stats_display[p]['height'],
                 name=p) for p in _middle_left
               if stats_display[p]['display'] and len(stats_display[p]['data']) > 0],
-            Layout(name='middle_left_padding')
+            Layout(Padding(''),
+                   name='middle_left_padding')
         )
+
+    def _update_middle_right_layout(self, stats, stats_display):
+        """Update the middle right layout"""
         renderable = []
         for p in _middle_right:
-            if stats_display[p]['display'] and len(stats_display[p]['data']) > 0:
-                if p == 'processlist':
-                    # r = Layout(Padding(stats_display[p]['data'],
-                    #                    pad=(1, 1, 1, 1)),
-                    #            size=stats_display[p]['height'],
-                    #            name=p)
-                    r = Layout(name=p)
-                else:
+            # The quicklook plugin will be ignore...
+            if stats_display[p]['display'] and len(stats_display[p]['data']) > 0 and p != 'processlist':
                     r = Layout(Panel(stats_display[p]['data'],
                                      title=stats_display[p]['title'],
                                      subtitle=stats_display[p]['subtitle']),
                                size=stats_display[p]['height'],
                                name=p)
-                renderable.append(r)
+                    renderable.append(r)
+        # ... and added here after the others.
+        if stats_display['processlist']['display'] and len(stats_display['processlist']['data']) > 0:
+            # @TODO: why - 13 ???
+            glances_processes.max_processes = self.console.height - sum([i.size for i in renderable]) - 13
+            stats_display['processlist'] = self._plugin_to_rich(stats, 'processlist', max_width=None)
+            r = Layout(Panel(stats_display['processlist']['data'],
+                             title=stats_display['processlist']['title'],
+                             subtitle=stats_display['processlist']['subtitle']),
+                       size=glances_processes.max_processes + 4,
+                       name='processlist')
+            # Insert the processlist
+            renderable.insert(len(renderable) - 1, r)
         self.layout['middle_right'].split_column(*renderable)
 
-        # self.layout['bottom'].split_row(
-        #     *[Layout(
-        #         Panel(stats_display[p]['data'],
-        #               title=stats_display[p]['title'],
-        #               subtitle=stats_display[p]['subtitle']),
-        #         size=stats_display[p]['height'],
-        #         name=p) for p in _bottom
-        #       if stats_display[p]['display'] and len(stats_display[p]['data']) > 0]
-        # )
+    def _update_bottom_layout(self, stats, stats_display):
+        """Update the bottom layout"""
         self.layout['bottom'].split_row(
-            Layout(name='bottom')
+            *[Layout(
+                Panel(stats_display[p]['data'],
+                      title=stats_display[p]['title'],
+                      subtitle=stats_display[p]['subtitle']),
+                name=p) for p in _bottom
+              if stats_display[p]['display'] and len(stats_display[p]['data']) > 0]
         )
 
     def plugins_to_rich(self, stats):
@@ -230,18 +258,15 @@ class GlancesRich(object):
             ret[p] = self._plugin_to_rich(stats, p)
         return ret
 
-    def _plugin_to_rich(self, stats, plugin):
+    def _plugin_to_rich(self, stats, plugin, max_width=None):
         """Return a Rich representation of the plugin"""
         ret = {'title': '', 'subtitle': '', 'data': '', 'width': 0, 'height': 0, 'display': False}
         if stats.get_plugin(plugin):
-            _max_width = None
             if plugin in _middle_left:
-                _max_width = _middle_left_width
-            if plugin == 'processlist':
-                glances_processes.max_processes = 10
+                max_width = _middle_left_width
             # Grab the stats to display
             stat_display = stats.get_plugin(plugin).get_stats_display(args=self.args,
-                                                                      max_width=_max_width)
+                                                                      max_width=max_width)
             # Buil the object (a dict) to display
             stat_repr = [i['msg'] for i in stat_display['msgdict']]
             ret['title'] =  plugin.capitalize()
