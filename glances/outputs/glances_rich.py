@@ -43,13 +43,13 @@ except ImportError:
 
 # Define plugins order in TUI menu
 _top = [
+    'quicklook',
     'cpu',
     'percpu',
     'gpu',
     'mem',
     'memswap',
-    'load',
-    'quicklook'
+    'load'
 ]
 
 _middle_left = [
@@ -181,24 +181,13 @@ class GlancesRich(object):
         renderable = []
         for p in _top:
             # The quicklook plugin will be ignore...
-            if stats_display[p]['display'] and len(stats_display[p]['data']) > 0 and p != 'quicklook':
+            if stats_display[p]['display'] and len(stats_display[p]['data']) > 0:
                 r = Layout(Panel(stats_display[p]['data'],
                                  title=stats_display[p]['title'],
                                  subtitle=stats_display[p]['subtitle']),
                            size=stats_display[p]['width'],
                            name=p)
                 renderable.append(r)
-        # ... and added here after the others.
-        if stats_display['quicklook']['display'] and len(stats_display['quicklook']['data']) > 0:
-            # @TODO: why - 13 ???
-            max_width = self.console.width - sum([i.size for i in renderable]) - 13
-            stats_display['quicklook'] = self._plugin_to_rich(stats, 'quicklook', max_width=max_width)
-            r = Layout(Panel(stats_display['quicklook']['data'],
-                             title=stats_display['quicklook']['title'],
-                             subtitle=stats_display['quicklook']['subtitle']),
-                       size=stats_display['quicklook']['width'],
-                       name='quicklook')
-            renderable.insert(0, r)
         self.layout['top'].split_row(*renderable)
 
     def _update_middle_left_layout(self, stats, stats_display):
@@ -220,25 +209,13 @@ class GlancesRich(object):
         renderable = []
         for p in _middle_right:
             # The quicklook plugin will be ignore...
-            if stats_display[p]['display'] and len(stats_display[p]['data']) > 0 and p != 'processlist':
-                    r = Layout(Panel(stats_display[p]['data'],
-                                     title=stats_display[p]['title'],
-                                     subtitle=stats_display[p]['subtitle']),
-                               size=stats_display[p]['height'],
-                               name=p)
-                    renderable.append(r)
-        # ... and added here after the others.
-        if stats_display['processlist']['display'] and len(stats_display['processlist']['data']) > 0:
-            # @TODO: why - 13 ???
-            glances_processes.max_processes = self.console.height - sum([i.size for i in renderable]) - 13
-            stats_display['processlist'] = self._plugin_to_rich(stats, 'processlist', max_width=None)
-            r = Layout(Panel(stats_display['processlist']['data'],
-                             title=stats_display['processlist']['title'],
-                             subtitle=stats_display['processlist']['subtitle']),
-                       size=glances_processes.max_processes + 4,
-                       name='processlist')
-            # Insert the processlist
-            renderable.insert(len(renderable) - 1, r)
+            if stats_display[p]['display'] and len(stats_display[p]['data']) > 0:
+                r = Layout(Panel(stats_display[p]['data'],
+                                 title=stats_display[p]['title'],
+                                 subtitle=stats_display[p]['subtitle']),
+                           size=stats_display[p]['height'],
+                           name=p)
+                renderable.append(r)
         self.layout['middle_right'].split_column(*renderable)
 
     def _update_bottom_layout(self, stats, stats_display):
@@ -253,13 +230,34 @@ class GlancesRich(object):
         )
 
     def plugins_to_rich(self, stats):
+        """Get the 'Rich' stats from the plugins
+        Return: a dict of dicts with:
+            - key: plugin name
+            - value: dict returned by _plugin_to_rich
+        Ex: {'cpu': {'title': '', 'subtitle': '', 'data': '', 'width': 0, 'height': 0, 'display': False}, ... }
+        """
         ret = {}
-        for p in stats.getPluginsList(enable=False):
+        # Some plugin should be processed after others
+        after = ['quicklook', 'processlist']
+        for p in [p for p in stats.getPluginsList(enable=False) if p not in after]:
             ret[p] = self._plugin_to_rich(stats, p)
+        # It is time to process its
+        for p in after:
+            if p == 'processlist':
+                height_but_processlist = max([ret[p]['height'] for p in _top if p in ret]) + \
+                    sum([ret[p]['height'] for p in _middle_right if p in ret]) + \
+                    max([ret[p]['height'] for p in _bottom if p in ret])
+                glances_processes.max_processes = self.console.height - height_but_processlist
+                ret[p] = self._plugin_to_rich(stats, p, max_width=None)
+            else:
+                width_but_after = sum([ret[p]['width']
+                                      for p in _top if p in ret and len(ret[p]['data']) > 0 and ret[p]['display']])
+                max_width = self.console.width - width_but_after - 13
+                ret[p] = self._plugin_to_rich(stats, p, max_width=max_width)
         return ret
 
     def _plugin_to_rich(self, stats, plugin, max_width=None):
-        """Return a Rich representation of the plugin"""
+        """Return a dict: Rich representation of the plugin"""
         ret = {'title': '', 'subtitle': '', 'data': '', 'width': 0, 'height': 0, 'display': False}
         if stats.get_plugin(plugin):
             if plugin in _middle_left:
@@ -269,10 +267,10 @@ class GlancesRich(object):
                                                                       max_width=max_width)
             # Buil the object (a dict) to display
             stat_repr = [i['msg'] for i in stat_display['msgdict']]
-            ret['title'] =  plugin.capitalize()
+            ret['title'] = plugin.capitalize()
             ret['data'] = ''.join(stat_repr)
-            ret['width'] = self._get_width(stat_display) + 4 # +4 for borders
-            ret['height'] = self._get_height(stat_display) + 2 # +2 for borders
+            ret['width'] = self._get_width(stat_display) + 4  # +4 for borders
+            ret['height'] = self._get_height(stat_display) + 2  # +2 for borders
             ret['display'] = stat_display['display']
         return ret
 
