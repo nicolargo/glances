@@ -90,4 +90,4 @@ release-note:
 	@echo "\n"
 	git --no-pager shortlog -s -n $(LASTTAG)..HEAD
 
-.PHONY: test docs docs-server
+.PHONY: test docs docs-server venv
