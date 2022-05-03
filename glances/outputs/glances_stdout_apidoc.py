@@ -48,9 +48,9 @@ def indent_stat(stat, indent='    '):
     # Indent stats to pretty print it
     if isinstance(stat, list) and len(stat) > 1 and isinstance(stat[0], dict):
         # Only display two first items
-        return indent + pformat(stat[0:2]).replace('\n', '\n' + indent)
+        return indent + pformat(stat[0:2]).replace('\n', '\n' + indent).replace("'", '"')
     else:
-        return indent + pformat(stat).replace('\n', '\n' + indent)
+        return indent + pformat(stat).replace('\n', '\n' + indent).replace("'", '"')
 
 
 def print_api_status():
