@@ -34,7 +34,9 @@ try:
     from rich.panel import Panel
     from rich.panel import Padding
     from rich.measure import Measurement
+    from rich.table import Table
     from rich.layout import Layout
+    from rich.style import Style
     from rich.console import Console
     from rich.live import Live
 except ImportError:
@@ -160,12 +162,12 @@ class GlancesRich(object):
         # Create the layout
         self.layout.split_column(
             Layout(name='top',
-                   size=stats_display['cpu']['height'],
+                   size=max([stats_display[p]['height'] if stats_display[p]['display'] else 0 for p in _top]),
                    renderable=False),
             Layout(name='middle',
                    renderable=False),
             Layout(name='bottom',
-                   size=stats_display['now']['height'],
+                   size=max([stats_display[p]['height'] if stats_display[p]['display'] else 0 for p in _bottom]),
                    renderable=False),
         )
         self.layout['middle'].split_row(
@@ -181,10 +183,13 @@ class GlancesRich(object):
         renderable = []
         for p in _top:
             # The quicklook plugin will be ignore...
-            if stats_display[p]['display'] and len(stats_display[p]['data']) > 0:
-                r = Layout(Panel(stats_display[p]['data'],
-                                 title=stats_display[p]['title'],
-                                 subtitle=stats_display[p]['subtitle']),
+            if stats_display[p]['display'] and len(stats_display[p]['content']) > 0:
+                # r = Layout(Panel(stats_display[p]['content_repr'],
+                #                  title=stats_display[p]['title'],
+                #                  subtitle=stats_display[p]['subtitle']),
+                #            size=stats_display[p]['width'],
+                #            name=p)
+                r = Layout(stats_display[p]['content_repr'],
                            size=stats_display[p]['width'],
                            name=p)
                 renderable.append(r)
@@ -194,12 +199,12 @@ class GlancesRich(object):
         """Update the middle left layout"""
         self.layout['middle_left'].split_column(
             *[Layout(
-                Panel(stats_display[p]['data'],
+                Panel(stats_display[p]['content_repr'],
                       title=stats_display[p]['title'],
                       subtitle=stats_display[p]['subtitle']),
                 size=stats_display[p]['height'],
                 name=p) for p in _middle_left
-              if stats_display[p]['display'] and len(stats_display[p]['data']) > 0],
+              if stats_display[p]['display'] and len(stats_display[p]['content']) > 0],
             Layout(Padding(''),
                    name='middle_left_padding')
         )
@@ -209,8 +214,8 @@ class GlancesRich(object):
         renderable = []
         for p in _middle_right:
             # The quicklook plugin will be ignore...
-            if stats_display[p]['display'] and len(stats_display[p]['data']) > 0:
-                r = Layout(Panel(stats_display[p]['data'],
+            if stats_display[p]['display'] and len(stats_display[p]['content']) > 0:
+                r = Layout(Panel(stats_display[p]['content_repr'],
                                  title=stats_display[p]['title'],
                                  subtitle=stats_display[p]['subtitle']),
                            size=stats_display[p]['height'],
@@ -222,11 +227,11 @@ class GlancesRich(object):
         """Update the bottom layout"""
         self.layout['bottom'].split_row(
             *[Layout(
-                Panel(stats_display[p]['data'],
+                Panel(stats_display[p]['content_repr'],
                       title=stats_display[p]['title'],
                       subtitle=stats_display[p]['subtitle']),
                 name=p) for p in _bottom
-              if stats_display[p]['display'] and len(stats_display[p]['data']) > 0]
+              if stats_display[p]['display'] and len(stats_display[p]['content']) > 0]
         )
 
     def plugins_to_rich(self, stats):
@@ -234,7 +239,7 @@ class GlancesRich(object):
         Return: a dict of dicts with:
             - key: plugin name
             - value: dict returned by _plugin_to_rich
-        Ex: {'cpu': {'title': '', 'subtitle': '', 'data': '', 'width': 0, 'height': 0, 'display': False}, ... }
+        Ex: {'cpu': {'title': '', 'subtitle': '', 'content': '', 'width': 0, 'height': 0, 'display': False}, ... }
         """
         ret = {}
         # Some plugin should be processed after others
@@ -251,27 +256,82 @@ class GlancesRich(object):
                 ret[p] = self._plugin_to_rich(stats, p, max_width=None)
             else:
                 width_but_after = sum([ret[p]['width']
-                                      for p in _top if p in ret and len(ret[p]['data']) > 0 and ret[p]['display']])
+                                      for p in _top if p in ret and len(ret[p]['content']) > 0 and ret[p]['display']])
                 max_width = self.console.width - width_but_after - 13
                 ret[p] = self._plugin_to_rich(stats, p, max_width=max_width)
         return ret
 
     def _plugin_to_rich(self, stats, plugin, max_width=None):
         """Return a dict: Rich representation of the plugin"""
-        ret = {'title': '', 'subtitle': '', 'data': '', 'width': 0, 'height': 0, 'display': False}
+        ret = {'title': '', 'subtitle': '', 'content': '', 'width': 0, 'height': 0, 'display': False}
         if stats.get_plugin(plugin):
             if plugin in _middle_left:
                 max_width = _middle_left_width
-            # Grab the stats to display
-            stat_display = stats.get_plugin(plugin).get_stats_display(args=self.args,
-                                                                      max_width=max_width)
-            # Buil the object (a dict) to display
-            stat_repr = [i['msg'] for i in stat_display['msgdict']]
-            ret['title'] = plugin.capitalize()
-            ret['data'] = ''.join(stat_repr)
-            ret['width'] = self._get_width(stat_display) + 4  # +4 for borders
-            ret['height'] = self._get_height(stat_display) + 2  # +2 for borders
-            ret['display'] = stat_display['display']
+
+            if hasattr(stats.get_plugin(plugin), 'msg_rich'):
+                # Grab the stats to display
+                ret = stats.get_plugin(plugin).msg_rich(args=self.args,
+                                                        max_width=max_width)
+                # TODO: Style should be moved in a dedicated class
+                # decoration:
+                #     DEFAULT: no decoration
+                #     UNDERLINE: underline
+                #     BOLD: bold
+                #     TITLE: for stat title
+                #     PROCESS: for process name
+                #     STATUS: for process status
+                #     NICE: for process niceness
+                #     CPU_TIME: for process cpu time
+                #     OK: Value is OK and non logged
+                #     OK_LOG: Value is OK and logged
+                #     CAREFUL: Value is CAREFUL and non logged
+                #     CAREFUL_LOG: Value is CAREFUL and logged
+                #     WARNING: Value is WARNING and non logged
+                #     WARNING_LOG: Value is WARNING and logged
+                #     CRITICAL: Value is CRITICAL and non logged
+                #     CRITICAL_LOG: Value is CRITICAL and logged
+                rich_style = {
+                    'title_style': Style(bold=True),
+                }
+                bbcode_style = {
+                    'OK': '[green bold]{}[/]',
+                    'OK_LOG': '[green bold reverse]{}[/]',
+                    'CAREFUL': '[magenta bold]{}[/]',
+                    'CAREFUL_LOG': '[magenta bold reverse]{}[/]',
+                    'WARNING': '[yellow bold]{}[/]',
+                    'WARNING_LOG': '[yellow bold reverse]{}[/]',
+                    'CRITICAL': '[red bold]{}[/]',
+                    'CRITICAL_LOG': '[red bold reverse]{}[/]',
+                }
+                # Create the table
+                ret['content_repr'] = Table(title=ret['title'],
+                                            title_style=rich_style['title_style'],
+                                            caption=ret['subtitle'],
+                                            box=None,
+                                            show_header=False,
+                                            show_footer=False)
+                # Create the columns
+                for _ in ret['content'][0]:
+                    ret['content_repr'].add_column()
+                # Add the lines
+                for line in ret['content']:
+                    value_format = bbcode_style[line['style']
+                                                ] if line['style'] in bbcode_style else '{}'
+                    ret['content_repr'].add_row(line['name'],
+                                                value_format.format(line['value']))
+            else:
+                # TODO: to be removed when all plugins will have a msg_rich method
+                # Grab the stats to display
+                stat_display = stats.get_plugin(plugin).get_stats_display(args=self.args,
+                                                                          max_width=max_width)
+                # Buil the object (a dict) to display
+                stat_repr = [i['msg'] for i in stat_display['msgdict']]
+                ret['title'] = plugin.capitalize()
+                ret['content'] = ''.join(stat_repr)
+                ret['content_repr'] = ret['content']
+                ret['width'] = self._get_width(stat_display) + 4  # +4 for borders
+                ret['height'] = self._get_height(stat_display) + 2  # +2 for borders
+                ret['display'] = stat_display['display']
         return ret
 
     def _get_width(self, stats_display, without_option=False):

@@ -53,10 +53,10 @@ over 15 minutes.',
 # Define the layout (for the Rich interface)
 layout = {
     'title': 'Load {cpucore}-core',
-    'data': [
-        {'name': '1 min', 'value': '{min1}'},
-        {'name': '5 min', 'value': '{min5}'},
-        {'name': '15 min', 'value': '{min15}'}
+    'content': [
+        {'name': '1 min', 'key': 'min1'},
+        {'name': '5 min', 'key': 'min5'},
+        {'name': '15 min', 'key': 'min15'}
     ],
     'subtitle': ''
 }
@@ -170,8 +170,6 @@ class PluginModel(GlancesPluginModel):
             # try/except mandatory for Windows compatibility (no load stats)
             pass
 
-        self.msg_rich()
-
     def msg_rich(self, args=None, max_width=None):
         """Return a dict with the rich message to display."""
 
@@ -182,27 +180,24 @@ class PluginModel(GlancesPluginModel):
         if not self.stats or (self.stats == {}) or self.is_disabled():
             return ret
 
+        ret['display'] = True
         ret['title'] = layout['title'].format(**self.stats)
-        ret['data'] = []
-        for i in layout['data']:
-            ret['data'].append({
-                'name': i['name'].format(**self.stats),
-                'value': i['value'].format(**self.stats)
-            })
         ret['subtitle'] = layout['subtitle'].format(**self.stats)
-
-        # Structure returned by the update_views() method
-        # {'min1': {'decoration': 'DEFAULT',
-        #           'optional': False,
-        #           'additional': False,
-        #           'splittable': False,
-        #           'hidden': False,
-        #           '_zero': True},...
+        ret['content'] = []
+        for i in layout['content']:
+            ret['content'].append({
+                'name': i['name'].format(**self.stats),
+                'value': '{}'.format(self.stats[i['key']]),
+                'style': self.get_views(i['key'], 'decoration'),
+            })
+        ret['width'] = 16
+        ret['height'] = 4
 
         logger.info(ret)
 
         return ret
 
+    # TODO: To be removed because replaced by msg_rich
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message

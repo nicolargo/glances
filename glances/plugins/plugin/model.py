@@ -912,6 +912,7 @@ class GlancesPluginModel(object):
         """Return default string to display in the curse interface."""
         return [self.curse_add_line(str(self.stats))]
 
+    # TODO: to be removed when all Rich method will be implemented ???
     def get_stats_display(self, args=None, max_width=None):
         """Return a dict with all the information needed to display the stat.
 
@@ -929,7 +930,8 @@ class GlancesPluginModel(object):
             align_curse = self._align
 
         if max_width is not None:
-            ret = {'display': display_curse, 'msgdict': self.msg_curse(args, max_width=max_width), 'align': align_curse}
+            ret = {'display': display_curse, 'msgdict': self.msg_curse(
+                args, max_width=max_width), 'align': align_curse}
         else:
             ret = {'display': display_curse, 'msgdict': self.msg_curse(args), 'align': align_curse}
 
@@ -1103,7 +1105,7 @@ class GlancesPluginModel(object):
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         if min_symbol in symbols:
-            symbols = symbols[symbols.index(min_symbol) :]
+            symbols = symbols[symbols.index(min_symbol):]
         prefix = {
             'Y': 1208925819614629174706176,
             'Z': 1180591620717411303424,
