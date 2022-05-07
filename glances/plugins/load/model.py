@@ -50,6 +50,17 @@ over 15 minutes.',
     'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
 }
 
+# Define the layout (for the Rich interface)
+layout = {
+    'title': 'Load {cpucore}-core',
+    'data': [
+        {'name': '1 min', 'value': '{min1}'},
+        {'name': '5 min', 'value': '{min5}'},
+        {'name': '15 min', 'value': '{min15}'}
+    ],
+    'subtitle': ''
+}
+
 # SNMP OID
 # 1 minute Load: .1.3.6.1.4.1.2021.10.1.3.1
 # 5 minute Load: .1.3.6.1.4.1.2021.10.1.3.2
@@ -78,7 +89,10 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
+            args=args,
+            config=config,
+            items_history_list=items_history_list,
+            fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface
@@ -155,6 +169,39 @@ class PluginModel(GlancesPluginModel):
         except KeyError:
             # try/except mandatory for Windows compatibility (no load stats)
             pass
+
+        self.msg_rich()
+
+    def msg_rich(self, args=None, max_width=None):
+        """Return a dict with the rich message to display."""
+
+        # Init the return message
+        ret = {}
+
+        # Only process if stats exist, not empty (issue #871) and plugin not disabled
+        if not self.stats or (self.stats == {}) or self.is_disabled():
+            return ret
+
+        ret['title'] = layout['title'].format(**self.stats)
+        ret['data'] = []
+        for i in layout['data']:
+            ret['data'].append({
+                'name': i['name'].format(**self.stats),
+                'value': i['value'].format(**self.stats)
+            })
+        ret['subtitle'] = layout['subtitle'].format(**self.stats)
+
+        # Structure returned by the update_views() method
+        # {'min1': {'decoration': 'DEFAULT',
+        #           'optional': False,
+        #           'additional': False,
+        #           'splittable': False,
+        #           'hidden': False,
+        #           '_zero': True},...
+
+        logger.info(ret)
+
+        return ret
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
