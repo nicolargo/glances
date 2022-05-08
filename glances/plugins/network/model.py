@@ -59,11 +59,13 @@ fields_description = {
     'cumulative_rx': {
         'description': 'The number of bytes received through the interface (cumulative).',
         'unit': 'bytes',
+        'short_description': 'Rx'
     },
     'cumulative_tx': {
         'description': 'The number of bytes sent through the interface (cumulative).',
-        'unit': 'bytes'
-        },
+        'unit': 'bytes',
+        'short_description': 'Tx'
+    },
     'speed': {
         'description': 'Maximum interface speed (in bit per second). Can return 0 on some operating-system.',
         'unit': 'bps',

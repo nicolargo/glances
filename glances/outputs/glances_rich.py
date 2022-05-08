@@ -286,6 +286,7 @@ class GlancesRich(object):
                 rich_style = {
                     'title_style': Style(bold=True),
                 }
+                # https://en.wikipedia.org/wiki/BBCode
                 bbcode_style = {
                     'DEFAULT': '{}',
                     'HEADER': '[bold]{}[/]',
@@ -310,7 +311,7 @@ class GlancesRich(object):
                 for line in ret['content']:
                     line_with_style = []
                     for col in line:
-                        data = str(col['data'])
+                        data = col['data']
                         data_format = bbcode_style[col['style']] if col['style'] in bbcode_style else '{}'
                         line_with_style.append(data_format.format(data))
                     ret['content_repr'].add_row(*line_with_style)

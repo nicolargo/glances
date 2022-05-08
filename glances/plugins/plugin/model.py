@@ -26,6 +26,7 @@ I am your father...
 import re
 import json
 import copy
+import numbers
 from operator import itemgetter
 
 from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr
@@ -977,11 +978,11 @@ class GlancesPluginModel(object):
                 column = []
                 for c in self.layout['content_column']:
                     if c == 'key':
-                        # Add a stat
-                        data = self.stats[k] if k in self.stats else 'N/A'
+                        # Add stat
+                        data = self.auto_unit(self.stats[k]) if k in self.stats else 'N/A'
                         style = self.get_views(k, 'decoration')
                     else:
-                        # Add the description
+                        # Add description
                         data = c.format(**self.fields_description[k])
                         style = 'DEFAULT'
                     column.append({'data': data, 'style': style})
@@ -1002,7 +1003,7 @@ class GlancesPluginModel(object):
                 column = []
                 for k in self.layout['content_column']:
                     # k is a key (ex: 'rx' for net plugin)
-                    data = stat[k] if k in stat else 'N/A'
+                    data = self.auto_unit(stat[k]) if k in stat else 'N/A'
                     style = self.get_views(k, 'decoration')
                     column.append({'data': data, 'style': style})
                 ret.append(column)
@@ -1204,6 +1205,9 @@ class GlancesPluginModel(object):
                         sacrificing precision for more readability.
         :min_symbol: Do not approach if number < min_symbol (default is K)
         """
+        if not isinstance(number, numbers.Number):
+            return str(number)
+
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         if min_symbol in symbols:
             symbols = symbols[symbols.index(min_symbol):]
