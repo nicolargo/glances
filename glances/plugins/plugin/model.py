@@ -59,7 +59,13 @@ fields_unit_type = {
 class GlancesPluginModel(object):
     """Main class for Glances plugin model."""
 
-    def __init__(self, args=None, config=None, items_history_list=None, stats_init_value={}, fields_description=None):
+    def __init__(self,
+                 args=None,
+                 config=None,
+                 items_history_list=None,
+                 stats_init_value={},
+                 fields_description=None,
+                 layout=None):
         """Init the plugin of plugins model class.
 
         All Glances' plugins model should inherit from this class. Most of the
@@ -100,6 +106,9 @@ class GlancesPluginModel(object):
         # Init the history list
         self.items_history_list = items_history_list
         self.stats_history = self.init_stats_history()
+
+        # Init the layout
+        self.layout = layout
 
         # Init the limits (configuration keys) dictionary
         self._limits = dict()
@@ -575,15 +584,15 @@ class GlancesPluginModel(object):
         if item is None:
             item_views = self.views
         else:
-            item_views = self.views[item]
+            item_views = self.views.get('item', {})
 
         if key is None:
             return item_views
         else:
             if option is None:
-                return item_views[key]
+                return item_views.get('key', 'DEFAULT')
             else:
-                if option in item_views[key]:
+                if key in item_views and option in item_views[key]:
                     return item_views[key][option]
                 else:
                     return 'DEFAULT'
@@ -908,6 +917,98 @@ class GlancesPluginModel(object):
             # logger.debug("No alias found for {}".format(header))
             return None
 
+    # TODO: To be rename to get_stats_display when all the rich implentation is OK
+    def msg_for_human(self, args=None, max_width=None):
+        """Return a dict with the human message to display.
+
+        Example for the Load plugin:
+            {'display': True,
+             'title': 'Load 4-core',
+             'subtitle': '',
+             'width': 16,
+             'height': 4,
+             'content': [[{'data': '1 min', 'style': 'DEFAULT'}, {'data': 1.77, 'style': 'DEFAULT'}], ... ]}
+        """
+
+        # Init the return message
+        ret = {}
+
+        # Only process if stats exist, not empty (issue #871) and plugin not disabled
+        if not self.stats or (self.stats == {}) or self.is_disabled() or not self.layout:
+            return None
+
+        # logger.info(self.stats)
+        # logger.info(self.views)
+        # logger.info(self.layout)
+
+        ret['display'] = True
+        if 'title' in self.layout:
+            ret['title'] = self.layout.get('title', '').format(**self.stats)
+        else:
+            ret['title'] = None
+        ret['subtitle'] = self.layout.get('subtitle', '')
+        ret['content'] = self.get_content(args=args, max_width=max_width)
+        ret['width'] = self.layout['width'] if 'width' in self.layout else max_width
+        ret['height'] = (ret['title'] != '') + (ret['subtitle'] != '') + len(ret['content'])
+
+        # TODO: Remove this when all the rich implentation is OK
+        logger.info(ret)
+
+        return ret
+
+    def get_content(self, args=None, max_width=None):
+        """Build the content of the message build from layout + stats + views
+
+        Return a list (one per line) of list (one per column) of dict:
+        - data: data to display
+        - style: style to apply
+
+        Example for the Load plugin:
+            [[{'data': '1 min', 'style': 'DEFAULT'}, {'data': 1.77, 'style': 'DEFAULT'}],
+             [{'data': '5 mins', 'style': 'DEFAULT'}, {'data': 1.47, 'style': 'OK'}],
+             [{'data': '15 mins', 'style': 'DEFAULT'}, {'data': 1.31, 'style': 'OK_LOG'}]]}
+        """
+        ret = []
+        if 'content_row' in self.layout and 'content_column' in self.layout:
+            # Row and column are defined
+            # Ex: Load plugin
+            for k in self.layout['content_row']:
+                # k is a key (ex: 'min1' for Load plugin)
+                column = []
+                for c in self.layout['content_column']:
+                    if c == 'key':
+                        # Add a stat
+                        data = self.stats[k] if k in self.stats else 'N/A'
+                        style = self.get_views(k, 'decoration')
+                    else:
+                        # Add the description
+                        data = c.format(**self.fields_description[k])
+                        style = 'DEFAULT'
+                    column.append({'data': data, 'style': style})
+                ret.append(column)
+        elif 'content_column' in self.layout and 'content_row' not in self.layout:
+            # Only column is defined
+            # Ex: Net plugin
+            # Create the header
+            if 'header_column' in self.layout:
+                column = []
+                for i, k in enumerate(self.layout['header_column']):
+                    data = k.format(**self.fields_description[self.layout['content_column'][i]])
+                    style = 'HEADER'
+                    column.append({'data': data, 'style': style})
+                ret.append(column)
+            # Create the content
+            for stat in self.stats:
+                column = []
+                for k in self.layout['content_column']:
+                    # k is a key (ex: 'rx' for net plugin)
+                    data = stat[k] if k in stat else 'N/A'
+                    style = self.get_views(k, 'decoration')
+                    column.append({'data': data, 'style': style})
+                ret.append(column)
+        return ret
+
+    # TODO: to be removed when all Rich method will be implemented ???
     def msg_curse(self, args=None, max_width=None):
         """Return default string to display in the curse interface."""
         return [self.curse_add_line(str(self.stats))]

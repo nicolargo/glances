@@ -184,11 +184,6 @@ class GlancesRich(object):
         for p in _top:
             # The quicklook plugin will be ignore...
             if stats_display[p]['display'] and len(stats_display[p]['content']) > 0:
-                # r = Layout(Panel(stats_display[p]['content_repr'],
-                #                  title=stats_display[p]['title'],
-                #                  subtitle=stats_display[p]['subtitle']),
-                #            size=stats_display[p]['width'],
-                #            name=p)
                 r = Layout(stats_display[p]['content_repr'],
                            size=stats_display[p]['width'],
                            name=p)
@@ -198,12 +193,9 @@ class GlancesRich(object):
     def _update_middle_left_layout(self, stats, stats_display):
         """Update the middle left layout"""
         self.layout['middle_left'].split_column(
-            *[Layout(
-                Panel(stats_display[p]['content_repr'],
-                      title=stats_display[p]['title'],
-                      subtitle=stats_display[p]['subtitle']),
-                size=stats_display[p]['height'],
-                name=p) for p in _middle_left
+            *[Layout(stats_display[p]['content_repr'],
+                     size=stats_display[p]['height'],
+                     name=p) for p in _middle_left
               if stats_display[p]['display'] and len(stats_display[p]['content']) > 0],
             Layout(Padding(''),
                    name='middle_left_padding')
@@ -268,10 +260,11 @@ class GlancesRich(object):
             if plugin in _middle_left:
                 max_width = _middle_left_width
 
-            if hasattr(stats.get_plugin(plugin), 'msg_rich'):
+            if hasattr(stats.get_plugin(plugin), 'msg_for_human') and stats.get_plugin(plugin).layout:
                 # Grab the stats to display
-                ret = stats.get_plugin(plugin).msg_rich(args=self.args,
-                                                        max_width=max_width)
+                ret = stats.get_plugin(plugin).msg_for_human(args=self.args,
+                                                             max_width=max_width)
+
                 # TODO: Style should be moved in a dedicated class
                 # decoration:
                 #     DEFAULT: no decoration
@@ -294,6 +287,8 @@ class GlancesRich(object):
                     'title_style': Style(bold=True),
                 }
                 bbcode_style = {
+                    'DEFAULT': '{}',
+                    'HEADER': '[bold]{}[/]',
                     'OK': '[green bold]{}[/]',
                     'OK_LOG': '[green bold reverse]{}[/]',
                     'CAREFUL': '[magenta bold]{}[/]',
@@ -309,16 +304,16 @@ class GlancesRich(object):
                                             caption=ret['subtitle'],
                                             box=None,
                                             show_header=False,
-                                            show_footer=False)
-                # Create the columns
-                for _ in ret['content'][0]:
-                    ret['content_repr'].add_column()
-                # Add the lines
+                                            show_footer=False,
+                                            expand=True)
+                # Fill the table
                 for line in ret['content']:
-                    value_format = bbcode_style[line['style']
-                                                ] if line['style'] in bbcode_style else '{}'
-                    ret['content_repr'].add_row(line['name'],
-                                                value_format.format(line['value']))
+                    line_with_style = []
+                    for col in line:
+                        data = str(col['data'])
+                        data_format = bbcode_style[col['style']] if col['style'] in bbcode_style else '{}'
+                        line_with_style.append(data_format.format(data))
+                    ret['content_repr'].add_row(*line_with_style)
             else:
                 # TODO: to be removed when all plugins will have a msg_rich method
                 # Grab the stats to display

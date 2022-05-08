@@ -38,21 +38,52 @@ import psutil
 # 'key': 'interface_name'}
 # Fields description
 fields_description = {
-    'interface_name': {'description': 'Interface name.', 'unit': 'string'},
-    'alias': {'description': 'Interface alias name (optional).', 'unit': 'string'},
-    'rx': {'description': 'The received/input rate (in bit per second).', 'unit': 'bps'},
-    'tx': {'description': 'The sent/output rate (in bit per second).', 'unit': 'bps'},
+    'interface_name': {
+        'description': 'Interface name.',
+        'unit': 'string'
+    },
+    'alias': {
+        'description': 'Interface alias name (optional).',
+        'unit': 'string'
+    },
+    'rx': {
+        'description': 'The received/input rate (in bit per second).',
+        'unit': 'bps',
+        'short_description': 'Rx/s'
+    },
+    'tx': {
+        'description': 'The sent/output rate (in bit per second).',
+        'unit': 'bps',
+        'short_description': 'Tx/s'
+    },
     'cumulative_rx': {
         'description': 'The number of bytes received through the interface (cumulative).',
         'unit': 'bytes',
     },
-    'cumulative_tx': {'description': 'The number of bytes sent through the interface (cumulative).', 'unit': 'bytes'},
+    'cumulative_tx': {
+        'description': 'The number of bytes sent through the interface (cumulative).',
+        'unit': 'bytes'
+        },
     'speed': {
         'description': 'Maximum interface speed (in bit per second). Can return 0 on some operating-system.',
         'unit': 'bps',
     },
-    'is_up': {'description': 'Is the interface up ?', 'unit': 'bool'},
-    'time_since_update': {'description': 'Number of seconds since last update.', 'unit': 'seconds'},
+    'is_up': {
+        'description': 'Is the interface up ?',
+        'unit': 'bool'
+    },
+    'time_since_update': {
+        'description': 'Number of seconds since last update.',
+        'unit': 'seconds'
+    },
+}
+
+# Define the layout (for the Rich interface)
+layout = {
+    # Only column are defined
+    # Row are not defined, dynamic generation for all interfaces
+    'header_column':  ['Network', '{short_description}', '{short_description}'],
+    'content_column': ['interface_name', 'rx', 'tx'],
 }
 
 # SNMP OID
@@ -87,6 +118,7 @@ class PluginModel(GlancesPluginModel):
             items_history_list=items_history_list,
             fields_description=fields_description,
             stats_init_value=[],
+            layout=layout,
         )
 
         # We want to display the stat in the curse interface

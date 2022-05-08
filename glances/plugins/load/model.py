@@ -34,18 +34,21 @@ fields_description = {
 waiting in the run-queue plus the number currently executing \
 over 1 minute.',
         'unit': 'float',
+        'short_description': '1 min',
     },
     'min5': {
         'description': 'Average sum of the number of processes \
 waiting in the run-queue plus the number currently executing \
 over 5 minutes.',
         'unit': 'float',
+        'short_description': '5 mins',
     },
     'min15': {
         'description': 'Average sum of the number of processes \
 waiting in the run-queue plus the number currently executing \
 over 15 minutes.',
         'unit': 'float',
+        'short_description': '15 mins',
     },
     'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
 }
@@ -53,12 +56,9 @@ over 15 minutes.',
 # Define the layout (for the Rich interface)
 layout = {
     'title': 'Load {cpucore}-core',
-    'content': [
-        {'name': '1 min', 'key': 'min1'},
-        {'name': '5 min', 'key': 'min5'},
-        {'name': '15 min', 'key': 'min15'}
-    ],
-    'subtitle': ''
+    'content_row': ['min1', 'min5', 'min15'],
+    'content_column': ['{short_description}', 'key'],
+    'width': 16
 }
 
 # SNMP OID
@@ -92,7 +92,8 @@ class PluginModel(GlancesPluginModel):
             args=args,
             config=config,
             items_history_list=items_history_list,
-            fields_description=fields_description
+            fields_description=fields_description,
+            layout=layout,
         )
 
         # We want to display the stat in the curse interface
@@ -169,67 +170,3 @@ class PluginModel(GlancesPluginModel):
         except KeyError:
             # try/except mandatory for Windows compatibility (no load stats)
             pass
-
-    def msg_rich(self, args=None, max_width=None):
-        """Return a dict with the rich message to display."""
-
-        # Init the return message
-        ret = {}
-
-        # Only process if stats exist, not empty (issue #871) and plugin not disabled
-        if not self.stats or (self.stats == {}) or self.is_disabled():
-            return ret
-
-        ret['display'] = True
-        ret['title'] = layout['title'].format(**self.stats)
-        ret['subtitle'] = layout['subtitle'].format(**self.stats)
-        ret['content'] = []
-        for i in layout['content']:
-            ret['content'].append({
-                'name': i['name'].format(**self.stats),
-                'value': '{}'.format(self.stats[i['key']]),
-                'style': self.get_views(i['key'], 'decoration'),
-            })
-        ret['width'] = 16
-        ret['height'] = 4
-
-        logger.info(ret)
-
-        return ret
-
-    # TODO: To be removed because replaced by msg_rich
-    def msg_curse(self, args=None, max_width=None):
-        """Return the dict to display in the curse interface."""
-        # Init the return message
-        ret = []
-
-        # Only process if stats exist, not empty (issue #871) and plugin not disabled
-        if not self.stats or (self.stats == {}) or self.is_disabled():
-            return ret
-
-        # Build the string message
-        # Header
-        msg = '{:6}'.format('LOAD%' if (args.disable_irix and self.nb_log_core != 0) else 'LOAD')
-        ret.append(self.curse_add_line(msg, "TITLE"))
-        # Core number
-        if 'cpucore' in self.stats and self.stats['cpucore'] > 0:
-            msg = '{:3}-core'.format(int(self.stats['cpucore']))
-            ret.append(self.curse_add_line(msg))
-        # Loop over 1min, 5min and 15min load
-        for load_time in ['1', '5', '15']:
-            ret.append(self.curse_new_line())
-            msg = '{:8}'.format('{} min:'.format(load_time))
-            ret.append(self.curse_add_line(msg))
-            if args.disable_irix and self.nb_log_core != 0:
-                # Enable Irix mode for load (see issue #1554)
-                load_stat = self.stats['min{}'.format(load_time)] / self.nb_log_core * 100
-            else:
-                load_stat = self.stats['min{}'.format(load_time)]
-            msg = '{:>6.2f}'.format(load_stat)
-            if load_time == '1':
-                ret.append(self.curse_add_line(msg))
-            else:
-                # Alert is only for 5 and 15 min
-                ret.append(self.curse_add_line(msg, self.get_views(key='min{}'.format(load_time), option='decoration')))
-
-        return ret
