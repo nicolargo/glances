@@ -84,7 +84,7 @@ fields_description = {
 layout = {
     # Only column are defined
     # Row are not defined, dynamic generation for all interfaces
-    'header_column':  ['Network', '{short_description}', '{short_description}'],
+    'header_column':  ['[blue]Network[/]', '{short_description}', '{short_description}'],
     'content_column': ['interface_name', 'rx', 'tx'],
 }
 
