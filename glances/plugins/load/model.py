@@ -58,6 +58,7 @@ layout = {
     'title': 'Load {cpucore}-core',
     'content_row': ['min1', 'min5', 'min15'],
     'content_column': ['{short_description}', 'key'],
+    'precision': 2,
     'width': 16
 }
 

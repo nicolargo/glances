@@ -979,7 +979,7 @@ class GlancesPluginModel(object):
                 for c in self.layout['content_column']:
                     if c == 'key':
                         # Add stat
-                        data = self.auto_unit(self.stats[k]) if k in self.stats else 'N/A'
+                        data = self.auto_unit(self.stats[k], precision=self.layout.get('precision')) if k in self.stats else 'N/A'
                         style = self.get_views(k, 'decoration')
                     else:
                         # Add description
@@ -1003,7 +1003,7 @@ class GlancesPluginModel(object):
                 column = []
                 for k in self.layout['content_column']:
                     # k is a key (ex: 'rx' for net plugin)
-                    data = self.auto_unit(stat[k]) if k in stat else 'N/A'
+                    data = self.auto_unit(stat[k], precision=self.layout.get('precision')) if k in stat else 'N/A'
                     style = self.get_views(k, 'decoration')
                     column.append({'data': data, 'style': style})
                 ret.append(column)
@@ -1189,7 +1189,7 @@ class GlancesPluginModel(object):
         """
         self._align = value
 
-    def auto_unit(self, number, low_precision=False, min_symbol='K'):
+    def auto_unit(self, number, low_precision=False, min_symbol='K', precision=None):
         """Make a nice human-readable string out of number.
 
         Number of decimal places increases as quantity approaches 1.
@@ -1204,6 +1204,7 @@ class GlancesPluginModel(object):
         :low_precision: returns less decimal places potentially (default is False)
                         sacrificing precision for more readability.
         :min_symbol: Do not approach if number < min_symbol (default is K)
+        :precision: force the precision to a specific value (default is None)
         """
         if not isinstance(number, numbers.Number):
             return str(number)
@@ -1237,8 +1238,14 @@ class GlancesPluginModel(object):
                         decimal_precision = min(1, decimal_precision)
                 elif symbol in 'K':
                     decimal_precision = 0
+                if precision:
+                    decimal_precision = precision
                 return '{:.{decimal}f}{symbol}'.format(value, decimal=decimal_precision, symbol=symbol)
-        return '{!s}'.format(number)
+
+        if precision:
+            return '{:.{decimal}f}'.format(number, decimal=precision)
+        else:
+            return '{!s}'.format(number)
 
     def trend_msg(self, trend, significant=1):
         """Return the trend message.
