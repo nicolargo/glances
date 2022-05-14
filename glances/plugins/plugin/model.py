@@ -585,13 +585,13 @@ class GlancesPluginModel(object):
         if item is None:
             item_views = self.views
         else:
-            item_views = self.views.get('item', {})
+            item_views = self.views.get(item, {})
 
         if key is None:
             return item_views
         else:
             if option is None:
-                return item_views.get('key', 'DEFAULT')
+                return item_views.get(key, 'DEFAULT')
             else:
                 if key in item_views and option in item_views[key]:
                     return item_views[key][option]
@@ -953,7 +953,7 @@ class GlancesPluginModel(object):
         ret['height'] = (ret['title'] != '') + (ret['subtitle'] != '') + len(ret['content'])
 
         # TODO: Remove this when all the rich implentation is OK
-        logger.info(ret)
+        # logger.info(ret)
 
         return ret
 
@@ -980,7 +980,7 @@ class GlancesPluginModel(object):
                     if c == 'key':
                         # Add stat
                         data = self.auto_unit(self.stats[k], precision=self.layout.get('precision')) if k in self.stats else 'N/A'
-                        style = self.get_views(k, 'decoration')
+                        style = self.get_views(item=k, key='decoration')
                     else:
                         # Add description
                         data = c.format(**self.fields_description[k])

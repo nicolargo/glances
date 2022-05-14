@@ -85,6 +85,7 @@ layout = {
     # Only column are defined
     # Row are not defined, dynamic generation for all interfaces
     'header_column':  ['[blue]Network[/]', '{short_description}', '{short_description}'],
+    # No content_row defined, so the row will be generated automatically
     'content_column': ['interface_name', 'rx', 'tx'],
 }
 

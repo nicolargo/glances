@@ -56,6 +56,7 @@ over 15 minutes.',
 # Define the layout (for the Rich interface)
 layout = {
     'title': '[blue]Load[/] {cpucore}-core',
+    # content_row is defined, so the row list will be:
     'content_row': ['min1', 'min5', 'min15'],
     'content_column': ['{short_description}', 'key'],
     'precision': 2,
