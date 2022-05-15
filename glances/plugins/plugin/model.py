@@ -66,7 +66,7 @@ class GlancesPluginModel(object):
                  items_history_list=None,
                  stats_init_value={},
                  fields_description=None,
-                 layout=None):
+                 template=None):
         """Init the plugin of plugins model class.
 
         All Glances' plugins model should inherit from this class. Most of the
@@ -108,8 +108,8 @@ class GlancesPluginModel(object):
         self.items_history_list = items_history_list
         self.stats_history = self.init_stats_history()
 
-        # Init the layout
-        self.layout = layout
+        # Init the template
+        self.template = template
 
         # Init the limits (configuration keys) dictionary
         self._limits = dict()
@@ -573,7 +573,7 @@ class GlancesPluginModel(object):
         """Set the views to input_views."""
         self.views = input_views
 
-    def get_views(self, item=None, key=None, option=None):
+    def get_views(self, item=None, key=None, option=None, default='DEFAULT'):
         """Return the views object.
 
         If key is None, return all the view for the current plugin
@@ -591,12 +591,12 @@ class GlancesPluginModel(object):
             return item_views
         else:
             if option is None:
-                return item_views.get(key, 'DEFAULT')
+                return item_views.get(key, default)
             else:
                 if key in item_views and option in item_views[key]:
                     return item_views[key][option]
                 else:
-                    return 'DEFAULT'
+                    return default
 
     def get_json_views(self, item=None, key=None, option=None):
         """Return the views (in JSON)."""
@@ -690,8 +690,7 @@ class GlancesPluginModel(object):
         is_max=False,
         header="",
         action_key=None,
-        log=False,
-    ):
+        log=False):
         """Return the alert status relative to a current value.
 
         Use this function for minor stats.
@@ -918,9 +917,15 @@ class GlancesPluginModel(object):
             # logger.debug("No alias found for {}".format(header))
             return None
 
+    def get_template(self):
+        """Return the plugin template"""
+        return self.template
+
     # TODO: To be rename to get_stats_display when all the rich implentation is OK
     def msg_for_human(self, args=None, max_width=None):
         """Return a dict with the human message to display.
+
+        'content' is a list of list (row) of dict (column)
 
         Example for the Load plugin:
             {'display': True,
@@ -935,30 +940,33 @@ class GlancesPluginModel(object):
         ret = {}
 
         # Only process if stats exist, not empty (issue #871) and plugin not disabled
-        if not self.stats or (self.stats == {}) or self.is_disabled() or not self.layout:
+        if not self.stats or (self.stats == {}) or self.is_disabled() or not self.template:
             return None
 
-        # logger.info(self.stats)
-        # logger.info(self.views)
-        # logger.info(self.layout)
+        # logger.info(self.get_stats())
+        # logger.info(self.get_limits())
+        # logger.info(self.get_views())
+        # logger.info(self.get_template())
 
         ret['display'] = True
-        if 'title' in self.layout:
-            ret['title'] = self.layout.get('title', '').format(**self.stats)
-        else:
-            ret['title'] = None
-        ret['subtitle'] = self.layout.get('subtitle', '')
+        ret['title'] = None
+        if 'title' in self.template:
+            if isinstance(self.stats, dict):
+                ret['title'] = self.template['title'].format(**self.stats)
+            else:
+                ret['title'] = self.template['title']
+        ret['subtitle'] = self.template.get('subtitle', '')
         ret['content'] = self.get_content(args=args, max_width=max_width)
-        ret['width'] = self.layout['width'] if 'width' in self.layout else max_width
+        ret['width'] = self.template['width'] if 'width' in self.template else max_width
         ret['height'] = (ret['title'] != '') + (ret['subtitle'] != '') + len(ret['content'])
 
         # TODO: Remove this when all the rich implentation is OK
-        # logger.info(ret)
+        # logger.info("{} => {}".format(self.plugin_name, ret))
 
         return ret
 
     def get_content(self, args=None, max_width=None):
-        """Build the content of the message build from layout + stats + views
+        """Build the content of the message build from template + stats + views
 
         Return a list (one per line) of list (one per column) of dict:
         - data: data to display
@@ -970,43 +978,47 @@ class GlancesPluginModel(object):
              [{'data': '15 mins', 'style': 'DEFAULT'}, {'data': 1.31, 'style': 'OK_LOG'}]]}
         """
         ret = []
-        if 'content_row' in self.layout and 'content_column' in self.layout:
+        if 'content_row' in self.template and 'content_column' in self.template:
             # Row and column are defined
             # Ex: Load plugin
-            for k in self.layout['content_row']:
+            for k in self.template['content_row']:
                 # k is a key (ex: 'min1' for Load plugin)
-                column = []
-                for c in self.layout['content_column']:
+                row = []
+                for c in self.template['content_column']:
                     if c == 'key':
                         # Add stat
-                        data = self.auto_unit(self.stats[k], precision=self.layout.get('precision')) if k in self.stats else 'N/A'
+                        data = self.auto_unit(self.stats[k], precision=self.template.get('precision')) if k in self.stats else 'N/A'
                         style = self.get_views(item=k, key='decoration')
                     else:
                         # Add description
                         data = c.format(**self.fields_description[k])
                         style = 'DEFAULT'
-                    column.append({'data': data, 'style': style})
-                ret.append(column)
-        elif 'content_column' in self.layout and 'content_row' not in self.layout:
+                    row.append({'data': data, 'style': style})
+                ret.append(row)
+        elif 'content_column' in self.template and 'content_row' not in self.template:
             # Only column is defined
             # Ex: Net plugin
             # Create the header
-            if 'header_column' in self.layout:
-                column = []
-                for i, k in enumerate(self.layout['header_column']):
-                    data = k.format(**self.fields_description[self.layout['content_column'][i]])
-                    style = 'HEADER'
-                    column.append({'data': data, 'style': style})
-                ret.append(column)
+            if 'header_column' in self.template:
+                row = []
+                for i, k in enumerate(self.template['header_column']):
+                    row.append({
+                        'data': k.format(**self.fields_description[self.template['content_column'][i]]),
+                        'style': 'HEADER'
+                    })
+                ret.append(row)
             # Create the content
             for stat in self.stats:
-                column = []
-                for k in self.layout['content_column']:
+                row = []
+                for k in self.template['content_column']:
                     # k is a key (ex: 'rx' for net plugin)
-                    data = self.auto_unit(stat[k], precision=self.layout.get('precision')) if k in stat else 'N/A'
-                    style = self.get_views(k, 'decoration')
-                    column.append({'data': data, 'style': style})
-                ret.append(column)
+                    row.append({
+                        'data': self.auto_unit(stat[k], precision=self.template.get('precision')) if k in stat else 'N/A',
+                        'style': self.get_views(k, 'decoration'),
+                        # 'trend': self.get_views(k, 'trend', default='')
+                    })
+                ret.append(row)
+
         return ret
 
     # TODO: to be removed when all Rich method will be implemented ???

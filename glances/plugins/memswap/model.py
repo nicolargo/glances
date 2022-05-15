@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -22,15 +22,33 @@
 from glances.globals import iterkeys
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.logger import logger
 
 import psutil
 
 # Fields description
 fields_description = {
-    'total': {'description': 'Total swap memory.', 'unit': 'bytes', 'min_symbol': 'K'},
-    'used': {'description': 'Used swap memory.', 'unit': 'bytes', 'min_symbol': 'K'},
-    'free': {'description': 'Free swap memory.', 'unit': 'bytes', 'min_symbol': 'K'},
-    'percent': {'description': 'Used swap memory in percentage.', 'unit': 'percent'},
+    'total': {
+        'description': 'Total swap memory.',
+        'unit': 'bytes',
+        'min_symbol': 'K',
+        'short_description': 'Total'
+    },
+    'used': {
+        'description': 'Used swap memory.',
+        'unit': 'bytes',
+        'min_symbol': 'K',
+        'short_description': 'Used'
+    },
+    'free': {
+        'description': 'Free swap memory.',
+        'unit': 'bytes', 'min_symbol': 'K',
+        'short_description': 'Free'
+    },
+    'percent': {
+        'description': 'Used swap memory in percentage.',
+        'unit': 'percent'
+    },
     'sin': {
         'description': 'The number of bytes the system has swapped in from disk (cumulative).',
         'unit': 'bytes',
@@ -42,6 +60,17 @@ fields_description = {
         'min_symbol': 'K',
     },
     'time_since_update': {'description': 'Number of seconds since last update.', 'unit': 'seconds'},
+    # 'trend': 'percent'
+}
+
+# Define the template (for the Rich interface)
+template = {
+    'title': '[blue]Swap[/] {percent}%',
+    # content_row is defined, so the row list will be:
+    'content_row': ['total', 'used', 'free'],
+    'content_column': ['{short_description}', 'key'],
+    # 'precision': 2,
+    'width': 16
 }
 
 # SNMP OID
@@ -59,7 +88,9 @@ snmp_oid = {
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
-items_history_list = [{'name': 'percent', 'description': 'Swap memory usage', 'y_unit': '%'}]
+items_history_list = [
+    {'name': 'percent', 'description': 'Swap memory usage', 'y_unit': '%'}
+]
 
 
 class PluginModel(GlancesPluginModel):
@@ -71,7 +102,10 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
+            args=args, config=config,
+            items_history_list=items_history_list,
+            fields_description=fields_description,
+            template=template
         )
 
         # We want to display the stat in the curse interface
@@ -160,6 +194,9 @@ class PluginModel(GlancesPluginModel):
         # Alert and log
         if 'used' in self.stats and 'total' in self.stats and 'percent' in self.stats:
             self.views['percent']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
+
+        # if 'trend' in self.fields_description:
+        #     self.views[self.fields_description['trend']]['trend'] = self.trend_msg(self.get_trend(self.fields_description['trend']))
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""

@@ -255,79 +255,100 @@ class GlancesRich(object):
 
     def _plugin_to_rich(self, stats, plugin, max_width=None):
         """Return a dict: Rich representation of the plugin"""
-        ret = {'title': '', 'subtitle': '', 'content': '', 'width': 0, 'height': 0, 'display': False}
-        if stats.get_plugin(plugin):
-            if plugin in _middle_left:
-                max_width = _middle_left_width
 
-            if hasattr(stats.get_plugin(plugin), 'msg_for_human') and stats.get_plugin(plugin).layout:
-                # Grab the stats to display
-                ret = stats.get_plugin(plugin).msg_for_human(args=self.args,
-                                                             max_width=max_width)
+        # Init the returned structure
+        ret = {
+            'title': '',
+            'subtitle': '',
+            'content': '',
+            'width': 0,
+            'height': 0,
+            'display': False
+        }
 
-                # TODO: Style should be moved in a dedicated class
-                # decoration:
-                #     DEFAULT: no decoration
-                #     UNDERLINE: underline
-                #     BOLD: bold
-                #     TITLE: for stat title
-                #     PROCESS: for process name
-                #     STATUS: for process status
-                #     NICE: for process niceness
-                #     CPU_TIME: for process cpu time
-                #     OK: Value is OK and non logged
-                #     OK_LOG: Value is OK and logged
-                #     CAREFUL: Value is CAREFUL and non logged
-                #     CAREFUL_LOG: Value is CAREFUL and logged
-                #     WARNING: Value is WARNING and non logged
-                #     WARNING_LOG: Value is WARNING and logged
-                #     CRITICAL: Value is CRITICAL and non logged
-                #     CRITICAL_LOG: Value is CRITICAL and logged
-                rich_style = {
-                    'title_style': Style(bold=True),
-                }
-                # https://en.wikipedia.org/wiki/BBCode
-                bbcode_style = {
-                    'DEFAULT': '{}',
-                    'HEADER': '[bold]{}[/]',
-                    'OK': '[green bold]{}[/]',
-                    'OK_LOG': '[green bold reverse]{}[/]',
-                    'CAREFUL': '[magenta bold]{}[/]',
-                    'CAREFUL_LOG': '[magenta bold reverse]{}[/]',
-                    'WARNING': '[yellow bold]{}[/]',
-                    'WARNING_LOG': '[yellow bold reverse]{}[/]',
-                    'CRITICAL': '[red bold]{}[/]',
-                    'CRITICAL_LOG': '[red bold reverse]{}[/]',
-                }
-                # Create the table
-                ret['content_repr'] = Table(title=ret['title'],
-                                            title_style=rich_style['title_style'],
-                                            caption=ret['subtitle'],
-                                            box=None,
-                                            show_header=False,
-                                            show_footer=False,
-                                            expand=True)
-                # Fill the table
-                for line in ret['content']:
-                    line_with_style = []
-                    for col in line:
-                        data = col['data']
-                        data_format = bbcode_style[col['style']] if col['style'] in bbcode_style else '{}'
-                        line_with_style.append(data_format.format(data))
-                    ret['content_repr'].add_row(*line_with_style)
-            else:
-                # TODO: to be removed when all plugins will have a msg_rich method
-                # Grab the stats to display
-                stat_display = stats.get_plugin(plugin).get_stats_display(args=self.args,
-                                                                          max_width=max_width)
-                # Buil the object (a dict) to display
-                stat_repr = [i['msg'] for i in stat_display['msgdict']]
-                ret['title'] = plugin.capitalize()
-                ret['content'] = ''.join(stat_repr)
-                ret['content_repr'] = ret['content']
-                ret['width'] = self._get_width(stat_display) + 4  # +4 for borders
-                ret['height'] = self._get_height(stat_display) + 2  # +2 for borders
-                ret['display'] = stat_display['display']
+        if not stats.get_plugin(plugin):
+            return ret
+
+        if plugin in _middle_left:
+            max_width = _middle_left_width
+
+        if hasattr(stats.get_plugin(plugin), 'msg_for_human') and stats.get_plugin(plugin).get_template():
+            # Grab the stats to display
+            ret = stats.get_plugin(plugin).msg_for_human(args=self.args,
+                                                            max_width=max_width)
+
+            # TODO: Style should be moved in a dedicated class
+            # decoration:
+            #     DEFAULT: no decoration
+            #     UNDERLINE: underline
+            #     BOLD: bold
+            #     TITLE: for stat title
+            #     PROCESS: for process name
+            #     STATUS: for process status
+            #     NICE: for process niceness
+            #     CPU_TIME: for process cpu time
+            #     OK: Value is OK and non logged
+            #     OK_LOG: Value is OK and logged
+            #     CAREFUL: Value is CAREFUL and non logged
+            #     CAREFUL_LOG: Value is CAREFUL and logged
+            #     WARNING: Value is WARNING and non logged
+            #     WARNING_LOG: Value is WARNING and logged
+            #     CRITICAL: Value is CRITICAL and non logged
+            #     CRITICAL_LOG: Value is CRITICAL and logged
+            rich_style = {
+                'title_style': Style(bold=True),
+            }
+            # https://en.wikipedia.org/wiki/BBCode
+            bbcode_style = {
+                'DEFAULT': '{}',
+                'HEADER': '[bold]{}[/]',
+                'OK': '[green bold]{}[/]',
+                'OK_LOG': '[green bold reverse]{}[/]',
+                'CAREFUL': '[magenta bold]{}[/]',
+                'CAREFUL_LOG': '[magenta bold reverse]{}[/]',
+                'WARNING': '[yellow bold]{}[/]',
+                'WARNING_LOG': '[yellow bold reverse]{}[/]',
+                'CRITICAL': '[red bold]{}[/]',
+                'CRITICAL_LOG': '[red bold reverse]{}[/]',
+            }
+            # Create the table
+            ret['content_repr'] = Table(title=ret['title'],
+                                        title_style=rich_style['title_style'],
+                                        title_justify='left',
+                                        caption=ret['subtitle'],
+                                        box=None,
+                                        show_header=False,
+                                        show_footer=False,
+                                        expand=True,
+                                        padding=(0,0,0,0),
+                                        )
+            # Fill the table
+            # Add the columns
+            # for row in ret['content']:
+            #     for col in row:
+            #         ret['content_repr'].add_column()
+            # Add the rows
+            for row in ret['content']:
+                row_with_style = []
+                for col in row:
+                    data = col['data']
+                    data_format = bbcode_style[col['style']] if col['style'] in bbcode_style else '{}'
+                    row_with_style.append(data_format.format(data))
+                ret['content_repr'].add_row(*row_with_style)
+        else:
+            # TODO: to be removed when all plugins will have a msg_rich method
+            # Grab the stats to display
+            stat_display = stats.get_plugin(plugin).get_stats_display(args=self.args,
+                                                                        max_width=max_width)
+            # Buil the object (a dict) to display
+            stat_repr = [i['msg'] for i in stat_display['msgdict']]
+            ret['title'] = plugin.capitalize()
+            ret['content'] = ''.join(stat_repr)
+            ret['content_repr'] = ret['content']
+            ret['width'] = self._get_width(stat_display) + 4  # +4 for borders
+            ret['height'] = self._get_height(stat_display) + 2  # +2 for borders
+            ret['display'] = stat_display['display']
+
         return ret
 
     def _get_width(self, stats_display, without_option=False):

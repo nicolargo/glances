@@ -80,8 +80,8 @@ fields_description = {
     },
 }
 
-# Define the layout (for the Rich interface)
-layout = {
+# Define the template (for the Rich interface)
+template = {
     # Only column are defined
     # Row are not defined, dynamic generation for all interfaces
     'header_column':  ['[blue]Network[/]', '{short_description}', '{short_description}'],
@@ -121,7 +121,7 @@ class PluginModel(GlancesPluginModel):
             items_history_list=items_history_list,
             fields_description=fields_description,
             stats_init_value=[],
-            layout=layout,
+            template=template,
         )
 
         # We want to display the stat in the curse interface
@@ -325,6 +325,7 @@ class PluginModel(GlancesPluginModel):
             self.views[i[self.get_key()]]['rx']['decoration'] = alert_rx
             self.views[i[self.get_key()]]['tx']['decoration'] = alert_tx
 
+    # TODO: to be removed when all the network feature will be available in the rich UI
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message

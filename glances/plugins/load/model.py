@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -53,8 +53,8 @@ over 15 minutes.',
     'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
 }
 
-# Define the layout (for the Rich interface)
-layout = {
+# Define the template (for the Rich interface)
+template = {
     'title': '[blue]Load[/] {cpucore}-core',
     # content_row is defined, so the row list will be:
     'content_row': ['min1', 'min5', 'min15'],
@@ -95,7 +95,7 @@ class PluginModel(GlancesPluginModel):
             config=config,
             items_history_list=items_history_list,
             fields_description=fields_description,
-            layout=layout,
+            template=template,
         )
 
         # We want to display the stat in the curse interface

@@ -67,8 +67,8 @@ class PluginModel(GlancesPluginModel):
     stats is a list
     """
 
-    # Define the header layout of the processes list columns
-    layout_header = {
+    # Define the header template of the processes list columns
+    template_header = {
         'cpu': '{:<6} ',
         'mem': '{:<5} ',
         'virt': '{:<5} ',
@@ -84,8 +84,8 @@ class PluginModel(GlancesPluginModel):
         'command': '{} {}',
     }
 
-    # Define the stat layout of the processes list columns
-    layout_stat = {
+    # Define the stat template of the processes list columns
+    template_stat = {
         'cpu': '{:<6.1f}',
         'cpu_no_digit': '{:<6.0f}',
         'mem': '{:<5.1f} ',
@@ -195,11 +195,11 @@ class PluginModel(GlancesPluginModel):
     def _get_process_curses_cpu(self, p, selected, args):
         """Return process CPU curses"""
         if key_exist_value_not_none_not_v('cpu_percent', p, ''):
-            cpu_layout = self.layout_stat['cpu'] if p['cpu_percent'] < 100 else self.layout_stat['cpu_no_digit']
+            cpu_template = self.template_stat['cpu'] if p['cpu_percent'] < 100 else self.template_stat['cpu_no_digit']
             if args.disable_irix and self.nb_log_core != 0:
-                msg = cpu_layout.format(p['cpu_percent'] / float(self.nb_log_core))
+                msg = cpu_template.format(p['cpu_percent'] / float(self.nb_log_core))
             else:
-                msg = cpu_layout.format(p['cpu_percent'])
+                msg = cpu_template.format(p['cpu_percent'])
             alert = self.get_alert(
                 p['cpu_percent'],
                 highlight_zero=False,
@@ -208,14 +208,14 @@ class PluginModel(GlancesPluginModel):
             )
             ret = self.curse_add_line(msg, alert)
         else:
-            msg = self.layout_header['cpu'].format('?')
+            msg = self.template_header['cpu'].format('?')
             ret = self.curse_add_line(msg)
         return ret
 
     def _get_process_curses_mem(self, p, selected, args):
         """Return process MEM curses"""
         if key_exist_value_not_none_not_v('memory_percent', p, ''):
-            msg = self.layout_stat['mem'].format(p['memory_percent'])
+            msg = self.template_stat['mem'].format(p['memory_percent'])
             alert = self.get_alert(
                 p['memory_percent'],
                 highlight_zero=False,
@@ -224,27 +224,27 @@ class PluginModel(GlancesPluginModel):
             )
             ret = self.curse_add_line(msg, alert)
         else:
-            msg = self.layout_header['mem'].format('?')
+            msg = self.template_header['mem'].format('?')
             ret = self.curse_add_line(msg)
         return ret
 
     def _get_process_curses_vms(self, p, selected, args):
         """Return process VMS curses"""
         if key_exist_value_not_none_not_v('memory_info', p, ''):
-            msg = self.layout_stat['virt'].format(self.auto_unit(p['memory_info'][1], low_precision=False))
+            msg = self.template_stat['virt'].format(self.auto_unit(p['memory_info'][1], low_precision=False))
             ret = self.curse_add_line(msg, optional=True)
         else:
-            msg = self.layout_header['virt'].format('?')
+            msg = self.template_header['virt'].format('?')
             ret = self.curse_add_line(msg)
         return ret
 
     def _get_process_curses_rss(self, p, selected, args):
         """Return process RSS curses"""
         if key_exist_value_not_none_not_v('memory_info', p, ''):
-            msg = self.layout_stat['res'].format(self.auto_unit(p['memory_info'][0], low_precision=False))
+            msg = self.template_stat['res'].format(self.auto_unit(p['memory_info'][0], low_precision=False))
             ret = self.curse_add_line(msg, optional=True)
         else:
-            msg = self.layout_header['res'].format('?')
+            msg = self.template_header['res'].format('?')
             ret = self.curse_add_line(msg)
         return ret
 
@@ -253,10 +253,10 @@ class PluginModel(GlancesPluginModel):
         if 'username' in p:
             # docker internal users are displayed as ints only, therefore str()
             # Correct issue #886 on Windows OS
-            msg = self.layout_stat['user'].format(str(p['username'])[:9])
+            msg = self.template_stat['user'].format(str(p['username'])[:9])
             ret = self.curse_add_line(msg)
         else:
-            msg = self.layout_header['user'].format('?')
+            msg = self.template_header['user'].format('?')
             ret = self.curse_add_line(msg)
         return ret
 
@@ -271,7 +271,7 @@ class PluginModel(GlancesPluginModel):
             # Also catch TypeError on macOS
             # See: https://github.com/nicolargo/glances/issues/622
             # logger.debug("Cannot get TIME+ ({})".format(e))
-            msg = self.layout_header['time'].format('?')
+            msg = self.template_header['time'].format('?')
             ret = self.curse_add_line(msg, optional=True)
         else:
             hours, minutes, seconds = seconds_to_hms(user_system_time)
@@ -281,7 +281,7 @@ class PluginModel(GlancesPluginModel):
                 msg = '{}h{}:{}'.format(hours, minutes, seconds)
             else:
                 msg = '{}:{}'.format(minutes, seconds)
-            msg = self.layout_stat['time'].format(msg)
+            msg = self.template_stat['time'].format(msg)
             if hours > 0:
                 ret = self.curse_add_line(msg, decoration='CPU_TIME', optional=True)
             else:
@@ -294,10 +294,10 @@ class PluginModel(GlancesPluginModel):
             num_threads = p['num_threads']
             if num_threads is None:
                 num_threads = '?'
-            msg = self.layout_stat['thread'].format(num_threads)
+            msg = self.template_stat['thread'].format(num_threads)
             ret = self.curse_add_line(msg)
         else:
-            msg = self.layout_header['thread'].format('?')
+            msg = self.template_header['thread'].format('?')
             ret = self.curse_add_line(msg)
         return ret
 
@@ -307,10 +307,10 @@ class PluginModel(GlancesPluginModel):
             nice = p['nice']
             if nice is None:
                 nice = '?'
-            msg = self.layout_stat['nice'].format(nice)
+            msg = self.template_stat['nice'].format(nice)
             ret = self.curse_add_line(msg, decoration=self.get_nice_alert(nice))
         else:
-            msg = self.layout_header['nice'].format('?')
+            msg = self.template_header['nice'].format('?')
             ret = self.curse_add_line(msg)
         return ret
 
@@ -318,13 +318,13 @@ class PluginModel(GlancesPluginModel):
         """Return process status curses"""
         if 'status' in p:
             status = p['status']
-            msg = self.layout_stat['status'].format(status)
+            msg = self.template_stat['status'].format(status)
             if status == 'R':
                 ret = self.curse_add_line(msg, decoration='STATUS')
             else:
                 ret = self.curse_add_line(msg)
         else:
-            msg = self.layout_header['status'].format('?')
+            msg = self.template_header['status'].format('?')
             ret = self.curse_add_line(msg)
         return ret
 
@@ -338,12 +338,12 @@ class PluginModel(GlancesPluginModel):
                 / p['time_since_update']
             )
             if io == 0:
-                msg = self.layout_stat[rorw].format("0")
+                msg = self.template_stat[rorw].format("0")
             else:
-                msg = self.layout_stat[rorw].format(self.auto_unit(io, low_precision=True))
+                msg = self.template_stat[rorw].format(self.auto_unit(io, low_precision=True))
             ret = self.curse_add_line(msg, optional=True, additional=True)
         else:
-            msg = self.layout_header[rorw].format("?")
+            msg = self.template_header[rorw].format("?")
             ret = self.curse_add_line(msg, optional=True, additional=True)
         return ret
 
@@ -379,11 +379,11 @@ class PluginModel(GlancesPluginModel):
         # PID
         if not self.args.programs:
             # Display processes, so the PID should be displayed
-            msg = self.layout_stat['pid'].format(p['pid'], width=self.__max_pid_size())
+            msg = self.template_stat['pid'].format(p['pid'], width=self.__max_pid_size())
         else:
             # Display programs, so the PID should not be displayed
             # Instead displays the number of childrens
-            msg = self.layout_stat['pid'].format(
+            msg = self.template_stat['pid'].format(
                 len(p['childrens']) if 'childrens' in p else '_', width=self.__max_pid_size()
             )
         ret.append(self.curse_add_line(msg))
@@ -420,17 +420,17 @@ class PluginModel(GlancesPluginModel):
                 arguments.replace('\r\n', ' ')
                 arguments.replace('\n', ' ')
                 if os.path.isdir(path) and not args.process_short_name:
-                    msg = self.layout_stat['command'].format(path) + os.sep
+                    msg = self.template_stat['command'].format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
                     ret.append(self.curse_add_line(cmd, decoration=process_decoration, splittable=True))
                 else:
-                    msg = self.layout_stat['command'].format(cmd)
+                    msg = self.template_stat['command'].format(cmd)
                     ret.append(self.curse_add_line(msg, decoration=process_decoration, splittable=True))
                 if arguments:
-                    msg = ' ' + self.layout_stat['command'].format(arguments)
+                    msg = ' ' + self.template_stat['command'].format(arguments)
                     ret.append(self.curse_add_line(msg, splittable=True))
             else:
-                msg = self.layout_stat['name'].format(bare_process_name)
+                msg = self.template_stat['name'].format(bare_process_name)
                 ret.append(self.curse_add_line(msg, decoration=process_decoration, splittable=True))
         except (TypeError, UnicodeEncodeError) as e:
             # Avoid crash after running fine for several hours #1335
@@ -544,51 +544,51 @@ class PluginModel(GlancesPluginModel):
         sort_style = 'SORT'
 
         if args.disable_irix and 0 < self.nb_log_core < 10:
-            msg = self.layout_header['cpu'].format('CPU%/' + str(self.nb_log_core))
+            msg = self.template_header['cpu'].format('CPU%/' + str(self.nb_log_core))
         elif args.disable_irix and self.nb_log_core != 0:
-            msg = self.layout_header['cpu'].format('CPU%/C')
+            msg = self.template_header['cpu'].format('CPU%/C')
         else:
-            msg = self.layout_header['cpu'].format('CPU%')
+            msg = self.template_header['cpu'].format('CPU%')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
-        msg = self.layout_header['mem'].format('MEM%')
+        msg = self.template_header['mem'].format('MEM%')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
-        msg = self.layout_header['virt'].format('VIRT')
+        msg = self.template_header['virt'].format('VIRT')
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = self.layout_header['res'].format('RES')
+        msg = self.template_header['res'].format('RES')
         ret.append(self.curse_add_line(msg, optional=True))
         if not self.args.programs:
-            msg = self.layout_header['pid'].format('PID', width=self.__max_pid_size())
+            msg = self.template_header['pid'].format('PID', width=self.__max_pid_size())
         else:
-            msg = self.layout_header['pid'].format('NPROCS', width=self.__max_pid_size())
+            msg = self.template_header['pid'].format('NPROCS', width=self.__max_pid_size())
         ret.append(self.curse_add_line(msg))
-        msg = self.layout_header['user'].format('USER')
+        msg = self.template_header['user'].format('USER')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
-        msg = self.layout_header['time'].format('TIME+')
+        msg = self.template_header['time'].format('TIME+')
         ret.append(
             self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_times' else 'DEFAULT', optional=True)
         )
-        msg = self.layout_header['thread'].format('THR')
+        msg = self.template_header['thread'].format('THR')
         ret.append(self.curse_add_line(msg))
-        msg = self.layout_header['nice'].format('NI')
+        msg = self.template_header['nice'].format('NI')
         ret.append(self.curse_add_line(msg))
-        msg = self.layout_header['status'].format('S')
+        msg = self.template_header['status'].format('S')
         ret.append(self.curse_add_line(msg))
-        msg = self.layout_header['ior'].format('R/s')
+        msg = self.template_header['ior'].format('R/s')
         ret.append(
             self.curse_add_line(
                 msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
             )
         )
-        msg = self.layout_header['iow'].format('W/s')
+        msg = self.template_header['iow'].format('W/s')
         ret.append(
             self.curse_add_line(
                 msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
             )
         )
         if not self.args.programs:
-            msg = self.layout_header['command'].format('Command', "('k' to kill)" if args.is_standalone else "")
+            msg = self.template_header['command'].format('Command', "('k' to kill)" if args.is_standalone else "")
         else:
-            msg = self.layout_header['command'].format('Programs', "('k' to kill)" if args.is_standalone else "")
+            msg = self.template_header['command'].format('Programs', "('k' to kill)" if args.is_standalone else "")
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
     def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):
@@ -605,10 +605,10 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_add_line(sep_char * 69))
             ret.append(self.curse_new_line())
         # CPU percent sum
-        msg = self.layout_stat['cpu'].format(self.__sum_stats('cpu_percent', mmm=mmm))
+        msg = self.template_stat['cpu'].format(self.__sum_stats('cpu_percent', mmm=mmm))
         ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm)))
         # MEM percent sum
-        msg = self.layout_stat['mem'].format(self.__sum_stats('memory_percent', mmm=mmm))
+        msg = self.template_stat['mem'].format(self.__sum_stats('memory_percent', mmm=mmm))
         ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm)))
         # VIRT and RES memory sum
         if (
@@ -617,37 +617,37 @@ class PluginModel(GlancesPluginModel):
             and self.stats[0]['memory_info'] != ''
         ):
             # VMS
-            msg = self.layout_stat['virt'].format(
+            msg = self.template_stat['virt'].format(
                 self.auto_unit(self.__sum_stats('memory_info', indice=1, mmm=mmm), low_precision=False)
             )
             ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True))
             # RSS
-            msg = self.layout_stat['res'].format(
+            msg = self.template_stat['res'].format(
                 self.auto_unit(self.__sum_stats('memory_info', indice=0, mmm=mmm), low_precision=False)
             )
             ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True))
         else:
-            msg = self.layout_header['virt'].format('')
+            msg = self.template_header['virt'].format('')
             ret.append(self.curse_add_line(msg))
-            msg = self.layout_header['res'].format('')
+            msg = self.template_header['res'].format('')
             ret.append(self.curse_add_line(msg))
         # PID
-        msg = self.layout_header['pid'].format('', width=self.__max_pid_size())
+        msg = self.template_header['pid'].format('', width=self.__max_pid_size())
         ret.append(self.curse_add_line(msg))
         # USER
-        msg = self.layout_header['user'].format('')
+        msg = self.template_header['user'].format('')
         ret.append(self.curse_add_line(msg))
         # TIME+
-        msg = self.layout_header['time'].format('')
+        msg = self.template_header['time'].format('')
         ret.append(self.curse_add_line(msg, optional=True))
         # THREAD
-        msg = self.layout_header['thread'].format('')
+        msg = self.template_header['thread'].format('')
         ret.append(self.curse_add_line(msg))
         # NICE
-        msg = self.layout_header['nice'].format('')
+        msg = self.template_header['nice'].format('')
         ret.append(self.curse_add_line(msg))
         # STATUS
-        msg = self.layout_header['status'].format('')
+        msg = self.template_header['status'].format('')
         ret.append(self.curse_add_line(msg))
         # IO read/write
         if 'io_counters' in self.stats[0] and mmm is None:
@@ -657,9 +657,9 @@ class PluginModel(GlancesPluginModel):
                 / self.stats[0]['time_since_update']
             )
             if io_rs == 0:
-                msg = self.layout_stat['ior'].format('0')
+                msg = self.template_stat['ior'].format('0')
             else:
-                msg = self.layout_stat['ior'].format(self.auto_unit(io_rs, low_precision=True))
+                msg = self.template_stat['ior'].format(self.auto_unit(io_rs, low_precision=True))
             ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True, additional=True))
             # IO write
             io_ws = int(
@@ -667,14 +667,14 @@ class PluginModel(GlancesPluginModel):
                 / self.stats[0]['time_since_update']
             )
             if io_ws == 0:
-                msg = self.layout_stat['iow'].format('0')
+                msg = self.template_stat['iow'].format('0')
             else:
-                msg = self.layout_stat['iow'].format(self.auto_unit(io_ws, low_precision=True))
+                msg = self.template_stat['iow'].format(self.auto_unit(io_ws, low_precision=True))
             ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True, additional=True))
         else:
-            msg = self.layout_header['ior'].format('')
+            msg = self.template_header['ior'].format('')
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
-            msg = self.layout_header['iow'].format('')
+            msg = self.template_header['iow'].format('')
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
         if mmm is None:
             msg = ' < {}'.format('current')
