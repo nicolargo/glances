@@ -275,7 +275,7 @@ class GlancesRich(object):
         if hasattr(stats.get_plugin(plugin), 'msg_for_human') and stats.get_plugin(plugin).get_template():
             # Grab the stats to display
             ret = stats.get_plugin(plugin).msg_for_human(args=self.args,
-                                                            max_width=max_width)
+                                                         max_width=max_width)
 
             # TODO: Style should be moved in a dedicated class
             # decoration:
