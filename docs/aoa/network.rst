@@ -39,6 +39,8 @@ virtual docker interface (docker0, docker1, ...):
     tx_critical=90
     # Define the list of hidden network interfaces (comma-separated regexp)
     hide=docker.*,lo
+    # Define the list of network interfaces to show (comma-separated regexp)
+    #show=eth0,eth1
     # WLAN 0 alias
     wlan0_alias=Wireless IF
     # It is possible to overwrite the bitrate thresholds per interface
