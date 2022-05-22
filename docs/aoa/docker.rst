@@ -25,6 +25,8 @@ under the ``[docker]`` section:
     show=thiscontainer,andthisone,andthoseones.*
     # Hide some containers (comma separeted list of container name or regular expression)
     hide=donotshowthisone,andthose.*
+    # Show only specific containers (comma separeted list of container name or regular expression)
+    #show=showthisone,andthose.*
     # Define the maximum docker size name (default is 20 chars)
     max_name_size=20
     # Global containers' thresholds for CPU and MEM (in %)

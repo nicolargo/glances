@@ -116,10 +116,10 @@ class Plugin(GlancesPlugin):
 
             # Loop over fs
             for fs in fs_stat:
-                # Do not take hidden file system into account
-                # Also check device name (see issue #1606)
-                if self.is_hide(fs.mountpoint) or self.is_hide(fs.device):
+                # Shall we display the stats ?
+                if not self.is_display(fs.mountpoint):
                     continue
+
                 # Grab the disk usage
                 try:
                     fs_usage = psutil.disk_usage(fs.mountpoint)
