@@ -883,10 +883,7 @@ class GlancesPlugin(object):
         show=sda.*
         """
         # @TODO: possible optimisation: create a re.compile list
-        if self.get_conf_value('show', header=header) == []:
-            return True
-        else:
-            return any(j for j in [re.match(i, value) for i in self.get_conf_value('show', header=header)])
+        return any(j for j in [re.match(i, value) for i in self.get_conf_value('show', header=header)])
 
     def is_hide(self, value, header=""):
         """Return True if the value is in the hide configuration list.
@@ -898,6 +895,14 @@ class GlancesPlugin(object):
         """
         # @TODO: possible optimisation: create a re.compile list
         return any(j for j in [re.match(i, value) for i in self.get_conf_value('hide', header=header)])
+
+    def is_display(self, value, header=""):
+        """Return True if the value should be displayed in the UI
+        """
+        if self.get_conf_value('show', header=header) != []:
+            return self.is_show(value, header=header)
+        else:
+            return not self.is_hide(value, header=header)
 
     def has_alias(self, header):
         """Return the alias name for the relative header it it exists otherwise None."""

@@ -91,7 +91,7 @@ class Plugin(GlancesPlugin):
 
             for net in net_io_counters:
                 # Do not take hidden interface into account
-                if self.is_hide(net):
+                if not self.is_display(net):
                     continue
 
                 # Grab the stats using the Wifi Python lib
