@@ -20,7 +20,6 @@
 """Manage Glances update."""
 
 from datetime import datetime, timedelta
-from packaging.version import Version
 import threading
 import json
 import pickle
@@ -32,6 +31,14 @@ from glances.compat import nativestr, urlopen, HTTPError, URLError
 from glances.config import user_cache_dir
 from glances.globals import safe_makedirs
 from glances.logger import logger
+
+try:
+    from packaging.version import Version
+    PACKAGING_IMPORT = True
+except ModuleNotFoundError as e:
+    logger.error("Unable to import 'packaging' module ({}). Glances cannot check for updates.".format(e))
+    PACKAGING_IMPORT = False
+
 
 PYPI_API_URL = 'https://pypi.python.org/pypi/Glances/json'
 
@@ -54,6 +61,8 @@ class Outdated(object):
         self.data = {u'installed_version': __version__, u'latest_version': '0.0', u'refresh_date': datetime.now()}
         # Read the configuration file
         self.load_config(config)
+        if not PACKAGING_IMPORT:
+            self.args.disable_check_update = False
         logger.debug("Check Glances version up-to-date: {}".format(not self.args.disable_check_update))
 
         # And update !
