@@ -236,7 +236,7 @@ class Plugin(GlancesPlugin):
             # Get stats for all containers
             stats['containers'] = []
             for container in containers:
-                # Should we display the container stats ?
+                # Shall we display the stats ?
                 if not self.is_display(nativestr(container.name)):
                     continue
 
