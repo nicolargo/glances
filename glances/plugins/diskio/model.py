@@ -99,7 +99,6 @@ class PluginModel(GlancesPluginModel):
                     continue
 
                 # Shall we display the stats ?
-                logger.info("diskio: %s => %s", disk, self.is_display(disk))
                 if not self.is_display(disk):
                     continue
 
