@@ -45,41 +45,41 @@ docs-server: docs
 webui: venv-dev
 	cd glances/outputs/static/ && npm ci && npm run build
 
-run: venv
+run:
 	./venv/bin/python -m glances -C ./conf/glances.conf
 
-run-debug: venv
+run-debug:
 	./venv/bin/python -m glances -C ./conf/glances.conf -d
 
-run-webserver: venv
+run-webserver:
 	./venv/bin/python -m glances -C ./conf/glances.conf -w
 
-run-restapiserver: venv
+run-restapiserver:
 	./venv/bin/python -m glances -C ./conf/glances.conf -w --disable-webui
 
-run-server: venv
+run-server:
 	./venv/bin/python -m glances -C ./conf/glances.conf -s
 
-run-client: venv
+run-client:
 	./venv/bin/python -m glances -C ./conf/glances.conf -c localhost
 
-run-browser: venv
+run-browser:
 	./venv/bin/python -m glances -C ./conf/glances.conf --browser
 
-show-version: venv
+show-version:
 	./venv/bin/python -m glances -C ./conf/glances.conf -V
 
-show-issue: venv
+show-issue:
 	./venv/bin/python -m glances -C ./conf/glances.conf --issue
 
-profiling: venv venv-dev
+profiling:
 	@echo "Please complete and run: sudo ./venv/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s --pid <GLANCES PID>"
 
-trace-malloc: venv
+trace-malloc:
 	@echo "Malloc test is running, please wait ~30 secondes..."
 	./venv/bin/python -m glances -C ./conf/glances.conf --trace-malloc --stop-after 15 --quiet
 
-memory-leak: venv
+memory-leak:
 	./venv/bin/python -m glances -C ./conf/glances.conf --memory-leak
 
 release-note:
