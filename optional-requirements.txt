@@ -24,6 +24,7 @@ pygal
 pymdstat
 pysnmp
 pySMART.smartx
+python-dateutil
 pyzmq
 requests
 scandir; python_version < "3.5"

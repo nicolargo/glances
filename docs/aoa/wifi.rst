@@ -30,6 +30,7 @@ hide the loopback interface (lo) and all the virtual docker interfaces:
 
     [wifi]
     hide=lo,docker.*
+    #show=wlp2s0
     # Define SIGNAL thresholds in dBm (lower is better...)
     careful=-65
     warning=-75

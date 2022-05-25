@@ -131,7 +131,7 @@ class PluginModel(GlancesPluginModel):
         self.stats = self.get_init_value()
         for stat in stats:
             # Do not take hide stat into account
-            if self.is_hide(stat["label"].lower()):
+            if not self.is_display(stat["label"].lower()):
                 continue
             # Set the alias for each stat
             alias = self.has_alias(stat["label"].lower())
