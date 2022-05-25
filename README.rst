@@ -225,15 +225,15 @@ create your own Dockerfile:
 .. code-block:: console
 
     FROM nicolargo/glances:latest
-    COPY glances.conf /glances/conf/glances.conf
-    CMD python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
+    COPY glances.conf /etc/glances.conf
+    CMD python -m glances -C /etc/glances.conf $GLANCES_OPT
 
 Alternatively, you can specify something along the same lines with
 docker run options:
 
 .. code-block:: console
 
-    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it nicolargo/glances:latest-full
+    docker run -v `pwd`/glances.conf:/etc/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it nicolargo/glances:latest-full
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
