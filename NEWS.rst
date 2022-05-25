@@ -3,10 +3,35 @@
 ==============================================================================
 
 ===============
+Version 3.2.7
+===============
+
+    Under development: see roadmap here https://github.com/nicolargo/glances/milestone/59
+
+===============
 Version 3.2.6
 ===============
 
-Under development: see roadmap here https://github.com/nicolargo/glances/milestone/58
+Enhancement requests:
+
+    * Create a Show option in the configuration file to only show some stats #2052
+    * Use glances.conf file inside docker-compose folder for Docker images
+    * Optionally disable public ip #2030
+    * Update public ip at intervals #2029
+
+Bug corrected:
+
+    * Unitary tests should run loopback interface #2051
+    * Add python-datutil dep for Focker plugin #2045
+    * Add venv to list of .PHONY in Makefile #2043
+    * Glances API Documentation displays non valid json #2036
+
+A big thanks to @RazCrimson for his contribution !
+
+Thanks for others contributors:
+
+    * Steven Conaway
+    * aekoroglu
 
 ===============
 Version 3.2.5

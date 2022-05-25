@@ -155,7 +155,7 @@ class PluginModel(GlancesPluginModel):
             for net in network_new:
                 # Do not take hidden interface into account
                 # or KeyError: 'eth0' when interface is not connected #1348
-                if self.is_hide(net) or net not in net_status:
+                if not self.is_display(net) or net not in net_status:
                     continue
                 try:
                     cumulative_rx = network_new[net].bytes_recv
@@ -216,7 +216,7 @@ class PluginModel(GlancesPluginModel):
 
                 for net in network_new:
                     # Do not take hidden interface into account
-                    if self.is_hide(net):
+                    if not self.is_display(net):
                         continue
 
                     try:
