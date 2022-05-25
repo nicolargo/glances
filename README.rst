@@ -59,7 +59,7 @@ Social networks
 
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/twitter-icon.png
     :target: https://twitter.com/nicolargo
-   
+
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/reddit.png
     :target: https://www.reddit.com/r/glances/
 
@@ -211,7 +211,7 @@ Available versions on the Docker Hub repository:
 - *nicolargo/glances:latest-full* for a full Debian Glances image version with all dependencies
 - *nicolargo/glances:alpine-latest-full* for a full Alpine Glances image version with all dependencies
 
-You can also specify a version by replacing latest by 3.2.3 (for example).
+You can also specify a version by replacing latest by 3.6.2.2 (for example).
 
 Run last version of Glances container in *console mode*:
 
