@@ -28,6 +28,7 @@ python-dateutil
 pyzmq
 requests
 scandir; python_version < "3.5"
+six
 sparklines
 statsd
 wifi
