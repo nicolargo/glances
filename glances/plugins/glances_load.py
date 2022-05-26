@@ -176,7 +176,7 @@ class Plugin(GlancesPlugin):
         # Loop over 1min, 5min and 15min load
         for load_time in ['1', '5', '15']:
             ret.append(self.curse_new_line())
-            msg = '{:8}'.format('{} min:'.format(load_time))
+            msg = '{:8}'.format('{} min'.format(load_time))
             ret.append(self.curse_add_line(msg))
             if args.disable_irix and self.nb_log_core != 0:
                 # Enable Irix mode for load (see issue #1554)
