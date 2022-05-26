@@ -61,7 +61,7 @@ class Outdated(object):
         # Read the configuration file
         self.load_config(config)
         if not PACKAGING_IMPORT:
-            self.args.disable_check_update = False
+            self.args.disable_check_update = True
         logger.debug("Check Glances version up-to-date: {}".format(not self.args.disable_check_update))
 
         # And update !
