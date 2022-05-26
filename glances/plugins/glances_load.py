@@ -181,17 +181,11 @@ class Plugin(GlancesPlugin):
             if args.disable_irix and self.nb_log_core != 0:
                 # Enable Irix mode for load (see issue #1554)
                 load_stat = self.stats['min{}'.format(load_time)] / self.nb_log_core * 100
-            else:
-                load_stat = self.stats['min{}'.format(load_time)]
-            # Manage IRIX display (see issue #1554)
-            if (args.disable_irix and self.nb_log_core != 0):
                 msg = '{:>5.1f}%'.format(load_stat)
             else:
+                # Default mode for load
+                load_stat = self.stats['min{}'.format(load_time)]
                 msg = '{:>6.2f}'.format(load_stat)
-            if load_time == '1':
-                ret.append(self.curse_add_line(msg))
-            else:
-                # Alert is only for 5 and 15 min
-                ret.append(self.curse_add_line(msg, self.get_views(key='min{}'.format(load_time), option='decoration')))
+            ret.append(self.curse_add_line(msg, self.get_views(key='min{}'.format(load_time), option='decoration')))
 
         return ret
