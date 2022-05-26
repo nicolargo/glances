@@ -167,7 +167,7 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{:6}'.format('LOAD%' if (args.disable_irix and self.nb_log_core != 0) else 'LOAD')
+        msg = '{:6}'.format('LOAD')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
         if 'cpucore' in self.stats and self.stats['cpucore'] > 0:
@@ -183,7 +183,11 @@ class Plugin(GlancesPlugin):
                 load_stat = self.stats['min{}'.format(load_time)] / self.nb_log_core * 100
             else:
                 load_stat = self.stats['min{}'.format(load_time)]
-            msg = '{:>6.2f}'.format(load_stat)
+            # Manage IRIX display (see issue #1554)
+            if (args.disable_irix and self.nb_log_core != 0):
+                msg = '{:>5.1f}%'.format(load_stat)
+            else:
+                msg = '{:>6.2f}'.format(load_stat)
             if load_time == '1':
                 ret.append(self.curse_add_line(msg))
             else:
