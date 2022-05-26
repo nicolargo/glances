@@ -23,7 +23,6 @@ import os
 import threading
 import time
 from copy import deepcopy
-from dateutil import parser
 
 from glances.compat import iterkeys, itervalues, nativestr, pretty_date
 from glances.logger import logger
@@ -35,10 +34,11 @@ from glances.timer import getTimeSinceLastUpdate
 # https://github.com/docker/docker-py
 try:
     import docker
+    from dateutil import parser
 except Exception as e:
     import_error_tag = True
     # Display debug message if import KeyError
-    logger.warning("Error loading Docker Python Lib. Docker plugin is disabled ({})".format(e))
+    logger.warning("Error loading Docker deps Lib. Docker plugin is disabled ({})".format(e))
 else:
     import_error_tag = False
 
