@@ -38,7 +38,9 @@ from glances.timer import Counter, Timer
 from glances.outputs.glances_unicode import unicode_message
 
 
-fields_unit_short = {'percent': '%'}
+fields_unit_short = {
+    'percent': '%'
+}
 
 fields_unit_type = {
     'percent': 'float',
@@ -52,7 +54,7 @@ fields_unit_type = {
     'second': 'int',
     'seconds': 'int',
     'byte': 'int',
-    'bytes': 'int',
+    'bytes': 'int'
 }
 
 
@@ -978,7 +980,7 @@ class GlancesPlugin(object):
         """Go to a new line."""
         return self.curse_add_line('\n')
 
-    def curse_add_stat(self, key, width=None, header='', separator='', trailer=''):
+    def curse_add_stat(self, key, width=None, header='', display_key=True, separator='', trailer=''):
         """Return a list of dict messages with the 'key: value' result
 
           <=== width ===>
@@ -986,8 +988,8 @@ class GlancesPlugin(object):
         | |       | |    |_ trailer
         | |       | |_ self.stats[key]
         | |       |_ separator
-        | |_ key
-        |_ trailer
+        | |_ key (if display_key is True)
+        |_ header
 
         Instead of:
             msg = '  {:8}'.format('idle:')
@@ -1007,6 +1009,8 @@ class GlancesPlugin(object):
             key_name = self.fields_description[key]['short_name']
         else:
             key_name = key
+        if not display_key:
+            key_name = ''
 
         # Check if unit is defined and get the short unit char in the unit_sort dict
         if (

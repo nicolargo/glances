@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -47,7 +47,10 @@ waiting in the run-queue plus the number currently executing \
 over 15 minutes.',
         'unit': 'float',
     },
-    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
+    'cpucore': {
+        'description': 'Total number of CPU core.',
+        'unit': 'number'
+    },
 }
 
 # SNMP OID
