@@ -329,9 +329,9 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, self.get_views(key='total', option='decoration')))
         # Idle CPU
         if 'idle' in self.stats and not idle_tag:
-            msg = '  {:8}'.format('idle:')
+            msg = '  {:8}'.format('idle')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle', option='optional')))
-            msg = '{:5.1f}%'.format(self.stats['idle'])
+            msg = '{:4.1f}%'.format(self.stats['idle'])
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle', option='optional')))
         # ctx_switches
         ret.extend(self.curse_add_stat('ctx_switches', width=15, header='  '))
@@ -345,7 +345,7 @@ class Plugin(GlancesPlugin):
         elif 'idle' in self.stats:
             ret.extend(self.curse_add_stat('idle', width=15))
         # IRQ CPU
-        ret.extend(self.curse_add_stat('irq', width=15, header='  '))
+        ret.extend(self.curse_add_stat('irq', width=14, header='  '))
         # interrupts
         ret.extend(self.curse_add_stat('interrupts', width=15, header='  '))
 
@@ -358,7 +358,7 @@ class Plugin(GlancesPlugin):
         else:
             ret.extend(self.curse_add_stat('core', width=15))
         # Nice CPU
-        ret.extend(self.curse_add_stat('nice', width=15, header='  '))
+        ret.extend(self.curse_add_stat('nice', width=14, header='  '))
         # soft_interrupts
         ret.extend(self.curse_add_stat('soft_interrupts', width=15, header='  '))
 
@@ -368,7 +368,7 @@ class Plugin(GlancesPlugin):
         # IOWait CPU
         ret.extend(self.curse_add_stat('iowait', width=15))
         # Steal CPU usage
-        ret.extend(self.curse_add_stat('steal', width=15, header='  '))
+        ret.extend(self.curse_add_stat('steal', width=14, header='  '))
         # syscalls: number of system calls since boot. Always set to 0 on Linux. (do not display)
         if not LINUX:
             ret.extend(self.curse_add_stat('syscalls', width=15, header='  '))
