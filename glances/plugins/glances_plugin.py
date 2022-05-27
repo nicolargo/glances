@@ -988,7 +988,7 @@ class GlancesPlugin(object):
         | |       | |    |_ trailer
         | |       | |_ self.stats[key]
         | |       |_ separator
-        | |_ key (if display_key is True)
+        | |_ 'short_name' description or key or nothing if display_key is True
         |_ header
 
         Instead of:
@@ -1005,12 +1005,12 @@ class GlancesPlugin(object):
             return []
 
         # Check if a shortname is defined
-        if key in self.fields_description and 'short_name' in self.fields_description[key]:
+        if not display_key:
+            key_name = ''
+        elif key in self.fields_description and 'short_name' in self.fields_description[key]:
             key_name = self.fields_description[key]['short_name']
         else:
             key_name = key
-        if not display_key:
-            key_name = ''
 
         # Check if unit is defined and get the short unit char in the unit_sort dict
         if (
