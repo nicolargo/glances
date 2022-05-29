@@ -59,7 +59,7 @@ Social networks
 
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/twitter-icon.png
     :target: https://twitter.com/nicolargo
-   
+
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/reddit.png
     :target: https://www.reddit.com/r/glances/
 
@@ -205,7 +205,7 @@ Available versions on the Docker Hub repository:
 - *nicolargo/glances:latest-full* for a full Debian Glances image version with all dependencies
 - *nicolargo/glances:alpine-latest-full* for a full Alpine Glances image version with all dependencies
 
-You can also specify a version by replacing latest by 3.2.3 (for example).
+You can also specify a version by replacing latest by 3.2.6.3 (for example).
 
 Run last version of Glances container in *console mode*:
 
@@ -219,15 +219,15 @@ create your own Dockerfile:
 .. code-block:: console
 
     FROM nicolargo/glances:latest
-    COPY glances.conf /glances/conf/glances.conf
-    CMD python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
+    COPY glances.conf /etc/glances.conf
+    CMD python -m glances -C /etc/glances.conf $GLANCES_OPT
 
 Alternatively, you can specify something along the same lines with
 docker run options:
 
 .. code-block:: console
 
-    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it nicolargo/glances:latest-full
+    docker run -v `pwd`/glances.conf:/etc/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it nicolargo/glances:latest-full
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 

@@ -314,9 +314,9 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg, self.get_views(key='total', option='decoration')))
         # Idle CPU
         if 'idle' in self.stats and not idle_tag:
-            msg = '  {:8}'.format('idle:')
+            msg = '  {:8}'.format('idle')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle', option='optional')))
-            msg = '{:5.1f}%'.format(self.stats['idle'])
+            msg = '{:4.1f}%'.format(self.stats['idle'])
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle', option='optional')))
         # ctx_switches
         if 'ctx_switches' in self.stats:
@@ -347,11 +347,7 @@ class PluginModel(GlancesPluginModel):
             msg = '{:5.1f}%'.format(self.stats['idle'])
             ret.append(self.curse_add_line(msg))
         # IRQ CPU
-        if 'irq' in self.stats:
-            msg = '  {:8}'.format('irq:')
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='irq', option='optional')))
-            msg = '{:5.1f}%'.format(self.stats['irq'])
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='irq', option='optional')))
+        ret.extend(self.curse_add_stat('irq', width=14, header='  '))
         # interrupts
         if 'interrupts' in self.stats:
             msg = '  {:8}'.format('inter:')
@@ -373,11 +369,7 @@ class PluginModel(GlancesPluginModel):
             msg = '{:>6}'.format(self.stats['nb_log_core'])
             ret.append(self.curse_add_line(msg))
         # Nice CPU
-        if 'nice' in self.stats:
-            msg = '  {:8}'.format('nice:')
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
-            msg = '{:5.1f}%'.format(self.stats['nice'])
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
+        ret.extend(self.curse_add_stat('nice', width=14, header='  '))
         # soft_interrupts
         if 'soft_interrupts' in self.stats:
             msg = '  {:8}'.format('sw_int:')
@@ -401,18 +393,7 @@ class PluginModel(GlancesPluginModel):
                 )
             )
         # Steal CPU usage
-        if 'steal' in self.stats:
-            msg = '  {:8}'.format('steal:')
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='steal', option='optional')))
-            msg = '{:5.1f}%'.format(self.stats['steal'])
-            ret.append(
-                self.curse_add_line(
-                    msg,
-                    self.get_views(key='steal', option='decoration'),
-                    optional=self.get_views(key='steal', option='optional'),
-                )
-            )
-        # syscalls
+        ret.extend(self.curse_add_stat('steal', width=14, header='  '))
         # syscalls: number of system calls since boot. Always set to 0 on Linux. (do not display)
         if 'syscalls' in self.stats and not LINUX:
             msg = '  {:8}'.format('syscal:')

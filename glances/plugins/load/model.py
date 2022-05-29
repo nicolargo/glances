@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -47,7 +47,10 @@ waiting in the run-queue plus the number currently executing \
 over 15 minutes.',
         'unit': 'float',
     },
-    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
+    'cpucore': {
+        'description': 'Total number of CPU core.',
+        'unit': 'number'
+    },
 }
 
 # SNMP OID
@@ -167,7 +170,7 @@ class PluginModel(GlancesPluginModel):
 
         # Build the string message
         # Header
-        msg = '{:6}'.format('LOAD%' if (args.disable_irix and self.nb_log_core != 0) else 'LOAD')
+        msg = '{:5}'.format('LOAD')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
         if 'cpucore' in self.stats and self.stats['cpucore'] > 0:
@@ -176,18 +179,16 @@ class PluginModel(GlancesPluginModel):
         # Loop over 1min, 5min and 15min load
         for load_time in ['1', '5', '15']:
             ret.append(self.curse_new_line())
-            msg = '{:8}'.format('{} min:'.format(load_time))
+            msg = '{:7}'.format('{} min'.format(load_time))
             ret.append(self.curse_add_line(msg))
             if args.disable_irix and self.nb_log_core != 0:
                 # Enable Irix mode for load (see issue #1554)
                 load_stat = self.stats['min{}'.format(load_time)] / self.nb_log_core * 100
+                msg = '{:>5.1f}%'.format(load_stat)
             else:
+                # Default mode for load
                 load_stat = self.stats['min{}'.format(load_time)]
-            msg = '{:>6.2f}'.format(load_stat)
-            if load_time == '1':
-                ret.append(self.curse_add_line(msg))
-            else:
-                # Alert is only for 5 and 15 min
-                ret.append(self.curse_add_line(msg, self.get_views(key='min{}'.format(load_time), option='decoration')))
+                msg = '{:>6.2f}'.format(load_stat)
+            ret.append(self.curse_add_line(msg, self.get_views(key='min{}'.format(load_time), option='decoration')))
 
         return ret
