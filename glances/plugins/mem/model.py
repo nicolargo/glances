@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -57,11 +57,17 @@ note that this doesn\'t reflect the actual memory available (use \'available\' i
         'unit': 'bytes',
         'min_symbol': 'K',
     },
-    'inactive': {'description': '*(UNIX)*: memory that is marked as not used.', 'unit': 'bytes', 'min_symbol': 'K'},
+    'inactive': {
+        'description': '*(UNIX)*: memory that is marked as not used.',
+        'unit': 'bytes',
+        'min_symbol': 'K',
+        'short_name': 'inacti',
+    },
     'buffers': {
         'description': '*(Linux, BSD)*: cache for things like file system metadata.',
         'unit': 'bytes',
         'min_symbol': 'K',
+        'short_name': 'buffer',
     },
     'cached': {'description': '*(Linux, BSD)*: cache for various things.', 'unit': 'bytes', 'min_symbol': 'K'},
     'wired': {
@@ -258,7 +264,7 @@ class PluginModel(GlancesPluginModel):
         msg = '{:>7.1%}'.format(self.stats['percent'] / 100)
         ret.append(self.curse_add_line(msg, self.get_views(key='percent', option='decoration')))
         # Active memory usage
-        ret.extend(self.curse_add_stat('active', width=18, header='  '))
+        ret.extend(self.curse_add_stat('active', width=16, header='  '))
 
         # Second line
         # total + inactive
@@ -266,7 +272,7 @@ class PluginModel(GlancesPluginModel):
         # Total memory usage
         ret.extend(self.curse_add_stat('total', width=15))
         # Inactive memory usage
-        ret.extend(self.curse_add_stat('inactive', width=18, header='  '))
+        ret.extend(self.curse_add_stat('inactive', width=16, header='  '))
 
         # Third line
         # used + buffers
@@ -274,7 +280,7 @@ class PluginModel(GlancesPluginModel):
         # Used memory usage
         ret.extend(self.curse_add_stat('used', width=15))
         # Buffers memory usage
-        ret.extend(self.curse_add_stat('buffers', width=18, header='  '))
+        ret.extend(self.curse_add_stat('buffers', width=16, header='  '))
 
         # Fourth line
         # free + cached
@@ -282,6 +288,6 @@ class PluginModel(GlancesPluginModel):
         # Free memory usage
         ret.extend(self.curse_add_stat('free', width=15))
         # Cached memory usage
-        ret.extend(self.curse_add_stat('cached', width=18, header='  '))
+        ret.extend(self.curse_add_stat('cached', width=16, header='  '))
 
         return ret

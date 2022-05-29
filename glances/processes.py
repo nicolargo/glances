@@ -36,7 +36,7 @@ class GlancesProcesses(object):
     def __init__(self, cache_timeout=60):
         """Init the class to collect stats about processes."""
         # Add internals caches because psutil do not cache all the stats
-        # See: https://code.google.com/p/psutil/issues/detail?id=462
+        # See: https://github.com/giampaolo/psutil/issues/462
         self.username_cache = {}
         self.cmdline_cache = {}
 
@@ -45,7 +45,7 @@ class GlancesProcesses(object):
         # First iteration, no cache
         self.cache_timer = Timer(0)
 
-        # Init the io dict
+        # Init the io_old dict used to compute the IO bitrate
         # key = pid
         # value = [ read_bytes_old, write_bytes_old ]
         self.io_old = {}
@@ -260,8 +260,8 @@ class GlancesProcesses(object):
 
         # Grab standard stats
         #####################
-        sorted_attrs = ['cpu_percent', 'cpu_times', 'memory_percent', 'name', 'status', 'status', 'num_threads']
-        displayed_attr = ['memory_info', 'nice', 'pid', 'ppid']
+        sorted_attrs = ['cpu_percent', 'cpu_times', 'memory_percent', 'name', 'status', 'num_threads']
+        displayed_attr = ['memory_info', 'nice', 'pid']
         cached_attrs = ['cmdline', 'username']
 
         # Some stats are optional

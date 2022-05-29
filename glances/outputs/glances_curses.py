@@ -1058,8 +1058,7 @@ class _GlancesCurses(object):
             if not display_additional and m['additional']:
                 continue
             # Is it possible to display the stat with the current screen size
-            # !!! Crash if not try/except... Why ???
-            try:
+            if screen_x - x > 0:
                 self.term_window.addnstr(
                     y,
                     x,
@@ -1068,21 +1067,10 @@ class _GlancesCurses(object):
                     screen_x - x,
                     self.colors_list[m['decoration']],
                 )
-            except Exception:
-                pass
-            else:
-                # New column
-                # Python 2: we need to decode to get real screen size because
-                # UTF-8 special tree chars occupy several bytes.
-                # Python 3: strings are strings and bytes are bytes, all is
-                # good.
-                try:
-                    x += len(u(m['msg']))
-                except UnicodeDecodeError:
-                    # Quick and dirty hack for issue #745
-                    pass
-                if x > x_max:
-                    x_max = x
+            # New column
+            x += len(u(m['msg']))
+            if x > x_max:
+                x_max = x
 
         # Compute the next Glances column/line position
         self.next_column = max(self.next_column, x_max + self.space_between_column)

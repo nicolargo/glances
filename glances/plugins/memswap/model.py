@@ -172,9 +172,9 @@ class PluginModel(GlancesPluginModel):
 
         # First line
         # total%
-        msg = '{}'.format('SWAP')
+        msg = '{:4}'.format('SWAP')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = ' {:3}'.format(self.trend_msg(self.get_trend('percent')))
+        msg = ' {:2}'.format(self.trend_msg(self.get_trend('percent')))
         ret.append(self.curse_add_line(msg))
         # Percent memory usage
         msg = '{:>6.1%}'.format(self.stats['percent'] / 100)
@@ -184,18 +184,18 @@ class PluginModel(GlancesPluginModel):
         # total
         ret.append(self.curse_new_line())
         # Total memory usage
-        ret.extend(self.curse_add_stat('total', width=16))
+        ret.extend(self.curse_add_stat('total', width=15))
 
         # Third line
         # used
         ret.append(self.curse_new_line())
         # Used memory usage
-        ret.extend(self.curse_add_stat('used', width=16))
+        ret.extend(self.curse_add_stat('used', width=15))
 
         # Fourth line
         # free
         ret.append(self.curse_new_line())
         # Free memory usage
-        ret.extend(self.curse_add_stat('free', width=16))
+        ret.extend(self.curse_add_stat('free', width=15))
 
         return ret
