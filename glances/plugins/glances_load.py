@@ -170,11 +170,13 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{:5}'.format('LOAD')
+        msg = '{:4}'.format('LOAD')
         ret.append(self.curse_add_line(msg, "TITLE"))
+        msg = ' {:1}'.format(self.trend_msg(self.get_trend('min1')))
+        ret.append(self.curse_add_line(msg))
         # Core number
         if 'cpucore' in self.stats and self.stats['cpucore'] > 0:
-            msg = '{:3}-core'.format(int(self.stats['cpucore']))
+            msg = '{:3}core'.format(int(self.stats['cpucore']))
             ret.append(self.curse_add_line(msg))
         # Loop over 1min, 5min and 15min load
         for load_time in ['1', '5', '15']:
