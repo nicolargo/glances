@@ -24,10 +24,12 @@ import time
 
 from glances.globals import WINDOWS
 from glances.logger import logger
+from glances.outputs.glances_stdout_json import GlancesStdoutJson
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
 from glances.outputs.glances_stdout import GlancesStdout
+from glances.outputs.glances_stdout_json import GlancesStdoutJson
 from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
 from glances.outputs.glances_stdout_issue import GlancesStdoutIssue
 from glances.outputs.glances_stdout_apidoc import GlancesStdoutApiDoc
@@ -96,6 +98,10 @@ class GlancesStandalone(object):
             logger.info("Stdout mode is ON, following stats will be displayed: {}".format(args.stdout))
             # Init screen
             self.screen = GlancesStdout(config=config, args=args)
+        elif args.stdout_json:
+            logger.info("Stdout JSON mode is ON, following stats will be displayed: {}".format(args.stdout_json))
+            # Init screen
+            self.screen = GlancesStdoutJson(config=config, args=args)
         elif args.stdout_csv:
             logger.info("Stdout CSV mode is ON, following stats will be displayed: {}".format(args.stdout_csv))
             # Init screen

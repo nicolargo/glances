@@ -414,6 +414,15 @@ or in a CSV format thanks to the stdout-csv option:
     2018-12-08 22:04:23 CEST,5.4,5949136896,4,1.04,0.99,1.04
     ...
 
+or in a JSON format thanks to the stdout-json option (attibute not supported in this mode in order to have a real JSON object in output):
+
+.. code-block:: console
+
+    $ glances --stdout-json cpu,mem
+    cpu: {"total": 29.0, "user": 24.7, "nice": 0.0, "system": 3.8, "idle": 71.4, "iowait": 0.0, "irq": 0.0, "softirq": 0.0, "steal": 0.0, "guest": 0.0, "guest_nice": 0.0, "time_since_update": 1, "cpucore": 4, "ctx_switches": 0, "interrupts": 0, "soft_interrupts": 0, "syscalls": 0}
+    mem: {"total": 7837949952, "available": 2919079936, "percent": 62.8, "used": 4918870016, "free": 2919079936, "active": 2841214976, "inactive": 3340550144, "buffers": 546799616, "cached": 3068141568, "shared": 788156416}
+    ...
+
 and RTFM, always.
 
 Documentation
