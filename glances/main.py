@@ -83,8 +83,11 @@ Examples of use:
   Start the client browser (browser mode):
     $ glances --browser
 
-  Display stats to stdout (one stat per line):
+  Display stats to stdout (one stat per line, possible to go inside stats using plugin.attribute):
     $ glances --stdout now,cpu.user,mem.used,load
+
+  Display JSON stats to stdout (one stats per line):
+    $ glances --stdout-json now,cpu,mem,load
 
   Display CSV stats to stdout (all stats in one line):
     $ glances --stdout-csv now,cpu.user,mem.used,load
@@ -409,10 +412,16 @@ Examples of use:
             help='display stats to stdout, one stat per line (comma separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
+            '--stdout-json',
+            default=None,
+            dest='stdout_json',
+            help='display stats to stdout, JSON format (comma separated list of plugins/plugins.attribute)',
+        )
+        parser.add_argument(
             '--stdout-csv',
             default=None,
             dest='stdout_csv',
-            help='display stats to stdout, csv format (comma separated list of plugins/plugins.attribute)',
+            help='display stats to stdout, CSV format (comma separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
             '--issue',
