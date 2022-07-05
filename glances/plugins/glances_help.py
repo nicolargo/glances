@@ -105,14 +105,14 @@ class Plugin(GlancesPlugin):
         self.view_data['misc_erase_process_filter'] = msg_col.format('E', 'Erase process filter')
         self.view_data['misc_generate_history_graphs'] = msg_col.format('g', 'Generate history graphs')
         self.view_data['misc_help'] = msg_col.format('h', 'HELP')
-        self.view_data['misc_accumulate processes_by_program'] = msg_col.format('j', 'Accumulate processes by program')
+        self.view_data['misc_accumulate_processes_by_program'] = msg_col.format('j', 'Accumulate processes by program')
         self.view_data['misc_kill_process'] = msg_col.format('k', 'Kill process')
         self.view_data['misc_reset_processes_summary_min_max'] = msg_col.format('M', 'Reset processes summary min/max')
         self.view_data['misc_quit'] = msg_col.format('q', 'QUIT (or Esc or Ctrl-C)')
         self.view_data['misc_reset_history'] = msg_col.format('r', 'Reset history')
         self.view_data['misc_delete_warning_alerts'] = msg_col.format('w', 'Delete warning alerts')
         self.view_data['misc_delete_warning_and_critical_alerts'] = msg_col.format('x', 'Delete warning & critical alerts')
-        self.view_data['misc_edit_process_filter_pattern'] = '  ENTER: Edit process filter pattern'        
+        self.view_data['misc_edit_process_filter_pattern'] = '  ENTER: Edit process filter pattern'
 
     def get_view_data(self, args=None):
         """Return the view."""
@@ -191,7 +191,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(self.view_data['misc_help']))
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(self.view_data['show_hide_network']))
-        ret.append(self.curse_add_line(self.view_data['misc_accumulate processes_by_program']))
+        ret.append(self.curse_add_line(self.view_data['misc_accumulate_processes_by_program']))
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(self.view_data['show_hide_current_time']))
         ret.append(self.curse_add_line(self.view_data['misc_kill_process']))
