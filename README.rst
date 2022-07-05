@@ -150,7 +150,7 @@ To upgrade Glances to the latest version:
 .. code-block:: console
 
     pip install --user --upgrade glances
-    pip install --user --upgrade glances[...]
+    pip install --user --upgrade 'glances[...]''
 
 If you need to install Glances in a specific user location, use:
 
