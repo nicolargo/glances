@@ -23,12 +23,13 @@ def processes_to_programs(processes):
             # Create a new entry in the dict (new program)
             programs_dict[p[key]] = {
                 'time_since_update': p['time_since_update'],
-                'num_threads': p['num_threads'],
-                'cpu_percent': p['cpu_percent'],
-                'memory_percent': p['memory_percent'],
-                'cpu_times': p['cpu_times'],
-                'memory_info': p['memory_info'],
-                'io_counters': p['io_counters'],
+                # some values can be None, e.g. macOS system processes
+                'num_threads': p['num_threads'] or 0,
+                'cpu_percent': p['cpu_percent'] or 0,
+                'memory_percent': p['memory_percent'] or 0,
+                'cpu_times': p['cpu_times'] or (),
+                'memory_info': p['memory_info'] or (),
+                'io_counters': p['io_counters'] or (),
                 'childrens': [p['pid']],
                 # Others keys are not used
                 # but should be set to be compliant with the existing process_list
@@ -41,11 +42,13 @@ def processes_to_programs(processes):
             }
         else:
             # Update a existing entry in the dict (existing program)
-            programs_dict[p[key]]['num_threads'] += p['num_threads']
-            programs_dict[p[key]]['cpu_percent'] += p['cpu_percent']
-            programs_dict[p[key]]['memory_percent'] += p['memory_percent']
-            programs_dict[p[key]]['cpu_times'] += p['cpu_times']
-            programs_dict[p[key]]['memory_info'] += p['memory_info']
+            # some values can be None, e.g. macOS system processes
+            programs_dict[p[key]]['num_threads'] += p['num_threads'] or 0
+            programs_dict[p[key]]['cpu_percent'] += p['cpu_percent'] or 0
+            programs_dict[p[key]]['memory_percent'] += p['memory_percent'] or 0
+            programs_dict[p[key]]['cpu_times'] += p['cpu_times'] or ()
+            programs_dict[p[key]]['memory_info'] += p['memory_info'] or ()
+
             programs_dict[p[key]]['io_counters'] += p['io_counters']
             programs_dict[p[key]]['childrens'].append(p['pid'])
             # If all the subprocess has the same value, display it
