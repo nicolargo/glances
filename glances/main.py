@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Glances main class."""
 
@@ -82,8 +72,11 @@ Examples of use:
   Start the client browser (browser mode):
     $ glances --browser
 
-  Display stats to stdout (one stat per line):
+  Display stats to stdout (one stat per line, possible to go inside stats using plugin.attribute):
     $ glances --stdout now,cpu.user,mem.used,load
+
+  Display JSON stats to stdout (one stats per line):
+    $ glances --stdout-json now,cpu,mem,load
 
   Display CSV stats to stdout (all stats in one line):
     $ glances --stdout-csv now,cpu.user,mem.used,load
@@ -408,10 +401,16 @@ Examples of use:
             help='display stats to stdout, one stat per line (comma separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
+            '--stdout-json',
+            default=None,
+            dest='stdout_json',
+            help='display stats to stdout, JSON format (comma separated list of plugins/plugins.attribute)',
+        )
+        parser.add_argument(
             '--stdout-csv',
             default=None,
             dest='stdout_csv',
-            help='display stats to stdout, csv format (comma separated list of plugins/plugins.attribute)',
+            help='display stats to stdout, CSV format (comma separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
             '--issue',

@@ -1,79 +1,141 @@
 <div class="container-fluid">
     <div class="row">
-        <div class="col-sm-12 col-lg-24">{{vm.help.version}} {{vm.help.psutil_version}}</div>
+        <div class="col-sm-12 col-lg-24">{{ vm.help.version }} {{ vm.help.psutil_version }}</div>
     </div>
     <div class="row">&nbsp;</div>
     <div class="row">
-        <div class="col-sm-12 col-lg-24">{{vm.help.configuration_file}}</div>
+        <div class="col-sm-12 col-lg-24">{{ vm.help.configuration_file }}</div>
     </div>
     <div class="row">&nbsp;</div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.sort_auto}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.sort_network}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.sort_cpu}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.show_hide_alert}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.sort_mem}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.percpu}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.sort_user}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.show_hide_ip}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.sort_proc}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.enable_disable_docker}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.sort_io}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.view_network_io_combination}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.sort_cpu_times}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.view_cumulative_network}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.show_hide_diskio}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.show_hide_filesytem_freespace}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.show_hide_filesystem}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.show_hide_vm.help}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.show_hide_network}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.diskio_iops}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.show_hide_sensors}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.show_hide_top_menu}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.show_hide_left_sidebar}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.show_hide_amp}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.enable_disable_process_stats}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.show_hide_irq}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.enable_disable_gpu}}</div>
-        <div class="col-sm-12 col-lg-6">{{vm.help.enable_disable_mean_gpu}}</div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.enable_disable_quick_look}}</div>
-        <div class="col-sm-12 col-lg-6"></div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.enable_disable_short_processname}}</div>
-        <div class="col-sm-12 col-lg-6"></div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-lg-6">{{vm.help.enable_disable_ports}}</div>
-        <div class="col-sm-12 col-lg-6"></div>
-    </div>
+</div>
 
+<div class="divTable" style="width: 100%;" >
+    <div class="divTableBody">
+        <div class="divTableRow">
+            <div class="divTableHead">{{ vm.help.header_sort.replace(':', '') }}</div>
+            <div class="divTableHead">{{ vm.help.header_show_hide.replace(':', '') }}</div>
+            <div class="divTableHead">{{ vm.help.header_toggle.replace(':', '') }}</div>
+            <div class="divTableHead">{{ vm.help.header_miscellaneous.replace(':', '') }}</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">{{ vm.help.sort_auto }}</div>
+            <div class="divTableCell">{{ vm.help.show_hide_application_monitoring }}</div>
+            <div class="divTableCell">{{ vm.help.toggle_bits_bytes }}</div>
+            <div class="divTableCell">{{ vm.help.misc_erase_process_filter }}</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">{{ vm.help.sort_cpu }}</div>
+            <div class="divTableCell">{{ vm.help.show_hide_diskio }}</div>
+            <div class="divTableCell">{{ vm.help.toggle_count_rate }}</div>
+            <div class="divTableCell">{{ vm.help.misc_generate_history_graphs }}</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">{{ vm.help.sort_io_rate }}</div>
+            <div class="divTableCell">{{ vm.help.show_hide_docker }}</div>
+            <div class="divTableCell">{{ vm.help.toggle_used_free }}</div>
+            <div class="divTableCell">{{ vm.help.misc_help }}</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">{{ vm.help.sort_mem }}</div>
+            <div class="divTableCell">{{ vm.help.show_hide_top_extended_stats }}</div>
+            <div class="divTableCell">{{ vm.help.toggle_bar_sparkline }}</div>
+            <div class="divTableCell">{{ vm.help.misc_accumulate_processes_by_program }}</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">{{ vm.help.sort_process_name }}</div>
+            <div class="divTableCell">{{ vm.help.show_hide_filesystem }}</div>
+            <div class="divTableCell">{{ vm.help.toggle_separate_combined }}</div>
+            <div class="divTableCell">{{ vm.help.misc_kill_process }}</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">{{ vm.help.sort_cpu_times }}</div>
+            <div class="divTableCell">{{ vm.help.show_hide_gpu }}</div>
+            <div class="divTableCell">{{ vm.help.toggle_live_cumulative }}</div>
+            <div class="divTableCell">{{ vm.help.misc_reset_processes_summary_min_max }}</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">{{ vm.help.sort_user }}</div>
+            <div class="divTableCell">{{ vm.help.show_hide_ip }}</div>
+            <div class="divTableCell">{{ vm.help.toggle_linux_percentage }}</div>
+            <div class="divTableCell">{{ vm.help.misc_quit }}</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.show_hide_tcp_connection }}</div>
+            <div class="divTableCell">{{ vm.help.toggle_cpu_individual_combined }}</div>
+            <div class="divTableCell">{{ vm.help.misc_reset_history }}</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.show_hide_alert }}</div>
+            <div class="divTableCell">{{ vm.help.toggle_gpu_individual_combined }}</div>
+            <div class="divTableCell">{{ vm.help.misc_delete_warning_alerts }}</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.show_hide_network }}</div>
+            <div class="divTableCell">{{ vm.help.toggle_short_full }}</div>
+            <div class="divTableCell">{{ vm.help.misc_delete_warning_and_critical_alerts }}</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.sort_cpu_times }}</div>
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.misc_edit_process_filter_pattern }}</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.show_hide_irq }}</div>
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">&nbsp;</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.show_hide_raid_plugin }}</div>
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">&nbsp;</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.show_hide_sensors }}</div>
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">&nbsp;</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.show_hide_wifi_module }}</div>
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">&nbsp;</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.show_hide_processes }}</div>
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">&nbsp;</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.show_hide_left_sidebar }}</div>
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">&nbsp;</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.show_hide_quick_look }}</div>
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">&nbsp;</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.show_hide_cpu_mem_swap }}</div>
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">&nbsp;</div>
+        </div>
+        <div class="divTableRow">
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">{{ vm.help.show_hide_all }}</div>
+            <div class="divTableCell">&nbsp;</div>
+            <div class="divTableCell">&nbsp;</div>
+        </div>
+    </div>
 </div>
