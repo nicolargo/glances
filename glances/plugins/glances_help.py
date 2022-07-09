@@ -106,6 +106,8 @@ class Plugin(GlancesPlugin):
         self.view_data['misc_generate_history_graphs'] = msg_col.format('g', 'Generate history graphs')
         self.view_data['misc_help'] = msg_col.format('h', 'HELP')
         self.view_data['misc_accumulate_processes_by_program'] = msg_col.format('j', 'Accumulate processes by program')
+        self.view_data['misc_increase_nice_process'] = msg_col.format('+', 'Increase nice process (need admin rights)')
+        self.view_data['misc_decrease_nice_process'] = msg_col.format('-', 'Decrease nice process')
         self.view_data['misc_kill_process'] = msg_col.format('k', 'Kill process')
         self.view_data['misc_reset_processes_summary_min_max'] = msg_col.format('M', 'Reset processes summary min/max')
         self.view_data['misc_quit'] = msg_col.format('q', 'QUIT (or Esc or Ctrl-C)')
@@ -214,5 +216,10 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(self.view_data['show_hide_left_sidebar']))
         ret.append(self.curse_add_line(self.view_data['misc_edit_process_filter_pattern']))
 
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line('For an exhaustive list of key bindings:'))
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line('https://glances.readthedocs.io/en/latest/cmds.html#interactive-commands'))
         # Return the message with decoration
         return ret
