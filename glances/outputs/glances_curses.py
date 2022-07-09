@@ -91,6 +91,8 @@ class _GlancesCurses(object):
         'W': {'switch': 'disable_wifi'},
         # 'x' > Delete finished warning and critical logs
         # 'z' > Enable or disable processes
+        # '+' > Increase the process nice level
+        # '-' > Decrease the process nice level
         # "<" (left arrow) navigation through process sort
         # ">" (right arrow) navigation through process sort
         # 'UP' > Up in the server list
@@ -161,6 +163,10 @@ class _GlancesCurses(object):
 
         # Init edit filter tag
         self.edit_filter = False
+
+        # Init nice increase/decrease tag
+        self.increase_nice_process = False
+        self.decrease_nice_process = False
 
         # Init kill process tag
         self.kill_process = False
@@ -415,6 +421,12 @@ class _GlancesCurses(object):
             # 'f' > Show/hide fs / folder stats
             self.args.disable_fs = not self.args.disable_fs
             self.args.disable_folders = not self.args.disable_folders
+        elif self.pressedkey == ord('+'):
+            # '+' > Increase process nice level
+            self.increase_nice_process = not self.increase_nice_process
+        elif self.pressedkey == ord('-'):
+            # '+' > Decrease process nice level
+            self.decrease_nice_process = not self.decrease_nice_process
         elif self.pressedkey == ord('k'):
             # 'k' > Kill selected process (after confirmation)
             self.kill_process = not self.kill_process
@@ -683,10 +695,18 @@ class _GlancesCurses(object):
             self.display_popup('Process filter only available in standalone mode')
         self.edit_filter = False
 
+        # Manage increase/decrease nice level of the selected process
+        # Only in standalone mode (cs_status is None)
+        if self.increase_nice_process and cs_status is None:
+            self.nice_increase(stats.get_plugin('processlist').get_raw()[self.args.cursor_position])
+        self.increase_nice_process = False
+        if self.decrease_nice_process and cs_status is None:
+            self.nice_decrease(stats.get_plugin('processlist').get_raw()[self.args.cursor_position])
+        self.decrease_nice_process = False
+
         # Display kill process confirmation popup
         # Only in standalone mode (cs_status is None)
         if self.kill_process and cs_status is None:
-            logger.info(stats.get_plugin('processlist').get_raw()[self.args.cursor_position])
             self.kill(stats.get_plugin('processlist').get_raw()[self.args.cursor_position])
         elif self.kill_process and cs_status is not None:
             self.display_popup('Kill process only available for local processes')
@@ -697,6 +717,12 @@ class _GlancesCurses(object):
             self.display_popup('Generate graph in {}'.format(self.args.export_graph_path))
 
         return True
+
+    def nice_increase(self, process):
+        glances_processes.nice_increase(process['pid'])
+
+    def nice_decrease(self, process):
+        glances_processes.nice_decrease(process['pid'])
 
     def kill(self, process):
         """Kill a process, or a list of process if the process has a childrens field.
@@ -1131,6 +1157,11 @@ class _GlancesCurses(object):
             if pressedkey == curses.KEY_F5:
                 # Were asked to refresh
                 return isexitkey
+
+            if pressedkey in (curses.KEY_UP, 65, curses.KEY_DOWN, 66):
+                # Up of won key pressed, reset the countdown
+                # Better for user experience
+                countdown.reset()
 
             if isexitkey and self.args.help_tag:
                 # Quit from help should return to main screen, not exit #1874
