@@ -277,7 +277,7 @@ class TestGlances(unittest.TestCase):
     def test_017_programs(self):
         """Check Programs function (it's not a plugin)."""
         # stats_to_check = [ ]
-        print('INFO: [TEST_010] Check PROGRAM stats')
+        print('INFO: [TEST_017] Check PROGRAM stats')
         stats_grab = processes_to_programs(stats.get_plugin('processlist').get_raw())
         self.assertTrue(type(stats_grab) is list, msg='Programs stats is not a list')
         print('INFO: PROGRAM list stats: %s items in the list' % len(stats_grab))
