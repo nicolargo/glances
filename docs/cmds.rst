@@ -298,13 +298,13 @@ The following commands (key pressed) are supported while in Glances:
     Show/hide IP module
 
 ``+``
-    Increase selected process nice level (need root right) - Only in standalone mode.
+    Increase selected process nice level (need right) - Only in standalone mode.
 
 ``-``
-    Decrease selected process nice level (need root right) - Only in standalone mode.
+    Decrease selected process nice level (need right) - Only in standalone mode.
 
 ``k``
-    Kill selected process - Only in standalone mode.
+    Kill selected process (need right) - Only in standalone mode.
 
 ``K``
     Show/hide TCP connections
