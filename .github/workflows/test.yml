@@ -26,7 +26,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ -f dev-requirements.txt ]; then pip install -r dev-requirements.txt; fi
 
     - name: Lint with flake8
       run: |
@@ -38,6 +37,7 @@ jobs:
 
     - name: Static type check
       run: |
+        pip install pyright
         pyright glances
         
     - name: Unitary tests
