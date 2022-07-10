@@ -37,8 +37,13 @@ jobs:
 
     - name: Static type check
       run: |
-        pip install pyright
-        pyright glances
+        if [ "${{ matrix.python-version }}" == "2.7" ];
+        then
+          echo "Skipping static type check for Python 2.7";
+        else
+          pip install pyright
+          pyright glances
+        fi
         
     - name: Unitary tests
       run: |
