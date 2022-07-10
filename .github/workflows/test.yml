@@ -34,6 +34,17 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=.git,./docs,./glances/outputs/static
 
+
+    - name: Static type check
+      run: |
+        if [ "${{ matrix.python-version }}" == "2.7" ];
+        then
+          echo "Skipping static type check for Python 2.7";
+        else
+          pip install pyright
+          pyright glances
+        fi
+        
     - name: Unitary tests
       run: |
         python ./unitest.py
