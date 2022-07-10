@@ -26,6 +26,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f dev-requirements.txt ]; then pip install -r dev-requirements.txt; fi
 
     - name: Lint with flake8
       run: |
@@ -34,6 +35,11 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=.git,./docs,./glances/outputs/static
 
+
+    - name: Static type check
+      run: |
+        pyright glances
+        
     - name: Unitary tests
       run: |
         python ./unitest.py
