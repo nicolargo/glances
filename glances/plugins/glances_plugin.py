@@ -18,7 +18,7 @@ import json
 import copy
 from operator import itemgetter
 
-from glances.compat import iterkeys, itervalues, listkeys, map, mean, nativestr, u
+from glances.compat import iterkeys, itervalues, listkeys, map, mean, nativestr
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
@@ -1102,7 +1102,7 @@ class GlancesPlugin(object):
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         if min_symbol in symbols:
-            symbols = symbols[symbols.index(min_symbol) :]
+            symbols = symbols[symbols.index(min_symbol):]
         prefix = {
             'Y': 1208925819614629174706176,
             'Z': 1180591620717411303424,
@@ -1180,7 +1180,7 @@ class GlancesPlugin(object):
                 "%s %s %s return %s in %s seconds"
                 % (
                     args[0].__class__.__name__,
-                    args[0].__class__.__module__[len('glances_') :],
+                    args[0].__class__.__module__[len('glances_'):],
                     fct.__name__,
                     ret,
                     duration,
