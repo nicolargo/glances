@@ -12,6 +12,7 @@
 import socket
 import string
 import json
+import sys
 
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
@@ -53,10 +54,12 @@ class Export(GlancesExport):
         self.topic_structure = (self.topic_structure or 'per-metric').lower()
         if self.topic_structure not in ['per-metric', 'per-plugin']:
             logger.critical("topic_structure must be either 'per-metric' or 'per-plugin'.")
-            return None
+            sys.exit(2)
 
         # Init the MQTT client
         self.client = self.init()
+        if not self.client:
+            exit('MQTT client initialization failed')
 
     def init(self):
         """Init the connection to the MQTT server."""

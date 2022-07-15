@@ -37,7 +37,7 @@ class Export(GlancesExport):
         # Load the configuration file
         self.export_enable = self.load_conf('opentsdb', mandatories=['host', 'port'], options=['prefix', 'tags'])
         if not self.export_enable:
-            sys.exit(2)
+            exit('Missing OPENTSDB config')
 
         # Default prefix for stats is 'glances'
         if self.prefix is None:
