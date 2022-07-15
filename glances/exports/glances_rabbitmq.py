@@ -44,7 +44,7 @@ class Export(GlancesExport):
             'rabbitmq', mandatories=['host', 'port', 'user', 'password', 'queue'], options=['protocol']
         )
         if not self.export_enable:
-            sys.exit(2)
+            exit('Missing RABBITMQ config')
 
         # Get the current hostname
         self.hostname = socket.gethostname()

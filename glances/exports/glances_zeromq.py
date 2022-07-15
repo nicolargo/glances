@@ -37,7 +37,7 @@ class Export(GlancesExport):
         # Load the ZeroMQ configuration file section ([export_zeromq])
         self.export_enable = self.load_conf('zeromq', mandatories=['host', 'port', 'prefix'], options=[])
         if not self.export_enable:
-            sys.exit(2)
+            exit('Missing ZEROMQ config')
 
         # Init the ZeroMQ context
         self.context = None

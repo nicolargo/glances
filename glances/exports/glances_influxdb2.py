@@ -43,7 +43,7 @@ class Export(GlancesExport):
             options=['protocol', 'prefix', 'tags'],
         )
         if not self.export_enable:
-            sys.exit(2)
+            exit('Missing INFLUXDB version 1 config')
 
         # The hostname is always add as a tag
         self.hostname = node().split('.')[0]
