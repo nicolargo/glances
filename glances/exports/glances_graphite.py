@@ -12,7 +12,6 @@
 import sys
 from numbers import Number
 
-from glances.compat import range
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
@@ -80,7 +79,6 @@ class Export(GlancesExport):
             client = None
         else:
             logger.info("Stats will be exported to Graphite server: {}:{}".format(self.host, self.port))
-
         return client
 
     def export(self, name, columns, points):
