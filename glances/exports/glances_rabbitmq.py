@@ -72,8 +72,8 @@ class Export(GlancesExport):
             channel = connection.channel()
             return channel
         except Exception as e:
-            logger.critical("Connection to rabbitMQ failed : %s " % e)
-            return None
+            logger.critical("Connection to rabbitMQ server %s:%s failed. %s" % (self.host, self.port, e))
+            sys.exit(2)
 
     def export(self, name, columns, points):
         """Write the points in RabbitMQ."""
