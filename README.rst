@@ -229,16 +229,16 @@ create your own Dockerfile:
     CMD python -m glances -C /etc/glances.conf $GLANCES_OPT
 
 Alternatively, you can specify something along the same lines with
-docker run options:
+docker run options (notice the `GLANCES_OPT` environment
+variable setting parameters for the glances startup command):
 
 .. code-block:: console
 
-    docker run -v `pwd`/glances.conf:/etc/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it nicolargo/glances:latest-full
+    docker run -v `pwd`/glances.conf:/etc/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -e GLANCES_OPT="-C /etc/glances.conf" -it nicolargo/glances:latest-full
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
-Run the container in *Web server mode* (notice the `GLANCES_OPT` environment
-variable setting parameters for the glances startup command):
+Run the container in *Web server mode*:
 
 .. code-block:: console
 
