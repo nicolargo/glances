@@ -452,9 +452,9 @@ There is also a chat dedicated to the Glances developers:
 Donation
 ========
 
-If this project help you, you can give me a tip ;)
+If you like this open-source project, you can become a sponsor.
 
-See the sponsors_ page.
+See the sponsors_ page (one-time or monthly tier available).
 
 Author
 ======
