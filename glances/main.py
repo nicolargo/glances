@@ -82,11 +82,15 @@ Examples of use:
   Display CSV stats to stdout (all stats in one line):
     $ glances --stdout-csv now,cpu.user,mem.used,load
 
+  Enable some plugins disabled by default (comma separated list):
+    $ glances --enable-plugin sensors
+
   Disable some plugins (comma separated list):
     $ glances --disable-plugin network,ports
 
-  Enable some plugins (comma separated list):
-    $ glances --enable-plugin sensors
+  Disable all plugins except some (comma separated list):
+    $ glances --disable-plugin all --enable-plugin cpu,mem,load
+
 """
 
     def __init__(self):
@@ -116,10 +120,16 @@ Examples of use:
             help='display modules (plugins & exports) list and exit',
         )
         parser.add_argument(
-            '--disable-plugin', '--disable-plugins', dest='disable_plugin', help='disable plugin (comma separed list)'
+            '--disable-plugin',
+            '--disable-plugins',
+            dest='disable_plugin',
+            help='disable plugin (comma separed list or all). If all is used, then you need to configure --enable-plugin.',
         )
         parser.add_argument(
-            '--enable-plugin', '--enable-plugins', dest='enable_plugin', help='enable plugin (comma separed list)'
+            '--enable-plugin',
+            '--enable-plugins',
+            dest='enable_plugin',
+            help='enable plugin (comma separed list)'
         )
         parser.add_argument(
             '--disable-process',
@@ -552,6 +562,12 @@ Examples of use:
                 disable(args, s)
                 logger.debug('{} disabled by the configuration file'.format(s))
         # The configuration key can be overwrite from the command line
+        if args and args.disable_plugin and 'all' in args.disable_plugin.split(','):
+            if not args.enable_plugin:
+                logger.critical("'all' key in --disable-plugin needs to be used with --enable-plugin")
+                sys.exit(2)
+            else:
+                logger.info("'all' key in --disable-plugin, only plugins defined with --enable-plugin will be available")
         if args.disable_plugin is not None:
             for p in args.disable_plugin.split(','):
                 disable(args, p)
