@@ -165,6 +165,10 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
+        # Only process if stats exist and plugin not disabled
+        if not self.stats or self.is_disabled():
+            return ret
+
         # Build the string message
         if args.client:
             # Client mode
