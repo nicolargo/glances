@@ -22,8 +22,8 @@ export default function GlancesPluginFsController($scope, $filter, GlancesStats,
             var fsData = stats[i];
 
             var shortMountPoint = fsData['mnt_point'];
-            if (shortMountPoint.length > 9) {
-                shortMountPoint = '_' + fsData['mnt_point'].slice(-8);
+            if (shortMountPoint.length > 22) {
+                shortMountPoint = '_' + fsData['mnt_point'].slice(-21);
             }
 
             vm.fileSystems.push({

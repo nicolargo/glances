@@ -1217,8 +1217,8 @@ function GlancesPluginFsController($scope, $filter, GlancesStats, ARGUMENTS) {
             var fsData = stats[i];
 
             var shortMountPoint = fsData['mnt_point'];
-            if (shortMountPoint.length > 9) {
-                shortMountPoint = '_' + fsData['mnt_point'].slice(-8);
+            if (shortMountPoint.length > 22) {
+                shortMountPoint = '_' + fsData['mnt_point'].slice(-21);
             }
 
             vm.fileSystems.push({
@@ -60171,7 +60171,7 @@ module.exports = path;
 /***/ ((module) => {
 
 // Module
-var code = "<div class=\"table-row\" ng-if=\"vm.disks.length > 0\">\n    <div class=\"table-cell text-left title\">DISK I/O</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">R/s</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">W/s</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">IOR/s</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">IOW/s</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"disk in vm.disks\">\n    <div class=\"table-cell text-left\">{{(disk.alias ? disk.alias : disk.name) | min_size:9}}</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">{{disk.bitrate.txps }}</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">{{disk.bitrate.rxps }}</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">{{disk.count.txps }}</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">{{disk.count.rxps }}</div>\n</div>\n";
+var code = "<div class=\"table-row\" ng-if=\"vm.disks.length > 0\">\n    <div class=\"table-cell text-left title\">DISK I/O</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">R/s</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">W/s</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">IOR/s</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">IOW/s</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"disk in vm.disks\">\n    <div class=\"table-cell text-left\">{{ (disk.alias ? disk.alias : disk.name) | min_size:32 }}</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">{{ disk.bitrate.txps }}</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">{{ disk.bitrate.rxps }}</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">{{ disk.count.txps }}</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">{{ disk.count.rxps }}</div>\n</div>\n";
 // Exports
 var _module_exports =code;;
 var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-diskio/view.html';
@@ -60219,7 +60219,7 @@ module.exports = path;
 /***/ ((module) => {
 
 // Module
-var code = "<div class=\"table-row\">\n    <div class=\"table-cell text-left title\">FILE SYS</div>\n    <div class=\"table-cell\">\n        <span ng-show=\"!vm.arguments.fs_free_space\">Used</span>\n        <span ng-show=\"vm.arguments.fs_free_space\">Free</span>\n    </div>\n    <div class=\"table-cell\">Total</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"fs in vm.fileSystems\">\n    <div class=\"table-cell text-left\">{{ fs.shortMountPoint }} <span class=\"visible-lg-inline\"\n            ng-show=\"fs.name.length <= 20\">({{ fs.name }})</span>\n    </div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration(fs.mountPoint, 'used')\">\n        <span ng-show=\"!vm.arguments.fs_free_space\">{{ fs.used | bytes }}</span>\n        <span ng-show=\"vm.arguments.fs_free_space\">{{ fs.free | bytes }}</span>\n    </div>\n    <div class=\"table-cell\">{{ fs.size | bytes }}</div>\n</div>\n";
+var code = "<div class=\"table-row\">\n    <div class=\"table-cell text-left title\">FILE SYS</div>\n    <div class=\"table-cell\">\n        <span ng-show=\"!vm.arguments.fs_free_space\">Used</span>\n        <span ng-show=\"vm.arguments.fs_free_space\">Free</span>\n    </div>\n    <div class=\"table-cell\">Total</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"fs in vm.fileSystems\">\n    <div class=\"table-cell text-left\">{{ fs.shortMountPoint }}\n        <span class=\"visible-lg-inline\" ng-show=\"fs.shortMountPoint <= 12\">({{ fs.name }})</span>\n    </div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration(fs.mountPoint, 'used')\">\n        <span ng-show=\"!vm.arguments.fs_free_space\">{{ fs.used | bytes }}</span>\n        <span ng-show=\"vm.arguments.fs_free_space\">{{ fs.free | bytes }}</span>\n    </div>\n    <div class=\"table-cell\">{{ fs.size | bytes }}</div>\n</div>\n";
 // Exports
 var _module_exports =code;;
 var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-fs/view.html';

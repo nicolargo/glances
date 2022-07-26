@@ -187,10 +187,7 @@ class Plugin(GlancesPlugin):
             if all([self.get_views(item=i[self.get_key()], key=f, option='hidden') for f in self.hide_zero_fields]):
                 continue
             # Is there an alias for the disk name ?
-            disk_real_name = i['disk_name']
-            disk_name = self.has_alias(i['disk_name'])
-            if disk_name is None:
-                disk_name = disk_real_name
+            disk_name = self.has_alias(i['disk_name']) if self.has_alias(i['disk_name']) else i['disk_name']
             # New line
             ret.append(self.curse_new_line())
             if len(disk_name) > name_max_width:
