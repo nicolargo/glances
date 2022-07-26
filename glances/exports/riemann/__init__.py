@@ -37,7 +37,7 @@ class Export(GlancesExport):
         # Load the Riemann configuration
         self.export_enable = self.load_conf('riemann', mandatories=['host', 'port'], options=[])
         if not self.export_enable:
-            sys.exit(2)
+            exit('Missing RIEMANN config')
 
         # Get the current hostname
         self.hostname = socket.gethostname()

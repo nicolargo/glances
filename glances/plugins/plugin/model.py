@@ -18,7 +18,11 @@ import json
 import copy
 from operator import itemgetter
 
+<<<<<<< HEAD:glances/plugins/plugin/model.py
 from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr
+=======
+from glances.compat import iterkeys, itervalues, listkeys, map, mean, nativestr
+>>>>>>> develop:glances/plugins/glances_plugin.py
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
@@ -1177,8 +1181,18 @@ class GlancesPluginModel(object):
             ret = fct(*args, **kw)
             duration = counter.get()
             logger.debug(
+<<<<<<< HEAD:glances/plugins/plugin/model.py
                 "{} {} {} return {} in {} seconds".format(
                     args[0].__class__.__name__, args[0].__class__.__module__, fct.__name__, ret, duration
+=======
+                "%s %s %s return %s in %s seconds"
+                % (
+                    args[0].__class__.__name__,
+                    args[0].__class__.__module__[len('glances_'):],
+                    fct.__name__,
+                    ret,
+                    duration,
+>>>>>>> develop:glances/plugins/glances_plugin.py
                 )
             )
             return ret

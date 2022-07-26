@@ -76,8 +76,13 @@ class PluginModel(GlancesPluginModel):
 
     def msg_curse(self, args=None, max_width=None):
         """Return the string to display in the curse interface."""
+        # Init the return message
+        ret = []
+
         # Only process if stats exist and plugin not disabled
         if not self.stats or self.is_disabled():
-            return []
-        else:
-            return [self.curse_add_line('Uptime: {}'.format(self.stats))]
+            return ret
+
+        ret = [self.curse_add_line('Uptime: {}'.format(self.stats))]
+
+        return ret

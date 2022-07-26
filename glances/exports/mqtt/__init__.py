@@ -12,6 +12,7 @@
 import socket
 import string
 import json
+import sys
 
 from glances.logger import logger
 from glances.exports.export import GlancesExport
@@ -44,7 +45,6 @@ class Export(GlancesExport):
 
         # Get the current hostname
         self.hostname = socket.gethostname()
-
         self.port = int(self.port) or 8883
         self.topic = self.topic or 'glances'
         self.user = self.user or 'glances'
@@ -53,10 +53,12 @@ class Export(GlancesExport):
         self.topic_structure = (self.topic_structure or 'per-metric').lower()
         if self.topic_structure not in ['per-metric', 'per-plugin']:
             logger.critical("topic_structure must be either 'per-metric' or 'per-plugin'.")
-            return None
+            sys.exit(2)
 
         # Init the MQTT client
         self.client = self.init()
+        if not self.client:
+            exit("MQTT client initialization failed")
 
     def init(self):
         """Init the connection to the MQTT server."""
@@ -71,7 +73,7 @@ class Export(GlancesExport):
             client.loop_start()
             return client
         except Exception as e:
-            logger.critical("Connection to MQTT server failed : %s " % e)
+            logger.critical("Connection to MQTT server %s:%s failed with error: %s " % (self.host, self.port, e))
             return None
 
     def export(self, name, columns, points):

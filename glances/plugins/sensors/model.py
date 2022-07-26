@@ -114,7 +114,6 @@ class PluginModel(GlancesPluginModel):
             # Update stats using SNMP
             # No standard:
             # http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
-
             pass
 
         # Global change on stats
@@ -160,17 +159,22 @@ class PluginModel(GlancesPluginModel):
             if not i['value']:
                 continue
             # Alert processing
-            if i['type'] == 'temperature_core' and not self.is_limit('critical', stat_name=i['type']):
-                if i['critical'] is None:
-                    alert = 'DEFAULT'
-                elif i['value'] >= i['critical']:
-                    alert = 'CRITICAL'
-                elif i['warning'] is None:
-                    alert = 'DEFAULT'
-                elif i['value'] >= i['warning']:
-                    alert = 'WARNING'
+            if i['type'] == 'temperature_core':
+                if self.is_limit('critical', stat_name='sensors_temperature_' + i['label']):
+                    # By default use the thresholds confiured in the glances.conf file (see #2058)
+                    alert = self.get_alert(current=i['value'], header='temperature_' + i['label'])
                 else:
-                    alert = 'OK'
+                    # Else use the system thresholds
+                    if i['critical'] is None:
+                        alert = 'DEFAULT'
+                    elif i['value'] >= i['critical']:
+                        alert = 'CRITICAL'
+                    elif i['warning'] is None:
+                        alert = 'DEFAULT'
+                    elif i['value'] >= i['warning']:
+                        alert = 'WARNING'
+                    else:
+                        alert = 'OK'
             elif i['type'] == 'battery':
                 alert = self.get_alert(current=100 - i['value'], header=i['type'])
             else:
@@ -322,12 +326,12 @@ class GlancesGrabSensors(object):
                 else:
                     sensors_current['label'] = feature.label
                 # Sensors value, limit and unit
-                sensors_current['value'] = int(getattr(feature, 'current', 0) if getattr(feature, 'current', 0) else 0)
-                warning = getattr(feature, 'high', None)
-                sensors_current['warning'] = int(warning) if warning is not None else None
-                critical = getattr(feature, 'critical', None)
-                sensors_current['critical'] = int(critical) if critical is not None else None
                 sensors_current['unit'] = type
+                sensors_current['value'] = int(getattr(feature, 'current', 0) if getattr(feature, 'current', 0) else 0)
+                system_warning = getattr(feature, 'high', None)
+                system_critical = getattr(feature, 'critical', None)
+                sensors_current['warning'] = int(system_warning) if system_warning is not None else None
+                sensors_current['critical'] = int(system_critical) if system_critical is not None else None
                 # Add sensor to the list
                 ret.append(sensors_current)
                 i += 1

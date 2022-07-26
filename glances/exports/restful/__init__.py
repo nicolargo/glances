@@ -34,7 +34,7 @@ class Export(GlancesExport):
         # Load the RESTful section in the configuration file
         self.export_enable = self.load_conf('restful', mandatories=['host', 'port', 'protocol', 'path'])
         if not self.export_enable:
-            sys.exit(2)
+            exit('Missing RESTFUL config')
 
         # Init the stats buffer
         # It's a dict of stats

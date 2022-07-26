@@ -40,7 +40,7 @@ class Export(GlancesExport):
             'kafka', mandatories=['host', 'port', 'topic'], options=['compression', 'tags']
         )
         if not self.export_enable:
-            sys.exit(2)
+            exit('Missing KAFKA config')
 
         # Init the kafka client
         self.client = self.init()

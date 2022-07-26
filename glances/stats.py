@@ -116,13 +116,18 @@ class GlancesStats(object):
             # on the console but do not crash
             logger.critical("Error while initializing the {} plugin ({})".format(name, e))
             logger.error(traceback.format_exc())
-            # Disable the plugin
+            # An error occure, disable the plugin
             if args is not None:
                 setattr(args, 'disable_' + name, False)
         else:
-            # Set the disable_<name> to False by default
+            # Manage the default status of the plugin (enable or disable)
             if args is not None:
-                setattr(args, 'disable_' + name, getattr(args, 'disable_' + name, False))
+                # If the all key is set in the disable_plugin option then look in the enable_plugin option
+                if getattr(args, 'disable_all', False):
+                    logger.info('%s => %s', name, getattr(args, 'enable_' + name, False))
+                    setattr(args, 'disable_' + name, not getattr(args, 'enable_' + name, False))
+                else:
+                    setattr(args, 'disable_' + name, getattr(args, 'disable_' + name, False))
 
     def load_plugins(self, args=None):
         """Load all plugins in the 'plugins' folder."""

@@ -7,10 +7,8 @@ services:
     restart: always
     ports:
       - "61208:61208"
-      # - "61209:61209"
     environment:
-      # - GLANCES_OPT="-w"
-      GLANCES_OPT: "-w"
+      GLANCES_OPT: "-C /glances/conf/glances.conf -w"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./glances.conf:/glances/conf/glances.conf"
