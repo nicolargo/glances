@@ -79,7 +79,6 @@ class Export(GlancesExport):
             client = None
         else:
             logger.info("Stats will be exported to Graphite server: {}:{}".format(self.host, self.port))
-
         return client
 
     def export(self, name, columns, points):

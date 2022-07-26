@@ -37,6 +37,7 @@ test: venv ## Run unit tests
 	./venv/bin/python ./unitest-restful.py
 	./venv/bin/python ./unitest-xmlrpc.py
 	./venv/bin/python -m black ./glances --check --exclude outputs/static
+	./venv/bin/pyright glances
 
 format: venv ## Format the code
 	./venv/bin/python -m black ./glances --exclude outputs/static
