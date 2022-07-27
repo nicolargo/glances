@@ -21,18 +21,21 @@ Glances - An eye on your system
     :target: https://github.com/nicolargo/glances/actions
     :alt: Linux tests (GitHub Actions)
 
-.. image:: https://img.shields.io/appveyor/ci/nicolargo/glances/master.svg?maxAge=3600&label=Windows
-    :target: https://ci.appveyor.com/project/nicolargo/glances
-    :alt: Windows tests (Appveyor)
+.. image:: https://img.shields.io/github/contributors/nicolargo/glances
+    :target: https://github.com/nicolargo/glances/issues?q=is%3Aissue+is%3Aopen+label%3A%22needs+contributor%22
+    :alt: Contibutors
 
 .. image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=develop
     :target: https://scrutinizer-ci.com/g/nicolargo/glances/?branch=develop
+    :alt: Code quality
 
-.. image:: https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/nicolargo
+.. image:: https://img.shields.io/github/sponsors/nicolargo
     :target: https://github.com/sponsors/nicolargo
+    :alt: Sponsors
 
 .. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
     :target: https://twitter.com/nicolargo
+    :alt: @nicolargo
 
 Summary
 =======
