@@ -103,7 +103,7 @@ class PluginModel(GlancesPluginModel):
                 stats.extend(hddtemp)
             # Update batteries stats
             try:
-                bat_percent = self.__set_type(self.bat_percent_plugin.update(), 'battery')
+                bat_percent = self.__set_type(self.batpercent_plugin.update(), 'battery')
             except Exception as e:
                 logger.error("Cannot grab battery percent (%s)" % e)
             else:
