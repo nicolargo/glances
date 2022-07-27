@@ -24,7 +24,7 @@ from glances.timer import getTimeSinceLastUpdate
 # https://github.com/docker/docker-py
 try:
     import docker
-    from dateutil import parser
+    from dateutil import parser, tz
 except Exception as e:
     import_error_tag = True
     # Display debug message if import KeyError
@@ -279,7 +279,8 @@ class Plugin(GlancesPlugin):
                     container_stats['network_tx'] = container_stats['network'].get('tx', None)
                     # Uptime
                     container_stats['Uptime'] = pretty_date(
-                        parser.parse(container.attrs['State']['StartedAt']).replace(tzinfo=None)
+                        # parser.parse(container.attrs['State']['StartedAt']).replace(tzinfo=None)
+                        parser.parse(container.attrs['State']['StartedAt']).astimezone(tz.tzlocal()).replace(tzinfo=None)
                     )
                 else:
                     container_stats['cpu'] = {}
