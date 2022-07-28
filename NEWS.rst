@@ -6,7 +6,46 @@
 Version 3.2.7
 ===============
 
-    Under development: see roadmap here https://github.com/nicolargo/glances/milestone/59
+Enhancements:
+
+    * Config to disable all plugins by default (or enable an exclusive list) #2089
+    * Keybind(s) for modifying nice level #2081
+    * [WEBUI] Reorganize help screen #2037
+    * Add a Json stdout option #2060
+    * Improve error message when export error occures
+    * Improve error message when MQTT error occures
+    * Change the way core are displayed
+    * Remove unused key in the process list
+    * Refactor top menu of the curse interface
+    * Improve Irix display for the load plugin
+
+Bug corrected:
+
+    * In the sensor plugin thresholds in the configuration file should overwrite system ones #2058
+    * Drive names truncated in Web UI #2055
+    * Correct issue with CPU label
+
+Documentation and CI:
+
+    * Improve makefile help #2078
+    * Add quote to the update command line (already ok for the installation). Related to #2073
+    * Make Glances (almost) compliant with REUSE #2042
+    * Update README for Debian package users
+    * Update documentation for Docker
+    * Update docs for new shortcut
+    * Disable Pyright on the Git actions pipeline
+    * Refactor comments
+    * Except datutil import error
+    * Another dep issue solved in the Alpine Docker + issue in the outdated method
+
+Contributors for this version:
+
+    * Nicolargo
+    * Sylvain MOUQUET
+    * FastThenLeft
+    * Jiajie Chen
+    * dbrennand
+    * ewuerger
 
 ===============
 Version 3.2.6
