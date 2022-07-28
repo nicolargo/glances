@@ -80,10 +80,16 @@ another while ensuring that the tasks do not conflict.',
         'unit': 'number',
         'rate': True,
         'min_symbol': 'K',
-        'short_name': 'sw_int',
+        'short_name': 'sys_call',
     },
-    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
-    'time_since_update': {'description': 'Number of seconds since last update.', 'unit': 'seconds'},
+    'cpucore': {
+        'description': 'Total number of CPU core.',
+        'unit': 'number'
+    },
+    'time_since_update': {
+        'description': 'Number of seconds since last update.',
+        'unit': 'seconds'
+    },
 }
 
 # SNMP OID
