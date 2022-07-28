@@ -21,18 +21,21 @@ Glances - An eye on your system
     :target: https://github.com/nicolargo/glances/actions
     :alt: Linux tests (GitHub Actions)
 
-.. image:: https://img.shields.io/appveyor/ci/nicolargo/glances/master.svg?maxAge=3600&label=Windows
-    :target: https://ci.appveyor.com/project/nicolargo/glances
-    :alt: Windows tests (Appveyor)
+.. image:: https://img.shields.io/github/contributors/nicolargo/glances
+    :target: https://github.com/nicolargo/glances/issues?q=is%3Aissue+is%3Aopen+label%3A%22needs+contributor%22
+    :alt: Contibutors
 
 .. image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=develop
     :target: https://scrutinizer-ci.com/g/nicolargo/glances/?branch=develop
+    :alt: Code quality
 
-.. image:: https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/nicolargo
+.. image:: https://img.shields.io/github/sponsors/nicolargo
     :target: https://github.com/sponsors/nicolargo
+    :alt: Sponsors
 
 .. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
     :target: https://twitter.com/nicolargo
+    :alt: @nicolargo
 
 Summary
 =======
@@ -132,8 +135,14 @@ For Windows, just install psutil from the binary installation file.
 *Note 2 (for the Wifi plugin)*: If you want to use the Wifi plugin, you need
 to install the *wireless-tools* package on your system.
 
-You can also install the following libraries in order to use optional
-features (like the Web interface, exports modules...):
+By default, Glances is installed without the Web interface dependencies.
+To install it, use the following command:
+
+.. code-block:: console
+
+    pip install --user 'glances[web]'
+
+For a full installation (with all features:
 
 .. code-block:: console
 
@@ -144,28 +153,13 @@ To upgrade Glances to the latest version:
 .. code-block:: console
 
     pip install --user --upgrade glances
-    pip install --user --upgrade 'glances[...]''
 
-If you need to install Glances in a specific user location, use:
-
-.. code-block:: console
-
-    export PYTHONUSERBASE=~/mylocalpath
-    pip install --user glances
-
-If you are administrator and want to install Glances for all users:
-
-.. code-block:: console
-
-    sudo pip install glances
-
-The current develop branch is also published to the test.pypi.org package index.
-If you want to test the develop version, enter:
+The current develop branch is published to the test.pypi.org package index.
+If you want to test the develop version (could be instable), enter:
 
 .. code-block:: console
 
     pip install --user -i https://test.pypi.org/simple/ Glances
-
 
 Glances Auto Install script: the easy way
 -----------------------------------------
@@ -205,7 +199,7 @@ Available versions on the Docker Hub repository:
 - *nicolargo/glances:latest-full* for a full Debian Glances image version with all dependencies
 - *nicolargo/glances:alpine-latest-full* for a full Alpine Glances image version with all dependencies
 
-You can also specify a version by replacing latest by 3.2.6.3 (for example).
+You can also specify a version by replacing latest by 3.2.6.4 (for example).
 
 Run last version of Glances container in *console mode*:
 
@@ -245,6 +239,10 @@ GNU/Linux
 able to install it using your favorite package manager. Be aware that
 when you use this method the operating system `package`_ for `Glances`
 may not be the latest version.
+
+Note: The Debian package (and all other Debian-based distributions) do
+not include anymore the JS statics files used by the Web interface
+(see ``issue2021``).
 
 FreeBSD
 -------
@@ -472,3 +470,4 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
 .. _package: https://repology.org/metapackage/glances/packages
 .. _sponsors: https://github.com/sponsors/nicolargo
+.. _issue2021: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
