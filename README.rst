@@ -141,8 +141,14 @@ For Windows, just install psutil from the binary installation file.
 *Note 2 (for the Wifi plugin)*: If you want to use the Wifi plugin, you need
 to install the *wireless-tools* package on your system.
 
-You can also install the following libraries in order to use optional
-features (like the Web interface, exports modules...):
+By default, Glances is installed without the Web interface dependencies.
+To install it, use the following command:
+
+.. code-block:: console
+
+    pip install --user 'glances[web]'
+
+For a full installation (with all features:
 
 .. code-block:: console
 
@@ -153,28 +159,13 @@ To upgrade Glances to the latest version:
 .. code-block:: console
 
     pip install --user --upgrade glances
-    pip install --user --upgrade 'glances[...]''
 
-If you need to install Glances in a specific user location, use:
-
-.. code-block:: console
-
-    export PYTHONUSERBASE=~/mylocalpath
-    pip install --user glances
-
-If you are administrator and want to install Glances for all users:
-
-.. code-block:: console
-
-    sudo pip install glances
-
-The current develop branch is also published to the test.pypi.org package index.
-If you want to test the develop version, enter:
+The current develop branch is published to the test.pypi.org package index.
+If you want to test the develop version (could be instable), enter:
 
 .. code-block:: console
 
     pip install --user -i https://test.pypi.org/simple/ Glances
-
 
 Glances Auto Install script: the easy way
 -----------------------------------------
@@ -254,6 +245,10 @@ GNU/Linux
 able to install it using your favorite package manager. Be aware that
 when you use this method the operating system `package`_ for `Glances`
 may not be the latest version.
+
+Note: The Debian package (and all other Debian-based distributions) do
+not include anymore the JS statics files used by the Web interface
+(see ``issue2021``).
 
 FreeBSD
 -------
@@ -481,3 +476,4 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
 .. _package: https://repology.org/metapackage/glances/packages
 .. _sponsors: https://github.com/sponsors/nicolargo
+.. _issue2021: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
