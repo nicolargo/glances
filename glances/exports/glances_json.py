@@ -47,7 +47,7 @@ class Export(GlancesExport):
         """Export the stats to the JSON file."""
 
         # Check for completion of loop for all exports
-        if name == self.plugins_to_export()[0] and self.buffer != {}:
+        if name == self.last_exported_list()[0] and self.buffer != {}:
             # One whole loop has been completed
             # Flush stats to file
             logger.debug("Exporting stats ({}) to JSON file ({})".format(listkeys(self.buffer), self.json_filename))
