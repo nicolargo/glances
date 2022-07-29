@@ -81,7 +81,7 @@ class Export(GlancesExport):
         plugins = stats.getPluginsList()
         for plugin_name in plugins:
             plugin = stats._plugins[plugin_name]
-            if plugin_name in self.plugins_to_export():
+            if plugin_name in self.plugins_to_export(stats):
                 self.export(plugin_name, plugin.get_export_history())
 
         logger.info("Graphs created in the folder {}".format(self.path))

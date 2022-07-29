@@ -54,7 +54,7 @@ class Export(GlancesExport):
 
     def export(self, name, columns, points):
         """Export the stats to the Statsd server."""
-        if name == self.plugins_to_export()[0] and self.buffer != {}:
+        if name == self.last_exported_list()[0] and self.buffer != {}:
             # One complete loop have been done
             logger.debug("Export stats ({}) to RESTful endpoint ({})".format(listkeys(self.buffer), self.client))
             # Export stats

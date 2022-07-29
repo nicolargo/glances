@@ -97,7 +97,7 @@ class GlancesStats(object):
         # The key is the plugin name
         # for example, the file glances_xxx.py
         # generate self._plugins_list["xxx"] = ...
-        name = plugin_script[len(self.header) : -3].lower()
+        name = plugin_script[len(self.header):-3].lower()
 
         # Load the plugin class
         try:
@@ -253,8 +253,8 @@ class GlancesStats(object):
         if plugin_list is provided, only export stats of given plugin (list)
         """
         if plugin_list is None:
-            # All plugins should be exported
-            plugin_list = self._plugins
+            # All enabled plugins should be exported
+            plugin_list = self.getPluginsList()
         return [self._plugins[p].get_export() for p in self._plugins]
 
     def getAllExportsAsDict(self, plugin_list=None):
@@ -264,13 +264,20 @@ class GlancesStats(object):
         if plugin_list is provided, only export stats of given plugin (list)
         """
         if plugin_list is None:
-            # All plugins should be exported
-            plugin_list = self._plugins
+            # All enabled plugins should be exported
+            plugin_list = self.getPluginsList()
         return {p: self._plugins[p].get_export() for p in plugin_list}
 
-    def getAllLimits(self):
-        """Return the plugins limits list."""
-        return [self._plugins[p].limits for p in self._plugins]
+    def getAllLimits(self, plugin_list=None):
+        """Return the plugins limits list.
+
+        Default behavior is to export all the limits
+        if plugin_list is provided, only export limits of given plugin (list)
+        """
+        if plugin_list is None:
+            # All enabled plugins should be exported
+            plugin_list = self.getPluginsList()
+        return [self._plugins[p].limits for p in plugin_list]
 
     def getAllLimitsAsDict(self, plugin_list=None):
         """Return all the stats limits (dict).
@@ -279,8 +286,8 @@ class GlancesStats(object):
         if plugin_list is provided, only export limits of given plugin (list)
         """
         if plugin_list is None:
-            # All plugins should be exported
-            plugin_list = self._plugins
+            # All enabled plugins should be exported
+            plugin_list = self.getPluginsList()
         return {p: self._plugins[p].limits for p in plugin_list}
 
     def getAllViews(self):
