@@ -31,7 +31,7 @@ if PY3:
     from statistics import mean
     from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
     from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-    from urllib.request import urlopen
+    from urllib.request import Request, urlopen, base64
     from urllib.error import HTTPError, URLError
     from urllib.parse import urlparse
 
@@ -126,7 +126,7 @@ else:
     from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError, NoSectionError
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
     from xmlrpclib import Fault, ProtocolError, ServerProxy, Transport, Server
-    from urllib2 import urlopen, HTTPError, URLError
+    from urllib2 import Request, urlopen, HTTPError, URLError, base64
     from urlparse import urlparse
 
     # Correct issue #1025 by monkey path the xmlrpc lib
