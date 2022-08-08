@@ -40,6 +40,10 @@ and additional information is displayed.
 
 **Note:** Access to the Censys Search API need an account (https://censys.io/login).
 
+Example:
+
+.. image:: ../_static/ip.png
+
 **Connected**:
 
 .. image:: ../_static/connected.png
