@@ -18,7 +18,7 @@ import json
 import copy
 from operator import itemgetter
 
-from glances.compat import iterkeys, itervalues, listkeys, map, mean, nativestr
+from glances.compat import iterkeys, itervalues, listkeys, map, mean, nativestr, PY3
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
@@ -1138,7 +1138,7 @@ class GlancesPlugin(object):
         Do not take into account if trend < significant
         """
         ret = '-'
-        if trend is None:
+        if trend is None or not PY3:
             ret = ' '
         elif trend > significant:
             ret = unicode_message('ARROW_UP', self.args)
