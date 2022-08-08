@@ -771,7 +771,7 @@ class _GlancesCurses(object):
         self.space_between_column = 3
         if 'ip' in stat_display:
             self.new_column()
-            self.display_plugin(stat_display["ip"])
+            self.display_plugin(stat_display["ip"], display_optional=(self.term_window.getmaxyx()[1] >= 100))
         self.new_column()
         self.display_plugin(
             stat_display["uptime"], add_space=-(self.get_stats_display_width(stat_display["cloud"]) != 0)
