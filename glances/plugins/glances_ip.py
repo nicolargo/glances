@@ -138,16 +138,6 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
-    def update_views(self):
-        """Update stats views."""
-        # Call the father's method
-        super(Plugin, self).update_views()
-
-        # Add specifics information
-        # Optional
-        for key in iterkeys(self.stats):
-            self.views[key]['optional'] = True
-
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
@@ -159,18 +149,18 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         msg = ' - '
-        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(msg, optional=True))
 
         # Start with the private IP information
         msg = 'IP '
-        ret.append(self.curse_add_line(msg, 'TITLE'))
+        ret.append(self.curse_add_line(msg, 'TITLE', optional=True))
         if 'address' in self.stats:
             msg = '{}'.format(self.stats['address'])
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=True))
         if 'mask_cidr' in self.stats:
             # VPN with no internet access (issue #842)
             msg = '/{}'.format(self.stats['mask_cidr'])
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=True))
 
         # Then with the public IP information
         try:
@@ -181,8 +171,8 @@ class Plugin(GlancesPlugin):
         else:
             if self.stats['public_address']:
                 msg = ' Pub '
-                ret.append(self.curse_add_line(msg, 'TITLE'))
-                ret.append(self.curse_add_line(msg_pub))
+                ret.append(self.curse_add_line(msg, 'TITLE', optional=True))
+                ret.append(self.curse_add_line(msg_pub, optional=True))
 
         if 'public_info' in self.stats and self.stats['public_info']:
             field_result = []
@@ -196,8 +186,8 @@ class Plugin(GlancesPlugin):
                     and field[1] in self.stats['public_info'][field[0]]
                 ):
                     field_result.append('{}'.format(self.stats['public_info'][field[0]][field[1]]))
-            ret.append(self.curse_add_line(' '))
-            ret.append(self.curse_add_line('/'.join(field_result)))
+            ret.append(self.curse_add_line(' ', optional=True))
+            ret.append(self.curse_add_line('/'.join(field_result), optional=True))
 
         return ret
 
