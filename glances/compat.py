@@ -345,3 +345,8 @@ def pretty_date(time=False):
     if day_diff < 365:
         return str(day_diff // 30) + " months"
     return str(day_diff // 365) + " years"
+
+
+def urlopen_auth(url, username, password):
+    """Open a url with basic auth"""
+    return urlopen(Request(url, headers={'Authorization': 'Basic ' + base64.b64encode(('%s:%s' % (username, password)).encode()).decode()}))
