@@ -1431,6 +1431,7 @@ function GlancesPluginIpController($scope, GlancesStats, ARGUMENTS) {
         vm.mask = ipStats.mask;
         vm.maskCidr = ipStats.mask_cidr;
         vm.publicAddress = ipStats.public_address
+        vm.publicInfo = ipStats.public_info_human
     }
 }
 
@@ -60251,7 +60252,7 @@ module.exports = path;
 /***/ ((module) => {
 
 // Module
-var code = "<section id=\"ip\" ng-if=\"vm.address != undefined && !vm.arguments.disable_ip\">\n    &nbsp;-&nbsp;<span class=\"title\">IP</span>&nbsp;<span>{{ vm.address }}/{{ vm.maskCidr }}</span>&nbsp;<span\n        ng-if=\"vm.publicAddress\" class=\"title\">Pub</span>&nbsp;<span>{{ vm.publicAddress }}</span>\n</section>\n";
+var code = "<section id=\"ip\" ng-if=\"vm.address != undefined && !vm.arguments.disable_ip\">\n    -\n    <span ng-if=\"vm.address != undefined\" class=\"title\">IP</span>\n    <spanng-if=\"vm.address != undefined\">{{ vm.address }}/{{ vm.maskCidr }}</span>\n    <span ng-if=\"vm.publicAddress\" class=\"title\">Pub</span>\n    <span ng-if=\"vm.publicAddress\">{{ vm.publicAddress }}</span>\n    <span ng-if=\"vm.publicInfo\">({{ vm.publicInfo }})</span>\n</section>\n";
 // Exports
 var _module_exports =code;;
 var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-ip/view.html';

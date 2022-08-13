@@ -25,5 +25,6 @@ export default function GlancesPluginIpController($scope, GlancesStats, ARGUMENT
         vm.mask = ipStats.mask;
         vm.maskCidr = ipStats.mask_cidr;
         vm.publicAddress = ipStats.public_address
+        vm.publicInfo = ipStats.public_info_human
     }
 }
