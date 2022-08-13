@@ -128,6 +128,7 @@ class Plugin(GlancesPlugin):
             else:
                 stats['public_address'] = self.public_address
                 stats['public_info'] = self.public_info
+                stats['public_info_human'] = self.public_info_for_human(stats['public_info'])
 
         elif self.input_method == 'snmp':
             # Not implemented yet
@@ -174,22 +175,29 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg, 'TITLE', optional=True))
                 ret.append(self.curse_add_line(msg_pub, optional=True))
 
-        if 'public_info' in self.stats and self.stats['public_info']:
-            field_result = []
-            for f in self.censys_fields:
-                field = f.split(':')
-                if len(field) == 1 and field[0] in self.stats['public_info']:
-                    field_result.append('{}'.format(self.stats['public_info'][field[0]]))
-                elif (
-                    len(field) == 2
-                    and field[0] in self.stats['public_info']
-                    and field[1] in self.stats['public_info'][field[0]]
-                ):
-                    field_result.append('{}'.format(self.stats['public_info'][field[0]][field[1]]))
-            ret.append(self.curse_add_line(' ', optional=True))
-            ret.append(self.curse_add_line('/'.join(field_result), optional=True))
+            if self.stats['public_info_human']:
+                ret.append(self.curse_add_line(' {}'.format(self.stats['public_info_human']),
+                                               optional=True))
 
         return ret
+
+    def public_info_for_human(self, public_info):
+        """Return the data to pack to the client."""
+        if not public_info:
+            return ''
+
+        field_result = []
+        for f in self.censys_fields:
+            field = f.split(':')
+            if len(field) == 1 and field[0] in public_info:
+                field_result.append('{}'.format(public_info[field[0]]))
+            elif (
+                len(field) == 2
+                and field[0] in public_info
+                and field[1] in public_info[field[0]]
+            ):
+                field_result.append('{}'.format(public_info[field[0]][field[1]]))
+        return '/'.join(field_result)
 
     @staticmethod
     def ip_to_cidr(ip):
