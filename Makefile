@@ -53,6 +53,9 @@ docs-server: docs ## Start a Web server to serve the documentation
 webui: venv-dev ## Build the Web UI
 	cd glances/outputs/static/ && npm ci && npm run build
 
+webui-audit: venv-dev ## Audit the Web UI
+	cd glances/outputs/static/ && npm audit
+
 run: ## Start Glances in console mode (also called standalone)
 	./venv/bin/python -m glances -C ./conf/glances.conf
 

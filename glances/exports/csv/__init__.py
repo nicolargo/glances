@@ -71,7 +71,7 @@ class Export(GlancesExport):
     def update(self, stats):
         """Update stats in the CSV output file."""
         # Get the stats
-        all_stats = stats.getAllExportsAsDict(plugin_list=self.plugins_to_export())
+        all_stats = stats.getAllExportsAsDict(plugin_list=self.plugins_to_export(stats))
 
         # Init data with timestamp (issue#708)
         if self.first_line:
@@ -79,7 +79,7 @@ class Export(GlancesExport):
         csv_data = [time.strftime('%Y-%m-%d %H:%M:%S')]
 
         # Loop over plugins to export
-        for plugin in self.plugins_to_export():
+        for plugin in self.plugins_to_export(stats):
             if isinstance(all_stats[plugin], list):
                 for stat in all_stats[plugin]:
                     # First line: header
@@ -102,7 +102,7 @@ class Export(GlancesExport):
                 # New file, write the header on top on the CSV file
                 self.writer.writerow(csv_header)
             # File already exist, check if header are compatible
-            if self.old_header != csv_header:
+            if self.old_header != csv_header and self.old_header is not None:
                 # Header are different, log an error and do not write data
                 logger.error("Cannot append data to existing CSV file. Headers are different.")
                 logger.debug("Old header: {}".format(self.old_header))
