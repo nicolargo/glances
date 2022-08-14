@@ -18,11 +18,19 @@ import os
 import sys
 import platform
 import operator
+import unicodedata
+import types
 import subprocess
 from datetime import datetime
 
+import queue
+from configparser import ConfigParser, NoOptionError, NoSectionError
 from statistics import mean
+from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
+from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 from urllib.request import urlopen, Request, base64
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 
 # Correct issue #1025 by monkey path the xmlrpc lib
 from defusedxml.xmlrpc import monkey_patch
@@ -149,7 +157,7 @@ def subsample(data, sampling):
     if len(data) <= sampling:
         return data
     sampling_length = int(round(len(data) / float(sampling)))
-    return [mean(data[s * sampling_length: (s + 1) * sampling_length]) for s in range(0, sampling)]
+    return [mean(data[s * sampling_length : (s + 1) * sampling_length]) for s in range(0, sampling)]
 
 
 def time_serie_subsample(data, sampling):
@@ -164,8 +172,8 @@ def time_serie_subsample(data, sampling):
     t = [t[0] for t in data]
     v = [t[1] for t in data]
     sampling_length = int(round(len(data) / float(sampling)))
-    t_subsampled = [t[s * sampling_length: (s + 1) * sampling_length][0] for s in range(0, sampling)]
-    v_subsampled = [mean(v[s * sampling_length: (s + 1) * sampling_length]) for s in range(0, sampling)]
+    t_subsampled = [t[s * sampling_length : (s + 1) * sampling_length][0] for s in range(0, sampling)]
+    v_subsampled = [mean(v[s * sampling_length : (s + 1) * sampling_length]) for s in range(0, sampling)]
     return list(zip(t_subsampled, v_subsampled))
 
 
@@ -192,6 +200,7 @@ def is_admin():
         try:
             return ctypes.windll.shell32.IsUserAnAdmin()
         except Exception as e:
+            print("Admin check failed with error: %s" % e)
             traceback.print_exc()
             return False
     else:
