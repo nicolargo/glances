@@ -31,7 +31,7 @@ from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.programs import processes_to_programs
-from glances.compat import subsample, range
+from glances.globals import subsample, range
 from glances.secure import secure_popen
 
 from tracemalloc import Snapshot

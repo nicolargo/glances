@@ -14,7 +14,7 @@ import threading
 import time
 from copy import deepcopy
 
-from glances.compat import iterkeys, itervalues, nativestr, pretty_date
+from glances.globals import iterkeys, itervalues, nativestr, pretty_date
 from glances.logger import logger
 from glances.globals import iterkeys, itervalues, nativestr
 from glances.timer import getTimeSinceLastUpdate

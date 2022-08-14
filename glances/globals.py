@@ -27,7 +27,7 @@ from configparser import ConfigParser, NoOptionError, NoSectionError
 from statistics import mean
 from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-from urllib.request import urlopen
+from urllib.request import urlopen, Request, base64
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 
@@ -243,3 +243,52 @@ def safe_makedirs(path):
                 raise
         else:
             raise
+
+
+def pretty_date(time=False):
+    """
+    Get a datetime object or a int() Epoch timestamp and return a
+    pretty string like 'an hour ago', 'Yesterday', '3 months ago',
+    'just now', etc
+    Source: https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
+    """
+    now = datetime.now()
+    if type(time) is int:
+        diff = now - datetime.fromtimestamp(time)
+    elif isinstance(time, datetime):
+        diff = now - time
+    elif not time:
+        diff = 0
+    second_diff = diff.seconds
+    day_diff = diff.days
+
+    if day_diff < 0:
+        return ''
+
+    if day_diff == 0:
+        if second_diff < 10:
+            return "just now"
+        if second_diff < 60:
+            return str(second_diff) + " secs"
+        if second_diff < 120:
+            return "a min"
+        if second_diff < 3600:
+            return str(second_diff // 60) + " mins"
+        if second_diff < 7200:
+            return "an hour"
+        if second_diff < 86400:
+            return str(second_diff // 3600) + " hours"
+    if day_diff == 1:
+        return "yesterday"
+    if day_diff < 7:
+        return str(day_diff) + " days"
+    if day_diff < 31:
+        return str(day_diff // 7) + " weeks"
+    if day_diff < 365:
+        return str(day_diff // 30) + " months"
+    return str(day_diff // 365) + " years"
+
+
+def urlopen_auth(url, username, password):
+    """Open a url with basic auth"""
+    return urlopen(Request(url, headers={'Authorization': 'Basic ' + base64.b64encode(('%s:%s' % (username, password)).encode()).decode()}))
