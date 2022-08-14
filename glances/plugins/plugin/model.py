@@ -1138,7 +1138,7 @@ class GlancesPluginModel(object):
         Do not take into account if trend < significant
         """
         ret = '-'
-        if trend is None or not PY3:
+        if trend is None:
             ret = ' '
         elif trend > significant:
             ret = unicode_message('ARROW_UP', self.args)
