@@ -14,11 +14,9 @@ I am your father...
 """
 
 import re
-import json
 import copy
-from operator import itemgetter
 
-from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr
+from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr, json_dumps, json_dumps_dictlist
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
@@ -162,16 +160,6 @@ class GlancesPluginModel(object):
         """Return true if plugin is disabled."""
         return not self.is_enabled(plugin_name=plugin_name)
 
-    def _json_dumps(self, d):
-        """Return the object 'd' in a JSON format.
-
-        Manage the issue #815 for Windows OS
-        """
-        try:
-            return json.dumps(d)
-        except UnicodeDecodeError:
-            return json.dumps(d, ensure_ascii=False)
-
     def history_enable(self):
         return self.args is not None and not self.args.disable_history and self.get_items_history_list() is not None
 
@@ -265,24 +253,9 @@ class GlancesPluginModel(object):
         s = self.get_json_history(nb=nb)
 
         if item is None:
-            return self._json_dumps(s)
+            return json_dumps(s)
 
-        if isinstance(s, dict):
-            try:
-                return self._json_dumps({item: s[item]})
-            except KeyError as e:
-                logger.error("Cannot get item history {} ({})".format(item, e))
-                return None
-        elif isinstance(s, list):
-            try:
-                # Source:
-                # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
-                return self._json_dumps({item: map(itemgetter(item), s)})
-            except (KeyError, ValueError) as e:
-                logger.error("Cannot get item history {} ({})".format(item, e))
-                return None
-        else:
-            return None
+        return json_dumps_dictlist(s, item)
 
     def get_trend(self, item, nb=6):
         """Get the trend regarding to the last nb values.
@@ -415,7 +388,7 @@ class GlancesPluginModel(object):
 
     def get_stats(self):
         """Return the stats object in JSON format."""
-        return self._json_dumps(self.stats)
+        return json_dumps(self.stats)
 
     def get_json(self):
         """Return the stats object in JSON format."""
@@ -426,23 +399,7 @@ class GlancesPluginModel(object):
 
         Stats should be a list of dict (processlist, network...)
         """
-        if isinstance(self.stats, dict):
-            try:
-                return self._json_dumps({item: self.stats[item]})
-            except KeyError as e:
-                logger.error("Cannot get item {} ({})".format(item, e))
-                return None
-        elif isinstance(self.stats, list):
-            try:
-                # Source:
-                # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
-                # But https://github.com/nicolargo/glances/issues/1401
-                return self._json_dumps({item: list(map(itemgetter(item), self.stats))})
-            except (KeyError, ValueError) as e:
-                logger.error("Cannot get item {} ({})".format(item, e))
-                return None
-        else:
-            return None
+        return json_dumps_dictlist(self.stats, item)
 
     def get_stats_value(self, item, value):
         """Return the stats object for a specific item=value in JSON format.
@@ -455,7 +412,7 @@ class GlancesPluginModel(object):
             if not isinstance(value, int) and value.isdigit():
                 value = int(value)
             try:
-                return self._json_dumps({value: [i for i in self.stats if i[item] == value]})
+                return json_dumps({value: [i for i in self.stats if i[item] == value]})
             except (KeyError, ValueError) as e:
                 logger.error("Cannot get item({})=value({}) ({})".format(item, value, e))
                 return None
@@ -582,7 +539,7 @@ class GlancesPluginModel(object):
 
     def get_json_views(self, item=None, key=None, option=None):
         """Return the views (in JSON)."""
-        return self._json_dumps(self.get_views(item, key, option))
+        return json_dumps(self.get_views(item, key, option))
 
     def load_limits(self, config):
         """Load limits from the configuration file, if it exists."""
@@ -1036,33 +993,28 @@ class GlancesPluginModel(object):
 
         if width is None:
             msg_item = header + '{}'.format(key_name) + separator
-            if unit_type == 'float':
-                msg_value = '{:.1f}{}'.format(value, unit_short) + trailer
-            elif 'min_symbol' in self.fields_description[key]:
-                msg_value = (
-                    '{}{}'.format(
-                        self.auto_unit(int(value), min_symbol=self.fields_description[key]['min_symbol']), unit_short
-                    )
-                    + trailer
-                )
-            else:
-                msg_value = '{}{}'.format(int(value), unit_short) + trailer
+            msg_template_float = '{:.1f}{}'
+            msg_template = '{}{}'
         else:
             # Define the size of the message
             # item will be on the left
             # value will be on the right
             msg_item = header + '{:{width}}'.format(key_name, width=width - 7) + separator
-            if unit_type == 'float':
-                msg_value = '{:5.1f}{}'.format(value, unit_short) + trailer
-            elif 'min_symbol' in self.fields_description[key]:
-                msg_value = (
-                    '{:>5}{}'.format(
-                        self.auto_unit(int(value), min_symbol=self.fields_description[key]['min_symbol']), unit_short
-                    )
-                    + trailer
+            msg_template_float = '{:5.1f}{}'
+            msg_template = '{:>5}{}'
+
+        if unit_type == 'float':
+            msg_value = msg_template_float.format(value, unit_short) + trailer
+        elif 'min_symbol' in self.fields_description[key]:
+            msg_value = (
+                msg_template.format(
+                    self.auto_unit(int(value), min_symbol=self.fields_description[key]['min_symbol']), unit_short
                 )
-            else:
-                msg_value = '{:>5}{}'.format(int(value), unit_short) + trailer
+                + trailer
+            )
+        else:
+            msg_value = msg_template.format(int(value), unit_short) + trailer
+
         decoration = self.get_views(key=key, option='decoration')
         optional = self.get_views(key=key, option='optional')
 

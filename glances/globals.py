@@ -17,7 +17,8 @@ import errno
 import os
 import sys
 import platform
-import operator
+import json
+from operator import itemgetter, methodcaller
 import unicodedata
 import types
 import subprocess
@@ -70,9 +71,9 @@ long = int
 PermissionError = OSError
 
 # Alias methods
-viewkeys = operator.methodcaller('keys')
-viewvalues = operator.methodcaller('values')
-viewitems = operator.methodcaller('items')
+viewkeys = methodcaller('keys')
+viewvalues = methodcaller('values')
+viewitems = methodcaller('items')
 
 
 ###################
@@ -299,3 +300,29 @@ def urlopen_auth(url, username, password):
             headers={'Authorization': 'Basic ' + base64.b64encode(('%s:%s' % (username, password)).encode()).decode()},
         )
     )
+def json_dumps(data):
+    """Return the object data in a JSON format.
+
+    Manage the issue #815 for Windows OS with UnicodeDecodeError catching.
+    """
+    try:
+        return json.dumps(data)
+    except UnicodeDecodeError:
+        return json.dumps(data, ensure_ascii=False)
+
+
+def json_dumps_dictlist(data, item):
+    if isinstance(data, dict):
+        try:
+            return json_dumps({item: data[item]})
+        except:
+            return None
+    elif isinstance(data, list):
+        try:
+            # Source:
+            # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
+            return json_dumps({item: map(itemgetter(item), data)})
+        except:
+            return None
+    else:
+        return None
