@@ -172,12 +172,12 @@ class Plugin(GlancesPlugin):
         msg = '{:{width}}'.format('DISK I/O', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.diskio_iops:
-            msg = '{:>7}'.format('IOR/s')
+            msg = '{:>8}'.format('IOR/s')
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format('IOW/s')
             ret.append(self.curse_add_line(msg))
         else:
-            msg = '{:>7}'.format('R/s')
+            msg = '{:>8}'.format('R/s')
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format('W/s')
             ret.append(self.curse_add_line(msg))
