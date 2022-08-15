@@ -13,6 +13,8 @@ import errno
 import os
 import sys
 import platform
+import json
+from operator import itemgetter
 
 # OS constants (some libraries/features are OS-dependent)
 BSD = sys.platform.find('bsd') != -1
@@ -43,3 +45,31 @@ def safe_makedirs(path):
                 raise
         else:
             raise
+
+
+def json_dumps(data):
+    """Return the object data in a JSON format.
+
+    Manage the issue #815 for Windows OS with UnicodeDecodeError catching.
+    """
+    try:
+        return json.dumps(data)
+    except UnicodeDecodeError:
+        return json.dumps(data, ensure_ascii=False)
+
+
+def json_dumps_dictlist(data, item):
+    if isinstance(data, dict):
+        try:
+            return json_dumps({item: data[item]})
+        except:
+            return None
+    elif isinstance(data, list):
+        try:
+            # Source:
+            # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
+            return json_dumps({item: map(itemgetter(item), data)})
+        except:
+            return None
+    else:
+        return None
