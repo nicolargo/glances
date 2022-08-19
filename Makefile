@@ -101,6 +101,7 @@ release-note: ## Generate release note
 flatpak: venv-dev ## Generate FlatPack JSON file
 	git clone https://github.com/flatpak/flatpak-builder-tools.git
 	./venv/bin/python ./flatpak-builder-tools/pip/flatpak-pip-generator glances
+	mv python3-glances.json ../flathub/
 	rm -rf ./flatpak-builder-tools
 
 .PHONY: test docs docs-server venv
