@@ -1,3 +1,4 @@
 py-spy
 black
 pyright
+requirements-parser

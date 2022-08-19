@@ -98,4 +98,9 @@ release-note: ## Generate release note
 	@echo "\n"
 	git --no-pager shortlog -s -n $(LASTTAG)..HEAD
 
+flatpak: venv-dev ## Generate FlatPack JSON file
+	git clone https://github.com/flatpak/flatpak-builder-tools.git
+	./venv/bin/python ./flatpak-builder-tools/pip/flatpak-pip-generator glances
+	rm -rf ./flatpak-builder-tools
+
 .PHONY: test docs docs-server venv
