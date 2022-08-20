@@ -9,7 +9,6 @@
 
 """CPU plugin."""
 
-from glances.logger import logger
 from glances.timer import getTimeSinceLastUpdate
 from glances.compat import iterkeys
 from glances.cpu_percent import cpu_percent

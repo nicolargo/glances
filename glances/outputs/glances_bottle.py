@@ -198,7 +198,6 @@ class GlancesBottle(object):
 
     def end(self):
         """End the bottle."""
-        pass
 
     def _index(self, refresh_time=None):
         """Bottle callback for index.html (/) file."""

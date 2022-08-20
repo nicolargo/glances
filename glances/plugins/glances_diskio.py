@@ -13,7 +13,6 @@ from __future__ import unicode_literals
 from glances.compat import nativestr, n
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.logger import logger
 
 import psutil
 

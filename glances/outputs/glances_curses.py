@@ -1231,14 +1231,10 @@ class GlancesCursesStandalone(_GlancesCurses):
 
     """Class for the Glances curse standalone."""
 
-    pass
-
 
 class GlancesCursesClient(_GlancesCurses):
 
     """Class for the Glances curse client."""
-
-    pass
 
 
 class GlancesTextbox(Textbox, object):

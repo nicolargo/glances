@@ -68,7 +68,7 @@ def get_install_extras_require():
         'sparklines': ['sparklines'],
         'web': ['bottle', 'requests'],
         'wifi': ['wifi']
-        #'gpu' and 'sensors' ==> See bellow
+        # 'gpu' and 'sensors' ==> See bellow
     }
     if PY3:
         extras_require['export'].append('influxdb-client')

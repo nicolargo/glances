@@ -11,7 +11,6 @@
 
 from datetime import datetime
 
-from glances.logger import logger
 from glances.events import glances_events
 from glances.thresholds import glances_thresholds
 

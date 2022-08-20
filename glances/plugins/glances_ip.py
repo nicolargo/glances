@@ -12,7 +12,7 @@
 import threading
 from json import loads
 
-from glances.compat import iterkeys, urlopen, queue, urlopen_auth
+from glances.compat import queue, urlopen, urlopen_auth
 from glances.logger import logger
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin

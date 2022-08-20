@@ -12,12 +12,10 @@
 import sys
 
 from glances.logger import logger
-from glances.compat import iteritems
 from glances.exports.glances_export import GlancesExport
 
 from kafka import KafkaProducer
 import json
-import codecs
 
 
 class Export(GlancesExport):

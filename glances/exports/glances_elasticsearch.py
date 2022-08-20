@@ -16,7 +16,6 @@ from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
 from elasticsearch import Elasticsearch, helpers
-from elasticsearch import __version__ as elk_version
 
 
 class Export(GlancesExport):

@@ -9,7 +9,6 @@
 
 """Curses browser interface class ."""
 
-import sys
 import math
 import curses
 from glances.outputs.glances_curses import _GlancesCurses
