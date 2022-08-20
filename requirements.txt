@@ -1,4 +1,4 @@
 psutil>=5.3.0
 defusedxml
-future
 packaging
+future; python_version < "3.0"
