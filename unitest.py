@@ -30,7 +30,7 @@ from glances.secure import secure_popen
 from glances.compat import PY3
 
 if PY3:
-    from tracemalloc import Snapshot
+    pass
 
 # Global variables
 # =================

@@ -36,11 +36,9 @@ class Plugin(GlancesPlugin):
 
     def reset(self):
         """No stats. It is just a plugin to display the help."""
-        pass
 
     def update(self):
         """No stats. It is just a plugin to display the help."""
-        pass
 
     def generate_view_data(self):
         """Generate the views."""
