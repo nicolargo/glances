@@ -32,6 +32,10 @@ venv-upgrade: venv ## Upgrade Python 3 run-time dependencies
 	./venv/bin/pip install --upgrade -r requirements.txt
 	./venv/bin/pip install --upgrade -r optional-requirements.txt
 
+# ===================================================================
+# Tests
+# ===================================================================
+
 test: venv-upgrade venv-dev-upgrade ## Run unit tests
 	./venv/bin/python ./unitest.py
 	./venv/bin/python ./unitest-restful.py
@@ -39,8 +43,31 @@ test: venv-upgrade venv-dev-upgrade ## Run unit tests
 	./venv/bin/python -m black ./glances --check --exclude outputs/static
 	./venv/bin/pyright glances
 
+# ===================================================================
+# Linters and profilers
+# ===================================================================
+
 format: venv-dev-upgrade ## Format the code
+	@git ls-files '*.py' | xargs ./venv/bin/python -m autopep8 --in-place --jobs 0 --global-config=.flake8
+	@git ls-files '*.py' | xargs ./venv/bin/python -m autoflake --in-place --jobs 0 --remove-all-unused-imports --remove-unused-variables --remove-duplicate-keys
 	./venv/bin/python -m black ./glances --exclude outputs/static
+
+flake8: venv-dev-upgrade ## Run flake8 linter.
+	@git ls-files '*.py' | xargs ./venv/bin/python -m flake8 --config=.flake8
+
+profiling: ## How to start the profiling of the Glances software
+	@echo "Please complete and run: sudo ./venv/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s --pid <GLANCES PID>"
+
+trace-malloc: ## Trace the malloc() calls
+	@echo "Malloc test is running, please wait ~30 secondes..."
+	./venv/bin/python -m glances -C ./conf/glances.conf --trace-malloc --stop-after 15 --quiet
+
+memory-leak: ## Profile memory leaks
+	./venv/bin/python -m glances -C ./conf/glances.conf --memory-leak
+
+# ===================================================================
+# Docs
+# ===================================================================
 
 docs: venv-dev-upgrade ## Create the documentation
 	./venv/bin/python -m glances -C ./conf/glances.conf --api-doc > ./docs/api.rst
@@ -50,11 +77,34 @@ docs-server: docs ## Start a Web server to serve the documentation
 	(sleep 2 && sensible-browser "http://localhost:$(PORT)") &
 	cd docs/_build/html/ && ../../../venv/bin/python -m http.server $(PORT)
 
+release-note: ## Generate release note
+	git --no-pager log $(LASTTAG)..HEAD --first-parent --pretty=format:"* %s"
+	@echo "\n"
+	git --no-pager shortlog -s -n $(LASTTAG)..HEAD
+
+# ===================================================================
+# WebUI
+# ===================================================================
+
 webui: venv-dev-upgrade ## Build the Web UI
 	cd glances/outputs/static/ && npm ci && npm run build
 
 webui-audit: venv-dev-upgrade ## Audit the Web UI
 	cd glances/outputs/static/ && npm audit
+
+# ===================================================================
+# Packaging
+# ===================================================================
+
+flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
+	git clone https://github.com/flatpak/flatpak-builder-tools.git
+	./venv/bin/python ./flatpak-builder-tools/pip/flatpak-pip-generator glances
+	rm -rf ./flatpak-builder-tools
+	@echo "Now follow: https://github.com/flathub/flathub/wiki/App-Submission"
+
+# ===================================================================
+# Run
+# ===================================================================
 
 run: ## Start Glances in console mode (also called standalone)
 	./venv/bin/python -m glances -C ./conf/glances.conf
@@ -82,26 +132,5 @@ show-version: ## Show Glances version number
 
 show-issue: ## Generate output for a new issue
 	./venv/bin/python -m glances -C ./conf/glances.conf --issue
-
-profiling: ## How to start the profiling of the Glances software
-	@echo "Please complete and run: sudo ./venv/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s --pid <GLANCES PID>"
-
-trace-malloc: ## Trace the malloc() calls
-	@echo "Malloc test is running, please wait ~30 secondes..."
-	./venv/bin/python -m glances -C ./conf/glances.conf --trace-malloc --stop-after 15 --quiet
-
-memory-leak: ## Profile memory leaks
-	./venv/bin/python -m glances -C ./conf/glances.conf --memory-leak
-
-release-note: ## Generate release note
-	git --no-pager log $(LASTTAG)..HEAD --first-parent --pretty=format:"* %s"
-	@echo "\n"
-	git --no-pager shortlog -s -n $(LASTTAG)..HEAD
-
-flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
-	git clone https://github.com/flatpak/flatpak-builder-tools.git
-	./venv/bin/python ./flatpak-builder-tools/pip/flatpak-pip-generator glances
-	rm -rf ./flatpak-builder-tools
-	@echo "Now follow: https://github.com/flathub/flathub/wiki/App-Submission"
 
 .PHONY: test docs docs-server venv

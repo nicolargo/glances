@@ -31,7 +31,9 @@ class Export(GlancesExport):
         self.index = None
 
         # Load the ES configuration file
-        self.export_enable = self.load_conf('elasticsearch', mandatories=['scheme', 'host', 'port', 'index'], options=[])
+        self.export_enable = self.load_conf(
+            'elasticsearch', mandatories=['scheme', 'host', 'port', 'index'], options=[]
+        )
         if not self.export_enable:
             sys.exit(2)
 
@@ -46,20 +48,16 @@ class Export(GlancesExport):
         try:
             es = Elasticsearch(hosts=['{}://{}:{}'.format(self.scheme, self.host, self.port)])
         except Exception as e:
-            logger.critical("Cannot connect to ElasticSearch server %s://%s:%s (%s)" % (self.scheme,
-                                                                                        self.host,
-                                                                                        self.port, e))
+            logger.critical(
+                "Cannot connect to ElasticSearch server %s://%s:%s (%s)" % (self.scheme, self.host, self.port, e)
+            )
             sys.exit(2)
 
         if not es.ping():
-            logger.critical("Cannot ping the ElasticSearch server %s://%s:%s" % (self.scheme,
-                                                                                 self.host,
-                                                                                 self.port))
+            logger.critical("Cannot ping the ElasticSearch server %s://%s:%s" % (self.scheme, self.host, self.port))
             sys.exit(2)
         else:
-            logger.info("Connected to the ElasticSearch server %s://%s:%s" % (self.scheme,
-                                                                              self.host,
-                                                                              self.port))
+            logger.info("Connected to the ElasticSearch server %s://%s:%s" % (self.scheme, self.host, self.port))
 
         return es
 

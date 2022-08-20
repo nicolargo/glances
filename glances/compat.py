@@ -349,4 +349,9 @@ def pretty_date(time=False):
 
 def urlopen_auth(url, username, password):
     """Open a url with basic auth"""
-    return urlopen(Request(url, headers={'Authorization': 'Basic ' + base64.b64encode(('%s:%s' % (username, password)).encode()).decode()}))
+    return urlopen(
+        Request(
+            url,
+            headers={'Authorization': 'Basic ' + base64.b64encode(('%s:%s' % (username, password)).encode()).decode()},
+        )
+    )

@@ -24,6 +24,7 @@ from glances.logger import logger
 
 try:
     from packaging.version import Version
+
     PACKAGING_IMPORT = True
 except Exception as e:
     logger.error("Unable to import 'packaging' module ({}). Glances cannot check for updates.".format(e))

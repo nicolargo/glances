@@ -37,10 +37,7 @@ waiting in the run-queue plus the number currently executing \
 over 15 minutes.',
         'unit': 'float',
     },
-    'cpucore': {
-        'description': 'Total number of CPU core.',
-        'unit': 'number'
-    },
+    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
 }
 
 # SNMP OID
