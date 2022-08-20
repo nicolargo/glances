@@ -113,7 +113,9 @@ class Plugin(GlancesPlugin):
         self.view_data['misc_quit'] = msg_col.format('q', 'QUIT (or Esc or Ctrl-C)')
         self.view_data['misc_reset_history'] = msg_col.format('r', 'Reset history')
         self.view_data['misc_delete_warning_alerts'] = msg_col.format('w', 'Delete warning alerts')
-        self.view_data['misc_delete_warning_and_critical_alerts'] = msg_col.format('x', 'Delete warning & critical alerts')
+        self.view_data['misc_delete_warning_and_critical_alerts'] = msg_col.format(
+            'x', 'Delete warning & critical alerts'
+        )
         self.view_data['misc_edit_process_filter_pattern'] = '  ENTER: Edit process filter pattern'
 
     def get_view_data(self, args=None):

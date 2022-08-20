@@ -27,9 +27,7 @@ from glances.timer import Counter, Timer
 from glances.outputs.glances_unicode import unicode_message
 
 
-fields_unit_short = {
-    'percent': '%'
-}
+fields_unit_short = {'percent': '%'}
 
 fields_unit_type = {
     'percent': 'float',
@@ -43,7 +41,7 @@ fields_unit_type = {
     'second': 'int',
     'seconds': 'int',
     'byte': 'int',
-    'bytes': 'int'
+    'bytes': 'int',
 }
 
 
@@ -847,8 +845,7 @@ class GlancesPlugin(object):
         return any(j for j in [re.match(i, value) for i in self.get_conf_value('hide', header=header)])
 
     def is_display(self, value, header=""):
-        """Return True if the value should be displayed in the UI
-        """
+        """Return True if the value should be displayed in the UI"""
         if self.get_conf_value('show', header=header) != []:
             return self.is_show(value, header=header)
         else:
@@ -1055,7 +1052,7 @@ class GlancesPlugin(object):
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         if min_symbol in symbols:
-            symbols = symbols[symbols.index(min_symbol):]
+            symbols = symbols[symbols.index(min_symbol) :]
         prefix = {
             'Y': 1208925819614629174706176,
             'Z': 1180591620717411303424,
@@ -1133,7 +1130,7 @@ class GlancesPlugin(object):
                 "%s %s %s return %s in %s seconds"
                 % (
                     args[0].__class__.__name__,
-                    args[0].__class__.__module__[len('glances_'):],
+                    args[0].__class__.__module__[len('glances_') :],
                     fct.__name__,
                     ret,
                     duration,

@@ -97,7 +97,7 @@ class GlancesStats(object):
         # The key is the plugin name
         # for example, the file glances_xxx.py
         # generate self._plugins_list["xxx"] = ...
-        name = plugin_script[len(self.header):-3].lower()
+        name = plugin_script[len(self.header) : -3].lower()
 
         # Load the plugin class
         try:

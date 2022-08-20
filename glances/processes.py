@@ -430,7 +430,7 @@ class GlancesProcesses(object):
             self._sort_key = key
 
     def nice_decrease(self, pid):
-        """ Decrease nice level
+        """Decrease nice level
         On UNIX this is a number which usually goes from -20 to 20.
         The higher the nice value, the lower the priority of the process."""
         p = psutil.Process(pid)
@@ -438,10 +438,12 @@ class GlancesProcesses(object):
             p.nice(p.nice() - 1)
             logger.info('Set nice level of process {} to {} (higher the priority)'.format(pid, p.nice()))
         except psutil.AccessDenied:
-            logger.warning('Can not decrease (higher the priority) the nice level of process {} (access denied)'.format(pid))
+            logger.warning(
+                'Can not decrease (higher the priority) the nice level of process {} (access denied)'.format(pid)
+            )
 
     def nice_increase(self, pid):
-        """ Increase nice level
+        """Increase nice level
         On UNIX this is a number which usually goes from -20 to 20.
         The higher the nice value, the lower the priority of the process."""
         p = psutil.Process(pid)
@@ -449,7 +451,9 @@ class GlancesProcesses(object):
             p.nice(p.nice() + 1)
             logger.info('Set nice level of process {} to {} (lower the priority)'.format(pid, p.nice()))
         except psutil.AccessDenied:
-            logger.warning('Can not increase (lower the priority) the nice level of process {} (access denied)'.format(pid))
+            logger.warning(
+                'Can not increase (lower the priority) the nice level of process {} (access denied)'.format(pid)
+            )
 
     def kill(self, pid, timeout=3):
         """Kill process with pid"""
@@ -458,8 +462,6 @@ class GlancesProcesses(object):
         logger.debug('Send kill signal to process: {}'.format(p))
         p.kill()
         return p.wait(timeout)
-
-
 
 
 def weighted(value):

@@ -126,10 +126,7 @@ Examples of use:
             help='disable plugin (comma separed list or all). If all is used, then you need to configure --enable-plugin.',
         )
         parser.add_argument(
-            '--enable-plugin',
-            '--enable-plugins',
-            dest='enable_plugin',
-            help='enable plugin (comma separed list)'
+            '--enable-plugin', '--enable-plugins', dest='enable_plugin', help='enable plugin (comma separed list)'
         )
         parser.add_argument(
             '--disable-process',
@@ -567,7 +564,9 @@ Examples of use:
                 logger.critical("'all' key in --disable-plugin needs to be used with --enable-plugin")
                 sys.exit(2)
             else:
-                logger.info("'all' key in --disable-plugin, only plugins defined with --enable-plugin will be available")
+                logger.info(
+                    "'all' key in --disable-plugin, only plugins defined with --enable-plugin will be available"
+                )
         if args.disable_plugin is not None:
             for p in args.disable_plugin.split(','):
                 disable(args, p)
