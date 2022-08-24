@@ -3149,9 +3149,10 @@ function timedeltaFilter($filter) {
     return function (value) {
         var sum = $filter('timemillis')(value);
         var d = new Date(sum);
+        var doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24)
 
         return {
-            hours: d.getUTCHours(), // TODO : multiple days ( * (d.getDay() * 24))
+            hours: d.getUTCHours() + ((doy - 1) * 24),
             minutes: d.getUTCMinutes(),
             seconds: d.getUTCSeconds(),
             milliseconds: parseInt("" + d.getUTCMilliseconds() / 10)
