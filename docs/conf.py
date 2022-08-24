@@ -12,7 +12,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-from glances import __version__
 import sys
 import os
 from datetime import datetime
@@ -25,6 +24,7 @@ from datetime import datetime
 # Insert Glances' path into the system.
 sys.path.insert(0, os.path.abspath('..'))
 
+from glances import __version__
 
 # -- General configuration ------------------------------------------------
 
