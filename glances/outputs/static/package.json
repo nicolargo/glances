@@ -8,23 +8,25 @@
         "lodash": "^4.17.21"
     },
     "devDependencies": {
-        "clean-webpack-plugin": "^4.0.0",
         "copy-webpack-plugin": "^9.0.1",
         "css-loader": "^6.5.1",
         "del": "^6.0.0",
         "html-loader": "^3.0.1",
+        "html-webpack-plugin": "^5.5.0",
         "less": "^4.0.0",
         "less-loader": "^10.2.0",
         "ngtemplate-loader": "^2.1.0",
-        "node-sass": "^7.0.0",
-        "sass-loader": "^12.3.0",
+        "sass": "^1.54.5",
+        "sass-loader": "^12.6.0",
         "style-loader": "^3.3.1",
         "url-loader": "^4.1.1",
         "webpack": "^5.63.0",
-        "webpack-cli": "^4.9.1"
+        "webpack-cli": "^4.9.1",
+        "webpack-dev-server": "^4.10.0"
     },
     "scripts": {
-        "build": "webpack --progress",
+        "build": "webpack --progress --mode=production",
+        "start": "webpack serve --mode=development",
         "watch": "webpack --progress --watch"
     }
 }
