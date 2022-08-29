@@ -11,6 +11,7 @@
 </head>
 
 <body>
-  <glances refresh-time="{{ refresh_time }}"></glances>
+  <!--<glances refresh-time="{{ refresh_time }}"></glances>-->
+  <glances></glances>
 </body>
 </html>
