@@ -1,30 +1,35 @@
 {
     "private": true,
     "dependencies": {
-        "angular": "^1.8.2",
-        "angular-hotkeys": "^1.7.0",
         "bootstrap": "^3.4.1",
         "favico.js": "^0.3.10",
-        "lodash": "^4.17.21"
+        "hotkeys-js": "^3.9.5",
+        "lodash": "^4.17.21",
+        "sanitize-html": "^2.7.1",
+        "vue": "^3.2.38"
     },
     "devDependencies": {
-        "clean-webpack-plugin": "^4.0.0",
         "copy-webpack-plugin": "^9.0.1",
         "css-loader": "^6.5.1",
         "del": "^6.0.0",
-        "html-loader": "^3.0.1",
+        "eslint": "^8.23.0",
+        "eslint-plugin-vue": "^9.4.0",
+        "html-webpack-plugin": "^5.5.0",
         "less": "^4.0.0",
         "less-loader": "^10.2.0",
-        "ngtemplate-loader": "^2.1.0",
-        "node-sass": "^7.0.0",
-        "sass-loader": "^12.3.0",
+        "sass": "^1.54.5",
+        "sass-loader": "^12.6.0",
         "style-loader": "^3.3.1",
         "url-loader": "^4.1.1",
+        "vue-loader": "^17.0.0",
         "webpack": "^5.63.0",
-        "webpack-cli": "^4.9.1"
+        "webpack-cli": "^4.9.1",
+        "webpack-dev-server": "^4.10.0"
     },
     "scripts": {
-        "build": "webpack --progress",
-        "watch": "webpack --progress --watch"
+        "build": "webpack --progress --mode=production",
+        "start": "webpack serve --mode=development",
+        "watch": "webpack --progress --watch",
+        "lint": "eslint ./ --ext .js,.vue"
     }
 }
