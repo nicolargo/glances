@@ -1,5 +1,4 @@
 <template>
-    <!-- prettier-ignore -->
     <section>
         <div class="table-row">
             <div class="table-cell text-left title">NETWORK</div>
