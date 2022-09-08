@@ -9,7 +9,6 @@
 
 """Statsd interface class."""
 
-import sys
 from numbers import Number
 
 from glances.logger import logger

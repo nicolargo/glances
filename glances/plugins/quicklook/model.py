@@ -10,7 +10,6 @@
 """Quicklook plugin."""
 
 from glances.cpu_percent import cpu_percent
-from glances.logger import logger
 from glances.outputs.glances_bars import Bar
 from glances.outputs.glances_sparklines import Sparkline
 from glances.plugins.plugin.model import GlancesPluginModel

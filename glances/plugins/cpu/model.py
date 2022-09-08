@@ -9,7 +9,6 @@
 
 """CPU plugin."""
 
-from glances.logger import logger
 from glances.timer import getTimeSinceLastUpdate
 from glances.globals import LINUX, iterkeys
 from glances.cpu_percent import cpu_percent
@@ -82,14 +81,8 @@ another while ensuring that the tasks do not conflict.',
         'min_symbol': 'K',
         'short_name': 'sys_call',
     },
-    'cpucore': {
-        'description': 'Total number of CPU core.',
-        'unit': 'number'
-    },
-    'time_since_update': {
-        'description': 'Number of seconds since last update.',
-        'unit': 'seconds'
-    },
+    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
+    'time_since_update': {'description': 'Number of seconds since last update.', 'unit': 'seconds'},
 }
 
 # SNMP OID

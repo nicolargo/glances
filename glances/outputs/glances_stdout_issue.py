@@ -81,7 +81,7 @@ class GlancesStdoutIssue(object):
             try:
                 # Update the stats
                 stats._plugins[plugin].update()
-            except Exception as e:
+            except Exception:
                 pass
 
         time.sleep(3)

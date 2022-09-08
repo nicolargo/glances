@@ -282,7 +282,9 @@ class PluginModel(GlancesPluginModel):
                     # Uptime
                     container_stats['Uptime'] = pretty_date(
                         # parser.parse(container.attrs['State']['StartedAt']).replace(tzinfo=None)
-                        parser.parse(container.attrs['State']['StartedAt']).astimezone(tz.tzlocal()).replace(tzinfo=None)
+                        parser.parse(container.attrs['State']['StartedAt'])
+                        .astimezone(tz.tzlocal())
+                        .replace(tzinfo=None)
                     )
                 else:
                     container_stats['cpu'] = {}

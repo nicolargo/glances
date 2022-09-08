@@ -10,7 +10,6 @@
 """Riemann interface class."""
 
 import socket
-import sys
 from numbers import Number
 
 from glances.logger import logger
