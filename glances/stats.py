@@ -104,7 +104,6 @@ class GlancesStats(object):
             name = plugin_path.split('glances_')[1]
         else:
             name = plugin_path
-
         # Load the plugin class
         try:
             # Import the plugin

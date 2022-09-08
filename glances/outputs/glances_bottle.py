@@ -169,10 +169,10 @@ class GlancesBottle(object):
             self._app.route('/<refresh_time:int>', method=["GET"], callback=self._index)
             self._app.route('/<filepath:path>', method="GET", callback=self._resource)
             bindmsg = 'Glances Web User Interface started on {}'.format(self.bind_url)
-            logger.info(bindmsg)
         else:
-            logger.info('The WebUI is disable (--disable-webui)')
+            bindmsg = 'The WebUI is disable (--disable-webui)'
 
+        logger.info(bindmsg)
         print(bindmsg)
 
     def start(self, stats):
@@ -198,7 +198,6 @@ class GlancesBottle(object):
 
     def end(self):
         """End the bottle."""
-        pass
 
     def _index(self, refresh_time=None):
         """Bottle callback for index.html (/) file."""

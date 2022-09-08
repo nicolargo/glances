@@ -177,8 +177,7 @@ class PluginModel(GlancesPluginModel):
                 ret.append(self.curse_add_line(msg_pub, optional=True))
 
             if self.stats['public_info_human']:
-                ret.append(self.curse_add_line(' {}'.format(self.stats['public_info_human']),
-                                               optional=True))
+                ret.append(self.curse_add_line(' {}'.format(self.stats['public_info_human']), optional=True))
 
         return ret
 
@@ -192,11 +191,7 @@ class PluginModel(GlancesPluginModel):
             field = f.split(':')
             if len(field) == 1 and field[0] in public_info:
                 field_result.append('{}'.format(public_info[field[0]]))
-            elif (
-                len(field) == 2
-                and field[0] in public_info
-                and field[1] in public_info[field[0]]
-            ):
+            elif len(field) == 2 and field[0] in public_info and field[1] in public_info[field[0]]:
                 field_result.append('{}'.format(public_info[field[0]][field[1]]))
         return '/'.join(field_result)
 

@@ -62,7 +62,7 @@ class Export(GlancesExport):
 
         try:
             s[self.db]
-        except Exception as e:
+        except Exception:
             # Database did not exist
             # Create it...
             s.create(self.db)

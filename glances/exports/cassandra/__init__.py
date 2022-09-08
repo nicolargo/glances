@@ -77,7 +77,7 @@ class Export(GlancesExport):
         # Keyspace
         try:
             session.set_keyspace(self.keyspace)
-        except InvalidRequest as e:
+        except InvalidRequest:
             logger.info("Create keyspace {} on the Cassandra cluster".format(self.keyspace))
             c = "CREATE KEYSPACE %s WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '%s' }" % (
                 self.keyspace,

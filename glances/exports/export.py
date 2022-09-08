@@ -35,7 +35,7 @@ class GlancesExport(object):
         'ports',
         'processlist',
         'psutilversion',
-        'quicklook'
+        'quicklook',
     ]
 
     def __init__(self, config=None, args=None):

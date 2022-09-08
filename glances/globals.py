@@ -321,7 +321,8 @@ def json_dumps_dictlist(data, item):
         try:
             # Source:
             # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
-            return json_dumps({item: map(itemgetter(item), data)})
+            # But https://github.com/nicolargo/glances/issues/1401
+            return json_dumps({item: list(map(itemgetter(item), data))})
         except:
             return None
     else:

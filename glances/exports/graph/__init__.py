@@ -51,7 +51,7 @@ class Export(GlancesExport):
         # Check if output folder is writeable
         try:
             tempfile.TemporaryFile(dir=self.path)
-        except OSError as e:
+        except OSError:
             logger.critical("Graph output folder {} is not writeable".format(self.path))
             sys.exit(2)
 

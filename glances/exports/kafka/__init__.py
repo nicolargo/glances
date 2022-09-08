@@ -17,7 +17,6 @@ from glances.exports.export import GlancesExport
 
 from kafka import KafkaProducer
 import json
-import codecs
 
 
 class Export(GlancesExport):
