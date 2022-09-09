@@ -23,3 +23,9 @@ There is no alert on this information.
     The support for multiple batteries is only available if
     you have the batinfo Python lib installed on your system
     because for the moment PSUtil only support one battery.
+
+.. note 3::
+    If a sensors has temperature and fan speed with the same name unit,
+    it is possible to alias it using:
+    unitname_temperature_core_alias=Alias for temp
+    unitname_fan_speed_alias=Alias for fan speed
