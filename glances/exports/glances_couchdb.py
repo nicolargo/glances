@@ -50,7 +50,9 @@ class Export(GlancesExport):
         if self.user is None:
             server_uri = 'http://{}:{}/'.format(self.host, self.port)
         else:
-            server_uri = 'http://{}:{}@{}:{}/'.format(self.user, self.password, self.host, self.port)
+            # Force https if a login/password is provided
+            # Related to https://github.com/nicolargo/glances/issues/2124
+            server_uri = 'https://{}:{}@{}:{}/'.format(self.user, self.password, self.host, self.port)
 
         try:
             s = couchdb.Server(server_uri)
@@ -58,7 +60,7 @@ class Export(GlancesExport):
             logger.critical("Cannot connect to CouchDB server %s (%s)" % (server_uri, e))
             sys.exit(2)
         else:
-            logger.info("Connected to the CouchDB server %s" % server_uri)
+            logger.info("Connected to the CouchDB server")
 
         try:
             s[self.db]
