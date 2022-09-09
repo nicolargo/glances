@@ -18,7 +18,7 @@ venv-dev: venv-python ## Install Python 3 dev dependencies
 	./venv/bin/pip install -r dev-requirements.txt
 	./venv/bin/pip install -r doc-requirements.txt
 
-venv-dev-upgrade: venv-dev ## Upgrade Python 3 dev dependencies
+venv-dev-upgrade: ## Upgrade Python 3 dev dependencies
 	./venv/bin/pip install --upgrade pip
 	./venv/bin/pip install --upgrade -r dev-requirements.txt
 	./venv/bin/pip install --upgrade -r doc-requirements.txt
@@ -27,8 +27,7 @@ venv: venv-python ## Install Python 3 run-time dependencies
 	./venv/bin/pip install -r requirements.txt
 	./venv/bin/pip install -r optional-requirements.txt
 
-venv-upgrade: venv ## Upgrade Python 3 run-time dependencies
-	./venv/bin/pip install --upgrade -r dev-requirements.txt
+venv-upgrade: ## Upgrade Python 3 run-time dependencies
 	./venv/bin/pip install --upgrade -r requirements.txt
 	./venv/bin/pip install --upgrade -r optional-requirements.txt
 
@@ -36,7 +35,14 @@ venv-upgrade: venv ## Upgrade Python 3 run-time dependencies
 # Tests
 # ===================================================================
 
-test: venv-upgrade venv-dev-upgrade ## Run unit tests
+test: ## Run unit tests
+	./venv/bin/python ./unitest.py
+	./venv/bin/python ./unitest-restful.py
+	./venv/bin/python ./unitest-xmlrpc.py
+	./venv/bin/python -m black ./glances --check --exclude outputs/static
+	./venv/bin/pyright glances
+
+test-with-upgrade: venv-upgrade venv-dev-upgrade ## Run unit tests
 	./venv/bin/python ./unitest.py
 	./venv/bin/python ./unitest-restful.py
 	./venv/bin/python ./unitest-xmlrpc.py
