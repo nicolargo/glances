@@ -20,7 +20,10 @@ from glances.plugins.sensors.sensor.glances_hddtemp import PluginModel as HddTem
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.plugin.model import GlancesPluginModel
 
+SENSOR_TEMP_TYPE = 'temperature_core'
 SENSOR_TEMP_UNIT = 'C'
+
+SENSOR_FAN_TYPE = 'fan_speed'
 SENSOR_FAN_UNIT = 'R'
 
 
@@ -79,7 +82,7 @@ class PluginModel(GlancesPluginModel):
             stats = []
             # Get the temperature
             try:
-                temperature = self.__set_type(self.glances_grab_sensors.get('temperature_core'), 'temperature_core')
+                temperature = self.__set_type(self.glances_grab_sensors.get(SENSOR_TEMP_TYPE), SENSOR_TEMP_TYPE)
             except Exception as e:
                 logger.error("Cannot grab sensors temperatures (%s)" % e)
             else:
@@ -87,7 +90,7 @@ class PluginModel(GlancesPluginModel):
                 stats.extend(temperature)
             # Get the FAN speed
             try:
-                fan_speed = self.__set_type(self.glances_grab_sensors.get('fan_speed'), 'fan_speed')
+                fan_speed = self.__set_type(self.glances_grab_sensors.get(SENSOR_FAN_TYPE), SENSOR_FAN_TYPE)
             except Exception as e:
                 logger.error("Cannot grab FAN speed (%s)" % e)
             else:
@@ -123,20 +126,31 @@ class PluginModel(GlancesPluginModel):
             if not self.is_display(stat["label"].lower()):
                 continue
             # Set the alias for each stat
-            alias = self.has_alias(stat["label"].lower())
-            if alias:
-                stat["label"] = alias
+            # alias = self.has_alias(stat["label"].lower())
+            # if alias:
+            #     stat["label"] = alias
+            stat["label"] = self.__get_alias(stat)
             # Update the stats
             self.stats.append(stat)
 
         return self.stats
 
+    def __get_alias(self, stats):
+        """Return the alias of the sensor."""
+        # Get the alias for each stat
+        if self.has_alias(stats["label"].lower()):
+            return self.has_alias(stats["label"].lower())
+        elif self.has_alias("{}_{}".format(stats["label"], stats["type"]).lower()):
+            return self.has_alias("{}_{}".format(stats["label"], stats["type"]).lower())
+        else:
+            return stats["label"]
+
     def __set_type(self, stats, sensor_type):
         """Set the plugin type.
 
         4 types of stats is possible in the sensors plugin:
-        - Core temperature: 'temperature_core'
-        - Fan speed: 'fan_speed'
+        - Core temperature: SENSOR_TEMP_TYPE
+        - Fan speed: SENSOR_FAN_TYPE
         - HDD temperature: 'temperature_hdd'
         - Battery capacity: 'battery'
         """
@@ -159,7 +173,7 @@ class PluginModel(GlancesPluginModel):
             if not i['value']:
                 continue
             # Alert processing
-            if i['type'] == 'temperature_core':
+            if i['type'] == SENSOR_TEMP_TYPE:
                 if self.is_limit('critical', stat_name='sensors_temperature_' + i['label']):
                     # By default use the thresholds confiured in the glances.conf file (see #2058)
                     alert = self.get_alert(current=i['value'], header='temperature_' + i['label'])
@@ -225,7 +239,7 @@ class PluginModel(GlancesPluginModel):
                     self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='value', option='decoration'))
                 )
             else:
-                if args.fahrenheit and i['type'] != 'battery' and i['type'] != 'fan_speed':
+                if args.fahrenheit and i['type'] != 'battery' and i['type'] != SENSOR_FAN_TYPE:
                     trend = ''
                     value = to_fahrenheit(i['value'])
                     unit = 'F'
@@ -337,12 +351,12 @@ class GlancesGrabSensors(object):
                 i += 1
         return ret
 
-    def get(self, sensor_type='temperature_core'):
+    def get(self, sensor_type=SENSOR_TEMP_TYPE):
         """Get sensors list."""
         self.__update__()
-        if sensor_type == 'temperature_core':
+        if sensor_type == SENSOR_TEMP_TYPE:
             ret = [s for s in self.sensors_list if s['unit'] == SENSOR_TEMP_UNIT]
-        elif sensor_type == 'fan_speed':
+        elif sensor_type == SENSOR_FAN_TYPE:
             ret = [s for s in self.sensors_list if s['unit'] == SENSOR_FAN_UNIT]
         else:
             # Unknown type

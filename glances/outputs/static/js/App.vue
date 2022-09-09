@@ -18,11 +18,11 @@
                         <glances-plugin-uptime :data="data"></glances-plugin-uptime>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-sm-24">
-                        <div class="pull-left">
-                            <glances-plugin-cloud :data="data"></glances-plugin-cloud>
-                        </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-24">
+                    <div class="pull-left">
+                        <glances-plugin-cloud :data="data"></glances-plugin-cloud>
                     </div>
                 </div>
             </div>
@@ -43,9 +43,10 @@
             <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_mem">
                 <glances-plugin-mem :data="data"></glances-plugin-mem>
             </div>
+            <!-- NOTE: display if MEM enabled and GPU disabled -->
             <div
-                class="col-sm-6 col-md-4 col-lg-3"
                 v-if="!args.disable_mem && !(!args.disable_gpu && hasGpu)"
+                class="hidden-xs hidden-sm col-md-4 col-lg-3"
             >
                 <glances-plugin-mem-more :data="data"></glances-plugin-mem-more>
             </div>
