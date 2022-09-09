@@ -8,7 +8,7 @@
         <div class="table-row" v-for="(folder, folderId) in folders" :key="folderId">
             <div class="table-cell text-left">{{ folder.path }}</div>
             <div class="table-cell"></div>
-            <div class="table-cell" :class="vm.getDecoration(folder)">
+            <div class="table-cell" :class="getDecoration(folder)">
                 {{ $filters.bytes(folder.size) }}
             </div>
         </div>
