@@ -118,6 +118,9 @@ run: ## Start Glances in console mode (also called standalone)
 run-debug: ## Start Glances in debug console mode (also called standalone)
 	./venv/bin/python -m glances -C ./conf/glances.conf -d
 
+run-local-conf: ## Start Glances in console mode with the system conf file
+	./venv/bin/python -m glances
+
 run-webserver: ## Start Glances in Web server mode
 	./venv/bin/python -m glances -C ./conf/glances.conf -w
 
