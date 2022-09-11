@@ -159,6 +159,22 @@ body {
     text-overflow: ellipsis;
 }
 
+#ip {
+    padding-left: 10px;
+}
+
+#ip span {
+    padding-left: 10px;
+}
+
+#processcount > span:nth-child(1) {
+    padding-left: 0px;
+}
+
+#processcount span {
+    padding-left: 10px;
+}
+
 /* Loading page */
 
 #loading-page .glances-logo {

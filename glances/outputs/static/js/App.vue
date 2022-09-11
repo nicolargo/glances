@@ -11,7 +11,7 @@
                     <div class="pull-left">
                         <glances-plugin-system :data="data"></glances-plugin-system>
                     </div>
-                    <div class="pull-left" v-if="args.disable_ip">
+                    <div class="pull-left" v-if="!args.disable_ip">
                         <glances-plugin-ip :data="data"></glances-plugin-ip>
                     </div>
                     <div class="pull-right">

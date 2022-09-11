@@ -127,8 +127,10 @@ class Plugin(GlancesPlugin):
                 logger.debug("Cannot grab public IP information ({})".format(e))
             else:
                 stats['public_address'] = self.public_address
-                stats['public_info'] = self.public_info
-                stats['public_info_human'] = self.public_info_for_human(stats['public_info'])
+                # Too much information provided in the public_info
+                # Limit it to public_info_for_human
+                # stats['public_info'] = self.public_info
+                stats['public_info_human'] = self.public_info_for_human(self.public_info)
 
         elif self.input_method == 'snmp':
             # Not implemented yet
