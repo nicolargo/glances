@@ -513,6 +513,8 @@ class Plugin(GlancesPlugin):
 
         # Process list
         # Loop over processes (sorted by the sort key previously compute)
+        # This is a Glances bottleneck (see flame graph),
+        # get_process_curses_data should be optimzed
         i = 0
         for p in self.__sort_stats(process_sort_key):
             ret.extend(self.get_process_curses_data(p, i == args.cursor_position, args))

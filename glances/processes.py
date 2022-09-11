@@ -253,6 +253,7 @@ class GlancesProcesses(object):
         #####################
         sorted_attrs = ['cpu_percent', 'cpu_times', 'memory_percent', 'name', 'status', 'num_threads']
         displayed_attr = ['memory_info', 'nice', 'pid']
+        # 'name' can not be cached because it is used for filtering
         cached_attrs = ['cmdline', 'username']
 
         # Some stats are optional
@@ -274,14 +275,14 @@ class GlancesProcesses(object):
             is_cached = True
 
         # Build the processes stats list (it is why we need psutil>=5.3.0)
+        # This is on of the main bottleneck of Glances (see flame graph)
         self.processlist = [
             p.info
             for p in psutil.process_iter(attrs=sorted_attrs, ad_value=None)
             # OS-related processes filter
-            if not (BSD and p.info['name'] == 'idle')
-            and not (WINDOWS and p.info['name'] == 'System Idle Process')
-            and not (MACOS and p.info['name'] == 'kernel_task')
-            and
+            if not (BSD and p.info['name'] == 'idle') and
+            not (WINDOWS and p.info['name'] == 'System Idle Process') and
+            not (MACOS and p.info['name'] == 'kernel_task') and
             # Kernel threads filter
             not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0)
         ]
