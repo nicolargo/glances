@@ -109,6 +109,15 @@ flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
 	@echo "Now follow: https://github.com/flathub/flathub/wiki/App-Submission"
 
 # ===================================================================
+# Docker
+# ===================================================================
+
+docker:
+	docker build --target full -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-full .
+	docker build --target minimal -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-minimal .
+	docker build --target dev -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-dev .
+
+# ===================================================================
 # Run
 # ===================================================================
 
@@ -120,6 +129,15 @@ run-debug: ## Start Glances in debug console mode (also called standalone)
 
 run-local-conf: ## Start Glances in console mode with the system conf file
 	./venv/bin/python -m glances
+
+run-docker-alpine-minimal: ## Start Glances Alpine Docker minimal in console mode
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-minimal
+
+run-docker-alpine-full: ## Start Glances Alpine Docker full in console mode
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-full
+
+run-docker-alpine-dev: ## Start Glances Alpine Docker dev in console mode
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-dev
 
 run-webserver: ## Start Glances in Web server mode
 	./venv/bin/python -m glances -C ./conf/glances.conf -w
