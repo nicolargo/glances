@@ -37,7 +37,7 @@ RUN pip3 install --no-cache-dir --user -r requirements.txt
 
 # Force install otherwise it could be cached without rerun
 ARG CHANGING_ARG
-RUN pip3 install --no-cache-dir --user glances[all]
+RUN pip3 install --no-cache-dir --user "glances[all]"
 
 
 FROM build as additional-packages
@@ -48,16 +48,15 @@ COPY *requirements.txt ./
 RUN CASS_DRIVER_NO_CYTHON=1 pip3 install --no-cache-dir --user -r optional-requirements.txt
 
 ##############################################################################
-# dev image
+# full image
 ##############################################################################
 
-FROM build as dev
+FROM build as full
 ARG PYTHON_VERSION
 
 COPY --from=remoteInstall /root/.local/bin /usr/local/bin/
 COPY --from=remoteInstall /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/lib/python${PYTHON_VERSION}/site-packages/
 COPY --from=additional-packages /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/lib/python${PYTHON_VERSION}/site-packages/
-COPY . /glances
 COPY ./docker-compose/glances.conf /etc/glances.conf
 
 # EXPOSE PORT (XMLRPC / WebUI)
@@ -72,7 +71,7 @@ CMD python3 -m glances -C /etc/glances.conf $GLANCES_OPT
 # minimal image
 ##############################################################################
 
-#Create running images without any building dependency
+# Create running images without any building dependency
 FROM alpine:${IMAGE_VERSION} as minimal
 ARG PYTHON_VERSION
 
@@ -94,17 +93,8 @@ EXPOSE 61209
 CMD python3 -m glances -C /etc/glances.conf $GLANCES_OPT
 
 ##############################################################################
-# full image
+# dev image (=full)
 ##############################################################################
 
-FROM minimal as full
-ARG PYTHON_VERSION
+FROM full as dev
 
-COPY --from=additional-packages /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/lib/python${PYTHON_VERSION}/site-packages/
-COPY ./docker-compose/glances.conf /etc/glances.conf
-
-# EXPOSE PORT (XMLRPC / WebUI)
-EXPOSE 61209 61208
-
-# Define default command.
-CMD python3 -m glances -C /etc/glances.conf $GLANCES_OPT
