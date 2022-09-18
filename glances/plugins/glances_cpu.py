@@ -341,7 +341,9 @@ class Plugin(GlancesPlugin):
             msg = '{:4.1f}%'.format(self.stats['idle'])
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle', option='optional')))
         # ctx_switches
-        ret.extend(self.curse_add_stat('ctx_switches', width=15, header='  '))
+        # On WINDOWS/SUNOS the ctx_switches is displayed in the third line
+        if not WINDOWS and not SUNOS:
+            ret.extend(self.curse_add_stat('ctx_switches', width=15, header='  '))
 
         # Second line
         # user|idle + irq + interrupts
@@ -369,6 +371,8 @@ class Plugin(GlancesPlugin):
         # soft_interrupts
         if not WINDOWS and not SUNOS:
             ret.extend(self.curse_add_stat('soft_interrupts', width=15, header='  '))
+        else:
+            ret.extend(self.curse_add_stat('ctx_switches', width=15, header='  '))
 
         # Fourth line
         # iowait + steal + syscalls
