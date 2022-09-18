@@ -41,6 +41,10 @@ User CPU time is the time spent on the processor running your program\'s code (o
 operations to complete.',
         'unit': 'percent',
     },
+    'dpc': {
+        'description': '*(Windows)*: time spent servicing deferred procedure calls (DPCs)',
+        'unit': 'percent',
+    },
     'idle': {
         'description': 'percent of CPU used by any program. Every program or task \
 that runs on a computer system occupies a certain amount of processing \
@@ -285,7 +289,7 @@ class Plugin(GlancesPlugin):
 
         # Add specifics information
         # Alert and log
-        for key in ['user', 'system', 'iowait', 'total']:
+        for key in ['user', 'system', 'iowait', 'dpc', 'total']:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert_log(self.stats[key], header=key)
         # Alert only
