@@ -35,25 +35,47 @@
                         <div class="table-cell text-left">irq:</div>
                         <div class="table-cell">{{ irq }}%</div>
                     </div>
+                    <!-- If no irq, display interrupts -->
+                    <div class="table-row" v-show="irq == undefined">
+                        <div class="table-cell text-left">inter:</div>
+                        <div class="table-cell">
+                            {{ interrupts }}
+                        </div>
+                    </div>
                     <div class="table-row" v-show="nice != undefined">
                         <div class="table-cell text-left">nice:</div>
                         <div class="table-cell">{{ nice }}%</div>
                     </div>
-                    <div class="table-row" v-show="steal != undefined">
-                        <div class="table-cell text-left">steal:</div>
-                        <div class="table-cell" :class="getDecoration('steal')">{{ steal }}%</div>
-                    </div>
-                </div>
-            </div>
-            <div class="hidden-xs hidden-sm hidden-md col-lg-8">
-                <div class="table">
-                    <div class="table-row" v-if="ctx_switches">
+                    <!-- If no nice, display ctx_switches -->
+                    <div class="table-row" v-if="nice == undefined && ctx_switches">
                         <div class="table-cell text-left">ctx_sw:</div>
                         <div class="table-cell" :class="getDecoration('ctx_switches')">
                             {{ ctx_switches }}
                         </div>
                     </div>
-                    <div class="table-row" v-if="interrupts">
+                    <div class="table-row" v-show="steal != undefined">
+                        <div class="table-cell text-left">steal:</div>
+                        <div class="table-cell" :class="getDecoration('steal')">{{ steal }}%</div>
+                    </div>
+                    <div class="table-row" v-if="!isLinux && syscalls">
+                        <div class="table-cell text-left">syscal:</div>
+                        <div class="table-cell">
+                            {{ syscalls }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="hidden-xs hidden-sm hidden-md col-lg-8">
+                <div class="table">
+                    <!-- If not already display instead of nice, then display ctx_switches -->
+                    <div class="table-row" v-if="nice != undefined && ctx_switches">
+                        <div class="table-cell text-left">ctx_sw:</div>
+                        <div class="table-cell" :class="getDecoration('ctx_switches')">
+                            {{ ctx_switches }}
+                        </div>
+                    </div>
+                    <!-- If not already display instead of irq, then display interrupts -->
+                    <div class="table-row" v-if="irq != undefined && interrupts">
                         <div class="table-cell text-left">inter:</div>
                         <div class="table-cell">
                             {{ interrupts }}
@@ -63,12 +85,6 @@
                         <div class="table-cell text-left">sw_int:</div>
                         <div class="table-cell">
                             {{ soft_interrupts }}
-                        </div>
-                    </div>
-                    <div class="table-row" v-if="!isLinux && syscalls">
-                        <div class="table-cell text-left">syscal:</div>
-                        <div class="table-cell">
-                            {{ syscalls }}
                         </div>
                     </div>
                 </div>
