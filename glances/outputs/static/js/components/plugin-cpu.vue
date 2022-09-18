@@ -15,25 +15,29 @@
                         <div class="table-cell text-left">system:</div>
                         <div class="table-cell" :class="getDecoration('system')">{{ system }}%</div>
                     </div>
-                    <div class="table-row">
-                        <div class="table-cell text-left">idle:</div>
-                        <div class="table-cell">{{ idle }}%</div>
+                    <div class="table-row" v-show="iowait != undefined">
+                        <div class="table-cell text-left">iowait:</div>
+                        <div class="table-cell" :class="getDecoration('iowait')">{{ iowait }}%</div>
+                    </div>
+                    <div class="table-row" v-show="iowait == undefined && dcp != undefined">
+                        <div class="table-cell text-left">dcp:</div>
+                        <div class="table-cell" :class="getDecoration('dpc')">{{ dpc }}%</div>
                     </div>
                 </div>
             </div>
             <div class="hidden-xs hidden-sm col-md-12 col-lg-8">
                 <div class="table">
-                    <div class="table-row" v-show="nice != undefined">
-                        <div class="table-cell text-left">nice:</div>
-                        <div class="table-cell">{{ nice }}%</div>
+                    <div class="table-row">
+                        <div class="table-cell text-left">idle:</div>
+                        <div class="table-cell">{{ idle }}%</div>
                     </div>
                     <div class="table-row" v-show="irq != undefined">
                         <div class="table-cell text-left">irq:</div>
                         <div class="table-cell">{{ irq }}%</div>
                     </div>
-                    <div class="table-row" v-show="iowait != undefined">
-                        <div class="table-cell text-left">iowait:</div>
-                        <div class="table-cell" :class="getDecoration('iowait')">{{ iowait }}%</div>
+                    <div class="table-row" v-show="nice != undefined">
+                        <div class="table-cell text-left">nice:</div>
+                        <div class="table-cell">{{ nice }}%</div>
                     </div>
                     <div class="table-row" v-show="steal != undefined">
                         <div class="table-cell text-left">steal:</div>
@@ -55,7 +59,7 @@
                             {{ interrupts }}
                         </div>
                     </div>
-                    <div class="table-row" v-if="soft_interrupts">
+                    <div class="table-row" v-if="!isWindows && !isSunOS && soft_interrupts">
                         <div class="table-cell text-left">sw_int:</div>
                         <div class="table-cell">
                             {{ soft_interrupts }}
@@ -90,6 +94,12 @@ export default {
         isLinux() {
             return this.data.isLinux;
         },
+        isSunOS() {
+            return this.data.isSunOS;
+        },
+        isWindows() {
+            return this.data.isWindows;
+        },
         total() {
             return this.stats.total;
         },
@@ -110,6 +120,9 @@ export default {
         },
         iowait() {
             return this.stats.iowait;
+        },
+        dpc() {
+            return this.stats.dpc;
         },
         steal() {
             return this.stats.steal;

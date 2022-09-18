@@ -12,7 +12,7 @@
 from glances.timer import getTimeSinceLastUpdate
 from glances.compat import iterkeys
 from glances.cpu_percent import cpu_percent
-from glances.globals import LINUX
+from glances.globals import LINUX, WINDOWS, SUNOS
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -367,7 +367,8 @@ class Plugin(GlancesPlugin):
         # Nice CPU
         ret.extend(self.curse_add_stat('nice', width=14, header='  '))
         # soft_interrupts
-        ret.extend(self.curse_add_stat('soft_interrupts', width=15, header='  '))
+        if not WINDOWS and not SUNOS:
+            ret.extend(self.curse_add_stat('soft_interrupts', width=15, header='  '))
 
         # Fourth line
         # iowait + steal + syscalls
