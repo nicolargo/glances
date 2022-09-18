@@ -179,8 +179,23 @@ class Plugin(GlancesPlugin):
         stats = self.get_init_value()
 
         stats['total'] = cpu_percent.get()
-        # Grab: 'user', 'system', 'idle', 'nice', 'iowait',
-        #       'irq', 'softirq', 'steal', 'guest', 'guest_nice'
+        # Standards stats
+        # - user: time spent by normal processes executing in user mode; on Linux this also includes guest time
+        # - system: time spent by processes executing in kernel mode
+        # - idle: time spent doing nothing
+        # - nice (UNIX): time spent by niced (prioritized) processes executing in user mode
+        #                on Linux this also includes guest_nice time
+        # - iowait (Linux): time spent waiting for I/O to complete.
+        #                   This is not accounted in idle time counter.
+        # - irq (Linux, BSD): time spent for servicing hardware interrupts
+        # - softirq (Linux): time spent for servicing software interrupts
+        # - steal (Linux 2.6.11+): time spent by other operating systems running in a virtualized environment
+        # - guest (Linux 2.6.24+): time spent running a virtual CPU for guest operating systems under
+        #                          the control of the Linux kernel
+        # - guest_nice (Linux 3.2.0+): time spent running a niced guest (virtual CPU for guest operating systems
+        #                              under the control of the Linux kernel)
+        # - interrupt (Windows): time spent for servicing hardware interrupts ( similar to “irq” on UNIX)
+        # - dpc (Windows): time spent servicing deferred procedure calls (DPCs)
         cpu_times_percent = psutil.cpu_times_percent(interval=0.0)
         for stat in cpu_times_percent._fields:
             stats[stat] = getattr(cpu_times_percent, stat)
@@ -297,8 +312,7 @@ class Plugin(GlancesPlugin):
         if not self.stats or self.args.percpu or self.is_disabled():
             return ret
 
-        # If user stat is not here, display only idle / total CPU usage (for
-        # example on Windows OS)
+        # Some tag to enable/disable stats (example: idle_tag triggered on Windows OS)
         idle_tag = 'user' not in self.stats
 
         # First line
@@ -354,8 +368,12 @@ class Plugin(GlancesPlugin):
         # Fourth line
         # iowait + steal + syscalls
         ret.append(self.curse_new_line())
-        # IOWait CPU
-        ret.extend(self.curse_add_stat('iowait', width=15))
+        if 'iowait' in self.stats:
+            # IOWait CPU
+            ret.extend(self.curse_add_stat('iowait', width=15))
+        elif 'dpc' in self.stats:
+            # DPC CPU
+            ret.extend(self.curse_add_stat('dpc', width=15))
         # Steal CPU usage
         ret.extend(self.curse_add_stat('steal', width=14, header='  '))
         # syscalls: number of system calls since boot. Always set to 0 on Linux. (do not display)

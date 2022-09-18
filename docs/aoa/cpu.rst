@@ -55,6 +55,7 @@ CPU stats description:
   0 on Windows and SunOS.
 - **syscal**: number of system calls per second. Do not displayed on
   Linux (always 0).
+- **dpc**: *(Windows)*: time spent servicing deferred procedure calls.
 
 To switch to per-CPU stats, just hit the ``1`` key:
 
