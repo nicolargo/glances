@@ -19,8 +19,8 @@
                         <div class="table-cell text-left">iowait:</div>
                         <div class="table-cell" :class="getDecoration('iowait')">{{ iowait }}%</div>
                     </div>
-                    <div class="table-row" v-show="iowait == undefined && dcp != undefined">
-                        <div class="table-cell text-left">dcp:</div>
+                    <div class="table-row" v-show="iowait == undefined && dpc != undefined">
+                        <div class="table-cell text-left">dpc:</div>
                         <div class="table-cell" :class="getDecoration('dpc')">{{ dpc }}%</div>
                     </div>
                 </div>
