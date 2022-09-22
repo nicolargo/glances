@@ -53,7 +53,8 @@ class Plugin(GlancesPlugin):
         msg_col = '  {0:1}  {1:34}'
         msg_header = '{0:39}'
 
-        """First column"""
+        ## First column
+        #
         self.view_data['header_sort'] = msg_header.format('SORT PROCESSES:')
         self.view_data['sort_auto'] = msg_col.format('a', 'Automatically')
         self.view_data['sort_cpu'] = msg_col.format('c', 'CPU%')
@@ -82,7 +83,8 @@ class Plugin(GlancesPlugin):
         self.view_data['show_hide_processes'] = msg_col.format('z', 'Processes')
         self.view_data['show_hide_left_sidebar'] = msg_col.format('2', 'Left sidebar')
 
-        """Second column"""
+        ## Second column
+        #
         self.view_data['show_hide_quick_look'] = msg_col.format('3', 'Quick Look')
         self.view_data['show_hide_cpu_mem_swap'] = msg_col.format('4', 'CPU, MEM, and SWAP')
         self.view_data['show_hide_all'] = msg_col.format('5', 'ALL')
