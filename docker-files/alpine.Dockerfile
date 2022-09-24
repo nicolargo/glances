@@ -114,6 +114,10 @@ COPY . /glances
 # EXPOSE PORT (XMLRPC / WebUI)
 EXPOSE 61209 61208
 
+# Forward access and error logs to Docker's log collector
+RUN ln -sf /dev/stdout /tmp/glances-root.log \
+    && ln -sf /dev/stderr /var/log/error.log
+
 WORKDIR /glances
 
 # Define default command.
