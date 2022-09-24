@@ -196,16 +196,18 @@ Get the Glances container:
 
 .. code-block:: console
 
-    docker pull nicolargo/glances:<version>
+    docker pull nicolargo/glances:alpine-latest-full
 
-Available versions on the Docker Hub repository:
+The followings tags are availables:
 
-- *nicolargo/glances:latest* for a basic Debian Glances image version with minimal dependencies
-- *nicolargo/glances:alpine-latest* for a basic Alpine Glances image version with minimal dependencies
-- *nicolargo/glances:latest-full* for a full Debian Glances image version with all dependencies
-- *nicolargo/glances:alpine-latest-full* for a full Alpine Glances image version with all dependencies
+- *alpine-latest-full* for a full Alpine Glances image (latest release) with all dependencies
+- *latest-full* for a full Debian Glances image (latest release) with all dependencies
+- *alpine-latest* for a basic Alpine Glances (latest release) version with minimal dependencies
+- *latest* for a basic Debian Glances image (latest release) with minimal dependencies
+- *alpine-dev* for a basic Alpine Glances image (development branch) with all dependencies
+- *latest* for a basic Debian Glances image (development branch) with all dependencies
 
-You can also specify a version by replacing latest by 3.2.6.4 (for example).
+You can also specify a version (example: *alpine-3.2.7-full*).
 
 Run last version of Glances container in *console mode*:
 
