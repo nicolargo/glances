@@ -9,7 +9,7 @@
                 <div class="table-cell">Uptime</div>
                 <div class="table-cell">CPU%</div>
                 <div class="table-cell">MEM</div>
-                <div class="table-cell">RSS</div>
+                <div class="table-cell">/MAX</div>
                 <div class="table-cell">IOR/s</div>
                 <div class="table-cell">IOW/s</div>
                 <div class="table-cell">RX/s</div>
@@ -35,7 +35,7 @@
                     {{ $filters.bytes(container.memory) }}
                 </div>
                 <div class="table-cell">
-                    {{ $filters.bytes(container.rss) }}
+                    {{ $filters.bytes(container.limit) }}
                 </div>
                 <div class="table-cell">
                     {{ $filters.bits(container.ior / container.io_time_since_update) }}
@@ -78,14 +78,14 @@ export default {
                     'uptime': containerData.Uptime,
                     'cpu': containerData.cpu.total,
                     'memory': containerData.memory.usage != undefined ? containerData.memory.usage : '?',
-                    'rss': containerData.memory.rss != undefined ? containerData.memory.rss : '?',
+                    'limit': containerData.memory.limit != undefined ? containerData.memory.limit : '?',
                     'ior': containerData.io.ior != undefined ? containerData.io.ior : '?',
                     'iow': containerData.io.iow != undefined ? containerData.io.iow : '?',
                     'io_time_since_update': containerData.io.time_since_update,
                     'rx': containerData.network.rx != undefined ? containerData.network.rx : '?',
                     'tx': containerData.network.tx != undefined ? containerData.network.tx : '?',
                     'net_time_since_update': containerData.network.time_since_update,
-                    'command': containerData.Command,
+                    'command': containerData.Command.join(' '),
                     'image': containerData.Image
             };
             });

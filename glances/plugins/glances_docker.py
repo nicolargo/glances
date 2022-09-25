@@ -206,7 +206,7 @@ class Plugin(GlancesPlugin):
             for container in containers:
                 if container.id not in self.thread_list:
                     # Thread did not exist in the internal dict
-                    # Create it and add it to the internal dict
+                    # Create it, add it to the internal dict and start it
                     logger.debug(
                         "{} plugin - Create thread for container {}".format(self.plugin_name, container.id[:12])
                     )
@@ -234,10 +234,8 @@ class Plugin(GlancesPlugin):
                 container_stats = {}
                 # The key is the container name and not the Id
                 container_stats['key'] = self.get_key()
-                # Export name (first name in the Names list, without the /)
+                # Export name
                 container_stats['name'] = nativestr(container.name)
-                # Export global Names (used by the WebUI)
-                container_stats['Names'] = [nativestr(container.name)]
                 # Container Id
                 container_stats['Id'] = container.id
                 # Container Image
@@ -556,15 +554,15 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = '{:>7}'.format('MEM')
         ret.append(self.curse_add_line(msg))
-        msg = '{:>7}'.format('/MAX')
+        msg = '/{:<7}'.format('MAX')
         ret.append(self.curse_add_line(msg))
         msg = '{:>7}'.format('IOR/s')
         ret.append(self.curse_add_line(msg))
-        msg = '{:>7}'.format('IOW/s')
+        msg = ' {:<7}'.format('IOW/s')
         ret.append(self.curse_add_line(msg))
         msg = '{:>7}'.format('Rx/s')
         ret.append(self.curse_add_line(msg))
-        msg = '{:>7}'.format('Tx/s')
+        msg = ' {:<7}'.format('Tx/s')
         ret.append(self.curse_add_line(msg))
         msg = ' {:8}'.format('Command')
         ret.append(self.curse_add_line(msg))
@@ -596,19 +594,24 @@ class Plugin(GlancesPlugin):
                 msg = '{:>7}'.format('_')
             ret.append(self.curse_add_line(msg, self.get_views(item=container['name'], key='mem', option='decoration')))
             try:
-                msg = '{:>7}'.format(self.auto_unit(container['memory']['limit']))
+                msg = '/{:<7}'.format(self.auto_unit(container['memory']['limit']))
             except KeyError:
-                msg = '{:>7}'.format('_')
+                msg = '/{:<7}'.format('_')
             ret.append(self.curse_add_line(msg))
             # IO R/W
             unit = 'B'
-            for r in ['ior', 'iow']:
-                try:
-                    value = self.auto_unit(int(container['io'][r] // container['io']['time_since_update'])) + unit
-                    msg = '{:>7}'.format(value)
-                except KeyError:
-                    msg = '{:>7}'.format('_')
-                ret.append(self.curse_add_line(msg))
+            try:
+                value = self.auto_unit(int(container['io']['ior'] // container['io']['time_since_update'])) + unit
+                msg = '{:>7}'.format(value)
+            except KeyError:
+                msg = '{:>7}'.format('_')
+            ret.append(self.curse_add_line(msg))
+            try:
+                value = self.auto_unit(int(container['io']['iow'] // container['io']['time_since_update'])) + unit
+                msg = ' {:<7}'.format(value)
+            except KeyError:
+                msg = ' {:<7}'.format('_')
+            ret.append(self.curse_add_line(msg))
             # NET RX/TX
             if args.byte:
                 # Bytes per second (for dummy)
@@ -618,18 +621,26 @@ class Plugin(GlancesPlugin):
                 # Bits per second (for real network administrator | Default)
                 to_bit = 8
                 unit = 'b'
-            for r in ['rx', 'tx']:
-                try:
-                    value = (
-                        self.auto_unit(
-                            int(container['network'][r] // container['network']['time_since_update'] * to_bit)
-                        )
-                        + unit
-                    )
-                    msg = '{:>7}'.format(value)
-                except KeyError:
-                    msg = '{:>7}'.format('_')
-                ret.append(self.curse_add_line(msg))
+            try:
+                value = (
+                    self.auto_unit(
+                        int(container['network']['rx'] // container['network']['time_since_update'] * to_bit)
+                    ) + unit
+                )
+                msg = '{:>7}'.format(value)
+            except KeyError:
+                msg = '{:>7}'.format('_')
+            ret.append(self.curse_add_line(msg))
+            try:
+                value = (
+                    self.auto_unit(
+                        int(container['network']['tx'] // container['network']['time_since_update'] * to_bit)
+                    ) + unit
+                )
+                msg = ' {:<7}'.format(value)
+            except KeyError:
+                msg = ' {:<7}'.format('_')
+            ret.append(self.curse_add_line(msg))
             # Command
             if container['Command'] is not None:
                 msg = ' {}'.format(' '.join(container['Command']))
@@ -641,11 +652,7 @@ class Plugin(GlancesPlugin):
 
     def _msg_name(self, container, max_width):
         """Build the container name."""
-        name = container['name']
-        if len(name) > max_width:
-            name = '_' + name[-max_width + 1 :]
-        else:
-            name = name[:max_width]
+        name = container['name'][:max_width]
         return ' {:{width}}'.format(name, width=max_width)
 
     def container_alert(self, status):
