@@ -6,7 +6,7 @@
                 <div
                     class="table-cell"
                     :class="['sortable', sorter.column === 'cpu_percent' && 'sort']"
-                    @click="$emit('update:sorter', 'cpu_percen')"
+                    @click="$emit('update:sorter', 'cpu_percent')"
                 >
                     CPU%
                 </div>

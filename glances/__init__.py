@@ -69,7 +69,7 @@ def end():
     """Stop Glances."""
     try:
         mode.end()
-    except NameError:
+    except (NameError, KeyError):
         # NameError: name 'mode' is not defined in case of interrupt shortly...
         # ...after starting the server mode (issue #1175)
         pass
