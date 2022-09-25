@@ -131,7 +131,7 @@ class GlancesFilter(object):
             # If the key did not exist
             return False
         try:
-            return self._filter_re.match(value) is None
+            return self._filter_re.fullmatch(value) is None
         except (AttributeError, TypeError):
             # AttributeError -  Filter processes crashes with a bad regular expression pattern (issue #665)
             # TypeError - Filter processes crashes if value is None (issue #1105)
