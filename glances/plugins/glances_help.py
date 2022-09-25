@@ -120,6 +120,7 @@ class Plugin(GlancesPlugin):
                 ('misc_reset_history', msg_col.format('r', 'Reset history')),
                 ('misc_delete_warning_alerts', msg_col.format('w', 'Delete warning alerts')),
                 ('misc_delete_warning_and_critical_alerts', msg_col.format('x', 'Delete warning & critical alerts')),
+                ('misc_theme_white', msg_col.format('9', 'Optimize colors for white background')),
                 ('misc_edit_process_filter_pattern', '  ENTER: Edit process filter pattern'),
             ]
         )
