@@ -20,6 +20,17 @@ import psutil
 # This constant defines the list of available processes sort key
 sort_processes_key_list = ['cpu_percent', 'memory_percent', 'username', 'cpu_times', 'io_counters', 'name']
 
+# Sort dictionary for human
+sort_for_human = {
+    'io_counters': 'disk IO',
+    'cpu_percent': 'CPU consumption',
+    'memory_percent': 'memory consumption',
+    'cpu_times': 'process time',
+    'username': 'user name',
+    'name': 'processs name',
+    None: 'None',
+}
+
 
 class GlancesProcesses(object):
     """Get processed stats using the psutil library."""
