@@ -9,7 +9,7 @@
 
 """Process count plugin."""
 
-from glances.processes import glances_processes
+from glances.processes import glances_processes, sort_for_human
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # Define the history items list
@@ -26,16 +26,6 @@ class Plugin(GlancesPlugin):
 
     stats is a list
     """
-
-    sort_for_human = {
-        'io_counters': 'disk IO',
-        'cpu_percent': 'CPU consumption',
-        'memory_percent': 'memory consumption',
-        'cpu_times': 'process time',
-        'username': 'user name',
-        'name': 'process name',
-        None: 'None',
-    }
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
@@ -133,7 +123,7 @@ class Plugin(GlancesPlugin):
         # Display sort information
         msg = 'Programs' if self.args.programs else 'Threads'
         try:
-            sort_human = self.sort_for_human[glances_processes.sort_key]
+            sort_human = sort_for_human[glances_processes.sort_key]
         except KeyError:
             sort_human = glances_processes.sort_key
         if glances_processes.auto_sort:
