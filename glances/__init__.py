@@ -134,7 +134,7 @@ def start(config, args):
         snapshot_end = tracemalloc.take_snapshot()
         snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
         memory_leak = sum([s.size_diff for s in snapshot_diff])
-        print("Memory comsumption: {0:.1f}KB (see log for details)".format(memory_leak / 1000))
+        print("Memory consumption: {0:.1f}KB (see log for details)".format(memory_leak / 1000))
         logger.info("Memory consumption (top 5):")
         for stat in snapshot_diff[:5]:
             logger.info(stat)

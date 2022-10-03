@@ -40,7 +40,7 @@ critical is reached:
 
 
 .. note::
-    Use && as seprator for multiple commands
+    Use && as separator for multiple commands
 
 
 Within ``/etc/glances/actions.d/fs-critical.py``:
