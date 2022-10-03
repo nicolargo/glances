@@ -373,7 +373,7 @@ class Plugin(GlancesPlugin):
             msg = self.layout_stat['pid'].format(p['pid'], width=self.__max_pid_size())
         else:
             # Display programs, so the PID should not be displayed
-            # Instead displays the number of childrens
+            # Instead displays the number of children
             msg = self.layout_stat['pid'].format(
                 len(p['childrens']) if 'childrens' in p else '_', width=self.__max_pid_size()
             )

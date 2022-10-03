@@ -291,9 +291,10 @@ class GlancesProcesses(object):
             p.info
             for p in psutil.process_iter(attrs=sorted_attrs, ad_value=None)
             # OS-related processes filter
-            if not (BSD and p.info['name'] == 'idle') and
-            not (WINDOWS and p.info['name'] == 'System Idle Process') and
-            not (MACOS and p.info['name'] == 'kernel_task') and
+            if not (BSD and p.info['name'] == 'idle')
+            and not (WINDOWS and p.info['name'] == 'System Idle Process')
+            and not (MACOS and p.info['name'] == 'kernel_task')
+            and
             # Kernel threads filter
             not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0)
         ]
@@ -322,7 +323,7 @@ class GlancesProcesses(object):
                     top_process = psutil.Process(proc['pid'])
                     extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
                     if LINUX:
-                        # num_fds only avalable on Unix system (see issue #1351)
+                        # num_fds only available on Unix system (see issue #1351)
                         extended_stats += ['num_fds']
                     if WINDOWS:
                         extended_stats += ['num_handles']

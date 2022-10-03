@@ -53,7 +53,7 @@ class AmpsList(object):
             )
 
         header = "glances_"
-        # For each AMP scrip, call the load_config method
+        # For each AMP script, call the load_config method
         for s in self.config.sections():
             if s.startswith("amp_"):
                 # An AMP section exists in the configuration file
