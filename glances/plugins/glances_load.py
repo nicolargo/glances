@@ -134,7 +134,7 @@ class Plugin(GlancesPlugin):
         # Call the father's method
         super(Plugin, self).update_views()
 
-        # Add specifics informations
+        # Add specifics information
         try:
             # Alert and log
             self.views['min15']['decoration'] = self.get_alert_log(

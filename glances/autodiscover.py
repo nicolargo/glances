@@ -32,7 +32,7 @@ if zeroconf_tag:
         sys.exit(1)
 
 # Global var
-# Recent versions of the zeroconf python package doesnt like a zeroconf type that ends with '._tcp.'.
+# Recent versions of the zeroconf python package doesn't like a zeroconf type that ends with '._tcp.'.
 # Correct issue: zeroconf problem with zeroconf_type = "_%s._tcp." % 'glances' #888
 zeroconf_type = "_%s._tcp.local." % 'glances'
 

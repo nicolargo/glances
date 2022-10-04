@@ -60,7 +60,7 @@ class Plugin(GlancesPlugin):
             stats = glances_processes.get_count()
         elif self.input_method == 'snmp':
             # Update stats using SNMP
-            # Not availaible
+            # Not available
             pass
 
         # Update the stats

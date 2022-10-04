@@ -56,7 +56,7 @@ following:
     #     => foo.mem
     # You can also use dynamic values
     #prefix=foo
-    # Followings tags will be added for all measurements
+    # Following tags will be added for all measurements
     # You can also use dynamic values.
     # Note: hostname is always added as a tag
     #tags=foo:bar,spam:eggs,domain:`domainname`
@@ -98,7 +98,7 @@ following:
     #     => foo.mem
     # You can also use dynamic values
     #prefix=foo
-    # Followings tags will be added for all measurements
+    # Following tags will be added for all measurements
     # You can also use dynamic values.
     # Note: hostname is always added as a tag
     #tags=foo:bar,spam:eggs,domain:`domainname`

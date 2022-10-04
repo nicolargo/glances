@@ -47,7 +47,7 @@ or in a CSV format thanks to the stdout-csv option:
     2018-12-08 22:04:23 CEST,5.4,5949136896,4,1.04,0.99,1.04
     ...
 
-or as a JSON format thanks to the stdout-json option (attibute not supported in this mode):
+or as a JSON format thanks to the stdout-json option (attribute not supported in this mode):
 
 .. code-block:: console
 
@@ -124,7 +124,7 @@ When the list is displayed, you can navigate through the Glances servers with
 up/down keys. It is also possible to sort the server using:
 - '1' is normal (do not sort)
 - '2' is using sorting with ascending order (ONLINE > SNMP > PROTECTED > OFFLINE > UNKNOWN)
-- '3' is using sorting with descending order (UNKNOW > OFFLINE > PROTECTED > SNMP > ONLINE)
+- '3' is using sorting with descending order (UNKNOWN > OFFLINE > PROTECTED > SNMP > ONLINE)
 
 SNMP
 ^^^^
