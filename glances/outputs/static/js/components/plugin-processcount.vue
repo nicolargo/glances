@@ -5,7 +5,7 @@
         <span>{{ running }} run,</span>
         <span>{{ sleeping }} slp,</span>
         <span>{{ stopped }} oth</span>
-        <span class="title">sorted {{ sorter.auto ? 'automatically' : '' }}</span>
+        <span class="title">{{ sorter.auto ? 'sorted automatically' : 'sorted' }}</span>
         <span>by {{ sorter.getColumnLabel(sorter.column) }}</span>
     </section>
 </template>
