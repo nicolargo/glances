@@ -125,9 +125,7 @@ class GlancesStdoutIssue(object):
 
         # Display total time need to update all plugins
         sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
-        print("Total time to update all stats: {}{:.5f}s{}".format(colors.BLUE,
-                                                                   counter_total.get(),
-                                                                   colors.NO))
+        print("Total time to update all stats: {}{:.5f}s{}".format(colors.BLUE, counter_total.get(), colors.NO))
         sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
 
         # Return True to exit directly (no refresh)

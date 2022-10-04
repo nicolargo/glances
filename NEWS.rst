@@ -18,8 +18,8 @@ Enhancements:
     * Keybind(s) for modifying nice level #2081
     * [WEBUI] Reorganize help screen #2037
     * Add a Json stdout option #2060
-    * Improve error message when export error occures
-    * Improve error message when MQTT error occures
+    * Improve error message when export error occurs
+    * Improve error message when MQTT error occurs
     * Change the way core are displayed
     * Remove unused key in the process list
     * Refactor top menu of the curse interface
@@ -126,7 +126,7 @@ Bugs corrected:
     * Failure to start on Apple M1 Max #1939
     * Influxdb2 via SSL #1934
     * Update WebUI (security patch). Thanks to @notFloran.
-    * Swith from black <> white theme with the '9' hotkey - Related to issue #976
+    * Switch from black <> white theme with the '9' hotkey - Related to issue #976
     * Fix: Docker plugin - Invalid IO stats with Arch Linux #1945
     * Bug Fix: Docker plugin - Network stats not being displayed #1944
     * Fix Grafana CPU temperature panel #1954
@@ -219,7 +219,7 @@ Enhancement and development requests:
         - Add caching for processing username and cmdline
         - Correct and improve refresh time method
         - Set refresh rate for global CPU percent
-        - Set the dafault refresh rate of system stats to 60 seconds
+        - Set the default refresh rate of system stats to 60 seconds
         - Default refresh time for sensors is refresh rate * 2
         - Improve history perf
         - Change main curses loop
@@ -301,7 +301,7 @@ Version 3.1.6.1
 
 Bugs corrected:
 
-    * Glances crash after installing module for shown GPU informations on Windows 10 #1800
+    * Glances crash after installing module for shown GPU information on Windows 10 #1800
 
 Version 3.1.6
 =============
@@ -359,7 +359,7 @@ Enhancements and new features:
     * Enhancement: RSS for containers enhancement #1694
     * exports: support rabbitmq amqps enhancement #1687
     * Quick Look missing CPU Infos enhancement #1685
-    * Add amqps protocol suppport for rabbitmq export #1688
+    * Add amqps protocol support for rabbitmq export #1688
     * Select host in Grafana json #1684
     * Value for free disk space is counterintuative on ext file systems enhancement #644
 
@@ -403,7 +403,7 @@ Bugs corrected:
     * Disk IO stats missing after upgrade to 5.5.x kernel #1601
     * Glances don't want to run on Crostini (LXC Container, Debian 10, python 3.7.3) #1600
     * Kafka key name needs to be bytes #1593
-    * Cant start glances with glances --export mqtt #1581
+    * Can't start glances with glances --export mqtt #1581
     * [WEBUI] AMP plugins is not displayed correctly in the Web Interface #1574
     * Unhandled AttributeError when no config files found #1569
     * Glances writing lots of Docker Error message in logs file enhancement #1561
@@ -641,7 +641,7 @@ Graph:
     # generate_every to a non zero value corresponding to the seconds between
     # two generation. Set it to 0 to disable graph auto generation.
     generate_every=60
-    # See followings configuration keys definitions in the Pygal lib documentation
+    # See following configuration keys definitions in the Pygal lib documentation
     # http://pygal.org/en/stable/documentation/index.html
     width=800
     height=600
@@ -701,7 +701,7 @@ Bugs corrected:
     * glances_network `OSError: [Errno 19] No such device` (issue #1106)
     * GPU plugin. <class 'TypeError'>: ... not JSON serializable"> (issue #1112)
     * PermissionError on macOS (issue #1120)
-    * Cant move up or down in glances --browser (issue #1113)
+    * Can't move up or down in glances --browser (issue #1113)
     * Unable to give aliases to or hide network interfaces and disks (issue #1126)
     * `UnicodeDecodeError` on mountpoints with non-breaking spaces (issue #1128)
 
@@ -758,7 +758,7 @@ Bugs corrected:
     * On Windows --export-statsd terminates immediately and does not export (issue #1067)
     * Glances v2.8.7 issues with Curses UI on Android (issue #1053)
     * Fails to start, OSError in sensors_temperatures (issue #1057)
-    * Crashs after long time running the glances --browser (issue #1059)
+    * Crashes after long time running the glances --browser (issue #1059)
     * Sensor values don't refresh since psutil backend (issue #1061)
     * glances-version.db Permission denied (issue #1066)
 
@@ -857,7 +857,7 @@ Enhancements and new features:
     * Not compatible with the new Docker API 2.0 (Docker 1.13) (issue #1000)
     * Add ZeroMQ exporter (issue #939)
     * Add CouchDB exporter (issue #928)
-    * Add hotspot Wifi informations (issue #937)
+    * Add hotspot Wifi information (issue #937)
     * Add default interface speed and automatic rate thresolds (issue #718)
     * Highlight max stats in the processes list (issue #878)
     * Docker alerts and actions (issue #875)
@@ -880,8 +880,8 @@ Version 2.7.1
 
 Bugs corrected:
 
-    * AMP plugin crashs on start with Python 3 (issue #917)
-    * Ports plugin crashs on start with Python 3 (issue #918)
+    * AMP plugin crashes on start with Python 3 (issue #917)
+    * Ports plugin crashes on start with Python 3 (issue #918)
 
 Version 2.7
 ===========
@@ -902,7 +902,7 @@ Enhancements and new features:
     * Add a new "Ports scanner" plugin (issue #734)
     * Add a new IRQ monitoring plugin (issue #911)
     * Improve IP plugin to display public IP address (issue #646)
-    * CPU additionnal stats monitoring: Context switch, Interrupts... (issue #810)
+    * CPU additional stats monitoring: Context switch, Interrupts... (issue #810)
     * Filter processes by others stats (username) (issue #748)
     * [Folders] Differentiate permission issue and non-existence of a directory (issue #828)
     * [Web UI] Add cpu name in quicklook plugin (issue #825)
@@ -1042,10 +1042,10 @@ Enhancements and new features:
 Bugs corrected:
 
     * The WebUI displays bad sensors stats (issue #632)
-    * Filter processes crashs with a bad regular expression pattern (issue #665)
+    * Filter processes crashes with a bad regular expression pattern (issue #665)
     * Error with IP plugin (issue #651)
     * Crach with Docker plugin (issue #649)
-    * Docker plugin crashs with webserver mode (issue #654)
+    * Docker plugin crashes with webserver mode (issue #654)
     * Infrequently crashing due to assert (issue #623)
     * Value for free disk space is counterintuative on ext file systems (issue #644)
     * Try/catch for unexpected psutil.NoSuchProcess: process no longer exists (issue #432)
@@ -1125,7 +1125,7 @@ Enhancements and new features:
     * Add InfluxDB export module (--export-influxdb) (issue #455)
     * Add StatsD export module (--export-statsd) (issue #465)
     * Refactor export module (CSV export option is now --export-csv). It is now possible to export stats from the Glances client mode (issue #463)
-    * The Web inteface is now based on Bootstrap / RWD grid (issue #417, #366 and #461) Thanks to Nicolas Hart @nclsHart
+    * The Web interface is now based on Bootstrap / RWD grid (issue #417, #366 and #461) Thanks to Nicolas Hart @nclsHart
     * It is now possible, through the configuration file, to define if an alarm should be logged or not (using the _log option) (issue #437)
     * You can now set alarm for Disk IO
     * API: add getAllLimits and getAllViews methods (issue #481) and allow CORS request (issue #479)
@@ -1181,7 +1181,7 @@ Version 2.1.1
 
 Enhancement:
 
-    * Automaticaly compute top processes number for the current screen (issue #408)
+    * Automatically compute top processes number for the current screen (issue #408)
     * CPU and Memory footprint optimization (issue #401)
 
 Bugs corrected:
@@ -1190,7 +1190,7 @@ Bugs corrected:
     * Process no longer exists (issue #421)
     * Error with Glances Client with Python 3.4.1 (issue #419)
     * TypeError: memory_maps() takes exactly 2 arguments (issue #413)
-    * No filesystem informations since Glances 2.0 bug enhancement (issue #381)
+    * No filesystem information since Glances 2.0 bug enhancement (issue #381)
 
 Version 2.1
 ===========
@@ -1200,7 +1200,7 @@ Version 2.1
       The pattern could be defined from the command line (-f <pattern>)
       or by pressing the ENTER key in the curse interface.
       For the moment, process filter feature is only available in standalone mode.
-    * Add extended processes informations for top process
+    * Add extended processes information for top process
       Top process stats availables: CPU affinity, extended memory information (shared, text, lib, datat, dirty, swap), open threads/files and TCP/UDP network sessions, IO nice level
       For the moment, extended processes stats are only available in standalone mode.
     * Add --process-short-name tag and '/' key to switch between short/command line
@@ -1396,7 +1396,7 @@ Version 1.6.1
     * Key 'u' shows cumulative net traffic
     * Work in improving autoUnit
     * Take into account the number of core in the CPU process limit
-    * API improvment add time_since_update for disk, process_disk and network
+    * API improvement add time_since_update for disk, process_disk and network
     * Improve help display
     * Add more dummy FS to the ignore list
     * Code refactory: psutil < 0.4.1 is deprecated (Thk to Alessio)
@@ -1504,7 +1504,7 @@ Version 1.3.7
 =============
 
     * Display (if terminal space is available) an alerts history (logs)
-    * Add a limits classe to manage stats limits
+    * Add a limits class to manage stats limits
     * Manage black and white console (issue #31)
 
 Version 1.3.6
@@ -1533,7 +1533,7 @@ Version 1.3.4
 Version 1.3.3
 =============
 
-    * Automatically swith between process short and long name
+    * Automatically switch between process short and long name
     * Center the host / system information
     * Always put the hour/date in the bottom/right
     * Correct a bug if there is a lot of Disk/IO

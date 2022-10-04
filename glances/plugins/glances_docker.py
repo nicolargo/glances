@@ -640,7 +640,8 @@ class Plugin(GlancesPlugin):
                 value = (
                     self.auto_unit(
                         int(container['network']['rx'] // container['network']['time_since_update'] * to_bit)
-                    ) + unit
+                    )
+                    + unit
                 )
                 msg = '{:>7}'.format(value)
             except KeyError:
@@ -650,7 +651,8 @@ class Plugin(GlancesPlugin):
                 value = (
                     self.auto_unit(
                         int(container['network']['tx'] // container['network']['time_since_update'] * to_bit)
-                    ) + unit
+                    )
+                    + unit
                 )
                 msg = ' {:<7}'.format(value)
             except KeyError:
@@ -750,11 +752,13 @@ def sort_docker_stats(stats):
         sort_by = 'cpu_percent'
 
     # Sort docker stats
-    sort_stats_processes(stats['containers'],
-                         sorted_by=sort_by,
-                         sorted_by_secondary=sort_by_secondary,
-                         # Reverse for all but name
-                         reverse=glances_processes.sort_key != 'name')
+    sort_stats_processes(
+        stats['containers'],
+        sorted_by=sort_by,
+        sorted_by_secondary=sort_by_secondary,
+        # Reverse for all but name
+        reverse=glances_processes.sort_key != 'name',
+    )
 
     # Return the main sort key and the sorted stats
     return sort_by, stats

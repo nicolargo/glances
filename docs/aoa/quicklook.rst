@@ -19,7 +19,7 @@ sparkline using 'S' hot key or --sparkline command line option (need the
 sparklines Python lib on your system). Please be aware that sparklines use
 the Glances history and will not be available if the history is disabled
 from the command line. For the moment sparkline is not available in
-client/server mode (see isse ).
+client/server mode (see issue ).
 
 .. image:: ../_static/sparkline.png
 
