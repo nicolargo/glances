@@ -234,6 +234,41 @@ export default {
     },
     methods: {
         setupHotKeys() {
+            // a => Sort processes/docker automatically
+            hotkeys('a', () => {
+                this.store.args.sort_processes_key = null;
+            });
+
+            // c => Sort processes/docker by CPU%
+            hotkeys('c', () => {
+                this.store.args.sort_processes_key = 'cpu_percent';
+            });
+
+            // m => Sort processes/docker by MEM%
+            hotkeys('m', () => {
+                this.store.args.sort_processes_key = 'memory_percent';
+            });
+
+            // u => Sort processes/docker by user
+            hotkeys('u', () => {
+                this.store.args.sort_processes_key = 'username';
+            });
+
+            // p => Sort processes/docker by name
+            hotkeys('p', () => {
+                this.store.args.sort_processes_key = 'name';
+            });
+
+            // i => Sort processes/docker by I/O rate
+            hotkeys('i', () => {
+                this.store.args.sort_processes_key = 'io_counters';
+            });
+
+            // t => Sort processes/docker by time
+            hotkeys('t', () => {
+                this.store.args.sort_processes_key = 'timemillis';
+            });
+        
             // A => Enable/disable AMPs
             hotkeys('shift+A', () => {
                 this.store.args.disable_amps = !this.store.args.disable_amps;
