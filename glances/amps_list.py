@@ -139,18 +139,11 @@ class AmpsList(object):
         try:
             # Search in both cmdline and name (for kernel thread, see #1261)
             for p in processlist:
-                add_it = False
-                if re.search(amp_value.regex(), p['name']) is not None:
-                    add_it = True
-                else:
-                    if p['cmdline'] is None:
-                        # See issue #1689 (thanks to @darylkell)
-                        continue
-                    for c in p['cmdline']:
-                        if re.search(amp_value.regex(), c) is not None:
-                            add_it = True
-                            break
-                if add_it:
+                if (re.search(amp_value.regex(), p['name']) is not None) or (
+                    p['cmdline'] is not None
+                    and p['cmdline'] != []
+                    and re.search(amp_value.regex(), ' '.join(p['cmdline'])) is not None
+                ):
                     ret.append(
                         {'pid': p['pid'], 'cpu_percent': p['cpu_percent'], 'memory_percent': p['memory_percent']}
                     )
