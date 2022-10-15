@@ -198,7 +198,7 @@ Get the Glances container:
 
     docker pull nicolargo/glances:alpine-latest-full
 
-The followings tags are availables:
+The following tags are availables:
 
 - *alpine-latest-full* for a full Alpine Glances image (latest release) with all dependencies
 - *latest-full* for a full Debian Glances image (latest release) with all dependencies
@@ -414,7 +414,7 @@ or in a CSV format thanks to the stdout-csv option:
     2018-12-08 22:04:23 CEST,5.4,5949136896,4,1.04,0.99,1.04
     ...
 
-or in a JSON format thanks to the stdout-json option (attibute not supported in this mode in order to have a real JSON object in output):
+or in a JSON format thanks to the stdout-json option (attribute not supported in this mode in order to have a real JSON object in output):
 
 .. code-block:: console
 

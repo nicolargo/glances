@@ -12,7 +12,7 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
-1. Start Glances with the followings options '...'
+1. Start Glances with the following options '...'
 2. Press the key '....'
 3. See error
 
