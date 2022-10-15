@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.9'
 services:
   glances:
     build:
@@ -13,3 +13,5 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./glances.conf:/glances/conf/glances.conf"
     pid: "host"
+    privileged: true
+    network_mode: "host"
