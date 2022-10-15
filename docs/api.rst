@@ -15,7 +15,7 @@ GET API status
 --------------
 
 This entry point should be used to check the API status.
-It will return nothing but a 200 return code if everythin is OK.
+It will return nothing but a 200 return code if everything is OK.
 
 Get the Rest API status::
 
@@ -109,7 +109,7 @@ Get a specific field::
     # curl http://localhost:61208/api/3/amps/name
     {"name": ["Dropbox", "Python", "Conntrack", "Nginx", "Systemd", "SystemV"]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/amps/name/Dropbox
     {"Dropbox": [{"count": 0,
@@ -213,7 +213,7 @@ Get a specific field::
     # curl http://localhost:61208/api/3/diskio/disk_name
     {"disk_name": ["sda", "sda1", "sda2", "sda5", "dm-0", "dm-1"]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/diskio/disk_name/sda
     {"sda": [{"disk_name": "sda",
@@ -287,7 +287,7 @@ Get a specific field::
     # curl http://localhost:61208/api/3/fs/mnt_point
     {"mnt_point": ["/", "/var/snap/firefox/common/host-hunspell"]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/fs/mnt_point//
     {"/": [{"device_name": "/dev/mapper/ubuntu--gnome--vg-root",
@@ -460,7 +460,7 @@ Get a specific field::
                         "vboxnet0",
                         "mpqemubr0"]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/network/interface_name/lo
     {"lo": [{"alias": None,
@@ -542,7 +542,7 @@ Get a specific field::
     # curl http://localhost:61208/api/3/ports/host
     {"host": ["192.168.0.254"]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/ports/host/192.168.0.254
     {"192.168.0.254": [{"description": "DefaultGateway",
@@ -971,7 +971,7 @@ Get a specific field::
              535974,
              536119]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/processlist/pid/477633
     {"477633": [{"cmdline": ["/snap/firefox/1877/usr/lib/firefox/firefox"],
@@ -1108,7 +1108,7 @@ Get a specific field::
                "SODIMM",
                "BAT BAT0"]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/sensors/label/acpitz 1
     {"acpitz 1": [{"critical": 105,
@@ -1151,7 +1151,7 @@ GET all stats
 Get all Glances stats::
 
     # curl http://localhost:61208/api/3/all
-    Return a very big dictionnary (avoid using this request, performances will be poor)...
+    Return a very big dictionary (avoid using this request, performances will be poor)...
 
 GET stats history
 -----------------

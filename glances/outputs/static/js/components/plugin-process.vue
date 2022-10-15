@@ -10,13 +10,12 @@
         <glances-plugin-processlist
             :sorter="sorter"
             :data="data"
-            @update:sorter="sorter.column = $event"
+            @update:sorter="args.sort_processes_key = $event"
         ></glances-plugin-processlist>
     </div>
 </template>
 
 <script>
-import hotkeys from 'hotkeys-js';
 import { store } from '../store.js';
 import GlancesPluginAmps from './plugin-amps.vue';
 import GlancesPluginProcesscount from './plugin-processcount.vue';
@@ -36,83 +35,56 @@ export default {
     data() {
         return {
             store,
-            sorter: {
-                column: 'cpu_percent',
-                auto: true,
-                isReverseColumn(column) {
-                    return !(column === 'username' || column === 'name');
-                },
-                getColumnLabel(column) {
-                    if (column === 'io_read' || column === 'io_write') {
-                        return 'io_counters';
-                    } else {
-                        return column;
-                    }
-                }
-            }
+            sorter: undefined
         };
     },
     computed: {
         args() {
             return this.store.args || {};
+        },
+        sortProcessesKey() {
+            return this.args.sort_processes_key;
         }
     },
-    methods: {
-        setupHotKeys() {
-            // a => Sort processes automatically
-            hotkeys('a', () => {
-                this.sorter.column = 'cpu_percent';
-                this.sorter.auto = true;
-            });
-
-            // c => Sort processes by CPU%
-            hotkeys('c', () => {
-                this.sorter.column = 'cpu_percent';
-                this.sorter.auto = false;
-            });
-
-            // m => Sort processes by MEM%
-            hotkeys('m', () => {
-                this.sorter.column = 'memory_percent';
-                this.sorter.auto = false;
-            });
-
-            // u => Sort processes by user
-            hotkeys('u', () => {
-                this.sorter.column = 'username';
-                this.sorter.auto = false;
-            });
-
-            // p => Sort processes by name
-            hotkeys('p', () => {
-                this.sorter.column = 'name';
-                this.sorter.auto = false;
-            });
-
-            // i => Sort processes by I/O rate
-            hotkeys('i', () => {
-                this.sorter.column = ['io_read', 'io_write'];
-                this.sorter.auto = false;
-            });
-
-            // t => Sort processes by time
-            hotkeys('t', () => {
-                this.sorter.column = 'timemillis';
-                this.sorter.auto = false;
-            });
+    watch: {
+        sortProcessesKey: {
+            immediate: true,
+            handler(sortProcessesKey) {
+                const sortable = [
+                    'cpu_percent',
+                    'memory_percent',
+                    'username',
+                    'timemillis',
+                    'num_threads',
+                    'io_counters',
+                    'name'
+                ];
+                function isReverseColumn(column) {
+                    return !['username', 'name'].includes(column);
+                }
+                function getColumnLabel(value) {
+                    const labels = {
+                        io_counters: 'disk IO',
+                        cpu_percent: 'CPU consumption',
+                        memory_percent: 'memory consumption',
+                        cpu_times: 'process time',
+                        username: 'user name',
+                        name: 'process name',
+                        timemillis: 'process time',
+                        None: 'None'
+                    };
+                    return labels[value] || value;
+                }
+                if (!sortProcessesKey || sortable.includes(sortProcessesKey)) {
+                    this.sorter = {
+                        column: this.args.sort_processes_key || 'cpu_percent',
+                        auto: !this.args.sort_processes_key,
+                        isReverseColumn,
+                        getColumnLabel
+                    };
+                }
+            }
         }
-    },
-    mounted() {
-        this.setupHotKeys();
-    },
-    beforeUnmount() {
-        hotkeys.unbind('a');
-        hotkeys.unbind('c');
-        hotkeys.unbind('m');
-        hotkeys.unbind('u');
-        hotkeys.unbind('p');
-        hotkeys.unbind('i');
-        hotkeys.unbind('t');
     }
 };
 </script>

@@ -47,7 +47,7 @@ class GlancesStatsClientSNMP(GlancesStats):
         self.load_modules(self.args)
 
     def check_snmp(self):
-        """Chek if SNMP is available on the server."""
+        """Check if SNMP is available on the server."""
         # Import the SNMP client class
         from glances.snmp import GlancesSNMPClient
 

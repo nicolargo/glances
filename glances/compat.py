@@ -203,7 +203,7 @@ else:
             return s.encode('utf-8', errors=errors)
 
     def system_exec(command):
-        """Execute a system command and return the resul as a str"""
+        """Execute a system command and return the result as a str"""
         try:
             res = subprocess.check_output(command.split(' '))
         except Exception as e:

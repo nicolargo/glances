@@ -21,11 +21,11 @@ under the ``[docker]`` section:
 
     [docker]
     disable=False
-    # Only show specific containers (comma separeted list of container name or regular expression)
+    # Only show specific containers (comma separated list of container name or regular expression)
     show=thiscontainer,andthisone,andthoseones.*
-    # Hide some containers (comma separeted list of container name or regular expression)
+    # Hide some containers (comma separated list of container name or regular expression)
     hide=donotshowthisone,andthose.*
-    # Show only specific containers (comma separeted list of container name or regular expression)
+    # Show only specific containers (comma separated list of container name or regular expression)
     #show=showthisone,andthose.*
     # Define the maximum docker size name (default is 20 chars)
     max_name_size=20
