@@ -6,7 +6,53 @@
 Version 3.3.0
 ===============
 
-    Version under development: see roadmap here https://github.com/nicolargo/glances/milestone/60
+Enhancements:
+
+    * Migration from AngularJS to Angular/React/Vue #2100 (many thanks to @fr4nc0is)
+    * Improve the IP module with a link to Censys #2105
+    * Add the public IP information to the WebUI #2105
+    * Add an option to show a configurable clock/time module to display #2150
+    * Add sort information on Docker plugin (console mode). Related to #2138
+    * Password files in same configuration dir in effect #2143
+    * If the container name is long, then display the start, not the end - Related to #1732
+    * Make the Web UI same than Console for CPU plugin
+    * [WINDOWS] Reorganise CPU stats display #2131
+    * Remove the static exportable_plugins list from glances_export.py #1556
+    * Limiting data exported for economic storage #1443
+
+Bug corrected:
+
+    * glances.conf FS hide not applying #1666
+    * AMP: regex with special chars #2152
+    * fix(help-screen): add missing shortcuts and columnize algorithmically #2135
+    * Correct issue with the regexp filter (use fullmatch instead of match)
+    * Errors when running Glances as web service #1702
+    * Apply alias to Duplicate sensor name #1686
+    * Make the hide function in sensors section compliant with lower/upercase #1590
+    * Web UI truncates the days part of CPU time counter of the process list #2108
+    * Correct alignement issue with the diskio plugin (Console UI)
+
+Documentation and CI:
+
+    * Refactor Docker file CI
+    * Add Codespell to the CI pipeline #2148
+    * Please add docker-compose example and document example. #2151
+    * [DOC] Glances failed to start and some other issues - BSD #2106
+    * [REQUEST Docker image] Output log to stdout #2128 (for debian)
+    * Fix code scanning alert - Clear-text logging of sensitive information #2124
+    * Improve makefile (with online documentation)
+    * buildx failed with: ERROR: failed to solve: python:3.10-slim-buster: no match for platform in manifest #2120
+    * [Update docs] Can I export only the fields I need in csv report？ #2113
+    * Windows Python 3 installation fails on dependency package "future" #2109
+
+Contributors for this version:
+
+    * fr4nc0is : a very special thanks to @fr4nc0is for his huge work on the Glances v3.3.0 WebUI !!!
+    * Kostis Anagnostopoulos
+    * Kian-Meng Ang
+    * dependabot[bot]
+    * matthewaaronthacker
+    * and your servant Nicolargo
 
 ===============
 Version 3.2.7
