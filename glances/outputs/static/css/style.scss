@@ -20,12 +20,11 @@ body {
     text-align: right;
 }
 
-.top-plugin {
-    margin-bottom: 20px;
-}
-
 .plugin {
     margin-bottom: 20px;
+    .table:last-child {
+        margin-bottom: 0;
+    }
 }
 .plugin.table-row-group .table-row:last-child .table-cell {
     padding-bottom: 20px;
@@ -116,7 +115,7 @@ body {
     white-space: nowrap;
 }
 
-#quicklook-plugin {
+#quicklook {
     .progress {
         margin-bottom: 0px;
         min-width: 100px;

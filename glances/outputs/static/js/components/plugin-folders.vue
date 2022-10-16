@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="plugin" id="folders">
         <div class="table-row" v-if="folders.length > 0">
             <div class="table-cell text-left title">FOLDERS</div>
             <div class="table-cell"></div>
