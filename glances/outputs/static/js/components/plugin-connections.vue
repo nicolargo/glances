@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="plugin" id="connections">
         <div class="table-row">
             <div class="table-cell text-left title">TCP CONNECTIONS</div>
             <div class="table-cell"></div>
