@@ -57,15 +57,6 @@ Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can
 add new plugins or exports modules.
 
-Social networks
-===============
-
-.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/twitter-icon.png
-    :target: https://twitter.com/nicolargo
-
-.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/reddit.png
-    :target: https://www.reddit.com/r/glances/
-
 Requirements
 ============
 
@@ -86,6 +77,7 @@ Glances version 4.0 will no longer supports Python 2.x.
 
 Optional dependencies:
 
+- ``batinfo`` (for battery monitoring)
 - ``bernhard`` (for the Riemann export module)
 - ``bottle`` (for Web server mode)
 - ``cassandra-driver`` (for the Cassandra export module)
@@ -148,7 +140,7 @@ To install it, use the following command:
 
     pip install --user 'glances[web]'
 
-For a full installation (with all features:
+For a full installation (with all features):
 
 .. code-block:: console
 
@@ -205,7 +197,7 @@ The following tags are availables:
 - *alpine-latest* for a basic Alpine Glances (latest release) version with minimal dependencies
 - *latest* for a basic Debian Glances image (latest release) with minimal dependencies
 - *alpine-dev* for a basic Alpine Glances image (development branch) with all dependencies
-- *latest* for a basic Debian Glances image (development branch) with all dependencies
+- *dev* for a basic Debian Glances image (development branch) with all dependencies
 
 You can also specify a version (example: *alpine-3.2.7-full*).
 
@@ -250,7 +242,8 @@ may not be the latest version.
 
 Note: The Debian package (and all other Debian-based distributions) do
 not include anymore the JS statics files used by the Web interface
-(see ``issue2021``).
+(see ``issue2021``). If you want to add it to your Glances installation,
+follow the instructions: ``issue2021comment``.
 
 FreeBSD
 -------
@@ -454,7 +447,9 @@ Donation
 
 If you like this open-source project, you can become a sponsor.
 
-See the sponsors_ page (one-time or monthly tier available).
+See the Github sponsors_ page (one-time or monthly tier available).
+
+Or send me some bitcoins: 185KN9FCix3svJYp7JQM7hRMfSKyeaJR4X
 
 Author
 ======
@@ -479,3 +474,4 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _package: https://repology.org/metapackage/glances/packages
 .. _sponsors: https://github.com/sponsors/nicolargo
 .. _issue2021: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
+.. _issue2021comment: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
