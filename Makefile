@@ -61,6 +61,9 @@ format: venv-dev-upgrade ## Format the code
 flake8: venv-dev-upgrade ## Run flake8 linter.
 	@git ls-files '*.py' | xargs ./venv/bin/python -m flake8 --config=.flake8
 
+codespell: venv-dev-upgrade ## Run codespell to fix common misspellings in text files
+	./venv/bin/codespell -S .git,./docs/_build,./Glances.egg-info,./venv,./glances/outputs,*.svg -L hart,bu,te,statics
+
 profiling: ## How to start the profiling of the Glances software
 	@echo "Please complete and run: sudo ./venv/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s --pid <GLANCES PID>"
 

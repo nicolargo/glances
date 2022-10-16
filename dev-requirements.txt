@@ -5,3 +5,4 @@ requirements-parser
 flake8
 autopep8
 autoflake
+codespell
