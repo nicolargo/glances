@@ -1,5 +1,5 @@
 <template>
-    <section id="ip" v-if="address != undefined">
+    <section class="plugin" id="ip" v-if="address != undefined">
         <span v-if="address != undefined" class="title">IP</span>
         <span v-if="address != undefined">{{ address }}/{{ maskCdir }}</span>
         <span v-if="publicAddress != undefined" class="title">Pub</span>

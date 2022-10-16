@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="plugin" id="ports">
         <div class="table-row" v-for="(port, portId) in ports" :key="portId">
             <div class="table-cell text-left">
                 <!-- prettier-ignore -->

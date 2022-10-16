@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="plugin" id="diskio">
         <div class="table-row" v-if="disks.length > 0">
             <div class="table-cell text-left title">DISK I/O</div>
             <div class="table-cell" v-show="!args.diskio_iops">R/s</div>
