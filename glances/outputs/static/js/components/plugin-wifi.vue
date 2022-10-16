@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="plugin" id="wifi">
         <div class="table-row" v-if="hotspots.length > 0">
             <div class="table-cell text-left title">WIFI</div>
             <div class="table-cell"></div>

@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="plugin" id="sensors">
         <div class="table-row" v-if="sensors.length > 0">
             <div class="table-cell text-left title">SENSORS</div>
         </div>

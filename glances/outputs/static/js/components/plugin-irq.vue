@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="plugin" id="irq">
         <div class="table-row" v-if="irqs.length > 0">
             <div class="table-cell text-left title">IRQ</div>
             <div class="table-cell"></div>

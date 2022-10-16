@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="plugin" id="fs">
         <div class="table-row">
             <div class="table-cell text-left title">FILE SYS</div>
             <div class="table-cell">
