@@ -31,7 +31,11 @@ RUN apt-get update && \
 FROM build as buildRequirements
 ARG PYTHON_VERSION
 COPY requirements.txt .
+COPY webui-requirements.txt .
 RUN pip3 install --no-cache-dir --user -r requirements.txt
+# Minimal means no webui, but it break what is done previously (see #2155)
+# So install the webui requirements...
+RUN pip3 install --no-cache-dir --user -r webui-requirements.txt
 # As minimal image we want to monitor others docker containers
 RUN pip3 install --no-cache-dir --user docker
 
