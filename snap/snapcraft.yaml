@@ -13,7 +13,7 @@ confinement: strict
 
 apps:
   glances:
-    command: glances-launch $SNAP/bin/glances
+    command: bin/glances-launch $SNAP/bin/glances
     plugs:
       - network
       - system-observe
@@ -53,7 +53,6 @@ parts:
     override-pull: |
       snapcraftctl pull
       "$SNAPCRAFT_STAGE"/scriptlets/selective-checkout
-
   bottle:
     plugin: python
     source: https://github.com/bottlepy/bottle.git
@@ -68,7 +67,7 @@ parts:
   docker:
     plugin: python
     source: https://github.com/docker/docker-py.git
-    source-tag: '6.0.0'
+    source-tag: '3.7.3'
     source-depth: 1
     override-build: |
       mkdir -p $SNAPCRAFT_PART_BUILD/dist
@@ -77,7 +76,7 @@ parts:
       bottle-dist: docker/dist
 
   launchers:
-    source: local/launchers
+    source: snap/local/launchers
     plugin: dump
     organize:
       '*': bin/
