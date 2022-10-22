@@ -53,6 +53,7 @@ parts:
     override-pull: |
       snapcraftctl pull
       "$SNAPCRAFT_STAGE"/scriptlets/selective-checkout
+
   bottle:
     plugin: python
     source: https://github.com/bottlepy/bottle.git
@@ -63,21 +64,24 @@ parts:
       cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/bottle-dist
     organize:
       bottle-dist: bottle/dist
+
   docker:
     plugin: python
     source: https://github.com/docker/docker-py.git
-    source-tag: '3.7.3'
+    source-tag: '6.0.0'
     source-depth: 1
     override-build: |
       mkdir -p $SNAPCRAFT_PART_BUILD/dist
       cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/docker-dist
     organize:
       bottle-dist: docker/dist
+
   launchers:
-    source: snap/local/launchers
+    source: local/launchers
     plugin: dump
     organize:
       '*': bin/
+
   selective-checkout:
     plugin: nil
     build-packages:
