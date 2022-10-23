@@ -38,9 +38,12 @@ class GlancesPassword(object):
         """Return the local password path.
         Related toissue: Password files in same configuration dir in effect #2143
         """
-        return self.config.get_value('passwords',
-                                     'local_password_path',
-                                     default=user_config_dir())
+        if self.config is None:
+            return user_config_dir
+        else:
+            return self.config.get_value('passwords',
+                                         'local_password_path',
+                                         default=user_config_dir())
 
     def sha256_hash(self, plain_password):
         """Return the SHA-256 of the given password."""

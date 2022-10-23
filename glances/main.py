@@ -773,5 +773,5 @@ Examples of use:
         """
         from glances.password import GlancesPassword
 
-        password = GlancesPassword(username=username)
+        password = GlancesPassword(username=username, config=self.get_config())
         return password.get_password(description, confirm, clear)
