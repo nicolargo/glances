@@ -39,7 +39,7 @@ class GlancesPassword(object):
         Related toissue: Password files in same configuration dir in effect #2143
         """
         if self.config is None:
-            return user_config_dir
+            return user_config_dir()
         else:
             return self.config.get_value('passwords',
                                          'local_password_path',
