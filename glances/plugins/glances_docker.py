@@ -7,7 +7,7 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Docker plugin."""
+"""Docker (and Podman) plugin."""
 
 import os
 import threading
@@ -26,11 +26,22 @@ try:
     import docker
     from dateutil import parser, tz
 except Exception as e:
-    import_error_tag = True
+    import_docker_error_tag = True
     # Display debug message if import KeyError
-    logger.warning("Error loading Docker deps Lib. Docker plugin is disabled ({})".format(e))
+    logger.debug("Error loading Docker deps Lib. Docker plugin is disabled ({})".format(e))
 else:
-    import_error_tag = False
+    import_docker_error_tag = False
+
+# Podman library (optional and Linux-only)
+# https://pypi.org/project/podman/
+try:
+    from podman import PodmanClient
+except Exception as e:
+    import_podman_error_tag = True
+    # Display debug message if import KeyError
+    logger.debug("Error loading Podman deps Lib. Podman feature in the Docker plugin is disabled ({})".format(e))
+else:
+    import_podman_error_tag = False
 
 # Define the items history list (list of items to add to history)
 # TODO: For the moment limited to the CPU. Had to change the graph exports
@@ -77,7 +88,9 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, config=config, items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args,
+                                     config=config,
+                                     items_history_list=items_history_list)
 
         # The plugin can be disabled using: args.disable_docker
         self.args = args
@@ -89,12 +102,27 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
 
         # Init the Docker API
-        self.docker_client = self.connect()
+        if not import_docker_error_tag:
+            self.docker_client = self.connect_docker()
+        else:
+            self.docker_client = None
 
-        # Dict of thread (to grab stats asynchronously, one thread is created per container)
+        # Init the Podman API
+        self._version_podman = {}
+        if not import_podman_error_tag:
+            self.podman_client = self.connect_podman()
+        else:
+            self.podman_client = None
+
+        # Dict of Docker thread (to grab stats asynchronously, one thread is created per container)
         # key: Container Id
-        # value: instance of ThreadDockerGrabber
-        self.thread_list = {}
+        # value: instance of ThreadContainerGrabber
+        self.thread_docker_list = {}
+
+        # Dict of Podman thread (to grab stats asynchronously, one thread is created per container)
+        # key: Container Id
+        # value: instance of ThreadContainerGrabber
+        self.thread_podman_list = {}
 
         # Dict of Network stats (Storing previous network stats to compute Rx/s and Tx/s)
         # key: Container Id
@@ -115,7 +143,9 @@ class Plugin(GlancesPlugin):
 
     def exit(self):
         """Overwrite the exit method to close threads."""
-        for t in itervalues(self.thread_list):
+        for t in itervalues(self.thread_docker_list):
+            t.stop()
+        for t in itervalues(self.thread_podman_list):
             t.stop()
         # Call the father class
         super(Plugin, self).exit()
@@ -143,18 +173,49 @@ class Plugin(GlancesPlugin):
 
         return ret
 
-    def connect(self):
+    def connect_docker(self):
         """Connect to the Docker server."""
         try:
-            # If the following line replace the next one, the issue #1878
-            # is reproduced (Docker containers information missing with Docker 20.10.x)
-            # So, for the moment disable the timeout option
+            # Do not use the timeout option (see issue #1878)
             ret = docker.from_env()
         except Exception as e:
             logger.error("docker plugin - Can not connect to Docker ({})".format(e))
             ret = None
 
         return ret
+
+    def connect_podman(self):
+        """Connect to Podman."""
+        try:
+            ret = PodmanClient(base_url=self._podman_sock())
+        except Exception as e:
+            logger.error("docker plugin - Can not connect to Podman ({})".format(e))
+            ret = None
+
+        try:
+            version_podman = ret.version()
+        except Exception as e:
+            logger.error("{} plugin - Cannot get Podman version ({})".format(self.plugin_name, e))
+            ret = None
+        else:
+            self._version_podman = {
+                'Version': version_podman['Version'],
+                'ApiVersion': version_podman['ApiVersion'],
+                'MinAPIVersion': version_podman['MinAPIVersion'],
+            }
+
+        return ret
+
+    def _podman_sock(self):
+        """Return the podman sock.
+        Could be desfined in the [docker] section thanks to the podman_sock option.
+        Default value: unix:///run/user/1000/podman/podman.sock
+        """
+        conf_podman_sock = self.get_conf_value('podman_sock')
+        if len(conf_podman_sock) == 0:
+            return "unix:///run/user/1000/podman/podman.sock"
+        else:
+            return conf_podman_sock[0]
 
     def _all_tag(self):
         """Return the all tag of the Glances/Docker configuration file.
@@ -172,153 +233,248 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
-        """Update Docker stats using the input method."""
-        # Init new stats
-        stats = self.get_init_value()
-
-        # The Docker-py lib is mandatory and connection should be ok
-        if import_error_tag or self.docker_client is None:
-            return self.stats
+        """Update Docker and podman stats using the input method."""
+        # Connection should be ok
+        if self.docker_client is None and self.podman_client is None:
+            return self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats
-
-            # Docker version
-            # Example: {
-            #     "KernelVersion": "3.16.4-tinycore64",
-            #     "Arch": "amd64",
-            #     "ApiVersion": "1.15",
-            #     "Version": "1.3.0",
-            #     "GitCommit": "c78088f",
-            #     "Os": "linux",
-            #     "GoVersion": "go1.3.3"
-            # }
-            try:
-                stats['version'] = self.docker_client.version()
-            except Exception as e:
-                # Correct issue#649
-                logger.error("{} plugin - Cannot get Docker version ({})".format(self.plugin_name, e))
-                # We may have lost connection remove version info
-                if 'version' in self.stats:
-                    del self.stats['version']
-                self.stats['containers'] = []
-                return self.stats
-
-            # Update current containers list
-            try:
-                # Issue #1152: Docker module doesn't export details about stopped containers
-                # The Docker/all key of the configuration file should be set to True
-                containers = self.docker_client.containers.list(all=self._all_tag()) or []
-            except Exception as e:
-                logger.error("{} plugin - Cannot get containers list ({})".format(self.plugin_name, e))
-                # We may have lost connection empty the containers list.
-                self.stats['containers'] = []
-                return self.stats
-
-            # Start new thread for new container
-            for container in containers:
-                if container.id not in self.thread_list:
-                    # Thread did not exist in the internal dict
-                    # Create it, add it to the internal dict and start it
-                    logger.debug(
-                        "{} plugin - Create thread for container {}".format(self.plugin_name, container.id[:12])
-                    )
-                    t = ThreadDockerGrabber(container)
-                    self.thread_list[container.id] = t
-                    t.start()
-
-            # Stop threads for non-existing containers
-            absent_containers = set(iterkeys(self.thread_list)) - set([c.id for c in containers])
-            for container_id in absent_containers:
-                # Stop the thread
-                logger.debug("{} plugin - Stop thread for old container {}".format(self.plugin_name, container_id[:12]))
-                self.thread_list[container_id].stop()
-                # Delete the item from the dict
-                del self.thread_list[container_id]
-
-            # Get stats for all containers
-            stats['containers'] = []
-            for container in containers:
-                # Shall we display the stats ?
-                if not self.is_display(nativestr(container.name)):
-                    continue
-
-                # Init the stats for the current container
-                container_stats = {}
-                # The key is the container name and not the Id
-                container_stats['key'] = self.get_key()
-                # Export name
-                container_stats['name'] = nativestr(container.name)
-                # Container Id
-                container_stats['Id'] = container.id
-                # Container Image
-                container_stats['Image'] = container.image.tags
-                # Global stats (from attrs)
-                # Container Status
-                container_stats['Status'] = container.attrs['State']['Status']
-                # Container Command (see #1912)
-                container_stats['Command'] = []
-                if container.attrs['Config'].get('Entrypoint', None):
-                    container_stats['Command'].extend(container.attrs['Config'].get('Entrypoint', []))
-                if container.attrs['Config'].get('Cmd', None):
-                    container_stats['Command'].extend(container.attrs['Config'].get('Cmd', []))
-                if not container_stats['Command']:
-                    container_stats['Command'] = None
-                # Standards stats
-                # See https://docs.docker.com/engine/api/v1.41/#operation/ContainerStats
-                # Be aware that the API can change... (example see issue #1857)
-                if container_stats['Status'] in ('running', 'paused'):
-                    # CPU
-                    container_stats['cpu'] = self.get_docker_cpu(container.id, self.thread_list[container.id].stats)
-                    container_stats['cpu_percent'] = container_stats['cpu'].get('total', None)
-                    # MEM
-                    container_stats['memory'] = self.get_docker_memory(
-                        container.id, self.thread_list[container.id].stats
-                    )
-                    container_stats['memory_usage'] = container_stats['memory'].get('usage', None)
-                    if container_stats['memory'].get('cache', None) is not None:
-                        container_stats['memory_usage'] -= container_stats['memory']['cache']
-                    # IO
-                    container_stats['io'] = self.get_docker_io(container.id, self.thread_list[container.id].stats)
-                    container_stats['io_r'] = container_stats['io'].get('ior', None)
-                    container_stats['io_w'] = container_stats['io'].get('iow', None)
-                    # NET
-                    container_stats['network'] = self.get_docker_network(
-                        container.id, self.thread_list[container.id].stats
-                    )
-                    container_stats['network_rx'] = container_stats['network'].get('rx', None)
-                    container_stats['network_tx'] = container_stats['network'].get('tx', None)
-                    # Uptime
-                    container_stats['Uptime'] = pretty_date(
-                        # parser.parse(container.attrs['State']['StartedAt']).replace(tzinfo=None)
-                        parser.parse(container.attrs['State']['StartedAt'])
-                        .astimezone(tz.tzlocal())
-                        .replace(tzinfo=None)
-                    )
-                else:
-                    container_stats['cpu'] = {}
-                    container_stats['cpu_percent'] = None
-                    container_stats['memory'] = {}
-                    container_stats['memory_percent'] = None
-                    container_stats['io'] = {}
-                    container_stats['io_r'] = None
-                    container_stats['io_w'] = None
-                    container_stats['network'] = {}
-                    container_stats['network_rx'] = None
-                    container_stats['network_tx'] = None
-                    container_stats['Uptime'] = None
-                # Add current container stats to the stats list
-                stats['containers'].append(container_stats)
-
+            stats_docker = self.update_docker()
+            stats_podman = self.update_podman()
+            stats = {
+                'version': stats_docker.get('version', {}),
+                'version_podman': stats_podman.get('version', {}),
+                'containers': stats_docker.get('containers', []) + stats_podman.get('containers', [])
+            }
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             # Not available
             pass
 
         # Sort and update the stats
+        # @TODO: Have a look because sort did not work for the moment (need memory stats ?)
         self.sort_key, self.stats = sort_docker_stats(stats)
 
         return self.stats
+
+    def update_docker(self):
+        """Update Docker stats using the input method."""
+        # Init new docker stats
+        stats = self.get_init_value()
+
+        # Docker version
+        # Example: {
+        #     "KernelVersion": "3.16.4-tinycore64",
+        #     "Arch": "amd64",
+        #     "ApiVersion": "1.15",
+        #     "Version": "1.3.0",
+        #     "GitCommit": "c78088f",
+        #     "Os": "linux",
+        #     "GoVersion": "go1.3.3"
+        # }
+        try:
+            stats['version'] = self.docker_client.version()
+        except Exception as e:
+            # Correct issue#649
+            logger.error("{} plugin - Cannot get Docker version ({})".format(self.plugin_name, e))
+            return stats
+
+        # Update current containers list
+        try:
+            # Issue #1152: Docker module doesn't export details about stopped containers
+            # The Docker/all key of the configuration file should be set to True
+            containers = self.docker_client.containers.list(all=self._all_tag()) or []
+        except Exception as e:
+            logger.error("{} plugin - Cannot get containers list ({})".format(self.plugin_name, e))
+            return stats
+
+        # Start new thread for new container
+        for container in containers:
+            if container.id not in self.thread_docker_list:
+                # Thread did not exist in the internal dict
+                # Create it, add it to the internal dict and start it
+                logger.debug(
+                    "{} plugin - Create thread for container {}".format(self.plugin_name, container.id[:12])
+                )
+                t = ThreadContainerGrabber(container)
+                self.thread_docker_list[container.id] = t
+                t.start()
+
+        # Stop threads for non-existing containers
+        absent_containers = set(iterkeys(self.thread_docker_list)) - set([c.id for c in containers])
+        for container_id in absent_containers:
+            # Stop the thread
+            logger.debug("{} plugin - Stop thread for old container {}".format(self.plugin_name, container_id[:12]))
+            self.thread_docker_list[container_id].stop()
+            # Delete the item from the dict
+            del self.thread_docker_list[container_id]
+
+        # Get stats for all containers
+        stats['containers'] = []
+        for container in containers:
+            # logger.info(['{}: {}'.format(key, container.attrs[key]) for key in sorted(container.attrs.keys())])
+            # logger.info(container.attrs['State']['Status'])
+            # Shall we display the stats ?
+            if not self.is_display(nativestr(container.name)):
+                continue
+
+            # Init the stats for the current container
+            container_stats = {}
+            # The key is the container name and not the Id
+            container_stats['key'] = self.get_key()
+            # Export name
+            container_stats['name'] = nativestr(container.name)
+            # Container Id
+            container_stats['Id'] = container.id
+            # Container Image
+            container_stats['Image'] = container.image.tags
+            # Global stats (from attrs)
+            # Container Status
+            container_stats['Status'] = container.attrs['State']['Status']
+            # Container Command (see #1912)
+            container_stats['Command'] = []
+            if container.attrs['Config'].get('Entrypoint', None):
+                container_stats['Command'].extend(container.attrs['Config'].get('Entrypoint', []))
+            if container.attrs['Config'].get('Cmd', None):
+                container_stats['Command'].extend(container.attrs['Config'].get('Cmd', []))
+            if not container_stats['Command']:
+                container_stats['Command'] = None
+            # Standards stats
+            # See https://docs.docker.com/engine/api/v1.41/#operation/ContainerStats
+            # Be aware that the API can change... (example see issue #1857)
+            if container_stats['Status'] in ('running', 'paused'):
+                # CPU
+                container_stats['cpu'] = self.get_docker_cpu(container.id, self.thread_docker_list[container.id].stats)
+                container_stats['cpu_percent'] = container_stats['cpu'].get('total', None)
+                # MEM
+                container_stats['memory'] = self.get_docker_memory(
+                    container.id, self.thread_docker_list[container.id].stats
+                )
+                container_stats['memory_usage'] = container_stats['memory'].get('usage', None)
+                if container_stats['memory'].get('cache', None) is not None:
+                    container_stats['memory_usage'] -= container_stats['memory']['cache']
+                # IO
+                container_stats['io'] = self.get_docker_io(container.id, self.thread_docker_list[container.id].stats)
+                container_stats['io_r'] = container_stats['io'].get('ior', None)
+                container_stats['io_w'] = container_stats['io'].get('iow', None)
+                # NET
+                container_stats['network'] = self.get_docker_network(
+                    container.id, self.thread_docker_list[container.id].stats
+                )
+                container_stats['network_rx'] = container_stats['network'].get('rx', None)
+                container_stats['network_tx'] = container_stats['network'].get('tx', None)
+                # Uptime
+                container_stats['Uptime'] = pretty_date(
+                    # parser.parse(container.attrs['State']['StartedAt']).replace(tzinfo=None)
+                    parser.parse(container.attrs['State']['StartedAt'])
+                    .astimezone(tz.tzlocal())
+                    .replace(tzinfo=None)
+                )
+            else:
+                container_stats['cpu'] = {}
+                container_stats['cpu_percent'] = None
+                container_stats['memory'] = {}
+                container_stats['memory_percent'] = None
+                container_stats['io'] = {}
+                container_stats['io_r'] = None
+                container_stats['io_w'] = None
+                container_stats['network'] = {}
+                container_stats['network_rx'] = None
+                container_stats['network_tx'] = None
+                container_stats['Uptime'] = None
+            # Add current container stats to the stats list
+            stats['containers'].append(container_stats)
+
+        return stats
+
+    def update_podman(self):
+        """Update Podman stats."""
+        # Init new docker stats
+        stats = self.get_init_value()
+
+        # Podman version
+        # Request very long so it is only done once in the connect_podman method
+        stats['version'] = self._version_podman
+
+        # Update current containers list
+        try:
+            containers = self.podman_client.containers.list() or []
+        except Exception as e:
+            logger.error("{} plugin - Cannot get Podman containers list ({})".format(self.plugin_name, e))
+            return stats
+
+        # And the stats for each container
+        try:
+            # Return example:
+            # [{'CPU': '3.21%',
+            #   'MemUsage': '352.3kB / 7.836GB', 'MemUsageBytes': '344KiB / 7.298GiB', 'Mem': '0.00%',
+            #   'NetIO': '-- / --',
+            #   'BlockIO': '-- / --',
+            # 'PIDS': '1', 'Pod': '8d0f1c783def', 'CID': '9491515251ed',
+            # 'Name': '8d0f1c783def-infra'}, ... ]
+            podman_stats = {s['CID'][:12]: s for s in self.podman_client.pods.stats()}
+        except Exception as e:
+            logger.error("{} plugin - Cannot get Podman containers list ({})".format(self.plugin_name, e))
+            return stats
+
+        # Get stats for all containers
+        stats['containers'] = []
+        for container in containers:
+            # Shall we display the stats ?
+            if not self.is_display(nativestr(container.name)):
+                continue
+
+            # Init the stats for the current container
+            container_stats = {}
+            # The key is the container name and not the Id
+            container_stats['key'] = self.get_key()
+            # Export name
+            container_stats['name'] = nativestr(container.name)
+            # Container Id
+            container_stats['Id'] = container.id
+            container_stats['IdShort'] = container.id[:12]
+            # Container Image
+            container_stats['Image'] = container.image.tags
+            # Container Status (from attrs)
+            container_stats['Status'] = container.attrs['State']
+            # Container Command
+            container_stats['Command'] = container.attrs['Command']
+            # Standards stats
+            if container_stats['Status'] in ('running', 'paused'):
+                # CPU
+                # '3.21%' to 3.21
+                container_stats['cpu_percent'] = float(podman_stats[container_stats['IdShort']]['CPU'][:-1])
+                container_stats['cpu'] = {'total': container_stats['cpu_percent']}
+                # MEMORY
+                # @TODO
+                # Should convert 'MemUsage': '352.3kB / 7.836GB' to bytes...
+                container_stats['memory'] = {}
+                container_stats['memory_percent'] = float(podman_stats[container_stats['IdShort']]['Mem'][:-1])
+                # Is it possible ?
+                container_stats['io'] = {}
+                container_stats['io_r'] = None
+                container_stats['io_w'] = None
+                container_stats['network'] = {}
+                container_stats['network_rx'] = None
+                container_stats['network_tx'] = None
+                container_stats['Uptime'] = None
+            else:
+                container_stats['cpu'] = {}
+                container_stats['cpu_percent'] = None
+                container_stats['memory'] = {}
+                container_stats['memory_percent'] = None
+                container_stats['io'] = {}
+                container_stats['io_r'] = None
+                container_stats['io_w'] = None
+                container_stats['network'] = {}
+                container_stats['network_rx'] = None
+                container_stats['network_tx'] = None
+                container_stats['Uptime'] = None
+            # Add current container stats to the stats list
+            stats['containers'].append(container_stats)
+
+        return stats
 
     def get_docker_cpu(self, container_id, all_stats):
         """Return the container CPU usage.
@@ -684,9 +840,9 @@ class Plugin(GlancesPlugin):
             return 'CAREFUL'
 
 
-class ThreadDockerGrabber(threading.Thread):
+class ThreadContainerGrabber(threading.Thread):
     """
-    Specific thread to grab docker stats.
+    Specific thread to grab container stats.
 
     stats is a dict
     """
@@ -694,14 +850,13 @@ class ThreadDockerGrabber(threading.Thread):
     def __init__(self, container):
         """Init the class.
 
-        container: instance of Docker-py Container
+        container: instance of Container returned by Docker or Podman client
         """
-        super(ThreadDockerGrabber, self).__init__()
+        super(ThreadContainerGrabber, self).__init__()
         # Event needed to stop properly the thread
         self._stopper = threading.Event()
         # The docker-py return stats as a stream
         self._container = container
-        self._stats_stream = container.stats(decode=True)
         # The class return the stats as a dict
         self._stats = {}
         logger.debug("docker plugin - Create thread for container {}".format(self._container.name))
@@ -712,7 +867,7 @@ class ThreadDockerGrabber(threading.Thread):
         Infinite loop, should be stopped by calling the stop() method
         """
         try:
-            for i in self._stats_stream:
+            for i in self._container.stats(decode=True):
                 self._stats = i
                 time.sleep(0.1)
                 if self.stopped():
