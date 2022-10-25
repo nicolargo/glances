@@ -8,7 +8,7 @@
 # Ex: Python 3.10 for  3.10-slim-buster
 # Note: ENV is for future running containers. ARG for building your Docker image.
 
-ARG IMAGE_VERSION=3.10-slim-buster
+ARG IMAGE_VERSION=3.11-slim-buster
 ARG PYTHON_VERSION=3.10
 FROM python:${IMAGE_VERSION} as build
 ARG PYTHON_VERSION
