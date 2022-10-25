@@ -7,11 +7,11 @@ bottle
 cassandra-driver
 chevron
 couchdb
-docker>=2.0.0
+docker==6.0.0
 elasticsearch
 graphitesender
 hddtemp
-influxdb>=1.0.0
+influxdb==5.3.1
 influxdb-client; python_version >= "3.6"
 kafka-python
 netifaces
