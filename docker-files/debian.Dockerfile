@@ -5,11 +5,11 @@
 #
 
 # WARNING: the version should be set.
-# Ex: Python 3.10 for  3.10-slim-buster
+# Ex: Python 3.11 for 3.11-slim-buster
 # Note: ENV is for future running containers. ARG for building your Docker image.
 
-ARG IMAGE_VERSION=3.10-slim-buster
-ARG PYTHON_VERSION=3.10
+ARG PYTHON_IMAGE_VERSION=3.11
+ARG IMAGE_VERSION=${PYTHON_IMAGE_VERSION}-slim-buster
 FROM python:${IMAGE_VERSION} as build
 ARG PYTHON_VERSION
 
@@ -58,10 +58,11 @@ RUN CASS_DRIVER_NO_CYTHON=1 pip3 install --no-cache-dir --user -r optional-requi
 
 FROM build as full
 ARG PYTHON_VERSION
+ARG PYTHON_IMAGE_VERSION
 
 COPY --from=buildRequirements /root/.local/bin /usr/local/bin/
-COPY --from=buildRequirements /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/local/lib/python${PYTHON_VERSION}/site-packages/
-COPY --from=buildOptionalRequirements /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/local/lib/python${PYTHON_VERSION}/site-packages/
+COPY --from=buildRequirements /root/.local/lib/python${PYTHON_IMAGE_VERSION}/site-packages /usr/local/lib/python${PYTHON_IMAGE_VERSION}/site-packages/
+COPY --from=buildOptionalRequirements /root/.local/lib/python${PYTHON_IMAGE_VERSION}/site-packages /usr/local/lib/python${PYTHON_IMAGE_VERSION}/site-packages/
 COPY ./docker-compose/glances.conf /etc/glances.conf
 
 # EXPOSE PORT (XMLRPC / WebUI)
@@ -79,6 +80,7 @@ CMD python3 -m glances -C /etc/glances.conf $GLANCES_OPT
 # Create running images without any building dependency
 FROM python:${IMAGE_VERSION} as minimal
 ARG PYTHON_VERSION
+ARG PYTHON_IMAGE_VERSION
 
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
@@ -90,7 +92,7 @@ RUN apt-get update && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=buildRequirements /root/.local/bin /usr/local/bin/
-COPY --from=buildRequirements /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/local/lib/python${PYTHON_VERSION}/site-packages/
+COPY --from=buildRequirements /root/.local/lib/python${PYTHON_IMAGE_VERSION}/site-packages /usr/local/lib/python${PYTHON_IMAGE_VERSION}/site-packages/
 COPY ./docker-compose/glances.conf /etc/glances.conf
 
 # EXPOSE PORT (XMLRPC)
@@ -105,10 +107,11 @@ CMD python3 -m glances -C /etc/glances.conf $GLANCES_OPT
 
 FROM full as dev
 ARG PYTHON_VERSION
+ARG PYTHON_IMAGE_VERSION
 
 COPY --from=buildRequirements /root/.local/bin /usr/local/bin/
-COPY --from=buildRequirements /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/lib/python${PYTHON_VERSION}/site-packages/
-COPY --from=buildOptionalRequirements /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/lib/python${PYTHON_VERSION}/site-packages/
+COPY --from=buildRequirements /root/.local/lib/python${PYTHON_IMAGE_VERSION}/site-packages /usr/lib/python${PYTHON_IMAGE_VERSION}/site-packages/
+COPY --from=buildOptionalRequirements /root/.local/lib/python${PYTHON_IMAGE_VERSION}/site-packages /usr/lib/python${PYTHON_IMAGE_VERSION}/site-packages/
 COPY ./docker-compose/glances.conf /etc/glances.conf
 
 # Copy the current Glances source code
