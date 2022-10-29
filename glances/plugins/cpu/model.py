@@ -18,6 +18,11 @@ from glances.plugins.plugin.model import GlancesPluginModel
 import psutil
 
 # Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
     'total': {'description': 'Sum of all CPU percentages (except idle).', 'unit': 'percent'},
     'system': {
@@ -67,9 +72,18 @@ CPU while the hypervisor is servicing another virtual processor.',
 second. A context switch is a procedure that a computer\'s CPU (central \
 processing unit) follows to change from one task (or process) to \
 another while ensuring that the tasks do not conflict.',
-        'unit': 'percent',
+        'unit': 'number',
+        'rate': True,
+        'min_symbol': 'K',
+        'short_name': 'ctx_sw',
     },
-    'interrupts': {'description': 'number of interrupts per second.', 'unit': 'percent'},
+    'interrupts': {
+        'description': 'number of interrupts per second.',
+        'unit': 'number',
+        'rate': True,
+        'min_symbol': 'K',
+        'short_name': 'inter',
+    },
     'soft_interrupts': {
         'description': 'number of software interrupts per second. Always set to \
 0 on Windows and SunOS.',
@@ -208,7 +222,7 @@ class PluginModel(GlancesPluginModel):
         if not hasattr(self, 'cpu_stats_old'):
             # Init the stats (needed to have the key name for export)
             for stat in cpu_stats._fields:
-                # TODO: better to set it to None but should refactor views and UI...
+                # @TODO: better to set it to None but should refactor views and UI...
                 stats[stat] = 0
         else:
             # Others calls...
@@ -301,12 +315,11 @@ class PluginModel(GlancesPluginModel):
         if not self.stats or self.args.percpu or self.is_disabled():
             return ret
 
-        # Build the string message
-        # If user stat is not here, display only idle / total CPU usage (for
-        # example on Windows OS)
+        # Some tag to enable/disable stats (example: idle_tag triggered on Windows OS)
         idle_tag = 'user' not in self.stats
 
-        # Header
+        # First line
+        # Total + (idle) + ctx_sw
         msg = '{}'.format('CPU')
         ret.append(self.curse_add_line(msg, "TITLE"))
         trend_user = self.get_trend('user')
@@ -331,41 +344,27 @@ class PluginModel(GlancesPluginModel):
         if not WINDOWS and not SUNOS:
             ret.extend(self.curse_add_stat('ctx_switches', width=15, header='  '))
 
-        # New line
+        # Second line
+        # user|idle + irq + interrupts
         ret.append(self.curse_new_line())
         # User CPU
-        if 'user' in self.stats:
-            msg = '{:8}'.format('user:')
-            ret.append(self.curse_add_line(msg))
-            msg = '{:5.1f}%'.format(self.stats['user'])
-            ret.append(self.curse_add_line(msg, self.get_views(key='user', option='decoration')))
+        if not idle_tag:
+            ret.extend(self.curse_add_stat('user', width=15))
         elif 'idle' in self.stats:
-            msg = '{:8}'.format('idle:')
-            ret.append(self.curse_add_line(msg))
-            msg = '{:5.1f}%'.format(self.stats['idle'])
-            ret.append(self.curse_add_line(msg))
+            ret.extend(self.curse_add_stat('idle', width=15))
         # IRQ CPU
         ret.extend(self.curse_add_stat('irq', width=14, header='  '))
         # interrupts
-        if 'interrupts' in self.stats:
-            msg = '  {:8}'.format('inter:')
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='interrupts', option='optional')))
-            msg = '{:>5}'.format(int(self.stats['interrupts'] // self.stats['time_since_update']))
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='interrupts', option='optional')))
+        ret.extend(self.curse_add_stat('interrupts', width=15, header='  '))
 
-        # New line
+        # Third line
+        # system|core + nice + sw_int
         ret.append(self.curse_new_line())
         # System CPU
-        if 'system' in self.stats and not idle_tag:
-            msg = '{:8}'.format('system:')
-            ret.append(self.curse_add_line(msg))
-            msg = '{:5.1f}%'.format(self.stats['system'])
-            ret.append(self.curse_add_line(msg, self.get_views(key='system', option='decoration')))
+        if not idle_tag:
+            ret.extend(self.curse_add_stat('system', width=15))
         else:
-            msg = '{:8}'.format('core:')
-            ret.append(self.curse_add_line(msg))
-            msg = '{:>6}'.format(self.stats['nb_log_core'])
-            ret.append(self.curse_add_line(msg))
+            ret.extend(self.curse_add_stat('core', width=15))
         # Nice CPU
         ret.extend(self.curse_add_stat('nice', width=14, header='  '))
         # soft_interrupts
@@ -386,11 +385,8 @@ class PluginModel(GlancesPluginModel):
         # Steal CPU usage
         ret.extend(self.curse_add_stat('steal', width=14, header='  '))
         # syscalls: number of system calls since boot. Always set to 0 on Linux. (do not display)
-        if 'syscalls' in self.stats and not LINUX:
-            msg = '  {:8}'.format('syscal:')
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='syscalls', option='optional')))
-            msg = '{:>5}'.format(int(self.stats['syscalls'] // self.stats['time_since_update']))
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='syscalls', option='optional')))
+        if not LINUX:
+            ret.extend(self.curse_add_stat('syscalls', width=15, header='  '))
 
         # Return the message with decoration
         return ret
