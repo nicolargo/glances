@@ -33,8 +33,6 @@ else:
 # - json: service return a JSON (True) or string (False)
 # - key: key of the IP address in the JSON structure
 urls = [
-    #  glances_ip.py plugin relies on low rating / malicious site domain #1975
-    # ('https://ip.42.pl/raw', False, None),
     ('https://httpbin.org/ip', True, 'origin'),
     ('https://api.ipify.org/?format=json', True, 'ip'),
     ('https://ipv4.jsonip.com', True, 'ip'),
@@ -128,8 +126,10 @@ class PluginModel(GlancesPluginModel):
                 logger.debug("Cannot grab public IP information ({})".format(e))
             else:
                 stats['public_address'] = self.public_address
-                stats['public_info'] = self.public_info
-                stats['public_info_human'] = self.public_info_for_human(stats['public_info'])
+                # Too much information provided in the public_info
+                # Limit it to public_info_for_human
+                # stats['public_info'] = self.public_info
+                stats['public_info_human'] = self.public_info_for_human(self.public_info)
 
         elif self.input_method == 'snmp':
             # Not implemented yet

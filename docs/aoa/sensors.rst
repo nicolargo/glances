@@ -29,3 +29,9 @@ There is no alert on this information.
     it is possible to alias it using:
     unitname_temperature_core_alias=Alias for temp
     unitname_fan_speed_alias=Alias for fan speed
+
+.. note 4::
+    The plugin could crash on some operating system (FreeBSD) with the
+    TCP or UDP blackhole option > 0 (see issue #2106). In this case, you
+    should disable the sensors (--disable-plugin sensors or from the
+    configuration file).

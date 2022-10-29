@@ -1,11 +1,10 @@
 <template>
-    <section id="ip" v-if="address != undefined">
-        -
+    <section class="plugin" id="ip" v-if="address != undefined">
         <span v-if="address != undefined" class="title">IP</span>
-        <span v-if="address != undefined">{{ address }}/{{ maskCidr }}</span>
-        <span v-if="publicAddress" class="title">Pub</span>
-        <span v-if="publicAddress">{{ publicAddress }}</span>
-        <span v-if="publicInfo">({{ publicInfo }})</span>
+        <span v-if="address != undefined">{{ address }}/{{ maskCdir }}</span>
+        <span v-if="publicAddress != undefined" class="title">Pub</span>
+        <span v-if="publicAddress != undefined">{{ publicAddress }}</span>
+        <span v-if="publicInfo != undefined">{{ publicInfo }}</span>
     </section>
 </template>
 
@@ -26,9 +25,9 @@ export default {
         gateway() {
             return this.ipStats.gateway;
         },
-        mask() {
-            return this.ipStats.mask;
-        },
+        // mask() {
+        //     return this.ipStats.mask;
+        // },
         maskCdir() {
             return this.ipStats.mask_cidr;
         },

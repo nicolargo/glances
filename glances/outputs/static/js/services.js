@@ -64,6 +64,7 @@ class GlancesStatsService {
                         views: response[1],
                         isBsd: response[0]['system']['os_name'] === 'FreeBSD',
                         isLinux: response[0]['system']['os_name'] === 'Linux',
+                        isSunOS: response[0]['system']['os_name'] === 'SunOS',
                         isMac: response[0]['system']['os_name'] === 'Darwin',
                         isWindows: response[0]['system']['os_name'] === 'Windows'
                     };

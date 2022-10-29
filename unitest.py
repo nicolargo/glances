@@ -325,7 +325,7 @@ class TestGlances(unittest.TestCase):
                             msg='{} view is not a dict'.format(plugin))
 
     def test_097_attribute(self):
-        """Test GlancesAttribute classe"""
+        """Test GlancesAttribute classes"""
         print('INFO: [TEST_097] Test attribute')
         # GlancesAttribute
         from glances.attribute import GlancesAttribute
@@ -348,7 +348,7 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(a.history_mean(nb=3), 4.5)
 
     def test_098_history(self):
-        """Test GlancesHistory classe"""
+        """Test GlancesHistory classes"""
         print('INFO: [TEST_098] Test history')
         # GlancesHistory
         from glances.history import GlancesHistory

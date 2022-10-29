@@ -1,12 +1,12 @@
 <template>
-    <div>
+    <div class="plugin">
         <section id="alerts">
             <span class="title" v-if="hasAlerts">
                 Warning or critical alerts (last {{ countAlerts }} entries)
             </span>
             <span class="title" v-else>No warning or critical alert detected</span>
         </section>
-        <section id="alert" class="plugin">
+        <section id="alert">
             <div class="table">
                 <div class="table-row" v-for="(alert, alertId) in alerts" :key="alertId">
                     <div class="table-cell text-left">

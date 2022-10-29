@@ -4,14 +4,14 @@
         <div class="loader">Loading...</div>
     </div>
     <glances-help v-else-if="args.help_tag"></glances-help>
-    <div v-else class="container-fluid">
-        <div class="top-plugin">
+    <main v-else>
+        <div class="container-fluid">
             <div class="row">
                 <div class="col-sm-24">
                     <div class="pull-left">
                         <glances-plugin-system :data="data"></glances-plugin-system>
                     </div>
-                    <div class="pull-left" v-if="args.disable_ip">
+                    <div class="pull-left" v-if="!args.disable_ip">
                         <glances-plugin-ip :data="data"></glances-plugin-ip>
                     </div>
                     <div class="pull-right">
@@ -19,6 +19,8 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="container-fluid">
             <div class="row">
                 <div class="col-sm-24">
                     <div class="pull-left">
@@ -26,115 +28,124 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="hidden-xs hidden-sm hidden-md col-lg-6" v-if="!args.disable_quicklook">
-                <glances-plugin-quicklook :data="data"></glances-plugin-quicklook>
-            </div>
-            <div class="col-sm-6 col-md-8 col-lg-6" v-if="!args.disable_cpu && !args.percpu">
-                <glances-plugin-cpu :data="data"></glances-plugin-cpu>
-            </div>
-            <div class="col-sm-12 col-md-8 col-lg-6" v-if="!args.disable_cpu && args.percpu">
-                <glances-plugin-percpu :data="data"></glances-plugin-percpu>
-            </div>
-            <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_gpu && hasGpu">
-                <glances-plugin-gpu :data="data"></glances-plugin-gpu>
-            </div>
-            <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_mem">
-                <glances-plugin-mem :data="data"></glances-plugin-mem>
-            </div>
-            <!-- NOTE: display if MEM enabled and GPU disabled -->
-            <div
-                v-if="!args.disable_mem && !(!args.disable_gpu && hasGpu)"
-                class="hidden-xs hidden-sm col-md-4 col-lg-3"
-            >
-                <glances-plugin-mem-more :data="data"></glances-plugin-mem-more>
-            </div>
-            <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_memswap">
-                <glances-plugin-memswap :data="data"></glances-plugin-memswap>
-            </div>
-            <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_load">
-                <glances-plugin-load :data="data"></glances-plugin-load>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-6 sidebar" v-if="!args.disable_left_sidebar">
-                <div class="table">
-                    <glances-plugin-network
-                        id="plugin-network"
-                        class="plugin table-row-group"
-                        v-if="!args.disable_network"
-                        :data="data"
-                    ></glances-plugin-network>
-                    <glances-plugin-connections
-                        id="plugin-connections"
-                        class="plugin table-row-group"
-                        v-if="isLinux && !args.disable_connections"
-                        :data="data"
-                    ></glances-plugin-connections>
-                    <glances-plugin-wifi
-                        id="plugin-wifi"
-                        class="plugin table-row-group"
-                        v-if="!args.disable_wifi"
-                        :data="data"
-                    ></glances-plugin-wifi>
-                    <glances-plugin-ports
-                        id="plugin-ports"
-                        class="plugin table-row-group"
-                        v-if="!args.disable_ports"
-                        :data="data"
-                    ></glances-plugin-ports>
-                    <glances-plugin-diskio
-                        id="plugin-diskio"
-                        class="plugin table-row-group"
-                        v-if="!args.disable_diskio"
-                        :data="data"
-                    ></glances-plugin-diskio>
-                    <glances-plugin-fs
-                        id="plugin-fs"
-                        class="plugin table-row-group"
-                        v-if="!args.disable_fs"
-                        :data="data"
-                    ></glances-plugin-fs>
-                    <glances-plugin-irq
-                        id="plugin-irq"
-                        class="plugin table-row-group"
-                        v-if="args.enable_irq"
-                        :data="data"
-                    ></glances-plugin-irq>
-                    <glances-plugin-folders
-                        id="plugin-folders"
-                        class="plugin table-row-group"
-                        v-if="!args.disable_folders"
-                        :data="data"
-                    ></glances-plugin-folders>
-                    <glances-plugin-raid
-                        id="plugin-raid"
-                        class="plugin table-row-group"
-                        v-if="!args.raid"
-                        :data="data"
-                    ></glances-plugin-raid>
-                    <glances-plugin-sensors
-                        id="plugin-sensors"
-                        class="plugin table-row-group"
-                        v-if="!args.disable_sensors"
-                        :data="data"
-                    ></glances-plugin-sensors>
+            <div class="row">
+                <div class="hidden-xs hidden-sm hidden-md col-lg-6" v-if="!args.disable_quicklook">
+                    <glances-plugin-quicklook :data="data"></glances-plugin-quicklook>
+                </div>
+                <div class="col-sm-6 col-md-8 col-lg-6" v-if="!args.disable_cpu && !args.percpu">
+                    <glances-plugin-cpu :data="data"></glances-plugin-cpu>
+                </div>
+                <div class="col-sm-12 col-md-8 col-lg-6" v-if="!args.disable_cpu && args.percpu">
+                    <glances-plugin-percpu :data="data"></glances-plugin-percpu>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_gpu && hasGpu">
+                    <glances-plugin-gpu :data="data"></glances-plugin-gpu>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_mem">
+                    <glances-plugin-mem :data="data"></glances-plugin-mem>
+                </div>
+                <!-- NOTE: display if MEM enabled and GPU disabled -->
+                <div
+                    v-if="!args.disable_mem && !(!args.disable_gpu && hasGpu)"
+                    class="hidden-xs hidden-sm col-md-4 col-lg-3"
+                >
+                    <glances-plugin-mem-more :data="data"></glances-plugin-mem-more>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_memswap">
+                    <glances-plugin-memswap :data="data"></glances-plugin-memswap>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_load">
+                    <glances-plugin-load :data="data"></glances-plugin-load>
                 </div>
             </div>
-            <div class="col-sm-18">
-                <glances-plugin-docker
-                    v-if="!args.disable_docker"
-                    :data="data"
-                ></glances-plugin-docker>
-                <glances-plugin-alert
-                    v-if="!args.disable_alert"
-                    :data="data"
-                ></glances-plugin-alert>
-                <glances-plugin-process :data="data"></glances-plugin-process>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-6 sidebar" v-if="!args.disable_left_sidebar">
+                    <div class="table">
+                        <glances-plugin-network
+                            id="plugin-network"
+                            class="plugin table-row-group"
+                            v-if="!args.disable_network"
+                            :data="data"
+                        ></glances-plugin-network>
+                        <glances-plugin-connections
+                            id="plugin-connections"
+                            class="plugin table-row-group"
+                            v-if="isLinux && !args.disable_connections"
+                            :data="data"
+                        ></glances-plugin-connections>
+                        <glances-plugin-wifi
+                            id="plugin-wifi"
+                            class="plugin table-row-group"
+                            v-if="!args.disable_wifi"
+                            :data="data"
+                        ></glances-plugin-wifi>
+                        <glances-plugin-ports
+                            id="plugin-ports"
+                            class="plugin table-row-group"
+                            v-if="!args.disable_ports"
+                            :data="data"
+                        ></glances-plugin-ports>
+                        <glances-plugin-diskio
+                            id="plugin-diskio"
+                            class="plugin table-row-group"
+                            v-if="!args.disable_diskio"
+                            :data="data"
+                        ></glances-plugin-diskio>
+                        <glances-plugin-fs
+                            id="plugin-fs"
+                            class="plugin table-row-group"
+                            v-if="!args.disable_fs"
+                            :data="data"
+                        ></glances-plugin-fs>
+                        <glances-plugin-irq
+                            id="plugin-irq"
+                            class="plugin table-row-group"
+                            v-if="args.enable_irq"
+                            :data="data"
+                        ></glances-plugin-irq>
+                        <glances-plugin-folders
+                            id="plugin-folders"
+                            class="plugin table-row-group"
+                            v-if="!args.disable_folders"
+                            :data="data"
+                        ></glances-plugin-folders>
+                        <glances-plugin-raid
+                            id="plugin-raid"
+                            class="plugin table-row-group"
+                            v-if="!args.raid"
+                            :data="data"
+                        ></glances-plugin-raid>
+                        <glances-plugin-sensors
+                            id="plugin-sensors"
+                            class="plugin table-row-group"
+                            v-if="!args.disable_sensors"
+                            :data="data"
+                        ></glances-plugin-sensors>
+                    </div>
+                </div>
+                <div class="col-sm-18">
+                    <glances-plugin-docker
+                        v-if="!args.disable_docker"
+                        :data="data"
+                    ></glances-plugin-docker>
+                    <glances-plugin-process :data="data"></glances-plugin-process>
+                    <glances-plugin-alert
+                        v-if="!args.disable_alert"
+                        :data="data"
+                    ></glances-plugin-alert>
+                </div>
             </div>
         </div>
-    </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-24">
+                    <glances-plugin-now :data="data"></glances-plugin-now>
+                </div>
+            </div>
+        </div>
+    </main>
 </template>
 
 <script>
@@ -159,6 +170,7 @@ import GlancesPluginMem from './components/plugin-mem.vue';
 import GlancesPluginMemMore from './components/plugin-mem-more.vue';
 import GlancesPluginMemswap from './components/plugin-memswap.vue';
 import GlancesPluginNetwork from './components/plugin-network.vue';
+import GlancesPluginNow from './components/plugin-now.vue';
 import GlancesPluginPercpu from './components/plugin-percpu.vue';
 import GlancesPluginPorts from './components/plugin-ports.vue';
 import GlancesPluginProcess from './components/plugin-process.vue';
@@ -188,6 +200,7 @@ export default {
         GlancesPluginMemMore,
         GlancesPluginMemswap,
         GlancesPluginNetwork,
+        GlancesPluginNow,
         GlancesPluginPercpu,
         GlancesPluginPorts,
         GlancesPluginProcess,
@@ -234,6 +247,41 @@ export default {
     },
     methods: {
         setupHotKeys() {
+            // a => Sort processes/docker automatically
+            hotkeys('a', () => {
+                this.store.args.sort_processes_key = null;
+            });
+
+            // c => Sort processes/docker by CPU%
+            hotkeys('c', () => {
+                this.store.args.sort_processes_key = 'cpu_percent';
+            });
+
+            // m => Sort processes/docker by MEM%
+            hotkeys('m', () => {
+                this.store.args.sort_processes_key = 'memory_percent';
+            });
+
+            // u => Sort processes/docker by user
+            hotkeys('u', () => {
+                this.store.args.sort_processes_key = 'username';
+            });
+
+            // p => Sort processes/docker by name
+            hotkeys('p', () => {
+                this.store.args.sort_processes_key = 'name';
+            });
+
+            // i => Sort processes/docker by I/O rate
+            hotkeys('i', () => {
+                this.store.args.sort_processes_key = 'io_counters';
+            });
+
+            // t => Sort processes/docker by time
+            hotkeys('t', () => {
+                this.store.args.sort_processes_key = 'timemillis';
+            });
+
             // A => Enable/disable AMPs
             hotkeys('shift+A', () => {
                 this.store.args.disable_amps = !this.store.args.disable_amps;

@@ -27,6 +27,9 @@ class GlancesStatsServer(GlancesStats):
         # all_stats is a dict of dicts filled by the server
         self.all_stats = collections.defaultdict(dict)
 
+        # In the update method, disable extended process stats
+        logger.info("Disable extended processes stats in server mode")
+
     def update(self, input_stats=None):
         """Update the stats."""
         input_stats = input_stats or {}
@@ -35,7 +38,6 @@ class GlancesStatsServer(GlancesStats):
         super(GlancesStatsServer, self).update()
 
         # Disable the extended processes stats because it cause an high CPU load
-        logger.info("Disable extended processes stats in server mode")
         self._plugins['processcount'].disable_extended()
 
         # Build all_stats variable (concatenation of all the stats)

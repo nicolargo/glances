@@ -1,5 +1,5 @@
 <template>
-    <section id="quicklook-plugin" class="plugin">
+    <section id="quicklook" class="plugin">
         <div class="cpu-name">
             {{ cpu_name }}
         </div>

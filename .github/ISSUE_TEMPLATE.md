@@ -12,6 +12,7 @@ For an enhancement or new feature: Describe your needs.
 
 * Glances & psutil (glances -V):
 * Operating System (lsb_release -a):
+* How do you install Glances (Pypi package, script, package manager, source):
 
 #### Logs
 

@@ -19,7 +19,7 @@ import sys
 # Global name
 # Version should start and end with a numerical char
 # See https://packaging.python.org/specifications/core-metadata/#version
-__version__ = '3.3.0_beta1'
+__version__ = '3.3.1_beta1'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
 
@@ -68,7 +68,7 @@ def end():
     """Stop Glances."""
     try:
         mode.end()
-    except NameError:
+    except (NameError, KeyError):
         # NameError: name 'mode' is not defined in case of interrupt shortly...
         # ...after starting the server mode (issue #1175)
         pass
@@ -133,7 +133,7 @@ def start(config, args):
         snapshot_end = tracemalloc.take_snapshot()
         snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
         memory_leak = sum([s.size_diff for s in snapshot_diff])
-        print("Memory comsumption: {0:.1f}KB (see log for details)".format(memory_leak / 1000))
+        print("Memory consumption: {0:.1f}KB (see log for details)".format(memory_leak / 1000))
         logger.info("Memory consumption (top 5):")
         for stat in snapshot_diff[:5]:
             logger.info(stat)

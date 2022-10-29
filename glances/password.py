@@ -25,11 +25,24 @@ class GlancesPassword(object):
 
     """This class contains all the methods relating to password."""
 
-    def __init__(self, username='glances'):
+    def __init__(self, username='glances', config=None):
         self.username = username
-        self.password_dir = user_config_dir()
+
+        self.config = config
+        self.password_dir = self.local_password_path()
         self.password_filename = self.username + '.pwd'
         self.password_file = os.path.join(self.password_dir, self.password_filename)
+
+    def local_password_path(self):
+        """Return the local password path.
+        Related toissue: Password files in same configuration dir in effect #2143
+        """
+        if self.config is None:
+            return user_config_dir()
+        else:
+            return self.config.get_value('passwords',
+                                         'local_password_path',
+                                         default=user_config_dir())
 
     def sha256_hash(self, plain_password):
         """Return the SHA-256 of the given password."""

@@ -5,10 +5,8 @@
         <span>{{ running }} run,</span>
         <span>{{ sleeping }} slp,</span>
         <span>{{ stopped }} oth</span>
-        <span>
-            sorted {{ sorter.auto ? 'automatically' : '' }} by
-            {{ sorter.getColumnLabel(sorter.column) }}, flat view
-        </span>
+        <span class="title">{{ sorter.auto ? 'sorted automatically' : 'sorted' }}</span>
+        <span>by {{ sorter.getColumnLabel(sorter.column) }}</span>
     </section>
 </template>
 

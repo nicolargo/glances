@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="plugin" id="raid">
         <div class="table-row" v-if="hasDisks">
             <div class="table-cell text-left title">RAID disks</div>
             <div class="table-cell">Used</div>

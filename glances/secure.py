@@ -16,7 +16,7 @@ from subprocess import Popen, PIPE
 def secure_popen(cmd):
     """A more or less secure way to execute system commands
 
-    Multiple command should be seperated with a &&
+    Multiple command should be separated with a &&
 
     :return: the result of the commands
     """

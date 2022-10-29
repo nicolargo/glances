@@ -372,7 +372,7 @@ class PluginModel(GlancesPluginModel):
             msg = self.layout_stat['pid'].format(p['pid'], width=self.__max_pid_size())
         else:
             # Display programs, so the PID should not be displayed
-            # Instead displays the number of childrens
+            # Instead displays the number of children
             msg = self.layout_stat['pid'].format(
                 len(p['childrens']) if 'childrens' in p else '_', width=self.__max_pid_size()
             )
@@ -512,6 +512,8 @@ class PluginModel(GlancesPluginModel):
 
         # Process list
         # Loop over processes (sorted by the sort key previously compute)
+        # This is a Glances bottleneck (see flame graph),
+        # get_process_curses_data should be optimzed
         i = 0
         for p in self.__sort_stats(process_sort_key):
             ret.extend(self.get_process_curses_data(p, i == args.cursor_position, args))

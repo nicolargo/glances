@@ -20,12 +20,11 @@ body {
     text-align: right;
 }
 
-.top-plugin {
-    margin-bottom: 20px;
-}
-
 .plugin {
     margin-bottom: 20px;
+    .table:last-child {
+        margin-bottom: 0;
+    }
 }
 .plugin.table-row-group .table-row:last-child .table-cell {
     padding-bottom: 20px;
@@ -43,6 +42,7 @@ body {
 }
 .sortable {
     cursor: pointer;
+    text-decoration: underline;
 }
 .text-right {
     text-align: right;
@@ -115,7 +115,7 @@ body {
     white-space: nowrap;
 }
 
-#quicklook-plugin {
+#quicklook {
     .progress {
         margin-bottom: 0px;
         min-width: 100px;
@@ -157,6 +157,22 @@ body {
     overflow: hidden;
     width: 100%;
     text-overflow: ellipsis;
+}
+
+#ip {
+    padding-left: 10px;
+}
+
+#ip span {
+    padding-left: 10px;
+}
+
+#processcount > span:nth-child(1) {
+    padding-left: 0px;
+}
+
+#processcount span {
+    padding-left: 10px;
 }
 
 /* Loading page */

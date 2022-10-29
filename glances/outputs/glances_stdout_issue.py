@@ -84,13 +84,14 @@ class GlancesStdoutIssue(object):
             except Exception:
                 pass
 
-        time.sleep(3)
+        time.sleep(2)
 
+        counter_total = Counter()
         for plugin in sorted(stats._plugins):
             if stats._plugins[plugin].is_disabled():
                 # If current plugin is disable
                 # then continue to next plugin
-                result = colors.NO + '[N/A]'.rjust(19 - len(plugin))
+                result = colors.NO + '[NA]'.rjust(18 - len(plugin))
                 message = colors.NO
                 self.print_issue(plugin, result, message)
                 continue
@@ -121,6 +122,11 @@ class GlancesStdoutIssue(object):
                 )
                 message = colors.NO + str(stat_error)[0 : TERMINAL_WIDTH - 41]
             self.print_issue(plugin, result, message)
+
+        # Display total time need to update all plugins
+        sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
+        print("Total time to update all stats: {}{:.5f}s{}".format(colors.BLUE, counter_total.get(), colors.NO))
+        sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
 
         # Return True to exit directly (no refresh)
         return True

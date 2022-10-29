@@ -1,6 +1,6 @@
 <template>
-    <section class="plugin" id="uptime">
-        <span>Uptime: {{ value }}</span>
+    <section id="now" class="plugin">
+        <span>{{ value }}</span>
     </section>
 </template>
 
@@ -13,7 +13,7 @@ export default {
     },
     computed: {
         value() {
-            return this.data.stats['uptime'];
+            return this.data.stats['now'];
         }
     }
 };
