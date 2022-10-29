@@ -75,7 +75,7 @@ class GlancesClientBrowser(object):
                 # Try with the preconfigure password (only if status is PROTECTED)
                 clear_password = self.password.get_password(server['name'])
                 if clear_password is not None:
-                    server['password'] = self.password.sha256_hash(clear_password)
+                    server['password'] = self.password.get_hash(clear_password)
             return 'http://{}:{}@{}:{}'.format(server['username'], server['password'], server['ip'], server['port'])
         else:
             return 'http://{}:{}'.format(server['ip'], server['port'])
@@ -151,7 +151,7 @@ class GlancesClientBrowser(object):
                 )
             # Store the password for the selected server
             if clear_password is not None:
-                self.set_in_selected('password', self.password.sha256_hash(clear_password))
+                self.set_in_selected('password', self.password.get_hash(clear_password))
 
         # Display the Glance client on the selected server
         logger.info("Connect Glances client to the {} server".format(server['key']))

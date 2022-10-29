@@ -129,7 +129,8 @@ class GlancesBottle(object):
 
             pwd = GlancesPassword(username=username,
                                   config=self.config)
-            return pwd.check_password(self.args.password, pwd.sha256_hash(password))
+            return pwd.check_password(self.args.password,
+                                      pwd.get_hash(password))
         else:
             return False
 
