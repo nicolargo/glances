@@ -9,13 +9,8 @@
 
 """Process count plugin."""
 
-<<<<<<< HEAD:glances/plugins/processcount/model.py
-from glances.processes import glances_processes
-from glances.plugins.plugin.model import GlancesPluginModel
-=======
 from glances.processes import glances_processes, sort_for_human
-from glances.plugins.glances_plugin import GlancesPlugin
->>>>>>> develop:glances/plugins/glances_processcount.py
+from glances.plugins.plugin.model import GlancesPluginModel
 
 # Define the history items list
 items_history_list = [
