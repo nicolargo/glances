@@ -16,7 +16,7 @@ then add the ``_action`` line to the Glances configuration file:
     critical_action=python /path/to/foo.py
 
 All the stats are available in the command line through the use of the
-`{{mustache}}`_ syntax. `Chevron`_ is required to render the mustache's template syntax.
+`Mustache`_ syntax. `Chevron`_ is required to render the mustache's template syntax.
 
 Another example would be to create a log file
 containing used vs total disk space if a space trigger warning is
@@ -27,11 +27,11 @@ reached:
     [fs]
     warning=70
     warning_action=echo {{mnt_point}} {{used}}/{{size}} > /tmp/fs.alert
-    
-A last example would be to create a log file containing the total user disk 
-space usage for a device and notify by email each time a space trigger 
+
+A last example would be to create a log file containing the total user disk
+space usage for a device and notify by email each time a space trigger
 critical is reached:
-    
+
 .. code-block:: ini
 
     [fs]
@@ -40,7 +40,7 @@ critical is reached:
 
 
 .. note::
-    Use && as seprator for multiple commands
+    Use && as separator for multiple commands
 
 
 Within ``/etc/glances/actions.d/fs-critical.py``:
@@ -61,6 +61,7 @@ Within ``/etc/glances/actions.d/fs-critical.py``:
     subprocess.call(['mail', '-s', 'CRITICAL: disk usage above 90%', '-r', 'postmaster@example.com', 'glances@example.com'], stdin=ps.stdout)
 
 .. note::
+
     You can use all the stats for the current plugin. See
     https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
     for the stats list.
@@ -75,5 +76,5 @@ use with caution:
     critical=5.0
     critical_action_repeat=/home/myhome/bin/bipper.sh
 
-.. _{{mustache}}: https://mustache.github.io/
+.. _Mustache: https://mustache.github.io/
 .. _Chevron: https://github.com/noahmorrison/chevron

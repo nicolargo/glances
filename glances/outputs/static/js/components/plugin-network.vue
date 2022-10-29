@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="plugin" id="network">
         <div class="table-row">
             <div class="table-cell text-left title">NETWORK</div>
             <div class="table-cell" v-show="!args.network_cumul && !args.network_sum">Rx/s</div>

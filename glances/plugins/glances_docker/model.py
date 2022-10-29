@@ -60,6 +60,16 @@ items_history_list = [{'name': 'cpu_percent', 'description': 'Container CPU cons
 # List of key to remove before export
 export_exclude_list = ['cpu', 'io', 'memory', 'network']
 
+# Sort dictionary for human
+sort_for_human = {
+    'io_counters': 'disk IO',
+    'cpu_percent': 'CPU consumption',
+    'memory_usage': 'memory consumption',
+    'cpu_times': 'uptime',
+    'name': 'container name',
+    None: 'None',
+}
+
 
 class PluginModel(GlancesPluginModel):
     """Glances Docker plugin.
@@ -97,6 +107,9 @@ class PluginModel(GlancesPluginModel):
         # key: Container Id
         # value: network stats dict
         self.io_old = {}
+
+        # Sort key
+        self.sort_key = None
 
         # Force a first update because we need two update to have the first stat
         self.update()
@@ -208,7 +221,7 @@ class PluginModel(GlancesPluginModel):
             for container in containers:
                 if container.id not in self.thread_list:
                     # Thread did not exist in the internal dict
-                    # Create it and add it to the internal dict
+                    # Create it, add it to the internal dict and start it
                     logger.debug(
                         "{} plugin - Create thread for container {}".format(self.plugin_name, container.id[:12])
                     )
@@ -236,10 +249,8 @@ class PluginModel(GlancesPluginModel):
                 container_stats = {}
                 # The key is the container name and not the Id
                 container_stats['key'] = self.get_key()
-                # Export name (first name in the Names list, without the /)
+                # Export name
                 container_stats['name'] = nativestr(container.name)
-                # Export global Names (used by the WebUI)
-                container_stats['Names'] = [nativestr(container.name)]
                 # Container Id
                 container_stats['Id'] = container.id
                 # Container Image
@@ -307,7 +318,7 @@ class PluginModel(GlancesPluginModel):
             pass
 
         # Sort and update the stats
-        self.stats = sort_stats(stats)
+        self.sort_key, self.stats = sort_docker_stats(stats)
 
         return self.stats
 
@@ -537,8 +548,10 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = ' {}'.format(len(self.stats['containers']))
         ret.append(self.curse_add_line(msg))
-        msg = ' (served by Docker {})'.format(self.stats['version']["Version"])
+        msg = ' sorted by {}'.format(sort_for_human[self.sort_key])
         ret.append(self.curse_add_line(msg))
+        # msg = ' (served by Docker {})'.format(self.stats['version']["Version"])
+        # ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
         # Header
         ret.append(self.curse_new_line())
@@ -549,24 +562,24 @@ class PluginModel(GlancesPluginModel):
             len(max(self.stats['containers'], key=lambda x: len(x['name']))['name']),
         )
         msg = ' {:{width}}'.format('Name', width=name_max_width)
-        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'name' else 'DEFAULT'))
         msg = '{:>10}'.format('Status')
         ret.append(self.curse_add_line(msg))
         msg = '{:>10}'.format('Uptime')
         ret.append(self.curse_add_line(msg))
         msg = '{:>6}'.format('CPU%')
-        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'cpu_percent' else 'DEFAULT'))
         msg = '{:>7}'.format('MEM')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>7}'.format('/MAX')
+        ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'memory_usage' else 'DEFAULT'))
+        msg = '/{:<7}'.format('MAX')
         ret.append(self.curse_add_line(msg))
         msg = '{:>7}'.format('IOR/s')
         ret.append(self.curse_add_line(msg))
-        msg = '{:>7}'.format('IOW/s')
+        msg = ' {:<7}'.format('IOW/s')
         ret.append(self.curse_add_line(msg))
         msg = '{:>7}'.format('Rx/s')
         ret.append(self.curse_add_line(msg))
-        msg = '{:>7}'.format('Tx/s')
+        msg = ' {:<7}'.format('Tx/s')
         ret.append(self.curse_add_line(msg))
         msg = ' {:8}'.format('Command')
         ret.append(self.curse_add_line(msg))
@@ -598,19 +611,24 @@ class PluginModel(GlancesPluginModel):
                 msg = '{:>7}'.format('_')
             ret.append(self.curse_add_line(msg, self.get_views(item=container['name'], key='mem', option='decoration')))
             try:
-                msg = '{:>7}'.format(self.auto_unit(container['memory']['limit']))
+                msg = '/{:<7}'.format(self.auto_unit(container['memory']['limit']))
             except KeyError:
-                msg = '{:>7}'.format('_')
+                msg = '/{:<7}'.format('_')
             ret.append(self.curse_add_line(msg))
             # IO R/W
             unit = 'B'
-            for r in ['ior', 'iow']:
-                try:
-                    value = self.auto_unit(int(container['io'][r] // container['io']['time_since_update'])) + unit
-                    msg = '{:>7}'.format(value)
-                except KeyError:
-                    msg = '{:>7}'.format('_')
-                ret.append(self.curse_add_line(msg))
+            try:
+                value = self.auto_unit(int(container['io']['ior'] // container['io']['time_since_update'])) + unit
+                msg = '{:>7}'.format(value)
+            except KeyError:
+                msg = '{:>7}'.format('_')
+            ret.append(self.curse_add_line(msg))
+            try:
+                value = self.auto_unit(int(container['io']['iow'] // container['io']['time_since_update'])) + unit
+                msg = ' {:<7}'.format(value)
+            except KeyError:
+                msg = ' {:<7}'.format('_')
+            ret.append(self.curse_add_line(msg))
             # NET RX/TX
             if args.byte:
                 # Bytes per second (for dummy)
@@ -620,18 +638,28 @@ class PluginModel(GlancesPluginModel):
                 # Bits per second (for real network administrator | Default)
                 to_bit = 8
                 unit = 'b'
-            for r in ['rx', 'tx']:
-                try:
-                    value = (
-                        self.auto_unit(
-                            int(container['network'][r] // container['network']['time_since_update'] * to_bit)
-                        )
-                        + unit
+            try:
+                value = (
+                    self.auto_unit(
+                        int(container['network']['rx'] // container['network']['time_since_update'] * to_bit)
                     )
-                    msg = '{:>7}'.format(value)
-                except KeyError:
-                    msg = '{:>7}'.format('_')
-                ret.append(self.curse_add_line(msg))
+                    + unit
+                )
+                msg = '{:>7}'.format(value)
+            except KeyError:
+                msg = '{:>7}'.format('_')
+            ret.append(self.curse_add_line(msg))
+            try:
+                value = (
+                    self.auto_unit(
+                        int(container['network']['tx'] // container['network']['time_since_update'] * to_bit)
+                    )
+                    + unit
+                )
+                msg = ' {:<7}'.format(value)
+            except KeyError:
+                msg = ' {:<7}'.format('_')
+            ret.append(self.curse_add_line(msg))
             # Command
             if container['Command'] is not None:
                 msg = ' {}'.format(' '.join(container['Command']))
@@ -643,11 +671,7 @@ class PluginModel(GlancesPluginModel):
 
     def _msg_name(self, container, max_width):
         """Build the container name."""
-        name = container['name']
-        if len(name) > max_width:
-            name = '_' + name[-max_width + 1 :]
-        else:
-            name = name[:max_width]
+        name = container['name'][:max_width]
         return ' {:{width}}'.format(name, width=max_width)
 
     def container_alert(self, status):
@@ -695,8 +719,8 @@ class ThreadDockerGrabber(threading.Thread):
                 time.sleep(0.1)
                 if self.stopped():
                     break
-        except:
-            logger.debug("docker plugin - Exception thrown during run")
+        except Exception as e:
+            logger.debug("docker plugin - Exception thrown during run ({})".format(e))
             self.stop()
 
     @property
@@ -719,12 +743,24 @@ class ThreadDockerGrabber(threading.Thread):
         return self._stopper.is_set()
 
 
-def sort_stats(stats):
+def sort_docker_stats(stats):
     # Sort Docker stats using the same function than processes
-    sort_by = 'cpu_percent'
+    sort_by = glances_processes.sort_key
     sort_by_secondary = 'memory_usage'
-    if glances_processes.sort_key.startswith('memory'):
+    if sort_by == 'memory_percent':
         sort_by = 'memory_usage'
         sort_by_secondary = 'cpu_percent'
-    sort_stats_processes(stats['containers'], sorted_by=sort_by, sorted_by_secondary=sort_by_secondary)
-    return stats
+    elif sort_by in ['username', 'io_counters', 'cpu_times']:
+        sort_by = 'cpu_percent'
+
+    # Sort docker stats
+    sort_stats_processes(
+        stats['containers'],
+        sorted_by=sort_by,
+        sorted_by_secondary=sort_by_secondary,
+        # Reverse for all but name
+        reverse=glances_processes.sort_key != 'name',
+    )
+
+    # Return the main sort key and the sorted stats
+    return sort_by, stats

@@ -10,7 +10,7 @@
 """Cloud plugin.
 
 Supported Cloud API:
-- OpenStack meta data (class ThreadOpenStack, see bellow): AWS, OVH...
+- OpenStack meta data (class ThreadOpenStack, see below): AWS, OVH...
 """
 
 import threading

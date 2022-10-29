@@ -1,5 +1,5 @@
 <template>
-    <section id="system">
+    <section class="plugin" id="system">
         <span v-if="isDisconnected" class="critical">Disconnected from</span>
         <span class="title">{{ hostname }}</span>
         <span v-if="isLinux" class="hidden-xs hidden-sm">

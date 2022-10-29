@@ -7,7 +7,7 @@
 """
 Script which downloads exe and wheel files hosted on AppVeyor:
 https://ci.appveyor.com/project/giampaolo/psutil
-Copied and readapted from the original recipe of Ibarra Corretge'
+Copied and re-adapted from the original recipe of Ibarra Corretge'
 <saghul@gmail.com>:
 http://code.saghul.net/index.php/2015/09/09/
 """

@@ -65,7 +65,7 @@ def get_install_extras_require():
         'sparklines': ['sparklines'],
         'web': ['bottle', 'requests'],
         'wifi': ['wifi']
-        # 'gpu' and 'sensors' ==> See bellow
+        # 'gpu' and 'sensors' ==> See below
     }
     if sys.platform.startswith('linux'):
         extras_require['sensors'] = ['batinfo']

@@ -122,10 +122,10 @@ Examples of use:
             '--disable-plugin',
             '--disable-plugins',
             dest='disable_plugin',
-            help='disable plugin (comma separed list or all). If all is used, then you need to configure --enable-plugin.',
+            help='disable plugin (comma separated list or all). If all is used, then you need to configure --enable-plugin.',
         )
         parser.add_argument(
-            '--enable-plugin', '--enable-plugins', dest='enable_plugin', help='enable plugin (comma separed list)'
+            '--enable-plugin', '--enable-plugins', dest='enable_plugin', help='enable plugin (comma separated list)'
         )
         parser.add_argument(
             '--disable-process',
@@ -252,7 +252,7 @@ Examples of use:
             help='Accumulate processes by program',
         )
         # Export modules feature
-        parser.add_argument('--export', dest='export', help='enable export module (comma separed list)')
+        parser.add_argument('--export', dest='export', help='enable export module (comma separated list)')
         parser.add_argument(
             '--export-csv-file', default='./glances.csv', dest='export_csv_file', help='file path for CSV exporter'
         )
@@ -772,5 +772,5 @@ Examples of use:
         """
         from glances.password import GlancesPassword
 
-        password = GlancesPassword(username=username)
+        password = GlancesPassword(username=username, config=self.get_config())
         return password.get_password(description, confirm, clear)

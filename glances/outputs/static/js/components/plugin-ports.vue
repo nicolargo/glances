@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="plugin" id="ports">
         <div class="table-row" v-for="(port, portId) in ports" :key="portId">
             <div class="table-cell text-left">
                 <!-- prettier-ignore -->
@@ -10,7 +10,7 @@
                 <span v-if="port.status == 'null'">Scanning</span>
                 <span v-else-if="port.status == 'false'">Timeout</span>
                 <span v-else-if="port.status == 'true'">Open</span>
-                <span v-else> {{ $filters.number(numberport.status * 1000.0, 0) }}ms </span>
+                <span v-else>{{ $filters.number(port.status * 1000.0, 0) }}ms</span>
             </div>
             <div :class="getWebDecoration(port)" class="table-cell" v-if="port.url">
                 <span v-if="port.status == 'null'">Scanning</span>

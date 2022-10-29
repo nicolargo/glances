@@ -19,6 +19,17 @@ import psutil
 # This constant defines the list of available processes sort key
 sort_processes_key_list = ['cpu_percent', 'memory_percent', 'username', 'cpu_times', 'io_counters', 'name']
 
+# Sort dictionary for human
+sort_for_human = {
+    'io_counters': 'disk IO',
+    'cpu_percent': 'CPU consumption',
+    'memory_percent': 'memory consumption',
+    'cpu_times': 'process time',
+    'username': 'user name',
+    'name': 'processs name',
+    None: 'None',
+}
+
 
 class GlancesProcesses(object):
     """Get processed stats using the psutil library."""
@@ -252,6 +263,7 @@ class GlancesProcesses(object):
         #####################
         sorted_attrs = ['cpu_percent', 'cpu_times', 'memory_percent', 'name', 'status', 'num_threads']
         displayed_attr = ['memory_info', 'nice', 'pid']
+        # 'name' can not be cached because it is used for filtering
         cached_attrs = ['cmdline', 'username']
 
         # Some stats are optional
@@ -273,6 +285,7 @@ class GlancesProcesses(object):
             is_cached = True
 
         # Build the processes stats list (it is why we need psutil>=5.3.0)
+        # This is on of the main bottleneck of Glances (see flame graph)
         self.processlist = [
             p.info
             for p in psutil.process_iter(attrs=sorted_attrs, ad_value=None)
@@ -309,7 +322,7 @@ class GlancesProcesses(object):
                     top_process = psutil.Process(proc['pid'])
                     extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
                     if LINUX:
-                        # num_fds only avalable on Unix system (see issue #1351)
+                        # num_fds only available on Unix system (see issue #1351)
                         extended_stats += ['num_fds']
                     if WINDOWS:
                         extended_stats += ['num_handles']

@@ -115,7 +115,7 @@ class GlancesStats(object):
             # on the console but do not crash
             logger.critical("Error while initializing the {} plugin ({})".format(name, e))
             logger.error(traceback.format_exc())
-            # An error occure, disable the plugin
+            # An error occurred, disable the plugin
             if args is not None:
                 setattr(args, 'disable_' + name, False)
         else:

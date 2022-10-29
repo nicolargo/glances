@@ -47,7 +47,7 @@ class GlancesFilter(object):
 
     @property
     def filter_input(self):
-        """Return the filter given by the user (as a sting)"""
+        """Return the filter given by the user (as a string)"""
         return self._filter_input
 
     @property
@@ -57,7 +57,7 @@ class GlancesFilter(object):
 
     @filter.setter
     def filter(self, value):
-        """Set the filter (as a sting) and compute the regular expression
+        """Set the filter (as a string) and compute the regular expression
 
         A filter could be one of the following:
         - python > Process name of cmd start with python
@@ -131,7 +131,7 @@ class GlancesFilter(object):
             # If the key did not exist
             return False
         try:
-            return self._filter_re.match(value) is None
+            return self._filter_re.fullmatch(value) is None
         except (AttributeError, TypeError):
             # AttributeError -  Filter processes crashes with a bad regular expression pattern (issue #665)
             # TypeError - Filter processes crashes if value is None (issue #1105)

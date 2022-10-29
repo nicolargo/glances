@@ -6,7 +6,7 @@
                 <div
                     class="table-cell"
                     :class="['sortable', sorter.column === 'cpu_percent' && 'sort']"
-                    @click="$emit('update:sorter', 'cpu_percen')"
+                    @click="$emit('update:sorter', 'cpu_percent')"
                 >
                     CPU%
                 </div>
@@ -46,16 +46,16 @@
                 <div
                     v-show="ioReadWritePresent"
                     class="table-cell hidden-xs hidden-sm"
-                    :class="['sortable', sorter.column === 'io_read' && 'sort']"
-                    @click="$emit('update:sorter', 'io_read')"
+                    :class="['sortable', sorter.column === 'io_counters' && 'sort']"
+                    @click="$emit('update:sorter', 'io_counters')"
                 >
                     IOR/s
                 </div>
                 <div
                     v-show="ioReadWritePresent"
                     class="table-cell text-left hidden-xs hidden-sm"
-                    :class="['sortable', sorter.column === 'io_write' && 'sort']"
-                    @click="$emit('update:sorter', 'io_write')"
+                    :class="['sortable', sorter.column === 'io_counters' && 'sort']"
+                    @click="$emit('update:sorter', 'io_counters')"
                 >
                     IOW/s
                 </div>
@@ -215,7 +215,12 @@ export default {
 
             return orderBy(
                 processes,
-                [sorter.column],
+                [sorter.column].reduce((retval, col) => {
+                    if (col === 'io_counters') {
+                        col = ['io_read', 'io_write']
+                    }
+                    return retval.concat(col);
+                }, []),
                 [sorter.isReverseColumn(sorter.column) ? 'desc' : 'asc']
             ).slice(0, this.limit);
         },

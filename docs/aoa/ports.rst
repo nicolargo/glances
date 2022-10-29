@@ -50,7 +50,7 @@ configuration file.
     # web_x_url is the URL to monitor (example: http://my.site.com/folder)
     # web_x_description is optional (if not set, define to URL)
     # web_x_timeout is optional and overwrite the default timeout value
-    # web_x_rtt_warning is optional and defines the warning respond time in ms (approximatively)
+    # web_x_rtt_warning is optional and defines the warning respond time in ms (approximately)
     #
     web_1_url=https://blog.nicolargo.com
     web_1_description=My Blog

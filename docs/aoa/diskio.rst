@@ -10,7 +10,7 @@ dynamically.
 
 You can display:
 
-- bytes per second (default behavor / Bytes/s, KBytes/s, MBytes/s, etc)
+- bytes per second (default behavior / Bytes/s, KBytes/s, MBytes/s, etc)
 - requests per second (using --diskio-iops option or *B* hotkey)
 
 There is no alert on this information.

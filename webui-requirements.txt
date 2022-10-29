@@ -1,0 +1,4 @@
+# install with base requirements file
+-r requirements.txt
+
+bottle

@@ -106,7 +106,7 @@ class PluginModel(GlancesPluginModel):
 
             # Loop over fs
             for fs in fs_stat:
-                # Shall we display the stats ?
+                # Hide the stats if the mount point is in the exclude list
                 if not self.is_display(fs.mountpoint):
                     continue
 
@@ -128,6 +128,12 @@ class PluginModel(GlancesPluginModel):
                     'percent': fs_usage.percent,
                     'key': self.get_key(),
                 }
+
+                # Hide the stats if the device name is in the exclude list
+                # Correct issue: glances.conf FS hide not applying #1666
+                if not self.is_display(fs_current['device_name']):
+                    continue
+
                 stats.append(fs_current)
 
         elif self.input_method == 'snmp':

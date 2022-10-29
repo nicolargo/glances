@@ -17,7 +17,7 @@ starts every time the 'g' key is pressed in the CLI interface.
     # generate_every to a non zero value corresponding to the seconds between
     # two generation. Set it to 0 to disable graph auto generation.
     generate_every=60
-    # See followings configuration keys definitions in the Pygal lib documentation
+    # See following configuration keys definitions in the Pygal lib documentation
     # http://pygal.org/en/stable/documentation/index.html
     width=800
     height=600

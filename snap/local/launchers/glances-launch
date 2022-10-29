@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# This is the maintainence launcher for the snap, make necessary runtime
+# This is the maintenance launcher for the snap, make necessary runtime
 # environment changes to make the snap work here.  You may also insert
 # security confinement/deprecation/obsoletion notice of the snap here.
 set \
