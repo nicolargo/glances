@@ -9,6 +9,20 @@ Version 3.3.1
     Under development, see milestone https://github.com/nicolargo/glances/milestone/61
 
 ===============
+Version 3.3.0.2
+===============
+
+Bug corrected:
+    * Password files in same configuration dir in effect #2143
+    * Fail to load config file on Python 3.10 #2176
+
+===============
+Version 3.3.0.1
+===============
+
+Just a version to rebuild the Docker images.
+
+===============
 Version 3.3.0
 ===============
 
