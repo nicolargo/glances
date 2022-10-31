@@ -15,6 +15,7 @@ import shlex
 import subprocess
 import time
 import unittest
+import os
 
 from glances import __version__
 from glances.compat import ServerProxy
@@ -43,7 +44,11 @@ class TestGlances(unittest.TestCase):
         global pid
 
         print('INFO: [TEST_000] Start the Glances Web Server')
-        cmdline = "python -m glances -B localhost -s -p %s" % SERVER_PORT
+        if os.path.isfile("./venv/bin/python"):
+            cmdline = "./venv/bin/python"
+        else:
+            cmdline = "python"
+        cmdline += " -m glances -B localhost -s --disable-autodiscover -p %s" % SERVER_PORT
         print("Run the Glances Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
