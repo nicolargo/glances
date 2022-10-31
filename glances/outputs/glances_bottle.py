@@ -127,8 +127,7 @@ class GlancesBottle(object):
         if username == self.args.username:
             from glances.password import GlancesPassword
 
-            pwd = GlancesPassword(username=username,
-                                  config=self.config)
+            pwd = GlancesPassword(username=username, config=self.config)
             return pwd.check_password(self.args.password, pwd.sha256_hash(password))
         else:
             return False

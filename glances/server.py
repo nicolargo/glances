@@ -67,8 +67,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
         if username in self.server.user_dict:
             from glances.password import GlancesPassword
 
-            pwd = GlancesPassword(username=username,
-                                  config=self.config)
+            pwd = GlancesPassword(username=username, config=self.config)
             return pwd.check_password(self.server.user_dict[username], password)
         else:
             return False
@@ -94,10 +93,7 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
 
     finished = False
 
-    def __init__(self, bind_address,
-                 bind_port=61209,
-                 requestHandler=GlancesXMLRPCHandler,
-                 config=None):
+    def __init__(self, bind_address, bind_port=61209, requestHandler=GlancesXMLRPCHandler, config=None):
 
         self.bind_address = bind_address
         self.bind_port = bind_port
@@ -196,10 +192,7 @@ class GlancesServer(object):
 
         # Init the XML RPC server
         try:
-            self.server = GlancesXMLRPCServer(args.bind_address,
-                                              args.port,
-                                              requestHandler,
-                                              config=config)
+            self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler, config=config)
         except Exception as e:
             logger.critical("Cannot start Glances server: {}".format(e))
             sys.exit(2)
