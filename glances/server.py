@@ -219,6 +219,7 @@ class GlancesServer(object):
         if not self.args.disable_autodiscover:
             # Note: The Zeroconf service name will be based on the hostname
             # Correct issue: Zeroconf problem with zeroconf service name #889
+            logger.info('Autodiscover is enabled with service name {}'.format(socket.gethostname().split('.', 1)[0]))
             self.autodiscover_client = GlancesAutoDiscoverClient(socket.gethostname().split('.', 1)[0], args)
         else:
             logger.info("Glances autodiscover announce is disabled")
