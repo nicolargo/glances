@@ -48,7 +48,7 @@ class TestGlances(unittest.TestCase):
             cmdline = "./venv/bin/python"
         else:
             cmdline = "python"
-        cmdline += " -m glances -B localhost -s --disable-autodiscover -p %s" % SERVER_PORT
+        cmdline += " -m glances -B localhost -s -p %s" % SERVER_PORT
         print("Run the Glances Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
