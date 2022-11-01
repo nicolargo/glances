@@ -57,16 +57,14 @@ Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can
 add new plugins or exports modules.
 
-Sponsoring this project
-=======================
+Project sponsorship
+===================
 
-You can help me to achieve my goals of improving the world through code,
-help me create better developer experiences, or just say "thank you".
-
-You can:
+You can help me to achieve my goals of improving this open-source project
+or just say "thank you" by:
 
 - sponsor me using one-time or monthly tier Github sponsors_ page
-- send me some pieces fo bitcoin: 185KN9FCix3svJYp7JQM7hRMfSKyeaJR4X
+- send me some pieces of bitcoin: 185KN9FCix3svJYp7JQM7hRMfSKyeaJR4X
 - buy me a gift on my wishlist_ page
 
 Any and all contributions are greatly appreciated.
