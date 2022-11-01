@@ -5,12 +5,15 @@
         <span>{{ running }} run,</span>
         <span>{{ sleeping }} slp,</span>
         <span>{{ stopped }} oth</span>
+        <span>{{ args.programs ? 'Programs' : 'Threads' }}</span>
         <span class="title">{{ sorter.auto ? 'sorted automatically' : 'sorted' }}</span>
         <span>by {{ sorter.getColumnLabel(sorter.column) }}</span>
     </section>
 </template>
 
 <script>
+import { store } from '../store.js';
+
 export default {
     props: {
         data: {
@@ -20,7 +23,15 @@ export default {
             type: Object
         }
     },
+    data() {
+        return {
+            store
+        };
+    },
     computed: {
+        args() {
+            return this.store.args || {};
+        },
         stats() {
             return this.data.stats['processcount'];
         },
