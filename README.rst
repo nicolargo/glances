@@ -65,9 +65,9 @@ help me create better developer experiences, or just say "thank you".
 
 You can:
 
-- :angel: sponsor me using one-time or monthly tier Github sponsors_ page
-- :money_mouth: send me some pieces fo bitcoin: 185KN9FCix3svJYp7JQM7hRMfSKyeaJR4X
-- :gift: send me a gift on my wishlist_ page
+- sponsor me using one-time or monthly tier Github sponsors_ page
+- send me some pieces fo bitcoin: 185KN9FCix3svJYp7JQM7hRMfSKyeaJR4X
+- buy me a gift on my wishlist_ page
 
 Any and all contributions are greatly appreciated.
 
