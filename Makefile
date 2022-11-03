@@ -101,6 +101,9 @@ webui: venv-dev-upgrade ## Build the Web UI
 webui-audit: venv-dev-upgrade ## Audit the Web UI
 	cd glances/outputs/static/ && npm audit
 
+webui-audit-fix: venv-dev-upgrade ## Fix audit the Web UI
+	cd glances/outputs/static/ && npm audit fix && npm ci && npm run build
+
 # ===================================================================
 # Packaging
 # ===================================================================
