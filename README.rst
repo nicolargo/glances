@@ -193,25 +193,20 @@ If you want to support other distributions, please contribute to `glancesautoins
 Docker: the fun way
 -------------------
 
-Glances containers are availables. You can use it to monitor your
-server and all your other containers!
+Glances Docker images are availables. You can use it to monitor your
+server and all your containers !
 
 Get the Glances container:
 
 .. code-block:: console
 
-    docker pull nicolargo/glances:alpine-latest-full
+    docker pull nicolargo/glances:latest-full
 
 The following tags are availables:
 
-- *alpine-latest-full* for a full Alpine Glances image (latest release) with all dependencies
-- *latest-full* for a full Debian Glances image (latest release) with all dependencies
-- *alpine-latest* for a basic Alpine Glances (latest release) version with minimal dependencies
-- *latest* for a basic Debian Glances image (latest release) with minimal dependencies
-- *alpine-dev* for a basic Alpine Glances image (development branch) with all dependencies
-- *dev* for a basic Debian Glances image (development branch) with all dependencies
-
-You can also specify a version (example: *alpine-3.2.7-full*).
+- *latest-full* for a full Alpine Glances image (latest release) with all dependencies
+- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
 
 Run last version of Glances container in *console mode*:
 

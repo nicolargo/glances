@@ -118,17 +118,12 @@ flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
 # Docker
 # ===================================================================
 
-docker: docker-alpine docker-debian
+docker: docker-alpine
 
 docker-alpine:
 	docker build --target full -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-full .
 	docker build --target minimal -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-minimal .
 	docker build --target dev -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-dev .
-
-docker-debian:
-	docker build --target full -f ./docker-files/debian.Dockerfile -t glances:local-debian-full .
-	docker build --target minimal -f ./docker-files/debian.Dockerfile -t glances:local-debian-minimal .
-	docker build --target dev -f ./docker-files/debian.Dockerfile -t glances:local-debian-dev .
 
 # ===================================================================
 # Run
@@ -151,15 +146,6 @@ run-docker-alpine-full: ## Start Glances Alpine Docker full in console mode
 
 run-docker-alpine-dev: ## Start Glances Alpine Docker dev in console mode
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-dev
-
-run-docker-debian-minimal: ## Start Glances Debian Docker minimal in console mode
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-debian-minimal
-
-run-docker-debian-full: ## Start Glances Debian Docker full in console mode
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-debian-full
-
-run-docker-debian-dev: ## Start Glances Debian Docker dev in console mode
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-debian-dev
 
 run-webserver: ## Start Glances in Web server mode
 	./venv/bin/python -m glances -C ./conf/glances.conf -w

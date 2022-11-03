@@ -33,12 +33,15 @@ RUN apk add --no-cache \
 
 FROM build as buildRequirements
 ARG PYTHON_VERSION
+
 COPY requirements.txt .
-COPY webui-requirements.txt .
 RUN pip3 install --no-cache-dir --user -r requirements.txt
+
 # Minimal means no webui, but it break what is done previously (see #2155)
 # So install the webui requirements...
+COPY webui-requirements.txt .
 RUN pip3 install --no-cache-dir --user -r webui-requirements.txt
+
 # As minimal image we want to monitor others docker containers
 RUN pip3 install --no-cache-dir --user docker
 
@@ -48,10 +51,9 @@ RUN pip3 install --no-cache-dir --user glances
 
 ##############################################################################
 
-FROM build as buildOptionalRequirements
+FROM buildRequirements as buildOptionalRequirements
 ARG PYTHON_VERSION
 
-COPY requirements.txt .
 COPY optional-requirements.txt .
 RUN CASS_DRIVER_NO_CYTHON=1 pip3 install --no-cache-dir --user -r optional-requirements.txt
 
@@ -70,9 +72,8 @@ COPY ./docker-compose/glances.conf /etc/glances.conf
 # EXPOSE PORT (XMLRPC / WebUI)
 EXPOSE 61209 61208
 
-WORKDIR /glances
-
 # Define default command.
+WORKDIR /glances
 CMD python3 -m glances -C /etc/glances.conf $GLANCES_OPT
 
 ##############################################################################
@@ -85,6 +86,8 @@ ARG PYTHON_VERSION
 
 RUN apk add --no-cache \
   python3 \
+  py3-packaging \
+  py3-dateutil \
   curl \
   lm-sensors \
   wireless-tools \
@@ -94,10 +97,11 @@ COPY --from=buildRequirements /root/.local/bin /usr/local/bin/
 COPY --from=buildRequirements /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/lib/python${PYTHON_VERSION}/site-packages/
 COPY ./docker-compose/glances.conf /etc/glances.conf
 
-# EXPOSE PORT (XMLRPC only because WebUI is not available)
-EXPOSE 61209
+# EXPOSE PORT (XMLRPC / WebUI)
+EXPOSE 61209 61208
 
 # Define default command.
+WORKDIR /glances
 CMD python3 -m glances -C /etc/glances.conf $GLANCES_OPT
 
 ##############################################################################
@@ -122,7 +126,6 @@ EXPOSE 61209 61208
 RUN ln -sf /dev/stdout /tmp/glances-root.log \
     && ln -sf /dev/stderr /var/log/error.log
 
-WORKDIR /glances
-
 # Define default command.
+WORKDIR /glances
 CMD python3 -m glances -C /etc/glances.conf $GLANCES_OPT
