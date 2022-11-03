@@ -9,7 +9,7 @@ Version 3.3.1
     Under development, see milestone https://github.com/nicolargo/glances/milestone/61
 
 ===============
-Version 3.3.0.3
+Version 3.3.0.4
 ===============
 
 Refactor the Docker images factory, from now, only Alpine image wll be provided.
