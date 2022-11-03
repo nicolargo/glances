@@ -51,9 +51,10 @@ RUN pip3 install --no-cache-dir --user glances
 
 ##############################################################################
 
-FROM buildRequirements as buildOptionalRequirements
+FROM build as buildOptionalRequirements
 ARG PYTHON_VERSION
 
+COPY requirements.txt .
 COPY optional-requirements.txt .
 RUN CASS_DRIVER_NO_CYTHON=1 pip3 install --no-cache-dir --user -r optional-requirements.txt
 
