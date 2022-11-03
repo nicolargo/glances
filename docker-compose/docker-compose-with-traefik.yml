@@ -15,7 +15,7 @@ services:
       - "traefik.frontend.rule=Host:whoami.docker.localhost"
 
   monitoring:
-    image: nicolargo/glances:alpine-dev
+    image: nicolargo/glances:dev
     restart: unless-stopped
     pid: host
     privileged: true
