@@ -67,7 +67,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
         if username in self.server.user_dict:
             from glances.password import GlancesPassword
 
-            pwd = GlancesPassword()
+            pwd = GlancesPassword(username=username, config=self.config)
             return pwd.check_password(self.server.user_dict[username], password)
         else:
             return False
@@ -93,10 +93,11 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
 
     finished = False
 
-    def __init__(self, bind_address, bind_port=61209, requestHandler=GlancesXMLRPCHandler):
+    def __init__(self, bind_address, bind_port=61209, requestHandler=GlancesXMLRPCHandler, config=None):
 
         self.bind_address = bind_address
         self.bind_port = bind_port
+        self.config = config
         try:
             self.address_family = socket.getaddrinfo(bind_address, bind_port)[0][0]
         except socket.error as e:
@@ -191,7 +192,7 @@ class GlancesServer(object):
 
         # Init the XML RPC server
         try:
-            self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler)
+            self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler, config=config)
         except Exception as e:
             logger.critical("Cannot start Glances server: {}".format(e))
             sys.exit(2)
@@ -211,6 +212,7 @@ class GlancesServer(object):
         if not self.args.disable_autodiscover:
             # Note: The Zeroconf service name will be based on the hostname
             # Correct issue: Zeroconf problem with zeroconf service name #889
+            logger.info('Autodiscover is enabled with service name {}'.format(socket.gethostname().split('.', 1)[0]))
             self.autodiscover_client = GlancesAutoDiscoverClient(socket.gethostname().split('.', 1)[0], args)
         else:
             logger.info("Glances autodiscover announce is disabled")
