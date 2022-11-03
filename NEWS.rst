@@ -9,6 +9,18 @@ Version 3.3.1
     Under development, see milestone https://github.com/nicolargo/glances/milestone/61
 
 ===============
+Version 3.3.0.3
+===============
+
+Refactor the Docker images factory, from now, only Alpine image wll be provided.
+
+The following Docker images (nicolargo/glances) are availables:
+
+- *latest-full* for a full Alpine Glances image (latest release) with all dependencies
+- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
+
+===============
 Version 3.3.0.2
 ===============
 
