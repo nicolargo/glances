@@ -6,3 +6,5 @@ flake8
 autopep8
 autoflake
 codespell
+memory-profiler
+matplotlib
