@@ -199,7 +199,7 @@ export default {
                     ((isWindows && process.nice != 32) || (!isWindows && process.nice != 0));
 
                 if (Array.isArray(process.cmdline)) {
-                    process.cmdline = process.cmdline.join(' ');
+                    process.cmdline = process.cmdline.join(' ').replace(/\n/g, ' ');
                 }
 
                 if (process.cmdline === null) {
