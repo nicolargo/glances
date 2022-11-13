@@ -14,9 +14,7 @@ currently being supported with security updates.
 
 If there are any vulnerabilities in {{cookiecutter.project_name}}, don't hesitate to report them.
 
-    1. Use any of the private contact addresses: contact@nicolargo.com
-
-    2. Describe the vulnerability.
+    1. Describe the vulnerability.
 
       * Type of issue (e.g. buffer overflow, SQL injection, cross-site scripting, etc.)
       * Full paths of source file(s) related to the manifestation of the issue
@@ -26,11 +24,11 @@ If there are any vulnerabilities in {{cookiecutter.project_name}}, don't hesitat
       * Proof-of-concept or exploit code (if possible)
       * Impact of the issue, including how an attacker might exploit the issue
 
-    3. If you have a fix, that is most welcome -- please attach or summarize it in your message!
+    2. If you have a fix, that is most welcome -- please attach or summarize it in your message!
 
-    4. We will evaluate the vulnerability and, if necessary, release a fix or mitigating steps to address it. We will contact you to let you know the outcome, and will credit you in the report.
+    3. We will evaluate the vulnerability and, if necessary, release a fix or mitigating steps to address it. We will contact you to let you know the outcome, and will credit you in the report.
 
-    5. Please do not disclose the vulnerability publicly until a fix is released!
+    4. Please do not disclose the vulnerability publicly until a fix is released!
 
 Once we have either a) published a fix, or b) declined to address the vulnerability for whatever reason, you are free to publicly disclose it.
 
