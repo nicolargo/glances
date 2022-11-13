@@ -48,7 +48,7 @@ def split_cmdline(bare_process_name, cmdline):
         path, cmd = "", cmdline[0]
     else:
         path, cmd = os.path.split(cmdline[0])
-    arguments = ' '.join(cmdline[1:])
+    arguments = ' '.join(cmdline[1:]).replace('\n', ' ')
     return path, cmd, arguments
 
 
