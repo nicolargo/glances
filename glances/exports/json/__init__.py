@@ -1,9 +1,8 @@
 """JSON interface class."""
 
 import sys
-import json
 
-from glances.globals import listkeys
+from glances.globals import listkeys, json_dumps
 from glances.logger import logger
 from glances.exports.export import GlancesExport
 
@@ -50,7 +49,7 @@ class Export(GlancesExport):
 
             # Export stats to JSON file
             with open(self.json_filename, "w") as self.json_file:
-                self.json_file.write("{}\n".format(json.dumps(self.buffer)))
+                self.json_file.write("{}\n".format(json_dumps(self.buffer)))
 
             # Reset buffer
             self.buffer = {}

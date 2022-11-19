@@ -6,3 +6,6 @@ flake8
 autopep8
 autoflake
 codespell
+memory-profiler
+matplotlib
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability

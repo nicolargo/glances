@@ -53,7 +53,7 @@ def processes_to_programs(processes):
             programs_dict[p[key]]['childrens'].append(p['pid'])
             # If all the subprocess has the same value, display it
             programs_dict[p[key]]['username'] = (
-                p['username'] if p['username'] == programs_dict[p[key]]['username'] else '_'
+                p['username'] if ('username' in p) and (p['username'] == programs_dict[p[key]]['username']) else '_'
             )
             programs_dict[p[key]]['nice'] = p['nice'] if p['nice'] == programs_dict[p[key]]['nice'] else '_'
             programs_dict[p[key]]['status'] = p['status'] if p['status'] == programs_dict[p[key]]['status'] else '_'

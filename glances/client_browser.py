@@ -9,7 +9,7 @@
 
 """Manage the Glances client browser (list of Glances server)."""
 
-import json
+import ujson
 import socket
 import threading
 
@@ -98,12 +98,12 @@ class GlancesClientBrowser(object):
             # Mandatory stats
             try:
                 # CPU%
-                cpu_percent = 100 - json.loads(s.getCpu())['idle']
+                cpu_percent = 100 - ujson.loads(s.getCpu())['idle']
                 server['cpu_percent'] = '{:.1f}'.format(cpu_percent)
                 # MEM%
-                server['mem_percent'] = json.loads(s.getMem())['percent']
+                server['mem_percent'] = ujson.loads(s.getMem())['percent']
                 # OS (Human Readable name)
-                server['hr_name'] = json.loads(s.getSystem())['hr_name']
+                server['hr_name'] = ujson.loads(s.getSystem())['hr_name']
             except (socket.error, Fault, KeyError) as e:
                 logger.debug("Error while grabbing stats form {}: {}".format(uri, e))
                 server['status'] = 'OFFLINE'
@@ -123,7 +123,7 @@ class GlancesClientBrowser(object):
                 # Optional stats (load is not available on Windows OS)
                 try:
                     # LOAD
-                    load_min5 = json.loads(s.getLoad())['min5']
+                    load_min5 = ujson.loads(s.getLoad())['min5']
                     server['load_min5'] = '{:.2f}'.format(load_min5)
                 except Exception as e:
                     logger.warning("Error while grabbing stats form {}: {}".format(uri, e))
