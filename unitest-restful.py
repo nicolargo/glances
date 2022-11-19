@@ -18,11 +18,6 @@ import numbers
 import unittest
 import sys
 
-# Check Python version
-if sys.version_info < (3, 4):
-    print('Glances requires at least Python 3.4 to run.')
-    sys.exit(1)
-
 from glances import __version__
 from glances.globals import text_type
 

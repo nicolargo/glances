@@ -177,13 +177,13 @@ class GlancesPluginModel(object):
 
     def update_stats_history(self):
         """Update stats history."""
-        # If the plugin data is a dict, the dict's key should be used
-        if self.get_key() is None:
-            item_name = ''
-        else:
-            item_name = self.get_key()
         # Build the history
         if self.get_export() and self.history_enable():
+            # If the plugin data is a dict, the dict's key should be used
+            if self.get_key() is None:
+                item_name = ''
+            else:
+                item_name = self.get_key()
             for i in self.get_items_history_list():
                 if isinstance(self.get_export(), list):
                     # Stats is a list of data

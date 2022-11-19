@@ -186,6 +186,9 @@ class GlancesAutoDiscoverClient(object):
                     # Issue #528 (no network interface available)
                     pass
 
+            # Ensure zeroconf_bind_address is an IP address not an host
+            zeroconf_bind_address = socket.gethostbyname(zeroconf_bind_address)
+
             # Check IP v4/v6
             address_family = socket.getaddrinfo(zeroconf_bind_address, args.port)[0][0]
 

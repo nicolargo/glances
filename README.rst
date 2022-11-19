@@ -57,12 +57,25 @@ Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can
 add new plugins or exports modules.
 
+Project sponsorship
+===================
+
+You can help me to achieve my goals of improving this open-source project
+or just say "thank you" by:
+
+- sponsor me using one-time or monthly tier Github sponsors_ page
+- send me some pieces of bitcoin: 185KN9FCix3svJYp7JQM7hRMfSKyeaJR4X
+- buy me a gift on my wishlist_ page
+
+Any and all contributions are greatly appreciated.
+
 Requirements
 ============
 
 - ``python>=3.4``
 - ``psutil>=5.3.0`` (better with latest version)
 - ``defusedxml`` (in order to monkey patch xmlrpc)
+- ``ujson`` (an optimized alternative to the standard json module)
 
 *Note for Python 2 users*
 
@@ -175,25 +188,20 @@ If you want to support other distributions, please contribute to `glancesautoins
 Docker: the fun way
 -------------------
 
-Glances containers are availables. You can use it to monitor your
-server and all your other containers!
+Glances Docker images are availables. You can use it to monitor your
+server and all your containers !
 
 Get the Glances container:
 
 .. code-block:: console
 
-    docker pull nicolargo/glances:alpine-latest-full
+    docker pull nicolargo/glances:latest-full
 
 The following tags are availables:
 
-- *alpine-latest-full* for a full Alpine Glances image (latest release) with all dependencies
-- *latest-full* for a full Debian Glances image (latest release) with all dependencies
-- *alpine-latest* for a basic Alpine Glances (latest release) version with minimal dependencies
-- *latest* for a basic Debian Glances image (latest release) with minimal dependencies
-- *alpine-dev* for a basic Alpine Glances image (development branch) with all dependencies
-- *dev* for a basic Debian Glances image (development branch) with all dependencies
-
-You can also specify a version (example: *alpine-3.2.7-full*).
+- *latest-full* for a full Alpine Glances image (latest release) with all dependencies
+- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
 
 Run last version of Glances container in *console mode*:
 
@@ -436,15 +444,6 @@ There is also a chat dedicated to the Glances developers:
 .. image:: https://badges.gitter.im/Join%20Chat.svg
         :target: https://gitter.im/nicolargo/glances?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-Donation
-========
-
-If you like this open-source project, you can become a sponsor.
-
-See the Github sponsors_ page (one-time or monthly tier available).
-
-Or send me some bitcoins: 185KN9FCix3svJYp7JQM7hRMfSKyeaJR4X
-
 Author
 ======
 
@@ -467,5 +466,6 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
 .. _package: https://repology.org/metapackage/glances/packages
 .. _sponsors: https://github.com/sponsors/nicolargo
+.. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
 .. _issue2021: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
 .. _issue2021comment: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157

@@ -74,6 +74,18 @@ trace-malloc: ## Trace the malloc() calls
 memory-leak: ## Profile memory leaks
 	./venv/bin/python -m glances -C ./conf/glances.conf --memory-leak
 
+memory-profiling: ## Profile memory usage
+	@echo "It's a very long test (~4 hours)..."
+	rm -f mprofile_*.dat
+	@echo "1/2 - Start memory profiling with the history option enable"
+	./venv/bin/mprof run -T 1 -C run.py -C ./conf/glances.conf --stop-after 2400 --quiet
+	./venv/bin/mprof plot --output ./docs/_static/glances-memory-profiling-with-history.png
+	rm -f mprofile_*.dat
+	@echo "2/2 - Start memory profiling with the history option disable"
+	./venv/bin/mprof run -T 1 -C run.py -C ./conf/glances.conf --disable-history --stop-after 2400 --quiet
+	./venv/bin/mprof plot --output ./docs/_static/glances-memory-profiling-without-history.png
+	rm -f mprofile_*.dat
+
 # ===================================================================
 # Docs
 # ===================================================================
@@ -118,17 +130,12 @@ flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
 # Docker
 # ===================================================================
 
-docker: docker-alpine docker-debian
+docker: docker-alpine ## Generate local docker images
 
-docker-alpine:
+docker-alpine: ## Generate local docker images (Alpine)
 	docker build --target full -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-full .
 	docker build --target minimal -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-minimal .
 	docker build --target dev -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-dev .
-
-docker-debian:
-	docker build --target full -f ./docker-files/debian.Dockerfile -t glances:local-debian-full .
-	docker build --target minimal -f ./docker-files/debian.Dockerfile -t glances:local-debian-minimal .
-	docker build --target dev -f ./docker-files/debian.Dockerfile -t glances:local-debian-dev .
 
 # ===================================================================
 # Run
@@ -151,15 +158,6 @@ run-docker-alpine-full: ## Start Glances Alpine Docker full in console mode
 
 run-docker-alpine-dev: ## Start Glances Alpine Docker dev in console mode
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-dev
-
-run-docker-debian-minimal: ## Start Glances Debian Docker minimal in console mode
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-debian-minimal
-
-run-docker-debian-full: ## Start Glances Debian Docker full in console mode
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-debian-full
-
-run-docker-debian-dev: ## Start Glances Debian Docker dev in console mode
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-debian-dev
 
 run-webserver: ## Start Glances in Web server mode
 	./venv/bin/python -m glances -C ./conf/glances.conf -w

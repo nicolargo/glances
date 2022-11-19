@@ -40,9 +40,7 @@ class GlancesPassword(object):
         if self.config is None:
             return user_config_dir()
         else:
-            return self.config.get_value('passwords',
-                                         'local_password_path',
-                                         default=user_config_dir())
+            return self.config.get_value('passwords', 'local_password_path', default=user_config_dir())
 
     def get_hash(self, plain_password, salt=''):
         """Return the hashed password, salt + pbkdf2_hmac."""
