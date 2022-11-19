@@ -130,9 +130,9 @@ flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
 # Docker
 # ===================================================================
 
-docker: docker-alpine
+docker: docker-alpine ## Generate local docker images
 
-docker-alpine:
+docker-alpine: ## Generate local docker images (Alpine)
 	docker build --target full -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-full .
 	docker build --target minimal -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-minimal .
 	docker build --target dev -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-dev .
