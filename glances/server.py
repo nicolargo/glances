@@ -9,7 +9,7 @@
 
 """Manage the Glances server."""
 
-import json
+from glances.globals import json_dumps
 import socket
 import sys
 from base64 import b64decode
@@ -147,19 +147,19 @@ class GlancesInstance(object):
     def getAll(self):
         # Update and return all the stats
         self.__update__()
-        return json.dumps(self.stats.getAll())
+        return json_dumps(self.stats.getAll())
 
     def getAllPlugins(self):
         # Return the plugins list
-        return json.dumps(self.stats.getPluginsList())
+        return json_dumps(self.stats.getPluginsList())
 
     def getAllLimits(self):
         # Return all the plugins limits
-        return json.dumps(self.stats.getAllLimitsAsDict())
+        return json_dumps(self.stats.getAllLimitsAsDict())
 
     def getAllViews(self):
         # Return all the plugins views
-        return json.dumps(self.stats.getAllViewsAsDict())
+        return json_dumps(self.stats.getAllViewsAsDict())
 
     def __getattr__(self, item):
         """Overwrite the getattr method in case of attribute is not found.

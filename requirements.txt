@@ -2,3 +2,6 @@ psutil>=5.3.0
 defusedxml
 packaging
 future; python_version < "3.0"
+ujson<3; python_version < "3.0"
+ujson<5; python_version >= "3.6" and python_version < "3.7"
+ujson; python_version >= "3.7"
