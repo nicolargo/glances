@@ -470,7 +470,7 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _readthedocs: https://glances.readthedocs.io/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
-.. _package: https://repology.org/metapackage/glances/packages
+.. _package: https://repology.org/project/glances/versions
 .. _sponsors: https://github.com/sponsors/nicolargo
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
 .. _issue2021: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
