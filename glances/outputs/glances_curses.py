@@ -680,7 +680,6 @@ class _GlancesCurses(object):
             new_filter = self.display_popup(
                 'Process filter pattern: \n\n'
                 + 'Examples:\n'
-                + '- python\n'
                 + '- .*python.*\n'
                 + '- /usr/lib.*\n'
                 + '- name:.*nautilus.*\n'
