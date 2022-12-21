@@ -13,7 +13,7 @@ import errno
 import os
 import sys
 import platform
-import json
+import ujson
 from operator import itemgetter
 
 # OS constants (some libraries/features are OS-dependent)
@@ -53,9 +53,9 @@ def json_dumps(data):
     Manage the issue #815 for Windows OS with UnicodeDecodeError catching.
     """
     try:
-        return json.dumps(data)
+        return ujson.dumps(data)
     except UnicodeDecodeError:
-        return json.dumps(data, ensure_ascii=False)
+        return ujson.dumps(data, ensure_ascii=False)
 
 
 def json_dumps_dictlist(data, item):

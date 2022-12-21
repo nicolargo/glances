@@ -9,7 +9,6 @@
 
 """Web interface class."""
 
-import json
 import os
 import sys
 import tempfile
@@ -18,6 +17,7 @@ import webbrowser
 import zlib
 import socket
 
+from glances.globals import json_dumps
 from glances.compat import b
 from glances.timer import Timer
 from glances.logger import logger
@@ -240,7 +240,7 @@ class GlancesBottle(object):
         # Update the stat
         view_data = self.stats.get_plugin("help").get_view_data()
         try:
-            plist = json.dumps(view_data, sort_keys=True)
+            plist = json_dumps(view_data)
         except Exception as e:
             abort(404, "Cannot get help view data (%s)" % str(e))
         return plist
@@ -278,7 +278,7 @@ class GlancesBottle(object):
         self.__update__()
 
         try:
-            plist = json.dumps(self.plugins_list)
+            plist = json_dumps(self.plugins_list)
         except Exception as e:
             abort(404, "Cannot get plugin list (%s)" % str(e))
         return plist
@@ -307,7 +307,7 @@ class GlancesBottle(object):
 
         try:
             # Get the JSON value of the stat ID
-            statval = json.dumps(self.stats.getAllAsDict())
+            statval = json_dumps(self.stats.getAllAsDict())
         except Exception as e:
             abort(404, "Cannot get stats (%s)" % str(e))
 
@@ -326,7 +326,7 @@ class GlancesBottle(object):
 
         try:
             # Get the JSON value of the stat limits
-            limits = json.dumps(self.stats.getAllLimitsAsDict())
+            limits = json_dumps(self.stats.getAllLimitsAsDict())
         except Exception as e:
             abort(404, "Cannot get limits (%s)" % (str(e)))
         return limits
@@ -344,7 +344,7 @@ class GlancesBottle(object):
 
         try:
             # Get the JSON value of the stat view
-            limits = json.dumps(self.stats.getAllViewsAsDict())
+            limits = json_dumps(self.stats.getAllViewsAsDict())
         except Exception as e:
             abort(404, "Cannot get views (%s)" % (str(e)))
         return limits
@@ -528,7 +528,7 @@ class GlancesBottle(object):
 
         try:
             # Get the JSON value of the config' dict
-            args_json = json.dumps(self.config.as_dict())
+            args_json = json_dumps(self.config.as_dict())
         except Exception as e:
             abort(404, "Cannot get config (%s)" % str(e))
         return args_json
@@ -550,7 +550,7 @@ class GlancesBottle(object):
 
         try:
             # Get the JSON value of the config' dict
-            args_json = json.dumps(config_dict[item])
+            args_json = json_dumps(config_dict[item])
         except Exception as e:
             abort(404, "Cannot get config item (%s)" % str(e))
         return args_json
@@ -569,7 +569,7 @@ class GlancesBottle(object):
             # Get the JSON value of the args' dict
             # Use vars to convert namespace to dict
             # Source: https://docs.python.org/%s/library/functions.html#vars
-            args_json = json.dumps(vars(self.args))
+            args_json = json_dumps(vars(self.args))
         except Exception as e:
             abort(404, "Cannot get args (%s)" % str(e))
         return args_json
@@ -592,7 +592,7 @@ class GlancesBottle(object):
             # Get the JSON value of the args' dict
             # Use vars to convert namespace to dict
             # Source: https://docs.python.org/%s/library/functions.html#vars
-            args_json = json.dumps(vars(self.args)[item])
+            args_json = json_dumps(vars(self.args)[item])
         except Exception as e:
             abort(404, "Cannot get args item (%s)" % str(e))
         return args_json
