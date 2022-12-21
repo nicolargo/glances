@@ -174,7 +174,7 @@ Command-Line Options
 
     set the server cache time [default: 1 sec]
 
-.. option:: open-web-browser
+.. option:: --open-web-browser
 
     try to open the Web UI in the default Web browser
 
