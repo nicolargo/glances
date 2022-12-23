@@ -350,7 +350,7 @@ class Plugin(GlancesPlugin):
         """Get curses data to display for a process.
 
         - p is the process to display
-        - selected is a tag=True if the selected process
+        - selected is a tag=True if p is the selected process
         """
         ret = [self.curse_new_line()]
         # When a process is selected:
