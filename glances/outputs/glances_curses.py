@@ -414,6 +414,8 @@ class _GlancesCurses(object):
                 glances_processes.disable_extended()
             else:
                 glances_processes.enable_extended()
+            # When a process is selected (and only in standalone mode), disable the cursor
+            self.args.disable_cursor = self.args.enable_process_extended and self.args.is_standalone
         elif self.pressedkey == ord('E'):
             # 'E' > Erase the process filter
             glances_processes.process_filter = None
@@ -451,11 +453,11 @@ class _GlancesCurses(object):
             # ">" (right arrow) navigation through process sort
             next_sort = (self.loop_position() + 1) % len(self._sort_loop)
             glances_processes.set_sort_key(self._sort_loop[next_sort], False)
-        elif self.pressedkey == curses.KEY_UP or self.pressedkey == 65:
+        elif self.pressedkey == curses.KEY_UP or self.pressedkey == 65 and not self.args.disable_cursor:
             # 'UP' > Up in the server list
             if self.args.cursor_position > 0:
                 self.args.cursor_position -= 1
-        elif self.pressedkey == curses.KEY_DOWN or self.pressedkey == 66:
+        elif self.pressedkey == curses.KEY_DOWN or self.pressedkey == 66 and not self.args.disable_cursor:
             # 'DOWN' > Down in the server list
             # if self.args.cursor_position < glances_processes.max_processes - 2:
             if self.args.cursor_position < glances_processes.processes_count:

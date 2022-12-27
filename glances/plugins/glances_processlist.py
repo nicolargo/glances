@@ -353,11 +353,11 @@ class Plugin(GlancesPlugin):
         - selected is a tag=True if p is the selected process
         """
         ret = [self.curse_new_line()]
+
         # When a process is selected:
         # * display a special character at the beginning of the line
         # * underline the command name
-        if args.is_standalone:
-            ret.append(self.curse_add_line(unicode_message('PROCESS_SELECTOR') if selected else ' ', 'SELECTED'))
+        ret.append(self.curse_add_line(unicode_message('PROCESS_SELECTOR') if (selected and not args.disable_cursor) else ' ', 'SELECTED'))
 
         # CPU
         ret.append(self._get_process_curses_cpu(p, selected, args))
@@ -404,7 +404,7 @@ class Plugin(GlancesPlugin):
         cmdline = p.get('cmdline', '?')
 
         try:
-            process_decoration = 'PROCESS_SELECTED' if (selected and args.is_standalone) else 'PROCESS'
+            process_decoration = 'PROCESS_SELECTED' if (selected and not args.disable_cursor) else 'PROCESS'
             if cmdline:
                 path, cmd, arguments = split_cmdline(bare_process_name, cmdline)
                 # Manage end of line in arguments (see #1692)
@@ -428,73 +428,13 @@ class Plugin(GlancesPlugin):
             logger.debug("Can not decode command line '{}' ({})".format(cmdline, e))
             ret.append(self.curse_add_line('', splittable=True))
 
-        # Add extended stats but only for the top processes
-        if args.cursor_position == 0 and 'extended_stats' in p and args.enable_process_extended:
-            # Left padding
-            xpad = ' ' * 13
-            # First line is CPU affinity
-            if 'cpu_affinity' in p and p['cpu_affinity'] is not None:
-                ret.append(self.curse_new_line())
-                msg = xpad + 'CPU affinity: ' + str(len(p['cpu_affinity'])) + ' cores'
-                ret.append(self.curse_add_line(msg, splittable=True))
-            # Second line is memory info
-            if 'memory_info' in p and p['memory_info'] is not None:
-                ret.append(self.curse_new_line())
-                msg = '{}Memory info: {}'.format(xpad, p['memory_info'])
-                if 'memory_swap' in p and p['memory_swap'] is not None:
-                    msg += ' swap ' + self.auto_unit(p['memory_swap'], low_precision=False)
-                ret.append(self.curse_add_line(msg, splittable=True))
-            # Third line is for open files/network sessions
-            msg = ''
-            if 'num_threads' in p and p['num_threads'] is not None:
-                msg += str(p['num_threads']) + ' threads '
-            if 'num_fds' in p and p['num_fds'] is not None:
-                msg += str(p['num_fds']) + ' files '
-            if 'num_handles' in p and p['num_handles'] is not None:
-                msg += str(p['num_handles']) + ' handles '
-            if 'tcp' in p and p['tcp'] is not None:
-                msg += str(p['tcp']) + ' TCP '
-            if 'udp' in p and p['udp'] is not None:
-                msg += str(p['udp']) + ' UDP'
-            if msg != '':
-                ret.append(self.curse_new_line())
-                msg = xpad + 'Open: ' + msg
-                ret.append(self.curse_add_line(msg, splittable=True))
-            # Fourth line is IO nice level (only Linux and Windows OS)
-            if 'ionice' in p and p['ionice'] is not None and hasattr(p['ionice'], 'ioclass'):
-                ret.append(self.curse_new_line())
-                msg = xpad + 'IO nice: '
-                k = 'Class is '
-                v = p['ionice'].ioclass
-                # Linux: The scheduling class. 0 for none, 1 for real time, 2 for best-effort, 3 for idle.
-                # Windows: On Windows only ioclass is used and it can be set to 2 (normal), 1 (low) or 0 (very low).
-                if WINDOWS:
-                    if v == 0:
-                        msg += k + 'Very Low'
-                    elif v == 1:
-                        msg += k + 'Low'
-                    elif v == 2:
-                        msg += 'No specific I/O priority'
-                    else:
-                        msg += k + str(v)
-                else:
-                    if v == 0:
-                        msg += 'No specific I/O priority'
-                    elif v == 1:
-                        msg += k + 'Real Time'
-                    elif v == 2:
-                        msg += k + 'Best Effort'
-                    elif v == 3:
-                        msg += k + 'IDLE'
-                    else:
-                        msg += k + str(v)
-                #  value is a number which goes from 0 to 7.
-                # The higher the value, the lower the I/O priority of the process.
-                if hasattr(p['ionice'], 'value') and p['ionice'].value != 0:
-                    msg += ' (value %s/7)' % str(p['ionice'].value)
-                ret.append(self.curse_add_line(msg, splittable=True))
-
         return ret
+
+    def is_selected_process(self, args):
+        return args.is_standalone and \
+           self.args.enable_process_extended and \
+           args.cursor_position is not None and \
+           glances_processes.extended_process is not None
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -507,6 +447,16 @@ class Plugin(GlancesPlugin):
 
         # Compute the sort key
         process_sort_key = glances_processes.sort_key
+        processes_list_sorted = self.__sort_stats(process_sort_key)
+
+        # Display extended stats for selected process
+        #############################################
+
+        if self.is_selected_process(args):
+            self.__msg_curse_extended_process(ret, glances_processes.extended_process)
+
+        # Display others processes list
+        ###############################
 
         # Header
         self.__msg_curse_header(ret, process_sort_key, args)
@@ -515,10 +465,10 @@ class Plugin(GlancesPlugin):
         # Loop over processes (sorted by the sort key previously compute)
         # This is a Glances bottleneck (see flame graph),
         # get_process_curses_data should be optimzed
-        i = 0
-        for p in self.__sort_stats(process_sort_key):
-            ret.extend(self.get_process_curses_data(p, i == args.cursor_position, args))
-            i += 1
+        for position, process in enumerate(processes_list_sorted):
+            ret.extend(self.get_process_curses_data(process,
+                                                    position == args.cursor_position,
+                                                    args))
 
         # A filter is set Display the stats summaries
         if glances_processes.process_filter is not None:
@@ -531,6 +481,95 @@ class Plugin(GlancesPlugin):
 
         # Return the message with decoration
         return ret
+
+    def __msg_curse_extended_process(self, ret, p):
+        """Get extended curses data tfor the selected process (see issue #2225)
+        p: the process dict
+        {'status': 'S',
+         'memory_info': pmem(rss=466890752, vms=3365347328, shared=68153344, text=659456, lib=0, data=774647808, dirty=0),
+         'pid': 4980,
+         'io_counters': [165385216, 0, 165385216, 0, 1],
+         'num_threads': 20,
+         'nice': 0,
+         'memory_percent': 5.958135664449709,
+         'cpu_percent': 0.0,
+         'gids': pgids(real=1000, effective=1000, saved=1000),
+         'cpu_times': pcputimes(user=696.38, system=119.98, children_user=0.0, children_system=0.0, iowait=0.0),
+         'name': 'WebExtensions',
+         'key': 'pid',
+         'time_since_update': 2.1997854709625244,
+         'cmdline': ['/snap/firefox/2154/usr/lib/firefox/firefox', '-contentproc', '-childID', '...'],
+         'username': 'nicolargo'}
+        """
+        # Title
+        msg = 'Selected {} {}'.format('program' if self.args.programs else 'thread',
+                                      p['name'])
+        ret.append(self.curse_add_line(msg, "TITLE"))
+
+        # First line is CPU affinity
+        if 'cpu_affinity' in p and p['cpu_affinity'] is not None:
+            ret.append(self.curse_new_line())
+            msg = 'CPU affinity: ' + str(len(p['cpu_affinity'])) + ' cores'
+            ret.append(self.curse_add_line(msg, splittable=True))
+        # Second line is memory info
+        if 'memory_info' in p and p['memory_info'] is not None:
+            ret.append(self.curse_new_line())
+            msg = 'Memory info: {}'.format(p['memory_info'])
+            if 'memory_swap' in p and p['memory_swap'] is not None:
+                msg += ' swap ' + self.auto_unit(p['memory_swap'], low_precision=False)
+            ret.append(self.curse_add_line(msg, splittable=True))
+        # Third line is for open files/network sessions
+        msg = ''
+        if 'num_threads' in p and p['num_threads'] is not None:
+            msg += str(p['num_threads']) + ' threads '
+        if 'num_fds' in p and p['num_fds'] is not None:
+            msg += str(p['num_fds']) + ' files '
+        if 'num_handles' in p and p['num_handles'] is not None:
+            msg += str(p['num_handles']) + ' handles '
+        if 'tcp' in p and p['tcp'] is not None:
+            msg += str(p['tcp']) + ' TCP '
+        if 'udp' in p and p['udp'] is not None:
+            msg += str(p['udp']) + ' UDP'
+        if msg != '':
+            ret.append(self.curse_new_line())
+            msg = 'Open: ' + msg
+            ret.append(self.curse_add_line(msg, splittable=True))
+        # Fourth line is IO nice level (only Linux and Windows OS)
+        if 'ionice' in p and p['ionice'] is not None and hasattr(p['ionice'], 'ioclass'):
+            ret.append(self.curse_new_line())
+            msg = 'IO nice: '
+            k = 'Class is '
+            v = p['ionice'].ioclass
+            # Linux: The scheduling class. 0 for none, 1 for real time, 2 for best-effort, 3 for idle.
+            # Windows: On Windows only ioclass is used and it can be set to 2 (normal), 1 (low) or 0 (very low).
+            if WINDOWS:
+                if v == 0:
+                    msg += k + 'Very Low'
+                elif v == 1:
+                    msg += k + 'Low'
+                elif v == 2:
+                    msg += 'No specific I/O priority'
+                else:
+                    msg += k + str(v)
+            else:
+                if v == 0:
+                    msg += 'No specific I/O priority'
+                elif v == 1:
+                    msg += k + 'Real Time'
+                elif v == 2:
+                    msg += k + 'Best Effort'
+                elif v == 3:
+                    msg += k + 'IDLE'
+                else:
+                    msg += k + str(v)
+            #  value is a number which goes from 0 to 7.
+            # The higher the value, the lower the I/O priority of the process.
+            if hasattr(p['ionice'], 'value') and p['ionice'].value != 0:
+                msg += ' (value %s/7)' % str(p['ionice'].value)
+            ret.append(self.curse_add_line(msg, splittable=True))
+
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_new_line())
 
     def __msg_curse_header(self, ret, process_sort_key, args=None):
         """Build the header and add it to the ret dict."""
