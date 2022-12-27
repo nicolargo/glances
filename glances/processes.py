@@ -37,6 +37,10 @@ class GlancesProcesses(object):
 
     def __init__(self, cache_timeout=60):
         """Init the class to collect stats about processes."""
+        # Init the args, coming from the GlancesStandalone class
+        # Should be set by the set_args method
+        self.args = None
+
         # Add internals caches because psutil do not cache all the stats
         # See: https://github.com/giampaolo/psutil/issues/462
         self.username_cache = {}
@@ -70,6 +74,7 @@ class GlancesProcesses(object):
 
         # Extended stats for top process is enable by default
         self.disable_extended_tag = False
+        self.extended_process = None
 
         # Test if the system can grab io_counters
         try:
@@ -108,6 +113,10 @@ class GlancesProcesses(object):
         # { 'cpu_percent': 0.0, 'memory_percent': 0.0 }
         self._max_values = {}
         self.reset_max_values()
+
+    def set_args(self, args):
+        """Set args."""
+        self.args = args
 
     def reset_processcount(self):
         """Reset the global process count"""
@@ -247,6 +256,64 @@ class GlancesProcesses(object):
         for k in self._max_values_list:
             self._max_values[k] = 0.0
 
+    def get_extended_stats(self, proc):
+        """Get the extended stats for the given PID."""
+        # - cpu_affinity (Linux, Windows, FreeBSD)
+        # - ionice (Linux and Windows > Vista)
+        # - num_ctx_switches (not available on Illumos/Solaris)
+        # - num_fds (Unix-like)
+        # - num_handles (Windows)
+        # - memory_maps (only swap, Linux)
+        #   https://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
+        # - connections (TCP and UDP)
+        ret = {}
+        try:
+            selected_process = psutil.Process(proc['pid'])
+            extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
+            if LINUX:
+                # num_fds only available on Unix system (see issue #1351)
+                extended_stats += ['num_fds']
+            if WINDOWS:
+                extended_stats += ['num_handles']
+
+            # Get the extended stats
+            ret = selected_process.as_dict(attrs=extended_stats, ad_value=None)
+
+            if LINUX:
+                try:
+                    ret['memory_swap'] = sum([v.swap for v in selected_process.memory_maps()])
+                except (psutil.NoSuchProcess, KeyError):
+                    # (KeyError catch for issue #1551)
+                    pass
+                except (psutil.AccessDenied, NotImplementedError):
+                    # NotImplementedError: /proc/${PID}/smaps file doesn't exist
+                    # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
+                    # is not enabled (see psutil #533/glances #413).
+                    ret['memory_swap'] = None
+            try:
+                ret['tcp'] = len(selected_process.connections(kind="tcp"))
+                ret['udp'] = len(selected_process.connections(kind="udp"))
+            except (psutil.AccessDenied, psutil.NoSuchProcess):
+                # Manage issue1283 (psutil.AccessDenied)
+                ret['tcp'] = None
+                ret['udp'] = None
+        except (psutil.NoSuchProcess, ValueError, AttributeError) as e:
+            logger.error('Can not grab extended stats ({})'.format(e))
+            ret['extended_stats'] = False
+            self.extended_process = None
+        else:
+            logger.debug('Grab extended stats for process {}'.format(proc['pid']))
+            ret['extended_stats'] = True
+        return ret
+
+    def is_selected_process(self, position):
+        """Return True if the process is the selected one."""
+        return self.args.enable_process_extended and \
+               not self.disable_extended_tag and \
+               hasattr(self.args, 'cursor_position') and \
+               position == self.args.cursor_position and \
+               not self.args.disable_cursor
+
     def update(self):
         """Update the processes stats."""
         # Reset the stats
@@ -303,59 +370,26 @@ class GlancesProcesses(object):
         # Update the processcount
         self.update_processcount(self.processlist)
 
-        # Loop over processes and add metadata
-        first = True
-        for proc in self.processlist:
-            # Get extended stats, only for top processes (see issue #403).
-            if first and not self.disable_extended_tag:
-                # - cpu_affinity (Linux, Windows, FreeBSD)
-                # - ionice (Linux and Windows > Vista)
-                # - num_ctx_switches (not available on Illumos/Solaris)
-                # - num_fds (Unix-like)
-                # - num_handles (Windows)
-                # - memory_maps (only swap, Linux)
-                #   https://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
-                # - connections (TCP and UDP)
-                extended = {}
-                try:
-                    top_process = psutil.Process(proc['pid'])
-                    extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
-                    if LINUX:
-                        # num_fds only available on Unix system (see issue #1351)
-                        extended_stats += ['num_fds']
-                    if WINDOWS:
-                        extended_stats += ['num_handles']
+        # Loop over processes and :
+        # - add extended stats for selected process
+        # - add metadata
+        for position, proc in enumerate(self.processlist):
+            # Extended stats
+            ################
 
-                    # Get the extended stats
-                    extended = top_process.as_dict(attrs=extended_stats, ad_value=None)
+            # Get the selected process
+            if self.is_selected_process(position):
+                # logger.info('Selected process: {}'.format(proc))
+                self.extended_process = proc
 
-                    if LINUX:
-                        try:
-                            extended['memory_swap'] = sum([v.swap for v in top_process.memory_maps()])
-                        except (psutil.NoSuchProcess, KeyError):
-                            # (KeyError catch for issue #1551)
-                            pass
-                        except (psutil.AccessDenied, NotImplementedError):
-                            # NotImplementedError: /proc/${PID}/smaps file doesn't exist
-                            # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
-                            # is not enabled (see psutil #533/glances #413).
-                            extended['memory_swap'] = None
-                    try:
-                        extended['tcp'] = len(top_process.connections(kind="tcp"))
-                        extended['udp'] = len(top_process.connections(kind="udp"))
-                    except (psutil.AccessDenied, psutil.NoSuchProcess):
-                        # Manage issue1283 (psutil.AccessDenied)
-                        extended['tcp'] = None
-                        extended['udp'] = None
-                except (psutil.NoSuchProcess, ValueError, AttributeError) as e:
-                    logger.error('Can not grab extended stats ({})'.format(e))
-                    extended['extended_stats'] = False
-                else:
-                    logger.debug('Grab extended stats for process {}'.format(proc['pid']))
-                    extended['extended_stats'] = True
-                proc.update(extended)
-            first = False
-            # /End of extended stats
+            # Grab extended stats only for the selected process (see issue #2225)
+            if self.extended_process is not None and \
+               proc['pid'] == self.extended_process['pid']:
+                self.extended_process = proc
+                proc.update(self.get_extended_stats(self.extended_process))
+
+            # Meta data
+            ###########
 
             # PID is the key
             proc['key'] = 'pid'
