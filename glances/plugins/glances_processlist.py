@@ -483,8 +483,11 @@ class Plugin(GlancesPlugin):
         return ret
 
     def __msg_curse_extended_process(self, ret, p):
-        """Get extended curses data tfor the selected process (see issue #2225)
-        p: the process dict
+        """Get extended curses data for the selected process (see issue #2225)
+
+        The result depends of the process type (process or thread).
+
+        Input p is a dict with the following keys:
         {'status': 'S',
          'memory_info': pmem(rss=466890752, vms=3365347328, shared=68153344, text=659456, lib=0, data=774647808, dirty=0),
          'pid': 4980,
@@ -501,9 +504,22 @@ class Plugin(GlancesPlugin):
          'cmdline': ['/snap/firefox/2154/usr/lib/firefox/firefox', '-contentproc', '-childID', '...'],
          'username': 'nicolargo'}
         """
+        if self.args.programs:
+            self.__msg_curse_extended_process_program(ret, p)
+        else:
+            self.__msg_curse_extended_process_thread(ret, p)
+
+    def __msg_curse_extended_process_program(self, ret, p):
         # Title
-        msg = 'Selected {} {}'.format('program' if self.args.programs else 'thread',
-                                      p['name'])
+        msg = "Pinned program {} ('e' to unpin)".format(p['name'])
+        ret.append(self.curse_add_line(msg, "TITLE"))
+
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_new_line())
+
+    def __msg_curse_extended_process_thread(self, ret, p):
+        # Title
+        msg = "Pinned thread {} ('e' to unpin)".format(p['name'])
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         # First line is CPU affinity
@@ -617,10 +633,9 @@ class Plugin(GlancesPlugin):
                 msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
             )
         )
-        if not self.args.programs:
-            msg = self.layout_header['command'].format('Command', "('k' to kill)" if args.is_standalone else "")
-        else:
-            msg = self.layout_header['command'].format('Programs', "('k' to kill)" if args.is_standalone else "")
+        shortkey = "('e' to pin | 'k' to kill)" if args.is_standalone and not args.disable_cursor else ""
+        msg = self.layout_header['command'].format("Programs" if self.args.programs else "Command",
+                                                   shortkey)
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
     def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):
