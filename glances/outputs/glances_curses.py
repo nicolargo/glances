@@ -429,7 +429,7 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('-'):
             # '+' > Decrease process nice level
             self.decrease_nice_process = not self.decrease_nice_process
-        elif self.pressedkey == ord('k'):
+        elif self.pressedkey == ord('k') and not self.args.disable_cursor:
             # 'k' > Kill selected process (after confirmation)
             self.kill_process = not self.kill_process
         elif self.pressedkey == ord('w'):
