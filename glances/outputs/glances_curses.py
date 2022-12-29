@@ -268,6 +268,7 @@ class _GlancesCurses(object):
             self.ifCAREFUL_color2 = curses.color_pair(8) | A_BOLD
             self.ifWARNING_color2 = curses.color_pair(5) | A_BOLD
             self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
+            self.ifINFO_color = curses.color_pair(8)
             self.filter_color = A_BOLD
             self.selected_color = A_BOLD
 
@@ -301,6 +302,7 @@ class _GlancesCurses(object):
             self.ifCAREFUL_color2 = curses.A_UNDERLINE
             self.ifWARNING_color2 = A_BOLD
             self.ifCRITICAL_color2 = curses.A_REVERSE
+            self.ifINFO_color = A_BOLD
             self.filter_color = A_BOLD
             self.selected_color = A_BOLD
 
@@ -328,6 +330,7 @@ class _GlancesCurses(object):
             'CRITICAL_LOG': self.ifCRITICAL_color,
             'PASSWORD': curses.A_PROTECT,
             'SELECTED': self.selected_color,
+            'INFO': self.ifINFO_color
         }
 
     def set_cursor(self, value):

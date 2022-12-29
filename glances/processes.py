@@ -266,17 +266,20 @@ class GlancesProcesses(object):
         # - memory_maps (only swap, Linux)
         #   https://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
         # - connections (TCP and UDP)
+        # - CPU min/max/mean
+
+        # Set the extended stats list (OS dependant)
+        extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
+        if LINUX:
+            # num_fds only available on Unix system (see issue #1351)
+            extended_stats += ['num_fds']
+        if WINDOWS:
+            extended_stats += ['num_handles']
+
         ret = {}
         try:
-            selected_process = psutil.Process(proc['pid'])
-            extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
-            if LINUX:
-                # num_fds only available on Unix system (see issue #1351)
-                extended_stats += ['num_fds']
-            if WINDOWS:
-                extended_stats += ['num_handles']
-
             # Get the extended stats
+            selected_process = psutil.Process(proc['pid'])
             ret = selected_process.as_dict(attrs=extended_stats, ad_value=None)
 
             if LINUX:
@@ -299,10 +302,30 @@ class GlancesProcesses(object):
                 ret['udp'] = None
         except (psutil.NoSuchProcess, ValueError, AttributeError) as e:
             logger.error('Can not grab extended stats ({})'.format(e))
-            ret['extended_stats'] = False
             self.extended_process = None
+            ret['extended_stats'] = False
         else:
             logger.debug('Grab extended stats for process {}'.format(proc['pid']))
+
+            # Compute CPU min/max/mean
+            if 'cpu_min' not in self.extended_process:
+                ret['cpu_min'] = proc['cpu_percent']
+            else:
+                ret['cpu_min'] = proc['cpu_percent'] if proc['cpu_min'] > proc['cpu_percent'] else proc['cpu_min']
+            if 'cpu_max' not in self.extended_process:
+                ret['cpu_max'] = proc['cpu_percent']
+            else:
+                ret['cpu_max'] = proc['cpu_percent'] if proc['cpu_max'] < proc['cpu_percent'] else proc['cpu_max']
+            if 'cpu_mean_sum' not in self.extended_process:
+                ret['cpu_mean_sum'] = proc['cpu_percent']
+            else:
+                ret['cpu_mean_sum'] = proc['cpu_mean_sum'] + proc['cpu_percent']
+            if 'cpu_mean_counter' not in self.extended_process:
+                ret['cpu_mean_counter'] = 1
+            else:
+                ret['cpu_mean_counter'] = proc['cpu_mean_counter'] + 1
+            ret['cpu_mean'] = ret['cpu_mean_sum'] / ret['cpu_mean_counter']
+
             ret['extended_stats'] = True
         return ret
 
@@ -377,16 +400,15 @@ class GlancesProcesses(object):
             # Extended stats
             ################
 
-            # Get the selected process
+            # Get the selected process when the 'e' key is pressed
             if self.is_selected_process(position):
-                # logger.info('Selected process: {}'.format(proc))
                 self.extended_process = proc
 
             # Grab extended stats only for the selected process (see issue #2225)
             if self.extended_process is not None and \
                proc['pid'] == self.extended_process['pid']:
-                self.extended_process = proc
                 proc.update(self.get_extended_stats(self.extended_process))
+                self.extended_process = proc
 
             # Meta data
             ###########
