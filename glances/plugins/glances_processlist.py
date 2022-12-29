@@ -20,6 +20,7 @@ from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.programs import processes_to_programs
+from glances.outputs.glances_bars import Bar
 
 
 def seconds_to_hms(input_seconds):
@@ -502,7 +503,10 @@ class Plugin(GlancesPlugin):
          'key': 'pid',
          'time_since_update': 2.1997854709625244,
          'cmdline': ['/snap/firefox/2154/usr/lib/firefox/firefox', '-contentproc', '-childID', '...'],
-         'username': 'nicolargo'}
+         'username': 'nicolargo',
+         'cpu_min': 0.0,
+         'cpu_max': 7.0,
+         'cpu_mean': 3.2}
         """
         if self.args.programs:
             self.__msg_curse_extended_process_program(ret, p)
@@ -519,21 +523,32 @@ class Plugin(GlancesPlugin):
 
     def __msg_curse_extended_process_thread(self, ret, p):
         # Title
-        msg = "Pinned thread {} ('e' to unpin)".format(p['name'])
-        ret.append(self.curse_add_line(msg, "TITLE"))
+        ret.append(self.curse_add_line("Pinned thread ", "TITLE"))
+        ret.append(self.curse_add_line(p['name'], "UNDERLINE"))
+        ret.append(self.curse_add_line(" ('e' to unpin)"))
 
         # First line is CPU affinity
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line(' CPU affinity '))
         if 'cpu_affinity' in p and p['cpu_affinity'] is not None:
-            ret.append(self.curse_new_line())
-            msg = 'CPU affinity: ' + str(len(p['cpu_affinity'])) + ' cores'
-            ret.append(self.curse_add_line(msg, splittable=True))
+            ret.append(self.curse_add_line(str(len(p['cpu_affinity'])), decoration='INFO'))
+            ret.append(self.curse_add_line(' cores', decoration='INFO'))
+        else:
+            ret.append(self.curse_add_line('N/A', decoration='INFO'))
+        # and min/max/mean CPU usage
+        ret.append(self.curse_add_line(' - Min/Max/Mean '))
+        msg = '{:.1f}/{:.1f}/{:.1f}%'.format(p['cpu_min'], p['cpu_max'], p['cpu_mean'])
+        ret.append(self.curse_add_line(msg, decoration='INFO'))
+
         # Second line is memory info
         if 'memory_info' in p and p['memory_info'] is not None:
             ret.append(self.curse_new_line())
-            msg = 'Memory info: {}'.format(p['memory_info'])
+            ret.append(self.curse_add_line(' Memory info  '))
+            msg = ' '.join(['{} {}'.format(k, self.auto_unit(p['memory_info']._asdict()[k], low_precision=False)) for k in p['memory_info']._asdict()])
             if 'memory_swap' in p and p['memory_swap'] is not None:
                 msg += ' swap ' + self.auto_unit(p['memory_swap'], low_precision=False)
-            ret.append(self.curse_add_line(msg, splittable=True))
+            ret.append(self.curse_add_line(msg, decoration='INFO', splittable=True))
+
         # Third line is for open files/network sessions
         msg = ''
         if 'num_threads' in p and p['num_threads'] is not None:
