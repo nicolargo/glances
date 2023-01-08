@@ -307,24 +307,25 @@ class GlancesProcesses(object):
         else:
             logger.debug('Grab extended stats for process {}'.format(proc['pid']))
 
-            # Compute CPU min/max/mean
-            if 'cpu_min' not in self.extended_process:
-                ret['cpu_min'] = proc['cpu_percent']
-            else:
-                ret['cpu_min'] = proc['cpu_percent'] if proc['cpu_min'] > proc['cpu_percent'] else proc['cpu_min']
-            if 'cpu_max' not in self.extended_process:
-                ret['cpu_max'] = proc['cpu_percent']
-            else:
-                ret['cpu_max'] = proc['cpu_percent'] if proc['cpu_max'] < proc['cpu_percent'] else proc['cpu_max']
-            if 'cpu_mean_sum' not in self.extended_process:
-                ret['cpu_mean_sum'] = proc['cpu_percent']
-            else:
-                ret['cpu_mean_sum'] = proc['cpu_mean_sum'] + proc['cpu_percent']
-            if 'cpu_mean_counter' not in self.extended_process:
-                ret['cpu_mean_counter'] = 1
-            else:
-                ret['cpu_mean_counter'] = proc['cpu_mean_counter'] + 1
-            ret['cpu_mean'] = ret['cpu_mean_sum'] / ret['cpu_mean_counter']
+            # Compute CPU and MEM min/max/mean
+            for stat_prefix in ['cpu', 'memory']:
+                if stat_prefix + '_min' not in self.extended_process:
+                    ret[stat_prefix + '_min'] = proc[stat_prefix + '_percent']
+                else:
+                    ret[stat_prefix + '_min'] = proc[stat_prefix + '_percent'] if proc[stat_prefix + '_min'] > proc[stat_prefix + '_percent'] else proc[stat_prefix + '_min']
+                if stat_prefix + '_max' not in self.extended_process:
+                    ret[stat_prefix + '_max'] = proc[stat_prefix + '_percent']
+                else:
+                    ret[stat_prefix + '_max'] = proc[stat_prefix + '_percent'] if proc[stat_prefix + '_max'] < proc[stat_prefix + '_percent'] else proc[stat_prefix + '_max']
+                if stat_prefix + '_mean_sum' not in self.extended_process:
+                    ret[stat_prefix + '_mean_sum'] = proc[stat_prefix + '_percent']
+                else:
+                    ret[stat_prefix + '_mean_sum'] = proc[stat_prefix + '_mean_sum'] + proc[stat_prefix + '_percent']
+                if stat_prefix + '_mean_counter' not in self.extended_process:
+                    ret[stat_prefix + '_mean_counter'] = 1
+                else:
+                    ret[stat_prefix + '_mean_counter'] = proc[stat_prefix + '_mean_counter'] + 1
+                ret[stat_prefix + '_mean'] = ret[stat_prefix + '_mean_sum'] / ret[stat_prefix + '_mean_counter']
 
             ret['extended_stats'] = True
         return ret

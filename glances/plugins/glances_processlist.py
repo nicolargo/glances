@@ -529,46 +529,15 @@ class Plugin(GlancesPlugin):
 
         # First line is CPU affinity
         ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(' CPU affinity '))
+        ret.append(self.curse_add_line(' CPU Min/Max/Mean: '))
+        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(p['cpu_min'], p['cpu_max'], p['cpu_mean'])
+        ret.append(self.curse_add_line(msg, decoration='INFO'))
         if 'cpu_affinity' in p and p['cpu_affinity'] is not None:
+            ret.append(self.curse_add_line(' Affinity: '))
             ret.append(self.curse_add_line(str(len(p['cpu_affinity'])), decoration='INFO'))
             ret.append(self.curse_add_line(' cores', decoration='INFO'))
-        else:
-            ret.append(self.curse_add_line('N/A', decoration='INFO'))
-        # and min/max/mean CPU usage
-        ret.append(self.curse_add_line(' - Min/Max/Mean '))
-        msg = '{:.1f}/{:.1f}/{:.1f}%'.format(p['cpu_min'], p['cpu_max'], p['cpu_mean'])
-        ret.append(self.curse_add_line(msg, decoration='INFO'))
-
-        # Second line is memory info
-        if 'memory_info' in p and p['memory_info'] is not None:
-            ret.append(self.curse_new_line())
-            ret.append(self.curse_add_line(' Memory info  '))
-            msg = ' '.join(['{} {}'.format(k, self.auto_unit(p['memory_info']._asdict()[k], low_precision=False)) for k in p['memory_info']._asdict()])
-            if 'memory_swap' in p and p['memory_swap'] is not None:
-                msg += ' swap ' + self.auto_unit(p['memory_swap'], low_precision=False)
-            ret.append(self.curse_add_line(msg, decoration='INFO', splittable=True))
-
-        # Third line is for open files/network sessions
-        msg = ''
-        if 'num_threads' in p and p['num_threads'] is not None:
-            msg += str(p['num_threads']) + ' threads '
-        if 'num_fds' in p and p['num_fds'] is not None:
-            msg += str(p['num_fds']) + ' files '
-        if 'num_handles' in p and p['num_handles'] is not None:
-            msg += str(p['num_handles']) + ' handles '
-        if 'tcp' in p and p['tcp'] is not None:
-            msg += str(p['tcp']) + ' TCP '
-        if 'udp' in p and p['udp'] is not None:
-            msg += str(p['udp']) + ' UDP'
-        if msg != '':
-            ret.append(self.curse_new_line())
-            msg = 'Open: ' + msg
-            ret.append(self.curse_add_line(msg, splittable=True))
-        # Fourth line is IO nice level (only Linux and Windows OS)
         if 'ionice' in p and p['ionice'] is not None and hasattr(p['ionice'], 'ioclass'):
-            ret.append(self.curse_new_line())
-            msg = 'IO nice: '
+            msg = ' IO nice: '
             k = 'Class is '
             v = p['ionice'].ioclass
             # Linux: The scheduling class. 0 for none, 1 for real time, 2 for best-effort, 3 for idle.
@@ -598,6 +567,28 @@ class Plugin(GlancesPlugin):
             if hasattr(p['ionice'], 'value') and p['ionice'].value != 0:
                 msg += ' (value %s/7)' % str(p['ionice'].value)
             ret.append(self.curse_add_line(msg, splittable=True))
+
+        # Second line is memory info
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line(' MEM Min/Max/Mean: '))
+        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(p['memory_min'], p['memory_max'], p['memory_mean'])
+        ret.append(self.curse_add_line(msg, decoration='INFO'))
+        if 'memory_info' in p and p['memory_info'] is not None:
+            ret.append(self.curse_add_line(' Memory info: '))
+            for k in p['memory_info']._asdict():
+                ret.append(self.curse_add_line(self.auto_unit(p['memory_info']._asdict()[k], low_precision=False), decoration='INFO', splittable=True))
+                ret.append(self.curse_add_line(' ' + k + ' ', splittable=True))
+            if 'memory_swap' in p and p['memory_swap'] is not None:
+                ret.append(self.curse_add_line(self.auto_unit(p['memory_swap'], low_precision=False), decoration='INFO', splittable=True))
+                ret.append(self.curse_add_line(' swap ', splittable=True))
+
+        # Third line is for open files/network sessions
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line(' Open: '))
+        for stat_prefix in ['num_threads', 'num_fds', 'num_handles', 'tcp', 'udp']:
+            if stat_prefix in p and p[stat_prefix] is not None:
+                ret.append(self.curse_add_line(str(p[stat_prefix]), decoration='INFO'))
+                ret.append(self.curse_add_line(' {} '.format(stat_prefix.replace('num_', ''))))
 
         ret.append(self.curse_new_line())
         ret.append(self.curse_new_line())
