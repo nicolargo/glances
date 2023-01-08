@@ -333,7 +333,8 @@ class GlancesProcesses(object):
 
     def is_selected_extended_process(self, position):
         """Return True if the process is the selected one for extended stats."""
-        return not self.args.programs and \
+        return hasattr(self.args, 'programs') and \
+               not self.args.programs and \
                hasattr(self.args, 'enable_process_extended') and \
                self.args.enable_process_extended and \
                not self.disable_extended_tag and \
