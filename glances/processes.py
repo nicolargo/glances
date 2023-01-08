@@ -332,7 +332,8 @@ class GlancesProcesses(object):
 
     def is_selected_process(self, position):
         """Return True if the process is the selected one."""
-        return self.args.enable_process_extended and \
+        return hasattr(self.args, 'enable_process_extended') and \
+               self.args.enable_process_extended and \
                not self.disable_extended_tag and \
                hasattr(self.args, 'cursor_position') and \
                position == self.args.cursor_position and \
