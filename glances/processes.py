@@ -13,6 +13,7 @@ from glances.compat import iterkeys
 from glances.globals import BSD, LINUX, MACOS, WINDOWS
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.filter import GlancesFilter
+from glances.programs import processes_to_programs
 from glances.logger import logger
 
 import psutil
@@ -330,9 +331,10 @@ class GlancesProcesses(object):
             ret['extended_stats'] = True
         return ret
 
-    def is_selected_process(self, position):
-        """Return True if the process is the selected one."""
-        return hasattr(self.args, 'enable_process_extended') and \
+    def is_selected_extended_process(self, position):
+        """Return True if the process is the selected one for extended stats."""
+        return not self.args.programs and \
+               hasattr(self.args, 'enable_process_extended') and \
                self.args.enable_process_extended and \
                not self.disable_extended_tag and \
                hasattr(self.args, 'cursor_position') and \
@@ -403,7 +405,7 @@ class GlancesProcesses(object):
             ################
 
             # Get the selected process when the 'e' key is pressed
-            if self.is_selected_process(position):
+            if self.is_selected_extended_process(position):
                 self.extended_process = proc
 
             # Grab extended stats only for the selected process (see issue #2225)
@@ -481,9 +483,14 @@ class GlancesProcesses(object):
         """Get the number of processes."""
         return self.processcount
 
-    def getlist(self, sorted_by=None):
-        """Get the processlist."""
-        return self.processlist
+    def getlist(self, sorted_by=None, as_programs=False):
+        """Get the processlist.
+        By default, return the list of threads.
+        If as_programs is True, return the list of programs."""
+        if as_programs:
+            return processes_to_programs(self.processlist)
+        else:
+            return self.processlist
 
     @property
     def sort_key(self):

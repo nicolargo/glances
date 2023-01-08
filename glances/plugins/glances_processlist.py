@@ -19,7 +19,6 @@ from glances.processes import glances_processes, sort_stats
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.programs import processes_to_programs
 from glances.outputs.glances_bars import Bar
 
 
@@ -147,9 +146,10 @@ class Plugin(GlancesPlugin):
             # Update stats using the standard system lib
             # Note: Update is done in the processcount plugin
             # Just return the processes list
-            stats = glances_processes.getlist()
             if self.args.programs:
-                stats = processes_to_programs(stats)
+                stats = glances_processes.getlist(as_programs=True)
+            else:
+                stats = glances_processes.getlist()
 
         elif self.input_method == 'snmp':
             # No SNMP grab for processes
@@ -639,7 +639,13 @@ class Plugin(GlancesPlugin):
                 msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
             )
         )
-        shortkey = "('e' to pin | 'k' to kill)" if args.is_standalone and not args.disable_cursor else ""
+        if args.is_standalone and not args.disable_cursor:
+            if self.args.programs:
+                shortkey = "('k' to kill)"
+            else:
+                shortkey = "('e' to pin | 'k' to kill)"
+        else:
+            shortkey = ""
         msg = self.layout_header['command'].format("Programs" if self.args.programs else "Command",
                                                    shortkey)
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))

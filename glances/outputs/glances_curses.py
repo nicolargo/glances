@@ -410,7 +410,7 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('9'):
             # '9' > Theme from black to white and reverse
             self._init_colors()
-        elif self.pressedkey == ord('e'):
+        elif self.pressedkey == ord('e') and not self.args.programs:
             # 'e' > Enable/Disable process extended
             self.args.enable_process_extended = not self.args.enable_process_extended
             if not self.args.enable_process_extended:
