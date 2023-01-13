@@ -36,7 +36,7 @@ def processes_to_programs(processes):
                 'name': p['name'],
                 'cmdline': [p['name']],
                 'pid': '_',
-                'username': p['username'],
+                'username': p['username'] if 'username' in p else '_',
                 'nice': p['nice'],
                 'status': p['status'],
             }
