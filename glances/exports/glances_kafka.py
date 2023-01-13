@@ -13,9 +13,9 @@ import sys
 
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
+from glances.globals import json_dumps
 
 from kafka import KafkaProducer
-import json
 
 
 class Export(GlancesExport):
@@ -54,7 +54,7 @@ class Export(GlancesExport):
         try:
             s = KafkaProducer(
                 bootstrap_servers=server_uri,
-                value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                value_serializer=lambda v: json_dumps(v).encode('utf-8'),
                 compression_type=self.compression,
             )
         except Exception as e:

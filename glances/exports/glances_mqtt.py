@@ -11,11 +11,11 @@
 
 import socket
 import string
-import json
 import sys
 
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
+from glances.globals import json_dumps
 
 # Import paho for MQTT
 from requests import certs
@@ -116,7 +116,7 @@ class Export(GlancesExport):
                     # Add the value
                     current_level[split_key[len(split_key) - 1]] = sensor_values[key]
 
-                json_value = json.dumps(output_value)
+                json_value = json_dumps(output_value)
                 self.client.publish(topic, json_value)
             except Exception as e:
                 logger.error("Can not export stats to MQTT server (%s)" % e)

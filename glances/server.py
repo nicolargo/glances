@@ -9,7 +9,7 @@
 
 """Manage the Glances server."""
 
-import json
+from glances.globals import json_dumps
 import socket
 import sys
 from base64 import b64decode
@@ -67,7 +67,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
         if username in self.server.user_dict:
             from glances.password import GlancesPassword
 
-            pwd = GlancesPassword()
+            pwd = GlancesPassword(username=username, config=self.config)
             return pwd.check_password(self.server.user_dict[username], password)
         else:
             return False
@@ -93,10 +93,11 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
 
     finished = False
 
-    def __init__(self, bind_address, bind_port=61209, requestHandler=GlancesXMLRPCHandler):
+    def __init__(self, bind_address, bind_port=61209, requestHandler=GlancesXMLRPCHandler, config=None):
 
         self.bind_address = bind_address
         self.bind_port = bind_port
+        self.config = config
         try:
             self.address_family = socket.getaddrinfo(bind_address, bind_port)[0][0]
         except socket.error as e:
@@ -146,19 +147,19 @@ class GlancesInstance(object):
     def getAll(self):
         # Update and return all the stats
         self.__update__()
-        return json.dumps(self.stats.getAll())
+        return json_dumps(self.stats.getAll())
 
     def getAllPlugins(self):
         # Return the plugins list
-        return json.dumps(self.stats.getPluginsList())
+        return json_dumps(self.stats.getPluginsList())
 
     def getAllLimits(self):
         # Return all the plugins limits
-        return json.dumps(self.stats.getAllLimitsAsDict())
+        return json_dumps(self.stats.getAllLimitsAsDict())
 
     def getAllViews(self):
         # Return all the plugins views
-        return json.dumps(self.stats.getAllViewsAsDict())
+        return json_dumps(self.stats.getAllViewsAsDict())
 
     def __getattr__(self, item):
         """Overwrite the getattr method in case of attribute is not found.
@@ -191,7 +192,7 @@ class GlancesServer(object):
 
         # Init the XML RPC server
         try:
-            self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler)
+            self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler, config=config)
         except Exception as e:
             logger.critical("Cannot start Glances server: {}".format(e))
             sys.exit(2)
@@ -211,6 +212,7 @@ class GlancesServer(object):
         if not self.args.disable_autodiscover:
             # Note: The Zeroconf service name will be based on the hostname
             # Correct issue: Zeroconf problem with zeroconf service name #889
+            logger.info('Autodiscover is enabled with service name {}'.format(socket.gethostname().split('.', 1)[0]))
             self.autodiscover_client = GlancesAutoDiscoverClient(socket.gethostname().split('.', 1)[0], args)
         else:
             logger.info("Glances autodiscover announce is disabled")

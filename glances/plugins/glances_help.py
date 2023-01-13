@@ -14,7 +14,6 @@ Just a stupid plugin to display the help screen.
 """
 import sys
 from glances.compat import iteritems
-from collections import OrderedDict
 from glances import __version__, psutil_version
 from glances.plugins.glances_plugin import GlancesPlugin
 from itertools import chain
@@ -63,7 +62,7 @@ class Plugin(GlancesPlugin):
 
         self.view_data.update(
             [
-                ## First column
+                # First column
                 #
                 ('header_sort', msg_header.format('SORT PROCESSES:')),
                 ('sort_auto', msg_col.format('a', 'Automatically')),
@@ -91,7 +90,7 @@ class Plugin(GlancesPlugin):
                 ('show_hide_wifi_module', msg_col.format('W', 'Wifi')),
                 ('show_hide_processes', msg_col.format('z', 'Processes')),
                 ('show_hide_left_sidebar', msg_col.format('2', 'Left sidebar')),
-                ## Second column
+                # Second column
                 #
                 ('show_hide_quick_look', msg_col.format('3', 'Quick Look')),
                 ('show_hide_cpu_mem_swap', msg_col.format('4', 'CPU, MEM, and SWAP')),
@@ -111,7 +110,7 @@ class Plugin(GlancesPlugin):
                 ('misc_erase_process_filter', msg_col.format('E', 'Erase process filter')),
                 ('misc_generate_history_graphs', msg_col.format('g', 'Generate history graphs')),
                 ('misc_help', msg_col.format('h', 'HELP')),
-                ('misc_accumulate_processes_by_program', msg_col.format('j', 'Accumulate processes by program')),
+                ('misc_accumulate_processes_by_program', msg_col.format('j', 'Display threads or programs')),
                 ('misc_increase_nice_process', msg_col.format('+', 'Increase nice process')),
                 ('misc_decrease_nice_process', msg_col.format('-', 'Decrease nice process (need admin rights)')),
                 ('misc_kill_process', msg_col.format('k', 'Kill process')),
@@ -146,7 +145,7 @@ class Plugin(GlancesPlugin):
 
         ret.append(self.curse_new_line())
 
-        ## key-shortcuts
+        # key-shortcuts
         #
         # Collect all values after the 1st key-msg
         # in a list of curse-lines.

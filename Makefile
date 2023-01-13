@@ -74,6 +74,18 @@ trace-malloc: ## Trace the malloc() calls
 memory-leak: ## Profile memory leaks
 	./venv/bin/python -m glances -C ./conf/glances.conf --memory-leak
 
+memory-profiling: ## Profile memory usage
+	@echo "It's a very long test (~4 hours)..."
+	rm -f mprofile_*.dat
+	@echo "1/2 - Start memory profiling with the history option enable"
+	./venv/bin/mprof run -T 1 -C run.py -C ./conf/glances.conf --stop-after 2400 --quiet
+	./venv/bin/mprof plot --output ./docs/_static/glances-memory-profiling-with-history.png
+	rm -f mprofile_*.dat
+	@echo "2/2 - Start memory profiling with the history option disable"
+	./venv/bin/mprof run -T 1 -C run.py -C ./conf/glances.conf --disable-history --stop-after 2400 --quiet
+	./venv/bin/mprof plot --output ./docs/_static/glances-memory-profiling-without-history.png
+	rm -f mprofile_*.dat
+
 # ===================================================================
 # Docs
 # ===================================================================
@@ -118,10 +130,17 @@ flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
 # Docker
 # ===================================================================
 
-docker:
+docker: docker-alpine ## Generate local docker images
+
+docker-alpine: ## Generate local docker images (Alpine)
 	docker build --target full -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-full .
 	docker build --target minimal -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-minimal .
 	docker build --target dev -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-dev .
+
+docker-ubuntu: ## Generate local docker images (Ubuntu)
+	docker build --target full -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-full .
+	docker build --target minimal -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-minimal .
+	docker build --target dev -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-dev .
 
 # ===================================================================
 # Run

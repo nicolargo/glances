@@ -118,7 +118,7 @@ class GlancesStats(object):
             if args is not None:
                 # If the all key is set in the disable_plugin option then look in the enable_plugin option
                 if getattr(args, 'disable_all', False):
-                    logger.info('%s => %s', name, getattr(args, 'enable_' + name, False))
+                    logger.debug('%s => %s', name, getattr(args, 'enable_' + name, False))
                     setattr(args, 'disable_' + name, not getattr(args, 'enable_' + name, False))
                 else:
                     setattr(args, 'disable_' + name, getattr(args, 'disable_' + name, False))

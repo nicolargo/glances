@@ -10,11 +10,11 @@
 """ZeroMQ interface class."""
 
 import sys
-import json
 
 from glances.compat import b
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
+from glances.globals import json_dumps
 
 import zmq
 from zmq.utils.strtypes import asbytes
@@ -84,7 +84,7 @@ class Export(GlancesExport):
         # - First frame containing the following prefix (STRING)
         # - Second frame with the Glances plugin name (STRING)
         # - Third frame with the Glances plugin stats (JSON)
-        message = [b(self.prefix), b(name), asbytes(json.dumps(data))]
+        message = [b(self.prefix), b(name), asbytes(json_dumps(data))]
 
         # Write data to the ZeroMQ bus
         # Result can be view: tcp://host:port

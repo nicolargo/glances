@@ -9,7 +9,7 @@
 
 """Manage the Glances client."""
 
-import json
+import ujson
 import socket
 import sys
 import time
@@ -119,7 +119,7 @@ class GlancesClient(object):
             if __version__.split('.')[0] == client_version.split('.')[0]:
                 # Init stats
                 self.stats = GlancesStatsClient(config=self.config, args=self.args)
-                self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
+                self.stats.set_plugins(ujson.loads(self.client.getAllPlugins()))
                 logger.debug("Client version: {} / Server version: {}".format(__version__, client_version))
             else:
                 self.log_and_exit(
@@ -198,7 +198,7 @@ class GlancesClient(object):
         """
         # Update the stats
         try:
-            server_stats = json.loads(self.client.getAll())
+            server_stats = ujson.loads(self.client.getAll())
         except socket.error:
             # Client cannot get server stats
             return "Disconnected"

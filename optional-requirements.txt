@@ -11,11 +11,11 @@ docker>=2.0.0
 elasticsearch
 graphitesender
 hddtemp
-influxdb>=1.0.0
-influxdb-client; python_version >= "3.6"
+influxdb>=1.0.0 # For InfluxDB < 1.8
+influxdb-client; python_version >= "3.7" # For InfluxDB >= 1.8
 kafka-python
 netifaces
-py3nvml; python_version >= "3.0"
+py3nvml; python_version >= "3.5"
 paho-mqtt
 pika
 podman; python_version >= "3.6"
@@ -33,5 +33,5 @@ six
 sparklines
 statsd
 wifi
-zeroconf==0.19.1; python_version < "3.0"
-zeroconf; python_version >= "3.0"
+zeroconf==0.47.1; python_version < "3.7"
+zeroconf; python_version >= "3.7"

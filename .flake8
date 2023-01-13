@@ -1,20 +1,7 @@
 [flake8]
-
+exclude = .git,__pycache__,docs/,build,dist
 ignore =
-    W504  # line break after binary operator
-
-    # --- flake8-bugbear plugin
-    B007  # Loop control variable 'keyword' not used within the loop body. If this is intended, start the name with an underscore.
-    B014  # Redundant exception types in `except (IOError, OSError) as err:`.  Write `except OSError as err:`, which catches exactly the same exceptions.
-    B008  # Do not perform function calls in argument defaults.
-
-    # --- flake8-blind-except plugin
-    B902  # blind except Exception: statement
-
-    # --- flake8-quotes plugin
-    Q000  # Double quotes found but single quotes preferred
-
-    # --- flake8-quotes naming; disable all except N804 and N805
+    W504, B007, B014, B008, B902, Q000,
     N801, N802, N803, N806, N807, N811, N812, N813, N814, N815, N816, N817, N818
 
 # lines should not exceed 120 characters

@@ -9,6 +9,32 @@ Version 3.3.1
     Under development, see milestone https://github.com/nicolargo/glances/milestone/61
 
 ===============
+Version 3.3.0.4
+===============
+
+Refactor the Docker images factory, from now, only Alpine image wll be provided.
+
+The following Docker images (nicolargo/glances) are availables:
+
+- *latest-full* for a full Alpine Glances image (latest release) with all dependencies
+- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
+
+===============
+Version 3.3.0.2
+===============
+
+Bug corrected:
+    * Password files in same configuration dir in effect #2143
+    * Fail to load config file on Python 3.10 #2176
+
+===============
+Version 3.3.0.1
+===============
+
+Just a version to rebuild the Docker images.
+
+===============
 Version 3.3.0
 ===============
 

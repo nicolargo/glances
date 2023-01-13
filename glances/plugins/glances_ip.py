@@ -10,7 +10,7 @@
 """IP plugin."""
 
 import threading
-from json import loads
+from ujson import loads
 
 from glances.compat import queue, urlopen, urlopen_auth
 from glances.logger import logger
