@@ -680,7 +680,6 @@ class _GlancesCurses(object):
             new_filter = self.display_popup(
                 'Process filter pattern: \n\n'
                 + 'Examples:\n'
-                + '- python\n'
                 + '- .*python.*\n'
                 + '- /usr/lib.*\n'
                 + '- name:.*nautilus.*\n'
@@ -1110,7 +1109,7 @@ class _GlancesCurses(object):
 
     def erase(self):
         """Erase the content of the screen."""
-        self.term_window.erase()
+        self.term_window.clear()
 
     def flush(self, stats, cs_status=None):
         """Clear and update the screen.

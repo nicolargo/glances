@@ -48,7 +48,7 @@ def split_cmdline(bare_process_name, cmdline):
         path, cmd = "", cmdline[0]
     else:
         path, cmd = os.path.split(cmdline[0])
-    arguments = ' '.join(cmdline[1:])
+    arguments = ' '.join(cmdline[1:]).replace('\n', ' ')
     return path, cmd, arguments
 
 
@@ -350,7 +350,7 @@ class Plugin(GlancesPlugin):
         """Get curses data to display for a process.
 
         - p is the process to display
-        - selected is a tag=True if the selected process
+        - selected is a tag=True if p is the selected process
         """
         ret = [self.curse_new_line()]
         # When a process is selected:

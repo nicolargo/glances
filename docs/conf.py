@@ -24,7 +24,9 @@ from datetime import datetime
 # Insert Glances' path into the system.
 sys.path.insert(0, os.path.abspath('..'))
 
+# WARNING: Do not move this import before the sys.path.insert() call.
 from glances import __version__
+
 
 # -- General configuration ------------------------------------------------
 

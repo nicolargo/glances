@@ -52,7 +52,7 @@ def get_install_requires():
 def get_install_extras_require():
     extras_require = {
         'action': ['chevron'],
-        'browser': ['zeroconf==0.19.1' if PY2 else 'zeroconf>=0.19.1'],
+        'browser': ['zeroconf==0.47.1' if PY2 else 'zeroconf>=0.19.1'],
         'cloud': ['requests'],
         'docker': ['docker>=2.0.0', 'python-dateutil', 'six'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
@@ -135,13 +135,11 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'Topic :: System :: Monitoring'
     ]
 )

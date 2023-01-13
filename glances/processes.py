@@ -286,21 +286,19 @@ class GlancesProcesses(object):
             is_cached = True
 
         # Build the processes stats list (it is why we need psutil>=5.3.0)
-        # This is on of the main bottleneck of Glances (see flame graph)
-        self.processlist = [
-            p.info
-            for p in psutil.process_iter(attrs=sorted_attrs, ad_value=None)
-            # OS-related processes filter
-            if not (BSD and p.info['name'] == 'idle')
-            and not (WINDOWS and p.info['name'] == 'System Idle Process')
-            and not (MACOS and p.info['name'] == 'kernel_task')
-            and
-            # Kernel threads filter
-            not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0)
-        ]
-
+        # This is one of the main bottleneck of Glances (see flame graph)
+        # Filter processes
+        self.processlist = list(filter(lambda p: not (BSD and p.info['name'] == 'idle') and
+                                       not (WINDOWS and p.info['name'] == 'System Idle Process') and
+                                       not (MACOS and p.info['name'] == 'kernel_task') and
+                                       not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0),
+                                       psutil.process_iter(attrs=sorted_attrs, ad_value=None)))
+        # Only get the info key
+        self.processlist = [p.info for p in self.processlist]
         # Sort the processes list by the current sort_key
-        self.processlist = sort_stats(self.processlist, sorted_by=self.sort_key, reverse=True)
+        self.processlist = sort_stats(self.processlist,
+                                      sorted_by=self.sort_key,
+                                      reverse=True)
 
         # Update the processcount
         self.update_processcount(self.processlist)
@@ -410,8 +408,9 @@ class GlancesProcesses(object):
                 # Save values to cache
                 self.processlist_cache[proc['pid']] = {cached: proc[cached] for cached in cached_attrs}
 
-        # Apply filter
-        self.processlist = [p for p in self.processlist if not (self._filter.is_filtered(p))]
+        # Apply user filter
+        self.processlist = list(filter(lambda p: not self._filter.is_filtered(p),
+                                       self.processlist))
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Useful to highlight the processes with maximum values
