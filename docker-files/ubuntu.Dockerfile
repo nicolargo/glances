@@ -98,6 +98,7 @@ RUN apt-get update \
     python3 \
     python3-packaging \
     python3-dateutil \
+    python3-requests \
     curl \
     lm-sensors \
     wireless-tools \
