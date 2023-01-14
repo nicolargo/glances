@@ -3,6 +3,12 @@
 ==============================================================================
 
 ===============
+Version 3.4.0
+===============
+
+    See roadmap here: https://github.com/nicolargo/glances/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Glances+3.4.0%22
+
+===============
 Version 3.3.1
 ===============
 
