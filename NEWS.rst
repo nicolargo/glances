@@ -6,7 +6,61 @@
 Version 3.3.1
 ===============
 
-    Under development, see milestone https://github.com/nicolargo/glances/milestone/61
+Enhancements:
+
+    * Minor change on the help screen
+    * Refactor some loop in the processes function
+    * Replace json by ujson #2201
+
+Bug corrected:
+
+    * Unable to see docker related information #2180
+    * CSV export dependent on sort order for docker container cpu #2156
+    * Error when process list is displayed in Programs mode #2209
+    * Console formatting permanently messed up when other text printed #2211
+    * API GET uptime returns formatted string, not seconds as the doc says #2158
+    * Glances UI is breaking for multiline commands #2189
+
+Documentation and CI:
+
+    * Add unitary test for memory profiling
+    * Update memory profile chart
+    * Add run-docker-ubuntu-* in Makefile
+    * The open-web-browser option was missing dashes #2219
+    * Correct regexp in glances.conf file example
+    * What is CW from network #2222 (related to discussion #2221)
+    * Change Glances repology URL
+    * Add example for the date format
+    * Correct Flake8 configuration file
+    * Drop UT for Python 3.5 and 3.6 (no more available in Ubuntu 22.04)
+    * Correct unitary test with Python 3.5
+    * Update Makefile with comments
+    * Update Python minimal requirement for py3nvlm
+    * Update security policy (user can open private issue directly in Github)
+    * Add a simple run script. Entry point for IDE debuger
+
+Cyber security update:
+
+    * Security alert on ujson < 5.4
+    * Merge pull request #2243 from nicolargo/renovate/nvidia-cuda-12.x
+    * Merge pull request #2244 from nicolargo/renovate/crazy-max-ghaction-docker-meta-4.x
+    * Merge pull request #2228 from nicolargo/renovate/zeroconf-0.x
+    * Merge pull request #2242 from nicolargo/renovate/crazy-max-ghaction-docker-meta-4.x
+    * Merge pull request #2239 from mfridge/action-command-split
+    * Merge pull request #2165 from nicolargo/renovate/zeroconf-0.x
+    * Merge pull request #2199 from nicolargo/renovate/alpine-3.x
+    * Merge pull request #2202 from chncaption/oscs_fix_cdr0ts8au51t49so8c6g
+    * Bump loader-utils from 2.0.0 to 2.0.3 in /glances/outputs/static #2187 - Update Web lib
+
+Contributors for this version:
+
+    * Nicolargo
+    * renovate[bot]
+    * chncaption
+    * fkwong
+    * *mfridge
+
+And also a big thanks to @RazCrimson (https://github.com/RazCrimson) for the support to the Glances community !
 
 ===============
 Version 3.3.0.4
