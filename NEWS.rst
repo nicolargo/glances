@@ -9,6 +9,17 @@ Version 3.4.0
     See roadmap here: https://github.com/nicolargo/glances/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Glances+3.4.0%22
 
 ===============
+Version 3.3.1.1
+===============
+
+Hard patch on the master branch.
+
+Bug corrected:
+
+    * "ModuleNotFoundError: No module named 'ujson'" #2246
+    * Remove surrounding quotes for quoted command arguments #2247 (related to #2239)
+
+===============
 Version 3.3.1
 ===============
 
