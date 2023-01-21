@@ -22,7 +22,9 @@ file under the ``[ip]`` section:
 
 
 **NOTE:** Setting low values for `public_refresh_interval` will result in frequent
-HTTP requests to the IP detection servers. Recommended range: 120-600 seconds
+HTTP requests to the IP detection servers. Recommended range: 120-600 seconds.
+Glances uses online services in order to get the IP addresses. Your IP address could be
+blocked if too many requests are done.
 
 If the Censys options are configured, the public IP address is also analysed (with the same interval)
 and additional information is displayed.

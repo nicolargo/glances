@@ -164,6 +164,15 @@ run-docker-alpine-full: ## Start Glances Alpine Docker full in console mode
 run-docker-alpine-dev: ## Start Glances Alpine Docker dev in console mode
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-dev
 
+run-docker-ubuntu-minimal: ## Start Glances Ubuntu Docker minimal in console mode
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-minimal
+
+run-docker-ubuntu-full: ## Start Glances Ubuntu Docker full in console mode
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-full
+
+run-docker-ubuntu-dev: ## Start Glances Ubuntu Docker dev in console mode
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-dev
+
 run-webserver: ## Start Glances in Web server mode
 	./venv/bin/python -m glances -C ./conf/glances.conf -w
 
