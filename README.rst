@@ -40,16 +40,22 @@ Glances - An eye on your system
 Summary
 =======
 
-**Glances** is a cross-platform monitoring tool which aims to present a
-large amount of monitoring information through a curses or Web
-based interface. The information dynamically adapts depending on the
-size of the user interface.
+**Glances** is an open-source system cross-platform monitoring tool.
+It allows real-time monitoring of various aspects of your system such as
+CPU, memory, disk, network usage etc. It also allows monitoring of running processes,
+logged in users, temperatures, voltages, fan speeds etc.
+It also supports container monitoring, it supports different container management
+systems such as Docker, LXC. The information is presented in an easy to read dashboard
+and can also be used for remote monitoring of systems via a web interface or command
+line interface. It is easy to install and use and can be customized to show only
+the information that you are interested in.
 
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-summary.png
 
-It can also work in client/server mode. Remote monitoring could be done
-via terminal, Web interface or API (XML-RPC and RESTful). Stats can also
-be exported to files or external time/value databases.
+In client/server mode, remote monitoring could be done via terminal,
+Web interface or API (XML-RPC and RESTful).
+Stats can also be exported to files or external time/value databases, CSV or direct
+output to STDOUT.
 
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-responsive-webdesign.png
 
