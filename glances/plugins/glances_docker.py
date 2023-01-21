@@ -14,7 +14,7 @@ import threading
 import time
 from copy import deepcopy
 
-from glances.compat import iterkeys, itervalues, nativestr, pretty_date
+from glances.compat import iterkeys, itervalues, nativestr, pretty_date, string_value_to_float
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.processes import sort_stats as sort_stats_processes, glances_processes
@@ -449,7 +449,10 @@ class Plugin(GlancesPlugin):
                 # MEMORY
                 # @TODO
                 # Should convert 'MemUsage': '352.3kB / 7.836GB' to bytes...
-                container_stats['memory'] = {}
+                container_stats['memory'] = {
+                    'usage': string_value_to_float(podman_stats[container_stats['IdShort']]['MemUsage'].split(' / ')[0]),
+                    'limit': string_value_to_float(podman_stats[container_stats['IdShort']]['MemUsage'].split(' / ')[1]),
+                }
                 container_stats['memory_percent'] = float(podman_stats[container_stats['IdShort']]['Mem'][:-1])
                 # Is it possible ?
                 container_stats['io'] = {}
