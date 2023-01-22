@@ -443,12 +443,12 @@ class Plugin(GlancesPlugin):
             # Standards stats
             if container_stats['Status'] in ('running', 'paused'):
                 # CPU
-                # '3.21%' to 3.21
+                # Convert: '3.21%' to 3.21
                 container_stats['cpu_percent'] = float(podman_stats[container_stats['IdShort']]['CPU'][:-1])
                 container_stats['cpu'] = {'total': container_stats['cpu_percent']}
                 # MEMORY
-                # @TODO
-                # Should convert 'MemUsage': '352.3kB / 7.836GB' to bytes...
+                # Convert 'MemUsage': '352.3kB / 7.836GB' to bytes
+                # Yes it is ungly but the API do not expose the memory limit in bytes...
                 container_stats['memory'] = {
                     'usage': string_value_to_float(podman_stats[container_stats['IdShort']]['MemUsage'].split(' / ')[0]),
                     'limit': string_value_to_float(podman_stats[container_stats['IdShort']]['MemUsage'].split(' / ')[1]),
