@@ -296,6 +296,7 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(string_value_to_float('15.5MB'), 15500000.0)
         self.assertEqual(string_value_to_float('25.9'), 25.9)
         self.assertEqual(string_value_to_float('12'), 12)
+        self.assertEqual(string_value_to_float('--'), None)
 
     def test_094_thresholds(self):
         """Test thresholds classes"""

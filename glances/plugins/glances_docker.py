@@ -454,13 +454,14 @@ class Plugin(GlancesPlugin):
                     'limit': string_value_to_float(podman_stats[container_stats['IdShort']]['MemUsage'].split(' / ')[1]),
                 }
                 container_stats['memory_percent'] = float(podman_stats[container_stats['IdShort']]['Mem'][:-1])
-                # Is it possible ?
+                # Not available for the moment: https://github.com/containers/podman/issues/11695
                 container_stats['io'] = {}
-                container_stats['io_r'] = None
-                container_stats['io_w'] = None
+                container_stats['io_r'] = string_value_to_float(podman_stats[container_stats['IdShort']]['BlockIO'].split(' / ')[0])
+                container_stats['io_w'] = string_value_to_float(podman_stats[container_stats['IdShort']]['BlockIO'].split(' / ')[1])
                 container_stats['network'] = {}
-                container_stats['network_rx'] = None
-                container_stats['network_tx'] = None
+                container_stats['network_rx'] = string_value_to_float(podman_stats[container_stats['IdShort']]['NetIO'].split(' / ')[0])
+                container_stats['network_tx'] = string_value_to_float(podman_stats[container_stats['IdShort']]['NetIO'].split(' / ')[1])
+                #
                 container_stats['Uptime'] = None
             else:
                 container_stats['cpu'] = {}
