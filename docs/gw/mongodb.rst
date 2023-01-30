@@ -11,7 +11,7 @@ following:
 
     [couchdb]
     host=localhost
-    port=5984
+    port=
     user=root
     password=example
     db=glances
