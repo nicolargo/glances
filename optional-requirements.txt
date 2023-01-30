@@ -22,6 +22,7 @@ potsdb
 prometheus_client
 pygal
 pymdstat
+pymongo; python_version >= "3.7"
 pysnmp
 pySMART.smartx
 python-dateutil
