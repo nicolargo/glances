@@ -56,7 +56,7 @@ class Export(GlancesExport):
             client = pymongo.MongoClient(server_uri)
             client.admin.command('ping')
         except Exception as e:
-            logger.critical("Cannot connect to MongoDB server %s (%s)" % (server_uri, e))
+            logger.critical("Cannot connect to MongoDB server %s:%s (%s)" % (self.host, self.port, e))
             sys.exit(2)
         else:
             logger.info("Connected to the MongoDB server")
