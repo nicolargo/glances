@@ -65,8 +65,8 @@ def get_install_extras_require():
         'cloud': ['requests'],
         'docker': ['docker>=2.0.0', 'python-dateutil', 'six'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
-                   'graphitesender', 'influxdb>=1.0.0', 'kafka-python', 'pika',
-                   'paho-mqtt', 'potsdb', 'prometheus_client', 'pyzmq',
+                   'graphitesender', 'influxdb>=1.0.0', 'kafka-python', 'pymongo',
+                   'pika', 'paho-mqtt', 'potsdb', 'prometheus_client', 'pyzmq',
                    'statsd'],
         'folders': ['scandir'],  # python_version<"3.5"
         'graph': ['pygal'],
