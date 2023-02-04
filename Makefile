@@ -137,6 +137,11 @@ docker-alpine: ## Generate local docker images (Alpine)
 	docker build --target minimal -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-minimal .
 	docker build --target dev -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-dev .
 
+docker-ubuntu: ## Generate local docker images (Ubuntu)
+	docker build --target full -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-full .
+	docker build --target minimal -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-minimal .
+	docker build --target dev -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-dev .
+
 # ===================================================================
 # Run
 # ===================================================================
@@ -158,6 +163,15 @@ run-docker-alpine-full: ## Start Glances Alpine Docker full in console mode
 
 run-docker-alpine-dev: ## Start Glances Alpine Docker dev in console mode
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-dev
+
+run-docker-ubuntu-minimal: ## Start Glances Ubuntu Docker minimal in console mode
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-minimal
+
+run-docker-ubuntu-full: ## Start Glances Ubuntu Docker full in console mode
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-full
+
+run-docker-ubuntu-dev: ## Start Glances Ubuntu Docker dev in console mode
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-dev
 
 run-webserver: ## Start Glances in Web server mode
 	./venv/bin/python -m glances -C ./conf/glances.conf -w

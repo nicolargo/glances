@@ -11,6 +11,7 @@
 
 from glances.compat import nativestr
 from subprocess import Popen, PIPE
+import re
 
 
 def secure_popen(cmd):
@@ -48,8 +49,9 @@ def __secure_popen(cmd):
     p_last = None
     # Split by pipe '|'
     for sub_cmd in cmd.split('|'):
-        # Split by space ' '
-        sub_cmd_split = [i for i in sub_cmd.split(' ') if i]
+        # Split by space character, but do no split spaces within quotes (remove surrounding quotes, though)
+        tmp_split = [_ for _ in list(filter(None, re.split(r'(\s+)|(".*?"+?)|(\'.*?\'+?)', sub_cmd))) if _ != ' ']
+        sub_cmd_split = [_[1:-1] if (_[0]==_[-1]=='"') or (_[0]==_[-1]=='\'') else _ for _ in tmp_split]
         p = Popen(sub_cmd_split, shell=False, stdin=sub_cmd_stdin, stdout=PIPE, stderr=PIPE)
         if p_last is not None:
             # Allow p_last to receive a SIGPIPE if p exits.

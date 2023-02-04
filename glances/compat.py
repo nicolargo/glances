@@ -68,6 +68,10 @@ if PY3:
             return s.decode()
         return s.encode('ascii', 'ignore').decode()
 
+    def to_hex(s):
+        """Convert the bytes string to a hex string"""
+        return s.hex()
+
     def listitems(d):
         return list(d.items())
 
@@ -165,6 +169,10 @@ else:
         if isinstance(s, binary_type):
             return s
         return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore')
+
+    def to_hex(s):
+        """Convert the string to a hex string in Python 2"""
+        return s.encode('hex')
 
     def listitems(d):
         return d.items()

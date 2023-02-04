@@ -37,3 +37,9 @@ or another example:
 
     [diskio]
     show=sda.*
+
+Filtering is based on regular expression. Please be sure that your regular
+expression works as expected. You can use an online tool like `regex101`_ in
+order to test your regular expression.
+
+.. _regex101: https://regex101.com/
