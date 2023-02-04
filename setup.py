@@ -41,7 +41,16 @@ def get_data_files():
 
 
 def get_install_requires():
-    requires = ['psutil>=5.3.0', 'defusedxml', 'future', 'packaging']
+    requires = [
+        'psutil>=5.6.7',
+        'defusedxml',
+        'packaging',
+        'future; python_version < "3.0"',
+        'ujson<3; python_version < "3.0"',
+        'ujson<4; python_version >= "3.5" and python_version < "3.6"',
+        'ujson<5; python_version >= "3.6" and python_version < "3.7"',
+        'ujson>=5.4.0; python_version >= "3.7"',
+    ]
     if sys.platform.startswith('win'):
         requires.append('bottle')
         requires.append('requests')
@@ -52,12 +61,12 @@ def get_install_requires():
 def get_install_extras_require():
     extras_require = {
         'action': ['chevron'],
-        'browser': ['zeroconf==0.47.0' if PY2 else 'zeroconf>=0.19.1'],
+        'browser': ['zeroconf==0.47.1' if PY2 else 'zeroconf>=0.19.1'],
         'cloud': ['requests'],
         'docker': ['docker>=2.0.0', 'python-dateutil', 'six'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
-                   'graphitesender', 'influxdb>=1.0.0', 'kafka-python', 'pika',
-                   'paho-mqtt', 'potsdb', 'prometheus_client', 'pyzmq',
+                   'graphitesender', 'influxdb>=1.0.0', 'kafka-python', 'pymongo',
+                   'pika', 'paho-mqtt', 'potsdb', 'prometheus_client', 'pyzmq',
                    'statsd'],
         'folders': ['scandir'],  # python_version<"3.5"
         'graph': ['pygal'],

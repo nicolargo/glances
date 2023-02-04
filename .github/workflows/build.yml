@@ -104,7 +104,7 @@ jobs:
 
       - name: Retrieve Repository Docker metadata
         id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v4.1.1
+        uses: crazy-max/ghaction-docker-meta@v4.3.0
         with:
           images: ${{ env.DEFAULT_DOCKER_IMAGE }}
           labels: |
@@ -136,7 +136,7 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Build and push image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           push: ${{ env.PUSH_BRANCH == 'true' }}
           tags: "${{ env.DEFAULT_DOCKER_IMAGE }}:${{ matrix.os != 'alpine' && format('{0}-', matrix.os) || '' }}${{ matrix.tag.tag }}"
