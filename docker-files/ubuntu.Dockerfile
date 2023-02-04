@@ -25,6 +25,7 @@ RUN apt-get update \
     curl \
     lm-sensors \
     wireless-tools \
+    smartmontools \
     net-tools \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
@@ -102,6 +103,7 @@ RUN apt-get update \
     curl \
     lm-sensors \
     wireless-tools \
+    smartmontools \
     net-tools \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
