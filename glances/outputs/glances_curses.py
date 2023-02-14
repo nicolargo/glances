@@ -57,7 +57,7 @@ class _GlancesCurses(object):
         'c': {'sort_key': 'cpu_percent'},
         'C': {'switch': 'disable_cloud'},
         'd': {'switch': 'disable_diskio'},
-        'D': {'switch': 'disable_docker'},
+        'D': {'switch': 'disable_containers'},
         # 'e' > Enable/Disable process extended
         # 'E' > Erase the process filter
         # 'f' > Show/hide fs / folder stats
@@ -124,7 +124,7 @@ class _GlancesCurses(object):
     _left_sidebar_max_width = 34
 
     # Define right sidebar
-    _right_sidebar = ['docker', 'processcount', 'amps', 'processlist', 'alert']
+    _right_sidebar = ['containers', 'processcount', 'amps', 'processlist', 'alert']
 
     def __init__(self, config=None, args=None):
         # Init
@@ -612,7 +612,7 @@ class _GlancesCurses(object):
         max_processes_displayed = (
             self.term_window.getmaxyx()[0]
             - 11
-            - (0 if 'docker' not in __stat_display else self.get_stats_display_height(__stat_display["docker"]))
+            - (0 if 'containers' not in __stat_display else self.get_stats_display_height(__stat_display["containers"]))
             - (
                 0
                 if 'processcount' not in __stat_display
