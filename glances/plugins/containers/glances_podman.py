@@ -1,7 +1,7 @@
 """Podman Extension unit for Glances' Containers plugin."""
 from datetime import datetime
 
-from glances.compat import iterkeys, itervalues, nativestr, pretty_date, string_value_to_float
+from glances.compat import iterkeys, itervalues, nativestr, pretty_date
 from glances.logger import logger
 from glances.plugins.containers.stats_fetcher import StatsFetcher
 
@@ -18,112 +18,50 @@ else:
 
 
 class PodmanStatsFetcher(StatsFetcher):
+    MANDATORY_FIELDS = ["CPU", "MemUsage", "MemLimit", "NetInput", "NetOutput", "BlockInput", "BlockOutput"]
+
+    @property
+    def stats(self):
+        if self._raw_stats["Error"]:
+            logger.error("containers plugin - Stats fetching failed: {}".format(self._raw_stats["Error"]))
+            logger.error(self._raw_stats)
+
+        return self._raw_stats["Stats"][0]
+
     @property
     def activity_stats(self):
-        io_stats = self._get_io_stats()
-        cpu_stats = self._get_cpu_stats()
-        memory_stats = self._get_memory_stats()
-        network_stats = self._get_network_stats()
+        result_stats = {"cpu": {}, "memory": {}, "io": {}, "network": {}}
 
-        computed_stats = {
-            "io": io_stats or {},
-            "memory": memory_stats or {},
-            "network": network_stats or {},
-            "cpu": cpu_stats or {"total": 0.0},
-        }
-        return computed_stats
-
-    def _get_cpu_stats(self):
-        """Return the container CPU usage.
-
-        Output: a dict {'total': 1.49}
-        """
-        if "cpu_percent" not in self.stats:
-            logger.debug("containers plugin - Missing CPU usage fields for container {}".format(self._container.id))
+        if any(field not in self.stats for field in self.MANDATORY_FIELDS):
+            logger.debug("containers plugin - Missing mandatory fields for container {}".format(self._container.id))
             logger.debug(self.stats)
-            return None
-
-        cpu_usage = string_value_to_float(self.stats["cpu_percent"].rstrip("%"))
-        return {"total": cpu_usage}
-
-    def _get_memory_stats(self):
-        """Return the container MEMORY.
-
-        Output: a dict {'rss': 1015808, 'cache': 356352,  'usage': ..., 'max_usage': ...}
-        """
-        if "mem_usage" not in self.stats or "/" not in self.stats["mem_usage"]:
-            logger.debug("containers plugin - Missing MEM usage fields for container {}".format(self._container.id))
-            logger.debug(self.stats)
-            return None
-
-        memory_usage_str = self.stats["mem_usage"]
-        usage_str, limit_str = memory_usage_str.split("/")
+            return result_stats
 
         try:
-            usage = string_value_to_float(usage_str)
-            limit = string_value_to_float(limit_str)
-        except ValueError as e:
-            logger.debug("containers plugin - Compute MEM usage failed for container {}".format(self._container.id))
+            cpu_usage = float(self.stats.get("CPU", 0))
+
+            mem_usage = float(self.stats["MemUsage"])
+            mem_limit = float(self.stats["MemLimit"])
+
+            rx = float(self.stats["NetInput"])
+            tx = float(self.stats["NetOutput"])
+
+            ior = float(self.stats["BlockInput"])
+            iow = float(self.stats["BlockOutput"])
+
+            # Hardcode `time_since_update` to 1 as podman already sends the calculated rate
+            result_stats = {
+                "cpu": {"total": cpu_usage},
+                "memory": {"usage": mem_usage, "limit": mem_limit},
+                "io": {"ior": ior, "iow": iow, "time_since_update": 1},
+                "network": {"rx": rx, "tx": tx, "time_since_update": 1},
+            }
+        except ValueError:
+            logger.debug("containers plugin - Non float stats values found for container {}".format(self._container.id))
             logger.debug(self.stats)
-            return None
+            return result_stats
 
-        return {"usage": usage, "limit": limit}
-
-    def _get_network_stats(self):
-        """Return the container network usage using the Docker API (v1.0 or higher).
-
-        Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}.
-        with:
-            time_since_update: number of seconds elapsed between the latest grab
-            rx: Number of bytes received
-            tx: Number of bytes transmitted
-        """
-        if "net_io" not in self.stats or "/" not in self.stats["net_io"]:
-            logger.debug("containers plugin - Missing Network usage fields for container {}".format(self._container.id))
-            logger.debug(self.stats)
-            return None
-
-        net_io_str = self.stats["net_io"]
-        rx_str, tx_str = net_io_str.split("/")
-
-        try:
-            rx = string_value_to_float(rx_str)
-            tx = string_value_to_float(tx_str)
-        except ValueError as e:
-            logger.debug("containers plugin - Compute Network usage failed for container {}".format(self._container.id))
-            logger.debug(self.stats)
-            return None
-
-        # Hardcode `time_since_update` to 1 as podman docs don't specify the rate calculated procedure
-        return {"rx": rx, "tx": tx, "time_since_update": 1}
-
-    def _get_io_stats(self):
-        """Return the container IO usage using the Docker API (v1.0 or higher).
-
-        Output: a dict {'time_since_update': 3000, 'ior': 10, 'iow': 65}.
-        with:
-            time_since_update: number of seconds elapsed between the latest grab
-            ior: Number of bytes read
-            iow: Number of bytes written
-        """
-        if "block_io" not in self.stats or "/" not in self.stats["block_io"]:
-            logger.debug("containers plugin - Missing BlockIO usage fields for container {}".format(self._container.id))
-            logger.debug(self.stats)
-            return None
-
-        block_io_str = self.stats["block_io"]
-        ior_str, iow_str = block_io_str.split("/")
-
-        try:
-            ior = string_value_to_float(ior_str)
-            iow = string_value_to_float(iow_str)
-        except ValueError as e:
-            logger.debug("containers plugin - Compute BlockIO usage failed for container {}".format(self._container.id))
-            logger.debug(self.stats)
-            return None
-
-        # Hardcode `time_since_update` to 1 as podman docs don't specify the rate calculated procedure
-        return {"ior": ior, "iow": iow, "time_since_update": 1}
+        return result_stats
 
 
 class PodmanContainersExtension:
