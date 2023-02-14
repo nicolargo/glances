@@ -10,26 +10,17 @@
 """Containers plugin."""
 
 import os
-import threading
-import time
 from copy import deepcopy
+from typing import Optional
 
-from glances.compat import iterkeys, itervalues, nativestr, pretty_date, string_value_to_float
 from glances.logger import logger
+from glances.plugins.containers.glances_docker import (
+    DockerContainersExtension, import_docker_error_tag)
+from glances.plugins.containers.glances_podman import (
+    PodmanContainersExtension, import_podman_error_tag)
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.processes import sort_stats as sort_stats_processes, glances_processes
-from glances.plugins.containers.glances_docker import import_docker_error_tag, DockerContainersExtension
-
-# Podman library (optional and Linux-only)
-# https://pypi.org/project/podman/
-try:
-    from podman import PodmanClient
-except Exception as e:
-    import_podman_error_tag = True
-    # Display debug message if import KeyError
-    logger.debug("Error loading Podman deps Lib. Podman feature in the Docker plugin is disabled ({})".format(e))
-else:
-    import_podman_error_tag = False
+from glances.processes import glances_processes
+from glances.processes import sort_stats as sort_stats_processes
 
 # Define the items history list (list of items to add to history)
 # TODO: For the moment limited to the CPU. Had to change the graph exports
@@ -89,34 +80,12 @@ class Plugin(GlancesPlugin):
 
         # Init the Docker API
         self.docker_extension = DockerContainersExtension() if not import_docker_error_tag else None
-        self.docker_extension: DockerContainersExtension
 
         # Init the Podman API
-        self._version_podman = {}
-        if not import_podman_error_tag:
-            self.podman_client = self.connect_podman()
-        else:
+        if import_podman_error_tag:
             self.podman_client = None
-
-        # Dict of Docker thread (to grab stats asynchronously, one thread is created per container)
-        # key: Container Id
-        # value: instance of ThreadContainerGrabber
-        self.thread_docker_list = {}
-
-        # Dict of Podman thread (to grab stats asynchronously, one thread is created per container)
-        # key: Container Id
-        # value: instance of ThreadContainerGrabber
-        self.thread_podman_list = {}
-
-        # Dict of Network stats (Storing previous network stats to compute Rx/s and Tx/s)
-        # key: Container Id
-        # value: network stats dict
-        self.network_old = {}
-
-        # Dict of Disk IO stats (Storing previous disk_io stats to compute Rx/s and Tx/s)
-        # key: Container Id
-        # value: network stats dict
-        self.io_old = {}
+        else:
+            self.podman_client = PodmanContainersExtension(podman_sock=self._podman_sock())
 
         # Sort key
         self.sort_key = None
@@ -124,6 +93,17 @@ class Plugin(GlancesPlugin):
         # Force a first update because we need two update to have the first stat
         self.update()
         self.refresh_timer.set(0)
+
+    def _podman_sock(self):
+        """Return the podman sock.
+        Could be desfined in the [docker] section thanks to the podman_sock option.
+        Default value: unix:///run/user/1000/podman/podman.sock
+        """
+        conf_podman_sock = self.get_conf_value('podman_sock')
+        if len(conf_podman_sock) == 0:
+            return "unix:///run/user/1000/podman/podman.sock"
+        else:
+            return conf_podman_sock[0]
 
     def exit(self):
         """Overwrite the exit method to close threads."""
@@ -154,50 +134,6 @@ class Plugin(GlancesPlugin):
                 container.pop(i)
 
         return ret
-
-    def connect_docker(self):
-        """Connect to the Docker server."""
-        try:
-            # Do not use the timeout option (see issue #1878)
-            ret = docker.from_env()
-        except Exception as e:
-            logger.error("docker plugin - Can not connect to Docker ({})".format(e))
-            ret = None
-
-        return ret
-
-    def connect_podman(self):
-        """Connect to Podman."""
-        try:
-            ret = PodmanClient(base_url=self._podman_sock())
-        except Exception as e:
-            logger.error("docker plugin - Can not connect to Podman ({})".format(e))
-            ret = None
-
-        try:
-            version_podman = ret.version()
-        except Exception as e:
-            logger.error("{} plugin - Cannot get Podman version ({})".format(self.plugin_name, e))
-            ret = None
-        else:
-            self._version_podman = {
-                'Version': version_podman['Version'],
-                'ApiVersion': version_podman['ApiVersion'],
-                'MinAPIVersion': version_podman['MinAPIVersion'],
-            }
-
-        return ret
-
-    def _podman_sock(self):
-        """Return the podman sock.
-        Could be desfined in the [docker] section thanks to the podman_sock option.
-        Default value: unix:///run/user/1000/podman/podman.sock
-        """
-        conf_podman_sock = self.get_conf_value('podman_sock')
-        if len(conf_podman_sock) == 0:
-            return "unix:///run/user/1000/podman/podman.sock"
-        else:
-            return conf_podman_sock[0]
 
     def _all_tag(self):
         """Return the all tag of the Glances/Docker configuration file.
@@ -247,261 +183,8 @@ class Plugin(GlancesPlugin):
 
     def update_podman(self):
         """Update Podman stats."""
-        # Init new docker stats
-        stats = self.get_init_value()
-
-        # Podman version
-        # Request very long so it is only done once in the connect_podman method
-        stats['version'] = self._version_podman
-
-        # Update current containers list
-        try:
-            containers = self.podman_client.containers.list() or []
-        except Exception as e:
-            logger.error("{} plugin - Cannot get Podman containers list ({})".format(self.plugin_name, e))
-            return stats
-
-        # And the stats for each container
-        try:
-            # Return example:
-            # [{'CPU': '3.21%',
-            #   'MemUsage': '352.3kB / 7.836GB', 'MemUsageBytes': '344KiB / 7.298GiB', 'Mem': '0.00%',
-            #   'NetIO': '-- / --',
-            #   'BlockIO': '-- / --',
-            # 'PIDS': '1', 'Pod': '8d0f1c783def', 'CID': '9491515251ed',
-            # 'Name': '8d0f1c783def-infra'}, ... ]
-            podman_stats = {s['CID'][:12]: s for s in self.podman_client.pods.stats()}
-        except Exception as e:
-            logger.error("{} plugin - Cannot get Podman containers list ({})".format(self.plugin_name, e))
-            return stats
-
-        # Get stats for all containers
-        stats['containers'] = []
-        for container in containers:
-            # Shall we display the stats ?
-            if not self.is_display(nativestr(container.name)):
-                continue
-
-            # Init the stats for the current container
-            container_stats = {}
-            # The key is the container name and not the Id
-            container_stats['key'] = self.get_key()
-            # Export name
-            container_stats['name'] = nativestr(container.name)
-            # Container Id
-            container_stats['Id'] = container.id
-            container_stats['IdShort'] = container.id[:12]
-            # Container Image
-            container_stats['Image'] = container.image.tags
-            # Container Status (from attrs)
-            container_stats['Status'] = container.attrs['State']
-            # Container Command
-            container_stats['Command'] = container.attrs['Command']
-            # Standards stats
-            if container_stats['Status'] in ('running', 'paused'):
-                # CPU
-                # Convert: '3.21%' to 3.21
-                container_stats['cpu_percent'] = float(podman_stats[container_stats['IdShort']]['CPU'][:-1])
-                container_stats['cpu'] = {'total': container_stats['cpu_percent']}
-                # MEMORY
-                # Convert 'MemUsage': '352.3kB / 7.836GB' to bytes
-                # Yes it is ungly but the API do not expose the memory limit in bytes...
-                container_stats['memory'] = {
-                    'usage': string_value_to_float(podman_stats[container_stats['IdShort']]['MemUsage'].split(' / ')[0]),
-                    'limit': string_value_to_float(podman_stats[container_stats['IdShort']]['MemUsage'].split(' / ')[1]),
-                }
-                container_stats['memory_percent'] = float(podman_stats[container_stats['IdShort']]['Mem'][:-1])
-                # Not available for the moment: https://github.com/containers/podman/issues/11695
-                container_stats['io'] = {}
-                container_stats['io_r'] = string_value_to_float(podman_stats[container_stats['IdShort']]['BlockIO'].split(' / ')[0])
-                container_stats['io_w'] = string_value_to_float(podman_stats[container_stats['IdShort']]['BlockIO'].split(' / ')[1])
-                container_stats['network'] = {}
-                container_stats['network_rx'] = string_value_to_float(podman_stats[container_stats['IdShort']]['NetIO'].split(' / ')[0])
-                container_stats['network_tx'] = string_value_to_float(podman_stats[container_stats['IdShort']]['NetIO'].split(' / ')[1])
-                #
-                container_stats['Uptime'] = None
-            else:
-                container_stats['cpu'] = {}
-                container_stats['cpu_percent'] = None
-                container_stats['memory'] = {}
-                container_stats['memory_percent'] = None
-                container_stats['io'] = {}
-                container_stats['io_r'] = None
-                container_stats['io_w'] = None
-                container_stats['network'] = {}
-                container_stats['network_rx'] = None
-                container_stats['network_tx'] = None
-                container_stats['Uptime'] = None
-            # Add current container stats to the stats list
-            stats['containers'].append(container_stats)
-
-        return stats
-
-    def get_docker_cpu(self, container_id, all_stats):
-        """Return the container CPU usage.
-
-        Input: id is the full container id
-               all_stats is the output of the stats method of the Docker API
-        Output: a dict {'total': 1.49}
-        """
-        cpu_stats = {'total': 0.0}
-
-        try:
-            cpu = {
-                'system': all_stats['cpu_stats']['system_cpu_usage'],
-                'total': all_stats['cpu_stats']['cpu_usage']['total_usage'],
-            }
-            precpu = {
-                'system': all_stats['precpu_stats']['system_cpu_usage'],
-                'total': all_stats['precpu_stats']['cpu_usage']['total_usage'],
-            }
-            # Issue #1857
-            # If either precpu_stats.online_cpus or cpu_stats.online_cpus is nil
-            # then for compatibility with older daemons the length of
-            # the corresponding cpu_usage.percpu_usage array should be used.
-            cpu['nb_core'] = all_stats['cpu_stats'].get('online_cpus', None)
-            if cpu['nb_core'] is None:
-                cpu['nb_core'] = len(all_stats['cpu_stats']['cpu_usage']['percpu_usage'] or [])
-        except KeyError as e:
-            logger.debug("docker plugin - Cannot grab CPU usage for container {} ({})".format(container_id, e))
-            logger.debug(all_stats)
-        else:
-            try:
-                cpu_delta = cpu['total'] - precpu['total']
-                system_cpu_delta = cpu['system'] - precpu['system']
-                # CPU usage % = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
-                cpu_stats['total'] = (cpu_delta / system_cpu_delta) * cpu['nb_core'] * 100.0
-            except TypeError as e:
-                logger.debug("docker plugin - Cannot compute CPU usage for container {} ({})".format(container_id, e))
-                logger.debug(all_stats)
-
-        # Return the stats
-        return cpu_stats
-
-    def get_docker_memory(self, container_id, all_stats):
-        """Return the container MEMORY.
-
-        Input: id is the full container id
-               all_stats is the output of the stats method of the Docker API
-        Output: a dict {'rss': 1015808, 'cache': 356352,  'usage': ..., 'max_usage': ...}
-        """
-        memory_stats = {}
-        # Read the stats
-        try:
-            # Mandatory fields
-            memory_stats['usage'] = all_stats['memory_stats']['usage']
-            memory_stats['limit'] = all_stats['memory_stats']['limit']
-            # Issue #1857
-            # Some stats are not always available in ['memory_stats']['stats']
-            if 'rss' in all_stats['memory_stats']['stats']:
-                memory_stats['rss'] = all_stats['memory_stats']['stats']['rss']
-            elif 'total_rss' in all_stats['memory_stats']['stats']:
-                memory_stats['rss'] = all_stats['memory_stats']['stats']['total_rss']
-            else:
-                memory_stats['rss'] = None
-            memory_stats['cache'] = all_stats['memory_stats']['stats'].get('cache', None)
-            memory_stats['max_usage'] = all_stats['memory_stats'].get('max_usage', None)
-        except (KeyError, TypeError) as e:
-            # all_stats do not have MEM information
-            logger.debug("docker plugin - Cannot grab MEM usage for container {} ({})".format(container_id, e))
-            logger.debug(all_stats)
-        # Return the stats
-        return memory_stats
-
-    def get_docker_network(self, container_id, all_stats):
-        """Return the container network usage using the Docker API (v1.0 or higher).
-
-        Input: id is the full container id
-        Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}.
-        with:
-            time_since_update: number of seconds elapsed between the latest grab
-            rx: Number of bytes received
-            tx: Number of bytes transmitted
-        """
-        # Init the returned dict
-        network_new = {}
-
-        # Read the rx/tx stats (in bytes)
-        try:
-            net_stats = all_stats["networks"]
-        except KeyError as e:
-            # all_stats do not have NETWORK information
-            logger.debug("docker plugin - Cannot grab NET usage for container {} ({})".format(container_id, e))
-            logger.debug(all_stats)
-            # No fallback available...
-            return network_new
-
-        # Previous network interface stats are stored in the self.network_old variable
-        # By storing time data we enable Rx/s and Tx/s calculations in the XML/RPC API, which would otherwise
-        # be overly difficult work for users of the API
-        try:
-            network_new['cumulative_rx'] = net_stats["eth0"]["rx_bytes"]
-            network_new['cumulative_tx'] = net_stats["eth0"]["tx_bytes"]
-        except KeyError as e:
-            # all_stats do not have INTERFACE information
-            logger.debug(
-                "docker plugin - Cannot grab network interface usage for container {} ({})".format(container_id, e)
-            )
-            logger.debug(all_stats)
-        else:
-            network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net_{}'.format(container_id))
-            if container_id in self.network_old:
-                network_new['rx'] = network_new['cumulative_rx'] - self.network_old[container_id]['cumulative_rx']
-                network_new['tx'] = network_new['cumulative_tx'] - self.network_old[container_id]['cumulative_tx']
-
-            # Save stats to compute next bitrate
-            self.network_old[container_id] = network_new
-
-        # Return the stats
-        return network_new
-
-    def get_docker_io(self, container_id, all_stats):
-        """Return the container IO usage using the Docker API (v1.0 or higher).
-
-        Input: id is the full container id
-        Output: a dict {'time_since_update': 3000, 'ior': 10, 'iow': 65}.
-        with:
-            time_since_update: number of seconds elapsed between the latest grab
-            ior: Number of bytes read
-            iow: Number of bytes written
-        """
-        # Init the returned dict
-        io_new = {}
-
-        # Read the ior/iow stats (in bytes)
-        try:
-            io_stats = all_stats["blkio_stats"]
-        except KeyError as e:
-            # all_stats do not have io information
-            logger.debug("docker plugin - Cannot grab block IO usage for container {} ({})".format(container_id, e))
-            logger.debug(all_stats)
-            # No fallback available...
-            return io_new
-
-        # Previous io interface stats are stored in the self.io_old variable
-        # By storing time data we enable IoR/s and IoW/s calculations in the
-        # XML/RPC API, which would otherwise be overly difficult work
-        # for users of the API
-        try:
-            io_service_bytes_recursive = io_stats['io_service_bytes_recursive']
-
-            # Read IOR and IOW value in the structure list of dict
-            io_new['cumulative_ior'] = [i for i in io_service_bytes_recursive if i['op'].lower() == 'read'][0]['value']
-            io_new['cumulative_iow'] = [i for i in io_service_bytes_recursive if i['op'].lower() == 'write'][0]['value']
-        except (TypeError, IndexError, KeyError, AttributeError) as e:
-            # all_stats do not have io information
-            logger.debug("docker plugin - Cannot grab block IO usage for container {} ({})".format(container_id, e))
-        else:
-            io_new['time_since_update'] = getTimeSinceLastUpdate('docker_io_{}'.format(container_id))
-            if container_id in self.io_old:
-                io_new['ior'] = io_new['cumulative_ior'] - self.io_old[container_id]['cumulative_ior']
-                io_new['iow'] = io_new['cumulative_iow'] - self.io_old[container_id]['cumulative_iow']
-
-            # Save stats to compute next bitrate
-            self.io_old[container_id] = io_new
-
-        # Return the stats
-        return io_new
+        version, containers = self.podman_client.update(all_tag=self._all_tag())
+        return {"version": version, "containers": containers}
 
     def get_user_ticks(self):
         """Return the user ticks by reading the environment variable."""
@@ -699,62 +382,6 @@ class Plugin(GlancesPlugin):
             return 'CRITICAL'
         else:
             return 'CAREFUL'
-
-
-class ThreadContainerGrabber(threading.Thread):
-    """
-    Specific thread to grab container stats.
-
-    stats is a dict
-    """
-
-    def __init__(self, container):
-        """Init the class.
-
-        container: instance of Container returned by Docker or Podman client
-        """
-        super(ThreadContainerGrabber, self).__init__()
-        # Event needed to stop properly the thread
-        self._stopper = threading.Event()
-        # The docker-py return stats as a stream
-        self._container = container
-        # The class return the stats as a dict
-        self._stats = {}
-        logger.debug("docker plugin - Create thread for container {}".format(self._container.name))
-
-    def run(self):
-        """Grab the stats.
-
-        Infinite loop, should be stopped by calling the stop() method
-        """
-        try:
-            for i in self._container.stats(decode=True):
-                self._stats = i
-                time.sleep(0.1)
-                if self.stopped():
-                    break
-        except Exception as e:
-            logger.debug("docker plugin - Exception thrown during run ({})".format(e))
-            self.stop()
-
-    @property
-    def stats(self):
-        """Stats getter."""
-        return self._stats
-
-    @stats.setter
-    def stats(self, value):
-        """Stats setter."""
-        self._stats = value
-
-    def stop(self, timeout=None):
-        """Stop the thread."""
-        logger.debug("docker plugin - Close thread for container {}".format(self._container.name))
-        self._stopper.set()
-
-    def stopped(self):
-        """Return True is the thread is stopped."""
-        return self._stopper.is_set()
 
 
 def sort_docker_stats(stats):
