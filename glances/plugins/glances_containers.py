@@ -240,6 +240,10 @@ class Plugin(GlancesPlugin):
         if not self.stats or 'containers' not in self.stats or len(self.stats['containers']) == 0 or self.is_disabled():
             return ret
 
+        show_pod_name = False
+        if any(ct.get("pod_name") for ct in self.stats["containers"]):
+            show_pod_name = True
+
         # Build the string message
         # Title
         msg = '{}'.format('CONTAINERS')
@@ -259,6 +263,10 @@ class Plugin(GlancesPlugin):
             self.config.get_int_value('containers', 'max_name_size', default=20) if self.config is not None else 20,
             len(max(self.stats['containers'], key=lambda x: len(x['name']))['name']),
         )
+
+        if show_pod_name:
+            msg = ' {:{width}}'.format('Pod', width=12)
+            ret.append(self.curse_add_line(msg))
         msg = ' {:{width}}'.format('Name', width=name_max_width)
         ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'name' else 'DEFAULT'))
         msg = '{:>10}'.format('Status')
@@ -284,6 +292,8 @@ class Plugin(GlancesPlugin):
         # Data
         for container in self.stats['containers']:
             ret.append(self.curse_new_line())
+            if show_pod_name:
+                ret.append(self.curse_add_line(' {:{width}}'.format(container.get("pod_id", " - "), width=12)))
             # Name
             ret.append(self.curse_add_line(self._msg_name(container=container, max_width=name_max_width)))
             # Status
@@ -338,10 +348,10 @@ class Plugin(GlancesPlugin):
                 unit = 'b'
             try:
                 value = (
-                    self.auto_unit(
-                        int(container['network']['rx'] // container['network']['time_since_update'] * to_bit)
-                    )
-                    + unit
+                        self.auto_unit(
+                            int(container['network']['rx'] // container['network']['time_since_update'] * to_bit)
+                        )
+                        + unit
                 )
                 msg = '{:>7}'.format(value)
             except KeyError:
@@ -349,10 +359,10 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             try:
                 value = (
-                    self.auto_unit(
-                        int(container['network']['tx'] // container['network']['time_since_update'] * to_bit)
-                    )
-                    + unit
+                        self.auto_unit(
+                            int(container['network']['tx'] // container['network']['time_since_update'] * to_bit)
+                        )
+                        + unit
                 )
                 msg = ' {:<7}'.format(value)
             except KeyError:
