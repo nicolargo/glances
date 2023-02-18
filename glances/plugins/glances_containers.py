@@ -14,10 +14,8 @@ from copy import deepcopy
 from typing import Optional
 
 from glances.logger import logger
-from glances.plugins.containers.glances_docker import (
-    DockerContainersExtension, import_docker_error_tag)
-from glances.plugins.containers.glances_podman import (
-    PodmanContainersExtension, import_podman_error_tag)
+from glances.plugins.containers.glances_docker import DockerContainersExtension, import_docker_error_tag
+from glances.plugins.containers.glances_podman import PodmanContainersExtension, import_podman_error_tag
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.processes import glances_processes
 from glances.processes import sort_stats as sort_stats_processes
@@ -179,11 +177,15 @@ class Plugin(GlancesPlugin):
     def update_docker(self):
         """Update Docker stats using the input method."""
         version, containers = self.docker_extension.update(all_tag=self._all_tag())
+        for container in containers:
+            container["engine"] = 'docker'
         return {"version": version, "containers": containers}
 
     def update_podman(self):
         """Update Podman stats."""
         version, containers = self.podman_client.update(all_tag=self._all_tag())
+        for container in containers:
+            container["engine"] = 'podman'
         return {"version": version, "containers": containers}
 
     def get_user_ticks(self):
@@ -244,6 +246,10 @@ class Plugin(GlancesPlugin):
         if any(ct.get("pod_name") for ct in self.stats["containers"]):
             show_pod_name = True
 
+        show_engine_name = False
+        if len(set(ct["engine"] for ct in self.stats["containers"])) > 1:
+            show_engine_name = True
+
         # Build the string message
         # Title
         msg = '{}'.format('CONTAINERS')
@@ -264,6 +270,9 @@ class Plugin(GlancesPlugin):
             len(max(self.stats['containers'], key=lambda x: len(x['name']))['name']),
         )
 
+        if show_engine_name:
+            msg = ' {:{width}}'.format('Engine', width=6)
+            ret.append(self.curse_add_line(msg))
         if show_pod_name:
             msg = ' {:{width}}'.format('Pod', width=12)
             ret.append(self.curse_add_line(msg))
@@ -289,9 +298,12 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = ' {:8}'.format('Command')
         ret.append(self.curse_add_line(msg))
+
         # Data
         for container in self.stats['containers']:
             ret.append(self.curse_new_line())
+            if show_engine_name:
+                ret.append(self.curse_add_line(' {:{width}}'.format(container["engine"], width=6)))
             if show_pod_name:
                 ret.append(self.curse_add_line(' {:{width}}'.format(container.get("pod_id", " - "), width=12)))
             # Name
@@ -348,10 +360,10 @@ class Plugin(GlancesPlugin):
                 unit = 'b'
             try:
                 value = (
-                        self.auto_unit(
-                            int(container['network']['rx'] // container['network']['time_since_update'] * to_bit)
-                        )
-                        + unit
+                    self.auto_unit(
+                        int(container['network']['rx'] // container['network']['time_since_update'] * to_bit)
+                    )
+                    + unit
                 )
                 msg = '{:>7}'.format(value)
             except KeyError:
@@ -359,10 +371,10 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             try:
                 value = (
-                        self.auto_unit(
-                            int(container['network']['tx'] // container['network']['time_since_update'] * to_bit)
-                        )
-                        + unit
+                    self.auto_unit(
+                        int(container['network']['tx'] // container['network']['time_since_update'] * to_bit)
+                    )
+                    + unit
                 )
                 msg = ' {:<7}'.format(value)
             except KeyError:
