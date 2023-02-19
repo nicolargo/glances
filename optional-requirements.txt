@@ -23,6 +23,7 @@ potsdb
 prometheus_client
 pygal
 pymdstat
+pymongo; python_version >= "3.7"
 pysnmp
 pySMART.smartx
 python-dateutil
@@ -33,5 +34,5 @@ six
 sparklines
 statsd
 wifi
-zeroconf==0.47.1; python_version < "3.7"
+zeroconf==0.47.3; python_version < "3.7"
 zeroconf; python_version >= "3.7"
