@@ -26,6 +26,7 @@ RUN apk add --no-cache \
   curl \
   lm-sensors \
   wireless-tools \
+  smartmontools \
   iputils
 
 ##############################################################################
@@ -93,6 +94,7 @@ RUN apk add --no-cache \
   curl \
   lm-sensors \
   wireless-tools \
+  smartmontools \
   iputils
 
 COPY --from=buildRequirements /root/.local/bin /usr/local/bin/
