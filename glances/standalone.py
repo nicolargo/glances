@@ -14,7 +14,6 @@ import time
 
 from glances.globals import WINDOWS
 from glances.logger import logger
-from glances.outputs.glances_stdout_json import GlancesStdoutJson
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
