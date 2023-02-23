@@ -127,10 +127,8 @@ class GlancesBottle(object):
         if username == self.args.username:
             from glances.password import GlancesPassword
 
-            pwd = GlancesPassword(username=username,
-                                  config=self.config)
-            return pwd.check_password(self.args.password,
-                                      pwd.get_hash(password))
+            pwd = GlancesPassword(username=username, config=self.config)
+            return pwd.check_password(self.args.password, pwd.get_hash(password))
         else:
             return False
 
@@ -162,7 +160,9 @@ class GlancesBottle(object):
             '/api/%s/<plugin>/<item>/history/<nb:int>' % self.API_VERSION, method="GET", callback=self._api_item_history
         )
         self._app.route('/api/%s/<plugin>/<item>/<value>' % self.API_VERSION, method="GET", callback=self._api_value)
-        self._app.route('/api/%s/<plugin>/<item>/<value:path>' % self.API_VERSION, method="GET", callback=self._api_value)
+        self._app.route(
+            '/api/%s/<plugin>/<item>/<value:path>' % self.API_VERSION, method="GET", callback=self._api_value
+        )
         bindmsg = 'Glances RESTful API Server started on {}api/{}/'.format(self.bind_url, self.API_VERSION)
         logger.info(bindmsg)
 
