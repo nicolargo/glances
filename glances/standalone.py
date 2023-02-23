@@ -192,3 +192,6 @@ class GlancesStandalone(object):
                 )
             )
             print("You should consider upgrading using: pip install --upgrade glances")
+            print("Disable this warning temporarily using: glances --disable-check-update")
+            print("To disable it permanently, refer config reference at "
+                  "https://glances.readthedocs.io/en/latest/config.html#syntax")
