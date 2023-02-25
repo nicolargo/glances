@@ -65,7 +65,7 @@ def get_install_extras_require():
         'cloud': ['requests'],
         'docker': ['docker>=2.0.0', 'python-dateutil', 'six'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
-                   'graphitesender', 'influxdb>=1.0.0', 'kafka-python', 'pymongo',
+                   'graphitesender', 'influxdb>=1.0.0', 'kafka-python',
                    'pika', 'paho-mqtt', 'potsdb', 'prometheus_client', 'pyzmq',
                    'statsd'],
         'folders': ['scandir'],  # python_version<"3.5"
@@ -81,7 +81,9 @@ def get_install_extras_require():
     }
     if PY3:
         extras_require['export'].append('influxdb-client')
+        extras_require['export'].append('pymongo')
         extras_require['gpu'] = ['py3nvml']
+        extras_require['podman'] = ['podman']
     if sys.platform.startswith('linux'):
         extras_require['sensors'] = ['batinfo']
 
