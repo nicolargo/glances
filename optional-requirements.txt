@@ -35,4 +35,4 @@ sparklines
 statsd
 wifi
 zeroconf==0.47.3; python_version < "3.7"
-zeroconf; python_version >= "3.7"
+zeroconf>=0.19.1; python_version >= "3.7"
