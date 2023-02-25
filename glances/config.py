@@ -173,11 +173,7 @@ class Config(object):
         if not self.parser.has_section('global'):
             self.parser.add_section('global')
         self.set_default('global', 'strftime_format', '')
-
-        # check_update
-        if not self.parser.has_section('global'):
-            self.parser.add_section('global')
-        self.set_default('global', 'check_update', 'false')
+        self.set_default('global', 'check_update', 'true')
 
         # Quicklook
         if not self.parser.has_section('quicklook'):

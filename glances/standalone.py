@@ -14,7 +14,6 @@ import time
 
 from glances.globals import WINDOWS
 from glances.logger import logger
-from glances.outputs.glances_stdout_json import GlancesStdoutJson
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
@@ -193,3 +192,6 @@ class GlancesStandalone(object):
                 )
             )
             print("You should consider upgrading using: pip install --upgrade glances")
+            print("Disable this warning temporarily using: glances --disable-check-update")
+            print("To disable it permanently, refer config reference at "
+                  "https://glances.readthedocs.io/en/latest/config.html#syntax")
