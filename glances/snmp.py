@@ -24,7 +24,6 @@ class GlancesSNMPClient(object):
     """SNMP client class (based on pysnmp library)."""
 
     def __init__(self, host='localhost', port=161, version='2c', community='public', user='private', auth=''):
-
         super(GlancesSNMPClient, self).__init__()
         self.cmdGen = cmdgen.CommandGenerator()
 
