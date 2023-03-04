@@ -5,8 +5,7 @@ services:
       context: ./
       dockerfile: Dockerfile
     restart: always
-    ports:
-      - "61208:61208"
+    network_mode: "host"
     environment:
       GLANCES_OPT: "-C /glances/conf/glances.conf -w"
     volumes:
@@ -14,4 +13,3 @@ services:
       - "./glances.conf:/glances/conf/glances.conf"
     pid: "host"
     privileged: true
-    network_mode: "host"
