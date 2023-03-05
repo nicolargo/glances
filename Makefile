@@ -159,22 +159,22 @@ run-local-conf: ## Start Glances in console mode with the system conf file
 	./venv/bin/python -m glances
 
 run-docker-alpine-minimal: ## Start Glances Alpine Docker minimal in console mode
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-minimal
+	docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-minimal
 
 run-docker-alpine-full: ## Start Glances Alpine Docker full in console mode
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-full
+	docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-full
 
 run-docker-alpine-dev: ## Start Glances Alpine Docker dev in console mode
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-dev
+	docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-dev
 
 run-docker-ubuntu-minimal: ## Start Glances Ubuntu Docker minimal in console mode
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-minimal
+	docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-minimal
 
 run-docker-ubuntu-full: ## Start Glances Ubuntu Docker full in console mode
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-full
+	docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-full
 
 run-docker-ubuntu-dev: ## Start Glances Ubuntu Docker dev in console mode
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-dev
+	docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-dev
 
 run-webserver: ## Start Glances in Web server mode
 	./venv/bin/python -m glances -C ./conf/glances.conf -w

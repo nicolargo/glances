@@ -27,6 +27,7 @@ RUN apt-get update \
     wireless-tools \
     smartmontools \
     net-tools \
+    tzdata \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -105,6 +106,7 @@ RUN apt-get update \
     wireless-tools \
     smartmontools \
     net-tools \
+    tzdata \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 

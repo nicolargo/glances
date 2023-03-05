@@ -27,7 +27,8 @@ RUN apk add --no-cache \
   lm-sensors \
   wireless-tools \
   smartmontools \
-  iputils
+  iputils \
+  tzdata
 
 ##############################################################################
 # Install the dependencies beforehand to make them cacheable
@@ -95,7 +96,8 @@ RUN apk add --no-cache \
   lm-sensors \
   wireless-tools \
   smartmontools \
-  iputils
+  iputils \
+  tzdata
 
 COPY --from=buildRequirements /root/.local/bin /usr/local/bin/
 COPY --from=buildRequirements /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/lib/python${PYTHON_VERSION}/site-packages/
