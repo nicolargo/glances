@@ -5,11 +5,12 @@ services:
       context: ./
       dockerfile: Dockerfile
     restart: always
+    pid: "host"
+    privileged: true
     network_mode: "host"
-    environment:
-      GLANCES_OPT: "-C /glances/conf/glances.conf -w"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./glances.conf:/glances/conf/glances.conf"
-    pid: "host"
-    privileged: true
+    environment:
+      - GLANCES_OPT: "-C /glances/conf/glances.conf -w"
+      - TZ: "${TZ}"
