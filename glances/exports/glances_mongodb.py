@@ -47,10 +47,7 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
 
-        server_uri = 'mongodb://%s:%s@%s:%s' % (quote_plus(self.user),
-                                                quote_plus(self.password),
-                                                self.host,
-                                                self.port)
+        server_uri = 'mongodb://%s:%s@%s:%s' % (quote_plus(self.user), quote_plus(self.password), self.host, self.port)
 
         try:
             client = pymongo.MongoClient(server_uri)
