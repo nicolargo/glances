@@ -77,7 +77,7 @@ class Sparkline(object):
 
     def get(self):
         """Return the sparkline."""
-        ret = sparklines(self.percents)[0]
+        ret = sparklines(self.percents, minimum=0, maximum=100)[0]
         if self.__with_text:
             percents_without_none = [x for x in self.percents if x is not None]
             if len(percents_without_none) > 0:

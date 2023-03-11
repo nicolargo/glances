@@ -51,7 +51,7 @@ def __secure_popen(cmd):
     for sub_cmd in cmd.split('|'):
         # Split by space character, but do no split spaces within quotes (remove surrounding quotes, though)
         tmp_split = [_ for _ in list(filter(None, re.split(r'(\s+)|(".*?"+?)|(\'.*?\'+?)', sub_cmd))) if _ != ' ']
-        sub_cmd_split = [_[1:-1] if (_[0]==_[-1]=='"') or (_[0]==_[-1]=='\'') else _ for _ in tmp_split]
+        sub_cmd_split = [_[1:-1] if (_[0] == _[-1] == '"') or (_[0] == _[-1] == '\'') else _ for _ in tmp_split]
         p = Popen(sub_cmd_split, shell=False, stdin=sub_cmd_stdin, stdout=PIPE, stderr=PIPE)
         if p_last is not None:
             # Allow p_last to receive a SIGPIPE if p exits.

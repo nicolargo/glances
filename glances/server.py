@@ -94,7 +94,6 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
     finished = False
 
     def __init__(self, bind_address, bind_port=61209, requestHandler=GlancesXMLRPCHandler, config=None):
-
         self.bind_address = bind_address
         self.bind_port = bind_port
         self.config = config

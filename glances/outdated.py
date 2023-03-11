@@ -49,10 +49,15 @@ class Outdated(object):
 
         # Set default value...
         self.data = {u'installed_version': __version__, u'latest_version': '0.0', u'refresh_date': datetime.now()}
-        # Read the configuration file
-        self.load_config(config)
+
+        # Disable update check if `packaging` is not installed
         if not PACKAGING_IMPORT:
             self.args.disable_check_update = True
+
+        # Read the configuration file only if update check is not explicitly disabled
+        if not self.args.disable_check_update:
+            self.load_config(config)
+
         logger.debug("Check Glances version up-to-date: {}".format(not self.args.disable_check_update))
 
         # And update !
