@@ -236,6 +236,13 @@ Examples of use:
             dest='enable_separator',
             help='enable separator in the UI',
         ),
+        parser.add_argument(
+            '--disable-cursor',
+            action='store_true',
+            default=False,
+            dest='disable_cursor',
+            help='disable cursor (process selection) in the UI',
+        ),
         # Sort processes list
         parser.add_argument(
             '--sort-processes',
@@ -698,6 +705,11 @@ Examples of use:
         # Filter is only available in standalone mode
         if args.process_filter is not None and not self.is_standalone():
             logger.critical("Process filter is only available in standalone mode")
+            sys.exit(2)
+
+        # Cursor option is only available in standalone mode
+        if not args.disable_cursor and not self.is_standalone():
+            logger.critical("Cursor is only available in standalone mode")
             sys.exit(2)
 
         # Disable HDDTemp if sensors are disabled
