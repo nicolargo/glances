@@ -50,6 +50,9 @@ class GlancesStandalone(object):
             self.display_modules_list()
             sys.exit(0)
 
+        # The args is needed to get the selected process in the process list (Curses mode)
+        glances_processes.set_args(args)
+
         # If process extended stats is disabled by user
         if not args.enable_process_extended:
             logger.debug("Extended stats for top process are disabled")
