@@ -34,6 +34,7 @@ Legend:
    fs
    irq
    folders
+   cloud
    raid
    smart
    sensors

@@ -32,11 +32,16 @@ fields_description = {
     'alias': {'description': 'Interface alias name (optional).', 'unit': 'string'},
     'rx': {'description': 'The received/input rate (in bit per second).', 'unit': 'bps'},
     'tx': {'description': 'The sent/output rate (in bit per second).', 'unit': 'bps'},
+    'cx': {'description': 'The cumulative received+sent rate (in bit per second).', 'unit': 'bps'},
     'cumulative_rx': {
         'description': 'The number of bytes received through the interface (cumulative).',
         'unit': 'bytes',
     },
     'cumulative_tx': {'description': 'The number of bytes sent through the interface (cumulative).', 'unit': 'bytes'},
+    'cumulative_cx': {
+        'description': 'The cumulative number of bytes reveived and sent through the interface (cumulative).',
+        'unit': 'bytes',
+    },
     'speed': {
         'description': 'Maximum interface speed (in bit per second). Can return 0 on some operating-system.',
         'unit': 'bps',

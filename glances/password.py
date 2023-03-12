@@ -44,17 +44,12 @@ class GlancesPassword(object):
 
     def get_hash(self, plain_password, salt=''):
         """Return the hashed password, salt + pbkdf2_hmac."""
-        return hashlib.pbkdf2_hmac('sha256',
-                                   plain_password.encode(),
-                                   salt.encode(),
-                                   100000,
-                                   dklen=128).hex()
+        return to_hex(hashlib.pbkdf2_hmac('sha256', plain_password.encode(), salt.encode(), 100000, dklen=128))
 
     def hash_password(self, plain_password):
         """Hash password with a salt based on UUID (universally unique identifier)."""
         salt = uuid.uuid4().hex
-        encrypted_password = self.get_hash(plain_password,
-                                           salt=salt)
+        encrypted_password = self.get_hash(plain_password, salt=salt)
         return salt + '$' + encrypted_password
 
     def check_password(self, hashed_password, plain_password):
@@ -63,8 +58,7 @@ class GlancesPassword(object):
         Return the comparison with the encrypted_password.
         """
         salt, encrypted_password = hashed_password.split('$')
-        re_encrypted_password = self.get_hash(plain_password,
-                                              salt = salt)
+        re_encrypted_password = self.get_hash(plain_password, salt=salt)
         return encrypted_password == re_encrypted_password
 
     def get_password(self, description='', confirm=False, clear=False):

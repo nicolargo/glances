@@ -70,7 +70,7 @@ def print_plugins_list(stat):
     print('')
 
 
-def print_plugin_export(plugin, stat_export):
+def print_plugin_stats(plugin, stat):
     sub_title = 'GET {}'.format(plugin)
     print(sub_title)
     print('-' * len(sub_title))
@@ -79,7 +79,7 @@ def print_plugin_export(plugin, stat_export):
     print('Get plugin stats::')
     print('')
     print('    # curl {}/{}'.format(API_URL, plugin))
-    print(indent_stat(stat_export))
+    print(indent_stat(json.loads(stat.get_stats())))
     print('')
 
 
@@ -223,7 +223,7 @@ class GlancesStdoutApiDoc(object):
             stat_export = stat.get_export()
             if stat_export is None or stat_export == [] or stat_export == {}:
                 continue
-            print_plugin_export(plugin, stat_export)
+            print_plugin_stats(plugin, stat)
             print_plugin_description(plugin, stat)
             print_plugin_item_value(plugin, stat, stat_export)
 

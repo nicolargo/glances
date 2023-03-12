@@ -110,7 +110,7 @@ class PluginModel(GlancesPluginModel):
                 ('misc_erase_process_filter', msg_col.format('E', 'Erase process filter')),
                 ('misc_generate_history_graphs', msg_col.format('g', 'Generate history graphs')),
                 ('misc_help', msg_col.format('h', 'HELP')),
-                ('misc_accumulate_processes_by_program', msg_col.format('j', 'Accumulate processes by program')),
+                ('misc_accumulate_processes_by_program', msg_col.format('j', 'Display threads or programs')),
                 ('misc_increase_nice_process', msg_col.format('+', 'Increase nice process')),
                 ('misc_decrease_nice_process', msg_col.format('-', 'Decrease nice process (need admin rights)')),
                 ('misc_kill_process', msg_col.format('k', 'Kill process')),

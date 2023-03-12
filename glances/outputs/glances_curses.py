@@ -267,6 +267,7 @@ class _GlancesCurses(object):
             self.ifCAREFUL_color2 = curses.color_pair(8) | A_BOLD
             self.ifWARNING_color2 = curses.color_pair(5) | A_BOLD
             self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
+            self.ifINFO_color = curses.color_pair(8)
             self.filter_color = A_BOLD
             self.selected_color = A_BOLD
 
@@ -300,6 +301,7 @@ class _GlancesCurses(object):
             self.ifCAREFUL_color2 = curses.A_UNDERLINE
             self.ifWARNING_color2 = A_BOLD
             self.ifCRITICAL_color2 = curses.A_REVERSE
+            self.ifINFO_color = A_BOLD
             self.filter_color = A_BOLD
             self.selected_color = A_BOLD
 
@@ -327,6 +329,7 @@ class _GlancesCurses(object):
             'CRITICAL_LOG': self.ifCRITICAL_color,
             'PASSWORD': curses.A_PROTECT,
             'SELECTED': self.selected_color,
+            'INFO': self.ifINFO_color
         }
 
     def set_cursor(self, value):
@@ -406,13 +409,15 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('9'):
             # '9' > Theme from black to white and reverse
             self._init_colors()
-        elif self.pressedkey == ord('e'):
+        elif self.pressedkey == ord('e') and not self.args.programs:
             # 'e' > Enable/Disable process extended
             self.args.enable_process_extended = not self.args.enable_process_extended
             if not self.args.enable_process_extended:
                 glances_processes.disable_extended()
             else:
                 glances_processes.enable_extended()
+            # When a process is selected (and only in standalone mode), disable the cursor
+            self.args.disable_cursor = self.args.enable_process_extended and self.args.is_standalone
         elif self.pressedkey == ord('E'):
             # 'E' > Erase the process filter
             glances_processes.process_filter = None
@@ -426,7 +431,7 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('-'):
             # '+' > Decrease process nice level
             self.decrease_nice_process = not self.decrease_nice_process
-        elif self.pressedkey == ord('k'):
+        elif self.pressedkey == ord('k') and not self.args.disable_cursor:
             # 'k' > Kill selected process (after confirmation)
             self.kill_process = not self.kill_process
         elif self.pressedkey == ord('w'):
@@ -450,11 +455,11 @@ class _GlancesCurses(object):
             # ">" (right arrow) navigation through process sort
             next_sort = (self.loop_position() + 1) % len(self._sort_loop)
             glances_processes.set_sort_key(self._sort_loop[next_sort], False)
-        elif self.pressedkey == curses.KEY_UP or self.pressedkey == 65:
+        elif self.pressedkey == curses.KEY_UP or self.pressedkey == 65 and not self.args.disable_cursor:
             # 'UP' > Up in the server list
             if self.args.cursor_position > 0:
                 self.args.cursor_position -= 1
-        elif self.pressedkey == curses.KEY_DOWN or self.pressedkey == 66:
+        elif self.pressedkey == curses.KEY_DOWN or self.pressedkey == 66 and not self.args.disable_cursor:
             # 'DOWN' > Down in the server list
             # if self.args.cursor_position < glances_processes.max_processes - 2:
             if self.args.cursor_position < glances_processes.processes_count:
@@ -679,7 +684,6 @@ class _GlancesCurses(object):
             new_filter = self.display_popup(
                 'Process filter pattern: \n\n'
                 + 'Examples:\n'
-                + '- python\n'
                 + '- .*python.*\n'
                 + '- /usr/lib.*\n'
                 + '- name:.*nautilus.*\n'
@@ -1109,7 +1113,7 @@ class _GlancesCurses(object):
 
     def erase(self):
         """Erase the content of the screen."""
-        self.term_window.erase()
+        self.term_window.clear()
 
     def flush(self, stats, cs_status=None):
         """Clear and update the screen.

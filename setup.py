@@ -37,7 +37,16 @@ def get_data_files():
 
 
 def get_install_requires():
-    requires = ['psutil>=5.3.0', 'defusedxml', 'future', 'packaging']
+    requires = [
+        'psutil>=5.6.7',
+        'defusedxml',
+        'packaging',
+        'future; python_version < "3.0"',
+        'ujson<3; python_version < "3.0"',
+        'ujson<4; python_version >= "3.5" and python_version < "3.6"',
+        'ujson<5; python_version >= "3.6" and python_version < "3.7"',
+        'ujson>=5.4.0; python_version >= "3.7"',
+    ]
     if sys.platform.startswith('win'):
         requires.append('bottle')
         requires.append('requests')
@@ -127,13 +136,11 @@ setup(
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'Topic :: System :: Monitoring'
     ]
 )

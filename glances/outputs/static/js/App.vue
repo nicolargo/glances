@@ -123,6 +123,7 @@
                             v-if="!args.disable_sensors"
                             :data="data"
                         ></glances-plugin-sensors>
+                        <glances-plugin-now :data="data"></glances-plugin-now>
                     </div>
                 </div>
                 <div class="col-sm-18">
@@ -135,13 +136,6 @@
                         v-if="!args.disable_alert"
                         :data="data"
                     ></glances-plugin-alert>
-                </div>
-            </div>
-        </div>
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-sm-24">
-                    <glances-plugin-now :data="data"></glances-plugin-now>
                 </div>
             </div>
         </div>

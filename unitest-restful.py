@@ -222,6 +222,16 @@ class TestGlances(unittest.TestCase):
         self.assertIsInstance(req.json(), dict)
         self.assertIsInstance(req.json()['interface_name'], list)
 
+    def test_012_status(self):
+        """Check status endpoint."""
+        method = "status"
+        print('INFO: [TEST_012] Status')
+        print("HTTP RESTful request: %s/%s" % (URL, method))
+        req = self.http_get("%s/%s" % (URL, method))
+
+        self.assertTrue(req.ok)
+        self.assertEqual(req.text, "Active")
+
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""
         print('INFO: [TEST_999] Stop the Glances Web Server')
