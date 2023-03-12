@@ -96,7 +96,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['alpine']
+        os: ['alpine', 'ubuntu']
         tag: ${{ fromJson(needs.create_Docker_builds.outputs.tags) }}
     steps:
       - name: Checkout
