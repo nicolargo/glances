@@ -8,7 +8,7 @@
 # Ex: Python 3.10 for Ubuntu 22.04
 # Note: ENV is for future running containers. ARG for building your Docker image.
 
-ARG IMAGE_VERSION=12.0.1-base-ubuntu22.04
+ARG IMAGE_VERSION=12.1.0-base-ubuntu22.04
 ARG PYTHON_VERSION=3.10
 ARG PIP_MIRROR=https://mirrors.aliyun.com/pypi/simple/
 FROM nvidia/cuda:${IMAGE_VERSION} as build
@@ -27,6 +27,7 @@ RUN apt-get update \
     wireless-tools \
     smartmontools \
     net-tools \
+    tzdata \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -105,6 +106,7 @@ RUN apt-get update \
     wireless-tools \
     smartmontools \
     net-tools \
+    tzdata \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
