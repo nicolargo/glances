@@ -13,6 +13,8 @@ ARG PYTHON_VERSION=3.10
 ARG PIP_MIRROR=https://mirrors.aliyun.com/pypi/simple/
 FROM nvidia/cuda:${IMAGE_VERSION} as build
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     python3 \
@@ -93,7 +95,6 @@ FROM nvidia/cuda:${IMAGE_VERSION} as minimal
 ARG PYTHON_VERSION
 
 ARG DEBIAN_FRONTEND=noninteractive
-ENV TZ=Asia/Shanghai
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
