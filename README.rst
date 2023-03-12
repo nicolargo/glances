@@ -40,16 +40,22 @@ Glances - An eye on your system
 Summary
 =======
 
-**Glances** is a cross-platform monitoring tool which aims to present a
-large amount of monitoring information through a curses or Web
-based interface. The information dynamically adapts depending on the
-size of the user interface.
+**Glances** is an open-source system cross-platform monitoring tool.
+It allows real-time monitoring of various aspects of your system such as
+CPU, memory, disk, network usage etc. It also allows monitoring of running processes,
+logged in users, temperatures, voltages, fan speeds etc.
+It also supports container monitoring, it supports different container management
+systems such as Docker, LXC. The information is presented in an easy to read dashboard
+and can also be used for remote monitoring of systems via a web interface or command
+line interface. It is easy to install and use and can be customized to show only
+the information that you are interested in.
 
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-summary.png
 
-It can also work in client/server mode. Remote monitoring could be done
-via terminal, Web interface or API (XML-RPC and RESTful). Stats can also
-be exported to files or external time/value databases.
+In client/server mode, remote monitoring could be done via terminal,
+Web interface or API (XML-RPC and RESTful).
+Stats can also be exported to files or external time/value databases, CSV or direct
+output to STDOUT.
 
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-responsive-webdesign.png
 
@@ -105,6 +111,7 @@ Optional dependencies:
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``pygal`` (for the graph export module)
 - ``pymdstat`` (for RAID support) [Linux-only]
+- ``pymongo`` (for the MongoDB export module) [Only for Python >= 3.7]
 - ``pysnmp`` (for SNMP support)
 - ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
 - ``pyzmq`` (for the ZeroMQ export module)
@@ -207,7 +214,7 @@ Run last version of Glances container in *console mode*:
 
 .. code-block:: console
 
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it nicolargo/glances:latest-full
+    docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it nicolargo/glances:latest-full
 
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
@@ -224,7 +231,7 @@ variable setting parameters for the glances startup command):
 
 .. code-block:: console
 
-    docker run -v `pwd`/glances.conf:/etc/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -e GLANCES_OPT="-C /etc/glances.conf" -it nicolargo/glances:latest-full
+    docker run -e TZ="${TZ}" -v `pwd`/glances.conf:/etc/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -e GLANCES_OPT="-C /etc/glances.conf" -it nicolargo/glances:latest-full
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
@@ -232,7 +239,7 @@ Run the container in *Web server mode*:
 
 .. code-block:: console
 
-    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host nicolargo/glances:latest-full
+    docker run -d --restart="always" -p 61208-61209:61208-61209 -e TZ="${TZ}" -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host nicolargo/glances:latest-full
 
 GNU/Linux
 ---------
@@ -464,7 +471,7 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _readthedocs: https://glances.readthedocs.io/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
-.. _package: https://repology.org/metapackage/glances/packages
+.. _package: https://repology.org/project/glances/versions
 .. _sponsors: https://github.com/sponsors/nicolargo
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
 .. _issue2021: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157

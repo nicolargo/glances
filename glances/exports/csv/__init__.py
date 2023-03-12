@@ -81,10 +81,10 @@ class Export(GlancesExport):
         # Loop over plugins to export
         for plugin in self.plugins_to_export(stats):
             if isinstance(all_stats[plugin], list):
-                for stat in all_stats[plugin]:
+                for stat in sorted(all_stats[plugin], key=lambda x: x['key']):
                     # First line: header
                     if self.first_line:
-                        csv_header += ('{}_{}_{}'.format(plugin, self.get_item_key(stat), item) for item in stat)
+                        csv_header += ['{}_{}_{}'.format(plugin, self.get_item_key(stat), item) for item in stat]
                     # Others lines: stats
                     csv_data += itervalues(stat)
             elif isinstance(all_stats[plugin], dict):

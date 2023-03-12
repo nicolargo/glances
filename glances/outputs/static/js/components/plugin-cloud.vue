@@ -16,12 +16,12 @@ export default {
             return this.data.stats['cloud'];
         },
         provider() {
-            return this.stats['ami-id'] !== undefined ? 'AWS EC2' : null;
+            return this.stats['id'] !== undefined ? `${stats['platform']}` : null;
         },
         instance() {
             const { stats } = this;
-            return this.stats['ami-id'] !== undefined
-                ? `${stats['instance-type']} instance ${stats['instance-id']} (${stats['reggion']})`
+            return this.stats['id'] !== undefined
+                ? `${stats['type']} instance ${stats['name']} (${stats['region']})`
                 : null;
         }
     }

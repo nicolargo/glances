@@ -14,7 +14,6 @@ import time
 
 from glances.globals import WINDOWS
 from glances.logger import logger
-from glances.outputs.glances_stdout_json import GlancesStdoutJson
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
@@ -50,6 +49,9 @@ class GlancesStandalone(object):
         if args.modules_list:
             self.display_modules_list()
             sys.exit(0)
+
+        # The args is needed to get the selected process in the process list (Curses mode)
+        glances_processes.set_args(args)
 
         # If process extended stats is disabled by user
         if not args.enable_process_extended:
@@ -193,3 +195,8 @@ class GlancesStandalone(object):
                 )
             )
             print("You should consider upgrading using: pip install --upgrade glances")
+            print("Disable this warning temporarily using: glances --disable-check-update")
+            print(
+                "To disable it permanently, refer config reference at "
+                "https://glances.readthedocs.io/en/latest/config.html#syntax"
+            )
