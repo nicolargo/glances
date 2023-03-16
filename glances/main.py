@@ -703,14 +703,12 @@ Examples of use:
             sys.exit(2)
 
         # Filter is only available in standalone mode
-        if args.process_filter is not None and not self.is_standalone():
-            logger.critical("Process filter is only available in standalone mode")
-            sys.exit(2)
+        if not args.process_filter and not self.is_standalone():
+            logger.debug("Process filter is only available in standalone mode")
 
         # Cursor option is only available in standalone mode
         if not args.disable_cursor and not self.is_standalone():
-            logger.critical("Cursor is only available in standalone mode")
-            sys.exit(2)
+            logger.debug("Cursor is only available in standalone mode")
 
         # Disable HDDTemp if sensors are disabled
         if getattr(self.args, 'disable_sensors', False):
