@@ -549,7 +549,6 @@ Examples of use:
             logger.setLevel(DEBUG)
         else:
             from warnings import simplefilter
-
             simplefilter("ignore")
 
         # Plugins refresh rate
@@ -737,7 +736,16 @@ Examples of use:
         self.args.is_server = self.is_server()
         self.args.is_webserver = self.is_webserver()
 
+        # Check mode compatibility
+        self.check_mode_compatibility()
+
         return args
+
+    def check_mode_compatibility(self):
+        """Check mode compatibility"""
+        if self.args.is_server and self.args.is_webserver:
+            logger.critical("Server and Web server mode are incompatible")
+            sys.exit(2)
 
     def is_standalone(self):
         """Return True if Glances is running in standalone mode."""
