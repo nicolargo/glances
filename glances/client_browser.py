@@ -126,7 +126,7 @@ class GlancesClientBrowser(object):
                     load_min5 = ujson.loads(s.getLoad())['min5']
                     server['load_min5'] = '{:.2f}'.format(load_min5)
                 except Exception as e:
-                    logger.warning("Error while grabbing stats form {}: {}".format(uri, e))
+                    logger.warning("Error while grabbing stats form server ({})".format(e))
 
         return server
 
