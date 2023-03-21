@@ -185,8 +185,9 @@ class Plugin(GlancesPlugin):
                     else:
                         stats.append(fs_current)
 
-        # Update the stats
-        self.stats = stats
+        # Create unique list filter by "mnt_point" and update the stats
+        seen = set()
+        self.stats = [seen.add(stat['mnt_point']) or stat for stat in stats if stat['mnt_point'] not in seen]
 
         return self.stats
 
