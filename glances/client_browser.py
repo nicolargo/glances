@@ -93,7 +93,7 @@ class GlancesClientBrowser(object):
         try:
             s = ServerProxy(uri, transport=t)
         except Exception as e:
-            logger.warning("Client browser couldn't create socket {}: {}".format(uri, e))
+            logger.warning("Client browser couldn't create socket {}".format(e))
         else:
             # Mandatory stats
             try:
