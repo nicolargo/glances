@@ -115,7 +115,7 @@ class GlancesClientBrowser(object):
                     server['status'] = 'PROTECTED'
                 else:
                     server['status'] = 'OFFLINE'
-                logger.debug("Cannot grab stats from {} ({} {})".format(uri, e.errcode, e.errmsg))
+                logger.debug("Cannot grab stats from server ({} {})".format(e.errcode, e.errmsg))
             else:
                 # Status
                 server['status'] = 'ONLINE'
