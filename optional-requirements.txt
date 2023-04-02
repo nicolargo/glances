@@ -33,5 +33,5 @@ six
 sparklines
 statsd
 wifi
-zeroconf==0.51.0; python_version < "3.7"
+zeroconf==0.52.0; python_version < "3.7"
 zeroconf; python_version >= "3.7"
