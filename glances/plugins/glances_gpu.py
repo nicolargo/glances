@@ -85,7 +85,7 @@ class Plugin(GlancesPlugin):
             #         "mem": 5.792331695556641,
             #         "proc": 4,
             #         "temperature": 26,
-            #         "fan_speed": 30,
+            #         "fan_speed": 30
             #     }
             # ]
             # Two GPU sample:
@@ -97,7 +97,7 @@ class Plugin(GlancesPlugin):
             #         "mem": 5.792331695556641,
             #         "proc": 4,
             #         "temperature": 26,
-            #         "fan_speed": 30,
+            #         "fan_speed": 30
             #     },
             #     {
             #         "key": "gpu_id",
@@ -106,7 +106,7 @@ class Plugin(GlancesPlugin):
             #         "mem": 15,
             #         "proc": 8,
             #         "temperature": 65,
-            #         "fan_speed": 75,
+            #         "fan_speed": 75
             #     }
             # ]
             return self.stats
