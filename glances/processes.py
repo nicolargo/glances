@@ -13,6 +13,7 @@ from glances.compat import iterkeys
 from glances.globals import BSD, LINUX, MACOS, WINDOWS
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.filter import GlancesFilter
+from glances.programs import processes_to_programs
 from glances.logger import logger
 
 import psutil
@@ -37,6 +38,10 @@ class GlancesProcesses(object):
 
     def __init__(self, cache_timeout=60):
         """Init the class to collect stats about processes."""
+        # Init the args, coming from the GlancesStandalone class
+        # Should be set by the set_args method
+        self.args = None
+
         # Add internals caches because psutil do not cache all the stats
         # See: https://github.com/giampaolo/psutil/issues/462
         self.username_cache = {}
@@ -70,6 +75,7 @@ class GlancesProcesses(object):
 
         # Extended stats for top process is enable by default
         self.disable_extended_tag = False
+        self.extended_process = None
 
         # Test if the system can grab io_counters
         try:
@@ -108,6 +114,10 @@ class GlancesProcesses(object):
         # { 'cpu_percent': 0.0, 'memory_percent': 0.0 }
         self._max_values = {}
         self.reset_max_values()
+
+    def set_args(self, args):
+        """Set args."""
+        self.args = args
 
     def reset_processcount(self):
         """Reset the global process count"""
@@ -247,6 +257,91 @@ class GlancesProcesses(object):
         for k in self._max_values_list:
             self._max_values[k] = 0.0
 
+    def get_extended_stats(self, proc):
+        """Get the extended stats for the given PID."""
+        # - cpu_affinity (Linux, Windows, FreeBSD)
+        # - ionice (Linux and Windows > Vista)
+        # - num_ctx_switches (not available on Illumos/Solaris)
+        # - num_fds (Unix-like)
+        # - num_handles (Windows)
+        # - memory_maps (only swap, Linux)
+        #   https://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
+        # - connections (TCP and UDP)
+        # - CPU min/max/mean
+
+        # Set the extended stats list (OS dependant)
+        extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
+        if LINUX:
+            # num_fds only available on Unix system (see issue #1351)
+            extended_stats += ['num_fds']
+        if WINDOWS:
+            extended_stats += ['num_handles']
+
+        ret = {}
+        try:
+            # Get the extended stats
+            selected_process = psutil.Process(proc['pid'])
+            ret = selected_process.as_dict(attrs=extended_stats, ad_value=None)
+
+            if LINUX:
+                try:
+                    ret['memory_swap'] = sum([v.swap for v in selected_process.memory_maps()])
+                except (psutil.NoSuchProcess, KeyError):
+                    # (KeyError catch for issue #1551)
+                    pass
+                except (psutil.AccessDenied, NotImplementedError):
+                    # NotImplementedError: /proc/${PID}/smaps file doesn't exist
+                    # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
+                    # is not enabled (see psutil #533/glances #413).
+                    ret['memory_swap'] = None
+            try:
+                ret['tcp'] = len(selected_process.connections(kind="tcp"))
+                ret['udp'] = len(selected_process.connections(kind="udp"))
+            except (psutil.AccessDenied, psutil.NoSuchProcess):
+                # Manage issue1283 (psutil.AccessDenied)
+                ret['tcp'] = None
+                ret['udp'] = None
+        except (psutil.NoSuchProcess, ValueError, AttributeError) as e:
+            logger.error('Can not grab extended stats ({})'.format(e))
+            self.extended_process = None
+            ret['extended_stats'] = False
+        else:
+            logger.debug('Grab extended stats for process {}'.format(proc['pid']))
+
+            # Compute CPU and MEM min/max/mean
+            for stat_prefix in ['cpu', 'memory']:
+                if stat_prefix + '_min' not in self.extended_process:
+                    ret[stat_prefix + '_min'] = proc[stat_prefix + '_percent']
+                else:
+                    ret[stat_prefix + '_min'] = proc[stat_prefix + '_percent'] if proc[stat_prefix + '_min'] > proc[stat_prefix + '_percent'] else proc[stat_prefix + '_min']
+                if stat_prefix + '_max' not in self.extended_process:
+                    ret[stat_prefix + '_max'] = proc[stat_prefix + '_percent']
+                else:
+                    ret[stat_prefix + '_max'] = proc[stat_prefix + '_percent'] if proc[stat_prefix + '_max'] < proc[stat_prefix + '_percent'] else proc[stat_prefix + '_max']
+                if stat_prefix + '_mean_sum' not in self.extended_process:
+                    ret[stat_prefix + '_mean_sum'] = proc[stat_prefix + '_percent']
+                else:
+                    ret[stat_prefix + '_mean_sum'] = proc[stat_prefix + '_mean_sum'] + proc[stat_prefix + '_percent']
+                if stat_prefix + '_mean_counter' not in self.extended_process:
+                    ret[stat_prefix + '_mean_counter'] = 1
+                else:
+                    ret[stat_prefix + '_mean_counter'] = proc[stat_prefix + '_mean_counter'] + 1
+                ret[stat_prefix + '_mean'] = ret[stat_prefix + '_mean_sum'] / ret[stat_prefix + '_mean_counter']
+
+            ret['extended_stats'] = True
+        return ret
+
+    def is_selected_extended_process(self, position):
+        """Return True if the process is the selected one for extended stats."""
+        return hasattr(self.args, 'programs') and \
+               not self.args.programs and \
+               hasattr(self.args, 'enable_process_extended') and \
+               self.args.enable_process_extended and \
+               not self.disable_extended_tag and \
+               hasattr(self.args, 'cursor_position') and \
+               position == self.args.cursor_position and \
+               not self.args.disable_cursor
+
     def update(self):
         """Update the processes stats."""
         # Reset the stats
@@ -305,59 +400,25 @@ class GlancesProcesses(object):
         # Update the processcount
         self.update_processcount(self.processlist)
 
-        # Loop over processes and add metadata
-        first = True
-        for proc in self.processlist:
-            # Get extended stats, only for top processes (see issue #403).
-            if first and not self.disable_extended_tag:
-                # - cpu_affinity (Linux, Windows, FreeBSD)
-                # - ionice (Linux and Windows > Vista)
-                # - num_ctx_switches (not available on Illumos/Solaris)
-                # - num_fds (Unix-like)
-                # - num_handles (Windows)
-                # - memory_maps (only swap, Linux)
-                #   https://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
-                # - connections (TCP and UDP)
-                extended = {}
-                try:
-                    top_process = psutil.Process(proc['pid'])
-                    extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
-                    if LINUX:
-                        # num_fds only available on Unix system (see issue #1351)
-                        extended_stats += ['num_fds']
-                    if WINDOWS:
-                        extended_stats += ['num_handles']
+        # Loop over processes and :
+        # - add extended stats for selected process
+        # - add metadata
+        for position, proc in enumerate(self.processlist):
+            # Extended stats
+            ################
 
-                    # Get the extended stats
-                    extended = top_process.as_dict(attrs=extended_stats, ad_value=None)
+            # Get the selected process when the 'e' key is pressed
+            if self.is_selected_extended_process(position):
+                self.extended_process = proc
 
-                    if LINUX:
-                        try:
-                            extended['memory_swap'] = sum([v.swap for v in top_process.memory_maps()])
-                        except (psutil.NoSuchProcess, KeyError):
-                            # (KeyError catch for issue #1551)
-                            pass
-                        except (psutil.AccessDenied, NotImplementedError):
-                            # NotImplementedError: /proc/${PID}/smaps file doesn't exist
-                            # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
-                            # is not enabled (see psutil #533/glances #413).
-                            extended['memory_swap'] = None
-                    try:
-                        extended['tcp'] = len(top_process.connections(kind="tcp"))
-                        extended['udp'] = len(top_process.connections(kind="udp"))
-                    except (psutil.AccessDenied, psutil.NoSuchProcess):
-                        # Manage issue1283 (psutil.AccessDenied)
-                        extended['tcp'] = None
-                        extended['udp'] = None
-                except (psutil.NoSuchProcess, ValueError, AttributeError) as e:
-                    logger.error('Can not grab extended stats ({})'.format(e))
-                    extended['extended_stats'] = False
-                else:
-                    logger.debug('Grab extended stats for process {}'.format(proc['pid']))
-                    extended['extended_stats'] = True
-                proc.update(extended)
-            first = False
-            # /End of extended stats
+            # Grab extended stats only for the selected process (see issue #2225)
+            if self.extended_process is not None and \
+               proc['pid'] == self.extended_process['pid']:
+                proc.update(self.get_extended_stats(self.extended_process))
+                self.extended_process = proc
+
+            # Meta data
+            ###########
 
             # PID is the key
             proc['key'] = 'pid'
@@ -424,9 +485,14 @@ class GlancesProcesses(object):
         """Get the number of processes."""
         return self.processcount
 
-    def getlist(self, sorted_by=None):
-        """Get the processlist."""
-        return self.processlist
+    def getlist(self, sorted_by=None, as_programs=False):
+        """Get the processlist.
+        By default, return the list of threads.
+        If as_programs is True, return the list of programs."""
+        if as_programs:
+            return processes_to_programs(self.processlist)
+        else:
+            return self.processlist
 
     @property
     def sort_key(self):

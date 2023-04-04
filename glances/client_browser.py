@@ -93,7 +93,7 @@ class GlancesClientBrowser(object):
         try:
             s = ServerProxy(uri, transport=t)
         except Exception as e:
-            logger.warning("Client browser couldn't create socket {}: {}".format(uri, e))
+            logger.warning("Client browser couldn't create socket ({})".format(e))
         else:
             # Mandatory stats
             try:
@@ -105,7 +105,7 @@ class GlancesClientBrowser(object):
                 # OS (Human Readable name)
                 server['hr_name'] = ujson.loads(s.getSystem())['hr_name']
             except (socket.error, Fault, KeyError) as e:
-                logger.debug("Error while grabbing stats form {}: {}".format(uri, e))
+                logger.debug("Error while grabbing stats form server ({})".format(e))
                 server['status'] = 'OFFLINE'
             except ProtocolError as e:
                 if e.errcode == 401:
@@ -115,7 +115,7 @@ class GlancesClientBrowser(object):
                     server['status'] = 'PROTECTED'
                 else:
                     server['status'] = 'OFFLINE'
-                logger.debug("Cannot grab stats from {} ({} {})".format(uri, e.errcode, e.errmsg))
+                logger.debug("Cannot grab stats from server ({} {})".format(e.errcode, e.errmsg))
             else:
                 # Status
                 server['status'] = 'ONLINE'
@@ -126,7 +126,7 @@ class GlancesClientBrowser(object):
                     load_min5 = ujson.loads(s.getLoad())['min5']
                     server['load_min5'] = '{:.2f}'.format(load_min5)
                 except Exception as e:
-                    logger.warning("Error while grabbing stats form {}: {}".format(uri, e))
+                    logger.warning("Error while grabbing stats form server ({})".format(e))
 
         return server
 

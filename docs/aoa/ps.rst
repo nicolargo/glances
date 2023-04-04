@@ -15,10 +15,15 @@ Filtered view:
 
 .. image:: ../_static/processlist-filter.png
 
+Extended view:
+
+.. image:: ../_static/processlist-extended.png
+
 The process view consists of 3 parts:
 
 - Processes summary
-- Monitored processes list (optional)
+- Monitored processes list (optional, only in standalone mode)
+- Extended stats for the selected process (optional)
 - Processes list
 
 The processes summary line displays:
@@ -56,12 +61,15 @@ You can also set the sort key in the UI:
    * - c
      - --sort-processes cpu_percent
      - Sort by CPU
+   * - e
+     - N/A
+     - Pin the process and display extended stats
    * - i
      - --sort-processes io_counters
      - Sort by DISK I/O
    * - j
      - --programs
-     - Accumulate processes by program
+     - Accumulate processes by program (extended stats disable in this mode)
    * - m
      - --sort-processes memory_percent
      - Sort by MEM

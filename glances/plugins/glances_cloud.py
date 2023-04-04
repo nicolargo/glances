@@ -10,7 +10,8 @@
 """Cloud plugin.
 
 Supported Cloud API:
-- OpenStack meta data (class ThreadOpenStack, see below): AWS, OVH...
+- OpenStack meta data (class ThreadOpenStack) - Vanilla OpenStack
+- OpenStackEC2 meta data (class ThreadOpenStackEC2) - Amazon EC2 compatible
 """
 
 import threading
@@ -53,13 +54,16 @@ class Plugin(GlancesPlugin):
 
         # Init thread to grab OpenStack stats asynchronously
         self.OPENSTACK = ThreadOpenStack()
+        self.OPENSTACKEC2 = ThreadOpenStackEC2()
 
         # Run the thread
         self.OPENSTACK.start()
+        self.OPENSTACKEC2.start()
 
     def exit(self):
         """Overwrite the exit method to close threads."""
         self.OPENSTACK.stop()
+        self.OPENSTACKEC2.stop()
         # Call the father class
         super(Plugin, self).exit()
 
@@ -80,12 +84,15 @@ class Plugin(GlancesPlugin):
         # Update the stats
         if self.input_method == 'local':
             stats = self.OPENSTACK.stats
+            if not stats:
+                stats = self.OPENSTACKEC2.stats
             # Example:
-            # Uncomment to test on physical computer
-            # stats = {'ami-id': 'ami-id',
-            #                    'instance-id': 'instance-id',
-            #                    'instance-type': 'instance-type',
-            #                    'region': 'placement/availability-zone'}
+            # Uncomment to test on physical computer (only for test purpose)
+            # stats = {'id': 'ami-id',
+            #          'name': 'My VM',
+            #          'type': 'Gold',
+            #          'region': 'France',
+            #          'platform': 'OpenStack'}
 
         # Update the stats
         self.stats = stats
@@ -101,13 +108,14 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Generate the output
-        if 'instance-type' in self.stats and 'instance-id' in self.stats and 'region' in self.stats:
-            msg = 'Cloud '
-            ret.append(self.curse_add_line(msg, "TITLE"))
-            msg = '{} instance {} ({})'.format(
-                self.stats['instance-type'], self.stats['instance-id'], self.stats['region']
-            )
-            ret.append(self.curse_add_line(msg))
+        msg = self.stats.get('platform', 'Unknown')
+        ret.append(self.curse_add_line(msg, "TITLE"))
+        msg = ' {} instance {} ({})'.format(
+            self.stats.get('type', 'Unknown'),
+            self.stats.get('name', 'Unknown'),
+            self.stats.get('region', 'Unknown')
+        )
+        ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration
         # logger.info(ret)
@@ -121,13 +129,19 @@ class ThreadOpenStack(threading.Thread):
     stats is a dict
     """
 
+    # The metadata service provides a way for instances to retrieve
+    # instance-specific data via a REST API. Instances access this
+    # service at 169.254.169.254 or at fe80::a9fe:a9fe.
+    # All types of metadata, be it user-, nova- or vendor-provided,
+    # can be accessed via this service.
     # https://docs.openstack.org/nova/latest/user/metadata-service.html
-    OPENSTACK_API_URL = 'http://169.254.169.254/latest/meta-data'
+    OPENSTACK_PLATFORM = "OpenStack"
+    OPENSTACK_API_URL = 'http://169.254.169.254/openstack/latest/meta-data'
     OPENSTACK_API_METADATA = {
-        'ami-id': 'ami-id',
-        'instance-id': 'instance-id',
-        'instance-type': 'instance-type',
-        'region': 'placement/availability-zone',
+        'id': 'project_id',
+        'name': 'name',
+        'type': 'meta/role',
+        'region': 'availability_zone',
     }
 
     def __init__(self):
@@ -159,6 +173,9 @@ class ThreadOpenStack(threading.Thread):
             else:
                 if r.ok:
                     self._stats[k] = to_ascii(r.content)
+        else:
+            # No break during the loop, so we can set the platform
+            self._stats['platform'] = self.OPENSTACK_PLATFORM
 
         return True
 
@@ -180,3 +197,26 @@ class ThreadOpenStack(threading.Thread):
     def stopped(self):
         """Return True is the thread is stopped."""
         return self._stopper.is_set()
+
+
+class ThreadOpenStackEC2(ThreadOpenStack):
+    """
+    Specific thread to grab OpenStack EC2 (Amazon cloud) stats.
+
+    stats is a dict
+    """
+
+    # The metadata service provides a way for instances to retrieve
+    # instance-specific data via a REST API. Instances access this
+    # service at 169.254.169.254 or at fe80::a9fe:a9fe.
+    # All types of metadata, be it user-, nova- or vendor-provided,
+    # can be accessed via this service.
+    # https://docs.openstack.org/nova/latest/user/metadata-service.html
+    OPENSTACK_PLATFORM = "Amazon EC2"
+    OPENSTACK_API_URL = 'http://169.254.169.254/latest/meta-data'
+    OPENSTACK_API_METADATA = {
+        'id': 'ami-id',
+        'name': 'instance-id',
+        'type': 'instance-type',
+        'region': 'placement/availability-zone',
+    }

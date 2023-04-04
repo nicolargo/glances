@@ -50,6 +50,9 @@ class GlancesStandalone(object):
             self.display_modules_list()
             sys.exit(0)
 
+        # The args is needed to get the selected process in the process list (Curses mode)
+        glances_processes.set_args(args)
+
         # If process extended stats is disabled by user
         if not args.enable_process_extended:
             logger.debug("Extended stats for top process are disabled")
@@ -193,5 +196,7 @@ class GlancesStandalone(object):
             )
             print("You should consider upgrading using: pip install --upgrade glances")
             print("Disable this warning temporarily using: glances --disable-check-update")
-            print("To disable it permanently, refer config reference at "
-                  "https://glances.readthedocs.io/en/latest/config.html#syntax")
+            print(
+                "To disable it permanently, refer config reference at "
+                "https://glances.readthedocs.io/en/latest/config.html#syntax"
+            )
