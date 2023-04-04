@@ -84,7 +84,8 @@ class Plugin(GlancesPlugin):
             #         "name": "Fake GeForce GTX",
             #         "mem": 5.792331695556641,
             #         "proc": 4,
-            #         "temperature": 26
+            #         "temperature": 26,
+            #         "fan_speed": 30
             #     }
             # ]
             # Two GPU sample:
@@ -95,7 +96,8 @@ class Plugin(GlancesPlugin):
             #         "name": "Fake GeForce GTX1",
             #         "mem": 5.792331695556641,
             #         "proc": 4,
-            #         "temperature": 26
+            #         "temperature": 26,
+            #         "fan_speed": 30
             #     },
             #     {
             #         "key": "gpu_id",
@@ -103,7 +105,8 @@ class Plugin(GlancesPlugin):
             #         "name": "Fake GeForce GTX2",
             #         "mem": 15,
             #         "proc": 8,
-            #         "temperature": 65
+            #         "temperature": 65,
+            #         "fan_speed": 75
             #     }
             # ]
             return self.stats
@@ -274,6 +277,8 @@ class Plugin(GlancesPlugin):
             device_stats['proc'] = get_proc(device_handle)
             # Processor temperature in °C
             device_stats['temperature'] = get_temperature(device_handle)
+            # Fan speed in %
+            device_stats['fan_speed'] = get_fan_speed(device_handle)
             stats.append(device_stats)
 
         return stats
@@ -324,8 +329,16 @@ def get_proc(device_handle):
 
 
 def get_temperature(device_handle):
-    """Get GPU device CPU consumption in percent."""
+    """Get GPU device CPU temperature in Celsius."""
     try:
         return pynvml.nvmlDeviceGetTemperature(device_handle, pynvml.NVML_TEMPERATURE_GPU)
+    except pynvml.NVMLError:
+        return None
+
+
+def get_fan_speed(device_handle):
+    """Get GPU device fan speed in percent."""
+    try:
+        return pynvml.nvmlDeviceGetFanSpeed(device_handle)
     except pynvml.NVMLError:
         return None
