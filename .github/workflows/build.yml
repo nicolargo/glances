@@ -8,8 +8,10 @@ env:
   DEFAULT_DOCKER_IMAGE: nicolargo/glances
   NODE_ENV: ${{ (contains('refs/heads/master', github.ref) || startsWith(github.ref, 'refs/tags/v')) && 'prod' || 'dev' }}
   PUSH_BRANCH: ${{ 'refs/heads/develop' == github.ref || 'refs/heads/master' == github.ref || startsWith(github.ref, 'refs/tags/v') }}
-  # linux/arm/v6 support following issue #2120
+  # linux/arm/v7 (drop support for v6) support following issue - See issue #2120
   DOCKER_PLATFORMS: linux/amd64,linux/arm/v7,linux/arm64,linux/386
+  # Ubuntu image only support linux/amd64 and linux/arm64 - See issue #2185
+  DOCKER_PLATFORMS_UBUNTU: linux/amd64,linux/arm64
 
 on:
   pull_request:
@@ -96,7 +98,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['alpine']
+        os: ['alpine', 'ubuntu']
         tag: ${{ fromJson(needs.create_Docker_builds.outputs.tags) }}
     steps:
       - name: Checkout
@@ -144,7 +146,7 @@ jobs:
             CHANGING_ARG=${{ github.sha }}
           context: .
           file: "docker-files/${{ matrix.os }}.Dockerfile"
-          platforms: ${{env.DOCKER_PLATFORMS}}
+          platforms: ${{ matrix.os != 'ubuntu' && env.DOCKER_PLATFORMS || env.DOCKER_PLATFORMS_UBUNTU }}
           target: ${{ matrix.tag.target }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache

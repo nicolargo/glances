@@ -230,7 +230,7 @@ class GlancesBottle(object):
         """
         response.status = 200
 
-        return None
+        return "Active"
 
     @compress
     def _api_help(self):

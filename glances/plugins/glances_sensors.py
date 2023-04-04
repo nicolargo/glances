@@ -175,7 +175,7 @@ class Plugin(GlancesPlugin):
             # Alert processing
             if i['type'] == SENSOR_TEMP_TYPE:
                 if self.is_limit('critical', stat_name='sensors_temperature_' + i['label']):
-                    # By default use the thresholds confiured in the glances.conf file (see #2058)
+                    # By default use the thresholds configured in the glances.conf file (see #2058)
                     alert = self.get_alert(current=i['value'], header='temperature_' + i['label'])
                 else:
                     # Else use the system thresholds
@@ -197,7 +197,7 @@ class Plugin(GlancesPlugin):
             self.views[i[self.get_key()]]['value']['decoration'] = alert
 
     def battery_trend(self, stats):
-        """Return the trend characterr for the battery"""
+        """Return the trend character for the battery"""
         if 'status' not in stats:
             return ''
         if stats['status'].startswith('Charg'):
@@ -331,12 +331,15 @@ class GlancesGrabSensors(object):
         else:
             return ret
         for chip_name, chip in iteritems(input_list):
-            i = 1
-            for feature in chip:
+            label_index = 1
+            for chip_name_index, feature in enumerate(chip):
                 sensors_current = {}
                 # Sensor name
                 if feature.label == '':
-                    sensors_current['label'] = chip_name + ' ' + str(i)
+                    sensors_current['label'] = chip_name + ' ' + str(chip_name_index)
+                elif feature.label in [i['label'] for i in ret]:
+                    sensors_current['label'] = feature.label + ' ' + str(label_index)
+                    label_index += 1
                 else:
                     sensors_current['label'] = feature.label
                 # Sensors value, limit and unit
@@ -348,7 +351,6 @@ class GlancesGrabSensors(object):
                 sensors_current['critical'] = int(system_critical) if system_critical is not None else None
                 # Add sensor to the list
                 ret.append(sensors_current)
-                i += 1
         return ret
 
     def get(self, sensor_type=SENSOR_TEMP_TYPE):
