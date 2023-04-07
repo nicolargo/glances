@@ -61,7 +61,7 @@ def get_install_requires():
 def get_install_extras_require():
     extras_require = {
         'action': ['chevron'],
-        'browser': ['zeroconf==0.54.0' if PY2 else 'zeroconf>=0.19.1'],
+        'browser': ['zeroconf==0.55.0' if PY2 else 'zeroconf>=0.19.1'],
         'cloud': ['requests'],
         'docker': ['docker>=2.0.0', 'python-dateutil', 'six'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
