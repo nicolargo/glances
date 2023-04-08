@@ -4,7 +4,10 @@ Graph
 ======
 
 You can generate dynamic graphs (SVG format) in a target folder. The generation
-starts every time the 'g' key is pressed in the CLI interface.
+starts every time the 'g' key is pressed in the CLI interface (if Glances has been
+started with the --export graph option).
+
+The graph export module can be configured through the Glances configuration file:
 
 .. code-block:: ini
 
