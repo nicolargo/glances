@@ -718,7 +718,11 @@ class _GlancesCurses(object):
 
         # Display graph generation popup
         if self.args.generate_graph:
-            self.display_popup('Generate graph in {}'.format(self.args.export_graph_path))
+            if 'graph' in stats.getExportsList():
+                self.display_popup('Generate graph in {}'.format(self.args.export_graph_path))
+            else:
+                logger.warning('Graph export module is disable. Run Glances with --export graph to enable it.')
+                self.args.generate_graph = False
 
         return True
 
