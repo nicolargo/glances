@@ -12,7 +12,7 @@ from __future__ import unicode_literals
 
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.compat import nativestr
+from glances.compat import nativestr, FileNotFoundError
 
 import psutil
 

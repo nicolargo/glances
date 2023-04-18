@@ -35,6 +35,7 @@ if PY3:
     from urllib.error import HTTPError, URLError
     from urllib.parse import urlparse
 
+
     # Correct issue #1025 by monkey path the xmlrpc lib
     from defusedxml.xmlrpc import monkey_patch
 
@@ -50,6 +51,7 @@ if PY3:
     long = int
 
     PermissionError = OSError
+    FileNotFoundError = FileNotFoundError
 
     viewkeys = operator.methodcaller('keys')
     viewvalues = operator.methodcaller('values')
@@ -148,6 +150,7 @@ else:
     long = long
 
     PermissionError = OSError
+    FileNotFoundError = IOError
 
     viewkeys = operator.methodcaller('viewkeys')
     viewvalues = operator.methodcaller('viewvalues')
