@@ -106,7 +106,7 @@ jobs:
 
       - name: Retrieve Repository Docker metadata
         id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v4.3.0
+        uses: crazy-max/ghaction-docker-meta@v4.4.0
         with:
           images: ${{ env.DEFAULT_DOCKER_IMAGE }}
           labels: |
