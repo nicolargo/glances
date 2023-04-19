@@ -14,6 +14,8 @@ import threading
 import time
 from copy import deepcopy
 
+import requests.exceptions
+
 from glances.compat import iterkeys, itervalues, nativestr, pretty_date
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -252,7 +254,12 @@ class Plugin(GlancesPlugin):
                 # Container Id
                 container_stats['Id'] = container.id
                 # Container Image
-                container_stats['Image'] = container.image.tags
+                try:
+                    # See issue 2233
+                    container_stats['Image'] = container.image.tags
+                except requests.exceptions.HTTPError:
+                    container_stats['Image'] = '-'
+
                 # Global stats (from attrs)
                 # Container Status
                 container_stats['Status'] = container.attrs['State']['Status']
