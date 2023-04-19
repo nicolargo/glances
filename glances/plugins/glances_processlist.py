@@ -411,6 +411,7 @@ class Plugin(GlancesPlugin):
                 # Manage end of line in arguments (see #1692)
                 arguments = arguments.replace('\r\n', ' ')
                 arguments = arguments.replace('\n', ' ')
+                arguments = arguments.replace('\t', ' ')
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = self.layout_stat['command'].format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
