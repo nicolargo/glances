@@ -48,7 +48,7 @@ def split_cmdline(bare_process_name, cmdline):
         path, cmd = "", cmdline[0]
     else:
         path, cmd = os.path.split(cmdline[0])
-    arguments = ' '.join(cmdline[1:]).replace('\n', ' ')
+    arguments = ' '.join(cmdline[1:])
     return path, cmd, arguments
 
 
@@ -409,8 +409,9 @@ class Plugin(GlancesPlugin):
             if cmdline:
                 path, cmd, arguments = split_cmdline(bare_process_name, cmdline)
                 # Manage end of line in arguments (see #1692)
-                arguments.replace('\r\n', ' ')
-                arguments.replace('\n', ' ')
+                arguments = arguments.replace('\r\n', ' ')
+                arguments = arguments.replace('\n', ' ')
+                arguments = arguments.replace('\t', ' ')
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = self.layout_stat['command'].format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
