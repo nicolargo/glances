@@ -191,6 +191,9 @@ run-client: ## Start Glances in client mode (RPC)
 run-browser: ## Start Glances in browser mode (RPC)
 	./venv/bin/python -m glances -C ./conf/glances.conf --browser
 
+run-issue: ## Start Glances in issue mode
+	./venv/bin/python -m glances -C ./conf/glances.conf --issue
+
 show-version: ## Show Glances version number
 	./venv/bin/python -m glances -C ./conf/glances.conf -V
 
