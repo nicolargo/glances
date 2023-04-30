@@ -222,7 +222,7 @@ class Plugin(GlancesPlugin):
 
     def _get_process_curses_vms(self, p, selected, args):
         """Return process VMS curses"""
-        if key_exist_value_not_none_not_v('memory_info', p, ''):
+        if key_exist_value_not_none_not_v('memory_info', p, '', 1):
             msg = self.layout_stat['virt'].format(self.auto_unit(p['memory_info'][1], low_precision=False))
             ret = self.curse_add_line(msg, optional=True)
         else:
@@ -232,7 +232,7 @@ class Plugin(GlancesPlugin):
 
     def _get_process_curses_rss(self, p, selected, args):
         """Return process RSS curses"""
-        if key_exist_value_not_none_not_v('memory_info', p, ''):
+        if key_exist_value_not_none_not_v('memory_info', p, '', 0):
             msg = self.layout_stat['res'].format(self.auto_unit(p['memory_info'][0], low_precision=False))
             ret = self.curse_add_line(msg, optional=True)
         else:

@@ -294,12 +294,13 @@ def key_exist_value_not_none(k, d):
     return k in d and d[k] is not None
 
 
-def key_exist_value_not_none_not_v(k, d, v=''):
+def key_exist_value_not_none_not_v(k, d, value='', lengh=None):
     # Return True if:
     # - key k exists
     # - d[k] is not None
-    # - d[k] != v
-    return k in d and d[k] is not None and d[k] != v
+    # - d[k] != value
+    # - if lengh is not None and len(d[k]) >= lengh
+    return k in d and d[k] is not None and d[k] != value and (lengh is None or len(d[k]) >= lengh)
 
 
 def disable(class_name, var):
