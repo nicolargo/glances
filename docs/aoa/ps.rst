@@ -108,11 +108,14 @@ Columns display
 ``VIRT``                  Virtual Memory Size
 
                           The total amount of virtual memory used by the
-                          process.
-
-                          It includes all code, data and shared
+                          process. It includes all code, data and shared
                           libraries plus pages that have been swapped out
                           and pages that have been mapped but not used.
+
+                          Virtual memory is usually much larger than physical
+                          memory, making it possible to run programs for which
+                          the total code plus data size is greater than the amount
+                          of RAM available.
 
                           Most of the time, this is not a useful number.
 ``RES``                   Resident Memory Size

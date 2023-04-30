@@ -549,7 +549,6 @@ Examples of use:
             logger.setLevel(DEBUG)
         else:
             from warnings import simplefilter
-
             simplefilter("ignore")
 
         # Plugins refresh rate
@@ -703,14 +702,12 @@ Examples of use:
             sys.exit(2)
 
         # Filter is only available in standalone mode
-        if args.process_filter is not None and not self.is_standalone():
-            logger.critical("Process filter is only available in standalone mode")
-            sys.exit(2)
+        if not args.process_filter and not self.is_standalone():
+            logger.debug("Process filter is only available in standalone mode")
 
         # Cursor option is only available in standalone mode
         if not args.disable_cursor and not self.is_standalone():
-            logger.critical("Cursor is only available in standalone mode")
-            sys.exit(2)
+            logger.debug("Cursor is only available in standalone mode")
 
         # Disable HDDTemp if sensors are disabled
         if getattr(self.args, 'disable_sensors', False):
@@ -739,7 +736,16 @@ Examples of use:
         self.args.is_server = self.is_server()
         self.args.is_webserver = self.is_webserver()
 
+        # Check mode compatibility
+        self.check_mode_compatibility()
+
         return args
+
+    def check_mode_compatibility(self):
+        """Check mode compatibility"""
+        if self.args.is_server and self.args.is_webserver:
+            logger.critical("Server and Web server mode are incompatible")
+            sys.exit(2)
 
     def is_standalone(self):
         """Return True if Glances is running in standalone mode."""

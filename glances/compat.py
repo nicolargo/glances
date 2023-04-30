@@ -36,6 +36,7 @@ if PY3:
     from urllib.error import HTTPError, URLError
     from urllib.parse import urlparse
 
+
     # Correct issue #1025 by monkey path the xmlrpc lib
     from defusedxml.xmlrpc import monkey_patch
 
@@ -51,6 +52,7 @@ if PY3:
     long = int
 
     PermissionError = OSError
+    FileNotFoundError = FileNotFoundError
 
     viewkeys = operator.methodcaller('keys')
     viewvalues = operator.methodcaller('values')
@@ -149,6 +151,7 @@ else:
     long = long
 
     PermissionError = OSError
+    FileNotFoundError = IOError
 
     viewkeys = operator.methodcaller('viewkeys')
     viewvalues = operator.methodcaller('viewvalues')
@@ -292,12 +295,13 @@ def key_exist_value_not_none(k, d):
     return k in d and d[k] is not None
 
 
-def key_exist_value_not_none_not_v(k, d, v=''):
+def key_exist_value_not_none_not_v(k, d, value='', lengh=None):
     # Return True if:
     # - key k exists
     # - d[k] is not None
-    # - d[k] != v
-    return k in d and d[k] is not None and d[k] != v
+    # - d[k] != value
+    # - if lengh is not None and len(d[k]) >= lengh
+    return k in d and d[k] is not None and d[k] != value and (lengh is None or len(d[k]) >= lengh)
 
 
 def disable(class_name, var):

@@ -31,8 +31,12 @@ Glances InfluxDB data model:
 |               | time_since_update...  |                       |
 |               |                       |                       |
 +---------------+-----------------------+-----------------------+
-| docker        | cpu_percent           | hostname              |
+| docker        | cpu_percent           | hostname              |
 |               | memory_usage...       | name                  |
++---------------+-----------------------+-----------------------+
+| gpu           | proc                  | hostname              |
+|               | mem                   | gpu_id                |
+|               | temperature...        |                       |
 +---------------+-----------------------+-----------------------+
 
 InfluxDB (up to version 1.7.x)
