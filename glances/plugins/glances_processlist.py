@@ -48,7 +48,7 @@ def split_cmdline(bare_process_name, cmdline):
         path, cmd = "", cmdline[0]
     else:
         path, cmd = os.path.split(cmdline[0])
-    arguments = ' '.join(cmdline[1:]).replace('\n', ' ')
+    arguments = ' '.join(cmdline[1:])
     return path, cmd, arguments
 
 
@@ -222,7 +222,7 @@ class Plugin(GlancesPlugin):
 
     def _get_process_curses_vms(self, p, selected, args):
         """Return process VMS curses"""
-        if key_exist_value_not_none_not_v('memory_info', p, ''):
+        if key_exist_value_not_none_not_v('memory_info', p, '', 1):
             msg = self.layout_stat['virt'].format(self.auto_unit(p['memory_info'][1], low_precision=False))
             ret = self.curse_add_line(msg, optional=True)
         else:
@@ -232,7 +232,7 @@ class Plugin(GlancesPlugin):
 
     def _get_process_curses_rss(self, p, selected, args):
         """Return process RSS curses"""
-        if key_exist_value_not_none_not_v('memory_info', p, ''):
+        if key_exist_value_not_none_not_v('memory_info', p, '', 0):
             msg = self.layout_stat['res'].format(self.auto_unit(p['memory_info'][0], low_precision=False))
             ret = self.curse_add_line(msg, optional=True)
         else:
@@ -409,8 +409,9 @@ class Plugin(GlancesPlugin):
             if cmdline:
                 path, cmd, arguments = split_cmdline(bare_process_name, cmdline)
                 # Manage end of line in arguments (see #1692)
-                arguments.replace('\r\n', ' ')
-                arguments.replace('\n', ' ')
+                arguments = arguments.replace('\r\n', ' ')
+                arguments = arguments.replace('\n', ' ')
+                arguments = arguments.replace('\t', ' ')
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = self.layout_stat['command'].format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))

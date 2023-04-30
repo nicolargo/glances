@@ -133,7 +133,7 @@ flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
 # Docker
 # ===================================================================
 
-docker: docker-alpine ## Generate local docker images
+docker: docker-alpine docker-ubuntu## Generate local docker images
 
 docker-alpine: ## Generate local docker images (Alpine)
 	docker build --target full -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-full .
@@ -190,6 +190,9 @@ run-client: ## Start Glances in client mode (RPC)
 
 run-browser: ## Start Glances in browser mode (RPC)
 	./venv/bin/python -m glances -C ./conf/glances.conf --browser
+
+run-issue: ## Start Glances in issue mode
+	./venv/bin/python -m glances -C ./conf/glances.conf --issue
 
 show-version: ## Show Glances version number
 	./venv/bin/python -m glances -C ./conf/glances.conf -V
