@@ -113,14 +113,14 @@ class GlancesStdoutIssue(object):
                 )
                 if isinstance(stat, list) and len(stat) > 0 and 'key' in stat[0]:
                     key = 'key={} '.format(stat[0]['key'])
-                    message = colors.ORANGE + key + colors.NO + str(stat)[0: TERMINAL_WIDTH - 41 - len(key)]
+                    message = colors.ORANGE + key + colors.NO + str(stat)[0 : TERMINAL_WIDTH - 41 - len(key)]
                 else:
-                    message = colors.NO + str(stat)[0: TERMINAL_WIDTH - 41]
+                    message = colors.NO + str(stat)[0 : TERMINAL_WIDTH - 41]
             else:
                 result = (colors.RED + '[ERROR]' + colors.BLUE + ' {:.5f}s '.format(counter.get())).rjust(
                     41 - len(plugin)
                 )
-                message = colors.NO + str(stat_error)[0: TERMINAL_WIDTH - 41]
+                message = colors.NO + str(stat_error)[0 : TERMINAL_WIDTH - 41]
             self.print_issue(plugin, result, message)
 
         # Display total time need to update all plugins

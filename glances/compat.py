@@ -35,7 +35,6 @@ if PY3:
     from urllib.error import HTTPError, URLError
     from urllib.parse import urlparse
 
-
     # Correct issue #1025 by monkey path the xmlrpc lib
     from defusedxml.xmlrpc import monkey_patch
 

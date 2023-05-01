@@ -41,7 +41,7 @@ class GlancesExport(object):
     def __init__(self, config=None, args=None):
         """Init the export class."""
         # Export name (= module name without glances_)
-        self.export_name = self.__class__.__module__[len('glances_'):]
+        self.export_name = self.__class__.__module__[len('glances_') :]
         logger.debug("Init export module %s" % self.export_name)
 
         # Init the config & args
