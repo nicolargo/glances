@@ -550,6 +550,7 @@ Examples of use:
             logger.setLevel(DEBUG)
         else:
             from warnings import simplefilter
+
             simplefilter("ignore")
 
         # Plugins refresh rate

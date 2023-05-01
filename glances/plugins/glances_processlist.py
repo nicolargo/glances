@@ -325,8 +325,8 @@ class Plugin(GlancesPlugin):
             # Display rate if stats is available and io_tag ([4]) == 1
             # IO
             io = int(
-                (p['io_counters'][0 if rorw == 'ior' else 1] - p['io_counters'][2 if rorw == 'ior' else 3]) /
-                p['time_since_update']
+                (p['io_counters'][0 if rorw == 'ior' else 1] - p['io_counters'][2 if rorw == 'ior' else 3])
+                / p['time_since_update']
             )
             if io == 0:
                 msg = self.layout_stat[rorw].format("0")
@@ -357,8 +357,11 @@ class Plugin(GlancesPlugin):
         # When a process is selected:
         # * display a special character at the beginning of the line
         # * underline the command name
-        ret.append(self.curse_add_line(unicode_message('PROCESS_SELECTOR') if (selected and not args.disable_cursor)
-                                       else ' ', 'SELECTED'))
+        ret.append(
+            self.curse_add_line(
+                unicode_message('PROCESS_SELECTOR') if (selected and not args.disable_cursor) else ' ', 'SELECTED'
+            )
+        )
 
         # CPU
         ret.append(self._get_process_curses_cpu(p, selected, args))
@@ -433,10 +436,12 @@ class Plugin(GlancesPlugin):
         return ret
 
     def is_selected_process(self, args):
-        return args.is_standalone and \
-           self.args.enable_process_extended and \
-           args.cursor_position is not None and \
-           glances_processes.extended_process is not None
+        return (
+            args.is_standalone
+            and self.args.enable_process_extended
+            and args.cursor_position is not None
+            and glances_processes.extended_process is not None
+        )
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -468,9 +473,7 @@ class Plugin(GlancesPlugin):
         # This is a Glances bottleneck (see flame graph),
         # get_process_curses_data should be optimzed
         for position, process in enumerate(processes_list_sorted):
-            ret.extend(self.get_process_curses_data(process,
-                                                    position == args.cursor_position,
-                                                    args))
+            ret.extend(self.get_process_curses_data(process, position == args.cursor_position, args))
 
         # A filter is set Display the stats summaries
         if glances_processes.process_filter is not None:
@@ -578,12 +581,20 @@ class Plugin(GlancesPlugin):
         if 'memory_info' in p and p['memory_info'] is not None:
             ret.append(self.curse_add_line(' Memory info: '))
             for k in p['memory_info']._asdict():
-                ret.append(self.curse_add_line(self.auto_unit(p['memory_info']._asdict()[k], low_precision=False),
-                                               decoration='INFO', splittable=True))
+                ret.append(
+                    self.curse_add_line(
+                        self.auto_unit(p['memory_info']._asdict()[k], low_precision=False),
+                        decoration='INFO',
+                        splittable=True,
+                    )
+                )
                 ret.append(self.curse_add_line(' ' + k + ' ', splittable=True))
             if 'memory_swap' in p and p['memory_swap'] is not None:
-                ret.append(self.curse_add_line(self.auto_unit(p['memory_swap'], low_precision=False),
-                                               decoration='INFO', splittable=True))
+                ret.append(
+                    self.curse_add_line(
+                        self.auto_unit(p['memory_swap'], low_precision=False), decoration='INFO', splittable=True
+                    )
+                )
                 ret.append(self.curse_add_line(' swap ', splittable=True))
 
         # Third line is for open files/network sessions
@@ -650,8 +661,7 @@ class Plugin(GlancesPlugin):
                 shortkey = "('e' to pin | 'k' to kill)"
         else:
             shortkey = ""
-        msg = self.layout_header['command'].format("Programs" if self.args.programs else "Command",
-                                                   shortkey)
+        msg = self.layout_header['command'].format("Programs" if self.args.programs else "Command", shortkey)
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
     def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):
@@ -675,9 +685,9 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm)))
         # VIRT and RES memory sum
         if (
-            'memory_info' in self.stats[0] and
-            self.stats[0]['memory_info'] is not None and
-            self.stats[0]['memory_info'] != ''
+            'memory_info' in self.stats[0]
+            and self.stats[0]['memory_info'] is not None
+            and self.stats[0]['memory_info'] != ''
         ):
             # VMS
             msg = self.layout_stat['virt'].format(

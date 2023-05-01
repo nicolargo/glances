@@ -42,7 +42,7 @@ class GlancesAmp(object):
 
         # AMP name (= module name without glances_)
         if name is None:
-            self.amp_name = self.__class__.__module__[len('glances_'):]
+            self.amp_name = self.__class__.__module__[len('glances_') :]
         else:
             self.amp_name = name
 
