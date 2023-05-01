@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -76,12 +76,12 @@ class FolderList(object):
 
         The list is defined in the Glances configuration file.
         """
-        for l in range(1, self.__folder_list_max_size + 1):
+        for line in range(1, self.__folder_list_max_size + 1):
             value = {}
-            key = 'folder_' + str(l) + '_'
+            key = 'folder_' + str(line) + '_'
 
             # Path is mandatory
-            value['indice'] = str(l)
+            value['indice'] = str(line)
             value['path'] = self.config.get_value(section, key + 'path')
             if value['path'] is None:
                 continue

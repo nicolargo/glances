@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -42,7 +42,7 @@ class GlancesAmp(object):
 
         # AMP name (= module name without glances_)
         if name is None:
-            self.amp_name = self.__class__.__module__[len('glances_') :]
+            self.amp_name = self.__class__.__module__[len('glances_'):]
         else:
             self.amp_name = name
 

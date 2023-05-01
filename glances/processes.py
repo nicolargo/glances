@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -313,11 +313,15 @@ class GlancesProcesses(object):
                 if stat_prefix + '_min' not in self.extended_process:
                     ret[stat_prefix + '_min'] = proc[stat_prefix + '_percent']
                 else:
-                    ret[stat_prefix + '_min'] = proc[stat_prefix + '_percent'] if proc[stat_prefix + '_min'] > proc[stat_prefix + '_percent'] else proc[stat_prefix + '_min']
+                    ret[stat_prefix + '_min'] = \
+                        proc[stat_prefix + '_percent'] if proc[stat_prefix + '_min'] > proc[stat_prefix + '_percent'] \
+                        else proc[stat_prefix + '_min']
                 if stat_prefix + '_max' not in self.extended_process:
                     ret[stat_prefix + '_max'] = proc[stat_prefix + '_percent']
                 else:
-                    ret[stat_prefix + '_max'] = proc[stat_prefix + '_percent'] if proc[stat_prefix + '_max'] < proc[stat_prefix + '_percent'] else proc[stat_prefix + '_max']
+                    ret[stat_prefix + '_max'] = \
+                        proc[stat_prefix + '_percent'] if proc[stat_prefix + '_max'] < proc[stat_prefix + '_percent'] \
+                        else proc[stat_prefix + '_max']
                 if stat_prefix + '_mean_sum' not in self.extended_process:
                     ret[stat_prefix + '_mean_sum'] = proc[stat_prefix + '_percent']
                 else:

@@ -77,7 +77,7 @@ class CpuPercent(object):
         # @TODO: Multisystem...
         try:
             self.cpu_info['cpu_name'] = open('/proc/cpuinfo', 'r').readlines()[4].split(':')[1].strip()
-        except:
+        except (FileNotFoundError, PermissionError, IOError, IndexError, KeyError, AttributeError):
             self.cpu_info['cpu_name'] = 'CPU'
         return self.cpu_info['cpu_name']
 
