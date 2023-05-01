@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -101,7 +101,7 @@ class Plugin(GlancesPlugin):
             first_column = '{}'.format(m['name'])
             first_column_style = self.get_alert(m['count'], m['countmin'], m['countmax'])
             second_column = '{}'.format(m['count'] if m['regex'] else '')
-            for l in m['result'].split('\n'):
+            for line in m['result'].split('\n'):
                 # Display first column with the process name...
                 msg = '{:<16} '.format(first_column)
                 ret.append(self.curse_add_line(msg, first_column_style))
@@ -111,7 +111,7 @@ class Plugin(GlancesPlugin):
                 # ... only on the first line
                 first_column = second_column = ''
                 # Display AMP result in the third column
-                ret.append(self.curse_add_line(l, splittable=True))
+                ret.append(self.curse_add_line(line, splittable=True))
                 ret.append(self.curse_new_line())
 
         # Delete the last empty line

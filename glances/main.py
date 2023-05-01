@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -123,7 +123,8 @@ Examples of use:
             '--disable-plugin',
             '--disable-plugins',
             dest='disable_plugin',
-            help='disable plugin (comma separated list or all). If all is used, then you need to configure --enable-plugin.',
+            help='disable plugin (comma separated list or all). If all is used, \
+                then you need to configure --enable-plugin.',
         )
         parser.add_argument(
             '--enable-plugin', '--enable-plugins', dest='enable_plugin', help='enable plugin (comma separated list)'

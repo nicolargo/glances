@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -23,7 +23,7 @@ import glances
 
 try:
     TERMINAL_WIDTH = shutil.get_terminal_size(fallback=(79, 24)).columns
-except:
+except Exception:
     TERMINAL_WIDTH = 79
 
 

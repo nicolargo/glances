@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -62,7 +62,7 @@ def json_dumps_dictlist(data, item):
     if isinstance(data, dict):
         try:
             return json_dumps({item: data[item]})
-        except:
+        except (TypeError, IndexError, KeyError):
             return None
     elif isinstance(data, list):
         try:
@@ -70,7 +70,7 @@ def json_dumps_dictlist(data, item):
             # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
             # But https://github.com/nicolargo/glances/issues/1401
             return json_dumps({item: list(map(itemgetter(item), data))})
-        except:
+        except (TypeError, IndexError, KeyError):
             return None
     else:
         return None
