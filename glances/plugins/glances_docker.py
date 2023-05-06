@@ -708,7 +708,7 @@ class ThreadDockerGrabber(threading.Thread):
         self._stopper = threading.Event()
         # The docker-py return stats as a stream
         self._container = container
-        self._stats_stream = container.stats(decode=True)
+        self._stats_stream = container.stats(stream=True, decode=True)
         # The class return the stats as a dict
         self._stats = {}
         logger.debug("docker plugin - Create thread for container {}".format(self._container.name))
