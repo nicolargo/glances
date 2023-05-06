@@ -8,7 +8,7 @@
 # Ex: Python 3.10 for Alpine 3.16
 # Note: ENV is for future running containers. ARG for building your Docker image.
 
-ARG IMAGE_VERSION=3.17
+ARG IMAGE_VERSION=3.17.3
 ARG PYTHON_VERSION=3.10
 FROM alpine:${IMAGE_VERSION} as build
 ARG PYTHON_VERSION
@@ -28,9 +28,7 @@ RUN apk add --no-cache \
   wireless-tools \
   smartmontools \
   iputils \
-  tzdata \
-  # Added for Cryptography (https://cryptography.io/en/latest/installation/#alpine)
-  gcc musl-dev libffi-dev openssl-dev cargo pkgconfig
+  tzdata
 
 ##############################################################################
 # Install the dependencies beforehand to make them cacheable
