@@ -36,6 +36,8 @@ RUN apk add --no-cache \
 FROM build as buildRequirements
 ARG PYTHON_VERSION
 
+RUN pip3 install --no-cache-dir --user --upgrade pip
+
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir --user -r requirements.txt
 
