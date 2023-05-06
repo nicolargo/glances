@@ -7,7 +7,7 @@ bottle
 cassandra-driver
 chevron
 couchdb
-docker>=2.0.0
+docker==6.0.1 # Docker 6.1.0 breaks the docker plugin
 elasticsearch
 graphitesender
 hddtemp
