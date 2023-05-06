@@ -28,7 +28,9 @@ RUN apk add --no-cache \
   wireless-tools \
   smartmontools \
   iputils \
-  tzdata
+  tzdata \
+  # Added for Cryptography (https://cryptography.io/en/latest/installation/#alpine)
+  gcc musl-dev libffi-dev openssl-dev cargo pkgconfig
 
 ##############################################################################
 # Install the dependencies beforehand to make them cacheable
