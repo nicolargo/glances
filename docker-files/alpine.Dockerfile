@@ -28,15 +28,15 @@ RUN apk add --no-cache \
   wireless-tools \
   smartmontools \
   iputils \
-  tzdata
+  tzdata \
+  # Required for 'cryptography' dependency
+  gcc libffi-dev openssl-dev cargo pkgconfig
 
 ##############################################################################
 # Install the dependencies beforehand to make them cacheable
 
 FROM build as buildRequirements
 ARG PYTHON_VERSION
-
-RUN pip3 install --no-cache-dir --user --upgrade pip
 
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir --user -r requirements.txt
