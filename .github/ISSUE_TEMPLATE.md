@@ -10,10 +10,13 @@ For an enhancement or new feature: Describe your needs.
 
 #### Versions
 
-* Glances & psutil (glances -V):
-* Operating System (lsb_release -a):
-* How do you install Glances (Pypi package, script, package manager, source):
+* Glances & psutil (glances -V): `To be completed`
+* Operating System (lsb_release -a): `To be completed`
+* How do you install Glances (Pypi package, script, package manager, source): `To be completed`
 
-#### Logs
+#### Configuration and log file
 
-You can also pastebin the Glances logs file (https://glances.readthedocs.io/en/latest/config.html#logging)
+You can also [pastebin](https://pastebin.com/):
+
+* the Glances configuration file (https://glances.readthedocs.io/en/latest/config.html#location)
+* the Glances log file (https://glances.readthedocs.io/en/latest/config.html#logging)
