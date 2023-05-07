@@ -4,7 +4,7 @@
 batinfo
 bernhard
 bottle
-cassandra-driver
+#cassandra-driver   # cassandra-driver breaks Glances CI (Alpine Docker). See detail in issue #2368
 chevron
 couchdb
 docker
