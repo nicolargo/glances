@@ -29,8 +29,10 @@ RUN apk add --no-cache \
   smartmontools \
   iputils \
   tzdata \
-  # Required for 'cryptography' dependency
-  gcc libffi-dev openssl-dev cargo pkgconfig
+  # Required for 'cryptography' dependency of optional requirement 'cassandra-driver' \
+  # Refer: https://cryptography.io/en/latest/installation/#alpine \
+  # `git` required to clone cargo crates (dependencies)
+  gcc libffi-dev openssl-dev cargo pkgconfig git
 
 ##############################################################################
 # Install the dependencies beforehand to make them cacheable
@@ -58,9 +60,14 @@ RUN pip3 install --no-cache-dir --user glances
 FROM build as buildOptionalRequirements
 ARG PYTHON_VERSION
 
+# Required for optional dependency cassandra-driver
+ENV CASS_DRIVER_NO_CYTHON=1
+# See issue 2368
+ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
+
 COPY requirements.txt .
 COPY optional-requirements.txt .
-RUN CASS_DRIVER_NO_CYTHON=1 pip3 install --no-cache-dir --user -r optional-requirements.txt
+RUN pip3 install --no-cache-dir --user -r optional-requirements.txt
 
 ##############################################################################
 # full image
