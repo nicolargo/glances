@@ -10,9 +10,14 @@ For an enhancement or new feature: Describe your needs.
 
 #### Versions
 
-* Glances & psutil (glances -V): `To be completed`
-* Operating System (lsb_release -a): `To be completed`
+* Glances & psutil versions: `To be completed with result of: glances -V`
+* Operating System: `To be completed with result of: lsb_release -a`
 * How do you install Glances (Pypi package, script, package manager, source): `To be completed`
+* Glances test (only available with Glances 3.1.7 or higher):
+
+ ```
+ To be completed with result of: glances --issue
+ ```
 
 #### Configuration and log file
 
