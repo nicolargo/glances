@@ -11,7 +11,6 @@
 
 import os
 from copy import deepcopy
-from typing import Optional
 
 from glances.logger import logger
 from glances.plugins.containers.glances_docker import DockerContainersExtension, import_docker_error_tag
