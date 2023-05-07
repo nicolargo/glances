@@ -50,7 +50,7 @@ class Plugin(GlancesPlugin):
                 return self.stats
 
             # Update the folders list (result of command)
-            self.glances_folders.update()
+            self.glances_folders.update(key=self.get_key())
 
             # Put it on the stats var
             stats = self.glances_folders.get()

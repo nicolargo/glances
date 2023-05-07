@@ -149,7 +149,7 @@ class FolderList(object):
 
         return ret
 
-    def update(self):
+    def update(self, key='path'):
         """Update the command result attributed."""
         # Only continue if monitor list is not empty
         if len(self.__folder_list) == 0:
@@ -160,6 +160,8 @@ class FolderList(object):
             # Update folder size
             if not self.first_grab and not self.timer_folders[i].finished():
                 continue
+            # Set the key (see issue #2327)
+            self.__folder_list[i]['key'] = key
             # Get folder size
             try:
                 self.__folder_list[i]['size'] = self.__folder_size(self.path(i))
