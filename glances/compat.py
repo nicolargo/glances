@@ -388,7 +388,9 @@ def string_value_to_float(s):
         'TB': 1000000000000,
         'PB': 1000000000000000,
     }
-    unpack_string = [i[0] if i[1] == '' else i[1].upper() for i in re.findall(r'([\d.]+)|([^\d.]+)', s.replace(' ', ''))]
+    unpack_string = [
+        i[0] if i[1] == '' else i[1].upper() for i in re.findall(r'([\d.]+)|([^\d.]+)', s.replace(' ', ''))
+    ]
     if len(unpack_string) == 2:
         value, unit = unpack_string
     elif len(unpack_string) == 1:
