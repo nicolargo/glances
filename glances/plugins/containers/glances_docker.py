@@ -210,7 +210,7 @@ class DockerContainersExtension:
             raise Exception("Missing libs required to run Docker Extension (Containers) ")
 
         self.client = None
-        self.ext_name = "Docker Ext"
+        self.ext_name = "containers (Docker)"
         self.stats_fetchers = {}
         self.connect()
 
@@ -221,7 +221,7 @@ class DockerContainersExtension:
             # Do not use the timeout option (see issue #1878)
             self.client = docker.from_env()
         except Exception as e:
-            logger.error("docker plugin - Can not connect to Docker ({})".format(e))
+            logger.error("{} plugin - Can't connect to Docker ({})".format(self.ext_name, e))
             self.client = None
 
     def stop(self):
@@ -245,7 +245,7 @@ class DockerContainersExtension:
             version_stats = self.client.version()
         except Exception as e:
             # Correct issue#649
-            logger.error("{} plugin - Cannot get Docker version ({})".format(self.ext_name, e))
+            logger.error("{} plugin - Can't get Docker version ({})".format(self.ext_name, e))
             return {}, []
 
         # Update current containers list
@@ -254,7 +254,7 @@ class DockerContainersExtension:
             # The Containers/all key of the configuration file should be set to True
             containers = self.client.containers.list(all=all_tag)
         except Exception as e:
-            logger.error("{} plugin - Cannot get containers list ({})".format(self.ext_name, e))
+            logger.error("{} plugin - Can't get containers list ({})".format(self.ext_name, e))
             return version_stats, []
 
         # Start new thread for new container

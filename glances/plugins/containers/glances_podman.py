@@ -1,5 +1,4 @@
 """Podman Extension unit for Glances' Containers plugin."""
-import json
 import time
 from datetime import datetime
 
@@ -230,14 +229,14 @@ class PodmanContainersExtension:
         try:
             self.client = PodmanClient(base_url=self.podman_sock)
         except Exception as e:
-            logger.error("{} plugin - Can not connect to Podman ({})".format(self.ext_name, e))
+            logger.error("{} plugin - Can't connect to Podman ({})".format(self.ext_name, e))
 
     def update_version(self):
         try:
             self._version = self.client.version()
             self._last_version_update = time.time()
         except Exception as e:
-            logger.error("{} plugin - Cannot get Podman version ({})".format(self.ext_name, e))
+            logger.error("{} plugin - Can't get Podman version ({})".format(self.ext_name, e))
 
     def stop(self):
         # Stop all streaming threads
@@ -262,7 +261,7 @@ class PodmanContainersExtension:
             if not self.pods_stats_fetcher:
                 self.pods_stats_fetcher = PodmanPodStatsFetcher(self.client.pods)
         except Exception as e:
-            logger.error("{} plugin - Cannot get containers list ({})".format(self.ext_name, e))
+            logger.error("{} plugin - Can't get containers list ({})".format(self.ext_name, e))
             return self._version, []
 
         # Start new thread for new container
