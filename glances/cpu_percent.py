@@ -11,6 +11,7 @@
 
 from glances.logger import logger
 from glances.timer import Timer
+from glances.compat import FileNotFoundError, PermissionError
 
 import psutil
 
@@ -77,7 +78,7 @@ class CpuPercent(object):
         # @TODO: Multisystem...
         try:
             self.cpu_info['cpu_name'] = open('/proc/cpuinfo', 'r').readlines()[4].split(':')[1].strip()
-        except:
+        except (FileNotFoundError, PermissionError, IndexError, KeyError, AttributeError):
             self.cpu_info['cpu_name'] = 'CPU'
         return self.cpu_info['cpu_name']
 

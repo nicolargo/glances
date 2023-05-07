@@ -188,7 +188,9 @@ class Plugin(GlancesPlugin):
             # Add the new hotspot to the message
             msg = '{:{width}}'.format(nativestr(hotspot_name), width=if_name_max_width)
             ret.append(self.curse_add_line(msg))
-            msg = '{:>7}'.format(i['signal'], width=if_name_max_width)
+            msg = '{:>7}'.format(
+                i['signal'],
+            )
             ret.append(
                 self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='signal', option='decoration'))
             )

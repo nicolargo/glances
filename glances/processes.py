@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -313,11 +313,19 @@ class GlancesProcesses(object):
                 if stat_prefix + '_min' not in self.extended_process:
                     ret[stat_prefix + '_min'] = proc[stat_prefix + '_percent']
                 else:
-                    ret[stat_prefix + '_min'] = proc[stat_prefix + '_percent'] if proc[stat_prefix + '_min'] > proc[stat_prefix + '_percent'] else proc[stat_prefix + '_min']
+                    ret[stat_prefix + '_min'] = (
+                        proc[stat_prefix + '_percent']
+                        if proc[stat_prefix + '_min'] > proc[stat_prefix + '_percent']
+                        else proc[stat_prefix + '_min']
+                    )
                 if stat_prefix + '_max' not in self.extended_process:
                     ret[stat_prefix + '_max'] = proc[stat_prefix + '_percent']
                 else:
-                    ret[stat_prefix + '_max'] = proc[stat_prefix + '_percent'] if proc[stat_prefix + '_max'] < proc[stat_prefix + '_percent'] else proc[stat_prefix + '_max']
+                    ret[stat_prefix + '_max'] = (
+                        proc[stat_prefix + '_percent']
+                        if proc[stat_prefix + '_max'] < proc[stat_prefix + '_percent']
+                        else proc[stat_prefix + '_max']
+                    )
                 if stat_prefix + '_mean_sum' not in self.extended_process:
                     ret[stat_prefix + '_mean_sum'] = proc[stat_prefix + '_percent']
                 else:
@@ -333,14 +341,16 @@ class GlancesProcesses(object):
 
     def is_selected_extended_process(self, position):
         """Return True if the process is the selected one for extended stats."""
-        return hasattr(self.args, 'programs') and \
-               not self.args.programs and \
-               hasattr(self.args, 'enable_process_extended') and \
-               self.args.enable_process_extended and \
-               not self.disable_extended_tag and \
-               hasattr(self.args, 'cursor_position') and \
-               position == self.args.cursor_position and \
-               not self.args.disable_cursor
+        return (
+            hasattr(self.args, 'programs')
+            and not self.args.programs
+            and hasattr(self.args, 'enable_process_extended')
+            and self.args.enable_process_extended
+            and not self.disable_extended_tag
+            and hasattr(self.args, 'cursor_position')
+            and position == self.args.cursor_position
+            and not self.args.disable_cursor
+        )
 
     def update(self):
         """Update the processes stats."""
@@ -412,8 +422,7 @@ class GlancesProcesses(object):
                 self.extended_process = proc
 
             # Grab extended stats only for the selected process (see issue #2225)
-            if self.extended_process is not None and \
-               proc['pid'] == self.extended_process['pid']:
+            if self.extended_process is not None and proc['pid'] == self.extended_process['pid']:
                 proc.update(self.get_extended_stats(self.extended_process))
                 self.extended_process = proc
 

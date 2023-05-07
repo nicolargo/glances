@@ -111,9 +111,7 @@ class Plugin(GlancesPlugin):
         msg = self.stats.get('platform', 'Unknown')
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = ' {} instance {} ({})'.format(
-            self.stats.get('type', 'Unknown'),
-            self.stats.get('name', 'Unknown'),
-            self.stats.get('region', 'Unknown')
+            self.stats.get('type', 'Unknown'), self.stats.get('name', 'Unknown'), self.stats.get('region', 'Unknown')
         )
         ret.append(self.curse_add_line(msg))
 
