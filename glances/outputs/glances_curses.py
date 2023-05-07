@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -330,7 +330,7 @@ class _GlancesCurses(object):
             'CRITICAL_LOG': self.ifCRITICAL_color,
             'PASSWORD': curses.A_PROTECT,
             'SELECTED': self.selected_color,
-            'INFO': self.ifINFO_color
+            'INFO': self.ifINFO_color,
         }
 
     def set_cursor(self, value):
@@ -1066,7 +1066,7 @@ class _GlancesCurses(object):
                     # Return to the first column
                     x = display_x
                     continue
-            except:
+            except Exception:
                 # Avoid exception (see issue #1692)
                 pass
             # Do not display outside the screen

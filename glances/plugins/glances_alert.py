@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -57,11 +57,13 @@ tree_new = {
                 '_yes': {
                     'mem': {
                         '_yes': {
-                            # Once you've identified the offenders, the resolution will again depend on whether their memory usage seems
-                            # business-as-usual or not. For example, a memory leak can be satisfactorily addressed by a one-time or periodic
-                            # restart of the process.
+                            # Once you've identified the offenders, the resolution will again
+                            # depend on whether their memory usage seems business-as-usual or not.
+                            # For example, a memory leak can be satisfactorily addressed by a one-time
+                            # or periodic restart of the process.
                             # - if memory usage seems anomalous: kill the offending processes.
-                            # - if memory usage seems business-as-usual: add RAM to the server, or split high-memory using services to other servers.
+                            # - if memory usage seems business-as-usual: add RAM to the server,
+                            # or split high-memory using services to other servers.
                             '_msg': "Memory issue"
                         },
                         '_no': {
@@ -86,15 +88,22 @@ tree_new = {
                     'cpu_user': {
                         '_yes': {
                             # We expect the user-time percentage to be high.
-                            # There's most likely a program or service you've configured on you server that's hogging CPU.
+                            # There's most likely a program or service you've configured on you server that's
+                            # hogging CPU.
                             # Checking the % user time just confirms this. When you see that the % user-time is high,
                             # it's time to see what executable is monopolizing the CPU
-                            # Once you've confirmed that the % usertime is high, check the process list(also provided by top).
-                            # Be default, top sorts the process list by % CPU, so you can just look at the top process or processes.
-                            # If there's a single process hogging the CPU in a way that seems abnormal, it's an anomalous situation
-                            # that a service restart can fix. If there are are multiple processes taking up CPU resources, or it
-                            # there's one process that takes lots of resources while otherwise functioning normally, than your setup
-                            # may just be underpowered. You'll need to upgrade your server(add more cores), or split services out onto
+                            # Once you've confirmed that the % usertime is high, check the process list(also provided
+                            # by top).
+                            # Be default, top sorts the process list by % CPU, so you can just look at the top process
+                            # or processes.
+                            # If there's a single process hogging the CPU in a way that seems abnormal, it's an
+                            # anomalous situation
+                            # that a service restart can fix. If there are are multiple processes taking up CPU
+                            # resources, or it
+                            # there's one process that takes lots of resources while otherwise functioning normally,
+                            # than your setup
+                            # may just be underpowered. You'll need to upgrade your server(add more cores),
+                            # or split services out onto
                             # other boxes. In either case, you have a resolution:
                             # - if situation seems anomalous: kill the offending processes.
                             # - if situation seems typical given history: upgrade server or add more servers.
@@ -119,13 +128,14 @@ tree_new = {
                         # Your slowness isn't due to CPU or IO problems, so it's likely an application-specific issue.
                         # It's also possible that the slowness is being caused by another server in your cluster, or
                         # by an external service you rely on.
-                        # start by checking important applications for uncharacteristic slowness(the DB is a good place to start),
-                        # think through which parts of your infrastructure could be slowed down externally. For example, do you
-                        # use an externally hosted email service that could slow down critical parts of your application?
-                        # If you suspect another server in your cluster, strace and lsof can provide information on what the
-                        # process is doing or waiting on. Strace will show you which file descriptors are being read or written
-                        # to(or being attempted to be read from) and lsof can give you a mapping of those file descriptors to
-                        # network connections.
+                        # start by checking important applications for uncharacteristic slowness(the DB is a good place
+                        # to start), think through which parts of your infrastructure could be slowed down externally.
+                        # For example, do you use an externally hosted email service that could slow down critical
+                        # parts of your application ?
+                        # If you suspect another server in your cluster, strace and lsof can provide information on
+                        # what the process is doing or waiting on. Strace will show you which file descriptors are
+                        # being read or written to (or being attempted to be read from) and lsof can give you a
+                        # mapping of those file descriptors to network connections.
                         '_msg': "External issue"
                     },
                 },

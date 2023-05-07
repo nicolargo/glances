@@ -61,6 +61,9 @@ format: venv-dev-upgrade ## Format the code
 flake8: venv-dev-upgrade ## Run flake8 linter.
 	@git ls-files '*.py' | xargs ./venv/bin/python -m flake8 --config=.flake8
 
+ruff: venv-dev-upgrade ## Run Ruff (fastest) linter.
+	./venv/bin/python -m ruff check . --config=./pyproject.toml
+
 codespell: venv-dev-upgrade ## Run codespell to fix common misspellings in text files
 	./venv/bin/codespell -S .git,./docs/_build,./Glances.egg-info,./venv,./glances/outputs,*.svg -L hart,bu,te,statics
 
