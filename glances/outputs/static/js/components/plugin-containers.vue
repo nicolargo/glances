@@ -47,7 +47,7 @@
                 <div class="table-cell" :class="container.status == 'Paused' ? 'careful' : 'ok'">
                     {{ container.status }}
                 </div>
-                <div class="table-cell" :class="container.status == 'Paused' ? 'careful' : 'ok'">
+                <div class="table-cell">
                     {{ container.uptime }}
                 </div>
                 <div class="table-cell">
