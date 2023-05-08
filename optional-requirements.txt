@@ -4,10 +4,10 @@
 batinfo
 bernhard
 bottle
-#cassandra-driver   # cassandra-driver breaks Glances CI (Alpine Docker). See detail in issue #2368
+cassandra-driver
 chevron
 couchdb
-docker==6.0.1
+docker==6.1.1
 elasticsearch
 graphitesender
 hddtemp
@@ -18,6 +18,7 @@ netifaces
 py3nvml; python_version >= "3.5"
 paho-mqtt
 pika
+podman; python_version >= "3.6"
 potsdb
 prometheus_client
 pygal
