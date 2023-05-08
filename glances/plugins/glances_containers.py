@@ -316,7 +316,7 @@ class Plugin(GlancesPlugin):
                 msg = '{:>10}'.format(container['Uptime'])
             else:
                 msg = '{:>10}'.format('_')
-            ret.append(self.curse_add_line(msg, status))
+            ret.append(self.curse_add_line(msg))
             # CPU
             try:
                 msg = '{:>6.1f}'.format(container['cpu']['total'])
