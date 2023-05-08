@@ -304,7 +304,7 @@ class Plugin(GlancesPlugin):
             if show_engine_name:
                 ret.append(self.curse_add_line(' {:{width}}'.format(container["engine"], width=6)))
             if show_pod_name:
-                ret.append(self.curse_add_line(' {:{width}}'.format(container.get("pod_id", " - "), width=12)))
+                ret.append(self.curse_add_line(' {:{width}}'.format(container.get("pod_id", "-"), width=12)))
             # Name
             ret.append(self.curse_add_line(self._msg_name(container=container, max_width=name_max_width)))
             # Status
