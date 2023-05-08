@@ -18,6 +18,7 @@ netifaces
 py3nvml; python_version >= "3.5"
 paho-mqtt
 pika
+podman; python_version >= "3.6"
 potsdb
 prometheus_client
 pygal

@@ -10,6 +10,10 @@
 
 """Glances unitary tests suite."""
 
+#
+# ./venv/bin/python unitest.py
+#
+
 import time
 import unittest
 
@@ -25,7 +29,7 @@ from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.programs import processes_to_programs
-from glances.compat import subsample, range
+from glances.compat import subsample, range, string_value_to_float
 from glances.secure import secure_popen
 from glances.compat import PY3
 
@@ -283,6 +287,16 @@ class TestGlances(unittest.TestCase):
         print('INFO: PROGRAM list stats: %s items in the list' % len(stats_grab))
         # Check if number of processes in the list equal counter
         # self.assertEqual(total, len(stats_grab))
+
+    def test_018_string_value_to_float(self):
+        """Check string_value_to_float function"""
+        print('INFO: [TEST_018] Check string_value_to_float function')
+        self.assertEqual(string_value_to_float('32kB'), 32000.0)
+        self.assertEqual(string_value_to_float('32 KB'), 32000.0)
+        self.assertEqual(string_value_to_float('15.5MB'), 15500000.0)
+        self.assertEqual(string_value_to_float('25.9'), 25.9)
+        self.assertEqual(string_value_to_float('12'), 12)
+        self.assertEqual(string_value_to_float('--'), None)
 
     def test_094_thresholds(self):
         """Test thresholds classes"""
