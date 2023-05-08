@@ -7,7 +7,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 
 """Podman Extension unit for Glances' Containers plugin."""
-import time
 from datetime import datetime
 
 from glances.compat import iterkeys, itervalues, nativestr, pretty_date, string_value_to_float
