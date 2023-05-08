@@ -219,16 +219,11 @@ class PodmanContainersExtension:
         if import_podman_error_tag:
             raise Exception("Missing libs required to run Podman Extension (Containers)")
 
-        self.ext_name = "containers (Podman)"
-
         self.client = None
+        self.ext_name = "containers (Podman)"
         self.podman_sock = podman_sock
         self.pods_stats_fetcher = None
         self.container_stats_fetchers = {}
-
-        # Cache version details as the version call is costly (in terms of time)
-        self._version = {}
-        self._last_version_update = 0
 
         self.connect()
 
@@ -238,13 +233,12 @@ class PodmanContainersExtension:
             self.client = PodmanClient(base_url=self.podman_sock)
         except Exception as e:
             logger.error("{} plugin - Can't connect to Podman ({})".format(self.ext_name, e))
+            self.client = None
 
     def update_version(self):
-        try:
-            self._version = self.client.version()
-            self._last_version_update = time.time()
-        except Exception as e:
-            logger.error("{} plugin - Can't get Podman version ({})".format(self.ext_name, e))
+        # Long and not useful anymore because the information is no more displayed in UIs
+        # return self.client.version()
+        return {}
 
     def stop(self):
         # Stop all streaming threads
@@ -257,9 +251,10 @@ class PodmanContainersExtension:
     def update(self, all_tag):
         """Update Podman stats using the input method."""
 
-        curr_time = time.time()
-        if curr_time - self._last_version_update > 300:  # 300 seconds
-            self.update_version()
+        if not self.client:
+            return {}, []
+
+        version_stats = self.update_version()
 
         # Update current containers list
         try:
@@ -270,7 +265,7 @@ class PodmanContainersExtension:
                 self.pods_stats_fetcher = PodmanPodStatsFetcher(self.client.pods)
         except Exception as e:
             logger.error("{} plugin - Can't get containers list ({})".format(self.ext_name, e))
-            return self._version, []
+            return version_stats, []
 
         # Start new thread for new container
         for container in containers:
@@ -298,7 +293,7 @@ class PodmanContainersExtension:
                 stats["pod_name"] = pod_stats[stats["Id"][:12]]["name"]
                 stats["pod_id"] = pod_stats[stats["Id"][:12]]["pod_id"]
 
-        return self._version, container_stats
+        return version_stats, container_stats
 
     @property
     def key(self):
