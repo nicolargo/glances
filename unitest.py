@@ -400,9 +400,13 @@ class TestGlances(unittest.TestCase):
     def test_100_secure(self):
         """Test secure functions"""
         print('INFO: [TEST_100] Secure functions')
-        self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
-        self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
-        self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
+        if WINDOWS:
+            self.assertEqual(secure_popen('echo TEST'), 'TEST\r\n')
+            self.assertEqual(secure_popen('echo TEST1 && echo TEST2'), 'TEST1\r\nTEST2\r\n')
+        else:
+            self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
+            self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
+            self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
 
     def test_200_memory_leak(self):
         """Memory leak check"""
