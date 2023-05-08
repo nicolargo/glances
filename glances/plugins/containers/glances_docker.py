@@ -221,6 +221,7 @@ class DockerContainersExtension:
         self.client = None
         self.ext_name = "containers (Docker)"
         self.stats_fetchers = {}
+
         self.connect()
 
     def connect(self):
@@ -233,6 +234,11 @@ class DockerContainersExtension:
             logger.error("{} plugin - Can't connect to Docker ({})".format(self.ext_name, e))
             self.client = None
 
+    def update_version(self):
+        # Long and not useful anymore because the information is no more displayed in UIs
+        # return self.client.version()
+        return {}
+
     def stop(self):
         # Stop all streaming threads
         for t in itervalues(self.stats_fetchers):
@@ -240,22 +246,11 @@ class DockerContainersExtension:
 
     def update(self, all_tag):
         """Update Docker stats using the input method."""
-        # Docker version
-        # Example: {
-        #     "KernelVersion": "3.16.4-tinycore64",
-        #     "Arch": "amd64",
-        #     "ApiVersion": "1.15",
-        #     "Version": "1.3.0",
-        #     "GitCommit": "c78088f",
-        #     "Os": "linux",
-        #     "GoVersion": "go1.3.3"
-        # }
-        try:
-            version_stats = self.client.version()
-        except Exception as e:
-            # Correct issue#649
-            logger.error("{} plugin - Can't get Docker version ({})".format(self.ext_name, e))
+
+        if not self.client:
             return {}, []
+
+        version_stats = self.update_version()
 
         # Update current containers list
         try:
