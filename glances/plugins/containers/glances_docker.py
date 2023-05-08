@@ -316,7 +316,7 @@ class DockerContainersExtension:
             stats['Command'] = None
 
         if stats['Status'] in self.CONTAINER_ACTIVE_STATUS:
-            stats['StartedAt'] = container.attrs['State']['StartedAt']
+            started_at = container.attrs['State']['StartedAt']
             stats_fetcher = self.stats_fetchers[container.id]
             activity_stats = stats_fetcher.activity_stats
             stats.update(activity_stats)
@@ -331,7 +331,7 @@ class DockerContainersExtension:
             stats['network_rx'] = stats['network'].get('rx')
             stats['network_tx'] = stats['network'].get('tx')
             stats['Uptime'] = pretty_date(
-                parser.parse(stats['StartedAt']).astimezone(tz.tzlocal()).replace(tzinfo=None)
+                parser.parse(started_at).astimezone(tz.tzlocal()).replace(tzinfo=None)
             )
         else:
             stats['io'] = {}

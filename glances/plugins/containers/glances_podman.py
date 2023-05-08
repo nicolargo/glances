@@ -322,7 +322,7 @@ class PodmanContainersExtension:
         }
 
         if stats['Status'] in self.CONTAINER_ACTIVE_STATUS:
-            stats['StartedAt'] = datetime.fromtimestamp(container.attrs['StartedAt'])
+            started_at = datetime.fromtimestamp(container.attrs['StartedAt'])
             stats_fetcher = self.container_stats_fetchers[container.id]
             activity_stats = stats_fetcher.activity_stats
             stats.update(activity_stats)
@@ -336,7 +336,7 @@ class PodmanContainersExtension:
             stats['io_w'] = stats['io'].get('iow')
             stats['network_rx'] = stats['network'].get('rx')
             stats['network_tx'] = stats['network'].get('tx')
-            stats['Uptime'] = pretty_date(stats['StartedAt'])
+            stats['Uptime'] = pretty_date(started_at)
         else:
             stats['io'] = {}
             stats['cpu'] = {}
