@@ -127,10 +127,10 @@
                     </div>
                 </div>
                 <div class="col-sm-18">
-                    <glances-plugin-docker
-                        v-if="!args.disable_docker"
+                    <glances-plugin-containers
+                        v-if="!args.disable_containers"
                         :data="data"
-                    ></glances-plugin-docker>
+                    ></glances-plugin-containers>
                     <glances-plugin-process :data="data"></glances-plugin-process>
                     <glances-plugin-alert
                         v-if="!args.disable_alert"
@@ -153,7 +153,7 @@ import GlancesPluginCloud from './components/plugin-cloud.vue';
 import GlancesPluginConnections from './components/plugin-connections.vue';
 import GlancesPluginCpu from './components/plugin-cpu.vue';
 import GlancesPluginDiskio from './components/plugin-diskio.vue';
-import GlancesPluginDocker from './components/plugin-docker.vue';
+import GlancesPluginContainers from './components/plugin-containers.vue';
 import GlancesPluginFolders from './components/plugin-folders.vue';
 import GlancesPluginFs from './components/plugin-fs.vue';
 import GlancesPluginGpu from './components/plugin-gpu.vue';
@@ -183,7 +183,7 @@ export default {
         GlancesPluginConnections,
         GlancesPluginCpu,
         GlancesPluginDiskio,
-        GlancesPluginDocker,
+        GlancesPluginContainers,
         GlancesPluginFolders,
         GlancesPluginFs,
         GlancesPluginGpu,
@@ -241,37 +241,37 @@ export default {
     },
     methods: {
         setupHotKeys() {
-            // a => Sort processes/docker automatically
+            // a => Sort processes/containers automatically
             hotkeys('a', () => {
                 this.store.args.sort_processes_key = null;
             });
 
-            // c => Sort processes/docker by CPU%
+            // c => Sort processes/containers by CPU%
             hotkeys('c', () => {
                 this.store.args.sort_processes_key = 'cpu_percent';
             });
 
-            // m => Sort processes/docker by MEM%
+            // m => Sort processes/containers by MEM%
             hotkeys('m', () => {
                 this.store.args.sort_processes_key = 'memory_percent';
             });
 
-            // u => Sort processes/docker by user
+            // u => Sort processes/containers by user
             hotkeys('u', () => {
                 this.store.args.sort_processes_key = 'username';
             });
 
-            // p => Sort processes/docker by name
+            // p => Sort processes/containers by name
             hotkeys('p', () => {
                 this.store.args.sort_processes_key = 'name';
             });
 
-            // i => Sort processes/docker by I/O rate
+            // i => Sort processes/containers by I/O rate
             hotkeys('i', () => {
                 this.store.args.sort_processes_key = 'io_counters';
             });
 
-            // t => Sort processes/docker by time
+            // t => Sort processes/containers by time
             hotkeys('t', () => {
                 this.store.args.sort_processes_key = 'timemillis';
             });
@@ -331,9 +331,9 @@ export default {
                 this.store.args.process_short_name = !this.store.args.process_short_name;
             });
 
-            // D => Enable/disable Docker stats
+            // D => Enable/disable containers stats
             hotkeys('shift+D', () => {
-                this.store.args.disable_docker = !this.store.args.disable_docker;
+                this.store.args.disable_containers = !this.store.args.disable_containers;
             });
 
             // b => Bytes or bits for network I/O

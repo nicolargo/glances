@@ -4,6 +4,8 @@
         {{ containers.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}
         <div class="table">
             <div class="table-row">
+                <div class="table-cell text-left">Engine</div>
+                <div class="table-cell text-left">Pod</div>
                 <div
                     class="table-cell text-left"
                     :class="['sortable', sorter.column === 'name' && 'sort']"
@@ -39,6 +41,8 @@
                 v-for="(container, containerId) in containers"
                 :key="containerId"
             >
+                <div class="table-cell text-left">{{ container.engine }}</div>
+                <div class="table-cell text-left">{{ container.pod_id || '-' }}</div>
                 <div class="table-cell text-left">{{ container.name }}</div>
                 <div class="table-cell" :class="container.status == 'Paused' ? 'careful' : 'ok'">
                     {{ container.status }}
@@ -99,7 +103,7 @@ export default {
             return this.args.sort_processes_key;
         },
         stats() {
-            return this.data.stats['docker'];
+            return this.data.stats['containers'];
         },
         containers() {
             const { sorter } = this;
@@ -120,7 +124,9 @@ export default {
                     'tx': containerData.network.tx != undefined ? containerData.network.tx : '?',
                     'net_time_since_update': containerData.network.time_since_update,
                     'command': containerData.Command.join(' '),
-                    'image': containerData.Image
+                    'image': containerData.Image,
+                    'engine': containerData.engine,
+                    'pod_id': containerData.pod_id
                 };
             });
             return orderBy(
