@@ -325,9 +325,7 @@ class DockerContainersExtension:
             stats['io_w'] = stats['io'].get('iow')
             stats['network_rx'] = stats['network'].get('rx')
             stats['network_tx'] = stats['network'].get('tx')
-            stats['Uptime'] = pretty_date(
-                parser.parse(started_at).astimezone(tz.tzlocal()).replace(tzinfo=None)
-            )
+            stats['Uptime'] = pretty_date(parser.parse(started_at).astimezone(tz.tzlocal()).replace(tzinfo=None))
         else:
             stats['io'] = {}
             stats['cpu'] = {}

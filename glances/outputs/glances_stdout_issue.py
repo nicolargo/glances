@@ -122,7 +122,7 @@ class GlancesStdoutIssue(object):
                 result = (colors.RED + '[ERROR]' + colors.BLUE + ' {:.5f}s '.format(counter.get())).rjust(
                     41 - len(plugin)
                 )
-                message = colors.NO + str(stat_error)[0: TERMINAL_WIDTH - 41]
+                message = colors.NO + str(stat_error)[0 : TERMINAL_WIDTH - 41]
 
             # Display the result
             self.print_issue(plugin, result, message)

@@ -58,7 +58,6 @@ if psutil_version_info < psutil_min_version:
 import tracemalloc
 
 
-
 def __signal_handler(signal, frame):
     logger.debug("Signal {} catched".format(signal))
     end()
