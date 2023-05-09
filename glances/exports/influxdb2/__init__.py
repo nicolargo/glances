@@ -35,15 +35,27 @@ class Export(GlancesExport):
         self.prefix = None
         self.tags = None
         self.hostname = None
+        self.interval = 0
 
         # Load the InfluxDB configuration file
         self.export_enable = self.load_conf(
             'influxdb2',
             mandatories=['host', 'port', 'user', 'password', 'org', 'bucket', 'token'],
-            options=['protocol', 'prefix', 'tags'],
+            options=['protocol', 'prefix', 'tags', 'interval'],
         )
         if not self.export_enable:
             exit('Missing INFLUXDB version 1 config')
+
+        # Interval between two exports (in seconds)
+        # if export_interval is set to 0, the Glances refresh time is used (default behavor)
+        try:
+            self.interval = int(self.interval)
+        except ValueError:
+            logger.warning("InfluxDB export interval is not an integer, use default value (0)")
+            self.interval = 0
+        # and should be set to the Glances refresh time if the value is 0
+        self.interval = self.interval if self.interval > 0 else self.args.time
+        logger.debug("InfluxDB export interval is set to {} seconds".format(self.interval))
 
         # The hostname is always add as a tag
         self.hostname = node().split('.')[0]
@@ -72,7 +84,7 @@ class Export(GlancesExport):
         write_client = client.write_api(
             write_options=WriteOptions(
                 batch_size=500,
-                flush_interval=10000,
+                flush_interval=self.interval * 1000,
                 jitter_interval=2000,
                 retry_interval=5000,
                 max_retries=5,

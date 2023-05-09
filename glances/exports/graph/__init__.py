@@ -56,12 +56,13 @@ class Export(GlancesExport):
             sys.exit(2)
 
         logger.info("Graphs will be created in the {} folder".format(self.path))
-        logger.info("Graphs will be created  when 'g' key is pressed (in the CLI interface)")
         if self.generate_every != 0:
             logger.info("Graphs will be created automatically every {} seconds".format(self.generate_every))
+            logger.info("or when 'g' key is pressed (only through the CLI interface)")
             # Start the timer
             self._timer = Timer(self.generate_every)
         else:
+            logger.info("Graphs will be created  when 'g' key is pressed (in the CLI interface)")
             self._timer = None
 
     def exit(self):
@@ -84,7 +85,7 @@ class Export(GlancesExport):
             if plugin_name in self.plugins_to_export(stats):
                 self.export(plugin_name, plugin.get_export_history())
 
-        logger.info("Graphs created in the folder {}".format(self.path))
+        logger.info("Graphs created in {}".format(self.path))
         self.args.generate_graph = False
 
     def export(self, title, data):

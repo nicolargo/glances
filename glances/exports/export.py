@@ -102,6 +102,7 @@ class GlancesExport(object):
 
     def get_item_key(self, item):
         """Return the value of the item 'key'."""
+        ret = None
         try:
             ret = item[item['key']]
         except KeyError:

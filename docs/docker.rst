@@ -9,7 +9,20 @@ Get the Glances container:
 
 .. code-block:: console
 
-    docker pull nicolargo/glances
+    docker pull nicolargo/glances:<version>
+
+Available tags (all images are based on the Alpine Operating System):
+
+- `latest` for a minimal Glances image (latest release) version with Console, WebUI and Docker dependencies (Recommended)
+- `latest-full` for a full Glances image (latest release) with all dependencies
+- `dev` for a full Glances image (development branch) with all dependencies (may be instable)
+You can also specify a version (example: 3.3.0.4). All available versions can be found on `DockerHub`_.
+
+An Example to pull the `latest` tag:
+
+.. code-block:: console
+
+  docker pull nicolargo/glances:latest
 
 Run the container in *console mode*:
 
@@ -152,3 +165,6 @@ You can add a ``[passwords]`` block to the Glances configuration file as mention
     # Additionally (and optionally) a default password could be defined
     localhost=mylocalhostpassword
     default=mydefaultpassword
+
+
+.. _DockerHub: https://hub.docker.com/r/nicolargo/glances/tags

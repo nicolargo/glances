@@ -1,25 +1,25 @@
-.. _docker:
+.. _containers:
 
-Docker
-======
+Containers
+==========
 
-If you use ``Docker``, Glances can help you to monitor your containers.
-Glances uses the Docker API through the `docker-py`_ library.
+If you use ``containers``, Glances can help you to monitor your Docker or Podman containers.
+Glances uses the containers API through the `docker-py`_ and `podman-py`_ libraries.
 
 You can install this dependency using:
 
 .. code-block:: console
 
-    pip install glances[docker]
+    pip install glances[containers]
 
-.. image:: ../_static/docker.png
+.. image:: ../_static/containers.png
 
 It is possible to define limits and actions from the configuration file
-under the ``[docker]`` section:
+under the ``[containers]`` section:
 
 .. code-block:: ini
 
-    [docker]
+    [containers]
     disable=False
     # Only show specific containers (comma separated list of container name or regular expression)
     show=thiscontainer,andthisone,andthoseones.*
@@ -27,7 +27,7 @@ under the ``[docker]`` section:
     hide=donotshowthisone,andthose.*
     # Show only specific containers (comma separated list of container name or regular expression)
     #show=showthisone,andthose.*
-    # Define the maximum docker size name (default is 20 chars)
+    # Define the maximum containers size name (default is 20 chars)
     max_name_size=20
     # Global containers' thresholds for CPU and MEM (in %)
     cpu_careful=50
@@ -44,12 +44,15 @@ under the ``[docker]`` section:
     # By default, Glances only display running containers
     # Set the following key to True to display all containers
     all=False
+    # Define Podman sock
+    #podman_sock=unix:///run/user/1000/podman/podman.sock
 
-You can use all the variables ({{foo}}) available in the Docker plugin.
+You can use all the variables ({{foo}}) available in the containers plugin.
 
 Filtering (for hide or show) is based on regular expression. Please be sure that your regular
 expression works as expected. You can use an online tool like `regex101`_ in
 order to test your regular expression.
 
 .. _regex101: https://regex101.com/
-.. _docker-py: https://github.com/docker/docker-py
+.. _docker-py: https://github.com/containers/containers-py
+.. _podman-py: https://github.com/containers/podman-py

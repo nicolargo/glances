@@ -61,6 +61,9 @@ format: venv-dev-upgrade ## Format the code
 flake8: venv-dev-upgrade ## Run flake8 linter.
 	@git ls-files '*.py' | xargs ./venv/bin/python -m flake8 --config=.flake8
 
+ruff: venv-dev-upgrade ## Run Ruff (fastest) linter.
+	./venv/bin/python -m ruff check . --config=./pyproject.toml
+
 codespell: venv-dev-upgrade ## Run codespell to fix common misspellings in text files
 	./venv/bin/codespell -S .git,./docs/_build,./Glances.egg-info,./venv,./glances/outputs,*.svg -L hart,bu,te,statics
 
@@ -133,7 +136,7 @@ flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
 # Docker
 # ===================================================================
 
-docker: docker-alpine ## Generate local docker images
+docker: docker-alpine docker-ubuntu## Generate local docker images
 
 docker-alpine: ## Generate local docker images (Alpine)
 	docker build --target full -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-full .
@@ -159,22 +162,22 @@ run-local-conf: ## Start Glances in console mode with the system conf file
 	./venv/bin/python -m glances
 
 run-docker-alpine-minimal: ## Start Glances Alpine Docker minimal in console mode
-	docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-minimal
+	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-minimal
 
 run-docker-alpine-full: ## Start Glances Alpine Docker full in console mode
-	docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-full
+	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-full
 
 run-docker-alpine-dev: ## Start Glances Alpine Docker dev in console mode
-	docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-dev
+	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-dev
 
 run-docker-ubuntu-minimal: ## Start Glances Ubuntu Docker minimal in console mode
-	docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-minimal
+	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-minimal
 
 run-docker-ubuntu-full: ## Start Glances Ubuntu Docker full in console mode
-	docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-full
+	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-full
 
 run-docker-ubuntu-dev: ## Start Glances Ubuntu Docker dev in console mode
-	docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-dev
+	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-dev
 
 run-webserver: ## Start Glances in Web server mode
 	./venv/bin/python -m glances -C ./conf/glances.conf -w
@@ -190,6 +193,9 @@ run-client: ## Start Glances in client mode (RPC)
 
 run-browser: ## Start Glances in browser mode (RPC)
 	./venv/bin/python -m glances -C ./conf/glances.conf --browser
+
+run-issue: ## Start Glances in issue mode
+	./venv/bin/python -m glances -C ./conf/glances.conf --issue
 
 show-version: ## Show Glances version number
 	./venv/bin/python -m glances -C ./conf/glances.conf -V

@@ -20,6 +20,7 @@ import types
 import subprocess
 import os
 from datetime import datetime
+import re
 
 from glances.logger import logger
 
@@ -50,6 +51,7 @@ if PY3:
     long = int
 
     PermissionError = OSError
+    FileNotFoundError = FileNotFoundError
 
     viewkeys = operator.methodcaller('keys')
     viewvalues = operator.methodcaller('values')
@@ -148,6 +150,7 @@ else:
     long = long
 
     PermissionError = OSError
+    FileNotFoundError = IOError
 
     viewkeys = operator.methodcaller('viewkeys')
     viewvalues = operator.methodcaller('viewvalues')
@@ -291,12 +294,13 @@ def key_exist_value_not_none(k, d):
     return k in d and d[k] is not None
 
 
-def key_exist_value_not_none_not_v(k, d, v=''):
+def key_exist_value_not_none_not_v(k, d, value='', lengh=None):
     # Return True if:
     # - key k exists
     # - d[k] is not None
-    # - d[k] != v
-    return k in d and d[k] is not None and d[k] != v
+    # - d[k] != value
+    # - if lengh is not None and len(d[k]) >= lengh
+    return k in d and d[k] is not None and d[k] != value and (lengh is None or len(d[k]) >= lengh)
 
 
 def disable(class_name, var):
@@ -363,3 +367,39 @@ def urlopen_auth(url, username, password):
             headers={'Authorization': 'Basic ' + base64.b64encode(('%s:%s' % (username, password)).encode()).decode()},
         )
     )
+
+
+def string_value_to_float(s):
+    """Convert a string with a value and an unit to a float.
+    Example:
+    '12.5 MB' -> 12500000.0
+    '32.5 GB' -> 32500000000.0
+    Args:
+        s (string): Input string with value and unit
+    Output:
+        float: The value in float
+    """
+    convert_dict = {
+        None: 1,
+        'B': 1,
+        'KB': 1000,
+        'MB': 1000000,
+        'GB': 1000000000,
+        'TB': 1000000000000,
+        'PB': 1000000000000000,
+    }
+    unpack_string = [
+        i[0] if i[1] == '' else i[1].upper() for i in re.findall(r'([\d.]+)|([^\d.]+)', s.replace(' ', ''))
+    ]
+    if len(unpack_string) == 2:
+        value, unit = unpack_string
+    elif len(unpack_string) == 1:
+        value = unpack_string[0]
+        unit = None
+    else:
+        return None
+    try:
+        value = float(unpack_string[0])
+    except ValueError:
+        return None
+    return value * convert_dict[unit]

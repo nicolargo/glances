@@ -267,6 +267,10 @@ class PluginModel(GlancesPluginModel):
         # Add specifics information
         # Alert
         for i in self.get_raw():
+            if i['time_since_update'] == 0:
+                # Skip alert if no timespan to measure
+                continue
+
             if_real_name = i['interface_name'].split(':')[0]
             # Convert rate in bps (to be able to compare to interface speed)
             bps_rx = int(i['rx'] // i['time_since_update'] * 8)

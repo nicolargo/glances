@@ -60,7 +60,7 @@ import tracemalloc
 
 
 def __signal_handler(signal, frame):
-    """Callback for CTRL-C."""
+    logger.debug("Signal {} catched".format(signal))
     end()
 
 
@@ -73,7 +73,7 @@ def end():
         # ...after starting the server mode (issue #1175)
         pass
 
-    logger.info("Glances stopped (key pressed: CTRL-C)")
+    logger.info("Glances stopped gracefully")
 
     # The end...
     sys.exit(0)
@@ -155,8 +155,9 @@ def main():
     Select the mode (standalone, client or server)
     Run it...
     """
-    # Catch the CTRL-C signal
-    signal.signal(signal.SIGINT, __signal_handler)
+    # Catch the kill signal
+    for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+        signal.signal(sig, __signal_handler)
 
     # Log Glances and psutil version
     logger.info('Start Glances {}'.format(__version__))
