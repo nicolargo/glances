@@ -106,6 +106,8 @@ class PluginModel(GlancesPluginModel):
         """Overwrite the exit method to close threads."""
         if self.docker_extension:
             self.docker_extension.stop()
+        if self.podman_client:
+            self.podman_client.stop()
         # Call the father class
         super(PluginModel, self).exit()
 
