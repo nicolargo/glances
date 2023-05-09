@@ -10,7 +10,7 @@
 """Docker Extension unit for Glances' Containers plugin."""
 import time
 
-from glances.compat import iterkeys, itervalues, nativestr, pretty_date
+from glances.globals import iterkeys, itervalues, nativestr, pretty_date
 from glances.logger import logger
 from glances.plugins.containers.stats_streamer import StatsStreamer
 
