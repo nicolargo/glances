@@ -24,13 +24,14 @@ import types
 import subprocess
 from datetime import datetime
 import re
+import base64
 
 import queue
 from configparser import ConfigParser, NoOptionError, NoSectionError
 from statistics import mean
 from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-from urllib.request import urlopen, Request, base64
+from urllib.request import urlopen, Request
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 
