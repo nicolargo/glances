@@ -13,8 +13,8 @@ import os
 from copy import deepcopy
 
 from glances.logger import logger
-from glances.plugins.containers.glances_docker import DockerContainersExtension, import_docker_error_tag
-from glances.plugins.containers.glances_podman import PodmanContainersExtension, import_podman_error_tag
+from glances.plugins.containers.engines.docker import DockerContainersExtension, import_docker_error_tag
+from glances.plugins.containers.engines.podman import PodmanContainersExtension, import_podman_error_tag
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.processes import glances_processes
 from glances.processes import sort_stats as sort_stats_processes
