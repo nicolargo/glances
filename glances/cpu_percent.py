@@ -11,7 +11,6 @@
 
 from glances.logger import logger
 from glances.timer import Timer
-from glances.compat import FileNotFoundError, PermissionError
 
 import psutil
 
