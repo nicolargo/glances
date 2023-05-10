@@ -92,6 +92,8 @@ class PluginModel(GlancesPluginModel):
             # New line
             ret.append(self.curse_new_line())
             # Display the current status
+            if not isinstance(self.stats[array], dict):
+                continue
             status = self.raid_alert(
                 self.stats[array]['status'],
                 self.stats[array]['used'],

@@ -18,7 +18,7 @@ from glances.exports.export import GlancesExport
 from glances.globals import json_dumps
 
 # Import paho for MQTT
-from requests import certs
+import certifi
 import paho.mqtt.client as paho
 
 
@@ -68,7 +68,7 @@ class Export(GlancesExport):
             client = paho.Client(client_id='glances_' + self.hostname, clean_session=False)
             client.username_pw_set(username=self.user, password=self.password)
             if self.tls:
-                client.tls_set(certs.where())
+                client.tls_set(certifi.where())
             client.connect(host=self.host, port=self.port)
             client.loop_start()
             return client

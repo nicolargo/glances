@@ -8,10 +8,13 @@
 # Ex: Python 3.10 for Ubuntu 22.04
 # Note: ENV is for future running containers. ARG for building your Docker image.
 
-ARG IMAGE_VERSION=12.1.0-base-ubuntu22.04
+# Image from CUDA https://hub.docker.com/r/nvidia/cuda/tags
+ARG IMAGE_VERSION=12.1.1-base-ubuntu22.04
 ARG PYTHON_VERSION=3.10
 ARG PIP_MIRROR=https://mirrors.aliyun.com/pypi/simple/
 FROM nvidia/cuda:${IMAGE_VERSION} as build
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
@@ -93,7 +96,6 @@ FROM nvidia/cuda:${IMAGE_VERSION} as minimal
 ARG PYTHON_VERSION
 
 ARG DEBIAN_FRONTEND=noninteractive
-ENV TZ=Asia/Shanghai
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \

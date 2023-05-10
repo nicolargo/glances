@@ -22,7 +22,7 @@ if sys.version_info < (3, 4):
 from glances.main import GlancesMain
 from glances.stats import GlancesStats
 from glances import __version__
-from glances.globals import WINDOWS, LINUX, subsample
+from glances.globals import WINDOWS, LINUX, subsample, string_value_to_float
 from glances.outputs.glances_bars import Bar
 from glances.thresholds import GlancesThresholdOk
 from glances.thresholds import GlancesThresholdCareful
@@ -287,6 +287,16 @@ class TestGlances(unittest.TestCase):
         # Check if number of processes in the list equal counter
         # self.assertEqual(total, len(stats_grab))
 
+    def test_018_string_value_to_float(self):
+        """Check string_value_to_float function"""
+        print('INFO: [TEST_018] Check string_value_to_float function')
+        self.assertEqual(string_value_to_float('32kB'), 32000.0)
+        self.assertEqual(string_value_to_float('32 KB'), 32000.0)
+        self.assertEqual(string_value_to_float('15.5MB'), 15500000.0)
+        self.assertEqual(string_value_to_float('25.9'), 25.9)
+        self.assertEqual(string_value_to_float('12'), 12)
+        self.assertEqual(string_value_to_float('--'), None)
+
     def test_094_thresholds(self):
         """Test thresholds classes"""
         print('INFO: [TEST_094] Thresholds')
@@ -389,9 +399,13 @@ class TestGlances(unittest.TestCase):
     def test_100_secure(self):
         """Test secure functions"""
         print('INFO: [TEST_100] Secure functions')
-        self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
-        self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
-        self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
+        if WINDOWS:
+            self.assertEqual(secure_popen('echo TEST'), 'TEST\r\n')
+            self.assertEqual(secure_popen('echo TEST1 && echo TEST2'), 'TEST1\r\nTEST2\r\n')
+        else:
+            self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
+            self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
+            self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
 
     def test_200_memory_leak(self):
         """Memory leak check"""

@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -47,7 +47,7 @@ def split_cmdline(bare_process_name, cmdline):
         path, cmd = "", cmdline[0]
     else:
         path, cmd = os.path.split(cmdline[0])
-    arguments = ' '.join(cmdline[1:]).replace('\n', ' ')
+    arguments = ' '.join(cmdline[1:])
     return path, cmd, arguments
 
 
@@ -221,7 +221,7 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_vms(self, p, selected, args):
         """Return process VMS curses"""
-        if key_exist_value_not_none_not_v('memory_info', p, ''):
+        if key_exist_value_not_none_not_v('memory_info', p, '', 1):
             msg = self.layout_stat['virt'].format(self.auto_unit(p['memory_info'][1], low_precision=False))
             ret = self.curse_add_line(msg, optional=True)
         else:
@@ -231,7 +231,7 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_rss(self, p, selected, args):
         """Return process RSS curses"""
-        if key_exist_value_not_none_not_v('memory_info', p, ''):
+        if key_exist_value_not_none_not_v('memory_info', p, '', 0):
             msg = self.layout_stat['res'].format(self.auto_unit(p['memory_info'][0], low_precision=False))
             ret = self.curse_add_line(msg, optional=True)
         else:
@@ -357,7 +357,11 @@ class PluginModel(GlancesPluginModel):
         # When a process is selected:
         # * display a special character at the beginning of the line
         # * underline the command name
-        ret.append(self.curse_add_line(unicode_message('PROCESS_SELECTOR') if (selected and not args.disable_cursor) else ' ', 'SELECTED'))
+        ret.append(
+            self.curse_add_line(
+                unicode_message('PROCESS_SELECTOR') if (selected and not args.disable_cursor) else ' ', 'SELECTED'
+            )
+        )
 
         # CPU
         ret.append(self._get_process_curses_cpu(p, selected, args))
@@ -408,8 +412,9 @@ class PluginModel(GlancesPluginModel):
             if cmdline:
                 path, cmd, arguments = split_cmdline(bare_process_name, cmdline)
                 # Manage end of line in arguments (see #1692)
-                arguments.replace('\r\n', ' ')
-                arguments.replace('\n', ' ')
+                arguments = arguments.replace('\r\n', ' ')
+                arguments = arguments.replace('\n', ' ')
+                arguments = arguments.replace('\t', ' ')
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = self.layout_stat['command'].format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
@@ -431,10 +436,12 @@ class PluginModel(GlancesPluginModel):
         return ret
 
     def is_selected_process(self, args):
-        return args.is_standalone and \
-           self.args.enable_process_extended and \
-           args.cursor_position is not None and \
-           glances_processes.extended_process is not None
+        return (
+            args.is_standalone
+            and self.args.enable_process_extended
+            and args.cursor_position is not None
+            and glances_processes.extended_process is not None
+        )
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -466,9 +473,7 @@ class PluginModel(GlancesPluginModel):
         # This is a Glances bottleneck (see flame graph),
         # get_process_curses_data should be optimzed
         for position, process in enumerate(processes_list_sorted):
-            ret.extend(self.get_process_curses_data(process,
-                                                    position == args.cursor_position,
-                                                    args))
+            ret.extend(self.get_process_curses_data(process, position == args.cursor_position, args))
 
         # A filter is set Display the stats summaries
         if glances_processes.process_filter is not None:
@@ -489,7 +494,8 @@ class PluginModel(GlancesPluginModel):
 
         Input p is a dict with the following keys:
         {'status': 'S',
-         'memory_info': pmem(rss=466890752, vms=3365347328, shared=68153344, text=659456, lib=0, data=774647808, dirty=0),
+         'memory_info': pmem(rss=466890752, vms=3365347328, shared=68153344,
+                             text=659456, lib=0, data=774647808, dirty=0),
          'pid': 4980,
          'io_counters': [165385216, 0, 165385216, 0, 1],
          'num_threads': 20,
@@ -575,10 +581,20 @@ class PluginModel(GlancesPluginModel):
         if 'memory_info' in p and p['memory_info'] is not None:
             ret.append(self.curse_add_line(' Memory info: '))
             for k in p['memory_info']._asdict():
-                ret.append(self.curse_add_line(self.auto_unit(p['memory_info']._asdict()[k], low_precision=False), decoration='INFO', splittable=True))
+                ret.append(
+                    self.curse_add_line(
+                        self.auto_unit(p['memory_info']._asdict()[k], low_precision=False),
+                        decoration='INFO',
+                        splittable=True,
+                    )
+                )
                 ret.append(self.curse_add_line(' ' + k + ' ', splittable=True))
             if 'memory_swap' in p and p['memory_swap'] is not None:
-                ret.append(self.curse_add_line(self.auto_unit(p['memory_swap'], low_precision=False), decoration='INFO', splittable=True))
+                ret.append(
+                    self.curse_add_line(
+                        self.auto_unit(p['memory_swap'], low_precision=False), decoration='INFO', splittable=True
+                    )
+                )
                 ret.append(self.curse_add_line(' swap ', splittable=True))
 
         # Third line is for open files/network sessions
@@ -645,8 +661,7 @@ class PluginModel(GlancesPluginModel):
                 shortkey = "('e' to pin | 'k' to kill)"
         else:
             shortkey = ""
-        msg = self.layout_header['command'].format("Programs" if self.args.programs else "Command",
-                                                   shortkey)
+        msg = self.layout_header['command'].format("Programs" if self.args.programs else "Command", shortkey)
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
     def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):

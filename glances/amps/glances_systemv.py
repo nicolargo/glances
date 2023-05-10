@@ -67,14 +67,14 @@ class Amp(GlancesAmp):
             # For each line
             for r in res.split('\n'):
                 # Split per space .*
-                l = r.split()
-                if len(l) < 4:
+                line = r.split()
+                if len(line) < 4:
                     continue
-                if l[1] == '+':
+                if line[1] == '+':
                     status['running'] += 1
-                elif l[1] == '-':
+                elif line[1] == '-':
                     status['stopped'] += 1
-                elif l[1] == '?':
+                elif line[1] == '?':
                     status['upstart'] += 1
             # Build the output (string) message
             output = 'Services\n'

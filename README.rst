@@ -96,7 +96,7 @@ Optional dependencies:
 - ``cassandra-driver`` (for the Cassandra export module)
 - ``chevron`` (for the action script feature)
 - ``couchdb`` (for the CouchDB export module)
-- ``docker`` (for the Docker monitoring support) [Linux/macOS-only]
+- ``docker`` (for the Containers Docker monitoring support) [Linux/macOS-only / Python >= 3.6]
 - ``elasticsearch`` (for the Elastic Search export module)
 - ``graphitesender`` (For the Graphite export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
@@ -106,6 +106,7 @@ Optional dependencies:
 - ``netifaces`` (for the IP plugin)
 - ``py3nvml`` (for the GPU plugin)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
+- ``podman`` (for the Containers Podman monitoring support) [Linux/macOS-only / Python >= 3.6]
 - ``potsdb`` (for the OpenTSDB export module)
 - ``prometheus_client`` (for the Prometheus export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
@@ -158,7 +159,7 @@ For a full installation (with all features):
 
 .. code-block:: console
 
-    pip install --user 'glances[action,browser,cloud,cpuinfo,docker,export,folders,gpu,graph,ip,raid,snmp,web,wifi]'
+    pip install --user 'glances[all]'
 
 To upgrade Glances to the latest version:
 

@@ -1131,11 +1131,7 @@ class GlancesPluginModel(object):
             duration = counter.get()
             logger.debug(
                 "{} {} {} return {} in {} seconds".format(
-                    args[0].__class__.__name__,
-                    args[0].__class__.__module__,
-                    fct.__name__,
-                    ret,
-                    duration
+                    args[0].__class__.__name__, args[0].__class__.__module__, fct.__name__, ret, duration
                 )
             )
             return ret
