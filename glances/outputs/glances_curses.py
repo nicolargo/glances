@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -56,7 +56,7 @@ class _GlancesCurses(object):
         'c': {'sort_key': 'cpu_percent'},
         'C': {'switch': 'disable_cloud'},
         'd': {'switch': 'disable_diskio'},
-        'D': {'switch': 'disable_docker'},
+        'D': {'switch': 'disable_containers'},
         # 'e' > Enable/Disable process extended
         # 'E' > Erase the process filter
         # 'f' > Show/hide fs / folder stats
@@ -123,7 +123,7 @@ class _GlancesCurses(object):
     _left_sidebar_max_width = 34
 
     # Define right sidebar
-    _right_sidebar = ['docker', 'processcount', 'amps', 'processlist', 'alert']
+    _right_sidebar = ['containers', 'processcount', 'amps', 'processlist', 'alert']
 
     def __init__(self, config=None, args=None):
         # Init
@@ -329,7 +329,7 @@ class _GlancesCurses(object):
             'CRITICAL_LOG': self.ifCRITICAL_color,
             'PASSWORD': curses.A_PROTECT,
             'SELECTED': self.selected_color,
-            'INFO': self.ifINFO_color
+            'INFO': self.ifINFO_color,
         }
 
     def set_cursor(self, value):
@@ -616,7 +616,7 @@ class _GlancesCurses(object):
         max_processes_displayed = (
             self.term_window.getmaxyx()[0]
             - 11
-            - (0 if 'docker' not in __stat_display else self.get_stats_display_height(__stat_display["docker"]))
+            - (0 if 'containers' not in __stat_display else self.get_stats_display_height(__stat_display["containers"]))
             - (
                 0
                 if 'processcount' not in __stat_display
@@ -717,7 +717,11 @@ class _GlancesCurses(object):
 
         # Display graph generation popup
         if self.args.generate_graph:
-            self.display_popup('Generate graph in {}'.format(self.args.export_graph_path))
+            if 'graph' in stats.getExportsList():
+                self.display_popup('Generate graph in {}'.format(self.args.export_graph_path))
+            else:
+                logger.warning('Graph export module is disable. Run Glances with --export graph to enable it.')
+                self.args.generate_graph = False
 
         return True
 
@@ -1061,7 +1065,7 @@ class _GlancesCurses(object):
                     # Return to the first column
                     x = display_x
                     continue
-            except:
+            except Exception:
                 # Avoid exception (see issue #1692)
                 pass
             # Do not display outside the screen

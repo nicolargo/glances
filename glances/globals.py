@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -23,13 +23,15 @@ import unicodedata
 import types
 import subprocess
 from datetime import datetime
+import re
+import base64
 
 import queue
 from configparser import ConfigParser, NoOptionError, NoSectionError
 from statistics import mean
 from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-from urllib.request import urlopen, Request, base64
+from urllib.request import urlopen, Request
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 
@@ -37,7 +39,6 @@ from urllib.parse import urlparse
 from defusedxml.xmlrpc import monkey_patch
 
 monkey_patch()
-
 
 ##############
 # GLOBALS VARS
@@ -216,12 +217,13 @@ def key_exist_value_not_none(k, d):
     return k in d and d[k] is not None
 
 
-def key_exist_value_not_none_not_v(k, d, v=''):
+def key_exist_value_not_none_not_v(k, d, value='', lengh=None):
     # Return True if:
     # - key k exists
     # - d[k] is not None
-    # - d[k] != v
-    return k in d and d[k] is not None and d[k] != v
+    # - d[k] != value
+    # - if lengh is not None and len(d[k]) >= lengh
+    return k in d and d[k] is not None and d[k] != value and (lengh is None or len(d[k]) >= lengh)
 
 
 def disable(class_name, var):
@@ -300,6 +302,8 @@ def urlopen_auth(url, username, password):
             headers={'Authorization': 'Basic ' + base64.b64encode(('%s:%s' % (username, password)).encode()).decode()},
         )
     )
+
+
 def json_dumps(data):
     """Return the object data in a JSON format.
 
@@ -315,7 +319,7 @@ def json_dumps_dictlist(data, item):
     if isinstance(data, dict):
         try:
             return json_dumps({item: data[item]})
-        except:
+        except (TypeError, IndexError, KeyError):
             return None
     elif isinstance(data, list):
         try:
@@ -323,7 +327,43 @@ def json_dumps_dictlist(data, item):
             # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
             # But https://github.com/nicolargo/glances/issues/1401
             return json_dumps({item: list(map(itemgetter(item), data))})
-        except:
+        except (TypeError, IndexError, KeyError):
             return None
     else:
         return None
+
+
+def string_value_to_float(s):
+    """Convert a string with a value and an unit to a float.
+    Example:
+    '12.5 MB' -> 12500000.0
+    '32.5 GB' -> 32500000000.0
+    Args:
+        s (string): Input string with value and unit
+    Output:
+        float: The value in float
+    """
+    convert_dict = {
+        None: 1,
+        'B': 1,
+        'KB': 1000,
+        'MB': 1000000,
+        'GB': 1000000000,
+        'TB': 1000000000000,
+        'PB': 1000000000000000,
+    }
+    unpack_string = [
+        i[0] if i[1] == '' else i[1].upper() for i in re.findall(r'([\d.]+)|([^\d.]+)', s.replace(' ', ''))
+    ]
+    if len(unpack_string) == 2:
+        value, unit = unpack_string
+    elif len(unpack_string) == 1:
+        value = unpack_string[0]
+        unit = None
+    else:
+        return None
+    try:
+        value = float(unpack_string[0])
+    except ValueError:
+        return None
+    return value * convert_dict[unit]

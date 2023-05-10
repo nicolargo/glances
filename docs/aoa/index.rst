@@ -40,8 +40,7 @@ Legend:
    sensors
    hddtemp
    ps
-   monitor
+   containers
    amps
    events
-   docker
    actions

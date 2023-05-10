@@ -13,6 +13,7 @@ from __future__ import unicode_literals
 import operator
 
 from glances.globals import u, nativestr, PermissionError
+from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
 import psutil
@@ -95,14 +96,26 @@ class PluginModel(GlancesPluginModel):
             try:
                 fs_stat = psutil.disk_partitions(all=False)
             except (UnicodeDecodeError, PermissionError):
+                logger.debug("Plugin - fs: PsUtil fetch failed")
                 return self.stats
 
             # Optional hack to allow logical mounts points (issue #448)
-            for fs_type in self.get_conf_value('allow'):
+            allowed_fs_types = self.get_conf_value('allow')
+            if allowed_fs_types:
+                # Avoid Psutil call unless mounts need to be allowed
                 try:
-                    fs_stat += [f for f in psutil.disk_partitions(all=True) if f.fstype.find(fs_type) >= 0]
-                except UnicodeDecodeError:
-                    return self.stats
+                    all_mounted_fs = psutil.disk_partitions(all=True)
+                except (UnicodeDecodeError, PermissionError):
+                    logger.debug("Plugin - fs: PsUtil extended fetch failed")
+                else:
+                    # Discard duplicates (#2299) and add entries matching allowed fs types
+                    tracked_mnt_points = set(f.mountpoint for f in fs_stat)
+                    for f in all_mounted_fs:
+                        if (
+                            any(f.fstype.find(fs_type) >= 0 for fs_type in allowed_fs_types)
+                            and f.mountpoint not in tracked_mnt_points
+                        ):
+                            fs_stat.append(f)
 
             # Loop over fs
             for fs in fs_stat:

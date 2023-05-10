@@ -95,7 +95,8 @@ class Export(GlancesExport):
         # Table
         try:
             session.execute(
-                "CREATE TABLE %s (plugin text, time timeuuid, stat map<text,float>, PRIMARY KEY (plugin, time)) WITH CLUSTERING ORDER BY (time DESC)"
+                "CREATE TABLE %s (plugin text, time timeuuid, stat map<text,float>, PRIMARY KEY (plugin, time)) \
+                    WITH CLUSTERING ORDER BY (time DESC)"
                 % self.table
             )
         except Exception:
