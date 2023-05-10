@@ -8,7 +8,7 @@
 # Ex: Python 3.10 for Alpine 3.16
 # Note: ENV is for future running containers. ARG for building your Docker image.
 
-ARG IMAGE_VERSION=3.17.3
+ARG IMAGE_VERSION=3.18.0
 ARG PYTHON_VERSION=3.10
 FROM alpine:${IMAGE_VERSION} as build
 ARG PYTHON_VERSION
