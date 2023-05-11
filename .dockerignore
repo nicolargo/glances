@@ -1,2 +1,16 @@
-.dockerignore
-.git
+# Ignore everything
+*
+
+# Include only code files
+!/glances/**/*.py
+
+# Include WebUI files (remove when webui moved to seperate package)
+!/glances/outputs/static
+
+# Include Requirements files
+!/requirements.txt
+!/webui-requirements.txt
+!/optional-requirements.txt
+
+# Include Config file
+!/docker-compose/glances.conf
