@@ -50,7 +50,7 @@ RUN apk add --no-cache \
   libffi-dev \
   openssl-dev
 
-RUN python${PYTHON_VERSION} -m venv venv
+RUN python${PYTHON_VERSION} -m venv --system-site-packages --without-pip venv
 
 COPY requirements.txt webui-requirements.txt optional-requirements.txt ./
 
