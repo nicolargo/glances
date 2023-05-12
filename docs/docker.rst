@@ -166,5 +166,53 @@ You can add a ``[passwords]`` block to the Glances configuration file as mention
     localhost=mylocalhostpassword
     default=mydefaultpassword
 
+Using GPU Plugin with Docker (Only Nvidia GPUs)
+------------------------------------------------------------------
+
+Complete the steps mentioned in the `docker docs <https://docs.docker.com/config/containers/resource_constraints/#gpu>`_
+to make the GPU accessible by the docker engine.
+
+With `docker run`
+^^^^^^^^^^^^^^^^^
+Include the `--gpus` flag with the `docker run` command.
+
+**Note:** Make sure the `--gpus` is present before the image name in the command, otherwise it won't work.
+
+.. code-block:: ini
+
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --gpus --pid host --network host -it docker.io/nicolargo/glances:latest-full
+
+..
+
+
+With `docker-compose`
+^^^^^^^^^^^^^^^^^^^^^
+Include the `deploy` section in compose file as specified below in the example service definition.
+
+.. code-block:: ini
+
+    version: '3'
+
+    services:
+      monitoring:
+        image: nicolargo/glances:latest-full
+        pid: host
+        network_mode: host
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+        environment:
+          - "GLANCES_OPT=-w"
+        # For nvidia GPUs
+        deploy:
+          resources:
+            reservations:
+              devices:
+                - driver: nvidia
+                  count: 1
+                  capabilities: [gpu]
+
+..
+
+Reference: https://docs.docker.com/compose/gpu-support/
 
 .. _DockerHub: https://hub.docker.com/r/nicolargo/glances/tags
