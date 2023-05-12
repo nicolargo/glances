@@ -10,6 +10,8 @@
 """Docker Extension unit for Glances' Containers plugin."""
 import time
 
+import requests
+
 from glances.compat import iterkeys, itervalues, nativestr, pretty_date
 from glances.logger import logger
 from glances.plugins.containers.stats_streamer import StatsStreamer
@@ -295,13 +297,18 @@ class DockerContainersExtension:
             'name': nativestr(container.name),
             # Container Id
             'Id': container.id,
-            # Container Image
-            'Image': str(container.image.tags),
             # Container Status (from attrs)
             'Status': container.attrs['State']['Status'],
             'Created': container.attrs['Created'],
             'Command': [],
         }
+
+        # Container Image
+        try:
+            # API fails on Unraid - See issue 2233
+            stats['Image'] = container.image.tags
+        except requests.exceptions.HTTPError:
+            stats['Image'] = '-'
 
         if container.attrs['Config'].get('Entrypoint', None):
             stats['Command'].extend(container.attrs['Config'].get('Entrypoint', []))
