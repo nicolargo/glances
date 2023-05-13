@@ -49,7 +49,7 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-RUN python${PYTHON_VERSION} -m venv venv
+RUN python${PYTHON_VERSION} -m venv --without-pip venv
 
 COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-requirements.txt ./
 
