@@ -1,0 +1,8 @@
+# install with base requirements file
+-r requirements.txt
+
+docker>=6.1.1; python_version >= "3.7"
+podman; python_version >= "3.6"
+packaging; python_version >= "3.7"
+python-dateutil
+six

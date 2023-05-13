@@ -52,16 +52,15 @@ RUN apk add --no-cache \
 
 RUN python${PYTHON_VERSION} -m venv --system-site-packages --without-pip venv
 
-COPY requirements.txt webui-requirements.txt optional-requirements.txt ./
+COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-requirements.txt ./
 
 ##############################################################################
 # BUILD: Install the minimal image deps
 FROM build as buildMinimal
 
-RUN /venv/bin/python3 -m pip install  \
-    docker  \
-    python-dateutil  \
-    #-r requirements.txt \
+RUN /venv/bin/python3 -m pip install --no-cache-dir \
+    # Note: requirements.txt is include by dep
+    -r docker-requirements.txt \
     -r webui-requirements.txt
 
 ##############################################################################
@@ -73,8 +72,7 @@ ARG CASS_DRIVER_NO_CYTHON=1
 # See issue 2368
 ARG CARGO_NET_GIT_FETCH_WITH_CLI=true
 
-RUN /venv/bin/python3 -m pip install  \
-    #-r requirements.txt \
+RUN /venv/bin/python3 -m pip install --no-cache-dir \
     -r optional-requirements.txt
 
 ##############################################################################

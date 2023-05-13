@@ -15,7 +15,6 @@ influxdb>=1.0.0 # For InfluxDB < 1.8
 influxdb-client; python_version >= "3.7" # For InfluxDB >= 1.8
 kafka-python
 netifaces
-packaging; python_version >= "3.7"
 paho-mqtt
 pika
 podman; python_version >= "3.6"

@@ -9,6 +9,7 @@
 
 # Include Requirements files
 !/requirements.txt
+!/docker-requirements.txt
 !/webui-requirements.txt
 !/optional-requirements.txt
 
