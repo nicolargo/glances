@@ -16,7 +16,7 @@ Available tags (all images are based on the Alpine Operating System):
 - `latest` for a minimal Glances image (latest release) version with Console, WebUI and Docker dependencies (Recommended)
 - `latest-full` for a full Glances image (latest release) with all dependencies
 - `dev` for a full Glances image (development branch) with all dependencies (may be instable)
-You can also specify a version (example: 3.3.0.4). All available versions can be found on `DockerHub`_.
+You can also specify a version (example: 3.4.0). All available versions can be found on `DockerHub`_.
 
 An Example to pull the `latest` tag:
 
@@ -88,7 +88,7 @@ You can also include Glances container in you own `docker-compose.yml`. Here's a
           - "traefik.frontend.rule=Host:glances.docker.localhost"
 
 How to protect your Dockerized server (or Web server) with a login/password ?
-------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 Below are two methods for setting up a login/password to protect Glances running inside a Docker container.
 
@@ -167,7 +167,7 @@ You can add a ``[passwords]`` block to the Glances configuration file as mention
     default=mydefaultpassword
 
 Using GPU Plugin with Docker (Only Nvidia GPUs)
-------------------------------------------------------------------
+-----------------------------------------------
 
 Complete the steps mentioned in the `docker docs <https://docs.docker.com/config/containers/resource_constraints/#gpu>`_
 to make the GPU accessible by the docker engine.

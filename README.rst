@@ -248,6 +248,8 @@ Run the container in *Web server mode*:
 
     docker run -d --restart="always" -p 61208-61209:61208-61209 -e TZ="${TZ}" -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host nicolargo/glances:latest-full
 
+For a full list of options, see the Glances `Docker`_ documentation page.
+
 GNU/Linux
 ---------
 
@@ -483,3 +485,4 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
 .. _issue2021: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
 .. _issue2021comment: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
+.. _Docker: https://github.com/nicolargo/glances/blob/develop/docs/docker.rst
