@@ -57,7 +57,7 @@ COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-re
 # BUILD: Install the minimal image deps
 FROM build as buildMinimal
 
-RUN /venv/bin/python3 -m pip install --no-cache-dir \
+RUN python${PYTHON_VERSION} -m pip install --target=/venv/lib/python${PYTHON_VERSION}/site-packages \
     # Note: requirements.txt is include by dep
     -r docker-requirements.txt \
     -r webui-requirements.txt
@@ -66,7 +66,8 @@ RUN /venv/bin/python3 -m pip install --no-cache-dir \
 # BUILD: Install all the deps
 FROM build as buildFull
 
-RUN /venv/bin/python3 -m pip install --no-cache-dir \
+RUN python${PYTHON_VERSION} -m pip install --target=/venv/lib/python${PYTHON_VERSION}/site-packages \
+    # Note: requirements.txt is include by dep
     -r optional-requirements.txt
 
 ##############################################################################
