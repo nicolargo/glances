@@ -91,7 +91,7 @@ class PodmanPodStatsFetcher:
         # Threaded Streamer
         # Temporary patch to get podman extension working
         stats_iterable = (pod_manager.stats(decode=True) for _ in iter(int, 1))
-        self._streamer = StatsStreamer(stats_iterable, initial_stream_value={})
+        self._streamer = StatsStreamer(stats_iterable, initial_stream_value={}, sleep_duration=2)
 
     def _log_debug(self, msg, exception=None):
         logger.debug("containers (Podman): Pod Manager - {} ({})".format(msg, exception))
