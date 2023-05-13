@@ -6,7 +6,7 @@
         "hotkeys-js": "^3.10.1",
         "lodash": "^4.17.21",
         "sanitize-html": "^2.8.1",
-        "vue": "^3.2.45"
+        "vue": "^3.2.47"
     },
     "devDependencies": {
         "copy-webpack-plugin": "^11.0.0",
