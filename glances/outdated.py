@@ -27,7 +27,7 @@ try:
 
     PACKAGING_IMPORT = True
 except Exception as e:
-    logger.error("Unable to import 'packaging' module ({}). Glances cannot check for updates.".format(e))
+    logger.warning("Unable to import 'packaging' module ({}). Glances cannot check for updates.".format(e))
     PACKAGING_IMPORT = False
 
 PYPI_API_URL = 'https://pypi.python.org/pypi/Glances/json'
