@@ -230,6 +230,8 @@ class PodmanContainersExtension:
         """Connect to Podman."""
         try:
             self.client = PodmanClient(base_url=self.podman_sock)
+            # PodmanClient works lazily, so make a ping to determine if socket is open
+            self.client.ping()
         except Exception as e:
             logger.error("{} plugin - Can't connect to Podman ({})".format(self.ext_name, e))
             self.client = None
