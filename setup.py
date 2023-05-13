@@ -80,6 +80,7 @@ def get_install_extras_require():
         # 'gpu' and 'sensors' ==> See below
     }
     if PY3:
+        extras_require['cloud'].append('packaging')
         extras_require['export'].append('influxdb-client')
         extras_require['export'].append('pymongo')
         extras_require['gpu'] = ['py3nvml']
