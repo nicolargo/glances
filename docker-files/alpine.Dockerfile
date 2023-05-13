@@ -58,7 +58,7 @@ COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-re
 # BUILD: Install the minimal image deps
 FROM build as buildMinimal
 
-RUN python${PYTHON_VERSION} -m pip install --target=/venv/lib/python${PYTHON_VERSION}/site-packages \
+RUN python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
     # Note: requirements.txt is include by dep
     -r docker-requirements.txt \
     -r webui-requirements.txt
@@ -72,7 +72,7 @@ ARG CASS_DRIVER_NO_CYTHON=1
 # See issue 2368
 ARG CARGO_NET_GIT_FETCH_WITH_CLI=true
 
-RUN python${PYTHON_VERSION} -m pip install --target=/venv/lib/python${PYTHON_VERSION}/site-packages \
+RUN python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
     # Note: requirements.txt is include by dep
     -r optional-requirements.txt
 

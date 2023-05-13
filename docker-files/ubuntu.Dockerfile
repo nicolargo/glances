@@ -57,7 +57,7 @@ COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-re
 # BUILD: Install the minimal image deps
 FROM build as buildMinimal
 
-RUN python${PYTHON_VERSION} -m pip install --target=/venv/lib/python${PYTHON_VERSION}/site-packages \
+RUN python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
     # Note: requirements.txt is include by dep
     -r docker-requirements.txt \
     -r webui-requirements.txt
@@ -66,7 +66,7 @@ RUN python${PYTHON_VERSION} -m pip install --target=/venv/lib/python${PYTHON_VER
 # BUILD: Install all the deps
 FROM build as buildFull
 
-RUN python${PYTHON_VERSION} -m pip install --target=/venv/lib/python${PYTHON_VERSION}/site-packages \
+RUN python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
     # Note: requirements.txt is include by dep
     -r optional-requirements.txt
 
