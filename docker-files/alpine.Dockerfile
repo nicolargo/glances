@@ -11,11 +11,27 @@
 ARG IMAGE_VERSION=3.18.0
 ARG PYTHON_VERSION=3.11
 
-FROM alpine:${IMAGE_VERSION} as build
-ARG PYTHON_VERSION
+##############################################################################
+# Base layer to be used for building dependencies and the release images
+FROM alpine:${IMAGE_VERSION} as base
 
 RUN apk add --no-cache \
   python3 \
+  curl \
+  lm-sensors \
+  wireless-tools \
+  smartmontools \
+  iputils \
+  tzdata
+
+##############################################################################
+# BUILD Stages
+##############################################################################
+# BUILD: Base image shared by all build images
+FROM base as build
+ARG PYTHON_VERSION
+
+RUN apk add --no-cache \
   python3-dev \
   py3-pip \
   py3-wheel \
@@ -24,124 +40,78 @@ RUN apk add --no-cache \
   build-base \
   libzmq \
   zeromq-dev \
-  curl \
-  lm-sensors \
-  wireless-tools \
-  smartmontools \
-  iputils \
-  tzdata \
   # Required for 'cryptography' dependency of optional requirement 'cassandra-driver' \
   # Refer: https://cryptography.io/en/latest/installation/#alpine \
   # `git` required to clone cargo crates (dependencies)
-  gcc libffi-dev openssl-dev cargo pkgconfig git
+  git \
+  gcc \
+  cargo \
+  pkgconfig \
+  libffi-dev \
+  openssl-dev
+
+RUN python${PYTHON_VERSION} -m venv --system-site-packages --without-pip venv
+
+COPY requirements.txt webui-requirements.txt optional-requirements.txt ./
 
 ##############################################################################
-# Install the dependencies beforehand to make them cacheable
+# BUILD: Install the minimal image deps
+FROM build as buildMinimal
 
-FROM build as buildRequirements
-ARG PYTHON_VERSION
-
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir --user -r requirements.txt
-
-# Minimal means no webui, but it break what is done previously (see #2155)
-# So install the webui requirements...
-COPY webui-requirements.txt .
-RUN pip3 install --no-cache-dir --user -r webui-requirements.txt
-
-# As minimal image we want to monitor others docker containers
-RUN pip3 install --no-cache-dir --user docker
-
-# Force install otherwise it could be cached without rerun
-ARG CHANGING_ARG
-RUN pip3 install --no-cache-dir --user glances
+RUN /venv/bin/python3 -m pip install  \
+    docker  \
+    python-dateutil  \
+    #-r requirements.txt \
+    -r webui-requirements.txt
 
 ##############################################################################
-
-FROM build as buildOptionalRequirements
-ARG PYTHON_VERSION
+# BUILD: Install all the deps
+FROM build as buildFull
 
 # Required for optional dependency cassandra-driver
-ENV CASS_DRIVER_NO_CYTHON=1
+ARG CASS_DRIVER_NO_CYTHON=1
 # See issue 2368
-ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
+ARG CARGO_NET_GIT_FETCH_WITH_CLI=true
 
-COPY requirements.txt .
-COPY optional-requirements.txt .
-RUN pip3 install --no-cache-dir --user -r optional-requirements.txt
+RUN /venv/bin/python3 -m pip install  \
+    #-r requirements.txt \
+    -r optional-requirements.txt
 
 ##############################################################################
-# full image
+# RELEASE Stages
 ##############################################################################
+# Base image shared by all releases
+FROM base as release
 
-FROM build as full
-ARG PYTHON_VERSION
-
-COPY --from=buildRequirements /root/.local/bin /usr/local/bin/
-COPY --from=buildRequirements /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/lib/python${PYTHON_VERSION}/site-packages/
-COPY --from=buildOptionalRequirements /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/lib/python${PYTHON_VERSION}/site-packages/
+# Copy source code and config file
 COPY ./docker-compose/glances.conf /etc/glances.conf
+COPY /glances /app/glances
 
 # EXPOSE PORT (XMLRPC / WebUI)
 EXPOSE 61209 61208
 
 # Define default command.
-WORKDIR /glances
-CMD python3 -m glances -C /etc/glances.conf $GLANCES_OPT
+WORKDIR /app
+CMD /venv/bin/python3 -m glances -C /etc/glances.conf $GLANCES_OPT
 
-##############################################################################
-# minimal image
-##############################################################################
+################################################################################
+# RELEASE: minimal
+FROM release as minimal
 
-# Create running images without any building dependency
-FROM alpine:${IMAGE_VERSION} as minimal
-ARG PYTHON_VERSION
+COPY --from=buildMinimal /venv /venv
 
-RUN apk add --no-cache \
-  python3 \
-  py3-packaging \
-  py3-dateutil \
-  py3-requests \
-  curl \
-  lm-sensors \
-  wireless-tools \
-  smartmontools \
-  iputils \
-  tzdata
+################################################################################
+# RELEASE: full
+FROM release as full
 
-COPY --from=buildRequirements /root/.local/bin /usr/local/bin/
-COPY --from=buildRequirements /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/lib/python${PYTHON_VERSION}/site-packages/
-COPY ./docker-compose/glances.conf /etc/glances.conf
+RUN apk add --no-cache libzmq
 
-# EXPOSE PORT (XMLRPC / WebUI)
-EXPOSE 61209 61208
+COPY --from=buildFull /venv /venv
 
-# Define default command.
-WORKDIR /glances
-CMD python3 -m glances -C /etc/glances.conf $GLANCES_OPT
-
-##############################################################################
-# dev image
-##############################################################################
-
+################################################################################
+# RELEASE: dev - to be compatible with CI
 FROM full as dev
-ARG PYTHON_VERSION
-
-COPY --from=buildRequirements /root/.local/bin /usr/local/bin/
-COPY --from=buildRequirements /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/lib/python${PYTHON_VERSION}/site-packages/
-COPY --from=buildOptionalRequirements /root/.local/lib/python${PYTHON_VERSION}/site-packages /usr/lib/python${PYTHON_VERSION}/site-packages/
-COPY ./docker-compose/glances.conf /etc/glances.conf
-
-# Copy the current Glances source code
-COPY . /glances
-
-# EXPOSE PORT (XMLRPC / WebUI)
-EXPOSE 61209 61208
 
 # Forward access and error logs to Docker's log collector
 RUN ln -sf /dev/stdout /tmp/glances-root.log \
-    && ln -sf /dev/stderr /var/log/error.log
-
-# Define default command.
-WORKDIR /glances
-CMD python3 -m glances -C /etc/glances.conf $GLANCES_OPT
+    && ln -sf /dev/stderr /var/log/error.log \
