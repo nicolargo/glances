@@ -63,7 +63,7 @@ def get_install_extras_require():
         'action': ['chevron'],
         'browser': ['zeroconf==0.62.0' if PY2 else 'zeroconf>=0.19.1'],
         'cloud': ['requests'],
-        'containers': ['docker>=6.1.1', 'python-dateutil', 'six'],
+        # 'containers' ==> See below
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
                    'graphitesender', 'influxdb>=1.0.0', 'kafka-python',
                    'pika', 'paho-mqtt', 'potsdb', 'prometheus_client', 'pyzmq',
@@ -80,6 +80,7 @@ def get_install_extras_require():
         # 'gpu' and 'sensors' ==> See below
     }
     if PY3:
+        extras_require['containers'] = ['docker>=6.1.1', 'podman', 'python-dateutil', 'six', 'packaging']
         extras_require['cloud'].append('packaging')
         extras_require['export'].append('influxdb-client')
         extras_require['export'].append('pymongo')

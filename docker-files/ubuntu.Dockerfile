@@ -51,24 +51,22 @@ RUN apt-get update \
 
 RUN python${PYTHON_VERSION} -m venv venv
 
-COPY requirements.txt webui-requirements.txt optional-requirements.txt ./
+COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-requirements.txt ./
 
 ##############################################################################
 # BUILD: Install the minimal image deps
 FROM build as buildMinimal
 
-RUN /venv/bin/python3 -m pip install  \
-    docker  \
-    python-dateutil  \
-    #-r requirements.txt \
+RUN /venv/bin/python3 -m pip install --no-cache-dir \
+    # Note: requirements.txt is include by dep
+    -r docker-requirements.txt \
     -r webui-requirements.txt
 
 ##############################################################################
 # BUILD: Install all the deps
 FROM build as buildFull
 
-RUN /venv/bin/python3 -m pip install  \
-    #-r requirements.txt \
+RUN /venv/bin/python3 -m pip install --no-cache-dir \
     -r optional-requirements.txt
 
 ##############################################################################
