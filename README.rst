@@ -216,9 +216,9 @@ The following tags are availables:
 - *latest-full* for a full Alpine Glances image (latest release) with all dependencies
 - *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
 - *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
-- *ubuntu-latest-full* for a full Alpine Glances image (latest release) with all dependencies
-- *ubuntu-latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
-- *ubuntu-dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
+- *ubuntu-latest-full* for a full Ubuntu Glances image (latest release) with all dependencies
+- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *ubuntu-dev* for a basic Ubuntu Glances image (based on development branch) with all dependencies (Warning: may be instable)
 
 Run last version of Glances container in *console mode*:
 
