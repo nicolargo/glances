@@ -11,11 +11,15 @@ Get the Glances container:
 
     docker pull nicolargo/glances:<version>
 
-Available tags (all images are based on the Alpine Operating System):
+Available tags (all images are based on both Alpine and Ubuntu Operating System):
 
-- `latest` for a minimal Glances image (latest release) version with Console, WebUI and Docker dependencies (Recommended)
-- `latest-full` for a full Glances image (latest release) with all dependencies
-- `dev` for a full Glances image (development branch) with all dependencies (may be instable)
+- *latest-full* for a full Alpine Glances image (latest release) with all dependencies
+- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
+- *ubuntu-latest-full* for a full Ubuntu Glances image (latest release) with all dependencies
+- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *ubuntu-dev* for a basic Ubuntu Glances image (based on development branch) with all dependencies (Warning: may be instable)
+
 You can also specify a version (example: 3.4.0). All available versions can be found on `DockerHub`_.
 
 An Example to pull the `latest` tag:
