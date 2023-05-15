@@ -9,6 +9,7 @@
         "vue": "^3.3.2"
     },
     "devDependencies": {
+        "@vue/compiler-sfc": "^3.3.2",
         "copy-webpack-plugin": "^11.0.0",
         "css-loader": "^6.7.3",
         "del": "^7.0.0",
