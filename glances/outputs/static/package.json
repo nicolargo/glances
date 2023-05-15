@@ -3,10 +3,10 @@
     "dependencies": {
         "bootstrap": "^3.4.1",
         "favico.js": "^0.3.10",
-        "hotkeys-js": "^3.10.1",
+        "hotkeys-js": "^3.10.2",
         "lodash": "^4.17.21",
-        "sanitize-html": "^2.8.1",
-        "vue": "^3.2.47"
+        "sanitize-html": "^2.10.0",
+        "vue": "^3.3.2"
     },
     "devDependencies": {
         "copy-webpack-plugin": "^11.0.0",
