@@ -6,7 +6,74 @@
 Version 3.4.0
 ===============
 
-    See roadmap here: https://github.com/nicolargo/glances/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Glances+3.4.0%22
+Enhancements:
+
+    * Enhance process "extended stats" display (in Curses interface) #2225
+      _You can now *pin* a specific process to the top of the process list_
+    * Improve Glances start time by disabling Docker and Podman version getter - Related to #1985
+    * Customizable InfluxDB2 export interval #2348
+    * Improve kill signal management #2194
+    * Display a critical error message if Glances is ran with both webserver and rpcserver mode
+    * Refactor the Cloud plugin, disable it by default in the default configuration file - Related to #2279
+    * Correct clear-text logging of sensitive information (security alert #29)
+    * Use of a broken or weak cryptographic hashing algorithm (SHA256) on password storage #2175
+
+Bug corrected:
+
+    * Correct issue (error message) concerning the Cloud plugin - Related to #2392
+    * InfluxDB2 export doesn't process folders correctly - missing key #2327
+    * Index error when displaying programs on MacOS #2360
+    * Dissociate 2 sensors with exactly the same names #2280
+    * All times displayed in UTC - Container not using TZ/localtime (Docker) #2278
+    * It is not possible to return API data for a particular mount point (FS plugin) #1162
+
+Documentation and CI:
+
+    * chg: Dockerfile - structured & cleaner build process #2386
+    * Ubuntu is back as additional Docker images. Alpine stays the default one. Related to #2185
+    * Improve Makefile amd docker-compose to support Podman and GPU
+    * Workaround to pin urlib3<2.0 - Related to #2392
+    * Error while generating the documentation (ModuleNotFoundError: No module named 'glances') #2391
+    * Update Flamegraph (memory profiling)
+    * Improve template for issue report and feature request
+    * Parameters in the VIRT column #2343
+    * Graph generation documentation is not clear #2336
+    * docs: Docker - include tag details
+    * Add global architecture diagram (Excalidraw)
+    * Links to documents in sample glances.conf are not valid. #2271
+    * Add semgrep support
+    * Smartmontools missing from full docker image #2262
+    * Improve documentation regarding regexp in configuration file
+    * Improve documentation about the [ip] plugin #2251
+
+Cyber security update:
+
+    * All libs have been updated to the latest version
+      Full roadmap here: https://github.com/nicolargo/glances/milestone/62?closed=1
+
+Refactor the Docker images factory, from now, Alpine and Ubuntu images will be provided (nicolargo/glances):
+
+- *latest-full* for a full Alpine Glances image (latest release) with all dependencies
+- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
+- *ubuntu-latest-full* for a full Ubuntu Glances image (latest release) with all dependencies
+- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *ubuntu-dev* for a basic Ubuntu Glances image (based on development branch) with all dependencies (Warning: may be instable)
+
+Contributors for this version:
+
+    * Nicolargo
+    * RazCrimson: a very special thanks to @RazCrimson for his huge work on this version !
+    * Bharath Vignesh J K
+    * Raz Crimson
+    * fr4nc0is
+    * Florian Calvet
+    * Ali Erdinç Köroğlu
+    * Jose Vicente Nunez
+    * Rui Chen
+    * Ryan Horiguchi
+    * mfridge
+    * snyk-bot
 
 ===============
 Version 3.3.1.1
