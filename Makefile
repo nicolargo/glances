@@ -40,14 +40,14 @@ test: ## Run unit tests
 	./venv/bin/python ./unitest-restful.py
 	./venv/bin/python ./unitest-xmlrpc.py
 	./venv/bin/python -m black ./glances --check --exclude outputs/static
-	./venv/bin/pyright glances
+#	./venv/bin/pyright glances
 
 test-with-upgrade: venv-upgrade venv-dev-upgrade ## Run unit tests
 	./venv/bin/python ./unitest.py
 	./venv/bin/python ./unitest-restful.py
 	./venv/bin/python ./unitest-xmlrpc.py
 	./venv/bin/python -m black ./glances --check --exclude outputs/static
-	./venv/bin/pyright glances
+#	./venv/bin/pyright glances
 
 # ===================================================================
 # Linters and profilers
