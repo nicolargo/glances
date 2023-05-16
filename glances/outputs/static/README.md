@@ -1,16 +1,44 @@
-# How to contribute?
+# Focus on the Glances Web User Interface
 
-In order to build the assets of the Web UI, you'll need [npm](https://docs.npmjs.com/getting-started/what-is-npm).
+In order to build the assets of the Web UI, you'll need [NPM](https://docs.npmjs.com/getting-started/what-is-npm).
+
+NPM is a package manager for JavaScript related to [Node.js](https://nodejs.org/en/).
+
+NodeJS should be installed/updated on your system.
+
+## Pre-requisites
+
+### Install NodeJS
+
+Example on Ubuntu OS:
+
+```bash
+sudo apt install nodejs
+```
+
+### Upgrade NodeJS
+
+Example on Ubuntu OS:
+
+```bash
+sudo apt update
+sudo apt install nodejs
+sudo npm install -g n
+sudo n lts
+hash -r
+```
+
+## Build Glances WebUI
 
 You must run the following command from the `glances/outputs/static/` directory.
 
-## Install dependencies
+### Install dependencies
 
 ```bash
 $ npm ci
 ```
 
-## Build assets
+### Build assets
 
 Run the build command to build assets once :
 
@@ -24,7 +52,7 @@ or use the watch command to rebuild only modified files :
 $ npm run watch
 ```
 
-# Anatomy
+## Anatomy
 
 ```bash
 static
