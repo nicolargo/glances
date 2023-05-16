@@ -12,8 +12,7 @@ from __future__ import unicode_literals
 
 import sys
 
-from glances.compat import nativestr, u, itervalues, enable, disable
-from glances.globals import MACOS, WINDOWS
+from glances.globals import MACOS, WINDOWS, nativestr, u, itervalues, enable, disable
 from glances.logger import logger
 from glances.events import glances_events
 from glances.processes import glances_processes, sort_processes_key_list
@@ -347,7 +346,7 @@ class _GlancesCurses(object):
                 pass
 
     def get_key(self, window):
-        # @TODO: Check issue #163
+        # TODO: Check issue #163
         ret = window.getch()
         return ret
 

@@ -13,7 +13,7 @@ from __future__ import unicode_literals
 import os
 
 from glances.timer import Timer
-from glances.compat import range, nativestr
+from glances.globals import nativestr
 from glances.logger import logger
 
 # Use the built-in version of scandir/walk if possible, otherwise

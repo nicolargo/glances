@@ -15,7 +15,7 @@ import sys
 from base64 import b64decode
 
 from glances import __version__
-from glances.compat import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
+from glances.globals import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer, Server
 from glances.autodiscover import GlancesAutoDiscoverClient
 from glances.logger import logger
 from glances.stats_server import GlancesStatsServer

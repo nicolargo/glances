@@ -22,7 +22,7 @@ The return string is a string with one or more line (\n between lines).
 If the *one_line* var is true then the AMP will be displayed in one line.
 """
 
-from glances.compat import u
+from glances.globals import u, b, nativestr
 from glances.timer import Timer
 from glances.logger import logger
 

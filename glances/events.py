@@ -12,7 +12,6 @@
 import time
 from datetime import datetime
 
-from glances.compat import range
 from glances.processes import glances_processes, sort_stats
 
 

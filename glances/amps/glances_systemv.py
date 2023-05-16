@@ -37,7 +37,7 @@ service_cmd=/usr/bin/service --status-all
 from subprocess import check_output, STDOUT
 
 from glances.logger import logger
-from glances.compat import iteritems
+from glances.globals import iteritems
 from glances.amps.glances_amp import GlancesAmp
 
 

@@ -17,8 +17,7 @@ import webbrowser
 import zlib
 import socket
 
-from glances.globals import json_dumps
-from glances.compat import b
+from glances.globals import b, json_dumps
 from glances.timer import Timer
 from glances.logger import logger
 

@@ -9,7 +9,6 @@
 
 """Manage the Glances ports list (Ports plugin)."""
 
-from glances.compat import range
 from glances.logger import logger
 from glances.globals import BSD
 
