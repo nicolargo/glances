@@ -217,7 +217,7 @@ Run last version of Glances container in *console mode*:
 
 .. code-block:: console
 
-    docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it nicolargo/glances:latest-full
+    docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host --network host -it nicolargo/glances:latest-full
 
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
@@ -234,7 +234,7 @@ variable setting parameters for the glances startup command):
 
 .. code-block:: console
 
-    docker run -e TZ="${TZ}" -v `pwd`/glances.conf:/etc/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -e GLANCES_OPT="-C /etc/glances.conf" -it nicolargo/glances:latest-full
+    docker run -e TZ="${TZ}" -v `pwd`/glances.conf:/etc/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host -e GLANCES_OPT="-C /etc/glances.conf" -it nicolargo/glances:latest-full
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
@@ -242,7 +242,7 @@ Run the container in *Web server mode*:
 
 .. code-block:: console
 
-    docker run -d --restart="always" -p 61208-61209:61208-61209 -e TZ="${TZ}" -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host nicolargo/glances:latest-full
+    docker run -d --restart="always" -p 61208-61209:61208-61209 -e TZ="${TZ}" -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host nicolargo/glances:latest-full
 
 For a full list of options, see the Glances `Docker`_ documentation page.
 
