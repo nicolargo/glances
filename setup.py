@@ -41,11 +41,7 @@ def get_install_requires():
         'psutil>=5.6.7',
         'defusedxml',
         'packaging',
-        'future; python_version < "3.0"',
-        'ujson<3; python_version < "3.0"',
-        'ujson<4; python_version >= "3.5" and python_version < "3.6"',
-        'ujson<5; python_version >= "3.6" and python_version < "3.7"',
-        'ujson>=5.4.0; python_version >= "3.7"',
+        'ujson>=5.4.0',
     ]
     if sys.platform.startswith('win'):
         requires.append('bottle')
@@ -74,7 +70,6 @@ def get_install_extras_require():
         'sparklines': ['sparklines'],
         'web': ['bottle', 'requests'],
         'wifi': ['wifi']
-        # 'gpu' and 'sensors' ==> See below
     }
     if sys.platform.startswith('linux'):
         extras_require['sensors'] = ['batinfo']
@@ -116,7 +111,7 @@ setup(
     url='https://github.com/nicolargo/glances',
     license='LGPLv3',
     keywords="cli curses monitoring system",
-    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+    python_requires=">=3.8",
     install_requires=get_install_requires(),
     extras_require=get_install_extras_require(),
     packages=['glances'],
@@ -136,7 +131,6 @@ setup(
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',

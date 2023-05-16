@@ -78,15 +78,15 @@ Any and all contributions are greatly appreciated.
 Requirements
 ============
 
-- ``python>=3.4``
+- ``python>=3.8`` (use Glances 3.4.x for lower Python version)
 - ``psutil>=5.3.0`` (better with latest version)
 - ``defusedxml`` (in order to monkey patch xmlrpc)
 - ``ujson`` (an optimized alternative to the standard json module)
 
 *Note for Python 2 users*
 
-Glances version 4 or higher do not support Python 2.
-Please uses Glances version 3 if you need Python 2 support.
+Glances version 4 or higher do not support Python 2 (and Python 3 < 3.8).
+Please uses Glances version 3.4.x if you need Python 2 support.
 
 Optional dependencies:
 
@@ -96,28 +96,27 @@ Optional dependencies:
 - ``cassandra-driver`` (for the Cassandra export module)
 - ``chevron`` (for the action script feature)
 - ``couchdb`` (for the CouchDB export module)
-- ``docker`` (for the Containers Docker monitoring support) [Linux/macOS-only / Python >= 3.6]
+- ``docker`` (for the Containers Docker monitoring support)
 - ``elasticsearch`` (for the Elastic Search export module)
 - ``graphitesender`` (For the Graphite export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB version 1 export module)
-- ``influxdb-client``  (for the InfluxDB version 2 export module) [Only for Python >= 3.6]
+- ``influxdb-client``  (for the InfluxDB version 2 export module)
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces`` (for the IP plugin)
 - ``py3nvml`` (for the GPU plugin)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
-- ``podman`` (for the Containers Podman monitoring support) [Linux/macOS-only / Python >= 3.6]
+- ``podman`` (for the Containers Podman monitoring support)
 - ``potsdb`` (for the OpenTSDB export module)
 - ``prometheus_client`` (for the Prometheus export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``pygal`` (for the graph export module)
 - ``pymdstat`` (for RAID support) [Linux-only]
-- ``pymongo`` (for the MongoDB export module) [Only for Python >= 3.7]
+- ``pymongo`` (for the MongoDB export module)
 - ``pysnmp`` (for SNMP support)
 - ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
 - ``pyzmq`` (for the ZeroMQ export module)
 - ``requests`` (for the Ports, Cloud plugins and RESTful export module)
-- ``scandir`` (for the Folders plugin) [Only for Python 3.4]
 - ``sparklines`` (for the Quick Plugin sparklines option)
 - ``statsd`` (for the StatsD export module)
 - ``wifi`` (for the wifi plugin) [Linux-only]

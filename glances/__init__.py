@@ -19,7 +19,7 @@ import sys
 # Global name
 # Version should start and end with a numerical char
 # See https://packaging.python.org/specifications/core-metadata/#version
-__version__ = '4.0.0_alpha1'
+__version__ = '4.0.0_beta01'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
 
