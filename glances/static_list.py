@@ -11,7 +11,6 @@
 
 from socket import gaierror, gethostbyname
 
-from glances.compat import range
 from glances.logger import logger
 
 

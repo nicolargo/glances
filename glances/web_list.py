@@ -9,7 +9,7 @@
 
 """Manage the Glances web/url list (Ports plugin)."""
 
-from glances.compat import range, urlparse
+from glances.globals import urlparse
 from glances.logger import logger
 
 

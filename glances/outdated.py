@@ -17,9 +17,8 @@ import os
 from ssl import CertificateError
 
 from glances import __version__
-from glances.compat import nativestr, urlopen, HTTPError, URLError
+from glances.globals import nativestr, urlopen, HTTPError, URLError, safe_makedirs
 from glances.config import user_cache_dir
-from glances.globals import safe_makedirs
 from glances.logger import logger
 
 try:

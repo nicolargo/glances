@@ -15,7 +15,7 @@ import sys
 import time
 
 from glances import __version__
-from glances.compat import Fault, ProtocolError, ServerProxy, Transport
+from glances.globals import Fault, ProtocolError, ServerProxy, Transport
 from glances.logger import logger
 from glances.stats_client import GlancesStatsClient
 from glances.outputs.glances_curses import GlancesCursesClient

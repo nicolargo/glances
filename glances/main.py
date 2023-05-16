@@ -14,9 +14,8 @@ import sys
 import tempfile
 
 from glances import __version__, psutil_version
-from glances.compat import input, disable, enable, PY3
+from glances.globals import WINDOWS, disable, enable
 from glances.config import Config
-from glances.globals import WINDOWS
 from glances.processes import sort_processes_key_list
 from glances.logger import logger, LOG_FILENAME
 
@@ -719,14 +718,14 @@ Examples of use:
             disable(self.args, 'hddtemp')
             logger.debug("Sensors and HDDTemp are disabled")
 
-        if getattr(self.args, 'trace_malloc', True) and not (PY3 or self.is_standalone()):
-            logger.critical("Option --trace-malloc is only available with Python 3 and terminal mode")
+        if getattr(self.args, 'trace_malloc', True) and not self.is_standalone():
+            logger.critical("Option --trace-malloc is only available in the terminal mode")
             sys.exit(2)
 
-        if getattr(self.args, 'memory_leak', True) and not (PY3 or self.is_standalone()):
-            logger.critical("Option --memory-leak is only available with Python 3 and terminal mode")
+        if getattr(self.args, 'memory_leak', True) and not self.is_standalone():
+            logger.critical("Option --memory-leak is only available in the terminal mode")
             sys.exit(2)
-        elif getattr(self.args, 'memory_leak', True) and (PY3 or self.is_standalone()):
+        elif getattr(self.args, 'memory_leak', True) and self.is_standalone():
             logger.info('Memory leak detection enabled')
             self.args.quiet = True
             if not self.args.stop_after:

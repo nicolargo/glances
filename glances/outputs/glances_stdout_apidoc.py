@@ -14,7 +14,7 @@ import json
 import time
 
 from glances.logger import logger
-from glances.compat import iteritems
+from glances.globals import iteritems
 
 API_URL = "http://localhost:61208/api/3"
 

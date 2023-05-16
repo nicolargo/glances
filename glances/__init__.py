@@ -19,7 +19,7 @@ import sys
 # Global name
 # Version should start and end with a numerical char
 # See https://packaging.python.org/specifications/core-metadata/#version
-__version__ = '3.4.0'
+__version__ = '4.0.0_alpha1'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
 
@@ -32,7 +32,6 @@ except ImportError:
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
-from glances.compat import PY3
 from glances.logger import logger
 from glances.main import GlancesMain
 from glances.timer import Counter
@@ -44,8 +43,8 @@ except locale.Error:
     print("Warning: Unable to set locale. Expect encoding problems.")
 
 # Check Python version
-if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 4):
-    print('Glances requires at least Python 2.7 or 3.4 to run.')
+if sys.version_info < (3, 4):
+    print('Glances requires at least Python 3.4 to run.')
     sys.exit(1)
 
 # Check psutil version
@@ -56,8 +55,7 @@ if psutil_version_info < psutil_min_version:
     sys.exit(1)
 
 # Trac malloc is only available on Python 3.4 or higher
-if PY3:
-    import tracemalloc
+import tracemalloc
 
 
 def __signal_handler(signal, frame):

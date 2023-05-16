@@ -9,13 +9,9 @@ from io import open
 from setuptools import setup, Command
 
 
-if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 4):
-    print('Glances requires at least Python 2.7 or 3.4 to run.')
+if sys.version_info < (3, 4):
+    print('Glances requires at least Python 3.4 to run.')
     sys.exit(1)
-
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
-
 
 # Global functions
 ##################
@@ -61,14 +57,15 @@ def get_install_requires():
 def get_install_extras_require():
     extras_require = {
         'action': ['chevron'],
-        'browser': ['zeroconf==0.62.0' if PY2 else 'zeroconf>=0.19.1'],
+        'browser': ['zeroconf>=0.19.1'],
         'cloud': ['requests'],
-        # 'containers' ==> See below
+        'containers': ['docker>=6.1.1', 'python-dateutil', 'six', 'podman', 'packaging'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
-                   'graphitesender', 'influxdb>=1.0.0', 'kafka-python',
-                   'pika', 'paho-mqtt', 'potsdb', 'prometheus_client', 'pyzmq',
-                   'statsd'],
-        'folders': ['scandir'],  # python_version<"3.5"
+                   'graphitesender', 'influxdb>=1.0.0', 'influxdb-client', 'pymongo',
+                   'kafka-python', 'pika', 'paho-mqtt', 'potsdb', 'prometheus_client',
+                   'pyzmq', 'statsd'],
+        'folders': ['scandir'],
+        'gpu': ['py3nvml'],
         'graph': ['pygal'],
         'ip': ['netifaces'],
         'raid': ['pymdstat'],
@@ -79,13 +76,6 @@ def get_install_extras_require():
         'wifi': ['wifi']
         # 'gpu' and 'sensors' ==> See below
     }
-    if PY3:
-        extras_require['containers'] = ['docker>=6.1.1', 'podman', 'python-dateutil', 'six', 'packaging']
-        extras_require['cloud'].append('packaging')
-        extras_require['export'].append('influxdb-client')
-        extras_require['export'].append('pymongo')
-        extras_require['gpu'] = ['py3nvml']
-        extras_require['podman'] = ['podman']
     if sys.platform.startswith('linux'):
         extras_require['sensors'] = ['batinfo']
 
@@ -145,8 +135,6 @@ setup(
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',

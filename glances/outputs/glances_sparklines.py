@@ -13,7 +13,7 @@ from __future__ import unicode_literals
 from __future__ import division
 import sys
 from glances.logger import logger
-from glances.compat import nativestr
+from glances.globals import nativestr
 
 sparklines_module = True
 

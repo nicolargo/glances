@@ -16,9 +16,8 @@ import sys
 import uuid
 from io import open
 
-from glances.compat import b, input, to_hex
+from glances.globals import b, safe_makedirs
 from glances.config import user_config_dir
-from glances.globals import safe_makedirs
 from glances.logger import logger
 
 
@@ -45,7 +44,7 @@ class GlancesPassword(object):
 
     def get_hash(self, plain_password, salt=''):
         """Return the hashed password, salt + pbkdf2_hmac."""
-        return to_hex(hashlib.pbkdf2_hmac('sha256', plain_password.encode(), salt.encode(), 100000, dklen=128))
+        return hashlib.pbkdf2_hmac('sha256', plain_password.encode(), salt.encode(), 100000, dklen=128).hex()
 
     def hash_password(self, plain_password):
         """Hash password with a salt based on UUID (universally unique identifier)."""

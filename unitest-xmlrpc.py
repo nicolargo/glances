@@ -10,15 +10,16 @@
 
 """Glances unitary tests suite for the XML-RPC API."""
 
+import os
 import json
 import shlex
 import subprocess
 import time
 import unittest
-import os
+import sys
 
 from glances import __version__
-from glances.compat import ServerProxy
+from glances.globals import ServerProxy
 
 SERVER_PORT = 61234
 URL = "http://localhost:%s" % SERVER_PORT
@@ -44,7 +45,7 @@ class TestGlances(unittest.TestCase):
         global pid
 
         print('INFO: [TEST_000] Start the Glances Web Server')
-        if os.path.isfile("./venv/bin/python"):
+        if os.path.isfile('./venv/bin/python'):
             cmdline = "./venv/bin/python"
         else:
             cmdline = "python"

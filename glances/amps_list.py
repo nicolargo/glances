@@ -13,9 +13,8 @@ import os
 import re
 import threading
 
-from glances.compat import listkeys, iteritems
+from glances.globals import listkeys, iteritems, amps_path
 from glances.logger import logger
-from glances.globals import amps_path
 from glances.processes import glances_processes
 
 
@@ -54,6 +53,8 @@ class AmpsList(object):
                 (http://glances.readthedocs.io/en/develop/aoa/amps.html)."
             )
 
+        # TODO: Change the way AMP are loaded (use folder/module instead of glances_foo.py file)
+        # See https://github.com/nicolargo/glances/issues/1930
         header = "glances_"
         # For each AMP script, call the load_config method
         for s in self.config.sections():

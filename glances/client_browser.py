@@ -13,7 +13,7 @@ import ujson
 import socket
 import threading
 
-from glances.compat import Fault, ProtocolError, ServerProxy
+from glances.globals import Fault, ProtocolError, ServerProxy
 from glances.client import GlancesClient, GlancesClientTransport
 from glances.logger import logger, LOG_FILENAME
 from glances.password_list import GlancesPasswordList as GlancesPassword

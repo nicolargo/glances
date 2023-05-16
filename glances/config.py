@@ -15,8 +15,7 @@ import multiprocessing
 from io import open
 import re
 
-from glances.compat import ConfigParser, NoOptionError, NoSectionError, system_exec
-from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS
+from glances.globals import ConfigParser, NoOptionError, NoSectionError, system_exec, BSD, LINUX, MACOS, SUNOS, WINDOWS
 from glances.logger import logger
 
 

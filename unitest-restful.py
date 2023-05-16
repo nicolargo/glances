@@ -10,15 +10,16 @@
 
 """Glances unitary tests suite for the RESTful API."""
 
+import os
 import shlex
 import subprocess
 import time
 import numbers
 import unittest
-import os
+import sys
 
 from glances import __version__
-from glances.compat import text_type
+from glances.globals import text_type
 
 import requests
 
@@ -55,7 +56,7 @@ class TestGlances(unittest.TestCase):
         global pid
 
         print('INFO: [TEST_000] Start the Glances Web Server')
-        if os.path.isfile("./venv/bin/python"):
+        if os.path.isfile('./venv/bin/python'):
             cmdline = "./venv/bin/python"
         else:
             cmdline = "python"
