@@ -210,6 +210,9 @@ The following tags are availables:
 - *latest-full* for a full Alpine Glances image (latest release) with all dependencies
 - *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
 - *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
+- *ubuntu-latest-full* for a full Ubuntu Glances image (latest release) with all dependencies
+- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *ubuntu-dev* for a basic Ubuntu Glances image (based on development branch) with all dependencies (Warning: may be instable)
 
 Run last version of Glances container in *console mode*:
 
@@ -241,6 +244,8 @@ Run the container in *Web server mode*:
 .. code-block:: console
 
     docker run -d --restart="always" -p 61208-61209:61208-61209 -e TZ="${TZ}" -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host nicolargo/glances:latest-full
+
+For a full list of options, see the Glances `Docker`_ documentation page.
 
 GNU/Linux
 ---------
@@ -477,3 +482,4 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
 .. _issue2021: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
 .. _issue2021comment: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
+.. _Docker: https://github.com/nicolargo/glances/blob/develop/docs/docker.rst

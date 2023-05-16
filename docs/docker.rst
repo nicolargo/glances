@@ -11,12 +11,16 @@ Get the Glances container:
 
     docker pull nicolargo/glances:<version>
 
-Available tags (all images are based on the Alpine Operating System):
+Available tags (all images are based on both Alpine and Ubuntu Operating System):
 
-- `latest` for a minimal Glances image (latest release) version with Console, WebUI and Docker dependencies (Recommended)
-- `latest-full` for a full Glances image (latest release) with all dependencies
-- `dev` for a full Glances image (development branch) with all dependencies (may be instable)
-You can also specify a version (example: 3.3.0.4). All available versions can be found on `DockerHub`_.
+- *latest-full* for a full Alpine Glances image (latest release) with all dependencies
+- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
+- *ubuntu-latest-full* for a full Ubuntu Glances image (latest release) with all dependencies
+- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *ubuntu-dev* for a basic Ubuntu Glances image (based on development branch) with all dependencies (Warning: may be instable)
+
+You can also specify a version (example: 3.4.0). All available versions can be found on `DockerHub`_.
 
 An Example to pull the `latest` tag:
 
@@ -88,7 +92,7 @@ You can also include Glances container in you own `docker-compose.yml`. Here's a
           - "traefik.frontend.rule=Host:glances.docker.localhost"
 
 How to protect your Dockerized server (or Web server) with a login/password ?
-------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 Below are two methods for setting up a login/password to protect Glances running inside a Docker container.
 
@@ -166,5 +170,53 @@ You can add a ``[passwords]`` block to the Glances configuration file as mention
     localhost=mylocalhostpassword
     default=mydefaultpassword
 
+Using GPU Plugin with Docker (Only Nvidia GPUs)
+-----------------------------------------------
+
+Complete the steps mentioned in the `docker docs <https://docs.docker.com/config/containers/resource_constraints/#gpu>`_
+to make the GPU accessible by the docker engine.
+
+With `docker run`
+^^^^^^^^^^^^^^^^^
+Include the `--gpus` flag with the `docker run` command.
+
+**Note:** Make sure the `--gpus` is present before the image name in the command, otherwise it won't work.
+
+.. code-block:: ini
+
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --gpus --pid host --network host -it docker.io/nicolargo/glances:latest-full
+
+..
+
+
+With `docker-compose`
+^^^^^^^^^^^^^^^^^^^^^
+Include the `deploy` section in compose file as specified below in the example service definition.
+
+.. code-block:: ini
+
+    version: '3'
+
+    services:
+      monitoring:
+        image: nicolargo/glances:latest-full
+        pid: host
+        network_mode: host
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+        environment:
+          - "GLANCES_OPT=-w"
+        # For nvidia GPUs
+        deploy:
+          resources:
+            reservations:
+              devices:
+                - driver: nvidia
+                  count: 1
+                  capabilities: [gpu]
+
+..
+
+Reference: https://docs.docker.com/compose/gpu-support/
 
 .. _DockerHub: https://hub.docker.com/r/nicolargo/glances/tags

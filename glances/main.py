@@ -555,6 +555,9 @@ Examples of use:
         # Plugins refresh rate
         if self.config.has_section('global'):
             global_refresh = self.config.get_float_value('global', 'refresh', default=self.DEFAULT_REFRESH_TIME)
+        else:
+            global_refresh = self.DEFAULT_REFRESH_TIME
+        # The configuration key can be overwrite from the command line
         if args.time == self.DEFAULT_REFRESH_TIME:
             args.time = global_refresh
         logger.debug('Global refresh rate is set to {} seconds'.format(args.time))
