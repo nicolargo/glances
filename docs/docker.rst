@@ -32,7 +32,7 @@ Run the container in *console mode*:
 
 .. code-block:: console
 
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it docker.io/nicolargo/glances
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host --network host -it docker.io/nicolargo/glances
 
 Additionally, if you want to use your own glances.conf file, you can create your own Dockerfile:
 
@@ -46,7 +46,7 @@ Alternatively, you can specify something along the same lines with docker run op
 
 .. code-block:: console
 
-    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
+    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host -it docker.io/nicolargo/glances
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
@@ -54,7 +54,7 @@ Run the container in *Web server mode* (notice the `GLANCES_OPT` environment var
 
 .. code-block:: console
 
-    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host docker.io/nicolargo/glances
+    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host docker.io/nicolargo/glances
 
 Note: if you want to see the network interface stats within the container, add --net=host --privileged
 
