@@ -59,7 +59,7 @@ def get_install_extras_require():
         'action': ['chevron'],
         'browser': ['zeroconf>=0.19.1'],
         'cloud': ['requests'],
-        'containers': ['docker>=6.1.1', 'python-dateutil', 'six', 'podman'],
+        'containers': ['docker>=6.1.1', 'python-dateutil', 'six', 'podman', 'packaging'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
                    'graphitesender', 'influxdb>=1.0.0', 'influxdb-client', 'pymongo',
                    'kafka-python', 'pika', 'paho-mqtt', 'potsdb', 'prometheus_client',

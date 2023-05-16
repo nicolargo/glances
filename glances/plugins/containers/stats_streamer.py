@@ -19,7 +19,7 @@ class StatsStreamer:
     Use `StatsStreamer.stats` to access the latest streamed results
     """
 
-    def __init__(self, iterable, initial_stream_value=None):
+    def __init__(self, iterable, initial_stream_value=None, sleep_duration=0.1):
         """
         iterable: an Iterable instance that needs to be streamed
         """
@@ -34,6 +34,8 @@ class StatsStreamer:
         self.result_lock = threading.Lock()
         # Last result streamed time (initial val 0)
         self._last_update_time = 0
+        # Time to sleep before next iteration
+        self._sleep_duration = sleep_duration
 
         self._thread.start()
 
@@ -56,7 +58,7 @@ class StatsStreamer:
                 self._raw_result = res
                 self._post_update_hook()
 
-                time.sleep(0.1)
+                time.sleep(self._sleep_duration)
                 if self.stopped():
                     break
 
