@@ -7,3 +7,4 @@ packaging; python_version >= "3.7"
 python-dateutil
 six
 urllib3<2.0 # See issue https://github.com/nicolargo/glances/issues/2392
+requests # See issue - https://github.com/nicolargo/glances/issues/2233
