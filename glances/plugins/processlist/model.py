@@ -18,7 +18,6 @@ from glances.processes import glances_processes, sort_stats
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.core.model import PluginModel as CorePluginModel
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.programs import processes_to_programs
 
 
 def seconds_to_hms(input_seconds):

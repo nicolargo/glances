@@ -14,7 +14,6 @@ import platform
 import re
 from io import open
 
-from glances.logger import logger
 from glances.globals import iteritems
 from glances.plugins.plugin.model import GlancesPluginModel
 

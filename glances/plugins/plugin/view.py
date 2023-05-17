@@ -23,18 +23,9 @@ I am your father...
 ...for all Glances view plugins.
 """
 
-import re
 import json
-import copy
-from operator import itemgetter
 
-from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr
-from glances.actions import GlancesActions
-from glances.history import GlancesHistory
-from glances.logger import logger
-from glances.events import glances_events
-from glances.thresholds import glances_thresholds
-from glances.timer import Counter, Timer
+from glances.globals import listkeys
 from glances.plugins.plugin.model import fields_unit_short, fields_unit_type
 
 

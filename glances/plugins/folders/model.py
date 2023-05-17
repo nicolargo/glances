@@ -15,7 +15,6 @@ import numbers
 from glances.globals import nativestr
 from glances.folder_list import FolderList as glancesFolderList
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.logger import logger
 
 
 class PluginModel(GlancesPluginModel):

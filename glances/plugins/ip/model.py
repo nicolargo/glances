@@ -12,7 +12,7 @@
 import threading
 from ujson import loads
 
-from glances.globals import iterkeys, urlopen, queue, urlopen_auth
+from glances.globals import urlopen, queue, urlopen_auth
 from glances.logger import logger
 from glances.timer import Timer
 from glances.timer import getTimeSinceLastUpdate

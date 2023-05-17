@@ -11,6 +11,7 @@
 """Init the Glances software."""
 
 # Import system libs
+import tracemalloc
 import locale
 import platform
 import signal
@@ -55,7 +56,6 @@ if psutil_version_info < psutil_min_version:
     sys.exit(1)
 
 # Trac malloc is only available on Python 3.4 or higher
-import tracemalloc
 
 
 def __signal_handler(signal, frame):

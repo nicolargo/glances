@@ -19,7 +19,7 @@ import numbers
 from glances.globals import WINDOWS, MACOS, BSD, bool_type
 from glances.ports_list import GlancesPortsList
 from glances.web_list import GlancesWebList
-from glances.timer import Timer, Counter
+from glances.timer import Counter
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
