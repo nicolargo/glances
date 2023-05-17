@@ -12,7 +12,7 @@
 import sys
 
 from glances.logger import logger
-from glances.globals import iteritems, json_dumps
+from glances.globals import json_dumps
 from glances.exports.export import GlancesExport
 
 from kafka import KafkaProducer

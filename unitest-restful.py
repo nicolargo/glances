@@ -16,7 +16,6 @@ import subprocess
 import time
 import numbers
 import unittest
-import sys
 
 from glances import __version__
 from glances.globals import text_type

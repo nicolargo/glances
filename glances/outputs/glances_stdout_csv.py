@@ -11,7 +11,6 @@
 
 import time
 
-from glances.logger import logger
 from glances.globals import printandflush
 
 
