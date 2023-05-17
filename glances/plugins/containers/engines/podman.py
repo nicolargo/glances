@@ -20,7 +20,7 @@ try:
 except Exception as e:
     import_podman_error_tag = True
     # Display debug message if import KeyError
-    logger.debug("Error loading Podman deps Lib. Podman feature in the Containers plugin is disabled ({})".format(e))
+    logger.warning("Error loading Podman deps Lib. Podman feature in the Containers plugin is disabled ({})".format(e))
 else:
     import_podman_error_tag = False
 
