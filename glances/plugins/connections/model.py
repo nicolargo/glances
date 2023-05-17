@@ -158,7 +158,9 @@ class PluginModel(GlancesPluginModel):
                 msg = '{:>{width}}'.format(self.stats[s], width=max_width - len(s) + 2)
                 ret.append(self.curse_add_line(msg))
         # Connections track
-        if self.stats['nf_conntrack_enabled']:
+        if self.stats['nf_conntrack_enabled'] and \
+           'nf_conntrack_count' in self.stats and \
+           'nf_conntrack_max' in self.stats:
             s = 'Tracked'
             ret.append(self.curse_new_line())
             msg = '{:{width}}'.format(nativestr(s).capitalize(), width=len(s))
