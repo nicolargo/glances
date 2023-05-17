@@ -54,8 +54,8 @@ test-with-upgrade: venv-upgrade venv-dev-upgrade ## Run unit tests
 # ===================================================================
 
 format: venv-dev-upgrade ## Format the code
-	@git ls-files '*.py' | xargs ./venv/bin/python -m autopep8 --in-place --jobs 0 --global-config=.flake8
-	@git ls-files '*.py' | xargs ./venv/bin/python -m autoflake --in-place --remove-all-unused-imports --remove-unused-variables --remove-duplicate-keys --exclude="compat.py,globals.py"
+	@git ls-files './glances/*.py' | xargs ./venv/bin/python -m autopep8 --in-place --jobs 0 --global-config=.flake8
+	@git ls-files './glances/*.py' | xargs ./venv/bin/python -m autoflake --in-place --remove-all-unused-imports --remove-unused-variables --remove-duplicate-keys --exclude="compat.py,globals.py"
 	./venv/bin/python -m black ./glances --exclude outputs/static
 
 flake8: venv-dev-upgrade ## Run flake8 linter.
