@@ -31,6 +31,17 @@ venv-upgrade: ## Upgrade Python 3 run-time dependencies
 	./venv/bin/pip install --upgrade -r requirements.txt
 	./venv/bin/pip install --upgrade -r optional-requirements.txt
 
+# For minimal installation (without optional dependencies)
+
+venv-min-python: ## Install Python 3 venv
+	virtualenv -p /usr/bin/python3 venv-min
+
+venv-min: venv-min-python ## Install Python 3 run-time dependencies
+	./venv/bin/pip install -r requirements.txt
+
+venv-min-upgrade: ## Upgrade Python 3 run-time dependencies
+	./venv/bin/pip install --upgrade -r requirements.txt
+
 # ===================================================================
 # Tests
 # ===================================================================
