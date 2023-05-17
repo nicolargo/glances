@@ -10,8 +10,6 @@
 """Docker Extension unit for Glances' Containers plugin."""
 import time
 
-import requests
-
 from glances.compat import iterkeys, itervalues, nativestr, pretty_date
 from glances.logger import logger
 from glances.plugins.containers.stats_streamer import StatsStreamer
@@ -19,12 +17,13 @@ from glances.plugins.containers.stats_streamer import StatsStreamer
 # Docker-py library (optional and Linux-only)
 # https://github.com/docker/docker-py
 try:
+    import requests
     import docker
     from dateutil import parser, tz
 except Exception as e:
     import_docker_error_tag = True
     # Display debug message if import KeyError
-    logger.debug("Error loading Docker deps Lib. Docker plugin is disabled ({})".format(e))
+    logger.warning("Error loading Docker deps Lib. Docker plugin is disabled ({})".format(e))
 else:
     import_docker_error_tag = False
 
