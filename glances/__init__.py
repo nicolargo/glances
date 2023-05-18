@@ -154,8 +154,13 @@ def main():
     Select the mode (standalone, client or server)
     Run it...
     """
+    # SIGHUP not available on Windows (see issue #2408)
+    if sys.platform.startswith('win'):
+        signal_list = (signal.SIGTERM, signal.SIGINT)
+    else:
+        signal_list = (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)
     # Catch the kill signal
-    for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+    for sig in signal_list:
         signal.signal(sig, __signal_handler)
 
     # Log Glances and psutil version
