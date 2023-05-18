@@ -26,7 +26,7 @@ import sys
 from glances.logger import logger
 from glances.keyboard import KBHit
 from glances.timer import Timer
-from glances.compat import nativestr, u
+from glances.globals import nativestr, u
 from glances.processes import glances_processes, sort_processes_key_list
 
 # Import curses library for "normal" operating system
