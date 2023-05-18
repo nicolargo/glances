@@ -9,6 +9,23 @@ Version 4.0.0
 Under development: https://github.com/nicolargo/glances/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Glances+4.0.0%22
 
 ===============
+Version 3.4.0.2
+===============
+
+Bugs corrected:
+
+    * Cannot start Glances 3.4.0.1 on Windows 10: SIGHUP not defined #2408
+    * Influxdb2 export not working #2407
+
+===============
+Version 3.4.0.1
+===============
+
+Bug corrected:
+
+    * 3.4.0 crash on startupwith minimal deps #2401
+
+===============
 Version 3.4.0
 ===============
 
