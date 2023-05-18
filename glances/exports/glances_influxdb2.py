@@ -35,7 +35,7 @@ class Export(GlancesExport):
         self.prefix = None
         self.tags = None
         self.hostname = None
-        self.interval = 0
+        self.interval = None
 
         # Load the InfluxDB configuration file
         self.export_enable = self.load_conf(
@@ -44,14 +44,15 @@ class Export(GlancesExport):
             options=['protocol', 'prefix', 'tags', 'interval'],
         )
         if not self.export_enable:
-            exit('Missing INFLUXDB version 1 config')
+            exit('Missing influxdb2 config')
 
         # Interval between two exports (in seconds)
-        # if export_interval is set to 0, the Glances refresh time is used (default behavor)
+        if self.interval is None:
+            self.interval = 0
         try:
             self.interval = int(self.interval)
         except ValueError:
-            logger.warning("InfluxDB export interval is not an integer, use default value (0)")
+            logger.warning("InfluxDB export interval is not an integer, use default value")
             self.interval = 0
         # and should be set to the Glances refresh time if the value is 0
         self.interval = self.interval if self.interval > 0 else self.args.time
