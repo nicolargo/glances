@@ -3,20 +3,10 @@
 #
 # Glances - An eye on your system
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Glances unitary tests suite for the XML-RPC API."""
 
@@ -26,12 +16,6 @@ import shlex
 import subprocess
 import time
 import unittest
-import sys
-
-# Check Python version
-if sys.version_info < (3, 4):
-    print('Glances requires at least Python 3.4 to run.')
-    sys.exit(1)
 
 from glances import __version__
 from glances.globals import ServerProxy
@@ -64,7 +48,7 @@ class TestGlances(unittest.TestCase):
             cmdline = "./venv/bin/python"
         else:
             cmdline = "python"
-        cmdline += " -m glances -s -p %s" % SERVER_PORT
+        cmdline += " -m glances -B localhost -s -p %s" % SERVER_PORT
         print("Run the Glances Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)

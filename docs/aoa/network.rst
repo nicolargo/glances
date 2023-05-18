@@ -39,6 +39,8 @@ virtual docker interface (docker0, docker1, ...):
     tx_critical=90
     # Define the list of hidden network interfaces (comma-separated regexp)
     hide=docker.*,lo
+    # Define the list of network interfaces to show (comma-separated regexp)
+    #show=eth0,eth1
     # WLAN 0 alias
     wlan0_alias=Wireless IF
     # It is possible to overwrite the bitrate thresholds per interface
@@ -51,3 +53,9 @@ virtual docker interface (docker0, docker1, ...):
     wlan0_tx_warning=900000
     wlan0_tx_critical=1000000
     wlan0_tx_log=True
+
+Filtering is based on regular expression. Please be sure that your regular
+expression works as expected. You can use an online tool like `regex101`_ in
+order to test your regular expression.
+
+.. _regex101: https://regex101.com/

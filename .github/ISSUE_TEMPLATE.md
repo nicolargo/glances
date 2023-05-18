@@ -10,9 +10,18 @@ For an enhancement or new feature: Describe your needs.
 
 #### Versions
 
-* Glances & psutil (glances -V):
-* Operating System (lsb_release -a):
+* Glances & psutil versions: `To be completed with result of: glances -V`
+* Operating System: `To be completed with result of: lsb_release -a`
+* How do you install Glances (Pypi package, script, package manager, source): `To be completed`
+* Glances test (only available with Glances 3.1.7 or higher):
 
-#### Logs
+ ```
+ To be completed with result of: glances --issue
+ ```
 
-You can also pastebin the Glances logs file (https://glances.readthedocs.io/en/latest/config.html#logging)
+#### Configuration and log file
+
+You can also [pastebin](https://pastebin.com/):
+
+* the Glances configuration file (https://glances.readthedocs.io/en/latest/config.html#location)
+* the Glances log file (https://glances.readthedocs.io/en/latest/config.html#logging)

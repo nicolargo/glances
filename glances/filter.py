@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import re
 
@@ -57,7 +47,7 @@ class GlancesFilter(object):
 
     @property
     def filter_input(self):
-        """Return the filter given by the user (as a sting)"""
+        """Return the filter given by the user (as a string)"""
         return self._filter_input
 
     @property
@@ -67,7 +57,7 @@ class GlancesFilter(object):
 
     @filter.setter
     def filter(self, value):
-        """Set the filter (as a sting) and compute the regular expression
+        """Set the filter (as a string) and compute the regular expression
 
         A filter could be one of the following:
         - python > Process name of cmd start with python
@@ -141,7 +131,7 @@ class GlancesFilter(object):
             # If the key did not exist
             return False
         try:
-            return self._filter_re.match(value) is None
+            return self._filter_re.fullmatch(value) is None
         except (AttributeError, TypeError):
             # AttributeError -  Filter processes crashes with a bad regular expression pattern (issue #665)
             # TypeError - Filter processes crashes if value is None (issue #1105)

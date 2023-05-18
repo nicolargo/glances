@@ -34,13 +34,13 @@ Legend:
    fs
    irq
    folders
+   cloud
    raid
    smart
    sensors
    hddtemp
    ps
-   monitor
+   containers
    amps
    events
-   docker
    actions

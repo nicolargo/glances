@@ -2,32 +2,23 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """MQTT interface class."""
 
 import socket
 import string
-import json
+import sys
 
 from glances.logger import logger
 from glances.exports.export import GlancesExport
+from glances.globals import json_dumps
 
 # Import paho for MQTT
-from requests import certs
+import certifi
 import paho.mqtt.client as paho
 
 
@@ -54,7 +45,6 @@ class Export(GlancesExport):
 
         # Get the current hostname
         self.hostname = socket.gethostname()
-
         self.port = int(self.port) or 8883
         self.topic = self.topic or 'glances'
         self.user = self.user or 'glances'
@@ -63,10 +53,12 @@ class Export(GlancesExport):
         self.topic_structure = (self.topic_structure or 'per-metric').lower()
         if self.topic_structure not in ['per-metric', 'per-plugin']:
             logger.critical("topic_structure must be either 'per-metric' or 'per-plugin'.")
-            return None
+            sys.exit(2)
 
         # Init the MQTT client
         self.client = self.init()
+        if not self.client:
+            exit("MQTT client initialization failed")
 
     def init(self):
         """Init the connection to the MQTT server."""
@@ -76,12 +68,12 @@ class Export(GlancesExport):
             client = paho.Client(client_id='glances_' + self.hostname, clean_session=False)
             client.username_pw_set(username=self.user, password=self.password)
             if self.tls:
-                client.tls_set(certs.where())
+                client.tls_set(certifi.where())
             client.connect(host=self.host, port=self.port)
             client.loop_start()
             return client
         except Exception as e:
-            logger.critical("Connection to MQTT server failed : %s " % e)
+            logger.critical("Connection to MQTT server %s:%s failed with error: %s " % (self.host, self.port, e))
             return None
 
     def export(self, name, columns, points):
@@ -124,7 +116,7 @@ class Export(GlancesExport):
                     # Add the value
                     current_level[split_key[len(split_key) - 1]] = sensor_values[key]
 
-                json_value = json.dumps(output_value)
+                json_value = json_dumps(output_value)
                 self.client.publish(topic, json_value)
             except Exception as e:
                 logger.error("Can not export stats to MQTT server (%s)" % e)

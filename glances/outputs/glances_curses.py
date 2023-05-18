@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Curses interface class."""
 from __future__ import unicode_literals
@@ -66,7 +56,7 @@ class _GlancesCurses(object):
         'c': {'sort_key': 'cpu_percent'},
         'C': {'switch': 'disable_cloud'},
         'd': {'switch': 'disable_diskio'},
-        'D': {'switch': 'disable_docker'},
+        'D': {'switch': 'disable_containers'},
         # 'e' > Enable/Disable process extended
         # 'E' > Erase the process filter
         # 'f' > Show/hide fs / folder stats
@@ -100,6 +90,8 @@ class _GlancesCurses(object):
         'W': {'switch': 'disable_wifi'},
         # 'x' > Delete finished warning and critical logs
         # 'z' > Enable or disable processes
+        # '+' > Increase the process nice level
+        # '-' > Decrease the process nice level
         # "<" (left arrow) navigation through process sort
         # ">" (right arrow) navigation through process sort
         # 'UP' > Up in the server list
@@ -131,7 +123,7 @@ class _GlancesCurses(object):
     _left_sidebar_max_width = 34
 
     # Define right sidebar
-    _right_sidebar = ['docker', 'processcount', 'amps', 'processlist', 'alert']
+    _right_sidebar = ['containers', 'processcount', 'amps', 'processlist', 'alert']
 
     def __init__(self, config=None, args=None):
         # Init
@@ -170,6 +162,10 @@ class _GlancesCurses(object):
 
         # Init edit filter tag
         self.edit_filter = False
+
+        # Init nice increase/decrease tag
+        self.increase_nice_process = False
+        self.decrease_nice_process = False
 
         # Init kill process tag
         self.kill_process = False
@@ -271,6 +267,7 @@ class _GlancesCurses(object):
             self.ifCAREFUL_color2 = curses.color_pair(8) | A_BOLD
             self.ifWARNING_color2 = curses.color_pair(5) | A_BOLD
             self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
+            self.ifINFO_color = curses.color_pair(8)
             self.filter_color = A_BOLD
             self.selected_color = A_BOLD
 
@@ -304,6 +301,7 @@ class _GlancesCurses(object):
             self.ifCAREFUL_color2 = curses.A_UNDERLINE
             self.ifWARNING_color2 = A_BOLD
             self.ifCRITICAL_color2 = curses.A_REVERSE
+            self.ifINFO_color = A_BOLD
             self.filter_color = A_BOLD
             self.selected_color = A_BOLD
 
@@ -331,6 +329,7 @@ class _GlancesCurses(object):
             'CRITICAL_LOG': self.ifCRITICAL_color,
             'PASSWORD': curses.A_PROTECT,
             'SELECTED': self.selected_color,
+            'INFO': self.ifINFO_color,
         }
 
     def set_cursor(self, value):
@@ -410,13 +409,15 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('9'):
             # '9' > Theme from black to white and reverse
             self._init_colors()
-        elif self.pressedkey == ord('e'):
+        elif self.pressedkey == ord('e') and not self.args.programs:
             # 'e' > Enable/Disable process extended
             self.args.enable_process_extended = not self.args.enable_process_extended
             if not self.args.enable_process_extended:
                 glances_processes.disable_extended()
             else:
                 glances_processes.enable_extended()
+            # When a process is selected (and only in standalone mode), disable the cursor
+            self.args.disable_cursor = self.args.enable_process_extended and self.args.is_standalone
         elif self.pressedkey == ord('E'):
             # 'E' > Erase the process filter
             glances_processes.process_filter = None
@@ -424,7 +425,13 @@ class _GlancesCurses(object):
             # 'f' > Show/hide fs / folder stats
             self.args.disable_fs = not self.args.disable_fs
             self.args.disable_folders = not self.args.disable_folders
-        elif self.pressedkey == ord('k'):
+        elif self.pressedkey == ord('+'):
+            # '+' > Increase process nice level
+            self.increase_nice_process = not self.increase_nice_process
+        elif self.pressedkey == ord('-'):
+            # '+' > Decrease process nice level
+            self.decrease_nice_process = not self.decrease_nice_process
+        elif self.pressedkey == ord('k') and not self.args.disable_cursor:
             # 'k' > Kill selected process (after confirmation)
             self.kill_process = not self.kill_process
         elif self.pressedkey == ord('w'):
@@ -448,11 +455,11 @@ class _GlancesCurses(object):
             # ">" (right arrow) navigation through process sort
             next_sort = (self.loop_position() + 1) % len(self._sort_loop)
             glances_processes.set_sort_key(self._sort_loop[next_sort], False)
-        elif self.pressedkey == curses.KEY_UP or self.pressedkey == 65:
+        elif self.pressedkey == curses.KEY_UP or self.pressedkey == 65 and not self.args.disable_cursor:
             # 'UP' > Up in the server list
             if self.args.cursor_position > 0:
                 self.args.cursor_position -= 1
-        elif self.pressedkey == curses.KEY_DOWN or self.pressedkey == 66:
+        elif self.pressedkey == curses.KEY_DOWN or self.pressedkey == 66 and not self.args.disable_cursor:
             # 'DOWN' > Down in the server list
             # if self.args.cursor_position < glances_processes.max_processes - 2:
             if self.args.cursor_position < glances_processes.processes_count:
@@ -609,7 +616,7 @@ class _GlancesCurses(object):
         max_processes_displayed = (
             self.term_window.getmaxyx()[0]
             - 11
-            - (0 if 'docker' not in __stat_display else self.get_stats_display_height(__stat_display["docker"]))
+            - (0 if 'containers' not in __stat_display else self.get_stats_display_height(__stat_display["containers"]))
             - (
                 0
                 if 'processcount' not in __stat_display
@@ -677,7 +684,6 @@ class _GlancesCurses(object):
             new_filter = self.display_popup(
                 'Process filter pattern: \n\n'
                 + 'Examples:\n'
-                + '- python\n'
                 + '- .*python.*\n'
                 + '- /usr/lib.*\n'
                 + '- name:.*nautilus.*\n'
@@ -692,10 +698,18 @@ class _GlancesCurses(object):
             self.display_popup('Process filter only available in standalone mode')
         self.edit_filter = False
 
+        # Manage increase/decrease nice level of the selected process
+        # Only in standalone mode (cs_status is None)
+        if self.increase_nice_process and cs_status is None:
+            self.nice_increase(stats.get_plugin('processlist').get_raw()[self.args.cursor_position])
+        self.increase_nice_process = False
+        if self.decrease_nice_process and cs_status is None:
+            self.nice_decrease(stats.get_plugin('processlist').get_raw()[self.args.cursor_position])
+        self.decrease_nice_process = False
+
         # Display kill process confirmation popup
         # Only in standalone mode (cs_status is None)
         if self.kill_process and cs_status is None:
-            logger.info(stats.get_plugin('processlist').get_raw()[self.args.cursor_position])
             self.kill(stats.get_plugin('processlist').get_raw()[self.args.cursor_position])
         elif self.kill_process and cs_status is not None:
             self.display_popup('Kill process only available for local processes')
@@ -703,9 +717,19 @@ class _GlancesCurses(object):
 
         # Display graph generation popup
         if self.args.generate_graph:
-            self.display_popup('Generate graph in {}'.format(self.args.export_graph_path))
+            if 'graph' in stats.getExportsList():
+                self.display_popup('Generate graph in {}'.format(self.args.export_graph_path))
+            else:
+                logger.warning('Graph export module is disable. Run Glances with --export graph to enable it.')
+                self.args.generate_graph = False
 
         return True
+
+    def nice_increase(self, process):
+        glances_processes.nice_increase(process['pid'])
+
+    def nice_decrease(self, process):
+        glances_processes.nice_decrease(process['pid'])
 
     def kill(self, process):
         """Kill a process, or a list of process if the process has a childrens field.
@@ -754,7 +778,7 @@ class _GlancesCurses(object):
         self.space_between_column = 3
         if 'ip' in stat_display:
             self.new_column()
-            self.display_plugin(stat_display["ip"])
+            self.display_plugin(stat_display["ip"], display_optional=(self.term_window.getmaxyx()[1] >= 100))
         self.new_column()
         self.display_plugin(
             stat_display["uptime"], add_space=-(self.get_stats_display_width(stat_display["cloud"]) != 0)
@@ -1041,7 +1065,7 @@ class _GlancesCurses(object):
                     # Return to the first column
                     x = display_x
                     continue
-            except:
+            except Exception:
                 # Avoid exception (see issue #1692)
                 pass
             # Do not display outside the screen
@@ -1093,7 +1117,7 @@ class _GlancesCurses(object):
 
     def erase(self):
         """Erase the content of the screen."""
-        self.term_window.erase()
+        self.term_window.clear()
 
     def flush(self, stats, cs_status=None):
         """Clear and update the screen.
@@ -1144,6 +1168,11 @@ class _GlancesCurses(object):
             if pressedkey == curses.KEY_F5:
                 # Were asked to refresh
                 return isexitkey
+
+            if pressedkey in (curses.KEY_UP, 65, curses.KEY_DOWN, 66):
+                # Up of won key pressed, reset the countdown
+                # Better for user experience
+                countdown.reset()
 
             if isexitkey and self.args.help_tag:
                 # Quit from help should return to main screen, not exit #1874
@@ -1213,14 +1242,10 @@ class GlancesCursesStandalone(_GlancesCurses):
 
     """Class for the Glances curse standalone."""
 
-    pass
-
 
 class GlancesCursesClient(_GlancesCurses):
 
     """Class for the Glances curse client."""
-
-    pass
 
 
 class GlancesTextbox(Textbox, object):

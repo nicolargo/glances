@@ -46,9 +46,16 @@ To hide all mount points starting with /boot and /snap:
 
 Filtering are also applied on device name (Glances 3.1.4 or higher).
 
-Example to hide all /dev/sdb mount points:
+It is also possible to configure a white list of devices to display.
+Example to only show /dev/sdb mount points:
 
 .. code-block:: ini
 
      [fs]
-     hide=/dev/sdb.*
+     show=/dev/sdb.*
+
+Filtering is based on regular expression. Please be sure that your regular
+expression works as expected. You can use an online tool like `regex101`_ in
+order to test your regular expression.
+
+.. _regex101: https://regex101.com/

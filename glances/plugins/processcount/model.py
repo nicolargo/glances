@@ -2,24 +2,14 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Process count plugin."""
 
-from glances.processes import glances_processes
+from glances.processes import glances_processes, sort_for_human
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Define the history items list
@@ -36,16 +26,6 @@ class PluginModel(GlancesPluginModel):
 
     stats is a list
     """
-
-    sort_for_human = {
-        'io_counters': 'disk IO',
-        'cpu_percent': 'CPU consumption',
-        'memory_percent': 'memory consumption',
-        'cpu_times': 'process time',
-        'username': 'user name',
-        'name': 'process name',
-        None: 'None',
-    }
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
@@ -80,7 +60,7 @@ class PluginModel(GlancesPluginModel):
             stats = glances_processes.get_count()
         elif self.input_method == 'snmp':
             # Update stats using SNMP
-            # Not availaible
+            # Not available
             pass
 
         # Update the stats
@@ -143,7 +123,7 @@ class PluginModel(GlancesPluginModel):
         # Display sort information
         msg = 'Programs' if self.args.programs else 'Threads'
         try:
-            sort_human = self.sort_for_human[glances_processes.sort_key]
+            sort_human = sort_for_human[glances_processes.sort_key]
         except KeyError:
             sort_human = glances_processes.sort_key
         if glances_processes.auto_sort:

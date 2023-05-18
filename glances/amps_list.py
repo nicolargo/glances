@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2020 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Manage the AMPs list."""
 
@@ -58,13 +48,15 @@ class AmpsList(object):
         # Display a warning (deprecated) message if the monitor section exist
         if "monitor" in self.config.sections():
             logger.warning(
-                "A deprecated [monitor] section exists in the Glances configuration file. You should use the new Applications Monitoring Process module instead (http://glances.readthedocs.io/en/develop/aoa/amps.html)."
+                "A deprecated [monitor] section exists in the Glances configuration file. You should use the new \
+                Applications Monitoring Process module instead \
+                (http://glances.readthedocs.io/en/develop/aoa/amps.html)."
             )
 
         # TODO: Change the way AMP are loaded (use folder/module instead of glances_foo.py file)
         # See https://github.com/nicolargo/glances/issues/1930
         header = "glances_"
-        # For each AMP scrip, call the load_config method
+        # For each AMP script, call the load_config method
         for s in self.config.sections():
             if s.startswith("amp_"):
                 # An AMP section exists in the configuration file
@@ -150,18 +142,11 @@ class AmpsList(object):
         try:
             # Search in both cmdline and name (for kernel thread, see #1261)
             for p in processlist:
-                add_it = False
-                if re.search(amp_value.regex(), p['name']) is not None:
-                    add_it = True
-                else:
-                    if p['cmdline'] is None:
-                        # See issue #1689 (thanks to @darylkell)
-                        continue
-                    for c in p['cmdline']:
-                        if re.search(amp_value.regex(), c) is not None:
-                            add_it = True
-                            break
-                if add_it:
+                if (re.search(amp_value.regex(), p['name']) is not None) or (
+                    p['cmdline'] is not None
+                    and p['cmdline'] != []
+                    and re.search(amp_value.regex(), ' '.join(p['cmdline'])) is not None
+                ):
                     ret.append(
                         {'pid': p['pid'], 'cpu_percent': p['cpu_percent'], 'memory_percent': p['memory_percent']}
                     )

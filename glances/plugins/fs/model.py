@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """File system plugin."""
 from __future__ import unicode_literals
@@ -23,6 +13,7 @@ from __future__ import unicode_literals
 import operator
 
 from glances.globals import u, nativestr, PermissionError
+from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
 import psutil
@@ -105,21 +96,33 @@ class PluginModel(GlancesPluginModel):
             try:
                 fs_stat = psutil.disk_partitions(all=False)
             except (UnicodeDecodeError, PermissionError):
+                logger.debug("Plugin - fs: PsUtil fetch failed")
                 return self.stats
 
             # Optional hack to allow logical mounts points (issue #448)
-            for fs_type in self.get_conf_value('allow'):
+            allowed_fs_types = self.get_conf_value('allow')
+            if allowed_fs_types:
+                # Avoid Psutil call unless mounts need to be allowed
                 try:
-                    fs_stat += [f for f in psutil.disk_partitions(all=True) if f.fstype.find(fs_type) >= 0]
-                except UnicodeDecodeError:
-                    return self.stats
+                    all_mounted_fs = psutil.disk_partitions(all=True)
+                except (UnicodeDecodeError, PermissionError):
+                    logger.debug("Plugin - fs: PsUtil extended fetch failed")
+                else:
+                    # Discard duplicates (#2299) and add entries matching allowed fs types
+                    tracked_mnt_points = set(f.mountpoint for f in fs_stat)
+                    for f in all_mounted_fs:
+                        if (
+                            any(f.fstype.find(fs_type) >= 0 for fs_type in allowed_fs_types)
+                            and f.mountpoint not in tracked_mnt_points
+                        ):
+                            fs_stat.append(f)
 
             # Loop over fs
             for fs in fs_stat:
-                # Do not take hidden file system into account
-                # Also check device name (see issue #1606)
-                if self.is_hide(fs.mountpoint) or self.is_hide(fs.device):
+                # Hide the stats if the mount point is in the exclude list
+                if not self.is_display(fs.mountpoint):
                     continue
+
                 # Grab the disk usage
                 try:
                     fs_usage = psutil.disk_usage(fs.mountpoint)
@@ -138,6 +141,12 @@ class PluginModel(GlancesPluginModel):
                     'percent': fs_usage.percent,
                     'key': self.get_key(),
                 }
+
+                # Hide the stats if the device name is in the exclude list
+                # Correct issue: glances.conf FS hide not applying #1666
+                if not self.is_display(fs_current['device_name']):
+                    continue
+
                 stats.append(fs_current)
 
         elif self.input_method == 'snmp':

@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Common objects shared by all Glances modules."""
 
@@ -27,17 +17,21 @@ import errno
 import os
 import sys
 import platform
-import operator
+import ujson
+from operator import itemgetter, methodcaller
 import unicodedata
 import types
 import subprocess
+from datetime import datetime
+import re
+import base64
 
 import queue
 from configparser import ConfigParser, NoOptionError, NoSectionError
 from statistics import mean
 from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 
@@ -45,7 +39,6 @@ from urllib.parse import urlparse
 from defusedxml.xmlrpc import monkey_patch
 
 monkey_patch()
-
 
 ##############
 # GLOBALS VARS
@@ -79,9 +72,9 @@ long = int
 PermissionError = OSError
 
 # Alias methods
-viewkeys = operator.methodcaller('keys')
-viewvalues = operator.methodcaller('values')
-viewitems = operator.methodcaller('items')
+viewkeys = methodcaller('keys')
+viewvalues = methodcaller('values')
+viewitems = methodcaller('items')
 
 
 ###################
@@ -209,6 +202,7 @@ def is_admin():
         try:
             return ctypes.windll.shell32.IsUserAnAdmin()
         except Exception as e:
+            print("Admin check failed with error: %s" % e)
             traceback.print_exc()
             return False
     else:
@@ -223,12 +217,13 @@ def key_exist_value_not_none(k, d):
     return k in d and d[k] is not None
 
 
-def key_exist_value_not_none_not_v(k, d, v=''):
+def key_exist_value_not_none_not_v(k, d, value='', lengh=None):
     # Return True if:
     # - key k exists
     # - d[k] is not None
-    # - d[k] != v
-    return k in d and d[k] is not None and d[k] != v
+    # - d[k] != value
+    # - if lengh is not None and len(d[k]) >= lengh
+    return k in d and d[k] is not None and d[k] != value and (lengh is None or len(d[k]) >= lengh)
 
 
 def disable(class_name, var):
@@ -253,3 +248,122 @@ def safe_makedirs(path):
                 raise
         else:
             raise
+
+
+def pretty_date(time=False):
+    """
+    Get a datetime object or a int() Epoch timestamp and return a
+    pretty string like 'an hour ago', 'Yesterday', '3 months ago',
+    'just now', etc
+    Source: https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
+    """
+    now = datetime.now()
+    if type(time) is int:
+        diff = now - datetime.fromtimestamp(time)
+    elif isinstance(time, datetime):
+        diff = now - time
+    elif not time:
+        diff = 0
+    second_diff = diff.seconds
+    day_diff = diff.days
+
+    if day_diff < 0:
+        return ''
+
+    if day_diff == 0:
+        if second_diff < 10:
+            return "just now"
+        if second_diff < 60:
+            return str(second_diff) + " secs"
+        if second_diff < 120:
+            return "a min"
+        if second_diff < 3600:
+            return str(second_diff // 60) + " mins"
+        if second_diff < 7200:
+            return "an hour"
+        if second_diff < 86400:
+            return str(second_diff // 3600) + " hours"
+    if day_diff == 1:
+        return "yesterday"
+    if day_diff < 7:
+        return str(day_diff) + " days"
+    if day_diff < 31:
+        return str(day_diff // 7) + " weeks"
+    if day_diff < 365:
+        return str(day_diff // 30) + " months"
+    return str(day_diff // 365) + " years"
+
+
+def urlopen_auth(url, username, password):
+    """Open a url with basic auth"""
+    return urlopen(
+        Request(
+            url,
+            headers={'Authorization': 'Basic ' + base64.b64encode(('%s:%s' % (username, password)).encode()).decode()},
+        )
+    )
+
+
+def json_dumps(data):
+    """Return the object data in a JSON format.
+
+    Manage the issue #815 for Windows OS with UnicodeDecodeError catching.
+    """
+    try:
+        return ujson.dumps(data)
+    except UnicodeDecodeError:
+        return ujson.dumps(data, ensure_ascii=False)
+
+
+def json_dumps_dictlist(data, item):
+    if isinstance(data, dict):
+        try:
+            return json_dumps({item: data[item]})
+        except (TypeError, IndexError, KeyError):
+            return None
+    elif isinstance(data, list):
+        try:
+            # Source:
+            # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
+            # But https://github.com/nicolargo/glances/issues/1401
+            return json_dumps({item: list(map(itemgetter(item), data))})
+        except (TypeError, IndexError, KeyError):
+            return None
+    else:
+        return None
+
+
+def string_value_to_float(s):
+    """Convert a string with a value and an unit to a float.
+    Example:
+    '12.5 MB' -> 12500000.0
+    '32.5 GB' -> 32500000000.0
+    Args:
+        s (string): Input string with value and unit
+    Output:
+        float: The value in float
+    """
+    convert_dict = {
+        None: 1,
+        'B': 1,
+        'KB': 1000,
+        'MB': 1000000,
+        'GB': 1000000000,
+        'TB': 1000000000000,
+        'PB': 1000000000000000,
+    }
+    unpack_string = [
+        i[0] if i[1] == '' else i[1].upper() for i in re.findall(r'([\d.]+)|([^\d.]+)', s.replace(' ', ''))
+    ]
+    if len(unpack_string) == 2:
+        value, unit = unpack_string
+    elif len(unpack_string) == 1:
+        value = unpack_string[0]
+        unit = None
+    else:
+        return None
+    try:
+        value = float(unpack_string[0])
+    except ValueError:
+        return None
+    return value * convert_dict[unit]

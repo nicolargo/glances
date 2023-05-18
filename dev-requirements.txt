@@ -1,2 +1,14 @@
 py-spy
 black
+pyright
+requirements-parser
+flake8
+autopep8
+autoflake
+ruff
+codespell
+memory-profiler
+matplotlib
+semgrep
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
+numpy>=1.22.2 # not directly required, pinned by Snyk to avoid a vulnerability

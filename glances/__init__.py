@@ -2,25 +2,16 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
 """Init the Glances software."""
 
 # Import system libs
+import tracemalloc
 import locale
 import platform
 import signal
@@ -29,7 +20,7 @@ import sys
 # Global name
 # Version should start and end with a numerical char
 # See https://packaging.python.org/specifications/core-metadata/#version
-__version__ = '3.2.6_beta01'
+__version__ = '4.0.0_beta01'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
 
@@ -65,12 +56,10 @@ if psutil_version_info < psutil_min_version:
     sys.exit(1)
 
 # Trac malloc is only available on Python 3.4 or higher
-import tracemalloc
-
 
 
 def __signal_handler(signal, frame):
-    """Callback for CTRL-C."""
+    logger.debug("Signal {} catched".format(signal))
     end()
 
 
@@ -78,12 +67,12 @@ def end():
     """Stop Glances."""
     try:
         mode.end()
-    except NameError:
+    except (NameError, KeyError):
         # NameError: name 'mode' is not defined in case of interrupt shortly...
         # ...after starting the server mode (issue #1175)
         pass
 
-    logger.info("Glances stopped (key pressed: CTRL-C)")
+    logger.info("Glances stopped gracefully")
 
     # The end...
     sys.exit(0)
@@ -143,7 +132,7 @@ def start(config, args):
         snapshot_end = tracemalloc.take_snapshot()
         snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
         memory_leak = sum([s.size_diff for s in snapshot_diff])
-        print("Memory comsumption: {0:.1f}KB (see log for details)".format(memory_leak / 1000))
+        print("Memory consumption: {0:.1f}KB (see log for details)".format(memory_leak / 1000))
         logger.info("Memory consumption (top 5):")
         for stat in snapshot_diff[:5]:
             logger.info(stat)
@@ -165,8 +154,14 @@ def main():
     Select the mode (standalone, client or server)
     Run it...
     """
-    # Catch the CTRL-C signal
-    signal.signal(signal.SIGINT, __signal_handler)
+    # SIGHUP not available on Windows (see issue #2408)
+    if sys.platform.startswith('win'):
+        signal_list = (signal.SIGTERM, signal.SIGINT)
+    else:
+        signal_list = (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)
+    # Catch the kill signal
+    for sig in signal_list:
+        signal.signal(sig, __signal_handler)
 
     # Log Glances and psutil version
     logger.info('Start Glances {}'.format(__version__))

@@ -2,26 +2,17 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
 
 from glances.globals import BSD, LINUX, MACOS, WINDOWS, iterkeys
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.filter import GlancesFilter
+from glances.programs import processes_to_programs
 from glances.logger import logger
 
 import psutil
@@ -29,14 +20,29 @@ import psutil
 # This constant defines the list of available processes sort key
 sort_processes_key_list = ['cpu_percent', 'memory_percent', 'username', 'cpu_times', 'io_counters', 'name']
 
+# Sort dictionary for human
+sort_for_human = {
+    'io_counters': 'disk IO',
+    'cpu_percent': 'CPU consumption',
+    'memory_percent': 'memory consumption',
+    'cpu_times': 'process time',
+    'username': 'user name',
+    'name': 'processs name',
+    None: 'None',
+}
+
 
 class GlancesProcesses(object):
     """Get processed stats using the psutil library."""
 
     def __init__(self, cache_timeout=60):
         """Init the class to collect stats about processes."""
+        # Init the args, coming from the GlancesStandalone class
+        # Should be set by the set_args method
+        self.args = None
+
         # Add internals caches because psutil do not cache all the stats
-        # See: https://code.google.com/p/psutil/issues/detail?id=462
+        # See: https://github.com/giampaolo/psutil/issues/462
         self.username_cache = {}
         self.cmdline_cache = {}
 
@@ -45,7 +51,7 @@ class GlancesProcesses(object):
         # First iteration, no cache
         self.cache_timer = Timer(0)
 
-        # Init the io dict
+        # Init the io_old dict used to compute the IO bitrate
         # key = pid
         # value = [ read_bytes_old, write_bytes_old ]
         self.io_old = {}
@@ -68,6 +74,7 @@ class GlancesProcesses(object):
 
         # Extended stats for top process is enable by default
         self.disable_extended_tag = False
+        self.extended_process = None
 
         # Test if the system can grab io_counters
         try:
@@ -106,6 +113,10 @@ class GlancesProcesses(object):
         # { 'cpu_percent': 0.0, 'memory_percent': 0.0 }
         self._max_values = {}
         self.reset_max_values()
+
+    def set_args(self, args):
+        """Set args."""
+        self.args = args
 
     def reset_processcount(self):
         """Reset the global process count"""
@@ -245,6 +256,101 @@ class GlancesProcesses(object):
         for k in self._max_values_list:
             self._max_values[k] = 0.0
 
+    def get_extended_stats(self, proc):
+        """Get the extended stats for the given PID."""
+        # - cpu_affinity (Linux, Windows, FreeBSD)
+        # - ionice (Linux and Windows > Vista)
+        # - num_ctx_switches (not available on Illumos/Solaris)
+        # - num_fds (Unix-like)
+        # - num_handles (Windows)
+        # - memory_maps (only swap, Linux)
+        #   https://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
+        # - connections (TCP and UDP)
+        # - CPU min/max/mean
+
+        # Set the extended stats list (OS dependant)
+        extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
+        if LINUX:
+            # num_fds only available on Unix system (see issue #1351)
+            extended_stats += ['num_fds']
+        if WINDOWS:
+            extended_stats += ['num_handles']
+
+        ret = {}
+        try:
+            # Get the extended stats
+            selected_process = psutil.Process(proc['pid'])
+            ret = selected_process.as_dict(attrs=extended_stats, ad_value=None)
+
+            if LINUX:
+                try:
+                    ret['memory_swap'] = sum([v.swap for v in selected_process.memory_maps()])
+                except (psutil.NoSuchProcess, KeyError):
+                    # (KeyError catch for issue #1551)
+                    pass
+                except (psutil.AccessDenied, NotImplementedError):
+                    # NotImplementedError: /proc/${PID}/smaps file doesn't exist
+                    # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
+                    # is not enabled (see psutil #533/glances #413).
+                    ret['memory_swap'] = None
+            try:
+                ret['tcp'] = len(selected_process.connections(kind="tcp"))
+                ret['udp'] = len(selected_process.connections(kind="udp"))
+            except (psutil.AccessDenied, psutil.NoSuchProcess):
+                # Manage issue1283 (psutil.AccessDenied)
+                ret['tcp'] = None
+                ret['udp'] = None
+        except (psutil.NoSuchProcess, ValueError, AttributeError) as e:
+            logger.error('Can not grab extended stats ({})'.format(e))
+            self.extended_process = None
+            ret['extended_stats'] = False
+        else:
+            logger.debug('Grab extended stats for process {}'.format(proc['pid']))
+
+            # Compute CPU and MEM min/max/mean
+            for stat_prefix in ['cpu', 'memory']:
+                if stat_prefix + '_min' not in self.extended_process:
+                    ret[stat_prefix + '_min'] = proc[stat_prefix + '_percent']
+                else:
+                    ret[stat_prefix + '_min'] = (
+                        proc[stat_prefix + '_percent']
+                        if proc[stat_prefix + '_min'] > proc[stat_prefix + '_percent']
+                        else proc[stat_prefix + '_min']
+                    )
+                if stat_prefix + '_max' not in self.extended_process:
+                    ret[stat_prefix + '_max'] = proc[stat_prefix + '_percent']
+                else:
+                    ret[stat_prefix + '_max'] = (
+                        proc[stat_prefix + '_percent']
+                        if proc[stat_prefix + '_max'] < proc[stat_prefix + '_percent']
+                        else proc[stat_prefix + '_max']
+                    )
+                if stat_prefix + '_mean_sum' not in self.extended_process:
+                    ret[stat_prefix + '_mean_sum'] = proc[stat_prefix + '_percent']
+                else:
+                    ret[stat_prefix + '_mean_sum'] = proc[stat_prefix + '_mean_sum'] + proc[stat_prefix + '_percent']
+                if stat_prefix + '_mean_counter' not in self.extended_process:
+                    ret[stat_prefix + '_mean_counter'] = 1
+                else:
+                    ret[stat_prefix + '_mean_counter'] = proc[stat_prefix + '_mean_counter'] + 1
+                ret[stat_prefix + '_mean'] = ret[stat_prefix + '_mean_sum'] / ret[stat_prefix + '_mean_counter']
+
+            ret['extended_stats'] = True
+        return ret
+
+    def is_selected_extended_process(self, position):
+        """Return True if the process is the selected one for extended stats."""
+        return (
+            hasattr(self.args, 'programs')
+            and not self.args.programs
+            and hasattr(self.args, 'enable_process_extended')
+            and self.args.enable_process_extended
+            and not self.disable_extended_tag
+            and hasattr(self.args, 'cursor_position')
+            and position == self.args.cursor_position
+            and not self.args.disable_cursor
+        )
+
     def update(self):
         """Update the processes stats."""
         # Reset the stats
@@ -260,8 +366,9 @@ class GlancesProcesses(object):
 
         # Grab standard stats
         #####################
-        sorted_attrs = ['cpu_percent', 'cpu_times', 'memory_percent', 'name', 'status', 'status', 'num_threads']
-        displayed_attr = ['memory_info', 'nice', 'pid', 'ppid']
+        sorted_attrs = ['cpu_percent', 'cpu_times', 'memory_percent', 'name', 'status', 'num_threads']
+        displayed_attr = ['memory_info', 'nice', 'pid']
+        # 'name' can not be cached because it is used for filtering
         cached_attrs = ['cmdline', 'username']
 
         # Some stats are optional
@@ -283,77 +390,43 @@ class GlancesProcesses(object):
             is_cached = True
 
         # Build the processes stats list (it is why we need psutil>=5.3.0)
-        self.processlist = [
-            p.info
-            for p in psutil.process_iter(attrs=sorted_attrs, ad_value=None)
-            # OS-related processes filter
-            if not (BSD and p.info['name'] == 'idle')
-            and not (WINDOWS and p.info['name'] == 'System Idle Process')
-            and not (MACOS and p.info['name'] == 'kernel_task')
-            and
-            # Kernel threads filter
-            not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0)
-        ]
-
+        # This is one of the main bottleneck of Glances (see flame graph)
+        # Filter processes
+        self.processlist = list(
+            filter(
+                lambda p: not (BSD and p.info['name'] == 'idle')
+                and not (WINDOWS and p.info['name'] == 'System Idle Process')
+                and not (MACOS and p.info['name'] == 'kernel_task')
+                and not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0),
+                psutil.process_iter(attrs=sorted_attrs, ad_value=None),
+            )
+        )
+        # Only get the info key
+        self.processlist = [p.info for p in self.processlist]
         # Sort the processes list by the current sort_key
         self.processlist = sort_stats(self.processlist, sorted_by=self.sort_key, reverse=True)
 
         # Update the processcount
         self.update_processcount(self.processlist)
 
-        # Loop over processes and add metadata
-        first = True
-        for proc in self.processlist:
-            # Get extended stats, only for top processes (see issue #403).
-            if first and not self.disable_extended_tag:
-                # - cpu_affinity (Linux, Windows, FreeBSD)
-                # - ionice (Linux and Windows > Vista)
-                # - num_ctx_switches (not available on Illumos/Solaris)
-                # - num_fds (Unix-like)
-                # - num_handles (Windows)
-                # - memory_maps (only swap, Linux)
-                #   https://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
-                # - connections (TCP and UDP)
-                extended = {}
-                try:
-                    top_process = psutil.Process(proc['pid'])
-                    extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
-                    if LINUX:
-                        # num_fds only avalable on Unix system (see issue #1351)
-                        extended_stats += ['num_fds']
-                    if WINDOWS:
-                        extended_stats += ['num_handles']
+        # Loop over processes and :
+        # - add extended stats for selected process
+        # - add metadata
+        for position, proc in enumerate(self.processlist):
+            # Extended stats
+            ################
 
-                    # Get the extended stats
-                    extended = top_process.as_dict(attrs=extended_stats, ad_value=None)
+            # Get the selected process when the 'e' key is pressed
+            if self.is_selected_extended_process(position):
+                self.extended_process = proc
 
-                    if LINUX:
-                        try:
-                            extended['memory_swap'] = sum([v.swap for v in top_process.memory_maps()])
-                        except (psutil.NoSuchProcess, KeyError):
-                            # (KeyError catch for issue #1551)
-                            pass
-                        except (psutil.AccessDenied, NotImplementedError):
-                            # NotImplementedError: /proc/${PID}/smaps file doesn't exist
-                            # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
-                            # is not enabled (see psutil #533/glances #413).
-                            extended['memory_swap'] = None
-                    try:
-                        extended['tcp'] = len(top_process.connections(kind="tcp"))
-                        extended['udp'] = len(top_process.connections(kind="udp"))
-                    except (psutil.AccessDenied, psutil.NoSuchProcess):
-                        # Manage issue1283 (psutil.AccessDenied)
-                        extended['tcp'] = None
-                        extended['udp'] = None
-                except (psutil.NoSuchProcess, ValueError, AttributeError) as e:
-                    logger.error('Can not grab extended stats ({})'.format(e))
-                    extended['extended_stats'] = False
-                else:
-                    logger.debug('Grab extended stats for process {}'.format(proc['pid']))
-                    extended['extended_stats'] = True
-                proc.update(extended)
-            first = False
-            # /End of extended stats
+            # Grab extended stats only for the selected process (see issue #2225)
+            if self.extended_process is not None and proc['pid'] == self.extended_process['pid']:
+                proc.update(self.get_extended_stats(self.extended_process))
+                self.extended_process = proc
+
+            # Meta data
+            ###########
 
             # PID is the key
             proc['key'] = 'pid'
@@ -406,8 +479,8 @@ class GlancesProcesses(object):
                 # Save values to cache
                 self.processlist_cache[proc['pid']] = {cached: proc[cached] for cached in cached_attrs}
 
-        # Apply filter
-        self.processlist = [p for p in self.processlist if not (self._filter.is_filtered(p))]
+        # Apply user filter
+        self.processlist = list(filter(lambda p: not self._filter.is_filtered(p), self.processlist))
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Useful to highlight the processes with maximum values
@@ -420,9 +493,14 @@ class GlancesProcesses(object):
         """Get the number of processes."""
         return self.processcount
 
-    def getlist(self, sorted_by=None):
-        """Get the processlist."""
-        return self.processlist
+    def getlist(self, sorted_by=None, as_programs=False):
+        """Get the processlist.
+        By default, return the list of threads.
+        If as_programs is True, return the list of programs."""
+        if as_programs:
+            return processes_to_programs(self.processlist)
+        else:
+            return self.processlist
 
     @property
     def sort_key(self):
@@ -437,6 +515,32 @@ class GlancesProcesses(object):
         else:
             self.auto_sort = auto
             self._sort_key = key
+
+    def nice_decrease(self, pid):
+        """Decrease nice level
+        On UNIX this is a number which usually goes from -20 to 20.
+        The higher the nice value, the lower the priority of the process."""
+        p = psutil.Process(pid)
+        try:
+            p.nice(p.nice() - 1)
+            logger.info('Set nice level of process {} to {} (higher the priority)'.format(pid, p.nice()))
+        except psutil.AccessDenied:
+            logger.warning(
+                'Can not decrease (higher the priority) the nice level of process {} (access denied)'.format(pid)
+            )
+
+    def nice_increase(self, pid):
+        """Increase nice level
+        On UNIX this is a number which usually goes from -20 to 20.
+        The higher the nice value, the lower the priority of the process."""
+        p = psutil.Process(pid)
+        try:
+            p.nice(p.nice() + 1)
+            logger.info('Set nice level of process {} to {} (lower the priority)'.format(pid, p.nice()))
+        except psutil.AccessDenied:
+            logger.warning(
+                'Can not increase (lower the priority) the nice level of process {} (access denied)'.format(pid)
+            )
 
     def kill(self, pid, timeout=3):
         """Kill process with pid"""

@@ -2,32 +2,20 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Kafka interface class."""
 
 import sys
 
 from glances.logger import logger
-from glances.globals import iteritems
+from glances.globals import json_dumps
 from glances.exports.export import GlancesExport
 
 from kafka import KafkaProducer
-import json
-import codecs
 
 
 class Export(GlancesExport):
@@ -50,7 +38,7 @@ class Export(GlancesExport):
             'kafka', mandatories=['host', 'port', 'topic'], options=['compression', 'tags']
         )
         if not self.export_enable:
-            sys.exit(2)
+            exit('Missing KAFKA config')
 
         # Init the kafka client
         self.client = self.init()
@@ -66,7 +54,7 @@ class Export(GlancesExport):
         try:
             s = KafkaProducer(
                 bootstrap_servers=server_uri,
-                value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                value_serializer=lambda v: json_dumps(v).encode('utf-8'),
                 compression_type=self.compression,
             )
         except Exception as e:

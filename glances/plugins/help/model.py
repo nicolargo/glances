@@ -2,29 +2,21 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
 Help plugin.
 
 Just a stupid plugin to display the help screen.
 """
-
+import sys
+from glances.globals import iteritems
 from glances import __version__, psutil_version
 from glances.plugins.plugin.model import GlancesPluginModel
+from itertools import chain
 
 
 class PluginModel(GlancesPluginModel):
@@ -40,17 +32,20 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # init data dictionary
-        self.view_data = {}
+        # init data dictionary, to preserve insertion order
+        if sys.version_info < (3, 6):
+            from collections import OrderedDict
+
+            self.view_data = OrderedDict()
+        else:
+            self.view_data = {}
         self.generate_view_data()
 
     def reset(self):
         """No stats. It is just a plugin to display the help."""
-        pass
 
     def update(self):
         """No stats. It is just a plugin to display the help."""
-        pass
 
     def generate_view_data(self):
         """Generate the views."""
@@ -62,60 +57,72 @@ class PluginModel(GlancesPluginModel):
         except AttributeError:
             pass
 
-        msg_col = ' {0:1}  {1:35}'
-        msg_col2 = '   {0:1}  {1:35}'
-        self.view_data['sort_auto'] = msg_col.format('a', 'Sort processes automatically')
-        self.view_data['sort_network'] = msg_col2.format('b', 'Bytes or bits for network I/O')
-        self.view_data['sort_cpu'] = msg_col.format('c', 'Sort processes by CPU%')
-        self.view_data['show_hide_alert'] = msg_col2.format('l', 'Show/hide alert logs')
-        self.view_data['sort_mem'] = msg_col.format('m', 'Sort processes by MEM%')
-        self.view_data['sort_user'] = msg_col.format('u', 'Sort processes by USER')
-        self.view_data['delete_warning_alerts'] = msg_col2.format('w', 'Delete warning alerts')
-        self.view_data['sort_proc'] = msg_col.format('p', 'Sort processes by name')
-        self.view_data['delete_warning_critical_alerts'] = msg_col2.format('x', 'Delete warning and critical alerts')
-        self.view_data['sort_io'] = msg_col.format('i', 'Sort processes by I/O rate')
-        self.view_data['percpu'] = msg_col2.format('1', 'Global CPU or per-CPU stats')
-        self.view_data['sort_cpu_times'] = msg_col.format('t', 'Sort processes by TIME')
-        self.view_data['show_hide_help'] = msg_col2.format('h', 'Show/hide this help screen')
-        self.view_data['show_hide_diskio'] = msg_col.format('d', 'Show/hide disk I/O stats')
-        self.view_data['show_hide_irq'] = msg_col2.format('Q', 'Show/hide IRQ stats')
-        self.view_data['view_network_io_combination'] = msg_col2.format('T', 'View network I/O as combination')
-        self.view_data['show_hide_filesystem'] = msg_col.format('f', 'Show/hide filesystem stats')
-        self.view_data['view_cumulative_network'] = msg_col2.format('U', 'View cumulative network I/O')
-        self.view_data['show_hide_network'] = msg_col.format('n', 'Show/hide network stats')
-        self.view_data['show_hide_time'] = msg_col.format('N', 'Show/hide current time')
-        self.view_data['show_hide_filesytem_freespace'] = msg_col2.format('F', 'Show filesystem free space')
-        self.view_data['show_hide_sensors'] = msg_col.format('s', 'Show/hide sensors stats')
-        self.view_data['generate_graphs'] = msg_col2.format('g', 'Generate graphs for current history')
-        self.view_data['show_hide_left_sidebar'] = msg_col.format('2', 'Show/hide left sidebar')
-        self.view_data['reset_history'] = msg_col2.format('r', 'Reset history')
-        self.view_data['enable_disable_process_stats'] = msg_col.format('z', 'Enable/disable processes stats')
-        self.view_data['quit'] = msg_col.format('q', 'Quit (Esc and Ctrl-C also work)')
-        self.view_data['enable_disable_top_extends_stats'] = msg_col.format('e', 'Enable/disable top extended stats')
-        self.view_data['enable_disable_short_processname'] = msg_col.format('/', 'Enable/disable short processes name')
-        self.view_data['enable_disable_irix'] = msg_col.format('0', 'Enable/disable Irix process CPU')
-        self.view_data['enable_disable_docker'] = msg_col2.format('D', 'Enable/disable Docker stats')
-        self.view_data['enable_disable_quick_look'] = msg_col.format('3', 'Enable/disable quick look plugin')
-        self.view_data['show_hide_ip'] = msg_col2.format('I', 'Show/hide IP module')
-        self.view_data['diskio_iops'] = msg_col2.format('B', 'Count/rate for Disk I/O')
-        self.view_data['show_hide_top_menu'] = msg_col2.format('5', 'Show/hide top menu (QL, CPU, MEM, SWAP and LOAD)')
-        self.view_data['enable_disable_gpu'] = msg_col.format('G', 'Enable/disable gpu plugin')
-        self.view_data['enable_disable_mean_gpu'] = msg_col2.format('6', 'Enable/disable mean gpu')
-        self.view_data['edit_pattern_filter'] = 'ENTER: Edit the process filter pattern'
-        self.view_data['enable_disable_application_monitor_process'] = msg_col2.format(
-            'A', 'Enable/disable application monitoring process'
+        msg_col = '  {0:1}  {1:34}'
+        msg_header = '{0:39}'
+
+        self.view_data.update(
+            [
+                # First column
+                #
+                ('header_sort', msg_header.format('SORT PROCESSES:')),
+                ('sort_auto', msg_col.format('a', 'Automatically')),
+                ('sort_cpu', msg_col.format('c', 'CPU%')),
+                ('sort_io_rate', msg_col.format('i', 'I/O rate')),
+                ('sort_mem', msg_col.format('m', 'MEM%')),
+                ('sort_process_name', msg_col.format('p', 'Process name')),
+                ('sort_cpu_times', msg_col.format('t', 'TIME')),
+                ('sort_user', msg_col.format('u', 'USER')),
+                ('header_show_hide', msg_header.format('SHOW/HIDE SECTION:')),
+                ('show_hide_application_monitoring', msg_col.format('A', 'Application monitoring')),
+                ('show_hide_diskio', msg_col.format('d', 'Disk I/O')),
+                ('show_hide_docker', msg_col.format('D', 'Docker')),
+                ('show_hide_top_extended_stats', msg_col.format('e', 'Top extended stats')),
+                ('show_hide_filesystem', msg_col.format('f', 'Filesystem')),
+                ('show_hide_gpu', msg_col.format('G', 'GPU')),
+                ('show_hide_ip', msg_col.format('I', 'IP')),
+                ('show_hide_tcp_connection', msg_col.format('K', 'TCP')),
+                ('show_hide_alert', msg_col.format('l', 'Alert logs')),
+                ('show_hide_network', msg_col.format('n', 'Network')),
+                ('show_hide_current_time', msg_col.format('N', 'Time')),
+                ('show_hide_irq', msg_col.format('Q', 'IRQ')),
+                ('show_hide_raid_plugin', msg_col.format('R', 'RAID')),
+                ('show_hide_sensors', msg_col.format('s', 'Sensors')),
+                ('show_hide_wifi_module', msg_col.format('W', 'Wifi')),
+                ('show_hide_processes', msg_col.format('z', 'Processes')),
+                ('show_hide_left_sidebar', msg_col.format('2', 'Left sidebar')),
+                # Second column
+                #
+                ('show_hide_quick_look', msg_col.format('3', 'Quick Look')),
+                ('show_hide_cpu_mem_swap', msg_col.format('4', 'CPU, MEM, and SWAP')),
+                ('show_hide_all', msg_col.format('5', 'ALL')),
+                ('header_toggle', msg_header.format('TOGGLE DATA TYPE:')),
+                ('toggle_bits_bytes', msg_col.format('b', 'Network I/O, bits/bytes')),
+                ('toggle_count_rate', msg_col.format('B', 'Disk I/O, count/rate')),
+                ('toggle_used_free', msg_col.format('F', 'Filesystem space, used/free')),
+                ('toggle_bar_sparkline', msg_col.format('S', 'Quick Look, bar/sparkline')),
+                ('toggle_separate_combined', msg_col.format('T', 'Network I/O, separate/combined')),
+                ('toggle_live_cumulative', msg_col.format('U', 'Network I/O, live/cumulative')),
+                ('toggle_linux_percentage', msg_col.format('0', 'Load, Linux/percentage')),
+                ('toggle_cpu_individual_combined', msg_col.format('1', 'CPU, individual/combined')),
+                ('toggle_gpu_individual_combined', msg_col.format('6', 'GPU, individual/combined')),
+                ('toggle_short_full', msg_col.format('/', 'Process names, short/full')),
+                ('header_miscellaneous', msg_header.format('MISCELLANEOUS:')),
+                ('misc_erase_process_filter', msg_col.format('E', 'Erase process filter')),
+                ('misc_generate_history_graphs', msg_col.format('g', 'Generate history graphs')),
+                ('misc_help', msg_col.format('h', 'HELP')),
+                ('misc_accumulate_processes_by_program', msg_col.format('j', 'Display threads or programs')),
+                ('misc_increase_nice_process', msg_col.format('+', 'Increase nice process')),
+                ('misc_decrease_nice_process', msg_col.format('-', 'Decrease nice process (need admin rights)')),
+                ('misc_kill_process', msg_col.format('k', 'Kill process')),
+                ('misc_reset_processes_summary_min_max', msg_col.format('M', 'Reset processes summary min/max')),
+                ('misc_quit', msg_col.format('q', 'QUIT (or Esc or Ctrl-C)')),
+                ('misc_reset_history', msg_col.format('r', 'Reset history')),
+                ('misc_delete_warning_alerts', msg_col.format('w', 'Delete warning alerts')),
+                ('misc_delete_warning_and_critical_alerts', msg_col.format('x', 'Delete warning & critical alerts')),
+                ('misc_theme_white', msg_col.format('9', 'Optimize colors for white background')),
+                ('misc_edit_process_filter_pattern', '  ENTER: Edit process filter pattern'),
+            ]
         )
-        self.view_data['erase_current_process_filter'] = msg_col.format('E', 'Erase current process filter')
-        self.view_data['show_hide_tcp_connection'] = msg_col.format('K', 'Show/hide TCP connections')
-        self.view_data['kill_process'] = msg_col2.format('k', 'Kill process')
-        self.view_data['reset_process_summary_min_max'] = msg_col.format('M', 'Reset processes summary min/max')
-        self.view_data['show_hide_current_time'] = msg_col2.format('N', 'Show/hide current time')
-        self.view_data['show_hide_raid_plugin'] = msg_col.format('R', 'Show/hide RAID plugin')
-        self.view_data['show_hide_wifi_module'] = msg_col2.format('W', 'Show/hide Wifi module')
-        self.view_data['enable_disable_all_but_quick_look_and_load_module'] = msg_col2.format(
-            '4', 'Enable/disable all but quick look and load module'
-        )
-        self.view_data['programs'] = msg_col2.format('j', 'Accumulate processes by program')
 
     def get_view_data(self, args=None):
         """Return the view."""
@@ -126,94 +133,51 @@ class PluginModel(GlancesPluginModel):
         # Init the return message
         ret = []
 
-        # Build the string message
-        # Header
+        # Build the header message
         ret.append(self.curse_add_line(self.view_data['version'], 'TITLE'))
         ret.append(self.curse_add_line(self.view_data['psutil_version']))
         ret.append(self.curse_new_line())
 
-        # Configuration file path
+        # Build the configuration file path
         if 'configuration_file' in self.view_data:
-            ret.append(self.curse_new_line())
             ret.append(self.curse_add_line(self.view_data['configuration_file']))
             ret.append(self.curse_new_line())
 
-        # Keys
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['sort_auto']))
-        ret.append(self.curse_add_line(self.view_data['sort_network']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['sort_cpu']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_alert']))
         ret.append(self.curse_new_line())
 
-        ret.append(self.curse_add_line(self.view_data['sort_mem']))
-        ret.append(self.curse_add_line(self.view_data['delete_warning_alerts']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['sort_user']))
-        ret.append(self.curse_add_line(self.view_data['delete_warning_critical_alerts']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['sort_proc']))
-        ret.append(self.curse_add_line(self.view_data['percpu']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['sort_io']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_ip']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['sort_cpu_times']))
-        ret.append(self.curse_add_line(self.view_data['enable_disable_docker']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['show_hide_diskio']))
-        ret.append(self.curse_add_line(self.view_data['view_network_io_combination']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['show_hide_filesystem']))
-        ret.append(self.curse_add_line(self.view_data['view_cumulative_network']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['show_hide_network']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_filesytem_freespace']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['show_hide_sensors']))
-        ret.append(self.curse_add_line(self.view_data['generate_graphs']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['show_hide_left_sidebar']))
-        ret.append(self.curse_add_line(self.view_data['reset_history']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['enable_disable_process_stats']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_help']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['enable_disable_quick_look']))
-        ret.append(self.curse_add_line(self.view_data['diskio_iops']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['enable_disable_top_extends_stats']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_top_menu']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['enable_disable_short_processname']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_irq']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['enable_disable_gpu']))
-        ret.append(self.curse_add_line(self.view_data['enable_disable_mean_gpu']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['enable_disable_irix']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_wifi_module']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['erase_current_process_filter']))
-        ret.append(self.curse_add_line(self.view_data['enable_disable_application_monitor_process']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['show_hide_tcp_connection']))
-        ret.append(self.curse_add_line(self.view_data['kill_process']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['reset_process_summary_min_max']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_current_time']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['show_hide_raid_plugin']))
-        ret.append(self.curse_add_line(self.view_data['enable_disable_all_but_quick_look_and_load_module']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['quit']))
-        ret.append(self.curse_add_line(self.view_data['programs']))
+        # key-shortcuts
+        #
+        # Collect all values after the 1st key-msg
+        # in a list of curse-lines.
+        #
+        shortcuts = []
+        collecting = False
+        for k, v in iteritems(self.view_data):
+            if collecting:
+                pass
+            elif k == 'header_sort':
+                collecting = True
+            else:
+                continue
+            shortcuts.append(self.curse_add_line(v))
+        # Divide shortcuts into 2 columns
+        # and if number of schortcuts is even,
+        # make the 1st column taller (len+1).
+        #
+        nlines = (len(shortcuts) + 1) // 2
+        ret.extend(
+            msg
+            for triplet in zip(
+                iter(shortcuts[:nlines]),
+                chain(shortcuts[nlines:], iter(lambda: self.curse_add_line(''), None)),
+                iter(self.curse_new_line, None),
+            )
+            for msg in triplet
+        )
 
         ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line('For an exhaustive list of key bindings:'))
         ret.append(self.curse_new_line())
-
-        ret.append(self.curse_add_line(self.view_data['edit_pattern_filter']))
-
+        ret.append(self.curse_add_line('https://glances.readthedocs.io/en/latest/cmds.html#interactive-commands'))
         # Return the message with decoration
         return ret

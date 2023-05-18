@@ -21,32 +21,41 @@ Glances - An eye on your system
     :target: https://github.com/nicolargo/glances/actions
     :alt: Linux tests (GitHub Actions)
 
-.. image:: https://img.shields.io/appveyor/ci/nicolargo/glances/master.svg?maxAge=3600&label=Windows
-    :target: https://ci.appveyor.com/project/nicolargo/glances
-    :alt: Windows tests (Appveyor)
+.. image:: https://img.shields.io/github/contributors/nicolargo/glances
+    :target: https://github.com/nicolargo/glances/issues?q=is%3Aissue+is%3Aopen+label%3A%22needs+contributor%22
+    :alt: Contibutors
 
 .. image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=develop
     :target: https://scrutinizer-ci.com/g/nicolargo/glances/?branch=develop
+    :alt: Code quality
 
-.. image:: https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/nicolargo
+.. image:: https://img.shields.io/github/sponsors/nicolargo
     :target: https://github.com/sponsors/nicolargo
+    :alt: Sponsors
 
 .. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
     :target: https://twitter.com/nicolargo
+    :alt: @nicolargo
 
 Summary
 =======
 
-**Glances** is a cross-platform monitoring tool which aims to present a
-large amount of monitoring information through a curses or Web
-based interface. The information dynamically adapts depending on the
-size of the user interface.
+**Glances** is an open-source system cross-platform monitoring tool.
+It allows real-time monitoring of various aspects of your system such as
+CPU, memory, disk, network usage etc. It also allows monitoring of running processes,
+logged in users, temperatures, voltages, fan speeds etc.
+It also supports container monitoring, it supports different container management
+systems such as Docker, LXC. The information is presented in an easy to read dashboard
+and can also be used for remote monitoring of systems via a web interface or command
+line interface. It is easy to install and use and can be customized to show only
+the information that you are interested in.
 
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-summary.png
 
-It can also work in client/server mode. Remote monitoring could be done
-via terminal, Web interface or API (XML-RPC and RESTful). Stats can also
-be exported to files or external time/value databases.
+In client/server mode, remote monitoring could be done via terminal,
+Web interface or API (XML-RPC and RESTful).
+Stats can also be exported to files or external time/value databases, CSV or direct
+output to STDOUT.
 
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-responsive-webdesign.png
 
@@ -54,54 +63,60 @@ Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can
 add new plugins or exports modules.
 
-Social networks
-===============
+Project sponsorship
+===================
 
-.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/twitter-icon.png
-    :target: https://twitter.com/nicolargo
-   
-.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/reddit.png
-    :target: https://www.reddit.com/r/glances/
+You can help me to achieve my goals of improving this open-source project
+or just say "thank you" by:
+
+- sponsor me using one-time or monthly tier Github sponsors_ page
+- send me some pieces of bitcoin: 185KN9FCix3svJYp7JQM7hRMfSKyeaJR4X
+- buy me a gift on my wishlist_ page
+
+Any and all contributions are greatly appreciated.
 
 Requirements
 ============
 
-- ``python>=3.4``
+- ``python>=3.8`` (use Glances 3.4.x for lower Python version)
 - ``psutil>=5.3.0`` (better with latest version)
 - ``defusedxml`` (in order to monkey patch xmlrpc)
+- ``ujson`` (an optimized alternative to the standard json module)
 
 *Note for Python 2 users*
 
-Glances version 4 or higher do not support Python 2.
-Please uses Glances version 3 if you need Python 2 support.
+Glances version 4 or higher do not support Python 2 (and Python 3 < 3.8).
+Please uses Glances version 3.4.x if you need Python 2 support.
 
 Optional dependencies:
 
+- ``batinfo`` (for battery monitoring)
 - ``bernhard`` (for the Riemann export module)
 - ``bottle`` (for Web server mode)
 - ``cassandra-driver`` (for the Cassandra export module)
 - ``chevron`` (for the action script feature)
 - ``couchdb`` (for the CouchDB export module)
-- ``docker`` (for the Docker monitoring support) [Linux/macOS-only]
+- ``docker`` (for the Containers Docker monitoring support)
 - ``elasticsearch`` (for the Elastic Search export module)
 - ``graphitesender`` (For the Graphite export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB version 1 export module)
-- ``influxdb-client``  (for the InfluxDB version 2 export module) [Only for Python >= 3.6]
+- ``influxdb-client``  (for the InfluxDB version 2 export module)
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces`` (for the IP plugin)
 - ``py3nvml`` (for the GPU plugin)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
+- ``podman`` (for the Containers Podman monitoring support)
 - ``potsdb`` (for the OpenTSDB export module)
 - ``prometheus_client`` (for the Prometheus export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``pygal`` (for the graph export module)
 - ``pymdstat`` (for RAID support) [Linux-only]
+- ``pymongo`` (for the MongoDB export module)
 - ``pysnmp`` (for SNMP support)
 - ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
 - ``pyzmq`` (for the ZeroMQ export module)
 - ``requests`` (for the Ports, Cloud plugins and RESTful export module)
-- ``scandir`` (for the Folders plugin) [Only for Python 3.4]
 - ``sparklines`` (for the Quick Plugin sparklines option)
 - ``statsd`` (for the StatsD export module)
 - ``wifi`` (for the wifi plugin) [Linux-only]
@@ -132,40 +147,31 @@ For Windows, just install psutil from the binary installation file.
 *Note 2 (for the Wifi plugin)*: If you want to use the Wifi plugin, you need
 to install the *wireless-tools* package on your system.
 
-You can also install the following libraries in order to use optional
-features (like the Web interface, exports modules...):
+By default, Glances is installed without the Web interface dependencies.
+To install it, use the following command:
 
 .. code-block:: console
 
-    pip install --user 'glances[action,browser,cloud,cpuinfo,docker,export,folders,gpu,graph,ip,raid,snmp,web,wifi]'
+    pip install --user 'glances[web]'
+
+For a full installation (with all features):
+
+.. code-block:: console
+
+    pip install --user 'glances[all]'
 
 To upgrade Glances to the latest version:
 
 .. code-block:: console
 
     pip install --user --upgrade glances
-    pip install --user --upgrade glances[...]
 
-If you need to install Glances in a specific user location, use:
-
-.. code-block:: console
-
-    export PYTHONUSERBASE=~/mylocalpath
-    pip install --user glances
-
-If you are administrator and want to install Glances for all users:
-
-.. code-block:: console
-
-    sudo pip install glances
-
-The current develop branch is also published to the test.pypi.org package index.
-If you want to test the develop version, enter:
+The current develop branch is published to the test.pypi.org package index.
+If you want to test the develop version (could be instable), enter:
 
 .. code-block:: console
 
     pip install --user -i https://test.pypi.org/simple/ Glances
-
 
 Glances Auto Install script: the easy way
 -----------------------------------------
@@ -189,29 +195,29 @@ If you want to support other distributions, please contribute to `glancesautoins
 Docker: the fun way
 -------------------
 
-Glances containers are availables. You can use it to monitor your
-server and all your other containers!
+Glances Docker images are availables. You can use it to monitor your
+server and all your containers !
 
 Get the Glances container:
 
 .. code-block:: console
 
-    docker pull nicolargo/glances:<version>
+    docker pull nicolargo/glances:latest-full
 
-Available versions on the Docker Hub repository:
+The following tags are availables:
 
-- *nicolargo/glances:latest* for a basic Debian Glances image version with minimal dependencies
-- *nicolargo/glances:alpine-latest* for a basic Alpine Glances image version with minimal dependencies
-- *nicolargo/glances:latest-full* for a full Debian Glances image version with all dependencies
-- *nicolargo/glances:alpine-latest-full* for a full Alpine Glances image version with all dependencies
-
-You can also specify a version by replacing latest by 3.2.3 (for example).
+- *latest-full* for a full Alpine Glances image (latest release) with all dependencies
+- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
+- *ubuntu-latest-full* for a full Ubuntu Glances image (latest release) with all dependencies
+- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *ubuntu-dev* for a basic Ubuntu Glances image (based on development branch) with all dependencies (Warning: may be instable)
 
 Run last version of Glances container in *console mode*:
 
 .. code-block:: console
 
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it nicolargo/glances:latest-full
+    docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host --network host -it nicolargo/glances:latest-full
 
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
@@ -219,24 +225,26 @@ create your own Dockerfile:
 .. code-block:: console
 
     FROM nicolargo/glances:latest
-    COPY glances.conf /glances/conf/glances.conf
-    CMD python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
+    COPY glances.conf /etc/glances.conf
+    CMD python -m glances -C /etc/glances.conf $GLANCES_OPT
 
 Alternatively, you can specify something along the same lines with
-docker run options:
-
-.. code-block:: console
-
-    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it nicolargo/glances:latest-full
-
-Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
-
-Run the container in *Web server mode* (notice the `GLANCES_OPT` environment
+docker run options (notice the `GLANCES_OPT` environment
 variable setting parameters for the glances startup command):
 
 .. code-block:: console
 
-    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host nicolargo/glances:latest-full
+    docker run -e TZ="${TZ}" -v `pwd`/glances.conf:/etc/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host -e GLANCES_OPT="-C /etc/glances.conf" -it nicolargo/glances:latest-full
+
+Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
+
+Run the container in *Web server mode*:
+
+.. code-block:: console
+
+    docker run -d --restart="always" -p 61208-61209:61208-61209 -e TZ="${TZ}" -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host nicolargo/glances:latest-full
+
+For a full list of options, see the Glances `Docker`_ documentation page.
 
 GNU/Linux
 ---------
@@ -245,6 +253,11 @@ GNU/Linux
 able to install it using your favorite package manager. Be aware that
 when you use this method the operating system `package`_ for `Glances`
 may not be the latest version.
+
+Note: The Debian package (and all other Debian-based distributions) do
+not include anymore the JS statics files used by the Web interface
+(see ``issue2021``). If you want to add it to your Glances installation,
+follow the instructions: ``issue2021comment``.
 
 FreeBSD
 -------
@@ -408,6 +421,15 @@ or in a CSV format thanks to the stdout-csv option:
     2018-12-08 22:04:23 CEST,5.4,5949136896,4,1.04,0.99,1.04
     ...
 
+or in a JSON format thanks to the stdout-json option (attribute not supported in this mode in order to have a real JSON object in output):
+
+.. code-block:: console
+
+    $ glances --stdout-json cpu,mem
+    cpu: {"total": 29.0, "user": 24.7, "nice": 0.0, "system": 3.8, "idle": 71.4, "iowait": 0.0, "irq": 0.0, "softirq": 0.0, "steal": 0.0, "guest": 0.0, "guest_nice": 0.0, "time_since_update": 1, "cpucore": 4, "ctx_switches": 0, "interrupts": 0, "soft_interrupts": 0, "syscalls": 0}
+    mem: {"total": 7837949952, "available": 2919079936, "percent": 62.8, "used": 4918870016, "free": 2919079936, "active": 2841214976, "inactive": 3340550144, "buffers": 546799616, "cached": 3068141568, "shared": 788156416}
+    ...
+
 and RTFM, always.
 
 Documentation
@@ -434,13 +456,6 @@ There is also a chat dedicated to the Glances developers:
 .. image:: https://badges.gitter.im/Join%20Chat.svg
         :target: https://gitter.im/nicolargo/glances?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-Donation
-========
-
-If this project help you, you can give me a tip ;)
-
-See the sponsors_ page.
-
 Author
 ======
 
@@ -461,5 +476,9 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _readthedocs: https://glances.readthedocs.io/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
-.. _package: https://repology.org/metapackage/glances/packages
+.. _package: https://repology.org/project/glances/versions
 .. _sponsors: https://github.com/sponsors/nicolargo
+.. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
+.. _issue2021: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
+.. _issue2021comment: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
+.. _Docker: https://github.com/nicolargo/glances/blob/develop/docs/docker.rst

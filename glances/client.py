@@ -2,24 +2,14 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Manage the Glances client."""
 
-import json
+import ujson
 import socket
 import sys
 import time
@@ -109,7 +99,7 @@ class GlancesClient(object):
             # Fallback to SNMP
             self.client_mode = 'snmp'
             logger.error("Connection to Glances server failed ({} {})".format(err.errno, err.strerror))
-            fall_back_msg = 'No Glances server found on {}. Trying fallback to SNMP...'.format(self.uri)
+            fall_back_msg = 'No Glances server found. Trying fallback to SNMP...'
             if not self.return_to_browser:
                 print(fall_back_msg)
             else:
@@ -129,7 +119,7 @@ class GlancesClient(object):
             if __version__.split('.')[0] == client_version.split('.')[0]:
                 # Init stats
                 self.stats = GlancesStatsClient(config=self.config, args=self.args)
-                self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
+                self.stats.set_plugins(ujson.loads(self.client.getAllPlugins()))
                 logger.debug("Client version: {} / Server version: {}".format(__version__, client_version))
             else:
                 self.log_and_exit(
@@ -208,7 +198,7 @@ class GlancesClient(object):
         """
         # Update the stats
         try:
-            server_stats = json.loads(self.client.getAll())
+            server_stats = ujson.loads(self.client.getAll())
         except socket.error:
             # Client cannot get server stats
             return "Disconnected"

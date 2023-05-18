@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Wifi plugin."""
 
@@ -90,7 +80,7 @@ class PluginModel(GlancesPluginModel):
 
             for net in net_io_counters:
                 # Do not take hidden interface into account
-                if self.is_hide(net):
+                if not self.is_display(net):
                     continue
 
                 # Grab the stats using the Wifi Python lib
@@ -99,11 +89,9 @@ class PluginModel(GlancesPluginModel):
                 except InterfaceError as e:
                     # Not a Wifi interface
                     logger.debug("WIFI plugin: Scan InterfaceError ({})".format(e))
-                    pass
                 except Exception as e:
                     # Other error
                     logger.debug("WIFI plugin: Can not grab cell stats ({})".format(e))
-                    pass
                 else:
                     for wifi_cell in wifi_cells:
                         hotspot = {
@@ -199,7 +187,9 @@ class PluginModel(GlancesPluginModel):
             # Add the new hotspot to the message
             msg = '{:{width}}'.format(nativestr(hotspot_name), width=if_name_max_width)
             ret.append(self.curse_add_line(msg))
-            msg = '{:>7}'.format(i['signal'], width=if_name_max_width)
+            msg = '{:>7}'.format(
+                i['signal'],
+            )
             ret.append(
                 self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='signal', option='decoration'))
             )

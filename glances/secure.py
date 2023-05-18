@@ -2,31 +2,22 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Secures functions for Glances"""
 
 from glances.globals import nativestr
 from subprocess import Popen, PIPE
+import re
 
 
 def secure_popen(cmd):
     """A more or less secure way to execute system commands
 
-    Multiple command should be seperated with a &&
+    Multiple command should be separated with a &&
 
     :return: the result of the commands
     """
@@ -58,8 +49,9 @@ def __secure_popen(cmd):
     p_last = None
     # Split by pipe '|'
     for sub_cmd in cmd.split('|'):
-        # Split by space ' '
-        sub_cmd_split = [i for i in sub_cmd.split(' ') if i]
+        # Split by space character, but do no split spaces within quotes (remove surrounding quotes, though)
+        tmp_split = [_ for _ in list(filter(None, re.split(r'(\s+)|(".*?"+?)|(\'.*?\'+?)', sub_cmd))) if _ != ' ']
+        sub_cmd_split = [_[1:-1] if (_[0] == _[-1] == '"') or (_[0] == _[-1] == '\'') else _ for _ in tmp_split]
         p = Popen(sub_cmd_split, shell=False, stdin=sub_cmd_stdin, stdout=PIPE, stderr=PIPE)
         if p_last is not None:
             # Allow p_last to receive a SIGPIPE if p exits.

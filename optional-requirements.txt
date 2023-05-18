@@ -7,28 +7,33 @@ bottle
 cassandra-driver
 chevron
 couchdb
-docker>=2.0.0
+docker>=6.1.1
 elasticsearch
 graphitesender
 hddtemp
-influxdb>=1.0.0
-influxdb-client; python_version >= "3.6"
+influxdb>=1.0.0 # For InfluxDB < 1.8
+influxdb-client; python_version >= "3.7" # For InfluxDB >= 1.8
 kafka-python
 netifaces
-py3nvml; python_version >= "3.0"
+packaging; python_version >= "3.7"
 paho-mqtt
 pika
+podman; python_version >= "3.6"
 potsdb
 prometheus_client
 pygal
 pymdstat
+pymongo; python_version >= "3.7"
+py3nvml; python_version >= "3.5"
 pysnmp
 pySMART.smartx
+python-dateutil
 pyzmq
 requests
 scandir; python_version < "3.5"
+six
 sparklines
 statsd
 wifi
-zeroconf==0.19.1; python_version < "3.0"
-zeroconf; python_version >= "3.0"
+zeroconf==0.62.0; python_version < "3.7"
+zeroconf; python_version >= "3.7"

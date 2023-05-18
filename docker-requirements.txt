@@ -1,0 +1,10 @@
+# install with base requirements file
+-r requirements.txt
+
+docker>=6.1.1; python_version >= "3.7"
+podman; python_version >= "3.6"
+packaging; python_version >= "3.7"
+python-dateutil
+six
+urllib3<2.0 # See issue https://github.com/nicolargo/glances/issues/2392
+requests # See issue - https://github.com/nicolargo/glances/issues/2233

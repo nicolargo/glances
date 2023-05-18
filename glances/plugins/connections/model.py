@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Connections plugin."""
 from __future__ import unicode_literals
@@ -62,16 +52,11 @@ class PluginModel(GlancesPluginModel):
             args=args,
             config=config,
             # items_history_list=items_history_list,
-            stats_init_value={},
+            stats_init_value={'net_connections_enabled': True, 'nf_conntrack_enabled': True},
         )
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-
-        # This plugin is composed if net_connections and nf_conntrack
-        # Enabled by default
-        self.net_connections_enabled = True
-        self.nf_conntrack_enabled = True
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
@@ -87,12 +72,13 @@ class PluginModel(GlancesPluginModel):
             # Update stats using the PSUtils lib
 
             # Grab network interface stat using the psutil net_connections method
-            if self.net_connections_enabled:
+            if stats['net_connections_enabled']:
                 try:
                     net_connections = psutil.net_connections(kind="tcp")
                 except Exception as e:
-                    logger.debug('Can not get network connections stats ({})'.format(e))
-                    self.net_connections_enabled = False
+                    logger.warning('Can not get network connections stats ({})'.format(e))
+                    logger.info('Disable connections stats')
+                    stats['net_connections_enabled'] = False
                     self.stats = stats
                     return self.stats
 
@@ -109,18 +95,24 @@ class PluginModel(GlancesPluginModel):
                     terminated += stats[s]
                 stats['terminated'] = terminated
 
-            if self.nf_conntrack_enabled:
+            if stats['nf_conntrack_enabled']:
                 # Grab connections track directly from the /proc file
                 for i in self.conntrack:
                     try:
                         with open(self.conntrack[i], 'r') as f:
                             stats[i] = float(f.readline().rstrip("\n"))
-                    except IOError as e:
-                        logger.debug('Can not get network connections track ({})'.format(e))
-                        self.nf_conntrack_enabled = False
+                    except (IOError, FileNotFoundError) as e:
+                        logger.warning('Can not get network connections track ({})'.format(e))
+                        logger.info('Disable connections track')
+                        stats['nf_conntrack_enabled'] = False
                         self.stats = stats
                         return self.stats
-                stats['nf_conntrack_percent'] = stats['nf_conntrack_count'] * 100 / stats['nf_conntrack_max']
+                if 'nf_conntrack_max' in stats and 'nf_conntrack_count' in stats:
+                    stats['nf_conntrack_percent'] = stats['nf_conntrack_count'] * 100 / stats['nf_conntrack_max']
+                else:
+                    stats['nf_conntrack_enabled'] = False
+                    self.stats = stats
+                    return self.stats
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -138,7 +130,7 @@ class PluginModel(GlancesPluginModel):
         # Add specific information
         try:
             # Alert and log
-            if self.nf_conntrack_enabled:
+            if self.stats['nf_conntrack_enabled']:
                 self.views['nf_conntrack_percent']['decoration'] = self.get_alert(header='nf_conntrack_percent')
         except KeyError:
             # try/except mandatory for Windows compatibility (no conntrack stats)
@@ -154,11 +146,11 @@ class PluginModel(GlancesPluginModel):
             return ret
 
         # Header
-        if self.net_connections_enabled or self.nf_conntrack_enabled:
+        if self.stats['net_connections_enabled'] or self.stats['nf_conntrack_enabled']:
             msg = '{}'.format('TCP CONNECTIONS')
             ret.append(self.curse_add_line(msg, "TITLE"))
         # Connections status
-        if self.net_connections_enabled:
+        if self.stats['net_connections_enabled']:
             for s in [psutil.CONN_LISTEN, 'initiated', psutil.CONN_ESTABLISHED, 'terminated']:
                 ret.append(self.curse_new_line())
                 msg = '{:{width}}'.format(nativestr(s).capitalize(), width=len(s))
@@ -166,7 +158,11 @@ class PluginModel(GlancesPluginModel):
                 msg = '{:>{width}}'.format(self.stats[s], width=max_width - len(s) + 2)
                 ret.append(self.curse_add_line(msg))
         # Connections track
-        if self.nf_conntrack_enabled:
+        if (
+            self.stats['nf_conntrack_enabled']
+            and 'nf_conntrack_count' in self.stats
+            and 'nf_conntrack_max' in self.stats
+        ):
             s = 'Tracked'
             ret.append(self.curse_new_line())
             msg = '{:{width}}'.format(nativestr(s).capitalize(), width=len(s))

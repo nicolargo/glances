@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Cassandra/Scylla interface class."""
 
@@ -25,7 +15,6 @@ from numbers import Number
 
 from glances.logger import logger
 from glances.exports.export import GlancesExport
-from glances.globals import iteritems
 
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import Cluster
@@ -87,7 +76,7 @@ class Export(GlancesExport):
         # Keyspace
         try:
             session.set_keyspace(self.keyspace)
-        except InvalidRequest as e:
+        except InvalidRequest:
             logger.info("Create keyspace {} on the Cassandra cluster".format(self.keyspace))
             c = "CREATE KEYSPACE %s WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '%s' }" % (
                 self.keyspace,
@@ -105,7 +94,8 @@ class Export(GlancesExport):
         # Table
         try:
             session.execute(
-                "CREATE TABLE %s (plugin text, time timeuuid, stat map<text,float>, PRIMARY KEY (plugin, time)) WITH CLUSTERING ORDER BY (time DESC)"
+                "CREATE TABLE %s (plugin text, time timeuuid, stat map<text,float>, PRIMARY KEY (plugin, time)) \
+                    WITH CLUSTERING ORDER BY (time DESC)"
                 % self.table
             )
         except Exception:
@@ -122,7 +112,6 @@ class Export(GlancesExport):
 
         # Write input to the Cassandra table
         try:
-
             stmt = "INSERT INTO {} (plugin, time, stat) VALUES (?, ?, ?)".format(self.table)
             query = self.session.prepare(stmt)
             self.session.execute(query, (name, uuid_from_time(datetime.now()), data))

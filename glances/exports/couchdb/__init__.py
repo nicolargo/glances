@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """CouchDB interface class."""
 
@@ -60,7 +50,9 @@ class Export(GlancesExport):
         if self.user is None:
             server_uri = 'http://{}:{}/'.format(self.host, self.port)
         else:
-            server_uri = 'http://{}:{}@{}:{}/'.format(self.user, self.password, self.host, self.port)
+            # Force https if a login/password is provided
+            # Related to https://github.com/nicolargo/glances/issues/2124
+            server_uri = 'https://{}:{}@{}:{}/'.format(self.user, self.password, self.host, self.port)
 
         try:
             s = couchdb.Server(server_uri)
@@ -68,11 +60,11 @@ class Export(GlancesExport):
             logger.critical("Cannot connect to CouchDB server %s (%s)" % (server_uri, e))
             sys.exit(2)
         else:
-            logger.info("Connected to the CouchDB server %s" % server_uri)
+            logger.info("Connected to the CouchDB server")
 
         try:
             s[self.db]
-        except Exception as e:
+        except Exception:
             # Database did not exist
             # Create it...
             s.create(self.db)

@@ -2,29 +2,19 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """ZeroMQ interface class."""
 
 import sys
-import json
 
 from glances.globals import b
 from glances.logger import logger
 from glances.exports.export import GlancesExport
+from glances.globals import json_dumps
 
 import zmq
 from zmq.utils.strtypes import asbytes
@@ -47,7 +37,7 @@ class Export(GlancesExport):
         # Load the ZeroMQ configuration file section ([export_zeromq])
         self.export_enable = self.load_conf('zeromq', mandatories=['host', 'port', 'prefix'], options=[])
         if not self.export_enable:
-            sys.exit(2)
+            exit('Missing ZEROMQ config')
 
         # Init the ZeroMQ context
         self.context = None
@@ -94,7 +84,7 @@ class Export(GlancesExport):
         # - First frame containing the following prefix (STRING)
         # - Second frame with the Glances plugin name (STRING)
         # - Third frame with the Glances plugin stats (JSON)
-        message = [b(self.prefix), b(name), asbytes(json.dumps(data))]
+        message = [b(self.prefix), b(name), asbytes(json_dumps(data))]
 
         # Write data to the ZeroMQ bus
         # Result can be view: tcp://host:port

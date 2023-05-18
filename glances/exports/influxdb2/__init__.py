@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """InfluxDB (from to InfluxDB 1.8+) interface class."""
 
@@ -45,15 +35,28 @@ class Export(GlancesExport):
         self.prefix = None
         self.tags = None
         self.hostname = None
+        self.interval = None
 
         # Load the InfluxDB configuration file
         self.export_enable = self.load_conf(
             'influxdb2',
             mandatories=['host', 'port', 'user', 'password', 'org', 'bucket', 'token'],
-            options=['protocol', 'prefix', 'tags'],
+            options=['protocol', 'prefix', 'tags', 'interval'],
         )
         if not self.export_enable:
-            sys.exit(2)
+            exit('Missing influxdb2 config')
+
+        # Interval between two exports (in seconds)
+        if self.interval is None:
+            self.interval = 0
+        try:
+            self.interval = int(self.interval)
+        except ValueError:
+            logger.warning("InfluxDB export interval is not an integer, use default value")
+            self.interval = 0
+        # and should be set to the Glances refresh time if the value is 0
+        self.interval = self.interval if self.interval > 0 else self.args.time
+        logger.debug("InfluxDB export interval is set to {} seconds".format(self.interval))
 
         # The hostname is always add as a tag
         self.hostname = node().split('.')[0]
@@ -82,7 +85,7 @@ class Export(GlancesExport):
         write_client = client.write_api(
             write_options=WriteOptions(
                 batch_size=500,
-                flush_interval=10000,
+                flush_interval=self.interval * 1000,
                 jitter_interval=2000,
                 retry_interval=5000,
                 max_retries=5,

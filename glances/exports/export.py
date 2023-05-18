@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
 I am your father...
@@ -23,7 +13,7 @@ I am your father...
 ...for all Glances exports IF.
 """
 
-import json
+from glances.globals import json_dumps
 
 from glances.globals import NoOptionError, NoSectionError, iteritems, iterkeys
 from glances.logger import logger
@@ -33,25 +23,19 @@ class GlancesExport(object):
 
     """Main class for Glances export IF."""
 
-    # For the moment, only the below plugins can be exported
+    # List of non exportable plugins
     # @TODO: remove this part and make all plugins exportable (see issue #1556)
     # @TODO: also make this list configurable by the user (see issue #1443)
-    exportable_plugins = [
-        'cpu',
-        'percpu',
-        'load',
-        'mem',
-        'memswap',
-        'network',
-        'diskio',
-        'fs',
-        'processcount',
-        'ip',
-        'system',
-        'uptime',
-        'sensors',
-        'docker',
-        'gpu',
+    non_exportable_plugins = [
+        'alert',
+        'amps',
+        'help',
+        'now',
+        'plugin',
+        'ports',
+        'processlist',
+        'psutilversion',
+        'quicklook',
     ]
 
     def __init__(self, config=None, args=None):
@@ -72,23 +56,12 @@ class GlancesExport(object):
         self.host = None
         self.port = None
 
-        # Build the export list on startup to avoid change during execution
-        self.export_list = self._plugins_to_export()
+        # Save last export list
+        self._last_exported_list = None
 
     def exit(self):
         """Close the export module."""
         logger.debug("Finalise export interface %s" % self.export_name)
-
-    def _plugins_to_export(self):
-        """Return the list of plugins to export."""
-        ret = self.exportable_plugins
-        for p in ret:
-            if getattr(self.args, 'disable_' + p):
-                ret.remove(p)
-        return ret
-
-    def plugins_to_export(self):
-        return self.export_list
 
     def load_conf(self, section, mandatories=['host', 'port'], options=None):
         """Load the export <section> configuration in the Glances configuration file.
@@ -129,6 +102,7 @@ class GlancesExport(object):
 
     def get_item_key(self, item):
         """Return the value of the item 'key'."""
+        ret = None
         try:
             ret = item[item['key']]
         except KeyError:
@@ -155,6 +129,18 @@ class GlancesExport(object):
 
         return d_tags
 
+    def plugins_to_export(self, stats):
+        """Return the list of plugins to export.
+
+        :param stats: the stats object
+        :return: a list of plugins to export
+        """
+        return [p for p in stats.getPluginsList() if p not in self.non_exportable_plugins]
+
+    def last_exported_list(self):
+        """Return the list of plugins last exported."""
+        return self._last_exported_list
+
     def update(self, stats):
         """Update stats to a server.
 
@@ -166,11 +152,12 @@ class GlancesExport(object):
             return False
 
         # Get all the stats & limits
-        all_stats = stats.getAllExportsAsDict(plugin_list=self.plugins_to_export())
-        all_limits = stats.getAllLimitsAsDict(plugin_list=self.plugins_to_export())
+        self._last_exported_list = self.plugins_to_export(stats)
+        all_stats = stats.getAllExportsAsDict(plugin_list=self.last_exported_list())
+        all_limits = stats.getAllLimitsAsDict(plugin_list=self.last_exported_list())
 
         # Loop over plugins to export
-        for plugin in self.plugins_to_export():
+        for plugin in self.last_exported_list():
             if isinstance(all_stats[plugin], dict):
                 all_stats[plugin].update(all_limits[plugin])
             elif isinstance(all_stats[plugin], list):
@@ -199,7 +186,7 @@ class GlancesExport(object):
             # Walk through the dict
             for key, value in iteritems(stats):
                 if isinstance(value, bool):
-                    value = json.dumps(value)
+                    value = json_dumps(value)
                 if isinstance(value, list):
                     try:
                         value = value[0]

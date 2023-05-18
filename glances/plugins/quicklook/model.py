@@ -2,25 +2,14 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2020 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-# You should have received a copy of the GNU Lesser General Public License
 
 """Quicklook plugin."""
 
 from glances.cpu_percent import cpu_percent
-from glances.logger import logger
 from glances.outputs.glances_bars import Bar
 from glances.outputs.glances_sparklines import Sparkline
 from glances.plugins.plugin.model import GlancesPluginModel

@@ -15,10 +15,15 @@ Filtered view:
 
 .. image:: ../_static/processlist-filter.png
 
+Extended view:
+
+.. image:: ../_static/processlist-extended.png
+
 The process view consists of 3 parts:
 
 - Processes summary
-- Monitored processes list (optional)
+- Monitored processes list (optional, only in standalone mode)
+- Extended stats for the selected process (optional)
 - Processes list
 
 The processes summary line displays:
@@ -56,12 +61,15 @@ You can also set the sort key in the UI:
    * - c
      - --sort-processes cpu_percent
      - Sort by CPU
+   * - e
+     - N/A
+     - Pin the process and display extended stats
    * - i
      - --sort-processes io_counters
      - Sort by DISK I/O
    * - j
      - --programs
-     - Accumulate processes by program
+     - Accumulate processes by program (extended stats disable in this mode)
    * - m
      - --sort-processes memory_percent
      - Sort by MEM
@@ -100,11 +108,14 @@ Columns display
 ``VIRT``                  Virtual Memory Size
 
                           The total amount of virtual memory used by the
-                          process.
-
-                          It includes all code, data and shared
+                          process. It includes all code, data and shared
                           libraries plus pages that have been swapped out
                           and pages that have been mapped but not used.
+
+                          Virtual memory is usually much larger than physical
+                          memory, making it possible to run programs for which
+                          the total code plus data size is greater than the amount
+                          of RAM available.
 
                           Most of the time, this is not a useful number.
 ``RES``                   Resident Memory Size

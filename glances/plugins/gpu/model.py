@@ -4,18 +4,8 @@
 #
 # Copyright (C) 2020 Kirby Banman <kirby.banman@gmail.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """GPU plugin (limited to NVIDIA chipsets)."""
 
@@ -94,7 +84,8 @@ class PluginModel(GlancesPluginModel):
             #         "name": "Fake GeForce GTX",
             #         "mem": 5.792331695556641,
             #         "proc": 4,
-            #         "temperature": 26
+            #         "temperature": 26,
+            #         "fan_speed": 30
             #     }
             # ]
             # Two GPU sample:
@@ -105,7 +96,8 @@ class PluginModel(GlancesPluginModel):
             #         "name": "Fake GeForce GTX1",
             #         "mem": 5.792331695556641,
             #         "proc": 4,
-            #         "temperature": 26
+            #         "temperature": 26,
+            #         "fan_speed": 30
             #     },
             #     {
             #         "key": "gpu_id",
@@ -113,7 +105,8 @@ class PluginModel(GlancesPluginModel):
             #         "name": "Fake GeForce GTX2",
             #         "mem": 15,
             #         "proc": 8,
-            #         "temperature": 65
+            #         "temperature": 65,
+            #         "fan_speed": 75
             #     }
             # ]
             return self.stats
@@ -284,6 +277,8 @@ class PluginModel(GlancesPluginModel):
             device_stats['proc'] = get_proc(device_handle)
             # Processor temperature in °C
             device_stats['temperature'] = get_temperature(device_handle)
+            # Fan speed in %
+            device_stats['fan_speed'] = get_fan_speed(device_handle)
             stats.append(device_stats)
 
         return stats
@@ -312,7 +307,7 @@ def get_device_name(device_handle):
     """Get GPU device name."""
     try:
         return nativestr(pynvml.nvmlDeviceGetName(device_handle))
-    except pynvml.NVMlError:
+    except pynvml.NVMLError:
         return "NVIDIA"
 
 
@@ -334,8 +329,16 @@ def get_proc(device_handle):
 
 
 def get_temperature(device_handle):
-    """Get GPU device CPU consumption in percent."""
+    """Get GPU device CPU temperature in Celsius."""
     try:
         return pynvml.nvmlDeviceGetTemperature(device_handle, pynvml.NVML_TEMPERATURE_GPU)
+    except pynvml.NVMLError:
+        return None
+
+
+def get_fan_speed(device_handle):
+    """Get GPU device fan speed in percent."""
+    try:
+        return pynvml.nvmlDeviceGetFanSpeed(device_handle)
     except pynvml.NVMLError:
         return None

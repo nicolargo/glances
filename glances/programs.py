@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # from glances.logger import logger
 
@@ -33,34 +23,37 @@ def processes_to_programs(processes):
             # Create a new entry in the dict (new program)
             programs_dict[p[key]] = {
                 'time_since_update': p['time_since_update'],
-                'num_threads': p['num_threads'],
-                'cpu_percent': p['cpu_percent'],
-                'memory_percent': p['memory_percent'],
-                'cpu_times': p['cpu_times'],
-                'memory_info': p['memory_info'],
-                'io_counters': p['io_counters'],
+                # some values can be None, e.g. macOS system processes
+                'num_threads': p['num_threads'] or 0,
+                'cpu_percent': p['cpu_percent'] or 0,
+                'memory_percent': p['memory_percent'] or 0,
+                'cpu_times': p['cpu_times'] or (),
+                'memory_info': p['memory_info'] or (),
+                'io_counters': p['io_counters'] or (),
                 'childrens': [p['pid']],
                 # Others keys are not used
                 # but should be set to be compliant with the existing process_list
                 'name': p['name'],
                 'cmdline': [p['name']],
                 'pid': '_',
-                'username': p['username'],
+                'username': p['username'] if 'username' in p else '_',
                 'nice': p['nice'],
                 'status': p['status'],
             }
         else:
             # Update a existing entry in the dict (existing program)
-            programs_dict[p[key]]['num_threads'] += p['num_threads']
-            programs_dict[p[key]]['cpu_percent'] += p['cpu_percent']
-            programs_dict[p[key]]['memory_percent'] += p['memory_percent']
-            programs_dict[p[key]]['cpu_times'] += p['cpu_times']
-            programs_dict[p[key]]['memory_info'] += p['memory_info']
+            # some values can be None, e.g. macOS system processes
+            programs_dict[p[key]]['num_threads'] += p['num_threads'] or 0
+            programs_dict[p[key]]['cpu_percent'] += p['cpu_percent'] or 0
+            programs_dict[p[key]]['memory_percent'] += p['memory_percent'] or 0
+            programs_dict[p[key]]['cpu_times'] += p['cpu_times'] or ()
+            programs_dict[p[key]]['memory_info'] += p['memory_info'] or ()
+
             programs_dict[p[key]]['io_counters'] += p['io_counters']
             programs_dict[p[key]]['childrens'].append(p['pid'])
             # If all the subprocess has the same value, display it
             programs_dict[p[key]]['username'] = (
-                p['username'] if p['username'] == programs_dict[p[key]]['username'] else '_'
+                p['username'] if ('username' in p) and (p['username'] == programs_dict[p[key]]['username']) else '_'
             )
             programs_dict[p[key]]['nice'] = p['nice'] if p['nice'] == programs_dict[p[key]]['nice'] else '_'
             programs_dict[p[key]]['status'] = p['status'] if p['status'] == programs_dict[p[key]]['status'] else '_'

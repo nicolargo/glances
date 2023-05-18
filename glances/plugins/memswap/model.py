@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Swap memory plugin."""
 
@@ -209,9 +199,9 @@ class PluginModel(GlancesPluginModel):
 
         # First line
         # total%
-        msg = '{}'.format('SWAP')
+        msg = '{:4}'.format('SWAP')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = ' {:3}'.format(self.trend_msg(self.get_trend('percent')))
+        msg = ' {:2}'.format(self.trend_msg(self.get_trend('percent')))
         ret.append(self.curse_add_line(msg))
         # Percent memory usage
         msg = '{:>6.1%}'.format(self.stats['percent'] / 100)
@@ -221,18 +211,18 @@ class PluginModel(GlancesPluginModel):
         # total
         ret.append(self.curse_new_line())
         # Total memory usage
-        ret.extend(self.curse_add_stat('total', width=16))
+        ret.extend(self.curse_add_stat('total', width=15))
 
         # Third line
         # used
         ret.append(self.curse_new_line())
         # Used memory usage
-        ret.extend(self.curse_add_stat('used', width=16))
+        ret.extend(self.curse_add_stat('used', width=15))
 
         # Fourth line
         # free
         ret.append(self.curse_new_line())
         # Free memory usage
-        ret.extend(self.curse_add_stat('free', width=16))
+        ret.extend(self.curse_add_stat('free', width=15))
 
         return ret

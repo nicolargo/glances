@@ -3,20 +3,10 @@
 #
 # Glances - An eye on your system
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Glances unitary tests suite."""
 
@@ -32,7 +22,7 @@ if sys.version_info < (3, 4):
 from glances.main import GlancesMain
 from glances.stats import GlancesStats
 from glances import __version__
-from glances.globals import WINDOWS, LINUX, subsample
+from glances.globals import WINDOWS, LINUX, subsample, string_value_to_float
 from glances.outputs.glances_bars import Bar
 from glances.thresholds import GlancesThresholdOk
 from glances.thresholds import GlancesThresholdCareful
@@ -41,10 +31,8 @@ from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.programs import processes_to_programs
-from glances.compat import subsample, range
 from glances.secure import secure_popen
 
-from tracemalloc import Snapshot
 
 # Global variables
 # =================
@@ -291,12 +279,22 @@ class TestGlances(unittest.TestCase):
     def test_017_programs(self):
         """Check Programs function (it's not a plugin)."""
         # stats_to_check = [ ]
-        print('INFO: [TEST_010] Check PROGRAM stats')
+        print('INFO: [TEST_017] Check PROGRAM stats')
         stats_grab = processes_to_programs(stats.get_plugin('processlist').get_raw())
         self.assertTrue(type(stats_grab) is list, msg='Programs stats is not a list')
         print('INFO: PROGRAM list stats: %s items in the list' % len(stats_grab))
         # Check if number of processes in the list equal counter
         # self.assertEqual(total, len(stats_grab))
+
+    def test_018_string_value_to_float(self):
+        """Check string_value_to_float function"""
+        print('INFO: [TEST_018] Check string_value_to_float function')
+        self.assertEqual(string_value_to_float('32kB'), 32000.0)
+        self.assertEqual(string_value_to_float('32 KB'), 32000.0)
+        self.assertEqual(string_value_to_float('15.5MB'), 15500000.0)
+        self.assertEqual(string_value_to_float('25.9'), 25.9)
+        self.assertEqual(string_value_to_float('12'), 12)
+        self.assertEqual(string_value_to_float('--'), None)
 
     def test_094_thresholds(self):
         """Test thresholds classes"""
@@ -336,7 +334,7 @@ class TestGlances(unittest.TestCase):
                             msg='{} view is not a dict'.format(plugin))
 
     def test_097_attribute(self):
-        """Test GlancesAttribute classe"""
+        """Test GlancesAttribute classes"""
         print('INFO: [TEST_097] Test attribute')
         # GlancesAttribute
         from glances.attribute import GlancesAttribute
@@ -359,7 +357,7 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(a.history_mean(nb=3), 4.5)
 
     def test_098_history(self):
-        """Test GlancesHistory classe"""
+        """Test GlancesHistory classes"""
         print('INFO: [TEST_098] Test history')
         # GlancesHistory
         from glances.history import GlancesHistory
@@ -400,9 +398,13 @@ class TestGlances(unittest.TestCase):
     def test_100_secure(self):
         """Test secure functions"""
         print('INFO: [TEST_100] Secure functions')
-        self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
-        self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
-        self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
+        if WINDOWS:
+            self.assertEqual(secure_popen('echo TEST'), 'TEST\r\n')
+            self.assertEqual(secure_popen('echo TEST1 && echo TEST2'), 'TEST1\r\nTEST2\r\n')
+        else:
+            self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
+            self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
+            self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
 
     def test_200_memory_leak(self):
         """Memory leak check"""

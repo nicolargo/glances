@@ -3,20 +3,10 @@
 #
 # Glances - An eye on your system
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Glances unitary tests suite for the RESTful API."""
 
@@ -26,12 +16,6 @@ import subprocess
 import time
 import numbers
 import unittest
-import sys
-
-# Check Python version
-if sys.version_info < (3, 4):
-    print('Glances requires at least Python 3.4 to run.')
-    sys.exit(1)
 
 from glances import __version__
 from glances.globals import text_type
@@ -75,7 +59,7 @@ class TestGlances(unittest.TestCase):
             cmdline = "./venv/bin/python"
         else:
             cmdline = "python"
-        cmdline += " -m glances -w -p %s" % SERVER_PORT
+        cmdline += " -m glances -B localhost -w -p %s" % SERVER_PORT
         print("Run the Glances Web Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
@@ -236,6 +220,16 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(req.ok)
         self.assertIsInstance(req.json(), dict)
         self.assertIsInstance(req.json()['interface_name'], list)
+
+    def test_012_status(self):
+        """Check status endpoint."""
+        method = "status"
+        print('INFO: [TEST_012] Status')
+        print("HTTP RESTful request: %s/%s" % (URL, method))
+        req = self.http_get("%s/%s" % (URL, method))
+
+        self.assertTrue(req.ok)
+        self.assertEqual(req.text, "Active")
 
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""

@@ -20,16 +20,11 @@ body {
     text-align: right;
 }
 
-.row {
-    margin-right: 0px;
-}
-
-.top-plugin {
-    margin-bottom: 20px;
-}
-
 .plugin {
     margin-bottom: 20px;
+    .table:last-child {
+        margin-bottom: 0;
+    }
 }
 .plugin.table-row-group .table-row:last-child .table-cell {
     padding-bottom: 20px;
@@ -47,6 +42,7 @@ body {
 }
 .sortable {
     cursor: pointer;
+    text-decoration: underline;
 }
 .text-right {
     text-align: right;
@@ -119,7 +115,7 @@ body {
     white-space: nowrap;
 }
 
-#quicklook-plugin {
+#quicklook {
     .progress {
         margin-bottom: 0px;
         min-width: 100px;
@@ -161,6 +157,22 @@ body {
     overflow: hidden;
     width: 100%;
     text-overflow: ellipsis;
+}
+
+#ip {
+    padding-left: 10px;
+}
+
+#ip span {
+    padding-left: 10px;
+}
+
+#processcount > span:nth-child(1) {
+    padding-left: 0px;
+}
+
+#processcount span {
+    padding-left: 10px;
 }
 
 /* Loading page */
@@ -234,4 +246,42 @@ source : https://github.com/lukehaas/css-loaders
     40% {
         box-shadow: 0 2.5em 0 0 #56CA69;
     }
+}
+
+/* Help table */
+
+.divTable{
+	display: table;
+	width: 100%;
+}
+.divTableRow {
+	display: table-row;
+}
+.divTableHeading {
+	background-color: #EEE;
+	display: table-header-group;
+}
+.divTableHead {
+	border: 0px solid #999999;
+	display: table-cell;
+	padding: 3px 10px;
+    font-weight: bold;
+}
+.divTableCell {
+	border: 0px solid #999999;
+	display: table-cell;
+	padding: 3px 10px;
+}
+.divTableHeading {
+	background-color: #EEE;
+	display: table-header-group;
+	font-weight: bold;
+}
+.divTableFoot {
+	background-color: #EEE;
+	display: table-footer-group;
+	font-weight: bold;
+}
+.divTableBody {
+	display: table-row-group;
 }

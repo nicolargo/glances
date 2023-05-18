@@ -2,24 +2,13 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """RESTful interface class."""
 
-import sys
 
 from glances.globals import listkeys
 from glances.logger import logger
@@ -44,7 +33,7 @@ class Export(GlancesExport):
         # Load the RESTful section in the configuration file
         self.export_enable = self.load_conf('restful', mandatories=['host', 'port', 'protocol', 'path'])
         if not self.export_enable:
-            sys.exit(2)
+            exit('Missing RESTFUL config')
 
         # Init the stats buffer
         # It's a dict of stats
@@ -64,7 +53,7 @@ class Export(GlancesExport):
 
     def export(self, name, columns, points):
         """Export the stats to the Statsd server."""
-        if name == self.plugins_to_export()[0] and self.buffer != {}:
+        if name == self.last_exported_list()[0] and self.buffer != {}:
             # One complete loop have been done
             logger.debug("Export stats ({}) to RESTful endpoint ({})".format(listkeys(self.buffer), self.client))
             # Export stats

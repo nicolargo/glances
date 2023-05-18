@@ -1,0 +1,8 @@
+[flake8]
+exclude = .git,__pycache__,docs/,build,dist
+ignore =
+    W504, B007, B014, B008, B902, Q000,
+    N801, N802, N803, N806, N807, N811, N812, N813, N814, N815, N816, N817, N818
+
+# lines should not exceed 120 characters
+max-line-length = 120

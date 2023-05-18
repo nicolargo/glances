@@ -1,9 +1,8 @@
 """JSON interface class."""
 
 import sys
-import json
 
-from glances.globals import listkeys
+from glances.globals import listkeys, json_dumps
 from glances.logger import logger
 from glances.exports.export import GlancesExport
 
@@ -43,14 +42,14 @@ class Export(GlancesExport):
         """Export the stats to the JSON file."""
 
         # Check for completion of loop for all exports
-        if name == self.plugins_to_export()[0] and self.buffer != {}:
+        if name == self.last_exported_list()[0] and self.buffer != {}:
             # One whole loop has been completed
             # Flush stats to file
             logger.debug("Exporting stats ({}) to JSON file ({})".format(listkeys(self.buffer), self.json_filename))
 
             # Export stats to JSON file
             with open(self.json_filename, "w") as self.json_file:
-                self.json_file.write("{}\n".format(json.dumps(self.buffer)))
+                self.json_file.write("{}\n".format(json_dumps(self.buffer)))
 
             # Reset buffer
             self.buffer = {}

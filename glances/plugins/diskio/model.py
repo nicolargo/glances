@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Disk I/O plugin."""
 from __future__ import unicode_literals
@@ -23,7 +13,6 @@ from __future__ import unicode_literals
 from glances.globals import nativestr
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.logger import logger
 
 import psutil
 
@@ -98,8 +87,8 @@ class PluginModel(GlancesPluginModel):
                 if self.args is not None and not self.args.diskio_show_ramfs and disk.startswith('ram'):
                     continue
 
-                # Do not take hide disk into account
-                if self.is_hide(disk):
+                # Shall we display the stats ?
+                if not self.is_display(disk):
                     continue
 
                 # Compute count and bit rate
@@ -182,12 +171,12 @@ class PluginModel(GlancesPluginModel):
         msg = '{:{width}}'.format('DISK I/O', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.diskio_iops:
-            msg = '{:>7}'.format('IOR/s')
+            msg = '{:>8}'.format('IOR/s')
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format('IOW/s')
             ret.append(self.curse_add_line(msg))
         else:
-            msg = '{:>7}'.format('R/s')
+            msg = '{:>8}'.format('R/s')
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format('W/s')
             ret.append(self.curse_add_line(msg))
@@ -197,10 +186,7 @@ class PluginModel(GlancesPluginModel):
             if all([self.get_views(item=i[self.get_key()], key=f, option='hidden') for f in self.hide_zero_fields]):
                 continue
             # Is there an alias for the disk name ?
-            disk_real_name = i['disk_name']
-            disk_name = self.has_alias(i['disk_name'])
-            if disk_name is None:
-                disk_name = disk_real_name
+            disk_name = self.has_alias(i['disk_name']) if self.has_alias(i['disk_name']) else i['disk_name']
             # New line
             ret.append(self.curse_new_line())
             if len(disk_name) > name_max_width:

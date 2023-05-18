@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Graph exporter interface class."""
 
@@ -61,17 +51,18 @@ class Export(GlancesExport):
         # Check if output folder is writeable
         try:
             tempfile.TemporaryFile(dir=self.path)
-        except OSError as e:
+        except OSError:
             logger.critical("Graph output folder {} is not writeable".format(self.path))
             sys.exit(2)
 
         logger.info("Graphs will be created in the {} folder".format(self.path))
-        logger.info("Graphs will be created  when 'g' key is pressed (in the CLI interface)")
         if self.generate_every != 0:
             logger.info("Graphs will be created automatically every {} seconds".format(self.generate_every))
+            logger.info("or when 'g' key is pressed (only through the CLI interface)")
             # Start the timer
             self._timer = Timer(self.generate_every)
         else:
+            logger.info("Graphs will be created  when 'g' key is pressed (in the CLI interface)")
             self._timer = None
 
     def exit(self):
@@ -91,10 +82,10 @@ class Export(GlancesExport):
         plugins = stats.getPluginsList()
         for plugin_name in plugins:
             plugin = stats._plugins[plugin_name]
-            if plugin_name in self.plugins_to_export():
+            if plugin_name in self.plugins_to_export(stats):
                 self.export(plugin_name, plugin.get_export_history())
 
-        logger.info("Graphs created in the folder {}".format(self.path))
+        logger.info("Graphs created in {}".format(self.path))
         self.args.generate_graph = False
 
     def export(self, title, data):

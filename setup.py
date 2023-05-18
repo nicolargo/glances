@@ -37,7 +37,12 @@ def get_data_files():
 
 
 def get_install_requires():
-    requires = ['psutil>=5.3.0', 'defusedxml', 'future', 'packaging']
+    requires = [
+        'psutil>=5.6.7',
+        'defusedxml',
+        'packaging',
+        'ujson>=5.4.0',
+    ]
     if sys.platform.startswith('win'):
         requires.append('bottle')
         requires.append('requests')
@@ -50,9 +55,9 @@ def get_install_extras_require():
         'action': ['chevron'],
         'browser': ['zeroconf>=0.19.1'],
         'cloud': ['requests'],
-        'docker': ['docker>=2.0.0'],
+        'containers': ['docker>=6.1.1', 'python-dateutil', 'six', 'podman', 'packaging'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
-                   'graphitesender', 'influxdb>=1.0.0', 'influxdb-client',
+                   'graphitesender', 'influxdb>=1.0.0', 'influxdb-client', 'pymongo',
                    'kafka-python', 'pika', 'paho-mqtt', 'potsdb', 'prometheus_client',
                    'pyzmq', 'statsd'],
         'folders': ['scandir'],
@@ -65,7 +70,6 @@ def get_install_extras_require():
         'sparklines': ['sparklines'],
         'web': ['bottle', 'requests'],
         'wifi': ['wifi']
-        #'gpu' and 'sensors' ==> See bellow
     }
     if sys.platform.startswith('linux'):
         extras_require['sensors'] = ['batinfo']
@@ -107,7 +111,7 @@ setup(
     url='https://github.com/nicolargo/glances',
     license='LGPLv3',
     keywords="cli curses monitoring system",
-    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+    python_requires=">=3.8",
     install_requires=get_install_requires(),
     extras_require=get_install_extras_require(),
     packages=['glances'],
@@ -127,13 +131,10 @@ setup(
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'Topic :: System :: Monitoring'
     ]
 )

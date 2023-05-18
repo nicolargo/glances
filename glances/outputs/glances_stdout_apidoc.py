@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Fields description interface class."""
 
@@ -48,9 +38,9 @@ def indent_stat(stat, indent='    '):
     # Indent stats to pretty print it
     if isinstance(stat, list) and len(stat) > 1 and isinstance(stat[0], dict):
         # Only display two first items
-        return indent + pformat(stat[0:2]).replace('\n', '\n' + indent)
+        return indent + pformat(stat[0:2]).replace('\n', '\n' + indent).replace("'", '"')
     else:
-        return indent + pformat(stat).replace('\n', '\n' + indent)
+        return indent + pformat(stat).replace('\n', '\n' + indent).replace("'", '"')
 
 
 def print_api_status():
@@ -80,7 +70,7 @@ def print_plugins_list(stat):
     print('')
 
 
-def print_plugin_export(plugin, stat_export):
+def print_plugin_stats(plugin, stat):
     sub_title = 'GET {}'.format(plugin)
     print(sub_title)
     print('-' * len(sub_title))
@@ -89,7 +79,7 @@ def print_plugin_export(plugin, stat_export):
     print('Get plugin stats::')
     print('')
     print('    # curl {}/{}'.format(API_URL, plugin))
-    print(indent_stat(stat_export))
+    print(indent_stat(json.loads(stat.get_stats())))
     print('')
 
 
@@ -233,7 +223,7 @@ class GlancesStdoutApiDoc(object):
             stat_export = stat.get_export()
             if stat_export is None or stat_export == [] or stat_export == {}:
                 continue
-            print_plugin_export(plugin, stat_export)
+            print_plugin_stats(plugin, stat)
             print_plugin_description(plugin, stat)
             print_plugin_item_value(plugin, stat, stat_export)
 

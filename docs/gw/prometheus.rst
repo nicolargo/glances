@@ -15,7 +15,13 @@ listening on <host:port> (define in the Glances configuration file).
     prefix=glances
     labels=src:glances
 
-Note: you can use dynamc fields for the label (ex: labels=system:`uname -s`)
+.. note::
+
+    When running Glances in a container, set ``host=0.0.0.0`` in the Glances configuration file.
+
+.. note::
+
+    You can use dynamic fields for the label (ex: labels=system:`uname -s`)
 
 and run Glances with:
 

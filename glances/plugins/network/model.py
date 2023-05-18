@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Network plugin."""
 from __future__ import unicode_literals
@@ -38,24 +28,11 @@ import psutil
 # 'key': 'interface_name'}
 # Fields description
 fields_description = {
-    'interface_name': {
-        'description': 'Interface name.',
-        'unit': 'string'
-    },
-    'alias': {
-        'description': 'Interface alias name (optional).',
-        'unit': 'string'
-    },
-    'rx': {
-        'description': 'The received/input rate (in bit per second).',
-        'unit': 'bps',
-        'short_description': 'Rx/s'
-    },
-    'tx': {
-        'description': 'The sent/output rate (in bit per second).',
-        'unit': 'bps',
-        'short_description': 'Tx/s'
-    },
+    'interface_name': {'description': 'Interface name.', 'unit': 'string'},
+    'alias': {'description': 'Interface alias name (optional).', 'unit': 'string'},
+    'rx': {'description': 'The received/input rate (in bit per second).', 'unit': 'bps'},
+    'tx': {'description': 'The sent/output rate (in bit per second).', 'unit': 'bps'},
+    'cx': {'description': 'The cumulative received+sent rate (in bit per second).', 'unit': 'bps'},
     'cumulative_rx': {
         'description': 'The number of bytes received through the interface (cumulative).',
         'unit': 'bytes',
@@ -65,6 +42,11 @@ fields_description = {
         'description': 'The number of bytes sent through the interface (cumulative).',
         'unit': 'bytes',
         'short_description': 'Tx'
+    },
+    'cumulative_tx': {'description': 'The number of bytes sent through the interface (cumulative).', 'unit': 'bytes'},
+    'cumulative_cx': {
+        'description': 'The cumulative number of bytes reveived and sent through the interface (cumulative).',
+        'unit': 'bytes',
     },
     'speed': {
         'description': 'Maximum interface speed (in bit per second). Can return 0 on some operating-system.',
@@ -190,7 +172,7 @@ class PluginModel(GlancesPluginModel):
             for net in network_new:
                 # Do not take hidden interface into account
                 # or KeyError: 'eth0' when interface is not connected #1348
-                if self.is_hide(net) or net not in net_status:
+                if not self.is_display(net) or net not in net_status:
                     continue
                 try:
                     cumulative_rx = network_new[net].bytes_recv
@@ -251,7 +233,7 @@ class PluginModel(GlancesPluginModel):
 
                 for net in network_new:
                     # Do not take hidden interface into account
-                    if self.is_hide(net):
+                    if not self.is_display(net):
                         continue
 
                     try:
@@ -307,6 +289,10 @@ class PluginModel(GlancesPluginModel):
         # Add specifics information
         # Alert
         for i in self.get_raw():
+            if i['time_since_update'] == 0:
+                # Skip alert if no timespan to measure
+                continue
+
             if_real_name = i['interface_name'].split(':')[0]
             # Convert rate in bps (to be able to compare to interface speed)
             bps_rx = int(i['rx'] // i['time_since_update'] * 8)

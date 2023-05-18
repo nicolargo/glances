@@ -2,24 +2,14 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Manage the Glances client browser (list of Glances server)."""
 
-import json
+import ujson
 import socket
 import threading
 
@@ -85,7 +75,7 @@ class GlancesClientBrowser(object):
                 # Try with the preconfigure password (only if status is PROTECTED)
                 clear_password = self.password.get_password(server['name'])
                 if clear_password is not None:
-                    server['password'] = self.password.sha256_hash(clear_password)
+                    server['password'] = self.password.get_hash(clear_password)
             return 'http://{}:{}@{}:{}'.format(server['username'], server['password'], server['ip'], server['port'])
         else:
             return 'http://{}:{}'.format(server['ip'], server['port'])
@@ -103,19 +93,19 @@ class GlancesClientBrowser(object):
         try:
             s = ServerProxy(uri, transport=t)
         except Exception as e:
-            logger.warning("Client browser couldn't create socket {}: {}".format(uri, e))
+            logger.warning("Client browser couldn't create socket ({})".format(e))
         else:
             # Mandatory stats
             try:
                 # CPU%
-                cpu_percent = 100 - json.loads(s.getCpu())['idle']
+                cpu_percent = 100 - ujson.loads(s.getCpu())['idle']
                 server['cpu_percent'] = '{:.1f}'.format(cpu_percent)
                 # MEM%
-                server['mem_percent'] = json.loads(s.getMem())['percent']
+                server['mem_percent'] = ujson.loads(s.getMem())['percent']
                 # OS (Human Readable name)
-                server['hr_name'] = json.loads(s.getSystem())['hr_name']
+                server['hr_name'] = ujson.loads(s.getSystem())['hr_name']
             except (socket.error, Fault, KeyError) as e:
-                logger.debug("Error while grabbing stats form {}: {}".format(uri, e))
+                logger.debug("Error while grabbing stats form server ({})".format(e))
                 server['status'] = 'OFFLINE'
             except ProtocolError as e:
                 if e.errcode == 401:
@@ -125,7 +115,7 @@ class GlancesClientBrowser(object):
                     server['status'] = 'PROTECTED'
                 else:
                     server['status'] = 'OFFLINE'
-                logger.debug("Cannot grab stats from {} ({} {})".format(uri, e.errcode, e.errmsg))
+                logger.debug("Cannot grab stats from server ({} {})".format(e.errcode, e.errmsg))
             else:
                 # Status
                 server['status'] = 'ONLINE'
@@ -133,10 +123,10 @@ class GlancesClientBrowser(object):
                 # Optional stats (load is not available on Windows OS)
                 try:
                     # LOAD
-                    load_min5 = json.loads(s.getLoad())['min5']
+                    load_min5 = ujson.loads(s.getLoad())['min5']
                     server['load_min5'] = '{:.2f}'.format(load_min5)
                 except Exception as e:
-                    logger.warning("Error while grabbing stats form {}: {}".format(uri, e))
+                    logger.warning("Error while grabbing stats form server ({})".format(e))
 
         return server
 
@@ -161,7 +151,7 @@ class GlancesClientBrowser(object):
                 )
             # Store the password for the selected server
             if clear_password is not None:
-                self.set_in_selected('password', self.password.sha256_hash(clear_password))
+                self.set_in_selected('password', self.password.get_hash(clear_password))
 
         # Display the Glance client on the selected server
         logger.info("Connect Glances client to the {} server".format(server['key']))

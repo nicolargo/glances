@@ -2,28 +2,18 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Issue interface class."""
 
 import os
 import sys
 import platform
-import shutil
 import time
+import pprint
 
 from glances.timer import Counter
 from glances import __version__, psutil_version
@@ -31,10 +21,7 @@ from glances import __version__, psutil_version
 import psutil
 import glances
 
-try:
-    TERMINAL_WIDTH = shutil.get_terminal_size(fallback=(79, 24)).columns
-except:
-    TERMINAL_WIDTH = 79
+TERMINAL_WIDTH = 79
 
 
 class colors:
@@ -91,16 +78,17 @@ class GlancesStdoutIssue(object):
             try:
                 # Update the stats
                 stats._plugins[plugin].update()
-            except Exception as e:
+            except Exception:
                 pass
 
-        time.sleep(3)
+        time.sleep(2)
 
+        counter_total = Counter()
         for plugin in sorted(stats._plugins):
             if stats._plugins[plugin].is_disabled():
                 # If current plugin is disable
                 # then continue to next plugin
-                result = colors.NO + '[N/A]'.rjust(19 - len(plugin))
+                result = colors.NO + '[NA]'.rjust(18 - len(plugin))
                 message = colors.NO
                 self.print_issue(plugin, result, message)
                 continue
@@ -114,6 +102,10 @@ class GlancesStdoutIssue(object):
                 stats._plugins[plugin].update()
                 # Get the stats
                 stat = stats.get_plugin(plugin).get_export()
+                # Hide private information
+                if plugin == 'ip':
+                    for key in stat.keys():
+                        stat[key] = '***'
             except Exception as e:
                 stat_error = e
             if stat_error is None:
@@ -122,15 +114,23 @@ class GlancesStdoutIssue(object):
                 )
                 if isinstance(stat, list) and len(stat) > 0 and 'key' in stat[0]:
                     key = 'key={} '.format(stat[0]['key'])
-                    message = colors.ORANGE + key + colors.NO + str(stat)[0 : TERMINAL_WIDTH - 41 - len(key)]
+                    stat_output = pprint.pformat([stat[0]], compact=True, width=120, depth=3)
+                    message = colors.ORANGE + key + colors.NO + '\n' + stat_output[0:-1] + ', ...' + stat_output[-1]
                 else:
-                    message = colors.NO + str(stat)[0 : TERMINAL_WIDTH - 41]
+                    message = '\n' + colors.NO + pprint.pformat(stat, compact=True, width=120, depth=2)
             else:
                 result = (colors.RED + '[ERROR]' + colors.BLUE + ' {:.5f}s '.format(counter.get())).rjust(
                     41 - len(plugin)
                 )
                 message = colors.NO + str(stat_error)[0 : TERMINAL_WIDTH - 41]
+
+            # Display the result
             self.print_issue(plugin, result, message)
+
+        # Display total time need to update all plugins
+        sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
+        print("Total time to update all stats: {}{:.5f}s{}".format(colors.BLUE, counter_total.get(), colors.NO))
+        sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
 
         # Return True to exit directly (no refresh)
         return True

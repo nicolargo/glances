@@ -2,30 +2,20 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Manage the Glances server."""
 
-import json
+from glances.globals import json_dumps
 import socket
 import sys
 from base64 import b64decode
 
 from glances import __version__
-from glances.globals import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer, Server
+from glances.globals import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 from glances.autodiscover import GlancesAutoDiscoverClient
 from glances.logger import logger
 from glances.stats_server import GlancesStatsServer
@@ -77,7 +67,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
         if username in self.server.user_dict:
             from glances.password import GlancesPassword
 
-            pwd = GlancesPassword()
+            pwd = GlancesPassword(username=username, config=self.config)
             return pwd.check_password(self.server.user_dict[username], password)
         else:
             return False
@@ -103,10 +93,10 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
 
     finished = False
 
-    def __init__(self, bind_address, bind_port=61209, requestHandler=GlancesXMLRPCHandler):
-
+    def __init__(self, bind_address, bind_port=61209, requestHandler=GlancesXMLRPCHandler, config=None):
         self.bind_address = bind_address
         self.bind_port = bind_port
+        self.config = config
         try:
             self.address_family = socket.getaddrinfo(bind_address, bind_port)[0][0]
         except socket.error as e:
@@ -156,19 +146,19 @@ class GlancesInstance(object):
     def getAll(self):
         # Update and return all the stats
         self.__update__()
-        return json.dumps(self.stats.getAll())
+        return json_dumps(self.stats.getAll())
 
     def getAllPlugins(self):
         # Return the plugins list
-        return json.dumps(self.stats.getPluginsList())
+        return json_dumps(self.stats.getPluginsList())
 
     def getAllLimits(self):
         # Return all the plugins limits
-        return json.dumps(self.stats.getAllLimitsAsDict())
+        return json_dumps(self.stats.getAllLimitsAsDict())
 
     def getAllViews(self):
         # Return all the plugins views
-        return json.dumps(self.stats.getAllViewsAsDict())
+        return json_dumps(self.stats.getAllViewsAsDict())
 
     def __getattr__(self, item):
         """Overwrite the getattr method in case of attribute is not found.
@@ -201,7 +191,7 @@ class GlancesServer(object):
 
         # Init the XML RPC server
         try:
-            self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler)
+            self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler, config=config)
         except Exception as e:
             logger.critical("Cannot start Glances server: {}".format(e))
             sys.exit(2)
@@ -221,6 +211,7 @@ class GlancesServer(object):
         if not self.args.disable_autodiscover:
             # Note: The Zeroconf service name will be based on the hostname
             # Correct issue: Zeroconf problem with zeroconf service name #889
+            logger.info('Autodiscover is enabled with service name {}'.format(socket.gethostname().split('.', 1)[0]))
             self.autodiscover_client = GlancesAutoDiscoverClient(socket.gethostname().split('.', 1)[0], args)
         else:
             logger.info("Glances autodiscover announce is disabled")

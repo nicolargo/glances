@@ -31,8 +31,12 @@ Glances InfluxDB data model:
 |               | time_since_update...  |                       |
 |               |                       |                       |
 +---------------+-----------------------+-----------------------+
-| docker        | cpu_percent           | hostname              |
+| docker        | cpu_percent           | hostname              |
 |               | memory_usage...       | name                  |
++---------------+-----------------------+-----------------------+
+| gpu           | proc                  | hostname              |
+|               | mem                   | gpu_id                |
+|               | temperature...        |                       |
 +---------------+-----------------------+-----------------------+
 
 InfluxDB (up to version 1.7.x)
@@ -56,7 +60,7 @@ following:
     #     => foo.mem
     # You can also use dynamic values
     #prefix=foo
-    # Followings tags will be added for all measurements
+    # Following tags will be added for all measurements
     # You can also use dynamic values.
     # Note: hostname is always added as a tag
     #tags=foo:bar,spam:eggs,domain:`domainname`
@@ -92,13 +96,16 @@ following:
     org=nicolargo
     bucket=glances
     token=EjFUTWe8U-MIseEAkaVIgVnej_TrnbdvEcRkaB1imstW7gapSqy6_6-8XD-yd51V0zUUpDy-kAdVD1purDLuxA==
+    # Set the interval between two exports (in seconds)
+    # If the interval is set to 0, the Glances refresh time is used (default behavor)
+    #interval=0
     # Prefix will be added for all measurement name
     # Ex: prefix=foo
     #     => foo.cpu
     #     => foo.mem
     # You can also use dynamic values
     #prefix=foo
-    # Followings tags will be added for all measurements
+    # Following tags will be added for all measurements
     # You can also use dynamic values.
     # Note: hostname is always added as a tag
     #tags=foo:bar,spam:eggs,domain:`domainname`

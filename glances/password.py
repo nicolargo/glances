@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Manage password."""
 
@@ -35,24 +25,31 @@ class GlancesPassword(object):
 
     """This class contains all the methods relating to password."""
 
-    def __init__(self, username='glances'):
+    def __init__(self, username='glances', config=None):
         self.username = username
-        self.password_dir = user_config_dir()
+
+        self.config = config
+        self.password_dir = self.local_password_path()
         self.password_filename = self.username + '.pwd'
         self.password_file = os.path.join(self.password_dir, self.password_filename)
 
-    def sha256_hash(self, plain_password):
-        """Return the SHA-256 of the given password."""
-        return hashlib.sha256(b(plain_password)).hexdigest()
+    def local_password_path(self):
+        """Return the local password path.
+        Related to issue: Password files in same configuration dir in effect #2143
+        """
+        if self.config is None:
+            return user_config_dir()
+        else:
+            return self.config.get_value('passwords', 'local_password_path', default=user_config_dir())
 
-    def get_hash(self, salt, plain_password):
-        """Return the hashed password, salt + SHA-256."""
-        return hashlib.sha256(salt.encode() + plain_password.encode()).hexdigest()
+    def get_hash(self, plain_password, salt=''):
+        """Return the hashed password, salt + pbkdf2_hmac."""
+        return hashlib.pbkdf2_hmac('sha256', plain_password.encode(), salt.encode(), 100000, dklen=128).hex()
 
     def hash_password(self, plain_password):
         """Hash password with a salt based on UUID (universally unique identifier)."""
         salt = uuid.uuid4().hex
-        encrypted_password = self.get_hash(salt, plain_password)
+        encrypted_password = self.get_hash(plain_password, salt=salt)
         return salt + '$' + encrypted_password
 
     def check_password(self, hashed_password, plain_password):
@@ -61,7 +58,7 @@ class GlancesPassword(object):
         Return the comparison with the encrypted_password.
         """
         salt, encrypted_password = hashed_password.split('$')
-        re_encrypted_password = self.get_hash(salt, plain_password)
+        re_encrypted_password = self.get_hash(plain_password, salt=salt)
         return encrypted_password == re_encrypted_password
 
     def get_password(self, description='', confirm=False, clear=False):
@@ -70,11 +67,11 @@ class GlancesPassword(object):
         For Glances server, get the password (confirm=True, clear=False):
             1) from the password file (if it exists)
             2) from the CLI
-        Optionally: save the password to a file (hashed with salt + SHA-256)
+        Optionally: save the password to a file (hashed with salt + SHA-pbkdf2_hmac)
 
         For Glances client, get the password (confirm=False, clear=True):
             1) from the CLI
-            2) the password is hashed with SHA-256 (only SHA string transit
+            2) the password is hashed with SHA-pbkdf2_hmac (only SHA string transit
                through the network)
         """
         if os.path.exists(self.password_file) and not clear:
@@ -82,21 +79,21 @@ class GlancesPassword(object):
             logger.info("Read password from file {}".format(self.password_file))
             password = self.load_password()
         else:
-            # password_sha256 is the plain SHA-256 password
-            # password_hashed is the salt + SHA-256 password
-            password_sha256 = self.sha256_hash(getpass.getpass(description))
-            password_hashed = self.hash_password(password_sha256)
+            # password_hash is the plain SHA-pbkdf2_hmac password
+            # password_hashed is the salt + SHA-pbkdf2_hmac password
+            password_hash = self.get_hash(getpass.getpass(description))
+            password_hashed = self.hash_password(password_hash)
             if confirm:
                 # password_confirm is the clear password (only used to compare)
-                password_confirm = self.sha256_hash(getpass.getpass('Password (confirm): '))
+                password_confirm = self.get_hash(getpass.getpass('Password (confirm): '))
 
                 if not self.check_password(password_hashed, password_confirm):
                     logger.critical("Sorry, passwords do not match. Exit.")
                     sys.exit(1)
 
-            # Return the plain SHA-256 or the salted password
+            # Return the plain SHA-pbkdf2_hmac or the salted password
             if clear:
-                password = password_sha256
+                password = password_hash
             else:
                 password = password_hashed
 

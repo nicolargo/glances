@@ -2,24 +2,13 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License 1for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Web interface class."""
 
-import json
 import os
 import sys
 import tempfile
@@ -28,7 +17,7 @@ import webbrowser
 import zlib
 import socket
 
-from glances.globals import b
+from glances.globals import b, json_dumps
 from glances.timer import Timer
 from glances.logger import logger
 
@@ -137,8 +126,8 @@ class GlancesBottle(object):
         if username == self.args.username:
             from glances.password import GlancesPassword
 
-            pwd = GlancesPassword()
-            return pwd.check_password(self.args.password, pwd.sha256_hash(password))
+            pwd = GlancesPassword(username=username, config=self.config)
+            return pwd.check_password(self.args.password, pwd.get_hash(password))
         else:
             return False
 
@@ -170,6 +159,9 @@ class GlancesBottle(object):
             '/api/%s/<plugin>/<item>/history/<nb:int>' % self.API_VERSION, method="GET", callback=self._api_item_history
         )
         self._app.route('/api/%s/<plugin>/<item>/<value>' % self.API_VERSION, method="GET", callback=self._api_value)
+        self._app.route(
+            '/api/%s/<plugin>/<item>/<value:path>' % self.API_VERSION, method="GET", callback=self._api_value
+        )
         bindmsg = 'Glances RESTful API Server started on {}api/{}/'.format(self.bind_url, self.API_VERSION)
         logger.info(bindmsg)
 
@@ -179,10 +171,10 @@ class GlancesBottle(object):
             self._app.route('/<refresh_time:int>', method=["GET"], callback=self._index)
             self._app.route('/<filepath:path>', method="GET", callback=self._resource)
             bindmsg = 'Glances Web User Interface started on {}'.format(self.bind_url)
-            logger.info(bindmsg)
         else:
-            logger.info('The WebUI is disable (--disable-webui)')
+            bindmsg = 'The WebUI is disable (--disable-webui)'
 
+        logger.info(bindmsg)
         print(bindmsg)
 
     def start(self, stats):
@@ -208,7 +200,6 @@ class GlancesBottle(object):
 
     def end(self):
         """End the bottle."""
-        pass
 
     def _index(self, refresh_time=None):
         """Bottle callback for index.html (/) file."""
@@ -238,7 +229,7 @@ class GlancesBottle(object):
         """
         response.status = 200
 
-        return None
+        return "Active"
 
     @compress
     def _api_help(self):
@@ -251,7 +242,7 @@ class GlancesBottle(object):
         # Update the stat
         view_data = self.stats.get_plugin("help").get_view_data()
         try:
-            plist = json.dumps(view_data, sort_keys=True)
+            plist = json_dumps(view_data)
         except Exception as e:
             abort(404, "Cannot get help view data (%s)" % str(e))
         return plist
@@ -289,7 +280,7 @@ class GlancesBottle(object):
         self.__update__()
 
         try:
-            plist = json.dumps(self.plugins_list)
+            plist = json_dumps(self.plugins_list)
         except Exception as e:
             abort(404, "Cannot get plugin list (%s)" % str(e))
         return plist
@@ -318,7 +309,7 @@ class GlancesBottle(object):
 
         try:
             # Get the JSON value of the stat ID
-            statval = json.dumps(self.stats.getAllAsDict())
+            statval = json_dumps(self.stats.getAllAsDict())
         except Exception as e:
             abort(404, "Cannot get stats (%s)" % str(e))
 
@@ -337,7 +328,7 @@ class GlancesBottle(object):
 
         try:
             # Get the JSON value of the stat limits
-            limits = json.dumps(self.stats.getAllLimitsAsDict())
+            limits = json_dumps(self.stats.getAllLimitsAsDict())
         except Exception as e:
             abort(404, "Cannot get limits (%s)" % (str(e)))
         return limits
@@ -355,7 +346,7 @@ class GlancesBottle(object):
 
         try:
             # Get the JSON value of the stat view
-            limits = json.dumps(self.stats.getAllViewsAsDict())
+            limits = json_dumps(self.stats.getAllViewsAsDict())
         except Exception as e:
             abort(404, "Cannot get views (%s)" % (str(e)))
         return limits
@@ -539,7 +530,7 @@ class GlancesBottle(object):
 
         try:
             # Get the JSON value of the config' dict
-            args_json = json.dumps(self.config.as_dict())
+            args_json = json_dumps(self.config.as_dict())
         except Exception as e:
             abort(404, "Cannot get config (%s)" % str(e))
         return args_json
@@ -561,7 +552,7 @@ class GlancesBottle(object):
 
         try:
             # Get the JSON value of the config' dict
-            args_json = json.dumps(config_dict[item])
+            args_json = json_dumps(config_dict[item])
         except Exception as e:
             abort(404, "Cannot get config item (%s)" % str(e))
         return args_json
@@ -580,7 +571,7 @@ class GlancesBottle(object):
             # Get the JSON value of the args' dict
             # Use vars to convert namespace to dict
             # Source: https://docs.python.org/%s/library/functions.html#vars
-            args_json = json.dumps(vars(self.args))
+            args_json = json_dumps(vars(self.args))
         except Exception as e:
             abort(404, "Cannot get args (%s)" % str(e))
         return args_json
@@ -603,7 +594,7 @@ class GlancesBottle(object):
             # Get the JSON value of the args' dict
             # Use vars to convert namespace to dict
             # Source: https://docs.python.org/%s/library/functions.html#vars
-            args_json = json.dumps(vars(self.args)[item])
+            args_json = json_dumps(vars(self.args)[item])
         except Exception as e:
             abort(404, "Cannot get args item (%s)" % str(e))
         return args_json

@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Monitor plugin."""
 
@@ -111,7 +101,7 @@ class PluginModel(GlancesPluginModel):
             first_column = '{}'.format(m['name'])
             first_column_style = self.get_alert(m['count'], m['countmin'], m['countmax'])
             second_column = '{}'.format(m['count'] if m['regex'] else '')
-            for l in m['result'].split('\n'):
+            for line in m['result'].split('\n'):
                 # Display first column with the process name...
                 msg = '{:<16} '.format(first_column)
                 ret.append(self.curse_add_line(msg, first_column_style))
@@ -121,7 +111,7 @@ class PluginModel(GlancesPluginModel):
                 # ... only on the first line
                 first_column = second_column = ''
                 # Display AMP result in the third column
-                ret.append(self.curse_add_line(l, splittable=True))
+                ret.append(self.curse_add_line(line, splittable=True))
                 ret.append(self.curse_new_line())
 
         # Delete the last empty line

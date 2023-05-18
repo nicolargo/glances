@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Glances main class."""
 
@@ -82,17 +72,24 @@ Examples of use:
   Start the client browser (browser mode):
     $ glances --browser
 
-  Display stats to stdout (one stat per line):
+  Display stats to stdout (one stat per line, possible to go inside stats using plugin.attribute):
     $ glances --stdout now,cpu.user,mem.used,load
+
+  Display JSON stats to stdout (one stats per line):
+    $ glances --stdout-json now,cpu,mem,load
 
   Display CSV stats to stdout (all stats in one line):
     $ glances --stdout-csv now,cpu.user,mem.used,load
 
+  Enable some plugins disabled by default (comma separated list):
+    $ glances --enable-plugin sensors
+
   Disable some plugins (comma separated list):
     $ glances --disable-plugin network,ports
 
-  Enable some plugins (comma separated list):
-    $ glances --enable-plugin sensors
+  Disable all plugins except some (comma separated list):
+    $ glances --disable-plugin all --enable-plugin cpu,mem,load
+
 """
 
     def __init__(self):
@@ -122,10 +119,14 @@ Examples of use:
             help='display modules (plugins & exports) list and exit',
         )
         parser.add_argument(
-            '--disable-plugin', '--disable-plugins', dest='disable_plugin', help='disable plugin (comma separed list)'
+            '--disable-plugin',
+            '--disable-plugins',
+            dest='disable_plugin',
+            help='disable plugin (comma separated list or all). If all is used, \
+                then you need to configure --enable-plugin.',
         )
         parser.add_argument(
-            '--enable-plugin', '--enable-plugins', dest='enable_plugin', help='enable plugin (comma separed list)'
+            '--enable-plugin', '--enable-plugins', dest='enable_plugin', help='enable plugin (comma separated list)'
         )
         parser.add_argument(
             '--disable-process',
@@ -235,6 +236,13 @@ Examples of use:
             dest='enable_separator',
             help='enable separator in the UI',
         ),
+        parser.add_argument(
+            '--disable-cursor',
+            action='store_true',
+            default=False,
+            dest='disable_cursor',
+            help='disable cursor (process selection) in the UI',
+        ),
         # Sort processes list
         parser.add_argument(
             '--sort-processes',
@@ -252,7 +260,7 @@ Examples of use:
             help='Accumulate processes by program',
         )
         # Export modules feature
-        parser.add_argument('--export', dest='export', help='enable export module (comma separed list)')
+        parser.add_argument('--export', dest='export', help='enable export module (comma separated list)')
         parser.add_argument(
             '--export-csv-file', default='./glances.csv', dest='export_csv_file', help='file path for CSV exporter'
         )
@@ -408,10 +416,16 @@ Examples of use:
             help='display stats to stdout, one stat per line (comma separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
+            '--stdout-json',
+            default=None,
+            dest='stdout_json',
+            help='display stats to stdout, JSON format (comma separated list of plugins/plugins.attribute)',
+        )
+        parser.add_argument(
             '--stdout-csv',
             default=None,
             dest='stdout_csv',
-            help='display stats to stdout, csv format (comma separated list of plugins/plugins.attribute)',
+            help='display stats to stdout, CSV format (comma separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
             '--issue',
@@ -541,6 +555,9 @@ Examples of use:
         # Plugins refresh rate
         if self.config.has_section('global'):
             global_refresh = self.config.get_float_value('global', 'refresh', default=self.DEFAULT_REFRESH_TIME)
+        else:
+            global_refresh = self.DEFAULT_REFRESH_TIME
+        # The configuration key can be overwrite from the command line
         if args.time == self.DEFAULT_REFRESH_TIME:
             args.time = global_refresh
         logger.debug('Global refresh rate is set to {} seconds'.format(args.time))
@@ -552,6 +569,14 @@ Examples of use:
                 disable(args, s)
                 logger.debug('{} disabled by the configuration file'.format(s))
         # The configuration key can be overwrite from the command line
+        if args and args.disable_plugin and 'all' in args.disable_plugin.split(','):
+            if not args.enable_plugin:
+                logger.critical("'all' key in --disable-plugin needs to be used with --enable-plugin")
+                sys.exit(2)
+            else:
+                logger.info(
+                    "'all' key in --disable-plugin, only plugins defined with --enable-plugin will be available"
+                )
         if args.disable_plugin is not None:
             for p in args.disable_plugin.split(','):
                 disable(args, p)
@@ -681,9 +706,12 @@ Examples of use:
             sys.exit(2)
 
         # Filter is only available in standalone mode
-        if args.process_filter is not None and not self.is_standalone():
-            logger.critical("Process filter is only available in standalone mode")
-            sys.exit(2)
+        if not args.process_filter and not self.is_standalone():
+            logger.debug("Process filter is only available in standalone mode")
+
+        # Cursor option is only available in standalone mode
+        if not args.disable_cursor and not self.is_standalone():
+            logger.debug("Cursor is only available in standalone mode")
 
         # Disable HDDTemp if sensors are disabled
         if getattr(self.args, 'disable_sensors', False):
@@ -712,7 +740,16 @@ Examples of use:
         self.args.is_server = self.is_server()
         self.args.is_webserver = self.is_webserver()
 
+        # Check mode compatibility
+        self.check_mode_compatibility()
+
         return args
+
+    def check_mode_compatibility(self):
+        """Check mode compatibility"""
+        if self.args.is_server and self.args.is_webserver:
+            logger.critical("Server and Web server mode are incompatible")
+            sys.exit(2)
 
     def is_standalone(self):
         """Return True if Glances is running in standalone mode."""
@@ -758,5 +795,5 @@ Examples of use:
         """
         from glances.password import GlancesPassword
 
-        password = GlancesPassword(username=username)
+        password = GlancesPassword(username=username, config=self.get_config())
         return password.get_password(description, confirm, clear)

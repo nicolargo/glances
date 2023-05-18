@@ -17,11 +17,34 @@ file under the ``[ip]`` section:
 
 .. code-block:: ini
     [ip]
-    public_refresh_interval=240
+    public_refresh_interval=300
     public_ip_disabled=True
 
+
 **NOTE:** Setting low values for `public_refresh_interval` will result in frequent
-HTTP requests to the IP detection servers. Recommended range: 120-600 seconds
+HTTP requests to the IP detection servers. Recommended range: 120-600 seconds.
+Glances uses online services in order to get the IP addresses. Your IP address could be
+blocked if too many requests are done.
+
+If the Censys options are configured, the public IP address is also analysed (with the same interval)
+and additional information is displayed.
+
+.. code-block:: ini
+    [ip]
+    public_refresh_interval=300
+    public_ip_disabled=True
+    censys_url=https://search.censys.io/api
+    # Get your own credential here: https://search.censys.io/account/api
+    censys_username=CENSYS_API_ID
+    censys_password=CENSYS_API_SECRET
+    # List of fields to be displayed in user interface (comma separated)
+    censys_fields=location:continent,location:country,autonomous_system:name
+
+**Note:** Access to the Censys Search API need an account (https://censys.io/login).
+
+Example:
+
+.. image:: ../_static/ip.png
 
 **Connected**:
 

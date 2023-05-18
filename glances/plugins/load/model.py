@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2022 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Load plugin."""
 
@@ -161,7 +151,7 @@ class PluginModel(GlancesPluginModel):
         # Call the father's method
         super(PluginModel, self).update_views()
 
-        # Add specifics informations
+        # Add specifics information
         try:
             # Alert and log
             self.views['min15']['decoration'] = self.get_alert_log(
@@ -172,3 +162,39 @@ class PluginModel(GlancesPluginModel):
         except KeyError:
             # try/except mandatory for Windows compatibility (no load stats)
             pass
+
+    def msg_curse(self, args=None, max_width=None):
+        """Return the dict to display in the curse interface."""
+        # Init the return message
+        ret = []
+
+        # Only process if stats exist, not empty (issue #871) and plugin not disabled
+        if not self.stats or (self.stats == {}) or self.is_disabled():
+            return ret
+
+        # Build the string message
+        # Header
+        msg = '{:4}'.format('LOAD')
+        ret.append(self.curse_add_line(msg, "TITLE"))
+        msg = ' {:1}'.format(self.trend_msg(self.get_trend('min1')))
+        ret.append(self.curse_add_line(msg))
+        # Core number
+        if 'cpucore' in self.stats and self.stats['cpucore'] > 0:
+            msg = '{:3}core'.format(int(self.stats['cpucore']))
+            ret.append(self.curse_add_line(msg))
+        # Loop over 1min, 5min and 15min load
+        for load_time in ['1', '5', '15']:
+            ret.append(self.curse_new_line())
+            msg = '{:7}'.format('{} min'.format(load_time))
+            ret.append(self.curse_add_line(msg))
+            if args.disable_irix and self.nb_log_core != 0:
+                # Enable Irix mode for load (see issue #1554)
+                load_stat = self.stats['min{}'.format(load_time)] / self.nb_log_core * 100
+                msg = '{:>5.1f}%'.format(load_stat)
+            else:
+                # Default mode for load
+                load_stat = self.stats['min{}'.format(load_time)]
+                msg = '{:>6.2f}'.format(load_stat)
+            ret.append(self.curse_add_line(msg, self.get_views(key='min{}'.format(load_time), option='decoration')))
+
+        return ret

@@ -3,10 +3,319 @@
 ==============================================================================
 
 ===============
+Version 4.0.0
+===============
+
+Under development: https://github.com/nicolargo/glances/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Glances+4.0.0%22
+
+===============
+Version 3.4.0.2
+===============
+
+Bugs corrected:
+
+    * Cannot start Glances 3.4.0.1 on Windows 10: SIGHUP not defined #2408
+    * Influxdb2 export not working #2407
+
+===============
+Version 3.4.0.1
+===============
+
+Bug corrected:
+
+    * 3.4.0 crash on startupwith minimal deps #2401
+
+===============
+Version 3.4.0
+===============
+
+Enhancements:
+
+    * Enhance process "extended stats" display (in Curses interface) #2225
+      _You can now *pin* a specific process to the top of the process list_
+    * Improve Glances start time by disabling Docker and Podman version getter - Related to #1985
+    * Customizable InfluxDB2 export interval #2348
+    * Improve kill signal management #2194
+    * Display a critical error message if Glances is ran with both webserver and rpcserver mode
+    * Refactor the Cloud plugin, disable it by default in the default configuration file - Related to #2279
+    * Correct clear-text logging of sensitive information (security alert #29)
+    * Use of a broken or weak cryptographic hashing algorithm (SHA256) on password storage #2175
+
+Bug corrected:
+
+    * Correct issue (error message) concerning the Cloud plugin - Related to #2392
+    * InfluxDB2 export doesn't process folders correctly - missing key #2327
+    * Index error when displaying programs on MacOS #2360
+    * Dissociate 2 sensors with exactly the same names #2280
+    * All times displayed in UTC - Container not using TZ/localtime (Docker) #2278
+    * It is not possible to return API data for a particular mount point (FS plugin) #1162
+
+Documentation and CI:
+
+    * chg: Dockerfile - structured & cleaner build process #2386
+    * Ubuntu is back as additional Docker images. Alpine stays the default one. Related to #2185
+    * Improve Makefile amd docker-compose to support Podman and GPU
+    * Workaround to pin urlib3<2.0 - Related to #2392
+    * Error while generating the documentation (ModuleNotFoundError: No module named 'glances') #2391
+    * Update Flamegraph (memory profiling)
+    * Improve template for issue report and feature request
+    * Parameters in the VIRT column #2343
+    * Graph generation documentation is not clear #2336
+    * docs: Docker - include tag details
+    * Add global architecture diagram (Excalidraw)
+    * Links to documents in sample glances.conf are not valid. #2271
+    * Add semgrep support
+    * Smartmontools missing from full docker image #2262
+    * Improve documentation regarding regexp in configuration file
+    * Improve documentation about the [ip] plugin #2251
+
+Cyber security update:
+
+    * All libs have been updated to the latest version
+      Full roadmap here: https://github.com/nicolargo/glances/milestone/62?closed=1
+
+Refactor the Docker images factory, from now, Alpine and Ubuntu images will be provided (nicolargo/glances):
+
+- *latest-full* for a full Alpine Glances image (latest release) with all dependencies
+- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
+- *ubuntu-latest-full* for a full Ubuntu Glances image (latest release) with all dependencies
+- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *ubuntu-dev* for a basic Ubuntu Glances image (based on development branch) with all dependencies (Warning: may be instable)
+
+Contributors for this version:
+
+    * Nicolargo
+    * RazCrimson: a very special thanks to @RazCrimson for his huge work on this version !
+    * Bharath Vignesh J K
+    * Raz Crimson
+    * fr4nc0is
+    * Florian Calvet
+    * Ali Erdinç Köroğlu
+    * Jose Vicente Nunez
+    * Rui Chen
+    * Ryan Horiguchi
+    * mfridge
+    * snyk-bot
+
+===============
+Version 3.3.1.1
+===============
+
+Hard patch on the master branch.
+
+Bug corrected:
+
+    * "ModuleNotFoundError: No module named 'ujson'" #2246
+    * Remove surrounding quotes for quoted command arguments #2247 (related to #2239)
+
+===============
+Version 3.3.1
+===============
+
+Enhancements:
+
+    * Minor change on the help screen
+    * Refactor some loop in the processes function
+    * Replace json by ujson #2201
+
+Bug corrected:
+
+    * Unable to see docker related information #2180
+    * CSV export dependent on sort order for docker container cpu #2156
+    * Error when process list is displayed in Programs mode #2209
+    * Console formatting permanently messed up when other text printed #2211
+    * API GET uptime returns formatted string, not seconds as the doc says #2158
+    * Glances UI is breaking for multiline commands #2189
+
+Documentation and CI:
+
+    * Add unitary test for memory profiling
+    * Update memory profile chart
+    * Add run-docker-ubuntu-* in Makefile
+    * The open-web-browser option was missing dashes #2219
+    * Correct regexp in glances.conf file example
+    * What is CW from network #2222 (related to discussion #2221)
+    * Change Glances repology URL
+    * Add example for the date format
+    * Correct Flake8 configuration file
+    * Drop UT for Python 3.5 and 3.6 (no more available in Ubuntu 22.04)
+    * Correct unitary test with Python 3.5
+    * Update Makefile with comments
+    * Update Python minimal requirement for py3nvlm
+    * Update security policy (user can open private issue directly in Github)
+    * Add a simple run script. Entry point for IDE debuger
+
+Cyber security update:
+
+    * Security alert on ujson < 5.4
+    * Merge pull request #2243 from nicolargo/renovate/nvidia-cuda-12.x
+    * Merge pull request #2244 from nicolargo/renovate/crazy-max-ghaction-docker-meta-4.x
+    * Merge pull request #2228 from nicolargo/renovate/zeroconf-0.x
+    * Merge pull request #2242 from nicolargo/renovate/crazy-max-ghaction-docker-meta-4.x
+    * Merge pull request #2239 from mfridge/action-command-split
+    * Merge pull request #2165 from nicolargo/renovate/zeroconf-0.x
+    * Merge pull request #2199 from nicolargo/renovate/alpine-3.x
+    * Merge pull request #2202 from chncaption/oscs_fix_cdr0ts8au51t49so8c6g
+    * Bump loader-utils from 2.0.0 to 2.0.3 in /glances/outputs/static #2187 - Update Web lib
+
+Contributors for this version:
+
+    * Nicolargo
+    * renovate[bot]
+    * chncaption
+    * fkwong
+    * *mfridge
+
+And also a big thanks to @RazCrimson (https://github.com/RazCrimson) for the support to the Glances community !
+
+===============
+Version 3.3.0.4
+===============
+
+Refactor the Docker images factory, from now, only Alpine image wll be provided.
+
+The following Docker images (nicolargo/glances) are availables:
+
+- *latest-full* for a full Alpine Glances image (latest release) with all dependencies
+- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
+
+===============
+Version 3.3.0.2
+===============
+
+Bug corrected:
+    * Password files in same configuration dir in effect #2143
+    * Fail to load config file on Python 3.10 #2176
+
+===============
+Version 3.3.0.1
+===============
+
+Just a version to rebuild the Docker images.
+
+===============
+Version 3.3.0
+===============
+
+Enhancements:
+
+    * Migration from AngularJS to Angular/React/Vue #2100 (many thanks to @fr4nc0is)
+    * Improve the IP module with a link to Censys #2105
+    * Add the public IP information to the WebUI #2105
+    * Add an option to show a configurable clock/time module to display #2150
+    * Add sort information on Docker plugin (console mode). Related to #2138
+    * Password files in same configuration dir in effect #2143
+    * If the container name is long, then display the start, not the end - Related to #1732
+    * Make the Web UI same than Console for CPU plugin
+    * [WINDOWS] Reorganise CPU stats display #2131
+    * Remove the static exportable_plugins list from glances_export.py #1556
+    * Limiting data exported for economic storage #1443
+
+Bug corrected:
+
+    * glances.conf FS hide not applying #1666
+    * AMP: regex with special chars #2152
+    * fix(help-screen): add missing shortcuts and columnize algorithmically #2135
+    * Correct issue with the regexp filter (use fullmatch instead of match)
+    * Errors when running Glances as web service #1702
+    * Apply alias to Duplicate sensor name #1686
+    * Make the hide function in sensors section compliant with lower/upercase #1590
+    * Web UI truncates the days part of CPU time counter of the process list #2108
+    * Correct alignement issue with the diskio plugin (Console UI)
+
+Documentation and CI:
+
+    * Refactor Docker file CI
+    * Add Codespell to the CI pipeline #2148
+    * Please add docker-compose example and document example. #2151
+    * [DOC] Glances failed to start and some other issues - BSD #2106
+    * [REQUEST Docker image] Output log to stdout #2128 (for debian)
+    * Fix code scanning alert - Clear-text logging of sensitive information #2124
+    * Improve makefile (with online documentation)
+    * buildx failed with: ERROR: failed to solve: python:3.10-slim-buster: no match for platform in manifest #2120
+    * [Update docs] Can I export only the fields I need in csv report？ #2113
+    * Windows Python 3 installation fails on dependency package "future" #2109
+
+Contributors for this version:
+
+    * fr4nc0is : a very special thanks to @fr4nc0is for his huge work on the Glances v3.3.0 WebUI !!!
+    * Kostis Anagnostopoulos
+    * Kian-Meng Ang
+    * dependabot[bot]
+    * matthewaaronthacker
+    * and your servant Nicolargo
+
+===============
+Version 3.2.7
+===============
+
+Enhancements:
+
+    * Config to disable all plugins by default (or enable an exclusive list) #2089
+    * Keybind(s) for modifying nice level #2081
+    * [WEBUI] Reorganize help screen #2037
+    * Add a Json stdout option #2060
+    * Improve error message when export error occurs
+    * Improve error message when MQTT error occurs
+    * Change the way core are displayed
+    * Remove unused key in the process list
+    * Refactor top menu of the curse interface
+    * Improve Irix display for the load plugin
+
+Bug corrected:
+
+    * In the sensor plugin thresholds in the configuration file should overwrite system ones #2058
+    * Drive names truncated in Web UI #2055
+    * Correct issue with CPU label
+
+Documentation and CI:
+
+    * Improve makefile help #2078
+    * Add quote to the update command line (already ok for the installation). Related to #2073
+    * Make Glances (almost) compliant with REUSE #2042
+    * Update README for Debian package users
+    * Update documentation for Docker
+    * Update docs for new shortcut
+    * Disable Pyright on the Git actions pipeline
+    * Refactor comments
+    * Except datutil import error
+    * Another dep issue solved in the Alpine Docker + issue in the outdated method
+
+Contributors for this version:
+
+    * Nicolargo
+    * Sylvain MOUQUET
+    * FastThenLeft
+    * Jiajie Chen
+    * dbrennand
+    * ewuerger
+
+===============
 Version 3.2.6
 ===============
 
-Under development: see roadmap here https://github.com/nicolargo/glances/milestone/58
+Enhancement requests:
+
+    * Create a Show option in the configuration file to only show some stats #2052
+    * Use glances.conf file inside docker-compose folder for Docker images
+    * Optionally disable public ip #2030
+    * Update public ip at intervals #2029
+
+Bug corrected:
+
+    * Unitary tests should run loopback interface #2051
+    * Add python-datutil dep for Focker plugin #2045
+    * Add venv to list of .PHONY in Makefile #2043
+    * Glances API Documentation displays non valid json #2036
+
+A big thanks to @RazCrimson for his contribution !
+
+Thanks for others contributors:
+
+    * Steven Conaway
+    * aekoroglu
 
 ===============
 Version 3.2.5
@@ -56,7 +365,7 @@ Bugs corrected:
     * Failure to start on Apple M1 Max #1939
     * Influxdb2 via SSL #1934
     * Update WebUI (security patch). Thanks to @notFloran.
-    * Swith from black <> white theme with the '9' hotkey - Related to issue #976
+    * Switch from black <> white theme with the '9' hotkey - Related to issue #976
     * Fix: Docker plugin - Invalid IO stats with Arch Linux #1945
     * Bug Fix: Docker plugin - Network stats not being displayed #1944
     * Fix Grafana CPU temperature panel #1954
@@ -149,7 +458,7 @@ Enhancement and development requests:
         - Add caching for processing username and cmdline
         - Correct and improve refresh time method
         - Set refresh rate for global CPU percent
-        - Set the dafault refresh rate of system stats to 60 seconds
+        - Set the default refresh rate of system stats to 60 seconds
         - Default refresh time for sensors is refresh rate * 2
         - Improve history perf
         - Change main curses loop
@@ -231,7 +540,7 @@ Version 3.1.6.1
 
 Bugs corrected:
 
-    * Glances crash after installing module for shown GPU informations on Windows 10 #1800
+    * Glances crash after installing module for shown GPU information on Windows 10 #1800
 
 Version 3.1.6
 =============
@@ -289,7 +598,7 @@ Enhancements and new features:
     * Enhancement: RSS for containers enhancement #1694
     * exports: support rabbitmq amqps enhancement #1687
     * Quick Look missing CPU Infos enhancement #1685
-    * Add amqps protocol suppport for rabbitmq export #1688
+    * Add amqps protocol support for rabbitmq export #1688
     * Select host in Grafana json #1684
     * Value for free disk space is counterintuative on ext file systems enhancement #644
 
@@ -333,7 +642,7 @@ Bugs corrected:
     * Disk IO stats missing after upgrade to 5.5.x kernel #1601
     * Glances don't want to run on Crostini (LXC Container, Debian 10, python 3.7.3) #1600
     * Kafka key name needs to be bytes #1593
-    * Cant start glances with glances --export mqtt #1581
+    * Can't start glances with glances --export mqtt #1581
     * [WEBUI] AMP plugins is not displayed correctly in the Web Interface #1574
     * Unhandled AttributeError when no config files found #1569
     * Glances writing lots of Docker Error message in logs file enhancement #1561
@@ -571,7 +880,7 @@ Graph:
     # generate_every to a non zero value corresponding to the seconds between
     # two generation. Set it to 0 to disable graph auto generation.
     generate_every=60
-    # See followings configuration keys definitions in the Pygal lib documentation
+    # See following configuration keys definitions in the Pygal lib documentation
     # http://pygal.org/en/stable/documentation/index.html
     width=800
     height=600
@@ -631,7 +940,7 @@ Bugs corrected:
     * glances_network `OSError: [Errno 19] No such device` (issue #1106)
     * GPU plugin. <class 'TypeError'>: ... not JSON serializable"> (issue #1112)
     * PermissionError on macOS (issue #1120)
-    * Cant move up or down in glances --browser (issue #1113)
+    * Can't move up or down in glances --browser (issue #1113)
     * Unable to give aliases to or hide network interfaces and disks (issue #1126)
     * `UnicodeDecodeError` on mountpoints with non-breaking spaces (issue #1128)
 
@@ -688,7 +997,7 @@ Bugs corrected:
     * On Windows --export-statsd terminates immediately and does not export (issue #1067)
     * Glances v2.8.7 issues with Curses UI on Android (issue #1053)
     * Fails to start, OSError in sensors_temperatures (issue #1057)
-    * Crashs after long time running the glances --browser (issue #1059)
+    * Crashes after long time running the glances --browser (issue #1059)
     * Sensor values don't refresh since psutil backend (issue #1061)
     * glances-version.db Permission denied (issue #1066)
 
@@ -787,7 +1096,7 @@ Enhancements and new features:
     * Not compatible with the new Docker API 2.0 (Docker 1.13) (issue #1000)
     * Add ZeroMQ exporter (issue #939)
     * Add CouchDB exporter (issue #928)
-    * Add hotspot Wifi informations (issue #937)
+    * Add hotspot Wifi information (issue #937)
     * Add default interface speed and automatic rate thresolds (issue #718)
     * Highlight max stats in the processes list (issue #878)
     * Docker alerts and actions (issue #875)
@@ -810,8 +1119,8 @@ Version 2.7.1
 
 Bugs corrected:
 
-    * AMP plugin crashs on start with Python 3 (issue #917)
-    * Ports plugin crashs on start with Python 3 (issue #918)
+    * AMP plugin crashes on start with Python 3 (issue #917)
+    * Ports plugin crashes on start with Python 3 (issue #918)
 
 Version 2.7
 ===========
@@ -832,7 +1141,7 @@ Enhancements and new features:
     * Add a new "Ports scanner" plugin (issue #734)
     * Add a new IRQ monitoring plugin (issue #911)
     * Improve IP plugin to display public IP address (issue #646)
-    * CPU additionnal stats monitoring: Context switch, Interrupts... (issue #810)
+    * CPU additional stats monitoring: Context switch, Interrupts... (issue #810)
     * Filter processes by others stats (username) (issue #748)
     * [Folders] Differentiate permission issue and non-existence of a directory (issue #828)
     * [Web UI] Add cpu name in quicklook plugin (issue #825)
@@ -972,10 +1281,10 @@ Enhancements and new features:
 Bugs corrected:
 
     * The WebUI displays bad sensors stats (issue #632)
-    * Filter processes crashs with a bad regular expression pattern (issue #665)
+    * Filter processes crashes with a bad regular expression pattern (issue #665)
     * Error with IP plugin (issue #651)
     * Crach with Docker plugin (issue #649)
-    * Docker plugin crashs with webserver mode (issue #654)
+    * Docker plugin crashes with webserver mode (issue #654)
     * Infrequently crashing due to assert (issue #623)
     * Value for free disk space is counterintuative on ext file systems (issue #644)
     * Try/catch for unexpected psutil.NoSuchProcess: process no longer exists (issue #432)
@@ -1055,7 +1364,7 @@ Enhancements and new features:
     * Add InfluxDB export module (--export-influxdb) (issue #455)
     * Add StatsD export module (--export-statsd) (issue #465)
     * Refactor export module (CSV export option is now --export-csv). It is now possible to export stats from the Glances client mode (issue #463)
-    * The Web inteface is now based on Bootstrap / RWD grid (issue #417, #366 and #461) Thanks to Nicolas Hart @nclsHart
+    * The Web interface is now based on Bootstrap / RWD grid (issue #417, #366 and #461) Thanks to Nicolas Hart @nclsHart
     * It is now possible, through the configuration file, to define if an alarm should be logged or not (using the _log option) (issue #437)
     * You can now set alarm for Disk IO
     * API: add getAllLimits and getAllViews methods (issue #481) and allow CORS request (issue #479)
@@ -1111,7 +1420,7 @@ Version 2.1.1
 
 Enhancement:
 
-    * Automaticaly compute top processes number for the current screen (issue #408)
+    * Automatically compute top processes number for the current screen (issue #408)
     * CPU and Memory footprint optimization (issue #401)
 
 Bugs corrected:
@@ -1120,7 +1429,7 @@ Bugs corrected:
     * Process no longer exists (issue #421)
     * Error with Glances Client with Python 3.4.1 (issue #419)
     * TypeError: memory_maps() takes exactly 2 arguments (issue #413)
-    * No filesystem informations since Glances 2.0 bug enhancement (issue #381)
+    * No filesystem information since Glances 2.0 bug enhancement (issue #381)
 
 Version 2.1
 ===========
@@ -1130,7 +1439,7 @@ Version 2.1
       The pattern could be defined from the command line (-f <pattern>)
       or by pressing the ENTER key in the curse interface.
       For the moment, process filter feature is only available in standalone mode.
-    * Add extended processes informations for top process
+    * Add extended processes information for top process
       Top process stats availables: CPU affinity, extended memory information (shared, text, lib, datat, dirty, swap), open threads/files and TCP/UDP network sessions, IO nice level
       For the moment, extended processes stats are only available in standalone mode.
     * Add --process-short-name tag and '/' key to switch between short/command line
@@ -1326,7 +1635,7 @@ Version 1.6.1
     * Key 'u' shows cumulative net traffic
     * Work in improving autoUnit
     * Take into account the number of core in the CPU process limit
-    * API improvment add time_since_update for disk, process_disk and network
+    * API improvement add time_since_update for disk, process_disk and network
     * Improve help display
     * Add more dummy FS to the ignore list
     * Code refactory: psutil < 0.4.1 is deprecated (Thk to Alessio)
@@ -1434,7 +1743,7 @@ Version 1.3.7
 =============
 
     * Display (if terminal space is available) an alerts history (logs)
-    * Add a limits classe to manage stats limits
+    * Add a limits class to manage stats limits
     * Manage black and white console (issue #31)
 
 Version 1.3.6
@@ -1463,7 +1772,7 @@ Version 1.3.4
 Version 1.3.3
 =============
 
-    * Automatically swith between process short and long name
+    * Automatically switch between process short and long name
     * Center the host / system information
     * Always put the hour/date in the bottom/right
     * Correct a bug if there is a lot of Disk/IO

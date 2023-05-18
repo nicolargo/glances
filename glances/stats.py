@@ -2,20 +2,10 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
-# Glances is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-License-Identifier: LGPL-3.0-only
 #
-# Glances is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """The stats manager."""
 
@@ -114,7 +104,6 @@ class GlancesStats(object):
             name = plugin_path.split('glances_')[1]
         else:
             name = plugin_path
-
         # Load the plugin class
         try:
             # Import the plugin
@@ -126,13 +115,18 @@ class GlancesStats(object):
             # on the console but do not crash
             logger.critical("Error while initializing the {} plugin ({})".format(name, e))
             logger.error(traceback.format_exc())
-            # Disable the plugin
+            # An error occurred, disable the plugin
             if args is not None:
                 setattr(args, 'disable_' + name, False)
         else:
-            # Set the disable_<name> to False by default
+            # Manage the default status of the plugin (enable or disable)
             if args is not None:
-                setattr(args, 'disable_' + name, getattr(args, 'disable_' + name, False))
+                # If the all key is set in the disable_plugin option then look in the enable_plugin option
+                if getattr(args, 'disable_all', False):
+                    logger.debug('%s => %s', name, getattr(args, 'enable_' + name, False))
+                    setattr(args, 'disable_' + name, not getattr(args, 'enable_' + name, False))
+                else:
+                    setattr(args, 'disable_' + name, getattr(args, 'disable_' + name, False))
 
     def load_plugins(self, args=None):
         """Load all plugins in the 'plugins' folder."""
@@ -266,8 +260,8 @@ class GlancesStats(object):
         if plugin_list is provided, only export stats of given plugin (list)
         """
         if plugin_list is None:
-            # All plugins should be exported
-            plugin_list = self._plugins
+            # All enabled plugins should be exported
+            plugin_list = self.getPluginsList()
         return [self._plugins[p].get_export() for p in self._plugins]
 
     def getAllExportsAsDict(self, plugin_list=None):
@@ -277,13 +271,20 @@ class GlancesStats(object):
         if plugin_list is provided, only export stats of given plugin (list)
         """
         if plugin_list is None:
-            # All plugins should be exported
-            plugin_list = self._plugins
+            # All enabled plugins should be exported
+            plugin_list = self.getPluginsList()
         return {p: self._plugins[p].get_export() for p in plugin_list}
 
-    def getAllLimits(self):
-        """Return the plugins limits list."""
-        return [self._plugins[p].limits for p in self._plugins]
+    def getAllLimits(self, plugin_list=None):
+        """Return the plugins limits list.
+
+        Default behavior is to export all the limits
+        if plugin_list is provided, only export limits of given plugin (list)
+        """
+        if plugin_list is None:
+            # All enabled plugins should be exported
+            plugin_list = self.getPluginsList()
+        return [self._plugins[p].limits for p in plugin_list]
 
     def getAllLimitsAsDict(self, plugin_list=None):
         """Return all the stats limits (dict).
@@ -292,8 +293,8 @@ class GlancesStats(object):
         if plugin_list is provided, only export limits of given plugin (list)
         """
         if plugin_list is None:
-            # All plugins should be exported
-            plugin_list = self._plugins
+            # All enabled plugins should be exported
+            plugin_list = self.getPluginsList()
         return {p: self._plugins[p].limits for p in plugin_list}
 
     def getAllViews(self):
