@@ -96,6 +96,9 @@ following:
     org=nicolargo
     bucket=glances
     token=EjFUTWe8U-MIseEAkaVIgVnej_TrnbdvEcRkaB1imstW7gapSqy6_6-8XD-yd51V0zUUpDy-kAdVD1purDLuxA==
+    # Set the interval between two exports (in seconds)
+    # If the interval is set to 0, the Glances refresh time is used (default behavor)
+    #interval=0
     # Prefix will be added for all measurement name
     # Ex: prefix=foo
     #     => foo.cpu
