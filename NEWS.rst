@@ -3,6 +3,15 @@
 ==============================================================================
 
 ===============
+Version 3.4.0.2
+===============
+
+Bugs corrected:
+
+    * Cannot start Glances 3.4.0.1 on Windows 10: SIGHUP not defined #2408
+    * Influxdb2 export not working #2407
+
+===============
 Version 3.4.0.1
 ===============
 
