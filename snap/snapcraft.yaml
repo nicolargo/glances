@@ -52,7 +52,7 @@ parts:
     #        https://bugs.launchpad.net/snapcraft/+bug/1813364
     parse-info: [setup.py]
     override-pull: |
-      craftctl pull
+      craftctl default
       "$CRAFT_STAGE"/scriptlets/selective-checkout
 
   bottle:
