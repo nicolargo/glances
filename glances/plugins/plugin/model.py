@@ -25,9 +25,8 @@ from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.events import glances_events
 from glances.thresholds import glances_thresholds
-from glances.timer import Counter, Timer
+from glances.timer import Counter, Timer, getTimeSinceLastUpdate
 from glances.outputs.glances_unicode import unicode_message
-
 
 fields_unit_short = {'percent': '%'}
 
@@ -209,6 +208,10 @@ class GlancesPluginModel(object):
         for c in self.computes:
             stats[c] = getattr(self, c)(stats)
         return stats
+
+    def time_since_update(self, stats):
+        """Memorized the time since last update."""
+        return getTimeSinceLastUpdate(self.plugin_name)
 
     def update_local(self, stats):
         """Return the stats updated by getters and computes."""
