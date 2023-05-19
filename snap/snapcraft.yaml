@@ -67,57 +67,13 @@ parts:
   docker:
     plugin: python
     source: https://github.com/docker/docker-py.git
-    source-tag: '6.1.2'
+    source-tag: '3.7.3'
     source-depth: 1
     override-build: |
       mkdir -p $SNAPCRAFT_PART_BUILD/dist
       cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/docker-dist
     organize:
       docker-dist: docker/dist
-
-  python-dateutil:
-    plugin: python
-    source: https://github.com/dateutil/dateutil.git
-    source-tag: '2.8.2'
-    source-depth: 1
-    override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/python-dateutil-dist
-    organize:
-      python-dateutil-dist: python-dateutil/dist
-
-  six:
-    plugin: python
-    source: https://github.com/benjaminp/six.git
-    source-tag: '1.16.0'
-    source-depth: 1
-    override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/six-dist
-    organize:
-      six-dist: six/dist
-
-  podman:
-    plugin: python
-    source: https://github.com/containers/podman-py.git
-    source-tag: '4.5.0'
-    source-depth: 1
-    override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/podman-dist
-    organize:
-      podman-dist: podman/dist
-
-  packaging:
-    plugin: python
-    source: https://github.com/pypa/packaging.git
-    source-tag: '23.1'
-    source-depth: 1
-    override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/packaging-dist
-    organize:
-      packaging-dist: packaging/dist
 
   launchers:
     source: snap/local/launchers
