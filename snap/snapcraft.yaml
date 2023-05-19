@@ -7,7 +7,7 @@ description: |
   Web based interface. It can adapt dynamically the displayed information
   depending on the user interface size.
 
-base: core22
+base: core20
 grade: stable
 confinement: strict
 
@@ -40,7 +40,6 @@ plugs:
       - /etc/glances/glances.conf
 
 parts:
-
   glances:
     after:
     - selective-checkout
@@ -52,17 +51,16 @@ parts:
     #        https://bugs.launchpad.net/snapcraft/+bug/1813364
     parse-info: [setup.py]
     override-pull: |
-      craftctl default
-      "$CRAFT_STAGE"/scriptlets/selective-checkout
-
+      snapcraftctl pull
+      "$SNAPCRAFT_STAGE"/scriptlets/selective-checkout
   bottle:
     plugin: python
     source: https://github.com/bottlepy/bottle.git
     source-branch: release-0.12
     source-depth: 1
     override-build: |
-      mkdir -p $CRAFT_PART_BUILD/dist
-      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/bottle-dist
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/bottle-dist
     organize:
       bottle-dist: bottle/dist
 
@@ -72,8 +70,8 @@ parts:
     source-tag: '6.1.2'
     source-depth: 1
     override-build: |
-      mkdir -p $CRAFT_PART_BUILD/dist
-      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/docker-dist
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/docker-dist
     organize:
       docker-dist: docker/dist
 
@@ -83,8 +81,8 @@ parts:
     source-tag: '2.8.2'
     source-depth: 1
     override-build: |
-      mkdir -p $CRAFT_PART_BUILD/dist
-      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/python-dateutil-dist
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/python-dateutil-dist
     organize:
       python-dateutil-dist: python-dateutil/dist
 
@@ -94,8 +92,8 @@ parts:
     source-tag: '1.16.0'
     source-depth: 1
     override-build: |
-      mkdir -p $CRAFT_PART_BUILD/dist
-      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/six-dist
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/six-dist
     organize:
       six-dist: six/dist
 
@@ -105,8 +103,8 @@ parts:
     source-tag: '4.5.0'
     source-depth: 1
     override-build: |
-      mkdir -p $CRAFT_PART_BUILD/dist
-      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/podman-dist
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/podman-dist
     organize:
       podman-dist: podman/dist
 
@@ -116,8 +114,8 @@ parts:
     source-tag: '23.1'
     source-depth: 1
     override-build: |
-      mkdir -p $CRAFT_PART_BUILD/dist
-      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/packaging-dist
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/packaging-dist
     organize:
       packaging-dist: packaging/dist
 
@@ -128,15 +126,10 @@ parts:
       '*': bin/
 
   selective-checkout:
-    source: https://github.com/brlin-tw/selective-checkout.git
-    source-tag: v3.0.1
-    plugin: dump
+    plugin: nil
     build-packages:
-      - curl
-      - jq
-      - sed
-      - git
-    stage:
-      - scriptlets/selective-checkout
+    - git
+    stage-snaps:
+    - selective-checkout
     prime:
-      - -*
+    - -*
