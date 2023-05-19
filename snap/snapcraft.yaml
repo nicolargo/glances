@@ -52,8 +52,8 @@ parts:
     #        https://bugs.launchpad.net/snapcraft/+bug/1813364
     parse-info: [setup.py]
     override-pull: |
-      snapcraftctl pull
-      "$SNAPCRAFT_STAGE"/scriptlets/selective-checkout
+      craftctl pull
+      "$CRAFT_STAGE"/scriptlets/selective-checkout
 
   bottle:
     plugin: python
@@ -61,8 +61,8 @@ parts:
     source-branch: release-0.12
     source-depth: 1
     override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/bottle-dist
+      mkdir -p $CRAFT_PART_BUILD/dist
+      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/bottle-dist
     organize:
       bottle-dist: bottle/dist
 
@@ -72,8 +72,8 @@ parts:
     source-tag: '6.1.2'
     source-depth: 1
     override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/docker-dist
+      mkdir -p $CRAFT_PART_BUILD/dist
+      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/docker-dist
     organize:
       docker-dist: docker/dist
 
@@ -83,8 +83,8 @@ parts:
     source-tag: '2.8.2'
     source-depth: 1
     override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/python-dateutil-dist
+      mkdir -p $CRAFT_PART_BUILD/dist
+      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/python-dateutil-dist
     organize:
       python-dateutil-dist: python-dateutil/dist
 
@@ -94,8 +94,8 @@ parts:
     source-tag: '1.16.0'
     source-depth: 1
     override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/six-dist
+      mkdir -p $CRAFT_PART_BUILD/dist
+      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/six-dist
     organize:
       six-dist: six/dist
 
@@ -105,8 +105,8 @@ parts:
     source-tag: '4.5.0'
     source-depth: 1
     override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/podman-dist
+      mkdir -p $CRAFT_PART_BUILD/dist
+      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/podman-dist
     organize:
       podman-dist: podman/dist
 
@@ -116,8 +116,8 @@ parts:
     source-tag: '23.1'
     source-depth: 1
     override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/packaging-dist
+      mkdir -p $CRAFT_PART_BUILD/dist
+      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/packaging-dist
     organize:
       packaging-dist: packaging/dist
 
