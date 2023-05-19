@@ -12,12 +12,16 @@
 from glances.globals import iterkeys
 from glances.plugins.plugin.model import GlancesPluginModel
 
-import psutil
-
 # Fields description
 fields_description = {
-    'total': {'description': 'Total physical memory available.', 'unit': 'bytes', 'min_symbol': 'K'},
+    'total': {
+        'getter': 'psutil.virtual_memory',
+        'description': 'Total physical memory available.',
+        'unit': 'bytes',
+        'min_symbol': 'K'
+    },
     'available': {
+        'getter': 'psutil.virtual_memory',
         'description': 'The actual amount of available memory that can be given instantly \
 to processes that request more memory in bytes; this is calculated by summing \
 different memory values depending on the platform (e.g. free + buffers + cached on Linux) \
@@ -26,46 +30,59 @@ and it is supposed to be used to monitor actual memory usage in a cross platform
         'min_symbol': 'K',
     },
     'percent': {
+        'getter': 'psutil.virtual_memory',
         'description': 'The percentage usage calculated as (total - available) / total * 100.',
         'unit': 'percent',
     },
-    'used': {
-        'description': 'Memory used, calculated differently depending on the platform and \
-designed for informational purposes only.',
-        'unit': 'bytes',
-        'min_symbol': 'K',
-    },
-    'free': {
-        'description': 'Memory not being used at all (zeroed) that is readily available; \
-note that this doesn\'t reflect the actual memory available (use \'available\' instead).',
-        'unit': 'bytes',
-        'min_symbol': 'K',
-    },
     'active': {
+        'getter': 'psutil.virtual_memory',
         'description': '*(UNIX)*: memory currently in use or very recently used, and so it is in RAM.',
         'unit': 'bytes',
         'min_symbol': 'K',
     },
     'inactive': {
+        'getter': 'psutil.virtual_memory',
         'description': '*(UNIX)*: memory that is marked as not used.',
         'unit': 'bytes',
         'min_symbol': 'K',
         'short_name': 'inacti',
     },
     'buffers': {
+        'getter': 'psutil.virtual_memory',
         'description': '*(Linux, BSD)*: cache for things like file system metadata.',
         'unit': 'bytes',
         'min_symbol': 'K',
         'short_name': 'buffer',
     },
-    'cached': {'description': '*(Linux, BSD)*: cache for various things.', 'unit': 'bytes', 'min_symbol': 'K'},
+    'cached': {
+        'getter': 'psutil.virtual_memory',
+        'description': '*(Linux, BSD)*: cache for various things.',
+        'unit': 'bytes',
+        'min_symbol': 'K'
+    },
     'wired': {
+        'getter': 'psutil.virtual_memory',
         'description': '*(BSD, macOS)*: memory that is marked to always stay in RAM. It is never moved to disk.',
         'unit': 'bytes',
         'min_symbol': 'K',
     },
     'shared': {
+        'getter': 'psutil.virtual_memory',
         'description': '*(BSD)*: memory that may be simultaneously accessed by multiple processes.',
+        'unit': 'bytes',
+        'min_symbol': 'K',
+    },
+    'free': {
+        'getter': 'compute',
+        'description': 'Memory not being used at all (zeroed) that is readily available; \
+note that this doesn\'t reflect the actual memory available (use \'available\' instead).',
+        'unit': 'bytes',
+        'min_symbol': 'K',
+    },
+    'used': {
+        'getter': 'compute',
+        'description': 'Memory used, calculated differently depending on the platform and \
+designed for informational purposes only.',
         'unit': 'bytes',
         'min_symbol': 'K',
     },
@@ -115,25 +132,42 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
+            args=args,
+            config=config,
+            items_history_list=items_history_list,
+            fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+    def free(self, stats):
+        """Return the free memory compute parameter"""
+        # Use the 'free'/htop calculation
+        # free=available+buffer+cached
+        ret = stats['available']
+        if hasattr(stats, 'buffers'):
+            ret += stats['buffers']
+        if hasattr(stats, 'cached'):
+            ret += stats['cached']
+        return ret
+
+    def used(self, stats):
+        """Return the used memory compute parameter"""
+        return stats['total'] - stats['free']
+
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
         """Update RAM memory stats using the input method."""
+
         # Init new stats
         stats = self.get_init_value()
 
         if self.input_method == 'local':
-            # Update stats using the standard system lib
-            # Grab MEM using the psutil virtual_memory method
-            vm_stats = psutil.virtual_memory()
-
-            # Get all the memory stats (copy/paste of the psutil documentation)
+            #
+            # Under the wood, Glances use psutil.virtual_memory() to get the memory stats
+            #
             # total: total physical memory available.
             # available: the actual amount of available memory that can be given instantly
             # to processes that request more memory in bytes; this is calculated by summing
@@ -151,32 +185,8 @@ class PluginModel(GlancesPluginModel):
             # cached: (Linux, BSD): cache for various things.
             # wired: (BSD, macOS): memory that is marked to always stay in RAM. It is never moved to disk.
             # shared: (BSD): memory that may be simultaneously accessed by multiple processes.
-            self.reset()
-            for mem in [
-                'total',
-                'available',
-                'percent',
-                'used',
-                'free',
-                'active',
-                'inactive',
-                'buffers',
-                'cached',
-                'wired',
-                'shared',
-            ]:
-                if hasattr(vm_stats, mem):
-                    stats[mem] = getattr(vm_stats, mem)
+            stats = self.update_local(stats)
 
-            # Use the 'free'/htop calculation
-            # free=available+buffer+cached
-            stats['free'] = stats['available']
-            if hasattr(stats, 'buffers'):
-                stats['free'] += stats['buffers']
-            if hasattr(stats, 'cached'):
-                stats['free'] += stats['cached']
-            # used=total-free
-            stats['used'] = stats['total'] - stats['free']
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             if self.short_system_name in ('windows', 'esxi'):

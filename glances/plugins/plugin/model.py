@@ -16,6 +16,9 @@ I am your father...
 import re
 import copy
 
+# PsUtil is call "dynamically", so the import should not be removed
+import psutil
+
 from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr, json_dumps, json_dumps_dictlist
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
@@ -111,6 +114,21 @@ class GlancesPluginModel(object):
 
         # Init stats description
         self.fields_description = fields_description
+        if fields_description:
+            # Return a list of getter (external functions to run to get the stats)
+            self.getters = list(set([fields_description[i]['getter'] for i in fields_description
+                                if (i in fields_description and
+                                    'getter' in fields_description[i] and
+                                    fields_description[i]['getter'] not in ('compute'))]))
+            # Return a list of internal functions to run to compute the stats
+            # Computation is done after the getters
+            self.computes = [i for i in fields_description
+                             if (i in fields_description and
+                                 'getter' in fields_description[i] and
+                                 fields_description[i]['getter'] in ('compute'))]
+        else:
+            self.getters = []
+            self.computes = []
 
         # Init the stats
         self.stats_init_value = stats_init_value
@@ -174,6 +192,31 @@ class GlancesPluginModel(object):
             reset_list = [a['name'] for a in self.get_items_history_list()]
             logger.debug("Reset history for plugin {} (items: {})".format(self.plugin_name, reset_list))
             self.stats_history.reset()
+
+    def update_getters(self, stats):
+        """Return the stats updated from the getters functions."""
+        for g in self.getters:
+            # For each "getter", the Python function is called
+            g_call = getattr(globals()[g.split('.')[0]], g.split('.')[1])()
+            # The result is stored in the stats dict
+            # (only if the field is in the self.fields_description)
+            for name in [f for f in g_call._fields if f in self.fields_description]:
+                stats[name] = getattr(g_call, name)
+        return stats
+
+    def update_computes(self, stats):
+        """Return the stats updated from the computes functions."""
+        for c in self.computes:
+            stats[c] = getattr(self, c)(stats)
+        return stats
+
+    def update_local(self, stats):
+        """Return the stats updated by getters and computes."""
+        # Update the stats from the getters
+        stats = self.update_getters(stats)
+        # Update the stats from the computes
+        stats = self.update_computes(stats)
+        return stats
 
     def update_stats_history(self):
         """Update stats history."""
@@ -483,9 +526,9 @@ class GlancesPluginModel(object):
                         'splittable': False,
                         'hidden': False,
                         '_zero': self.views[i[self.get_key()]][key]['_zero']
-                        if i[self.get_key()] in self.views
-                        and key in self.views[i[self.get_key()]]
-                        and 'zero' in self.views[i[self.get_key()]][key]
+                        if i[self.get_key()] in self.views and
+                        key in self.views[i[self.get_key()]] and
+                        'zero' in self.views[i[self.get_key()]][key]
                         else True,
                     }
                     ret[i[self.get_key()]][key] = value
@@ -962,9 +1005,9 @@ class GlancesPluginModel(object):
 
         # Check if unit is defined and get the short unit char in the unit_sort dict
         if (
-            key in self.fields_description
-            and 'unit' in self.fields_description[key]
-            and self.fields_description[key]['unit'] in fields_unit_short
+            key in self.fields_description and
+            'unit' in self.fields_description[key] and
+            self.fields_description[key]['unit'] in fields_unit_short
         ):
             # Get the shortname
             unit_short = fields_unit_short[self.fields_description[key]['unit']]
@@ -973,9 +1016,9 @@ class GlancesPluginModel(object):
 
         # Check if unit is defined and get the unit type unit_type dict
         if (
-            key in self.fields_description
-            and 'unit' in self.fields_description[key]
-            and self.fields_description[key]['unit'] in fields_unit_type
+            key in self.fields_description and
+            'unit' in self.fields_description[key] and
+            self.fields_description[key]['unit'] in fields_unit_type
         ):
             # Get the shortname
             unit_type = fields_unit_type[self.fields_description[key]['unit']]
@@ -984,9 +1027,9 @@ class GlancesPluginModel(object):
 
         # Is it a rate ? Yes, compute it thanks to the time_since_update key
         if (
-            key in self.fields_description
-            and 'rate' in self.fields_description[key]
-            and self.fields_description[key]['rate'] is True
+            key in self.fields_description and
+            'rate' in self.fields_description[key] and
+            self.fields_description[key]['rate'] is True
         ):
             value = self.stats[key] // self.stats['time_since_update']
         else:
@@ -1010,8 +1053,8 @@ class GlancesPluginModel(object):
             msg_value = (
                 msg_template.format(
                     self.auto_unit(int(value), min_symbol=self.fields_description[key]['min_symbol']), unit_short
-                )
-                + trailer
+                ) +
+                trailer
             )
         else:
             msg_value = msg_template.format(int(value), unit_short) + trailer
@@ -1055,7 +1098,7 @@ class GlancesPluginModel(object):
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         if min_symbol in symbols:
-            symbols = symbols[symbols.index(min_symbol) :]
+            symbols = symbols[symbols.index(min_symbol):]
         prefix = {
             'Y': 1208925819614629174706176,
             'Z': 1180591620717411303424,
