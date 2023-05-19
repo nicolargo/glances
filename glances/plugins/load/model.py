@@ -37,7 +37,11 @@ waiting in the run-queue plus the number currently executing \
 over 15 minutes.',
         'unit': 'float',
     },
-    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
+    'cpucore': {
+        'description':
+        'Total number of CPU core.',
+        'unit': 'number'
+    },
 }
 
 # SNMP OID
@@ -68,7 +72,10 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
+            args=args,
+            config=config,
+            items_history_list=items_history_list,
+            fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface
@@ -104,9 +111,7 @@ class PluginModel(GlancesPluginModel):
 
             # Get the load using the os standard lib
             load = self._getloadavg()
-            if load is None:
-                stats = self.get_init_value()
-            else:
+            if load:
                 stats = {'min1': load[0], 'min5': load[1], 'min15': load[2], 'cpucore': self.nb_log_core}
 
         elif self.input_method == 'snmp':

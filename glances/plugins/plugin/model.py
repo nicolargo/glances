@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -114,13 +114,15 @@ class GlancesPluginModel(object):
         # Init stats description
         self.fields_description = fields_description
         if fields_description:
-            # Return a list of getter (external functions to run to get the stats)
+            # Return a list of getter (internal or external functions to run to get the stats)
+            # Note: It should return a dict
             self.getters = list(set([fields_description[i]['getter'] for i in fields_description
                                 if (i in fields_description and
                                     'getter' in fields_description[i] and
                                     fields_description[i]['getter'] not in ('compute'))]))
             # Return a list of internal functions to run to compute the stats
             # Computation is done after the getters
+            # Note It could return what ever you want
             self.computes = [i for i in fields_description
                              if (i in fields_description and
                                  'getter' in fields_description[i] and
@@ -196,11 +198,22 @@ class GlancesPluginModel(object):
         """Return the stats updated from the getters functions."""
         for g in self.getters:
             # For each "getter", the Python function is called
-            g_call = getattr(globals()[g.split('.')[0]], g.split('.')[1])()
+            g_lib = g.split('.')[0]
+            g_func = g.split('.')[1]
+            if g_lib == 'self':
+                g_call = getattr(self, g_func)()
+            else:
+                g_call = getattr(globals()[g_lib], g_func)()
             # The result is stored in the stats dict
             # (only if the field is in the self.fields_description)
-            for name in [f for f in g_call._fields if f in self.fields_description]:
-                stats[name] = getattr(g_call, name)
+            if hasattr(g_call, '_fields'):
+                # It's a psutil object
+                for name in [f for f in g_call._fields if f in self.fields_description]:
+                    stats[name] = getattr(g_call, name)
+            else:
+                # It's a Dict object
+                for name in [f for f in g_call if f in self.fields_description]:
+                    stats[name] = g_call.get(name, None)
         return stats
 
     def update_computes(self, stats):

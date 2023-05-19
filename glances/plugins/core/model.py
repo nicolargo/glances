@@ -15,8 +15,13 @@ import psutil
 
 # Fields description
 fields_description = {
-    'phys': {'description': 'Number of physical cores (hyper thread CPUs are excluded).', 'unit': 'number'},
+    'phys': {
+        'getter': 'self.cpu_count',
+        'description': 'Number of physical cores (hyper thread CPUs are excluded).',
+        'unit': 'number'
+    },
     'log': {
+        'getter': 'self.cpu_count',
         'description': 'Number of logical CPUs. A logical CPU is the number of \
 physical cores multiplied by the number of threads that can run on each core.',
         'unit': 'number',
@@ -40,6 +45,20 @@ class PluginModel(GlancesPluginModel):
         # The core number is displayed by the load plugin
         self.display_curse = False
 
+    def cpu_count(self):
+        """Return the CPU core number."""
+        stats = self.get_init_value()
+        try:
+            # The psutil 2.0 include psutil.cpu_count() and psutil.cpu_count(logical=False)
+            # Return a dict with:
+            # - phys: physical cores only (hyper thread CPUs are excluded)
+            # - log: logical CPUs in the system
+            stats['phys'] = psutil.cpu_count(logical=False)
+            stats['log'] = psutil.cpu_count()
+        except NameError:
+            pass
+        return stats
+
     # Do *NOT* uncomment the following line
     # @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
@@ -53,17 +72,7 @@ class PluginModel(GlancesPluginModel):
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
-
-            # The psutil 2.0 include psutil.cpu_count() and psutil.cpu_count(logical=False)
-            # Return a dict with:
-            # - phys: physical cores only (hyper thread CPUs are excluded)
-            # - log: logical CPUs in the system
-            # Return None if undefined
-            try:
-                stats["phys"] = psutil.cpu_count(logical=False)
-                stats["log"] = psutil.cpu_count()
-            except NameError:
-                self.reset()
+            stats = self.update_local(stats)
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
