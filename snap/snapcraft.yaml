@@ -128,10 +128,15 @@ parts:
       '*': bin/
 
   selective-checkout:
-    plugin: nil
+    source: https://github.com/brlin-tw/selective-checkout.git
+    source-tag: v3.0.1
+    plugin: dump
     build-packages:
-    - git
-    stage-snaps:
-    - selective-checkout
+      - curl
+      - jq
+      - sed
+      - git
+    stage:
+      - scriptlets/selective-checkout
     prime:
-    - -*
+      - -*
