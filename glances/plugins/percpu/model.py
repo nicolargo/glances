@@ -9,7 +9,6 @@
 
 """Per-CPU plugin."""
 
-from glances.cpu_percent import cpu_percent
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
