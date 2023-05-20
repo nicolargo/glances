@@ -3,7 +3,7 @@
         <div class="table">
             <div class="table-row">
                 <div class="table-cell text-left title">MEM</div>
-                <div class="table-cell">{{ percent }}%</div>
+                <div class="table-cell" :class="getDecoration('percent')">{{ percent }}%</div>
             </div>
             <div class="table-row">
                 <div class="table-cell text-left">total:</div>
