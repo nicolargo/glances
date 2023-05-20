@@ -161,7 +161,7 @@ class PluginModel(GlancesPluginModel):
         except Exception:
             self.nb_log_core = 1
 
-    @GlancesPluginModel._manage_gauge
+    @GlancesPluginModel._manage_rate
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):

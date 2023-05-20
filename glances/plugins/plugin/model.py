@@ -1139,8 +1139,8 @@ class GlancesPluginModel(object):
 
         return wrapper
 
-    def _manage_gauge(fct):
-        """Manage gauge decorator for update method."""
+    def _manage_rate(fct):
+        """Manage rate decorator for update method."""
 
         def wrapper(self, *args, **kw):
             # Call the method
@@ -1178,4 +1178,4 @@ class GlancesPluginModel(object):
     # Mandatory to call the decorator in child classes
     _check_decorator = staticmethod(_check_decorator)
     _log_result_decorator = staticmethod(_log_result_decorator)
-    _manage_gauge = staticmethod(_manage_gauge)
+    _manage_rate = staticmethod(_manage_rate)
