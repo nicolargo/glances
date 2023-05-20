@@ -1160,7 +1160,10 @@ class GlancesPluginModel(object):
                             # The stat becomes the delta between the current and the previous value
                             ret[field] = ret[field] - self.stats_old[field + '_gauge']
                             # Compute the rate
-                            ret[field + '_rate_per_sec'] = ret[field] // ret['time_since_update']
+                            if ret['time_since_update'] > 0:
+                                ret[field + '_rate_per_sec'] = ret[field] // ret['time_since_update']
+                            else:
+                                ret[field] = 0
                         else:
                             # Avoid strange rate at the first run
                             ret[field] = 0
