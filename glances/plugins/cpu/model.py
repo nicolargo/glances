@@ -25,7 +25,7 @@ import psutil
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
     'total': {
-        # 'getter': 'compute',
+        'getter': 'compute',
         'description': 'Sum of all CPU percentages (except idle).',
         'unit': 'percent'
     },
@@ -116,7 +116,7 @@ another while ensuring that the tasks do not conflict.',
         'short_name': 'sys_call',
     },
     'cpucore': {
-        # 'getter': 'compute',
+        'getter': 'compute',
         'description': 'Total number of CPU core.',
         'unit': 'number'
     },
@@ -177,6 +177,15 @@ class PluginModel(GlancesPluginModel):
         except Exception:
             self.nb_log_core = 1
 
+    def cpucore(self, stats):
+        """Core number is needed to compute the CTX switch limit"""
+        return self.nb_log_core
+
+    def total(self, stats):
+        """Return the sum of all CPU percentages (except idle)
+        Use a function shared with percpu plugin"""
+        return cpu_percent.get()
+
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
@@ -196,16 +205,16 @@ class PluginModel(GlancesPluginModel):
 
     def update_cpu_local(self):
         """Update CPU stats using psutil."""
+
+        # Init new stats
+        stats = self.get_init_value()
+
         # Grab CPU stats using psutil's cpu_percent and cpu_times_percent
         # Get all possible values for CPU stats: user, system, idle,
         # nice (UNIX), iowait (Linux), irq (Linux, FreeBSD), steal (Linux 2.6.11+)
         # The following stats are returned by the API but not displayed in the UI:
         # softirq (Linux), guest (Linux 2.6.24+), guest_nice (Linux 3.2.0+)
-
-        # Init new stats
-        stats = self.get_init_value()
-
-        stats['total'] = cpu_percent.get()
+        #
         # Standards stats
         # - user: time spent by normal processes executing in user mode; on Linux this also includes guest time
         # - system: time spent by processes executing in kernel mode
@@ -223,27 +232,13 @@ class PluginModel(GlancesPluginModel):
         #                              under the control of the Linux kernel)
         # - interrupt (Windows): time spent for servicing hardware interrupts ( similar to “irq” on UNIX)
         # - dpc (Windows): time spent servicing deferred procedure calls (DPCs)
-
-        # cpu_times_percent = psutil.cpu_times_percent(interval=0.0)
-        # for stat in cpu_times_percent._fields:
-        #     stats[stat] = getattr(cpu_times_percent, stat)
-
+        #
         # Additional CPU stats (number of events not as a %; psutil>=4.1.0)
         # - ctx_switches: number of context switches (voluntary + involuntary) since boot.
         # - interrupts: number of interrupts since boot.
         # - soft_interrupts: number of software interrupts since boot. Always set to 0 on Windows and SunOS.
         # - syscalls: number of system calls since boot. Always set to 0 on Linux.
-
-        # cpu_stats = psutil.cpu_stats()
         self.update_local(stats)
-
-        # By storing time data we enable Rx/s and Tx/s calculations in the
-        # XML/RPC API, which would otherwise be overly difficult work
-        # for users of the API
-        # stats['time_since_update'] = getTimeSinceLastUpdate('cpu')
-
-        # Core number is needed to compute the CTX switch limit
-        stats['cpucore'] = self.nb_log_core
 
         return stats
 
