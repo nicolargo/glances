@@ -82,7 +82,7 @@ COPY /glances /app/glances
 
 # Copy binary and update PATH
 COPY docker-bin.sh /usr/local/bin/glances
-ENV PATH="$PATH:/venv/bin"
+ENV PATH="/venv/bin:$PATH"
 
 # EXPOSE PORT (XMLRPC / WebUI)
 EXPOSE 61209 61208
