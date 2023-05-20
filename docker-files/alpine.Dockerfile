@@ -86,6 +86,10 @@ FROM base as release
 COPY ./docker-compose/glances.conf /etc/glances.conf
 COPY /glances /app/glances
 
+# Copy binary and update PATH
+COPY docker-bin.sh /usr/local/bin/glances
+ENV PATH="$PATH:/venv/bin"
+
 # EXPOSE PORT (XMLRPC / WebUI)
 EXPOSE 61209 61208
 
