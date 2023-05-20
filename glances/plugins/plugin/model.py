@@ -114,19 +114,20 @@ class GlancesPluginModel(object):
         # Init stats description
         self.fields_description = fields_description
         if fields_description:
-            # Return a list of getter (internal or external functions to run to get the stats)
-            # Note: It should return a dict
-            self.getters = list(set([fields_description[i]['getter'] for i in fields_description
-                                if (i in fields_description and
-                                    'getter' in fields_description[i] and
-                                    fields_description[i]['getter'] not in ('compute'))]))
-            # Return a list of internal functions to run to compute the stats
+            # Return a dict of getter (internal or external functions to run to get the stats)
+            # key: getter name (string)
+            # value: arguments
+            # return: a dict
+            self.getters = {fields_description[i]['getter']['fct']:fields_description[i]['getter']['arg'] for i in fields_description
+                            if ('getter' in fields_description[i] and
+                                'fct' in fields_description[i]['getter'])}
+            # Return a list of internal functions to be ran to compute the stats
             # Computation is done after the getters
-            # Note It could return what ever you want
+            # return: what you want, but should be JSON serializable
             self.computes = [i for i in fields_description
                              if (i in fields_description and
                                  'getter' in fields_description[i] and
-                                 fields_description[i]['getter'] in ('compute'))]
+                                 fields_description[i]['getter'] == 'compute')]
         else:
             self.getters = []
             self.computes = []
@@ -198,12 +199,16 @@ class GlancesPluginModel(object):
         """Return the stats updated from the getters functions."""
         for g in self.getters:
             # For each "getter", the Python function is called
-            g_lib = g.split('.')[0]
-            g_func = g.split('.')[1]
-            if g_lib == 'self':
-                g_call = getattr(self, g_func)()
+            g_lib_name, g_func = g.split('.')
+            g_arg = self.getters.get(g, None)
+            if g_lib_name == 'self':
+                g_lib = self
             else:
-                g_call = getattr(globals()[g_lib], g_func)()
+                g_lib = globals()[g_lib_name]
+            if g_arg:
+                g_call = getattr(g_lib, g_func)(**g_arg)
+            else:
+                g_call = getattr(g_lib, g_func)()
             # The result is stored in the stats dict
             # (only if the field is in the self.fields_description)
             if hasattr(g_call, '_fields'):

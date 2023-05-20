@@ -24,50 +24,63 @@ import psutil
 # rate: is it a rate ? If yes, // by time_since_update when displayed,
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
-    'total': {'description': 'Sum of all CPU percentages (except idle).', 'unit': 'percent'},
+    'total': {
+        # 'getter': 'compute',
+        'description': 'Sum of all CPU percentages (except idle).',
+        'unit': 'percent'
+    },
     'system': {
+        'getter': {'fct': 'psutil.cpu_times_percent', 'arg': {'interval': 0.0}},
         'description': 'percent time spent in kernel space. System CPU time is the \
 time spent running code in the Operating System kernel.',
         'unit': 'percent',
     },
     'user': {
+        'getter': {'fct': 'psutil.cpu_times_percent', 'arg': {'interval': 0.0}},
         'description': 'CPU percent time spent in user space. \
 User CPU time is the time spent on the processor running your program\'s code (or code in libraries).',
         'unit': 'percent',
     },
     'iowait': {
+        'getter': {'fct': 'psutil.cpu_times_percent', 'arg': {'interval': 0.0}},
         'description': '*(Linux)*: percent time spent by the CPU waiting for I/O \
 operations to complete.',
         'unit': 'percent',
     },
     'dpc': {
+        'getter': {'fct': 'psutil.cpu_times_percent', 'arg': {'interval': 0.0}},
         'description': '*(Windows)*: time spent servicing deferred procedure calls (DPCs)',
         'unit': 'percent',
     },
     'idle': {
+        'getter': {'fct': 'psutil.cpu_times_percent', 'arg': {'interval': 0.0}},
         'description': 'percent of CPU used by any program. Every program or task \
 that runs on a computer system occupies a certain amount of processing \
 time on the CPU. If the CPU has completed all tasks it is idle.',
         'unit': 'percent',
     },
     'irq': {
+        'getter': {'fct': 'psutil.cpu_times_percent', 'arg': {'interval': 0.0}},
         'description': '*(Linux and BSD)*: percent time spent servicing/handling \
 hardware/software interrupts. Time servicing interrupts (hardware + \
 software).',
         'unit': 'percent',
     },
     'nice': {
+        'getter': {'fct': 'psutil.cpu_times_percent', 'arg': {'interval': 0.0}},
         'description': '*(Unix)*: percent time occupied by user level processes with \
 a positive nice value. The time the CPU has spent running users\' \
 processes that have been *niced*.',
         'unit': 'percent',
     },
     'steal': {
+        'getter': {'fct': 'psutil.cpu_times_percent', 'arg': {'interval': 0.0}},
         'description': '*(Linux)*: percentage of time a virtual CPU waits for a real \
 CPU while the hypervisor is servicing another virtual processor.',
         'unit': 'percent',
     },
     'ctx_switches': {
+        'getter': {'fct': 'psutil.cpu_stats', 'arg': {}},
         'description': 'number of context switches (voluntary + involuntary) per \
 second. A context switch is a procedure that a computer\'s CPU (central \
 processing unit) follows to change from one task (or process) to \
@@ -78,6 +91,7 @@ another while ensuring that the tasks do not conflict.',
         'short_name': 'ctx_sw',
     },
     'interrupts': {
+        'getter': {'fct': 'psutil.cpu_stats', 'arg': {}},
         'description': 'number of interrupts per second.',
         'unit': 'number',
         'rate': True,
@@ -85,6 +99,7 @@ another while ensuring that the tasks do not conflict.',
         'short_name': 'inter',
     },
     'soft_interrupts': {
+        'getter': {'fct': 'psutil.cpu_stats', 'arg': {}},
         'description': 'number of software interrupts per second. Always set to \
 0 on Windows and SunOS.',
         'unit': 'number',
@@ -93,6 +108,7 @@ another while ensuring that the tasks do not conflict.',
         'short_name': 'sw_int',
     },
     'syscalls': {
+        'getter': {'fct': 'psutil.cpu_stats', 'arg': {}},
         'description': 'number of system calls per second. Always 0 on Linux OS.',
         'unit': 'number',
         'rate': True,
@@ -159,9 +175,9 @@ class PluginModel(GlancesPluginModel):
         """Update CPU stats using the input method."""
         # Grab stats into self.stats
         if self.input_method == 'local':
-            stats = self.update_local()
+            stats = self.update_cpu_local()
         elif self.input_method == 'snmp':
-            stats = self.update_snmp()
+            stats = self.update_cpu_snmp()
         else:
             stats = self.get_init_value()
 
@@ -170,7 +186,7 @@ class PluginModel(GlancesPluginModel):
 
         return self.stats
 
-    def update_local(self):
+    def update_cpu_local(self):
         """Update CPU stats using psutil."""
         # Grab CPU stats using psutil's cpu_percent and cpu_times_percent
         # Get all possible values for CPU stats: user, system, idle,
@@ -199,16 +215,19 @@ class PluginModel(GlancesPluginModel):
         #                              under the control of the Linux kernel)
         # - interrupt (Windows): time spent for servicing hardware interrupts ( similar to “irq” on UNIX)
         # - dpc (Windows): time spent servicing deferred procedure calls (DPCs)
-        cpu_times_percent = psutil.cpu_times_percent(interval=0.0)
-        for stat in cpu_times_percent._fields:
-            stats[stat] = getattr(cpu_times_percent, stat)
+
+        # cpu_times_percent = psutil.cpu_times_percent(interval=0.0)
+        # for stat in cpu_times_percent._fields:
+        #     stats[stat] = getattr(cpu_times_percent, stat)
 
         # Additional CPU stats (number of events not as a %; psutil>=4.1.0)
         # - ctx_switches: number of context switches (voluntary + involuntary) since boot.
         # - interrupts: number of interrupts since boot.
         # - soft_interrupts: number of software interrupts since boot. Always set to 0 on Windows and SunOS.
         # - syscalls: number of system calls since boot. Always set to 0 on Linux.
-        cpu_stats = psutil.cpu_stats()
+
+        # cpu_stats = psutil.cpu_stats()
+        self.update_local(stats)
 
         # By storing time data we enable Rx/s and Tx/s calculations in the
         # XML/RPC API, which would otherwise be overly difficult work
@@ -218,24 +237,24 @@ class PluginModel(GlancesPluginModel):
         # Core number is needed to compute the CTX switch limit
         stats['cpucore'] = self.nb_log_core
 
-        # Previous CPU stats are stored in the cpu_stats_old variable
-        if not hasattr(self, 'cpu_stats_old'):
-            # Init the stats (needed to have the key name for export)
-            for stat in cpu_stats._fields:
-                # @TODO: better to set it to None but should refactor views and UI...
-                stats[stat] = 0
-        else:
-            # Others calls...
-            for stat in cpu_stats._fields:
-                if getattr(cpu_stats, stat) is not None:
-                    stats[stat] = getattr(cpu_stats, stat) - getattr(self.cpu_stats_old, stat)
+        # # Previous CPU stats are stored in the cpu_stats_old variable
+        # if not hasattr(self, 'stats_old'):
+        #     # Init the stats (needed to have the key name for export)
+        #     for stat in stats:
+        #         # @TODO: better to set it to None but should refactor views and UI...
+        #         stats[stat] = 0
+        # else:
+        #     # Others calls...
+        #     for stat in stats:
+        #         if stat in stats:
+        #             stats[stat] = stats[stat] - self.stats_old[stat]
 
-        # Save stats to compute next step
-        self.cpu_stats_old = cpu_stats
+        # # Save stats to compute next step
+        # self.stats_old = stats
 
         return stats
 
-    def update_snmp(self):
+    def update_cpu_snmp(self):
         """Update CPU stats using SNMP."""
 
         # Init new stats

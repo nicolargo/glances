@@ -16,12 +16,12 @@ import psutil
 # Fields description
 fields_description = {
     'phys': {
-        'getter': 'self.cpu_count',
+        'getter': {'fct': 'self.cpu_count', 'arg': {}},
         'description': 'Number of physical cores (hyper thread CPUs are excluded).',
         'unit': 'number'
     },
     'log': {
-        'getter': 'self.cpu_count',
+        'getter': {'fct': 'self.cpu_count', 'arg': {}},
         'description': 'Number of logical CPUs. A logical CPU is the number of \
 physical cores multiplied by the number of threads that can run on each core.',
         'unit': 'number',

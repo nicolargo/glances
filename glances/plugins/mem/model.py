@@ -15,13 +15,13 @@ from glances.plugins.plugin.model import GlancesPluginModel
 # Fields description
 fields_description = {
     'total': {
-        'getter': 'psutil.virtual_memory',
+        'getter': {'fct': 'psutil.virtual_memory', 'arg': {}},
         'description': 'Total physical memory available.',
         'unit': 'bytes',
         'min_symbol': 'K'
     },
     'available': {
-        'getter': 'psutil.virtual_memory',
+        'getter': {'fct': 'psutil.virtual_memory', 'arg': {}},
         'description': 'The actual amount of available memory that can be given instantly \
 to processes that request more memory in bytes; this is calculated by summing \
 different memory values depending on the platform (e.g. free + buffers + cached on Linux) \
@@ -30,44 +30,44 @@ and it is supposed to be used to monitor actual memory usage in a cross platform
         'min_symbol': 'K',
     },
     'percent': {
-        'getter': 'psutil.virtual_memory',
+        'getter': {'fct': 'psutil.virtual_memory', 'arg': {}},
         'description': 'The percentage usage calculated as (total - available) / total * 100.',
         'unit': 'percent',
     },
     'active': {
-        'getter': 'psutil.virtual_memory',
+        'getter': {'fct': 'psutil.virtual_memory', 'arg': {}},
         'description': '*(UNIX)*: memory currently in use or very recently used, and so it is in RAM.',
         'unit': 'bytes',
         'min_symbol': 'K',
     },
     'inactive': {
-        'getter': 'psutil.virtual_memory',
+        'getter': {'fct': 'psutil.virtual_memory', 'arg': {}},
         'description': '*(UNIX)*: memory that is marked as not used.',
         'unit': 'bytes',
         'min_symbol': 'K',
         'short_name': 'inacti',
     },
     'buffers': {
-        'getter': 'psutil.virtual_memory',
+        'getter': {'fct': 'psutil.virtual_memory', 'arg': {}},
         'description': '*(Linux, BSD)*: cache for things like file system metadata.',
         'unit': 'bytes',
         'min_symbol': 'K',
         'short_name': 'buffer',
     },
     'cached': {
-        'getter': 'psutil.virtual_memory',
+        'getter': {'fct': 'psutil.virtual_memory', 'arg': {}},
         'description': '*(Linux, BSD)*: cache for various things.',
         'unit': 'bytes',
         'min_symbol': 'K'
     },
     'wired': {
-        'getter': 'psutil.virtual_memory',
+        'getter': {'fct': 'psutil.virtual_memory', 'arg': {}},
         'description': '*(BSD, macOS)*: memory that is marked to always stay in RAM. It is never moved to disk.',
         'unit': 'bytes',
         'min_symbol': 'K',
     },
     'shared': {
-        'getter': 'psutil.virtual_memory',
+        'getter': {'fct': 'psutil.virtual_memory', 'arg': {}},
         'description': '*(BSD)*: memory that may be simultaneously accessed by multiple processes.',
         'unit': 'bytes',
         'min_symbol': 'K',

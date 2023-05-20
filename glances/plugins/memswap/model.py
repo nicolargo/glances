@@ -17,36 +17,36 @@ import psutil
 # Fields description
 fields_description = {
     'total': {
-        'getter': 'psutil.swap_memory',
+        'getter': {'fct': 'psutil.swap_memory', 'arg': {}},
         'description': 'Total swap memory.',
         'unit': 'bytes',
         'min_symbol': 'K'
     },
     'used': {
-        'getter': 'psutil.swap_memory',
+        'getter': {'fct': 'psutil.swap_memory', 'arg': {}},
         'description': 'Used swap memory.',
         'unit': 'bytes',
         'min_symbol': 'K'
     },
     'free': {
-        'getter': 'psutil.swap_memory',
+        'getter': {'fct': 'psutil.swap_memory', 'arg': {}},
         'description': 'Free swap memory.',
         'unit': 'bytes',
         'min_symbol': 'K'
     },
     'percent': {
-        'getter': 'psutil.swap_memory',
+        'getter': {'fct': 'psutil.swap_memory', 'arg': {}},
         'description': 'Used swap memory in percentage.',
         'unit': 'percent'
     },
     'sin': {
-        'getter': 'psutil.swap_memory',
+        'getter': {'fct': 'psutil.swap_memory', 'arg': {}},
         'description': 'The number of bytes the system has swapped in from disk (cumulative).',
         'unit': 'bytes',
         'min_symbol': 'K',
     },
     'sout': {
-        'getter': 'psutil.swap_memory',
+        'getter': {'fct': 'psutil.swap_memory', 'arg': {}},
         'description': 'The number of bytes the system has swapped out from disk (cumulative).',
         'unit': 'bytes',
         'min_symbol': 'K',
