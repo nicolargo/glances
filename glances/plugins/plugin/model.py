@@ -135,6 +135,7 @@ class GlancesPluginModel(object):
         # Init the stats
         self.stats_init_value = stats_init_value
         self.stats = None
+        self.stats_old = None
         self.reset()
 
     def __repr__(self):
@@ -227,6 +228,23 @@ class GlancesPluginModel(object):
             stats[c] = getattr(self, c)(stats)
         return stats
 
+    def update_gauges(self, stats):
+        """Manage gauge (field with rate=True).
+        Create a new field with the gauge value (cumulative).
+        Set the field to stats_gauge current - old (to compute the rate)
+        """
+        if self.stats_old is None:
+            # First call
+            return stats
+        for c in self.fields_description:
+            if 'rate' in self.fields_description[c] and self.fields_description[c]:
+                stats[c + '_gauge'] = stats[c]
+                if c + '_gauge' in self.stats_old:
+                    stats[c] = stats[c] - self.stats_old[c + '_gauge']
+                else:
+                    stats[c] = 0
+        return stats
+
     def time_since_update(self, stats):
         """Memorized the time since last update."""
         return getTimeSinceLastUpdate(self.plugin_name)
@@ -235,8 +253,16 @@ class GlancesPluginModel(object):
         """Return the stats updated by getters and computes."""
         # Update the stats from the getters
         stats = self.update_getters(stats)
+
         # Update the stats from the computes
         stats = self.update_computes(stats)
+
+        # Update gauge (if rate=True)
+        stats = self.update_gauges(stats)
+
+        # Record current stats
+        self.stats_old = stats
+
         return stats
 
     def update_stats_history(self):
@@ -1052,7 +1078,10 @@ class GlancesPluginModel(object):
             'rate' in self.fields_description[key] and
             self.fields_description[key]['rate'] is True
         ):
-            value = self.stats[key] // self.stats['time_since_update']
+            if key + '_gauge' in self.stats:
+                value = self.stats[key] // self.stats['time_since_update']
+            else:
+                value = 0
         else:
             value = self.stats[key]
 

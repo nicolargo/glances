@@ -115,8 +115,16 @@ another while ensuring that the tasks do not conflict.',
         'min_symbol': 'K',
         'short_name': 'sys_call',
     },
-    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
-    'time_since_update': {'description': 'Number of seconds since last update.', 'unit': 'seconds'},
+    'cpucore': {
+        # 'getter': 'compute',
+        'description': 'Total number of CPU core.',
+        'unit': 'number'
+    },
+    'time_since_update': {
+        'getter': 'compute',
+        'description': 'Number of seconds since last update.',
+        'unit': 'seconds'
+    },
 }
 
 # SNMP OID
@@ -232,25 +240,10 @@ class PluginModel(GlancesPluginModel):
         # By storing time data we enable Rx/s and Tx/s calculations in the
         # XML/RPC API, which would otherwise be overly difficult work
         # for users of the API
-        stats['time_since_update'] = getTimeSinceLastUpdate('cpu')
+        # stats['time_since_update'] = getTimeSinceLastUpdate('cpu')
 
         # Core number is needed to compute the CTX switch limit
         stats['cpucore'] = self.nb_log_core
-
-        # # Previous CPU stats are stored in the cpu_stats_old variable
-        # if not hasattr(self, 'stats_old'):
-        #     # Init the stats (needed to have the key name for export)
-        #     for stat in stats:
-        #         # @TODO: better to set it to None but should refactor views and UI...
-        #         stats[stat] = 0
-        # else:
-        #     # Others calls...
-        #     for stat in stats:
-        #         if stat in stats:
-        #             stats[stat] = stats[stat] - self.stats_old[stat]
-
-        # # Save stats to compute next step
-        # self.stats_old = stats
 
         return stats
 
@@ -316,7 +309,7 @@ class PluginModel(GlancesPluginModel):
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
         # Alert only but depend on Core number
         for key in ['ctx_switches']:
-            if key in self.stats:
+            if key in self.stats and key + '_gauge' in self.stats:
                 self.views[key]['decoration'] = self.get_alert(
                     self.stats[key], maximum=100 * self.stats['cpucore'], header=key
                 )
