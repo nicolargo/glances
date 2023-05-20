@@ -22,7 +22,7 @@ from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.events import glances_events
 from glances.thresholds import glances_thresholds
-from glances.timer import Counter, Timer
+from glances.timer import Counter, Timer, getTimeSinceLastUpdate
 from glances.outputs.glances_unicode import unicode_message
 
 
@@ -115,6 +115,7 @@ class GlancesPluginModel(object):
         # Init the stats
         self.stats_init_value = stats_init_value
         self.stats = None
+        self.stats_old = None
         self.reset()
 
     def __repr__(self):
@@ -982,15 +983,15 @@ class GlancesPluginModel(object):
         else:
             unit_type = 'float'
 
-        # Is it a rate ? Yes, compute it thanks to the time_since_update key
+        # Is it a rate ? Yes, get the pre-computed rate value
         if (
-            key in self.fields_description
-            and 'rate' in self.fields_description[key]
-            and self.fields_description[key]['rate'] is True
+            key in self.fields_description and
+            'rate' in self.fields_description[key] and
+            self.fields_description[key]['rate'] is True
         ):
-            value = self.stats[key] // self.stats['time_since_update']
+            value = self.stats.get(key + '_rate_per_sec', 0)
         else:
-            value = self.stats[key]
+            value = self.stats.get(key, 0)
 
         if width is None:
             msg_item = header + '{}'.format(key_name) + separator
@@ -1138,6 +1139,40 @@ class GlancesPluginModel(object):
 
         return wrapper
 
+    def _manage_gauge(fct):
+        """Manage gauge decorator for update method."""
+
+        def wrapper(self, *args, **kw):
+            # Call the method
+            ret = fct(self, *args, **kw)
+
+            # Add extra data to the stats
+            # time_since_update: time since the last update
+            ret['time_since_update'] = getTimeSinceLastUpdate(self.plugin_name)
+
+            if self.stats_old:
+                # For all the field with the rate=True flag
+                for field in self.fields_description:
+                    if 'rate' in self.fields_description[field] and self.fields_description[field]['rate'] is True:
+                        # Create a new metadata with the gauge
+                        ret[field + '_gauge'] = ret[field]
+                        if field + '_gauge' in self.stats_old:
+                            # The stat becomes the delta between the current and the previous value
+                            ret[field] = ret[field] - self.stats_old[field + '_gauge']
+                            # Compute the rate
+                            ret[field + '_rate_per_sec'] = ret[field] // ret['time_since_update']
+                        else:
+                            # Avoid strange rate at the first run
+                            ret[field] = 0
+
+            # Memorized the current stats for next run
+            self.stats_old = ret
+
+            return ret
+
+        return wrapper
+
     # Mandatory to call the decorator in child classes
     _check_decorator = staticmethod(_check_decorator)
     _log_result_decorator = staticmethod(_log_result_decorator)
+    _manage_gauge = staticmethod(_manage_gauge)

@@ -9,7 +9,6 @@
 
 """CPU plugin."""
 
-from glances.timer import getTimeSinceLastUpdate
 from glances.globals import LINUX, WINDOWS, SUNOS, iterkeys
 from glances.cpu_percent import cpu_percent
 from glances.plugins.core.model import PluginModel as CorePluginModel
@@ -21,10 +20,13 @@ import psutil
 # description: human readable description
 # short_name: shortname to use un UI
 # unit: unit type
-# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# rate: is it a rate ? If yes generate metadata with _gauge and _rate_per_sec
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
-    'total': {'description': 'Sum of all CPU percentages (except idle).', 'unit': 'percent'},
+    'total': {
+        'description': 'Sum of all CPU percentages (except idle).',
+        'unit': 'percent'
+    },
     'system': {
         'description': 'percent time spent in kernel space. System CPU time is the \
 time spent running code in the Operating System kernel.',
@@ -99,8 +101,14 @@ another while ensuring that the tasks do not conflict.',
         'min_symbol': 'K',
         'short_name': 'sys_call',
     },
-    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
-    'time_since_update': {'description': 'Number of seconds since last update.', 'unit': 'seconds'},
+    'cpucore': {
+        'description': 'Total number of CPU core.',
+        'unit': 'number'
+    },
+    'time_since_update': {
+        'description': 'Number of seconds since last update.',
+        'unit': 'seconds'
+    },
 }
 
 # SNMP OID
@@ -153,6 +161,7 @@ class PluginModel(GlancesPluginModel):
         except Exception:
             self.nb_log_core = 1
 
+    @GlancesPluginModel._manage_gauge
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
@@ -181,7 +190,9 @@ class PluginModel(GlancesPluginModel):
         # Init new stats
         stats = self.get_init_value()
 
+        # Total is shared with perCPU plugin
         stats['total'] = cpu_percent.get()
+
         # Standards stats
         # - user: time spent by normal processes executing in user mode; on Linux this also includes guest time
         # - system: time spent by processes executing in kernel mode
@@ -209,29 +220,11 @@ class PluginModel(GlancesPluginModel):
         # - soft_interrupts: number of software interrupts since boot. Always set to 0 on Windows and SunOS.
         # - syscalls: number of system calls since boot. Always set to 0 on Linux.
         cpu_stats = psutil.cpu_stats()
-
-        # By storing time data we enable Rx/s and Tx/s calculations in the
-        # XML/RPC API, which would otherwise be overly difficult work
-        # for users of the API
-        stats['time_since_update'] = getTimeSinceLastUpdate('cpu')
+        for stat in cpu_stats._fields:
+            stats[stat] = getattr(cpu_stats, stat)
 
         # Core number is needed to compute the CTX switch limit
         stats['cpucore'] = self.nb_log_core
-
-        # Previous CPU stats are stored in the cpu_stats_old variable
-        if not hasattr(self, 'cpu_stats_old'):
-            # Init the stats (needed to have the key name for export)
-            for stat in cpu_stats._fields:
-                # @TODO: better to set it to None but should refactor views and UI...
-                stats[stat] = 0
-        else:
-            # Others calls...
-            for stat in cpu_stats._fields:
-                if getattr(cpu_stats, stat) is not None:
-                    stats[stat] = getattr(cpu_stats, stat) - getattr(self.cpu_stats_old, stat)
-
-        # Save stats to compute next step
-        self.cpu_stats_old = cpu_stats
 
         return stats
 
