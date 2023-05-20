@@ -5,7 +5,7 @@
                 <div class="table">
                     <div class="table-row">
                         <div class="table-cell text-left title">CPU</div>
-                        <div class="table-cell">{{ total }}%</div>
+                        <div class="table-cell" :class="getDecoration('total')">{{ total }}%</div>
                     </div>
                     <div class="table-row">
                         <div class="table-cell text-left">user:</div>
