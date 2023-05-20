@@ -9,6 +9,15 @@ Version 4.0.0
 Under development: https://github.com/nicolargo/glances/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Glances+4.0.0%22
 
 ===============
+Version 3.4.0.3
+===============
+
+Bugs corrected:
+
+    * Add glances binary to '/usr/local/bin' + Update ENV PATH to include '/venv/bin' in Dockerfiles #2419
+    * No more threshold display in the WebUI cpu/mem and memswap plugins #2420
+
+===============
 Version 3.4.0.2
 ===============
 
