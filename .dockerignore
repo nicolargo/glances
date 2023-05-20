@@ -16,5 +16,5 @@
 # Include Config file
 !/docker-compose/glances.conf
 
-# Include binary file
+# Include Binary file
 !/docker-bin.sh
