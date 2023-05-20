@@ -12,6 +12,75 @@
 from glances.cpu_percent import cpu_percent
 from glances.plugins.plugin.model import GlancesPluginModel
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+#
+# Example:
+# [{'key': 'cpu_number', 'cpu_number': 0, 'total': 24.4, 'user': 20.3, 'system': 3.9,
+#   'idle': 75.6, 'nice': 0.0, 'iowait': 0.3, 'irq': 0.0, 'softirq': 0.0, 'steal': 0.0,
+#   'guest': 0.0, 'guest_nice': 0.0}
+fields_description = {
+    'cpu_number': {
+        'getter': {'fct': 'cpu_percent.get', 'arg': {'percpu': True}},
+        'description': 'CPU core identifier.',
+        'unit': 'number'
+    },
+    'total': {
+        'getter': {'fct': 'cpu_percent.get', 'arg': {'percpu': True}},
+        'description': 'Sum of all CPU percentages for the current Core (except idle).',
+        'unit': 'percent'
+    },
+    'system': {
+        'getter': {'fct': 'cpu_percent.get', 'arg': {'percpu': True}},
+        'description': 'percent time spent in kernel space. System CPU time is the \
+time spent running code in the Operating System kernel.',
+        'unit': 'percent',
+    },
+    'user': {
+        'getter': {'fct': 'cpu_percent.get', 'arg': {'percpu': True}},
+        'description': 'CPU percent time spent in user space. \
+User CPU time is the time spent on the processor running your program\'s code (or code in libraries).',
+        'unit': 'percent',
+    },
+    'iowait': {
+        'getter': {'fct': 'cpu_percent.get', 'arg': {'percpu': True}},
+        'description': '*(Linux)*: percent time spent by the CPU waiting for I/O \
+operations to complete.',
+        'unit': 'percent',
+    },
+    'idle': {
+        'getter': {'fct': 'cpu_percent.get', 'arg': {'percpu': True}},
+        'description': 'percent of CPU used by any program. Every program or task \
+that runs on a computer system occupies a certain amount of processing \
+time on the CPU. If the CPU has completed all tasks it is idle.',
+        'unit': 'percent',
+    },
+    'irq': {
+        'getter': {'fct': 'cpu_percent.get', 'arg': {'percpu': True}},
+        'description': '*(Linux and BSD)*: percent time spent servicing/handling \
+hardware/software interrupts. Time servicing interrupts (hardware + \
+software).',
+        'unit': 'percent',
+    },
+    'nice': {
+        'getter': {'fct': 'cpu_percent.get', 'arg': {'percpu': True}},
+        'description': '*(Unix)*: percent time occupied by user level processes with \
+a positive nice value. The time the CPU has spent running users\' \
+processes that have been *niced*.',
+        'unit': 'percent',
+    },
+    'steal': {
+        'getter': {'fct': 'cpu_percent.get', 'arg': {'percpu': True}},
+        'description': '*(Linux)*: percentage of time a virtual CPU waits for a real \
+CPU while the hypervisor is servicing another virtual processor.',
+        'unit': 'percent',
+    },
+}
+
 # Define the history items list
 items_history_list = [
     {'name': 'user', 'description': 'User CPU usage', 'y_unit': '%'},
@@ -29,7 +98,11 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config, items_history_list=items_history_list, stats_init_value=[]
+            args=args,
+            config=config,
+            items_history_list=items_history_list,
+            stats_init_value=[],
+            fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface
@@ -49,7 +122,8 @@ class PluginModel(GlancesPluginModel):
         # Grab per-CPU stats using psutil's cpu_percent(percpu=True) and
         # cpu_times_percent(percpu=True) methods
         if self.input_method == 'local':
-            stats = cpu_percent.get(percpu=True)
+            # stats = cpu_percent.get(percpu=True)
+            stats = self.update_local(stats)
         else:
             # Update stats using SNMP
             pass

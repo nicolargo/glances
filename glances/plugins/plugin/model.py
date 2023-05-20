@@ -13,12 +13,16 @@ I am your father...
 ...of all Glances model plugins.
 """
 
+# System import
 import re
 import copy
 
-# PsUtil is call "dynamically", so the import should not be removed
+# The following lib are imported "dynamically", so the import should not be removed
+# You should ignire the warning message from your IDE (imported but not unused)
 import psutil
+from glances.cpu_percent import cpu_percent
 
+# Others imports
 from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr, json_dumps, json_dumps_dictlist
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
@@ -206,20 +210,19 @@ class GlancesPluginModel(object):
                 g_lib = self
             else:
                 g_lib = globals()[g_lib_name]
+            # Call the "getter"
             if g_arg:
                 g_call = getattr(g_lib, g_func)(**g_arg)
             else:
                 g_call = getattr(g_lib, g_func)()
-            # The result is stored in the stats dict
-            # (only if the field is in the self.fields_description)
+            # Transform the result (because we need serializable data)
             if hasattr(g_call, '_fields'):
-                # It's a psutil object
+                # It's (probably) a psutil object
                 for name in [f for f in g_call._fields if f in self.fields_description]:
                     stats[name] = getattr(g_call, name)
             else:
-                # It's a Dict object
-                for name in [f for f in g_call if f in self.fields_description]:
-                    stats[name] = g_call.get(name, None)
+                # It's already a Python type
+                stats = g_call
         return stats
 
     def update_computes(self, stats):

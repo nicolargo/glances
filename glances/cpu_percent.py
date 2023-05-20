@@ -19,7 +19,7 @@ class CpuPercent(object):
 
     """Get and store the CPU percent."""
 
-    def __init__(self, cached_timer_cpu=3):
+    def __init__(self, cached_timer_cpu=2):
         self.cpu_info = {'cpu_name': None, 'cpu_hz_current': None, 'cpu_hz': None}
         self.cpu_percent = 0
         self.percpu_percent = []
