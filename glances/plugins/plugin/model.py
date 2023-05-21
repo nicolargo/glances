@@ -57,6 +57,8 @@ class GlancesPluginModel(object):
         self.stats). As an example, you can have a look on the mem plugin
         (for dict) or network (for list of dicts).
 
+        From version 4 of the API, the plugin should return a dict.
+
         A plugin should implement:
         - the reset method: to set your self.stats variable to {} or []
         - the update method: where your self.stats variable is set
@@ -111,6 +113,13 @@ class GlancesPluginModel(object):
 
         # Init stats description
         self.fields_description = fields_description
+        # Get the key in case of stat return a dict of dict
+        self.key = None
+        if self.fields_description:
+            keys = [k for k in self.fields_description if 'key' in self.fields_description[k] and
+                    self.fields_description[k]['key']]
+            if len(keys) == 1:
+                self.key = keys[0]
 
         # Init the stats
         self.stats_init_value = stats_init_value
@@ -143,7 +152,7 @@ class GlancesPluginModel(object):
 
     def get_key(self):
         """Return the key of the list."""
-        return None
+        return self.key
 
     def is_enabled(self, plugin_name=None):
         """Return true if plugin is enabled."""
@@ -186,7 +195,11 @@ class GlancesPluginModel(object):
             else:
                 item_name = self.get_key()
             for i in self.get_items_history_list():
-                if isinstance(self.get_export(), list):
+                if isinstance(self.get_export(), dict):
+                    # TODO: To be implemented
+                    pass
+                elif isinstance(self.get_export(), list):
+                    # TODO: When implementation of feature/issue2414 is done, this code should be removed
                     # Stats is a list of data
                     # Iter through it (for example, iter through network interface)
                     for l_export in self.get_export():
@@ -471,7 +484,30 @@ class GlancesPluginModel(object):
         """
         ret = {}
 
-        if isinstance(self.get_raw(), list) and self.get_raw() is not None and self.get_key() is not None:
+        if isinstance(self.get_raw(), dict) and \
+           self.get_raw() is not None and \
+           self.get_key() is not None and \
+           self.plugin_name == 'diskio': # TODO <== To be removed when feature/issue2414 is done
+            # Stats are stored in a dict of dict (ex: DISKIO...)
+            for key in self.get_raw():
+                ret[key] = {}
+                for field in self.get_raw()[key]:
+                    value = {
+                        'decoration': 'DEFAULT',
+                        'optional': False,
+                        'additional': False,
+                        'splittable': False,
+                        'hidden': False,
+                        '_zero': self.views[key][field]['_zero']
+                        if key in self.views and
+                           field in self.views[key] and
+                           'zero' in self.views[key][field]
+                        else True,
+                    }
+                    ret[key][field] = value
+            pass
+        # TODO: should be removed when feature/issue2414 is done
+        elif isinstance(self.get_raw(), list) and self.get_raw() is not None and self.get_key() is not None:
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
                 # i[self.get_key()] is the interface name (example for NETWORK)
@@ -830,7 +866,7 @@ class GlancesPluginModel(object):
         Example for diskio:
         show=sda.*
         """
-        # @TODO: possible optimisation: create a re.compile list
+        # TODO: possible optimisation: create a re.compile list
         return any(
             j for j in [re.fullmatch(i.lower(), value.lower()) for i in self.get_conf_value('show', header=header)]
         )
@@ -843,7 +879,7 @@ class GlancesPluginModel(object):
         Example for diskio:
         hide=sda2,sda5,loop.*
         """
-        # @TODO: possible optimisation: create a re.compile list
+        # TODO: possible optimisation: create a re.compile list
         return any(
             j for j in [re.fullmatch(i.lower(), value.lower()) for i in self.get_conf_value('hide', header=header)]
         )
@@ -1053,10 +1089,11 @@ class GlancesPluginModel(object):
         :low_precision: returns less decimal places potentially (default is False)
                         sacrificing precision for more readability.
         :min_symbol: Do not approach if number < min_symbol (default is K)
+        :decimal_count: if set, force the number of decimal number (default is None)
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         if min_symbol in symbols:
-            symbols = symbols[symbols.index(min_symbol) :]
+            symbols = symbols[symbols.index(min_symbol):]
         prefix = {
             'Y': 1208925819614629174706176,
             'Z': 1180591620717411303424,
@@ -1067,6 +1104,9 @@ class GlancesPluginModel(object):
             'M': 1048576,
             'K': 1024,
         }
+
+        if number == 0:
+            return '0'
 
         for symbol in reversed(symbols):
             value = float(number) / prefix[symbol]
@@ -1142,36 +1182,48 @@ class GlancesPluginModel(object):
     def _manage_rate(fct):
         """Manage rate decorator for update method."""
 
+        def compute_rate(self, stat, stat_old, time_since_update):
+            # Add extra data to the stats time_since_update: time since the last update
+            stat['time_since_update'] = time_since_update
+
+            # 1) set _gauge for all the rate fields
+            # 2) compute the _rate_per_sec
+            # 3) set the original field to the delta between the current and the previous value
+            for field in self.fields_description:
+                # For all the field with the rate=True flag
+                if 'rate' in self.fields_description[field] and self.fields_description[field]['rate'] is True:
+                    # Create a new metadata with the gauge
+                    stat[field + '_gauge'] = stat[field]
+                    if field + '_gauge' in stat_old:
+                        # The stat becomes the delta between the current and the previous value
+                        stat[field] = stat[field] - stat_old[field + '_gauge']
+                        # Compute the rate
+                        if stat['time_since_update'] > 0:
+                            stat[field + '_rate_per_sec'] = stat[field] // stat['time_since_update']
+                        else:
+                            stat[field] = 0
+                    else:
+                        # Avoid strange rate at the first run
+                        stat[field] = 0
+            return stat
+
         def wrapper(self, *args, **kw):
             # Call the method
-            ret = fct(self, *args, **kw)
+            stat= fct(self, *args, **kw)
 
-            # Add extra data to the stats
-            # time_since_update: time since the last update
-            ret['time_since_update'] = getTimeSinceLastUpdate(self.plugin_name)
+            time_since_update = getTimeSinceLastUpdate(self.plugin_name)
 
             if self.stats_old:
-                # For all the field with the rate=True flag
-                for field in self.fields_description:
-                    if 'rate' in self.fields_description[field] and self.fields_description[field]['rate'] is True:
-                        # Create a new metadata with the gauge
-                        ret[field + '_gauge'] = ret[field]
-                        if field + '_gauge' in self.stats_old:
-                            # The stat becomes the delta between the current and the previous value
-                            ret[field] = ret[field] - self.stats_old[field + '_gauge']
-                            # Compute the rate
-                            if ret['time_since_update'] > 0:
-                                ret[field + '_rate_per_sec'] = ret[field] // ret['time_since_update']
-                            else:
-                                ret[field] = 0
-                        else:
-                            # Avoid strange rate at the first run
-                            ret[field] = 0
+                if self.get_key() is None:
+                    compute_rate(self, stat, self.stats_old, time_since_update)
+                else:
+                    for item in stat:
+                        compute_rate(self, stat[item], self.stats_old[item], time_since_update)
 
             # Memorized the current stats for next run
-            self.stats_old = ret
+            self.stats_old = stat
 
-            return ret
+            return stat
 
         return wrapper
 

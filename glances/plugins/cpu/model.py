@@ -18,10 +18,11 @@ import psutil
 
 # Fields description
 # description: human readable description
-# short_name: shortname to use un UI
+# short_name: shortname to use in UI
 # unit: unit type
 # rate: is it a rate ? If yes generate metadata with _gauge and _rate_per_sec
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# if a key field is defined, the value is used as a key in the stats dict
 fields_description = {
     'total': {
         'description': 'Sum of all CPU percentages (except idle).',
