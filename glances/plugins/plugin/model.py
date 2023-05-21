@@ -1106,6 +1106,7 @@ class GlancesPluginModel(object):
         }
 
         if number == 0:
+            # Avoid 0.0
             return '0'
 
         for symbol in reversed(symbols):
@@ -1209,7 +1210,9 @@ class GlancesPluginModel(object):
 
         def wrapper(self, *args, **kw):
             # Call the method
-            stat= fct(self, *args, **kw)
+            stat = fct(self, *args, **kw)
+            if self.get_key() and 'sda' in stat:
+                logger.info("stat (fct): {}".format(stat['sda'].get('read_bytes_gauge', None)))
 
             time_since_update = getTimeSinceLastUpdate(self.plugin_name)
 
@@ -1217,11 +1220,15 @@ class GlancesPluginModel(object):
                 if self.get_key() is None:
                     compute_rate(self, stat, self.stats_old, time_since_update)
                 else:
-                    for item in stat:
-                        compute_rate(self, stat[item], self.stats_old[item], time_since_update)
+                    # logger.info("Compute rate for {}".format(self.plugin_name))
+                    # logger.info("stat_old: {}".format(self.stats_old['sda'].get('read_bytes_gauge', None)))
+                    # logger.info("stat (before rate): {}".format(stat['sda'].get('read_bytes_gauge', None)))
+                    for key in stat:
+                        compute_rate(self, stat[key], self.stats_old[key], time_since_update)
+                    # logger.info("stat (after rate): {}".format(stat['sda']['read_bytes_gauge']))
 
             # Memorized the current stats for next run
-            self.stats_old = stat
+            self.stats_old = copy.deepcopy(stat)
 
             return stat
 

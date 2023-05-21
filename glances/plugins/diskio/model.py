@@ -143,7 +143,7 @@ class PluginModel(GlancesPluginModel):
         # Update the stats
         self.stats = stats
 
-        return self.stats
+        return stats
 
     def update_views(self):
         """Update stats views."""
