@@ -16,11 +16,52 @@ from glances.plugins.plugin.model import GlancesPluginModel
 
 import psutil
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use in UI
+# unit: unit type
+# rate: is it a rate ? If yes generate metadata with _gauge and _rate_per_sec
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# if field has a key=True then this field will be used as iterator for the stat (dict of dict)
+fields_description = {
+    'disk_name': {
+        'key': True,
+        'description': 'Disk name.',
+    },
+    'read_count': {
+        'description': 'Number of read since the last update.',
+        'unit': 'number',
+        'rate': True,
+        'min_symbol': 'K',
+    },
+    'write_count': {
+        'description': 'Number of write since the last update.',
+        'unit': 'number',
+        'rate': True,
+        'min_symbol': 'K',
+    },
+    'read_bytes': {
+        'description': 'Number of bytes read since the last update.',
+        'unit': 'bytes',
+        'rate': True,
+        'min_symbol': 'K',
+    },
+    'write_bytes': {
+        'description': 'Number of bytes write since the last update.',
+        'unit': 'bytes',
+        'rate': True,
+        'min_symbol': 'K',
+    },
+    'time_since_update': {
+        'description': 'Number of seconds since last update.',
+        'unit': 'seconds'
+    },
+}
 
 # Define the history items list
 items_history_list = [
-    {'name': 'read_bytes', 'description': 'Bytes read per second', 'y_unit': 'B/s'},
-    {'name': 'write_bytes', 'description': 'Bytes write per second', 'y_unit': 'B/s'},
+    {'name': 'read_bytes_rate_per_sec', 'description': 'Bytes read per second', 'y_unit': 'B/s'},
+    {'name': 'write_bytes_rate_per_sec', 'description': 'Bytes write per second', 'y_unit': 'B/s'},
 ]
 
 
@@ -33,7 +74,9 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config, items_history_list=items_history_list, stats_init_value=[]
+            args=args, config=config,
+            items_history_list=items_history_list,
+            fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface
@@ -44,16 +87,13 @@ class PluginModel(GlancesPluginModel):
             self.hide_zero = config.get_bool_value(self.plugin_name, 'hide_zero', default=False)
         else:
             self.hide_zero = False
-        self.hide_zero_fields = ['read_bytes', 'write_bytes']
+        self.hide_zero_fields = ['read_bytes_rate_per_sec', 'write_bytes_rate_per_sec']
 
         # Force a first update because we need two update to have the first stat
         self.update()
         self.refresh_timer.set(0)
 
-    def get_key(self):
-        """Return the key of the list."""
-        return 'disk_name'
-
+    @GlancesPluginModel._manage_rate
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
@@ -75,57 +115,26 @@ class PluginModel(GlancesPluginModel):
             except Exception:
                 return stats
 
-            # Previous disk IO stats are stored in the diskio_old variable
-            # By storing time data we enable Rx/s and Tx/s calculations in the
-            # XML/RPC API, which would otherwise be overly difficult work
-            # for users of the API
-            time_since_update = getTimeSinceLastUpdate('disk')
-
-            diskio = diskio
             for disk in diskio:
                 # By default, RamFS is not displayed (issue #714)
-                if self.args is not None and not self.args.diskio_show_ramfs and disk.startswith('ram'):
+                if self.args is not None and \
+                   not self.args.diskio_show_ramfs and disk.startswith('ram'):
                     continue
 
                 # Shall we display the stats ?
                 if not self.is_display(disk):
                     continue
 
-                # Compute count and bit rate
-                try:
-                    diskstat = {
-                        'time_since_update': time_since_update,
-                        'disk_name': disk,
-                        'read_count': diskio[disk].read_count - self.diskio_old[disk].read_count,
-                        'write_count': diskio[disk].write_count - self.diskio_old[disk].write_count,
-                        'read_bytes': diskio[disk].read_bytes - self.diskio_old[disk].read_bytes,
-                        'write_bytes': diskio[disk].write_bytes - self.diskio_old[disk].write_bytes,
-                    }
-                except (KeyError, AttributeError):
-                    diskstat = {
-                        'time_since_update': time_since_update,
-                        'disk_name': disk,
-                        'read_count': 0,
-                        'write_count': 0,
-                        'read_bytes': 0,
-                        'write_bytes': 0,
-                    }
+                # Convert disk stat to plain Python Dict
+                diskio_stats = {}
+                for key in diskio[disk]._fields:
+                    diskio_stats[key] = getattr(diskio[disk], key)
+                stats[disk] = diskio_stats
 
                 # Add alias if exist (define in the configuration file)
                 if self.has_alias(disk) is not None:
-                    diskstat['alias'] = self.has_alias(disk)
+                    stats[disk]['alias'] = self.has_alias(disk)
 
-                # Add the dict key
-                diskstat['key'] = self.get_key()
-
-                # Add the current disk stat to the list
-                stats.append(diskstat)
-
-            # Save stats to compute next bitrate
-            try:
-                self.diskio_old = diskio
-            except (IOError, UnboundLocalError):
-                pass
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             # No standard way for the moment...
@@ -146,14 +155,14 @@ class PluginModel(GlancesPluginModel):
 
         # Add specifics information
         # Alert
-        for i in self.get_raw():
-            disk_real_name = i['disk_name']
-            self.views[i[self.get_key()]]['read_bytes']['decoration'] = self.get_alert(
-                int(i['read_bytes'] // i['time_since_update']), header=disk_real_name + '_rx'
-            )
-            self.views[i[self.get_key()]]['write_bytes']['decoration'] = self.get_alert(
-                int(i['write_bytes'] // i['time_since_update']), header=disk_real_name + '_tx'
-            )
+        for k, v in self.get_raw().items():
+            if 'read_bytes_rate_per_sec' in v and 'write_bytes_rate_per_sec' in v:
+                self.views[k]['read_bytes_rate_per_sec']['decoration'] = self.get_alert(
+                    int(v['read_bytes_rate_per_sec']), header=k + '_rx'
+                )
+                self.views[k]['read_bytes_rate_per_sec']['decoration'] = self.get_alert(
+                    int(v['write_bytes_rate_per_sec']), header=k + '_tx'
+                )
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -181,49 +190,53 @@ class PluginModel(GlancesPluginModel):
             msg = '{:>7}'.format('W/s')
             ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
-        for i in self.sorted_stats():
+        # for i in self.sorted_stats():
+        for k in sorted(self.stats):
+            v = self.stats[k]
+            if 'read_bytes_rate_per_sec' not in v or 'write_bytes_rate_per_sec' not in v:
+                continue
             # Hide stats if never be different from 0 (issue #1787)
-            if all([self.get_views(item=i[self.get_key()], key=f, option='hidden') for f in self.hide_zero_fields]):
+            if all([self.get_views(item=k, key=f, option='hidden') for f in self.hide_zero_fields]):
                 continue
             # Is there an alias for the disk name ?
-            disk_name = self.has_alias(i['disk_name']) if self.has_alias(i['disk_name']) else i['disk_name']
+            disk_name = self.has_alias(k) if self.has_alias(k) else k
             # New line
             ret.append(self.curse_new_line())
             if len(disk_name) > name_max_width:
                 # Cut disk name if it is too long
-                disk_name = '_' + disk_name[-name_max_width + 1 :]
+                disk_name = '_' + disk_name[-name_max_width + 1:]
             msg = '{:{width}}'.format(nativestr(disk_name), width=name_max_width + 1)
             ret.append(self.curse_add_line(msg))
             if args.diskio_iops:
                 # count
-                txps = self.auto_unit(int(i['read_count'] // i['time_since_update']))
-                rxps = self.auto_unit(int(i['write_count'] // i['time_since_update']))
+                txps = self.auto_unit(v['read_count_rate_per_sec'])
+                rxps = self.auto_unit(v['write_count_rate_per_sec'])
                 msg = '{:>7}'.format(txps)
                 ret.append(
                     self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()], key='read_count', option='decoration')
+                        msg, self.get_views(item=k, key='read_count_rate_per_sec', option='decoration')
                     )
                 )
                 msg = '{:>7}'.format(rxps)
                 ret.append(
                     self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()], key='write_count', option='decoration')
+                        msg, self.get_views(item=k, key='write_count_rate_per_sec', option='decoration')
                     )
                 )
             else:
                 # Bitrate
-                txps = self.auto_unit(int(i['read_bytes'] // i['time_since_update']))
-                rxps = self.auto_unit(int(i['write_bytes'] // i['time_since_update']))
+                txps = self.auto_unit(v['read_bytes_rate_per_sec'])
+                rxps = self.auto_unit(v['write_bytes_rate_per_sec'])
                 msg = '{:>7}'.format(txps)
                 ret.append(
                     self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()], key='read_bytes', option='decoration')
+                        msg, self.get_views(item=k, key='read_bytes_rate_per_sec', option='decoration')
                     )
                 )
                 msg = '{:>7}'.format(rxps)
                 ret.append(
                     self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()], key='write_bytes', option='decoration')
+                        msg, self.get_views(item=k, key='write_bytes_rate_per_sec', option='decoration')
                     )
                 )
 
