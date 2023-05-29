@@ -14,6 +14,15 @@ import time
 from dataclasses import dataclass
 
 
+class GlancesDataUnit:
+
+    PERCENT = '%'
+    BIT = 'b'
+    BYTE = 'B'
+    CORE = 'C'
+    TEMPERATURE = '°'
+
+
 @dataclass
 class GlancesDataItem:
     """Class for a Glances Data item."""

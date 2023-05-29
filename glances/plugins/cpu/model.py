@@ -13,7 +13,7 @@ from glances.globals import LINUX, WINDOWS, SUNOS, iterkeys
 from glances.cpu_percent import cpu_percent
 from glances.plugins.core.model import PluginModel as CorePluginModel
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.data.item import GlancesDataItem
+from glances.data.item import GlancesDataItem, GlancesDataUnit
 from glances.data.plugin import GlancesDataPlugin
 
 import psutil
@@ -32,63 +32,63 @@ import psutil
 fields_description = {
     'total': {
         'description': 'Sum of all CPU percentages (except idle).',
-        'unit': 'percent'
+        'unit': GlancesDataUnit.PERCENT
     },
     'system': {
         'description': 'percent time spent in kernel space. System CPU time is the \
 time spent running code in the Operating System kernel.',
-        'unit': 'percent',
+        'unit': GlancesDataUnit.PERCENT
     },
     'user': {
         'description': 'CPU percent time spent in user space. \
 User CPU time is the time spent on the processor running your program\'s code (or code in libraries).',
-        'unit': 'percent',
+        'unit': GlancesDataUnit.PERCENT
     },
     'iowait': {
         'description': '*(Linux)*: percent time spent by the CPU waiting for I/O \
 operations to complete.',
-        'unit': 'percent',
+        'unit': GlancesDataUnit.PERCENT
     },
     'dpc': {
         'description': '*(Windows)*: time spent servicing deferred procedure calls (DPCs)',
-        'unit': 'percent',
+        'unit': GlancesDataUnit.PERCENT
     },
     'idle': {
         'description': 'percent of CPU used by any program. Every program or task \
 that runs on a computer system occupies a certain amount of processing \
 time on the CPU. If the CPU has completed all tasks it is idle.',
-        'unit': 'percent',
+        'unit': GlancesDataUnit.PERCENT
     },
     'irq': {
         'description': '*(Linux and BSD)*: percent time spent servicing/handling \
 hardware/software interrupts. Time servicing interrupts (hardware + \
 software).',
-        'unit': 'percent',
+        'unit': GlancesDataUnit.PERCENT
     },
     'nice': {
         'description': '*(Unix)*: percent time occupied by user level processes with \
 a positive nice value. The time the CPU has spent running users\' \
 processes that have been *niced*.',
-        'unit': 'percent',
+        'unit': GlancesDataUnit.PERCENT
     },
     'steal': {
         'description': '*(Linux)*: percentage of time a virtual CPU waits for a real \
 CPU while the hypervisor is servicing another virtual processor.',
-        'unit': 'percent',
+        'unit': GlancesDataUnit.PERCENT
     },
     'ctx_switches': {
         'description': 'number of context switches (voluntary + involuntary) per \
 second. A context switch is a procedure that a computer\'s CPU (central \
 processing unit) follows to change from one task (or process) to \
 another while ensuring that the tasks do not conflict.',
-        'unit': 'number',
+        'unit': GlancesDataUnit.BYTE,
         'rate': True,
         'min_symbol': 'K',
         'short_name': 'ctx_sw',
     },
     'interrupts': {
         'description': 'number of interrupts per second.',
-        'unit': 'number',
+        'unit': GlancesDataUnit.BYTE,
         'rate': True,
         'min_symbol': 'K',
         'short_name': 'inter',
@@ -96,21 +96,21 @@ another while ensuring that the tasks do not conflict.',
     'soft_interrupts': {
         'description': 'number of software interrupts per second. Always set to \
 0 on Windows and SunOS.',
-        'unit': 'number',
+        'unit': GlancesDataUnit.BYTE,
         'rate': True,
         'min_symbol': 'K',
         'short_name': 'sw_int',
     },
     'syscalls': {
         'description': 'number of system calls per second. Always 0 on Linux OS.',
-        'unit': 'number',
+        'unit': GlancesDataUnit.BYTE,
         'rate': True,
         'min_symbol': 'K',
         'short_name': 'sys_call',
     },
     'cpucore': {
         'description': 'Total number of CPU core.',
-        'unit': 'number'
+        'unit': GlancesDataUnit.CORE
     },
 }
 
