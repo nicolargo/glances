@@ -28,21 +28,10 @@ from glances.data.item import GlancesDataItem
 from glances.data.plugin import GlancesDataPlugin
 
 
-fields_unit_short = {'percent': '%'}
-
-fields_unit_type = {
-    'percent': 'float',
-    'percents': 'float',
-    'number': 'int',
-    'numbers': 'int',
-    'int': 'int',
-    'ints': 'int',
-    'float': 'float',
-    'floats': 'float',
-    'second': 'int',
-    'seconds': 'int',
-    'byte': 'int',
-    'bytes': 'int',
+# TODO to be refactor...
+fields_unit_short = {
+    'percent': '%',
+    '%': '%'
 }
 
 
@@ -982,16 +971,6 @@ class GlancesPluginModel(object):
         else:
             unit_short = ''
 
-        # Check if unit is defined and get the unit type unit_type dict
-        if (
-            key in self.fields_description
-            and 'unit' in self.fields_description[key]
-            and self.fields_description[key]['unit'] in fields_unit_type
-        ):
-            # Get the shortname
-            unit_type = fields_unit_type[self.fields_description[key]['unit']]
-        else:
-            unit_type = 'float'
 
         # TODO: not usefull anumore after refactoring
         # Is it a rate ? Yes, compute it thanks to the time_since_update key
