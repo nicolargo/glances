@@ -34,7 +34,6 @@ from glances.thresholds import GlancesThresholds
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.programs import processes_to_programs
 from glances.secure import secure_popen
-from glances.data.item import GlancesItem
 
 
 # Global variables
