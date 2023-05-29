@@ -24,6 +24,8 @@ from glances.events import glances_events
 from glances.thresholds import glances_thresholds
 from glances.timer import Counter, Timer
 from glances.outputs.glances_unicode import unicode_message
+from glances.data.item import GlancesDataItem
+from glances.data.plugin import GlancesDataPlugin
 
 
 fields_unit_short = {'percent': '%'}
@@ -51,7 +53,7 @@ class GlancesPluginModel(object):
         """Init the plugin of plugins model class.
 
         All Glances' plugins model should inherit from this class. Most of the
-        methods are already implemented in the father classes.
+        methods are already implemented in this class.
 
         Your plugin should return a dict or a list of dicts (stored in the
         self.stats). As an example, you can have a look on the mem plugin
@@ -112,6 +114,14 @@ class GlancesPluginModel(object):
         # Init stats description
         self.fields_description = fields_description
 
+        # if self.fields_description:
+        #     # Init the data
+        #     # TODO: to be done in the top level plugin class
+        #     self.stats = GlancesDataPlugin(name=self.plugin_name,
+        #                                    description='Glances {} plugin'.format(self.plugin_name.upper()))
+        #     for key, value in fields_description.items():
+        #         self.stats.add_item(GlancesDataItem(**value, name=key))
+        # else:
         # Init the stats
         self.stats_init_value = stats_init_value
         self.stats = None

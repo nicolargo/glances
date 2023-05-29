@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -182,7 +182,6 @@ class PluginModel(GlancesPluginModel):
         except Exception:
             nb_log_core = 1
         self.stats.update_item('cpucore', nb_log_core)
-
 
     # TODO: To be done in the top level plugin class
     def get_raw(self):

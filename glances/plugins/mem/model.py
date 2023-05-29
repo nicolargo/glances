@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -11,12 +11,28 @@
 
 from glances.globals import iterkeys
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.data.item import GlancesDataItem
+from glances.data.plugin import GlancesDataPlugin
 
 import psutil
 
+# =============================================================================
 # Fields description
+# =============================================================================
+# key: stat identifier
+# description: human readable description
+# short_name: shortname to use in user interfaces
+# unit: unit type
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# rate: if True, the value is a rate (per second, compute automaticaly)
+# =============================================================================
+
 fields_description = {
-    'total': {'description': 'Total physical memory available.', 'unit': 'bytes', 'min_symbol': 'K'},
+    'total': {
+        'description': 'Total physical memory available.',
+        'unit': 'bytes',
+        'min_symbol': 'K'
+    },
     'available': {
         'description': 'The actual amount of available memory that can be given instantly \
 to processes that request more memory in bytes; this is calculated by summing \
@@ -58,7 +74,11 @@ note that this doesn\'t reflect the actual memory available (use \'available\' i
         'min_symbol': 'K',
         'short_name': 'buffer',
     },
-    'cached': {'description': '*(Linux, BSD)*: cache for various things.', 'unit': 'bytes', 'min_symbol': 'K'},
+    'cached': {
+        'description': '*(Linux, BSD)*: cache for various things.',
+        'unit': 'bytes',
+        'min_symbol': 'K'
+    },
     'wired': {
         'description': '*(BSD, macOS)*: memory that is marked to always stay in RAM. It is never moved to disk.',
         'unit': 'bytes',
@@ -71,7 +91,17 @@ note that this doesn\'t reflect the actual memory available (use \'available\' i
     },
 }
 
+# =============================================================================
+# Define the history items list
+# =============================================================================
+# All items in this list will be historised if the --enable-history tag is set
+# =============================================================================
+
+items_history_list = [{'name': 'percent', 'description': 'RAM memory usage', 'y_unit': '%'}]
+
+# =============================================================================
 # SNMP OID
+# =============================================================================
 # Total RAM in machine: .1.3.6.1.4.1.2021.4.5.0
 # Total RAM used: .1.3.6.1.4.1.2021.4.6.0
 # Total RAM Free: .1.3.6.1.4.1.2021.4.11.0
@@ -79,6 +109,8 @@ note that this doesn\'t reflect the actual memory available (use \'available\' i
 # Total RAM Buffered: .1.3.6.1.4.1.2021.4.14.0
 # Total Cached Memory: .1.3.6.1.4.1.2021.4.15.0
 # Note: For Windows, stats are in the FS table
+# =============================================================================
+
 snmp_oid = {
     'default': {
         'total': '1.3.6.1.4.1.2021.4.5.0',
@@ -101,10 +133,6 @@ snmp_oid = {
     },
 }
 
-# Define the history items list
-# All items in this list will be historised if the --enable-history tag is set
-items_history_list = [{'name': 'percent', 'description': 'RAM memory usage', 'y_unit': '%'}]
-
 
 class PluginModel(GlancesPluginModel):
     """Glances' memory plugin.
@@ -115,19 +143,30 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
+            args=args,
+            config=config,
+            items_history_list=items_history_list,
+            fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+        # Init the data
+        # TODO: to be done in the top level plugin class
+        self.stats = GlancesDataPlugin(name=self.plugin_name,
+                                       description='Glances {} plugin'.format(self.plugin_name.upper()))
+        for key, value in fields_description.items():
+            self.stats.add_item(GlancesDataItem(**value, name=key))
+
+    # TODO: To be done in the top level plugin class
+    def get_raw(self):
+        return self.stats.export()
+
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
         """Update RAM memory stats using the input method."""
-        # Init new stats
-        stats = self.get_init_value()
-
         if self.input_method == 'local':
             # Update stats using the standard system lib
             # Grab MEM using the psutil virtual_memory method
@@ -151,7 +190,6 @@ class PluginModel(GlancesPluginModel):
             # cached: (Linux, BSD): cache for various things.
             # wired: (BSD, macOS): memory that is marked to always stay in RAM. It is never moved to disk.
             # shared: (BSD): memory that may be simultaneously accessed by multiple processes.
-            self.reset()
             for mem in [
                 'total',
                 'available',
@@ -165,18 +203,18 @@ class PluginModel(GlancesPluginModel):
                 'wired',
                 'shared',
             ]:
-                if hasattr(vm_stats, mem):
-                    stats[mem] = getattr(vm_stats, mem)
+                if hasattr(vm_stats, mem) and mem in fields_description:
+                    self.stats.update_item(mem, getattr(vm_stats, mem))
 
             # Use the 'free'/htop calculation
-            # free=available+buffer+cached
-            stats['free'] = stats['available']
-            if hasattr(stats, 'buffers'):
-                stats['free'] += stats['buffers']
-            if hasattr(stats, 'cached'):
-                stats['free'] += stats['cached']
-            # used=total-free
-            stats['used'] = stats['total'] - stats['free']
+            # free = available + (buffer) + (cached)
+            self.stats.update_item('free', self.stats.get_item('available'))
+            if self.stats.get_item('buffers'):
+                self.stats.update_item('free', self.stats.get_item('free') + self.stats.get_item('buffers'))
+            if self.stats.get_item('cached'):
+                self.stats.update_item('free', self.stats.get_item('free') + self.stats.get_item('cached'))
+            # used = total - free
+            self.stats.update_item('used', self.stats.get_item('total') + self.stats.get_item('free'))
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             if self.short_system_name in ('windows', 'esxi'):
@@ -184,42 +222,39 @@ class PluginModel(GlancesPluginModel):
                 try:
                     fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name], bulk=True)
                 except KeyError:
-                    self.reset()
+                    return
                 else:
                     for fs in fs_stat:
                         # The Physical Memory (Windows) or Real Memory (VMware)
                         # gives statistics on RAM usage and availability.
                         if fs in ('Physical Memory', 'Real Memory'):
-                            stats['total'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
-                            stats['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
-                            stats['percent'] = float(stats['used'] * 100 / stats['total'])
-                            stats['free'] = stats['total'] - stats['used']
+                            self.stats.update_item('total', int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit']))
+                            self.stats.update_item('used', int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit']))
+                            self.stats.update_item('percent', float(self.stats.get_item('used') * 100 / self.stats.get_item('total')))
+                            self.stats.update_item('free', self.stats.get_item('total') - self.stats.get_item('used'))
                             break
             else:
                 # Default behavior for others OS
                 stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
 
                 if stats['total'] == '':
-                    self.reset()
-                    return self.stats
+                    return
 
                 for key in iterkeys(stats):
-                    if stats[key] != '':
-                        stats[key] = float(stats[key]) * 1024
+                    if stats[key] != '' and key in fields_description:
+                        self.stats.update_item(key, float(stats[key]) * 1024)
 
                 # Use the 'free'/htop calculation
-                stats['free'] = stats['free'] - stats['total'] + (stats['buffers'] + stats['cached'])
+                self.stats.update_item('free', self.stats.get_item('total') -
+                                       (self.stats.get_item('buffers') + self.stats.get_item('cached')))
 
                 # used=total-free
-                stats['used'] = stats['total'] - stats['free']
+                self.stats.update_item('used', self.stats.get_item('total') - self.stats.get_item('free'))
 
                 # percent: the percentage usage calculated as (total - available) / total * 100.
-                stats['percent'] = float((stats['total'] - stats['free']) / stats['total'] * 100)
-
-        # Update the stats
-        self.stats = stats
-
-        return self.stats
+                self.stats.update_item('percent',
+                                       float((self.stats.get_item('total') - self.stats.get_item('total')) /
+                                             self.stats.get_item('total') * 100))
 
     def update_views(self):
         """Update stats views."""
@@ -228,10 +263,11 @@ class PluginModel(GlancesPluginModel):
 
         # Add specifics information
         # Alert and log
-        self.views['percent']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
+        self.views['percent']['decoration'] = self.get_alert_log(self.stats.get_item('percent'))
+
         # Optional
         for key in ['active', 'inactive', 'buffers', 'cached']:
-            if key in self.stats:
+            if key in self.stats.items:
                 self.views[key]['optional'] = True
 
     def msg_curse(self, args=None, max_width=None):
@@ -250,7 +286,7 @@ class PluginModel(GlancesPluginModel):
         msg = ' {:2}'.format(self.trend_msg(self.get_trend('percent')))
         ret.append(self.curse_add_line(msg))
         # Percent memory usage
-        msg = '{:>7.1%}'.format(self.stats['percent'] / 100)
+        msg = '{:>7.1%}'.format(self.stats.get_item('percent') / 100)
         ret.append(self.curse_add_line(msg, self.get_views(key='percent', option='decoration')))
         # Active memory usage
         ret.extend(self.curse_add_stat('active', width=16, header='  '))
