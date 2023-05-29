@@ -60,7 +60,7 @@
                     <div class="table-row" v-if="!isLinux && syscalls">
                         <div class="table-cell text-left">syscal:</div>
                         <div class="table-cell">
-                            {{ syscalls }}
+                            {{ $filters.bytes(syscalls) }}
                         </div>
                     </div>
                 </div>
@@ -71,20 +71,20 @@
                     <div class="table-row" v-if="nice != undefined && ctx_switches">
                         <div class="table-cell text-left">ctx_sw:</div>
                         <div class="table-cell" :class="getDecoration('ctx_switches')">
-                            {{ ctx_switches }}
+                            {{ $filters.bytes(ctx_switches) }}
                         </div>
                     </div>
                     <!-- If not already display instead of irq, then display interrupts -->
                     <div class="table-row" v-if="irq != undefined && interrupts">
                         <div class="table-cell text-left">inter:</div>
                         <div class="table-cell">
-                            {{ interrupts }}
+                            {{ $filters.bytes(interrupts) }}
                         </div>
                     </div>
                     <div class="table-row" v-if="!isWindows && !isSunOS && soft_interrupts">
                         <div class="table-cell text-left">sw_int:</div>
                         <div class="table-cell">
-                            {{ soft_interrupts }}
+                            {{ $filters.bytes(soft_interrupts) }}
                         </div>
                     </div>
                 </div>
@@ -144,24 +144,16 @@ export default {
             return this.stats.steal;
         },
         ctx_switches() {
-            const { stats } = this;
-            return stats.ctx_switches
-                ? Math.floor(stats.ctx_switches / stats.time_since_update)
-                : null;
+            return this.stats.ctx_switches;
         },
         interrupts() {
-            const { stats } = this;
-            return stats.interrupts ? Math.floor(stats.interrupts / stats.time_since_update) : null;
+            return this.stats.interrupts;
         },
         soft_interrupts() {
-            const { stats } = this;
-            return stats.soft_interrupts
-                ? Math.floor(stats.soft_interrupts / stats.time_since_update)
-                : null;
+            return this.stats.soft_interrupts;
         },
         syscalls() {
-            const { stats } = this;
-            return stats.syscalls ? Math.floor(stats.syscalls / stats.time_since_update) : null;
+            return this.stats.syscalls;
         }
     },
     methods: {

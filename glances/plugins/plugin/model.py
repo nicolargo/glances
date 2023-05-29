@@ -376,6 +376,7 @@ class GlancesPluginModel(object):
 
         return ret
 
+    # TODO: next 4 methods should be clarified / refactor
     def get_raw(self):
         """Return the stats object."""
         return self.stats
@@ -386,7 +387,7 @@ class GlancesPluginModel(object):
 
     def get_stats(self):
         """Return the stats object in JSON format."""
-        return json_dumps(self.stats)
+        return json_dumps(self.get_export())
 
     def get_json(self):
         """Return the stats object in JSON format."""
@@ -949,7 +950,7 @@ class GlancesPluginModel(object):
             ret.extend(self.curse_add_stat('idle', width=15, header='  '))
 
         """
-        if key not in self.stats:
+        if key not in self.get_raw():
             return []
 
         # Check if a shortname is defined
@@ -982,15 +983,18 @@ class GlancesPluginModel(object):
         else:
             unit_type = 'float'
 
+        # TODO: not usefull anumore after refactoring
         # Is it a rate ? Yes, compute it thanks to the time_since_update key
         if (
             key in self.fields_description
             and 'rate' in self.fields_description[key]
             and self.fields_description[key]['rate'] is True
+            and 'time_since_update' in self.get_raw()
+            and self.get_raw()['time_since_update']
         ):
-            value = self.stats[key] // self.stats['time_since_update']
+            value = self.get_raw()[key] // self.get_raw()['time_since_update']
         else:
-            value = self.stats[key]
+            value = self.get_raw()[key]
 
         if width is None:
             msg_item = header + '{}'.format(key_name) + separator
@@ -1004,17 +1008,16 @@ class GlancesPluginModel(object):
             msg_template_float = '{:5.1f}{}'
             msg_template = '{:>5}{}'
 
-        if unit_type == 'float':
-            msg_value = msg_template_float.format(value, unit_short) + trailer
+        if value is None:
+            msg_value = msg_template.format('_', unit_short) + trailer
         elif 'min_symbol' in self.fields_description[key]:
             msg_value = (
                 msg_template.format(
                     self.auto_unit(int(value), min_symbol=self.fields_description[key]['min_symbol']), unit_short
-                )
-                + trailer
+                ) + trailer
             )
         else:
-            msg_value = msg_template.format(int(value), unit_short) + trailer
+            msg_value = msg_template_float.format(value, unit_short) + trailer
 
         decoration = self.get_views(key=key, option='decoration')
         optional = self.get_views(key=key, option='optional')

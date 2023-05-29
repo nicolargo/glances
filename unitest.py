@@ -8,15 +8,17 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Glances unitary tests suite."""
+"""Glances unitary tests suite.
+To run all test: make test
+"""
 
 import time
 import unittest
 import sys
 
 # Check Python version
-if sys.version_info < (3, 4):
-    print('Glances requires at least Python 3.4 to run.')
+if sys.version_info < (3, 7):
+    print('Glances requires at least Python 3.7 to run.')
     sys.exit(1)
 
 from glances.main import GlancesMain
@@ -32,6 +34,7 @@ from glances.thresholds import GlancesThresholds
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.programs import processes_to_programs
 from glances.secure import secure_popen
+from glances.data.item import GlancesItem
 
 
 # Global variables
