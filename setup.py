@@ -9,8 +9,8 @@ from io import open
 from setuptools import setup, Command
 
 
-if sys.version_info < (3, 4):
-    print('Glances requires at least Python 3.4 to run.')
+if sys.version_info < (3, 8):
+    print('Glances requires at least Python 3.8 to run.')
     sys.exit(1)
 
 # Global functions

@@ -168,18 +168,20 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Call CorePluginModel in order to display the core number
-        try:
-            self.nb_log_core = CorePluginModel(args=self.args).update()["log"]
-        except Exception:
-            self.nb_log_core = 1
-
         # Init the data
         # TODO: to be done in the top level plugin class
         self.stats = GlancesDataPlugin(name=self.plugin_name,
                                        description='Glances {} plugin'.format(self.plugin_name.upper()))
         for key, value in fields_description.items():
             self.stats.add_item(GlancesDataItem(**value, name=key))
+
+        # Call CorePluginModel in order to display the core number
+        try:
+            nb_log_core = CorePluginModel(args=self.args).update()["log"]
+        except Exception:
+            nb_log_core = 1
+        self.stats.update_item('cpucore', nb_log_core)
+
 
     # TODO: To be done in the top level plugin class
     def get_raw(self):
@@ -230,9 +232,6 @@ class PluginModel(GlancesPluginModel):
         for stat in cpu_stats._fields:
             if stat in fields_description:
                 self.stats.update_item(stat, getattr(cpu_stats, stat))
-
-        # Core number is needed to compute the CTX switch limit
-        self.stats.update_item('cpucore', self.nb_log_core)
 
     # TODO: to be refactored
     def update_snmp(self):
