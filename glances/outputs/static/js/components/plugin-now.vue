@@ -1,6 +1,8 @@
 <template>
     <section id="now" class="plugin">
-        <span>{{ value }}</span>
+        <div class="table-row">
+            <div class="table-cell text-left">{{ value }}</div>
+        </div>
     </section>
 </template>
 
