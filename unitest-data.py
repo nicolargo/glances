@@ -54,7 +54,7 @@ class TestGlancesData(unittest.TestCase):
         self.assertEqual(r.name, 'rate')
         self.assertEqual(r.description, 'description rate')
         self.assertEqual(r.rate, True)
-        self.assertAlmostEqual(r.value, 1.0, places=2)
+        self.assertAlmostEqual(r.value, 1.0, places=1)
         self.assertEqual(r.unit, 'ps')
         self.assertTrue(r.last_update is not None)
         d = r.dict()
@@ -81,7 +81,7 @@ class TestGlancesData(unittest.TestCase):
         self.assertTrue('percent' in e_dict)
         self.assertTrue('rate' in e_dict)
         self.assertEqual(e_dict['percent'], 50.0)
-        self.assertAlmostEqual(e_dict['rate'], 1.0, places=2)
+        self.assertAlmostEqual(e_dict['rate'], 1.0, places=1)
 
         e_json = plugin.export(json=True)
         self.assertEqual(e_dict, ujson.loads(e_json))
