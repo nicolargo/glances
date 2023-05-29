@@ -28,13 +28,6 @@ from glances.data.item import GlancesDataItem
 from glances.data.plugin import GlancesDataPlugin
 
 
-# TODO to be refactor...
-fields_unit_short = {
-    'percent': '%',
-    '%': '%'
-}
-
-
 class GlancesPluginModel(object):
     """Main class for Glances plugin model."""
 
@@ -960,19 +953,18 @@ class GlancesPluginModel(object):
         else:
             key_name = key
 
-        # Check if unit is defined and get the short unit char in the unit_sort dict
+        # Only display % if the key is a percentage
         if (
-            key in self.fields_description
-            and 'unit' in self.fields_description[key]
-            and self.fields_description[key]['unit'] in fields_unit_short
+            key in self.fields_description and
+            'unit' in self.fields_description[key] and
+            self.fields_description[key]['unit'] in ('%', 'percent')
         ):
             # Get the shortname
-            unit_short = fields_unit_short[self.fields_description[key]['unit']]
+            unit_short = self.fields_description[key]['unit']
         else:
             unit_short = ''
 
-
-        # TODO: not usefull anumore after refactoring
+        # TODO: not usefull anymore after refactoring
         # Is it a rate ? Yes, compute it thanks to the time_since_update key
         if (
             key in self.fields_description
