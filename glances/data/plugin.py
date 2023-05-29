@@ -35,6 +35,18 @@ class GlancesDataPlugin:
         else:
             self.items[item.name] = item
 
+    def update_item(self, name, value):
+        """Update the item called name with the given value."""
+        self.items[name].update(value)
+
+    def get_item(self, name, default=None):
+        """Return the value of the item called."""
+        ret = self.items.get(name, default)
+        if ret is not None:
+            return ret.value
+        else:
+            return default
+
     def export(self, json=False):
         """Export the plugin data."""
         ret = {key: value.value for key, value in self.items.items()}

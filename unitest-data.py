@@ -86,6 +86,11 @@ class TestGlancesData(unittest.TestCase):
         e_json = plugin.export(json=True)
         self.assertEqual(e_dict, ujson.loads(e_json))
 
+        plugin.update_item('percent', 60.0)
+        e_dict = plugin.export()
+        self.assertEqual(plugin.get_item('percent'), 60.0)
+        self.assertEqual(plugin.get_item('nonexist'), None)
+
 
 if __name__ == '__main__':
     unittest.main()
