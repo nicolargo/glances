@@ -9,8 +9,8 @@ from io import open
 from setuptools import setup, Command
 
 
-if sys.version_info < (3, 8):
-    print('Glances requires at least Python 3.8 to run.')
+if sys.version_info < (3, 9):
+    print('Glances requires at least Python 3.9 to run.')
     sys.exit(1)
 
 # Global functions
@@ -111,7 +111,7 @@ setup(
     url='https://github.com/nicolargo/glances',
     license='LGPLv3',
     keywords="cli curses monitoring system",
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     install_requires=get_install_requires(),
     extras_require=get_install_extras_require(),
     packages=['glances'],
@@ -131,7 +131,6 @@ setup(
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',

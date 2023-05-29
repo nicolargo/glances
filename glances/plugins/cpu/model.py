@@ -21,11 +21,12 @@ import psutil
 # =============================================================================
 # Fields description
 # =============================================================================
+# key: stat identifier
 # description: human readable description
-# short_name: shortname to use un UI
+# short_name: shortname to use in user interfaces
 # unit: unit type
-# rate: if True, the value is a rate (per second, compute automaticaly)
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# rate: if True, the value is a rate (per second, compute automaticaly)
 # =============================================================================
 
 fields_description = {

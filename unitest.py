@@ -14,12 +14,6 @@ To run all test: make test
 
 import time
 import unittest
-import sys
-
-# Check Python version
-if sys.version_info < (3, 8):
-    print('Glances requires at least Python 3.8 to run.')
-    sys.exit(1)
 
 from glances.main import GlancesMain
 from glances.stats import GlancesStats
