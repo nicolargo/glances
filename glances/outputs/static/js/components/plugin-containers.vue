@@ -107,28 +107,30 @@ export default {
         },
         containers() {
             const { sorter } = this;
-            const containers = (this.stats.containers || []).map((containerData) => {
-                // prettier-ignore
-                return {
-                    'id': containerData.Id,
-                    'name': containerData.name,
-                    'status': containerData.Status,
-                    'uptime': containerData.Uptime,
-                    'cpu_percent': containerData.cpu.total,
-                    'memory_usage': containerData.memory.usage != undefined ? containerData.memory.usage : '?',
-                    'limit': containerData.memory.limit != undefined ? containerData.memory.limit : '?',
-                    'ior': containerData.io.ior != undefined ? containerData.io.ior : '?',
-                    'iow': containerData.io.iow != undefined ? containerData.io.iow : '?',
-                    'io_time_since_update': containerData.io.time_since_update,
-                    'rx': containerData.network.rx != undefined ? containerData.network.rx : '?',
-                    'tx': containerData.network.tx != undefined ? containerData.network.tx : '?',
-                    'net_time_since_update': containerData.network.time_since_update,
-                    'command': containerData.Command.join(' '),
-                    'image': containerData.Image,
-                    'engine': containerData.engine,
-                    'pod_id': containerData.pod_id
-                };
-            });
+            const containers = ((this.stats && this.stats.containers) || []).map(
+                (containerData) => {
+                    // prettier-ignore
+                    return {
+                        'id': containerData.Id,
+                        'name': containerData.name,
+                        'status': containerData.Status,
+                        'uptime': containerData.Uptime,
+                        'cpu_percent': containerData.cpu.total,
+                        'memory_usage': containerData.memory.usage != undefined ? containerData.memory.usage : '?',
+                        'limit': containerData.memory.limit != undefined ? containerData.memory.limit : '?',
+                        'ior': containerData.io.ior != undefined ? containerData.io.ior : '?',
+                        'iow': containerData.io.iow != undefined ? containerData.io.iow : '?',
+                        'io_time_since_update': containerData.io.time_since_update,
+                        'rx': containerData.network.rx != undefined ? containerData.network.rx : '?',
+                        'tx': containerData.network.tx != undefined ? containerData.network.tx : '?',
+                        'net_time_since_update': containerData.network.time_since_update,
+                        'command': containerData.Command.join(' '),
+                        'image': containerData.Image,
+                        'engine': containerData.engine,
+                        'pod_id': containerData.pod_id
+                    };
+                }
+            );
             return orderBy(
                 containers,
                 [sorter.column].reduce((retval, col) => {
