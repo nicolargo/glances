@@ -30,7 +30,25 @@ The Glances Restfull/API server could be ran using the following command line:
 
     # glances -w --disable-webui
 
-Note: Change request URL api/3 by api/2 if you use Glances 2.x.
+API URL
+-------
+
+The default root API URL is ``http://localhost:61208/api/3``.
+
+The bind addresse and port could be changed using the ``--bind`` and ``--port`` command line options.
+
+It is also possible to define an URL prefix using the ``url_prefix`` option from the [outputs] section
+of the Glances configuration file. The url_prefix should always end with a slash (``/``).
+
+For example:
+
+.. code-block:: ini
+    [outputs]
+    url_prefix = /glances/
+
+will change the root API URL to ``http://localhost:61208/glances/api/3`` and the Web UI URL to
+``http://localhost:61208/glances/``
+
 """
 
 
