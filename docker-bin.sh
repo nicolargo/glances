@@ -1,3 +1,3 @@
 #!/bin/sh
 
-/venv/bin/python3 -m glances $@
+/venv/bin/python3 -m glances "$@"
