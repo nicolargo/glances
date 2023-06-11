@@ -172,16 +172,14 @@ class PluginModel(GlancesPluginModel):
         # Init the data
         # TODO: to be done in the top level plugin class
         self.stats = GlancesDataPlugin(name=self.plugin_name,
-                                       description='Glances {} plugin'.format(self.plugin_name.upper()))
-        for key, value in fields_description.items():
-            self.stats.add_item(GlancesDataItem(**value, name=key))
+                                       description='Glances {} plugin'.format(self.plugin_name.upper()),
+                                       fields_description=fields_description)
 
         # Call CorePluginModel in order to display the core number
         try:
-            nb_log_core = CorePluginModel(args=self.args).update()["log"]
+            self.nb_log_core = CorePluginModel(args=self.args).update()["log"]
         except Exception:
-            nb_log_core = 1
-        self.stats.update_item('cpucore', nb_log_core)
+            self.nb_log_core = 1
 
     # TODO: To be done in the top level plugin class
     def get_raw(self):
@@ -198,8 +196,13 @@ class PluginModel(GlancesPluginModel):
 
     def update_local(self):
         """Update CPU stats using psutil."""
+        stats = dict()
+
+        # Put the number of core in the dict
+        stats['cpucore'] = self.nb_log_core
+
         # Grab total CPU stats using psutil's cpu_percent
-        self.stats.update_item('total', cpu_percent.get())
+        stats['total'] = cpu_percent.get()
 
         # Standards stats
         # - user: time spent by normal processes executing in user mode; on Linux this also includes guest time
@@ -221,7 +224,7 @@ class PluginModel(GlancesPluginModel):
         cpu_times_percent = psutil.cpu_times_percent(interval=0.0)
         for stat in cpu_times_percent._fields:
             if stat in fields_description:
-                self.stats.update_item(stat, getattr(cpu_times_percent, stat))
+                stats[stat] = getattr(cpu_times_percent, stat)
 
         # Additional CPU stats (number of events not as a %; psutil>=4.1.0)
         # - ctx_switches: number of context switches (voluntary + involuntary) since boot.
@@ -231,7 +234,9 @@ class PluginModel(GlancesPluginModel):
         cpu_stats = psutil.cpu_stats()
         for stat in cpu_stats._fields:
             if stat in fields_description:
-                self.stats.update_item(stat, getattr(cpu_stats, stat))
+                stats[stat] = getattr(cpu_stats, stat)
+
+        self.stats.update_data(stats)
 
     # TODO: to be refactored
     def update_snmp(self):
@@ -282,20 +287,20 @@ class PluginModel(GlancesPluginModel):
         # Add specifics information
         # Alert and log
         for key in ['user', 'system', 'iowait', 'dpc', 'total']:
-            if key in self.stats.items:
+            if self.stats.get_item(key) is not None:
                 self.views[key]['decoration'] = self.get_alert_log(self.stats.get_item(key), header=key)
         # Alert only
         for key in ['steal']:
-            if key in self.stats.items:
+            if self.stats.get_item(key) is not None:
                 self.views[key]['decoration'] = self.get_alert(self.stats.get_item(key), header=key)
         # Alert only but depend on Core number
         for key in ['ctx_switches']:
-            if key in self.stats.items and self.stats.get_item(key) is not None:
+            if self.stats.get_item(key) is not None:
                 self.views[key]['decoration'] = self.get_alert(
                     self.stats.get_item(key), maximum=100 * self.stats.get_item('cpucore'), header=key)
         # Optional
         for key in ['nice', 'irq', 'idle', 'steal', 'ctx_switches', 'interrupts', 'soft_interrupts', 'syscalls']:
-            if key in self.stats.items:
+            if self.stats.get_item(key) is not None:
                 self.views[key]['optional'] = True
 
     def msg_curse(self, args=None, max_width=None):
@@ -304,11 +309,11 @@ class PluginModel(GlancesPluginModel):
         ret = []
 
         # Only process if stats exist and plugin not disable
-        if not self.stats.items or self.args.percpu or self.is_disabled():
+        if self.stats.has_no_data() or self.args.percpu or self.is_disabled():
             return ret
 
         # Some tag to enable/disable stats (example: idle_tag triggered on Windows OS)
-        idle_tag = 'user' not in self.stats.items
+        idle_tag = 'user' not in self.stats.items()
 
         # First line
         # Total + (idle) + ctx_sw
@@ -326,7 +331,7 @@ class PluginModel(GlancesPluginModel):
         msg = '{:5.1f}%'.format(self.stats.get_item('total'))
         ret.append(self.curse_add_line(msg, self.get_views(key='total', option='decoration')))
         # Idle CPU
-        if 'idle' in self.stats.items and not idle_tag:
+        if 'idle' in self.stats.items() and not idle_tag:
             msg = '  {:8}'.format('idle')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle', option='optional')))
             msg = '{:4.1f}%'.format(self.stats.get_item('idle'))
@@ -342,7 +347,7 @@ class PluginModel(GlancesPluginModel):
         # User CPU
         if not idle_tag:
             ret.extend(self.curse_add_stat('user', width=15))
-        elif 'idle' in self.stats.items:
+        elif 'idle' in self.stats.items():
             ret.extend(self.curse_add_stat('idle', width=15))
         # IRQ CPU
         ret.extend(self.curse_add_stat('irq', width=14, header='  '))
@@ -368,10 +373,10 @@ class PluginModel(GlancesPluginModel):
         # Fourth line
         # iowait + steal + syscalls
         ret.append(self.curse_new_line())
-        if 'iowait' in self.stats.items:
+        if 'iowait' in self.stats.items():
             # IOWait CPU
             ret.extend(self.curse_add_stat('iowait', width=15))
-        elif 'dpc' in self.stats.items:
+        elif 'dpc' in self.stats.items():
             # DPC CPU
             ret.extend(self.curse_add_stat('dpc', width=15))
         # Steal CPU usage

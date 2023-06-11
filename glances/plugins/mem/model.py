@@ -11,7 +11,7 @@
 
 from glances.globals import iterkeys
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.data.item import GlancesDataItem, GlancesDataUnit
+from glances.data.item import GlancesDataUnit
 from glances.data.plugin import GlancesDataPlugin
 
 import psutil
@@ -30,7 +30,7 @@ import psutil
 fields_description = {
     'total': {
         'description': 'Total physical memory available.',
-        'unit':  GlancesDataUnit.BYTE,
+        'unit': GlancesDataUnit.BYTE,
         'min_symbol': 'K'
     },
     'available': {
@@ -155,9 +155,8 @@ class PluginModel(GlancesPluginModel):
         # Init the data
         # TODO: to be done in the top level plugin class
         self.stats = GlancesDataPlugin(name=self.plugin_name,
-                                       description='Glances {} plugin'.format(self.plugin_name.upper()))
-        for key, value in fields_description.items():
-            self.stats.add_item(GlancesDataItem(**value, name=key))
+                                       description='Glances {} plugin'.format(self.plugin_name.upper()),
+                                       fields_description=fields_description)
 
     # TODO: To be done in the top level plugin class
     def get_raw(self):
@@ -171,6 +170,7 @@ class PluginModel(GlancesPluginModel):
             # Update stats using the standard system lib
             # Grab MEM using the psutil virtual_memory method
             vm_stats = psutil.virtual_memory()
+            stats = dict()
 
             # Get all the memory stats (copy/paste of the psutil documentation)
             # total: total physical memory available.
@@ -204,17 +204,18 @@ class PluginModel(GlancesPluginModel):
                 'shared',
             ]:
                 if hasattr(vm_stats, mem) and mem in fields_description:
-                    self.stats.update_item(mem, getattr(vm_stats, mem))
+                    stats[mem] = getattr(vm_stats, mem)
 
+            # TODO: not the same result than Glances version 3 !
             # Use the 'free'/htop calculation
             # free = available + (buffer) + (cached)
-            self.stats.update_item('free', self.stats.get_item('available'))
-            if self.stats.get_item('buffers'):
-                self.stats.update_item('free', self.stats.get_item('free') + self.stats.get_item('buffers'))
-            if self.stats.get_item('cached'):
-                self.stats.update_item('free', self.stats.get_item('free') + self.stats.get_item('cached'))
+            stats['free'] = stats['available'] + stats.get('buffers', 0) + stats.get('cached', 0)
             # used = total - free
-            self.stats.update_item('used', self.stats.get_item('total') + self.stats.get_item('free'))
+            stats['used'] = stats['total'] - stats['free']
+
+            self.stats.update_data(stats)
+
+        # TODO: refactor
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             if self.short_system_name in ('windows', 'esxi'):
@@ -267,7 +268,7 @@ class PluginModel(GlancesPluginModel):
 
         # Optional
         for key in ['active', 'inactive', 'buffers', 'cached']:
-            if key in self.stats.items:
+            if self.stats.get_item(key) is not None:
                 self.views[key]['optional'] = True
 
     def msg_curse(self, args=None, max_width=None):
@@ -276,7 +277,7 @@ class PluginModel(GlancesPluginModel):
         ret = []
 
         # Only process if stats exist and plugin not disabled
-        if not self.stats or self.is_disabled():
+        if self.stats.has_no_data() or self.is_disabled():
             return ret
 
         # First line

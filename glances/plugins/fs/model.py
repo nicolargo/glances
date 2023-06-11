@@ -15,10 +15,76 @@ import operator
 from glances.globals import u, nativestr, PermissionError
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.data.item import GlancesDataUnit
 
 import psutil
 
+# =============================================================================
+# Fields description
+# =============================================================================
+# key: stat identifier
+# description: human readable description
+# short_name: shortname to use in user interfaces
+# unit: unit type
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# rate: if True, the value is a rate (per second, compute automaticaly)
+# =============================================================================
+
+# {   "device_name":"\/dev\/mapper\/ubuntu--gnome--vg-root"
+#     "fs_type":"ext4",
+#     "mnt_point":"\/",
+#     "size":243334156288,
+#     "used":201981718528,
+#     "free":28964982784,
+#     "percent":87.5,
+#     "key":"mnt_point"}
+
+fields_description = {
+    'key': {
+        'description': 'Internal key used to identified the stat',
+        'value': 'mnt_point'
+    },
+    'mnt_point': {
+        'description': 'Mount point.',
+    },
+    'device_name': {
+        'description': 'Device name.',
+    },
+    'fs_type': {
+        'description': 'File system type.',
+    },
+    'percent': {
+        'description': 'Filesystem usage in percent.',
+        'unit': GlancesDataUnit.PERCENT
+    },
+    'size': {
+        'description': 'Filesystem total size.',
+        'unit': GlancesDataUnit.BYTE,
+        'min_symbol': 'K'
+    },
+    'used': {
+        'description': 'Filesystem used size.',
+        'unit': GlancesDataUnit.BYTE,
+        'min_symbol': 'K'
+    },
+    'free': {
+        'description': 'Filesystem free size.',
+        'unit': GlancesDataUnit.BYTE,
+        'min_symbol': 'K'
+    },
+}
+
+# =============================================================================
+# Define the history items list
+# =============================================================================
+# All items in this list will be historised if the --enable-history tag is set
+# =============================================================================
+
+items_history_list = [{'name': 'percent', 'description': 'File system usage in percent', 'y_unit': '%'}]
+
+# =============================================================================
 # SNMP OID
+# =============================================================================
 # The snmpd.conf needs to be edited.
 # Add the following to enable it on all disk
 # ...
@@ -55,10 +121,6 @@ snmp_oid = {
     },
 }
 snmp_oid['esxi'] = snmp_oid['windows']
-
-# Define the history items list
-# All items in this list will be historised if the --enable-history tag is set
-items_history_list = [{'name': 'percent', 'description': 'File system usage in percent', 'y_unit': '%'}]
 
 
 class PluginModel(GlancesPluginModel):

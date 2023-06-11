@@ -7,11 +7,11 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Glances Data Item class."""
+"""Glances Data Item(s) classes."""
 
 import time
-
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import ujson
 
 
 class GlancesDataUnit:
@@ -60,3 +60,36 @@ class GlancesDataItem:
         Intersting topic: https://stackoverflow.com/questions/72604922/how-to-convert-python-dataclass-to-dictionary-of-string-literal
         """
         return self.__dict__
+
+
+@dataclass
+class GlancesDataItems:
+    """Class for a Glances Data items dictionnary."""
+    items: dict[str, GlancesDataItem] = field(default_factory=dict)
+
+    def add_item(self, item: GlancesDataItem):
+        """Add a new item."""
+        if item.name in self.items:
+            self.items[item.name].update(item.value)
+        else:
+            self.items[item.name] = item
+
+    def update_item(self, name, value):
+        """Update the item called name with the given value."""
+        self.items[name].update(value)
+
+    def get_item(self, name, default=None):
+        """Return the value of the item called."""
+        ret = self.items.get(name, default)
+        if ret is not None:
+            return ret.value
+        else:
+            return default
+
+    def export(self, json=False):
+        """Export the plugin data."""
+        ret = {key: value.value for key, value in self.items.items()}
+        if json:
+            return ujson.dumps(ret)
+        else:
+            return ret
