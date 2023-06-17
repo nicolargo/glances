@@ -9,9 +9,10 @@
 
 """Secures functions for Glances"""
 
-from glances.globals import nativestr
 from subprocess import Popen, PIPE
 import re
+
+from glances.globals import nativestr
 
 
 def secure_popen(cmd):
@@ -54,8 +55,10 @@ def __secure_popen(cmd):
         sub_cmd_split = [_[1:-1] if (_[0] == _[-1] == '"') or (_[0] == _[-1] == '\'') else _ for _ in tmp_split]
         p = Popen(sub_cmd_split, shell=False, stdin=sub_cmd_stdin, stdout=PIPE, stderr=PIPE)
         if p_last is not None:
-            p_last.wait()
+            # Allow p_last to receive a SIGPIPE if p exits.
             p_last.stdout.close()
+            p_last.kill()
+            p_last.wait()
         p_last = p
         sub_cmd_stdin = p.stdout
 
