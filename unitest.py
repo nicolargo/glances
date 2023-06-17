@@ -29,7 +29,6 @@ from glances.plugins.plugin.model import GlancesPluginModel
 from glances.programs import processes_to_programs
 from glances.secure import secure_popen
 
-
 # Global variables
 # =================
 
