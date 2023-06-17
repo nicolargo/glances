@@ -54,7 +54,7 @@ def __secure_popen(cmd):
         sub_cmd_split = [_[1:-1] if (_[0] == _[-1] == '"') or (_[0] == _[-1] == '\'') else _ for _ in tmp_split]
         p = Popen(sub_cmd_split, shell=False, stdin=sub_cmd_stdin, stdout=PIPE, stderr=PIPE)
         if p_last is not None:
-            # Allow p_last to receive a SIGPIPE if p exits.
+            p_last.wait()
             p_last.stdout.close()
         p_last = p
         sub_cmd_stdin = p.stdout
