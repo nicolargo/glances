@@ -72,7 +72,7 @@ class GlancesDataPlugin:
             self._update_data_item(data['key'],
                                    key_value,
                                    key=key_value)
-        # The the rest
+        # Then others fields
         for name, value in data.items():
             if name != 'key':
                 self._update_data_item(name, value, key=key_value)
@@ -91,16 +91,13 @@ class GlancesDataPlugin:
             if self.has_no_data():
                 # Create first data
                 self._add_data(GlancesDataItem(**self.fields_description[name],
-                                              value=value,
-                                              name=name))
-            elif name not in self.items():
+                                               name=name))
+            if name not in self.items():
                 # Add new item in existing data
                 self.data[self.data_index(name)].add_item(GlancesDataItem(**self.fields_description[name],
-                                                          value=value,
                                                           name=name))
-            else:
-                # Update item value of existing data
-                self.data[self.data_index(name)].update_item(name, value)
+            # Update item value of existing data
+            self.data[self.data_index(name)].update_item(name, value)
         else:
             # Network, Fs, DiskIO...
             if self.has_no_data() or self.data_index(key) == -1:
@@ -109,19 +106,16 @@ class GlancesDataPlugin:
                 without_value = self.fields_description[name].copy()
                 without_value.pop('value', None)
                 self._add_data(GlancesDataItem(**without_value,
-                                              value=value,
-                                              name=name))
-            elif self.data_index(key) not in self.data:
+                                               name=name))
+            if self.data_index(key) not in self.data:
                 # Add new item in existing data
                 # Note: pop the value key from the fields_description to avoid duplicate key value error
                 without_value = self.fields_description[name].copy()
                 without_value.pop('value', None)
                 self.data[self.data_index(key)].add_item(GlancesDataItem(**without_value,
-                                                         value=value,
                                                          name=name))
-            else:
-                # Update item value of existing data
-                self.data[self.data_index(key)].update_item(name, value)
+            # Update item value of existing data
+            self.data[self.data_index(key)].update_item(name, value)
 
     # TODO: add unitest for this untested function
     def get_item(self, name, default=None, key=None):
