@@ -215,7 +215,7 @@ class DockerContainersExtension:
 
     CONTAINER_ACTIVE_STATUS = ['running', 'paused']
 
-    def __init__(self):
+    def __init__(self, server_url:str = 'unix://var/run/docker.sock'):
         if import_docker_error_tag:
             raise Exception("Missing libs required to run Docker Extension (Containers) ")
 
@@ -223,14 +223,14 @@ class DockerContainersExtension:
         self.ext_name = "containers (Docker)"
         self.stats_fetchers = {}
 
-        self.connect()
+        self.connect(server_url)
 
-    def connect(self):
+    def connect(self, base_url:str = 'unix://var/run/docker.sock'):
         """Connect to the Docker server."""
         # Init the Docker API Client
         try:
             # Do not use the timeout option (see issue #1878)
-            self.client = docker.from_env()
+            self.client = docker.DockerClient(base_url)
         except Exception as e:
             logger.error("{} plugin - Can't connect to Docker ({})".format(self.ext_name, e))
             self.client = None

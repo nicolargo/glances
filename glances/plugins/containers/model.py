@@ -70,7 +70,7 @@ class PluginModel(GlancesPluginModel):
         self.args = args
 
         # Default config keys
-        self.config = config
+        self.config = config # TODO: need to debug this point
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -82,7 +82,7 @@ class PluginModel(GlancesPluginModel):
         if import_podman_error_tag:
             self.podman_client = None
         else:
-            self.podman_client = PodmanContainersExtension(podman_sock=self._podman_sock())
+            self.podman_client = PodmanContainersExtension(podman_sock=self._podman_sock()) # TODO: podman also
 
         # Sort key
         self.sort_key = None
@@ -157,7 +157,7 @@ class PluginModel(GlancesPluginModel):
 
         if self.input_method == 'local':
             # Update stats
-            stats_docker = self.update_docker() if self.docker_extension else {}
+            stats_docker = self.update_docker() if self.docker_extension else {} # TODO: need to concat all docker client
             stats_podman = self.update_podman() if self.podman_client else {}
             stats = {
                 'version': stats_docker.get('version', {}),
