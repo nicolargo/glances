@@ -70,13 +70,13 @@ class PluginModel(GlancesPluginModel):
         self.args = args
 
         # Default config keys
-        self.config = config # TODO: need to debug this point
+        self.config = config
 
         # We want to display the stat in the curse interface
         self.display_curse = True
 
         # Init the Docker API
-        self.docker_extension = DockerContainersExtension() if not import_docker_error_tag else None
+        self.docker_extension = DockerContainersExtension(server_urls=self._docker_sock()) if not import_docker_error_tag else None
 
         # Init the Podman API
         if import_podman_error_tag:
@@ -91,6 +91,16 @@ class PluginModel(GlancesPluginModel):
         self.update()
         self.refresh_timer.set(0)
 
+    def _docker_sock(self):
+        """Return the docker socks.
+        Default value: unix://var/run/docker.sock
+        """
+        conf_docker_sock = self.get_conf_value('docker_sock')
+        if len(conf_docker_sock) == 0:
+            return "unix://var/run/docker.sock"
+        else:
+            return conf_docker_sock
+        
     def _podman_sock(self):
         """Return the podman sock.
         Could be desfined in the [docker] section thanks to the podman_sock option.
@@ -157,7 +167,7 @@ class PluginModel(GlancesPluginModel):
 
         if self.input_method == 'local':
             # Update stats
-            stats_docker = self.update_docker() if self.docker_extension else {} # TODO: need to concat all docker client
+            stats_docker = self.update_docker() if self.docker_extension else {}
             stats_podman = self.update_podman() if self.podman_client else {}
             stats = {
                 'version': stats_docker.get('version', {}),
