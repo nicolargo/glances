@@ -307,6 +307,8 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg))
         msg = ' {:<7}'.format('Tx/s')
         ret.append(self.curse_add_line(msg))
+        msg = '{:<30}'.format('Socket URL')
+        ret.append(self.curse_add_line(msg))
         msg = ' {:8}'.format('Command')
         ret.append(self.curse_add_line(msg))
 
@@ -391,6 +393,12 @@ class PluginModel(GlancesPluginModel):
             except KeyError:
                 msg = ' {:<7}'.format('_')
             ret.append(self.curse_add_line(msg))
+            # Socket URL
+            if container['Socket_URL'] is not None:
+                msg = '{:<30}'.format(container['Socket_URL'])
+            else:
+                msg = '{:<30}'.format('_')
+            ret.append(self.curse_add_line(msg, splittable=True))
             # Command
             if container['Command'] is not None:
                 msg = ' {}'.format(' '.join(container['Command']))

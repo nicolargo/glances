@@ -301,6 +301,7 @@ class DockerContainersExtension:
             # Container Status (from attrs)
             'Status': container.attrs['State']['Status'],
             'Created': container.attrs['Created'],
+            'Socket_URL': container.client.api.base_url,
             'Command': [],
         }
 
