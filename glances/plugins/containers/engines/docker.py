@@ -215,7 +215,7 @@ class DockerContainersExtension:
 
     CONTAINER_ACTIVE_STATUS = ['running', 'paused']
 
-    def __init__(self, server_urls:str|list = 'unix://var/run/docker.sock'):
+    def __init__(self, server_urls:str|list = 'unix:///var/run/docker.sock'):
         if import_docker_error_tag:
             raise Exception("Missing libs required to run Docker Extension (Containers) ")
 
@@ -225,7 +225,7 @@ class DockerContainersExtension:
 
         self.connect(server_urls)
 
-    def connect(self, base_urls:str|list = 'unix://var/run/docker.sock'):
+    def connect(self, base_urls:str|list = 'unix:///var/run/docker.sock'):
         """Connect to the Docker server."""
         # Init the Docker API Client
         base_urls = [base_urls] if isinstance(base_urls, str) else base_urls

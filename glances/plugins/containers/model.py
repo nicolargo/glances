@@ -93,11 +93,11 @@ class PluginModel(GlancesPluginModel):
 
     def _docker_sock(self):
         """Return the docker socks.
-        Default value: unix://var/run/docker.sock
+        Default value: unix:///var/run/docker.sock
         """
         conf_docker_sock = self.get_conf_value('docker_sock')
         if len(conf_docker_sock) == 0:
-            return "unix://var/run/docker.sock"
+            return "unix:///var/run/docker.sock"
         else:
             return conf_docker_sock
         
