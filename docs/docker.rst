@@ -50,6 +50,14 @@ Alternatively, you can specify something along the same lines with docker run op
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
+Glances by default, uses the container's OS information in the UI. If you want to display the host's OS info, you can do that by mounting `/etc/os-release` into the container.
+
+Here is a simple docker run example for that:
+
+.. code-block:: console
+
+    docker run -v /etc/os-release:/etc/os-release:ro docker.io/nicolargo/glances
+
 Run the container in *Web server mode* (notice the `GLANCES_OPT` environment variable setting parameters for the glances startup command):
 
 .. code-block:: console
@@ -85,6 +93,8 @@ You can also include Glances container in you own `docker-compose.yml`. Here's a
         pid: host
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
+          # Uncomment the below line if you want glances to display host OS detail instead of container's
+          # - /etc/os-release:/etc/os-release:ro
         environment:
           - "GLANCES_OPT=-w"
         labels:
@@ -145,6 +155,8 @@ and make it visible to your container by adding it to ``docker-compose.yml`` as 
           - GLANCES_OPT="-w --password"
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock:ro
+          # Uncomment the below line if you want glances to display host OS detail instead of container's
+          # - /etc/os-release:/etc/os-release:ro
         pid: host
         secrets:
           - source: glances_password
@@ -204,6 +216,8 @@ Include the `deploy` section in compose file as specified below in the example s
         network_mode: host
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
+          # Uncomment the below line if you want glances to display host OS detail instead of container's
+          # - /etc/os-release:/etc/os-release:ro
         environment:
           - "GLANCES_OPT=-w"
         # For nvidia GPUs
