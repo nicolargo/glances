@@ -3,7 +3,7 @@
 Docker
 ======
 
-Glances can be installed through Docker, allowing you to run it without installing all the python dependencies directly on your system. Once you have [docker installed](https://docs.docker.com/install/), you can
+Glances can be installed through Docker, allowing you to run it without installing all the python dependencies directly on your system. Once you have `docker installed <https://docs.docker.com/install/>`_, you can
 
 Get the Glances container:
 
