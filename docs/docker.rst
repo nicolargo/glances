@@ -9,16 +9,47 @@ Get the Glances container:
 
 .. code-block:: console
 
-    docker pull nicolargo/glances:<version>
+    docker pull nicolargo/glances:<version or tag>
 
 Available tags (all images are based on both Alpine and Ubuntu Operating System):
 
-- *latest-full* for a full Alpine Glances image (latest release) with all dependencies
-- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
-- *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
-- *ubuntu-latest-full* for a full Ubuntu Glances image (latest release) with all dependencies
-- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (Bottle and Docker)
-- *ubuntu-dev* for a basic Ubuntu Glances image (based on development branch) with all dependencies (Warning: may be instable)
+.. list-table::
+   :widths: 25 15 25 35
+   :header-rows: 1
+
+   * - Image Tag
+     - OS
+     - Target
+     - Installed Dependencies
+   * - `latest-full`
+     - Alpine
+     - Latest Release
+     - Full
+   * - `latest`
+     - Alpine
+     - Latest Release
+     - Minimal + (Bottle & Docker)
+   * - `dev`
+     - Alpine
+     - develop
+     - Full
+   * - `ubuntu-latest-full`
+     - Ubuntu
+     - Latest Release
+     - Full
+   * - `ubuntu-latest`
+     - Ubuntu
+     - Latest Release
+     - Minimal + (Bottle & Docker)
+   * - `ubuntu-dev`
+     - Ubuntu
+     - develop
+     - Full
+
+.. warning::
+    Tags containing `dev` target the `develop` branch directly and could be unstable.
+
+For example, if you want a full Alpine Glances image (latest release) with all dependencies, go for `latest-full`.
 
 You can also specify a version (example: 3.4.0). All available versions can be found on `DockerHub`_.
 
