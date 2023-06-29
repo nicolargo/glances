@@ -726,6 +726,41 @@ Get a specific field::
     # curl http://localhost:61208/api/3/quicklook/cpu
     {"cpu": 47.6}
 
+GET raid
+-----------
+
+Get plugin stats::
+
+    # curl http://localhost:61208/api/3/raid
+    {"md3": {"status": "active",
+             "type": "raid1",
+             "components": {"sdh1": "2",
+                            "sdi1": "0"},
+             "available": "2",
+             "used": "2",
+             "config": "UU"},
+     "md1": {"status": "active",
+             "type": "raid1",
+             "components": {"sdg": "0",
+                            "sde": "1"},
+             "available": "2",
+             "used": "2",
+             "config": "UU"},
+     "md4": {"status": "active",
+             "type": "raid1",
+             "components": {"sdf1": "1",
+                            "sdb1": "0"},
+             "available": "2",
+             "used": "2",
+             "config": "UU"},
+     "md0": {"status": "active",
+             "type": "raid1",
+             "components": {"sdc": "2",
+                            "sdd": "3"},
+             "available": "2",
+             "used": "2",
+             "config": "UU"}}
+
 GET sensors
 -----------
 
