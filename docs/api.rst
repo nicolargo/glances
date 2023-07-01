@@ -78,37 +78,6 @@ Get the plugins list::
      "uptime",
      "wifi"]
 
-GET alert
----------
-
-Get plugin stats::
-
-    # curl http://localhost:61208/api/3/alert
-    [[1685868235.0,
-      -1,
-      "WARNING",
-      "MEM",
-      82.5138999890755,
-      82.5138999890755,
-      82.5138999890755,
-      82.5138999890755,
-      1,
-      [],
-      "",
-      "memory_percent"],
-     [1685868235.0,
-      -1,
-      "WARNING",
-      "MEMSWAP",
-      71.3584259851909,
-      71.3584259851909,
-      71.3584259851909,
-      71.3584259851909,
-      1,
-      [],
-      "",
-      "memory_percent"]]
-
 GET amps
 --------
 
@@ -123,7 +92,7 @@ Get plugin stats::
       "refresh": 3.0,
       "regex": True,
       "result": None,
-      "timer": 0.6977648735046387},
+      "timer": 0.5169370174407959},
      {"count": 0,
       "countmax": 20.0,
       "countmin": None,
@@ -132,7 +101,7 @@ Get plugin stats::
       "refresh": 3.0,
       "regex": True,
       "result": None,
-      "timer": 0.6975433826446533}]
+      "timer": 0.5167624950408936}]
 
 Get a specific field::
 
@@ -150,7 +119,7 @@ Get a specific item when field matchs the given value::
                   "refresh": 3.0,
                   "regex": True,
                   "result": None,
-                  "timer": 0.6977648735046387}]}
+                  "timer": 0.5169370174407959}]}
 
 GET connections
 ---------------
@@ -171,44 +140,21 @@ GET containers
 Get plugin stats::
 
     # curl http://localhost:61208/api/3/containers
-    {"containers": [{"Command": ["/portainer"],
-                     "Created": "2022-10-29T14:59:10.266701439Z",
-                     "Id": "3abd51c615968482d9ccff5afc629f267f6dda113ed68b75b432615fae3b49fb",
-                     "Image": ["portainer/portainer-ce:2.9.3"],
-                     "Status": "running",
-                     "Uptime": "6 days",
-                     "cpu": {"total": 0.0},
-                     "cpu_percent": 0.0,
-                     "engine": "docker",
-                     "io": {"cumulative_ior": 454656, "cumulative_iow": 1601536},
-                     "io_r": None,
-                     "io_w": None,
-                     "key": "name",
-                     "memory": {"cache": None,
-                                "limit": 7836184576,
-                                "max_usage": None,
-                                "rss": None,
-                                "usage": 14630912},
-                     "memory_usage": 14630912,
-                     "name": "portainer",
-                     "network": {"cumulative_rx": 4178062, "cumulative_tx": 0},
-                     "network_rx": None,
-                     "network_tx": None},
-                    {"Command": ["top"],
+    {"containers": [{"Command": ["top"],
                      "Created": "2023-05-08T15:29:34.918692365+02:00",
                      "Id": "4b7f732d43e4bc5d92fe5298cba025b550e6a608754c1c38f9a90aaecd46b8f9",
                      "Image": "["docker.io/library/ubuntu:latest"]",
                      "Status": "running",
-                     "Uptime": "3 weeks",
-                     "cpu": {"total": 4.595457301269493e-06},
-                     "cpu_percent": 4.595457301269493e-06,
+                     "Uptime": "1 months",
+                     "cpu": {"total": 5.693020444087977e-06},
+                     "cpu_percent": 5.693020444087977e-06,
                      "engine": "podman",
                      "io": {"ior": 0.0, "iow": 0.0, "time_since_update": 1},
                      "io_r": 0.0,
                      "io_w": 0.0,
                      "key": "name",
-                     "memory": {"limit": 7836184576.0, "usage": 1105920.0},
-                     "memory_usage": 1105920.0,
+                     "memory": {"limit": 7836184576.0, "usage": 1150976.0},
+                     "memory_usage": 1150976.0,
                      "name": "frosty_bouman",
                      "network": {"rx": 0.0, "time_since_update": 1, "tx": 0.0},
                      "network_rx": 0.0,
@@ -220,9 +166,9 @@ Get plugin stats::
                      "Id": "9491515251edcd5bb5dc17205d7ee573c0be96fe0b08b0a12a7e2cea874565ea",
                      "Image": "["k8s.gcr.io/pause:3.5"]",
                      "Status": "running",
-                     "Uptime": "3 weeks",
-                     "cpu": {"total": 2.917191208219233e-10},
-                     "cpu_percent": 2.917191208219233e-10,
+                     "Uptime": "1 months",
+                     "cpu": {"total": 3.04524972926188e-10},
+                     "cpu_percent": 3.04524972926188e-10,
                      "engine": "podman",
                      "io": {"ior": 0.0, "iow": 0.0, "time_since_update": 1},
                      "io_r": 0.0,
@@ -235,7 +181,26 @@ Get plugin stats::
                      "network_rx": 0.0,
                      "network_tx": 0.0,
                      "pod_id": "8d0f1c783def",
-                     "pod_name": "8d0f1c783def-infra"}],
+                     "pod_name": "8d0f1c783def-infra"},
+                    {"Command": ["/portainer"],
+                     "Created": "2022-10-29T14:59:10.266701439Z",
+                     "Id": "3abd51c615968482d9ccff5afc629f267f6dda113ed68b75b432615fae3b49fb",
+                     "Image": ["portainer/portainer-ce:2.9.3"],
+                     "Status": "running",
+                     "Uptime": "1 months",
+                     "cpu": {"total": 0.0},
+                     "cpu_percent": 0.0,
+                     "engine": "docker",
+                     "io": {},
+                     "io_r": None,
+                     "io_w": None,
+                     "key": "name",
+                     "memory": {},
+                     "memory_usage": None,
+                     "name": "portainer",
+                     "network": {},
+                     "network_rx": None,
+                     "network_tx": None}],
      "version": {},
      "version_podman": {}}
 
@@ -267,19 +232,19 @@ Get plugin stats::
      "ctx_switches": 0,
      "guest": 0.0,
      "guest_nice": 0.0,
-     "idle": 46.5,
+     "idle": 73.1,
      "interrupts": 0,
-     "iowait": 5.9,
+     "iowait": 5.4,
      "irq": 0.0,
      "nice": 0.0,
      "soft_interrupts": 0,
-     "softirq": 0.0,
+     "softirq": 0.7,
      "steal": 0.0,
      "syscalls": 0,
-     "system": 8.8,
+     "system": 6.1,
      "time_since_update": 1,
-     "total": 47.6,
-     "user": 38.8}
+     "total": 21.5,
+     "user": 14.7}
 
 Fields descriptions:
 
@@ -302,7 +267,7 @@ Fields descriptions:
 Get a specific field::
 
     # curl http://localhost:61208/api/3/cpu/total
-    {"total": 47.6}
+    {"total": 21.5}
 
 GET diskio
 ----------
@@ -348,13 +313,13 @@ Get plugin stats::
 
     # curl http://localhost:61208/api/3/fs
     [{"device_name": "/dev/mapper/ubuntu--gnome--vg-root",
-      "free": 29491679232,
+      "free": 29072863232,
       "fs_type": "ext4",
       "key": "mnt_point",
       "mnt_point": "/",
-      "percent": 87.2,
+      "percent": 87.4,
       "size": 243334156288,
-      "used": 201455022080},
+      "used": 201873838080},
      {"device_name": "zsfpool",
       "free": 41811968,
       "fs_type": "zfs",
@@ -373,13 +338,13 @@ Get a specific item when field matchs the given value::
 
     # curl http://localhost:61208/api/3/fs/mnt_point//
     {"/": [{"device_name": "/dev/mapper/ubuntu--gnome--vg-root",
-            "free": 29491679232,
+            "free": 29072863232,
             "fs_type": "ext4",
             "key": "mnt_point",
             "mnt_point": "/",
-            "percent": 87.2,
+            "percent": 87.4,
             "size": 243334156288,
-            "used": 201455022080}]}
+            "used": 201873838080}]}
 
 GET ip
 ------
@@ -405,7 +370,7 @@ GET load
 Get plugin stats::
 
     # curl http://localhost:61208/api/3/load
-    {"cpucore": 4, "min1": 3.21533203125, "min15": 1.640625, "min5": 2.1494140625}
+    {"cpucore": 4, "min1": 1.419921875, "min15": 1.23583984375, "min5": 1.271484375}
 
 Fields descriptions:
 
@@ -417,7 +382,7 @@ Fields descriptions:
 Get a specific field::
 
     # curl http://localhost:61208/api/3/load/min1
-    {"min1": 3.21533203125}
+    {"min1": 1.419921875}
 
 GET mem
 -------
@@ -425,16 +390,16 @@ GET mem
 Get plugin stats::
 
     # curl http://localhost:61208/api/3/mem
-    {"active": 3263922176,
-     "available": 1370243072,
-     "buffers": 104714240,
-     "cached": 1946484736,
-     "free": 1370243072,
-     "inactive": 3313500160,
-     "percent": 82.5,
-     "shared": 608448512,
+    {"active": 2468954112,
+     "available": 3260387328,
+     "buffers": 286007296,
+     "cached": 3429928960,
+     "free": 3260387328,
+     "inactive": 4000096256,
+     "percent": 58.4,
+     "shared": 503971840,
      "total": 7836184576,
-     "used": 6465941504}
+     "used": 4575797248}
 
 Fields descriptions:
 
@@ -461,13 +426,13 @@ GET memswap
 Get plugin stats::
 
     # curl http://localhost:61208/api/3/memswap
-    {"free": 2314932224,
-     "percent": 71.4,
-     "sin": 18428387328,
-     "sout": 26147098624,
+    {"free": 6976094208,
+     "percent": 13.7,
+     "sin": 22796165120,
+     "sout": 33151795200,
      "time_since_update": 1,
      "total": 8082419712,
-     "used": 5767487488}
+     "used": 1106325504}
 
 Fields descriptions:
 
@@ -491,9 +456,9 @@ Get plugin stats::
 
     # curl http://localhost:61208/api/3/network
     [{"alias": None,
-      "cumulative_cx": 620625100,
-      "cumulative_rx": 310312550,
-      "cumulative_tx": 310312550,
+      "cumulative_cx": 753201938,
+      "cumulative_rx": 376600969,
+      "cumulative_tx": 376600969,
       "cx": 0,
       "interface_name": "lo",
       "is_up": True,
@@ -503,17 +468,17 @@ Get plugin stats::
       "time_since_update": 1,
       "tx": 0},
      {"alias": None,
-      "cumulative_cx": 25774388477,
-      "cumulative_rx": 24727418740,
-      "cumulative_tx": 1046969737,
-      "cx": 705,
+      "cumulative_cx": 35838678086,
+      "cumulative_rx": 34530644309,
+      "cumulative_tx": 1308033777,
+      "cx": 224,
       "interface_name": "wlp2s0",
       "is_up": True,
       "key": "interface_name",
-      "rx": 465,
+      "rx": 98,
       "speed": 0,
       "time_since_update": 1,
-      "tx": 240}]
+      "tx": 126}]
 
 Fields descriptions:
 
@@ -536,18 +501,17 @@ Get a specific field::
                         "wlp2s0",
                         "docker0",
                         "br_grafana",
-                        "mpqemubr0",
                         "vethb2d0673",
-                        "vboxnet0",
-                        "tap-1e376645a40"]}
+                        "mpqemubr0",
+                        "vboxnet0"]}
 
 Get a specific item when field matchs the given value::
 
     # curl http://localhost:61208/api/3/network/interface_name/lo
     {"lo": [{"alias": None,
-             "cumulative_cx": 620625100,
-             "cumulative_rx": 310312550,
-             "cumulative_tx": 310312550,
+             "cumulative_cx": 753201938,
+             "cumulative_rx": 376600969,
+             "cumulative_tx": 376600969,
              "cx": 0,
              "interface_name": "lo",
              "is_up": True,
@@ -563,7 +527,7 @@ GET now
 Get plugin stats::
 
     # curl http://localhost:61208/api/3/now
-    "2023-06-04 10:43:55 CEST"
+    "2023-07-01 11:18:07 CEST"
 
 GET percpu
 ----------
@@ -574,29 +538,29 @@ Get plugin stats::
     [{"cpu_number": 0,
       "guest": 0.0,
       "guest_nice": 0.0,
-      "idle": 38.0,
-      "iowait": 9.0,
+      "idle": 55.0,
+      "iowait": 4.0,
       "irq": 0.0,
       "key": "cpu_number",
       "nice": 0.0,
       "softirq": 0.0,
       "steal": 0.0,
-      "system": 12.0,
-      "total": 62.0,
-      "user": 32.0},
+      "system": 3.0,
+      "total": 45.0,
+      "user": 4.0},
      {"cpu_number": 1,
       "guest": 0.0,
       "guest_nice": 0.0,
-      "idle": 42.0,
-      "iowait": 7.0,
+      "idle": 64.0,
+      "iowait": 1.0,
       "irq": 0.0,
       "key": "cpu_number",
       "nice": 0.0,
       "softirq": 0.0,
       "steal": 0.0,
-      "system": 9.0,
-      "total": 58.0,
-      "user": 31.0}]
+      "system": 2.0,
+      "total": 36.0,
+      "user": 4.0}]
 
 Get a specific field::
 
@@ -615,7 +579,7 @@ Get plugin stats::
       "port": 0,
       "refresh": 30,
       "rtt_warning": None,
-      "status": 0.007061,
+      "status": 0.007086,
       "timeout": 3}]
 
 Get a specific field::
@@ -632,7 +596,7 @@ Get a specific item when field matchs the given value::
                       "port": 0,
                       "refresh": 30,
                       "rtt_warning": None,
-                      "status": 0.007061,
+                      "status": 0.007086,
                       "timeout": 3}]}
 
 GET processcount
@@ -641,12 +605,12 @@ GET processcount
 Get plugin stats::
 
     # curl http://localhost:61208/api/3/processcount
-    {"pid_max": 0, "running": 1, "sleeping": 355, "thread": 1985, "total": 424}
+    {"pid_max": 0, "running": 1, "sleeping": 299, "thread": 1389, "total": 367}
 
 Get a specific field::
 
     # curl http://localhost:61208/api/3/processcount/total
-    {"total": 424}
+    {"total": 367}
 
 GET psutilversion
 -----------------
@@ -662,69 +626,69 @@ GET quicklook
 Get plugin stats::
 
     # curl http://localhost:61208/api/3/quicklook
-    {"cpu": 47.6,
+    {"cpu": 21.5,
      "cpu_hz": 2025000000.0,
-     "cpu_hz_current": 2048627750.0,
+     "cpu_hz_current": 2049013250.0,
      "cpu_name": "Intel(R) Core(TM) i7-4500U CPU @ 1.80GHz",
-     "mem": 82.5,
+     "mem": 58.4,
      "percpu": [{"cpu_number": 0,
                  "guest": 0.0,
                  "guest_nice": 0.0,
-                 "idle": 38.0,
-                 "iowait": 9.0,
+                 "idle": 55.0,
+                 "iowait": 4.0,
                  "irq": 0.0,
                  "key": "cpu_number",
                  "nice": 0.0,
                  "softirq": 0.0,
                  "steal": 0.0,
-                 "system": 12.0,
-                 "total": 62.0,
-                 "user": 32.0},
+                 "system": 3.0,
+                 "total": 45.0,
+                 "user": 4.0},
                 {"cpu_number": 1,
                  "guest": 0.0,
                  "guest_nice": 0.0,
-                 "idle": 42.0,
-                 "iowait": 7.0,
+                 "idle": 64.0,
+                 "iowait": 1.0,
                  "irq": 0.0,
                  "key": "cpu_number",
                  "nice": 0.0,
                  "softirq": 0.0,
                  "steal": 0.0,
-                 "system": 9.0,
-                 "total": 58.0,
-                 "user": 31.0},
+                 "system": 2.0,
+                 "total": 36.0,
+                 "user": 4.0},
                 {"cpu_number": 2,
                  "guest": 0.0,
                  "guest_nice": 0.0,
-                 "idle": 34.0,
+                 "idle": 52.0,
                  "iowait": 3.0,
+                 "irq": 0.0,
+                 "key": "cpu_number",
+                 "nice": 0.0,
+                 "softirq": 1.0,
+                 "steal": 0.0,
+                 "system": 6.0,
+                 "total": 48.0,
+                 "user": 10.0},
+                {"cpu_number": 3,
+                 "guest": 0.0,
+                 "guest_nice": 0.0,
+                 "idle": 33.0,
+                 "iowait": 6.0,
                  "irq": 0.0,
                  "key": "cpu_number",
                  "nice": 0.0,
                  "softirq": 0.0,
                  "steal": 0.0,
                  "system": 6.0,
-                 "total": 66.0,
-                 "user": 46.0},
-                {"cpu_number": 3,
-                 "guest": 0.0,
-                 "guest_nice": 0.0,
-                 "idle": 49.0,
-                 "iowait": 2.0,
-                 "irq": 0.0,
-                 "key": "cpu_number",
-                 "nice": 0.0,
-                 "softirq": 0.0,
-                 "steal": 0.0,
-                 "system": 5.0,
-                 "total": 51.0,
-                 "user": 30.0}],
-     "swap": 71.4}
+                 "total": 67.0,
+                 "user": 24.0}],
+     "swap": 13.7}
 
 Get a specific field::
 
     # curl http://localhost:61208/api/3/quicklook/cpu
-    {"cpu": 47.6}
+    {"cpu": 21.5}
 
 GET sensors
 -----------
@@ -795,7 +759,7 @@ GET uptime
 Get plugin stats::
 
     # curl http://localhost:61208/api/3/uptime
-    "26 days, 21:42:01"
+    "53 days, 22:16:11"
 
 GET all stats
 -------------
@@ -811,33 +775,33 @@ GET stats history
 History of a plugin::
 
     # curl http://localhost:61208/api/3/cpu/history
-    {"system": [["2023-06-04T10:43:55.867435", 8.8],
-                ["2023-06-04T10:43:58.362875", 2.2],
-                ["2023-06-04T10:43:59.401460", 2.2]],
-     "user": [["2023-06-04T10:43:55.867421", 38.8],
-              ["2023-06-04T10:43:58.362867", 17.2],
-              ["2023-06-04T10:43:59.401442", 17.2]]}
+    {"system": [["2023-07-01T11:18:07.951220", 6.1],
+                ["2023-07-01T11:18:10.174242", 2.3],
+                ["2023-07-01T11:18:11.214331", 2.3]],
+     "user": [["2023-07-01T11:18:07.951210", 14.7],
+              ["2023-07-01T11:18:10.174234", 16.8],
+              ["2023-07-01T11:18:11.214312", 16.8]]}
 
 Limit history to last 2 values::
 
     # curl http://localhost:61208/api/3/cpu/history/2
-    {"system": [["2023-06-04T10:43:58.362875", 2.2],
-                ["2023-06-04T10:43:59.401460", 2.2]],
-     "user": [["2023-06-04T10:43:58.362867", 17.2],
-              ["2023-06-04T10:43:59.401442", 17.2]]}
+    {"system": [["2023-07-01T11:18:10.174242", 2.3],
+                ["2023-07-01T11:18:11.214331", 2.3]],
+     "user": [["2023-07-01T11:18:10.174234", 16.8],
+              ["2023-07-01T11:18:11.214312", 16.8]]}
 
 History for a specific field::
 
     # curl http://localhost:61208/api/3/cpu/system/history
-    {"system": [["2023-06-04T10:43:55.867435", 8.8],
-                ["2023-06-04T10:43:58.362875", 2.2],
-                ["2023-06-04T10:43:59.401460", 2.2]]}
+    {"system": [["2023-07-01T11:18:07.951220", 6.1],
+                ["2023-07-01T11:18:10.174242", 2.3],
+                ["2023-07-01T11:18:11.214331", 2.3]]}
 
 Limit history for a specific field to last 2 values::
 
     # curl http://localhost:61208/api/3/cpu/system/history
-    {"system": [["2023-06-04T10:43:58.362875", 2.2],
-                ["2023-06-04T10:43:59.401460", 2.2]]}
+    {"system": [["2023-07-01T11:18:10.174242", 2.3],
+                ["2023-07-01T11:18:11.214331", 2.3]]}
 
 GET limits (used for thresholds)
 --------------------------------
