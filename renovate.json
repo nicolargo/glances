@@ -3,5 +3,5 @@
   "extends": [
     "config:base"
   ],
-  "ignorePaths": ["glances/outputs/static/package-lock.json"]
+  "ignorePaths": ["**/package-lock.json"]
 }
