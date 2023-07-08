@@ -10,16 +10,31 @@
 """CPU core plugin."""
 
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.data.item import GlancesDataUnit
+from glances.data.plugin import GlancesDataPlugin
 
 import psutil
 
+# =============================================================================
 # Fields description
+# =============================================================================
+# key: stat identifier
+# description: human readable description
+# short_name: shortname to use in user interfaces
+# unit: unit type
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# rate: if True, the value is a rate (per second, compute automaticaly)
+# =============================================================================
+
 fields_description = {
-    'phys': {'description': 'Number of physical cores (hyper thread CPUs are excluded).', 'unit': 'number'},
+    'phys': {
+        'description': 'Number of physical cores (hyper thread CPUs are excluded).',
+        'unit': GlancesDataUnit.INTEGER
+    },
     'log': {
         'description': 'Number of logical CPUs. A logical CPU is the number of \
 physical cores multiplied by the number of threads that can run on each core.',
-        'unit': 'number',
+        'unit': GlancesDataUnit.INTEGER
     },
 }
 
@@ -34,11 +49,23 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, fields_description=fields_description)
+        super(PluginModel, self).__init__(args=args,
+                                          config=config,
+                                          fields_description=fields_description)
 
         # We dot not want to display the stat in the curse interface
         # The core number is displayed by the load plugin
         self.display_curse = False
+
+        # Init the data
+        # TODO: to be done in the top level plugin class
+        self.stats = GlancesDataPlugin(name=self.plugin_name,
+                                       description='Glances {} plugin'.format(self.plugin_name.upper()),
+                                       fields_description=fields_description)
+
+    # TODO: To be done in the top level plugin class
+    def get_raw(self):
+        return self.stats.export()
 
     # Do *NOT* uncomment the following line
     # @GlancesPluginModel._check_decorator
@@ -63,7 +90,7 @@ class PluginModel(GlancesPluginModel):
                 stats["phys"] = psutil.cpu_count(logical=False)
                 stats["log"] = psutil.cpu_count()
             except NameError:
-                self.reset()
+                stats = self.get_init_value()
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -71,6 +98,4 @@ class PluginModel(GlancesPluginModel):
             pass
 
         # Update the stats
-        self.stats = stats
-
-        return self.stats
+        self.stats.update_data(stats)

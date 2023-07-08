@@ -76,7 +76,9 @@ class PluginModel(GlancesPluginModel):
 
         # Call CorePluginModel in order to display the core number
         try:
-            self.nb_log_core = CorePluginModel(args=self.args).update()["log"]
+            core_plugin = CorePluginModel(args=self.args)
+            core_plugin.update()
+            self.nb_log_core = core_plugin.get_raw()['log']
         except Exception as e:
             logger.warning('Error: Can not retrieve the CPU core number (set it to 1) ({})'.format(e))
             self.nb_log_core = 1

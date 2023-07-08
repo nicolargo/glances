@@ -390,7 +390,7 @@ class GlancesPluginModel(object):
 
         Stats should be a list of dict (processlist, network...)
         """
-        return json_dumps_dictlist(self.stats, item)
+        return json_dumps_dictlist(self.get_raw(), item)
 
     def get_stats_value(self, item, value):
         """Return the stats object for a specific item=value in JSON format.

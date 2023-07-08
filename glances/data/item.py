@@ -21,6 +21,8 @@ class GlancesDataUnit:
     BYTE = 'B'
     CORE = 'C'
     TEMPERATURE = '°'
+    INTEGER = ''
+    FLOAT = ''
 
 
 @dataclass
