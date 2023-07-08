@@ -190,10 +190,10 @@ By default, the login is ``glances`` but you can change it with
 
 If you want, the SHA password will be stored in ``<login>.pwd`` file (in
 the same folder where the Glances configuration file is stored, so
-~/.config/glances/ on GNU Linus operating system).
+~/.config/glances/ on GNU Linux operating system).
 
 Next time your run the server/client, password will not be asked. To set a
-specific username you can used the -u <username> option.
+specific username you can use the -u <username> option.
 
 It is also possible to set the default password in the Glances configuration
 file:
