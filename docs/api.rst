@@ -295,7 +295,7 @@ Get a specific field::
     # curl http://localhost:61208/api/3/diskio/disk_name
     {"disk_name": ["sda", "sda1", "sda2", "sda5", "dm-0", "dm-1"]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/diskio/disk_name/sda
     {"sda": [{"disk_name": "sda",
@@ -334,7 +334,7 @@ Get a specific field::
     # curl http://localhost:61208/api/3/fs/mnt_point
     {"mnt_point": ["/", "/zsfpool", "/var/snap/firefox/common/host-hunspell"]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/fs/mnt_point//
     {"/": [{"device_name": "/dev/mapper/ubuntu--gnome--vg-root",
@@ -505,7 +505,7 @@ Get a specific field::
                         "mpqemubr0",
                         "vboxnet0"]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/network/interface_name/lo
     {"lo": [{"alias": None,
@@ -587,7 +587,7 @@ Get a specific field::
     # curl http://localhost:61208/api/3/ports/host
     {"host": ["192.168.1.1"]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/ports/host/192.168.1.1
     {"192.168.1.1": [{"description": "DefaultGateway",
@@ -724,7 +724,7 @@ Get a specific field::
                "SODIMM",
                "BAT BAT0"]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/sensors/label/acpitz 0
     {"acpitz 0": [{"critical": 105,
@@ -767,7 +767,7 @@ GET all stats
 Get all Glances stats::
 
     # curl http://localhost:61208/api/3/all
-    Return a very big dictionnary (avoid using this request, performances will be poor)...
+    Return a very big dictionary (avoid using this request, performances will be poor)...
 
 GET stats history
 -----------------
