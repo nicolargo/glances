@@ -14,7 +14,7 @@ API URL
 
 The default root API URL is ``http://localhost:61208/api/3``.
 
-The bind addresse and port could be changed using the ``--bind`` and ``--port`` command line options.
+The bind address and port could be changed using the ``--bind`` and ``--port`` command line options.
 
 It is also possible to define an URL prefix using the ``url_prefix`` option from the [outputs] section
 of the Glances configuration file. The url_prefix should always end with a slash (``/``).
@@ -33,7 +33,7 @@ GET API status
 --------------
 
 This entry point should be used to check the API status.
-It will return nothing but a 200 return code if everythin is OK.
+It will return nothing but a 200 return code if everything is OK.
 
 Get the Rest API status::
 
@@ -108,7 +108,7 @@ Get a specific field::
     # curl http://localhost:61208/api/3/amps/name
     {"name": ["Dropbox", "Python", "Conntrack", "Nginx", "Systemd", "SystemV"]}
 
-Get a specific item when field matchs the given value::
+Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/3/amps/name/Dropbox
     {"Dropbox": [{"count": 0,
