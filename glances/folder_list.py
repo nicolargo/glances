@@ -139,7 +139,7 @@ class FolderList(object):
 
         ret = 0
         for f in scandir(path):
-            if f.is_dir() and (f.name != '.' or f.name != '..'):
+            if f.is_dir(follow_symlinks=False) and (f.name != '.' or f.name != '..'):
                 ret += self.__folder_size(os.path.join(path, f.name))
             else:
                 try:

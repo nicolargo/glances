@@ -36,5 +36,8 @@ the following definition should do the job:
 In client/server mode, the list is defined on the ``server`` side.
 
 .. warning::
+    Symbolic links are not followed.
+
+.. warning::
     Do **NOT** define folders containing lot of files and subfolders or use an
     huge refresh time...
