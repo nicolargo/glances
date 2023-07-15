@@ -401,11 +401,11 @@ The following commands (key pressed) are supported while in Glances:
 ``/``
     Switch between process command line or command name
 
-``F5``
-    Refresh stats in curses user interface
+``F5`` or ``CTRL-R``
+    Refresh user interface
 
 ``LEFT``
-    Navigation leff through process sort
+    Navigation left through process sort
 
 ``RIGHT``
     Navigation right through process sort
