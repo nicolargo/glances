@@ -367,3 +367,8 @@ def string_value_to_float(s):
     except ValueError:
         return None
     return value * convert_dict[unit]
+
+
+def file_exists(filename):
+    """Return True if the file exists and is readable."""
+    return os.path.isfile(filename) and os.access(filename, os.R_OK)
