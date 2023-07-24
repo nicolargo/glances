@@ -3,18 +3,14 @@
 Wi-Fi
 =====
 
-* WARNING: The Wifi Python lib (https://pypi.python.org/pypi/wifi) is note
-compatible with Python 3. So the plugin is disable in Glances 4.0 or higher*
-
 *Availability: Linux*
 
 .. image:: ../_static/wifi.png
 
-Glances displays the Wi-Fi hotspot names and signal quality. If Glances
-is ran as root, then all the available hotspots are displayed.
+Glances displays the Wi-Fi signal quality.
 
 .. note::
-    You need to install the ``wireless-tools`` package on your system.
+    Stats are grabbed from the ``/proc/net/wireless`` file (so Linux only).
 
 In the configuration file, you can define signal quality thresholds:
 
