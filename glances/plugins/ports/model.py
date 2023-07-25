@@ -76,11 +76,6 @@ class PluginModel(GlancesPluginModel):
                 # Run ports scanner
                 self._thread = ThreadScanner(self.stats)
                 self._thread.start()
-                # # Restart timer
-                # if len(self.stats) > 0:
-                #     self.timer_ports = Timer(self.stats[0]['refresh'])
-                # else:
-                #     self.timer_ports = Timer(0)
         else:
             # Not available in SNMP mode
             pass
