@@ -3,14 +3,16 @@
 Wi-Fi
 =====
 
-*Availability: Linux*
+*Availability: Linux only*
+
+If ``nmcli`` is available on the system, Glances displays the hotspot name,
+the security type and the Wi-Fi signal quality:
 
 .. image:: ../_static/wifi.png
 
-Glances displays the Wi-Fi signal quality.
+or, as a backup, the file ``/proc/net/wireless`` is used to display the signal quality:
 
-.. note::
-    Stats are grabbed from the ``/proc/net/wireless`` file (so Linux only).
+.. image:: ../_static/wifi2.png
 
 In the configuration file, you can define signal quality thresholds:
 
@@ -18,16 +20,12 @@ In the configuration file, you can define signal quality thresholds:
 - ``"Good"`` quality between -85 and -60dBm
 - ``"Excellent"`` between -60 and -40dBm
 
-It's also possible to disable the scan on a specific interface from the
-configuration file (``[wifi]`` section). For example, if you want to
-hide the loopback interface (lo) and all the virtual docker interfaces:
+Thresholds for the signal quality can be defined in the configuration file:
 
 .. code-block:: ini
 
     [wifi]
-    hide=lo,docker.*
-    #show=wlp2s0
-    # Define SIGNAL thresholds in dBm (lower is better...)
+    disable=False
     careful=-65
     warning=-75
     critical=-85

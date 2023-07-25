@@ -8,6 +8,9 @@
         <div class="table-row" v-for="(hotspot, hotspotId) in hotspots" :key="hotspotId">
             <div class="table-cell text-left">
                 {{ $filters.limitTo(hotspot.ssid, 20) }}
+                <span>
+                    {{ hotspot.security }}
+                </span>
             </div>
             <div class="table-cell"></div>
             <div class="table-cell" :class="getDecoration(hotspot, 'signal')">
@@ -42,6 +45,7 @@ export default {
                     return {
                         ssid: hotspotData['ssid'],
                         signal: hotspotData['signal'],
+                        security: hotspotData['security']
                     };
                 })
                 .filter(Boolean);
