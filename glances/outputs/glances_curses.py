@@ -107,8 +107,8 @@ class _GlancesCurses(object):
     # Define left sidebar
     _left_sidebar = [
         'network',
-        'connections',
         'wifi',
+        'connections',
         'ports',
         'diskio',
         'fs',

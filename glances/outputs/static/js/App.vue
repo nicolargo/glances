@@ -69,18 +69,18 @@
                             v-if="!args.disable_network"
                             :data="data"
                         ></glances-plugin-network>
-                        <glances-plugin-connections
-                            id="plugin-connections"
-                            class="plugin table-row-group"
-                            v-if="isLinux && !args.disable_connections"
-                            :data="data"
-                        ></glances-plugin-connections>
                         <glances-plugin-wifi
                             id="plugin-wifi"
                             class="plugin table-row-group"
                             v-if="!args.disable_wifi"
                             :data="data"
                         ></glances-plugin-wifi>
+                        <glances-plugin-connections
+                            id="plugin-connections"
+                            class="plugin table-row-group"
+                            v-if="isLinux && !args.disable_connections"
+                            :data="data"
+                        ></glances-plugin-connections>
                         <glances-plugin-ports
                             id="plugin-ports"
                             class="plugin table-row-group"
