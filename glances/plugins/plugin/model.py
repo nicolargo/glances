@@ -1210,27 +1210,27 @@ class GlancesPluginModel(object):
 
         def wrapper(self, *args, **kw):
             # Call the method
-            stat = fct(self, *args, **kw)
-            if self.get_key() and 'sda' in stat:
-                logger.info("stat (fct): {}".format(stat['sda'].get('read_bytes_gauge', None)))
+            stats = fct(self, *args, **kw)
+            if self.get_key() and 'sda' in stats:
+                logger.info("stat (fct): {}".format(stats['sda']))
 
             time_since_update = getTimeSinceLastUpdate(self.plugin_name)
 
             if self.stats_old:
                 if self.get_key() is None:
-                    compute_rate(self, stat, self.stats_old, time_since_update)
+                    compute_rate(self, stats, self.stats_old, time_since_update)
                 else:
                     # logger.info("Compute rate for {}".format(self.plugin_name))
                     # logger.info("stat_old: {}".format(self.stats_old['sda'].get('read_bytes_gauge', None)))
-                    # logger.info("stat (before rate): {}".format(stat['sda'].get('read_bytes_gauge', None)))
-                    for key in stat:
-                        compute_rate(self, stat[key], self.stats_old[key], time_since_update)
-                    # logger.info("stat (after rate): {}".format(stat['sda']['read_bytes_gauge']))
+                    # logger.info("stat (before rate): {}".format(stats['sda'].get('read_bytes_gauge', None)))
+                    for key in stats:
+                        compute_rate(self, stats[key], self.stats_old[key], time_since_update)
+                    # logger.info("stat (after rate): {}".format(stats['sda']['read_bytes_gauge']))
 
             # Memorized the current stats for next run
-            self.stats_old = copy.deepcopy(stat)
+            self.stats_old = copy.deepcopy(stats)
 
-            return stat
+            return stats
 
         return wrapper
 
