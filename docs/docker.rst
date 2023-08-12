@@ -3,22 +3,53 @@
 Docker
 ======
 
-Glances can be installed through Docker, allowing you to run it without installing all the python dependencies directly on your system. Once you have [docker installed](https://docs.docker.com/install/), you can
+Glances can be installed through Docker, allowing you to run it without installing all the python dependencies directly on your system. Once you have `docker installed <https://docs.docker.com/install/>`_, you can
 
 Get the Glances container:
 
 .. code-block:: console
 
-    docker pull nicolargo/glances:<version>
+    docker pull nicolargo/glances:<version or tag>
 
 Available tags (all images are based on both Alpine and Ubuntu Operating System):
 
-- *latest-full* for a full Alpine Glances image (latest release) with all dependencies
-- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
-- *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
-- *ubuntu-latest-full* for a full Ubuntu Glances image (latest release) with all dependencies
-- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (Bottle and Docker)
-- *ubuntu-dev* for a basic Ubuntu Glances image (based on development branch) with all dependencies (Warning: may be instable)
+.. list-table::
+   :widths: 25 15 25 35
+   :header-rows: 1
+
+   * - Image Tag
+     - OS
+     - Target
+     - Installed Dependencies
+   * - `latest-full`
+     - Alpine
+     - Latest Release
+     - Full
+   * - `latest`
+     - Alpine
+     - Latest Release
+     - Minimal + (Bottle & Docker)
+   * - `dev`
+     - Alpine
+     - develop
+     - Full
+   * - `ubuntu-latest-full`
+     - Ubuntu
+     - Latest Release
+     - Full
+   * - `ubuntu-latest`
+     - Ubuntu
+     - Latest Release
+     - Minimal + (Bottle & Docker)
+   * - `ubuntu-dev`
+     - Ubuntu
+     - develop
+     - Full
+
+.. warning::
+    Tags containing `dev` target the `develop` branch directly and could be unstable.
+
+For example, if you want a full Alpine Glances image (latest release) with all dependencies, go for `latest-full`.
 
 You can also specify a version (example: 3.4.0). All available versions can be found on `DockerHub`_.
 
@@ -49,6 +80,14 @@ Alternatively, you can specify something along the same lines with docker run op
     docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host -it docker.io/nicolargo/glances
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
+
+Glances by default, uses the container's OS information in the UI. If you want to display the host's OS info, you can do that by mounting `/etc/os-release` into the container.
+
+Here is a simple docker run example for that:
+
+.. code-block:: console
+
+    docker run -v /etc/os-release:/etc/os-release:ro docker.io/nicolargo/glances
 
 Run the container in *Web server mode* (notice the `GLANCES_OPT` environment variable setting parameters for the glances startup command):
 
@@ -85,6 +124,8 @@ You can also include Glances container in you own `docker-compose.yml`. Here's a
         pid: host
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
+          # Uncomment the below line if you want glances to display host OS detail instead of container's
+          # - /etc/os-release:/etc/os-release:ro
         environment:
           - "GLANCES_OPT=-w"
         labels:
@@ -145,6 +186,8 @@ and make it visible to your container by adding it to ``docker-compose.yml`` as 
           - GLANCES_OPT="-w --password"
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock:ro
+          # Uncomment the below line if you want glances to display host OS detail instead of container's
+          # - /etc/os-release:/etc/os-release:ro
         pid: host
         secrets:
           - source: glances_password
@@ -204,6 +247,8 @@ Include the `deploy` section in compose file as specified below in the example s
         network_mode: host
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
+          # Uncomment the below line if you want glances to display host OS detail instead of container's
+          # - /etc/os-release:/etc/os-release:ro
         environment:
           - "GLANCES_OPT=-w"
         # For nvidia GPUs

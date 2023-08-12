@@ -107,8 +107,8 @@ class _GlancesCurses(object):
     # Define left sidebar
     _left_sidebar = [
         'network',
-        'connections',
         'wifi',
+        'connections',
         'ports',
         'diskio',
         'fs',
@@ -470,8 +470,8 @@ class _GlancesCurses(object):
                 logger.info("Stop Glances client and return to the browser")
             else:
                 logger.info("Stop Glances (keypressed: {})".format(self.pressedkey))
-        elif self.pressedkey == curses.KEY_F5:
-            # "F5" manual refresh requested
+        elif self.pressedkey == curses.KEY_F5 or self.pressedkey == 18:
+            # "F5" or Ctrl-R to force UI refresh
             pass
 
         # Return the key code
@@ -1115,12 +1115,24 @@ class _GlancesCurses(object):
         # Have empty lines after the plugins
         self.next_line += add_space
 
-    def erase(self):
-        """Erase the content of the screen."""
+    def clear(self):
+        """Erase the content of the screen.
+        The difference is that clear() also calls clearok(). clearok()
+        basically tells ncurses to forget whatever it knows about the current
+        terminal contents, so that when refresh() is called, it will actually
+        begin by clearing the entire terminal screen before redrawing any of it."""
         self.term_window.clear()
 
+    def erase(self):
+        """Erase the content of the screen.
+        erase() on the other hand, just clears the screen (the internal
+        object, not the terminal screen). When refresh() is later called,
+        ncurses will still compute the minimum number of characters to send to
+        update the terminal."""
+        self.term_window.erase()
+
     def flush(self, stats, cs_status=None):
-        """Clear and update the screen.
+        """Erase and update the screen.
 
         :param stats: Stats database to display
         :param cs_status:
@@ -1165,8 +1177,9 @@ class _GlancesCurses(object):
             pressedkey = self.__catch_key(return_to_browser=return_to_browser)
             isexitkey = pressedkey == ord('\x1b') or pressedkey == ord('q')
 
-            if pressedkey == curses.KEY_F5:
-                # Were asked to refresh
+            if pressedkey == curses.KEY_F5 or self.pressedkey == 18:
+                # Were asked to refresh (F5 or Ctrl-R)
+                self.clear()
                 return isexitkey
 
             if pressedkey in (curses.KEY_UP, 65, curses.KEY_DOWN, 66):

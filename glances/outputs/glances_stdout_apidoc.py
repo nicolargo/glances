@@ -30,7 +30,25 @@ The Glances Restfull/API server could be ran using the following command line:
 
     # glances -w --disable-webui
 
-Note: Change request URL api/3 by api/2 if you use Glances 2.x.
+API URL
+-------
+
+The default root API URL is ``http://localhost:61208/api/3``.
+
+The bind address and port could be changed using the ``--bind`` and ``--port`` command line options.
+
+It is also possible to define an URL prefix using the ``url_prefix`` option from the [outputs] section
+of the Glances configuration file. The url_prefix should always end with a slash (``/``).
+
+For example:
+
+.. code-block:: ini
+    [outputs]
+    url_prefix = /glances/
+
+will change the root API URL to ``http://localhost:61208/glances/api/3`` and the Web UI URL to
+``http://localhost:61208/glances/``
+
 """
 
 
@@ -49,7 +67,7 @@ def print_api_status():
     print('-' * len(sub_title))
     print('')
     print('This entry point should be used to check the API status.')
-    print('It will return nothing but a 200 return code if everythin is OK.')
+    print('It will return nothing but a 200 return code if everything is OK.')
     print('')
     print('Get the Rest API status::')
     print('')
@@ -126,7 +144,7 @@ def print_plugin_item_value(plugin, stat, stat_export):
         print(indent_stat(stat_item))
         print('')
     if item and value and stat.get_stats_value(item, value):
-        print('Get a specific item when field matchs the given value::')
+        print('Get a specific item when field matches the given value::')
         print('')
         print('    # curl {}/{}/{}/{}'.format(API_URL, plugin, item, value))
         print(indent_stat(json.loads(stat.get_stats_value(item, value))))
@@ -141,7 +159,7 @@ def print_all():
     print('Get all Glances stats::')
     print('')
     print('    # curl {}/all'.format(API_URL))
-    print('    Return a very big dictionnary (avoid using this request, performances will be poor)...')
+    print('    Return a very big dictionary (avoid using this request, performances will be poor)...')
     print('')
 
 

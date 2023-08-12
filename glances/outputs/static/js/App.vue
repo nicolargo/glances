@@ -69,18 +69,18 @@
                             v-if="!args.disable_network"
                             :data="data"
                         ></glances-plugin-network>
-                        <glances-plugin-connections
-                            id="plugin-connections"
-                            class="plugin table-row-group"
-                            v-if="isLinux && !args.disable_connections"
-                            :data="data"
-                        ></glances-plugin-connections>
                         <glances-plugin-wifi
                             id="plugin-wifi"
                             class="plugin table-row-group"
                             v-if="!args.disable_wifi"
                             :data="data"
                         ></glances-plugin-wifi>
+                        <glances-plugin-connections
+                            id="plugin-connections"
+                            class="plugin table-row-group"
+                            v-if="isLinux && !args.disable_connections"
+                            :data="data"
+                        ></glances-plugin-connections>
                         <glances-plugin-ports
                             id="plugin-ports"
                             class="plugin table-row-group"
@@ -102,9 +102,15 @@
                         <glances-plugin-irq
                             id="plugin-irq"
                             class="plugin table-row-group"
-                            v-if="args.enable_irq"
+                            v-if="!args.disable_irq"
                             :data="data"
                         ></glances-plugin-irq>
+                        <glances-plugin-smart
+                            id="plugin-smart"
+                            class="plugin table-row-group"
+                            v-if="!args.disable_smart"
+                            :data="data"
+                        ></glances-plugin-smart>
                         <glances-plugin-folders
                             id="plugin-folders"
                             class="plugin table-row-group"
@@ -123,7 +129,11 @@
                             v-if="!args.disable_sensors"
                             :data="data"
                         ></glances-plugin-sensors>
-                        <glances-plugin-now :data="data"></glances-plugin-now>
+                        <glances-plugin-now
+                            id="plugin-now"
+                            class="plugin table-row-group"
+                            :data="data"
+                        ></glances-plugin-now>
                     </div>
                 </div>
                 <div class="col-sm-18">
@@ -170,6 +180,7 @@ import GlancesPluginPorts from './components/plugin-ports.vue';
 import GlancesPluginProcess from './components/plugin-process.vue';
 import GlancesPluginQuicklook from './components/plugin-quicklook.vue';
 import GlancesPluginRaid from './components/plugin-raid.vue';
+import GlancesPluginSmart from './components/plugin-smart.vue';
 import GlancesPluginSensors from './components/plugin-sensors.vue';
 import GlancesPluginSystem from './components/plugin-system.vue';
 import GlancesPluginUptime from './components/plugin-uptime.vue';
@@ -201,6 +212,7 @@ export default {
         GlancesPluginQuicklook,
         GlancesPluginRaid,
         GlancesPluginSensors,
+        GlancesPluginSmart,
         GlancesPluginSystem,
         GlancesPluginUptime,
         GlancesPluginWifi
