@@ -57,7 +57,7 @@ class Export(GlancesExport):
         try:
             s = couchdb.Server(server_uri)
         except Exception as e:
-            logger.critical("Cannot connect to CouchDB server %s (%s)" % (server_uri, e))
+            logger.critical("Cannot connect to CouchDB server (%s)" % e)
             sys.exit(2)
         else:
             logger.info("Connected to the CouchDB server")

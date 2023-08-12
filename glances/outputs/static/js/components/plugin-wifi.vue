@@ -8,8 +8,8 @@
         <div class="table-row" v-for="(hotspot, hotspotId) in hotspots" :key="hotspotId">
             <div class="table-cell text-left">
                 {{ $filters.limitTo(hotspot.ssid, 20) }}
-                <span v-if="hotspot.encrypted">
-                    {{ hotspot.encryption_type }}
+                <span>
+                    {{ hotspot.security }}
                 </span>
             </div>
             <div class="table-cell"></div>
@@ -44,9 +44,8 @@ export default {
                     }
                     return {
                         ssid: hotspotData['ssid'],
-                        encrypted: hotspotData['encrypted'],
                         signal: hotspotData['signal'],
-                        encryption_type: hotspotData['encryption_type']
+                        security: hotspotData['security']
                     };
                 })
                 .filter(Boolean);

@@ -50,6 +50,12 @@ body {
 .text-left {
     text-align: left;
 }
+.text-truncate {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 .sidebar .table-cell:not(.text-left) {
     padding-left: 10px;
 }

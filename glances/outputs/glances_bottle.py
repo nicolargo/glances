@@ -16,6 +16,7 @@ from io import open
 import webbrowser
 import zlib
 import socket
+from urllib.parse import urljoin
 
 from glances.globals import b, json_dumps
 from glances.timer import Timer
@@ -85,8 +86,8 @@ class GlancesBottle(object):
         # Load configuration file
         self.load_config(config)
 
-        # Set the bind URL
-        self.bind_url = 'http://{}:{}/'.format(self.args.bind_address, self.args.port)
+        # Set the bind URL (only used for log information purpose)
+        self.bind_url = urljoin('http://{}:{}/'.format(self.args.bind_address, self.args.port), self.url_prefix)
 
         # Init Bottle
         self._app = Bottle()
@@ -107,10 +108,12 @@ class GlancesBottle(object):
     def load_config(self, config):
         """Load the outputs section of the configuration file."""
         # Limit the number of processes to display in the WebUI
+        self.url_prefix = '/'
         if config is not None and config.has_section('outputs'):
-            logger.debug('Read number of processes to display in the WebUI')
             n = config.get_value('outputs', 'max_processes_display', default=None)
             logger.debug('Number of processes to display in the WebUI: {}'.format(n))
+            self.url_prefix = config.get_value('outputs', 'url_prefix', default='/')
+            logger.debug('URL prefix: {}'.format(self.url_prefix))
 
     def __update__(self):
         # Never update more than 1 time per cached_time
@@ -162,7 +165,7 @@ class GlancesBottle(object):
         self._app.route(
             '/api/%s/<plugin>/<item>/<value:path>' % self.API_VERSION, method="GET", callback=self._api_value
         )
-        bindmsg = 'Glances RESTful API Server started on {}api/{}/'.format(self.bind_url, self.API_VERSION)
+        bindmsg = 'Glances RESTful API Server started on {}api/{}'.format(self.bind_url, self.API_VERSION)
         logger.info(bindmsg)
 
         # WEB UI
@@ -193,13 +196,27 @@ class GlancesBottle(object):
             # 2) Glances standalone mode is running on Windows OS
             webbrowser.open(self.bind_url, new=2, autoraise=1)
 
-        try:
-            self._app.run(host=self.args.bind_address, port=self.args.port, quiet=not self.args.debug)
-        except socket.error as e:
-            logger.critical('Error: Can not ran Glances Web server ({})'.format(e))
+        # Run the Web application
+        if self.url_prefix != '/':
+            # Create an outer Bottle class instance to manage url_prefix
+            self.main_app = Bottle()
+            self.main_app.mount(self.url_prefix, self._app)
+            try:
+                self.main_app.run(host=self.args.bind_address, port=self.args.port, quiet=not self.args.debug)
+            except socket.error as e:
+                logger.critical('Error: Can not ran Glances Web server ({})'.format(e))
+        else:
+            try:
+                self._app.run(host=self.args.bind_address, port=self.args.port, quiet=not self.args.debug)
+            except socket.error as e:
+                logger.critical('Error: Can not ran Glances Web server ({})'.format(e))
 
     def end(self):
         """End the bottle."""
+        logger.info("Close the Web server")
+        self._app.close()
+        if self.url_prefix != '/':
+            self.main_app.close()
 
     def _index(self, refresh_time=None):
         """Bottle callback for index.html (/) file."""
