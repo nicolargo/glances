@@ -47,8 +47,7 @@ WIRELESS_FILE = '/proc/net/wireless'
 wireless_file_exists = file_exists(WIRELESS_FILE)
 
 if not nmcli_command_exists and not wireless_file_exists:
-    logger.debug("Wifi plugin is disabled (no %s command or %s file found)" % ('nmcli',
-                                                                               WIRELESS_FILE))
+    logger.debug("Wifi plugin is disabled (no %s command or %s file found)" % ('nmcli', WIRELESS_FILE))
 
 
 class PluginModel(GlancesPluginModel):
@@ -121,12 +120,14 @@ class PluginModel(GlancesPluginModel):
                     # Extract the stats
                     wifi_stats = wifi_stats.split()
                     # Add the Wifi link to the list
-                    stats.append({
-                        'key': self.get_key(),
-                        'ssid': wifi_stats[0][:-1],
-                        'signal': float(wifi_stats[3]),
-                        'security': ''
-                    })
+                    stats.append(
+                        {
+                            'key': self.get_key(),
+                            'ssid': wifi_stats[0][:-1],
+                            'signal': float(wifi_stats[3]),
+                            'security': '',
+                        }
+                    )
                     # Next line
                     wifi_stats = f.readline()
 
@@ -202,11 +203,11 @@ class PluginModel(GlancesPluginModel):
             hotspot_name = i['ssid']
             # Cut hotspot_name if it is too long
             if len(hotspot_name) > if_name_max_width:
-                hotspot_name = '_' + hotspot_name[-if_name_max_width - len(i['security']) + 1:]
+                hotspot_name = '_' + hotspot_name[-if_name_max_width - len(i['security']) + 1 :]
             # Add the new hotspot to the message
-            msg = '{:{width}} {security}'.format(nativestr(hotspot_name),
-                                                 width=if_name_max_width - len(i['security']) - 1,
-                                                 security=i['security'])
+            msg = '{:{width}} {security}'.format(
+                nativestr(hotspot_name), width=if_name_max_width - len(i['security']) - 1, security=i['security']
+            )
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format(
                 i['signal'],
@@ -244,12 +245,7 @@ class ThreadHotspot(threading.Thread):
                 if len(h) != 4 or h[0] != 'yes':
                     # Do not process the line if it is not the active hotspot
                     continue
-                nmcli_result.append({
-                    'key': 'ssid',
-                    'ssid': h[1],
-                    'signal': -float(h[2]),
-                    'security': h[3]
-                })
+                nmcli_result.append({'key': 'ssid', 'ssid': h[1], 'signal': -float(h[2]), 'security': h[3]})
             self.thread_stats = nmcli_result
             # Wait refresh time until next scan
             # Note: nmcli cache the result for x seconds
