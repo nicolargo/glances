@@ -163,6 +163,22 @@ def print_all():
     print('')
 
 
+def print_top(stats):
+    time.sleep(1)
+    stats.update()
+    sub_title = 'GET top n items of a specific plugin'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('')
+    print('Get top 2 processes of the processlist plugin::')
+    print('')
+    print('    # curl {}/processlist/top/2'.format(API_URL))
+    print(indent_stat(stats.get_plugin('processlist').get_export()[:2]))
+    print('')
+    print('Note: Only work for plugin with a list of items')
+    print('')
+
+
 def print_history(stats):
     time.sleep(1)
     stats.update()
@@ -247,6 +263,10 @@ class GlancesStdoutApiDoc(object):
 
         # Get all stats
         print_all()
+
+        # Get top stats (only for plugins with a list of items)
+        # Example for processlist plugin: get top 2 processes
+        print_top(stats)
 
         # History
         print_history(stats)

@@ -2,12 +2,12 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Web interface class."""
+"""RestFull API interface class."""
 
 import os
 import sys
@@ -152,6 +152,7 @@ class GlancesBottle(object):
         self._app.route(
             '/api/%s/<plugin>/history/<nb:int>' % self.API_VERSION, method="GET", callback=self._api_history
         )
+        self._app.route('/api/%s/<plugin>/top/<nb:int>' % self.API_VERSION, method="GET", callback=self._api_top)
         self._app.route('/api/%s/<plugin>/limits' % self.API_VERSION, method="GET", callback=self._api_limits)
         self._app.route('/api/%s/<plugin>/views' % self.API_VERSION, method="GET", callback=self._api_views)
         self._app.route('/api/%s/<plugin>/<item>' % self.API_VERSION, method="GET", callback=self._api_item)
@@ -392,6 +393,36 @@ class GlancesBottle(object):
             abort(404, "Cannot get plugin %s (%s)" % (plugin, str(e)))
 
         return statval
+
+    @compress
+    def _api_top(self, plugin, nb=0):
+        """Glances API RESTful implementation.
+
+        Return the JSON representation of a given plugin limited to the top nb items.
+        It is used to reduce the payload of the HTTP response (example: processlist).
+
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json; charset=utf-8'
+
+        if plugin not in self.plugins_list:
+            abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
+
+        # Update the stat
+        self.__update__()
+
+        try:
+            # Get the value of the stat ID
+            statval = self.stats.get_plugin(plugin).get_export()
+        except Exception as e:
+            abort(404, "Cannot get plugin %s (%s)" % (plugin, str(e)))
+
+        if isinstance(statval, list):
+            return json_dumps(statval[:nb])
+        else:
+            return json_dumps(statval)
 
     @compress
     def _api_history(self, plugin, nb=0):
