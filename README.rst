@@ -252,7 +252,7 @@ GNU/Linux
 `Glances` is available on many Linux distributions, so you should be
 able to install it using your favorite package manager. Be aware that
 when you use this method the operating system `package`_ for `Glances`
-may not be the latest version.
+may not be the latest version and only basics plugins are enabled.
 
 Note: The Debian package (and all other Debian-based distributions) do
 not include anymore the JS statics files used by the Web interface
