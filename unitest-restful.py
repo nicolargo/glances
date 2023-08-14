@@ -231,6 +231,18 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(req.ok)
         self.assertEqual(req.text, "Active")
 
+    def test_013_top(self):
+        """Values."""
+        method = "processlist"
+        request = "%s/%s/top/2" % (URL, method)
+        print('INFO: [TEST_013] Top nb item of PROCESSLIST')
+        print(request)
+        req = self.http_get(request)
+
+        self.assertTrue(req.ok)
+        self.assertIsInstance(req.json(), list)
+        self.assertEqual(len(req.json()), 2)
+
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""
         print('INFO: [TEST_999] Stop the Glances Web Server')
