@@ -330,6 +330,7 @@ class _GlancesCurses(object):
             'PASSWORD': curses.A_PROTECT,
             'SELECTED': self.selected_color,
             'INFO': self.ifINFO_color,
+            'ERROR': self.selected_color,
         }
 
     def set_cursor(self, value):
