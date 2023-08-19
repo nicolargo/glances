@@ -372,3 +372,29 @@ def string_value_to_float(s):
 def file_exists(filename):
     """Return True if the file exists and is readable."""
     return os.path.isfile(filename) and os.access(filename, os.R_OK)
+
+
+def folder_size(path, errno=0):
+    """Return a tuple with the size of the directory given by path and the errno.
+    If an error occurs (for example one file or subfolder is not accessible),
+    errno is set to the error number.
+
+    path: <string>
+    errno: <int> Should always be 0 when calling the function"""
+    ret_size = 0
+    ret_err = errno
+    try:
+        f_list = os.scandir(path)
+    except OSError as e:
+        return 0, e.errno
+    for f in f_list:
+        if f.is_dir(follow_symlinks=False) and (f.name != '.' or f.name != '..'):
+            ret = folder_size(os.path.join(path, f.name), ret_err)
+            ret_size += ret[0]
+            ret_err = ret[1]
+        else:
+            try:
+                ret_size += f.stat().st_size
+            except OSError as e:
+                ret_err = e.errno
+    return ret_size, ret_err

@@ -9,8 +9,8 @@ from io import open
 from setuptools import setup, Command
 
 
-if sys.version_info < (3, 4):
-    print('Glances requires at least Python 3.4 to run.')
+if sys.version_info < (3, 8):
+    print('Glances requires at least Python 3.8 to run.')
     sys.exit(1)
 
 # Global functions
@@ -60,7 +60,6 @@ def get_install_extras_require():
                    'graphitesender', 'influxdb>=1.0.0', 'influxdb-client', 'pymongo',
                    'kafka-python', 'pika', 'paho-mqtt', 'potsdb', 'prometheus_client',
                    'pyzmq', 'statsd'],
-        'folders': ['scandir'],
         'gpu': ['py3nvml'],
         'graph': ['pygal'],
         'ip': ['netifaces'],

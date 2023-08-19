@@ -64,8 +64,8 @@ class PluginModel(GlancesPluginModel):
 
     def get_alert(self, stat, header=""):
         """Manage limits of the folder list."""
-        if not isinstance(stat['size'], numbers.Number):
-            ret = 'DEFAULT'
+        if stat['errno'] != 0:
+            ret = 'ERROR'
         else:
             ret = 'OK'
 
@@ -108,15 +108,15 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_new_line())
             if len(i['path']) > name_max_width:
                 # Cut path if it is too long
-                path = '_' + i['path'][-name_max_width + 1 :]
+                path = '_' + i['path'][-name_max_width + 1:]
             else:
                 path = i['path']
             msg = '{:{width}}'.format(nativestr(path), width=name_max_width)
             ret.append(self.curse_add_line(msg))
-            try:
+            if i['errno'] != 0:
+                msg = '?{:>8}'.format(self.auto_unit(i['size']))
+            else:
                 msg = '{:>9}'.format(self.auto_unit(i['size']))
-            except (TypeError, ValueError):
-                msg = '{:>9}'.format(i['size'])
             ret.append(self.curse_add_line(msg, self.get_alert(i, header='folder_' + i['indice'])))
 
         return ret
