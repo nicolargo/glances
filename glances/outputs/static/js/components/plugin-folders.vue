@@ -9,6 +9,9 @@
             <div class="table-cell text-left">{{ folder.path }}</div>
             <div class="table-cell"></div>
             <div class="table-cell" :class="getDecoration(folder)">
+                <span v-if="folder.errno > 0" class="visible-lg-inline">
+                    ?
+                </span>
                 {{ $filters.bytes(folder.size) }}
             </div>
         </div>
@@ -31,6 +34,7 @@ export default {
                 return {
                     path: folderData['path'],
                     size: folderData['size'],
+                    errno: folderData['errno'],
                     careful: folderData['careful'],
                     warning: folderData['warning'],
                     critical: folderData['critical']
@@ -40,8 +44,8 @@ export default {
     },
     methods: {
         getDecoration(folder) {
-            if (!Number.isInteger(folder.size)) {
-                return;
+            if (folder.errno > 0) {
+                return 'error';
             }
             if (folder.critical !== null && folder.size > folder.critical * 1000000) {
                 return 'critical';
