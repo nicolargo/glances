@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install pip install build tools
         run: >-
@@ -101,7 +101,7 @@ jobs:
         tag: ${{ fromJson(needs.create_Docker_builds.outputs.tags) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Retrieve Repository Docker metadata
         id: docker_meta
