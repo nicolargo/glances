@@ -130,7 +130,7 @@ jobs:
           version: latest
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         if: ${{ env.PUSH_BRANCH == 'true' }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
