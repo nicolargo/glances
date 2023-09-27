@@ -215,25 +215,26 @@ class DockerContainersExtension:
 
     CONTAINER_ACTIVE_STATUS = ['running', 'paused']
 
-    def __init__(self):
+    def __init__(self, server_urls:str|list = 'unix:///var/run/docker.sock'):
         if import_docker_error_tag:
             raise Exception("Missing libs required to run Docker Extension (Containers) ")
 
-        self.client = None
+        self.clients = None
         self.ext_name = "containers (Docker)"
         self.stats_fetchers = {}
 
-        self.connect()
+        self.connect(server_urls)
 
-    def connect(self):
+    def connect(self, base_urls:str|list = 'unix:///var/run/docker.sock'):
         """Connect to the Docker server."""
         # Init the Docker API Client
+        base_urls = [base_urls] if isinstance(base_urls, str) else base_urls
         try:
             # Do not use the timeout option (see issue #1878)
-            self.client = docker.from_env()
+            self.clients = [docker.DockerClient(url) for url in base_urls]
         except Exception as e:
             logger.error("{} plugin - Can't connect to Docker ({})".format(self.ext_name, e))
-            self.client = None
+            self.clients = None
 
     def update_version(self):
         # Long and not useful anymore because the information is no more displayed in UIs
@@ -248,7 +249,7 @@ class DockerContainersExtension:
     def update(self, all_tag):
         """Update Docker stats using the input method."""
 
-        if not self.client:
+        if not self.clients:
             return {}, []
 
         version_stats = self.update_version()
@@ -257,7 +258,8 @@ class DockerContainersExtension:
         try:
             # Issue #1152: Docker module doesn't export details about stopped containers
             # The Containers/all key of the configuration file should be set to True
-            containers = self.client.containers.list(all=all_tag)
+            containers = []
+            [[containers.append(container_per_client) for container_per_client in client.containers.list(all=all_tag)] for client in self.clients]
         except Exception as e:
             logger.error("{} plugin - Can't get containers list ({})".format(self.ext_name, e))
             return version_stats, []
@@ -299,6 +301,7 @@ class DockerContainersExtension:
             # Container Status (from attrs)
             'Status': container.attrs['State']['Status'],
             'Created': container.attrs['Created'],
+            'Socket_URL': container.client.api.base_url,
             'Command': [],
         }
 

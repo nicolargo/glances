@@ -76,13 +76,13 @@ class PluginModel(GlancesPluginModel):
         self.display_curse = True
 
         # Init the Docker API
-        self.docker_extension = DockerContainersExtension() if not import_docker_error_tag else None
+        self.docker_extension = DockerContainersExtension(server_urls=self._docker_sock()) if not import_docker_error_tag else None
 
         # Init the Podman API
         if import_podman_error_tag:
             self.podman_client = None
         else:
-            self.podman_client = PodmanContainersExtension(podman_sock=self._podman_sock())
+            self.podman_client = PodmanContainersExtension(podman_sock=self._podman_sock()) # TODO: podman also
 
         # Sort key
         self.sort_key = None
@@ -91,6 +91,16 @@ class PluginModel(GlancesPluginModel):
         self.update()
         self.refresh_timer.set(0)
 
+    def _docker_sock(self):
+        """Return the docker socks.
+        Default value: unix:///var/run/docker.sock
+        """
+        conf_docker_sock = self.get_conf_value('docker_sock')
+        if len(conf_docker_sock) == 0:
+            return "unix:///var/run/docker.sock"
+        else:
+            return conf_docker_sock
+        
     def _podman_sock(self):
         """Return the podman sock.
         Could be desfined in the [docker] section thanks to the podman_sock option.
@@ -297,6 +307,8 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg))
         msg = ' {:<7}'.format('Tx/s')
         ret.append(self.curse_add_line(msg))
+        msg = '{:<30}'.format('Socket URL')
+        ret.append(self.curse_add_line(msg))
         msg = ' {:8}'.format('Command')
         ret.append(self.curse_add_line(msg))
 
@@ -381,6 +393,12 @@ class PluginModel(GlancesPluginModel):
             except KeyError:
                 msg = ' {:<7}'.format('_')
             ret.append(self.curse_add_line(msg))
+            # Socket URL
+            if container['Socket_URL'] is not None:
+                msg = '{:<30}'.format(container['Socket_URL'])
+            else:
+                msg = '{:<30}'.format('_')
+            ret.append(self.curse_add_line(msg, splittable=True))
             # Command
             if container['Command'] is not None:
                 msg = ' {}'.format(' '.join(container['Command']))
