@@ -80,7 +80,7 @@ You can also include Glances container in you own `docker-compose.yml`. Here's a
           - "traefik.frontend.rule=Host:whoami.docker.localhost"
 
       monitoring:
-        image: nicolargo/glances:latest-alpine
+        image: nicolargo/glances:latest
         restart: always
         pid: host
         volumes:
