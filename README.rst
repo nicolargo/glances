@@ -140,8 +140,8 @@ To install Glances, simply use ``pip``:
     pip install --user glances
 
 *Note*: Python headers are required to install `psutil`_, a Glances
-dependency. For example, on Debian/Ubuntu you need to install first
-the *python-dev* package (*python-devel* on Fedora/CentOS/RHEL).
+dependency. For example, on Debian/Ubuntu **the simplest** is ``apt install python3-psutil`` or alternatively need to install first
+the *python-dev* package and gcc (*python-devel* on Fedora/CentOS/RHEL).
 For Windows, just install psutil from the binary installation file.
 
 *Note 2 (for the Wifi plugin)*: If you want to use the Wifi plugin, you need
