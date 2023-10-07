@@ -64,8 +64,9 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-
+        # Python version "3.12" introduce this issue:
+        # https://github.com/nicolargo/glances/actions/runs/6439648370/job/17487567454
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
 
     - uses: actions/checkout@v4
