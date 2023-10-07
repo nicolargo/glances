@@ -35,13 +35,17 @@ class GlancesEvents(object):
        "top sort key"]
     """
 
-    def __init__(self):
+    def __init__(self, max_events=10):
         """Init the events class."""
         # Maximum size of the events list
-        self.events_max = 10
+        self.set_max_events(max_events)
 
         # Init the logs list
         self.events_list = []
+
+    def set_max_events(self, max_events):
+        """Set the maximum size of the events list."""
+        self.max_events = max_events
 
     def get(self):
         """Return the raw events list."""
@@ -138,8 +142,8 @@ class GlancesEvents(object):
             # Add the item to the list
             self.events_list.insert(0, item)
 
-            # Limit the list to 'events_max' items
-            if self.len() > self.events_max:
+            # Limit the list to 'max_events' items
+            if self.len() > self.max_events:
                 self.events_list.pop()
 
             return True
