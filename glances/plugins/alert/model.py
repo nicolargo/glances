@@ -11,6 +11,7 @@
 
 from datetime import datetime
 
+from glances.logger import logger
 from glances.events import glances_events
 from glances.thresholds import glances_thresholds
 
@@ -170,13 +171,19 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super(PluginModel, self).__init__(args=args,
+                                          config=config,
+                                          stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
 
         # Set the message position
         self.align = 'bottom'
+
+        # Set the maximum number of events to display
+        if config is not None and (config.has_section('alert') or config.has_section('alerts')):
+            glances_events.set_max_events(config.get_int_value('alert', 'max_events'))
 
     def update(self):
         """Nothing to do here. Just return the global glances_log."""
