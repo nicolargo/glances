@@ -39,7 +39,10 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super(PluginModel, self).__init__(args=args,
+                                          config=config,
+                                          items_history_list=items_history_list,
+                                          stats_init_value=[])
 
         # Init the Nvidia API
         self.init_nvidia()
