@@ -9,35 +9,42 @@ following:
 
 .. code-block:: ini
 
-    [mongodb]
+    [couchdb]
     host=localhost
-    port=27017
-    db=glances
+    port=
     user=root
     password=example
+    db=glances
 
 and run Glances with:
 
 .. code-block:: console
 
-    $ glances --export mongodb
+    $ glances --export couchdb
 
-Documents are stored in native the configured database (glances by default)
-with one collection per plugin.
+Documents are stored in native ``JSON`` format. Glances adds ``"type"``
+and ``"time"`` entries:
 
-Example of MongoDB Document for the load stats:
+- ``type``: plugin name
+- ``time``: timestamp  (format: "2016-09-24T16:39:08.524828Z")
+
+Example of Couch Document for the load stats:
 
 .. code-block:: json
 
     {
-        _id: ObjectId('63d78ffee5528e543ce5af3a'),
-        min1: 1.46337890625,
-        min5: 1.09619140625,
-        min15: 1.07275390625,
-        cpucore: 4,
-        history_size: 1200,
-        load_disable: 'False',
-        load_careful: 0.7,
-        load_warning: 1,
-        load_critical: 5
+       "_id": "36cbbad81453c53ef08804cb2612d5b6",
+       "_rev": "1-382400899bec5615cabb99aa34df49fb",
+       "min15": 0.33,
+       "time": "2016-09-24T16:39:08.524828Z",
+       "min5": 0.4,
+       "cpucore": 4,
+       "load_warning": 1,
+       "min1": 0.5,
+       "history_size": 28800,
+       "load_critical": 5,
+       "type": "load",
+       "load_careful": 0.7
     }
+
+You can view the result using the CouchDB utils URL: http://127.0.0.1:5984/_utils/database.html?glances.
