@@ -12,6 +12,8 @@
 import argparse
 import sys
 import tempfile
+from logging import DEBUG
+from warnings import simplefilter
 
 from glances import __version__, psutil_version
 from glances.globals import WINDOWS, disable, enable
@@ -121,12 +123,17 @@ Examples of use:
         parser.add_argument(
             '--disable-plugin',
             '--disable-plugins',
+            '--disable',
             dest='disable_plugin',
             help='disable plugin (comma separated list or all). If all is used, \
                 then you need to configure --enable-plugin.',
         )
         parser.add_argument(
-            '--enable-plugin', '--enable-plugins', dest='enable_plugin', help='enable plugin (comma separated list)'
+            '--enable-plugin',
+            '--enable-plugins',
+            '--enable',
+            dest='enable_plugin',
+            help='enable plugin (comma separated list)'
         )
         parser.add_argument(
             '--disable-process',
@@ -533,36 +540,28 @@ Examples of use:
 
         return parser
 
-    def parse_args(self):
-        """Parse command line arguments."""
-        args = self.init_args().parse_args()
-
-        # Load the configuration file, if it exists
-        # This function should be called after the parse_args
-        # because the configuration file path can be defined
-        self.config = Config(args.conf_file)
-
-        # Debug mode
+    def init_debug(self, args):
+        """Init Glances debug mode."""
         if args.debug:
-            from logging import DEBUG
-
             logger.setLevel(DEBUG)
         else:
-            from warnings import simplefilter
-
             simplefilter("ignore")
 
-        # Plugins refresh rate
+    def init_refresh_rate(self, args):
+        """Init Glances refresh rate"""
         if self.config.has_section('global'):
             global_refresh = self.config.get_float_value('global', 'refresh', default=self.DEFAULT_REFRESH_TIME)
         else:
             global_refresh = self.DEFAULT_REFRESH_TIME
-        # The configuration key can be overwrite from the command line
+
+        # The configuration key can be overwrite from the command line (-t <time>)
         if args.time == self.DEFAULT_REFRESH_TIME:
             args.time = global_refresh
+
         logger.debug('Global refresh rate is set to {} seconds'.format(args.time))
 
-        # Plugins disable/enable
+    def init_plugins(self, args):
+        """Init Glances plugins"""
         # Allow users to disable plugins from the glances.conf (issue #1378)
         for s in self.config.sections():
             if self.config.has_section(s) and (self.config.get_bool_value(s, 'disable', False)):
@@ -589,6 +588,16 @@ Examples of use:
             for p in args.export.split(','):
                 setattr(args, 'export_' + p, True)
 
+        # By default help is hidden
+        args.help_tag = False
+
+        # Display Rx and Tx, not the sum for the network
+        args.network_sum = False
+        args.network_cumul = False
+
+    def init_client_server(self, args):
+        """Init Glances client/server mode."""
+
         # Client/server Port
         if args.port is None:
             if args.webserver:
@@ -601,7 +610,7 @@ Examples of use:
                 x if x else y for (x, y) in zip(args.client.partition(':')[::2], (args.client, args.port))
             )
 
-        # Autodiscover
+        # Client autodiscover mode
         if args.disable_autodiscover:
             logger.info("Auto discover mode is disabled")
 
@@ -652,15 +661,9 @@ Examples of use:
             # Default is no password
             args.password = self.password
 
-        # By default help is hidden
-        args.help_tag = False
-
-        # Display Rx and Tx, not the sum for the network
-        args.network_sum = False
-        args.network_cumul = False
-
+    def init_ui_mode(self, args):
         # Manage light mode
-        if args.enable_light:
+        if getattr(args, 'enable_light', False):
             logger.info("Light mode is on")
             args.disable_left_sidebar = True
             disable(args, 'process')
@@ -669,7 +672,7 @@ Examples of use:
             disable(args, 'docker')
 
         # Manage full quicklook option
-        if args.full_quicklook:
+        if getattr(args, 'full_quicklook', False):
             logger.info("Full quicklook mode")
             enable(args, 'quicklook')
             disable(args, 'cpu')
@@ -678,13 +681,46 @@ Examples of use:
             enable(args, 'load')
 
         # Manage disable_top option
-        if args.disable_top:
+        if getattr(args, 'disable_top', False):
             logger.info("Disable top menu")
             disable(args, 'quicklook')
             disable(args, 'cpu')
             disable(args, 'mem')
             disable(args, 'memswap')
             disable(args, 'load')
+
+        # Memory leak
+        if getattr(args, 'memory_leak', False):
+            logger.info('Memory leak detection enabled')
+            args.quiet = True
+            if not args.stop_after:
+                args.stop_after = 60
+            args.time = 1
+            args.disable_history = True
+
+    def parse_args(self):
+        """Parse command line arguments."""
+        args = self.init_args().parse_args()
+
+        # Load the configuration file, if it exists
+        # This function should be called after the parse_args
+        # because the configuration file path can be defined
+        self.config = Config(args.conf_file)
+
+        # Init Glances debug mode
+        self.init_debug(args)
+
+        # Plugins Glances refresh rate
+        self.init_refresh_rate(args)
+
+        # Manage Plugins disable/enable option
+        self.init_plugins(args)
+
+        # Init Glances client/server mode
+        self.init_client_server(args)
+
+        # Init UI mode
+        self.init_ui_mode(args)
 
         # Init the generate_graph tag
         # Should be set to True to generate graphs
@@ -713,26 +749,6 @@ Examples of use:
         if not args.disable_cursor and not self.is_standalone():
             logger.debug("Cursor is only available in standalone mode")
 
-        # Disable HDDTemp if sensors are disabled
-        if getattr(self.args, 'disable_sensors', False):
-            disable(self.args, 'hddtemp')
-            logger.debug("Sensors and HDDTemp are disabled")
-
-        if getattr(self.args, 'trace_malloc', True) and not self.is_standalone():
-            logger.critical("Option --trace-malloc is only available in the terminal mode")
-            sys.exit(2)
-
-        if getattr(self.args, 'memory_leak', True) and not self.is_standalone():
-            logger.critical("Option --memory-leak is only available in the terminal mode")
-            sys.exit(2)
-        elif getattr(self.args, 'memory_leak', True) and self.is_standalone():
-            logger.info('Memory leak detection enabled')
-            self.args.quiet = True
-            if not self.args.stop_after:
-                self.args.stop_after = 60
-            self.args.time = 1
-            self.args.disable_history = True
-
         # Let the plugins known the Glances mode
         self.args.is_standalone = self.is_standalone()
         self.args.is_client = self.is_client()
@@ -747,8 +763,19 @@ Examples of use:
 
     def check_mode_compatibility(self):
         """Check mode compatibility"""
+        # Server and Web server are not compatible
         if self.args.is_server and self.args.is_webserver:
-            logger.critical("Server and Web server mode are incompatible")
+            logger.critical("Server and Web server modes should not be used together")
+            sys.exit(2)
+
+        # Trace malloc option
+        if getattr(self.args, 'trace_malloc', True) and not self.is_standalone():
+            logger.critical("Option --trace-malloc is only available in the terminal mode")
+            sys.exit(2)
+
+        # Memory leak option
+        if getattr(self.args, 'memory_leak', True) and not self.is_standalone():
+            logger.critical("Option --memory-leak is only available in the terminal mode")
             sys.exit(2)
 
     def is_standalone(self):
