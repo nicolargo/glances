@@ -6,7 +6,6 @@ bernhard
 bottle
 cassandra-driver
 chevron
-couchdb
 docker>=6.1.1
 elasticsearch
 graphitesender
@@ -21,6 +20,7 @@ pika
 podman; python_version >= "3.6"
 potsdb
 prometheus_client
+pycouchdb
 pygal
 pymdstat
 pymongo; python_version >= "3.7"
