@@ -11,10 +11,10 @@ following:
 
     [couchdb]
     host=localhost
-    port=
+    port=5984
+    db=glances
     user=root
     password=example
-    db=glances
 
 and run Glances with:
 
@@ -26,7 +26,7 @@ Documents are stored in native ``JSON`` format. Glances adds ``"type"``
 and ``"time"`` entries:
 
 - ``type``: plugin name
-- ``time``: timestamp  (format: "2016-09-24T16:39:08.524828Z")
+- ``time``: timestamp  (format: "2016-09-24T16:39:08.524Z")
 
 Example of Couch Document for the load stats:
 
@@ -36,7 +36,7 @@ Example of Couch Document for the load stats:
        "_id": "36cbbad81453c53ef08804cb2612d5b6",
        "_rev": "1-382400899bec5615cabb99aa34df49fb",
        "min15": 0.33,
-       "time": "2016-09-24T16:39:08.524828Z",
+       "time": "2016-09-24T16:39:08.524Z",
        "min5": 0.4,
        "cpucore": 4,
        "load_warning": 1,
