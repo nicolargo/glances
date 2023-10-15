@@ -161,22 +161,20 @@ class GlancesStandalone(object):
 
         return ret
 
-    def serve_forever(self):
-        """Wrapper to the serve_forever function."""
-        if self.args.stop_after:
-            for _ in range(self.args.stop_after):
-                if not self.__serve_once():
-                    break
-        else:
-            while self.__serve_once():
-                pass
-        # self.end()
-
     def serve_n(self, n=1):
         """Serve n time."""
         for _ in range(n):
             if not self.__serve_once():
                 break
+        # self.end()
+
+    def serve_forever(self):
+        """Wrapper to the serve_forever function."""
+        if self.args.stop_after:
+            self.serve_n(self.args.stop_after)
+        else:
+            while self.__serve_once():
+                pass
         # self.end()
 
     def end(self):
