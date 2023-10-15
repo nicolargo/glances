@@ -39,7 +39,7 @@ from subprocess import check_output, CalledProcessError
 
 from glances.logger import logger
 from glances.globals import iteritems, to_ascii
-from glances.amps.glances_amp import GlancesAmp
+from glances.amps.amp import GlancesAmp
 
 
 class Amp(GlancesAmp):
