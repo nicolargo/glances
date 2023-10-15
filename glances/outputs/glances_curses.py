@@ -272,7 +272,9 @@ class _GlancesCurses(object):
             self.selected_color = A_BOLD
 
             if curses.COLOR_PAIRS > 8:
-                colors_list = [curses.COLOR_MAGENTA, curses.COLOR_CYAN, curses.COLOR_YELLOW]
+                colors_list = [curses.COLOR_MAGENTA,
+                               curses.COLOR_CYAN,
+                               curses.COLOR_YELLOW]
                 for i in range(0, 3):
                     try:
                         curses.init_pair(i + 9, colors_list[i], -1)
@@ -286,6 +288,10 @@ class _GlancesCurses(object):
                 self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
                 self.filter_color = curses.color_pair(10) | A_BOLD
                 self.selected_color = curses.color_pair(11) | A_BOLD
+                # Define separator line style
+                curses.init_color(12, 500, 500, 500)
+                curses.init_pair(12, curses.COLOR_BLACK, -1)
+                self.separator = curses.color_pair(12)
 
         else:
             # The screen is NOT compatible with a colored design
@@ -304,6 +310,7 @@ class _GlancesCurses(object):
             self.ifINFO_color = A_BOLD
             self.filter_color = A_BOLD
             self.selected_color = A_BOLD
+            self.separator = curses.COLOR_BLACK
 
         # Define the colors list (hash table) for stats
         self.colors_list = {
@@ -331,6 +338,7 @@ class _GlancesCurses(object):
             'SELECTED': self.selected_color,
             'INFO': self.ifINFO_color,
             'ERROR': self.selected_color,
+            'SEPARATOR': self.separator,
         }
 
     def set_cursor(self, value):
@@ -578,7 +586,7 @@ class _GlancesCurses(object):
         """New column in the curses interface."""
         self.column = self.next_column
 
-    def separator_line(self, color='TITLE'):
+    def separator_line(self, color='SEPARATOR'):
         """New separator line in the curses interface."""
         if not self.args.enable_separator:
             return
