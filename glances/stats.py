@@ -95,38 +95,29 @@ class GlancesStats(object):
 
     def _load_plugin(self, plugin_path, args=None, config=None):
         """Load the plugin, init it and add to the _plugin dict."""
-        # The key is the plugin_path
-        # except when it starts with glances_xxx
-        # generate self._plugins_list["xxx"] = <instance of xxx Plugin>
-        if plugin_path.startswith('glances_'):
-            # Avoid circular loop when Glances plugin uses lib with same name
-            # Example: docker should be named to glances_docker
-            name = plugin_path.split('glances_')[1]
-        else:
-            name = plugin_path
         # Load the plugin class
         try:
             # Import the plugin
-            plugin = import_module('glances.plugins.' + plugin_path + '.model')
+            plugin = import_module('glances.plugins.' + plugin_path)
             # Init and add the plugin to the dictionary
-            self._plugins[name] = plugin.PluginModel(args=args, config=config)
+            self._plugins[plugin_path] = plugin.PluginModel(args=args, config=config)
         except Exception as e:
             # If a plugin can not be loaded, display a critical message
             # on the console but do not crash
-            logger.critical("Error while initializing the {} plugin ({})".format(name, e))
+            logger.critical("Error while initializing the {} plugin ({})".format(plugin_path, e))
             logger.error(traceback.format_exc())
             # An error occurred, disable the plugin
             if args is not None:
-                setattr(args, 'disable_' + name, False)
+                setattr(args, 'disable_' + plugin_path, False)
         else:
             # Manage the default status of the plugin (enable or disable)
             if args is not None:
-                # If the all key is set in the disable_plugin option then look in the enable_plugin option
+                # If the all keys are set in the disable_plugin option then look in the enable_plugin option
                 if getattr(args, 'disable_all', False):
-                    logger.debug('%s => %s', name, getattr(args, 'enable_' + name, False))
-                    setattr(args, 'disable_' + name, not getattr(args, 'enable_' + name, False))
+                    logger.debug('%s => %s', plugin_path, getattr(args, 'enable_' + plugin_path, False))
+                    setattr(args, 'disable_' + plugin_path, not getattr(args, 'enable_' + plugin_path, False))
                 else:
-                    setattr(args, 'disable_' + name, getattr(args, 'disable_' + name, False))
+                    setattr(args, 'disable_' + plugin_path, getattr(args, 'disable_' + plugin_path, False))
 
     def load_plugins(self, args=None):
         """Load all plugins in the 'plugins' folder."""
