@@ -70,7 +70,8 @@ class GlancesPluginModel(object):
         :stats_init_value: Default value for a stats item
         """
         # Build the plugin name
-        self.plugin_name = self.__class__.__module__.split('.')[2]
+        # Get second-last entry as the last one will always be 'model'
+        self.plugin_name = self.__class__.__module__.split('.')[-2]
         if self.plugin_name.startswith('glances_'):
             self.plugin_name = self.plugin_name.split('glances_')[1]
         logger.debug("Init {} plugin".format(self.plugin_name))
