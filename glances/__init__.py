@@ -108,7 +108,7 @@ def start(config, args):
     # Start the main loop
     logger.debug("Glances started in {} seconds".format(start_duration.get()))
     if args.stop_after:
-        logger.info('Glances will be stopped in ~{} seconds'.format(args.stop_after * args.time * args.memory_leak * 2))
+        logger.info('Glances will be stopped in ~{} seconds'.format(args.stop_after * args.time))
 
     if args.memory_leak:
         print(
