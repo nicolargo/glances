@@ -48,6 +48,10 @@ A first section (called global) is available:
     # History size (maximum number of values)
     # Default is 28800: 1 day with 1 point every 3 seconds
     history_size=28800
+    # Define directory external to glances hierarchy for loading additional plugins
+    # The layout follows the glances standard for plugin definitions
+    # (see <install-dir>glances/plugins for details)
+    # plugin_dir=/home/user/dev/plugins
 
 Each plugin, export module and application monitoring process (AMP) can
 have a section. Below an example for the CPU plugin:
