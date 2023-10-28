@@ -149,14 +149,20 @@ class GlancesStats(object):
 
             return _plugin_list
 
+        path = None
         # Skip section check as implied by has_option
         if config and config.parser.has_option('global', 'plugin_dir'):
             path = config.parser['global']['plugin_dir']
+
+        if args and 'plugin_dir' in args:
+            path = args.plugin_path
+            
+        if path:
             # Get list before starting the counter
             _sys_path = sys.path
             start_duration = Counter()
             # Ensure that plugins can be found in plugin_dir
-            sys.path.insert(1, path)
+            sys.path.insert(0, path)
             for plugin in get_addl_plugins(self, path):
                 start_duration.reset()
                 try:
