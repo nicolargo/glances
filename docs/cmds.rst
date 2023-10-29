@@ -22,6 +22,10 @@ Command-Line Options
 
     path to the configuration file
 
+.. option:: -P plugin directory, --plugins plugin directory
+
+    path to a directory containing additional plugins
+
 .. option:: --modules-list
 
     display modules (plugins & exports) list and exit
