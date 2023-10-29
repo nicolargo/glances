@@ -155,7 +155,7 @@ class GlancesStats(object):
             path = config.parser['global']['plugin_dir']
 
         if args and 'plugin_dir' in args:
-            path = args.plugin_path
+            path = args.plugin_dir
             
         if path:
             # Get list before starting the counter
