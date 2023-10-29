@@ -105,6 +105,10 @@ class GlancesStandalone(object):
             # Init screen
             self.screen = GlancesCursesStandalone(config=config, args=args)
 
+            # If an error occur during the screen init, continue if export option is set
+            # It is done in the screen.init function
+            self._quiet = args.quiet
+
         # Check the latest Glances version
         self.outdated = Outdated(config=config, args=args)
 
