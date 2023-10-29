@@ -141,10 +141,19 @@ class _GlancesCurses(object):
         self.space_between_line = 2
 
         # Init the curses screen
-        self.screen = curses.initscr()
-        if not self.screen:
-            logger.critical("Cannot init the curses library.\n")
-            sys.exit(1)
+        try:
+            self.screen = curses.initscr()
+            if not self.screen:
+                logger.critical("Cannot init the curses library.\n")
+                sys.exit(1)
+        except Exception as e:
+            if args.export:
+                logger.info("Cannot init the curses library, quiet mode on and export.")
+                args.quiet = True
+                return
+            else:
+                logger.critical("Cannot init the curses library ({})".format(e))
+                sys.exit(1)
 
         # Load the 'outputs' section of the configuration file
         # - Init the theme (default is black)
