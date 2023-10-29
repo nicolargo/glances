@@ -111,6 +111,7 @@ Examples of use:
         parser.add_argument('-V', '--version', action='version', version=version)
         parser.add_argument('-d', '--debug', action='store_true', default=False, dest='debug', help='enable debug mode')
         parser.add_argument('-C', '--config', dest='conf_file', help='path to the configuration file')
+        parser.add_argument('-P', '--plugins', dest='plugin_dir', help='path to additional plugin directory')
         # Disable plugin
         parser.add_argument(
             '--modules-list',
