@@ -89,6 +89,7 @@ class _GlancesCurses(object):
         # 'w' > Delete finished warning logs
         'W': {'switch': 'disable_wifi'},
         # 'x' > Delete finished warning and critical logs
+        'Y': {'switch': 'enable_systemd'},
         # 'z' > Enable or disable processes
         # '+' > Increase the process nice level
         # '-' > Decrease the process nice level
@@ -117,6 +118,7 @@ class _GlancesCurses(object):
         'raid',
         'smart',
         'sensors',
+        'systemd',
         'now',
     ]
     _left_sidebar_min_width = 23
