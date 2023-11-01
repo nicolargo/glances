@@ -15,7 +15,7 @@ import sys
 import threading
 import traceback
 from importlib import import_module
-import pkgutil
+import pathlib
 
 from glances.logger import logger
 from glances.globals import exports_path, plugins_path, sys_path
@@ -142,10 +142,16 @@ class GlancesStats(object):
         def get_addl_plugins(self, plugin_path):
             """ Get list of additonal plugins """
             _plugin_list = []
-            for plugin in pkgutil.walk_packages([plugin_path]):
-                # Make sure we only include top-level packages in that directory
-                if plugin.ispkg and not plugin.name.startswith('__') and plugin.module_finder.path == plugin_path:
-                    _plugin_list.append(plugin.name)
+            for plugin in os.listdir(plugin_path):
+                path = os.path.join(plugin_path, plugin)
+                if os.path.isdir(path) and not path.startswith('__'):
+                    # Poor man's walk_pkgs - can't use pkgutil as the module would be already imported here!
+                    for fil in pathlib.Path(path).glob('*.py'):
+                        if fil.is_file():
+                            with open(fil) as fd:
+                                if 'PluginModel' in fd.read():
+                                    _plugin_list.append(plugin)
+                                    break
 
             return _plugin_list
 
@@ -154,7 +160,7 @@ class GlancesStats(object):
         if config and config.parser.has_option('global', 'plugin_dir'):
             path = config.parser['global']['plugin_dir']
 
-        if args and 'plugin_dir' in args:
+        if args and 'plugin_dir' in args and args.plugin_dir:
             path = args.plugin_dir
             
         if path:
@@ -164,19 +170,22 @@ class GlancesStats(object):
             # Ensure that plugins can be found in plugin_dir
             sys.path.insert(0, path)
             for plugin in get_addl_plugins(self, path):
-                start_duration.reset()
-                try:
-                    _mod_loaded = import_module(plugin+'.model')
-                    self._plugins[plugin] = _mod_loaded.PluginModel(args=args, config=config)
-                    logger.debug("Plugin {} started in {} seconds".format(plugin, start_duration.get()))
-                except Exception as e:
-                    # If a plugin can not be loaded, display a critical message
-                    # on the console but do not crash
-                    logger.critical("Error while initializing the {} plugin ({})".format(plugin, e))
-                    logger.error(traceback.format_exc())
-                    # An error occurred, disable the plugin
-                    if args:
-                        setattr(args, 'disable_' + plugin, False)
+                if plugin in sys.modules:
+                    logger.warn(f"Pugin {plugin} already in sys.modules, skipping (workaround: rename plugin)")
+                else:
+                    start_duration.reset()
+                    try:
+                        _mod_loaded = import_module(plugin+'.model')
+                        self._plugins[plugin] = _mod_loaded.PluginModel(args=args, config=config)
+                        logger.debug("Plugin {} started in {} seconds".format(plugin, start_duration.get()))
+                    except Exception as e:
+                        # If a plugin can not be loaded, display a critical message
+                        # on the console but do not crash
+                        logger.critical("Error while initializing the {} plugin ({})".format(plugin, e))
+                        logger.error(traceback.format_exc())
+                        # An error occurred, disable the plugin
+                        if args:
+                            setattr(args, 'disable_' + plugin, False)
 
             sys.path = _sys_path
             # Log plugins list
