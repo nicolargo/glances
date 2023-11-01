@@ -179,5 +179,19 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line('For an exhaustive list of key bindings:'))
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line('https://glances.readthedocs.io/en/latest/cmds.html#interactive-commands'))
+        ret.append(self.curse_new_line())
+
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line('Colors binding:'))
+        ret.append(self.curse_new_line())
+        for c in ['DEFAULT', 'UNDERLINE', 'BOLD', 'SORT', 'OK', 'MAX', 'FILTER', 'TITLE', 'PROCESS', 'PROCESS_SELECTED',
+                  'STATUS', 'NICE', 'CPU_TIME', 'CAREFUL', 'WARNING', 'CRITICAL', 'OK_LOG', 'CAREFUL_LOG',
+                  'WARNING_LOG', 'CRITICAL_LOG', 'PASSWORD', 'SELECTED', 'INFO', 'ERROR', 'SEPARATOR']:
+            ret.append(self.curse_add_line(c, decoration=c))
+            if c == 'CPU_TIME':
+                ret.append(self.curse_new_line())
+            else:
+                ret.append(self.curse_add_line(' '))
+
         # Return the message with decoration
         return ret

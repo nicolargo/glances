@@ -101,7 +101,15 @@ class _GlancesCurses(object):
     _sort_loop = sort_processes_key_list
 
     # Define top menu
-    _top = ['quicklook', 'cpu', 'percpu', 'gpu', 'mem', 'memswap', 'load']
+    _top = [
+        'quicklook',
+        'cpu',
+        'percpu',
+        'gpu',
+        'mem',
+        'memswap',
+        'load'
+    ]
     _quicklook_max_width = 68
 
     # Define left sidebar
@@ -123,7 +131,13 @@ class _GlancesCurses(object):
     _left_sidebar_max_width = 34
 
     # Define right sidebar
-    _right_sidebar = ['containers', 'processcount', 'amps', 'processlist', 'alert']
+    _right_sidebar = [
+        'containers',
+        'processcount',
+        'amps',
+        'processlist',
+        'alert'
+    ]
 
     def __init__(self, config=None, args=None):
         # Init
@@ -245,6 +259,9 @@ class _GlancesCurses(object):
 
         if curses.has_colors():
             # The screen is compatible with a colored design
+            # ex: export TERM=xterm-256color
+            #     export TERM=xterm-color
+
             if self.is_theme('white'):
                 # White theme: black ==> white
                 curses.init_pair(1, curses.COLOR_BLACK, -1)
@@ -253,36 +270,36 @@ class _GlancesCurses(object):
             if self.args.disable_bg:
                 curses.init_pair(2, curses.COLOR_RED, -1)
                 curses.init_pair(3, curses.COLOR_GREEN, -1)
-                curses.init_pair(4, curses.COLOR_BLUE, -1)
                 curses.init_pair(5, curses.COLOR_MAGENTA, -1)
             else:
                 curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_RED)
                 curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
-                curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLUE)
                 curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
+            curses.init_pair(4, curses.COLOR_BLUE, -1)
             curses.init_pair(6, curses.COLOR_RED, -1)
             curses.init_pair(7, curses.COLOR_GREEN, -1)
-            curses.init_pair(8, curses.COLOR_BLUE, -1)
+            curses.init_pair(8, curses.COLOR_MAGENTA, -1)
 
             # Colors text styles
             self.no_color = curses.color_pair(1)
             self.default_color = curses.color_pair(3) | A_BOLD
-            self.nice_color = curses.color_pair(5)
-            self.cpu_time_color = curses.color_pair(5)
+            self.nice_color = curses.color_pair(8)
+            self.cpu_time_color = curses.color_pair(8)
             self.ifCAREFUL_color = curses.color_pair(4) | A_BOLD
             self.ifWARNING_color = curses.color_pair(5) | A_BOLD
             self.ifCRITICAL_color = curses.color_pair(2) | A_BOLD
             self.default_color2 = curses.color_pair(7)
-            self.ifCAREFUL_color2 = curses.color_pair(8) | A_BOLD
-            self.ifWARNING_color2 = curses.color_pair(5) | A_BOLD
+            self.ifCAREFUL_color2 = curses.color_pair(4)
+            self.ifWARNING_color2 = curses.color_pair(8) | A_BOLD
             self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
-            self.ifINFO_color = curses.color_pair(8)
+            self.ifINFO_color = curses.color_pair(4)
             self.filter_color = A_BOLD
             self.selected_color = A_BOLD
+            self.separator = curses.color_pair(1)
 
-            if curses.COLOR_PAIRS > 8:
-                colors_list = [curses.COLOR_MAGENTA,
-                               curses.COLOR_CYAN,
+            if curses.COLORS > 8:
+                # ex: export TERM=xterm-256color
+                colors_list = [curses.COLOR_CYAN,
                                curses.COLOR_YELLOW]
                 for i in range(0, 3):
                     try:
@@ -292,29 +309,27 @@ class _GlancesCurses(object):
                             curses.init_pair(i + 9, curses.COLOR_BLACK, -1)
                         else:
                             curses.init_pair(i + 9, curses.COLOR_WHITE, -1)
-                self.nice_color = curses.color_pair(9)
-                self.cpu_time_color = curses.color_pair(9)
-                self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
-                self.filter_color = curses.color_pair(10) | A_BOLD
-                self.selected_color = curses.color_pair(11) | A_BOLD
+                self.filter_color = curses.color_pair(9) | A_BOLD
+                self.selected_color = curses.color_pair(10) | A_BOLD
                 # Define separator line style
-                curses.init_color(12, 500, 500, 500)
-                curses.init_pair(12, curses.COLOR_BLACK, -1)
-                self.separator = curses.color_pair(12)
+                curses.init_color(11, 500, 500, 500)
+                curses.init_pair(11, curses.COLOR_BLACK, -1)
+                self.separator = curses.color_pair(11)
 
         else:
             # The screen is NOT compatible with a colored design
             # switch to B&W text styles
+            # ex: export TERM=xterm-mono
             self.no_color = curses.A_NORMAL
             self.default_color = curses.A_NORMAL
             self.nice_color = A_BOLD
             self.cpu_time_color = A_BOLD
-            self.ifCAREFUL_color = curses.A_UNDERLINE
-            self.ifWARNING_color = A_BOLD
+            self.ifCAREFUL_color = A_BOLD
+            self.ifWARNING_color = curses.A_UNDERLINE
             self.ifCRITICAL_color = curses.A_REVERSE
             self.default_color2 = curses.A_NORMAL
-            self.ifCAREFUL_color2 = curses.A_UNDERLINE
-            self.ifWARNING_color2 = A_BOLD
+            self.ifCAREFUL_color2 = A_BOLD
+            self.ifWARNING_color2 = curses.A_UNDERLINE
             self.ifCRITICAL_color2 = curses.A_REVERSE
             self.ifINFO_color = A_BOLD
             self.filter_color = A_BOLD
