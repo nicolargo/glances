@@ -106,7 +106,7 @@ class GlancesEvents(object):
         event_index = self.__event_exist(event_type)
         if event_index < 0:
             # Event did not exist, add it
-            self._create_event(event_state, event_type, event_value, proc_list, proc_desc, peak_time)
+            self._create_event(event_state, event_type, event_value, proc_desc)
         else:
             # Event exist, update it
             self._update_event(event_index,
@@ -114,7 +114,7 @@ class GlancesEvents(object):
 
         return self.len()
 
-    def _create_event(self, event_state, event_type, event_value, proc_list, proc_desc, peak_time):
+    def _create_event(self, event_state, event_type, event_value, proc_desc):
         """Add a new item in the log list.
 
         Item is added only if the criticality (event_state) is WARNING or CRITICAL.
