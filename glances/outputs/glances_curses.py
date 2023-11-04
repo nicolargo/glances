@@ -158,6 +158,8 @@ class _GlancesCurses(object):
             if not self.screen:
                 logger.critical("Cannot init the curses library.\n")
                 sys.exit(1)
+            else:
+                logger.debug("Curses library initialized with term: {}".format(curses.longname()))
         except Exception as e:
             if args.export:
                 logger.info("Cannot init the curses library, quiet mode on and export.")
@@ -1272,7 +1274,7 @@ class _GlancesCurses(object):
 
     def wait(self, delay=100):
         """Wait delay in ms"""
-        curses.napms(100)
+        curses.napms(delay)
 
     def get_stats_display_width(self, curse_msg, without_option=False):
         """Return the width of the formatted curses message."""
