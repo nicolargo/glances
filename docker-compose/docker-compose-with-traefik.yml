@@ -25,15 +25,16 @@ services:
       - "/run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro"
       - "./glances.conf:/glances/conf/glances.conf"
     environment:
-      - GLANCES_OPT: "-C /glances/conf/glances.conf -w"
-      - TZ: "${TZ}"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+      - TZ=${TZ}
+      - "GLANCES_OPT=-C /glances/conf/glances.conf -w"
+    # Uncomment for GPU compatibilty (Nvidia) inside the container
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
     labels:
       - "traefik.port=61208"
       - "traefik.frontend.rule=Host:glances.docker.localhost"
