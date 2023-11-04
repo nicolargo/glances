@@ -73,7 +73,7 @@ class GlancesPluginModel(object):
         # Internal or external module (former prefixed by 'glances.plugins')
         _mod = self.__class__.__module__.replace('glances.plugins.', '')
         self.plugin_name = _mod.split('.')[0]
-        
+
         if self.plugin_name.startswith('glances_'):
             self.plugin_name = self.plugin_name.split('glances_')[1]
         logger.debug("Init {} plugin".format(self.plugin_name))
@@ -689,7 +689,7 @@ class GlancesPluginModel(object):
             # Add _LOG to the return string
             # So stats will be highlighted with a specific color
             log_str = "_LOG"
-            # Add the log to the list
+            # Add the log to the events list
             glances_events.add(ret, stat_name.upper(), value)
 
         # Manage threshold

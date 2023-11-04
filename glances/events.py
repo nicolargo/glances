@@ -13,6 +13,7 @@ import time
 from datetime import datetime
 
 from glances.processes import glances_processes, sort_stats
+from glances.logger import logger
 
 
 class GlancesEvents(object):
@@ -108,7 +109,8 @@ class GlancesEvents(object):
             self._create_event(event_state, event_type, event_value, proc_list, proc_desc, peak_time)
         else:
             # Event exist, update it
-            self._update_event(event_index, event_state, event_type, event_value, proc_list, proc_desc, peak_time)
+            self._update_event(event_index,
+                               event_state, event_type, event_value, proc_list, proc_desc, peak_time)
 
         return self.len()
 
@@ -128,7 +130,7 @@ class GlancesEvents(object):
                 time.mktime(datetime.now().timetuple()),  # START DATE
                 -1,  # END DATE
                 event_state,  # STATE: WARNING|CRITICAL
-                event_type,  # TYPE: CPU, LOAD, MEM...
+                event_type,   # TYPE: CPU, LOAD, MEM...
                 event_value,  # MAX
                 event_value,  # AVG
                 event_value,  # MIN

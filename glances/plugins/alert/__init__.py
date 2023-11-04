@@ -183,7 +183,7 @@ class PluginModel(GlancesPluginModel):
 
         # Set the maximum number of events to display
         if config is not None and (config.has_section('alert') or config.has_section('alerts')):
-            glances_events.set_max_events(config.get_int_value('alert', 'max_events'))
+            glances_events.set_max_events(config.get_int_value('alert', 'max_events', default=10))
 
     def update(self):
         """Nothing to do here. Just return the global glances_log."""
@@ -211,6 +211,7 @@ class PluginModel(GlancesPluginModel):
             # New line
             ret.append(self.curse_new_line())
             # Start
+            # TODO: Related to #2591, manege TZ in order to make it work inside containers
             msg = str(datetime.fromtimestamp(alert[0]))
             ret.append(self.curse_add_line(msg))
             # Duration
