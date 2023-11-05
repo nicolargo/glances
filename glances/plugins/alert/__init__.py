@@ -10,6 +10,8 @@
 """Alert plugin."""
 
 from datetime import datetime
+from time import tzname
+import pytz
 
 from glances.logger import logger
 from glances.events import glances_events
@@ -211,8 +213,8 @@ class PluginModel(GlancesPluginModel):
             # New line
             ret.append(self.curse_new_line())
             # Start
-            # TODO: Related to #2591, manege TZ in order to make it work inside containers
-            msg = str(datetime.fromtimestamp(alert[0]))
+            msg = str(datetime.fromtimestamp(alert[0],
+                                             tz=pytz.timezone(tzname[0] if tzname[0] else 'UTC')))
             ret.append(self.curse_add_line(msg))
             # Duration
             if alert[1] > 0:
