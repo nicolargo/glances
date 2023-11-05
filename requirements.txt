@@ -4,3 +4,4 @@ packaging
 ujson<4; python_version >= "3.5" and python_version < "3.6"
 ujson<5; python_version >= "3.6" and python_version < "3.7"
 ujson>=5.4.0; python_version >= "3.7"
+pytz
