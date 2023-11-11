@@ -11,6 +11,7 @@
                 <div class="table-row" v-for="(alert, alertId) in alerts" :key="alertId">
                     <div class="table-cell text-left">
                         {{ formatDate(alert.begin) }}
+                        {{ alert.tz }}
                         ({{ alert.ongoing ? 'ongoing' : alert.duration }}) -
                         <span v-show="!alert.ongoing"> {{ alert.level }} on </span>
                         <span :class="alert.level.toLowerCase()">
@@ -41,10 +42,11 @@ export default {
         alerts() {
             return (this.stats || []).map((alertalertStats) => {
                 const alert = {};
+                var tzoffset = new Date().getTimezoneOffset();
                 alert.name = alertalertStats[3];
                 alert.level = alertalertStats[2];
-                alert.begin = alertalertStats[0] * 1000;
-                alert.end = alertalertStats[1] * 1000;
+                alert.begin = alertalertStats[0] * 1000 - tzoffset * 60 * 1000;
+                alert.end = alertalertStats[1] * 1000 - tzoffset * 60 * 1000;
                 alert.ongoing = alertalertStats[1] == -1;
                 alert.min = alertalertStats[6];
                 alert.mean = alertalertStats[5];
