@@ -101,8 +101,10 @@ Optional dependencies:
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB version 1 export module)
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
+- ``jinja2`` (for templating, used under the hood by FastAPI)
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces`` (for the IP plugin)
+- ``orjson`` (fast JSON library, used under the hood by FastAPI)
 - ``py3nvml`` (for the GPU plugin)
 - ``pycouchdb`` (for the CouchDB export module)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
@@ -319,7 +321,7 @@ Start Termux on your device and enter:
     $ apt update
     $ apt upgrade
     $ apt install clang python
-    $ pip install fastapi uvicorn
+    $ pip install fastapi uvicorn orjson jinja2
     $ pip install glances
 
 And start Glances:

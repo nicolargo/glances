@@ -46,6 +46,8 @@ def get_install_requires():
     if sys.platform.startswith('win'):
         requires.append('fastapi')
         requires.append('uvicorn')
+        requires.append('orjson')
+        requires.append('jinja2')
         requires.append('requests')
 
     return requires
@@ -68,7 +70,7 @@ def get_install_extras_require():
         'smart': ['pySMART.smartx'],
         'snmp': ['pysnmp'],
         'sparklines': ['sparklines'],
-        'web': ['fastapi', 'uvicorn', 'requests'],
+        'web': ['fastapi', 'uvicorn', 'jinja2', 'orjson', 'requests'],
         'wifi': ['wifi']
     }
     if sys.platform.startswith('linux'):

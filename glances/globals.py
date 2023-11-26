@@ -315,10 +315,10 @@ def json_dumps(data):
         return ujson.dumps(data, ensure_ascii=False)
 
 
-def json_dumps_dictlist(data, item):
+def dictlist(data, item):
     if isinstance(data, dict):
         try:
-            return json_dumps({item: data[item]})
+            return {item: data[item]}
         except (TypeError, IndexError, KeyError):
             return None
     elif isinstance(data, list):
@@ -326,11 +326,19 @@ def json_dumps_dictlist(data, item):
             # Source:
             # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
             # But https://github.com/nicolargo/glances/issues/1401
-            return json_dumps({item: list(map(itemgetter(item), data))})
+            return {item: list(map(itemgetter(item), data))}
         except (TypeError, IndexError, KeyError):
             return None
     else:
         return None
+
+
+def json_dumps_dictlist(data, item):
+    dl = dictlist(data, item)
+    if dl is None:
+        return None
+    else:
+        return json_dumps(dl)
 
 
 def string_value_to_float(s):
