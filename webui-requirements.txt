@@ -1,4 +1,5 @@
 # install with base requirements file
 -r requirements.txt
 
-bottle
+fastapi; python_version >= "3.8"
+uvicorn; python_version >= "3.8"

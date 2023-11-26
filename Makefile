@@ -80,6 +80,9 @@ test-min: ## Run unit tests in minimal environment
 test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in minimal environment
 	./venv-min/bin/python ./unitest.py
 
+test-restful-api: ## Run unit tests of the RESTful API
+	./venv-min/bin/python ./unitest-restful.py
+
 # ===================================================================
 # Linters and profilers
 # ===================================================================

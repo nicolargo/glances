@@ -53,16 +53,28 @@ parts:
     override-pull: |
       snapcraftctl pull
       "$SNAPCRAFT_STAGE"/scriptlets/selective-checkout
-  bottle:
+
+  fastapi:
     plugin: python
-    source: https://github.com/bottlepy/bottle.git
-    source-branch: release-0.12
+    source: https://github.com/tiangolo/fastapi.git
+    source-tag: '0.104.1'
     source-depth: 1
     override-build: |
       mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/bottle-dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/fastapi-dist
     organize:
-      bottle-dist: bottle/dist
+      fastapi-dist: fastapi/dist
+
+  uvicorn:
+    plugin: python
+    source: https://github.com/encode/uvicorn.git
+    source-tag: '0.24.0.post1'
+    source-depth: 1
+    override-build: |
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/uvicorn-dist
+    organize:
+      uvicorn-dist: uvicorn/dist
 
   docker:
     plugin: python
