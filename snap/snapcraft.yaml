@@ -76,6 +76,28 @@ parts:
     organize:
       uvicorn-dist: uvicorn/dist
 
+  orjson:
+    plugin: python
+    source: https://github.com/ijl/orjson.git
+    source-tag: '3.9.10'
+    source-depth: 1
+    override-build: |
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/orjson-dist
+    organize:
+      orjson-dist: orjson/dist
+
+  jinja2:
+    plugin: python
+    source: https://github.com/pallets/jinja.git
+    source-tag: '3.1.2'
+    source-depth: 1
+    override-build: |
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/jinja2-dist
+    organize:
+      jinja2-dist: jinja2/dist
+
   docker:
     plugin: python
     source: https://github.com/docker/docker-py.git

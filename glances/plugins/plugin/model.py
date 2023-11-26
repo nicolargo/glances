@@ -16,7 +16,7 @@ I am your father...
 import re
 import copy
 
-from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr, json_dumps, json_dumps_dictlist
+from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr, json_dumps, json_dumps_dictlist, dictlist
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
@@ -395,6 +395,13 @@ class GlancesPluginModel(object):
         """Return the stats object in JSON format."""
         return self.get_stats()
 
+    def get_raw_stats_item(self, item):
+        """Return the stats object for a specific item in RAW format.
+
+        Stats should be a list of dict (processlist, network...)
+        """
+        return dictlist(self.stats, item)
+
     def get_stats_item(self, item):
         """Return the stats object for a specific item in JSON format.
 
@@ -402,8 +409,8 @@ class GlancesPluginModel(object):
         """
         return json_dumps_dictlist(self.stats, item)
 
-    def get_stats_value(self, item, value):
-        """Return the stats object for a specific item=value in JSON format.
+    def get_raw_stats_value(self, item, value):
+        """Return the stats object for a specific item=value.
 
         Stats should be a list of dict (processlist, network...)
         """
@@ -413,10 +420,21 @@ class GlancesPluginModel(object):
             if not isinstance(value, int) and value.isdigit():
                 value = int(value)
             try:
-                return json_dumps({value: [i for i in self.stats if i[item] == value]})
+                return {value: [i for i in self.stats if i[item] == value]}
             except (KeyError, ValueError) as e:
                 logger.error("Cannot get item({})=value({}) ({})".format(item, value, e))
                 return None
+
+    def get_stats_value(self, item, value):
+        """Return the stats object for a specific item=value in JSON format.
+
+        Stats should be a list of dict (processlist, network...)
+        """
+        rsv = self.get_raw_stats_value(item, value)
+        if rsv is None:
+            return None
+        else:
+            return json_dumps(rsv)
 
     def update_views_hidden(self):
         """Update the hidden views
