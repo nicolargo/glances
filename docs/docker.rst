@@ -28,7 +28,7 @@ Available tags (all images are based on both Alpine and Ubuntu Operating System)
    * - `latest`
      - Alpine
      - Latest Release
-     - Minimal + (Bottle & Docker)
+     - Minimal + (FastAPI & Docker)
    * - `dev`
      - Alpine
      - develop
@@ -40,7 +40,7 @@ Available tags (all images are based on both Alpine and Ubuntu Operating System)
    * - `ubuntu-latest`
      - Ubuntu
      - Latest Release
-     - Minimal + (Bottle & Docker)
+     - Minimal + (FastAPI & Docker)
    * - `ubuntu-dev`
      - Ubuntu
      - develop
