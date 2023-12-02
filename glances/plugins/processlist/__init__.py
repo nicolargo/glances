@@ -135,6 +135,15 @@ class PluginModel(GlancesPluginModel):
         """Return the key of the list."""
         return 'pid'
 
+    def get_raw(self):
+        """Overwrite the default get_raw methode in order to return dict in the values.
+        for example:
+        pmem(rss=6377472, vms=13946880, shared=4100096, text=913408, lib=0, data=2289664, dirty=0)
+        will be replaced by:
+        {'rss': 6377472, 'vms': 13946880, 'shared': 4100096, 'text': 913408, 'lib': 0, 'data': 2289664, 'dirty': 0}
+        """
+        return [{k: (v._asdict() if hasattr(v, '_asdict') else v) for k, v in p.items()} for p in self.stats]
+
     def update(self):
         """Update processes stats using the input method."""
         # Init new stats
