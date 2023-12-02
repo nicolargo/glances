@@ -84,15 +84,19 @@ class GlancesRestfulApi(object):
                                 self.url_prefix)
 
         # FastAPI Init
-        self._app = FastAPI(dependencies=[Depends(self.authentication)])
+        if self.args.password:
+            self._app = FastAPI(dependencies=[Depends(self.authentication)])
+        else:
+            self._app = FastAPI()
+
+        # Change the default root path
         if self.url_prefix != '/':
             self._app.include_router(APIRouter(prefix=self.url_prefix))
 
         # Set path for WebUI
-        # self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/public')
-        self.STATIC_PATH = 'static/public'
+        self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/public')
         # TEMPLATE_PATH.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/templates'))
-        self.TEMPLATE_PATH = 'static/templates'
+        self.TEMPLATE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/templates')
         self._templates = Jinja2Templates(directory=self.TEMPLATE_PATH)
 
         # FastAPI Enable CORS
@@ -133,6 +137,7 @@ class GlancesRestfulApi(object):
         return self._app()
 
     # TODO: the password comparaison is not working for the moment.
+    #       if the password is wrong, authentication is working...
     # Perahps because the password is hashed in the GlancesPassword class
     # and the one given by creds.password is not hashed ?
     def authentication(self, creds: Annotated[HTTPBasicCredentials, Depends(security)]):
