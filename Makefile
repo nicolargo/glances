@@ -81,7 +81,7 @@ test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in mi
 	./venv-min/bin/python ./unitest.py
 
 # ===================================================================
-# Linters and profilers
+# Linters, profilers and cyber security
 # ===================================================================
 
 format: ## Format the code
@@ -122,6 +122,10 @@ memory-profiling: ## Profile memory usage
 	./venv-dev/bin/mprof run -T 1 -C run.py -C ./conf/glances.conf --disable-history --stop-after 2400 --quiet
 	./venv-dev/bin/mprof plot --output ./docs/_static/glances-memory-profiling-without-history.png
 	rm -f mprofile_*.dat
+
+# Trivy installation: https://aquasecurity.github.io/trivy/latest/getting-started/installation/
+trivy: ## Run Trivy to find vulnerabilities in container images
+	trivy fs .
 
 # ===================================================================
 # Docs
