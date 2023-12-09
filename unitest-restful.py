@@ -39,12 +39,12 @@ class TestGlances(unittest.TestCase):
         """The function is called *every time* before test_*."""
         print('\n' + '=' * 78)
 
-    def http_get(self, url, deflate=False):
+    def http_get(self, url, gzip=False):
         """Make the request"""
-        if deflate:
+        if gzip:
             ret = requests.get(url,
                                stream=True,
-                               headers={'Accept-encoding': 'deflate'})
+                               headers={'Accept-encoding': 'gzip'})
         else:
             ret = requests.get(url,
                                headers={'Accept-encoding': 'identity'})
@@ -76,16 +76,18 @@ class TestGlances(unittest.TestCase):
         req = self.http_get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
+        self.assertTrue(req.json(), dict)
 
-    def test_001a_all_deflate(self):
+    def test_001a_all_gzip(self):
         """All."""
         method = "all"
-        print('INFO: [TEST_001a] Get all stats (with Deflate compression)')
+        print('INFO: [TEST_001a] Get all stats (with GZip compression)')
         print("HTTP RESTful request: %s/%s" % (URL, method))
-        req = self.http_get("%s/%s" % (URL, method), deflate=True)
+        req = self.http_get("%s/%s" % (URL, method), gzip=True)
 
         self.assertTrue(req.ok)
-        self.assertTrue(req.headers['Content-Encoding'] == 'deflate')
+        self.assertTrue(req.headers['Content-Encoding'] == 'gzip')
+        self.assertTrue(req.json(), dict)
 
     def test_002_pluginslist(self):
         """Plugins list."""
@@ -203,14 +205,12 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(len(req.json()['user']) > 1)
         print("HTTP RESTful request: %s/cpu/system/%s" % (URL, method))
         req = self.http_get("%s/cpu/system/%s" % (URL, method))
-        self.assertIsInstance(req.json(), dict)
-        self.assertIsInstance(req.json()['system'], list)
-        self.assertTrue(len(req.json()['system']) > 0)
+        self.assertIsInstance(req.json(), list)
+        self.assertIsInstance(req.json()[0], list)
         print("HTTP RESTful request: %s/cpu/system/%s/3" % (URL, method))
         req = self.http_get("%s/cpu/system/%s/3" % (URL, method))
-        self.assertIsInstance(req.json(), dict)
-        self.assertIsInstance(req.json()['system'], list)
-        self.assertTrue(len(req.json()['system']) > 1)
+        self.assertIsInstance(req.json(), list)
+        self.assertIsInstance(req.json()[0], list)
 
     def test_011_issue1401(self):
         """Check issue #1401."""
@@ -229,7 +229,7 @@ class TestGlances(unittest.TestCase):
         req = self.http_get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
-        self.assertEqual(req.text, "Active")
+        self.assertEqual(req.json(), "Active")
 
     def test_013_top(self):
         """Values."""

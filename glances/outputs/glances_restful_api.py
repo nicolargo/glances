@@ -111,6 +111,8 @@ class GlancesRestfulApi(object):
 
         # FastAPI Enable GZIP compression
         # https://fastapi.tiangolo.com/advanced/middleware/
+        # TODO: do not work for the moment
+        # curl return a binary stream, not the JSON
         self._app.add_middleware(GZipMiddleware,
                                  minimum_size=1000)
 
@@ -509,9 +511,8 @@ class GlancesRestfulApi(object):
         self.__update__()
 
         try:
-            # TODO: to be refactor to not return a JSON object
-            # Get the JSON value of the stat ID
-            statval = self.stats.get_plugin(plugin).get_stats_history(nb=int(nb))
+            # Get the RAW value of the stat ID
+            statval = self.stats.get_plugin(plugin).get_raw_history(nb=int(nb))
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -610,7 +611,7 @@ class GlancesRestfulApi(object):
 
         try:
             # Get the RAW value of the stat history
-            ret = self.stats.get_plugin(plugin).get_stats_history(item, nb=nb)
+            ret = self.stats.get_plugin(plugin).get_raw_history(item, nb=nb)
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
