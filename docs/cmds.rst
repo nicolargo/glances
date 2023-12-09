@@ -224,7 +224,7 @@ Command-Line Options
 
 .. option:: --disable-check-update
 
-    disable online Glances version ckeck
+    disable online Glances version check
 
 Interactive Commands
 --------------------
