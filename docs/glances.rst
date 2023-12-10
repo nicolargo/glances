@@ -11,12 +11,12 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-**glances** is a cross-platform curses-based monitoring tool which aims
-to present a maximum of information in a minimum of space, ideally to
-fit in a classical 80x24 terminal or higher to have additional
-information. It can adapt dynamically the displayed information
-depending on the terminal size. It can also work in client/server mode.
-Remote monitoring could be done via terminal or web interface.
+**glances** is a cross-platform curses-based monitoring tool that aims
+to present a maximum of information in a minimum of space, ideally fitting
+in a classic 80x24 terminal or larger for more details. It can adapt
+dynamically to the displayed information depending on the terminal size.
+It can also work in client/server mode.
+Remote monitoring can be performed via a terminal or web interface.
 
 **glances** is written in Python and uses the *psutil* library to get
 information from your system.
@@ -38,19 +38,20 @@ Monitor local machine (standalone mode):
 
     $ glances
 
-Monitor local machine with the web interface (Web UI), run the following command line:
+To monitor the local machine with the web interface (Web UI),
+, run the following command line:
 
     $ glances -w
 
-and open a Web browser with the returned URL
+then, open a web browser to the provided URL.
 
 Monitor local machine and export stats to a CSV file:
 
     $ glances --export csv --export-csv-file /tmp/glances.csv
 
-Monitor local machine and export stats to a InfluxDB server with 5s
+Monitor local machine and export stats to an InfluxDB server with 5s
 refresh time (also possible to export to OpenTSDB, Cassandra, Statsd,
-ElasticSearch, RabbitMQ and Riemann):
+ElasticSearch, RabbitMQ, and Riemann):
 
     $ glances -t 5 --export influxdb
 

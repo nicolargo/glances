@@ -3,7 +3,9 @@
 Docker
 ======
 
-Glances can be installed through Docker, allowing you to run it without installing all the python dependencies directly on your system. Once you have `docker installed <https://docs.docker.com/install/>`_, you can
+Glances can be installed through Docker, allowing you to run it without
+installing all the Python dependencies directly on your system. Once you
+have `docker installed <https://docs.docker.com/install/>`_, you can
 
 Get the Glances container:
 
@@ -11,7 +13,7 @@ Get the Glances container:
 
     docker pull nicolargo/glances:<version or tag>
 
-Available tags (all images are based on both Alpine and Ubuntu Operating System):
+Available tags (all images are based on both Alpine and Ubuntu Operating Systems):
 
 .. list-table::
    :widths: 25 15 25 35
@@ -47,13 +49,13 @@ Available tags (all images are based on both Alpine and Ubuntu Operating System)
      - Full
 
 .. warning::
-    Tags containing `dev` target the `develop` branch directly and could be unstable.
+    Tags containing `dev` directly target the `develop` branch and could be unstable.
 
 For example, if you want a full Alpine Glances image (latest release) with all dependencies, go for `latest-full`.
 
 You can also specify a version (example: 3.4.0). All available versions can be found on `DockerHub`_.
 
-An Example to pull the `latest` tag:
+An example of how to pull the `latest` tag:
 
 .. code-block:: console
 
@@ -81,7 +83,7 @@ Alternatively, you can specify something along the same lines with docker run op
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
-Glances by default, uses the container's OS information in the UI. If you want to display the host's OS info, you can do that by mounting `/etc/os-release` into the container.
+Glances by default uses the container's OS information in the UI. If you want to display the host's OS info, you can do that by mounting `/etc/os-release` into the container.
 
 Here is a simple docker run example for that:
 
@@ -97,7 +99,7 @@ Run the container in *Web server mode* (notice the `GLANCES_OPT` environment var
 
 Note: if you want to see the network interface stats within the container, add --net=host --privileged
 
-You can also include Glances container in you own `docker-compose.yml`. Here's a realistic example including a "traefik" reverse proxy serving an "whoami" app container plus a Glances container, providing a simple and efficient monitoring webui.
+You can also include Glances container in you own `docker-compose.yml`. A realistic example includes a "traefik" reverse proxy serving an "whoami" app container plus a Glances container, providing a simple and efficient monitoring webui.
 
 .. code-block:: console
 
