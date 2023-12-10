@@ -35,12 +35,12 @@ glances \- An eye on your system
 \fBglances\fP [OPTIONS]
 .SH DESCRIPTION
 .sp
-\fBglances\fP is a cross\-platform curses\-based monitoring tool which aims
-to present a maximum of information in a minimum of space, ideally to
-fit in a classical 80x24 terminal or higher to have additional
-information. It can adapt dynamically the displayed information
-depending on the terminal size. It can also work in client/server mode.
-Remote monitoring could be done via terminal or web interface.
+\fBglances\fP is a cross\-platform curses\-based monitoring tool that aims
+to present a maximum of information in a minimum of space, ideally fitting
+in a classic 80x24 terminal or larger for more details. It can adapt
+dynamically to the displayed information depending on the terminal size.
+It can also work in client/server mode.
+Remote monitoring can be performed via a terminal or web interface.
 .sp
 \fBglances\fP is written in Python and uses the \fIpsutil\fP library to get
 information from your system.
@@ -54,7 +54,7 @@ show this help message and exit
 .INDENT 0.0
 .TP
 .B \-V, \-\-version
-show program’s version number and exit
+show the program’s version number and exit
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -79,22 +79,22 @@ display modules (plugins & exports) list and exit
 .INDENT 0.0
 .TP
 .B \-\-disable\-plugin PLUGIN
-disable PLUGIN (comma separated list)
+disable PLUGIN (comma\-separated list)
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-\-enable\-plugin PLUGIN
-enable PLUGIN (comma separated list)
+enable PLUGIN (comma\-separated list)
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-\-stdout PLUGINS_STATS
-display stats to stdout (comma separated list of plugins/plugins.attribute)
+display stats to stdout (comma\-separated list of plugins/plugins.attribute)
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-\-export EXPORT
-enable EXPORT module (comma separated list)
+enable EXPORT module (comma\-separated list)
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -119,7 +119,7 @@ disable the Web UI (only the RESTful API will respond)
 .INDENT 0.0
 .TP
 .B \-\-light, \-\-enable\-light
-light mode for Curses UI (disable all but top menu)
+light mode for Curses UI (disable all but the top menu)
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -149,7 +149,7 @@ disable all but quick look and load
 .INDENT 0.0
 .TP
 .B \-5, \-\-disable\-top
-disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
+disable top menu (QuickLook, CPU, MEM, SWAP, and LOAD)
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -284,12 +284,12 @@ force short name for processes name
 .INDENT 0.0
 .TP
 .B \-\-hide\-kernel\-threads
-hide kernel threads in process list (not available on Windows)
+hide kernel threads in the process list (not available on Windows)
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-b, \-\-byte
-display network rate in byte per second
+display network rate in bytes per second
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -314,7 +314,7 @@ display FS free space instead of used
 .INDENT 0.0
 .TP
 .B \-\-theme\-white
-optimize display colors for white background
+optimize display colors for a white background
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -336,7 +336,7 @@ On macOS please use \fBCTRL\-H\fP to delete filter.
 .UNINDENT
 .UNINDENT
 .sp
-Filter is a regular expression pattern:
+The filter is a regular expression pattern:
 .INDENT 7.0
 .IP \(bu 2
 \fBgnome\fP: matches all processes starting with the \fBgnome\fP
@@ -358,7 +358,7 @@ If CPU iowait \fB>60%\fP, sort processes by I/O read and write
 .UNINDENT
 .TP
 .B \fBA\fP
-Enable/disable Application Monitoring Process
+Enable/disable the Application Monitoring Process
 .TP
 .B \fBb\fP
 Switch between bit/s or Byte/s for network I/O
@@ -382,7 +382,7 @@ Enable/disable Docker stats
 Enable/disable top extended stats
 .TP
 .B \fBE\fP
-Erase current process filter
+Erase the current process filter
 .TP
 .B \fBf\fP
 Show/hide file system and folder monitoring stats
@@ -460,7 +460,7 @@ Enable/disable spark lines
 Sort process by CPU times (TIME+)
 .TP
 .B \fBT\fP
-View network I/O as combination
+View network I/O as a combination
 .TP
 .B \fBu\fP
 Sort processes by USER
@@ -483,13 +483,13 @@ Show/hide processes stats
 .B \fB0\fP
 Enable/disable Irix/Solaris mode
 .sp
-Task’s CPU usage will be divided by the total number of CPUs
+The task’s CPU usage will be divided by the total number of CPUs
 .TP
 .B \fB1\fP
 Switch between global CPU and per\-CPU stats
 .TP
 .B \fB2\fP
-Enable/disable left sidebar
+Enable/disable the left sidebar
 .TP
 .B \fB3\fP
 Enable/disable the quick look module
@@ -498,7 +498,7 @@ Enable/disable the quick look module
 Enable/disable all but quick look and load module
 .TP
 .B \fB5\fP
-Enable/disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
+Enable/disable the top menu (QuickLook, CPU, MEM, SWAP, and LOAD)
 .TP
 .B \fB6\fP
 Enable/disable mean GPU mode
@@ -513,10 +513,10 @@ Switch between process command line or command name
 Refresh user interface
 .TP
 .B \fBLEFT\fP
-Navigation left through process sort
+Navigation left through the process sort
 .TP
 .B \fBRIGHT\fP
-Navigation right through process sort
+Navigation right through the process sort
 .TP
 .B \fBUP\fP
 Up in the processes list
@@ -545,7 +545,7 @@ Quit Glances
 .sp
 No configuration file is mandatory to use Glances.
 .sp
-Furthermore a configuration file is needed to access more settings.
+Furthermore, a configuration file is needed to access more settings.
 .SH LOCATION
 .sp
 \fBNOTE:\fP
@@ -556,7 +556,7 @@ A template is available in the \fB/usr{,/local}/share/doc/glances\fP
 .UNINDENT
 .UNINDENT
 .sp
-You can put your own \fBglances.conf\fP file in the following locations:
+You can place your \fBglances.conf\fP file in the following locations:
 .TS
 center;
 |l|l|.
@@ -593,11 +593,11 @@ On Windows XP, \fB%APPDATA%\fP is: \fBC:\eDocuments and Settings\e<USERNAME>\eAp
 On Windows Vista and later: \fBC:\eUsers\e<USERNAME>\eAppData\eRoaming\fP\&.
 .UNINDENT
 .sp
-User\-specific options override system\-wide options and options given on
-the command line override either.
+User\-specific options override system\-wide options, and options given on
+the command line overrides both.
 .SH SYNTAX
 .sp
-Glances reads configuration files in the \fIini\fP syntax.
+Glances read configuration files in the \fIini\fP syntax.
 .sp
 A first section (called global) is available:
 .INDENT 0.0
@@ -608,7 +608,7 @@ A first section (called global) is available:
 [global]
 # Refresh rate (default is a minimum of 2 seconds)
 # Can be overwritten by the \-t <sec> option
-# It is also possible to overwrite it in each plugin sections
+# It is also possible to overwrite it in each plugin section
 refresh=2
 # Should Glances check if a newer version is available on PyPI ?
 check_update=false
@@ -624,8 +624,8 @@ history_size=28800
 .UNINDENT
 .UNINDENT
 .sp
-Each plugin, export module and application monitoring process (AMP) can
-have a section. Below an example for the CPU plugin:
+Each plugin, export module, and application monitoring process (AMP) can
+have a section. Below is an example for the CPU plugin:
 .INDENT 0.0
 .INDENT 3.5
 .sp
@@ -679,7 +679,7 @@ or a Nginx AMP:
 .nf
 .ft C
 [amp_nginx]
-# Nginx status page should be enable (https://easyengine.io/tutorials/nginx/status\-page/)
+# Nginx status page should be enabled (https://easyengine.io/tutorials/nginx/status\-page/)
 enable=true
 regex=\e/usr\e/sbin\e/nginx
 refresh=60
@@ -690,9 +690,9 @@ status_url=http://localhost/nginx_status
 .UNINDENT
 .UNINDENT
 .sp
-With Glances 3.0 or higher it is also possible to use dynamic configuration
-value using system command. For example, if you to set the prefix of an
-InfluxDB export to the current hostname, use:
+With Glances 3.0 or higher, you can use dynamic configuration values
+by utilizing system commands. For example, if you want to set the prefix
+of an InfluxDB export to the current hostname, use:
 .INDENT 0.0
 .INDENT 3.5
 .sp
@@ -726,14 +726,14 @@ Glances logs all of its internal messages to a log file.
 \fBDEBUG\fP messages can be logged using the \fB\-d\fP option on the command
 line.
 .sp
-The location of the Glances log file depends of your operating system. You can
-display the full path of the Glances log file full path using the\(ga\(gaglances \-V\(ga\(ga
+The location of the Glances log file depends on your operating system. You can
+display the full path of the Glances log file using the \fBglances \-V\fP
 command line.
 .sp
 The file is automatically rotated when its size exceeds 1 MB.
 .sp
 If you want to use another system path or change the log message, you
-can use your own logger configuration. First of all, you have to create
+can use your logger configuration. First of all, you have to create
 a \fBglances.json\fP file with, for example, the following content (JSON
 format):
 .INDENT 0.0
@@ -819,7 +819,7 @@ LOG_CFG=<path>/glances.json glances
 \fBNOTE:\fP
 .INDENT 0.0
 .INDENT 3.5
-Replace \fB<path>\fP by the folder where your \fBglances.json\fP file
+Replace \fB<path>\fP with the directory where your \fBglances.json\fP file
 is hosted.
 .UNINDENT
 .UNINDENT
@@ -832,14 +832,15 @@ $ glances
 .UNINDENT
 .UNINDENT
 .sp
-Monitor local machine with the web interface (Web UI), run the following command line:
+To monitor the local machine with the web interface (Web UI),
+, run the following command line:
 .INDENT 0.0
 .INDENT 3.5
 $ glances \-w
 .UNINDENT
 .UNINDENT
 .sp
-and open a Web browser with the returned URL
+then, open a web browser to the provided URL.
 .sp
 Monitor local machine and export stats to a CSV file:
 .INDENT 0.0
@@ -848,9 +849,9 @@ $ glances –export csv –export\-csv\-file /tmp/glances.csv
 .UNINDENT
 .UNINDENT
 .sp
-Monitor local machine and export stats to a InfluxDB server with 5s
+Monitor local machine and export stats to an InfluxDB server with 5s
 refresh time (also possible to export to OpenTSDB, Cassandra, Statsd,
-ElasticSearch, RabbitMQ and Riemann):
+ElasticSearch, RabbitMQ, and Riemann):
 .INDENT 0.0
 .INDENT 3.5
 $ glances \-t 5 –export influxdb
