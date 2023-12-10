@@ -27,7 +27,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "GLANCES" "1" "Nov 01, 2023" "4.0.0_beta01" "Glances"
+.TH "GLANCES" "1" "Dec 10, 2023" "4.0.0_beta01" "Glances"
 .SH NAME
 glances \- An eye on your system
 .SH SYNOPSIS
@@ -68,7 +68,7 @@ path to the configuration file
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-P plugin directory, \-\-plugins plugin directory
+.B \-P PLUGIN_DIRECTORY, \-\-plugins PLUGIN_DIRECTORY
 path to a directory containing additional plugins
 .UNINDENT
 .INDENT 0.0
@@ -319,7 +319,7 @@ optimize display colors for white background
 .INDENT 0.0
 .TP
 .B \-\-disable\-check\-update
-disable online Glances version ckeck
+disable online Glances version check
 .UNINDENT
 .SH INTERACTIVE COMMANDS
 .sp
@@ -409,7 +409,7 @@ Show/hide IP module
 Increase selected process nice level / Lower the priority (need right) \- Only in standalone mode.
 .TP
 .B \fB\-\fP
-Decrease selected process nice level  / Higher the priority (need right) \- Only in standalone mode.
+Decrease selected process nice level / Higher the priority (need right) \- Only in standalone mode.
 .TP
 .B \fBk\fP
 Kill selected process (need right) \- Only in standalone mode.
@@ -607,10 +607,10 @@ A first section (called global) is available:
 .ft C
 [global]
 # Refresh rate (default is a minimum of 2 seconds)
-# Can be overwrite by the \-t <sec> option
+# Can be overwritten by the \-t <sec> option
 # It is also possible to overwrite it in each plugin sections
 refresh=2
-# Does Glances should check if a newer version is available on PyPI ?
+# Should Glances check if a newer version is available on PyPI ?
 check_update=false
 # History size (maximum number of values)
 # Default is 28800: 1 day with 1 point every 3 seconds
@@ -723,13 +723,14 @@ tags=system:\(gauname \-a\(ga
 .sp
 Glances logs all of its internal messages to a log file.
 .sp
-\fBDEBUG\fP messages can been logged using the \fB\-d\fP option on the command
+\fBDEBUG\fP messages can be logged using the \fB\-d\fP option on the command
 line.
 .sp
-The location of the Glances depends of your operating system. You could
-displayed the Glances log file full path using the\(ga\(gaglances \-V\(ga\(ga command line.
+The location of the Glances log file depends of your operating system. You can
+display the full path of the Glances log file full path using the\(ga\(gaglances \-V\(ga\(ga
+command line.
 .sp
-The file is automatically rotate when the size is higher than 1 MB.
+The file is automatically rotated when its size exceeds 1 MB.
 .sp
 If you want to use another system path or change the log message, you
 can use your own logger configuration. First of all, you have to create
