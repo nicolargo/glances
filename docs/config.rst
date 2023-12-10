@@ -40,10 +40,10 @@ A first section (called global) is available:
 
     [global]
     # Refresh rate (default is a minimum of 2 seconds)
-    # Can be overwrite by the -t <sec> option
+    # Can be overwritten by the -t <sec> option
     # It is also possible to overwrite it in each plugin sections
     refresh=2
-    # Does Glances should check if a newer version is available on PyPI ?
+    # Should Glances check if a newer version is available on PyPI ?
     check_update=false
     # History size (maximum number of values)
     # Default is 28800: 1 day with 1 point every 3 seconds
@@ -124,13 +124,14 @@ Logging
 
 Glances logs all of its internal messages to a log file.
 
-``DEBUG`` messages can been logged using the ``-d`` option on the command
+``DEBUG`` messages can be logged using the ``-d`` option on the command
 line.
 
-The location of the Glances depends of your operating system. You could
-displayed the Glances log file full path using the``glances -V`` command line.
+The location of the Glances log file depends of your operating system. You can
+display the full path of the Glances log file full path using the``glances -V``
+command line.
 
-The file is automatically rotate when the size is higher than 1 MB.
+The file is automatically rotated when its size exceeds 1 MB.
 
 If you want to use another system path or change the log message, you
 can use your own logger configuration. First of all, you have to create
