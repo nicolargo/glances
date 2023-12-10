@@ -20,19 +20,10 @@ from urllib.parse import urljoin
 # from typing import Annotated
 from typing_extensions import Annotated
 
-from glances.globals import json_dumps
 from glances.timer import Timer
 from glances.logger import logger
 
 # FastAPI import
-
-# TODO: not sure import is needed
-try:
-    import jinja2
-except ImportError:
-    logger.critical('Jinja2 import error. Glances cannot start in web server mode.')
-    sys.exit(2)
-
 try:
     from fastapi import FastAPI, Depends, HTTPException, status, APIRouter, Request
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -78,7 +69,7 @@ class GlancesRestfulApi(object):
         # Load configuration file
         self.load_config(config)
 
-        # Set the bind URL (only used for log information purpose)
+        # Set the bind URL
         self.bind_url = urljoin('http://{}:{}/'.format(self.args.bind_address,
                                                        self.args.port),
                                 self.url_prefix)
@@ -95,7 +86,6 @@ class GlancesRestfulApi(object):
 
         # Set path for WebUI
         self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/public')
-        # TEMPLATE_PATH.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/templates'))
         self.TEMPLATE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/templates')
         self._templates = Jinja2Templates(directory=self.TEMPLATE_PATH)
 
@@ -103,7 +93,10 @@ class GlancesRestfulApi(object):
         # https://fastapi.tiangolo.com/tutorial/cors/
         self._app.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
+            # allow_origins=["*"],
+            allow_origins=[
+                self.bind_url
+            ],
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
@@ -140,7 +133,7 @@ class GlancesRestfulApi(object):
 
     # TODO: the password comparaison is not working for the moment.
     #       if the password is wrong, authentication is working...
-    # Perahps because the password is hashed in the GlancesPassword class
+    # Perhaps because the password is hashed in the GlancesPassword class
     # and the one given by creds.password is not hashed ?
     def authentication(self, creds: Annotated[HTTPBasicCredentials, Depends(security)]):
         """Check if a username/password combination is valid."""
@@ -168,21 +161,24 @@ class GlancesRestfulApi(object):
                              status_code=status.HTTP_200_OK,
                              response_class=ORJSONResponse,
                              endpoint=self._api_status)
+
         router.add_api_route('/api/%s/config' % self.API_VERSION,
                              response_class=ORJSONResponse,
                              endpoint=self._api_config)
-        router.add_api_route('/api/%s/config/{item}' % self.API_VERSION,
+        router.add_api_route('/api/%s/config/{section}' % self.API_VERSION,
                              response_class=ORJSONResponse,
-                             endpoint=self._api_config_item)
+                             endpoint=self._api_config_section)
+        router.add_api_route('/api/%s/config/{section}/{item}' % self.API_VERSION,
+                             response_class=ORJSONResponse,
+                             endpoint=self._api_config_section_item)
+
         router.add_api_route('/api/%s/args' % self.API_VERSION,
                              response_class=ORJSONResponse,
                              endpoint=self._api_args)
         router.add_api_route('/api/%s/args/{item}' % self.API_VERSION,
                              response_class=ORJSONResponse,
                              endpoint=self._api_args_item)
-        router.add_api_route('/api/%s/help' % self.API_VERSION,
-                             response_class=ORJSONResponse,
-                             endpoint=self._api_help)
+
         router.add_api_route('/api/%s/pluginslist' % self.API_VERSION,
                              response_class=ORJSONResponse,
                              endpoint=self._api_plugins)
@@ -195,6 +191,10 @@ class GlancesRestfulApi(object):
         router.add_api_route('/api/%s/all/views' % self.API_VERSION,
                              response_class=ORJSONResponse,
                              endpoint=self._api_all_views)
+
+        router.add_api_route('/api/%s/help' % self.API_VERSION,
+                             response_class=ORJSONResponse,
+                             endpoint=self._api_help)
         router.add_api_route('/api/%s/{plugin}' % self.API_VERSION,
                              response_class=ORJSONResponse,
                              endpoint=self._api)
@@ -204,7 +204,7 @@ class GlancesRestfulApi(object):
         router.add_api_route('/api/%s/{plugin}/history/{nb}' % self.API_VERSION,
                              response_class=ORJSONResponse,
                              endpoint=self._api_history)
-        router.add_api_route('/api/%s/{plugin}/top/<nb:int>' % self.API_VERSION,
+        router.add_api_route('/api/%s/{plugin}/top/{nb}' % self.API_VERSION,
                              response_class=ORJSONResponse,
                              endpoint=self._api_top)
         router.add_api_route('/api/%s/{plugin}/limits' % self.API_VERSION,
@@ -232,18 +232,13 @@ class GlancesRestfulApi(object):
 
         # WEB UI
         if not self.args.disable_webui:
-            # Template
+            # Template for the root index.html file
             router.add_api_route('/',
                                  response_class=HTMLResponse,
                                  endpoint=self._index)
 
-            # TODO: to be migrated to another route
-            # router.add_api_route('/{refresh_time}',
-            #                      endpoint=self._index)
-
             # Statics files
-            # self._app.mount("/static", StaticFiles(directory=self.STATIC_PATH), name="static")
-            self._app.mount("/",
+            self._app.mount("/static",
                             StaticFiles(directory=self.STATIC_PATH),
                             name="static")
 
@@ -282,30 +277,27 @@ class GlancesRestfulApi(object):
             logger.critical('Error: Can not ran Glances Web server ({})'.format(e))
 
     def end(self):
-        """End the bottle."""
+        """End the Web server"""
         logger.info("Close the Web server")
-        # TODO: close FastAPI instance gracefully
-        # self._app.close()
-        # if self.url_prefix != '/':
-        #     self.main_app.close()
 
-    # Example from FastAPI documentation
-    # @app.get("/", response_class=HTMLResponse)
-    # def home(request: Request):
-    #     return templates.TemplateResponse("index.html", {"request": request})
+    def _index(self, request: Request):
+        """Return main index.html (/) file.
+        Parameters are available through the request object.
+        Example: http://localhost:61208/?refresh=5
+        """
 
-    def _index(self, refresh_time=None):
-        """Return main index.html (/) file."""
-
-        if refresh_time is None or refresh_time < 1:
-            refresh_time = int(self.args.time)
+        refresh_time = request.query_params.get('refresh',
+                                                default=max(1, int(self.args.time)))
 
         # Update the stat
         self.__update__()
 
         # Display
-        # return template("index.html", refresh_time=refresh_time)
-        return self.templates.TemplateResponse("index.html")
+        return self._templates.TemplateResponse("index.html",
+                                                {
+                                                    "request": request,
+                                                    "refresh_time": refresh_time,
+                                                })
 
     def _api_status(self):
         """Glances API RESTful implementation.
@@ -662,29 +654,61 @@ class GlancesRestfulApi(object):
 
         return ORJSONResponse(args_json)
 
-    def _api_config_item(self, item):
+    def _api_config_section(self, section):
         """Glances API RESTful implementation.
 
-        Return the JSON representation of the Glances configuration item
+        Return the JSON representation of the Glances configuration section
         HTTP/200 if OK
         HTTP/400 if item is not found
         HTTP/404 if others error
         """
         config_dict = self.config.as_dict()
-        if item not in config_dict:
+        if section not in config_dict:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unknown configuration item %s" % item)
+                detail="Unknown configuration item %s" % section)
 
         try:
             # Get the RAW value of the config' dict
-            args_json = config_dict[item]
+            ret_section = config_dict[section]
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Cannot get config item (%s)" % str(e))
+                detail="Cannot get config section %s (%s)" % (section, str(e)))
 
-        return ORJSONResponse(args_json)
+        return ORJSONResponse(ret_section)
+
+    def _api_config_section_item(self, section, item):
+        """Glances API RESTful implementation.
+
+        Return the JSON representation of the Glances configuration section/item
+        HTTP/200 if OK
+        HTTP/400 if item is not found
+        HTTP/404 if others error
+        """
+        config_dict = self.config.as_dict()
+        if section not in config_dict:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Unknown configuration item %s" % section)
+
+        try:
+            # Get the RAW value of the config' dict section
+            ret_section = config_dict[section]
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Cannot get config section %s (%s)" % (section, str(e)))
+
+        try:
+            # Get the RAW value of the config' dict item
+            ret_item = ret_section[item]
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Cannot get item %s in config section %s (%s)" % (item, section, str(e)))
+
+        return ORJSONResponse(ret_item)
 
     def _api_args(self):
         """Glances API RESTful implementation.

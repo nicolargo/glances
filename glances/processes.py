@@ -443,7 +443,7 @@ class GlancesProcesses(object):
             # If io_tag = 0 > Access denied or first time (display "?")
             # If io_tag = 1 > No access denied (display the IO rate)
             if 'io_counters' in proc and proc['io_counters'] is not None:
-                io_new = [proc['io_counters'].read_bytes, proc['io_counters'].write_bytes]
+                io_new = [proc['io_counters'][2], proc['io_counters'][3]]
                 # For IO rate computation
                 # Append saved IO r/w bytes
                 try:

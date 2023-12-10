@@ -78,10 +78,10 @@
                 <div class="table-cell" :class="getMemoryPercentAlert(process)">
                     {{ process.memory_percent == -1 ? '?' : $filters.number(process.memory_percent, 1) }}
                 </div>
-                <div class="table-cell hidden-xs hidden-sm">
+                <div class="table-cell">
                     {{ $filters.bytes(process.memvirt) }}
                 </div>
-                <div class="table-cell hidden-xs hidden-sm">
+                <div class="table-cell">
                     {{ $filters.bytes(process.memres) }}
                 </div>
                 <div class="table-cell">
@@ -159,8 +159,8 @@ export default {
                 process.memvirt = '?';
                 process.memres = '?';
                 if (process.memory_info) {
-                    process.memvirt = process.memory_info[1];
-                    process.memres = process.memory_info[0];
+                    process.memvirt = process.memory_info.vms;
+                    process.memres = process.memory_info.rss;
                 }
 
                 process.timeplus = '?';
