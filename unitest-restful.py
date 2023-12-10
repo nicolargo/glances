@@ -59,7 +59,7 @@ class TestGlances(unittest.TestCase):
             cmdline = "./venv/bin/python"
         else:
             cmdline = "python"
-        cmdline += " -m glances -B 0.0.0.0 -w -p %s --disable-webui" % SERVER_PORT
+        cmdline += " -m glances -B 0.0.0.0 -w -p %s --disable-webui -C ./conf/glances.conf" % SERVER_PORT
         print("Run the Glances Web Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
@@ -242,6 +242,19 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(req.ok)
         self.assertIsInstance(req.json(), list)
         self.assertEqual(len(req.json()), 2)
+
+    def test_014_config(self):
+        """Test API request to get Glances configuration."""
+        method = "config"
+        print('INFO: [TEST_014] Get config')
+
+        req = self.http_get("%s/%s" % (URL, method))
+        self.assertTrue(req.ok)
+        self.assertIsInstance(req.json(), dict)
+
+        req = self.http_get("%s/%s/global/refresh" % (URL, method))
+        self.assertTrue(req.ok)
+        self.assertEqual(req.json(), "2")
 
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""
