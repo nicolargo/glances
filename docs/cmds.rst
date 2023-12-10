@@ -22,7 +22,7 @@ Command-Line Options
 
     path to the configuration file
 
-.. option:: -P plugin directory, --plugins plugin directory
+.. option:: -P PLUGIN_DIRECTORY, --plugins PLUGIN_DIRECTORY
 
     path to a directory containing additional plugins
 
@@ -224,7 +224,7 @@ Command-Line Options
 
 .. option:: --disable-check-update
 
-    disable online Glances version ckeck
+    disable online Glances version check
 
 Interactive Commands
 --------------------
@@ -305,7 +305,7 @@ The following commands (key pressed) are supported while in Glances:
     Increase selected process nice level / Lower the priority (need right) - Only in standalone mode.
 
 ``-``
-    Decrease selected process nice level  / Higher the priority (need right) - Only in standalone mode.
+    Decrease selected process nice level / Higher the priority (need right) - Only in standalone mode.
 
 ``k``
     Kill selected process (need right) - Only in standalone mode.
