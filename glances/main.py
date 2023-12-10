@@ -83,13 +83,13 @@ Examples of use:
   Display CSV stats to stdout (all stats in one line):
     $ glances --stdout-csv now,cpu.user,mem.used,load
 
-  Enable some plugins disabled by default (comma separated list):
+  Enable some plugins disabled by default (comma-separated list):
     $ glances --enable-plugin sensors
 
-  Disable some plugins (comma separated list):
+  Disable some plugins (comma-separated list):
     $ glances --disable-plugin network,ports
 
-  Disable all plugins except some (comma separated list):
+  Disable all plugins except some (comma-separated list):
     $ glances --disable-plugin all --enable-plugin cpu,mem,load
 
 """
@@ -126,7 +126,7 @@ Examples of use:
             '--disable-plugins',
             '--disable',
             dest='disable_plugin',
-            help='disable plugin (comma separated list or all). If all is used, \
+            help='disable plugin (comma-separated list or all). If all is used, \
                 then you need to configure --enable-plugin.',
         )
         parser.add_argument(
@@ -134,7 +134,7 @@ Examples of use:
             '--enable-plugins',
             '--enable',
             dest='enable_plugin',
-            help='enable plugin (comma separated list)'
+            help='enable plugin (comma-separated list)'
         )
         parser.add_argument(
             '--disable-process',
@@ -157,7 +157,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='enable_light',
-            help='light mode for Curses UI (disable all but top menu)',
+            help='light mode for Curses UI (disable all but the top menu)',
         )
         parser.add_argument(
             '-0',
@@ -268,7 +268,7 @@ Examples of use:
             help='Accumulate processes by program',
         )
         # Export modules feature
-        parser.add_argument('--export', dest='export', help='enable export module (comma separated list)')
+        parser.add_argument('--export', dest='export', help='enable export module (comma-separated list)')
         parser.add_argument(
             '--export-csv-file', default='./glances.csv', dest='export_csv_file', help='file path for CSV exporter'
         )
@@ -421,19 +421,19 @@ Examples of use:
             '--stdout',
             default=None,
             dest='stdout',
-            help='display stats to stdout, one stat per line (comma separated list of plugins/plugins.attribute)',
+            help='display stats to stdout, one stat per line (comma-separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
             '--stdout-json',
             default=None,
             dest='stdout_json',
-            help='display stats to stdout, JSON format (comma separated list of plugins/plugins.attribute)',
+            help='display stats to stdout, JSON format (comma-separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
             '--stdout-csv',
             default=None,
             dest='stdout_csv',
-            help='display stats to stdout, CSV format (comma separated list of plugins/plugins.attribute)',
+            help='display stats to stdout, CSV format (comma-separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
             '--issue',
@@ -465,7 +465,7 @@ Examples of use:
                 action='store_true',
                 default=False,
                 dest='no_kernel_threads',
-                help='hide kernel threads in process list (not available on Windows)',
+                help='hide kernel threads in the process list (not available on Windows)',
             )
         parser.add_argument(
             '-b',
@@ -473,7 +473,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='byte',
-            help='display network rate in byte per second',
+            help='display network rate in bytes per second',
         )
         parser.add_argument(
             '--diskio-show-ramfs',
@@ -522,7 +522,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='theme_white',
-            help='optimize display colors for white background',
+            help='optimize display colors for a white background',
         )
         # Globals options
         parser.add_argument(
