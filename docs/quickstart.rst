@@ -3,8 +3,8 @@
 Quickstart
 ==========
 
-This page gives a good introduction in how to get started with Glances.
-Glances offers 3 modes:
+This page gives a good introduction to how to get started with Glances.
+Glances offers three modes:
 
 - Standalone
 - Client/Server
@@ -61,7 +61,7 @@ Note: It will display one line per stat per refresh.
 Client/Server Mode
 ------------------
 
-If you want to remotely monitor a machine, called ``server``, from
+If you want to remotely monitor a machine called ``server``, from
 another one, called ``client``, just run on the server:
 
 .. code-block:: console
@@ -118,7 +118,7 @@ To start the central client, use the following option:
 
 .. note::
 
-    Use ``--disable-autodiscover`` to disable the auto discovery mode.
+    Use ``--disable-autodiscover`` to disable the auto-discovery mode.
 
 When the list is displayed, you can navigate through the Glances servers with
 up/down keys. It is also possible to sort the server using:
@@ -137,7 +137,7 @@ client, the latter will try to grab stats using the ``SNMP`` protocol:
     client$ glances -c @snmpserver
 
 .. note::
-    Stats grabbed by SNMP request are limited and OS dependent.
+    Stats grabbed by SNMP request are limited and OS-dependent.
     A SNMP server should be installed and configured...
 
 
@@ -152,14 +152,14 @@ Web Server Mode
 
 .. image:: _static/screenshot-web.png
 
-If you want to remotely monitor a machine, called ``server``, from any
+If you want to remotely monitor a machine called ``server``, from any
 device with a web browser, just run the server with the ``-w`` option:
 
 .. code-block:: console
 
     server$ glances -w
 
-then on the client enter the following URL in your favorite web browser:
+then, on the client, enter the following URL in your favorite web browser:
 
 ::
 
@@ -167,7 +167,7 @@ then on the client enter the following URL in your favorite web browser:
 
 where ``@server`` is the IP address or hostname of the server.
 
-To change the refresh rate of the page, just add the period in seconds
+To change the refresh rate of the page, add the period in seconds
 at the end of the URL. For example, to refresh the page every ``10``
 seconds:
 
@@ -181,10 +181,10 @@ Here's a screenshot from Chrome on Android:
 
 .. image:: _static/screenshot-web2.png
 
-How to protect your server (or Web server) with a login/password ?
+How do you protect your server (or Web server) with a login/password ?
 ------------------------------------------------------------------
 
-You can set a password to access to the server using the ``--password``.
+You can set a password to access the server using the ``--password``.
 By default, the login is ``glances`` but you can change it with
 ``--username``.
 
@@ -192,8 +192,8 @@ If you want, the SHA password will be stored in ``<login>.pwd`` file (in
 the same folder where the Glances configuration file is stored, so
 ~/.config/glances/ on GNU Linux operating system).
 
-Next time your run the server/client, password will not be asked. To set a
-specific username you can use the -u <username> option.
+Next time you run the server/client, password will not be asked. To set a
+specific username, you can use the -u <username> option.
 
 It is also possible to set the default password in the Glances configuration
 file:

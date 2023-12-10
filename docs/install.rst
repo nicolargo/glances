@@ -3,8 +3,8 @@
 Install
 =======
 
-Glances is on ``PyPI``. By using PyPI, you are sure to have the latest
-stable version.
+Glances is available on ``PyPI``. By using PyPI, you are sure to have the
+latest stable version.
 
 To install, simply use ``pip``:
 
@@ -12,13 +12,13 @@ To install, simply use ``pip``:
 
     pip install glances
 
-*Note*: Python headers are required to install `psutil`_. For example,
-on Debian/Ubuntu you need to install first the *python-dev* package.
-For Fedora/CentOS/RHEL install first *python-devel* package. For Windows,
-just install psutil from the binary installation file.
+*Note*: Python headers are required to install `psutil`_. For instance,
+on Debian/Ubuntu, you must first install the *python-dev* package.
+On Fedora/CentOS/RHEL, first, install the *python-devel* package. For Windows,
+psutil can be installed from the binary installation file.
 
-You can also install the following libraries in order to use optional
-features (like the Web interface, export modules...):
+You can also install the following libraries to use the optional
+features (such as the web interface, export modules, etc.):
 
 .. code-block:: console
 
