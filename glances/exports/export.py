@@ -115,7 +115,7 @@ class GlancesExport(object):
     def parse_tags(self, tags):
         """Parse tags into a dict.
 
-        :param tags: a comma separated list of 'key:value' pairs. Example: foo:bar,spam:eggs
+        :param tags: a comma-separated list of 'key:value' pairs. Example: foo:bar,spam:eggs
         :return: a dict of tags. Example: {'foo': 'bar', 'spam': 'eggs'}
         """
         d_tags = {}
