@@ -142,6 +142,7 @@ class PluginModel(GlancesPluginModel):
         will be replaced by:
         {'rss': 6377472, 'vms': 13946880, 'shared': 4100096, 'text': 913408, 'lib': 0, 'data': 2289664, 'dirty': 0}
         """
+        # TODO: When the WebUI is displayed, this function is call > 2 times per second... Why ???
         return [{k: (v._asdict() if hasattr(v, '_asdict') else v) for k, v in p.items()} for p in self.stats]
 
     def update(self):

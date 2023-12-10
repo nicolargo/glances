@@ -23,9 +23,9 @@ def create_program_dict(p):
         'num_threads': p['num_threads'] or 0,
         'cpu_percent': p['cpu_percent'] or 0,
         'memory_percent': p['memory_percent'] or 0,
-        'cpu_times': p['cpu_times'] or (),
-        'memory_info': p['memory_info'] or (),
-        'io_counters': p['io_counters'] or (),
+        'cpu_times': p['cpu_times'] or {},
+        'memory_info': p['memory_info'] or {},
+        'io_counters': p['io_counters'] or {},
         'childrens': [p['pid']],
         # Others keys are not used
         # but should be set to be compliant with the existing process_list
@@ -44,8 +44,10 @@ def update_program_dict(program, p):
     program['num_threads'] += p['num_threads'] or 0
     program['cpu_percent'] += p['cpu_percent'] or 0
     program['memory_percent'] += p['memory_percent'] or 0
-    program['cpu_times'] = dict(Counter(program['cpu_times']) + Counter(p['cpu_times']))
-    program['memory_info'] = dict(Counter(program['memory_info']) + Counter(p['memory_info']))
+    program['cpu_times'] = dict(Counter(program['cpu_times'] or {}) +
+                                Counter(p['cpu_times'] or {}))
+    program['memory_info'] = dict(Counter(program['memory_info'] or {}) +
+                                  Counter(p['memory_info'] or {}))
 
     program['io_counters'] += p['io_counters']
     program['childrens'].append(p['pid'])
