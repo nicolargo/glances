@@ -846,7 +846,7 @@ class GlancesPluginModel(object):
         If the show value is empty, return True (show by default)
 
         The show configuration list is defined in the glances.conf file.
-        It is a comma separated list of regexp.
+        It is a comma-separated list of regexp.
         Example for diskio:
         show=sda.*
         """
@@ -859,7 +859,7 @@ class GlancesPluginModel(object):
         """Return True if the value is in the hide configuration list.
 
         The hide configuration list is defined in the glances.conf file.
-        It is a comma separated list of regexp.
+        It is a comma-separated list of regexp.
         Example for diskio:
         hide=sda2,sda5,loop.*
         """
