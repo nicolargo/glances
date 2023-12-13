@@ -90,7 +90,7 @@ EXPOSE 61209 61208
 
 # Define default command.
 WORKDIR /app
-CMD /venv/bin/python3 -m glances -C /etc/glances.conf $GLANCES_OPT
+CMD /venv/bin/python3 -m glances $GLANCES_OPT
 
 ################################################################################
 # RELEASE: minimal
