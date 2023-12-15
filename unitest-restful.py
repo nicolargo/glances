@@ -17,13 +17,14 @@ import time
 import numbers
 import unittest
 
+from glances.outputs.glances_restful_api import GlancesRestfulApi
 from glances import __version__
 from glances.globals import text_type
 
 import requests
 
 SERVER_PORT = 61234
-API_VERSION = 3
+API_VERSION = GlancesRestfulApi.API_VERSION
 URL = "http://localhost:{}/api/{}".format(SERVER_PORT, API_VERSION)
 pid = None
 

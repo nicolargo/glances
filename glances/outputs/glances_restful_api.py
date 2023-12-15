@@ -20,6 +20,8 @@ from urllib.parse import urljoin
 # from typing import Annotated
 from typing_extensions import Annotated
 
+from glances import __version__
+from glances.password import GlancesPassword
 from glances.timer import Timer
 from glances.logger import logger
 
@@ -48,7 +50,7 @@ security = HTTPBasic()
 class GlancesRestfulApi(object):
     """This class manages the Restful API server."""
 
-    API_VERSION = '3'
+    API_VERSION = '4'
 
     def __init__(self, config=None, args=None):
         # Init config
@@ -77,8 +79,12 @@ class GlancesRestfulApi(object):
         # FastAPI Init
         if self.args.password:
             self._app = FastAPI(dependencies=[Depends(self.authentication)])
+            self._password = GlancesPassword(username=args.username,
+                                             config=config)
+
         else:
             self._app = FastAPI()
+            self._password = None
 
         # Change the default root path
         if self.url_prefix != '/':
@@ -104,8 +110,6 @@ class GlancesRestfulApi(object):
 
         # FastAPI Enable GZIP compression
         # https://fastapi.tiangolo.com/advanced/middleware/
-        # TODO: do not work for the moment
-        # curl return a binary stream, not the JSON
         self._app.add_middleware(GZipMiddleware,
                                  minimum_size=1000)
 
@@ -131,26 +135,20 @@ class GlancesRestfulApi(object):
     def app(self):
         return self._app()
 
-    # TODO: the password comparaison is not working for the moment.
-    #       if the password is wrong, authentication is working...
-    # Perhaps because the password is hashed in the GlancesPassword class
-    # and the one given by creds.password is not hashed ?
     def authentication(self, creds: Annotated[HTTPBasicCredentials, Depends(security)]):
         """Check if a username/password combination is valid."""
-        # print(creds.username, creds.password)
-        # print(self.args.username, self.args.password)
         if creds.username == self.args.username:
-            from glances.password import GlancesPassword
+            # check_password and get_hash are (lru) cached to optimize the requests
+            if self._password.check_password(self.args.password,
+                                             self._password.get_hash(creds.password)):
+                return creds.username
 
-            pwd = GlancesPassword(username=creds.username, config=self.config)
-            # print(self.args.password, pwd.get_hash(creds.username))
-            return pwd.check_password(self.args.password, pwd.get_hash(creds.username))
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-                headers={"WWW-Authenticate": "Basic"},
-            )
+        # If the username/password combination is invalid, return an HTTP 401
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
 
     def _router(self):
         """Define a custom router for Glances path."""
@@ -282,10 +280,12 @@ class GlancesRestfulApi(object):
 
     def _index(self, request: Request):
         """Return main index.html (/) file.
+
         Parameters are available through the request object.
         Example: http://localhost:61208/?refresh=5
-        """
 
+        Note: This function is only called the first time the page is loaded.
+        """
         refresh_time = request.query_params.get('refresh',
                                                 default=max(1, int(self.args.time)))
 
@@ -308,8 +308,7 @@ class GlancesRestfulApi(object):
         See related issue:  Web server health check endpoint #1988
         """
 
-        # TODO: return a more useful status
-        return "Active"
+        return ORJSONResponse({'version': __version__})
 
     def _api_help(self):
         """Glances API RESTful implementation.
