@@ -25,6 +25,8 @@ import subprocess
 from datetime import datetime
 import re
 import base64
+import functools
+import weakref
 
 import queue
 from configparser import ConfigParser, NoOptionError, NoSectionError
@@ -406,3 +408,21 @@ def folder_size(path, errno=0):
             except OSError as e:
                 ret_err = e.errno
     return ret_size, ret_err
+
+
+def weak_lru_cache(maxsize=128, typed=False):
+    """LRU Cache decorator that keeps a weak reference to self
+    Source: https://stackoverflow.com/a/55990799"""
+    def wrapper(func):
+
+        @functools.lru_cache(maxsize, typed)
+        def _func(_self, *args, **kwargs):
+            return func(_self(), *args, **kwargs)
+
+        @functools.wraps(func)
+        def inner(self, *args, **kwargs):
+            return _func(weakref.ref(self), *args, **kwargs)
+
+        return inner
+
+    return wrapper
