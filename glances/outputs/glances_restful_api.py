@@ -18,10 +18,9 @@ import socket
 from urllib.parse import urljoin
 
 # Replace typing_extensions by typing when Python 3.8 support will be dropped
-# from typing import Annotated
-from typing_extensions import Annotated
+from typing import Annotated
 
-from glances import __version__
+from glances import __version__, __apiversion__
 from glances.password import GlancesPassword
 from glances.timer import Timer
 from glances.logger import logger
@@ -51,7 +50,7 @@ security = HTTPBasic()
 class GlancesRestfulApi(object):
     """This class manages the Restful API server."""
 
-    API_VERSION = '4'
+    API_VERSION = __apiversion__
 
     def __init__(self, config=None, args=None):
         # Init config

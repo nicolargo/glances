@@ -13,12 +13,12 @@ from pprint import pformat
 import json
 import time
 
-from glances.outputs.glances_restful_api import GlancesRestfulApi
+from glances import __apiversion__
 from glances.logger import logger
 from glances.globals import iteritems
 
 
-API_URL = "http://localhost:61208/api/{api_version}".format(api_version=GlancesRestfulApi.API_VERSION)
+API_URL = "http://localhost:61208/api/{api_version}".format(api_version=__apiversion__)
 
 APIDOC_HEADER = """\
 .. _api:
@@ -65,7 +65,7 @@ It is possible to change the Web UI refresh rate (default is 2 seconds) using th
 ``http://localhost:61208/glances/?refresh=5``
 
 """.format(
-    api_version=GlancesRestfulApi.API_VERSION
+    api_version=__apiversion__
 )
 
 
