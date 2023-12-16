@@ -44,10 +44,8 @@ def update_program_dict(program, p):
     program['num_threads'] += p['num_threads'] or 0
     program['cpu_percent'] += p['cpu_percent'] or 0
     program['memory_percent'] += p['memory_percent'] or 0
-    program['cpu_times'] = dict(Counter(program['cpu_times'] or {}) +
-                                Counter(p['cpu_times'] or {}))
-    program['memory_info'] = dict(Counter(program['memory_info'] or {}) +
-                                  Counter(p['memory_info'] or {}))
+    program['cpu_times'] = dict(Counter(program['cpu_times'] or {}) + Counter(p['cpu_times'] or {}))
+    program['memory_info'] = dict(Counter(program['memory_info'] or {}) + Counter(p['memory_info'] or {}))
 
     program['io_counters'] += p['io_counters']
     program['childrens'].append(p['pid'])

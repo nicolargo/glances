@@ -13,7 +13,6 @@ from datetime import datetime
 from time import tzname
 import pytz
 
-from glances.logger import logger
 from glances.events import glances_events
 from glances.thresholds import glances_thresholds
 
@@ -173,9 +172,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args,
-                                          config=config,
-                                          stats_init_value=[])
+        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -213,8 +210,7 @@ class PluginModel(GlancesPluginModel):
             # New line
             ret.append(self.curse_new_line())
             # Start
-            msg = str(datetime.fromtimestamp(alert[0],
-                                             tz=pytz.timezone(tzname[0] if tzname[0] else 'UTC')))
+            msg = str(datetime.fromtimestamp(alert[0], tz=pytz.timezone(tzname[0] if tzname[0] else 'UTC')))
             ret.append(self.curse_add_line(msg))
             # Duration
             if alert[1] > 0:

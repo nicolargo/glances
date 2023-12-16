@@ -413,8 +413,8 @@ def folder_size(path, errno=0):
 def weak_lru_cache(maxsize=128, typed=False):
     """LRU Cache decorator that keeps a weak reference to self
     Source: https://stackoverflow.com/a/55990799"""
-    def wrapper(func):
 
+    def wrapper(func):
         @functools.lru_cache(maxsize, typed)
         def _func(_self, *args, **kwargs):
             return func(_self(), *args, **kwargs)

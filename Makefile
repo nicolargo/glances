@@ -102,7 +102,7 @@ codespell: ## Run codespell to fix common misspellings in text files
 	./venv-dev/bin/codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics
 
 semgrep: ## Run semgrep to find bugs and enforce code standards
-	./venv-dev/bin/semgrep --config=auto --lang python --use-git-ignore ./glances
+	./venv-dev/bin/semgrep scan --config=auto
 
 profiling: ## How to start the profiling of the Glances software
 	@echo "Please complete and run: sudo ./venv-dev/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s --pid <GLANCES PID>"

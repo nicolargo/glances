@@ -36,7 +36,7 @@ class GlancesExport(object):
         'processlist',
         'psutilversion',
         'quicklook',
-        'version'
+        'version',
     ]
 
     def __init__(self, config=None, args=None):
