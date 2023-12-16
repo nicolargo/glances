@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -53,8 +53,13 @@ For example:
 will change the root API URL to ``http://localhost:61208/glances/api/{api_version}`` and the Web UI URL to
 ``http://localhost:61208/glances/``
 
-Web UI refresh
---------------
+API documentation
+-----------------
+
+The API documentation is available at the following URL: ``http://localhost:61208/docs#/``.
+
+WebUI refresh
+-------------
 
 It is possible to change the Web UI refresh rate (default is 2 seconds) using the following option in the URL:
 ``http://localhost:61208/glances/?refresh=5``
