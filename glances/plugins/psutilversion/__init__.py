@@ -7,16 +7,17 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""psutil plugin."""
+"""psutil plugin.
+Just a simple plugin to get the Psutil version."""
 
 from glances import psutil_version_info
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
 class PluginModel(GlancesPluginModel):
-    """Get the psutil version for client/server purposes.
+    """Get the Psutil version.
 
-    stats is a tuple
+    stats is a string
     """
 
     def __init__(self, args=None, config=None):
@@ -40,7 +41,7 @@ class PluginModel(GlancesPluginModel):
         if self.input_method == 'local':
             # psutil version only available in local
             try:
-                self.stats = psutil_version_info
+                self.stats = '.'.join([str(i) for i in psutil_version_info])
             except NameError:
                 pass
         else:
