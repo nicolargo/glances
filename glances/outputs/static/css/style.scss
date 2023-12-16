@@ -19,6 +19,15 @@ body {
     display: table-cell;
     text-align: right;
 }
+.width-50 {
+    width: 50px;
+}
+.width-75 {
+    width: 75px;
+}
+.width-100 {
+    width: 100px;
+}
 
 .plugin {
     margin-bottom: 20px;
@@ -116,6 +125,7 @@ body {
 }
 
 /* Plugins */
+
 #processlist-plugin .table-cell {
     padding: 0px 5px 0px 5px;
     white-space: nowrap;

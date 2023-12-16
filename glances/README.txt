@@ -12,7 +12,7 @@ globals.py                  Share variables upon modules
 main.py                     Main script to rule them up...
 client.py                   Glances client
 server.py                   Glances server
-webserver.py                Glances web server (Bottle-based)
+webserver.py                Glances web server (Based on FastAPI)
 autodiscover.py             Glances autodiscover module (via zeroconf)
 standalone.py               Glances standalone (curses interface)
 password.py                 Manage password for Glances client/server
@@ -27,7 +27,7 @@ plugins
 outputs
     => Glances UI
     glances_curses.py       The curses interface
-    glances_bottle.py       The web interface
+    glances_restful-api.py  The HTTP/API & Web based interface
     ...
 exports
     => Glances exports

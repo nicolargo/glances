@@ -44,7 +44,10 @@ def get_install_requires():
         'ujson>=5.4.0',
     ]
     if sys.platform.startswith('win'):
-        requires.append('bottle')
+        requires.append('fastapi')
+        requires.append('uvicorn')
+        requires.append('orjson')
+        requires.append('jinja2')
         requires.append('requests')
 
     return requires
@@ -67,7 +70,7 @@ def get_install_extras_require():
         'smart': ['pySMART.smartx'],
         'snmp': ['pysnmp'],
         'sparklines': ['sparklines'],
-        'web': ['bottle', 'requests'],
+        'web': ['fastapi', 'uvicorn', 'jinja2', 'orjson', 'requests'],
         'wifi': ['wifi']
     }
     if sys.platform.startswith('linux'):
@@ -123,7 +126,7 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console :: Curses',
         'Environment :: Web Environment',
-        'Framework :: Bottle',
+        'Framework :: FastAPI',
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'Intended Audience :: System Administrators',
