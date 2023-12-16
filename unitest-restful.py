@@ -79,17 +79,6 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(req.ok)
         self.assertTrue(req.json(), dict)
 
-    def test_001a_all_gzip(self):
-        """All."""
-        method = "all"
-        print('INFO: [TEST_001a] Get all stats (with GZip compression)')
-        print("HTTP RESTful request: %s/%s" % (URL, method))
-        req = self.http_get("%s/%s" % (URL, method), gzip=True)
-
-        self.assertTrue(req.ok)
-        self.assertTrue(req.headers['Content-Encoding'] == 'gzip')
-        self.assertTrue(req.json(), dict)
-
     def test_002_pluginslist(self):
         """Plugins list."""
         method = "pluginslist"
@@ -111,14 +100,12 @@ class TestGlances(unittest.TestCase):
             print("HTTP RESTful request: %s/%s" % (URL, p))
             req = self.http_get("%s/%s" % (URL, p))
             self.assertTrue(req.ok)
-            if p in ('uptime', 'now'):
+            if p in ('uptime', 'now', 'version', 'psutilversion'):
                 self.assertIsInstance(req.json(), text_type)
             elif p in ('fs', 'percpu', 'sensors', 'alert', 'processlist', 'diskio',
                        'hddtemp', 'batpercent', 'network', 'folders', 'amps', 'ports',
                        'irq', 'wifi', 'gpu'):
                 self.assertIsInstance(req.json(), list)
-            elif p in ('psutilversion', 'help'):
-                pass
             else:
                 self.assertIsInstance(req.json(), dict)
 
@@ -230,7 +217,7 @@ class TestGlances(unittest.TestCase):
         req = self.http_get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
-        self.assertEqual(req.json(), "Active")
+        self.assertEqual(req.json()['version'], __version__)
 
     def test_013_top(self):
         """Values."""
@@ -256,6 +243,17 @@ class TestGlances(unittest.TestCase):
         req = self.http_get("%s/%s/global/refresh" % (URL, method))
         self.assertTrue(req.ok)
         self.assertEqual(req.json(), "2")
+
+    def test_015_all_gzip(self):
+        """All with Gzip."""
+        method = "all"
+        print('INFO: [TEST_015] Get all stats (with GZip compression)')
+        print("HTTP RESTful request: %s/%s" % (URL, method))
+        req = self.http_get("%s/%s" % (URL, method), gzip=True)
+
+        self.assertTrue(req.ok)
+        self.assertTrue(req.headers['Content-Encoding'] == 'gzip')
+        self.assertTrue(req.json(), dict)
 
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""
