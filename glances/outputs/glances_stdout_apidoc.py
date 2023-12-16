@@ -64,7 +64,9 @@ WebUI refresh
 It is possible to change the Web UI refresh rate (default is 2 seconds) using the following option in the URL:
 ``http://localhost:61208/glances/?refresh=5``
 
-""".format(api_version=GlancesRestfulApi.API_VERSION)
+""".format(
+    api_version=GlancesRestfulApi.API_VERSION
+)
 
 
 def indent_stat(stat, indent='    '):

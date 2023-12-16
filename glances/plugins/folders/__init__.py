@@ -10,7 +10,6 @@
 """Folder plugin."""
 from __future__ import unicode_literals
 
-import numbers
 
 from glances.globals import nativestr
 from glances.folder_list import FolderList as glancesFolderList
@@ -108,7 +107,7 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_new_line())
             if len(i['path']) > name_max_width:
                 # Cut path if it is too long
-                path = '_' + i['path'][-name_max_width + 1:]
+                path = '_' + i['path'][-name_max_width + 1 :]
             else:
                 path = i['path']
             msg = '{:{width}}'.format(nativestr(path), width=name_max_width)

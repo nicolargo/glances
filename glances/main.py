@@ -134,7 +134,7 @@ Examples of use:
             '--enable-plugins',
             '--enable',
             dest='enable_plugin',
-            help='enable plugin (comma-separated list)'
+            help='enable plugin (comma-separated list)',
         )
         parser.add_argument(
             '--disable-process',

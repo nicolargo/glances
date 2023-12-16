@@ -583,8 +583,7 @@ class PluginModel(GlancesPluginModel):
             for k, v in p['memory_info'].items():
                 ret.append(
                     self.curse_add_line(
-                        self.auto_unit(v,
-                                       low_precision=False),
+                        self.auto_unit(v, low_precision=False),
                         decoration='INFO',
                         splittable=True,
                     )
@@ -593,10 +592,7 @@ class PluginModel(GlancesPluginModel):
             if 'memory_swap' in p and p['memory_swap'] is not None:
                 ret.append(
                     self.curse_add_line(
-                        self.auto_unit(p['memory_swap'],
-                                       low_precision=False),
-                        decoration='INFO',
-                        splittable=True
+                        self.auto_unit(p['memory_swap'], low_precision=False), decoration='INFO', splittable=True
                     )
                 )
                 ret.append(self.curse_add_line(' swap ', splittable=True))

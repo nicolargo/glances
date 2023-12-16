@@ -482,8 +482,9 @@ class GlancesProcesses(object):
         processlist = list(filter(lambda p: not self._filter.is_filtered(p), processlist))
 
         # Save the new processlist and transform all namedtuples to dict
-        self.processlist = [{k: (v._asdict() if hasattr(v, '_asdict') else v)
-                             for k, v in p.items()} for p in processlist]
+        self.processlist = [
+            {k: (v._asdict() if hasattr(v, '_asdict') else v) for k, v in p.items()} for p in processlist
+        ]
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Useful to highlight the processes with maximum values

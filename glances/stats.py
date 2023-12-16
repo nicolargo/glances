@@ -138,9 +138,10 @@ class GlancesStats(object):
         logger.debug("Active plugins list: {}".format(self.getPluginsList()))
 
     def load_additional_plugins(self, args=None, config=None):
-        """ Load additional plugins if defined """
+        """Load additional plugins if defined"""
+
         def get_addl_plugins(self, plugin_path):
-            """ Get list of additonal plugins """
+            """Get list of additonal plugins"""
             _plugin_list = []
             for plugin in os.listdir(plugin_path):
                 path = os.path.join(plugin_path, plugin)
@@ -175,7 +176,7 @@ class GlancesStats(object):
                 else:
                     start_duration.reset()
                     try:
-                        _mod_loaded = import_module(plugin+'.model')
+                        _mod_loaded = import_module(plugin + '.model')
                         self._plugins[plugin] = _mod_loaded.PluginModel(args=args, config=config)
                         logger.debug("Plugin {} started in {} seconds".format(plugin, start_duration.get()))
                     except Exception as e:

@@ -10,7 +10,6 @@
 """Manage the folder list."""
 from __future__ import unicode_literals
 
-import os
 
 from glances.timer import Timer
 from glances.globals import nativestr, folder_size
@@ -132,11 +131,12 @@ class FolderList(object):
             # Get folder size
             self.__folder_list[i]['size'], self.__folder_list[i]['errno'] = folder_size(self.path(i))
             if self.__folder_list[i]['errno'] != 0:
-                logger.debug('Folder size ({} ~ {}) may not be correct. Error: {}'.format(
-                    self.path(i),
-                    self.__folder_list[i]['size'],
-                    self.__folder_list[i]['errno']))
-        # Reset the timer
+                logger.debug(
+                    'Folder size ({} ~ {}) may not be correct. Error: {}'.format(
+                        self.path(i), self.__folder_list[i]['size'], self.__folder_list[i]['errno']
+                    )
+                )
+            # Reset the timer
             self.timer_folders[i].reset()
 
         # It is no more the first time...

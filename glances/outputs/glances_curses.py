@@ -101,15 +101,7 @@ class _GlancesCurses(object):
     _sort_loop = sort_processes_key_list
 
     # Define top menu
-    _top = [
-        'quicklook',
-        'cpu',
-        'percpu',
-        'gpu',
-        'mem',
-        'memswap',
-        'load'
-    ]
+    _top = ['quicklook', 'cpu', 'percpu', 'gpu', 'mem', 'memswap', 'load']
     _quicklook_max_width = 68
 
     # Define left sidebar
@@ -131,13 +123,7 @@ class _GlancesCurses(object):
     _left_sidebar_max_width = 34
 
     # Define right sidebar
-    _right_sidebar = [
-        'containers',
-        'processcount',
-        'amps',
-        'processlist',
-        'alert'
-    ]
+    _right_sidebar = ['containers', 'processcount', 'amps', 'processlist', 'alert']
 
     def __init__(self, config=None, args=None):
         # Init
@@ -301,8 +287,7 @@ class _GlancesCurses(object):
 
             if curses.COLORS > 8:
                 # ex: export TERM=xterm-256color
-                colors_list = [curses.COLOR_CYAN,
-                               curses.COLOR_YELLOW]
+                colors_list = [curses.COLOR_CYAN, curses.COLOR_YELLOW]
                 for i in range(0, 3):
                     try:
                         curses.init_pair(i + 9, colors_list[i], -1)
@@ -462,9 +447,7 @@ class _GlancesCurses(object):
             )
 
     def _handle_sort_key(self, hotkey):
-        glances_processes.set_sort_key(
-            self._hotkeys[hotkey]['sort_key'], self._hotkeys[hotkey]['sort_key'] == 'auto'
-        )
+        glances_processes.set_sort_key(self._hotkeys[hotkey]['sort_key'], self._hotkeys[hotkey]['sort_key'] == 'auto')
 
     def _handle_enter(self):
         self.edit_filter = not self.edit_filter
