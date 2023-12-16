@@ -64,13 +64,13 @@ export default {
                 }
                 function getColumnLabel(value) {
                     const labels = {
-                        io_counters: 'disk IO',
                         cpu_percent: 'CPU consumption',
                         memory_percent: 'memory consumption',
-                        cpu_times: 'process time',
                         username: 'user name',
-                        name: 'process name',
                         timemillis: 'process time',
+                        cpu_times: 'process time',
+                        io_counters: 'disk IO',
+                        name: 'process name',
                         None: 'None'
                     };
                     return labels[value] || value;

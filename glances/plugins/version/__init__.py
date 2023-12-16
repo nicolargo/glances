@@ -2,20 +2,21 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""psutil plugin.
-Just a simple plugin to get the Psutil version."""
+"""version plugin.
+Just a simple plugin to get the Glances version.
+"""
 
-from glances import psutil_version_info
+from glances import __version__ as glances_version
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
 class PluginModel(GlancesPluginModel):
-    """Get the Psutil version.
+    """Get the Glances versions.
 
     stats is a string
     """
@@ -41,7 +42,7 @@ class PluginModel(GlancesPluginModel):
         if self.input_method == 'local':
             # psutil version only available in local
             try:
-                self.stats = '.'.join([str(i) for i in psutil_version_info])
+                self.stats = glances_version
             except NameError:
                 pass
         else:

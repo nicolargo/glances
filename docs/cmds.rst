@@ -172,7 +172,7 @@ Command-Line Options
 
 .. option:: -w, --webserver
 
-    run Glances in web server mode (bottle lib needed)
+    run Glances in web server mode (FastAPI lib needed)
 
 .. option:: --cached-time CACHED_TIME
 

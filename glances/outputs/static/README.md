@@ -65,7 +65,7 @@ static
 |
 |--- public # path where builds are put
 |
-|--- templates (bottle)
+|--- templates
 ```
 
 ## Data

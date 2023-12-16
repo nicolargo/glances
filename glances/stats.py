@@ -136,7 +136,7 @@ class GlancesStats(object):
 
         # Log plugins list
         logger.debug("Active plugins list: {}".format(self.getPluginsList()))
-        
+
     def load_additional_plugins(self, args=None, config=None):
         """ Load additional plugins if defined """
         def get_addl_plugins(self, plugin_path):
@@ -162,7 +162,7 @@ class GlancesStats(object):
 
         if args and 'plugin_dir' in args and args.plugin_dir:
             path = args.plugin_dir
-            
+
         if path:
             # Get list before starting the counter
             _sys_path = sys.path
@@ -190,7 +190,7 @@ class GlancesStats(object):
             sys.path = _sys_path
             # Log plugins list
             logger.debug("Active additional plugins list: {}".format(self.getPluginsList()))
-                    
+
     def load_exports(self, args=None):
         """Load all exporters in the 'exports' folder."""
         start_duration = Counter()

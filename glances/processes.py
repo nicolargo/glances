@@ -353,9 +353,8 @@ class GlancesProcesses(object):
 
     def update(self):
         """Update the processes stats."""
-        # Reset the stats
-        self.processlist = []
-        self.reset_processcount()
+        # Init new processes stats
+        processlist = []
 
         # Do not process if disable tag is set
         if self.disable_tag:
@@ -392,7 +391,7 @@ class GlancesProcesses(object):
         # Build the processes stats list (it is why we need psutil>=5.3.0)
         # This is one of the main bottleneck of Glances (see flame graph)
         # Filter processes
-        self.processlist = list(
+        processlist = list(
             filter(
                 lambda p: not (BSD and p.info['name'] == 'idle')
                 and not (WINDOWS and p.info['name'] == 'System Idle Process')
@@ -402,17 +401,17 @@ class GlancesProcesses(object):
             )
         )
         # Only get the info key
-        self.processlist = [p.info for p in self.processlist]
+        processlist = [p.info for p in processlist]
         # Sort the processes list by the current sort_key
-        self.processlist = sort_stats(self.processlist, sorted_by=self.sort_key, reverse=True)
+        processlist = sort_stats(processlist, sorted_by=self.sort_key, reverse=True)
 
         # Update the processcount
-        self.update_processcount(self.processlist)
+        self.update_processcount(processlist)
 
         # Loop over processes and :
         # - add extended stats for selected process
         # - add metadata
-        for position, proc in enumerate(self.processlist):
+        for position, proc in enumerate(processlist):
             # Extended stats
             ################
 
@@ -443,7 +442,7 @@ class GlancesProcesses(object):
             # If io_tag = 0 > Access denied or first time (display "?")
             # If io_tag = 1 > No access denied (display the IO rate)
             if 'io_counters' in proc and proc['io_counters'] is not None:
-                io_new = [proc['io_counters'].read_bytes, proc['io_counters'].write_bytes]
+                io_new = [proc['io_counters'][2], proc['io_counters'][3]]
                 # For IO rate computation
                 # Append saved IO r/w bytes
                 try:
@@ -480,7 +479,11 @@ class GlancesProcesses(object):
                 self.processlist_cache[proc['pid']] = {cached: proc[cached] for cached in cached_attrs}
 
         # Apply user filter
-        self.processlist = list(filter(lambda p: not self._filter.is_filtered(p), self.processlist))
+        processlist = list(filter(lambda p: not self._filter.is_filtered(p), processlist))
+
+        # Save the new processlist and transform all namedtuples to dict
+        self.processlist = [{k: (v._asdict() if hasattr(v, '_asdict') else v)
+                             for k, v in p.items()} for p in processlist]
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Useful to highlight the processes with maximum values

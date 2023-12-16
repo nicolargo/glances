@@ -153,7 +153,7 @@ class PluginModel(GlancesPluginModel):
             # No SNMP grab for processes
             pass
 
-        # Update the stats
+        # Update the stats and transform all namedtuples to dict
         self.stats = stats
 
         # Get the max values (dict)
@@ -220,8 +220,8 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_vms(self, p, selected, args):
         """Return process VMS curses"""
-        if key_exist_value_not_none_not_v('memory_info', p, '', 1):
-            msg = self.layout_stat['virt'].format(self.auto_unit(p['memory_info'][1], low_precision=False))
+        if key_exist_value_not_none_not_v('memory_info', p, '', 1) and 'vms' in p['memory_info']:
+            msg = self.layout_stat['virt'].format(self.auto_unit(p['memory_info']['vms'], low_precision=False))
             ret = self.curse_add_line(msg, optional=True)
         else:
             msg = self.layout_header['virt'].format('?')
@@ -230,8 +230,8 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_rss(self, p, selected, args):
         """Return process RSS curses"""
-        if key_exist_value_not_none_not_v('memory_info', p, '', 0):
-            msg = self.layout_stat['res'].format(self.auto_unit(p['memory_info'][0], low_precision=False))
+        if key_exist_value_not_none_not_v('memory_info', p, '', 0) and 'rss' in p['memory_info']:
+            msg = self.layout_stat['res'].format(self.auto_unit(p['memory_info']['rss'], low_precision=False))
             ret = self.curse_add_line(msg, optional=True)
         else:
             msg = self.layout_header['res'].format('?')
@@ -254,7 +254,7 @@ class PluginModel(GlancesPluginModel):
         """Return process time curses"""
         try:
             # Sum user and system time
-            user_system_time = p['cpu_times'][0] + p['cpu_times'][1]
+            user_system_time = p['cpu_times']['user'] + p['cpu_times']['system']
         except (OverflowError, TypeError):
             # Catch OverflowError on some Amazon EC2 server
             # See https://github.com/nicolargo/glances/issues/87
@@ -470,7 +470,7 @@ class PluginModel(GlancesPluginModel):
         # Process list
         # Loop over processes (sorted by the sort key previously compute)
         # This is a Glances bottleneck (see flame graph),
-        # get_process_curses_data should be optimzed
+        # TODO: get_process_curses_data should be optimzed
         for position, process in enumerate(processes_list_sorted):
             ret.extend(self.get_process_curses_data(process, position == args.cursor_position, args))
 
@@ -493,16 +493,17 @@ class PluginModel(GlancesPluginModel):
 
         Input p is a dict with the following keys:
         {'status': 'S',
-         'memory_info': pmem(rss=466890752, vms=3365347328, shared=68153344,
-                             text=659456, lib=0, data=774647808, dirty=0),
+         'memory_info': {'rss': 466890752, 'vms': 3365347328, 'shared': 68153344,
+                         'text': 659456, 'lib': 0, 'data': 774647808, 'dirty': 0],
          'pid': 4980,
          'io_counters': [165385216, 0, 165385216, 0, 1],
          'num_threads': 20,
          'nice': 0,
          'memory_percent': 5.958135664449709,
          'cpu_percent': 0.0,
-         'gids': pgids(real=1000, effective=1000, saved=1000),
-         'cpu_times': pcputimes(user=696.38, system=119.98, children_user=0.0, children_system=0.0, iowait=0.0),
+         'gids': {'real': 1000, 'effective': 1000, 'saved': 1000},
+         'cpu_times': {'user': 696.38, 'system': 119.98, 'children_user': 0.0,
+                       'children_system': 0.0, 'iowait': 0.0),
          'name': 'WebExtensions',
          'key': 'pid',
          'time_since_update': 2.1997854709625244,
@@ -579,10 +580,11 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg, decoration='INFO'))
         if 'memory_info' in p and p['memory_info'] is not None:
             ret.append(self.curse_add_line(' Memory info: '))
-            for k in p['memory_info']._asdict():
+            for k, v in p['memory_info'].items():
                 ret.append(
                     self.curse_add_line(
-                        self.auto_unit(p['memory_info']._asdict()[k], low_precision=False),
+                        self.auto_unit(v,
+                                       low_precision=False),
                         decoration='INFO',
                         splittable=True,
                     )
@@ -591,7 +593,10 @@ class PluginModel(GlancesPluginModel):
             if 'memory_swap' in p and p['memory_swap'] is not None:
                 ret.append(
                     self.curse_add_line(
-                        self.auto_unit(p['memory_swap'], low_precision=False), decoration='INFO', splittable=True
+                        self.auto_unit(p['memory_swap'],
+                                       low_precision=False),
+                        decoration='INFO',
+                        splittable=True
                     )
                 )
                 ret.append(self.curse_add_line(' swap ', splittable=True))
@@ -690,12 +695,12 @@ class PluginModel(GlancesPluginModel):
         ):
             # VMS
             msg = self.layout_stat['virt'].format(
-                self.auto_unit(self.__sum_stats('memory_info', indice=1, mmm=mmm), low_precision=False)
+                self.auto_unit(self.__sum_stats('memory_info', sub_key='vms', mmm=mmm), low_precision=False)
             )
             ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True))
             # RSS
             msg = self.layout_stat['res'].format(
-                self.auto_unit(self.__sum_stats('memory_info', indice=0, mmm=mmm), low_precision=False)
+                self.auto_unit(self.__sum_stats('memory_info', sub_key='rss', mmm=mmm), low_precision=False)
             )
             ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True))
         else:
@@ -725,7 +730,7 @@ class PluginModel(GlancesPluginModel):
         if 'io_counters' in self.stats[0] and mmm is None:
             # IO read
             io_rs = int(
-                (self.__sum_stats('io_counters', 0) - self.__sum_stats('io_counters', indice=2, mmm=mmm))
+                (self.__sum_stats('io_counters', 0) - self.__sum_stats('io_counters', sub_key=2, mmm=mmm))
                 / self.stats[0]['time_since_update']
             )
             if io_rs == 0:
@@ -735,7 +740,7 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True, additional=True))
             # IO write
             io_ws = int(
-                (self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters', indice=3, mmm=mmm))
+                (self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters', sub_key=3, mmm=mmm))
                 / self.stats[0]['time_since_update']
             )
             if io_ws == 0:
@@ -769,10 +774,10 @@ class PluginModel(GlancesPluginModel):
         self.mmm_min = {}
         self.mmm_max = {}
 
-    def __sum_stats(self, key, indice=None, mmm=None):
+    def __sum_stats(self, key, sub_key=None, mmm=None):
         """Return the sum of the stats value for the given key.
 
-        :param indice: If indice is set, get the p[key][indice]
+        :param sub_key: If sub_key is set, get the p[key][sub_key]
         :param mmm: display min, max, mean or current (if mmm=None)
         """
         # Compute stats summary
@@ -784,13 +789,13 @@ class PluginModel(GlancesPluginModel):
             if p[key] is None:
                 # Correct https://github.com/nicolargo/glances/issues/1105#issuecomment-363553788
                 continue
-            if indice is None:
+            if sub_key is None:
                 ret += p[key]
             else:
-                ret += p[key][indice]
+                ret += p[key][sub_key]
 
         # Manage Min/Max/Mean
-        mmm_key = self.__mmm_key(key, indice)
+        mmm_key = self.__mmm_key(key, sub_key)
         if mmm == 'min':
             try:
                 if self.mmm_min[mmm_key] > ret:
@@ -814,10 +819,10 @@ class PluginModel(GlancesPluginModel):
 
         return ret
 
-    def __mmm_key(self, key, indice):
+    def __mmm_key(self, key, sub_key):
         ret = key
-        if indice is not None:
-            ret += str(indice)
+        if sub_key is not None:
+            ret += str(sub_key)
         return ret
 
     def __sort_stats(self, sorted_by=None):

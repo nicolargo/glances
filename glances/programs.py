@@ -7,6 +7,8 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
+from collections import Counter
+
 # from glances.logger import logger
 
 # This constant defines the list of available processes sort key
@@ -21,9 +23,9 @@ def create_program_dict(p):
         'num_threads': p['num_threads'] or 0,
         'cpu_percent': p['cpu_percent'] or 0,
         'memory_percent': p['memory_percent'] or 0,
-        'cpu_times': p['cpu_times'] or (),
-        'memory_info': p['memory_info'] or (),
-        'io_counters': p['io_counters'] or (),
+        'cpu_times': p['cpu_times'] or {},
+        'memory_info': p['memory_info'] or {},
+        'io_counters': p['io_counters'] or {},
         'childrens': [p['pid']],
         # Others keys are not used
         # but should be set to be compliant with the existing process_list
@@ -35,14 +37,17 @@ def create_program_dict(p):
         'status': p['status'],
     }
 
+
 def update_program_dict(program, p):
     """Update an existing entry in the dict (existing program)"""
     # some values can be None, e.g. macOS system processes
     program['num_threads'] += p['num_threads'] or 0
     program['cpu_percent'] += p['cpu_percent'] or 0
     program['memory_percent'] += p['memory_percent'] or 0
-    program['cpu_times'] += p['cpu_times'] or ()
-    program['memory_info'] += p['memory_info'] or ()
+    program['cpu_times'] = dict(Counter(program['cpu_times'] or {}) +
+                                Counter(p['cpu_times'] or {}))
+    program['memory_info'] = dict(Counter(program['memory_info'] or {}) +
+                                  Counter(p['memory_info'] or {}))
 
     program['io_counters'] += p['io_counters']
     program['childrens'].append(p['pid'])
@@ -50,6 +55,7 @@ def update_program_dict(program, p):
     program['username'] = p.get('username', '_') if p.get('username') == program['username'] else '_'
     program['nice'] = p['nice'] if p['nice'] == program['nice'] else '_'
     program['status'] = p['status'] if p['status'] == program['status'] else '_'
+
 
 def processes_to_programs(processes):
     """Convert a list of processes to a list of programs."""

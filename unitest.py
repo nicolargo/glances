@@ -280,10 +280,8 @@ class TestGlances(unittest.TestCase):
         # stats_to_check = [ ]
         print('INFO: [TEST_017] Check PROGRAM stats')
         stats_grab = processes_to_programs(stats.get_plugin('processlist').get_raw())
-        self.assertTrue(type(stats_grab) is list, msg='Programs stats is not a list')
-        print('INFO: PROGRAM list stats: %s items in the list' % len(stats_grab))
-        # Check if number of processes in the list equal counter
-        # self.assertEqual(total, len(stats_grab))
+        self.assertIsInstance(stats_grab, list, msg='Programs stats list is not a list')
+        self.assertIsInstance(stats_grab[0], dict, msg='First item should be a dict')
 
     def test_018_string_value_to_float(self):
         """Check string_value_to_float function"""
