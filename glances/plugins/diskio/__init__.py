@@ -10,6 +10,7 @@
 """Disk I/O plugin."""
 from __future__ import unicode_literals
 
+from glances.logger import logger
 from glances.globals import nativestr
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -186,12 +187,12 @@ class PluginModel(GlancesPluginModel):
             if all([self.get_views(item=i[self.get_key()], key=f, option='hidden') for f in self.hide_zero_fields]):
                 continue
             # Is there an alias for the disk name ?
-            disk_name = self.has_alias(i['disk_name']) if self.has_alias(i['disk_name']) else i['disk_name']
+            disk_name = i['alias'] if 'alias' in i else i['disk_name']
             # New line
             ret.append(self.curse_new_line())
             if len(disk_name) > name_max_width:
                 # Cut disk name if it is too long
-                disk_name = '_' + disk_name[-name_max_width + 1 :]
+                disk_name = disk_name[:name_max_width] + '_'
             msg = '{:{width}}'.format(nativestr(disk_name), width=name_max_width + 1)
             ret.append(self.curse_add_line(msg))
             if args.diskio_iops:

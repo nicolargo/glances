@@ -147,6 +147,10 @@ class PluginModel(GlancesPluginModel):
                 if not self.is_display(fs_current['device_name']):
                     continue
 
+                # Add alias if exist (define in the configuration file)
+                if self.has_alias(fs_current['mnt_point']) is not None:
+                    fs_current['alias'] = self.has_alias(fs_current['mnt_point'])
+
                 stats.append(fs_current)
 
         elif self.input_method == 'snmp':
@@ -225,16 +229,16 @@ class PluginModel(GlancesPluginModel):
             return ret
 
         # Max size for the interface name
-        name_max_width = max_width - 12
+        name_max_width = max_width - 13
 
         # Build the string message
         # Header
         msg = '{:{width}}'.format('FILE SYS', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.fs_free_space:
-            msg = '{:>7}'.format('Free')
+            msg = '{:>8}'.format('Free')
         else:
-            msg = '{:>7}'.format('Used')
+            msg = '{:>8}'.format('Used')
         ret.append(self.curse_add_line(msg))
         msg = '{:>7}'.format('Total')
         ret.append(self.curse_add_line(msg))
@@ -243,17 +247,13 @@ class PluginModel(GlancesPluginModel):
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
             # New line
             ret.append(self.curse_new_line())
-            if i['device_name'] == '' or i['device_name'] == 'none':
-                mnt_point = i['mnt_point'][-name_max_width + 1 :]
-            elif len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= name_max_width - 3:
+            mnt_point = i['alias'] if 'alias' in i else i['mnt_point']
+            if len(mnt_point) + len(i['device_name'].split('/')[-1]) <= name_max_width - 3:
                 # If possible concatenate mode info... Glances touch inside :)
                 mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
-            elif len(i['mnt_point']) > name_max_width:
-                # Cut mount point name if it is too long
-                mnt_point = '_' + i['mnt_point'][-name_max_width + 1 :]
-            else:
-                mnt_point = i['mnt_point']
-            msg = '{:{width}}'.format(nativestr(mnt_point), width=name_max_width)
+            elif len(mnt_point) > name_max_width:
+                mnt_point = mnt_point[:name_max_width] + '_'
+            msg = '{:{width}}'.format(nativestr(mnt_point), width=name_max_width + 1)
             ret.append(self.curse_add_line(msg))
             if args.fs_free_space:
                 msg = '{:>7}'.format(self.auto_unit(i['free']))
