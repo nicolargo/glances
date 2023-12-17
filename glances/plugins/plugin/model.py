@@ -98,6 +98,9 @@ class GlancesPluginModel(object):
             logger.debug('Load section {} in {}'.format(self.plugin_name, config.config_file_paths()))
             self.load_limits(config=config)
 
+        # Init the alias (dictionnary)
+        self.alias = self.read_alias()
+
         # Init the actions
         self.actions = GlancesActions(args=args)
 
@@ -633,7 +636,7 @@ class GlancesPluginModel(object):
         return self.stats
 
     def get_stat_name(self, header=""):
-        """ "Return the stat name with an optional header"""
+        """Return the stat name with an optional header"""
         ret = self.plugin_name
         if header != "":
             ret += '_' + header
@@ -875,14 +878,15 @@ class GlancesPluginModel(object):
         else:
             return not self.is_hide(value, header=header)
 
+    def read_alias(self):
+        if self.plugin_name + '_' + 'alias' in self._limits:
+            return {i.split(':')[0]: i.split(':')[1] for i in self._limits[self.plugin_name + '_' + 'alias'][0].split(',')}
+        else:
+            return dict()
+
     def has_alias(self, header):
         """Return the alias name for the relative header it it exists otherwise None."""
-        try:
-            # Force to lower case (issue #1126)
-            return self._limits[self.plugin_name + '_' + header.lower() + '_' + 'alias'][0]
-        except (KeyError, IndexError):
-            # logger.debug("No alias found for {}".format(header))
-            return None
+        return self.alias.get(header, None)
 
     def msg_curse(self, args=None, max_width=None):
         """Return default string to display in the curse interface."""
