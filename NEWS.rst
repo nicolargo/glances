@@ -8,6 +8,10 @@ Version 4.0.0
 
 Under development: https://github.com/nicolargo/glances/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Glances+4.0.0%22
 
+**BREAKING CHANGES:**
+
+    * The Glances API version 3 is replaced by the version 4. So Restfull API URL is now /api/4/.
+
 ===============
 Version 3.4.0.3
 ===============
