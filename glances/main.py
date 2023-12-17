@@ -15,7 +15,7 @@ import tempfile
 from logging import DEBUG
 from warnings import simplefilter
 
-from glances import __version__, psutil_version
+from glances import __version__, psutil_version, __apiversion__
 from glances.globals import WINDOWS, disable, enable
 from glances.config import Config
 from glances.processes import sort_processes_key_list
@@ -99,16 +99,23 @@ Examples of use:
         # Read the command line arguments
         self.args = self.parse_args()
 
+    def version_msg(self):
+        """Return the version message."""
+        version = 'Glances version:\t{}\n'.format(__version__)
+        version += 'Glances API version:\t{}\n'.format(__apiversion__)
+        version += 'PsUtil version:\t\t{}\n'.format(psutil_version)
+        version += 'Log file:\t\t{}\n'.format(LOG_FILENAME)
+        return version
+
     def init_args(self):
         """Init all the command line arguments."""
-        version = 'Glances v{} with PsUtil v{}\nLog file: {}'.format(__version__, psutil_version, LOG_FILENAME)
         parser = argparse.ArgumentParser(
             prog='glances',
             conflict_handler='resolve',
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog=self.example_of_use,
         )
-        parser.add_argument('-V', '--version', action='version', version=version)
+        parser.add_argument('-V', '--version', action='version', version=self.version_msg())
         parser.add_argument('-d', '--debug', action='store_true', default=False, dest='debug', help='enable debug mode')
         parser.add_argument('-C', '--config', dest='conf_file', help='path to the configuration file')
         parser.add_argument('-P', '--plugins', dest='plugin_dir', help='path to additional plugin directory')
