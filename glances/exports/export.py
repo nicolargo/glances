@@ -36,12 +36,13 @@ class GlancesExport(object):
         'processlist',
         'psutilversion',
         'quicklook',
+        'version',
     ]
 
     def __init__(self, config=None, args=None):
         """Init the export class."""
         # Export name (= module name without glances_)
-        self.export_name = self.__class__.__module__[len('glances_') :]
+        self.export_name = self.__class__.__module__
         logger.debug("Init export module %s" % self.export_name)
 
         # Init the config & args
@@ -115,7 +116,7 @@ class GlancesExport(object):
     def parse_tags(self, tags):
         """Parse tags into a dict.
 
-        :param tags: a comma separated list of 'key:value' pairs. Example: foo:bar,spam:eggs
+        :param tags: a comma-separated list of 'key:value' pairs. Example: foo:bar,spam:eggs
         :return: a dict of tags. Example: {'foo': 'bar', 'spam': 'eggs'}
         """
         d_tags = {}

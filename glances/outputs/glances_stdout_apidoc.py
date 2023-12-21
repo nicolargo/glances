@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -13,10 +13,12 @@ from pprint import pformat
 import json
 import time
 
+from glances import __apiversion__
 from glances.logger import logger
 from glances.globals import iteritems
 
-API_URL = "http://localhost:61208/api/3"
+
+API_URL = "http://localhost:61208/api/{api_version}".format(api_version=__apiversion__)
 
 APIDOC_HEADER = """\
 .. _api:
@@ -33,12 +35,14 @@ The Glances Restfull/API server could be ran using the following command line:
 API URL
 -------
 
-The default root API URL is ``http://localhost:61208/api/3``.
+The default root API URL is ``http://localhost:61208/api/{api_version}``.
 
 The bind address and port could be changed using the ``--bind`` and ``--port`` command line options.
 
 It is also possible to define an URL prefix using the ``url_prefix`` option from the [outputs] section
-of the Glances configuration file. The url_prefix should always end with a slash (``/``).
+of the Glances configuration file.
+
+Note: The url_prefix should always end with a slash (``/``).
 
 For example:
 
@@ -46,10 +50,23 @@ For example:
     [outputs]
     url_prefix = /glances/
 
-will change the root API URL to ``http://localhost:61208/glances/api/3`` and the Web UI URL to
+will change the root API URL to ``http://localhost:61208/glances/api/{api_version}`` and the Web UI URL to
 ``http://localhost:61208/glances/``
 
-"""
+API documentation
+-----------------
+
+The API documentation is available at the following URL: ``http://localhost:61208/docs#/``.
+
+WebUI refresh
+-------------
+
+It is possible to change the Web UI refresh rate (default is 2 seconds) using the following option in the URL:
+``http://localhost:61208/glances/?refresh=5``
+
+""".format(
+    api_version=__apiversion__
+)
 
 
 def indent_stat(stat, indent='    '):
@@ -67,7 +84,7 @@ def print_api_status():
     print('-' * len(sub_title))
     print('')
     print('This entry point should be used to check the API status.')
-    print('It will return nothing but a 200 return code if everything is OK.')
+    print('It will the Glances version and a 200 return code if everything is OK.')
     print('')
     print('Get the Rest API status::')
     print('')

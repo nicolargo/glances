@@ -36,9 +36,7 @@ class Export(GlancesExport):
 
         # Load the CouchDB configuration file section
         # User and Password are mandatory with CouchDB 3.0 and higher
-        self.export_enable = self.load_conf('couchdb',
-                                            mandatories=['host', 'port', 'db',
-                                                         'user', 'password'])
+        self.export_enable = self.load_conf('couchdb', mandatories=['host', 'port', 'db', 'user', 'password'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -51,8 +49,7 @@ class Export(GlancesExport):
             return None
 
         # @TODO: https
-        server_uri = 'http://{}:{}@{}:{}/'.format(self.user, self.password,
-                                                  self.host, self.port)
+        server_uri = 'http://{}:{}@{}:{}/'.format(self.user, self.password, self.host, self.port)
 
         try:
             s = pycouchdb.Server(server_uri)

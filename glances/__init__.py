@@ -21,6 +21,7 @@ import sys
 # Version should start and end with a numerical char
 # See https://packaging.python.org/specifications/core-metadata/#version
 __version__ = '4.0.0_beta01'
+__apiversion__ = '4'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
 
@@ -108,7 +109,7 @@ def start(config, args):
     # Start the main loop
     logger.debug("Glances started in {} seconds".format(start_duration.get()))
     if args.stop_after:
-        logger.info('Glances will be stopped in ~{} seconds'.format(args.stop_after * args.time * args.memory_leak * 2))
+        logger.info('Glances will be stopped in ~{} seconds'.format(args.stop_after * args.time))
 
     if args.memory_leak:
         print(

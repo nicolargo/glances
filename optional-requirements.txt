@@ -3,17 +3,19 @@
 
 batinfo
 bernhard
-bottle
 cassandra-driver
 chevron
 docker>=6.1.1
 elasticsearch
+fastapi; python_version >= "3.8"
 graphitesender
 hddtemp
 influxdb>=1.0.0 # For InfluxDB < 1.8
 influxdb-client; python_version >= "3.7" # For InfluxDB >= 1.8
+jinja2
 kafka-python
 netifaces
+orjson; python_version >= "3.8"
 packaging; python_version >= "3.7"
 paho-mqtt
 pika
@@ -34,6 +36,7 @@ scandir; python_version < "3.5"
 six
 sparklines
 statsd
+uvicorn; python_version >= "3.8"
 wifi
 zeroconf==0.112.0; python_version < "3.7"
 zeroconf; python_version >= "3.7"

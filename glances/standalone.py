@@ -13,8 +13,9 @@ import asyncio
 import sys
 import time
 
-from glances.globals import WINDOWS
 from glances.logger import logger
+
+from glances.globals import WINDOWS
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
@@ -105,6 +106,10 @@ class GlancesStandalone(object):
 
             # Init screen
             self.screen = GlancesCursesStandalone(config=config, args=args)
+
+            # If an error occur during the screen init, continue if export option is set
+            # It is done in the screen.init function
+            self._quiet = args.quiet
 
         # Check the latest Glances version
         self.outdated = Outdated(config=config, args=args)

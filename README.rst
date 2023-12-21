@@ -92,17 +92,19 @@ Optional dependencies:
 
 - ``batinfo`` (for battery monitoring)
 - ``bernhard`` (for the Riemann export module)
-- ``bottle`` (for Web server mode)
 - ``cassandra-driver`` (for the Cassandra export module)
 - ``chevron`` (for the action script feature)
 - ``docker`` (for the Containers Docker monitoring support)
 - ``elasticsearch`` (for the Elastic Search export module)
+- ``FastAPI`` and ``Uvicorn`` (for Web server mode)
 - ``graphitesender`` (For the Graphite export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB version 1 export module)
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
+- ``jinja2`` (for templating, used under the hood by FastAPI)
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces`` (for the IP plugin)
+- ``orjson`` (fast JSON library, used under the hood by FastAPI)
 - ``py3nvml`` (for the GPU plugin)
 - ``pycouchdb`` (for the CouchDB export module)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
@@ -207,10 +209,10 @@ Get the Glances container:
 The following tags are availables:
 
 - *latest-full* for a full Alpine Glances image (latest release) with all dependencies
-- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (FastAPI and Docker)
 - *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
 - *ubuntu-latest-full* for a full Ubuntu Glances image (latest release) with all dependencies
-- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (FastAPI and Docker)
 - *ubuntu-dev* for a basic Ubuntu Glances image (based on development branch) with all dependencies (Warning: may be instable)
 
 Run last version of Glances container in *console mode*:
@@ -319,7 +321,7 @@ Start Termux on your device and enter:
     $ apt update
     $ apt upgrade
     $ apt install clang python
-    $ pip install bottle
+    $ pip install fastapi uvicorn orjson jinja2
     $ pip install glances
 
 And start Glances:

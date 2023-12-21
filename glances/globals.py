@@ -25,6 +25,8 @@ import subprocess
 from datetime import datetime
 import re
 import base64
+import functools
+import weakref
 
 import queue
 from configparser import ConfigParser, NoOptionError, NoSectionError
@@ -315,10 +317,10 @@ def json_dumps(data):
         return ujson.dumps(data, ensure_ascii=False)
 
 
-def json_dumps_dictlist(data, item):
+def dictlist(data, item):
     if isinstance(data, dict):
         try:
-            return json_dumps({item: data[item]})
+            return {item: data[item]}
         except (TypeError, IndexError, KeyError):
             return None
     elif isinstance(data, list):
@@ -326,11 +328,19 @@ def json_dumps_dictlist(data, item):
             # Source:
             # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
             # But https://github.com/nicolargo/glances/issues/1401
-            return json_dumps({item: list(map(itemgetter(item), data))})
+            return {item: list(map(itemgetter(item), data))}
         except (TypeError, IndexError, KeyError):
             return None
     else:
         return None
+
+
+def json_dumps_dictlist(data, item):
+    dl = dictlist(data, item)
+    if dl is None:
+        return None
+    else:
+        return json_dumps(dl)
 
 
 def string_value_to_float(s):
@@ -398,3 +408,21 @@ def folder_size(path, errno=0):
             except OSError as e:
                 ret_err = e.errno
     return ret_size, ret_err
+
+
+def weak_lru_cache(maxsize=128, typed=False):
+    """LRU Cache decorator that keeps a weak reference to self
+    Source: https://stackoverflow.com/a/55990799"""
+
+    def wrapper(func):
+        @functools.lru_cache(maxsize, typed)
+        def _func(_self, *args, **kwargs):
+            return func(_self(), *args, **kwargs)
+
+        @functools.wraps(func)
+        def inner(self, *args, **kwargs):
+            return _func(weakref.ref(self), *args, **kwargs)
+
+        return inner
+
+    return wrapper

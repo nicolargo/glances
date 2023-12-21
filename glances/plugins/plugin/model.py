@@ -16,7 +16,7 @@ I am your father...
 import re
 import copy
 
-from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr, json_dumps, json_dumps_dictlist
+from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr, json_dumps, json_dumps_dictlist, dictlist
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
@@ -70,7 +70,10 @@ class GlancesPluginModel(object):
         :stats_init_value: Default value for a stats item
         """
         # Build the plugin name
-        self.plugin_name = self.__class__.__module__.split('.')[2]
+        # Internal or external module (former prefixed by 'glances.plugins')
+        _mod = self.__class__.__module__.replace('glances.plugins.', '')
+        self.plugin_name = _mod.split('.')[0]
+
         if self.plugin_name.startswith('glances_'):
             self.plugin_name = self.plugin_name.split('glances_')[1]
         logger.debug("Init {} plugin".format(self.plugin_name))
@@ -94,6 +97,9 @@ class GlancesPluginModel(object):
         if config is not None:
             logger.debug('Load section {} in {}'.format(self.plugin_name, config.config_file_paths()))
             self.load_limits(config=config)
+
+        # Init the alias (dictionnary)
+        self.alias = self.read_alias()
 
         # Init the actions
         self.actions = GlancesActions(args=args)
@@ -392,6 +398,13 @@ class GlancesPluginModel(object):
         """Return the stats object in JSON format."""
         return self.get_stats()
 
+    def get_raw_stats_item(self, item):
+        """Return the stats object for a specific item in RAW format.
+
+        Stats should be a list of dict (processlist, network...)
+        """
+        return dictlist(self.stats, item)
+
     def get_stats_item(self, item):
         """Return the stats object for a specific item in JSON format.
 
@@ -399,8 +412,8 @@ class GlancesPluginModel(object):
         """
         return json_dumps_dictlist(self.stats, item)
 
-    def get_stats_value(self, item, value):
-        """Return the stats object for a specific item=value in JSON format.
+    def get_raw_stats_value(self, item, value):
+        """Return the stats object for a specific item=value.
 
         Stats should be a list of dict (processlist, network...)
         """
@@ -410,10 +423,21 @@ class GlancesPluginModel(object):
             if not isinstance(value, int) and value.isdigit():
                 value = int(value)
             try:
-                return json_dumps({value: [i for i in self.stats if i[item] == value]})
+                return {value: [i for i in self.stats if i[item] == value]}
             except (KeyError, ValueError) as e:
                 logger.error("Cannot get item({})=value({}) ({})".format(item, value, e))
                 return None
+
+    def get_stats_value(self, item, value):
+        """Return the stats object for a specific item=value in JSON format.
+
+        Stats should be a list of dict (processlist, network...)
+        """
+        rsv = self.get_raw_stats_value(item, value)
+        if rsv is None:
+            return None
+        else:
+            return json_dumps(rsv)
 
     def update_views_hidden(self):
         """Update the hidden views
@@ -612,7 +636,7 @@ class GlancesPluginModel(object):
         return self.stats
 
     def get_stat_name(self, header=""):
-        """ "Return the stat name with an optional header"""
+        """Return the stat name with an optional header"""
         ret = self.plugin_name
         if header != "":
             ret += '_' + header
@@ -686,7 +710,7 @@ class GlancesPluginModel(object):
             # Add _LOG to the return string
             # So stats will be highlighted with a specific color
             log_str = "_LOG"
-            # Add the log to the list
+            # Add the log to the events list
             glances_events.add(ret, stat_name.upper(), value)
 
         # Manage threshold
@@ -825,7 +849,7 @@ class GlancesPluginModel(object):
         If the show value is empty, return True (show by default)
 
         The show configuration list is defined in the glances.conf file.
-        It is a comma separated list of regexp.
+        It is a comma-separated list of regexp.
         Example for diskio:
         show=sda.*
         """
@@ -838,7 +862,7 @@ class GlancesPluginModel(object):
         """Return True if the value is in the hide configuration list.
 
         The hide configuration list is defined in the glances.conf file.
-        It is a comma separated list of regexp.
+        It is a comma-separated list of regexp.
         Example for diskio:
         hide=sda2,sda5,loop.*
         """
@@ -854,14 +878,15 @@ class GlancesPluginModel(object):
         else:
             return not self.is_hide(value, header=header)
 
+    def read_alias(self):
+        if self.plugin_name + '_' + 'alias' in self._limits:
+            return {i.split(':')[0]: i.split(':')[1] for i in self._limits[self.plugin_name + '_' + 'alias'][0].split(',')}
+        else:
+            return dict()
+
     def has_alias(self, header):
         """Return the alias name for the relative header it it exists otherwise None."""
-        try:
-            # Force to lower case (issue #1126)
-            return self._limits[self.plugin_name + '_' + header.lower() + '_' + 'alias'][0]
-        except (KeyError, IndexError):
-            # logger.debug("No alias found for {}".format(header))
-            return None
+        return self.alias.get(header, None)
 
     def msg_curse(self, args=None, max_width=None):
         """Return default string to display in the curse interface."""

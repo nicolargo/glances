@@ -15,7 +15,7 @@ import tempfile
 from logging import DEBUG
 from warnings import simplefilter
 
-from glances import __version__, psutil_version
+from glances import __version__, psutil_version, __apiversion__
 from glances.globals import WINDOWS, disable, enable
 from glances.config import Config
 from glances.processes import sort_processes_key_list
@@ -83,13 +83,13 @@ Examples of use:
   Display CSV stats to stdout (all stats in one line):
     $ glances --stdout-csv now,cpu.user,mem.used,load
 
-  Enable some plugins disabled by default (comma separated list):
+  Enable some plugins disabled by default (comma-separated list):
     $ glances --enable-plugin sensors
 
-  Disable some plugins (comma separated list):
+  Disable some plugins (comma-separated list):
     $ glances --disable-plugin network,ports
 
-  Disable all plugins except some (comma separated list):
+  Disable all plugins except some (comma-separated list):
     $ glances --disable-plugin all --enable-plugin cpu,mem,load
 
 """
@@ -99,18 +99,26 @@ Examples of use:
         # Read the command line arguments
         self.args = self.parse_args()
 
+    def version_msg(self):
+        """Return the version message."""
+        version = 'Glances version:\t{}\n'.format(__version__)
+        version += 'Glances API version:\t{}\n'.format(__apiversion__)
+        version += 'PsUtil version:\t\t{}\n'.format(psutil_version)
+        version += 'Log file:\t\t{}\n'.format(LOG_FILENAME)
+        return version
+
     def init_args(self):
         """Init all the command line arguments."""
-        version = 'Glances v{} with PsUtil v{}\nLog file: {}'.format(__version__, psutil_version, LOG_FILENAME)
         parser = argparse.ArgumentParser(
             prog='glances',
             conflict_handler='resolve',
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog=self.example_of_use,
         )
-        parser.add_argument('-V', '--version', action='version', version=version)
+        parser.add_argument('-V', '--version', action='version', version=self.version_msg())
         parser.add_argument('-d', '--debug', action='store_true', default=False, dest='debug', help='enable debug mode')
         parser.add_argument('-C', '--config', dest='conf_file', help='path to the configuration file')
+        parser.add_argument('-P', '--plugins', dest='plugin_dir', help='path to additional plugin directory')
         # Disable plugin
         parser.add_argument(
             '--modules-list',
@@ -125,7 +133,7 @@ Examples of use:
             '--disable-plugins',
             '--disable',
             dest='disable_plugin',
-            help='disable plugin (comma separated list or all). If all is used, \
+            help='disable plugin (comma-separated list or all). If all is used, \
                 then you need to configure --enable-plugin.',
         )
         parser.add_argument(
@@ -133,7 +141,7 @@ Examples of use:
             '--enable-plugins',
             '--enable',
             dest='enable_plugin',
-            help='enable plugin (comma separated list)'
+            help='enable plugin (comma-separated list)',
         )
         parser.add_argument(
             '--disable-process',
@@ -156,7 +164,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='enable_light',
-            help='light mode for Curses UI (disable all but top menu)',
+            help='light mode for Curses UI (disable all but the top menu)',
         )
         parser.add_argument(
             '-0',
@@ -267,7 +275,7 @@ Examples of use:
             help='Accumulate processes by program',
         )
         # Export modules feature
-        parser.add_argument('--export', dest='export', help='enable export module (comma separated list)')
+        parser.add_argument('--export', dest='export', help='enable export module (comma-separated list)')
         parser.add_argument(
             '--export-csv-file', default='./glances.csv', dest='export_csv_file', help='file path for CSV exporter'
         )
@@ -362,7 +370,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='webserver',
-            help='run Glances in web server mode (bottle needed)',
+            help='run Glances in web server mode (FastAPI, Uvicorn, Jinja2 and OrJsonLib needed)',
         )
         parser.add_argument(
             '--cached-time',
@@ -420,19 +428,19 @@ Examples of use:
             '--stdout',
             default=None,
             dest='stdout',
-            help='display stats to stdout, one stat per line (comma separated list of plugins/plugins.attribute)',
+            help='display stats to stdout, one stat per line (comma-separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
             '--stdout-json',
             default=None,
             dest='stdout_json',
-            help='display stats to stdout, JSON format (comma separated list of plugins/plugins.attribute)',
+            help='display stats to stdout, JSON format (comma-separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
             '--stdout-csv',
             default=None,
             dest='stdout_csv',
-            help='display stats to stdout, CSV format (comma separated list of plugins/plugins.attribute)',
+            help='display stats to stdout, CSV format (comma-separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
             '--issue',
@@ -464,7 +472,7 @@ Examples of use:
                 action='store_true',
                 default=False,
                 dest='no_kernel_threads',
-                help='hide kernel threads in process list (not available on Windows)',
+                help='hide kernel threads in the process list (not available on Windows)',
             )
         parser.add_argument(
             '-b',
@@ -472,7 +480,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='byte',
-            help='display network rate in byte per second',
+            help='display network rate in bytes per second',
         )
         parser.add_argument(
             '--diskio-show-ramfs',
@@ -521,7 +529,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='theme_white',
-            help='optimize display colors for white background',
+            help='optimize display colors for a white background',
         )
         # Globals options
         parser.add_argument(
