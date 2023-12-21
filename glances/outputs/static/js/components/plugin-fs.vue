@@ -10,7 +10,7 @@
         </div>
         <div class="table-row" v-for="(fs, fsId) in fileSystems" :key="fsId">
             <div class="table-cell text-left">
-                {{ $filters.minSize(fs.alias ? fs.alias : fs.mountPoint, 36) }}
+                {{ $filters.minSize(fs.alias ? fs.alias : fs.mountPoint, 36, begin=false) }}
                 <span v-if="(fs.alias ? fs.alias : fs.mountPoint).length + fs.name.length <= 34" class="visible-lg-inline">
                     ({{ fs.name }})
                 </span>
