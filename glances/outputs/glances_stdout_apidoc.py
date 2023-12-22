@@ -200,7 +200,7 @@ def print_top(stats):
     print(sub_title)
     print('-' * len(sub_title))
     print('')
-    print('Get top 2 processes of the processlist plugin::')
+    print('Get top 2 processes of the processlist plugin:')
     print('')
     print('    # curl {}/processlist/top/2'.format(API_URL))
     print(indent_stat(stats.get_plugin('processlist').get_export()[:2]))
@@ -210,19 +210,25 @@ def print_top(stats):
 
 
 def print_fields_info(stats):
-    sub_title = 'GET item description of a specific plugin'
+    sub_title = 'GET item description'
     print(sub_title)
     print('-' * len(sub_title))
+    print('Get item description (human readable) for a specific plugin/item:')
     print('')
     print('    # curl {}/diskio/read_bytes/description'.format(API_URL))
     print(indent_stat(stats.get_plugin('diskio').get_item_info('read_bytes', 'description')))
     print('')
-    sub_title = 'GET item unit of a specific plugin'
+    print('Note: the description is defined in the fields_description variable of the plugin.')
+    print('')
+    sub_title = 'GET item unit'
     print(sub_title)
     print('-' * len(sub_title))
+    print('Get item unit for a specific plugin/item:')
     print('')
     print('    # curl {}/diskio/read_bytes/unit'.format(API_URL))
     print(indent_stat(stats.get_plugin('diskio').get_item_info('read_bytes', 'unit')))
+    print('')
+    print('Note: the description is defined in the fields_description variable of the plugin.')
     print('')
 
 
