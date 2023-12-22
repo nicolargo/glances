@@ -38,6 +38,34 @@ urls = [
     ('https://ipv4.jsonip.com', True, 'ip'),
 ]
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'address': {
+        'description': 'Private IP address',
+    },
+    'mask': {
+        'description': 'Private IP mask',
+    },
+    'mask_cidr': {
+        'description': 'Private IP mask in CIDR format',
+        'unit': 'number',
+    },
+    'gateway': {
+        'description': 'Private IP gateway',
+    },
+    'public_address': {
+        'description': 'Public IP address',
+    },
+    'public_info_human': {
+        'description': 'Public IP information',
+    },
+}
+
 
 class PluginModel(GlancesPluginModel):
     """Glances IP Plugin.
@@ -50,7 +78,10 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config)
+        super(PluginModel, self).__init__(
+            args=args, config=config,
+            fields_description=fields_description
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True

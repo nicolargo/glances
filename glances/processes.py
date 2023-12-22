@@ -476,7 +476,10 @@ class GlancesProcesses(object):
                     pass
             else:
                 # Save values to cache
-                self.processlist_cache[proc['pid']] = {cached: proc[cached] for cached in cached_attrs}
+                try:
+                    self.processlist_cache[proc['pid']] = {cached: proc[cached] for cached in cached_attrs}
+                except KeyError:
+                    pass
 
         # Apply user filter
         processlist = list(filter(lambda p: not self._filter.is_filtered(p), processlist))

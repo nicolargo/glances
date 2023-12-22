@@ -12,6 +12,35 @@
 from glances.processes import glances_processes, sort_for_human
 from glances.plugins.plugin.model import GlancesPluginModel
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'total': {
+        'description': 'Total number of processes',
+        'unit': 'number',
+    },
+    'running': {
+        'description': 'Total number of running processes',
+        'unit': 'number',
+    },
+    'sleeping': {
+        'description': 'Total number of sleeping processes',
+        'unit': 'number',
+    },
+    'thread': {
+        'description': 'Total number of threads',
+        'unit': 'number',
+    },
+    'pid_max': {
+        'description': 'Maximum number of processes',
+        'unit': 'number',
+    },
+}
+
 # Define the history items list
 items_history_list = [
     {'name': 'total', 'description': 'Total number of processes', 'y_unit': ''},
@@ -29,7 +58,11 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, items_history_list=items_history_list)
+        super(PluginModel, self).__init__(
+            args=args, config=config,
+            items_history_list=items_history_list,
+            fields_description=fields_description
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True

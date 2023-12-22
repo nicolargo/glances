@@ -31,13 +31,51 @@ except ImportError as e:
     requests_tag = False
     logger.warning("Missing Python Lib ({}), Ports plugin is limited to port scanning".format(e))
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'host': {
+        'description': 'Measurement is be done on this host (or IP address)',
+    },
+    'port': {
+        'description': 'Measurement is be done on this port (0 for ICMP)',
+    },
+    'description': {
+        'description': 'Human readable description for the host/port',
+    },
+    'refresh': {
+        'description': 'Refresh time (in seconds) for this host/port',
+    },
+    'timeout': {
+        'description': 'Timeout (in seconds) for the measurement',
+    },
+    'status': {
+        'description': 'Measurement result (in seconds)',
+        'unit': 'second',
+    },
+    'rtt_warning': {
+        'description': 'Warning threshold (in seconds) for the measurement',
+        'unit': 'second',
+    },
+    'indice': {
+        'description': 'Unique indice for the host/port',
+    },
+}
 
 class PluginModel(GlancesPluginModel):
     """Glances ports scanner plugin."""
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super(PluginModel, self).__init__(
+            args=args, config=config,
+            stats_init_value=[],
+            fields_description=fields_description
+        )
         self.args = args
         self.config = config
 

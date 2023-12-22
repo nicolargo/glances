@@ -26,6 +26,35 @@ SENSOR_TEMP_UNIT = 'C'
 SENSOR_FAN_TYPE = 'fan_speed'
 SENSOR_FAN_UNIT = 'R'
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'label': {
+        'description': 'Sensor label',
+    },
+    'unit': {
+        'description': 'Sensor unit',
+    },
+    'value': {
+        'description': 'Sensor value',
+        'unit': 'number',
+    },
+    'warning': {
+        'description': 'Warning threshold',
+        'unit': 'number',
+    },
+    'critical': {
+        'description': 'Critical threshold',
+        'unit': 'number',
+    },
+    'type': {
+        'description': 'Sensor type (one of battery, temperature_core, fan_speed)',
+    },
+}
 
 class PluginModel(GlancesPluginModel):
     """Glances sensors plugin.
@@ -37,7 +66,11 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super(PluginModel, self).__init__(
+            args=args, config=config,
+            stats_init_value=[],
+            fields_description=fields_description
+        )
 
         start_duration = Counter()
 

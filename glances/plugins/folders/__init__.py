@@ -16,12 +16,54 @@ from glances.folder_list import FolderList as glancesFolderList
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'path': {
+        'description': 'Absolute path.'
+    },
+    'size': {
+        'description': 'Folder size in bytes.',
+        'unit': 'byte',
+    },
+    'refresh': {
+        'description': 'Refresh interval in seconds.',
+        'unit': 'second',
+    },
+    'errno': {
+        'description': 'Return code when retrieving folder size (0 is no error).',
+        'unit': 'number',
+    },
+    'careful': {
+        'description': 'Careful threshold in MB.',
+        'unit': 'megabyte',
+    },
+    'warning': {
+        'description': 'Warning threshold in MB.',
+        'unit': 'megabyte',
+    },
+    'critical': {
+        'description': 'Critical threshold in MB.',
+        'unit': 'megabyte',
+    },
+}
+
+
 class PluginModel(GlancesPluginModel):
     """Glances folder plugin."""
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super(PluginModel, self).__init__(
+            args=args, config=config,
+            stats_init_value=[],
+            fields_description=fields_description
+        )
+
         self.args = args
         self.config = config
 

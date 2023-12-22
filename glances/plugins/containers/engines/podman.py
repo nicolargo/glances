@@ -71,7 +71,8 @@ class PodmanContainerStatsFetcher:
             ior = float(api_stats["BlockInput"])
             iow = float(api_stats["BlockOutput"])
 
-            # Hardcode `time_since_update` to 1 as podman already sends the calculated rate
+            # Hardcode `time_since_update` to 1 as podman
+            # already sends the calculated rate per second
             result_stats = {
                 "cpu": {"total": cpu_usage},
                 "memory": {"usage": mem_usage, "limit": mem_limit},
@@ -290,9 +291,9 @@ class PodmanContainersExtension:
 
         pod_stats = self.pods_stats_fetcher.activity_stats
         for stats in container_stats:
-            if stats["Id"][:12] in pod_stats:
-                stats["pod_name"] = pod_stats[stats["Id"][:12]]["name"]
-                stats["pod_id"] = pod_stats[stats["Id"][:12]]["pod_id"]
+            if stats["id"][:12] in pod_stats:
+                stats["pod_name"] = pod_stats[stats["id"][:12]]["name"]
+                stats["pod_id"] = pod_stats[stats["id"][:12]]["pod_id"]
 
         return version_stats, container_stats
 
@@ -308,16 +309,16 @@ class PodmanContainersExtension:
             # Export name
             'name': nativestr(container.name),
             # Container Id
-            'Id': container.id,
+            'id': container.id,
             # Container Image
-            'Image': str(container.image.tags),
+            'image': ','.join(container.image.tags if container.image.tags else []),
             # Container Status (from attrs)
-            'Status': container.attrs['State'],
-            'Created': container.attrs['Created'],
-            'Command': container.attrs.get('Command') or [],
+            'status': container.attrs['State'],
+            'created': container.attrs['Created'],
+            'command': container.attrs.get('Command') or [],
         }
 
-        if stats['Status'] in self.CONTAINER_ACTIVE_STATUS:
+        if stats['status'] in self.CONTAINER_ACTIVE_STATUS:
             started_at = datetime.fromtimestamp(container.attrs['StartedAt'])
             stats_fetcher = self.container_stats_fetchers[container.id]
             activity_stats = stats_fetcher.activity_stats
@@ -328,22 +329,23 @@ class PodmanContainersExtension:
             stats['memory_usage'] = stats["memory"].get('usage')
             if stats['memory'].get('cache') is not None:
                 stats['memory_usage'] -= stats['memory']['cache']
-            stats['io_r'] = stats['io'].get('ior')
-            stats['io_w'] = stats['io'].get('iow')
-            stats['network_rx'] = stats['network'].get('rx')
-            stats['network_tx'] = stats['network'].get('tx')
-            stats['Uptime'] = pretty_date(started_at)
+            stats['io_rx'] = stats['io'].get('ior') // stats['io'].get('time_since_update')
+            stats['io_wx'] = stats['io'].get('iow') // stats['io'].get('time_since_update')
+            stats['network_rx'] = stats['network'].get('rx') // stats['network'].get('time_since_update')
+            stats['network_tx'] = stats['network'].get('tx') // stats['network'].get('time_since_update')
+            stats['uptime'] = pretty_date(started_at)
+            stats['command'] = ' '.join(stats['command'])
         else:
             stats['io'] = {}
             stats['cpu'] = {}
             stats['memory'] = {}
             stats['network'] = {}
-            stats['io_r'] = None
-            stats['io_w'] = None
+            stats['io_rx'] = None
+            stats['io_wx'] = None
             stats['cpu_percent'] = None
             stats['memory_percent'] = None
             stats['network_rx'] = None
             stats['network_tx'] = None
-            stats['Uptime'] = None
+            stats['uptime'] = None
 
         return stats

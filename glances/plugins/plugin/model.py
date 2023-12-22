@@ -439,6 +439,13 @@ class GlancesPluginModel(object):
         else:
             return json_dumps(rsv)
 
+    def get_item_info(self, item, key, default=None):
+        """Return the item info grabbed into self.fields_description."""
+        if self.fields_description is None or item not in self.fields_description:
+            return default
+        else:
+            return self.fields_description[item].get(key, default)
+
     def update_views_hidden(self):
         """Update the hidden views
 

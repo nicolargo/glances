@@ -16,6 +16,37 @@ from glances.plugins.plugin.model import GlancesPluginModel
 
 import psutil
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'cpu': {
+        'description': 'CPU percent usage',
+        'unit': 'percent',
+    },
+    'mem': {
+        'description': 'MEM percent usage',
+        'unit': 'percent',
+    },
+    'swap': {
+        'description': 'SWAP percent usage',
+        'unit': 'percent',
+    },
+    'cpu_name': {
+        'description': 'CPU name',
+    },
+    'cpu_hz_current': {
+        'description': 'CPU current frequency',
+        'unit': 'hertz',
+    },
+    'cpu_hz': {
+        'description': 'CPU max frequency',
+        'unit': 'hertz',
+    },
+}
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
@@ -35,7 +66,11 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the quicklook plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, items_history_list=items_history_list)
+        super(PluginModel, self).__init__(
+            args=args, config=config,
+            items_history_list=items_history_list,
+            fields_description=fields_description
+        )
         # We want to display the stat in the curse interface
         self.display_curse = True
 
