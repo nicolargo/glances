@@ -12,6 +12,74 @@
 from glances.cpu_percent import cpu_percent
 from glances.plugins.plugin.model import GlancesPluginModel
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'cpu_number': {
+        'description': 'CPU number',
+    },
+    'total': {
+        'description': 'Sum of CPU percentages (except idle) for current CPU number.',
+        'unit': 'percent',
+    },
+    'system': {
+        'description': 'Percent time spent in kernel space. System CPU time is the \
+time spent running code in the Operating System kernel.',
+        'unit': 'percent',
+    },
+    'user': {
+        'description': 'CPU percent time spent in user space. \
+User CPU time is the time spent on the processor running your program\'s code (or code in libraries).',
+        'unit': 'percent',
+    },
+    'iowait': {
+        'description': '*(Linux)*: percent time spent by the CPU waiting for I/O \
+operations to complete.',
+        'unit': 'percent',
+    },
+    'idle': {
+        'description': 'percent of CPU used by any program. Every program or task \
+that runs on a computer system occupies a certain amount of processing \
+time on the CPU. If the CPU has completed all tasks it is idle.',
+        'unit': 'percent',
+    },
+    'irq': {
+        'description': '*(Linux and BSD)*: percent time spent servicing/handling \
+hardware/software interrupts. Time servicing interrupts (hardware + \
+software).',
+        'unit': 'percent',
+    },
+    'nice': {
+        'description': '*(Unix)*: percent time occupied by user level processes with \
+a positive nice value. The time the CPU has spent running users\' \
+processes that have been *niced*.',
+        'unit': 'percent',
+    },
+    'steal': {
+        'description': '*(Linux)*: percentage of time a virtual CPU waits for a real \
+CPU while the hypervisor is servicing another virtual processor.',
+        'unit': 'percent',
+    },
+    'guest': {
+        'description': '*(Linux)*: percent of time spent running a virtual CPU for \
+guest operating systems under the control of the Linux kernel.',
+        'unit': 'percent',
+    },
+    'guest_nice': {
+        'description': '*(Linux)*: percent of time spent running a niced guest (virtual CPU).',
+        'unit': 'percent',
+    },
+    'softirq': {
+        'description': '*(Linux)*: percent of time spent handling software interrupts.',
+        'unit': 'percent',
+    },
+}
+
+
 # Define the history items list
 items_history_list = [
     {'name': 'user', 'description': 'User CPU usage', 'y_unit': '%'},
@@ -29,7 +97,10 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config, items_history_list=items_history_list, stats_init_value=[]
+            args=args, config=config,
+            items_history_list=items_history_list,
+            stats_init_value=[],
+            fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface

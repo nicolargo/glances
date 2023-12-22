@@ -394,20 +394,20 @@ def folder_size(path, errno=0):
     ret_size = 0
     ret_err = errno
     try:
-        f_list = os.scandir(path)
+        for f in os.scandir(path):
+            if f.is_dir(follow_symlinks=False) and (f.name != '.' or f.name != '..'):
+                ret = folder_size(os.path.join(path, f.name), ret_err)
+                ret_size += ret[0]
+                ret_err = ret[1]
+            else:
+                try:
+                    ret_size += f.stat().st_size
+                except OSError as e:
+                    ret_err = e.errno
     except OSError as e:
         return 0, e.errno
-    for f in f_list:
-        if f.is_dir(follow_symlinks=False) and (f.name != '.' or f.name != '..'):
-            ret = folder_size(os.path.join(path, f.name), ret_err)
-            ret_size += ret[0]
-            ret_err = ret[1]
-        else:
-            try:
-                ret_size += f.stat().st_size
-            except OSError as e:
-                ret_err = e.errno
-    return ret_size, ret_err
+    else:
+        return ret_size, ret_err
 
 
 def weak_lru_cache(maxsize=128, typed=False):

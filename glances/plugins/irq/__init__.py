@@ -17,6 +17,23 @@ from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'irq_line': {
+        'description': 'IRQ line name',
+    },
+    'irq_rate': {
+        'description': 'IRQ rate per second',
+        'unit': 'numberpersecond',
+    },
+}
+
+
 class PluginModel(GlancesPluginModel):
     """Glances IRQ plugin.
 
@@ -25,7 +42,11 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super(PluginModel, self).__init__(
+            args=args, config=config,
+            stats_init_value=[],
+            fields_description=fields_description
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True

@@ -13,13 +13,53 @@ from glances.globals import iteritems
 from glances.amps_list import AmpsList as glancesAmpsList
 from glances.plugins.plugin.model import GlancesPluginModel
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'name': {
+        'description': 'AMP name.'
+    },
+    'result': {
+        'description': 'AMP result (a string).'
+    },
+    'refresh': {
+        'description': 'AMP refresh interval.',
+        'unit': 'second'
+    },
+    'timer': {
+        'description': 'Time until next refresh.',
+        'unit': 'second'
+    },
+    'count': {
+        'description': 'Number of matching processes.',
+        'unit': 'number'
+    },
+    'countmin': {
+        'description': 'Minimum number of matching processes.',
+        'unit': 'number'
+    },
+    'countmax': {
+        'description': 'Maximum number of matching processes.',
+        'unit': 'number'
+    },
+}
+
 
 class PluginModel(GlancesPluginModel):
     """Glances AMPs plugin."""
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super(PluginModel, self).__init__(
+            args=args,
+            config=config,
+            stats_init_value=[],
+            fields_description=fields_description
+        )
         self.args = args
         self.config = config
 

@@ -218,6 +218,16 @@ class GlancesRestfulApi(object):
             endpoint=self._api_item_history,
         )
         router.add_api_route(
+            '/api/%s/{plugin}/{item}/description' % self.API_VERSION,
+            response_class=ORJSONResponse,
+            endpoint=self._api_item_description,
+        )
+        router.add_api_route(
+            '/api/%s/{plugin}/{item}/unit' % self.API_VERSION,
+            response_class=ORJSONResponse,
+            endpoint=self._api_item_unit,
+        )
+        router.add_api_route(
             '/api/%s/{plugin}/{item}/{value}' % self.API_VERSION,
             response_class=ORJSONResponse,
             endpoint=self._api_value,
@@ -598,8 +608,58 @@ class GlancesRestfulApi(object):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get history for plugin %s (%s)" % (plugin, str(e))
             )
+        else:
+            return ORJSONResponse(ret)
 
-        return ORJSONResponse(ret)
+    def _api_item_description(self, plugin, item):
+        """Glances API RESTful implementation.
+
+        Return the JSON representation of the couple plugin/item description
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        if plugin not in self.plugins_list:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list),
+            )
+
+        try:
+            # Get the description
+            ret = self.stats.get_plugin(plugin).get_item_info(item, 'description')
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Cannot get %s description for plugin %s (%s)" % (item, plugin, str(e)),
+            )
+        else:
+            return ORJSONResponse(ret)
+
+    def _api_item_unit(self, plugin, item):
+        """Glances API RESTful implementation.
+
+        Return the JSON representation of the couple plugin/item unit
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        if plugin not in self.plugins_list:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list),
+            )
+
+        try:
+            # Get the unit
+            ret = self.stats.get_plugin(plugin).get_item_info(item, 'unit')
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Cannot get %s unit for plugin %s (%s)" % (item, plugin, str(e)),
+            )
+        else:
+            return ORJSONResponse(ret)
 
     def _api_value(self, plugin, item, value):
         """Glances API RESTful implementation.
@@ -626,8 +686,8 @@ class GlancesRestfulApi(object):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Cannot get %s = %s for plugin %s (%s)" % (item, value, plugin, str(e)),
             )
-
-        return ORJSONResponse(ret)
+        else:
+            return ORJSONResponse(ret)
 
     def _api_config(self):
         """Glances API RESTful implementation.
@@ -641,8 +701,8 @@ class GlancesRestfulApi(object):
             args_json = self.config.as_dict()
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get config (%s)" % str(e))
-
-        return ORJSONResponse(args_json)
+        else:
+            return ORJSONResponse(args_json)
 
     def _api_config_section(self, section):
         """Glances API RESTful implementation.

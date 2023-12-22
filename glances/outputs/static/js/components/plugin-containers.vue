@@ -60,16 +60,16 @@
                     {{ $filters.bytes(container.limit) }}
                 </div>
                 <div class="table-cell">
-                    {{ $filters.bits(container.ior / container.io_time_since_update) }}
+                    {{ $filters.bytes(container.io_rx) }}
                 </div>
                 <div class="table-cell">
-                    {{ $filters.bits(container.iow / container.io_time_since_update) }}
+                    {{ $filters.bytes(container.io_wx) }}
                 </div>
                 <div class="table-cell">
-                    {{ $filters.bits(container.rx / container.net_time_since_update) }}
+                    {{ $filters.bits(container.network_rx) }}
                 </div>
                 <div class="table-cell">
-                    {{ $filters.bits(container.tx / container.net_time_since_update) }}
+                    {{ $filters.bits(container.network_tx) }}
                 </div>
                 <div class="table-cell text-left">
                     {{ container.command }}
@@ -107,25 +107,23 @@ export default {
         },
         containers() {
             const { sorter } = this;
-            const containers = ((this.stats && this.stats.containers) || []).map(
+            const containers = (this.stats || []).map(
                 (containerData) => {
                     // prettier-ignore
                     return {
-                        'id': containerData.Id,
+                        'id': containerData.id,
                         'name': containerData.name,
-                        'status': containerData.Status,
-                        'uptime': containerData.Uptime,
+                        'status': containerData.status,
+                        'uptime': containerData.uptime,
                         'cpu_percent': containerData.cpu.total,
                         'memory_usage': containerData.memory.usage != undefined ? containerData.memory.usage : '?',
                         'limit': containerData.memory.limit != undefined ? containerData.memory.limit : '?',
-                        'ior': containerData.io.ior != undefined ? containerData.io.ior : '?',
-                        'iow': containerData.io.iow != undefined ? containerData.io.iow : '?',
-                        'io_time_since_update': containerData.io.time_since_update,
-                        'rx': containerData.network.rx != undefined ? containerData.network.rx : '?',
-                        'tx': containerData.network.tx != undefined ? containerData.network.tx : '?',
-                        'net_time_since_update': containerData.network.time_since_update,
-                        'command': containerData.Command.join(' '),
-                        'image': containerData.Image,
+                        'io_rx': containerData.io_rx != undefined ? containerData.io_rx : '?',
+                        'io_wx': containerData.io_wx != undefined ? containerData.io_wx : '?',
+                        'network_rx': containerData.network_rx != undefined ? containerData.network_rx : '?',
+                        'network_tx': containerData.network_tx != undefined ? containerData.network_tx : '?',
+                        'command': containerData.command,
+                        'image': containerData.image,
                         'engine': containerData.engine,
                         'pod_id': containerData.pod_id
                     };

@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -15,6 +15,51 @@ from glances.plugins.plugin.model import GlancesPluginModel
 from glances.globals import nativestr
 
 import psutil
+
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'LISTEN': {
+        'description': 'Number of TCP connections in LISTEN state',
+        'unit': 'number',
+    },
+    'ESTABLISHED': {
+        'description': 'Number of TCP connections in ESTABLISHED state',
+        'unit': 'number',
+    },
+    'SYN_SENT': {
+        'description': 'Number of TCP connections in SYN_SENT state',
+        'unit': 'number',
+    },
+    'SYN_RECV': {
+        'description': 'Number of TCP connections in SYN_RECV state',
+        'unit': 'number',
+    },
+    'initiated': {
+        'description': 'Number of TCP connections initiated',
+        'unit': 'number',
+    },
+    'terminated': {
+        'description': 'Number of TCP connections terminated',
+        'unit': 'number',
+    },
+    'nf_conntrack_count': {
+        'description': 'Number of tracked connections',
+        'unit': 'number',
+    },
+    'nf_conntrack_max': {
+        'description': 'Maximum number of tracked connections',
+        'unit': 'number',
+    },
+    'nf_conntrack_percent': {
+        'description': 'Percentage of tracked connections',
+        'unit': 'percent',
+    },
+}
 
 # Define the history items list
 # items_history_list = [{'name': 'rx',
@@ -53,6 +98,7 @@ class PluginModel(GlancesPluginModel):
             config=config,
             # items_history_list=items_history_list,
             stats_init_value={'net_connections_enabled': True, 'nf_conntrack_enabled': True},
+            fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface

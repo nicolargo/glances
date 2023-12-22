@@ -26,11 +26,21 @@ APIDOC_HEADER = """\
 API (Restfull/JSON) documentation
 =================================
 
+This documentation describes the Glances API version {api_version} (Restfull/JSON) interface.
+
+For Glances version 3, please have a look on:
+``https://github.com/nicolargo/glances/blob/support/glancesv3/docs/api.rst``
+
+Run the Glances API server
+--------------------------
+
 The Glances Restfull/API server could be ran using the following command line:
 
 .. code-block:: bash
 
     # glances -w --disable-webui
+
+It is also ran automatically when Glances is started in Web server mode (-w).
 
 API URL
 -------
@@ -53,10 +63,11 @@ For example:
 will change the root API URL to ``http://localhost:61208/glances/api/{api_version}`` and the Web UI URL to
 ``http://localhost:61208/glances/``
 
-API documentation
------------------
+API documentation URL
+---------------------
 
-The API documentation is available at the following URL: ``http://localhost:61208/docs#/``.
+The API documentation is embeded in the server and available at the following URL:
+``http://localhost:61208/docs#/``.
 
 WebUI refresh
 -------------
@@ -130,7 +141,9 @@ def print_plugin_description(plugin, stat):
                     description['description'][:-1]
                     if description['description'].endswith('.')
                     else description['description'],
-                    description['unit'],
+                    description['unit']
+                    if 'unit' in description
+                    else 'None'
                 )
             )
         print('')
@@ -193,6 +206,23 @@ def print_top(stats):
     print(indent_stat(stats.get_plugin('processlist').get_export()[:2]))
     print('')
     print('Note: Only work for plugin with a list of items')
+    print('')
+
+
+def print_fields_info(stats):
+    sub_title = 'GET item description of a specific plugin'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('')
+    print('    # curl {}/diskio/read_bytes/description'.format(API_URL))
+    print(indent_stat(stats.get_plugin('diskio').get_item_info('read_bytes', 'description')))
+    print('')
+    sub_title = 'GET item unit of a specific plugin'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('')
+    print('    # curl {}/diskio/read_bytes/unit'.format(API_URL))
+    print(indent_stat(stats.get_plugin('diskio').get_item_info('read_bytes', 'unit')))
     print('')
 
 
@@ -284,6 +314,9 @@ class GlancesStdoutApiDoc(object):
         # Get top stats (only for plugins with a list of items)
         # Example for processlist plugin: get top 2 processes
         print_top(stats)
+
+        # Fields description
+        print_fields_info(stats)
 
         # History
         print_history(stats)

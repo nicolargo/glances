@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -17,6 +17,40 @@ from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
 import psutil
+
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'device_name': {
+        'description': 'Device name.'
+    },
+    'fs_type': {
+        'description': 'File system type.'
+    },
+    'mnt_point': {
+        'description': 'Mount point.'
+    },
+    'size': {
+        'description': 'Total size.',
+        'unit': 'byte',
+    },
+    'used': {
+        'description': 'Used size.',
+        'unit': 'byte',
+    },
+    'free': {
+        'description': 'Free size.',
+        'unit': 'byte',
+    },
+    'percent': {
+        'description': 'File system usage in percent.',
+        'unit': 'percent',
+    },
+}
 
 # SNMP OID
 # The snmpd.conf needs to be edited.
@@ -70,7 +104,10 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config, items_history_list=items_history_list, stats_init_value=[]
+            args=args, config=config,
+            items_history_list=items_history_list,
+            stats_init_value=[],
+            fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface

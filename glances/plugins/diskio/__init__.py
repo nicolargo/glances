@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -17,6 +17,37 @@ from glances.plugins.plugin.model import GlancesPluginModel
 
 import psutil
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'disk_name': {
+        'description': 'Disk name.'
+    },
+    'read_count': {
+        'description': 'Number of reads since last request.',
+        'unit': 'number',
+    },
+    'write_count': {
+        'description': 'Number of writes since last request.',
+        'unit': 'number',
+    },
+    'read_bytes': {
+        'description': 'Number of bytes read since last request.',
+        'unit': 'byte',
+    },
+    'write_bytes': {
+        'description': 'Number of bytes written since last request.',
+        'unit': 'byte',
+    },
+    'time_since_update': {
+        'description': 'Time since last request.',
+        'unit': 'second',
+    },
+}
 
 # Define the history items list
 items_history_list = [
@@ -34,7 +65,10 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config, items_history_list=items_history_list, stats_init_value=[]
+            args=args, config=config,
+            items_history_list=items_history_list,
+            stats_init_value=[],
+            fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface
@@ -69,8 +103,6 @@ class PluginModel(GlancesPluginModel):
             # write_count: number of writes
             # read_bytes: number of bytes read
             # write_bytes: number of bytes written
-            # read_time: time spent reading from disk (in milliseconds)
-            # write_time: time spent writing to disk (in milliseconds)
             try:
                 diskio = psutil.disk_io_counters(perdisk=True)
             except Exception:

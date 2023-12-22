@@ -23,6 +23,46 @@ except Exception as e:
 else:
     import_error_tag = False
 
+#     {
+#         "key": "gpu_id",
+#         "gpu_id": 0,
+#         "name": "Fake GeForce GTX",
+#         "mem": 5.792331695556641,
+#         "proc": 4,
+#         "temperature": 26,
+#         "fan_speed": 30
+#     }
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'gpu_id': {
+        'description': 'GPU identification',
+    },
+    'name': {
+        'description': 'GPU name',
+    },
+    'mem': {
+        'description': 'Memory consumption',
+        'unit': 'percent',
+    },
+    'proc': {
+        'description': 'GPU processor consumption',
+        'unit': 'percent',
+    },
+    'temperature': {
+        'description': 'GPU temperature',
+        'unit': 'celsius',
+    },
+    'fan_speed': {
+        'description': 'GPU fan speed',
+        'unit': 'roundperminute',
+    },
+}
+
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
 items_history_list = [
@@ -40,7 +80,10 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config, items_history_list=items_history_list, stats_init_value=[]
+            args=args, config=config,
+            items_history_list=items_history_list,
+            stats_init_value=[],
+            fields_description=fields_description
         )
 
         # Init the Nvidia API

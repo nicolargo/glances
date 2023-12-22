@@ -17,6 +17,41 @@ from io import open
 from glances.globals import iteritems
 from glances.plugins.plugin.model import GlancesPluginModel
 
+# {
+#   "os_name": "Linux",
+#   "hostname": "XPS13-9333",
+#   "platform": "64bit",
+#   "linux_distro": "Ubuntu 22.04",
+#   "os_version": "5.15.0-88-generic",
+#   "hr_name": "Ubuntu 22.04 64bit"
+# }
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'os_name': {
+        'description': 'Operating system name',
+    },
+    'hostname': {
+        'description': 'Hostname',
+    },
+    'platform': {
+        'description': 'Platform (32 or 64 bits)',
+    },
+    'linux_distro': {
+        'description': 'Linux distribution',
+    },
+    'os_version': {
+        'description': 'Operating system version',
+    },
+    'hr_name': {
+        'description': 'Human readable operating sytem name',
+    },
+}
+
 # SNMP OID
 snmp_oid = {
     'default': {'hostname': '1.3.6.1.2.1.1.5.0', 'system_name': '1.3.6.1.2.1.1.1.0'},
@@ -82,7 +117,10 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config)
+        super(PluginModel, self).__init__(
+            args=args, config=config,
+            fields_description=fields_description
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True

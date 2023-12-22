@@ -24,9 +24,12 @@ import psutil
 # rate: is it a rate ? If yes, // by time_since_update when displayed,
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
-    'total': {'description': 'Sum of all CPU percentages (except idle).', 'unit': 'percent'},
+    'total': {
+        'description': 'Sum of all CPU percentages (except idle).',
+        'unit': 'percent'
+    },
     'system': {
-        'description': 'percent time spent in kernel space. System CPU time is the \
+        'description': 'Percent time spent in kernel space. System CPU time is the \
 time spent running code in the Operating System kernel.',
         'unit': 'percent',
     },
@@ -141,7 +144,9 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the CPU plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
+            args=args, config=config,
+            items_history_list=items_history_list,
+            fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface
