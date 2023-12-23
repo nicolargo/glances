@@ -104,8 +104,10 @@ class TestGlances(unittest.TestCase):
                 self.assertIsInstance(req.json(), text_type)
             elif p in ('fs', 'percpu', 'sensors', 'alert', 'processlist', 'diskio',
                        'hddtemp', 'batpercent', 'network', 'folders', 'amps', 'ports',
-                       'irq', 'wifi', 'gpu'):
+                       'irq', 'wifi', 'gpu', 'containers'):
                 self.assertIsInstance(req.json(), list)
+                if len(req.json()) > 0:
+                    self.assertIsInstance(req.json()[0], dict)
             else:
                 self.assertIsInstance(req.json(), dict)
 
