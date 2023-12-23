@@ -12,12 +12,17 @@ Under development: https://github.com/nicolargo/glances/issues?q=is%3Aopen+is%3A
 
     * The Glances API version 3 is replaced by the version 4. So Restfull API URL is now /api/4/ #2610
     * Alias definition change in the configuration file #1735
+
       Glances version 3.x and lower:
+
         sda1_alias=InternalDisk
         sdb1_alias=ExternalDisk
+
       Glances version 4.x and higher:
+
         alias=sda1:InternalDisk,sdb1:ExternalDisk
-    * Alias can now be used to redefine FS name #1735
+
+    * Alert data model change from a list of list to a list of dict #2633
 
 ===============
 Version 3.4.0.3
