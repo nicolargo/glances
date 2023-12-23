@@ -257,6 +257,20 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(req.headers['Content-Encoding'] == 'gzip')
         self.assertTrue(req.json(), dict)
 
+    def test_016_fields_description(self):
+        """Fields description."""
+        print('INFO: [TEST_016] Get fields description and unit')
+
+        print("HTTP RESTful request: %s/cpu/total/description" % URL)
+        req = self.http_get("%s/cpu/total/description" % URL)
+        self.assertTrue(req.ok)
+        self.assertTrue(req.json(), str)
+
+        print("HTTP RESTful request: %s/cpu/total/unit" % URL)
+        req = self.http_get("%s/cpu/total/unit" % URL)
+        self.assertTrue(req.ok)
+        self.assertTrue(req.json(), str)
+
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""
         print('INFO: [TEST_999] Stop the Glances Web Server')
