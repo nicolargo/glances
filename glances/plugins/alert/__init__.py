@@ -19,6 +19,77 @@ from glances.thresholds import glances_thresholds
 # from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
+# {
+#     "begin": "begin",
+#     "end": "end",
+#     "state": "WARNING|CRITICAL",
+#     "type": "CPU|LOAD|MEM",
+#     "max": MAX,
+#     "avg": AVG,
+#     "min": MIN,
+#     "sum": SUM,
+#     "count": COUNT,
+#     "top": [top3 process list],
+#     "desc": "Processes description",
+#     "sort": "top sort key"
+# }
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'begin': {
+        'description': 'Begin timestamp of the event',
+        'unit': 'timestamp',
+    },
+    'end': {
+        'description': 'End timestamp of the event (or -1 if ongoing)',
+        'unit': 'timestamp',
+    },
+    'state': {
+        'description': 'State of the event (WARNING|CRITICAL)',
+        'unit': 'string',
+    },
+    'type': {
+        'description': 'Type of the event (CPU|LOAD|MEM)',
+        'unit': 'string',
+    },
+    'max': {
+        'description': 'Maximum value during the event period',
+        'unit': 'float',
+    },
+    'avg': {
+        'description': 'Average value during the event period',
+        'unit': 'float',
+    },
+    'min': {
+        'description': 'Minimum value during the event period',
+        'unit': 'float',
+    },
+    'sum': {
+        'description': 'Sum of the values during the event period',
+        'unit': 'float',
+    },
+    'count': {
+        'description': 'Number of values during the event period',
+        'unit': 'int',
+    },
+    'top': {
+        'description': 'Top 3 processes name during the event period',
+        'unit': 'list',
+    },
+    'desc': {
+        'description': 'Description of the event',
+        'unit': 'string',
+    },
+    'sort': {
+        'description': 'Sort key of the top processes',
+        'unit': 'string',
+    },
+}
+
 # Static decision tree for the global alert message
 # - msg: Message to be displayed (result of the decision tree)
 # - thresholds: a list of stats to take into account
@@ -172,7 +243,11 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super(PluginModel, self).__init__(
+            args=args, config=config,
+            stats_init_value=[],
+            fields_description=fields_description
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -210,32 +285,35 @@ class PluginModel(GlancesPluginModel):
             # New line
             ret.append(self.curse_new_line())
             # Start
-            msg = str(datetime.fromtimestamp(alert[0], tz=pytz.timezone(tzname[0] if tzname[0] else 'UTC')))
+            msg = str(datetime.fromtimestamp(alert['begin'],
+                                             tz=pytz.timezone(tzname[0] if tzname[0] else 'UTC')))
             ret.append(self.curse_add_line(msg))
             # Duration
-            if alert[1] > 0:
+            if alert['end'] > 0:
                 # If finished display duration
-                msg = ' ({})'.format(datetime.fromtimestamp(alert[1]) - datetime.fromtimestamp(alert[0]))
+                msg = ' ({})'.format(datetime.fromtimestamp(alert['end']) - datetime.fromtimestamp(alert['begin']))
             else:
                 msg = ' (ongoing)'
             ret.append(self.curse_add_line(msg))
             ret.append(self.curse_add_line(" - "))
             # Infos
-            if alert[1] > 0:
+            if alert['end'] > 0:
                 # If finished do not display status
-                msg = '{} on {}'.format(alert[2], alert[3])
+                msg = '{} on {}'.format(alert['state'], alert['type'])
                 ret.append(self.curse_add_line(msg))
             else:
-                msg = str(alert[3])
-                ret.append(self.curse_add_line(msg, decoration=alert[2]))
+                msg = str(alert['type'])
+                ret.append(self.curse_add_line(msg, decoration=alert['state']))
             # Min / Mean / Max
-            if self.approx_equal(alert[6], alert[4], tolerance=0.1):
-                msg = ' ({:.1f})'.format(alert[5])
+            if self.approx_equal(alert['min'], alert['max'], tolerance=0.1):
+                msg = ' ({:.1f})'.format(alert['avg'])
             else:
-                msg = ' (Min:{:.1f} Mean:{:.1f} Max:{:.1f})'.format(alert[6], alert[5], alert[4])
+                msg = ' (Min:{:.1f} Mean:{:.1f} Max:{:.1f})'.format(alert['min'],
+                                                                    alert['avg'],
+                                                                    alert['max'])
             ret.append(self.curse_add_line(msg))
             # Top processes
-            top_process = ', '.join([p['name'] for p in alert[9]])
+            top_process = ', '.join(alert['top'])
             if top_process != '':
                 msg = ': {}'.format(top_process)
                 ret.append(self.curse_add_line(msg))

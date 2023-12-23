@@ -415,12 +415,13 @@ class GlancesPluginModel(object):
     def get_raw_stats_value(self, item, value):
         """Return the stats object for a specific item=value.
 
-        Stats should be a list of dict (processlist, network...)
+        Return None if the item=value does not exist
+        Return None if the item is not a list of dict
         """
         if not isinstance(self.stats, list):
             return None
         else:
-            if not isinstance(value, int) and value.isdigit():
+            if (not isinstance(value, int) and not isinstance(value, float)) and value.isdigit():
                 value = int(value)
             try:
                 return {value: [i for i in self.stats if i[item] == value]}

@@ -25,14 +25,20 @@ class GlancesEvents(object):
     event_value = value
 
     Item (or event) is defined by:
-      ["begin",
-       "end",
-       "WARNING|CRITICAL",
-       "CPU|LOAD|MEM",
-       MAX, AVG, MIN, SUM, COUNT,
-       [top3 process list],
-       "Processes description",
-       "top sort key"]
+        {
+            "begin": "begin",
+            "end": "end",
+            "state": "WARNING|CRITICAL",
+            "type": "CPU|LOAD|MEM",
+            "max": MAX,
+            "avg": AVG,
+            "min": MIN,
+            "sum": SUM,
+            "count": COUNT,
+            "top": [top 3 process name],
+            "desc": "Processes description",
+            "sort": "top sort key"
+        }
     """
 
     def __init__(self, max_events=10):
@@ -60,11 +66,11 @@ class GlancesEvents(object):
 
         An event exist if:
         * end is < 0
-        * event_type is matching
+        * type is matching
         Return -1 if the item is not found.
         """
         for i in range(self.len()):
-            if self.events_list[i][1] < 0 and self.events_list[i][3] == event_type:
+            if self.events_list[i]['end'] < 0 and self.events_list[i]['type'] == event_type:
                 return i
         return -1
 
@@ -124,20 +130,20 @@ class GlancesEvents(object):
             # Create the new log item
             # Time is stored in Epoch format
             # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
-            item = [
-                time.mktime(datetime.now().timetuple()),  # START DATE
-                -1,  # END DATE
-                event_state,  # STATE: WARNING|CRITICAL
-                event_type,  # TYPE: CPU, LOAD, MEM...
-                event_value,  # MAX
-                event_value,  # AVG
-                event_value,  # MIN
-                event_value,  # SUM
-                1,  # COUNT
-                [],  # TOP 3 PROCESS LIST
-                proc_desc,  # MONITORED PROCESSES DESC
-                glances_processes.sort_key,
-            ]  # TOP PROCESS SORT KEY
+            item = {
+                "begin": time.mktime(datetime.now().timetuple()),
+                "end": -1,
+                "state": event_state,
+                "type": event_type,
+                "max": event_value,
+                "avg": event_value,
+                "min": event_value,
+                "sum": event_value,
+                "count": 1,
+                "top": [],
+                "desc": proc_desc,
+                "sort": glances_processes.sort_key,
+            }
 
             # Add the item to the list
             self.events_list.insert(0, item)
@@ -145,7 +151,6 @@ class GlancesEvents(object):
             # Limit the list to 'max_events' items
             if self.len() > self.max_events:
                 self.events_list.pop()
-
             return True
         else:
             return False
@@ -158,9 +163,9 @@ class GlancesEvents(object):
 
             # Set the end of the events
             end_time = time.mktime(datetime.now().timetuple())
-            if end_time - self.events_list[event_index][0] > peak_time:
+            if end_time - self.events_list[event_index]['begin'] > peak_time:
                 # If event is > peak_time seconds
-                self.events_list[event_index][1] = end_time
+                self.events_list[event_index]['end'] = end_time
             else:
                 # If event <= peak_time seconds, ignore
                 self.events_list.remove(self.events_list[event_index])
@@ -170,25 +175,25 @@ class GlancesEvents(object):
 
             # State
             if event_state == "CRITICAL":
-                self.events_list[event_index][2] = event_state
+                self.events_list[event_index]['state'] = event_state
             # Min value
-            self.events_list[event_index][6] = min(self.events_list[event_index][6], event_value)
+            self.events_list[event_index]['min'] = min(self.events_list[event_index]['min'], event_value)
             # Max value
-            self.events_list[event_index][4] = max(self.events_list[event_index][4], event_value)
+            self.events_list[event_index]['max'] = max(self.events_list[event_index]['max'], event_value)
             # Average value
-            self.events_list[event_index][7] += event_value
-            self.events_list[event_index][8] += 1
-            self.events_list[event_index][5] = self.events_list[event_index][7] / self.events_list[event_index][8]
+            self.events_list[event_index]['sum'] += event_value
+            self.events_list[event_index]['count'] += 1
+            self.events_list[event_index]['avg'] = self.events_list[event_index]['sum'] / self.events_list[event_index]['count']
 
             # TOP PROCESS LIST (only for CRITICAL ALERT)
             if event_state == "CRITICAL":
                 events_sort_key = self.get_event_sort_key(event_type)
                 # Sort the current process list to retrieve the TOP 3 processes
-                self.events_list[event_index][9] = sort_stats(proc_list, events_sort_key)[0:3]
-                self.events_list[event_index][11] = events_sort_key
+                self.events_list[event_index]['top'] = [p['name'] for p in sort_stats(proc_list, events_sort_key)[0:3]]
+                self.events_list[event_index]['sort'] = events_sort_key
 
             # MONITORED PROCESSES DESC
-            self.events_list[event_index][10] = proc_desc
+            self.events_list[event_index]['desc'] = proc_desc
 
         return True
 
@@ -202,7 +207,7 @@ class GlancesEvents(object):
         clean_events_list = []
         while self.len() > 0:
             item = self.events_list.pop()
-            if item[1] < 0 or (not critical and item[2].startswith("CRITICAL")):
+            if item['end'] < 0 or (not critical and item['state'].startswith("CRITICAL")):
                 clean_events_list.insert(0, item)
         # The list is now the clean one
         self.events_list = clean_events_list
