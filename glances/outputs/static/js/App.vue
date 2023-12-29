@@ -339,7 +339,7 @@ export default {
             });
 
             // SLASH => Enable/disable short processes name
-            hotkeys('/', () => {
+            hotkeys('shift+S', () => {
                 this.store.args.process_short_name = !this.store.args.process_short_name;
             });
 
