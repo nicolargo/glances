@@ -622,10 +622,6 @@ Examples of use:
         if args.disable_autodiscover:
             logger.info("Auto discover mode is disabled")
 
-        # In web server mode
-        if args.webserver:
-            args.process_short_name = True
-
         # Server or client login/password
         if args.username_prompt:
             # Every username needs a password

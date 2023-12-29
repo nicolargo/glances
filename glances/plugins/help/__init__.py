@@ -28,6 +28,7 @@ class PluginModel(GlancesPluginModel):
 
         # Set the config instance
         self.config = config
+        self.args = args
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -105,22 +106,32 @@ class PluginModel(GlancesPluginModel):
                 ('toggle_linux_percentage', msg_col.format('0', 'Load, Linux/percentage')),
                 ('toggle_cpu_individual_combined', msg_col.format('1', 'CPU, individual/combined')),
                 ('toggle_gpu_individual_combined', msg_col.format('6', 'GPU, individual/combined')),
-                ('toggle_short_full', msg_col.format('/', 'Process names, short/full')),
+                ('toggle_short_full',
+                 msg_col.format('S',
+                                'Process names, short/full') if self.args.webserver else msg_col.format('/', 'Process names, short/full')),
                 ('header_miscellaneous', msg_header.format('MISCELLANEOUS:')),
-                ('misc_erase_process_filter', msg_col.format('E', 'Erase process filter')),
-                ('misc_generate_history_graphs', msg_col.format('g', 'Generate history graphs')),
+                ('misc_erase_process_filter',
+                 '' if self.args.webserver else msg_col.format('E', 'Erase process filter')),
+                ('misc_generate_history_graphs',
+                 '' if self.args.webserver else msg_col.format('g', 'Generate history graphs')),
                 ('misc_help', msg_col.format('h', 'HELP')),
-                ('misc_accumulate_processes_by_program', msg_col.format('j', 'Display threads or programs')),
+                ('misc_accumulate_processes_by_program',
+                 '' if self.args.webserver else msg_col.format('j', 'Display threads or programs')),
                 ('misc_increase_nice_process', msg_col.format('+', 'Increase nice process')),
                 ('misc_decrease_nice_process', msg_col.format('-', 'Decrease nice process (need admin rights)')),
-                ('misc_kill_process', msg_col.format('k', 'Kill process')),
-                ('misc_reset_processes_summary_min_max', msg_col.format('M', 'Reset processes summary min/max')),
-                ('misc_quit', msg_col.format('q', 'QUIT (or Esc or Ctrl-C)')),
+                ('misc_kill_process',
+                 '' if self.args.webserver else msg_col.format('k', 'Kill process')),
+                ('misc_reset_processes_summary_min_max',
+                 '' if self.args.webserver else msg_col.format('M', 'Reset processes summary min/max')),
+                ('misc_quit',
+                 '' if self.args.webserver else msg_col.format('q', 'QUIT (or Esc or Ctrl-C)')),
                 ('misc_reset_history', msg_col.format('r', 'Reset history')),
                 ('misc_delete_warning_alerts', msg_col.format('w', 'Delete warning alerts')),
                 ('misc_delete_warning_and_critical_alerts', msg_col.format('x', 'Delete warning & critical alerts')),
-                ('misc_theme_white', msg_col.format('9', 'Optimize colors for white background')),
-                ('misc_edit_process_filter_pattern', '  ENTER: Edit process filter pattern'),
+                ('misc_theme_white',
+                 '' if self.args.webserver else msg_col.format('9', 'Optimize colors for white background')),
+                ('misc_edit_process_filter_pattern',
+                 '' if self.args.webserver else '  ENTER: Edit process filter pattern'),
             ]
         )
 
