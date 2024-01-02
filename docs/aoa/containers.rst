@@ -14,6 +14,8 @@ You can install this dependency using:
 
 .. image:: ../_static/containers.png
 
+Note: Memory usage is compute as following "display memory usage = memory usage - inactive_file"
+
 It is possible to define limits and actions from the configuration file
 under the ``[containers]`` section:
 

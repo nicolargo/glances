@@ -256,6 +256,10 @@ class PluginModel(GlancesPluginModel):
         """Return the user ticks by reading the environment variable."""
         return os.sysconf(os.sysconf_names['SC_CLK_TCK'])
 
+    def memory_usage_no_cache(self, mem):
+        """Return the 'real' memory usage by removing inactive_file to usage"""
+        return mem['usage'] - (mem['inactive_file'] if 'inactive_file' in mem else 0)
+
     def update_views(self):
         """Update stats views."""
         # Call the father's method
@@ -281,11 +285,17 @@ class PluginModel(GlancesPluginModel):
             if 'memory' in i and 'usage' in i['memory']:
                 # Looking for specific MEM container threshold in the conf file
                 alert = self.get_alert(
-                    i['memory']['usage'], maximum=i['memory']['limit'], header=i['name'] + '_mem', action_key=i['name']
+                    self.memory_usage_no_cache(i['memory']),
+                    maximum=i['memory']['limit'],
+                    header=i['name'] + '_mem', action_key=i['name']
                 )
                 if alert == 'DEFAULT':
                     # Not found ? Get back to default MEM threshold value
-                    alert = self.get_alert(i['memory']['usage'], maximum=i['memory']['limit'], header='mem')
+                    alert = self.get_alert(
+                        self.memory_usage_no_cache(i['memory']),
+                        maximum=i['memory']['limit'],
+                        header='mem'
+                    )
                 self.views[i[self.get_key()]]['mem']['decoration'] = alert
 
         # Display Engine and Pod name ?
@@ -383,8 +393,8 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_add_line(msg, self.get_views(item=container['name'], key='cpu', option='decoration')))
             # MEM
             try:
-                msg = '{:>7}'.format(self.auto_unit(container['memory']['usage']))
-            except (KeyError, TypeError):
+                msg = '{:>7}'.format(self.auto_unit(self.memory_usage_no_cache(container['memory'])))
+            except KeyError:
                 msg = '{:>7}'.format('_')
             ret.append(self.curse_add_line(msg, self.get_views(item=container['name'], key='mem', option='decoration')))
             try:
