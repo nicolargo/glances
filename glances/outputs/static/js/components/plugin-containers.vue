@@ -54,7 +54,7 @@
                     {{ $filters.number(container.cpu_percent, 1) }}
                 </div>
                 <div class="table-cell">
-                    {{ $filters.bytes(container.memory_usage) }}
+                    {{ $filters.bytes(container.memory_usage_no_cache) }}
                 </div>
                 <div class="table-cell">
                     {{ $filters.bytes(container.limit) }}
@@ -112,14 +112,21 @@ export default {
             const { sorter } = this;
             const containers = (this.stats || []).map(
                 (containerData) => {
-                    // prettier-ignore
+                    let memory_usage_no_cache = '?'
+                    if (containerData.memory.usage != undefined) {
+                        memory_usage_no_cache = containerData.memory.usage;
+                        if (containerData.memory.inactive_file != undefined) {
+                            memory_usage_no_cache = memory_usage_no_cache - containerData.memory.inactive_file;
+                        }
+                    }
+                
                     return {
                         'id': containerData.id,
                         'name': containerData.name,
                         'status': containerData.status,
                         'uptime': containerData.uptime,
                         'cpu_percent': containerData.cpu.total,
-                        'memory_usage': containerData.memory.usage != undefined ? containerData.memory.usage : '?',
+                        'memory_usage_no_cache': memory_usage_no_cache,
                         'limit': containerData.memory.limit != undefined ? containerData.memory.limit : '?',
                         'io_rx': containerData.io_rx != undefined ? containerData.io_rx : '?',
                         'io_wx': containerData.io_wx != undefined ? containerData.io_wx : '?',

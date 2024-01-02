@@ -139,7 +139,7 @@ class PodmanPodStatsFetcher:
     def _get_memory_stats(self, stats):
         """Return the container MEMORY.
 
-        Output: a dict {'rss': 1015808, 'cache': 356352,  'usage': ..., 'max_usage': ...}
+        Output: a dict {'usage': ..., 'limit': ...}
         """
         if "MemUsage" not in stats or "/" not in stats["MemUsage"]:
             self._log_debug("Missing MEM usage fields")
@@ -155,7 +155,7 @@ class PodmanPodStatsFetcher:
             self._log_debug("Compute MEM usage failed", e)
             return None
 
-        return {"usage": usage, "limit": limit}
+        return {'usage': usage, 'limit': limit, 'inactive_file': 0}
 
     def _get_network_stats(self, stats):
         """Return the container network usage using the Docker API (v1.0 or higher).
