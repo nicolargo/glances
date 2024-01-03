@@ -120,7 +120,9 @@ class DockerStatsFetcher:
     def _get_memory_stats(self):
         """Return the container MEMORY.
 
-        Output: a dict {'usage': ..., 'limit': ..., 'max_usage': ...}        
+        Output: a dict {'usage': ..., 'limit': ..., 'inactive_file': ...}
+
+        Note:the displayed memory usage is 'usage - inactive_file'
         """
         memory_stats = self._streamer.stats.get('memory_stats')
 
@@ -131,7 +133,7 @@ class DockerStatsFetcher:
 
         stats = {field: memory_stats[field] for field in self.MANDATORY_MEMORY_FIELDS}
 
-        # Optional field
+        # Optional field stats:inactive_file 
         stats['inactive_file'] = 0
         if 'stats' in memory_stats:
             stats['inactive_file'] = memory_stats['stats'].get('inactive_file', 0)
