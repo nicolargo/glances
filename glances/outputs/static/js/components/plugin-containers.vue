@@ -54,7 +54,7 @@
                     {{ $filters.number(container.cpu_percent, 1) }}
                 </div>
                 <div class="table-cell">
-                    {{ $filters.bytes(container.memory_usage_no_cache) }}
+                    {{ $filters.bytes(container.memory_usage) }}
                 </div>
                 <div class="table-cell">
                     {{ $filters.bytes(container.limit) }}
@@ -126,7 +126,7 @@ export default {
                         'status': containerData.status,
                         'uptime': containerData.uptime,
                         'cpu_percent': containerData.cpu.total,
-                        'memory_usage_no_cache': memory_usage_no_cache,
+                        'memory_usage': memory_usage_no_cache,
                         'limit': containerData.memory.limit != undefined ? containerData.memory.limit : '?',
                         'io_rx': containerData.io_rx != undefined ? containerData.io_rx : '?',
                         'io_wx': containerData.io_wx != undefined ? containerData.io_wx : '?',

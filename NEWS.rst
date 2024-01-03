@@ -23,6 +23,7 @@ Under development: https://github.com/nicolargo/glances/issues?q=is%3Aopen+is%3A
         alias=sda1:InternalDisk,sdb1:ExternalDisk
 
     * Alert data model change from a list of list to a list of dict #2633
+    * Docker memory usage uses the same algorithm than docker stats #2637
 
 ===============
 Version 3.4.0.5
