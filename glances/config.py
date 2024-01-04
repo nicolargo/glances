@@ -127,7 +127,7 @@ class Config(object):
         * custom path: /path/to/glances
         * Linux, SunOS: ~/.config/glances, /etc/glances
         * *BSD: ~/.config/glances, /usr/local/etc/glances
-        * macOS: ~/Library/Application Support/glances, /usr/local/etc/glances
+        * macOS: ~/.config/glances, ~/Library/Application Support/glances, /usr/local/etc/glances
         * Windows: %APPDATA%\glances
 
         The config file will be searched in the following order of priority:
