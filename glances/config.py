@@ -20,28 +20,26 @@ from glances.logger import logger
 
 
 def user_config_dir():
-    r"""Return the per-user config dir (full path).
+    r"""Return a list of per-user config dir (full path).
 
     - Linux, *BSD, SunOS: ~/.config/glances
     - macOS: ~/Library/Application Support/glances
     - Windows: %APPDATA%\glances
     """
+    paths = []
     if WINDOWS:
-        path = os.environ.get('APPDATA')
+        paths.append(os.environ.get('APPDATA'))
     elif MACOS:
-        path = os.path.expanduser('~/Library/Application Support')
+        paths.append(os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'))
+        paths.append(os.path.expanduser('~/Library/Application Support'))
     else:
-        path = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
-    if path is None:
-        path = ''
-    else:
-        path = os.path.join(path, 'glances')
+        paths.append(os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'))
 
-    return path
+    return [os.path.join(path, 'glances') if path is not None else '' for path in paths]
 
 
 def user_cache_dir():
-    r"""Return the per-user cache dir (full path).
+    r"""Return a list of per-user cache dir (full path).
 
     - Linux, *BSD, SunOS: ~/.cache/glances
     - macOS: ~/Library/Caches/glances
@@ -54,11 +52,11 @@ def user_cache_dir():
     else:
         path = os.path.join(os.environ.get('XDG_CACHE_HOME') or os.path.expanduser('~/.cache'), 'glances')
 
-    return path
+    return [path]
 
 
 def system_config_dir():
-    r"""Return the system-wide config dir (full path).
+    r"""Return a list of system-wide config dir (full path).
 
     - Linux, SunOS: /etc/glances
     - *BSD, macOS: /usr/local/etc/glances
@@ -75,11 +73,11 @@ def system_config_dir():
     else:
         path = os.path.join(path, 'glances')
 
-    return path
+    return [path]
 
 
 def default_config_dir():
-    r"""Return the system-wide config dir (full path).
+    r"""Return a list of system-wide config dir (full path).
 
     - Linux, SunOS, *BSD, macOS: /usr/share/doc (as defined in the setup.py files)
     - Windows: %APPDATA%\glances
@@ -93,7 +91,7 @@ def default_config_dir():
     else:
         path = os.path.join(path, 'glances')
 
-    return path
+    return [path]
 
 
 class Config(object):
@@ -138,12 +136,18 @@ class Config(object):
         """
         paths = []
 
+        # self.config_dir is the path to the config file (via -C flag)
         if self.config_dir:
             paths.append(self.config_dir)
 
-        paths.append(os.path.join(user_config_dir(), self.config_filename))
-        paths.append(os.path.join(system_config_dir(), self.config_filename))
-        paths.append(os.path.join(default_config_dir(), self.config_filename))
+        # user_config_dir() returns a list of paths
+        paths.extend([os.path.join(path, self.config_filename) for path in user_config_dir()])
+
+        # system_config_dir() returns a list of paths
+        paths.extend([os.path.join(path, self.config_filename) for path in system_config_dir()])
+
+        # default_config_dir() returns a list of paths
+        paths.extend([os.path.join(path, self.config_filename) for path in default_config_dir()])
 
         return paths
 

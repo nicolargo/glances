@@ -38,9 +38,9 @@ class GlancesPassword(object):
         Related to issue: Password files in same configuration dir in effect #2143
         """
         if self.config is None:
-            return user_config_dir()
+            return user_config_dir()[0]
         else:
-            return self.config.get_value('passwords', 'local_password_path', default=user_config_dir())
+            return self.config.get_value('passwords', 'local_password_path', default=user_config_dir()[0])
 
     @weak_lru_cache(maxsize=32)
     def get_hash(self, plain_password, salt=''):

@@ -43,7 +43,7 @@ class Outdated(object):
         """Init the Outdated class"""
         self.args = args
         self.config = config
-        self.cache_dir = user_cache_dir()
+        self.cache_dir = user_cache_dir()[0]
         self.cache_file = os.path.join(self.cache_dir, 'glances-version.db')
 
         # Set default value...
