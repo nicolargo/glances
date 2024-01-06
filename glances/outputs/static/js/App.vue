@@ -338,7 +338,7 @@ export default {
                 this.store.args.disable_process = !this.store.args.disable_process;
             });
 
-            // SLASH => Enable/disable short processes name
+            // S => Enable/disable short processes name
             hotkeys('shift+S', () => {
                 this.store.args.process_short_name = !this.store.args.process_short_name;
             });
