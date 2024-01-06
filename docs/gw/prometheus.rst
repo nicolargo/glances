@@ -4,8 +4,8 @@ Prometheus
 ==========
 
 You can export statistics to a ``Prometheus`` server through an exporter.
-When the *--export-prometheus* is used, Glances creates a Prometheus exporter
-listening on <host:port> (define in the Glances configuration file).
+When the *--export prometheus* is used, Glances creates a Prometheus exporter
+listening on <host:port> (defined in the Glances configuration file).
 
 .. code-block:: ini
 
