@@ -19,7 +19,7 @@ You can place your ``glances.conf`` file in the following locations:
 ==================== =============================================================
 ``Linux``, ``SunOS`` ~/.config/glances/, /etc/glances/, /usr/share/docs/glances/
 ``*BSD``             ~/.config/glances/, /usr/local/etc/glances/, /usr/share/docs/glances/
-``macOS``            ~/Library/Application Support/glances/, /usr/local/etc/glances/, /usr/share/docs/glances/
+``macOS``            ~/.config/glances/, ~/Library/Application Support/glances/, /usr/local/etc/glances/, /usr/share/docs/glances/
 ``Windows``          %APPDATA%\\glances\\glances.conf
 ==================== =============================================================
 
