@@ -426,3 +426,13 @@ def weak_lru_cache(maxsize=128, typed=False):
         return inner
 
     return wrapper
+
+
+def namedtuple_to_dict(data):
+    """Convert a namedtuple to a dict, using the _asdict() method embeded in PsUtil stats."""
+    return {k: (v._asdict() if hasattr(v, '_asdict') else v) for k, v in data.items()}
+
+
+def list_of_namedtuple_to_list_of_dict(data):
+    """Convert a list of namedtuples to a dict, using the _asdict() method embeded in PsUtil stats."""
+    return [namedtuple_to_dict(d) for d in data]

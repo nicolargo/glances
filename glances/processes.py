@@ -10,6 +10,7 @@
 import os
 
 from glances.globals import BSD, LINUX, MACOS, WINDOWS, iterkeys
+from glances.globals import namedtuple_to_dict, list_of_namedtuple_to_list_of_dict
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.filter import GlancesFilter
 from glances.programs import processes_to_programs
@@ -336,7 +337,7 @@ class GlancesProcesses(object):
                 ret[stat_prefix + '_mean'] = ret[stat_prefix + '_mean_sum'] / ret[stat_prefix + '_mean_counter']
 
             ret['extended_stats'] = True
-        return ret
+        return namedtuple_to_dict(ret)
 
     def is_selected_extended_process(self, position):
         """Return True if the process is the selected one for extended stats."""
@@ -422,7 +423,7 @@ class GlancesProcesses(object):
             # Grab extended stats only for the selected process (see issue #2225)
             if self.extended_process is not None and proc['pid'] == self.extended_process['pid']:
                 proc.update(self.get_extended_stats(self.extended_process))
-                self.extended_process = proc
+                self.extended_process = namedtuple_to_dict(proc)
 
             # Meta data
             ###########
@@ -485,9 +486,7 @@ class GlancesProcesses(object):
         processlist = list(filter(lambda p: not self._filter.is_filtered(p), processlist))
 
         # Save the new processlist and transform all namedtuples to dict
-        self.processlist = [
-            {k: (v._asdict() if hasattr(v, '_asdict') else v) for k, v in p.items()} for p in processlist
-        ]
+        self.processlist = list_of_namedtuple_to_list_of_dict(processlist)
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Useful to highlight the processes with maximum values
