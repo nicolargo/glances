@@ -244,12 +244,11 @@ Examples of use:
             help='enable extended stats on top process',
         )
         parser.add_argument(
-            '--separator',
-            '--enable-separator',
-            action='store_true',
-            default=False,
+            '--disable-separator',
+            action='store_false',
+            default=True,
             dest='enable_separator',
-            help='enable separator in the UI',
+            help='disable separator in the UI (between top and others modules)',
         ),
         parser.add_argument(
             '--disable-cursor',

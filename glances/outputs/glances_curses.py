@@ -201,7 +201,7 @@ class _GlancesCurses(object):
         if config is not None and config.has_section('outputs'):
             logger.debug('Read the outputs section in the configuration file')
             self.theme['name'] = config.get_value('outputs', 'curse_theme', default='black')
-            logger.debug('Theme for the curse interface: {}'.format(self.theme['name']))
+            self.args.enable_separator = config.get_bool_value('outputs', 'separator', default=True)
 
     def is_theme(self, name):
         """Return True if the theme *name* should be used."""
@@ -596,7 +596,7 @@ class _GlancesCurses(object):
         self.column = self.next_column
 
     def separator_line(self, color='SEPARATOR'):
-        """New separator line in the curses interface."""
+        """Add a separator line in the curses interface."""
         if not self.args.enable_separator:
             return
         self.new_line()

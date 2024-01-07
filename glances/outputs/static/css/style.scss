@@ -69,6 +69,21 @@ body {
     padding-left: 10px;
 }
 
+.separator {
+    overflow:hidden;
+    height:5px;
+}
+
+.separator:after {
+    content:'';
+    display:block;
+    margin:-25px auto 0;
+    width:100%;
+    height:24px;
+    border-radius:125px / 12px;
+    box-shadow:0 0 8px #555555;
+}
+
 /* Theme */
 
 .title {
