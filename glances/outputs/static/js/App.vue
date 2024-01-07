@@ -28,6 +28,7 @@
                     </div>
                 </div>
             </div>
+            <div class="row separator" v-if="args.enable_separator"></div>
             <div class="row">
                 <div class="hidden-xs hidden-sm hidden-md col-lg-6" v-if="!args.disable_quicklook">
                     <glances-plugin-quicklook :data="data"></glances-plugin-quicklook>
@@ -58,6 +59,7 @@
                     <glances-plugin-load :data="data"></glances-plugin-load>
                 </div>
             </div>
+            <div class="row separator" v-if="args.enable_separator"></div>
         </div>
         <div class="container-fluid">
             <div class="row">
