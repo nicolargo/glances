@@ -9,7 +9,8 @@
 # WARNING: the Alpine image version and Python version should be set.
 # Alpine 3.18 tag is a link to the latest 3.18.x version.
 # Be aware that if you change the Alpine version, you may have to change the Python version.
-ARG IMAGE_VERSION=3.18
+
+ARG IMAGE_VERSION=3.19
 ARG PYTHON_VERSION=3.11
 
 ##############################################################################
@@ -84,7 +85,7 @@ RUN python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VE
 FROM base as release
 
 # Copy source code and config file
-COPY ./docker-compose/glances.conf /etc/glances.conf
+COPY ./docker-compose/glances.conf /etc/glances/glances.conf
 COPY /glances /app/glances
 
 # Copy binary and update PATH

@@ -226,14 +226,16 @@ Run last version of Glances container in *console mode*:
 
     docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it nicolargo/glances:latest-full
 
+By default, the /etc/glances/glances.conf file is used (based on docker-compose/glances.conf).
+
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
 
 .. code-block:: console
 
     FROM nicolargo/glances:latest
-    COPY glances.conf /etc/glances.conf
-    CMD python -m glances -C /etc/glances.conf $GLANCES_OPT
+    COPY glances.conf /root/.config/glances/glances.conf
+    CMD python -m glances -C /root/.config/glances/glances.conf $GLANCES_OPT
 
 Alternatively, you can specify something along the same lines with
 docker run options (notice the `GLANCES_OPT` environment
@@ -241,7 +243,7 @@ variable setting parameters for the glances startup command):
 
 .. code-block:: console
 
-    docker run -e TZ="${TZ}" -v `pwd`/glances.conf:/etc/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -e GLANCES_OPT="-C /etc/glances.conf" -it nicolargo/glances:latest-full
+    docker run -e TZ="${TZ}" -v `pwd`/glances.conf:/root/.config/glances/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host -e GLANCES_OPT="-C /root/.config/glances/glances.conf" -it nicolargo/glances:latest-full
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
