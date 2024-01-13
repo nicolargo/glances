@@ -77,7 +77,7 @@ RUN python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VE
 FROM base as release
 
 # Copy Glances source code and config file
-COPY ./docker-compose/glances.conf /etc/glances.conf
+COPY ./docker-compose/glances.conf /etc/glances/glances.conf
 COPY /glances /app/glances
 
 # Copy binary and update PATH
