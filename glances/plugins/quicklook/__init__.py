@@ -132,6 +132,11 @@ class PluginModel(GlancesPluginModel):
         if not self.stats or self.is_disabled():
             return ret
 
+        if not max_width:
+            # No max_width defined, return an emptu curse message
+            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            return ret
+
         # Define the data: Bar (default behavior) or Sparkline
         sparkline_tag = False
         if self.args.sparkline and self.history_enable() and not self.args.client:

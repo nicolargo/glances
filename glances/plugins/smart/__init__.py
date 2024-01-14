@@ -168,7 +168,12 @@ class PluginModel(GlancesPluginModel):
             return ret
 
         # Max size for the interface name
-        name_max_width = max_width - 6
+        if max_width:
+            name_max_width = max_width - 6
+        else:
+            # No max_width defined, return an emptu curse message
+            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            return ret
 
         # Header
         msg = '{:{width}}'.format('SMART disks', width=name_max_width)

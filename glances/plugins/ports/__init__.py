@@ -180,7 +180,12 @@ class PluginModel(GlancesPluginModel):
             return ret
 
         # Max size for the interface name
-        name_max_width = max_width - 7
+        if max_width:
+            name_max_width = max_width - 7
+        else:
+            # No max_width defined, return an emptu curse message
+            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            return ret
 
         # Build the string message
         for p in self.stats:

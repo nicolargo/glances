@@ -65,77 +65,18 @@
             <div class="row">
                 <div class="col-sm-6 sidebar" v-if="!args.disable_left_sidebar">
                     <div class="table">
-                        <glances-plugin-network
-                            id="plugin-network"
-                            class="plugin table-row-group"
-                            v-if="!args.disable_network"
-                            :data="data"
-                        ></glances-plugin-network>
-                        <glances-plugin-wifi
-                            id="plugin-wifi"
-                            class="plugin table-row-group"
-                            v-if="!args.disable_wifi"
-                            :data="data"
-                        ></glances-plugin-wifi>
-                        <glances-plugin-connections
-                            id="plugin-connections"
-                            class="plugin table-row-group"
-                            v-if="isLinux && !args.disable_connections"
-                            :data="data"
-                        ></glances-plugin-connections>
-                        <glances-plugin-ports
-                            id="plugin-ports"
-                            class="plugin table-row-group"
-                            v-if="!args.disable_ports"
-                            :data="data"
-                        ></glances-plugin-ports>
-                        <glances-plugin-diskio
-                            id="plugin-diskio"
-                            class="plugin table-row-group"
-                            v-if="!args.disable_diskio"
-                            :data="data"
-                        ></glances-plugin-diskio>
-                        <glances-plugin-fs
-                            id="plugin-fs"
-                            class="plugin table-row-group"
-                            v-if="!args.disable_fs"
-                            :data="data"
-                        ></glances-plugin-fs>
-                        <glances-plugin-irq
-                            id="plugin-irq"
-                            class="plugin table-row-group"
-                            v-if="!args.disable_irq"
-                            :data="data"
-                        ></glances-plugin-irq>
-                        <glances-plugin-smart
-                            id="plugin-smart"
-                            class="plugin table-row-group"
-                            v-if="!args.disable_smart"
-                            :data="data"
-                        ></glances-plugin-smart>
-                        <glances-plugin-folders
-                            id="plugin-folders"
-                            class="plugin table-row-group"
-                            v-if="!args.disable_folders"
-                            :data="data"
-                        ></glances-plugin-folders>
-                        <glances-plugin-raid
-                            id="plugin-raid"
-                            class="plugin table-row-group"
-                            v-if="!args.raid"
-                            :data="data"
-                        ></glances-plugin-raid>
-                        <glances-plugin-sensors
-                            id="plugin-sensors"
-                            class="plugin table-row-group"
-                            v-if="!args.disable_sensors"
-                            :data="data"
-                        ></glances-plugin-sensors>
-                        <glances-plugin-now
-                            id="plugin-now"
-                            class="plugin table-row-group"
-                            :data="data"
-                        ></glances-plugin-now>
+                        <!-- When they exist on the same node, v-if has a higher priority than v-for.
+                            That means the v-if condition will not have access to variables from the
+                            scope of the v-for -->
+                        <template v-for="plugin in leftMenu">
+                            <component
+                                v-if="!args[`disable_${plugin}`]"
+                                :is="`glances-plugin-${plugin}`"
+                                :id="`plugin-${plugin}`"
+                                class="plugin table-row-group"
+                                :data="data">
+                            </component>
+                        </template>
                     </div>
                 </div>
                 <div class="col-sm-18">
@@ -188,6 +129,8 @@ import GlancesPluginSystem from './components/plugin-system.vue';
 import GlancesPluginUptime from './components/plugin-uptime.vue';
 import GlancesPluginWifi from './components/plugin-wifi.vue';
 
+import uiconfig from './uiconfig.json';
+
 export default {
     components: {
         GlancesHelp,
@@ -228,6 +171,9 @@ export default {
         args() {
             return this.store.args || {};
         },
+        config() {
+            return this.store.config || {};
+        },
         data() {
             return this.store.data || {};
         },
@@ -244,6 +190,11 @@ export default {
             const { data } = this;
             const title = (data.stats && data.stats.system && data.stats.system.hostname) || '';
             return title ? `${title} - Glances` : 'Glances';
+        },
+        leftMenu() {
+            return this.config.outputs.left_menu !== undefined
+                ? this.config.outputs.left_menu.split(',')
+                : uiconfig.leftMenu;
         }
     },
     watch: {

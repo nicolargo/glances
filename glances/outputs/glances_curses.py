@@ -105,6 +105,8 @@ class _GlancesCurses(object):
     _quicklook_max_width = 68
 
     # Define left sidebar
+    # This default list is also defined in the glances/outputs/static/js/uiconfig.json
+    # file for the web interface
     _left_sidebar = [
         'network',
         'wifi',
@@ -197,11 +199,16 @@ class _GlancesCurses(object):
 
     def load_config(self, config):
         """Load the outputs section of the configuration file."""
-        # Load the theme
         if config is not None and config.has_section('outputs'):
             logger.debug('Read the outputs section in the configuration file')
+            # Load the theme
             self.theme['name'] = config.get_value('outputs', 'curse_theme', default='black')
+            # Separator ?
             self.args.enable_separator = config.get_bool_value('outputs', 'separator', default=True)
+            # Set the left sidebar list
+            self._left_sidebar = config.get_list_value('outputs',
+                                                       'left_menu',
+                                                       default=self._left_sidebar)
 
     def is_theme(self, name):
         """Return True if the theme *name* should be used."""
@@ -629,18 +636,23 @@ class _GlancesCurses(object):
 
         for p in stats.getPluginsList(enable=False):
             if p == 'quicklook' or p == 'processlist':
-                # processlist is done later
+                # - processlist is done later
                 # because we need to know how many processes could be displayed
+                # - quicklook is done later
+                # because it is based on CPU, MEM, SWAP and LOAD
                 continue
 
             # Compute the plugin max size
             plugin_max_width = None
             if p in self._left_sidebar:
-                plugin_max_width = max(self._left_sidebar_min_width, self.term_window.getmaxyx()[1] - 105)
-                plugin_max_width = min(self._left_sidebar_max_width, plugin_max_width)
+                plugin_max_width = max(self._left_sidebar_min_width,
+                                       self.term_window.getmaxyx()[1] - 105)
+                plugin_max_width = min(self._left_sidebar_max_width,
+                                       plugin_max_width)
 
             # Get the view
-            ret[p] = stats.get_plugin(p).get_stats_display(args=self.args, max_width=plugin_max_width)
+            ret[p] = stats.get_plugin(p).get_stats_display(args=self.args,
+                                                           max_width=plugin_max_width)
 
         return ret
 
