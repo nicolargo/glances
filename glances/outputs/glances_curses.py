@@ -39,15 +39,16 @@ class _GlancesCurses(object):
     """
 
     _hotkeys = {
-        # 'ENTER' > Edit the process filter
+        '\n': {'handler': '_handle_enter'},
         '0': {'switch': 'disable_irix'},
         '1': {'switch': 'percpu'},
         '2': {'switch': 'disable_left_sidebar'},
         '3': {'switch': 'disable_quicklook'},
-        # '4' > Enable or disable quicklook
-        # '5' > Enable or disable top menu
+        '4': {'handler': '_handle_quicklook'},
+        '5': {'handler': '_handle_top_menu'},
         '6': {'switch': 'meangpu'},
-        '9': {'switch': 'theme_white'},
+        '9': {'switch': 'theme_white',
+              'handler': '_handle_theme'},
         '/': {'switch': 'process_short_name'},
         'a': {'sort_key': 'auto'},
         'A': {'switch': 'disable_amps'},
@@ -58,8 +59,8 @@ class _GlancesCurses(object):
         'd': {'switch': 'disable_diskio'},
         'D': {'switch': 'disable_containers'},
         # 'e' > Enable/Disable process extended
-        # 'E' > Erase the process filter
-        # 'f' > Show/hide fs / folder stats
+        'E': {'handler': '_handle_erase_filter'},
+        'f': {'handler': '_handle_fs_stats'},
         'F': {'switch': 'fs_free_space'},
         'g': {'switch': 'generate_graph'},
         'G': {'switch': 'disable_gpu'},
@@ -86,12 +87,12 @@ class _GlancesCurses(object):
         'T': {'switch': 'network_sum'},
         'u': {'sort_key': 'username'},
         'U': {'switch': 'network_cumul'},
-        # 'w' > Delete finished warning logs
+        'w': {'handler': '_handle_clean_logs'},
         'W': {'switch': 'disable_wifi'},
-        # 'x' > Delete finished warning and critical logs
-        # 'z' > Enable or disable processes
-        # '+' > Increase the process nice level
-        # '-' > Decrease the process nice level
+        'x': {'handler': '_handle_clean_critical_logs'},
+        'z': {'handler': '_handle_disable_process'},
+        '+': {'handler': '_handle_increase_nice'},
+        '-': {'handler': '_handle_decrease_nice'},
         # "<" (left arrow) navigation through process sort
         # ">" (right arrow) navigation through process sort
         # 'UP' > Up in the server list
@@ -390,34 +391,15 @@ class _GlancesCurses(object):
                 self._handle_switch(hotkey)
             elif self.pressedkey == ord(hotkey) and 'sort_key' in self._hotkeys[hotkey]:
                 self._handle_sort_key(hotkey)
+            if self.pressedkey == ord(hotkey) and 'handler' in self._hotkeys[hotkey]:
+                action = getattr(self, self._hotkeys[hotkey]['handler'])
+                action()
 
-        # Other actions...
-        if self.pressedkey == ord('\n'):
-            self._handle_enter()
-        elif self.pressedkey == ord('4'):
-            self._handle_quicklook()
-        elif self.pressedkey == ord('5'):
-            self._handle_top_menu()
-        elif self.pressedkey == ord('9'):
-            self._handle_theme()
-        elif self.pressedkey == ord('e') and not self.args.programs:
+        # Other actions with key > 255 (ord will not work) and/or additional test...
+        if self.pressedkey == ord('e') and not self.args.programs:
             self._handle_process_extended()
-        elif self.pressedkey == ord('E'):
-            self._handle_erase_filter()
-        elif self.pressedkey == ord('f'):
-            self._handle_fs_stats()
-        elif self.pressedkey == ord('+'):
-            self._handle_increase_nice()
-        elif self.pressedkey == ord('-'):
-            self._handle_decrease_nice()
         elif self.pressedkey == ord('k') and not self.args.disable_cursor:
             self._handle_kill_process()
-        elif self.pressedkey == ord('w'):
-            self._handle_clean_logs()
-        elif self.pressedkey == ord('x'):
-            self._handle_clean_critical_logs()
-        elif self.pressedkey == ord('z'):
-            self._handle_disable_process()
         elif self.pressedkey == curses.KEY_LEFT:
             self._handle_sort_left()
         elif self.pressedkey == curses.KEY_RIGHT:
