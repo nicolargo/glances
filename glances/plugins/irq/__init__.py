@@ -12,6 +12,7 @@
 import os
 import operator
 
+from glances.logger import logger
 from glances.globals import LINUX
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.plugin.model import GlancesPluginModel
