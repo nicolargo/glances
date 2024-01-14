@@ -48,10 +48,30 @@ A first section (called global) is available:
     # History size (maximum number of values)
     # Default is 28800: 1 day with 1 point every 3 seconds
     history_size=28800
-    # Define directory external to glances hierarchy for loading additional plugins
+    # Set the way Glances should display the date (default is %Y-%m-%d %H:%M:%S %Z)
+    #strftime_format="%Y-%m-%d %H:%M:%S %Z"
+    # Define external directory for loading additional plugins
     # The layout follows the glances standard for plugin definitions
-    # (see <install-dir>glances/plugins for details)
-    # plugin_dir=/home/user/dev/plugins
+    #plugin_dir=/home/user/dev/plugins
+
+than a second one concerning the user interface:
+
+.. code-block:: ini
+
+    [outputs]
+    # Theme name (for the moment only for the Curses interface: black or white)
+    curse_theme=black
+    # Separator in the Curses and WebUI interface (between top and others plugins)
+    separator=True
+    # Set the the Curses and WebUI interface left menu plugin list (comma-separated)
+    #left_menu=network,wifi,connections,ports,diskio,fs,irq,folders,raid,smart,sensors,now
+    # Limit the number of processes to display (for the WebUI)
+    max_processes_display=25
+    # Set the URL prefix (for the WebUI and the API)
+    # Example: url_prefix=/glances/ => http://localhost/glances/
+    # The final / is mandatory
+    # Default is no prefix (/)
+    #url_prefix=/glances/
 
 Each plugin, export module, and application monitoring process (AMP) can
 have a section. Below is an example for the CPU plugin:

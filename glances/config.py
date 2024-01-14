@@ -325,6 +325,13 @@ class Config(object):
                 pass
         return ret
 
+    def get_list_value(self, section, option, default=None, separator=','):
+        """Get the list value of an option, if it exists."""
+        try:
+            return self.parser.get(section, option).split(separator)
+        except (NoOptionError, NoSectionError):
+            return default
+
     def get_int_value(self, section, option, default=0):
         """Get the int value of an option, if it exists."""
         try:
