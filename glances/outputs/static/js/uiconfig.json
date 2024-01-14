@@ -1,0 +1,16 @@
+{
+    "leftMenu": [
+        "network",
+        "wifi",
+        "connections",
+        "ports",
+        "diskio",
+        "fs",
+        "irq",
+        "folders",
+        "raid",
+        "smart",
+        "sensors",
+        "now"
+    ]
+}
