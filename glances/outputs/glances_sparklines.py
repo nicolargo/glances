@@ -34,7 +34,9 @@ class Sparkline(object):
 
     """Manage sparklines (see https://pypi.org/project/sparklines/)."""
 
-    def __init__(self, size, pre_char='[', post_char=']', empty_char=' ', with_text=True):
+    def __init__(self, size,
+                 pre_char='[', post_char=']', empty_char=' ',
+                 display_value=True):
         # If the sparklines python module available ?
         self.__available = sparklines_module
         # Sparkline size
@@ -45,7 +47,7 @@ class Sparkline(object):
         self.__pre_char = pre_char
         self.__post_char = post_char
         self.__empty_char = empty_char
-        self.__with_text = with_text
+        self.__display_value = display_value
 
     @property
     def available(self):
@@ -56,7 +58,7 @@ class Sparkline(object):
         # Return the sparkline size, with or without decoration
         if with_decoration:
             return self.__size
-        if self.__with_text:
+        if self.__display_value:
             return self.__size - 6
 
     @property
@@ -78,11 +80,14 @@ class Sparkline(object):
     def get(self, overwrite=''):
         """Return the sparkline."""
         ret = sparklines(self.percents, minimum=0, maximum=100)[0]
-        if self.__with_text:
+        if self.__display_value:
             percents_without_none = [x for x in self.percents if x is not None]
             if len(percents_without_none) > 0:
                 ret = '{}{:5.1f}%'.format(ret, percents_without_none[-1])
-        return nativestr(ret)
+        ret = nativestr(ret)
+        if overwrite and len(overwrite) < len(ret) - 6:
+            ret = overwrite + ret[len(overwrite):]
+        return ret
 
     def __str__(self):
         """Return the sparkline."""
