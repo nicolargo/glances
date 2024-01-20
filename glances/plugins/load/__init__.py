@@ -198,6 +198,6 @@ def get_load_average(percent: bool = False):
             pass
 
     if load_average and percent:
-        return tuple([i / get_nb_log_core() * 100 for i in load_average])
+        return tuple([round(i / get_nb_log_core() * 100, 1) for i in load_average])
     else:
         return load_average
