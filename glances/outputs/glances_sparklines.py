@@ -75,7 +75,7 @@ class Sparkline(object):
     def post_char(self):
         return self.__post_char
 
-    def get(self):
+    def get(self, overwrite=''):
         """Return the sparkline."""
         ret = sparklines(self.percents, minimum=0, maximum=100)[0]
         if self.__with_text:
