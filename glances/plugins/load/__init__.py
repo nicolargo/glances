@@ -58,6 +58,14 @@ items_history_list = [
     {'name': 'min15', 'description': '15 minutes load'},
 ]
 
+# Get the number of logical CPU core only once
+# the variable is also shared with the QuickLook plugin
+try:
+    nb_log_core = CorePluginModel().update()["log"]
+except Exception as e:
+    logger.warning('Error: Can not retrieve the CPU core number (set it to 1) ({})'.format(e))
+    nb_log_core = 1
+
 
 class PluginModel(GlancesPluginModel):
     """Glances load plugin.
@@ -74,24 +82,6 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Call CorePluginModel in order to display the core number
-        try:
-            self.nb_log_core = CorePluginModel(args=self.args).update()["log"]
-        except Exception as e:
-            logger.warning('Error: Can not retrieve the CPU core number (set it to 1) ({})'.format(e))
-            self.nb_log_core = 1
-
-    def _getloadavg(self):
-        """Get load average. On both Linux and Windows thanks to PsUtil"""
-        try:
-            return psutil.getloadavg()
-        except (AttributeError, OSError):
-            pass
-        try:
-            return os.getloadavg()
-        except (AttributeError, OSError):
-            return None
-
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
@@ -103,11 +93,16 @@ class PluginModel(GlancesPluginModel):
             # Update stats using the standard system lib
 
             # Get the load using the os standard lib
-            load = self._getloadavg()
+            load = get_load_average()
             if load is None:
                 stats = self.get_init_value()
             else:
-                stats = {'min1': load[0], 'min5': load[1], 'min15': load[2], 'cpucore': self.nb_log_core}
+                stats = {
+                    'min1': load[0],
+                    'min5': load[1],
+                    'min15': load[2],
+                    'cpucore': get_nb_log_core()
+                }
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -122,7 +117,7 @@ class PluginModel(GlancesPluginModel):
             for k, v in iteritems(stats):
                 stats[k] = float(v)
 
-            stats['cpucore'] = self.nb_log_core
+            stats['cpucore'] = get_nb_log_core()
 
         # Update the stats
         self.stats = stats
@@ -170,9 +165,9 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_new_line())
             msg = '{:7}'.format('{} min'.format(load_time))
             ret.append(self.curse_add_line(msg))
-            if args.disable_irix and self.nb_log_core != 0:
+            if args.disable_irix and get_nb_log_core() != 0:
                 # Enable Irix mode for load (see issue #1554)
-                load_stat = self.stats['min{}'.format(load_time)] / self.nb_log_core * 100
+                load_stat = self.stats['min{}'.format(load_time)] / get_nb_log_core() * 100
                 msg = '{:>5.1f}%'.format(load_stat)
             else:
                 # Default mode for load
@@ -181,3 +176,28 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_add_line(msg, self.get_views(key='min{}'.format(load_time), option='decoration')))
 
         return ret
+
+
+def get_nb_log_core():
+    """Get the number of logical CPU core."""
+    return nb_log_core
+
+
+def get_load_average(percent: bool = False):
+    """Get load average. On both Linux and Windows thanks to PsUtil
+
+    if percent is True, return the load average in percent
+    Ex: if you only have one CPU core and the load average is 1.0, then return 100%"""
+    load_average = None
+    try:
+        load_average = psutil.getloadavg()
+    except (AttributeError, OSError):
+        try:
+            load_average = os.getloadavg()
+        except (AttributeError, OSError):
+            pass
+
+    if load_average and percent:
+        return tuple([i / get_nb_log_core() * 100 for i in load_average])
+    else:
+        return load_average
