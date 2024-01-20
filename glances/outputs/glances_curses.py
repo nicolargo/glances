@@ -1020,7 +1020,8 @@ class _GlancesCurses(object):
 
         # Add the message
         for y, m in enumerate(sentence_list):
-            popup.addnstr(2 + y, 2, m, len(m))
+            if len(m) > 0:
+                popup.addnstr(2 + y, 2, m, len(m))
 
         if popup_type == 'info':
             # Display the popup
@@ -1048,7 +1049,7 @@ class _GlancesCurses(object):
                 logger.debug("User enters the following string: %s" % textbox.gather())
                 return textbox.gather()[:-1]
             else:
-                logger.debug("User centers an empty string")
+                logger.debug("User enters an empty string")
                 return None
         elif popup_type == 'yesno':
             # # Create a sub-window for the text field
