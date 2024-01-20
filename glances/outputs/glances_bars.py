@@ -15,7 +15,6 @@ from math import modf
 
 
 class Bar(object):
-
     """Manage bar (progression or status).
 
     import sys
@@ -29,11 +28,8 @@ class Bar(object):
     """
 
     def __init__(self, size,
-                 percentage_char='|',
-                 empty_char=' ',
-                 pre_char='[', post_char=']',
-                 display_value=True,
-                 min_value=0, max_value=100):
+                 percentage_char='|', empty_char=' ', pre_char='[', post_char=']',
+                 display_value=True, min_value=0, max_value=100):
         # Build curses_bars
         self.__curses_bars = [empty_char] * 5 + [percentage_char] * 5
         # Bar size
@@ -75,11 +71,9 @@ class Bar(object):
     def post_char(self):
         return self.__post_char
 
-    def get(self):
+    def get(self, overwrite=''):
         """Return the bars."""
-        value = self.percent
-        if value > self.max_value:
-            value = self.max_value
+        value = self.max_value if self.percent > self.max_value else self.percent
         frac, whole = modf(self.size * value / 100.0)
         ret = self.__curses_bars[8] * int(whole)
         if frac > 0:
@@ -91,6 +85,8 @@ class Bar(object):
                 ret = '{}>{:4.0f}%'.format(ret, self.max_value)
             else:
                 ret = '{}{:5.1f}%'.format(ret, self.percent)
+        if overwrite and len(overwrite) < len(ret) - 6:
+            ret = overwrite + ret[len(overwrite):]
         return ret
 
     def __str__(self):
