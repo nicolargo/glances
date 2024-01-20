@@ -37,6 +37,10 @@ fields_description = {
         'description': 'SWAP percent usage',
         'unit': 'percent',
     },
+    'load': {
+        'description': 'LOAD percent usage',
+        'unit': 'percent',
+    },
     'cpu_name': {
         'description': 'CPU name',
     },
@@ -57,6 +61,7 @@ items_history_list = [
     {'name': 'percpu', 'description': 'PERCPU percent usage', 'y_unit': '%'},
     {'name': 'mem', 'description': 'MEM percent usage', 'y_unit': '%'},
     {'name': 'swap', 'description': 'SWAP percent usage', 'y_unit': '%'},
+    {'name': 'load', 'description': 'LOAD percent usage', 'y_unit': '%'},
 ]
 
 
