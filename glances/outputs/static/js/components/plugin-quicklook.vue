@@ -61,22 +61,22 @@
                 <div class="table-cell">{{ mem }}%</div>
             </div>
             <div class="table-row">
-                <div class="table-cell text-left">SWAP</div>
+                <div class="table-cell text-left">LOAD</div>
                 <div class="table-cell">
                     <div class="progress">
                         <div
-                            :class="`progress-bar progress-bar-${getDecoration('swap')}`"
+                            :class="`progress-bar progress-bar-${getDecoration('load')}`"
                             role="progressbar"
-                            :aria-valuenow="swap"
+                            :aria-valuenow="load"
                             aria-valuemin="0"
                             aria-valuemax="100"
-                            :style="`width: ${swap}%;`"
+                            :style="`width: ${load}%;`"
                         >
                             &nbsp;
                         </div>
                     </div>
                 </div>
-                <div class="table-cell">{{ swap }}%</div>
+                <div class="table-cell">{{ load }}%</div>
             </div>
         </div>
     </section>
@@ -108,6 +108,9 @@ export default {
         },
         mem() {
             return this.stats.mem;
+        },
+        load() {
+            return this.stats.load;
         },
         cpu() {
             return this.stats.cpu;
