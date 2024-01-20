@@ -38,5 +38,5 @@ sparklines
 statsd
 uvicorn; python_version >= "3.8"
 wifi
-zeroconf==0.112.0; python_version < "3.7"
+zeroconf==0.131.0; python_version < "3.7"
 zeroconf; python_version >= "3.7"

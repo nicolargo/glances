@@ -13,3 +13,4 @@ semgrep
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
 numpy>=1.22.2 # not directly required, pinned by Snyk to avoid a vulnerability
 pillow>=10.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
+fonttools>=4.43.0 # not directly required, pinned by Snyk to avoid a vulnerability
