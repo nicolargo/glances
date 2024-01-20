@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -11,6 +11,7 @@
 
 from glances.logger import logger
 from glances.cpu_percent import cpu_percent
+from glances.plugins.load import get_load_average, get_nb_log_core
 from glances.outputs.glances_bars import Bar
 from glances.outputs.glances_sparklines import Sparkline
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -84,11 +85,20 @@ class PluginModel(GlancesPluginModel):
 
         # Grab quicklook stats: CPU, MEM and SWAP
         if self.input_method == 'local':
-            # Get the latest CPU percent value
+            # Get system information
+            cpu_info = cpu_percent.get_info()
+            stats['cpu_name'] = cpu_info['cpu_name']
+            stats['cpu_hz_current'] = (
+                self._mhz_to_hz(cpu_info['cpu_hz_current']) if cpu_info['cpu_hz_current'] is not None else None
+            )
+            stats['cpu_hz'] = self._mhz_to_hz(cpu_info['cpu_hz']) if cpu_info['cpu_hz'] is not None else None
+
+            # Get the CPU percent value (global and per core)
+            # Stats is shared across all plugins
             stats['cpu'] = cpu_percent.get()
             stats['percpu'] = cpu_percent.get(percpu=True)
 
-            # Use the psutil lib for the memory (virtual and swap)
+            # Get the virtual and swap memory
             stats['mem'] = psutil.virtual_memory().percent
             try:
                 stats['swap'] = psutil.swap_memory().percent
@@ -96,13 +106,14 @@ class PluginModel(GlancesPluginModel):
                 # Correct issue in Illumos OS (see #1767)
                 stats['swap'] = None
 
-            # Get additional information
-            cpu_info = cpu_percent.get_info()
-            stats['cpu_name'] = cpu_info['cpu_name']
-            stats['cpu_hz_current'] = (
-                self._mhz_to_hz(cpu_info['cpu_hz_current']) if cpu_info['cpu_hz_current'] is not None else None
-            )
-            stats['cpu_hz'] = self._mhz_to_hz(cpu_info['cpu_hz']) if cpu_info['cpu_hz'] is not None else None
+            # Get load
+            stats['cpucore'] = get_nb_log_core()
+            try:
+                # Load average is a tuple (1 min, 5 min, 15 min)
+                # Process only the 15 min value
+                stats['load'] = get_load_average(percent=True)[2]
+            except (TypeError, IndexError):
+                stats['load'] = None
 
         elif self.input_method == 'snmp':
             # Not available
@@ -118,11 +129,15 @@ class PluginModel(GlancesPluginModel):
         # Call the father's method
         super(PluginModel, self).update_views()
 
-        # Add specifics information
-        # Alert only
+        # Alert for CPU, MEM and SWAP
         for key in ['cpu', 'mem', 'swap']:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
+
+        # Alert for LOAD
+        self.views['load']['decoration'] = self.get_alert(
+            self.stats['load'], header='load'
+        )
 
     def msg_curse(self, args=None, max_width=10):
         """Return the list to display in the UI."""
@@ -145,9 +160,13 @@ class PluginModel(GlancesPluginModel):
             sparkline_tag = data.available
         if not sparkline_tag:
             # Fallback to bar if Sparkline module is not installed
-            data = Bar(max_width, percentage_char=self.get_conf_value('percentage_char', default=['|'])[0])
+            data = Bar(max_width,
+                       percentage_char=self.get_conf_value('percentage_char', default=['|'])[0])
 
         # Build the string message
+        ##########################
+
+        # System information
         if 'cpu_name' in self.stats and 'cpu_hz_current' in self.stats and 'cpu_hz' in self.stats:
             msg_name = self.stats['cpu_name']
             if self.stats['cpu_hz_current'] and self.stats['cpu_hz']:
@@ -160,7 +179,9 @@ class PluginModel(GlancesPluginModel):
                 ret.append(self.curse_add_line(msg_name))
             ret.append(self.curse_add_line(msg_freq))
             ret.append(self.curse_new_line())
-        for key in ['cpu', 'mem', 'swap']:
+
+        # Loop over CPU, MEM and LOAD
+        for key in ['cpu', 'mem', 'load']:
             if key == 'cpu' and args.percpu:
                 if sparkline_tag:
                     raw_cpu = self.get_raw_history(item='percpu', nb=data.size)
