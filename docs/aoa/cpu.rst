@@ -15,17 +15,6 @@ displayed.
 
 .. image:: ../_static/cpu-wide.png
 
-A character is also displayed just after the CPU header and shows the
-trend value:
-
-======== ==============================================================
-Trend    Status
-======== ==============================================================
-``-``    CPU value is equal to the mean of the six latests refreshes
-``\``    CPU value is lower than the mean of the six latests refreshes
-``/``    CPU value is higher than the mean of the six latests refreshes
-======== ==============================================================
-
 CPU stats description:
 
 - **user**: percent time spent in user space. User CPU time is the time
