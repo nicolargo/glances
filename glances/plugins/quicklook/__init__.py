@@ -238,14 +238,10 @@ class PluginModel(GlancesPluginModel):
 
     def _msg_create_line(self, msg, data, key):
         """Create a new line to the Quick view."""
-        # if key == 'mem' and self.get_alert(self.stats['swap'], header='swap') != 'DEFAULT':
-        #     overwrite = 'SWAP'
-        # else:
-        overwrite = ''
         return [
             self.curse_add_line(msg),
             self.curse_add_line(data.pre_char, decoration='BOLD'),
-            self.curse_add_line(data.get(overwrite), self.get_views(key=key, option='decoration')),
+            self.curse_add_line(data.get(), self.get_views(key=key, option='decoration')),
             self.curse_add_line(data.post_char, decoration='BOLD'),
             self.curse_add_line('  '),
         ]

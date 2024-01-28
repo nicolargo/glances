@@ -34,6 +34,19 @@ class Bar(object):
                  unit_char='%',
                  display_value=True,
                  min_value=0, max_value=100):
+        """Init a bar (used in Quicllook plugin)
+
+        Args:
+            size (_type_): Bar size
+            bar_char (str, optional): Bar character. Defaults to '|'.
+            empty_char (str, optional): Empty character. Defaults to ' '.
+            pre_char (str, optional): Display this char before the bar. Defaults to '['.
+            post_char (str, optional): Display this char after the bar. Defaults to ']'.
+            unit_char (str, optional): Unit char to be displayed. Defaults to '%'.
+            display_value (bool, optional): Do i need to display the value. Defaults to True.
+            min_value (int, optional): Minimum value. Defaults to 0.
+            max_value (int, optional): Maximum value (percent can be higher). Defaults to 100.
+        """
         # Build curses_bars
         self.__curses_bars = [empty_char] * 5 + [bar_char] * 5
         # Bar size
@@ -77,26 +90,34 @@ class Bar(object):
     def post_char(self):
         return self.__post_char
 
-    def get(self, overwrite=''):
+    def get(self, overlay: str = None):
         """Return the bars."""
         value = self.max_value if self.percent > self.max_value else self.percent
+
+        # Build the bar
         frac, whole = modf(self.size * value / 100.0)
         ret = self.__curses_bars[8] * int(whole)
         if frac > 0:
             ret += self.__curses_bars[int(frac * 8)]
             whole += 1
         ret += self.__empty_char * int(self.size - whole)
+
+        # Add the value
         if self.__display_value:
-            if self.percent > self.max_value:
-                ret = '{}>{:4.0f}{}'.format(ret,
-                                            self.max_value,
-                                            self.__unit_char)
+            if self.percent >= self.max_value:
+                ret = '{} {}{:3.0f}{}'.format(ret,
+                                              '>' if self.percent > self.max_value else ' ',
+                                              self.max_value,
+                                              self.__unit_char)
             else:
                 ret = '{}{:5.1f}{}'.format(ret,
                                            self.percent,
                                            self.__unit_char)
-        if overwrite and len(overwrite) < len(ret) - 6:
-            ret = overwrite + ret[len(overwrite):]
+
+        # Add overlay
+        if overlay and len(overlay) < len(ret) - 6:
+            ret = overlay + ret[len(overlay):]
+
         return ret
 
     def __str__(self):
