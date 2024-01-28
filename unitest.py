@@ -371,7 +371,7 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(len(h.get()), 2)
         self.assertEqual(len(h.get()['a']), 0)
 
-    def test_099_output_bars_must_be_between_0_and_100_percent(self):
+    def test_099_output_bars(self):
         """Test quick look plugin.
 
         > bar.min_value
@@ -381,16 +381,27 @@ class TestGlances(unittest.TestCase):
         > bar.percent = -1
         > bar.percent
         0
-        > bar.percent = 101
-        > bar.percent
-        100
         """
         print('INFO: [TEST_099] Test progress bar')
+
         bar = Bar(size=1)
+        # Percent value can not be lower than min_value
         bar.percent = -1
         self.assertLessEqual(bar.percent, bar.min_value)
+        # but... percent value can be higher than max_value
         bar.percent = 101
-        self.assertGreaterEqual(bar.percent, bar.max_value)
+        self.assertLessEqual(bar.percent, 101)
+
+        # Test display
+        bar = Bar(size=50)
+        bar.percent = 0
+        self.assertEqual(bar.get(), '                                              0.0%')
+        bar.percent = 70
+        self.assertEqual(bar.get(), '|||||||||||||||||||||||||||||||              70.0%')
+        bar.percent = 100
+        self.assertEqual(bar.get(), '||||||||||||||||||||||||||||||||||||||||||||  100%')
+        bar.percent = 110
+        self.assertEqual(bar.get(), '|||||||||||||||||||||||||||||||||||||||||||| >100%')
 
     def test_100_secure(self):
         """Test secure functions"""

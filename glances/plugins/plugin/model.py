@@ -777,8 +777,12 @@ class GlancesPluginModel(object):
         else:
             return stat_name + '_' + criticality in self._limits
 
-    def get_limit(self, criticality, stat_name=""):
-        """Return the limit value for the alert."""
+    def get_limit(self, criticality=None, stat_name=""):
+        """Return the limit value for the given criticality.
+        If criticality is None, return the dict of all the limits."""
+        if criticality is None:
+            return self._limits
+
         # Get the limit for stat + header
         # Example: network_wlan0_rx_careful
         try:
