@@ -31,6 +31,17 @@ percentage.
 
 .. image:: ../_static/loadpercent.png
 
+A character is also displayed just after the LOAD header and shows the
+trend value (for the 1 minute load stat):
+
+======== ==============================================================
+Trend    Status
+======== ==============================================================
+``-``    Mean 15 lasts values equal mean 15 previous values
+``↓``    Mean 15 lasts values is lower mean 15 previous values
+``↑``    Mean 15 lasts values is higher mean 15 previous valuess
+======== ==============================================================
+
 Legend:
 
 ============= ============

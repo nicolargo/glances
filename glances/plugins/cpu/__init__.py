@@ -331,16 +331,8 @@ class PluginModel(GlancesPluginModel):
 
         # First line
         # Total + (idle) + ctx_sw
-        msg = '{}'.format('CPU')
+        msg = '{:8}'.format('CPU')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        trend_user = self.get_trend('user')
-        trend_system = self.get_trend('system')
-        if trend_user is None or trend_user is None:
-            trend_cpu = None
-        else:
-            trend_cpu = trend_user + trend_system
-        msg = ' {:4}'.format(self.trend_msg(trend_cpu))
-        ret.append(self.curse_add_line(msg))
         # Total CPU usage
         msg = '{:5.1f}%'.format(self.stats['total'])
         ret.append(self.curse_add_line(msg, self.get_views(key='total', option='decoration')))

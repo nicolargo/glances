@@ -261,17 +261,17 @@ class GlancesPluginModel(object):
 
         return json_dumps_dictlist(s, item)
 
-    def get_trend(self, item, nb=6):
+    def get_trend(self, item, nb=30):
         """Get the trend regarding to the last nb values.
 
-        The trend is the diff between the mean of the last nb values
-        and the current one.
+        The trend is the diffirence between the mean of the last 0 to nb / 2
+        and nb / 2 to nb values.
         """
         raw_history = self.get_raw_history(item=item, nb=nb)
         if raw_history is None or len(raw_history) < nb:
             return None
         last_nb = [v[1] for v in raw_history]
-        return last_nb[-1] - mean(last_nb[:-1])
+        return mean(last_nb[nb // 2:]) - mean(last_nb[:nb // 2])
 
     @property
     def input_method(self):
