@@ -42,41 +42,23 @@
                     <div class="table-cell">{{ percpu.total }}%</div>
                 </div>
             </template>
-            <div class="table-row">
-                <div class="table-cell text-left">MEM</div>
+            <div class="table-row" v-for="(key) in stats_list_after_cpu">
+                <div class="table-cell text-left">{{ key.toUpperCase() }}</div>
                 <div class="table-cell">
                     <div class="progress">
                         <div
-                            :class="`progress-bar progress-bar-${getDecoration('mem')}`"
+                            :class="`progress-bar progress-bar-${getDecoration(key)}`"
                             role="progressbar"
-                            :aria-valuenow="mem"
+                            :aria-valuenow="stats[key]"
                             aria-valuemin="0"
                             aria-valuemax="100"
-                            :style="`width: ${mem}%;`"
+                            :style="`width: ${stats[key]}%;`"
                         >
                             &nbsp;
                         </div>
                     </div>
                 </div>
-                <div class="table-cell">{{ mem }}%</div>
-            </div>
-            <div class="table-row">
-                <div class="table-cell text-left">LOAD</div>
-                <div class="table-cell">
-                    <div class="progress">
-                        <div
-                            :class="`progress-bar progress-bar-${getDecoration('load')}`"
-                            role="progressbar"
-                            :aria-valuenow="load"
-                            aria-valuemin="0"
-                            aria-valuemax="100"
-                            :style="`width: ${load}%;`"
-                        >
-                            &nbsp;
-                        </div>
-                    </div>
-                </div>
-                <div class="table-cell">{{ load }}%</div>
+                <div class="table-cell">{{ stats[key] }}%</div>
             </div>
         </div>
     </section>
@@ -106,12 +88,6 @@ export default {
         view() {
             return this.data.views['quicklook'];
         },
-        mem() {
-            return this.stats.mem;
-        },
-        load() {
-            return this.stats.load;
-        },
         cpu() {
             return this.stats.cpu;
         },
@@ -124,15 +100,15 @@ export default {
         cpu_hz() {
             return this.stats.cpu_hz;
         },
-        swap() {
-            return this.stats.swap;
-        },
         percpus() {
             return this.stats.percpu.map(({ cpu_number: number, total }) => ({
                 number,
                 total
             }));
-        }
+        },
+        stats_list_after_cpu() {
+            return this.view.list.filter((key) => !key.includes('cpu'));
+        },
     },
     methods: {
         getDecoration(value) {
