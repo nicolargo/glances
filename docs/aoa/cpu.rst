@@ -46,6 +46,8 @@ CPU stats description:
   operations to complete.
 - **steal** *(Linux)*: percentage of time a virtual CPU waits for a real
   CPU while the hypervisor is servicing another virtual processor.
+- **guest** *(Linux)*: percentage of time a virtual CPU spends
+  servicing another virtual CPU under the control of the Linux kernel.
 - **ctx_sw**: number of context switches (voluntary + involuntary) per
   second. A context switch is a procedure that a computer's CPU (central
   processing unit) follows to change from one task (or process) to

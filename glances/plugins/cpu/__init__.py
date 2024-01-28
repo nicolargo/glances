@@ -70,6 +70,11 @@ processes that have been *niced*.',
 CPU while the hypervisor is servicing another virtual processor.',
         'unit': 'percent',
     },
+    'guest': {
+        'description': '*(Linux)*: time spent running a virtual CPU for guest operating \
+systems under the control of the Linux kernel.',
+        'unit': 'percent',
+    },
     'ctx_switches': {
         'description': 'number of context switches (voluntary + involuntary) per \
 second. A context switch is a procedure that a computer\'s CPU (central \
@@ -307,7 +312,8 @@ class PluginModel(GlancesPluginModel):
                     self.stats[key], maximum=100 * self.stats['cpucore'], header=key
                 )
         # Optional
-        for key in ['nice', 'irq', 'idle', 'steal', 'ctx_switches', 'interrupts', 'soft_interrupts', 'syscalls']:
+        for key in ['nice', 'irq', 'idle', 'steal', 'guest',
+                    'ctx_switches', 'interrupts', 'soft_interrupts', 'syscalls']:
             if key in self.stats:
                 self.views[key]['optional'] = True
 
@@ -379,7 +385,7 @@ class PluginModel(GlancesPluginModel):
             ret.extend(self.curse_add_stat('ctx_switches', width=15, header='  '))
 
         # Fourth line
-        # iowait + steal + syscalls
+        # iowait + steal + (syscalls or guest)
         ret.append(self.curse_new_line())
         if 'iowait' in self.stats:
             # IOWait CPU
@@ -389,9 +395,13 @@ class PluginModel(GlancesPluginModel):
             ret.extend(self.curse_add_stat('dpc', width=15))
         # Steal CPU usage
         ret.extend(self.curse_add_stat('steal', width=14, header='  '))
-        # syscalls: number of system calls since boot. Always set to 0 on Linux. (do not display)
         if not LINUX:
+            # syscalls: number of system calls since boot. Always set to 0 on Linux. (do not display)
             ret.extend(self.curse_add_stat('syscalls', width=15, header='  '))
+        else:
+            # So instead on Linux we display the guest CPU usage (see #2667)
+            # guest: time spent running a virtual CPU for guest operating systems under
+            ret.extend(self.curse_add_stat('guest', width=14, header='  '))
 
         # Return the message with decoration
         return ret
