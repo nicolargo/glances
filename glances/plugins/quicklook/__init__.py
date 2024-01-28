@@ -153,6 +153,9 @@ class PluginModel(GlancesPluginModel):
             self.stats['load'], header='load'
         )
 
+        # Define the list of stats to display
+        self.views['list'] = self.stats_list
+
     def msg_curse(self, args=None, max_width=10):
         """Return the list to display in the UI."""
         # Init the return message
