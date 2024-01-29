@@ -50,9 +50,10 @@ def get_install_requires():
         'ujson<4; python_version >= "3.5" and python_version < "3.6"',
         'ujson<5; python_version >= "3.6" and python_version < "3.7"',
         'ujson>=5.4.0; python_version >= "3.7"',
+        'bottle',
+        'influxdb-client==1.39',
     ]
     if sys.platform.startswith('win'):
-        requires.append('bottle')
         requires.append('requests')
 
     return requires
