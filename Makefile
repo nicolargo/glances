@@ -174,6 +174,12 @@ flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
 	rm -rf ./flatpak-builder-tools
 	@echo "Now follow: https://github.com/flathub/flathub/wiki/App-Submission"
 
+# Snap package is automaticaly build on the Snapcraft.io platform
+# https://snapcraft.io/glances
+# But you can try an offline build with the following command
+snapcraft:
+	snapcraft
+
 # ===================================================================
 # Docker
 # ===================================================================
