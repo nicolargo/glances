@@ -12,8 +12,9 @@
 import sys
 import time
 
-from glances.globals import WINDOWS
 from glances.logger import logger
+
+from glances.globals import WINDOWS
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
@@ -105,6 +106,10 @@ class GlancesStandalone(object):
             # Init screen
             self.screen = GlancesCursesStandalone(config=config, args=args)
 
+            # If an error occur during the screen init, continue if export option is set
+            # It is done in the screen.init function
+            self._quiet = args.quiet
+
         # Check the latest Glances version
         self.outdated = Outdated(config=config, args=args)
 
@@ -161,22 +166,20 @@ class GlancesStandalone(object):
 
         return ret
 
-    def serve_forever(self):
-        """Wrapper to the serve_forever function."""
-        if self.args.stop_after:
-            for _ in range(self.args.stop_after):
-                if not self.__serve_once():
-                    break
-        else:
-            while self.__serve_once():
-                pass
-        # self.end()
-
     def serve_n(self, n=1):
         """Serve n time."""
         for _ in range(n):
             if not self.__serve_once():
                 break
+        # self.end()
+
+    def serve_forever(self):
+        """Wrapper to the serve_forever function."""
+        if self.args.stop_after:
+            self.serve_n(self.args.stop_after)
+        else:
+            while self.__serve_once():
+                pass
         # self.end()
 
     def end(self):

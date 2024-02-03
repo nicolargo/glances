@@ -11,12 +11,14 @@
                 <div class="table-row" v-for="(alert, alertId) in alerts" :key="alertId">
                     <div class="table-cell text-left">
                         {{ formatDate(alert.begin) }}
+                        {{ alert.tz }}
                         ({{ alert.ongoing ? 'ongoing' : alert.duration }}) -
-                        <span v-show="!alert.ongoing"> {{ alert.level }} on </span>
-                        <span :class="alert.level.toLowerCase()">
-                            {{ alert.name }}
+                        <span v-show="!alert.ongoing"> {{ alert.state }} on </span>
+                        <span :class="alert.state.toLowerCase()">
+                            {{ alert.type }}
                         </span>
                         ({{ $filters.number(alert.max, 1) }})
+                        {{ alert.top }}
                     </div>
                 </div>
             </div>
@@ -41,14 +43,16 @@ export default {
         alerts() {
             return (this.stats || []).map((alertalertStats) => {
                 const alert = {};
-                alert.name = alertalertStats[3];
-                alert.level = alertalertStats[2];
-                alert.begin = alertalertStats[0] * 1000;
-                alert.end = alertalertStats[1] * 1000;
-                alert.ongoing = alertalertStats[1] == -1;
-                alert.min = alertalertStats[6];
-                alert.mean = alertalertStats[5];
-                alert.max = alertalertStats[4];
+                var tzoffset = new Date().getTimezoneOffset();
+                alert.state = alertalertStats.state;
+                alert.type = alertalertStats.type;
+                alert.begin = alertalertStats.begin * 1000 - tzoffset * 60 * 1000;
+                alert.end = alertalertStats.end * 1000 - tzoffset * 60 * 1000;
+                alert.ongoing = alertalertStats.end == -1;
+                alert.min = alertalertStats.min;
+                alert.avg = alertalertStats.avg;
+                alert.max = alertalertStats.max;
+                alert.top = alertalertStats.top.join(', ');
 
                 if (!alert.ongoing) {
                     const duration = alert.end - alert.begin;

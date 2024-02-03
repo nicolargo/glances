@@ -71,7 +71,7 @@ class Export(GlancesExport):
             metric_name = self.prefix + self.METRIC_SEPARATOR + str(name) + self.METRIC_SEPARATOR + str(k)
             # Prometheus is very sensible to the metric name
             # See: https://prometheus.io/docs/practices/naming/
-            for c in ['.', '-', '/', ' ']:
+            for c in ' .-/:[]':
                 metric_name = metric_name.replace(c, self.METRIC_SEPARATOR)
             # Get the labels
             labels = self.parse_tags(self.labels)

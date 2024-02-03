@@ -9,8 +9,8 @@ from io import open
 from setuptools import setup, Command
 
 
-if sys.version_info < (3, 4):
-    print('Glances requires at least Python 3.4 to run.')
+if sys.version_info < (3, 8):
+    print('Glances requires at least Python 3.8 to run.')
     sys.exit(1)
 
 # Global functions
@@ -44,7 +44,10 @@ def get_install_requires():
         'ujson>=5.4.0',
     ]
     if sys.platform.startswith('win'):
-        requires.append('bottle')
+        requires.append('fastapi')
+        requires.append('uvicorn')
+        requires.append('orjson')
+        requires.append('jinja2')
         requires.append('requests')
 
     return requires
@@ -56,11 +59,10 @@ def get_install_extras_require():
         'browser': ['zeroconf>=0.19.1'],
         'cloud': ['requests'],
         'containers': ['docker>=6.1.1', 'python-dateutil', 'six', 'podman', 'packaging'],
-        'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
-                   'graphitesender', 'influxdb>=1.0.0', 'influxdb-client', 'pymongo',
+        'export': ['bernhard', 'cassandra-driver', 'elasticsearch', 'graphitesender',
+                   'ibmcloudant', 'influxdb>=1.0.0', 'influxdb-client', 'pymongo',
                    'kafka-python', 'pika', 'paho-mqtt', 'potsdb', 'prometheus_client',
                    'pyzmq', 'statsd'],
-        'folders': ['scandir'],
         'gpu': ['py3nvml'],
         'graph': ['pygal'],
         'ip': ['netifaces'],
@@ -68,7 +70,7 @@ def get_install_extras_require():
         'smart': ['pySMART.smartx'],
         'snmp': ['pysnmp'],
         'sparklines': ['sparklines'],
-        'web': ['bottle', 'requests'],
+        'web': ['fastapi', 'uvicorn', 'jinja2', 'orjson', 'requests'],
         'wifi': ['wifi']
     }
     if sys.platform.startswith('linux'):
@@ -124,7 +126,7 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console :: Curses',
         'Environment :: Web Environment',
-        'Framework :: Bottle',
+        'Framework :: FastAPI',
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'Intended Audience :: System Administrators',
@@ -135,6 +137,7 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Topic :: System :: Monitoring'
     ]
 )

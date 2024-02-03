@@ -25,6 +25,8 @@ import subprocess
 from datetime import datetime
 import re
 import base64
+import functools
+import weakref
 
 import queue
 from configparser import ConfigParser, NoOptionError, NoSectionError
@@ -258,7 +260,7 @@ def pretty_date(time=False):
     Source: https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
     """
     now = datetime.now()
-    if type(time) is int:
+    if isinstance(time, int):
         diff = now - datetime.fromtimestamp(time)
     elif isinstance(time, datetime):
         diff = now - time
@@ -315,10 +317,10 @@ def json_dumps(data):
         return ujson.dumps(data, ensure_ascii=False)
 
 
-def json_dumps_dictlist(data, item):
+def dictlist(data, item):
     if isinstance(data, dict):
         try:
-            return json_dumps({item: data[item]})
+            return {item: data[item]}
         except (TypeError, IndexError, KeyError):
             return None
     elif isinstance(data, list):
@@ -326,11 +328,19 @@ def json_dumps_dictlist(data, item):
             # Source:
             # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
             # But https://github.com/nicolargo/glances/issues/1401
-            return json_dumps({item: list(map(itemgetter(item), data))})
+            return {item: list(map(itemgetter(item), data))}
         except (TypeError, IndexError, KeyError):
             return None
     else:
         return None
+
+
+def json_dumps_dictlist(data, item):
+    dl = dictlist(data, item)
+    if dl is None:
+        return None
+    else:
+        return json_dumps(dl)
 
 
 def string_value_to_float(s):
@@ -372,3 +382,57 @@ def string_value_to_float(s):
 def file_exists(filename):
     """Return True if the file exists and is readable."""
     return os.path.isfile(filename) and os.access(filename, os.R_OK)
+
+
+def folder_size(path, errno=0):
+    """Return a tuple with the size of the directory given by path and the errno.
+    If an error occurs (for example one file or subfolder is not accessible),
+    errno is set to the error number.
+
+    path: <string>
+    errno: <int> Should always be 0 when calling the function"""
+    ret_size = 0
+    ret_err = errno
+    try:
+        for f in os.scandir(path):
+            if f.is_dir(follow_symlinks=False) and (f.name != '.' or f.name != '..'):
+                ret = folder_size(os.path.join(path, f.name), ret_err)
+                ret_size += ret[0]
+                ret_err = ret[1]
+            else:
+                try:
+                    ret_size += f.stat().st_size
+                except OSError as e:
+                    ret_err = e.errno
+    except OSError as e:
+        return 0, e.errno
+    else:
+        return ret_size, ret_err
+
+
+def weak_lru_cache(maxsize=128, typed=False):
+    """LRU Cache decorator that keeps a weak reference to self
+    Source: https://stackoverflow.com/a/55990799"""
+
+    def wrapper(func):
+        @functools.lru_cache(maxsize, typed)
+        def _func(_self, *args, **kwargs):
+            return func(_self(), *args, **kwargs)
+
+        @functools.wraps(func)
+        def inner(self, *args, **kwargs):
+            return _func(weakref.ref(self), *args, **kwargs)
+
+        return inner
+
+    return wrapper
+
+
+def namedtuple_to_dict(data):
+    """Convert a namedtuple to a dict, using the _asdict() method embeded in PsUtil stats."""
+    return {k: (v._asdict() if hasattr(v, '_asdict') else v) for k, v in data.items()}
+
+
+def list_of_namedtuple_to_list_of_dict(data):
+    """Convert a list of namedtuples to a dict, using the _asdict() method embeded in PsUtil stats."""
+    return [namedtuple_to_dict(d) for d in data]

@@ -10,6 +10,7 @@
 import os
 
 from glances.globals import BSD, LINUX, MACOS, WINDOWS, iterkeys
+from glances.globals import namedtuple_to_dict, list_of_namedtuple_to_list_of_dict
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.filter import GlancesFilter
 from glances.programs import processes_to_programs
@@ -336,7 +337,7 @@ class GlancesProcesses(object):
                 ret[stat_prefix + '_mean'] = ret[stat_prefix + '_mean_sum'] / ret[stat_prefix + '_mean_counter']
 
             ret['extended_stats'] = True
-        return ret
+        return namedtuple_to_dict(ret)
 
     def is_selected_extended_process(self, position):
         """Return True if the process is the selected one for extended stats."""
@@ -353,9 +354,8 @@ class GlancesProcesses(object):
 
     def update(self):
         """Update the processes stats."""
-        # Reset the stats
-        self.processlist = []
-        self.reset_processcount()
+        # Init new processes stats
+        processlist = []
 
         # Do not process if disable tag is set
         if self.disable_tag:
@@ -392,7 +392,7 @@ class GlancesProcesses(object):
         # Build the processes stats list (it is why we need psutil>=5.3.0)
         # This is one of the main bottleneck of Glances (see flame graph)
         # Filter processes
-        self.processlist = list(
+        processlist = list(
             filter(
                 lambda p: not (BSD and p.info['name'] == 'idle')
                 and not (WINDOWS and p.info['name'] == 'System Idle Process')
@@ -402,17 +402,17 @@ class GlancesProcesses(object):
             )
         )
         # Only get the info key
-        self.processlist = [p.info for p in self.processlist]
+        processlist = [p.info for p in processlist]
         # Sort the processes list by the current sort_key
-        self.processlist = sort_stats(self.processlist, sorted_by=self.sort_key, reverse=True)
+        processlist = sort_stats(processlist, sorted_by=self.sort_key, reverse=True)
 
         # Update the processcount
-        self.update_processcount(self.processlist)
+        self.update_processcount(processlist)
 
         # Loop over processes and :
         # - add extended stats for selected process
         # - add metadata
-        for position, proc in enumerate(self.processlist):
+        for position, proc in enumerate(processlist):
             # Extended stats
             ################
 
@@ -423,7 +423,7 @@ class GlancesProcesses(object):
             # Grab extended stats only for the selected process (see issue #2225)
             if self.extended_process is not None and proc['pid'] == self.extended_process['pid']:
                 proc.update(self.get_extended_stats(self.extended_process))
-                self.extended_process = proc
+                self.extended_process = namedtuple_to_dict(proc)
 
             # Meta data
             ###########
@@ -443,7 +443,7 @@ class GlancesProcesses(object):
             # If io_tag = 0 > Access denied or first time (display "?")
             # If io_tag = 1 > No access denied (display the IO rate)
             if 'io_counters' in proc and proc['io_counters'] is not None:
-                io_new = [proc['io_counters'].read_bytes, proc['io_counters'].write_bytes]
+                io_new = [proc['io_counters'][2], proc['io_counters'][3]]
                 # For IO rate computation
                 # Append saved IO r/w bytes
                 try:
@@ -477,10 +477,16 @@ class GlancesProcesses(object):
                     pass
             else:
                 # Save values to cache
-                self.processlist_cache[proc['pid']] = {cached: proc[cached] for cached in cached_attrs}
+                try:
+                    self.processlist_cache[proc['pid']] = {cached: proc[cached] for cached in cached_attrs}
+                except KeyError:
+                    pass
 
         # Apply user filter
-        self.processlist = list(filter(lambda p: not self._filter.is_filtered(p), self.processlist))
+        processlist = list(filter(lambda p: not self._filter.is_filtered(p), processlist))
+
+        # Save the new processlist and transform all namedtuples to dict
+        self.processlist = list_of_namedtuple_to_list_of_dict(processlist)
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Useful to highlight the processes with maximum values

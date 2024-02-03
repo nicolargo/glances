@@ -7,7 +7,7 @@ description: |
   Web based interface. It can adapt dynamically the displayed information
   depending on the user interface size.
 
-base: core20
+base: core22
 grade: stable
 confinement: strict
 
@@ -53,21 +53,55 @@ parts:
     override-pull: |
       snapcraftctl pull
       "$SNAPCRAFT_STAGE"/scriptlets/selective-checkout
-  bottle:
+
+  fastapi:
     plugin: python
-    source: https://github.com/bottlepy/bottle.git
-    source-branch: release-0.12
+    source: https://github.com/tiangolo/fastapi.git
+    source-tag: '0.109.0'
     source-depth: 1
     override-build: |
       mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/bottle-dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/fastapi-dist
     organize:
-      bottle-dist: bottle/dist
+      fastapi-dist: fastapi/dist
+
+  uvicorn:
+    plugin: python
+    source: https://github.com/encode/uvicorn.git
+    source-tag: '0.27.0.post1'
+    source-depth: 1
+    override-build: |
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/uvicorn-dist
+    organize:
+      uvicorn-dist: uvicorn/dist
+
+  orjson:
+    plugin: python
+    source: https://github.com/ijl/orjson.git
+    source-tag: '3.9.12'
+    source-depth: 1
+    override-build: |
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/orjson-dist
+    organize:
+      orjson-dist: orjson/dist
+
+  jinja2:
+    plugin: python
+    source: https://github.com/pallets/jinja.git
+    source-tag: '3.1.3'
+    source-depth: 1
+    override-build: |
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/jinja2-dist
+    organize:
+      jinja2-dist: jinja2/dist
 
   docker:
     plugin: python
     source: https://github.com/docker/docker-py.git
-    source-tag: '3.7.3'
+    source-tag: '7.0.0'
     source-depth: 1
     override-build: |
       mkdir -p $SNAPCRAFT_PART_BUILD/dist

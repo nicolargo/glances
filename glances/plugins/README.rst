@@ -6,23 +6,16 @@ This is the Glances plugins folder.
 
 A Glances plugin is a Python module hosted in a folder.
 
-It should be based on the MVC model.
-- model: data model (where the stats will be updated)
-- view: input for UI (where the stats are displayed)
-- controler: output from UI (where the stats are controled)
+It should implement a Class named PluginModel (inherited from GlancesPluginModel).
 
-////
-TODO
-////
+This class should be based on the MVC model.
+- model: where the stats are updated (update method)
+- view: where the stats are prepare to be displayed (update_views)
+- controler: where the stats are displayed (msg_curse method)
 
 A plugin should define the following global variables:
 
 - fields_description: a dict twith the field description/option
-- items_history_list: define items history
+- items_history_list (optional): define items history
 
-A plugin should implement the following methods:
-
-- update(): update the self.stats variable (most of the time a dict or a list of dict)
-- msg_curse(): return a list of messages to display in UI
-
-Have a look of all Glances plugin's methods in the plugin.py file.
+Have a look of all Glances plugin's methods in the plugin folder (where the GlancesPluginModel is defined).

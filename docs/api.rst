@@ -3,21 +3,33 @@
 API (Restfull/JSON) documentation
 =================================
 
+This documentation describes the Glances API version 4 (Restfull/JSON) interface.
+
+For Glances version 3, please have a look on:
+``https://github.com/nicolargo/glances/blob/support/glancesv3/docs/api.rst``
+
+Run the Glances API server
+--------------------------
+
 The Glances Restfull/API server could be ran using the following command line:
 
 .. code-block:: bash
 
     # glances -w --disable-webui
 
+It is also ran automatically when Glances is started in Web server mode (-w).
+
 API URL
 -------
 
-The default root API URL is ``http://localhost:61208/api/3``.
+The default root API URL is ``http://localhost:61208/api/4``.
 
 The bind address and port could be changed using the ``--bind`` and ``--port`` command line options.
 
 It is also possible to define an URL prefix using the ``url_prefix`` option from the [outputs] section
-of the Glances configuration file. The url_prefix should always end with a slash (``/``).
+of the Glances configuration file.
+
+Note: The url_prefix should always end with a slash (``/``).
 
 For example:
 
@@ -25,19 +37,31 @@ For example:
     [outputs]
     url_prefix = /glances/
 
-will change the root API URL to ``http://localhost:61208/glances/api/3`` and the Web UI URL to
+will change the root API URL to ``http://localhost:61208/glances/api/4`` and the Web UI URL to
 ``http://localhost:61208/glances/``
+
+API documentation URL
+---------------------
+
+The API documentation is embeded in the server and available at the following URL:
+``http://localhost:61208/docs#/``.
+
+WebUI refresh
+-------------
+
+It is possible to change the Web UI refresh rate (default is 2 seconds) using the following option in the URL:
+``http://localhost:61208/glances/?refresh=5``
 
 
 GET API status
 --------------
 
 This entry point should be used to check the API status.
-It will return nothing but a 200 return code if everything is OK.
+It will the Glances version and a 200 return code if everything is OK.
 
 Get the Rest API status::
 
-    # curl -I http://localhost:61208/api/3/status
+    # curl -I http://localhost:61208/api/4/status
     "HTTP/1.0 200 OK"
 
 GET plugins list
@@ -45,7 +69,7 @@ GET plugins list
 
 Get the plugins list::
 
-    # curl http://localhost:61208/api/3/pluginslist
+    # curl http://localhost:61208/api/4/pluginslist
     ["alert",
      "amps",
      "cloud",
@@ -76,6 +100,7 @@ Get the plugins list::
      "smart",
      "system",
      "uptime",
+     "version",
      "wifi"]
 
 GET alert
@@ -83,26 +108,62 @@ GET alert
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/alert
-    [[1690293736.0,
-      -1,
-      "WARNING",
-      "MEM",
-      77.54053433873582,
-      77.54053433873582,
-      77.54053433873582,
-      77.54053433873582,
-      1,
-      [],
-      "",
-      "memory_percent"]]
+    # curl http://localhost:61208/api/4/alert
+    [{"avg": 81.2614296446961,
+      "begin": 1706975961.0,
+      "count": 1,
+      "desc": "",
+      "end": -1,
+      "max": 81.2614296446961,
+      "min": 81.2614296446961,
+      "sort": "memory_percent",
+      "state": "WARNING",
+      "sum": 81.2614296446961,
+      "top": [],
+      "type": "MEM"}]
+
+Fields descriptions:
+
+* **begin**: Begin timestamp of the event (unit is *timestamp*)
+* **end**: End timestamp of the event (or -1 if ongoing) (unit is *timestamp*)
+* **state**: State of the event (WARNING|CRITICAL) (unit is *string*)
+* **type**: Type of the event (CPU|LOAD|MEM) (unit is *string*)
+* **max**: Maximum value during the event period (unit is *float*)
+* **avg**: Average value during the event period (unit is *float*)
+* **min**: Minimum value during the event period (unit is *float*)
+* **sum**: Sum of the values during the event period (unit is *float*)
+* **count**: Number of values during the event period (unit is *int*)
+* **top**: Top 3 processes name during the event period (unit is *list*)
+* **desc**: Description of the event (unit is *string*)
+* **sort**: Sort key of the top processes (unit is *string*)
+
+Get a specific field::
+
+    # curl http://localhost:61208/api/4/alert/begin
+    {"begin": [1706975961.0]}
+
+Get a specific item when field matches the given value::
+
+    # curl http://localhost:61208/api/4/alert/begin/1706975961.0
+    {"1706975961.0": [{"avg": 81.2614296446961,
+                       "begin": 1706975961.0,
+                       "count": 1,
+                       "desc": "",
+                       "end": -1,
+                       "max": 81.2614296446961,
+                       "min": 81.2614296446961,
+                       "sort": "memory_percent",
+                       "state": "WARNING",
+                       "sum": 81.2614296446961,
+                       "top": [],
+                       "type": "MEM"}]}
 
 GET amps
 --------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/amps
+    # curl http://localhost:61208/api/4/amps
     [{"count": 0,
       "countmax": None,
       "countmin": 1.0,
@@ -111,7 +172,7 @@ Get plugin stats::
       "refresh": 3.0,
       "regex": True,
       "result": None,
-      "timer": 0.23587393760681152},
+      "timer": 0.32085204124450684},
      {"count": 0,
       "countmax": 20.0,
       "countmin": None,
@@ -120,16 +181,26 @@ Get plugin stats::
       "refresh": 3.0,
       "regex": True,
       "result": None,
-      "timer": 0.2357802391052246}]
+      "timer": 0.32070302963256836}]
+
+Fields descriptions:
+
+* **name**: AMP name (unit is *None*)
+* **result**: AMP result (a string) (unit is *None*)
+* **refresh**: AMP refresh interval (unit is *second*)
+* **timer**: Time until next refresh (unit is *second*)
+* **count**: Number of matching processes (unit is *number*)
+* **countmin**: Minimum number of matching processes (unit is *number*)
+* **countmax**: Maximum number of matching processes (unit is *number*)
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/amps/name
+    # curl http://localhost:61208/api/4/amps/name
     {"name": ["Dropbox", "Python", "Conntrack", "Nginx", "Systemd", "SystemV"]}
 
 Get a specific item when field matches the given value::
 
-    # curl http://localhost:61208/api/3/amps/name/Dropbox
+    # curl http://localhost:61208/api/4/amps/name/Dropbox
     {"Dropbox": [{"count": 0,
                   "countmax": None,
                   "countmin": 1.0,
@@ -138,19 +209,31 @@ Get a specific item when field matches the given value::
                   "refresh": 3.0,
                   "regex": True,
                   "result": None,
-                  "timer": 0.23587393760681152}]}
+                  "timer": 0.32085204124450684}]}
 
 GET connections
 ---------------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/connections
+    # curl http://localhost:61208/api/4/connections
     {"net_connections_enabled": True, "nf_conntrack_enabled": True}
+
+Fields descriptions:
+
+* **LISTEN**: Number of TCP connections in LISTEN state (unit is *number*)
+* **ESTABLISHED**: Number of TCP connections in ESTABLISHED state (unit is *number*)
+* **SYN_SENT**: Number of TCP connections in SYN_SENT state (unit is *number*)
+* **SYN_RECV**: Number of TCP connections in SYN_RECV state (unit is *number*)
+* **initiated**: Number of TCP connections initiated (unit is *number*)
+* **terminated**: Number of TCP connections terminated (unit is *number*)
+* **nf_conntrack_count**: Number of tracked connections (unit is *number*)
+* **nf_conntrack_max**: Maximum number of tracked connections (unit is *number*)
+* **nf_conntrack_percent**: Percentage of tracked connections (unit is *percent*)
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/connections/net_connections_enabled
+    # curl http://localhost:61208/api/4/connections/net_connections_enabled
     {"net_connections_enabled": True}
 
 GET containers
@@ -158,81 +241,101 @@ GET containers
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/containers
-    {"containers": [{"Command": ["/portainer"],
-                     "Created": "2022-10-29T14:59:10.266701439Z",
-                     "Id": "3abd51c615968482d9ccff5afc629f267f6dda113ed68b75b432615fae3b49fb",
-                     "Image": ["portainer/portainer-ce:2.9.3"],
-                     "Status": "running",
-                     "Uptime": "an hour",
-                     "cpu": {"total": 0.0},
-                     "cpu_percent": 0.0,
-                     "engine": "docker",
-                     "io": {"cumulative_ior": 29429760, "cumulative_iow": 2326528},
-                     "io_r": None,
-                     "io_w": None,
-                     "key": "name",
-                     "memory": {"cache": None,
-                                "limit": 7836184576,
-                                "max_usage": None,
-                                "rss": None,
-                                "usage": 21876736},
-                     "memory_usage": 21876736,
-                     "name": "portainer",
-                     "network": {"cumulative_rx": 401604, "cumulative_tx": 0},
-                     "network_rx": None,
-                     "network_tx": None},
-                    {"Command": ["top"],
-                     "Created": "2023-05-08T15:29:34.918692365+02:00",
-                     "Id": "4b7f732d43e4bc5d92fe5298cba025b550e6a608754c1c38f9a90aaecd46b8f9",
-                     "Image": "["docker.io/library/ubuntu:latest"]",
-                     "Status": "running",
-                     "Uptime": "2 months",
-                     "cpu": {"total": 6.7650116939635326e-06},
-                     "cpu_percent": 6.7650116939635326e-06,
-                     "engine": "podman",
-                     "io": {"ior": 0.0, "iow": 0.0, "time_since_update": 1},
-                     "io_r": 0.0,
-                     "io_w": 0.0,
-                     "key": "name",
-                     "memory": {"limit": 7836184576.0, "usage": 1093632.0},
-                     "memory_usage": 1093632.0,
-                     "name": "frosty_bouman",
-                     "network": {"rx": 0.0, "time_since_update": 1, "tx": 0.0},
-                     "network_rx": 0.0,
-                     "network_tx": 0.0,
-                     "pod_id": "8d0f1c783def",
-                     "pod_name": "frosty_bouman"},
-                    {"Command": [],
-                     "Created": "2022-10-22T14:23:03.120912374+02:00",
-                     "Id": "9491515251edcd5bb5dc17205d7ee573c0be96fe0b08b0a12a7e2cea874565ea",
-                     "Image": "["k8s.gcr.io/pause:3.5"]",
-                     "Status": "running",
-                     "Uptime": "2 months",
-                     "cpu": {"total": 3.177554220933258e-10},
-                     "cpu_percent": 3.177554220933258e-10,
-                     "engine": "podman",
-                     "io": {"ior": 0.0, "iow": 0.0, "time_since_update": 1},
-                     "io_r": 0.0,
-                     "io_w": 0.0,
-                     "key": "name",
-                     "memory": {"limit": 7836184576.0, "usage": 204800.0},
-                     "memory_usage": 204800.0,
-                     "name": "8d0f1c783def-infra",
-                     "network": {"rx": 0.0, "time_since_update": 1, "tx": 0.0},
-                     "network_rx": 0.0,
-                     "network_tx": 0.0,
-                     "pod_id": "8d0f1c783def",
-                     "pod_name": "8d0f1c783def-infra"}],
-     "version": {},
-     "version_podman": {}}
+    # curl http://localhost:61208/api/4/containers
+    [{"command": "/portainer",
+      "cpu": {"total": 0.0},
+      "cpu_percent": 0.0,
+      "created": "2022-10-29T14:59:10.266701439Z",
+      "engine": "docker",
+      "id": "3abd51c615968482d9ccff5afc629f267f6dda113ed68b75b432615fae3b49fb",
+      "image": ["portainer/portainer-ce:2.9.3"],
+      "io": {"cumulative_ior": 1187840, "cumulative_iow": 2011136},
+      "key": "name",
+      "memory": {"cache": None,
+                 "limit": 7823585280,
+                 "max_usage": None,
+                 "rss": None,
+                 "usage": 17010688},
+      "memory_usage": 17010688,
+      "name": "portainer",
+      "network": {"cumulative_rx": 2966333, "cumulative_tx": 0},
+      "status": "running",
+      "uptime": "1 weeks"},
+     {"command": "top",
+      "cpu": {"total": 2.918210864825478e-06},
+      "cpu_percent": 2.918210864825478e-06,
+      "created": "2023-12-09T10:45:34.339489876+01:00",
+      "engine": "podman",
+      "id": "481d6ffb7eef284d062628cf350bdd9ce0a803db8a2a505d75565ed24322b714",
+      "image": "docker.io/library/ubuntu:latest",
+      "io": {"ior": 0.0, "iow": 0.0, "time_since_update": 1},
+      "io_rx": 0.0,
+      "io_wx": 0.0,
+      "key": "name",
+      "memory": {"limit": 7823585280.0, "usage": 1236992.0},
+      "memory_usage": 1236992.0,
+      "name": "sad_darwin",
+      "network": {"rx": 0.0, "time_since_update": 1, "tx": 0.0},
+      "network_rx": 0.0,
+      "network_tx": 0.0,
+      "pod_id": "8d0f1c783def",
+      "pod_name": "sad_darwin",
+      "status": "running",
+      "uptime": "1 months"}]
+
+Fields descriptions:
+
+* **name**: Container name (unit is *None*)
+* **id**: Container ID (unit is *None*)
+* **image**: Container image (unit is *None*)
+* **status**: Container status (unit is *None*)
+* **created**: Container creation date (unit is *None*)
+* **command**: Container command (unit is *None*)
+* **cpu_percent**: Container CPU consumption (unit is *percent*)
+* **memory_usage**: Container memory usage (unit is *byte*)
+* **io_rx**: Container IO bytes read rate (unit is *bytepersecond*)
+* **io_wx**: Container IO bytes write rate (unit is *bytepersecond*)
+* **network_rx**: Container network RX bitrate (unit is *bitpersecond*)
+* **network_tx**: Container network TX bitrate (unit is *bitpersecond*)
+* **uptime**: Container uptime (unit is *None*)
+* **engine**: Container engine (Docker and Podman are currently supported) (unit is *None*)
+* **pod_name**: Pod name (only with Podman) (unit is *None*)
+* **pod_id**: Pod ID (only with Podman) (unit is *None*)
+
+Get a specific field::
+
+    # curl http://localhost:61208/api/4/containers/name
+    {"name": ["portainer", "sad_darwin", "8d0f1c783def-infra"]}
+
+Get a specific item when field matches the given value::
+
+    # curl http://localhost:61208/api/4/containers/name/portainer
+    {"portainer": [{"command": "/portainer",
+                    "cpu": {"total": 0.0},
+                    "cpu_percent": 0.0,
+                    "created": "2022-10-29T14:59:10.266701439Z",
+                    "engine": "docker",
+                    "id": "3abd51c615968482d9ccff5afc629f267f6dda113ed68b75b432615fae3b49fb",
+                    "image": ["portainer/portainer-ce:2.9.3"],
+                    "io": {"cumulative_ior": 1187840, "cumulative_iow": 2011136},
+                    "key": "name",
+                    "memory": {"cache": None,
+                               "limit": 7823585280,
+                               "max_usage": None,
+                               "rss": None,
+                               "usage": 17010688},
+                    "memory_usage": 17010688,
+                    "name": "portainer",
+                    "network": {"cumulative_rx": 2966333, "cumulative_tx": 0},
+                    "status": "running",
+                    "uptime": "1 weeks"}]}
 
 GET core
 --------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/core
+    # curl http://localhost:61208/api/4/core
     {"log": 4, "phys": 2}
 
 Fields descriptions:
@@ -242,7 +345,7 @@ Fields descriptions:
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/core/phys
+    # curl http://localhost:61208/api/4/core/phys
     {"phys": 2}
 
 GET cpu
@@ -250,29 +353,28 @@ GET cpu
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/cpu
+    # curl http://localhost:61208/api/4/cpu
     {"cpucore": 4,
-     "ctx_switches": 0,
+     "ctx_switches": 1565209189,
      "guest": 0.0,
      "guest_nice": 0.0,
-     "idle": 70.8,
-     "interrupts": 0,
-     "iowait": 0.0,
+     "idle": 69.3,
+     "interrupts": 673172772,
+     "iowait": 0.5,
      "irq": 0.0,
      "nice": 0.0,
-     "soft_interrupts": 0,
-     "softirq": 0.7,
+     "soft_interrupts": 382231833,
+     "softirq": 0.0,
      "steal": 0.0,
      "syscalls": 0,
-     "system": 4.4,
-     "time_since_update": 1,
-     "total": 29.2,
-     "user": 24.1}
+     "system": 3.5,
+     "total": 30.2,
+     "user": 26.6}
 
 Fields descriptions:
 
 * **total**: Sum of all CPU percentages (except idle) (unit is *percent*)
-* **system**: percent time spent in kernel space. System CPU time is the time spent running code in the Operating System kernel (unit is *percent*)
+* **system**: Percent time spent in kernel space. System CPU time is the time spent running code in the Operating System kernel (unit is *percent*)
 * **user**: CPU percent time spent in user space. User CPU time is the time spent on the processor running your program's code (or code in libraries) (unit is *percent*)
 * **iowait**: *(Linux)*: percent time spent by the CPU waiting for I/O operations to complete (unit is *percent*)
 * **dpc**: *(Windows)*: time spent servicing deferred procedure calls (DPCs) (unit is *percent*)
@@ -280,123 +382,167 @@ Fields descriptions:
 * **irq**: *(Linux and BSD)*: percent time spent servicing/handling hardware/software interrupts. Time servicing interrupts (hardware + software) (unit is *percent*)
 * **nice**: *(Unix)*: percent time occupied by user level processes with a positive nice value. The time the CPU has spent running users' processes that have been *niced* (unit is *percent*)
 * **steal**: *(Linux)*: percentage of time a virtual CPU waits for a real CPU while the hypervisor is servicing another virtual processor (unit is *percent*)
+* **guest**: *(Linux)*: time spent running a virtual CPU for guest operating systems under the control of the Linux kernel (unit is *percent*)
 * **ctx_switches**: number of context switches (voluntary + involuntary) per second. A context switch is a procedure that a computer's CPU (central processing unit) follows to change from one task (or process) to another while ensuring that the tasks do not conflict (unit is *number*)
+* **ctx_switches_rate_per_sec**: number of context switches (voluntary + involuntary) per second. A context switch is a procedure that a computer's CPU (central processing unit) follows to change from one task (or process) to another while ensuring that the tasks do not conflict per second (unit is *number* per second)
+* **ctx_switches_gauge**: number of context switches (voluntary + involuntary) per second. A context switch is a procedure that a computer's CPU (central processing unit) follows to change from one task (or process) to another while ensuring that the tasks do not conflict (cumulative) (unit is *number*)
 * **interrupts**: number of interrupts per second (unit is *number*)
+* **interrupts_rate_per_sec**: number of interrupts per second per second (unit is *number* per second)
+* **interrupts_gauge**: number of interrupts per second (cumulative) (unit is *number*)
 * **soft_interrupts**: number of software interrupts per second. Always set to 0 on Windows and SunOS (unit is *number*)
+* **soft_interrupts_rate_per_sec**: number of software interrupts per second. Always set to 0 on Windows and SunOS per second (unit is *number* per second)
+* **soft_interrupts_gauge**: number of software interrupts per second. Always set to 0 on Windows and SunOS (cumulative) (unit is *number*)
 * **syscalls**: number of system calls per second. Always 0 on Linux OS (unit is *number*)
+* **syscalls_rate_per_sec**: number of system calls per second. Always 0 on Linux OS per second (unit is *number* per second)
+* **syscalls_gauge**: number of system calls per second. Always 0 on Linux OS (cumulative) (unit is *number*)
 * **cpucore**: Total number of CPU core (unit is *number*)
 * **time_since_update**: Number of seconds since last update (unit is *seconds*)
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/cpu/total
-    {"total": 29.2}
+    # curl http://localhost:61208/api/4/cpu/total
+    {"total": 30.2}
 
 GET diskio
 ----------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/diskio
+    # curl http://localhost:61208/api/4/diskio
     [{"disk_name": "sda",
       "key": "disk_name",
-      "read_bytes": 0,
-      "read_count": 0,
-      "time_since_update": 1,
-      "write_bytes": 0,
-      "write_count": 0},
-     {"disk_name": "sda1",
+      "read_bytes": 157324110848,
+      "read_count": 11374333,
+      "write_bytes": 201555001344,
+      "write_count": 6582750},
+     {"alias": "InternalDisk",
+      "disk_name": "sda1",
       "key": "disk_name",
-      "read_bytes": 0,
-      "read_count": 0,
-      "time_since_update": 1,
+      "read_bytes": 22958080,
+      "read_count": 713,
       "write_bytes": 0,
-      "write_count": 0}]
+      "write_count": 78}]
+
+Fields descriptions:
+
+* **disk_name**: Disk name (unit is *None*)
+* **read_count**: Number of reads (unit is *number*)
+* **read_count_rate_per_sec**: Number of reads per second (unit is *number* per second)
+* **read_count_gauge**: Number of reads (cumulative) (unit is *number*)
+* **write_count**: Number of writes (unit is *number*)
+* **write_count_rate_per_sec**: Number of writes per second (unit is *number* per second)
+* **write_count_gauge**: Number of writes (cumulative) (unit is *number*)
+* **read_bytes**: Number of bytes read (unit is *byte*)
+* **read_bytes_rate_per_sec**: Number of bytes read per second (unit is *byte* per second)
+* **read_bytes_gauge**: Number of bytes read (cumulative) (unit is *byte*)
+* **write_bytes**: Number of bytes written (unit is *byte*)
+* **write_bytes_rate_per_sec**: Number of bytes written per second (unit is *byte* per second)
+* **write_bytes_gauge**: Number of bytes written (cumulative) (unit is *byte*)
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/diskio/disk_name
+    # curl http://localhost:61208/api/4/diskio/disk_name
     {"disk_name": ["sda", "sda1", "sda2", "sda5", "dm-0", "dm-1"]}
 
 Get a specific item when field matches the given value::
 
-    # curl http://localhost:61208/api/3/diskio/disk_name/sda
+    # curl http://localhost:61208/api/4/diskio/disk_name/sda
     {"sda": [{"disk_name": "sda",
               "key": "disk_name",
-              "read_bytes": 0,
-              "read_count": 0,
-              "time_since_update": 1,
-              "write_bytes": 0,
-              "write_count": 0}]}
+              "read_bytes": 157324110848,
+              "read_count": 11374333,
+              "write_bytes": 201555001344,
+              "write_count": 6582750}]}
 
 GET fs
 ------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/fs
-    [{"device_name": "/dev/mapper/ubuntu--gnome--vg-root",
-      "free": 25133506560,
+    # curl http://localhost:61208/api/4/fs
+    [{"alias": "Root",
+      "device_name": "/dev/mapper/ubuntu--gnome--vg-root",
+      "free": 11921264640,
       "fs_type": "ext4",
       "key": "mnt_point",
       "mnt_point": "/",
-      "percent": 89.1,
+      "percent": 94.8,
       "size": 243334156288,
-      "used": 205813194752},
+      "used": 219025436672},
      {"device_name": "zsfpool",
-      "free": 41811968,
+      "free": 31195136,
       "fs_type": "zfs",
       "key": "mnt_point",
       "mnt_point": "/zsfpool",
-      "percent": 0.3,
-      "size": 41943040,
-      "used": 131072}]
+      "percent": 25.4,
+      "size": 41811968,
+      "used": 10616832}]
+
+Fields descriptions:
+
+* **device_name**: Device name (unit is *None*)
+* **fs_type**: File system type (unit is *None*)
+* **mnt_point**: Mount point (unit is *None*)
+* **size**: Total size (unit is *byte*)
+* **used**: Used size (unit is *byte*)
+* **free**: Free size (unit is *byte*)
+* **percent**: File system usage in percent (unit is *percent*)
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/fs/mnt_point
+    # curl http://localhost:61208/api/4/fs/mnt_point
     {"mnt_point": ["/", "/zsfpool", "/var/snap/firefox/common/host-hunspell"]}
 
 Get a specific item when field matches the given value::
 
-    # curl http://localhost:61208/api/3/fs/mnt_point//
-    {"/": [{"device_name": "/dev/mapper/ubuntu--gnome--vg-root",
-            "free": 25133506560,
+    # curl http://localhost:61208/api/4/fs/mnt_point//
+    {"/": [{"alias": "Root",
+            "device_name": "/dev/mapper/ubuntu--gnome--vg-root",
+            "free": 11921264640,
             "fs_type": "ext4",
             "key": "mnt_point",
             "mnt_point": "/",
-            "percent": 89.1,
+            "percent": 94.8,
             "size": 243334156288,
-            "used": 205813194752}]}
+            "used": 219025436672}]}
 
 GET ip
 ------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/ip
-    {"address": "192.168.1.14",
-     "gateway": "192.168.1.1",
+    # curl http://localhost:61208/api/4/ip
+    {"address": "192.168.0.32",
+     "gateway": "192.168.0.254",
      "mask": "255.255.255.0",
      "mask_cidr": 24,
-     "public_address": "92.151.148.66",
+     "public_address": "91.166.228.228",
      "public_info_human": ""}
+
+Fields descriptions:
+
+* **address**: Private IP address (unit is *None*)
+* **mask**: Private IP mask (unit is *None*)
+* **mask_cidr**: Private IP mask in CIDR format (unit is *number*)
+* **gateway**: Private IP gateway (unit is *None*)
+* **public_address**: Public IP address (unit is *None*)
+* **public_info_human**: Public IP information (unit is *None*)
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/ip/gateway
-    {"gateway": "192.168.1.1"}
+    # curl http://localhost:61208/api/4/ip/gateway
+    {"gateway": "192.168.0.254"}
 
 GET load
 --------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/load
+    # curl http://localhost:61208/api/4/load
     {"cpucore": 4,
-     "min1": 1.18505859375,
-     "min15": 1.17724609375,
-     "min5": 1.23779296875}
+     "min1": 1.7509765625,
+     "min15": 1.4345703125,
+     "min5": 1.2666015625}
 
 Fields descriptions:
 
@@ -407,25 +553,25 @@ Fields descriptions:
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/load/min1
-    {"min1": 1.18505859375}
+    # curl http://localhost:61208/api/4/load/min1
+    {"min1": 1.7509765625}
 
 GET mem
 -------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/mem
-    {"active": 3179450368,
-     "available": 1759965184,
-     "buffers": 139554816,
-     "cached": 2369826816,
-     "free": 1759965184,
-     "inactive": 3354943488,
-     "percent": 77.5,
-     "shared": 580452352,
-     "total": 7836184576,
-     "used": 6076219392}
+    # curl http://localhost:61208/api/4/mem
+    {"active": 2068942848,
+     "available": 1466028032,
+     "buffers": 165359616,
+     "cached": 1911681024,
+     "free": 1466028032,
+     "inactive": 4365434880,
+     "percent": 81.3,
+     "shared": 562696192,
+     "total": 7823585280,
+     "used": 6357557248}
 
 Fields descriptions:
 
@@ -443,22 +589,22 @@ Fields descriptions:
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/mem/total
-    {"total": 7836184576}
+    # curl http://localhost:61208/api/4/mem/total
+    {"total": 7823585280}
 
 GET memswap
 -----------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/memswap
-    {"free": 5171486720,
-     "percent": 36.0,
-     "sin": 30833557504,
-     "sout": 44998725632,
+    # curl http://localhost:61208/api/4/memswap
+    {"free": 6025789440,
+     "percent": 25.4,
+     "sin": 26750087168,
+     "sout": 36382937088,
      "time_since_update": 1,
      "total": 8082419712,
-     "used": 2910932992}
+     "used": 2056630272}
 
 Fields descriptions:
 
@@ -472,7 +618,7 @@ Fields descriptions:
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/memswap/total
+    # curl http://localhost:61208/api/4/memswap/total
     {"total": 8082419712}
 
 GET network
@@ -480,104 +626,107 @@ GET network
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/network
+    # curl http://localhost:61208/api/4/network
     [{"alias": None,
-      "cumulative_cx": 1271814348,
-      "cumulative_rx": 635907174,
-      "cumulative_tx": 635907174,
-      "cx": 1070,
+      "cumulative_cx": 2849154006,
+      "cumulative_rx": 1424577003,
+      "cumulative_tx": 1424577003,
+      "cx": 0,
       "interface_name": "lo",
       "is_up": True,
       "key": "interface_name",
-      "rx": 535,
+      "rx": 0,
       "speed": 0,
       "time_since_update": 1,
-      "tx": 535},
-     {"alias": None,
-      "cumulative_cx": 43280474609,
-      "cumulative_rx": 41602144558,
-      "cumulative_tx": 1678330051,
-      "cx": 4727,
+      "tx": 0},
+     {"alias": "WIFI",
+      "cumulative_cx": 18617767483,
+      "cumulative_rx": 15193537585,
+      "cumulative_tx": 3424229898,
+      "cx": 224,
       "interface_name": "wlp2s0",
       "is_up": True,
       "key": "interface_name",
-      "rx": 663,
+      "rx": 98,
       "speed": 0,
       "time_since_update": 1,
-      "tx": 4064}]
+      "tx": 126}]
 
 Fields descriptions:
 
 * **interface_name**: Interface name (unit is *string*)
 * **alias**: Interface alias name (optional) (unit is *string*)
-* **rx**: The received/input rate (in bit per second) (unit is *bps*)
-* **tx**: The sent/output rate (in bit per second) (unit is *bps*)
-* **cx**: The cumulative received+sent rate (in bit per second) (unit is *bps*)
-* **cumulative_rx**: The number of bytes received through the interface (cumulative) (unit is *bytes*)
-* **cumulative_tx**: The number of bytes sent through the interface (cumulative) (unit is *bytes*)
-* **cumulative_cx**: The cumulative number of bytes reveived and sent through the interface (cumulative) (unit is *bytes*)
-* **speed**: Maximum interface speed (in bit per second). Can return 0 on some operating-system (unit is *bps*)
+* **rx**: The received/input rate (unit is *bitpersecond*)
+* **tx**: The sent/output rate (unit is *bitpersecond*)
+* **cx**: The cumulative received+sent rate (unit is *bitpersecond*)
+* **cumulative_rx**: The number of bytes received through the interface (cumulative) (unit is *byte*)
+* **cumulative_tx**: The number of bytes sent through the interface (cumulative) (unit is *byte*)
+* **cumulative_cx**: The cumulative number of bytes reveived and sent through the interface (cumulative) (unit is *byte*)
+* **speed**: Maximum interface speed (in bit per second). Can return 0 on some operating-system (unit is *bitpersecond*)
 * **is_up**: Is the interface up ? (unit is *bool*)
 * **time_since_update**: Number of seconds since last update (unit is *seconds*)
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/network/interface_name
+    # curl http://localhost:61208/api/4/network/interface_name
     {"interface_name": ["lo",
                         "wlp2s0",
+                        "br-40875d2e2716",
                         "docker0",
                         "br_grafana",
                         "mpqemubr0",
-                        "veth0868fe1",
-                        "vboxnet0"]}
+                        "vethbeef843",
+                        "tap-838a195875f",
+                        "lxdbr0",
+                        "veth4cbf8f0a"]}
 
 Get a specific item when field matches the given value::
 
-    # curl http://localhost:61208/api/3/network/interface_name/lo
+    # curl http://localhost:61208/api/4/network/interface_name/lo
     {"lo": [{"alias": None,
-             "cumulative_cx": 1271814348,
-             "cumulative_rx": 635907174,
-             "cumulative_tx": 635907174,
-             "cx": 1070,
+             "cumulative_cx": 2849154006,
+             "cumulative_rx": 1424577003,
+             "cumulative_tx": 1424577003,
+             "cx": 0,
              "interface_name": "lo",
              "is_up": True,
              "key": "interface_name",
-             "rx": 535,
+             "rx": 0,
              "speed": 0,
              "time_since_update": 1,
-             "tx": 535}]}
+             "tx": 0}]}
 
 GET now
 -------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/now
-    "2023-07-25 16:02:16 CEST"
+    # curl http://localhost:61208/api/4/now
+    "2024-02-03 16:59:21 CET"
 
 GET percpu
 ----------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/percpu
+    # curl http://localhost:61208/api/4/percpu
     [{"cpu_number": 0,
       "guest": 0.0,
       "guest_nice": 0.0,
-      "idle": 30.0,
+      "idle": 47.0,
       "iowait": 0.0,
       "irq": 0.0,
       "key": "cpu_number",
       "nice": 0.0,
       "softirq": 0.0,
       "steal": 0.0,
-      "system": 2.0,
-      "total": 70.0,
+      "system": 1.0,
+      "total": 53.0,
       "user": 4.0},
      {"cpu_number": 1,
       "guest": 0.0,
       "guest_nice": 0.0,
-      "idle": 30.0,
+      "idle": 45.0,
       "iowait": 0.0,
       "irq": 0.0,
       "key": "cpu_number",
@@ -585,12 +734,27 @@ Get plugin stats::
       "softirq": 0.0,
       "steal": 0.0,
       "system": 0.0,
-      "total": 70.0,
-      "user": 4.0}]
+      "total": 55.0,
+      "user": 7.0}]
+
+Fields descriptions:
+
+* **cpu_number**: CPU number (unit is *None*)
+* **total**: Sum of CPU percentages (except idle) for current CPU number (unit is *percent*)
+* **system**: Percent time spent in kernel space. System CPU time is the time spent running code in the Operating System kernel (unit is *percent*)
+* **user**: CPU percent time spent in user space. User CPU time is the time spent on the processor running your program's code (or code in libraries) (unit is *percent*)
+* **iowait**: *(Linux)*: percent time spent by the CPU waiting for I/O operations to complete (unit is *percent*)
+* **idle**: percent of CPU used by any program. Every program or task that runs on a computer system occupies a certain amount of processing time on the CPU. If the CPU has completed all tasks it is idle (unit is *percent*)
+* **irq**: *(Linux and BSD)*: percent time spent servicing/handling hardware/software interrupts. Time servicing interrupts (hardware + software) (unit is *percent*)
+* **nice**: *(Unix)*: percent time occupied by user level processes with a positive nice value. The time the CPU has spent running users' processes that have been *niced* (unit is *percent*)
+* **steal**: *(Linux)*: percentage of time a virtual CPU waits for a real CPU while the hypervisor is servicing another virtual processor (unit is *percent*)
+* **guest**: *(Linux)*: percent of time spent running a virtual CPU for guest operating systems under the control of the Linux kernel (unit is *percent*)
+* **guest_nice**: *(Linux)*: percent of time spent running a niced guest (virtual CPU) (unit is *percent*)
+* **softirq**: *(Linux)*: percent of time spent handling software interrupts (unit is *percent*)
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/percpu/cpu_number
+    # curl http://localhost:61208/api/4/percpu/cpu_number
     {"cpu_number": [0, 1, 2, 3]}
 
 GET ports
@@ -598,82 +762,103 @@ GET ports
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/ports
+    # curl http://localhost:61208/api/4/ports
     [{"description": "DefaultGateway",
-      "host": "192.168.1.1",
+      "host": "192.168.0.254",
       "indice": "port_0",
       "port": 0,
       "refresh": 30,
       "rtt_warning": None,
-      "status": 0.005154,
+      "status": 0.003976,
       "timeout": 3}]
+
+Fields descriptions:
+
+* **host**: Measurement is be done on this host (or IP address) (unit is *None*)
+* **port**: Measurement is be done on this port (0 for ICMP) (unit is *None*)
+* **description**: Human readable description for the host/port (unit is *None*)
+* **refresh**: Refresh time (in seconds) for this host/port (unit is *None*)
+* **timeout**: Timeout (in seconds) for the measurement (unit is *None*)
+* **status**: Measurement result (in seconds) (unit is *second*)
+* **rtt_warning**: Warning threshold (in seconds) for the measurement (unit is *second*)
+* **indice**: Unique indice for the host/port (unit is *None*)
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/ports/host
-    {"host": ["192.168.1.1"]}
+    # curl http://localhost:61208/api/4/ports/host
+    {"host": ["192.168.0.254"]}
 
 Get a specific item when field matches the given value::
 
-    # curl http://localhost:61208/api/3/ports/host/192.168.1.1
-    {"192.168.1.1": [{"description": "DefaultGateway",
-                      "host": "192.168.1.1",
-                      "indice": "port_0",
-                      "port": 0,
-                      "refresh": 30,
-                      "rtt_warning": None,
-                      "status": 0.005154,
-                      "timeout": 3}]}
+    # curl http://localhost:61208/api/4/ports/host/192.168.0.254
+    {"192.168.0.254": [{"description": "DefaultGateway",
+                        "host": "192.168.0.254",
+                        "indice": "port_0",
+                        "port": 0,
+                        "refresh": 30,
+                        "rtt_warning": None,
+                        "status": 0.003976,
+                        "timeout": 3}]}
 
 GET processcount
 ----------------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/processcount
-    {"pid_max": 0, "running": 1, "sleeping": 323, "thread": 1643, "total": 391}
+    # curl http://localhost:61208/api/4/processcount
+    {"pid_max": 0, "running": 1, "sleeping": 337, "thread": 1652, "total": 405}
+
+Fields descriptions:
+
+* **total**: Total number of processes (unit is *number*)
+* **running**: Total number of running processes (unit is *number*)
+* **sleeping**: Total number of sleeping processes (unit is *number*)
+* **thread**: Total number of threads (unit is *number*)
+* **pid_max**: Maximum number of processes (unit is *number*)
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/processcount/total
-    {"total": 391}
+    # curl http://localhost:61208/api/4/processcount/total
+    {"total": 405}
 
 GET psutilversion
 -----------------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/psutilversion
-    [5, 9, 5]
+    # curl http://localhost:61208/api/4/psutilversion
+    "5.9.7"
 
 GET quicklook
 -------------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/quicklook
-    {"cpu": 29.2,
-     "cpu_hz": 3000000000.0,
-     "cpu_hz_current": 2649443250.0,
+    # curl http://localhost:61208/api/4/quicklook
+    {"cpu": 30.2,
+     "cpu_hz": 2025000000.0,
+     "cpu_hz_current": 1873965500.0,
      "cpu_name": "Intel(R) Core(TM) i7-4500U CPU @ 1.80GHz",
-     "mem": 77.5,
+     "cpucore": 4,
+     "load": 35.9,
+     "mem": 81.3,
      "percpu": [{"cpu_number": 0,
                  "guest": 0.0,
                  "guest_nice": 0.0,
-                 "idle": 30.0,
+                 "idle": 47.0,
                  "iowait": 0.0,
                  "irq": 0.0,
                  "key": "cpu_number",
                  "nice": 0.0,
                  "softirq": 0.0,
                  "steal": 0.0,
-                 "system": 2.0,
-                 "total": 70.0,
+                 "system": 1.0,
+                 "total": 53.0,
                  "user": 4.0},
                 {"cpu_number": 1,
                  "guest": 0.0,
                  "guest_nice": 0.0,
-                 "idle": 30.0,
+                 "idle": 45.0,
                  "iowait": 0.0,
                  "irq": 0.0,
                  "key": "cpu_number",
@@ -681,47 +866,57 @@ Get plugin stats::
                  "softirq": 0.0,
                  "steal": 0.0,
                  "system": 0.0,
-                 "total": 70.0,
-                 "user": 4.0},
+                 "total": 55.0,
+                 "user": 7.0},
                 {"cpu_number": 2,
                  "guest": 0.0,
                  "guest_nice": 0.0,
-                 "idle": 14.0,
+                 "idle": 10.0,
+                 "iowait": 1.0,
+                 "irq": 0.0,
+                 "key": "cpu_number",
+                 "nice": 0.0,
+                 "softirq": 0.0,
+                 "steal": 0.0,
+                 "system": 4.0,
+                 "total": 90.0,
+                 "user": 37.0},
+                {"cpu_number": 3,
+                 "guest": 0.0,
+                 "guest_nice": 0.0,
+                 "idle": 44.0,
                  "iowait": 0.0,
                  "irq": 0.0,
                  "key": "cpu_number",
                  "nice": 0.0,
                  "softirq": 0.0,
                  "steal": 0.0,
-                 "system": 3.0,
-                 "total": 86.0,
-                 "user": 17.0},
-                {"cpu_number": 3,
-                 "guest": 0.0,
-                 "guest_nice": 0.0,
-                 "idle": 24.0,
-                 "iowait": 0.0,
-                 "irq": 0.0,
-                 "key": "cpu_number",
-                 "nice": 0.0,
-                 "softirq": 1.0,
-                 "steal": 0.0,
                  "system": 2.0,
-                 "total": 76.0,
-                 "user": 9.0}],
-     "swap": 36.0}
+                 "total": 56.0,
+                 "user": 6.0}],
+     "swap": 25.4}
+
+Fields descriptions:
+
+* **cpu**: CPU percent usage (unit is *percent*)
+* **mem**: MEM percent usage (unit is *percent*)
+* **swap**: SWAP percent usage (unit is *percent*)
+* **load**: LOAD percent usage (unit is *percent*)
+* **cpu_name**: CPU name (unit is *None*)
+* **cpu_hz_current**: CPU current frequency (unit is *hertz*)
+* **cpu_hz**: CPU max frequency (unit is *hertz*)
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/quicklook/cpu
-    {"cpu": 29.2}
+    # curl http://localhost:61208/api/4/quicklook/cpu_name
+    {"cpu_name": "Intel(R) Core(TM) i7-4500U CPU @ 1.80GHz"}
 
 GET sensors
 -----------
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/sensors
+    # curl http://localhost:61208/api/4/sensors
     [{"critical": 105,
       "key": "label",
       "label": "acpitz 0",
@@ -737,9 +932,18 @@ Get plugin stats::
       "value": 29,
       "warning": 105}]
 
+Fields descriptions:
+
+* **label**: Sensor label (unit is *None*)
+* **unit**: Sensor unit (unit is *None*)
+* **value**: Sensor value (unit is *number*)
+* **warning**: Warning threshold (unit is *number*)
+* **critical**: Critical threshold (unit is *number*)
+* **type**: Sensor type (one of battery, temperature_core, fan_speed) (unit is *None*)
+
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/sensors/label
+    # curl http://localhost:61208/api/4/sensors/label
     {"label": ["acpitz 0",
                "acpitz 1",
                "Package id 0",
@@ -752,7 +956,7 @@ Get a specific field::
 
 Get a specific item when field matches the given value::
 
-    # curl http://localhost:61208/api/3/sensors/label/acpitz 0
+    # curl http://localhost:61208/api/4/sensors/label/acpitz 0
     {"acpitz 0": [{"critical": 105,
                    "key": "label",
                    "label": "acpitz 0",
@@ -766,17 +970,26 @@ GET system
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/system
+    # curl http://localhost:61208/api/4/system
     {"hostname": "XPS13-9333",
      "hr_name": "Ubuntu 22.04 64bit",
      "linux_distro": "Ubuntu 22.04",
      "os_name": "Linux",
-     "os_version": "5.15.0-71-generic",
+     "os_version": "5.15.0-88-generic",
      "platform": "64bit"}
+
+Fields descriptions:
+
+* **os_name**: Operating system name (unit is *None*)
+* **hostname**: Hostname (unit is *None*)
+* **platform**: Platform (32 or 64 bits) (unit is *None*)
+* **linux_distro**: Linux distribution (unit is *None*)
+* **os_version**: Operating system version (unit is *None*)
+* **hr_name**: Human readable operating sytem name (unit is *None*)
 
 Get a specific field::
 
-    # curl http://localhost:61208/api/3/system/os_name
+    # curl http://localhost:61208/api/4/system/os_name
     {"os_name": "Linux"}
 
 GET uptime
@@ -784,58 +997,169 @@ GET uptime
 
 Get plugin stats::
 
-    # curl http://localhost:61208/api/3/uptime
-    "78 days, 3:00:11"
+    # curl http://localhost:61208/api/4/uptime
+    "70 days, 8:01:20"
+
+GET version
+-----------
+
+Get plugin stats::
+
+    # curl http://localhost:61208/api/4/version
+    "4.0.0_beta01"
 
 GET all stats
 -------------
 
 Get all Glances stats::
 
-    # curl http://localhost:61208/api/3/all
+    # curl http://localhost:61208/api/4/all
     Return a very big dictionary (avoid using this request, performances will be poor)...
+
+GET top n items of a specific plugin
+------------------------------------
+
+Get top 2 processes of the processlist plugin::
+
+    # curl http://localhost:61208/api/4/processlist/top/2
+    [{"cmdline": ["/usr/share/code/code",
+                  "--ms-enable-electron-run-as-node",
+                  "/home/nicolargo/.vscode/extensions/ms-python.vscode-pylance-2023.12.1/dist/server.bundle.js",
+                  "--cancellationReceive=file:ccbec6d233aa604f3844cb603c03b1e30b9e3ec684",
+                  "--node-ipc",
+                  "--clientProcessId=1559267"],
+      "cpu_percent": 0.0,
+      "cpu_times": {"children_system": 0.35,
+                    "children_user": 2.54,
+                    "iowait": 0.0,
+                    "system": 138.29,
+                    "user": 2149.01},
+      "gids": {"effective": 1000, "real": 1000, "saved": 1000},
+      "io_counters": [56303616, 675840, 0, 0, 0],
+      "key": "pid",
+      "memory_info": {"data": 701427712,
+                      "dirty": 0,
+                      "lib": 0,
+                      "rss": 525553664,
+                      "shared": 47415296,
+                      "text": 120561664,
+                      "vms": 1207768666112},
+      "memory_percent": 6.717555253644529,
+      "name": "code",
+      "nice": 0,
+      "num_threads": 13,
+      "pid": 1560380,
+      "status": "S",
+      "time_since_update": 1,
+      "username": "nicolargo"},
+     {"cmdline": ["/usr/share/code/code",
+                  "--type=utility",
+                  "--utility-sub-type=node.mojom.NodeService",
+                  "--lang=en-US",
+                  "--service-sandbox-type=none",
+                  "--dns-result-order=ipv4first",
+                  "--inspect-port=0",
+                  "--crashpad-handler-pid=1559145",
+                  "--enable-crash-reporter=721e05a9-6035-4dcb-bd58-68097aa48dd0,no_channel",
+                  "--user-data-dir=/home/nicolargo/.config/Code",
+                  "--standard-schemes=vscode-webview,vscode-file",
+                  "--enable-sandbox",
+                  "--secure-schemes=vscode-webview,vscode-file",
+                  "--bypasscsp-schemes",
+                  "--cors-schemes=vscode-webview,vscode-file",
+                  "--fetch-schemes=vscode-webview,vscode-file",
+                  "--service-worker-schemes=vscode-webview",
+                  "--streaming-schemes",
+                  "--shared-files=v8_context_snapshot_data:100",
+                  "--field-trial-handle=0,i,8087816725710096048,13663223481033463053,262144",
+                  "--disable-features=CalculateNativeWinOcclusion,SpareRendererForSitePerProcess"],
+      "cpu_percent": 0.0,
+      "cpu_times": {"children_system": 101.84,
+                    "children_user": 111.74,
+                    "iowait": 0.0,
+                    "system": 139.35,
+                    "user": 778.06},
+      "gids": {"effective": 1000, "real": 1000, "saved": 1000},
+      "io_counters": [141422592, 72794112, 0, 0, 0],
+      "key": "pid",
+      "memory_info": {"data": 759570432,
+                      "dirty": 0,
+                      "lib": 0,
+                      "rss": 440238080,
+                      "shared": 57569280,
+                      "text": 120561664,
+                      "vms": 1212085194752},
+      "memory_percent": 5.627063095041765,
+      "name": "code",
+      "nice": 0,
+      "num_threads": 19,
+      "pid": 1559267,
+      "status": "S",
+      "time_since_update": 1,
+      "username": "nicolargo"}]
+
+Note: Only work for plugin with a list of items
+
+GET item description
+--------------------
+Get item description (human readable) for a specific plugin/item::
+
+    # curl http://localhost:61208/api/4/diskio/read_bytes/description
+    "Number of bytes read."
+
+Note: the description is defined in the fields_description variable of the plugin.
+
+GET item unit
+-------------
+Get item unit for a specific plugin/item::
+
+    # curl http://localhost:61208/api/4/diskio/read_bytes/unit
+    "byte"
+
+Note: the description is defined in the fields_description variable of the plugin.
 
 GET stats history
 -----------------
 
 History of a plugin::
 
-    # curl http://localhost:61208/api/3/cpu/history
-    {"system": [["2023-07-25T16:02:16.701846", 4.4],
-                ["2023-07-25T16:02:18.501052", 4.4],
-                ["2023-07-25T16:02:19.527073", 3.0]],
-     "user": [["2023-07-25T16:02:16.701836", 24.1],
-              ["2023-07-25T16:02:18.501045", 24.1],
-              ["2023-07-25T16:02:19.527068", 16.6]]}
+    # curl http://localhost:61208/api/4/cpu/history
+    {"system": [["2024-02-03T16:59:23.661692", 3.5],
+                ["2024-02-03T16:59:24.687718", 2.6],
+                ["2024-02-03T16:59:25.914949", 2.6]],
+     "user": [["2024-02-03T16:59:23.661678", 26.6],
+              ["2024-02-03T16:59:24.687708", 12.1],
+              ["2024-02-03T16:59:25.914934", 12.1]]}
 
 Limit history to last 2 values::
 
-    # curl http://localhost:61208/api/3/cpu/history/2
-    {"system": [["2023-07-25T16:02:18.501052", 4.4],
-                ["2023-07-25T16:02:19.527073", 3.0]],
-     "user": [["2023-07-25T16:02:18.501045", 24.1],
-              ["2023-07-25T16:02:19.527068", 16.6]]}
+    # curl http://localhost:61208/api/4/cpu/history/2
+    {"system": [["2024-02-03T16:59:24.687718", 2.6],
+                ["2024-02-03T16:59:25.914949", 2.6]],
+     "user": [["2024-02-03T16:59:24.687708", 12.1],
+              ["2024-02-03T16:59:25.914934", 12.1]]}
 
 History for a specific field::
 
-    # curl http://localhost:61208/api/3/cpu/system/history
-    {"system": [["2023-07-25T16:02:16.701846", 4.4],
-                ["2023-07-25T16:02:18.501052", 4.4],
-                ["2023-07-25T16:02:19.527073", 3.0]]}
+    # curl http://localhost:61208/api/4/cpu/system/history
+    {"system": [["2024-02-03T16:59:21.961184", 3.5],
+                ["2024-02-03T16:59:23.661692", 3.5],
+                ["2024-02-03T16:59:24.687718", 2.6],
+                ["2024-02-03T16:59:25.914949", 2.6]]}
 
 Limit history for a specific field to last 2 values::
 
-    # curl http://localhost:61208/api/3/cpu/system/history
-    {"system": [["2023-07-25T16:02:18.501052", 4.4],
-                ["2023-07-25T16:02:19.527073", 3.0]]}
+    # curl http://localhost:61208/api/4/cpu/system/history
+    {"system": [["2024-02-03T16:59:24.687718", 2.6],
+                ["2024-02-03T16:59:25.914949", 2.6]]}
 
 GET limits (used for thresholds)
 --------------------------------
 
 All limits/thresholds::
 
-    # curl http://localhost:61208/api/3/all/limits
-    {"alert": {"history_size": 1200.0},
+    # curl http://localhost:61208/api/4/all/limits
+    {"alert": {"alert_disable": ["False"], "history_size": 1200.0},
      "amps": {"amps_disable": ["False"], "history_size": 1200.0},
      "containers": {"containers_all": ["False"],
                     "containers_disable": ["False"],
@@ -865,11 +1189,13 @@ All limits/thresholds::
              "cpu_user_log": ["False"],
              "cpu_user_warning": 70.0,
              "history_size": 1200.0},
-     "diskio": {"diskio_disable": ["False"],
+     "diskio": {"diskio_alias": ["sda1:InternalDisk", "sdb1:ExternalDisk"],
+                "diskio_disable": ["False"],
                 "diskio_hide": ["loop.*", "/dev/loop.*"],
                 "history_size": 1200.0},
      "folders": {"folders_disable": ["False"], "history_size": 1200.0},
-     "fs": {"fs_careful": 50.0,
+     "fs": {"fs_alias": ["/:Root"],
+            "fs_careful": 50.0,
             "fs_critical": 90.0,
             "fs_disable": ["False"],
             "fs_hide": ["/boot.*", "/snap.*"],
@@ -908,6 +1234,7 @@ All limits/thresholds::
                  "memswap_disable": ["False"],
                  "memswap_warning": 70.0},
      "network": {"history_size": 1200.0,
+                 "network_alias": ["wlp2s0:WIFI"],
                  "network_disable": ["False"],
                  "network_rx_careful": 70.0,
                  "network_rx_critical": 90.0,
@@ -982,14 +1309,18 @@ All limits/thresholds::
                                                   "19"]},
      "psutilversion": {"history_size": 1200.0},
      "quicklook": {"history_size": 1200.0,
+                   "quicklook_bar_char": ["|"],
                    "quicklook_cpu_careful": 50.0,
                    "quicklook_cpu_critical": 90.0,
                    "quicklook_cpu_warning": 70.0,
                    "quicklook_disable": ["False"],
+                   "quicklook_list": ["cpu", "mem", "load"],
+                   "quicklook_load_careful": 70.0,
+                   "quicklook_load_critical": 500.0,
+                   "quicklook_load_warning": 100.0,
                    "quicklook_mem_careful": 50.0,
                    "quicklook_mem_critical": 90.0,
                    "quicklook_mem_warning": 70.0,
-                   "quicklook_percentage_char": ["|"],
                    "quicklook_swap_careful": 50.0,
                    "quicklook_swap_critical": 90.0,
                    "quicklook_swap_warning": 70.0},
@@ -1009,6 +1340,7 @@ All limits/thresholds::
                 "system_disable": ["False"],
                 "system_refresh": 60},
      "uptime": {"history_size": 1200.0},
+     "version": {"history_size": 1200.0},
      "wifi": {"history_size": 1200.0,
               "wifi_careful": -65.0,
               "wifi_critical": -85.0,
@@ -1017,7 +1349,7 @@ All limits/thresholds::
 
 Limits/thresholds for the cpu plugin::
 
-    # curl http://localhost:61208/api/3/cpu/limits
+    # curl http://localhost:61208/api/4/cpu/limits
     {"cpu_ctx_switches_careful": 160000.0,
      "cpu_ctx_switches_critical": 200000.0,
      "cpu_ctx_switches_warning": 180000.0,

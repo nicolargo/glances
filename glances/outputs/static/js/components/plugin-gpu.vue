@@ -19,7 +19,7 @@
                 <div class="table-cell" v-if="mean.mem == null">N/A</div>
             </div>
             <div class="table-row" v-if="args.meangpu || gpus.length === 1">
-                <div class="table-cell text-left">temperature::</div>
+                <div class="table-cell text-left">temperature:</div>
                 <div
                     class="table-cell"
                     :class="getMeanDecoration('temperature')"

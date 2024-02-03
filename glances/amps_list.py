@@ -45,41 +45,30 @@ class AmpsList(object):
         if self.config is None:
             return False
 
-        # Display a warning (deprecated) message if the monitor section exist
-        if "monitor" in self.config.sections():
-            logger.warning(
-                "A deprecated [monitor] section exists in the Glances configuration file. You should use the new \
-                Applications Monitoring Process module instead \
-                (http://glances.readthedocs.io/en/develop/aoa/amps.html)."
-            )
-
-        # TODO: Change the way AMP are loaded (use folder/module instead of glances_foo.py file)
-        # See https://github.com/nicolargo/glances/issues/1930
-        header = "glances_"
         # For each AMP script, call the load_config method
         for s in self.config.sections():
             if s.startswith("amp_"):
                 # An AMP section exists in the configuration file
-                # If an AMP script exist in the glances/amps folder, use it
-                amp_conf_name = s[4:]
-                amp_script = os.path.join(amps_path, header + s[4:] + ".py")
-                if not os.path.exists(amp_script):
+                # If an AMP module exist in amps_path (glances/amps) folder then use it
+                amp_name = s[4:]
+                amp_module = os.path.join(amps_path, amp_name)
+                if not os.path.exists(amp_module):
                     # If not, use the default script
-                    amp_script = os.path.join(amps_path, "glances_default.py")
+                    amp_module = os.path.join(amps_path, "default")
                 try:
-                    amp = __import__(os.path.basename(amp_script)[:-3])
+                    amp = __import__(os.path.basename(amp_module))
                 except ImportError as e:
-                    logger.warning("Missing Python Lib ({}), cannot load {} AMP".format(e, amp_conf_name))
+                    logger.warning("Missing Python Lib ({}), cannot load AMP {}".format(e, amp_name))
                 except Exception as e:
-                    logger.warning("Cannot load {} AMP ({})".format(amp_conf_name, e))
+                    logger.warning("Cannot load AMP {} ({})".format(amp_name, e))
                 else:
                     # Add the AMP to the dictionary
                     # The key is the AMP name
                     # for example, the file glances_xxx.py
                     # generate self._amps_list["xxx"] = ...
-                    self.__amps_dict[amp_conf_name] = amp.Amp(name=amp_conf_name, args=self.args)
+                    self.__amps_dict[amp_name] = amp.Amp(name=amp_name, args=self.args)
                     # Load the AMP configuration
-                    self.__amps_dict[amp_conf_name].load_config(self.config)
+                    self.__amps_dict[amp_name].load_config(self.config)
         # Log AMPs list
         logger.debug("AMPs list: {}".format(self.getList()))
 

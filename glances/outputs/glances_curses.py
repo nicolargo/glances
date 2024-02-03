@@ -39,15 +39,16 @@ class _GlancesCurses(object):
     """
 
     _hotkeys = {
-        # 'ENTER' > Edit the process filter
+        '\n': {'handler': '_handle_enter'},
         '0': {'switch': 'disable_irix'},
         '1': {'switch': 'percpu'},
         '2': {'switch': 'disable_left_sidebar'},
         '3': {'switch': 'disable_quicklook'},
-        # '4' > Enable or disable quicklook
-        # '5' > Enable or disable top menu
+        '4': {'handler': '_handle_quicklook'},
+        '5': {'handler': '_handle_top_menu'},
         '6': {'switch': 'meangpu'},
-        '9': {'switch': 'theme_white'},
+        '9': {'switch': 'theme_white',
+              'handler': '_handle_theme'},
         '/': {'switch': 'process_short_name'},
         'a': {'sort_key': 'auto'},
         'A': {'switch': 'disable_amps'},
@@ -58,8 +59,8 @@ class _GlancesCurses(object):
         'd': {'switch': 'disable_diskio'},
         'D': {'switch': 'disable_containers'},
         # 'e' > Enable/Disable process extended
-        # 'E' > Erase the process filter
-        # 'f' > Show/hide fs / folder stats
+        'E': {'handler': '_handle_erase_filter'},
+        'f': {'handler': '_handle_fs_stats'},
         'F': {'switch': 'fs_free_space'},
         'g': {'switch': 'generate_graph'},
         'G': {'switch': 'disable_gpu'},
@@ -86,12 +87,12 @@ class _GlancesCurses(object):
         'T': {'switch': 'network_sum'},
         'u': {'sort_key': 'username'},
         'U': {'switch': 'network_cumul'},
-        # 'w' > Delete finished warning logs
+        'w': {'handler': '_handle_clean_logs'},
         'W': {'switch': 'disable_wifi'},
-        # 'x' > Delete finished warning and critical logs
-        # 'z' > Enable or disable processes
-        # '+' > Increase the process nice level
-        # '-' > Decrease the process nice level
+        'x': {'handler': '_handle_clean_critical_logs'},
+        'z': {'handler': '_handle_disable_process'},
+        '+': {'handler': '_handle_increase_nice'},
+        '-': {'handler': '_handle_decrease_nice'},
         # "<" (left arrow) navigation through process sort
         # ">" (right arrow) navigation through process sort
         # 'UP' > Up in the server list
@@ -105,6 +106,8 @@ class _GlancesCurses(object):
     _quicklook_max_width = 68
 
     # Define left sidebar
+    # This default list is also defined in the glances/outputs/static/js/uiconfig.json
+    # file for the web interface
     _left_sidebar = [
         'network',
         'wifi',
@@ -139,10 +142,21 @@ class _GlancesCurses(object):
         self.space_between_line = 2
 
         # Init the curses screen
-        self.screen = curses.initscr()
-        if not self.screen:
-            logger.critical("Cannot init the curses library.\n")
-            sys.exit(1)
+        try:
+            self.screen = curses.initscr()
+            if not self.screen:
+                logger.critical("Cannot init the curses library.\n")
+                sys.exit(1)
+            else:
+                logger.debug("Curses library initialized with term: {}".format(curses.longname()))
+        except Exception as e:
+            if args.export:
+                logger.info("Cannot init the curses library, quiet mode on and export.")
+                args.quiet = True
+                return
+            else:
+                logger.critical("Cannot init the curses library ({})".format(e))
+                sys.exit(1)
 
         # Load the 'outputs' section of the configuration file
         # - Init the theme (default is black)
@@ -186,11 +200,16 @@ class _GlancesCurses(object):
 
     def load_config(self, config):
         """Load the outputs section of the configuration file."""
-        # Load the theme
         if config is not None and config.has_section('outputs'):
             logger.debug('Read the outputs section in the configuration file')
+            # Load the theme
             self.theme['name'] = config.get_value('outputs', 'curse_theme', default='black')
-            logger.debug('Theme for the curse interface: {}'.format(self.theme['name']))
+            # Separator ?
+            self.args.enable_separator = config.get_bool_value('outputs', 'separator', default=True)
+            # Set the left sidebar list
+            self._left_sidebar = config.get_list_value('outputs',
+                                                       'left_menu',
+                                                       default=self._left_sidebar)
 
     def is_theme(self, name):
         """Return True if the theme *name* should be used."""
@@ -236,6 +255,9 @@ class _GlancesCurses(object):
 
         if curses.has_colors():
             # The screen is compatible with a colored design
+            # ex: export TERM=xterm-256color
+            #     export TERM=xterm-color
+
             if self.is_theme('white'):
                 # White theme: black ==> white
                 curses.init_pair(1, curses.COLOR_BLACK, -1)
@@ -244,35 +266,36 @@ class _GlancesCurses(object):
             if self.args.disable_bg:
                 curses.init_pair(2, curses.COLOR_RED, -1)
                 curses.init_pair(3, curses.COLOR_GREEN, -1)
-                curses.init_pair(4, curses.COLOR_BLUE, -1)
                 curses.init_pair(5, curses.COLOR_MAGENTA, -1)
             else:
                 curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_RED)
                 curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
-                curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLUE)
                 curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
+            curses.init_pair(4, curses.COLOR_BLUE, -1)
             curses.init_pair(6, curses.COLOR_RED, -1)
             curses.init_pair(7, curses.COLOR_GREEN, -1)
-            curses.init_pair(8, curses.COLOR_BLUE, -1)
+            curses.init_pair(8, curses.COLOR_MAGENTA, -1)
 
             # Colors text styles
             self.no_color = curses.color_pair(1)
             self.default_color = curses.color_pair(3) | A_BOLD
-            self.nice_color = curses.color_pair(5)
-            self.cpu_time_color = curses.color_pair(5)
+            self.nice_color = curses.color_pair(8)
+            self.cpu_time_color = curses.color_pair(8)
             self.ifCAREFUL_color = curses.color_pair(4) | A_BOLD
             self.ifWARNING_color = curses.color_pair(5) | A_BOLD
             self.ifCRITICAL_color = curses.color_pair(2) | A_BOLD
             self.default_color2 = curses.color_pair(7)
-            self.ifCAREFUL_color2 = curses.color_pair(8) | A_BOLD
-            self.ifWARNING_color2 = curses.color_pair(5) | A_BOLD
+            self.ifCAREFUL_color2 = curses.color_pair(4)
+            self.ifWARNING_color2 = curses.color_pair(8) | A_BOLD
             self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
-            self.ifINFO_color = curses.color_pair(8)
+            self.ifINFO_color = curses.color_pair(4)
             self.filter_color = A_BOLD
             self.selected_color = A_BOLD
+            self.separator = curses.color_pair(1)
 
-            if curses.COLOR_PAIRS > 8:
-                colors_list = [curses.COLOR_MAGENTA, curses.COLOR_CYAN, curses.COLOR_YELLOW]
+            if curses.COLORS > 8:
+                # ex: export TERM=xterm-256color
+                colors_list = [curses.COLOR_CYAN, curses.COLOR_YELLOW]
                 for i in range(0, 3):
                     try:
                         curses.init_pair(i + 9, colors_list[i], -1)
@@ -281,29 +304,32 @@ class _GlancesCurses(object):
                             curses.init_pair(i + 9, curses.COLOR_BLACK, -1)
                         else:
                             curses.init_pair(i + 9, curses.COLOR_WHITE, -1)
-                self.nice_color = curses.color_pair(9)
-                self.cpu_time_color = curses.color_pair(9)
-                self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
-                self.filter_color = curses.color_pair(10) | A_BOLD
-                self.selected_color = curses.color_pair(11) | A_BOLD
+                self.filter_color = curses.color_pair(9) | A_BOLD
+                self.selected_color = curses.color_pair(10) | A_BOLD
+                # Define separator line style
+                curses.init_color(11, 500, 500, 500)
+                curses.init_pair(11, curses.COLOR_BLACK, -1)
+                self.separator = curses.color_pair(11)
 
         else:
             # The screen is NOT compatible with a colored design
             # switch to B&W text styles
+            # ex: export TERM=xterm-mono
             self.no_color = curses.A_NORMAL
             self.default_color = curses.A_NORMAL
             self.nice_color = A_BOLD
             self.cpu_time_color = A_BOLD
-            self.ifCAREFUL_color = curses.A_UNDERLINE
-            self.ifWARNING_color = A_BOLD
+            self.ifCAREFUL_color = A_BOLD
+            self.ifWARNING_color = curses.A_UNDERLINE
             self.ifCRITICAL_color = curses.A_REVERSE
             self.default_color2 = curses.A_NORMAL
-            self.ifCAREFUL_color2 = curses.A_UNDERLINE
-            self.ifWARNING_color2 = A_BOLD
+            self.ifCAREFUL_color2 = A_BOLD
+            self.ifWARNING_color2 = curses.A_UNDERLINE
             self.ifCRITICAL_color2 = curses.A_REVERSE
             self.ifINFO_color = A_BOLD
             self.filter_color = A_BOLD
             self.selected_color = A_BOLD
+            self.separator = curses.COLOR_BLACK
 
         # Define the colors list (hash table) for stats
         self.colors_list = {
@@ -330,6 +356,8 @@ class _GlancesCurses(object):
             'PASSWORD': curses.A_PROTECT,
             'SELECTED': self.selected_color,
             'INFO': self.ifINFO_color,
+            'ERROR': self.selected_color,
+            'SEPARATOR': self.separator,
         }
 
     def set_cursor(self, value):
@@ -360,122 +388,137 @@ class _GlancesCurses(object):
         logger.debug("Keypressed (code: {})".format(self.pressedkey))
         for hotkey in self._hotkeys:
             if self.pressedkey == ord(hotkey) and 'switch' in self._hotkeys[hotkey]:
-                # Get the option name
-                # Ex: disable_foo return foo
-                #     enable_foo_bar return foo_bar
-                option = '_'.join(self._hotkeys[hotkey]['switch'].split('_')[1:])
-                if self._hotkeys[hotkey]['switch'].startswith('disable_'):
-                    # disable_ switch
-                    if getattr(self.args, self._hotkeys[hotkey]['switch']):
-                        enable(self.args, option)
-                    else:
-                        disable(self.args, option)
-                elif self._hotkeys[hotkey]['switch'].startswith('enable_'):
-                    # enable_ switch
-                    if getattr(self.args, self._hotkeys[hotkey]['switch']):
-                        disable(self.args, option)
-                    else:
-                        enable(self.args, option)
-                else:
-                    # Others switchs options (with no enable_ or disable_)
-                    setattr(
-                        self.args,
-                        self._hotkeys[hotkey]['switch'],
-                        not getattr(self.args, self._hotkeys[hotkey]['switch']),
-                    )
-            if self.pressedkey == ord(hotkey) and 'sort_key' in self._hotkeys[hotkey]:
-                glances_processes.set_sort_key(
-                    self._hotkeys[hotkey]['sort_key'], self._hotkeys[hotkey]['sort_key'] == 'auto'
-                )
+                self._handle_switch(hotkey)
+            elif self.pressedkey == ord(hotkey) and 'sort_key' in self._hotkeys[hotkey]:
+                self._handle_sort_key(hotkey)
+            if self.pressedkey == ord(hotkey) and 'handler' in self._hotkeys[hotkey]:
+                action = getattr(self, self._hotkeys[hotkey]['handler'])
+                action()
 
-        # Other actions...
-        if self.pressedkey == ord('\n'):
-            # 'ENTER' > Edit the process filter
-            self.edit_filter = not self.edit_filter
-        elif self.pressedkey == ord('4'):
-            # '4' > Enable or disable quicklook
-            self.args.full_quicklook = not self.args.full_quicklook
-            if self.args.full_quicklook:
-                self.enable_fullquicklook()
-            else:
-                self.disable_fullquicklook()
-        elif self.pressedkey == ord('5'):
-            # '5' > Enable or disable top menu
-            self.args.disable_top = not self.args.disable_top
-            if self.args.disable_top:
-                self.disable_top()
-            else:
-                self.enable_top()
-        elif self.pressedkey == ord('9'):
-            # '9' > Theme from black to white and reverse
-            self._init_colors()
-        elif self.pressedkey == ord('e') and not self.args.programs:
-            # 'e' > Enable/Disable process extended
-            self.args.enable_process_extended = not self.args.enable_process_extended
-            if not self.args.enable_process_extended:
-                glances_processes.disable_extended()
-            else:
-                glances_processes.enable_extended()
-            # When a process is selected (and only in standalone mode), disable the cursor
-            self.args.disable_cursor = self.args.enable_process_extended and self.args.is_standalone
-        elif self.pressedkey == ord('E'):
-            # 'E' > Erase the process filter
-            glances_processes.process_filter = None
-        elif self.pressedkey == ord('f'):
-            # 'f' > Show/hide fs / folder stats
-            self.args.disable_fs = not self.args.disable_fs
-            self.args.disable_folders = not self.args.disable_folders
-        elif self.pressedkey == ord('+'):
-            # '+' > Increase process nice level
-            self.increase_nice_process = not self.increase_nice_process
-        elif self.pressedkey == ord('-'):
-            # '+' > Decrease process nice level
-            self.decrease_nice_process = not self.decrease_nice_process
+        # Other actions with key > 255 (ord will not work) and/or additional test...
+        if self.pressedkey == ord('e') and not self.args.programs:
+            self._handle_process_extended()
         elif self.pressedkey == ord('k') and not self.args.disable_cursor:
-            # 'k' > Kill selected process (after confirmation)
-            self.kill_process = not self.kill_process
-        elif self.pressedkey == ord('w'):
-            # 'w' > Delete finished warning logs
-            glances_events.clean()
-        elif self.pressedkey == ord('x'):
-            # 'x' > Delete finished warning and critical logs
-            glances_events.clean(critical=True)
-        elif self.pressedkey == ord('z'):
-            # 'z' > Enable or disable processes
-            self.args.disable_process = not self.args.disable_process
-            if self.args.disable_process:
-                glances_processes.disable()
-            else:
-                glances_processes.enable()
+            self._handle_kill_process()
         elif self.pressedkey == curses.KEY_LEFT:
-            # "<" (left arrow) navigation through process sort
-            next_sort = (self.loop_position() - 1) % len(self._sort_loop)
-            glances_processes.set_sort_key(self._sort_loop[next_sort], False)
+            self._handle_sort_left()
         elif self.pressedkey == curses.KEY_RIGHT:
-            # ">" (right arrow) navigation through process sort
-            next_sort = (self.loop_position() + 1) % len(self._sort_loop)
-            glances_processes.set_sort_key(self._sort_loop[next_sort], False)
+            self._handle_sort_right()
         elif self.pressedkey == curses.KEY_UP or self.pressedkey == 65 and not self.args.disable_cursor:
-            # 'UP' > Up in the server list
-            if self.args.cursor_position > 0:
-                self.args.cursor_position -= 1
+            self._handle_cursor_up()
         elif self.pressedkey == curses.KEY_DOWN or self.pressedkey == 66 and not self.args.disable_cursor:
-            # 'DOWN' > Down in the server list
-            # if self.args.cursor_position < glances_processes.max_processes - 2:
-            if self.args.cursor_position < glances_processes.processes_count:
-                self.args.cursor_position += 1
+            self._handle_cursor_down()
         elif self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
-            # 'ESC'|'q' > Quit
-            if return_to_browser:
-                logger.info("Stop Glances client and return to the browser")
-            else:
-                logger.info("Stop Glances (keypressed: {})".format(self.pressedkey))
+            self._handle_quit(return_to_browser)
         elif self.pressedkey == curses.KEY_F5 or self.pressedkey == 18:
-            # "F5" or Ctrl-R to force UI refresh
-            pass
+            self._handle_refresh()
 
         # Return the key code
         return self.pressedkey
+
+    def _handle_switch(self, hotkey):
+        option = '_'.join(self._hotkeys[hotkey]['switch'].split('_')[1:])
+        if self._hotkeys[hotkey]['switch'].startswith('disable_'):
+            if getattr(self.args, self._hotkeys[hotkey]['switch']):
+                enable(self.args, option)
+            else:
+                disable(self.args, option)
+        elif self._hotkeys[hotkey]['switch'].startswith('enable_'):
+            if getattr(self.args, self._hotkeys[hotkey]['switch']):
+                disable(self.args, option)
+            else:
+                enable(self.args, option)
+        else:
+            setattr(
+                self.args,
+                self._hotkeys[hotkey]['switch'],
+                not getattr(self.args, self._hotkeys[hotkey]['switch']),
+            )
+
+    def _handle_sort_key(self, hotkey):
+        glances_processes.set_sort_key(self._hotkeys[hotkey]['sort_key'], self._hotkeys[hotkey]['sort_key'] == 'auto')
+
+    def _handle_enter(self):
+        self.edit_filter = not self.edit_filter
+
+    def _handle_quicklook(self):
+        self.args.full_quicklook = not self.args.full_quicklook
+        if self.args.full_quicklook:
+            self.enable_fullquicklook()
+        else:
+            self.disable_fullquicklook()
+
+    def _handle_top_menu(self):
+        self.args.disable_top = not self.args.disable_top
+        if self.args.disable_top:
+            self.disable_top()
+        else:
+            self.enable_top()
+
+    def _handle_theme(self):
+        self._init_colors()
+
+    def _handle_process_extended(self):
+        self.args.enable_process_extended = not self.args.enable_process_extended
+        if not self.args.enable_process_extended:
+            glances_processes.disable_extended()
+        else:
+            glances_processes.enable_extended()
+        self.args.disable_cursor = self.args.enable_process_extended and self.args.is_standalone
+
+    def _handle_erase_filter(self):
+        glances_processes.process_filter = None
+
+    def _handle_fs_stats(self):
+        self.args.disable_fs = not self.args.disable_fs
+        self.args.disable_folders = not self.args.disable_folders
+
+    def _handle_increase_nice(self):
+        self.increase_nice_process = not self.increase_nice_process
+
+    def _handle_decrease_nice(self):
+        self.decrease_nice_process = not self.decrease_nice_process
+
+    def _handle_kill_process(self):
+        self.kill_process = not self.kill_process
+
+    def _handle_clean_logs(self):
+        glances_events.clean()
+
+    def _handle_clean_critical_logs(self):
+        glances_events.clean(critical=True)
+
+    def _handle_disable_process(self):
+        self.args.disable_process = not self.args.disable_process
+        if self.args.disable_process:
+            glances_processes.disable()
+        else:
+            glances_processes.enable()
+
+    def _handle_sort_left(self):
+        next_sort = (self.loop_position() - 1) % len(self._sort_loop)
+        glances_processes.set_sort_key(self._sort_loop[next_sort], False)
+
+    def _handle_sort_right(self):
+        next_sort = (self.loop_position() + 1) % len(self._sort_loop)
+        glances_processes.set_sort_key(self._sort_loop[next_sort], False)
+
+    def _handle_cursor_up(self):
+        if self.args.cursor_position > 0:
+            self.args.cursor_position -= 1
+
+    def _handle_cursor_down(self):
+        if self.args.cursor_position < glances_processes.processes_count:
+            self.args.cursor_position += 1
+
+    def _handle_quit(self, return_to_browser):
+        if return_to_browser:
+            logger.info("Stop Glances client and return to the browser")
+        else:
+            logger.info("Stop Glances (keypressed: {})".format(self.pressedkey))
+
+    def _handle_refresh(self):
+        pass
 
     def loop_position(self):
         """Return the current sort in the loop"""
@@ -541,8 +584,8 @@ class _GlancesCurses(object):
         """New column in the curses interface."""
         self.column = self.next_column
 
-    def separator_line(self, color='TITLE'):
-        """New separator line in the curses interface."""
+    def separator_line(self, color='SEPARATOR'):
+        """Add a separator line in the curses interface."""
         if not self.args.enable_separator:
             return
         self.new_line()
@@ -575,18 +618,23 @@ class _GlancesCurses(object):
 
         for p in stats.getPluginsList(enable=False):
             if p == 'quicklook' or p == 'processlist':
-                # processlist is done later
+                # - processlist is done later
                 # because we need to know how many processes could be displayed
+                # - quicklook is done later
+                # because it is based on CPU, MEM, SWAP and LOAD
                 continue
 
             # Compute the plugin max size
             plugin_max_width = None
             if p in self._left_sidebar:
-                plugin_max_width = max(self._left_sidebar_min_width, self.term_window.getmaxyx()[1] - 105)
-                plugin_max_width = min(self._left_sidebar_max_width, plugin_max_width)
+                plugin_max_width = max(self._left_sidebar_min_width,
+                                       self.term_window.getmaxyx()[1] - 105)
+                plugin_max_width = min(self._left_sidebar_max_width,
+                                       plugin_max_width)
 
             # Get the view
-            ret[p] = stats.get_plugin(p).get_stats_display(args=self.args, max_width=plugin_max_width)
+            ret[p] = stats.get_plugin(p).get_stats_display(args=self.args,
+                                                           max_width=plugin_max_width)
 
         return ret
 
@@ -972,7 +1020,8 @@ class _GlancesCurses(object):
 
         # Add the message
         for y, m in enumerate(sentence_list):
-            popup.addnstr(2 + y, 2, m, len(m))
+            if len(m) > 0:
+                popup.addnstr(2 + y, 2, m, len(m))
 
         if popup_type == 'info':
             # Display the popup
@@ -1000,7 +1049,7 @@ class _GlancesCurses(object):
                 logger.debug("User enters the following string: %s" % textbox.gather())
                 return textbox.gather()[:-1]
             else:
-                logger.debug("User centers an empty string")
+                logger.debug("User enters an empty string")
                 return None
         elif popup_type == 'yesno':
             # # Create a sub-window for the text field
@@ -1203,7 +1252,7 @@ class _GlancesCurses(object):
 
     def wait(self, delay=100):
         """Wait delay in ms"""
-        curses.napms(100)
+        curses.napms(delay)
 
     def get_stats_display_width(self, curse_msg, without_option=False):
         """Return the width of the formatted curses message."""

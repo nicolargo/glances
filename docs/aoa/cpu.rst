@@ -15,17 +15,6 @@ displayed.
 
 .. image:: ../_static/cpu-wide.png
 
-A character is also displayed just after the CPU header and shows the
-trend value:
-
-======== ==============================================================
-Trend    Status
-======== ==============================================================
-``-``    CPU value is equal to the mean of the six latests refreshes
-``\``    CPU value is lower than the mean of the six latests refreshes
-``/``    CPU value is higher than the mean of the six latests refreshes
-======== ==============================================================
-
 CPU stats description:
 
 - **user**: percent time spent in user space. User CPU time is the time
@@ -46,6 +35,8 @@ CPU stats description:
   operations to complete.
 - **steal** *(Linux)*: percentage of time a virtual CPU waits for a real
   CPU while the hypervisor is servicing another virtual processor.
+- **guest** *(Linux)*: percentage of time a virtual CPU spends
+  servicing another virtual CPU under the control of the Linux kernel.
 - **ctx_sw**: number of context switches (voluntary + involuntary) per
   second. A context switch is a procedure that a computer's CPU (central
   processing unit) follows to change from one task (or process) to

@@ -47,7 +47,7 @@
                         <div class="table-cell">{{ nice }}%</div>
                     </div>
                     <!-- If no nice, display ctx_switches -->
-                    <div class="table-row" v-if="nice == undefined && ctx_switches">
+                    <div class="table-row" v-if="nice == undefined && ctx_switches != undefined">
                         <div class="table-cell text-left">ctx_sw:</div>
                         <div class="table-cell" :class="getDecoration('ctx_switches')">
                             {{ ctx_switches }}
@@ -57,35 +57,37 @@
                         <div class="table-cell text-left">steal:</div>
                         <div class="table-cell" :class="getDecoration('steal')">{{ steal }}%</div>
                     </div>
-                    <div class="table-row" v-if="!isLinux && syscalls">
+                    <div class="table-row" v-if="!isLinux && syscalls != undefined">
                         <div class="table-cell text-left">syscal:</div>
-                        <div class="table-cell">
-                            {{ syscalls }}
-                        </div>
+                        <div class="table-cell">{{ syscalls }}</div>
                     </div>
                 </div>
             </div>
             <div class="hidden-xs hidden-sm hidden-md col-lg-8">
                 <div class="table">
                     <!-- If not already display instead of nice, then display ctx_switches -->
-                    <div class="table-row" v-if="nice != undefined && ctx_switches">
+                    <div class="table-row" v-if="nice != undefined && ctx_switches != undefined">
                         <div class="table-cell text-left">ctx_sw:</div>
                         <div class="table-cell" :class="getDecoration('ctx_switches')">
                             {{ ctx_switches }}
                         </div>
                     </div>
                     <!-- If not already display instead of irq, then display interrupts -->
-                    <div class="table-row" v-if="irq != undefined && interrupts">
+                    <div class="table-row" v-if="irq != undefined && interrupts != undefined">
                         <div class="table-cell text-left">inter:</div>
                         <div class="table-cell">
                             {{ interrupts }}
                         </div>
                     </div>
-                    <div class="table-row" v-if="!isWindows && !isSunOS && soft_interrupts">
+                    <div class="table-row" v-if="!isWindows && !isSunOS && soft_interrupts != undefined">
                         <div class="table-cell text-left">sw_int:</div>
                         <div class="table-cell">
                             {{ soft_interrupts }}
                         </div>
+                    </div>
+                    <div class="table-row" v-if="isLinux && guest != undefined">
+                        <div class="table-cell text-left">guest:</div>
+                        <div class="table-cell">{{ guest }}%</div>
                     </div>
                 </div>
             </div>
@@ -142,6 +144,9 @@ export default {
         },
         steal() {
             return this.stats.steal;
+        },
+        guest() {
+            return this.stats.guest;
         },
         ctx_switches() {
             const { stats } = this;
