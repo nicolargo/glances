@@ -4,11 +4,13 @@
 # https://github.com/nicolargo/glances
 #
 
-# WARNING: the versions should be set.
-# Ex: Python 3.11 for Alpine 3.18
 # Note: ENV is for future running containers. ARG for building your Docker image.
 
-ARG IMAGE_VERSION=3.18.3
+# WARNING: the Alpine image version and Python version should be set.
+# Alpine 3.18 tag is a link to the latest 3.18.x version.
+# Be aware that if you change the Alpine version, you may have to change the Python version.
+
+ARG IMAGE_VERSION=3.19
 ARG PYTHON_VERSION=3.11
 
 ##############################################################################
@@ -83,7 +85,7 @@ RUN python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VE
 FROM base as release
 
 # Copy source code and config file
-COPY ./docker-compose/glances.conf /etc/glances.conf
+COPY ./docker-compose/glances.conf /etc/glances/glances.conf
 COPY /glances /app/glances
 
 # Copy binary and update PATH
@@ -96,7 +98,7 @@ EXPOSE 61209 61208
 
 # Define default command.
 WORKDIR /app
-CMD /venv/bin/python3 -m glances -C /etc/glances.conf $GLANCES_OPT
+CMD /venv/bin/python3 -m glances $GLANCES_OPT
 
 ################################################################################
 # RELEASE: minimal

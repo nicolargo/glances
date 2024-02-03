@@ -266,7 +266,7 @@ export default {
         };
     },
     mounted() {
-        fetch('api/3/help', { method: 'GET' })
+        fetch('api/4/help', { method: 'GET' })
             .then((response) => response.json())
             .then((response) => (this.help = response));
     }

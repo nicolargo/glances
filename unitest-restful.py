@@ -17,13 +17,14 @@ import time
 import numbers
 import unittest
 
+from glances.outputs.glances_restful_api import GlancesRestfulApi
 from glances import __version__
 from glances.globals import text_type
 
 import requests
 
 SERVER_PORT = 61234
-API_VERSION = 3
+API_VERSION = GlancesRestfulApi.API_VERSION
 URL = "http://localhost:{}/api/{}".format(SERVER_PORT, API_VERSION)
 pid = None
 
@@ -39,12 +40,12 @@ class TestGlances(unittest.TestCase):
         """The function is called *every time* before test_*."""
         print('\n' + '=' * 78)
 
-    def http_get(self, url, deflate=False):
+    def http_get(self, url, gzip=False):
         """Make the request"""
-        if deflate:
+        if gzip:
             ret = requests.get(url,
                                stream=True,
-                               headers={'Accept-encoding': 'deflate'})
+                               headers={'Accept-encoding': 'gzip'})
         else:
             ret = requests.get(url,
                                headers={'Accept-encoding': 'identity'})
@@ -54,12 +55,12 @@ class TestGlances(unittest.TestCase):
         """Start the Glances Web Server."""
         global pid
 
-        print('INFO: [TEST_000] Start the Glances Web Server')
+        print('INFO: [TEST_000] Start the Glances Web Server API')
         if os.path.isfile('./venv/bin/python'):
             cmdline = "./venv/bin/python"
         else:
             cmdline = "python"
-        cmdline += " -m glances -B localhost -w -p %s" % SERVER_PORT
+        cmdline += " -m glances -B 0.0.0.0 -w -p %s --disable-webui -C ./conf/glances.conf" % SERVER_PORT
         print("Run the Glances Web Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
@@ -76,16 +77,7 @@ class TestGlances(unittest.TestCase):
         req = self.http_get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
-
-    def test_001a_all_deflate(self):
-        """All."""
-        method = "all"
-        print('INFO: [TEST_001a] Get all stats (with Deflate compression)')
-        print("HTTP RESTful request: %s/%s" % (URL, method))
-        req = self.http_get("%s/%s" % (URL, method), deflate=True)
-
-        self.assertTrue(req.ok)
-        self.assertTrue(req.headers['Content-Encoding'] == 'deflate')
+        self.assertTrue(req.json(), dict)
 
     def test_002_pluginslist(self):
         """Plugins list."""
@@ -108,14 +100,14 @@ class TestGlances(unittest.TestCase):
             print("HTTP RESTful request: %s/%s" % (URL, p))
             req = self.http_get("%s/%s" % (URL, p))
             self.assertTrue(req.ok)
-            if p in ('uptime', 'now'):
+            if p in ('uptime', 'now', 'version', 'psutilversion'):
                 self.assertIsInstance(req.json(), text_type)
             elif p in ('fs', 'percpu', 'sensors', 'alert', 'processlist', 'diskio',
                        'hddtemp', 'batpercent', 'network', 'folders', 'amps', 'ports',
-                       'irq', 'wifi', 'gpu'):
+                       'irq', 'wifi', 'gpu', 'containers'):
                 self.assertIsInstance(req.json(), list)
-            elif p in ('psutilversion', 'help'):
-                pass
+                if len(req.json()) > 0:
+                    self.assertIsInstance(req.json()[0], dict)
             else:
                 self.assertIsInstance(req.json(), dict)
 
@@ -203,14 +195,12 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(len(req.json()['user']) > 1)
         print("HTTP RESTful request: %s/cpu/system/%s" % (URL, method))
         req = self.http_get("%s/cpu/system/%s" % (URL, method))
-        self.assertIsInstance(req.json(), dict)
-        self.assertIsInstance(req.json()['system'], list)
-        self.assertTrue(len(req.json()['system']) > 0)
+        self.assertIsInstance(req.json(), list)
+        self.assertIsInstance(req.json()[0], list)
         print("HTTP RESTful request: %s/cpu/system/%s/3" % (URL, method))
         req = self.http_get("%s/cpu/system/%s/3" % (URL, method))
-        self.assertIsInstance(req.json(), dict)
-        self.assertIsInstance(req.json()['system'], list)
-        self.assertTrue(len(req.json()['system']) > 1)
+        self.assertIsInstance(req.json(), list)
+        self.assertIsInstance(req.json()[0], list)
 
     def test_011_issue1401(self):
         """Check issue #1401."""
@@ -229,7 +219,57 @@ class TestGlances(unittest.TestCase):
         req = self.http_get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
-        self.assertEqual(req.text, "Active")
+        self.assertEqual(req.json()['version'], __version__)
+
+    def test_013_top(self):
+        """Values."""
+        method = "processlist"
+        request = "%s/%s/top/2" % (URL, method)
+        print('INFO: [TEST_013] Top nb item of PROCESSLIST')
+        print(request)
+        req = self.http_get(request)
+
+        self.assertTrue(req.ok)
+        self.assertIsInstance(req.json(), list)
+        self.assertEqual(len(req.json()), 2)
+
+    def test_014_config(self):
+        """Test API request to get Glances configuration."""
+        method = "config"
+        print('INFO: [TEST_014] Get config')
+
+        req = self.http_get("%s/%s" % (URL, method))
+        self.assertTrue(req.ok)
+        self.assertIsInstance(req.json(), dict)
+
+        req = self.http_get("%s/%s/global/refresh" % (URL, method))
+        self.assertTrue(req.ok)
+        self.assertEqual(req.json(), "2")
+
+    def test_015_all_gzip(self):
+        """All with Gzip."""
+        method = "all"
+        print('INFO: [TEST_015] Get all stats (with GZip compression)')
+        print("HTTP RESTful request: %s/%s" % (URL, method))
+        req = self.http_get("%s/%s" % (URL, method), gzip=True)
+
+        self.assertTrue(req.ok)
+        self.assertTrue(req.headers['Content-Encoding'] == 'gzip')
+        self.assertTrue(req.json(), dict)
+
+    def test_016_fields_description(self):
+        """Fields description."""
+        print('INFO: [TEST_016] Get fields description and unit')
+
+        print("HTTP RESTful request: %s/cpu/total/description" % URL)
+        req = self.http_get("%s/cpu/total/description" % URL)
+        self.assertTrue(req.ok)
+        self.assertTrue(req.json(), str)
+
+        print("HTTP RESTful request: %s/cpu/total/unit" % URL)
+        req = self.http_get("%s/cpu/total/unit" % URL)
+        self.assertTrue(req.ok)
+        self.assertTrue(req.json(), str)
 
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""

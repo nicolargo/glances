@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -16,7 +16,7 @@ import sys
 import uuid
 from io import open
 
-from glances.globals import b, safe_makedirs
+from glances.globals import b, safe_makedirs, weak_lru_cache
 from glances.config import user_config_dir
 from glances.logger import logger
 
@@ -38,25 +38,29 @@ class GlancesPassword(object):
         Related to issue: Password files in same configuration dir in effect #2143
         """
         if self.config is None:
-            return user_config_dir()
+            return user_config_dir()[0]
         else:
-            return self.config.get_value('passwords', 'local_password_path', default=user_config_dir())
+            return self.config.get_value('passwords', 'local_password_path', default=user_config_dir()[0])
 
+    @weak_lru_cache(maxsize=32)
     def get_hash(self, plain_password, salt=''):
         """Return the hashed password, salt + pbkdf2_hmac."""
         return hashlib.pbkdf2_hmac('sha256', plain_password.encode(), salt.encode(), 100000, dklen=128).hex()
 
+    @weak_lru_cache(maxsize=32)
     def hash_password(self, plain_password):
         """Hash password with a salt based on UUID (universally unique identifier)."""
         salt = uuid.uuid4().hex
         encrypted_password = self.get_hash(plain_password, salt=salt)
         return salt + '$' + encrypted_password
 
+    @weak_lru_cache(maxsize=32)
     def check_password(self, hashed_password, plain_password):
         """Encode the plain_password with the salt of the hashed_password.
 
         Return the comparison with the encrypted_password.
         """
+        logger.info("Check password")
         salt, encrypted_password = hashed_password.split('$')
         re_encrypted_password = self.get_hash(plain_password, salt=salt)
         return encrypted_password == re_encrypted_password

@@ -12,8 +12,10 @@
 import argparse
 import sys
 import tempfile
+from logging import DEBUG
+from warnings import simplefilter
 
-from glances import __version__, psutil_version
+from glances import __version__, psutil_version, __apiversion__
 from glances.globals import WINDOWS, disable, enable
 from glances.config import Config
 from glances.processes import sort_processes_key_list
@@ -81,13 +83,13 @@ Examples of use:
   Display CSV stats to stdout (all stats in one line):
     $ glances --stdout-csv now,cpu.user,mem.used,load
 
-  Enable some plugins disabled by default (comma separated list):
+  Enable some plugins disabled by default (comma-separated list):
     $ glances --enable-plugin sensors
 
-  Disable some plugins (comma separated list):
+  Disable some plugins (comma-separated list):
     $ glances --disable-plugin network,ports
 
-  Disable all plugins except some (comma separated list):
+  Disable all plugins except some (comma-separated list):
     $ glances --disable-plugin all --enable-plugin cpu,mem,load
 
 """
@@ -97,18 +99,26 @@ Examples of use:
         # Read the command line arguments
         self.args = self.parse_args()
 
+    def version_msg(self):
+        """Return the version message."""
+        version = 'Glances version:\t{}\n'.format(__version__)
+        version += 'Glances API version:\t{}\n'.format(__apiversion__)
+        version += 'PsUtil version:\t\t{}\n'.format(psutil_version)
+        version += 'Log file:\t\t{}\n'.format(LOG_FILENAME)
+        return version
+
     def init_args(self):
         """Init all the command line arguments."""
-        version = 'Glances v{} with PsUtil v{}\nLog file: {}'.format(__version__, psutil_version, LOG_FILENAME)
         parser = argparse.ArgumentParser(
             prog='glances',
             conflict_handler='resolve',
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog=self.example_of_use,
         )
-        parser.add_argument('-V', '--version', action='version', version=version)
+        parser.add_argument('-V', '--version', action='version', version=self.version_msg())
         parser.add_argument('-d', '--debug', action='store_true', default=False, dest='debug', help='enable debug mode')
         parser.add_argument('-C', '--config', dest='conf_file', help='path to the configuration file')
+        parser.add_argument('-P', '--plugins', dest='plugin_dir', help='path to additional plugin directory')
         # Disable plugin
         parser.add_argument(
             '--modules-list',
@@ -121,12 +131,17 @@ Examples of use:
         parser.add_argument(
             '--disable-plugin',
             '--disable-plugins',
+            '--disable',
             dest='disable_plugin',
-            help='disable plugin (comma separated list or all). If all is used, \
+            help='disable plugin (comma-separated list or all). If all is used, \
                 then you need to configure --enable-plugin.',
         )
         parser.add_argument(
-            '--enable-plugin', '--enable-plugins', dest='enable_plugin', help='enable plugin (comma separated list)'
+            '--enable-plugin',
+            '--enable-plugins',
+            '--enable',
+            dest='enable_plugin',
+            help='enable plugin (comma-separated list)',
         )
         parser.add_argument(
             '--disable-process',
@@ -149,7 +164,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='enable_light',
-            help='light mode for Curses UI (disable all but top menu)',
+            help='light mode for Curses UI (disable all but the top menu)',
         )
         parser.add_argument(
             '-0',
@@ -229,12 +244,11 @@ Examples of use:
             help='enable extended stats on top process',
         )
         parser.add_argument(
-            '--separator',
-            '--enable-separator',
-            action='store_true',
-            default=False,
+            '--disable-separator',
+            action='store_false',
+            default=True,
             dest='enable_separator',
-            help='enable separator in the UI',
+            help='disable separator in the UI (between top and others modules)',
         ),
         parser.add_argument(
             '--disable-cursor',
@@ -260,7 +274,7 @@ Examples of use:
             help='Accumulate processes by program',
         )
         # Export modules feature
-        parser.add_argument('--export', dest='export', help='enable export module (comma separated list)')
+        parser.add_argument('--export', dest='export', help='enable export module (comma-separated list)')
         parser.add_argument(
             '--export-csv-file', default='./glances.csv', dest='export_csv_file', help='file path for CSV exporter'
         )
@@ -355,7 +369,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='webserver',
-            help='run Glances in web server mode (bottle needed)',
+            help='run Glances in web server mode (FastAPI, Uvicorn, Jinja2 and OrJsonLib needed)',
         )
         parser.add_argument(
             '--cached-time',
@@ -413,19 +427,19 @@ Examples of use:
             '--stdout',
             default=None,
             dest='stdout',
-            help='display stats to stdout, one stat per line (comma separated list of plugins/plugins.attribute)',
+            help='display stats to stdout, one stat per line (comma-separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
             '--stdout-json',
             default=None,
             dest='stdout_json',
-            help='display stats to stdout, JSON format (comma separated list of plugins/plugins.attribute)',
+            help='display stats to stdout, JSON format (comma-separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
             '--stdout-csv',
             default=None,
             dest='stdout_csv',
-            help='display stats to stdout, CSV format (comma separated list of plugins/plugins.attribute)',
+            help='display stats to stdout, CSV format (comma-separated list of plugins/plugins.attribute)',
         )
         parser.add_argument(
             '--issue',
@@ -457,7 +471,7 @@ Examples of use:
                 action='store_true',
                 default=False,
                 dest='no_kernel_threads',
-                help='hide kernel threads in process list (not available on Windows)',
+                help='hide kernel threads in the process list (not available on Windows)',
             )
         parser.add_argument(
             '-b',
@@ -465,7 +479,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='byte',
-            help='display network rate in byte per second',
+            help='display network rate in bytes per second',
         )
         parser.add_argument(
             '--diskio-show-ramfs',
@@ -514,7 +528,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='theme_white',
-            help='optimize display colors for white background',
+            help='optimize display colors for a white background',
         )
         # Globals options
         parser.add_argument(
@@ -533,36 +547,28 @@ Examples of use:
 
         return parser
 
-    def parse_args(self):
-        """Parse command line arguments."""
-        args = self.init_args().parse_args()
-
-        # Load the configuration file, if it exists
-        # This function should be called after the parse_args
-        # because the configuration file path can be defined
-        self.config = Config(args.conf_file)
-
-        # Debug mode
+    def init_debug(self, args):
+        """Init Glances debug mode."""
         if args.debug:
-            from logging import DEBUG
-
             logger.setLevel(DEBUG)
         else:
-            from warnings import simplefilter
-
             simplefilter("ignore")
 
-        # Plugins refresh rate
+    def init_refresh_rate(self, args):
+        """Init Glances refresh rate"""
         if self.config.has_section('global'):
             global_refresh = self.config.get_float_value('global', 'refresh', default=self.DEFAULT_REFRESH_TIME)
         else:
             global_refresh = self.DEFAULT_REFRESH_TIME
-        # The configuration key can be overwrite from the command line
+
+        # The configuration key can be overwrite from the command line (-t <time>)
         if args.time == self.DEFAULT_REFRESH_TIME:
             args.time = global_refresh
+
         logger.debug('Global refresh rate is set to {} seconds'.format(args.time))
 
-        # Plugins disable/enable
+    def init_plugins(self, args):
+        """Init Glances plugins"""
         # Allow users to disable plugins from the glances.conf (issue #1378)
         for s in self.config.sections():
             if self.config.has_section(s) and (self.config.get_bool_value(s, 'disable', False)):
@@ -589,6 +595,16 @@ Examples of use:
             for p in args.export.split(','):
                 setattr(args, 'export_' + p, True)
 
+        # By default help is hidden
+        args.help_tag = False
+
+        # Display Rx and Tx, not the sum for the network
+        args.network_sum = False
+        args.network_cumul = False
+
+    def init_client_server(self, args):
+        """Init Glances client/server mode."""
+
         # Client/server Port
         if args.port is None:
             if args.webserver:
@@ -601,13 +617,9 @@ Examples of use:
                 x if x else y for (x, y) in zip(args.client.partition(':')[::2], (args.client, args.port))
             )
 
-        # Autodiscover
+        # Client autodiscover mode
         if args.disable_autodiscover:
             logger.info("Auto discover mode is disabled")
-
-        # In web server mode
-        if args.webserver:
-            args.process_short_name = True
 
         # Server or client login/password
         if args.username_prompt:
@@ -652,15 +664,9 @@ Examples of use:
             # Default is no password
             args.password = self.password
 
-        # By default help is hidden
-        args.help_tag = False
-
-        # Display Rx and Tx, not the sum for the network
-        args.network_sum = False
-        args.network_cumul = False
-
+    def init_ui_mode(self, args):
         # Manage light mode
-        if args.enable_light:
+        if getattr(args, 'enable_light', False):
             logger.info("Light mode is on")
             args.disable_left_sidebar = True
             disable(args, 'process')
@@ -669,7 +675,7 @@ Examples of use:
             disable(args, 'docker')
 
         # Manage full quicklook option
-        if args.full_quicklook:
+        if getattr(args, 'full_quicklook', False):
             logger.info("Full quicklook mode")
             enable(args, 'quicklook')
             disable(args, 'cpu')
@@ -678,13 +684,46 @@ Examples of use:
             enable(args, 'load')
 
         # Manage disable_top option
-        if args.disable_top:
+        if getattr(args, 'disable_top', False):
             logger.info("Disable top menu")
             disable(args, 'quicklook')
             disable(args, 'cpu')
             disable(args, 'mem')
             disable(args, 'memswap')
             disable(args, 'load')
+
+        # Memory leak
+        if getattr(args, 'memory_leak', False):
+            logger.info('Memory leak detection enabled')
+            args.quiet = True
+            if not args.stop_after:
+                args.stop_after = 60
+            args.time = 1
+            args.disable_history = True
+
+    def parse_args(self):
+        """Parse command line arguments."""
+        args = self.init_args().parse_args()
+
+        # Load the configuration file, if it exists
+        # This function should be called after the parse_args
+        # because the configuration file path can be defined
+        self.config = Config(args.conf_file)
+
+        # Init Glances debug mode
+        self.init_debug(args)
+
+        # Plugins Glances refresh rate
+        self.init_refresh_rate(args)
+
+        # Manage Plugins disable/enable option
+        self.init_plugins(args)
+
+        # Init Glances client/server mode
+        self.init_client_server(args)
+
+        # Init UI mode
+        self.init_ui_mode(args)
 
         # Init the generate_graph tag
         # Should be set to True to generate graphs
@@ -713,26 +752,6 @@ Examples of use:
         if not args.disable_cursor and not self.is_standalone():
             logger.debug("Cursor is only available in standalone mode")
 
-        # Disable HDDTemp if sensors are disabled
-        if getattr(self.args, 'disable_sensors', False):
-            disable(self.args, 'hddtemp')
-            logger.debug("Sensors and HDDTemp are disabled")
-
-        if getattr(self.args, 'trace_malloc', True) and not self.is_standalone():
-            logger.critical("Option --trace-malloc is only available in the terminal mode")
-            sys.exit(2)
-
-        if getattr(self.args, 'memory_leak', True) and not self.is_standalone():
-            logger.critical("Option --memory-leak is only available in the terminal mode")
-            sys.exit(2)
-        elif getattr(self.args, 'memory_leak', True) and self.is_standalone():
-            logger.info('Memory leak detection enabled')
-            self.args.quiet = True
-            if not self.args.stop_after:
-                self.args.stop_after = 60
-            self.args.time = 1
-            self.args.disable_history = True
-
         # Let the plugins known the Glances mode
         self.args.is_standalone = self.is_standalone()
         self.args.is_client = self.is_client()
@@ -747,8 +766,19 @@ Examples of use:
 
     def check_mode_compatibility(self):
         """Check mode compatibility"""
+        # Server and Web server are not compatible
         if self.args.is_server and self.args.is_webserver:
-            logger.critical("Server and Web server mode are incompatible")
+            logger.critical("Server and Web server modes should not be used together")
+            sys.exit(2)
+
+        # Trace malloc option
+        if getattr(self.args, 'trace_malloc', True) and not self.is_standalone():
+            logger.critical("Option --trace-malloc is only available in the terminal mode")
+            sys.exit(2)
+
+        # Memory leak option
+        if getattr(self.args, 'memory_leak', True) and not self.is_standalone():
+            logger.critical("Option --memory-leak is only available in the terminal mode")
             sys.exit(2)
 
     def is_standalone(self):

@@ -10,24 +10,10 @@
 """Manage the folder list."""
 from __future__ import unicode_literals
 
-import os
 
 from glances.timer import Timer
-from glances.globals import nativestr
+from glances.globals import nativestr, folder_size
 from glances.logger import logger
-
-# Use the built-in version of scandir/walk if possible, otherwise
-# use the scandir module version
-scandir_tag = True
-try:
-    # For Python 3.5 or higher
-    from os import scandir
-except ImportError:
-    # For others...
-    try:
-        from scandir import scandir
-    except ImportError:
-        scandir_tag = False
 
 
 class FolderList(object):
@@ -62,12 +48,9 @@ class FolderList(object):
         self.first_grab = True
 
         if self.config is not None and self.config.has_section('folders'):
-            if scandir_tag:
-                # Process monitoring list
-                logger.debug("Folder list configuration detected")
-                self.__set_folder_list('folders')
-            else:
-                logger.error('Scandir not found. Please use Python 3.5+ or install the scandir lib')
+            # Process monitoring list
+            logger.debug("Folder list configuration detected")
+            self.__set_folder_list('folders')
         else:
             self.__folder_list = []
 
@@ -132,23 +115,6 @@ class FolderList(object):
         else:
             return None
 
-    def __folder_size(self, path):
-        """Return the size of the directory given by path
-
-        path: <string>"""
-
-        ret = 0
-        for f in scandir(path):
-            if f.is_dir(follow_symlinks=False) and (f.name != '.' or f.name != '..'):
-                ret += self.__folder_size(os.path.join(path, f.name))
-            else:
-                try:
-                    ret += f.stat().st_size
-                except OSError:
-                    pass
-
-        return ret
-
     def update(self, key='path'):
         """Update the command result attributed."""
         # Only continue if monitor list is not empty
@@ -163,15 +129,13 @@ class FolderList(object):
             # Set the key (see issue #2327)
             self.__folder_list[i]['key'] = key
             # Get folder size
-            try:
-                self.__folder_list[i]['size'] = self.__folder_size(self.path(i))
-            except OSError as e:
-                logger.debug('Cannot get folder size ({}). Error: {}'.format(self.path(i), e))
-                if e.errno == 13:
-                    # Permission denied
-                    self.__folder_list[i]['size'] = '!'
-                else:
-                    self.__folder_list[i]['size'] = '?'
+            self.__folder_list[i]['size'], self.__folder_list[i]['errno'] = folder_size(self.path(i))
+            if self.__folder_list[i]['errno'] != 0:
+                logger.debug(
+                    'Folder size ({} ~ {}) may not be correct. Error: {}'.format(
+                        self.path(i), self.__folder_list[i]['size'], self.__folder_list[i]['errno']
+                    )
+                )
             # Reset the timer
             self.timer_folders[i].reset()
 

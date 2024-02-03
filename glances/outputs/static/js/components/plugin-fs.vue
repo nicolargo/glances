@@ -10,8 +10,8 @@
         </div>
         <div class="table-row" v-for="(fs, fsId) in fileSystems" :key="fsId">
             <div class="table-cell text-left">
-                {{ fs.shortMountPoint }}
-                <span v-if="fs.shortMountPoint.length <= 12" class="visible-lg-inline">
+                {{ $filters.minSize(fs.alias ? fs.alias : fs.mountPoint, 36, begin=false) }}
+                <span v-if="(fs.alias ? fs.alias : fs.mountPoint).length + fs.name.length <= 34" class="visible-lg-inline">
                     ({{ fs.name }})
                 </span>
             </div>
@@ -55,18 +55,14 @@ export default {
         },
         fileSystems() {
             const fileSystems = this.stats.map((fsData) => {
-                let shortMountPoint = fsData['mnt_point'];
-                if (shortMountPoint.length > 22) {
-                    shortMountPoint = '_' + fsData['mnt_point'].slice(-21);
-                }
                 return {
                     name: fsData['device_name'],
                     mountPoint: fsData['mnt_point'],
-                    shortMountPoint: shortMountPoint,
                     percent: fsData['percent'],
                     size: fsData['size'],
                     used: fsData['used'],
-                    free: fsData['free']
+                    free: fsData['free'],
+                    alias: fsData['alias'] !== undefined ? fsData['alias'] : null
                 };
             });
             return orderBy(fileSystems, ['mnt_point']);

@@ -92,19 +92,21 @@ Optional dependencies:
 
 - ``batinfo`` (for battery monitoring)
 - ``bernhard`` (for the Riemann export module)
-- ``bottle`` (for Web server mode)
 - ``cassandra-driver`` (for the Cassandra export module)
 - ``chevron`` (for the action script feature)
-- ``couchdb`` (for the CouchDB export module)
 - ``docker`` (for the Containers Docker monitoring support)
 - ``elasticsearch`` (for the Elastic Search export module)
+- ``FastAPI`` and ``Uvicorn`` (for Web server mode)
 - ``graphitesender`` (For the Graphite export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB version 1 export module)
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
+- ``jinja2`` (for templating, used under the hood by FastAPI)
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces`` (for the IP plugin)
+- ``orjson`` (fast JSON library, used under the hood by FastAPI)
 - ``py3nvml`` (for the GPU plugin)
+- ``pycouchdb`` (for the CouchDB export module)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
 - ``podman`` (for the Containers Podman monitoring support)
 - ``potsdb`` (for the OpenTSDB export module)
@@ -140,8 +142,8 @@ To install Glances, simply use ``pip``:
     pip install --user glances
 
 *Note*: Python headers are required to install `psutil`_, a Glances
-dependency. For example, on Debian/Ubuntu you need to install first
-the *python-dev* package (*python-devel* on Fedora/CentOS/RHEL).
+dependency. For example, on Debian/Ubuntu **the simplest** is ``apt install python3-psutil`` or alternatively need to install first
+the *python-dev* package and gcc (*python-devel* on Fedora/CentOS/RHEL).
 For Windows, just install psutil from the binary installation file.
 
 *Note 2 (for the Wifi plugin)*: If you want to use the Wifi plugin, you need
@@ -207,10 +209,10 @@ Get the Glances container:
 The following tags are availables:
 
 - *latest-full* for a full Alpine Glances image (latest release) with all dependencies
-- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (FastAPI and Docker)
 - *dev* for a basic Alpine Glances image (based on development branch) with all dependencies (Warning: may be instable)
 - *ubuntu-latest-full* for a full Ubuntu Glances image (latest release) with all dependencies
-- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (Bottle and Docker)
+- *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (FastAPI and Docker)
 - *ubuntu-dev* for a basic Ubuntu Glances image (based on development branch) with all dependencies (Warning: may be instable)
 
 Run last version of Glances container in *console mode*:
@@ -219,14 +221,16 @@ Run last version of Glances container in *console mode*:
 
     docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host --network host -it nicolargo/glances:latest-full
 
+By default, the /etc/glances/glances.conf file is used (based on docker-compose/glances.conf).
+
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
 
 .. code-block:: console
 
     FROM nicolargo/glances:latest
-    COPY glances.conf /etc/glances.conf
-    CMD python -m glances -C /etc/glances.conf $GLANCES_OPT
+    COPY glances.conf /root/.config/glances/glances.conf
+    CMD python -m glances -C /root/.config/glances/glances.conf $GLANCES_OPT
 
 Alternatively, you can specify something along the same lines with
 docker run options (notice the `GLANCES_OPT` environment
@@ -234,7 +238,7 @@ variable setting parameters for the glances startup command):
 
 .. code-block:: console
 
-    docker run -e TZ="${TZ}" -v `pwd`/glances.conf:/etc/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host -e GLANCES_OPT="-C /etc/glances.conf" -it nicolargo/glances:latest-full
+    docker run -e TZ="${TZ}" -v `pwd`/glances.conf:/root/.config/glances/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host -e GLANCES_OPT="-C /root/.config/glances/glances.conf" -it nicolargo/glances:latest-full
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
@@ -252,7 +256,7 @@ GNU/Linux
 `Glances` is available on many Linux distributions, so you should be
 able to install it using your favorite package manager. Be aware that
 when you use this method the operating system `package`_ for `Glances`
-may not be the latest version.
+may not be the latest version and only basics plugins are enabled.
 
 Note: The Debian package (and all other Debian-based distributions) do
 not include anymore the JS statics files used by the Web interface
@@ -319,7 +323,7 @@ Start Termux on your device and enter:
     $ apt update
     $ apt upgrade
     $ apt install clang python
-    $ pip install bottle
+    $ pip install fastapi uvicorn orjson jinja2
     $ pip install glances
 
 And start Glances:

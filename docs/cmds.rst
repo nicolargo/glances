@@ -12,7 +12,7 @@ Command-Line Options
 
 .. option:: -V, --version
 
-    show program's version number and exit
+    show the program's version number and exit
 
 .. option:: -d, --debug
 
@@ -22,25 +22,29 @@ Command-Line Options
 
     path to the configuration file
 
+.. option:: -P PLUGIN_DIRECTORY, --plugins PLUGIN_DIRECTORY
+
+    path to a directory containing additional plugins
+
 .. option:: --modules-list
 
     display modules (plugins & exports) list and exit
 
 .. option:: --disable-plugin PLUGIN
 
-    disable PLUGIN (comma separated list)
+    disable PLUGIN (comma-separated list)
 
 .. option:: --enable-plugin PLUGIN
 
-    enable PLUGIN (comma separated list)
+    enable PLUGIN (comma-separated list)
 
 .. option:: --stdout PLUGINS_STATS
 
-    display stats to stdout (comma separated list of plugins/plugins.attribute)
+    display stats to stdout (comma-separated list of plugins/plugins.attribute)
 
 .. option:: --export EXPORT
 
-    enable EXPORT module (comma separated list)
+    enable EXPORT module (comma-separated list)
 
 .. option:: --export-csv-file EXPORT_CSV_FILE
 
@@ -60,7 +64,7 @@ Command-Line Options
 
 .. option:: --light, --enable-light
 
-    light mode for Curses UI (disable all but top menu)
+    light mode for Curses UI (disable all but the top menu)
 
 .. option:: -0, --disable-irix
 
@@ -84,7 +88,7 @@ Command-Line Options
 
 .. option:: -5, --disable-top
 
-    disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
+    disable top menu (QuickLook, CPU, MEM, SWAP, and LOAD)
 
 .. option:: -6, --meangpu
 
@@ -168,7 +172,7 @@ Command-Line Options
 
 .. option:: -w, --webserver
 
-    run Glances in web server mode (bottle lib needed)
+    run Glances in web server mode (FastAPI lib needed)
 
 .. option:: --cached-time CACHED_TIME
 
@@ -192,11 +196,11 @@ Command-Line Options
 
 .. option:: --hide-kernel-threads
 
-    hide kernel threads in process list (not available on Windows)
+    hide kernel threads in the process list (not available on Windows)
 
 .. option:: -b, --byte
 
-    display network rate in byte per second
+    display network rate in bytes per second
 
 .. option:: --diskio-show-ramfs
 
@@ -216,11 +220,11 @@ Command-Line Options
 
 .. option:: --theme-white
 
-    optimize display colors for white background
+    optimize display colors for a white background
 
 .. option:: --disable-check-update
 
-    disable online Glances version ckeck
+    disable online Glances version check
 
 Interactive Commands
 --------------------
@@ -232,7 +236,7 @@ The following commands (key pressed) are supported while in Glances:
 
     .. note:: On macOS please use ``CTRL-H`` to delete filter.
 
-    Filter is a regular expression pattern:
+    The filter is a regular expression pattern:
 
     - ``gnome``: matches all processes starting with the ``gnome``
       string
@@ -250,7 +254,7 @@ The following commands (key pressed) are supported while in Glances:
     - If CPU iowait ``>60%``, sort processes by I/O read and write
 
 ``A``
-    Enable/disable Application Monitoring Process
+    Enable/disable the Application Monitoring Process
 
 ``b``
     Switch between bit/s or Byte/s for network I/O
@@ -274,7 +278,7 @@ The following commands (key pressed) are supported while in Glances:
     Enable/disable top extended stats
 
 ``E``
-    Erase current process filter
+    Erase the current process filter
 
 ``f``
     Show/hide file system and folder monitoring stats
@@ -301,7 +305,7 @@ The following commands (key pressed) are supported while in Glances:
     Increase selected process nice level / Lower the priority (need right) - Only in standalone mode.
 
 ``-``
-    Decrease selected process nice level  / Higher the priority (need right) - Only in standalone mode.
+    Decrease selected process nice level / Higher the priority (need right) - Only in standalone mode.
 
 ``k``
     Kill selected process (need right) - Only in standalone mode.
@@ -352,7 +356,7 @@ The following commands (key pressed) are supported while in Glances:
     Sort process by CPU times (TIME+)
 
 ``T``
-    View network I/O as combination
+    View network I/O as a combination
 
 ``u``
     Sort processes by USER
@@ -375,13 +379,13 @@ The following commands (key pressed) are supported while in Glances:
 ``0``
     Enable/disable Irix/Solaris mode
 
-    Task's CPU usage will be divided by the total number of CPUs
+    The task's CPU usage will be divided by the total number of CPUs
 
 ``1``
     Switch between global CPU and per-CPU stats
 
 ``2``
-    Enable/disable left sidebar
+    Enable/disable the left sidebar
 
 ``3``
     Enable/disable the quick look module
@@ -390,7 +394,7 @@ The following commands (key pressed) are supported while in Glances:
     Enable/disable all but quick look and load module
 
 ``5``
-    Enable/disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
+    Enable/disable the top menu (QuickLook, CPU, MEM, SWAP, and LOAD)
 
 ``6``
     Enable/disable mean GPU mode
@@ -405,10 +409,10 @@ The following commands (key pressed) are supported while in Glances:
     Refresh user interface
 
 ``LEFT``
-    Navigation left through process sort
+    Navigation left through the process sort
 
 ``RIGHT``
-    Navigation right through process sort
+    Navigation right through the process sort
 
 ``UP``
     Up in the processes list

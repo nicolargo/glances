@@ -190,7 +190,7 @@ In curses/standalone mode, you can select a process using ``UP`` and ``DOWN`` an
 .. note::
     Limit for CPU and MEM percent values can be overwritten in the
     configuration file under the ``[processlist]`` section. It is also
-    possible to define limit for Nice values (comma separated list).
+    possible to define limit for Nice values (comma-separated list).
     For example: nice_warning=-20,-19,-18
 
 Accumulated per program — key 'j'

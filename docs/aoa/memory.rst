@@ -47,9 +47,9 @@ trend value:
 ======== ==============================================================
 Trend    Status
 ======== ==============================================================
-``-``    MEM value is equal to the mean of the six latests refreshes
-``\``    MEM value is lower than the mean of the six latests refreshes
-``/``    MEM value is higher than the mean of the six latests refreshes
+``-``    Mean 15 lasts values equal mean 15 previous values
+``↓``    Mean 15 lasts values is lower mean 15 previous values
+``↑``    Mean 15 lasts values is higher mean 15 previous valuess
 ======== ==============================================================
 
 Alerts are only set for used memory and used swap.

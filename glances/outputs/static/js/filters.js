@@ -74,10 +74,14 @@ export function limitTo(value, limit) {
     return value.slice(0, limit);
 }
 
-export function minSize(input, max) {
+export function minSize(input, max, begin = true) {
     max = max || 8;
     if (input.length > max) {
-        return '_' + input.substring(input.length - max + 1);
+        if (begin) {
+            return input.substring(0, max - 1) + '_';
+        } else {
+            return '_' + input.substring(input.length - max + 1);
+        }
     }
     return input;
 }

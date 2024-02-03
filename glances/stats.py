@@ -15,6 +15,7 @@ import sys
 import threading
 import traceback
 from importlib import import_module
+import pathlib
 
 from glances.logger import logger
 from glances.globals import exports_path, plugins_path, sys_path
@@ -82,6 +83,9 @@ class GlancesStats(object):
         # Load the plugins
         self.load_plugins(args=args)
 
+        # Load addititional plugins
+        self.load_additional_plugins(args=args, config=self.config)
+
         # Init the export modules dict
         # Active exporters dictionary
         self._exports = collections.defaultdict(dict)
@@ -95,38 +99,29 @@ class GlancesStats(object):
 
     def _load_plugin(self, plugin_path, args=None, config=None):
         """Load the plugin, init it and add to the _plugin dict."""
-        # The key is the plugin_path
-        # except when it starts with glances_xxx
-        # generate self._plugins_list["xxx"] = <instance of xxx Plugin>
-        if plugin_path.startswith('glances_'):
-            # Avoid circular loop when Glances plugin uses lib with same name
-            # Example: docker should be named to glances_docker
-            name = plugin_path.split('glances_')[1]
-        else:
-            name = plugin_path
         # Load the plugin class
         try:
             # Import the plugin
-            plugin = import_module('glances.plugins.' + plugin_path + '.model')
+            plugin = import_module('glances.plugins.' + plugin_path)
             # Init and add the plugin to the dictionary
-            self._plugins[name] = plugin.PluginModel(args=args, config=config)
+            self._plugins[plugin_path] = plugin.PluginModel(args=args, config=config)
         except Exception as e:
             # If a plugin can not be loaded, display a critical message
             # on the console but do not crash
-            logger.critical("Error while initializing the {} plugin ({})".format(name, e))
+            logger.critical("Error while initializing the {} plugin ({})".format(plugin_path, e))
             logger.error(traceback.format_exc())
             # An error occurred, disable the plugin
             if args is not None:
-                setattr(args, 'disable_' + name, False)
+                setattr(args, 'disable_' + plugin_path, False)
         else:
             # Manage the default status of the plugin (enable or disable)
             if args is not None:
-                # If the all key is set in the disable_plugin option then look in the enable_plugin option
+                # If the all keys are set in the disable_plugin option then look in the enable_plugin option
                 if getattr(args, 'disable_all', False):
-                    logger.debug('%s => %s', name, getattr(args, 'enable_' + name, False))
-                    setattr(args, 'disable_' + name, not getattr(args, 'enable_' + name, False))
+                    logger.debug('%s => %s', plugin_path, getattr(args, 'enable_' + plugin_path, False))
+                    setattr(args, 'disable_' + plugin_path, not getattr(args, 'enable_' + plugin_path, False))
                 else:
-                    setattr(args, 'disable_' + name, getattr(args, 'disable_' + name, False))
+                    setattr(args, 'disable_' + plugin_path, getattr(args, 'disable_' + plugin_path, False))
 
     def load_plugins(self, args=None):
         """Load all plugins in the 'plugins' folder."""
@@ -141,6 +136,61 @@ class GlancesStats(object):
 
         # Log plugins list
         logger.debug("Active plugins list: {}".format(self.getPluginsList()))
+
+    def load_additional_plugins(self, args=None, config=None):
+        """Load additional plugins if defined"""
+
+        def get_addl_plugins(self, plugin_path):
+            """Get list of additonal plugins"""
+            _plugin_list = []
+            for plugin in os.listdir(plugin_path):
+                path = os.path.join(plugin_path, plugin)
+                if os.path.isdir(path) and not path.startswith('__'):
+                    # Poor man's walk_pkgs - can't use pkgutil as the module would be already imported here!
+                    for fil in pathlib.Path(path).glob('*.py'):
+                        if fil.is_file():
+                            with open(fil) as fd:
+                                if 'PluginModel' in fd.read():
+                                    _plugin_list.append(plugin)
+                                    break
+
+            return _plugin_list
+
+        path = None
+        # Skip section check as implied by has_option
+        if config and config.parser.has_option('global', 'plugin_dir'):
+            path = config.parser['global']['plugin_dir']
+
+        if args and 'plugin_dir' in args and args.plugin_dir:
+            path = args.plugin_dir
+
+        if path:
+            # Get list before starting the counter
+            _sys_path = sys.path
+            start_duration = Counter()
+            # Ensure that plugins can be found in plugin_dir
+            sys.path.insert(0, path)
+            for plugin in get_addl_plugins(self, path):
+                if plugin in sys.modules:
+                    logger.warn(f"Pugin {plugin} already in sys.modules, skipping (workaround: rename plugin)")
+                else:
+                    start_duration.reset()
+                    try:
+                        _mod_loaded = import_module(plugin + '.model')
+                        self._plugins[plugin] = _mod_loaded.PluginModel(args=args, config=config)
+                        logger.debug("Plugin {} started in {} seconds".format(plugin, start_duration.get()))
+                    except Exception as e:
+                        # If a plugin can not be loaded, display a critical message
+                        # on the console but do not crash
+                        logger.critical("Error while initializing the {} plugin ({})".format(plugin, e))
+                        logger.error(traceback.format_exc())
+                        # An error occurred, disable the plugin
+                        if args:
+                            setattr(args, 'disable_' + plugin, False)
+
+            sys.path = _sys_path
+            # Log plugins list
+            logger.debug("Active additional plugins list: {}".format(self.getPluginsList()))
 
     def load_exports(self, args=None):
         """Load all exporters in the 'exports' folder."""

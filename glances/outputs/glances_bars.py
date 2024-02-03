@@ -15,7 +15,6 @@ from math import modf
 
 
 class Bar(object):
-
     """Manage bar (progression or status).
 
     import sys
@@ -28,28 +27,49 @@ class Bar(object):
         sys.stdout.flush()
     """
 
-    def __init__(self, size, percentage_char='|', empty_char=' ', pre_char='[', post_char=']', with_text=True):
+    def __init__(self, size,
+                 bar_char='|',
+                 empty_char=' ',
+                 pre_char='[', post_char=']',
+                 unit_char='%',
+                 display_value=True,
+                 min_value=0, max_value=100):
+        """Init a bar (used in Quicllook plugin)
+
+        Args:
+            size (_type_): Bar size
+            bar_char (str, optional): Bar character. Defaults to '|'.
+            empty_char (str, optional): Empty character. Defaults to ' '.
+            pre_char (str, optional): Display this char before the bar. Defaults to '['.
+            post_char (str, optional): Display this char after the bar. Defaults to ']'.
+            unit_char (str, optional): Unit char to be displayed. Defaults to '%'.
+            display_value (bool, optional): Do i need to display the value. Defaults to True.
+            min_value (int, optional): Minimum value. Defaults to 0.
+            max_value (int, optional): Maximum value (percent can be higher). Defaults to 100.
+        """
         # Build curses_bars
-        self.__curses_bars = [empty_char] * 5 + [percentage_char] * 5
+        self.__curses_bars = [empty_char] * 5 + [bar_char] * 5
         # Bar size
         self.__size = size
         # Bar current percent
         self.__percent = 0
         # Min and max value
-        self.min_value = 0
-        self.max_value = 100
+        self.min_value = min_value
+        self.max_value = max_value
         # Char used for the decoration
         self.__pre_char = pre_char
         self.__post_char = post_char
         self.__empty_char = empty_char
-        self.__with_text = with_text
+        self.__unit_char = unit_char
+        # Value should be displayed ?
+        self.__display_value = display_value
 
     @property
     def size(self, with_decoration=False):
         # Return the bar size, with or without decoration
         if with_decoration:
             return self.__size
-        if self.__with_text:
+        if self.__display_value:
             return self.__size - 6
 
     @property
@@ -58,10 +78,8 @@ class Bar(object):
 
     @percent.setter
     def percent(self, value):
-        if value <= self.min_value:
+        if value < self.min_value:
             value = self.min_value
-        if value >= self.max_value:
-            value = self.max_value
         self.__percent = value
 
     @property
@@ -72,16 +90,34 @@ class Bar(object):
     def post_char(self):
         return self.__post_char
 
-    def get(self):
+    def get(self, overlay: str = None):
         """Return the bars."""
-        frac, whole = modf(self.size * self.percent / 100.0)
+        value = self.max_value if self.percent > self.max_value else self.percent
+
+        # Build the bar
+        frac, whole = modf(self.size * value / 100.0)
         ret = self.__curses_bars[8] * int(whole)
         if frac > 0:
             ret += self.__curses_bars[int(frac * 8)]
             whole += 1
         ret += self.__empty_char * int(self.size - whole)
-        if self.__with_text:
-            ret = '{}{:5.1f}%'.format(ret, self.percent)
+
+        # Add the value
+        if self.__display_value:
+            if self.percent >= self.max_value:
+                ret = '{} {}{:3.0f}{}'.format(ret,
+                                              '>' if self.percent > self.max_value else ' ',
+                                              self.max_value,
+                                              self.__unit_char)
+            else:
+                ret = '{}{:5.1f}{}'.format(ret,
+                                           self.percent,
+                                           self.__unit_char)
+
+        # Add overlay
+        if overlay and len(overlay) < len(ret) - 6:
+            ret = overlay + ret[len(overlay):]
+
         return ret
 
     def __str__(self):

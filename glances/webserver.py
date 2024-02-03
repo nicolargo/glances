@@ -2,17 +2,17 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Glances Web Interface (Bottle based)."""
+"""Glances Restful/API and Web based interface."""
 
 from glances.globals import WINDOWS
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
-from glances.outputs.glances_bottle import GlancesBottle
+from glances.outputs.glances_restful_api import GlancesRestfulApi
 
 
 class GlancesWebServer(object):
@@ -30,8 +30,8 @@ class GlancesWebServer(object):
         # Initial system information update
         self.stats.update()
 
-        # Init the Bottle Web server
-        self.web = GlancesBottle(config=config, args=args)
+        # Init the Web server
+        self.web = GlancesRestfulApi(config=config, args=args)
 
     def serve_forever(self):
         """Main loop for the Web server."""

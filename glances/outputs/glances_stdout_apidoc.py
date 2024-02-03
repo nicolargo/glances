@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -13,10 +13,12 @@ from pprint import pformat
 import json
 import time
 
+from glances import __apiversion__
 from glances.logger import logger
 from glances.globals import iteritems
 
-API_URL = "http://localhost:61208/api/3"
+
+API_URL = "http://localhost:61208/api/{api_version}".format(api_version=__apiversion__)
 
 APIDOC_HEADER = """\
 .. _api:
@@ -24,21 +26,33 @@ APIDOC_HEADER = """\
 API (Restfull/JSON) documentation
 =================================
 
+This documentation describes the Glances API version {api_version} (Restfull/JSON) interface.
+
+For Glances version 3, please have a look on:
+``https://github.com/nicolargo/glances/blob/support/glancesv3/docs/api.rst``
+
+Run the Glances API server
+--------------------------
+
 The Glances Restfull/API server could be ran using the following command line:
 
 .. code-block:: bash
 
     # glances -w --disable-webui
 
+It is also ran automatically when Glances is started in Web server mode (-w).
+
 API URL
 -------
 
-The default root API URL is ``http://localhost:61208/api/3``.
+The default root API URL is ``http://localhost:61208/api/{api_version}``.
 
 The bind address and port could be changed using the ``--bind`` and ``--port`` command line options.
 
 It is also possible to define an URL prefix using the ``url_prefix`` option from the [outputs] section
-of the Glances configuration file. The url_prefix should always end with a slash (``/``).
+of the Glances configuration file.
+
+Note: The url_prefix should always end with a slash (``/``).
 
 For example:
 
@@ -46,10 +60,24 @@ For example:
     [outputs]
     url_prefix = /glances/
 
-will change the root API URL to ``http://localhost:61208/glances/api/3`` and the Web UI URL to
+will change the root API URL to ``http://localhost:61208/glances/api/{api_version}`` and the Web UI URL to
 ``http://localhost:61208/glances/``
 
-"""
+API documentation URL
+---------------------
+
+The API documentation is embeded in the server and available at the following URL:
+``http://localhost:61208/docs#/``.
+
+WebUI refresh
+-------------
+
+It is possible to change the Web UI refresh rate (default is 2 seconds) using the following option in the URL:
+``http://localhost:61208/glances/?refresh=5``
+
+""".format(
+    api_version=__apiversion__
+)
 
 
 def indent_stat(stat, indent='    '):
@@ -67,7 +95,7 @@ def print_api_status():
     print('-' * len(sub_title))
     print('')
     print('This entry point should be used to check the API status.')
-    print('It will return nothing but a 200 return code if everything is OK.')
+    print('It will the Glances version and a 200 return code if everything is OK.')
     print('')
     print('Get the Rest API status::')
     print('')
@@ -113,9 +141,30 @@ def print_plugin_description(plugin, stat):
                     description['description'][:-1]
                     if description['description'].endswith('.')
                     else description['description'],
-                    description['unit'],
+                    description['unit']
+                    if 'unit' in description
+                    else 'None'
                 )
             )
+            if 'rate' in description and description['rate']:
+                print('* **{}**: {} (unit is *{}* per second)'.format(
+                    field + '_rate_per_sec',
+                    (description['description'][:-1]
+                     if description['description'].endswith('.')
+                     else description['description']) + ' per second',
+                    description['unit']
+                    if 'unit' in description
+                    else 'None'
+                ))
+                print('* **{}**: {} (unit is *{}*)'.format(
+                    field + '_gauge',
+                    (description['description'][:-1]
+                     if description['description'].endswith('.')
+                     else description['description']) + ' (cumulative)',
+                    description['unit']
+                    if 'unit' in description
+                    else 'None'
+                ))
         print('')
     else:
         logger.error('No fields_description variable defined for plugin {}'.format(plugin))
@@ -160,6 +209,45 @@ def print_all():
     print('')
     print('    # curl {}/all'.format(API_URL))
     print('    Return a very big dictionary (avoid using this request, performances will be poor)...')
+    print('')
+
+
+def print_top(stats):
+    time.sleep(1)
+    stats.update()
+    sub_title = 'GET top n items of a specific plugin'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('')
+    print('Get top 2 processes of the processlist plugin::')
+    print('')
+    print('    # curl {}/processlist/top/2'.format(API_URL))
+    print(indent_stat(stats.get_plugin('processlist').get_export()[:2]))
+    print('')
+    print('Note: Only work for plugin with a list of items')
+    print('')
+
+
+def print_fields_info(stats):
+    sub_title = 'GET item description'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('Get item description (human readable) for a specific plugin/item::')
+    print('')
+    print('    # curl {}/diskio/read_bytes/description'.format(API_URL))
+    print(indent_stat(stats.get_plugin('diskio').get_item_info('read_bytes', 'description')))
+    print('')
+    print('Note: the description is defined in the fields_description variable of the plugin.')
+    print('')
+    sub_title = 'GET item unit'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('Get item unit for a specific plugin/item::')
+    print('')
+    print('    # curl {}/diskio/read_bytes/unit'.format(API_URL))
+    print(indent_stat(stats.get_plugin('diskio').get_item_info('read_bytes', 'unit')))
+    print('')
+    print('Note: the description is defined in the fields_description variable of the plugin.')
     print('')
 
 
@@ -247,6 +335,13 @@ class GlancesStdoutApiDoc(object):
 
         # Get all stats
         print_all()
+
+        # Get top stats (only for plugins with a list of items)
+        # Example for processlist plugin: get top 2 processes
+        print_top(stats)
+
+        # Fields description
+        print_fields_info(stats)
 
         # History
         print_history(stats)

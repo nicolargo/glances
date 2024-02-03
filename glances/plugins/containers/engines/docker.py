@@ -295,28 +295,28 @@ class DockerContainersExtension:
             # Export name
             'name': nativestr(container.name),
             # Container Id
-            'Id': container.id,
+            'id': container.id,
             # Container Status (from attrs)
-            'Status': container.attrs['State']['Status'],
-            'Created': container.attrs['Created'],
-            'Command': [],
+            'status': container.attrs['State']['Status'],
+            'created': container.attrs['Created'],
+            'command': [],
         }
 
         # Container Image
         try:
             # API fails on Unraid - See issue 2233
-            stats['Image'] = container.image.tags
+            stats['image'] = ','.join(container.image.tags if container.image.tags else []),
         except requests.exceptions.HTTPError:
-            stats['Image'] = '-'
+            stats['image'] = ''
 
         if container.attrs['Config'].get('Entrypoint', None):
-            stats['Command'].extend(container.attrs['Config'].get('Entrypoint', []))
+            stats['command'].extend(container.attrs['Config'].get('Entrypoint', []))
         if container.attrs['Config'].get('Cmd', None):
-            stats['Command'].extend(container.attrs['Config'].get('Cmd', []))
-        if not stats['Command']:
-            stats['Command'] = None
+            stats['command'].extend(container.attrs['Config'].get('Cmd', []))
+        if not stats['command']:
+            stats['command'] = None
 
-        if stats['Status'] in self.CONTAINER_ACTIVE_STATUS:
+        if stats['status'] in self.CONTAINER_ACTIVE_STATUS:
             started_at = container.attrs['State']['StartedAt']
             stats_fetcher = self.stats_fetchers[container.id]
             activity_stats = stats_fetcher.activity_stats
@@ -327,22 +327,25 @@ class DockerContainersExtension:
             stats['memory_usage'] = stats["memory"].get('usage')
             if stats['memory'].get('cache') is not None:
                 stats['memory_usage'] -= stats['memory']['cache']
-            stats['io_r'] = stats['io'].get('ior')
-            stats['io_w'] = stats['io'].get('iow')
-            stats['network_rx'] = stats['network'].get('rx')
-            stats['network_tx'] = stats['network'].get('tx')
-            stats['Uptime'] = pretty_date(parser.parse(started_at).astimezone(tz.tzlocal()).replace(tzinfo=None))
+            if 'time_since_update' in stats['io']:
+                stats['io_rx'] = stats['io'].get('ior') // stats['io'].get('time_since_update')
+                stats['io_wx'] = stats['io'].get('iow') // stats['io'].get('time_since_update')
+            if 'time_since_update' in stats['network']:
+                stats['network_rx'] = stats['network'].get('rx') // stats['network'].get('time_since_update')
+                stats['network_tx'] = stats['network'].get('tx') // stats['network'].get('time_since_update')
+            stats['uptime'] = pretty_date(parser.parse(started_at).astimezone(tz.tzlocal()).replace(tzinfo=None))
+            stats['command'] = ' '.join(stats['command'])
         else:
             stats['io'] = {}
             stats['cpu'] = {}
             stats['memory'] = {}
             stats['network'] = {}
-            stats['io_r'] = None
-            stats['io_w'] = None
+            stats['io_rx'] = None
+            stats['io_wx'] = None
             stats['cpu_percent'] = None
             stats['memory_percent'] = None
             stats['network_rx'] = None
             stats['network_tx'] = None
-            stats['Uptime'] = None
+            stats['uptime'] = None
 
         return stats

@@ -280,10 +280,8 @@ class TestGlances(unittest.TestCase):
         # stats_to_check = [ ]
         print('INFO: [TEST_017] Check PROGRAM stats')
         stats_grab = processes_to_programs(stats.get_plugin('processlist').get_raw())
-        self.assertTrue(type(stats_grab) is list, msg='Programs stats is not a list')
-        print('INFO: PROGRAM list stats: %s items in the list' % len(stats_grab))
-        # Check if number of processes in the list equal counter
-        # self.assertEqual(total, len(stats_grab))
+        self.assertIsInstance(stats_grab, list, msg='Programs stats list is not a list')
+        self.assertIsInstance(stats_grab[0], dict, msg='First item should be a dict')
 
     def test_018_string_value_to_float(self):
         """Check string_value_to_float function"""
@@ -373,7 +371,7 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(len(h.get()), 2)
         self.assertEqual(len(h.get()['a']), 0)
 
-    def test_099_output_bars_must_be_between_0_and_100_percent(self):
+    def test_099_output_bars(self):
         """Test quick look plugin.
 
         > bar.min_value
@@ -383,29 +381,43 @@ class TestGlances(unittest.TestCase):
         > bar.percent = -1
         > bar.percent
         0
-        > bar.percent = 101
-        > bar.percent
-        100
         """
         print('INFO: [TEST_099] Test progress bar')
+
         bar = Bar(size=1)
+        # Percent value can not be lower than min_value
         bar.percent = -1
         self.assertLessEqual(bar.percent, bar.min_value)
+        # but... percent value can be higher than max_value
         bar.percent = 101
-        self.assertGreaterEqual(bar.percent, bar.max_value)
+        self.assertLessEqual(bar.percent, 101)
+
+        # Test display
+        bar = Bar(size=50)
+        bar.percent = 0
+        self.assertEqual(bar.get(), '                                              0.0%')
+        bar.percent = 70
+        self.assertEqual(bar.get(), '|||||||||||||||||||||||||||||||              70.0%')
+        bar.percent = 100
+        self.assertEqual(bar.get(), '||||||||||||||||||||||||||||||||||||||||||||  100%')
+        bar.percent = 110
+        self.assertEqual(bar.get(), '|||||||||||||||||||||||||||||||||||||||||||| >100%')
 
     def test_100_secure(self):
         """Test secure functions"""
         print('INFO: [TEST_100] Secure functions')
+
         if WINDOWS:
-            self.assertEqual(secure_popen('echo TEST'), 'TEST\r\n')
-            self.assertEqual(secure_popen('echo TEST1 && echo TEST2'), 'TEST1\r\nTEST2\r\n')
+            self.assertIn(secure_popen('echo TEST'), ['TEST\n',
+                                                      'TEST\r\n'])
+            self.assertIn(secure_popen('echo TEST1 && echo TEST2'), ['TEST1\nTEST2\n',
+                                                                     'TEST1\r\nTEST2\r\n'])
         else:
             self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
+            self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
             # Make the test failed on Github (AssertionError: '' != 'FOO\n')
             # but not on my localLinux computer...
-            #self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
-            self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
+            # self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
 
     def test_200_memory_leak(self):
         """Memory leak check"""

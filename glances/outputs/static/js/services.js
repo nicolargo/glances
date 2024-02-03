@@ -2,15 +2,15 @@ import { store } from './store.js';
 import Favico from 'favico.js';
 
 // prettier-ignore
-const fetchAll = () => fetch('api/3/all', { method: 'GET' }).then((response) => response.json());
+const fetchAll = () => fetch('api/4/all', { method: 'GET' }).then((response) => response.json());
 // prettier-ignore
-const fetchAllViews = () => fetch('api/3/all/views', { method: 'GET' }).then((response) => response.json());
+const fetchAllViews = () => fetch('api/4/all/views', { method: 'GET' }).then((response) => response.json());
 // prettier-ignore
-const fetchAllLimits = () => fetch('api/3/all/limits', { method: 'GET' }).then((response) => response.json());
+const fetchAllLimits = () => fetch('api/4/all/limits', { method: 'GET' }).then((response) => response.json());
 // prettier-ignore
-const fetchArgs = () => fetch('api/3/args', { method: 'GET' }).then((response) => response.json());
+const fetchArgs = () => fetch('api/4/args', { method: 'GET' }).then((response) => response.json());
 // prettier-ignore
-const fetchConfig = () => fetch('api/3/config', { method: 'GET' }).then((response) => response.json());
+const fetchConfig = () => fetch('api/4/config', { method: 'GET' }).then((response) => response.json());
 
 class GlancesHelperService {
     limits = {};
