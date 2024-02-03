@@ -45,11 +45,16 @@ parts:
     - selective-checkout
     plugin: python
     source: .
+    python-packages:
+      - bottle
+      - influxdb-client==1.39
     # FIXME: Theoretically this also replaces `summary` and `description`
     #        keys, however due to the following bug we still need to keep
     #        them until it is fixed.
     #        https://bugs.launchpad.net/snapcraft/+bug/1813364
     parse-info: [setup.py]
+    stage-packages:
+      - file
     override-pull: |
       snapcraftctl pull
       "$SNAPCRAFT_STAGE"/scriptlets/selective-checkout
