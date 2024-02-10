@@ -1239,6 +1239,7 @@ class GlancesPluginModel(object):
                 # For all the field with the rate=True flag
                 if 'rate' in self.fields_description[field] and self.fields_description[field]['rate'] is True:
                     # Create a new metadata with the gauge
+                    stat['time_since_update'] = self.time_since_last_update
                     stat[field + '_gauge'] = stat[field]
                     if field + '_gauge' in stat_previous:
                         # The stat becomes the delta between the current and the previous value

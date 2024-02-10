@@ -46,7 +46,7 @@ fields_description = {
         'description': 'Number of bytes written.',
         'rate': True,
         'unit': 'byte',
-    }
+    },
 }
 
 # Define the history items list
@@ -100,16 +100,14 @@ class PluginModel(GlancesPluginModel):
         # Init new stats
         stats = self.get_init_value()
 
+        # Update the stats
         if self.input_method == 'local':
             stats = self.update_local()
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             # No standard way for the moment...
-            stats = self.get_init_value()
-        else:
-            stats = self.get_init_value()
+            pass
 
-        # Update the stats
         self.stats = stats
 
         return stats
@@ -134,7 +132,7 @@ class PluginModel(GlancesPluginModel):
                 continue
 
             # Filter stats to keep only the fields we want (define in fields_description)
-            # It will also convert psutil.sdiskio to a standard Python dict
+            # It will also convert psutil objects to a standard Python dict
             stat = self.filter_stats(disk_stat)
 
             # Add the key

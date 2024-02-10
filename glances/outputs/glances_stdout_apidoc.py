@@ -134,6 +134,7 @@ def print_plugin_description(plugin, stat):
         # For each plugins with a description
         print('Fields descriptions:')
         print('')
+        time_since_update = False
         for field, description in iteritems(stat.fields_description):
             print(
                 '* **{}**: {} (unit is *{}*)'.format(
@@ -147,6 +148,7 @@ def print_plugin_description(plugin, stat):
                 )
             )
             if 'rate' in description and description['rate']:
+                time_since_update = True
                 print('* **{}**: {} (unit is *{}* per second)'.format(
                     field + '_rate_per_sec',
                     (description['description'][:-1]
@@ -165,6 +167,14 @@ def print_plugin_description(plugin, stat):
                     if 'unit' in description
                     else 'None'
                 ))
+
+        if time_since_update:
+            print('* **{}**: {} (unit is *{}*)'.format(
+                'time_since_update',
+                'Number of seconds since last update',
+                'seconds'
+            ))
+
         print('')
     else:
         logger.error('No fields_description variable defined for plugin {}'.format(plugin))
