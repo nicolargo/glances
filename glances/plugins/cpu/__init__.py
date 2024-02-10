@@ -291,6 +291,9 @@ class PluginModel(GlancesPluginModel):
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
         # Alert only but depend on Core number
         for key in ['ctx_switches']:
+            # Skip alert if no timespan to measure
+            if self.stats.get('time_since_update', 0) == 0:
+                continue
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert(
                     self.stats[key], maximum=100 * self.stats['cpucore'], header=key

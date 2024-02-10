@@ -17,24 +17,24 @@
                 <span class="hidden-lg">{{ $filters.minSize(network.ifname) }}</span>
             </div>
             <div class="table-cell" v-show="!args.network_cumul && !args.network_sum">
-                {{ args.byte ? $filters.bytes(network.rx / network.time_since_update) : $filters.bits(network.rx / network.time_since_update) }}
+                {{ args.byte ? $filters.bytes(network.bytes_recv_rate_per_sec) : $filters.bits(network.bytes_recv_rate_per_sec) }}
             </div>
             <div class="table-cell" v-show="!args.network_cumul && !args.network_sum">
-                {{ args.byte ? $filters.bytes(network.tx / network.time_since_update) : $filters.bits(network.tx / network.time_since_update) }}
+                {{ args.byte ? $filters.bytes(network.bytes_sent_rate_per_sec) : $filters.bits(network.bytes_sent_rate_per_sec) }}
             </div>
             <div class="table-cell" v-show="!args.network_cumul && args.network_sum"></div>
             <div class="table-cell" v-show="!args.network_cumul && args.network_sum">
-                {{ args.byte ? $filters.bytes(network.cx / network.time_since_update) : $filters.bits(network.cx / network.time_since_update) }}
+                {{ args.byte ? $filters.bytes(network.bytes_all_rate_per_sec) : $filters.bits(network.bytes_all_rate_per_sec) }}
             </div>
             <div class="table-cell" v-show="args.network_cumul && !args.network_sum">
-                {{ args.byte ? $filters.bytes(network.cumulativeRx) : $filters.bits(network.cumulativeRx) }}
+                {{ args.byte ? $filters.bytes(network.bytes_recv) : $filters.bits(network.bytes_recv) }}
             </div>
             <div class="table-cell" v-show="args.network_cumul && !args.network_sum">
-                {{ args.byte ? $filters.bytes(network.cumulativeTx) : $filters.bits(network.cumulativeTx) }}
+                {{ args.byte ? $filters.bytes(network.bytes_sent) : $filters.bits(network.bytes_sent) }}
             </div>
             <div class="table-cell" v-show="args.network_cumul && args.network_sum"></div>
             <div class="table-cell" v-show="args.network_cumul && args.network_sum">
-                {{ args.byte ? $filters.bytes(network.cumulativeCx) : $filters.bits(network.cumulativeCx) }}
+                {{ args.byte ? $filters.bytes(network.bytes_all) : $filters.bits(network.bytes_all) }}
             </div>
         </div>
     </section>
@@ -69,13 +69,12 @@ export default {
                 const network = {
                     interfaceName: networkData['interface_name'],
                     ifname: alias ? alias : networkData['interface_name'],
-                    rx: networkData['rx'],
-                    tx: networkData['tx'],
-                    cx: networkData['cx'],
-                    time_since_update: networkData['time_since_update'],
-                    cumulativeRx: networkData['cumulative_rx'],
-                    cumulativeTx: networkData['cumulative_tx'],
-                    cumulativeCx: networkData['cumulative_cx']
+                    bytes_recv_rate_per_sec: networkData['bytes_recv_rate_per_sec'],
+                    bytes_sent_rate_per_sec: networkData['bytes_sent_rate_per_sec'],
+                    bytes_all_rate_per_sec: networkData['bytes_all_rate_per_sec'],
+                    bytes_recv: networkData['bytes_recv'],
+                    bytes_sent: networkData['bytes_sent'],
+                    bytes_all: networkData['bytes_all']
                 };
 
                 return network;
