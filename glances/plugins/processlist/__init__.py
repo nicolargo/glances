@@ -19,6 +19,67 @@ from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.core import PluginModel as CorePluginModel
 from glances.plugins.plugin.model import GlancesPluginModel
 
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: if True then compute and add *_gauge and *_rate_per_is fields
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'pid': {
+        'description': 'Process identifier (ID)',
+        'unit': 'number',
+    },
+    'name': {
+        'description': 'Process name',
+        'unit': 'string',
+    },
+    'cmdline': {
+        'description': 'Command line with arguments',
+        'unit': 'list',
+    },
+    'username': {
+        'description': 'Process owner',
+        'unit': 'string',
+    },
+    'num_threads': {
+        'description': 'Number of threads',
+        'unit': 'number',
+    },
+    'cpu_percent': {
+        'description': 'Process CPU consumption',
+        'unit': 'percent',
+    },
+    'memory_percent': {
+        'description': 'Process memory consumption',
+        'unit': 'percent',
+    },
+    'memory_info': {
+        'description': 'Process memory information (dict with rss, vms, shared, text, lib, data, dirty keys)',
+        'unit': 'byte',
+    },
+    'status': {
+        'description': 'Process status',
+        'unit': 'string',
+    },
+    'nice': {
+        'description': 'Process nice value',
+        'unit': 'number',
+    },
+    'cpu_times': {
+        'description': 'Process CPU times (dict with user, system, iowait keys)',
+        'unit': 'second',
+    },
+    'gids': {
+        'description': 'Process group IDs (dict with real, effective, saved keys)',
+        'unit': 'number',
+    },
+    'io_counters': {
+        'description': 'Process IO counters (list with read_count, write_count, read_bytes, write_bytes, io_tag keys)',
+        'unit': 'byte',
+    },
+}
+
 
 def seconds_to_hms(input_seconds):
     """Convert seconds to human-readable time."""
@@ -94,7 +155,9 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super(PluginModel, self).__init__(args=args, config=config,
+                                          fields_description=fields_description,
+                                          stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -143,24 +206,23 @@ class PluginModel(GlancesPluginModel):
         else:
             stats = self.get_init_value()
 
-        # Update the stats
-        self.stats = stats
-
         # Get the max values (dict)
         # Use Deep copy to avoid change between update and display
         self.max_values = copy.deepcopy(glances_processes.max_values())
 
+        # Update the stats
+        self.stats = stats
+
         return self.stats
 
-    # @GlancesPluginModel._manage_rate
     def update_local(self):
         # Update stats using the standard system lib
         # Note: Update is done in the processcount plugin
-        # Just return the processes list
+        # Just return the result
         if self.args.programs:
-            stats = glances_processes.getlist(as_programs=True)
+            stats = glances_processes.get_list(as_programs=True)
         else:
-            stats = glances_processes.getlist()
+            stats = glances_processes.get_list()
 
         return stats
 
