@@ -137,23 +137,13 @@ class PluginModel(GlancesPluginModel):
 
     def update(self):
         """Update processes stats using the input method."""
-        # Init new stats
-        stats = self.get_init_value()
-
+        # Update the stats
         if self.input_method == 'local':
-            # Update stats using the standard system lib
-            # Note: Update is done in the processcount plugin
-            # Just return the processes list
-            if self.args.programs:
-                stats = glances_processes.getlist(as_programs=True)
-            else:
-                stats = glances_processes.getlist()
+            stats = self.update_local()
+        else:
+            stats = self.get_init_value()
 
-        elif self.input_method == 'snmp':
-            # No SNMP grab for processes
-            pass
-
-        # Update the stats and transform all namedtuples to dict
+        # Update the stats
         self.stats = stats
 
         # Get the max values (dict)
@@ -161,6 +151,18 @@ class PluginModel(GlancesPluginModel):
         self.max_values = copy.deepcopy(glances_processes.max_values())
 
         return self.stats
+
+    # @GlancesPluginModel._manage_rate
+    def update_local(self):
+        # Update stats using the standard system lib
+        # Note: Update is done in the processcount plugin
+        # Just return the processes list
+        if self.args.programs:
+            stats = glances_processes.getlist(as_programs=True)
+        else:
+            stats = glances_processes.getlist()
+
+        return stats
 
     def get_nice_alert(self, value):
         """Return the alert relative to the Nice configuration list"""
