@@ -97,20 +97,16 @@ class PluginModel(GlancesPluginModel):
     @GlancesPluginModel._log_result_decorator
     def update(self):
         """Update disk I/O stats using the input method."""
-        # Init new stats
-        stats = self.get_init_value()
-
         # Update the stats
         if self.input_method == 'local':
             stats = self.update_local()
-        elif self.input_method == 'snmp':
-            # Update stats using SNMP
-            # No standard way for the moment...
-            pass
+        else:
+            stats = self.get_init_value()
 
+        # Update the stats
         self.stats = stats
 
-        return stats
+        return self.stats
 
     @GlancesPluginModel._manage_rate
     def update_local(self):
