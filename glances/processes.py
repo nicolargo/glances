@@ -486,20 +486,25 @@ class GlancesProcesses(object):
         processlist = list(filter(lambda p: not self._filter.is_filtered(p), processlist))
 
         # Save the new processlist and transform all namedtuples to dict
-        self.processlist = list_of_namedtuple_to_list_of_dict(processlist)
+        processlist = list_of_namedtuple_to_list_of_dict(processlist)
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Useful to highlight the processes with maximum values
         for k in self._max_values_list:
-            values_list = [i[k] for i in self.processlist if i[k] is not None]
+            values_list = [i[k] for i in processlist if i[k] is not None]
             if values_list:
                 self.set_max_values(k, max(values_list))
+
+        # Update the stats
+        self.processlist = processlist
+
+        return self.processlist
 
     def get_count(self):
         """Get the number of processes."""
         return self.processcount
 
-    def getlist(self, sorted_by=None, as_programs=False):
+    def get_list(self, sorted_by=None, as_programs=False):
         """Get the processlist.
         By default, return the list of threads.
         If as_programs is True, return the list of programs."""

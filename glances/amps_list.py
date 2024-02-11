@@ -89,7 +89,7 @@ class AmpsList(object):
     def update(self):
         """Update the command result attributed."""
         # Get the current processes list (once)
-        processlist = glances_processes.getlist()
+        processlist = glances_processes.get_list()
 
         # Iter upon the AMPs dict
         for k, v in iteritems(self.get()):

@@ -16,7 +16,7 @@ from glances.plugins.plugin.model import GlancesPluginModel
 # description: human readable description
 # short_name: shortname to use un UI
 # unit: unit type
-# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# rate: if True then compute and add *_gauge and *_rate_per_is fields
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
     'total': {
@@ -81,20 +81,16 @@ class PluginModel(GlancesPluginModel):
     @GlancesPluginModel._log_result_decorator
     def update(self):
         """Update processes stats using the input method."""
-        # Init new stats
-        stats = self.get_init_value()
-
+        # Update the stats
         if self.input_method == 'local':
             # Update stats using the standard system lib
             # Here, update is call for processcount AND processlist
             glances_processes.update()
 
-            # Return the processes count
+            # For the ProcessCount, only return the processes count
             stats = glances_processes.get_count()
-        elif self.input_method == 'snmp':
-            # Update stats using SNMP
-            # Not available
-            pass
+        else:
+            stats = self.get_init_value()
 
         # Update the stats
         self.stats = stats

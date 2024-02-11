@@ -336,11 +336,12 @@ class GlancesStdoutApiDoc(object):
         # Loop over plugins
         for plugin in sorted(stats._plugins):
             stat = stats.get_plugin(plugin)
+            print_plugin_stats(plugin, stat)
+            print_plugin_description(plugin, stat)
+
             stat_export = stat.get_export()
             if stat_export is None or stat_export == [] or stat_export == {}:
                 continue
-            print_plugin_stats(plugin, stat)
-            print_plugin_description(plugin, stat)
             print_plugin_item_value(plugin, stat, stat_export)
 
         # Get all stats
