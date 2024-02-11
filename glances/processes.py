@@ -359,7 +359,7 @@ class GlancesProcesses(object):
 
         # Do not process if disable tag is set
         if self.disable_tag:
-            return
+            return processlist
 
         # Time since last update (for disk_io rate computation)
         time_since_update = getTimeSinceLastUpdate('process_disk')
