@@ -26,6 +26,7 @@ local.properties
 
 # External tool builders
 .externalToolBuilders/
+*yarn.lock
 
 # Locally stored "Eclipse launch configurations"
 *.launch
