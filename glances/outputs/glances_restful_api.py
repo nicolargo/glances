@@ -85,7 +85,7 @@ class GlancesRestfulApi(object):
 
         # Change the default root path
         if self.url_prefix != '/':
-            self._app.include_router(APIRouter(prefix=self.url_prefix))
+            self._app.include_router(APIRouter(prefix=self.url_prefix.rstrip('/')))
 
         # Set path for WebUI
         self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/public')
