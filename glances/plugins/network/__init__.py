@@ -105,7 +105,7 @@ class PluginModel(GlancesPluginModel):
             self.hide_zero = False
         self.hide_zero_fields = ['bytes_recv', 'bytes_sent']
 
-        # Force a first update because we need two update to have the first stat
+        # Force a first update because we need two updates to have the first stat
         self.update()
         self.refresh_timer.set(0)
 

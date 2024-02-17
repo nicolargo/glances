@@ -89,6 +89,10 @@ class PluginModel(GlancesPluginModel):
             self.hide_zero = False
         self.hide_zero_fields = ['read_bytes', 'write_bytes']
 
+        # Force a first update because we need two updates to have the first stat
+        self.update()
+        self.refresh_timer.set(0)
+
     def get_key(self):
         """Return the key of the list."""
         return 'disk_name'
