@@ -9,7 +9,6 @@
 
 """CPU plugin."""
 
-from glances.timer import getTimeSinceLastUpdate
 from glances.globals import LINUX, WINDOWS, SUNOS, iterkeys
 from glances.cpu_percent import cpu_percent
 from glances.plugins.core import PluginModel as CorePluginModel
@@ -21,7 +20,7 @@ import psutil
 # description: human readable description
 # short_name: shortname to use un UI
 # unit: unit type
-# rate: is it a rate ? If yes, // by time_since_update when displayed,
+# rate: if True then compute and add *_gauge and *_rate_per_is fields
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
     'total': {
@@ -180,6 +179,7 @@ class PluginModel(GlancesPluginModel):
 
         return self.stats
 
+    @GlancesPluginModel._manage_rate
     def update_local(self):
         """Update CPU stats using psutil."""
         # Grab CPU stats using psutil's cpu_percent and cpu_times_percent
@@ -192,6 +192,7 @@ class PluginModel(GlancesPluginModel):
         stats = self.get_init_value()
 
         stats['total'] = cpu_percent.get()
+
         # Standards stats
         # - user: time spent by normal processes executing in user mode; on Linux this also includes guest time
         # - system: time spent by processes executing in kernel mode
@@ -210,8 +211,9 @@ class PluginModel(GlancesPluginModel):
         # - interrupt (Windows): time spent for servicing hardware interrupts ( similar to “irq” on UNIX)
         # - dpc (Windows): time spent servicing deferred procedure calls (DPCs)
         cpu_times_percent = psutil.cpu_times_percent(interval=0.0)
-        for stat in cpu_times_percent._fields:
-            stats[stat] = getattr(cpu_times_percent, stat)
+        # Filter stats to keep only the fields we want (define in fields_description)
+        # It will also convert psutil objects to a standard Python dict
+        stats.update(self.filter_stats(cpu_times_percent))
 
         # Additional CPU stats (number of events not as a %; psutil>=4.1.0)
         # - ctx_switches: number of context switches (voluntary + involuntary) since boot.
@@ -219,29 +221,11 @@ class PluginModel(GlancesPluginModel):
         # - soft_interrupts: number of software interrupts since boot. Always set to 0 on Windows and SunOS.
         # - syscalls: number of system calls since boot. Always set to 0 on Linux.
         cpu_stats = psutil.cpu_stats()
-
-        # By storing time data we enable Rx/s and Tx/s calculations in the
-        # XML/RPC API, which would otherwise be overly difficult work
-        # for users of the API
-        stats['time_since_update'] = getTimeSinceLastUpdate('cpu')
-
+        # Filter stats to keep only the fields we want (define in fields_description)
+        # It will also convert psutil objects to a standard Python dict
+        stats.update(self.filter_stats(cpu_stats))
         # Core number is needed to compute the CTX switch limit
         stats['cpucore'] = self.nb_log_core
-
-        # Previous CPU stats are stored in the cpu_stats_old variable
-        if not hasattr(self, 'cpu_stats_old'):
-            # Init the stats (needed to have the key name for export)
-            for stat in cpu_stats._fields:
-                # @TODO: better to set it to None but should refactor views and UI...
-                stats[stat] = 0
-        else:
-            # Others calls...
-            for stat in cpu_stats._fields:
-                if getattr(cpu_stats, stat) is not None:
-                    stats[stat] = getattr(cpu_stats, stat) - getattr(self.cpu_stats_old, stat)
-
-        # Save stats to compute next step
-        self.cpu_stats_old = cpu_stats
 
         return stats
 
@@ -307,6 +291,9 @@ class PluginModel(GlancesPluginModel):
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
         # Alert only but depend on Core number
         for key in ['ctx_switches']:
+            # Skip alert if no timespan to measure
+            if self.stats.get('time_since_update', 0) == 0:
+                continue
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert(
                     self.stats[key], maximum=100 * self.stats['cpucore'], header=key

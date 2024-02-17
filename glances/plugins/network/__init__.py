@@ -10,54 +10,37 @@
 """Network plugin."""
 from __future__ import unicode_literals
 
-import base64
-
-from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.logger import logger
 
 import psutil
 
-# {'interface_name': 'mpqemubr0-dummy',
-# 'alias': None,
-# 'time_since_update': 2.081636428833008,
-# 'cumulative_rx': 0,
-# 'rx': 0, 'cumulative_tx': 0, 'tx': 0, 'cumulative_cx': 0, 'cx': 0,
-# 'is_up': False,
-# 'speed': 0,
-# 'key': 'interface_name'}
 # Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: if True then compute and add *_gauge and *_rate_per_is fields
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
     'interface_name': {
-        'description': 'Interface name.',
-        'unit': 'string'
+        'description': 'Interface name.'
     },
     'alias': {
-        'description': 'Interface alias name (optional).',
-        'unit': 'string'
+        'description': 'Interface alias name (optional).'
     },
-    'rx': {
-        'description': 'The received/input rate.',
-        'unit': 'bitpersecond'
-    },
-    'tx': {
-        'description': 'The sent/output rate.',
-        'unit': 'bitpersecond'
-    },
-    'cx': {
-        'description': 'The cumulative received+sent rate.',
-        'unit': 'bitpersecond'
-    },
-    'cumulative_rx': {
-        'description': 'The number of bytes received through the interface (cumulative).',
+    'bytes_recv': {
+        'description': 'Number of bytes received.',
+        'rate': True,
         'unit': 'byte',
     },
-    'cumulative_tx': {
-        'description': 'The number of bytes sent through the interface (cumulative).',
-        'unit': 'byte'
+    'bytes_sent': {
+        'description': 'Number of bytes sent.',
+        'rate': True,
+        'unit': 'byte',
     },
-    'cumulative_cx': {
-        'description': 'The cumulative number of bytes reveived and sent through the interface (cumulative).',
+    'bytes_all': {
+        'description': 'Number of bytes received and sent.',
+        'rate': True,
         'unit': 'byte',
     },
     'speed': {
@@ -67,11 +50,7 @@ fields_description = {
     'is_up': {
         'description': 'Is the interface up ?',
         'unit': 'bool'
-    },
-    'time_since_update': {
-        'description': 'Number of seconds since last update.',
-        'unit': 'seconds'
-    },
+    }
 }
 
 # SNMP OID
@@ -80,15 +59,23 @@ fields_description = {
 snmp_oid = {
     'default': {
         'interface_name': '1.3.6.1.2.1.2.2.1.2',
-        'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
-        'cumulative_tx': '1.3.6.1.2.1.2.2.1.16',
+        'bytes_recv': '1.3.6.1.2.1.2.2.1.10',
+        'bytes_sent': '1.3.6.1.2.1.2.2.1.16',
     }
 }
 
 # Define the history items list
 items_history_list = [
-    {'name': 'rx', 'description': 'Download rate per second', 'y_unit': 'bit/s'},
-    {'name': 'tx', 'description': 'Upload rate per second', 'y_unit': 'bit/s'},
+    {
+        'name': 'bytes_recv_rate_per_sec',
+        'description': 'Download rate per second',
+        'y_unit': 'B/s'
+    },
+    {
+        'name': 'bytes_sent_rate_per_sec',
+        'description': 'Upload rate per second',
+        'y_unit': 'B/s'
+    },
 ]
 
 
@@ -116,9 +103,9 @@ class PluginModel(GlancesPluginModel):
             self.hide_zero = config.get_bool_value(self.plugin_name, 'hide_zero', default=False)
         else:
             self.hide_zero = False
-        self.hide_zero_fields = ['rx', 'tx']
+        self.hide_zero_fields = ['bytes_recv', 'bytes_sent']
 
-        # Force a first update because we need two update to have the first stat
+        # Force a first update because we need two updates to have the first stat
         self.update()
         self.refresh_timer.set(0)
 
@@ -133,152 +120,77 @@ class PluginModel(GlancesPluginModel):
 
         :return: list of stats dict (one dict per interface)
         """
-        # Init new stats
-        stats = self.get_init_value()
-
         if self.input_method == 'local':
-            # Update stats using the standard system lib
-
-            # Grab network interface stat using the psutil net_io_counter method
-            try:
-                net_io_counters = psutil.net_io_counters(pernic=True)
-            except UnicodeDecodeError as e:
-                logger.debug('Can not get network interface counters ({})'.format(e))
-                return self.stats
-
-            # Grab interface's status (issue #765)
-            # Grab interface's speed (issue #718)
-            net_status = {}
-            try:
-                net_status = psutil.net_if_stats()
-            except OSError as e:
-                # see psutil #797/glances #1106
-                logger.debug('Can not get network interface status ({})'.format(e))
-
-            # Previous network interface stats are stored in the network_old variable
-            if not hasattr(self, 'network_old'):
-                # First call, we init the network_old var
-                try:
-                    self.network_old = net_io_counters
-                except (IOError, UnboundLocalError):
-                    pass
-                return self.stats
-
-            # By storing time data we enable Rx/s and Tx/s calculations in the
-            # XML/RPC API, which would otherwise be overly difficult work
-            # for users of the API
-            time_since_update = getTimeSinceLastUpdate('net')
-
-            # Loop over interfaces
-            network_new = net_io_counters
-            for net in network_new:
-                # Do not take hidden interface into account
-                # or KeyError: 'eth0' when interface is not connected #1348
-                if not self.is_display(net) or net not in net_status:
-                    continue
-                try:
-                    cumulative_rx = network_new[net].bytes_recv
-                    cumulative_tx = network_new[net].bytes_sent
-                    cumulative_cx = cumulative_rx + cumulative_tx
-                    rx = cumulative_rx - self.network_old[net].bytes_recv
-                    tx = cumulative_tx - self.network_old[net].bytes_sent
-                    cx = rx + tx
-                    netstat = {
-                        'interface_name': net,
-                        'alias': self.has_alias(net),
-                        'time_since_update': time_since_update,
-                        'cumulative_rx': cumulative_rx,
-                        'rx': rx,
-                        'cumulative_tx': cumulative_tx,
-                        'tx': tx,
-                        'cumulative_cx': cumulative_cx,
-                        'cx': cx,
-                        # Interface status
-                        'is_up': net_status[net].isup,
-                        # Interface speed in Mbps, convert it to bps
-                        # Can be always 0 on some OSes
-                        'speed': net_status[net].speed * 1048576,
-                        # Set the key for the dict
-                        'key': self.get_key(),
-                    }
-                except KeyError:
-                    continue
-                else:
-                    # Append the interface stats to the list
-                    stats.append(netstat)
-
-            # Save stats to compute next bitrate
-            self.network_old = network_new
-
-        elif self.input_method == 'snmp':
-            # Update stats using SNMP
-
-            # SNMP bulk command to get all network interface in one shot
-            try:
-                net_io_counters = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name], bulk=True)
-            except KeyError:
-                net_io_counters = self.get_stats_snmp(snmp_oid=snmp_oid['default'], bulk=True)
-
-            # Previous network interface stats are stored in the network_old variable
-            if not hasattr(self, 'network_old'):
-                # First call, we init the network_old var
-                try:
-                    self.network_old = net_io_counters
-                except (IOError, UnboundLocalError):
-                    pass
-            else:
-                # See description in the 'local' block
-                time_since_update = getTimeSinceLastUpdate('net')
-
-                # Loop over interfaces
-                network_new = net_io_counters
-
-                for net in network_new:
-                    # Do not take hidden interface into account
-                    if not self.is_display(net):
-                        continue
-
-                    try:
-                        # Windows: a tips is needed to convert HEX to TXT
-                        # http://blogs.technet.com/b/networking/archive/2009/12/18/how-to-query-the-list-of-network-interfaces-using-snmp-via-the-ifdescr-counter.aspx
-                        if self.short_system_name == 'windows':
-                            try:
-                                interface_name = str(base64.b16decode(net[2:-2].upper()))
-                            except TypeError:
-                                interface_name = net
-                        else:
-                            interface_name = net
-
-                        cumulative_rx = float(network_new[net]['cumulative_rx'])
-                        cumulative_tx = float(network_new[net]['cumulative_tx'])
-                        cumulative_cx = cumulative_rx + cumulative_tx
-                        rx = cumulative_rx - float(self.network_old[net]['cumulative_rx'])
-                        tx = cumulative_tx - float(self.network_old[net]['cumulative_tx'])
-                        cx = rx + tx
-                        netstat = {
-                            'interface_name': interface_name,
-                            'alias': self.has_alias(interface_name),
-                            'time_since_update': time_since_update,
-                            'cumulative_rx': cumulative_rx,
-                            'rx': rx,
-                            'cumulative_tx': cumulative_tx,
-                            'tx': tx,
-                            'cumulative_cx': cumulative_cx,
-                            'cx': cx,
-                        }
-                    except KeyError:
-                        continue
-                    else:
-                        netstat['key'] = self.get_key()
-                        stats.append(netstat)
-
-                # Save stats to compute next bitrate
-                self.network_old = network_new
+            stats = self.update_local()
+        else:
+            stats = self.get_init_value()
 
         # Update the stats
         self.stats = stats
 
         return self.stats
+
+    @GlancesPluginModel._manage_rate
+    def update_local(self):
+        # Update stats using the standard system lib
+
+        stats = self.get_init_value()
+
+        # Grab network interface stat using the psutil net_io_counter method
+        # Example:
+        # { 'veth4cbf8f0a': snetio(
+        #   bytes_sent=102038421, bytes_recv=1263258,
+        #   packets_sent=25046, packets_recv=14114,
+        #   errin=0, errout=0, dropin=0, dropout=0), ... }
+        try:
+            net_io_counters = psutil.net_io_counters(pernic=True)
+        except UnicodeDecodeError as e:
+            logger.debug('Can not get network interface counters ({})'.format(e))
+            return self.stats
+
+        # Grab interface's status (issue #765)
+        # Grab interface's speed (issue #718)
+        # Example:
+        # { 'veth4cbf8f0a': snicstats(
+        #   isup=True, duplex=<NicDuplex.NIC_DUPLEX_FULL: 2>,
+        #   speed=10000, mtu=1500, flags='up,broadcast,running,multicast'), ... }
+        net_status = {}
+        try:
+            net_status = psutil.net_if_stats()
+        except OSError as e:
+            # see psutil #797/glances #1106
+            logger.debug('Can not get network interface status ({})'.format(e))
+
+        for interface_name, interface_stat in net_io_counters.items():
+            # Do not take hidden interface into account
+            # or KeyError: 'eth0' when interface is not connected #1348
+            if not self.is_display(interface_name) or interface_name not in net_status:
+                continue
+
+            # Filter stats to keep only the fields we want (define in fields_description)
+            # It will also convert psutil objects to a standard Python dict
+            stat = self.filter_stats(interface_stat)
+            stat.update(self.filter_stats(net_status[interface_name]))
+
+            # Add the key
+            stat['key'] = self.get_key()
+
+            # Add disk name
+            stat['interface_name'] = interface_name
+
+            # Add alias define in the configuration file
+            stat['alias'] = self.has_alias(interface_name)
+
+            # Add sent + revc  stats
+            stat['bytes_all'] = stat['bytes_sent'] + stat['bytes_recv']
+
+            # Interface speed in Mbps, convert it to bps
+            # Can be always 0 on some OSes
+            stat['speed'] = stat['speed'] * 1048576
+
+            stats.append(stat)
+
+        return stats
 
     def update_views(self):
         """Update stats views."""
@@ -291,27 +203,29 @@ class PluginModel(GlancesPluginModel):
         # Add specifics information
         # Alert
         for i in self.get_raw():
-            if i['time_since_update'] == 0:
-                # Skip alert if no timespan to measure
+            # Skip alert if no timespan to measure
+            if 'bytes_recv_rate_per_sec' not in i or 'bytes_sent_rate_per_sec' not in i:
                 continue
 
-            if_real_name = i['interface_name'].split(':')[0]
-            # Convert rate in bps (to be able to compare to interface speed)
-            bps_rx = int(i['rx'] // i['time_since_update'] * 8)
-            bps_tx = int(i['tx'] // i['time_since_update'] * 8)
+            # Convert rate to bps (to be able to compare to interface speed)
+            bps_rx = int(i['bytes_recv_rate_per_sec'] * 8)
+            bps_tx = int(i['bytes_sent_rate_per_sec'] * 8)
 
             # Decorate the bitrate with the configuration file thresholds
+            if_real_name = i['interface_name'].split(':')[0]
             alert_rx = self.get_alert(bps_rx, header=if_real_name + '_rx')
             alert_tx = self.get_alert(bps_tx, header=if_real_name + '_tx')
+
             # If nothing is define in the configuration file...
             # ... then use the interface speed (not available on all systems)
             if alert_rx == 'DEFAULT' and 'speed' in i and i['speed'] != 0:
                 alert_rx = self.get_alert(current=bps_rx, maximum=i['speed'], header='rx')
             if alert_tx == 'DEFAULT' and 'speed' in i and i['speed'] != 0:
                 alert_tx = self.get_alert(current=bps_tx, maximum=i['speed'], header='tx')
+
             # then decorates
-            self.views[i[self.get_key()]]['rx']['decoration'] = alert_rx
-            self.views[i[self.get_key()]]['tx']['decoration'] = alert_tx
+            self.views[i[self.get_key()]]['bytes_recv']['decoration'] = alert_rx
+            self.views[i[self.get_key()]]['bytes_sent']['decoration'] = alert_tx
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -384,35 +298,35 @@ class PluginModel(GlancesPluginModel):
                 unit = 'b'
 
             if args.network_cumul:
-                rx = self.auto_unit(int(i['cumulative_rx'] * to_bit)) + unit
-                tx = self.auto_unit(int(i['cumulative_tx'] * to_bit)) + unit
-                sx = self.auto_unit(int(i['cumulative_rx'] * to_bit) + int(i['cumulative_tx'] * to_bit)) + unit
+                rx = self.auto_unit(int(i['bytes_recv'] * to_bit)) + unit
+                tx = self.auto_unit(int(i['bytes_sent'] * to_bit)) + unit
+                ax = self.auto_unit(int(i['bytes_all'] * to_bit)) + unit
             else:
-                rx = self.auto_unit(int(i['rx'] // i['time_since_update'] * to_bit)) + unit
-                tx = self.auto_unit(int(i['tx'] // i['time_since_update'] * to_bit)) + unit
-                sx = (
-                    self.auto_unit(
-                        int(i['rx'] // i['time_since_update'] * to_bit)
-                        + int(i['tx'] // i['time_since_update'] * to_bit)
-                    )
-                    + unit
-                )
+                rx = self.auto_unit(int(i['bytes_recv_rate_per_sec'] * to_bit)) + unit
+                tx = self.auto_unit(int(i['bytes_sent_rate_per_sec'] * to_bit)) + unit
+                ax = self.auto_unit(int(i['bytes_all_rate_per_sec'] * to_bit)) + unit
 
             # New line
             ret.append(self.curse_new_line())
             msg = '{:{width}}'.format(if_name, width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if args.network_sum:
-                msg = '{:>14}'.format(sx)
+                msg = '{:>14}'.format(ax)
                 ret.append(self.curse_add_line(msg))
             else:
                 msg = '{:>7}'.format(rx)
                 ret.append(
-                    self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='rx', option='decoration'))
+                    self.curse_add_line(msg,
+                                        self.get_views(item=i[self.get_key()],
+                                                       key='bytes_recv',
+                                                       option='decoration'))
                 )
                 msg = '{:>7}'.format(tx)
                 ret.append(
-                    self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='tx', option='decoration'))
+                    self.curse_add_line(msg,
+                                        self.get_views(item=i[self.get_key()],
+                                                       key='bytes_sent',
+                                                       option='decoration'))
                 )
 
         return ret

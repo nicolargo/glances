@@ -134,6 +134,7 @@ def print_plugin_description(plugin, stat):
         # For each plugins with a description
         print('Fields descriptions:')
         print('')
+        time_since_update = False
         for field, description in iteritems(stat.fields_description):
             print(
                 '* **{}**: {} (unit is *{}*)'.format(
@@ -146,6 +147,34 @@ def print_plugin_description(plugin, stat):
                     else 'None'
                 )
             )
+            if 'rate' in description and description['rate']:
+                time_since_update = True
+                print('* **{}**: {} (unit is *{}* per second)'.format(
+                    field + '_rate_per_sec',
+                    (description['description'][:-1]
+                     if description['description'].endswith('.')
+                     else description['description']) + ' per second',
+                    description['unit']
+                    if 'unit' in description
+                    else 'None'
+                ))
+                print('* **{}**: {} (unit is *{}*)'.format(
+                    field + '_gauge',
+                    (description['description'][:-1]
+                     if description['description'].endswith('.')
+                     else description['description']) + ' (cumulative)',
+                    description['unit']
+                    if 'unit' in description
+                    else 'None'
+                ))
+
+        if time_since_update:
+            print('* **{}**: {} (unit is *{}*)'.format(
+                'time_since_update',
+                'Number of seconds since last update',
+                'seconds'
+            ))
+
         print('')
     else:
         logger.error('No fields_description variable defined for plugin {}'.format(plugin))
@@ -307,11 +336,12 @@ class GlancesStdoutApiDoc(object):
         # Loop over plugins
         for plugin in sorted(stats._plugins):
             stat = stats.get_plugin(plugin)
+            print_plugin_stats(plugin, stat)
+            print_plugin_description(plugin, stat)
+
             stat_export = stat.get_export()
             if stat_export is None or stat_export == [] or stat_export == {}:
                 continue
-            print_plugin_stats(plugin, stat)
-            print_plugin_description(plugin, stat)
             print_plugin_item_value(plugin, stat, stat_export)
 
         # Get all stats
