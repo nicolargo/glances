@@ -105,7 +105,7 @@ class GlancesEvents(object):
         If 'event' is not a 'new one', update the list .
         If event < peak_time then the alert is not set.
         """
-        proc_list = proc_list or glances_processes.getlist()
+        proc_list = proc_list or glances_processes.get_list()
 
         # Add or update the log
         event_index = self.__event_exist(event_type)
