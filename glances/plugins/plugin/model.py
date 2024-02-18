@@ -507,33 +507,9 @@ class GlancesPluginModel(object):
         """
         ret = {}
 
-        if isinstance(self.get_raw(), dict) and \
-           self.get_raw() is not None and \
-           self.get_key() is not None and \
-           self.plugin_name == 'diskio': # TODO <== To be removed when feature/issue2414 is done
-            # Stats are stored in a dict of dict (ex: DISKIO...)
-            for key in self.get_raw():
-                ret[key] = {}
-                for field in self.get_raw()[key]:
-                    value = {
-                        'decoration': 'DEFAULT',
-                        'optional': False,
-                        'additional': False,
-                        'splittable': False,
-                        'hidden': False,
-                        '_zero': self.views[key][field]['_zero']
-                        if key in self.views and
-                           field in self.views[key] and
-                           'zero' in self.views[key][field]
-                        else True,
-                    }
-                    ret[key][field] = value
-            pass
-        # TODO: should be removed when feature/issue2414 is done
-        elif isinstance(self.get_raw(), list) and self.get_raw() is not None and self.get_key() is not None:
-            # Stats are stored in a list of dict (ex: NETWORK, FS...)
+        if isinstance(self.get_raw(), list) and self.get_raw() is not None and self.get_key() is not None:
+            # Stats are stored in a list of dict (ex: DISKIO, NETWORK, FS...)
             for i in self.get_raw():
-                # i[self.get_key()] is the interface name (example for NETWORK)
                 ret[i[self.get_key()]] = {}
                 for key in listkeys(i):
                     value = {

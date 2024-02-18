@@ -60,7 +60,7 @@ class GlancesRestfulApi(object):
         self.args = args
 
         # Init stats
-        # Will be updated within Bottle route
+        # Will be updated within route
         self.stats = None
 
         # cached_time is the minimum time interval between stats updates
@@ -262,7 +262,6 @@ class GlancesRestfulApi(object):
         # Init plugin list
         self.plugins_list = self.stats.getPluginsList()
 
-        # Bind the Bottle TCP address/port
         if self.args.open_web_browser:
             # Implementation of the issue #946
             # Try to open the Glances Web UI in the default Web browser if:
