@@ -315,14 +315,14 @@ class _GlancesCurses(object):
             # The screen is NOT compatible with a colored design
             # switch to B&W text styles
             # ex: export TERM=xterm-mono
-            self.no_color = curses.A_NORMAL
-            self.default_color = curses.A_NORMAL
+            self.no_color = -1
+            self.default_color = -1
             self.nice_color = A_BOLD
             self.cpu_time_color = A_BOLD
             self.ifCAREFUL_color = A_BOLD
             self.ifWARNING_color = curses.A_UNDERLINE
             self.ifCRITICAL_color = curses.A_REVERSE
-            self.default_color2 = curses.A_NORMAL
+            self.default_color2 = -1
             self.ifCAREFUL_color2 = A_BOLD
             self.ifWARNING_color2 = curses.A_UNDERLINE
             self.ifCRITICAL_color2 = curses.A_REVERSE
