@@ -260,17 +260,17 @@ class _GlancesCurses(object):
 
             if self.is_theme('white'):
                 # White theme: black ==> white
-                curses.init_pair(1, curses.COLOR_BLACK, -1)
+                curses.init_pair(1, -1, -1)
             else:
-                curses.init_pair(1, curses.COLOR_WHITE, -1)
+                curses.init_pair(1, -1, -1)
             if self.args.disable_bg:
                 curses.init_pair(2, curses.COLOR_RED, -1)
                 curses.init_pair(3, curses.COLOR_GREEN, -1)
                 curses.init_pair(5, curses.COLOR_MAGENTA, -1)
             else:
-                curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_RED)
-                curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
-                curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
+                curses.init_pair(2, -1, curses.COLOR_RED)
+                curses.init_pair(3, -1, curses.COLOR_GREEN)
+                curses.init_pair(5, -1, curses.COLOR_MAGENTA)
             curses.init_pair(4, curses.COLOR_BLUE, -1)
             curses.init_pair(6, curses.COLOR_RED, -1)
             curses.init_pair(7, curses.COLOR_GREEN, -1)
@@ -301,14 +301,14 @@ class _GlancesCurses(object):
                         curses.init_pair(i + 9, colors_list[i], -1)
                     except Exception:
                         if self.is_theme('white'):
-                            curses.init_pair(i + 9, curses.COLOR_BLACK, -1)
+                            curses.init_pair(i + 9, -1, -1)
                         else:
-                            curses.init_pair(i + 9, curses.COLOR_WHITE, -1)
+                            curses.init_pair(i + 9, -1, -1)
                 self.filter_color = curses.color_pair(9) | A_BOLD
                 self.selected_color = curses.color_pair(10) | A_BOLD
                 # Define separator line style
                 curses.init_color(11, 500, 500, 500)
-                curses.init_pair(11, curses.COLOR_BLACK, -1)
+                curses.init_pair(11, -1, -1)
                 self.separator = curses.color_pair(11)
 
         else:
@@ -329,7 +329,7 @@ class _GlancesCurses(object):
             self.ifINFO_color = A_BOLD
             self.filter_color = A_BOLD
             self.selected_color = A_BOLD
-            self.separator = curses.COLOR_BLACK
+            self.separator = -1
 
         # Define the colors list (hash table) for stats
         self.colors_list = {
