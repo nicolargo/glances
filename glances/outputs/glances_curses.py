@@ -47,8 +47,6 @@ class _GlancesCurses(object):
         '4': {'handler': '_handle_quicklook'},
         '5': {'handler': '_handle_top_menu'},
         '6': {'switch': 'meangpu'},
-        '9': {'switch': 'theme_white',
-              'handler': '_handle_theme'},
         '/': {'switch': 'process_short_name'},
         'a': {'sort_key': 'auto'},
         'A': {'switch': 'disable_amps'},
@@ -158,9 +156,6 @@ class _GlancesCurses(object):
                 logger.critical("Cannot init the curses library ({})".format(e))
                 sys.exit(1)
 
-        # Load the 'outputs' section of the configuration file
-        # - Init the theme (default is black)
-        self.theme = {'name': 'black'}
 
         # Load configuration file
         self.load_config(config)
@@ -202,8 +197,6 @@ class _GlancesCurses(object):
         """Load the outputs section of the configuration file."""
         if config is not None and config.has_section('outputs'):
             logger.debug('Read the outputs section in the configuration file')
-            # Load the theme
-            self.theme['name'] = config.get_value('outputs', 'curse_theme', default='black')
             # Separator ?
             self.args.enable_separator = config.get_bool_value('outputs', 'separator', default=True)
             # Set the left sidebar list
@@ -211,9 +204,6 @@ class _GlancesCurses(object):
                                                        'left_menu',
                                                        default=self._left_sidebar)
 
-    def is_theme(self, name):
-        """Return True if the theme *name* should be used."""
-        return getattr(self.args, 'theme_' + name) or self.theme['name'] == name
 
     def _init_history(self):
         """Init the history option."""
@@ -258,11 +248,7 @@ class _GlancesCurses(object):
             # ex: export TERM=xterm-256color
             #     export TERM=xterm-color
 
-            if self.is_theme('white'):
-                # White theme: black ==> white
-                curses.init_pair(1, -1, -1)
-            else:
-                curses.init_pair(1, -1, -1)
+            curses.init_pair(1, -1, -1)
             if self.args.disable_bg:
                 curses.init_pair(2, curses.COLOR_RED, -1)
                 curses.init_pair(3, curses.COLOR_GREEN, -1)
@@ -300,10 +286,7 @@ class _GlancesCurses(object):
                     try:
                         curses.init_pair(i + 9, colors_list[i], -1)
                     except Exception:
-                        if self.is_theme('white'):
-                            curses.init_pair(i + 9, -1, -1)
-                        else:
-                            curses.init_pair(i + 9, -1, -1)
+                        curses.init_pair(i + 9, -1, -1)
                 self.filter_color = curses.color_pair(9) | A_BOLD
                 self.selected_color = curses.color_pair(10) | A_BOLD
                 # Define separator line style
@@ -455,8 +438,6 @@ class _GlancesCurses(object):
         else:
             self.enable_top()
 
-    def _handle_theme(self):
-        self._init_colors()
 
     def _handle_process_extended(self):
         self.args.enable_process_extended = not self.args.enable_process_extended
