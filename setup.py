@@ -63,7 +63,7 @@ def get_install_extras_require():
                    'ibmcloudant', 'influxdb>=1.0.0', 'influxdb-client', 'pymongo',
                    'kafka-python', 'pika', 'paho-mqtt', 'potsdb', 'prometheus_client',
                    'pyzmq', 'statsd'],
-        'gpu': ['py3nvml'],
+        'gpu': ['nvidia-ml-py'],
         'graph': ['pygal'],
         'ip': ['netifaces'],
         'raid': ['pymdstat'],
