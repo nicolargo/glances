@@ -13,9 +13,8 @@ from glances.globals import nativestr, to_fahrenheit
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
-# In Glances 3.1.4 or higher, we use the py3nvml lib (see issue #1523)
 try:
-    import py3nvml.py3nvml as pynvml
+    import pynvml
 except Exception as e:
     import_error_tag = True
     # Display debug message if import KeyError
