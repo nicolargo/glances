@@ -313,11 +313,6 @@ display FS free space instead of used
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-\-theme\-white
-optimize display colors for a white background
-.UNINDENT
-.INDENT 0.0
-.TP
 .B \-\-disable\-check\-update
 disable online Glances version check
 .UNINDENT
@@ -503,9 +498,6 @@ Enable/disable the top menu (QuickLook, CPU, MEM, SWAP, and LOAD)
 .B \fB6\fP
 Enable/disable mean GPU mode
 .TP
-.B \fB9\fP
-Switch UI theme between black and white
-.TP
 .B \fB/\fP
 Switch between process command line or command name
 .TP
@@ -632,8 +624,6 @@ than a second one concerning the user interface:
 .nf
 .ft C
 [outputs]
-# Theme name (for the moment only for the Curses interface: black or white)
-curse_theme=black
 # Separator in the Curses and WebUI interface (between top and others plugins)
 separator=True
 # Set the the Curses and WebUI interface left menu plugin list (comma\-separated)

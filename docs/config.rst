@@ -59,8 +59,6 @@ than a second one concerning the user interface:
 .. code-block:: ini
 
     [outputs]
-    # Theme name (for the moment only for the Curses interface: black or white)
-    curse_theme=black
     # Separator in the Curses and WebUI interface (between top and others plugins)
     separator=True
     # Set the the Curses and WebUI interface left menu plugin list (comma-separated)
