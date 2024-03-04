@@ -28,7 +28,14 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Install pip install build tools
+      - name: Upgrade pip
+        run: >-
+          python -m
+          pip install
+          --upgrade
+          pip
+
+      - name: Install build tools
         run: >-
           python -m
           pip install

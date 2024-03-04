@@ -52,6 +52,8 @@ RUN apk add --no-cache \
   libffi-dev \
   openssl-dev
 
+RUN python${PYTHON_VERSION} -m pip --version
+
 RUN python${PYTHON_VERSION} -m venv --without-pip venv
 
 COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-requirements.txt ./
