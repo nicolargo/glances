@@ -105,7 +105,7 @@ Optional dependencies:
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces`` (for the IP plugin)
 - ``orjson`` (fast JSON library, used under the hood by FastAPI)
-- ``py3nvml`` (for the GPU plugin)
+- ``nvidia-ml-py`` (for the GPU plugin)
 - ``pycouchdb`` (for the CouchDB export module)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
 - ``podman`` (for the Containers Podman monitoring support)

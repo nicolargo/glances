@@ -4,7 +4,8 @@ GPU
 ===
 
 .. note::
-    You need to install the `py3nvml`_ library on your system.
+    You need to install the `nvidia-ml-py`_ library on your system.
+    Or `py3nvml`_ for Glances 3.4.0.2 or lower.
     Or `nvidia-ml-py3`_ for Glances 3.1.3 or lower.
 
 The GPU stats are shown as a percentage of value and for the configured
@@ -49,5 +50,6 @@ GPU (PROC/MEM) Status
 ``>90%``       ``CRITICAL``
 ============== ============
 
+.. _nvidia-ml-py: https://pypi.org/project/nvidia-ml-py/
 .. _py3nvml: https://pypi.org/project/py3nvml/
 .. _nvidia-ml-py3: https://pypi.org/project/nvidia-ml-py3/
