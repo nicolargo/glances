@@ -291,7 +291,7 @@ class _GlancesCurses(object):
                 self.selected_color = curses.color_pair(10) | A_BOLD
                 # Define separator line style
                 curses.init_color(11, 500, 500, 500)
-                curses.init_pair(11, -1, -1)
+                curses.init_pair(11, curses.COLOR_BLACK, -1)
                 self.separator = curses.color_pair(11)
 
         else:
