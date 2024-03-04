@@ -525,10 +525,8 @@ Examples of use:
         )
         parser.add_argument(
             '--theme-white',
-            action='store_true',
             default=False,
-            dest='theme_white',
-            help='optimize display colors for a white background',
+            help='(deprecated, no effect)',
         )
         # Globals options
         parser.add_argument(
