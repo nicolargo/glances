@@ -52,7 +52,8 @@ RUN apk add --no-cache \
   libffi-dev \
   openssl-dev
 
-RUN python${PYTHON_VERSION} -m pip --version
+RUN python${PYTHON_VERSION} -m venv venv-build
+RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --upgrade pip
 
 RUN python${PYTHON_VERSION} -m venv --without-pip venv
 
@@ -62,7 +63,7 @@ COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-re
 # BUILD: Install the minimal image deps
 FROM build as buildMinimal
 
-RUN python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
+RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
     # Note: requirements.txt is include by dep
     -r docker-requirements.txt \
     -r webui-requirements.txt
@@ -76,7 +77,7 @@ ARG CASS_DRIVER_NO_CYTHON=1
 # See issue 2368
 ARG CARGO_NET_GIT_FETCH_WITH_CLI=true
 
-RUN python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
+RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
     # Note: requirements.txt is include by dep
     -r optional-requirements.txt
 
@@ -122,4 +123,4 @@ FROM full as dev
 
 # Forward access and error logs to Docker's log collector
 RUN ln -sf /dev/stdout /tmp/glances-root.log \
-    && ln -sf /dev/stderr /var/log/error.log \
+    && ln -sf /dev/stderr /var/log/error.log
