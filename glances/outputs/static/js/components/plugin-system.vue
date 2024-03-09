@@ -26,6 +26,9 @@ export default {
         };
     },
     computed: {
+        config() {
+            return this.store.config || {};
+        },
         stats() {
             return this.data.stats['system'];
         },
@@ -49,6 +52,14 @@ export default {
         },
         isDisconnected() {
             return this.store.status === 'FAILURE';
+        },
+        systemInfoMsg() {
+            return this.config.system !== undefined
+                ? this.config.system.system_info_msg
+                : undefined;
+        },
+        isSystemInfoMsg() {
+            return this.systemInfoMsg !== undefined;
         }
     }
 };

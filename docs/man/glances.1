@@ -27,7 +27,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "GLANCES" "1" "Feb 11, 2024" "4.0.0_beta01" "Glances"
+.TH "GLANCES" "1" "Mar 09, 2024" "4.0.0_beta01" "Glances"
 .SH NAME
 glances \- An eye on your system
 .SH SYNOPSIS
@@ -313,6 +313,11 @@ display FS free space instead of used
 .UNINDENT
 .INDENT 0.0
 .TP
+.B \-\-theme\-white
+optimize display colors for a white background
+.UNINDENT
+.INDENT 0.0
+.TP
 .B \-\-disable\-check\-update
 disable online Glances version check
 .UNINDENT
@@ -497,6 +502,9 @@ Enable/disable the top menu (QuickLook, CPU, MEM, SWAP, and LOAD)
 .TP
 .B \fB6\fP
 Enable/disable mean GPU mode
+.TP
+.B \fB9\fP
+Switch UI theme between black and white
 .TP
 .B \fB/\fP
 Switch between process command line or command name
