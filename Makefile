@@ -105,7 +105,9 @@ semgrep: ## Run semgrep to find bugs and enforce code standards
 	./venv-dev/bin/semgrep scan --config=auto
 
 profiling: ## How to start the profiling of the Glances software
-	@echo "Please complete and run: sudo ./venv-dev/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s --pid <GLANCES PID>"
+	@echo "Start a Glances instance and get its PID"
+	@echo "Run: sudo ./venv-dev/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s --pid <GLANCES PID>"
+	@echo "Open the SVG file (./docs/_static/glances-flame.svg) with a Web browser"
 
 trace-malloc: ## Trace the malloc() calls
 	@echo "Malloc test is running, please wait ~30 secondes..."
