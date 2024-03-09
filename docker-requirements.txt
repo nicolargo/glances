@@ -6,5 +6,6 @@ podman; python_version >= "3.6"
 packaging; python_version >= "3.7"
 python-dateutil
 six
-urllib3
+#urllib3
+urllib3<2.0
 requests
