@@ -17,6 +17,11 @@ ARG PYTHON_VERSION=3.11
 # Base layer to be used for building dependencies and the release images
 FROM alpine:${IMAGE_VERSION} as base
 
+# Upgrade the system
+RUN apk update \
+  && apk upgrade --no-cache
+
+# Install the minimal set of packages
 RUN apk add --no-cache \
   python3 \
   curl \

@@ -36,17 +36,21 @@ FROM base as build
 ARG PYTHON_VERSION
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Install build-time dependencies
+# Upgrade the system
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
+  && apt-get upgrade -y
+
+# Install build-time dependencies
+RUN apt-get install -y --no-install-recommends \
     python3-dev \
     python3-venv \
     python3-pip \
     python3-wheel \
     libzmq5 \
     musl-dev \
-    build-essential \
-  && apt-get clean \
+    build-essential
+
+RUN apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
 RUN python${PYTHON_VERSION} -m venv --without-pip venv
