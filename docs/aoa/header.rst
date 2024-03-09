@@ -11,6 +11,16 @@ Additionally, on GNU/Linux, it also shows the kernel version.
 
 In client mode, the server connection status is also displayed.
 
+The system information message can be configured in the configuration file
+(for the moment, it only work for the Curses interface):
+
+.. code-block:: ini
+    [system]
+    system_info_msg=({linux_distro} {platform} / {os_name} {os_version})
+
+**NOTE:** Available information are: hostname, os_name, os_version, os_arch,
+linux_distro, platform (use mustache syntax).
+
 It is possible to disable or define time interval to be used for refreshing the
 public IP address (default is 300 seconds) from the configuration
 file under the ``[ip]`` section:
