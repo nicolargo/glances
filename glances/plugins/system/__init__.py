@@ -14,6 +14,7 @@ import platform
 import re
 from io import open
 
+from glances.logger import logger
 from glances.globals import iteritems
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -68,7 +69,7 @@ snmp_oid = {
 # http://msdn.microsoft.com/en-us/library/windows/desktop/ms724832%28v=vs.85%29.aspx
 snmp_to_human = {
     'windows': {
-        'Windows Version 10.0': 'Windows 10 or Server 2016',
+        'Windows Version 10.0': 'Windows 10|11 or Server 2016|2019|2022',
         'Windows Version 6.3': 'Windows 8.1 or Server 2012R2',
         'Windows Version 6.2': 'Windows 8 or Server 2012',
         'Windows Version 6.1': 'Windows 7 or Server 2008R2',
@@ -118,7 +119,8 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config,
+            args=args,
+            config=config,
             fields_description=fields_description
         )
 
@@ -128,6 +130,9 @@ class PluginModel(GlancesPluginModel):
         # Set default rate to 60 seconds
         if self.get_refresh():
             self.set_refresh(60)
+
+        # Get the default message (if defined)
+        self.system_info_msg = config.get_value('system', 'system_info_msg')
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
@@ -222,16 +227,16 @@ class PluginModel(GlancesPluginModel):
         # Hostname is mandatory
         msg = self.stats['hostname']
         ret.append(self.curse_add_line(msg, "TITLE"))
+
         # System info
-        if self.stats['os_name'] == "Linux" and self.stats['linux_distro']:
-            msg = ' ({} {} / {} {})'.format(
-                self.stats['linux_distro'], self.stats['platform'], self.stats['os_name'], self.stats['os_version']
-            )
+        if self.system_info_msg:
+            msg = ' ' + self.system_info_msg.format(**self.stats)
+        elif self.stats['os_name'] == "Linux" and 'linux_distro' in self.stats:
+            msg = ' ({linux_distro} {platform} / {os_name} {os_version})'.format(**self.stats)
+        elif 'os_version' in self.stats and 'platform' in self.stats:
+            msg = ' ({os_name} {os_version} {platform})'.format(**self.stats)
         else:
-            try:
-                msg = ' ({} {} {})'.format(self.stats['os_name'], self.stats['os_version'], self.stats['platform'])
-            except Exception:
-                msg = ' ({})'.format(self.stats['os_name'])
+            msg = ' ({os_name})'.format(**self.stats)
         ret.append(self.curse_add_line(msg, optional=True))
 
         # Return the message with decoration
