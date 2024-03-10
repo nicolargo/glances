@@ -41,5 +41,5 @@ jobs:
         git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
         git config --global user.email "username@users.noreply.github.com"
         git add glances/outputs/static
-        git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+        /bin/bash -c "git commit -m '${{ env.CI_COMMIT_MESSAGE }}' || true"
         git push
