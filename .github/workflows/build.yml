@@ -2,7 +2,7 @@
 # - Docker Hub
 # - Pypi
 
-name: CI
+name: build
 
 env:
   DEFAULT_DOCKER_IMAGE: nicolargo/glances

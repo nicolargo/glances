@@ -1,0 +1,19 @@
+name: ci
+
+on:
+    pull_request:
+      branches: [ develop ]
+    push:
+      branches: [ master, develop ]
+      tags:
+        - v*
+
+jobs:
+    quality:
+    test:
+      needs: quality
+    webui:
+      if: ${{ always() }}
+      needs: [quality, test]
+    build:
+      needs: [quality, test, webui]

@@ -2,7 +2,7 @@
 
 name: test
 
-on: [push]
+# on: [push]
 
 jobs:
   test-linux:
