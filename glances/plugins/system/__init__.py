@@ -50,7 +50,7 @@ fields_description = {
     },
     'hr_name': {
         'description': 'Human readable operating sytem name',
-    },
+    }
 }
 
 # SNMP OID
@@ -173,12 +173,18 @@ class PluginModel(GlancesPluginModel):
                     stats['platform'] = '64bit'
             else:
                 stats['os_version'] = ""
+
             # Add human readable name
-            if stats['os_name'] == "Linux":
-                stats['hr_name'] = stats['linux_distro']
+            if self.system_info_msg:
+                try:
+                    stats['hr_name'] = self.system_info_msg.format(**stats)
+                except KeyError as e:
+                    logger.debug(f'Error in system_info_msg ({e})')
+                    stats['hr_name'] = '{os_name} {os_version} {platform}'.format(**stats)
+            elif stats['os_name'] == "Linux":
+                stats['hr_name'] = '{linux_distro} {platform} / {os_name} {os_version}'.format(**stats)
             else:
-                stats['hr_name'] = '{} {}'.format(stats['os_name'], stats['os_version'])
-            stats['hr_name'] += ' {}'.format(stats['platform'])
+                stats['hr_name'] = '{os_name} {os_version} {platform}'.format(**stats)
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -229,14 +235,7 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         # System info
-        if self.system_info_msg:
-            msg = ' ' + self.system_info_msg.format(**self.stats)
-        elif self.stats['os_name'] == "Linux" and 'linux_distro' in self.stats:
-            msg = ' ({linux_distro} {platform} / {os_name} {os_version})'.format(**self.stats)
-        elif 'os_version' in self.stats and 'platform' in self.stats:
-            msg = ' ({os_name} {os_version} {platform})'.format(**self.stats)
-        else:
-            msg = ' ({os_name})'.format(**self.stats)
+        msg = ' ' + self.stats['hr_name']
         ret.append(self.curse_add_line(msg, optional=True))
 
         # Return the message with decoration
