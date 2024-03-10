@@ -26,6 +26,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+        cache-dependency-path: ./glances/outputs/static/package-lock.json
     - name: Build Glances WebUI
       working-directory: ./glances/outputs/static
       run: |
@@ -33,7 +34,7 @@ jobs:
         npm ci
         npm run build
     - name: Commit and push WebUI
-      env: 
+      env:
         CI_COMMIT_MESSAGE: Continuous Integration Build Artifacts
         CI_COMMIT_AUTHOR: Continuous Integration
       run: |
