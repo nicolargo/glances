@@ -10,10 +10,14 @@ on:
 
 jobs:
     quality:
+      uses: ./.github/workflows/quality
     test:
+      uses: ./.github/workflows/test
       needs: quality
     webui:
       if: ${{ always() }}
+      uses: ./.github/workflows/webui
       needs: [quality, test]
     build:
+      uses: ./.github/workflows/build
       needs: [quality, test, webui]
