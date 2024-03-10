@@ -13,12 +13,13 @@ env:
   DOCKER_PLATFORMS_UBUNTU: linux/amd64,linux/arm64
 
 on:
-  pull_request:
-    branches: [ develop ]
-  push:
-    branches: [ master, develop ]
-    tags:
-      - v*
+  workflow_call:
+  # pull_request:
+  #   branches: [ develop ]
+  # push:
+  #   branches: [ master, develop ]
+  #   tags:
+  #     - v*
 
 jobs:
 

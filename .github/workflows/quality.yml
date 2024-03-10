@@ -12,13 +12,14 @@
 name: quality
 
 on:
-  push:
-    branches: [ develop ]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ develop ]
-  schedule:
-    - cron: '20 20 * * 0'
+  workflow_call:
+  # push:
+  #   branches: [ develop ]
+  # pull_request:
+  #   # The branches below must be a subset of the branches above
+  #   branches: [ develop ]
+  # schedule:
+  #   - cron: '20 20 * * 0'
 
 jobs:
   analyze:

@@ -4,10 +4,11 @@
 name: webui
 
 on:
-  push:
-    branches: [ "develop" ]
-  pull_request:
-    branches: [ "develop" ]
+  workflow_call:
+  # push:
+  #   branches: [ "develop" ]
+  # pull_request:
+  #   branches: [ "develop" ]
 
 jobs:
   build:
