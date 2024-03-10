@@ -194,6 +194,14 @@ body {
     text-overflow: ellipsis;
 }
 
+#system > span:nth-child(1) {
+    padding-left: 0px;
+}
+
+#system span {
+    padding-left: 10px;
+}
+
 #ip {
     padding-left: 10px;
 }

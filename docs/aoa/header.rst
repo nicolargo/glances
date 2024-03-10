@@ -16,10 +16,9 @@ The system information message can be configured in the configuration file
 
 .. code-block:: ini
     [system]
-    system_info_msg=({linux_distro} {platform} / {os_name} {os_version})
-
-**NOTE:** Available information are: hostname, os_name, os_version, os_arch,
-linux_distro, platform (use mustache syntax).
+    # System information to display (a string where {key} will be replaced by the value) in the Curses interface
+    # Available dynamics information are: hostname, os_name, os_version, os_arch, linux_distro, platform
+    system_info_msg= | My {os_name} system |
 
 It is possible to disable or define time interval to be used for refreshing the
 public IP address (default is 300 seconds) from the configuration
