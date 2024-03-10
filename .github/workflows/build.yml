@@ -14,6 +14,19 @@ env:
 
 on:
   workflow_call:
+    secrets:
+      TEST_PYPI_API_TOKEN:
+        description: 'Test PyPI API token'
+        required: true
+      PYPI_API_TOKEN:
+        description: 'PyPI API token'
+        required: true
+      DOCKER_USERNAME:
+        description: 'Docker Hub username'
+        required: true
+      DOCKER_TOKEN:
+        description: 'Docker Hub token'
+        required: true
   # pull_request:
   #   branches: [ develop ]
   # push:
