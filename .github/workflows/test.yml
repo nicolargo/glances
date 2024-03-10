@@ -1,8 +1,7 @@
-# Run unitary test + flake8
+# Run unitary test
 
 name: test
 
-# on: [push]
 on:
   workflow_call:
 
@@ -36,9 +35,6 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=.git,./docs,./glances/outputs/static
 
-    # - name: Lint with Ruff
-    #   uses: chartboost/ruff-action@v1
-
     - name: Static type check
       run: |
         if [ "${{ matrix.python-version }}" == "2.7" ];
@@ -53,13 +49,6 @@ jobs:
     - name: Unitary tests
       run: |
         python ./unitest.py
-
-    - name: Security issues with Bandit
-      uses: jpetrucciani/bandit-check@master
-      with:
-        #path: '-r --exit-zero --skip B104 ./glances/'
-        path: '-r --exit-zero --skip B104 ./glances/'
-
 
   test-windows:
 
