@@ -1,6 +1,6 @@
 # This pipeline aims at building Glances for the following targets:
-# - Docker Hub
 # - Pypi
+# - Docker Hub
 
 name: build
 
@@ -27,12 +27,6 @@ on:
       DOCKER_TOKEN:
         description: 'Docker Hub token'
         required: true
-  # pull_request:
-  #   branches: [ develop ]
-  # push:
-  #   branches: [ master, develop ]
-  #   tags:
-  #     - v*
 
 jobs:
 
