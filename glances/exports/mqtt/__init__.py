@@ -38,7 +38,7 @@ class Export(GlancesExport):
 
         # Load the MQTT configuration file
         self.export_enable = self.load_conf(
-            'mqtt', mandatories=['host', 'password'], options=['port', 'user', 'topic', 'tls', 'topic_structure']
+            'mqtt', mandatories=['host', 'password'], options=['port', 'user', 'topic', 'tls', 'topic_structure', 'callback_api_version']
         )
         if not self.export_enable:
             exit('Missing MQTT config')
@@ -61,11 +61,14 @@ class Export(GlancesExport):
             exit("MQTT client initialization failed")
 
     def init(self):
+        # Get the current callback api version
+        self.callback_api_version = int(self.callback_api_version) or 2
+
         """Init the connection to the MQTT server."""
         if not self.export_enable:
             return None
         try:
-            client = paho.Client(callback_api_version=2, client_id='glances_' + self.hostname, clean_session=False)
+            client = paho.Client(self.callback_api_version, client_id='glances_' + self.hostname, clean_session=False)
             client.username_pw_set(username=self.user, password=self.password)
             if self.tls:
                 client.tls_set(certifi.where())
