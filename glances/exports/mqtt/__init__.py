@@ -65,7 +65,7 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
         try:
-            client = paho.Client(client_id='glances_' + self.hostname, clean_session=False)
+            client = paho.Client(callback_api_version=2, client_id='glances_' + self.hostname, clean_session=False)
             client.username_pw_set(username=self.user, password=self.password)
             if self.tls:
                 client.tls_set(certifi.where())
