@@ -38,13 +38,17 @@ class Export(GlancesExport):
 
         # Load the MQTT configuration file
         self.export_enable = self.load_conf(
-            'mqtt', mandatories=['host', 'password'], options=['port', 'user', 'topic', 'tls', 'topic_structure']
+            'mqtt', mandatories=['host', 'password'], options=['port', 'user', 'hostname', 'topic', 'tls', 'topic_structure']
         )
         if not self.export_enable:
             exit('Missing MQTT config')
 
         # Get the current hostname
-        self.hostname = socket.gethostname()
+        self.hostname = (self.hostname or socket.gethostname())
+        if self.hostname in ['NONE']:
+            self.hostname = socket.gethostname()
+        else:
+            self.hostname = self.hostname
         self.port = int(self.port) or 8883
         self.topic = self.topic or 'glances'
         self.user = self.user or 'glances'
