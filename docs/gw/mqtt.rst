@@ -11,12 +11,15 @@ following:
 
     [mqtt]
     host=localhost
+    # Overwrite device name in the topic (see detail in PR#2701)
+    #devicename=localhost
     port=883
     tls=true
     user=glances
     password=glances
     topic=glances
     topic_structure=per-metric
+    callback_api_version=2
 
 and run Glances with:
 

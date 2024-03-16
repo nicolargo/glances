@@ -38,13 +38,13 @@ class Export(GlancesExport):
 
         # Load the MQTT configuration file
         self.export_enable = self.load_conf(
-            'mqtt', mandatories=['host', 'password'], options=['port', 'user', 'topic', 'tls', 'topic_structure', 'callback_api_version']
+            'mqtt', mandatories=['host', 'password'], options=['port', 'devicename', 'user', 'topic', 'tls', 'topic_structure', 'callback_api_version']
         )
         if not self.export_enable:
             exit('Missing MQTT config')
 
         # Get the current hostname
-        self.hostname = socket.gethostname()
+        self.devicename = self.devicename or socket.gethostname()
         self.port = int(self.port) or 8883
         self.topic = self.topic or 'glances'
         self.user = self.user or 'glances'
@@ -68,7 +68,7 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
         try:
-            client = paho.Client(self.callback_api_version, client_id='glances_' + self.hostname, clean_session=False)
+            client = paho.Client(client_id='glances_' + self.devicename, clean_session=False)
             client.username_pw_set(username=self.user, password=self.password)
             if self.tls:
                 client.tls_set(certifi.where())
@@ -92,7 +92,7 @@ class Export(GlancesExport):
             for sensor, value in zip(columns, points):
                 try:
                     sensor = [whitelisted(name) for name in sensor.split('.')]
-                    to_export = [self.topic, self.hostname, name]
+                    to_export = [self.topic, self.devicename, name]
                     to_export.extend(sensor)
                     topic = '/'.join(to_export)
 
@@ -101,7 +101,7 @@ class Export(GlancesExport):
                     logger.error("Can not export stats to MQTT server (%s)" % e)
         elif self.topic_structure == 'per-plugin':
             try:
-                topic = '/'.join([self.topic, self.hostname, name])
+                topic = '/'.join([self.topic, self.devicename, name])
                 sensor_values = dict(zip(columns, points))
 
                 # Build the value to output
