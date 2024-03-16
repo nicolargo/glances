@@ -18,3 +18,20 @@ Each event message displays the following information:
 3. alert name
 4. {min,avg,max} values or number of running processes for monitored
    processes list alerts
+
+The configuration should be done in the ``[alert]`` section of the
+Glances configuration file:
+
+.. code-block:: ini
+
+   [alert]
+   disable=False
+   # Maximum number of events to display (default is 10 events)
+   max_events=10
+   # Minimum duration for an event to be taken into account (default is 6 seconds)
+   min_duration=6
+   # Minimum time between two events of the same type (default is 6 seconds)
+   # This is used to avoid too many alerts for the same event
+   # Events will be merged
+   min_interval=6
+

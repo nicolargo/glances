@@ -41,10 +41,21 @@ class GlancesEvents(object):
         }
     """
 
-    def __init__(self, max_events=10):
-        """Init the events class."""
+    def __init__(self, max_events=10, min_duration=6, min_interval=6):
+        """Init the events class.
+
+        max_events: maximum size of the events list
+        min_duration: events duration should be > min_duration to be taken into account (in seconds)
+        min_interval: minimal interval between same kind of alert (in seconds)
+        """
         # Maximum size of the events list
         self.set_max_events(max_events)
+
+        # Minimal event duraton time (in seconds)
+        self.set_min_duration(min_duration)
+
+        # Minimal interval between same kind of alert (in seconds)
+        self.set_min_interval(min_interval)
 
         # Init the logs list
         self.events_list = []
@@ -52,6 +63,14 @@ class GlancesEvents(object):
     def set_max_events(self, max_events):
         """Set the maximum size of the events list."""
         self.max_events = max_events
+
+    def set_min_duration(self, min_duration):
+        """Set the minimal event duration time (in seconds)."""
+        self.min_duration = min_duration
+
+    def set_min_interval(self, min_interval):
+        """Set the minimum interval between same kind of alert (in seconds)."""
+        self.min_interval = min_interval
 
     def get(self):
         """Return the raw events list."""
@@ -61,16 +80,16 @@ class GlancesEvents(object):
         """Return the number of events in the logs list."""
         return self.events_list.__len__()
 
-    def __event_exist(self, event_type):
-        """Return the event position, if it exists.
-
-        An event exist if:
-        * end is < 0
-        * type is matching
+    def __event_exist(self, event_time, event_type):
+        """Return the event position in the events list if:
+        type is matching
+        and (end is < 0 or event_time - end < min_interval)
         Return -1 if the item is not found.
         """
         for i in range(self.len()):
-            if self.events_list[i]['end'] < 0 and self.events_list[i]['type'] == event_type:
+            if ((self.events_list[i]['end'] < 0) or
+                (event_time - self.events_list[i]['end'] < self.min_interval)) and \
+               self.events_list[i]['type'] == event_type:
                 return i
         return -1
 
@@ -98,27 +117,34 @@ class GlancesEvents(object):
         if glances_processes.auto_sort:
             glances_processes.set_sort_key('auto')
 
-    def add(self, event_state, event_type, event_value, proc_list=None, proc_desc="", peak_time=6):
+    def add(self, event_state, event_type, event_value, proc_list=None, proc_desc="", min_duration=None):
         """Add a new item to the logs list.
+
+        event_state = "OK|CAREFUL|WARNING|CRITICAL"
+        event_type = "CPU|LOAD|MEM|..."
+        event_value = value
+        proc_list = list of processes
+        proc_desc = processes description
 
         If 'event' is a 'new one', add it at the beginning of the list.
         If 'event' is not a 'new one', update the list .
-        If event < peak_time then the alert is not set.
+        When finished if event duration < peak_time then the alert is not set.
         """
+        event_time = time.mktime(datetime.now().timetuple())
         proc_list = proc_list or glances_processes.get_list()
 
         # Add or update the log
-        event_index = self.__event_exist(event_type)
+        event_index = self.__event_exist(event_time, event_type)
         if event_index < 0:
             # Event did not exist, add it
-            self._create_event(event_state, event_type, event_value, proc_desc)
+            self._create_event(event_time, event_state, event_type, event_value, proc_desc)
         else:
             # Event exist, update it
-            self._update_event(event_index, event_state, event_type, event_value, proc_list, proc_desc, peak_time)
+            self._update_event(event_time, event_index, event_state, event_type, event_value, proc_list, proc_desc)
 
         return self.len()
 
-    def _create_event(self, event_state, event_type, event_value, proc_desc):
+    def _create_event(self, event_time, event_state, event_type, event_value, proc_desc):
         """Add a new item in the log list.
 
         Item is added only if the criticality (event_state) is WARNING or CRITICAL.
@@ -131,7 +157,7 @@ class GlancesEvents(object):
             # Time is stored in Epoch format
             # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
             item = {
-                "begin": time.mktime(datetime.now().timetuple()),
+                "begin": event_time,
                 "end": -1,
                 "state": event_state,
                 "type": event_type,
@@ -155,22 +181,27 @@ class GlancesEvents(object):
         else:
             return False
 
-    def _update_event(self, event_index, event_state, event_type, event_value, proc_list, proc_desc, peak_time):
+    def _update_event(self, event_time, event_index, event_state, event_type, event_value, proc_list, proc_desc):
         """Update an event in the list"""
         if event_state == "OK" or event_state == "CAREFUL":
             # Reset the automatic process sort key
             self.reset_process_sort()
 
             # Set the end of the events
-            end_time = time.mktime(datetime.now().timetuple())
-            if end_time - self.events_list[event_index]['begin'] > peak_time:
-                # If event is > peak_time seconds
+            end_time = event_time
+            if end_time - self.events_list[event_index]['begin'] >= self.min_duration:
+                # If event is >= min_duration seconds
                 self.events_list[event_index]['end'] = end_time
             else:
-                # If event <= peak_time seconds, ignore
+                # If event < min_duration seconds, ignore
                 self.events_list.remove(self.events_list[event_index])
         else:
             # Update the item
+
+            # It's an ogoing event, update the end time
+            self.events_list[event_index]['end'] = -1
+
+            # Set process sort key
             self.set_process_sort(event_type)
 
             # State
