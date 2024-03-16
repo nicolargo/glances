@@ -258,6 +258,8 @@ class PluginModel(GlancesPluginModel):
         # Set the maximum number of events to display
         if config is not None and (config.has_section('alert') or config.has_section('alerts')):
             glances_events.set_max_events(config.get_int_value('alert', 'max_events', default=10))
+            glances_events.set_min_duration(config.get_int_value('alert', 'min_duration', default=6))
+            glances_events.set_min_interval(config.get_int_value('alert', 'min_interval', default=6))
 
     def update(self):
         """Nothing to do here. Just return the global glances_log."""

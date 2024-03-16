@@ -15,8 +15,8 @@ import unittest
 import sys
 
 # Check Python version
-if sys.version_info < (3, 4):
-    print('Glances requires at least Python 3.4 to run.')
+if sys.version_info < (3, 8):
+    print('Glances requires at least Python 3.8 to run.')
     sys.exit(1)
 
 from glances.main import GlancesMain
@@ -32,6 +32,7 @@ from glances.thresholds import GlancesThresholds
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.programs import processes_to_programs
 from glances.secure import secure_popen
+from glances.events import GlancesEvents
 
 # Global variables
 # =================
@@ -292,6 +293,57 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(string_value_to_float('25.9'), 25.9)
         self.assertEqual(string_value_to_float('12'), 12)
         self.assertEqual(string_value_to_float('--'), None)
+
+    def test_019_events(self):
+        """Test events class"""
+        print('INFO: [TEST_019] Test events')
+        # Init events
+        events = GlancesEvents(max_events=5, min_duration=1, min_interval=3)
+        # Minimal event duration not reached
+        events.add('WARNING', 'LOAD', 4)
+        events.add('CRITICAL', 'LOAD', 5)
+        events.add('OK', 'LOAD', 1)
+        self.assertEqual(len(events.get()), 0)
+        # Minimal event duration LOAD reached
+        events.add('WARNING', 'LOAD', 4)
+        time.sleep(1)
+        events.add('CRITICAL', 'LOAD', 5)
+        time.sleep(1)
+        events.add('OK', 'LOAD', 1)
+        self.assertEqual(len(events.get()), 1)
+        self.assertEqual(events.get()[0]['type'], 'LOAD')
+        self.assertEqual(events.get()[0]['state'], 'CRITICAL')
+        self.assertEqual(events.get()[0]['max'], 5)
+        # Minimal event duration CPU reached
+        events.add('WARNING', 'CPU', 60)
+        time.sleep(1)
+        events.add('WARNING', 'CPU', 70)
+        time.sleep(1)
+        events.add('OK', 'CPU', 10)
+        self.assertEqual(len(events.get()), 2)
+        self.assertEqual(events.get()[0]['type'], 'CPU')
+        self.assertEqual(events.get()[0]['state'], 'WARNING')
+        self.assertEqual(events.get()[0]['min'], 60)
+        self.assertEqual(events.get()[0]['max'], 70)
+        self.assertEqual(events.get()[0]['count'], 2)
+        # Minimal event duration CPU reached (again)
+        # but time between two events (min_interval) is too short
+        # a merge will be done
+        time.sleep(0.5)
+        events.add('WARNING', 'CPU', 60)
+        time.sleep(1)
+        events.add('WARNING', 'CPU', 80)
+        time.sleep(1)
+        events.add('OK', 'CPU', 10)
+        self.assertEqual(len(events.get()), 2)
+        self.assertEqual(events.get()[0]['type'], 'CPU')
+        self.assertEqual(events.get()[0]['state'], 'WARNING')
+        self.assertEqual(events.get()[0]['min'], 60)
+        self.assertEqual(events.get()[0]['max'], 80)
+        self.assertEqual(events.get()[0]['count'], 4)
+        # Clean WARNING events
+        events.clean()
+        self.assertEqual(len(events.get()), 1)
 
     def test_094_thresholds(self):
         """Test thresholds classes"""
