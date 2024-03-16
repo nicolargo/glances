@@ -404,7 +404,7 @@ def folder_size(path, errno=0):
                     ret_size += f.stat().st_size
                 except OSError as e:
                     ret_err = e.errno
-    except OSError as e:
+    except (OSError, PermissionError) as e:
         return 0, e.errno
     else:
         return ret_size, ret_err
