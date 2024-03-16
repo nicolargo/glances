@@ -15,13 +15,15 @@ jobs:
       uses: ./.github/workflows/test.yml
       needs: [quality]
     webui:
-      if: ${{ always() }}
+      if: github.event_name != 'pull_request'
       uses: ./.github/workflows/webui.yml
       needs: [quality, test]
     cyber:
+      if: github.event_name != 'pull_request'
       uses: ./.github/workflows/cyber.yml
       needs: [quality, test, webui]
     build:
+      if: github.event_name != 'pull_request'
       uses: ./.github/workflows/build.yml
       secrets:
         TEST_PYPI_API_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
