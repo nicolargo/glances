@@ -32,7 +32,7 @@ from glances.thresholds import GlancesThresholds
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.programs import processes_to_programs
 from glances.secure import secure_popen
-from glances.events import GlancesEvents
+from glances.events_list import GlancesEventsList
 
 # Global variables
 # =================
@@ -298,7 +298,7 @@ class TestGlances(unittest.TestCase):
         """Test events class"""
         print('INFO: [TEST_019] Test events')
         # Init events
-        events = GlancesEvents(max_events=5, min_duration=1, min_interval=3)
+        events = GlancesEventsList(max_events=5, min_duration=1, min_interval=3)
         # Minimal event duration not reached
         events.add('WARNING', 'LOAD', 4)
         events.add('CRITICAL', 'LOAD', 5)
