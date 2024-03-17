@@ -53,7 +53,6 @@ export default {
                 alert.avg = alertalertStats.avg;
                 alert.max = alertalertStats.max;
                 alert.top = alertalertStats.top.join(', ');
-                alert.global = alertalertStats.global;
 
                 if (!alert.ongoing) {
                     const duration = alert.end - alert.begin;

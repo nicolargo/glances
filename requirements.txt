@@ -3,3 +3,4 @@ defusedxml
 packaging
 ujson>=5.4.0
 pytz
+pydantic

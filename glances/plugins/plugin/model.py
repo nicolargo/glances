@@ -20,7 +20,7 @@ from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr, jso
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
-from glances.events import glances_events
+from glances.events_list import glances_events
 from glances.thresholds import glances_thresholds
 from glances.timer import Counter, Timer, getTimeSinceLastUpdate
 from glances.outputs.glances_unicode import unicode_message
