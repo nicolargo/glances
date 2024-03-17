@@ -79,9 +79,12 @@ Requirements
 ============
 
 - ``python>=3.8`` (use Glances 3.4.x for lower Python version)
-- ``psutil>=5.3.0`` (better with latest version)
+- ``psutil`` (better with latest version)
 - ``defusedxml`` (in order to monkey patch xmlrpc)
+- ``packaging`` (for the version comparison)
 - ``ujson`` (an optimized alternative to the standard json module)
+- ``pytz`` (for the timezone support)
+- ``pydantic`` (for the data validation support)
 
 *Note for Python 2 users*
 

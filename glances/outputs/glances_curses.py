@@ -14,7 +14,7 @@ import sys
 
 from glances.globals import MACOS, WINDOWS, nativestr, u, itervalues, enable, disable
 from glances.logger import logger
-from glances.events import glances_events
+from glances.events_list import glances_events
 from glances.processes import glances_processes, sort_processes_key_list
 from glances.outputs.glances_unicode import unicode_message
 from glances.timer import Timer
