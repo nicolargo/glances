@@ -12,6 +12,7 @@
 import time
 from datetime import datetime
 
+from glances.logger import logger
 from glances.processes import glances_processes, sort_stats
 from glances.thresholds import glances_thresholds
 
@@ -336,42 +337,34 @@ class GlancesEvents(object):
     def _update_event(self, event_time, event_index, event_state, event_type, event_value,
                       proc_list, proc_desc, global_message):
         """Update an event in the list"""
-        if event_state == "OK" or event_state == "CAREFUL":
-            # Reset the automatic process sort key
-            self.reset_process_sort()
-
-            # Set the end of the events
-            end_time = event_time
-            if end_time - self.events_list[event_index]['begin'] >= self.min_duration:
-                # If event is >= min_duration seconds
-                self.events_list[event_index]['end'] = end_time
-            else:
-                # If event < min_duration seconds, ignore
-                self.events_list.remove(self.events_list[event_index])
-        else:
-            # Update the item
-
-            # It's an ongoing event, update the end time
-            self.events_list[event_index]['end'] = -1
-
+        if event_state in ('OK', 'CAREFUL') and self.events_list[event_index]['end'] < 0:
+            # Close the event
+            self._close_event(event_time, event_index)
+        elif event_state in ('OK', 'CAREFUL') and self.events_list[event_index]['end'] >= 0:
+            # Event is already closed, do nothing
+            pass
+        else:  # event_state == "WARNING" or event_state == "CRITICAL"
             # Set process sort key
             self.set_process_sort(event_type)
 
-            # State
-            if event_state == "CRITICAL":
-                self.events_list[event_index]['state'] = event_state
-            # Min value
+            # It's an ongoing event, set the end time to -1
+            self.events_list[event_index]['end'] = -1
+
+            # Min/Max/Sum/Count/Avergae value
             self.events_list[event_index]['min'] = min(self.events_list[event_index]['min'], event_value)
-            # Max value
             self.events_list[event_index]['max'] = max(self.events_list[event_index]['max'], event_value)
-            # Average value
             self.events_list[event_index]['sum'] += event_value
             self.events_list[event_index]['count'] += 1
             self.events_list[event_index]['avg'] = self.events_list[event_index]['sum'] / self.events_list[event_index]['count']
 
-            # TOP PROCESS LIST (only for CRITICAL ALERT)
             if event_state == "CRITICAL":
+                # Avoid to change from CRITICAL to WARNING
+                # If an events have reached the CRITICAL state, it can't go back to WARNING
+                self.events_list[event_index]['state'] = event_state
+
+                # TOP PROCESS LIST (only for CRITICAL ALERT)
                 events_sort_key = self.get_event_sort_key(event_type)
+
                 # Sort the current process list to retrieve the TOP 3 processes
                 self.events_list[event_index]['top'] = [p['name'] for p in sort_stats(proc_list, events_sort_key)[0:3]]
                 self.events_list[event_index]['sort'] = events_sort_key
@@ -383,6 +376,19 @@ class GlancesEvents(object):
             self.events_list[event_index]['global'] = global_message
 
         return True
+
+    def _close_event(self, event_time, event_index):
+        """Close an event in the list"""
+        # Reset the automatic process sort key
+        self.reset_process_sort()
+
+        # Set the end of the events
+        if event_time - self.events_list[event_index]['begin'] >= self.min_duration:
+            # If event is >= min_duration seconds
+            self.events_list[event_index]['end'] = event_time
+        else:
+            # If event < min_duration seconds, ignore
+            self.events_list.remove(self.events_list[event_index])
 
     def clean(self, critical=False):
         """Clean the logs list by deleting finished items.
