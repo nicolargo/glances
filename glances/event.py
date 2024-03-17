@@ -47,7 +47,7 @@ class GlancesEvent:
     sum: float
     count: int
     avg: float
-    top: list[str]
+    top: list
     desc: str
     sort: str
     global_msg: str
