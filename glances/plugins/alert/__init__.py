@@ -13,7 +13,7 @@ from datetime import datetime
 from time import tzname
 import pytz
 
-from glances.events import glances_events
+from glances.events_list import glances_events
 
 # from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -88,7 +88,7 @@ fields_description = {
         'description': 'Sort key of the top processes',
         'unit': 'string',
     },
-    'global': {
+    'global_msg': {
         'description': 'Global alert message',
         'unit': 'string',
     }
@@ -137,10 +137,11 @@ class PluginModel(GlancesPluginModel):
 
         # Build the string message
         # Header with the global message
-        if len(self.stats) > 0 and self.stats[0]['end'] < 0 and 'global' in self.stats[0]:
-            ret.append(self.curse_add_line(self.stats[0]['global'], "TITLE"))
+        global_message = [e['global_msg'] for e in self.stats if (e['end'] == -1 and 'global_msg' in e)]
+        if len(global_message) > 0:
+            ret.append(self.curse_add_line(global_message[0], "TITLE"))
         else:
-            ret.append(self.curse_add_line("ALERTS", "TITLE"))
+            ret.append(self.curse_add_line("EVENTS history", "TITLE"))
         # Loop over alerts
         for alert in self.stats:
             # New line

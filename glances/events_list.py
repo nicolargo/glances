@@ -7,14 +7,15 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Manage Glances events (previously Glances logs in Glances < 3.1)."""
+"""Manage Glances events list (previously Glances logs in Glances < 3.1)."""
 
 import time
 from datetime import datetime
+from pydantic import RootModel
 
-from glances.logger import logger
-from glances.processes import glances_processes, sort_stats
+from glances.processes import glances_processes
 from glances.thresholds import glances_thresholds
+from glances.event import GlancesEvent
 
 # Static decision tree for the global alert message
 # - msg: Message to be displayed (result of the decision tree)
@@ -25,7 +26,7 @@ from glances.thresholds import glances_thresholds
 # -                 2: WARNING
 # -                 3: CRITICAL
 tree = [
-    {'msg': 'No warning or critical alert detected', 'thresholds': [], 'thresholds_min': 0},
+    {'msg': 'EVENTS history', 'thresholds': [], 'thresholds_min': 0},
     {'msg': 'High CPU user mode', 'thresholds': ['cpu_user'], 'thresholds_min': 2},
     {'msg': 'High CPU kernel usage', 'thresholds': ['cpu_system'], 'thresholds_min': 2},
     {'msg': 'High CPU I/O waiting', 'thresholds': ['cpu_iowait'], 'thresholds_min': 2},
@@ -161,31 +162,11 @@ def build_global_message():
         return tree[0]['msg']
 
 
-class GlancesEvents(object):
+class GlancesEventsList(object):
 
     """This class manages events inside the Glances software.
-
-    Events is a list of event (stored in the self.events_list var)
-    event_state = "OK|CAREFUL|WARNING|CRITICAL"
-    event_type = "CPU*|LOAD|MEM|MON"
-    event_value = value
-
-    Item (or event) is defined by:
-        {
-            "begin": "begin",
-            "end": "end",
-            "state": "WARNING|CRITICAL",
-            "type": "CPU|LOAD|MEM",
-            "max": MAX,
-            "avg": AVG,
-            "min": MIN,
-            "sum": SUM,
-            "count": COUNT,
-            "top": [top 3 process name],
-            "desc": "Processes description",
-            "sort": "top sort key",
-            "global": "global alert message"
-        }
+    GlancesEventsList is a list of GlancesEvent.
+    GlancesEvent is defined in the event.py file
     """
 
     def __init__(self, max_events=10, min_duration=6, min_interval=6):
@@ -220,8 +201,8 @@ class GlancesEvents(object):
         self.min_interval = min_interval
 
     def get(self):
-        """Return the raw events list."""
-        return self.events_list
+        """Return the RAW events list."""
+        return [RootModel[GlancesEvent](e).model_dump() for e in self.events_list]
 
     def len(self):
         """Return the number of events in the logs list."""
@@ -234,9 +215,9 @@ class GlancesEvents(object):
         Return -1 if the item is not found.
         """
         for i in range(self.len()):
-            if ((self.events_list[i]['end'] < 0) or
-                (event_time - self.events_list[i]['end'] < self.min_interval)) and \
-               self.events_list[i]['type'] == event_type:
+            if (self.events_list[i].is_ongoing() or
+                (event_time - self.events_list[i].end < self.min_interval)) and \
+               self.events_list[i].type == event_type:
                 return i
         return -1
 
@@ -264,7 +245,7 @@ class GlancesEvents(object):
         if glances_processes.auto_sort:
             glances_processes.set_sort_key('auto')
 
-    def add(self, event_state, event_type, event_value, proc_list=None, proc_desc="", min_duration=None):
+    def add(self, event_state, event_type, event_value, proc_list=None, proc_desc=""):
         """Add a new item to the logs list.
 
         event_state = "OK|CAREFUL|WARNING|CRITICAL"
@@ -301,81 +282,52 @@ class GlancesEvents(object):
 
         Item is added only if the criticality (event_state) is WARNING or CRITICAL.
         """
-        if event_state == "WARNING" or event_state == "CRITICAL":
-            # Define the automatic process sort key
-            self.set_process_sort(event_type)
+        if event_state not in ('WARNING', 'CRITICAL'):
+            return
 
-            # Create the new log item
-            # Time is stored in Epoch format
-            # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
-            item = {
-                "begin": event_time,
-                "end": -1,
-                "state": event_state,
-                "type": event_type,
-                "max": event_value,
-                "avg": event_value,
-                "min": event_value,
-                "sum": event_value,
-                "count": 1,
-                "top": [],
-                "desc": proc_desc,
-                "sort": glances_processes.sort_key,
-                "global": global_message,
-            }
+        # Define the automatic process sort key
+        self.set_process_sort(event_type)
 
-            # Add the item to the list
-            self.events_list.insert(0, item)
+        # Create the new log item
+        # Time is stored in Epoch format
+        # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
+        event = GlancesEvent(begin=event_time,
+                             state=event_state,
+                             type=event_type,
+                             min=event_value, max=event_value, sum=event_value, count=1, avg=event_value,
+                             top=[],
+                             desc=proc_desc,
+                             sort=glances_processes.sort_key,
+                             global_msg=global_message)
 
-            # Limit the list to 'max_events' items
-            if self.len() > self.max_events:
-                self.events_list.pop()
-            return True
-        else:
-            return False
+        # Add the event to the list
+        self.events_list.insert(0, event)
+
+        # Limit the list to 'max_events' items
+        if self.len() > self.max_events:
+            self.events_list.pop()
 
     def _update_event(self, event_time, event_index, event_state, event_type, event_value,
                       proc_list, proc_desc, global_message):
         """Update an event in the list"""
-        if event_state in ('OK', 'CAREFUL') and self.events_list[event_index]['end'] < 0:
+        if event_state in ('OK', 'CAREFUL') and self.events_list[event_index].is_ongoing():
             # Close the event
             self._close_event(event_time, event_index)
-        elif event_state in ('OK', 'CAREFUL') and self.events_list[event_index]['end'] >= 0:
+        elif event_state in ('OK', 'CAREFUL') and self.events_list[event_index].is_finished():
             # Event is already closed, do nothing
             pass
         else:  # event_state == "WARNING" or event_state == "CRITICAL"
             # Set process sort key
             self.set_process_sort(event_type)
 
-            # It's an ongoing event, set the end time to -1
-            self.events_list[event_index]['end'] = -1
-
-            # Min/Max/Sum/Count/Avergae value
-            self.events_list[event_index]['min'] = min(self.events_list[event_index]['min'], event_value)
-            self.events_list[event_index]['max'] = max(self.events_list[event_index]['max'], event_value)
-            self.events_list[event_index]['sum'] += event_value
-            self.events_list[event_index]['count'] += 1
-            self.events_list[event_index]['avg'] = self.events_list[event_index]['sum'] / self.events_list[event_index]['count']
-
-            if event_state == "CRITICAL":
-                # Avoid to change from CRITICAL to WARNING
-                # If an events have reached the CRITICAL state, it can't go back to WARNING
-                self.events_list[event_index]['state'] = event_state
-
-                # TOP PROCESS LIST (only for CRITICAL ALERT)
-                events_sort_key = self.get_event_sort_key(event_type)
-
-                # Sort the current process list to retrieve the TOP 3 processes
-                self.events_list[event_index]['top'] = [p['name'] for p in sort_stats(proc_list, events_sort_key)[0:3]]
-                self.events_list[event_index]['sort'] = events_sort_key
-
-            # MONITORED PROCESSES DESC
-            self.events_list[event_index]['desc'] = proc_desc
-
-            # Global message:
-            self.events_list[event_index]['global'] = global_message
-
-        return True
+            # Update an ongoing event
+            self.events_list[event_index].update(
+                state=event_state,
+                value=event_value,
+                sort_key=self.get_event_sort_key(event_type),
+                proc_list=proc_list,
+                proc_desc=proc_desc,
+                global_msg=global_message)
 
     def _close_event(self, event_time, event_index):
         """Close an event in the list"""
@@ -383,9 +335,9 @@ class GlancesEvents(object):
         self.reset_process_sort()
 
         # Set the end of the events
-        if event_time - self.events_list[event_index]['begin'] >= self.min_duration:
+        if event_time - self.events_list[event_index].begin >= self.min_duration:
             # If event is >= min_duration seconds
-            self.events_list[event_index]['end'] = event_time
+            self.events_list[event_index].end = event_time
         else:
             # If event < min_duration seconds, ignore
             self.events_list.remove(self.events_list[event_index])
@@ -399,12 +351,12 @@ class GlancesEvents(object):
         # Create a new clean list
         clean_events_list = []
         while self.len() > 0:
-            item = self.events_list.pop()
-            if item['end'] < 0 or (not critical and item['state'].startswith("CRITICAL")):
-                clean_events_list.insert(0, item)
+            event = self.events_list.pop()
+            if event.end < 0 or (not critical and event.state.startswith("CRITICAL")):
+                clean_events_list.insert(0, event)
         # The list is now the clean one
         self.events_list = clean_events_list
         return self.len()
 
 
-glances_events = GlancesEvents()
+glances_events = GlancesEventsList()
