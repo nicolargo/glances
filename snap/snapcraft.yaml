@@ -13,6 +13,7 @@ confinement: strict
 
 apps:
   glances:
+    # adapter: none
     command: bin/glances-launch $SNAP/bin/glances
     plugs:
       - network
@@ -51,8 +52,8 @@ parts:
     #        https://bugs.launchpad.net/snapcraft/+bug/1813364
     parse-info: [setup.py]
     override-pull: |
-      snapcraftctl pull
-      "$SNAPCRAFT_STAGE"/scriptlets/selective-checkout
+      craftctl default
+      "$CRAFT_STAGE"/scriptlets/selective-checkout
 
   fastapi:
     plugin: python
@@ -60,8 +61,8 @@ parts:
     source-tag: '0.109.0'
     source-depth: 1
     override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/fastapi-dist
+      mkdir -p $CRAFT_PART_BUILD/dist
+      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/fastapi-dist
     organize:
       fastapi-dist: fastapi/dist
 
@@ -71,8 +72,8 @@ parts:
     source-tag: '0.27.0.post1'
     source-depth: 1
     override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/uvicorn-dist
+      mkdir -p $CRAFT_PART_BUILD/dist
+      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/uvicorn-dist
     organize:
       uvicorn-dist: uvicorn/dist
 
@@ -82,8 +83,8 @@ parts:
     source-tag: '3.9.12'
     source-depth: 1
     override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/orjson-dist
+      mkdir -p $CRAFT_PART_BUILD/dist
+      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/orjson-dist
     organize:
       orjson-dist: orjson/dist
 
@@ -93,8 +94,8 @@ parts:
     source-tag: '3.1.3'
     source-depth: 1
     override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/jinja2-dist
+      mkdir -p $CRAFT_PART_BUILD/dist
+      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/jinja2-dist
     organize:
       jinja2-dist: jinja2/dist
 
@@ -104,8 +105,8 @@ parts:
     source-tag: '7.0.0'
     source-depth: 1
     override-build: |
-      mkdir -p $SNAPCRAFT_PART_BUILD/dist
-      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/docker-dist
+      mkdir -p $CRAFT_PART_BUILD/dist
+      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/docker-dist
     organize:
       docker-dist: docker/dist
 
