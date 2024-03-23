@@ -154,6 +154,8 @@ and generate the password file (the default login is ``glances``, add the ``--us
 
     glances -s --password
 
+Note: or ``glances -w --password`` for the web server mode.
+
 which will prompt you to answer the following questions:
 
 .. code-block:: console
