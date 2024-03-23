@@ -24,7 +24,7 @@ prometheus_client
 pygal
 pymdstat
 pymongo; python_version >= "3.7"
-py3nvml; python_version >= "3.5"
+nvidia-ml-py; python_version >= "3.5"
 pysnmp
 pySMART.smartx
 python-dateutil

@@ -17,6 +17,11 @@ ARG PYTHON_VERSION=3.11
 # Base layer to be used for building dependencies and the release images
 FROM alpine:${IMAGE_VERSION} as base
 
+# Upgrade the system
+RUN apk update \
+  && apk upgrade --no-cache
+
+# Install the minimal set of packages
 RUN apk add --no-cache \
   python3 \
   curl \
@@ -51,6 +56,9 @@ RUN apk add --no-cache \
   pkgconfig \
   libffi-dev \
   openssl-dev
+
+RUN python${PYTHON_VERSION} -m venv venv-build
+RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --upgrade pip
 
 RUN python${PYTHON_VERSION} -m venv --without-pip venv
 
@@ -120,4 +128,4 @@ FROM full as dev
 
 # Forward access and error logs to Docker's log collector
 RUN ln -sf /dev/stdout /tmp/glances-root.log \
-    && ln -sf /dev/stderr /var/log/error.log \
+    && ln -sf /dev/stderr /var/log/error.log

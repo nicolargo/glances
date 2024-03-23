@@ -8,6 +8,10 @@ from io import open
 
 from setuptools import setup, Command
 
+# Predication warning
+# Glances version 4 will only be compatible with Python 3.7 and above
+if sys.version_info < (3, 7):
+    print('WARNING: Glances version 4 will only be compatible with Python 3.7 and above.')
 
 if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 4):
     print('Glances requires at least Python 2.7 or 3.4 to run.')
