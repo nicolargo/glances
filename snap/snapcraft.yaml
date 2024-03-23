@@ -7,7 +7,7 @@ description: |
   Web based interface. It can adapt dynamically the displayed information
   depending on the user interface size.
 
-base: core20
+base: core22
 grade: stable
 confinement: strict
 
@@ -67,7 +67,7 @@ parts:
   docker:
     plugin: python
     source: https://github.com/docker/docker-py.git
-    source-tag: '3.7.3'
+    source-tag: '7.0.0'
     source-depth: 1
     override-build: |
       mkdir -p $SNAPCRAFT_PART_BUILD/dist
