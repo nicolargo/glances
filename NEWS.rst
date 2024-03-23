@@ -3,10 +3,16 @@
 ==============================================================================
 
 ===============
+Version 3.4.0.5
+===============
+
+Correct issur with GPU plugin in Docker images #2705
+
+===============
 Version 3.4.0.4
 ===============
 
-Cuber security patch (update some deps in the WebUI and Docker image)
+Cyber security patch (update some deps in the WebUI and Docker image)
 
 ===============
 Version 3.4.0.3
