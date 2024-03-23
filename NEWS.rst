@@ -25,6 +25,18 @@ Under development: https://github.com/nicolargo/glances/issues?q=is%3Aopen+is%3A
     * Alert data model change from a list of list to a list of dict #2633
 
 ===============
+Version 3.4.0.5
+===============
+
+Correct issur with GPU plugin in Docker images #2705
+
+===============
+Version 3.4.0.4
+===============
+
+Cyber security patch (update some deps in the WebUI and Docker image)
+
+===============
 Version 3.4.0.3
 ===============
 
