@@ -1,5 +1,6 @@
 name: glances
-adopt-info: glances
+version: '4.0.0+beta1'  ## '4.0.0'
+
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
   Glances is a cross-platform monitoring tool which aims to present
