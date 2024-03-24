@@ -8,13 +8,12 @@ description: |
   depending on the user interface size.
 
 base: core22
-grade: stable
+grade: devel  ## stable
 confinement: strict
 
 apps:
   glances:
-    # adapter: none
-    command: bin/glances-launch $SNAP/bin/glances
+    command: bin/glances
     plugs:
       - network
       - system-observe
@@ -42,85 +41,8 @@ plugs:
 
 parts:
   glances:
-    after:
-    - selective-checkout
     plugin: python
-    source: .
-    # FIXME: Theoretically this also replaces `summary` and `description`
-    #        keys, however due to the following bug we still need to keep
-    #        them until it is fixed.
-    #        https://bugs.launchpad.net/snapcraft/+bug/1813364
-    parse-info: [setup.py]
-    override-pull: |
-      craftctl default
-      "$CRAFT_STAGE"/scriptlets/selective-checkout
-
-  fastapi:
-    plugin: python
-    source: https://github.com/tiangolo/fastapi.git
-    source-tag: '0.109.0'
-    source-depth: 1
-    override-build: |
-      mkdir -p $CRAFT_PART_BUILD/dist
-      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/fastapi-dist
-    organize:
-      fastapi-dist: fastapi/dist
-
-  uvicorn:
-    plugin: python
-    source: https://github.com/encode/uvicorn.git
-    source-tag: '0.27.0.post1'
-    source-depth: 1
-    override-build: |
-      mkdir -p $CRAFT_PART_BUILD/dist
-      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/uvicorn-dist
-    organize:
-      uvicorn-dist: uvicorn/dist
-
-  orjson:
-    plugin: python
-    source: https://github.com/ijl/orjson.git
-    source-tag: '3.9.12'
-    source-depth: 1
-    override-build: |
-      mkdir -p $CRAFT_PART_BUILD/dist
-      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/orjson-dist
-    organize:
-      orjson-dist: orjson/dist
-
-  jinja2:
-    plugin: python
-    source: https://github.com/pallets/jinja.git
-    source-tag: '3.1.3'
-    source-depth: 1
-    override-build: |
-      mkdir -p $CRAFT_PART_BUILD/dist
-      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/jinja2-dist
-    organize:
-      jinja2-dist: jinja2/dist
-
-  docker:
-    plugin: python
-    source: https://github.com/docker/docker-py.git
-    source-tag: '7.0.0'
-    source-depth: 1
-    override-build: |
-      mkdir -p $CRAFT_PART_BUILD/dist
-      cp -r $CRAFT_PART_BUILD/dist $CRAFT_PART_INSTALL/docker-dist
-    organize:
-      docker-dist: docker/dist
-
-  launchers:
-    source: snap/local/launchers
-    plugin: dump
-    organize:
-      '*': bin/
-
-  selective-checkout:
-    plugin: nil
-    build-packages:
-    - git
-    stage-snaps:
-    - selective-checkout
-    prime:
-    - -*
+    source: https://github.com/nicolargo/glances.git
+    source-branch: develop  ## master
+    python-requirements:
+      - requirements.txt
