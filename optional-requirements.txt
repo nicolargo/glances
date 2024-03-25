@@ -40,3 +40,4 @@ uvicorn; python_version >= "3.8"
 wifi
 zeroconf==0.131.0; python_version < "3.7"
 zeroconf; python_version >= "3.7"
+dnspython>=2.6.0rc1 # not directly required, pinned by Snyk to avoid a vulnerability
