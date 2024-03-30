@@ -142,12 +142,6 @@ class GlancesStandalone(object):
         self.stats.update()
         logger.debug('Stats updated duration: {} seconds'.format(counter.get()))
 
-        # Export stats
-        # Start a counter used to compute the time needed
-        counter_export = Counter()
-        self.stats.export(self.stats)
-        logger.debug('Stats exported duration: {} seconds'.format(counter_export.get()))
-
         # Patch for issue1326 to avoid < 0 refresh
         adapted_refresh = self.refresh_time - counter.get()
         adapted_refresh = adapted_refresh if adapted_refresh > 0 else 0
@@ -163,6 +157,12 @@ class GlancesStandalone(object):
             # Break should be done via a signal (CTRL-C)
             time.sleep(adapted_refresh)
             ret = True
+
+        # Export stats
+        # Start a counter used to compute the time needed
+        counter_export = Counter()
+        self.stats.export(self.stats)
+        logger.debug('Stats exported duration: {} seconds'.format(counter_export.get()))
 
         return ret
 
