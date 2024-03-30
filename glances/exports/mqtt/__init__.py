@@ -63,12 +63,18 @@ class Export(GlancesExport):
     def init(self):
         # Get the current callback api version
         self.callback_api_version = int(self.callback_api_version) or 2
+        
+        # Set enum for connection
+        if self.callback_api_version == 1:
+            self.callback_api_version = paho.CallbackAPIVersion.VERSION1
+        else:
+            self.callback_api_version = paho.CallbackAPIVersion.VERSION2
 
         """Init the connection to the MQTT server."""
         if not self.export_enable:
             return None
         try:
-            client = paho.Client(client_id='glances_' + self.devicename, clean_session=False)
+            client = paho.Client(callback_api_version=self.callback_api_version, client_id='glances_' + self.devicename, clean_session=False)
             client.username_pw_set(username=self.user, password=self.password)
             if self.tls:
                 client.tls_set(certifi.where())
