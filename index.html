@@ -81,7 +81,7 @@
                             <li>IRQ / Raid</li>
                             <li>Sensors</li>
                             <li>Filesystem<span class="hidden-xs"> (and folders)</span></li>
-                            <li>Docker</li>
+                            <li>Container (Docker and Podman supported)</li>
                             <li>Monitor</li>
                             <li>Alert</li>
                             <li>System info</li>
@@ -134,24 +134,15 @@
                     <div class="col-xs-12">
                         <h2>Get started</h2>
 
-                        <h3>Glances Auto Install script</h3>
-
-                        <p>To install the latest Glances production ready version, just enter the following command line:</p>
-
-                        <pre>$ curl -L https://bit.ly/glances | /bin/bash</pre>
-
-                        <p>or</p>
-
-                        <pre>$ wget -O- https://bit.ly/glances | /bin/bash</pre>
-                        <p>Note: Only supported on some GNU/Linux distributions.</p>
-
-                        <h3>PyPI: The simple way</h3>
-
                         <p>Glances is on PyPI. By using PyPI, you are sure to have the latest stable version.</p>
 
-                        <p>To install, simply use pip:</p>
+                        <p>To install a minimal version:</p>
 
-                        <pre>$ pip install glances</pre>
+                        <pre>$ pip install --user glances</pre>
+
+                        <p>For a full installation (all plugins):</p>
+
+                        <pre>$ pip install --user glances[all]</pre>
 
                         <p>Others methods ? Read the <a href="https://github.com/nicolargo/glances/blob/master/README.rst">official installation documentation</a>.</p>
                     </div>
