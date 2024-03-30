@@ -670,7 +670,7 @@ Examples of use:
             disable(args, 'process')
             disable(args, 'alert')
             disable(args, 'amps')
-            disable(args, 'docker')
+            disable(args, 'containers')
 
         # Manage full quicklook option
         if getattr(args, 'full_quicklook', False):
