@@ -33,7 +33,7 @@ class GlancesExport(object):
         'now',
         'plugin',
         'ports',
-        'processlist',
+        # 'processlist',
         'psutilversion',
         'quicklook',
         'version',

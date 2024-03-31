@@ -69,6 +69,10 @@ class GlancesProcesses(object):
         # Cache is a dict with key=pid and value = dict of cached value
         self.processlist_cache = {}
 
+        # List of processes stats to export (filtred by the _filter_export)
+        self._filter_export = GlancesFilter()
+        self.processlist_export = []
+
         # Tag to enable/disable the processes stats (to reduce the Glances CPU consumption)
         # Default is to enable the processes stats
         self.disable_tag = False
@@ -118,6 +122,10 @@ class GlancesProcesses(object):
     def set_args(self, args):
         """Set args."""
         self.args = args
+
+    def set_export(self, export):
+        """Set the process export list of regexp."""
+        self._filter_export.filter = '|'.join(export.split(','))
 
     def reset_processcount(self):
         """Reset the global process count"""
@@ -482,11 +490,11 @@ class GlancesProcesses(object):
                 except KeyError:
                     pass
 
-        # Apply user filter
-        processlist = list(filter(lambda p: not self._filter.is_filtered(p), processlist))
+        # Filter and transform process list
+        processlist = self.update_export_list(processlist)
 
-        # Save the new processlist and transform all namedtuples to dict
-        processlist = list_of_namedtuple_to_list_of_dict(processlist)
+        # Filter and transform process export list
+        self.processlist_export = self.update_export_list(processlist)
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Useful to highlight the processes with maximum values
@@ -500,6 +508,18 @@ class GlancesProcesses(object):
 
         return self.processlist
 
+    def update_list(self, processlist):
+        """Return the process list after filtering and transformation (namedtuple to dict)."""
+        ret = list(filter(lambda p: not self._filter.is_filtered(p), processlist))
+        return list_of_namedtuple_to_list_of_dict(ret)
+
+    def update_export_list(self, processlist):
+        """Return the process export list after filtering and transformation (namedtuple to dict)."""
+        if self._filter_export.filter is None:
+            return []
+        ret = list(filter(lambda p: not self._filter_export.is_filtered(p), processlist))
+        return list_of_namedtuple_to_list_of_dict(ret)
+
     def get_count(self):
         """Get the number of processes."""
         return self.processcount
@@ -512,6 +532,10 @@ class GlancesProcesses(object):
             return processes_to_programs(self.processlist)
         else:
             return self.processlist
+
+    def get_export(self):
+        """Return the processlist for export."""
+        return self.processlist_export
 
     @property
     def sort_key(self):
