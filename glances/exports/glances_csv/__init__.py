@@ -69,7 +69,9 @@ class Export(GlancesExport):
         self.csv_file.close()
 
     def update(self, stats):
-        """Update stats in the CSV output file."""
+        """Update stats in the CSV output file.
+        This class overwrite the one in the parent class.
+        """
         # Get the stats
         all_stats = stats.getAllExportsAsDict(plugin_list=self.plugins_to_export(stats))
 
