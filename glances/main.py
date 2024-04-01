@@ -600,6 +600,10 @@ Examples of use:
         args.network_sum = False
         args.network_cumul = False
 
+        # Processlist id updated in processcount
+        if getattr(args, 'enable_processlist', False):
+            enable(args, 'processcount')
+
     def init_client_server(self, args):
         """Init Glances client/server mode."""
 

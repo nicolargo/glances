@@ -70,7 +70,7 @@ class Export(GlancesExport):
 
     def update(self, stats):
         """Update stats in the CSV output file.
-        This class overwrite the one in the parent class.
+        Note: This class overwrite the one in the parent class because we need to manage the header.
         """
         # Get the stats
         all_stats = stats.getAllExportsAsDict(plugin_list=self.plugins_to_export(stats))
@@ -82,20 +82,10 @@ class Export(GlancesExport):
 
         # Loop over plugins to export
         for plugin in self.plugins_to_export(stats):
-            if isinstance(all_stats[plugin], list):
-                for stat in sorted(all_stats[plugin], key=lambda x: x['key']):
-                    # First line: header
-                    if self.first_line:
-                        csv_header += ['{}_{}_{}'.format(plugin, self.get_item_key(stat), item) for item in stat]
-                    # Others lines: stats
-                    csv_data += itervalues(stat)
-            elif isinstance(all_stats[plugin], dict):
-                # First line: header
-                if self.first_line:
-                    fieldnames = iterkeys(all_stats[plugin])
-                    csv_header += ('{}_{}'.format(plugin, fieldname) for fieldname in fieldnames)
-                # Others lines: stats
-                csv_data += itervalues(all_stats[plugin])
+            export_names, export_values = self.build_export(all_stats[plugin])
+            if self.first_line:
+                csv_header += export_names
+            csv_data += export_values
 
         # Export to CSV
         # Manage header
@@ -118,6 +108,11 @@ class Export(GlancesExport):
         if self.old_header is None:
             self.writer.writerow(csv_data)
             self.csv_file.flush()
+
+    def export(self, name, columns, points):
+        """Export the stats to the CSV file.
+        For the moment everything is done in the update method."""
+        pass
 
 
 def open_csv_file(file_name, file_mode):

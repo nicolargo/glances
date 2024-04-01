@@ -167,12 +167,12 @@ class GlancesExport(object):
                     i.update(all_limits[plugin])
             else:
                 continue
-            export_names, export_values = self.__build_export(all_stats[plugin])
+            export_names, export_values = self.build_export(all_stats[plugin])
             self.export(plugin, export_names, export_values)
 
         return True
 
-    def __build_export(self, stats):
+    def build_export(self, stats):
         """Build the export lists."""
         export_names = []
         export_values = []
@@ -194,7 +194,7 @@ class GlancesExport(object):
                     except IndexError:
                         value = ''
                 if isinstance(value, dict):
-                    item_names, item_values = self.__build_export(value)
+                    item_names, item_values = self.build_export(value)
                     item_names = [pre_key + key.lower() + str(i) for i in item_names]
                     export_names += item_names
                     export_values += item_values
@@ -205,7 +205,7 @@ class GlancesExport(object):
             # Stats is a list (of dict)
             # Recursive loop through the list
             for item in stats:
-                item_names, item_values = self.__build_export(item)
+                item_names, item_values = self.build_export(item)
                 export_names += item_names
                 export_values += item_values
         return export_names, export_values
