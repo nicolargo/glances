@@ -200,3 +200,60 @@ When activated ('j' hotkey or --programs option in the command line), processes 
 to display which programs are active. The columns show the accumulated cpu consumption, the
 accumulated virtual and resident memory consumption, the accumulated transferred data I/O.
 The PID columns is replaced by a NPROCS column which is the number of processes.
+
+Export process
+--------------
+
+Glances version 4 introduces a new feature to export specifics processes. In order to use this
+feature, you need to use the export option in the processlist section of the Glances configuration
+file.
+
+The export option is one of the following:
+- a comma separated list of process names or regular expressions
+- a single filter (see above)
+
+Example number one, export all processes with the name 'python':
+
+.. code-block:: ini
+
+    [processlist]
+    export=.*python.*
+
+Example number two, export all processes with the name 'python' or 'bash':
+
+.. code-block:: ini
+
+    [processlist]
+    export=.*python.*,.*bash.*
+
+Example number three, export all processes belong to the user 'nicolargo':
+
+.. code-block:: ini
+
+    [processlist]
+    export=username:nicolargo
+
+The output of the export use the PID as the key (for example if you want to export firefox process
+to a CSV file):
+
+Configuration file (glances.conf):
+
+.. code-block:: ini
+
+    [processlist]
+    export=.*firefox.*
+
+Command line example:
+
+.. code-block:: bash
+
+    glances -C ./conf/glances.conf --export csv --export-csv-file /tmp/glances.csv --disable-plugin all --enable-plugin processlist --quiet
+
+the result will be:
+
+.. code-block:: csv
+
+    timestamp,845992.memory_percent,845992.status,845992.num_threads,845992.cpu_timesuser,845992.cpu_timessystem,845992.cpu_timeschildren_user,845992.cpu_timeschildren_system,845992.cpu_timesiowait,845992.memory_inforss,845992.memory_infovms,845992.memory_infoshared,845992.memory_infotext,845992.memory_infolib,845992.memory_infodata,845992.memory_infodirty,845992.name,845992.io_counters,845992.nice,845992.cpu_percent,845992.pid,845992.gidsreal,845992.gidseffective,845992.gidssaved,845992.key,845992.time_since_update,845992.cmdline,845992.username,total,running,sleeping,thread,pid_max
+    2024-04-03 18:39:55,3.692938041968513,S,138,1702.88,567.89,1752.79,244.18,0.0,288919552,12871561216,95182848,856064,0,984535040,0,firefox,1863281664,0,0.5,845992,1000,1000,1000,pid,2.2084147930145264,/snap/firefox/3836/usr/lib/firefox/firefox,nicolargo,403,1,333,1511,0
+    2024-04-03 18:39:57,3.692938041968513,S,138,1702.88,567.89,1752.79,244.18,0.0,288919552,12871561216,95182848,856064,0,984535040,0,firefox,1863281664,0,0.5,845992,1000,1000,1000,pid,2.2084147930145264,/snap/firefox/3836/usr/lib/firefox/firefox,nicolargo,403,1,333,1511,0
+
