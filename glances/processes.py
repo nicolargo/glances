@@ -491,7 +491,7 @@ class GlancesProcesses(object):
                     pass
 
         # Filter and transform process list
-        processlist = self.update_export_list(processlist)
+        processlist = self.update_list(processlist)
 
         # Filter and transform process export list
         self.processlist_export = self.update_export_list(processlist)

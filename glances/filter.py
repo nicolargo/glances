@@ -79,7 +79,7 @@ class GlancesFilter(object):
 
         self._filter_re = None
         if self.filter is not None:
-            logger.info("Set filter to {} on {}".format(
+            logger.debug("Set filter to {} on {}".format(
                 self.filter,
                 self.filter_key if self.filter_key else 'name or cmdline'))
             # Compute the regular expression
