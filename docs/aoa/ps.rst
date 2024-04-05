@@ -206,11 +206,11 @@ Export process
 
 Glances version 4 introduces a new feature to export specifics processes. In order to use this
 feature, you need to use the export option in the processlist section of the Glances configuration
-file.
+file or the --export-process-filter option in the command line.
 
 The export option is one of the following:
 - a comma separated list of process names or regular expressions
-- a single filter (see above)
+- a single Glances filter (see above)
 
 Example number one, export all processes with the name 'python':
 
@@ -219,6 +219,8 @@ Example number one, export all processes with the name 'python':
     [processlist]
     export=.*python.*
 
+Note: or the --export-process-filter ".*python.*" option in the command line.
+
 Example number two, export all processes with the name 'python' or 'bash':
 
 .. code-block:: ini
@@ -226,12 +228,16 @@ Example number two, export all processes with the name 'python' or 'bash':
     [processlist]
     export=.*python.*,.*bash.*
 
+Note: or the --export-process-filter ".*python.*,.*bash.*" option in the command line.
+
 Example number three, export all processes belong to the user 'nicolargo':
 
 .. code-block:: ini
 
     [processlist]
     export=username:nicolargo
+
+Note: or the --export-process-filter "username:nicolargo" option in the command line.
 
 The output of the export use the PID as the key (for example if you want to export firefox process
 to a CSV file):
@@ -242,6 +248,8 @@ Configuration file (glances.conf):
 
     [processlist]
     export=.*firefox.*
+
+Note: or the --export-process-filter ".*firefox.*" option in the command line.
 
 Command line example:
 
