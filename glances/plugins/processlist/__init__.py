@@ -188,9 +188,10 @@ class PluginModel(GlancesPluginModel):
                 )
                 glances_processes.set_sort_key(config.as_dict()['processlist']['sort_key'], False)
             if 'export' in config.as_dict()['processlist']:
-                logger.debug('Processlist will export processes matching following regexp: {}'.format(
-                    config.as_dict()['processlist']['export']))
-                glances_processes.set_export(config.as_dict()['processlist']['export'])
+                glances_processes.export_process_filter = config.as_dict()['processlist']['export']
+                if args.export:
+                    logger.info("Export process filter is set to: {}".format(
+                        glances_processes.export_process_filter))
 
         # The default sort key could also be overwrite by command line (see #1903)
         if args.sort_processes_key is not None:

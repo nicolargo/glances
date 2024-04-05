@@ -123,10 +123,6 @@ class GlancesProcesses(object):
         """Set args."""
         self.args = args
 
-    def set_export(self, export):
-        """Set the process export list of regexp."""
-        self._filter_export.filter = '|'.join(export.split(','))
-
     def reset_processcount(self):
         """Reset the global process count"""
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0, 'pid_max': None}
@@ -210,6 +206,8 @@ class GlancesProcesses(object):
         """Set the maximum number of processes showed in the UI."""
         self._max_processes = value
 
+    # Process filter
+
     @property
     def process_filter_input(self):
         """Get the process filter (given by the user)."""
@@ -234,6 +232,20 @@ class GlancesProcesses(object):
     def process_filter_re(self):
         """Get the process regular expression compiled."""
         return self._filter.filter_re
+
+    # Export filter
+
+    @property
+    def export_process_filter(self):
+        """Get the export process filter (current export filter)."""
+        return self._filter_export.filter
+
+    @export_process_filter.setter
+    def export_process_filter(self, value):
+        """Set the export process filter."""
+        self._filter_export.filter = '|'.join(value.split(','))
+
+    # Kernel threads
 
     def disable_kernel_threads(self):
         """Ignore kernel threads in process list."""

@@ -294,6 +294,13 @@ Examples of use:
             dest='export_graph_path',
             help='Folder for Graph exporter',
         )
+        parser.add_argument(
+            '--export-process-filter',
+            default=None,
+            type=str,
+            dest='export_process_filter',
+            help='set the export process filter (comman separated list of regular expression)',
+        )
         # Client/Server option
         parser.add_argument(
             '-c', '--client', dest='client', help='connect to a Glances server by IPv4/IPv6 address or hostname'
