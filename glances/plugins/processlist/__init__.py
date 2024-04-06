@@ -179,14 +179,19 @@ class PluginModel(GlancesPluginModel):
         self.pid_max = glances_processes.pid_max
 
         # Set the default sort key if it is defined in the configuration file
-        if config is not None:
-            if 'processlist' in config.as_dict() and 'sort_key' in config.as_dict()['processlist']:
+        if config is not None and 'processlist' in config.as_dict():
+            if 'sort_key' in config.as_dict()['processlist']:
                 logger.debug(
                     'Configuration overwrites processes sort key by {}'.format(
                         config.as_dict()['processlist']['sort_key']
                     )
                 )
                 glances_processes.set_sort_key(config.as_dict()['processlist']['sort_key'], False)
+            if 'export' in config.as_dict()['processlist']:
+                glances_processes.export_process_filter = config.as_dict()['processlist']['export']
+                if args.export:
+                    logger.info("Export process filter is set to: {}".format(
+                        config.as_dict()['processlist']['export']))
 
         # The default sort key could also be overwrite by command line (see #1903)
         if args.sort_processes_key is not None:
@@ -225,6 +230,13 @@ class PluginModel(GlancesPluginModel):
             stats = glances_processes.get_list()
 
         return stats
+
+    def get_export(self):
+        """Return the processes list to export.
+        Not all the processeses are exported.
+        Only the one defined in the Glances configuration file (see #794 for details).
+        """
+        return glances_processes.get_export()
 
     def get_nice_alert(self, value):
         """Return the alert relative to the Nice configuration list"""

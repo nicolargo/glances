@@ -64,7 +64,12 @@ class GlancesStandalone(object):
 
         # Manage optional process filter
         if args.process_filter is not None:
+            logger.info("Process filter is set to: {}".format(args.process_filter))
             glances_processes.process_filter = args.process_filter
+
+        if args.export and args.export_process_filter is not None:
+            logger.info("Export process filter is set to: {}".format(args.export_process_filter))
+            glances_processes.export_process_filter = args.export_process_filter
 
         if (not WINDOWS) and args.no_kernel_threads:
             # Ignore kernel threads in process list
