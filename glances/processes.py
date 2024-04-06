@@ -12,7 +12,7 @@ import os
 from glances.globals import BSD, LINUX, MACOS, WINDOWS, iterkeys
 from glances.globals import namedtuple_to_dict, list_of_namedtuple_to_list_of_dict
 from glances.timer import Timer, getTimeSinceLastUpdate
-from glances.filter import GlancesFilter
+from glances.filter import GlancesFilterList, GlancesFilter
 from glances.programs import processes_to_programs
 from glances.logger import logger
 
@@ -69,8 +69,9 @@ class GlancesProcesses(object):
         # Cache is a dict with key=pid and value = dict of cached value
         self.processlist_cache = {}
 
-        # List of processes stats to export (filtred by the _filter_export)
-        self._filter_export = GlancesFilter()
+        # List of processes stats to export
+        # Only process matching one of the filter will be exported
+        self._filter_export = GlancesFilterList()
         self.processlist_export = []
 
         # Tag to enable/disable the processes stats (to reduce the Glances CPU consumption)
@@ -106,7 +107,7 @@ class GlancesProcesses(object):
         # Maximum number of processes showed in the UI (None if no limit)
         self._max_processes = None
 
-        # Process filter is a regular expression
+        # Process filter
         self._filter = GlancesFilter()
 
         # Whether or not to hide kernel threads
@@ -237,13 +238,13 @@ class GlancesProcesses(object):
 
     @property
     def export_process_filter(self):
-        """Get the export process filter (current export filter)."""
+        """Get the export process filter (current export process filter list)."""
         return self._filter_export.filter
 
     @export_process_filter.setter
     def export_process_filter(self, value):
-        """Set the export process filter."""
-        self._filter_export.filter = '|'.join(value.split(','))
+        """Set the export process filter list."""
+        self._filter_export.filter = value
 
     # Kernel threads
 
@@ -502,11 +503,11 @@ class GlancesProcesses(object):
                 except KeyError:
                     pass
 
-        # Filter and transform process list
-        processlist = self.update_list(processlist)
-
         # Filter and transform process export list
         self.processlist_export = self.update_export_list(processlist)
+
+        # Filter and transform process list
+        processlist = self.update_list(processlist)
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Useful to highlight the processes with maximum values
@@ -522,14 +523,18 @@ class GlancesProcesses(object):
 
     def update_list(self, processlist):
         """Return the process list after filtering and transformation (namedtuple to dict)."""
-        ret = list(filter(lambda p: not self._filter.is_filtered(p), processlist))
+        if self._filter.filter is None:
+            return list_of_namedtuple_to_list_of_dict(processlist)
+        ret = list(filter(lambda p: self._filter.is_filtered(p),
+                          processlist))
         return list_of_namedtuple_to_list_of_dict(ret)
 
     def update_export_list(self, processlist):
         """Return the process export list after filtering and transformation (namedtuple to dict)."""
-        if self._filter_export.filter is None:
+        if self._filter_export.filter == []:
             return []
-        ret = list(filter(lambda p: not self._filter_export.is_filtered(p), processlist))
+        ret = list(filter(lambda p: self._filter_export.is_filtered(p),
+                          processlist))
         return list_of_namedtuple_to_list_of_dict(ret)
 
     def get_count(self):
