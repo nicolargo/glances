@@ -12,6 +12,49 @@ import re
 from glances.logger import logger
 
 
+class GlancesFilterList(object):
+    """Manage a lis of GlancesFilter objects
+
+    >>> fl = GlancesFilterList()
+    >>> fl.filter = '.*python.*,user:nicolargo'
+    >>> fl.is_filtered({'name': 'python is in the place'})
+    True
+    >>> fl.is_filtered({'name': 'snake is in the place'})
+    False
+    >>> fl.is_filtered({'name': 'snake is in the place', 'username': 'nicolargo'})
+    True
+    >>> fl.is_filtered({'name': 'snake is in the place', 'username': 'notme'})
+    False
+    """
+
+    def __init__(self):
+        self._filter = []
+
+    @property
+    def filter(self):
+        """Return the current filter to be applied"""
+        return self._filter
+
+    @filter.setter
+    def filter(self, value):
+        """Add a comma separated list of filters"""
+        for f in value.split(','):
+            self._add_filter(f)
+
+    def _add_filter(self, filter_input):
+        """Add a filter"""
+        f = GlancesFilter()
+        f.filter = filter_input
+        self._filter.append(f)
+
+    def is_filtered(self, process):
+        """Return True if the process is filtered by at least one filter"""
+        for f in self._filter:
+            if f.is_filtered(process):
+                return True
+        return False
+
+
 class GlancesFilter(object):
 
     """Allow Glances to filter processes
@@ -20,13 +63,13 @@ class GlancesFilter(object):
     >>> f.filter = '.*python.*'
     >>> f.filter
     '.*python.*'
-    >>> f.key
+    >>> f.filter_key
     None
-    >>> f.filter = 'user:nicolargo'
+    >>> f.filter = 'username:nicolargo'
     >>> f.filter
     'nicolargo'
-    >>> f.key
-    'user'
+    >>> f.filter_key
+    'username'
     >>> f.filter = 'username:.*nico.*'
     >>> f.filter
     '.*nico.*'
@@ -60,9 +103,9 @@ class GlancesFilter(object):
         """Set the filter (as a string) and compute the regular expression
 
         A filter could be one of the following:
-        - python > Process name of cmd start with python
-        - .*python.* > Process name of cmd contain python
-        - username:nicolargo > Process of nicolargo user
+        - python > Process name start with python
+        - .*python.* > Process name contain python
+        - user:nicolargo > Process belong to nicolargo user
         """
         self._filter_input = value
         if value is None:
@@ -125,7 +168,9 @@ class GlancesFilter(object):
         try:
             # If the item process[key] is a list, convert it to a string
             # in order to match it with the current regular expression
-            if isinstance(process[key], list):
+            if isinstance(process[key], list) and key == 'cmdline' and len(process[key]) > 0:
+                value = process[key][0]
+            elif isinstance(process[key], list):
                 value = ' '.join(process[key])
             else:
                 value = process[key]
@@ -133,7 +178,7 @@ class GlancesFilter(object):
             # If the key did not exist
             return False
         try:
-            return self._filter_re.fullmatch(value) is None
+            return self._filter_re.fullmatch(value) is not None
         except (AttributeError, TypeError):
             # AttributeError -  Filter processes crashes with a bad regular expression pattern (issue #665)
             # TypeError - Filter processes crashes if value is None (issue #1105)

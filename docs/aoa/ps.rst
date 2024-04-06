@@ -208,11 +208,9 @@ Glances version 4 introduces a new feature to export specifics processes. In ord
 feature, you need to use the export option in the processlist section of the Glances configuration
 file or the --export-process-filter option in the command line.
 
-The export option is one of the following:
-- a comma separated list of process names or regular expressions
-- a single Glances filter (see above)
+The export option is a list of Glances filters.
 
-Example number one, export all processes with the name 'python':
+Example number one, export all processes named 'python' (or with a command line containing 'python'):
 
 .. code-block:: ini
 
@@ -230,7 +228,7 @@ Example number two, export all processes with the name 'python' or 'bash':
 
 Note: or the --export-process-filter ".*python.*,.*bash.*" option in the command line.
 
-Example number three, export all processes belong to the user 'nicolargo':
+Example number three, export all processes belong to 'nicolargo' user:
 
 .. code-block:: ini
 
