@@ -294,6 +294,13 @@ Examples of use:
             dest='export_graph_path',
             help='Folder for Graph exporter',
         )
+        parser.add_argument(
+            '--export-process-filter',
+            default=None,
+            type=str,
+            dest='export_process_filter',
+            help='set the export process filter (comman separated list of regular expression)',
+        )
         # Client/Server option
         parser.add_argument(
             '-c', '--client', dest='client', help='connect to a Glances server by IPv4/IPv6 address or hostname'
@@ -599,6 +606,10 @@ Examples of use:
         # Display Rx and Tx, not the sum for the network
         args.network_sum = False
         args.network_cumul = False
+
+        # Processlist id updated in processcount
+        if getattr(args, 'enable_processlist', False):
+            enable(args, 'processcount')
 
     def init_client_server(self, args):
         """Init Glances client/server mode."""

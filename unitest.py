@@ -33,6 +33,7 @@ from glances.plugins.plugin.model import GlancesPluginModel
 from glances.programs import processes_to_programs
 from glances.secure import secure_popen
 from glances.events_list import GlancesEventsList
+from glances.filter import GlancesFilterList, GlancesFilter
 
 # Global variables
 # =================
@@ -344,6 +345,30 @@ class TestGlances(unittest.TestCase):
         # Clean WARNING events
         events.clean()
         self.assertEqual(len(events.get()), 1)
+
+    def test_020_filter(self):
+        """Test filter classes"""
+        print('INFO: [TEST_020] Test filter')
+        gf = GlancesFilter()
+        gf.filter = '.*python.*'
+        self.assertEqual(gf.filter, '.*python.*')
+        self.assertEqual(gf.filter_key, None)
+        self.assertTrue(gf.is_filtered({'name': 'python'}))
+        self.assertTrue(gf.is_filtered({'name': '/usr/bin/python -m glances'}))
+        self.assertFalse(gf.is_filtered({'noname': 'python'}))
+        self.assertFalse(gf.is_filtered({'name': 'snake'}))
+        gf.filter = 'username:nicolargo'
+        self.assertEqual(gf.filter, 'nicolargo')
+        self.assertEqual(gf.filter_key, 'username')
+        self.assertTrue(gf.is_filtered({'username': 'nicolargo'}))
+        self.assertFalse(gf.is_filtered({'username': 'notme'}))
+        self.assertFalse(gf.is_filtered({'notuser': 'nicolargo'}))
+        gfl = GlancesFilterList()
+        gfl.filter = '.*python.*,username:nicolargo'
+        self.assertTrue(gfl.is_filtered({'name': 'python is in the place'}))
+        self.assertFalse(gfl.is_filtered({'name': 'snake is in the place'}))
+        self.assertTrue(gfl.is_filtered({'name': 'snake is in the place', 'username': 'nicolargo'}))
+        self.assertFalse(gfl.is_filtered({'name': 'snake is in the place', 'username': 'notme'}))
 
     def test_094_thresholds(self):
         """Test thresholds classes"""

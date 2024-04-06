@@ -392,7 +392,10 @@ class GlancesPluginModel(object):
         return self.stats
 
     def get_export(self):
-        """Return the stats object to export."""
+        """Return the stats object to export.
+        By default, return the raw stats.
+        Note: this method could be overwritten by the plugin if a specific format is needed (ex: processlist)
+        """
         return self.get_raw()
 
     def get_stats(self):
