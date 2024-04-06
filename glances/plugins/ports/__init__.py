@@ -98,6 +98,10 @@ class PluginModel(GlancesPluginModel):
         # Call the father class
         super(PluginModel, self).exit()
 
+    def get_key(self):
+        """Return the key of the list."""
+        return 'indice'
+
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
@@ -119,10 +123,6 @@ class PluginModel(GlancesPluginModel):
             pass
 
         return self.stats
-
-    def get_key(self):
-        """Return the key of the list."""
-        return 'indice'
 
     def get_ports_alert(self, port, header="", log=False):
         """Return the alert status relative to the port scan return value."""
@@ -247,6 +247,10 @@ class ThreadScanner(threading.Thread):
         # Is part of Ports plugin
         self.plugin_name = "ports"
 
+    def get_key(self):
+        """Return the key of the list."""
+        return 'indice'
+
     def run(self):
         """Grab the stats.
 
@@ -265,6 +269,8 @@ class ThreadScanner(threading.Thread):
             # Scan an URL
             elif 'url' in p and requests_tag:
                 self._web_scan(p)
+            # Add the key for every element
+            p['key'] = self.get_key()
 
     @property
     def stats(self):

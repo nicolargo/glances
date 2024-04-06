@@ -32,8 +32,6 @@ class GlancesExport(object):
         'help',
         'now',
         'plugin',
-        'ports',
-        # 'processlist',
         'psutilversion',
         'quicklook',
         'version',
