@@ -60,12 +60,17 @@ items_history_list = [
 
 # Get the number of logical CPU core only once
 # the variable is also shared with the QuickLook plugin
+nb_log_core = 1
+nb_phys_core = 1
 try:
-    nb_log_core = CorePluginModel().update()["log"]
+    core = CorePluginModel().update()
 except Exception as e:
     logger.warning('Error: Can not retrieve the CPU core number (set it to 1) ({})'.format(e))
-    nb_log_core = 1
-
+else:
+    if 'log' in core:
+        nb_log_core = core['log']
+    if 'phys' in core:
+        nb_phys_core = core['phys']
 
 class PluginModel(GlancesPluginModel):
     """Glances load plugin.
@@ -181,6 +186,11 @@ class PluginModel(GlancesPluginModel):
 def get_nb_log_core():
     """Get the number of logical CPU core."""
     return nb_log_core
+
+
+def get_nb_phys_core():
+    """Get the number of physical CPU core."""
+    return nb_phys_core
 
 
 def get_load_average(percent: bool = False):

@@ -11,7 +11,7 @@
 
 from glances.logger import logger
 from glances.cpu_percent import cpu_percent
-from glances.plugins.load import get_load_average, get_nb_log_core
+from glances.plugins.load import get_load_average, get_nb_log_core, get_nb_phys_core
 from glances.outputs.glances_bars import Bar
 from glances.outputs.glances_sparklines import Sparkline
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -40,6 +40,14 @@ fields_description = {
     'load': {
         'description': 'LOAD percent usage',
         'unit': 'percent',
+    },
+    'cpu_log_core': {
+        'description': 'Number of logical CPU core',
+        'unit': 'number',
+    },
+    'cpu_phys_core': {
+        'description': 'Number of physical CPU core',
+        'unit': 'number',
     },
     'cpu_name': {
         'description': 'CPU name',
@@ -121,7 +129,8 @@ class PluginModel(GlancesPluginModel):
                 stats['swap'] = None
 
             # Get load
-            stats['cpucore'] = get_nb_log_core()
+            stats['cpu_log_core'] = get_nb_log_core()
+            stats['cpu_phys_core'] = get_nb_phys_core()
             try:
                 # Load average is a tuple (1 min, 5 min, 15 min)
                 # Process only the 15 min value (index 2)
