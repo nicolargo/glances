@@ -5,14 +5,9 @@ Wi-Fi
 
 *Availability: Linux only*
 
-If ``nmcli`` is available on the system, Glances displays the hotspot name,
-the security type and the Wi-Fi signal quality:
+*Dependency: this plugin uses the optional wifi Python lib*
 
 .. image:: ../_static/wifi.png
-
-or, as a backup, the file ``/proc/net/wireless`` is used to display the signal quality:
-
-.. image:: ../_static/wifi2.png
 
 In the configuration file, you can define signal quality thresholds:
 
