@@ -1,0 +1,51 @@
+GFX Clocks and Power:
+300 MHz (MCLK)
+214 MHz (SCLK)
+734 MHz (PSTATE_SCLK)
+1000 MHz (PSTATE_MCLK)
+700 mV (VDDGFX)
+3.213 W (average GPU)
+
+GPU Temperature: 24 C
+GPU Load: 0 %
+MEM Load: 0 %
+
+UVD: Disabled
+
+VCE: Disabled
+Clock Gating Flags Mask: 0x3fbcf
+Graphics Fine Grain Clock Gating: Off
+Graphics Medium Grain Clock Gating: On
+Graphics Medium Grain memory Light Sleep: On
+Graphics Coarse Grain Clock Gating: On
+Graphics Coarse Grain memory Light Sleep: On
+Graphics Coarse Grain Tree Shader Clock Gating: Off
+Graphics Coarse Grain Tree Shader Light Sleep: Off
+Graphics Command Processor Light Sleep: On
+Graphics Run List Controller Light Sleep: On
+Graphics 3D Coarse Grain Clock Gating: Off
+Graphics 3D Coarse Grain memory Light Sleep: Off
+Memory Controller Light Sleep: On
+Memory Controller Medium Grain Clock Gating: On
+System Direct Memory Access Light Sleep: Off
+System Direct Memory Access Medium Grain Clock Gating: On
+Bus Interface Medium Grain Clock Gating: Off
+Bus Interface Light Sleep: On
+Unified Video Decoder Medium Grain Clock Gating: On
+Video Compression Engine Medium Grain Clock Gating: On
+Host Data Path Light Sleep: On
+Host Data Path Medium Grain Clock Gating: On
+Digital Right Management Medium Grain Clock Gating: Off
+Digital Right Management Light Sleep: Off
+Rom Medium Grain Clock Gating: On
+Data Fabric Medium Grain Clock Gating: Off
+VCN Medium Grain Clock Gating: Off
+Host Data Path Deep Sleep: Off
+Host Data Path Shutdown: Off
+Interrupt Handler Clock Gating: Off
+JPEG Medium Grain Clock Gating: Off
+Repeater Fine Grain Clock Gating: Off
+Perfmon Clock Gating: Off
+Address Translation Hub Medium Grain Clock Gating: Off
+Address Translation Hub Light Sleep: Off
+
