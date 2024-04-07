@@ -3,17 +3,16 @@
 GPU
 ===
 
-.. note::
-    You need to install the `nvidia-ml-py`_ library on your system.
-    Or `py3nvml`_ for Glances 3.4.0.2 or lower.
-    Or `nvidia-ml-py3`_ for Glances 3.1.3 or lower.
+For the moment, only following GPU are supported:
+- NVidia (thanks to the `nvidia-ml-py`_ library)
+- AMD (only on Linux Operating system with kernel 5.14 or higher)
 
 The GPU stats are shown as a percentage of value and for the configured
 refresh time. It displays:
 
 - total GPU usage
 - memory consumption
-- temperature (Glances 3.1.4 or higher)
+- temperature
 
 .. image:: ../_static/gpu.png
 
@@ -29,15 +28,19 @@ You can change the threshold limits in the configuration file:
 
 .. code-block:: ini
 
-      [gpu]
-      # Default processor values if not defined: 50/70/90
-      proc_careful=50
-      proc_warning=70
-      proc_critical=90
-      # Default memory values if not defined: 50/70/90
-      mem_careful=50
-      mem_warning=70
-      mem_critical=90
+    [gpu]
+    # Default processor values if not defined: 50/70/90
+    proc_careful=50
+    proc_warning=70
+    proc_critical=90
+    # Default memory values if not defined: 50/70/90
+    mem_careful=50
+    mem_warning=70
+    mem_critical=90
+    # Temperature
+    temperature_careful=60
+    temperature_warning=70
+    temperature_critical=80
 
 Legend:
 
@@ -51,5 +54,3 @@ GPU (PROC/MEM) Status
 ============== ============
 
 .. _nvidia-ml-py: https://pypi.org/project/nvidia-ml-py/
-.. _py3nvml: https://pypi.org/project/py3nvml/
-.. _nvidia-ml-py3: https://pypi.org/project/nvidia-ml-py3/
