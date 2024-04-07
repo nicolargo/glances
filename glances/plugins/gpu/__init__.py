@@ -3,34 +3,24 @@
 # This file is part of Glances.
 #
 # Copyright (C) 2020 Kirby Banman <kirby.banman@gmail.com>
+# Copyright (C) 2024 Nicolas Hennion <nicolashennion@gmail.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""GPU plugin (limited to NVIDIA chipsets)."""
+"""GPU plugin for Glances.
 
-from glances.globals import nativestr, to_fahrenheit
+Currently supported:
+- NVIDIA GPU (need pynvml lib)
+- AMD GPU (no lib needed)
+"""
+
 from glances.logger import logger
+from glances.globals import to_fahrenheit
+from glances.plugins.gpu.cards.nvidia import NvidiaGPU
+from glances.plugins.gpu.cards.amd import AmdGPU
 from glances.plugins.plugin.model import GlancesPluginModel
 
-try:
-    import pynvml
-except Exception as e:
-    import_error_tag = True
-    # Display debug message if import KeyError
-    logger.warning("Missing Python Lib ({}), Nvidia GPU plugin is disabled".format(e))
-else:
-    import_error_tag = False
-
-#     {
-#         "key": "gpu_id",
-#         "gpu_id": 0,
-#         "name": "Fake GeForce GTX",
-#         "mem": 5.792331695556641,
-#         "proc": 4,
-#         "temperature": 26,
-#         "fan_speed": 30
-#     }
 # Fields description
 # description: human readable description
 # short_name: shortname to use un UI
@@ -71,7 +61,7 @@ items_history_list = [
 
 
 class PluginModel(GlancesPluginModel):
-    """Glances GPU plugin (limited to NVIDIA chipsets).
+    """Glances GPU plugin.
 
     stats is a list of dictionaries with one entry per GPU
     """
@@ -84,27 +74,20 @@ class PluginModel(GlancesPluginModel):
             stats_init_value=[],
             fields_description=fields_description
         )
-
-        # Init the Nvidia API
-        self.init_nvidia()
+        # Init the GPU API
+        self.nvidia = NvidiaGPU()
+        self.amd = AmdGPU()
 
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-    def init_nvidia(self):
-        """Init the NVIDIA API."""
-        if import_error_tag:
-            self.nvml_ready = False
+    def exit(self):
+        """Overwrite the exit method to close the GPU API."""
+        self.nvidia.exit()
+        self.amd.exit()
 
-        try:
-            pynvml.nvmlInit()
-            self.device_handles = get_device_handles()
-            self.nvml_ready = True
-        except Exception:
-            logger.debug("pynvml could not be initialized.")
-            self.nvml_ready = False
-
-        return self.nvml_ready
+        # Call the father exit method
+        super(PluginModel, self).exit()
 
     def get_key(self):
         """Return the key of the list."""
@@ -117,49 +100,45 @@ class PluginModel(GlancesPluginModel):
         # Init new stats
         stats = self.get_init_value()
 
-        if not self.nvml_ready:
-            # !!!
-            # Uncomment to test on computer without GPU
-            # One GPU sample:
-            # self.stats = [
-            #     {
-            #         "key": "gpu_id",
-            #         "gpu_id": 0,
-            #         "name": "Fake GeForce GTX",
-            #         "mem": 5.792331695556641,
-            #         "proc": 4,
-            #         "temperature": 26,
-            #         "fan_speed": 30
-            #     }
-            # ]
-            # Two GPU sample:
-            # self.stats = [
-            #     {
-            #         "key": "gpu_id",
-            #         "gpu_id": 0,
-            #         "name": "Fake GeForce GTX1",
-            #         "mem": 5.792331695556641,
-            #         "proc": 4,
-            #         "temperature": 26,
-            #         "fan_speed": 30
-            #     },
-            #     {
-            #         "key": "gpu_id",
-            #         "gpu_id": 1,
-            #         "name": "Fake GeForce GTX2",
-            #         "mem": 15,
-            #         "proc": 8,
-            #         "temperature": 65,
-            #         "fan_speed": 75
-            #     }
-            # ]
-            return self.stats
+        # Get the stats
+        stats.extend(self.nvidia.get_device_stats())
+        stats.extend(self.amd.get_device_stats())
 
-        if self.input_method == 'local':
-            stats = self.get_device_stats()
-        elif self.input_method == 'snmp':
-            # not available
-            pass
+        # !!!
+        # Uncomment to test on computer without GPU
+        # One GPU sample:
+        # stats = [
+        #     {
+        #         "key": "gpu_id",
+        #         "gpu_id": "nvidia0",
+        #         "name": "Fake GeForce GTX",
+        #         "mem": 5.792331695556641,
+        #         "proc": 4,
+        #         "temperature": 26,
+        #         "fan_speed": 30
+        #     }
+        # ]
+        # Two GPU sample:
+        # stats = [
+        #     {
+        #         "key": "gpu_id",
+        #         "gpu_id": "nvidia0",
+        #         "name": "Fake GeForce GTX1",
+        #         "mem": 5.792331695556641,
+        #         "proc": 4,
+        #         "temperature": 26,
+        #         "fan_speed": 30
+        #     },
+        #     {
+        #         "key": "gpu_id",
+        #         "gpu_id": "nvidia1",
+        #         "name": "Fake GeForce GTX2",
+        #         "mem": 15,
+        #         "proc": 8,
+        #         "temperature": 65,
+        #         "fan_speed": 75
+        #     }
+        # ]
 
         # Update the stats
         self.stats = stats
@@ -209,11 +188,10 @@ class PluginModel(GlancesPluginModel):
         # Header
         header = ''
         if len(self.stats) > 1:
-            header += '{} '.format(len(self.stats))
+            header += '{} {}'.format(len(self.stats),
+                                     'GPUs' if len(self.stats) > 1 else 'GPU')
         if same_name:
-            header += '{} {}'.format('GPU', gpu_stats['name'])
-        else:
-            header += '{}'.format('GPU')
+            header += ' {}'.format(gpu_stats['name'])
         msg = header[:17]
         ret.append(self.curse_add_line(msg, "TITLE"))
 
@@ -302,87 +280,3 @@ class PluginModel(GlancesPluginModel):
                 ret.append(self.curse_add_line(msg))
 
         return ret
-
-    def get_device_stats(self):
-        """Get GPU stats."""
-        stats = []
-
-        for index, device_handle in enumerate(self.device_handles):
-            device_stats = dict()
-            # Dictionary key is the GPU_ID
-            device_stats['key'] = self.get_key()
-            # GPU id (for multiple GPU, start at 0)
-            device_stats['gpu_id'] = index
-            # GPU name
-            device_stats['name'] = get_device_name(device_handle)
-            # Memory consumption in % (not available on all GPU)
-            device_stats['mem'] = get_mem(device_handle)
-            # Processor consumption in %
-            device_stats['proc'] = get_proc(device_handle)
-            # Processor temperature in °C
-            device_stats['temperature'] = get_temperature(device_handle)
-            # Fan speed in %
-            device_stats['fan_speed'] = get_fan_speed(device_handle)
-            stats.append(device_stats)
-
-        return stats
-
-    def exit(self):
-        """Overwrite the exit method to close the GPU API."""
-        if self.nvml_ready:
-            try:
-                pynvml.nvmlShutdown()
-            except Exception as e:
-                logger.debug("pynvml failed to shutdown correctly ({})".format(e))
-
-        # Call the father exit method
-        super(PluginModel, self).exit()
-
-
-def get_device_handles():
-    """Get a list of NVML device handles, one per device.
-
-    Can throw NVMLError.
-    """
-    return [pynvml.nvmlDeviceGetHandleByIndex(i) for i in range(pynvml.nvmlDeviceGetCount())]
-
-
-def get_device_name(device_handle):
-    """Get GPU device name."""
-    try:
-        return nativestr(pynvml.nvmlDeviceGetName(device_handle))
-    except pynvml.NVMLError:
-        return "NVIDIA"
-
-
-def get_mem(device_handle):
-    """Get GPU device memory consumption in percent."""
-    try:
-        memory_info = pynvml.nvmlDeviceGetMemoryInfo(device_handle)
-        return memory_info.used * 100.0 / memory_info.total
-    except pynvml.NVMLError:
-        return None
-
-
-def get_proc(device_handle):
-    """Get GPU device CPU consumption in percent."""
-    try:
-        return pynvml.nvmlDeviceGetUtilizationRates(device_handle).gpu
-    except pynvml.NVMLError:
-        return None
-
-
-def get_temperature(device_handle):
-    """Get GPU device CPU temperature in Celsius."""
-    try:
-        return pynvml.nvmlDeviceGetTemperature(device_handle, pynvml.NVML_TEMPERATURE_GPU)
-    except pynvml.NVMLError:
-        return None
-
-
-def get_fan_speed(device_handle):
-    """Get GPU device fan speed in percent."""
-    try:
-        return pynvml.nvmlDeviceGetFanSpeed(device_handle)
-    except pynvml.NVMLError:
-        return None
