@@ -77,6 +77,8 @@ class PluginModel(GlancesPluginModel):
         # Init the GPU API
         self.nvidia = NvidiaGPU()
         self.amd = AmdGPU()
+        # Just for test purpose (uncomment to test on computer without AMD GPU)
+        # self.amd = AmdGPU(drm_root_folder='./test-data/plugins/gpu/amd/sys/class/drm')
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -188,10 +190,10 @@ class PluginModel(GlancesPluginModel):
         # Header
         header = ''
         if len(self.stats) > 1:
-            header += '{} {}'.format(len(self.stats),
-                                     'GPUs' if len(self.stats) > 1 else 'GPU')
+            header += '{} {} '.format(len(self.stats),
+                                      'GPUs' if len(self.stats) > 1 else 'GPU')
         if same_name:
-            header += ' {}'.format(gpu_stats['name'])
+            header += '{}'.format(gpu_stats['name'])
         msg = header[:17]
         ret.append(self.curse_add_line(msg, "TITLE"))
 
@@ -267,7 +269,7 @@ class PluginModel(GlancesPluginModel):
                 # New line
                 ret.append(self.curse_new_line())
                 # GPU ID + PROC + MEM + TEMPERATURE
-                id_msg = '{}'.format(gpu_stats['gpu_id'])
+                id_msg = '{:>7}'.format(gpu_stats['gpu_id'])
                 try:
                     proc_msg = '{:>3.0f}%'.format(gpu_stats['proc'])
                 except (ValueError, TypeError):
@@ -276,7 +278,7 @@ class PluginModel(GlancesPluginModel):
                     mem_msg = '{:>3.0f}%'.format(gpu_stats['mem'])
                 except (ValueError, TypeError):
                     mem_msg = '{:>4}'.format('N/A')
-                msg = '{}: {} mem: {}'.format(id_msg, proc_msg, mem_msg)
+                msg = '{} {} mem {}'.format(id_msg, proc_msg, mem_msg)
                 ret.append(self.curse_add_line(msg))
 
         return ret
