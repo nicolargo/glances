@@ -14,11 +14,11 @@ from glances.globals import nativestr
 try:
     import pynvml
 except Exception as e:
-    import_nvidia_error_tag = True
+    nvidia_gpu_enable = False
     # Display debug message if import KeyError
     logger.warning("Missing Python Lib ({}), Nvidia GPU plugin is disabled".format(e))
 else:
-    import_nvidia_error_tag = False
+    nvidia_gpu_enable = True
 
 
 class NvidiaGPU:
@@ -26,12 +26,12 @@ class NvidiaGPU:
 
     def __init__(self):
         """Init Nvidia GPU card class."""
-        if import_nvidia_error_tag:
+        if not nvidia_gpu_enable:
             self.device_handles = []
         else:
             try:
                 pynvml.nvmlInit()
-                self.device_handles = get_device_handles()
+                self.device_handles = get_device_list()
             except Exception:
                 logger.debug("pynvml could not be initialized.")
                 self.device_handles = []
@@ -69,7 +69,7 @@ class NvidiaGPU:
         return stats
 
 
-def get_device_handles():
+def get_device_list():
     """Get a list of NVML device handles, one per device.
 
     Can throw NVMLError.
