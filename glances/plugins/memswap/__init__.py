@@ -79,8 +79,9 @@ class PluginModel(GlancesPluginModel):
             # Grab SWAP using the psutil swap_memory method
             try:
                 sm_stats = psutil.swap_memory()
-            except RuntimeError:
+            except (OSError, RuntimeError):
                 # Crash on startup on Illumos when no swap is configured #1767
+                # OpenBSD crash on start without a swap file/partition #2719
                 pass
             else:
                 # Get all the swap stats (copy/paste of the psutil documentation)
