@@ -2,38 +2,41 @@
 Glances - An eye on your system
 ===============================
 
-.. image:: https://img.shields.io/pypi/v/glances.svg
+|  |pypi| |starts| |docker| |pypistat| |test| |contibutors| |quality|
+|  |sponsors| |twitter|
+
+.. |pypi| image:: https://img.shields.io/pypi/v/glances.svg
     :target: https://pypi.python.org/pypi/Glances
 
-.. image:: https://img.shields.io/github/stars/nicolargo/glances.svg
+.. |starts| image:: https://img.shields.io/github/stars/nicolargo/glances.svg
     :target: https://github.com/nicolargo/glances/
     :alt: Github stars
 
-.. image:: https://img.shields.io/docker/pulls/nicolargo/glances
+.. |docker| image:: https://img.shields.io/docker/pulls/nicolargo/glances
     :target: https://hub.docker.com/r/nicolargo/glances/
     :alt: Docker pull
 
-.. image:: https://pepy.tech/badge/glances/month
+.. |pypistat| image:: https://pepy.tech/badge/glances/month
     :target: https://pepy.tech/project/glances
     :alt: Pypi downloads
 
-.. image:: https://github.com/nicolargo/glances/actions/workflows/test.yml/badge.svg
+.. |test| image:: https://github.com/nicolargo/glances/actions/workflows/test.yml/badge.svg
     :target: https://github.com/nicolargo/glances/actions
     :alt: Linux tests (GitHub Actions)
 
-.. image:: https://img.shields.io/github/contributors/nicolargo/glances
+.. |contibutors| image:: https://img.shields.io/github/contributors/nicolargo/glances
     :target: https://github.com/nicolargo/glances/issues?q=is%3Aissue+is%3Aopen+label%3A%22needs+contributor%22
     :alt: Contibutors
 
-.. image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=develop
+.. |quality| image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=develop
     :target: https://scrutinizer-ci.com/g/nicolargo/glances/?branch=develop
     :alt: Code quality
 
-.. image:: https://img.shields.io/github/sponsors/nicolargo
+.. |sponsors| image:: https://img.shields.io/github/sponsors/nicolargo
     :target: https://github.com/sponsors/nicolargo
     :alt: Sponsors
 
-.. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
+.. |twitter| image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
     :target: https://twitter.com/nicolargo
     :alt: @nicolargo
 
