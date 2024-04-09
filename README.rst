@@ -20,7 +20,7 @@ Glances - An eye on your system
     :target: https://pepy.tech/project/glances
     :alt: Pypi downloads
 
-.. |test| image:: https://github.com/nicolargo/glances/actions/workflows/test.yml/badge.svg
+.. |test| image:: https://github.com/nicolargo/glances/actions/workflows/test.yml/badge.svg?branch=develop
     :target: https://github.com/nicolargo/glances/actions
     :alt: Linux tests (GitHub Actions)
 
