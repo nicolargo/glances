@@ -134,7 +134,7 @@ class PluginModel(GlancesPluginModel):
         #     {
         #         "key": "gpu_id",
         #         "gpu_id": "nvidia1",
-        #         "name": "Fake GeForce GTX2",
+        #         "name": "Fake GeForce GTX1",
         #         "mem": 15,
         #         "proc": 8,
         #         "temperature": 65,
@@ -190,10 +190,15 @@ class PluginModel(GlancesPluginModel):
         # Header
         header = ''
         if len(self.stats) > 1:
-            header += '{} {} '.format(len(self.stats),
-                                      'GPUs' if len(self.stats) > 1 else 'GPU')
-        if same_name:
+            header += '{}'.format(len(self.stats))
+            if same_name:
+                header += ' {}'.format(gpu_stats['name'])
+            else:
+                header += ' GPUs'
+        elif same_name:
             header += '{}'.format(gpu_stats['name'])
+        else:
+            header += 'GPU'
         msg = header[:17]
         ret.append(self.curse_add_line(msg, "TITLE"))
 
