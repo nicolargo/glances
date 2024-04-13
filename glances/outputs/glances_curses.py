@@ -106,6 +106,7 @@ class _GlancesCurses(object):
     # Define left sidebar
     # This default list is also defined in the glances/outputs/static/js/uiconfig.json
     # file for the web interface
+    # Both can be overwritten by the configuration file ([outputs] left_menu option)
     _left_sidebar = [
         'network',
         'wifi',
