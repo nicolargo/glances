@@ -7,7 +7,7 @@
         </div>
         <div class="table-row" v-for="(disk, diskId) in disks" :key="diskId">
             <div class="table-cell text-left">
-                {{ disk.type.toUppercase() }} {{ disk.name }}
+                {{ disk.type.toUpperCase() }} {{ disk.name }}
                 <div class="warning" v-show="disk.degraded">└─ Degraded mode</div>
                 <div v-show="disk.degraded">&nbsp; &nbsp;└─ {{ disk.config }}</div>
                 <div class="critical" v-show="disk.inactive">└─ Status {{ disk.status }}</div>
@@ -20,10 +20,10 @@
                     </div>
                 </template>
             </div>
-            <div class="table-cell" v-show="!disk.inactive" :class="getAlert(disk)">
+            <div class="table-cell" v-show="disk.status == 'active'" :class="getAlert(disk)">
                 {{ disk.used }}
             </div>
-            <div class="table-cell" v-show="!disk.inactive" :class="getAlert(disk)">
+            <div class="table-cell" v-show="disk.status == 'active'" :class="getAlert(disk)">
                 {{ disk.available }}
             </div>
         </div>
