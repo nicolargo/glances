@@ -26,7 +26,10 @@ public IP information.
 In the default configuration file, public IP address information is disable. Set public_disabled, to False
 in order to enable the feature.
 
+Example:
+
 .. code-block:: ini
+
     [ip]
     # Disable display of private IP address
     disable=False
