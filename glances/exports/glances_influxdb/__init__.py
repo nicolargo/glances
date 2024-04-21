@@ -18,6 +18,8 @@ from glances.exports.export import GlancesExport
 from influxdb import InfluxDBClient
 from influxdb.client import InfluxDBClientError
 
+FIELD_TO_TAG = ['name', 'cmdline']
+
 
 class Export(GlancesExport):
     """This class manages the InfluxDB export module."""
@@ -135,6 +137,13 @@ class Export(GlancesExport):
                 fields.pop(fields['key'])
             # Add the hostname as a tag
             tags['hostname'] = self.hostname
+            # Add name as a tag (example for the process list)
+            for k in FIELD_TO_TAG:
+                if k in fields:
+                    tags[k] = str(fields[k])
+                    # Remove it from the field list (can not be a field and a tag)
+                    if k in fields:
+                        fields.pop(fields[k])
             # Add the measurement to the list
             ret.append({'measurement': name, 'tags': tags, 'fields': fields})
         return ret
