@@ -27,17 +27,6 @@ except ImportError as e:
 else:
     import_error_tag = False
 
-# List of online services to retrieve public IP address
-# List of tuple (url, json, key)
-# - url: URL of the Web site
-# - json: service return a JSON (True) or string (False)
-# - key: key of the IP address in the JSON structure
-urls = [
-    ('https://httpbin.org/ip', True, 'origin'),
-    ('https://api.ipify.org/?format=json', True, 'ip'),
-    ('https://ipv4.jsonip.com', True, 'ip'),
-]
-
 # Fields description
 # description: human readable description
 # short_name: shortname to use un UI
@@ -74,7 +63,6 @@ class PluginModel(GlancesPluginModel):
     """
 
     _default_public_refresh_interval = 300
-    _default_public_ip_disabled = ["False"]
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
@@ -86,26 +74,20 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # For public IP address
+        # Public information (see issue #2732)
         self.public_address = ""
+        self.public_info = ""
+        self.public_api = self.get_conf_value("public_api", default=[None])[0]
+        self.public_username = self.get_conf_value("public_username", default=[None])[0]
+        self.public_password = self.get_conf_value("public_password", default=[None])[0]
+        self.public_field = self.get_conf_value("public_field", default=[None])
+        self.public_template = self.get_conf_value("public_template", default=[None])[0]
+        self.public_disabled = (
+            self.get_conf_value('public_disabled', default='False')[0].lower() != 'false' or
+            self.public_api is None or self.public_field is None
+        )
         self.public_address_refresh_interval = self.get_conf_value(
             "public_refresh_interval", default=self._default_public_refresh_interval
-        )
-
-        public_ip_disabled = self.get_conf_value("public_ip_disabled", default=self._default_public_ip_disabled)
-        self.public_ip_disabled = True if public_ip_disabled == ["True"] else False
-
-        # For the Censys options (see issue #2105)
-        self.public_info = ""
-        self.censys_url = self.get_conf_value("censys_url", default=[None])[0]
-        self.censys_username = self.get_conf_value("censys_username", default=[None])[0]
-        self.censys_password = self.get_conf_value("censys_password", default=[None])[0]
-        self.censys_fields = self.get_conf_value("censys_fields", default=[None])
-        self.public_info_disabled = (
-            self.censys_url is None
-            or self.censys_username is None
-            or self.censys_password is None
-            or self.censys_fields is None
         )
 
     @GlancesPluginModel._check_decorator
@@ -119,47 +101,41 @@ class PluginModel(GlancesPluginModel):
         stats = self.get_init_value()
 
         if self.input_method == 'local' and not import_error_tag:
-            # Update stats using the netifaces lib
-            # Start with the default IP gateway
+            # Private IP address
+            # Get the default gateway thanks to the netifaces lib
             try:
                 default_gw = netifaces.gateways()['default'][netifaces.AF_INET]
             except (KeyError, AttributeError) as e:
                 logger.debug("Cannot grab default gateway IP address ({})".format(e))
-                return {}
+                return self.get_init_value()
             else:
                 stats['gateway'] = default_gw[0]
-
-            # Then the private IP address
             # If multiple IP addresses are available, only the one with the default gateway is returned
             try:
                 address = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['addr']
                 mask = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['netmask']
             except (KeyError, AttributeError) as e:
                 logger.debug("Cannot grab private IP address ({})".format(e))
-                return {}
+                return self.get_init_value()
             else:
                 stats['address'] = address
                 stats['mask'] = mask
                 stats['mask_cidr'] = self.ip_to_cidr(stats['mask'])
 
-            # Finally with the public IP address
+            # Public IP address
             time_since_update = getTimeSinceLastUpdate('public-ip')
             try:
-                if not self.public_ip_disabled and (
-                    self.stats.get('address') != address or time_since_update > self.public_address_refresh_interval
+                if not self.public_disabled and (
+                    self.public_address == "" or time_since_update > self.public_address_refresh_interval
                 ):
-                    self.public_address = PublicIpAddress().get()
-                    if not self.public_info_disabled:
-                        self.public_info = PublicIpInfo(
-                            self.public_address, self.censys_url, self.censys_username, self.censys_password
-                        ).get()
+                    self.public_info = PublicIpInfo(
+                        self.public_api, self.public_username, self.public_password
+                    ).get()
+                    self.public_address = self.public_info['ip']
             except (KeyError, AttributeError) as e:
                 logger.debug("Cannot grab public IP information ({})".format(e))
             else:
                 stats['public_address'] = self.public_address
-                # Too much information provided in the public_info
-                # Limit it to public_info_for_human
-                # stats['public_info'] = self.public_info
                 stats['public_info_human'] = self.public_info_for_human(self.public_info)
 
         elif self.input_method == 'snmp':
@@ -217,14 +193,7 @@ class PluginModel(GlancesPluginModel):
         if not public_info:
             return ''
 
-        field_result = []
-        for f in self.censys_fields:
-            field = f.split(':')
-            if len(field) == 1 and field[0] in public_info:
-                field_result.append('{}'.format(public_info[field[0]]))
-            elif len(field) == 2 and field[0] in public_info and field[1] in public_info[field[0]]:
-                field_result.append('{}'.format(public_info[field[0]][field[1]]))
-        return '/'.join(field_result)
+        return self.public_template.format(**public_info)
 
     @staticmethod
     def ip_to_cidr(ip):
@@ -240,57 +209,11 @@ class PluginModel(GlancesPluginModel):
         return sum(bin(int(x)).count('1') for x in ip.split('.'))
 
 
-class PublicIpAddress(object):
-    """Get public IP address from online services."""
-
-    def __init__(self, timeout=2):
-        """Init the class."""
-        self.timeout = timeout
-
-    def get(self):
-        """Get the first public IP address returned by one of the online services."""
-        q = queue.Queue()
-
-        for u, j, k in urls:
-            t = threading.Thread(target=self._get_ip_public, args=(q, u, j, k))
-            t.daemon = True
-            t.start()
-
-        timer = Timer(self.timeout)
-        ip = None
-        while not timer.finished() and ip is None:
-            if q.qsize() > 0:
-                ip = q.get()
-
-        if ip is None:
-            return None
-
-        return ', '.join(set([x.strip() for x in ip.split(',')]))
-
-    def _get_ip_public(self, queue_target, url, json=False, key=None):
-        """Request the url service and put the result in the queue_target."""
-        try:
-            response = urlopen(url, timeout=self.timeout).read().decode('utf-8')
-        except Exception as e:
-            logger.debug("IP plugin - Cannot open URL {} ({})".format(url, e))
-            queue_target.put(None)
-        else:
-            # Request depend on service
-            try:
-                if not json:
-                    queue_target.put(response)
-                else:
-                    queue_target.put(loads(response)[key])
-            except ValueError:
-                queue_target.put(None)
-
-
 class PublicIpInfo(object):
-    """Get public IP information from Censys online service."""
+    """Get public IP information from online service."""
 
-    def __init__(self, ip, url, username, password, timeout=2):
+    def __init__(self, url, username, password, timeout=2):
         """Init the class."""
-        self.ip = ip
         self.url = url
         self.username = username
         self.password = password
@@ -300,7 +223,7 @@ class PublicIpInfo(object):
         """Return the public IP information returned by one of the online service."""
         q = queue.Queue()
 
-        t = threading.Thread(target=self._get_ip_public_info, args=(q, self.ip, self.url, self.username, self.password))
+        t = threading.Thread(target=self._get_ip_public_info, args=(q, self.url, self.username, self.password))
         t.daemon = True
         t.start()
 
@@ -310,22 +233,18 @@ class PublicIpInfo(object):
             if q.qsize() > 0:
                 info = q.get()
 
-        if info is None:
-            return None
-
         return info
 
-    def _get_ip_public_info(self, queue_target, ip, url, username, password):
+    def _get_ip_public_info(self, queue_target, url, username, password):
         """Request the url service and put the result in the queue_target."""
-        request_url = "{}/v2/hosts/{}".format(url, ip)
         try:
-            response = urlopen_auth(request_url, username, password).read()
+            response = urlopen_auth(url, username, password).read()
         except Exception as e:
-            logger.debug("IP plugin - Cannot open URL {} ({})".format(request_url, e))
+            logger.debug("IP plugin - Cannot get public IP information from {} ({})".format(url, e))
             queue_target.put(None)
         else:
             try:
-                queue_target.put(loads(response)['result'])
+                queue_target.put(loads(response))
             except (ValueError, KeyError) as e:
-                logger.debug("IP plugin - Cannot get result field from {} ({})".format(request_url, e))
+                logger.debug("IP plugin - Cannot load public IP information from {} ({})".format(url, e))
                 queue_target.put(None)

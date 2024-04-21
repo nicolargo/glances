@@ -20,36 +20,43 @@ The system information message can be configured in the configuration file
     # Available dynamics information are: hostname, os_name, os_version, os_arch, linux_distro, platform
     system_info_msg= | My {os_name} system |
 
-It is possible to disable or define time interval to be used for refreshing the
-public IP address (default is 300 seconds) from the configuration
-file under the ``[ip]`` section:
+The header IP message can be configured from the ip ``[ip]`` section, it allows to display private and
+public IP information.
+
+In the default configuration file, public IP address information is disable. Set public_disabled, to False
+in order to enable the feature.
 
 .. code-block:: ini
     [ip]
+    # Disable display of private IP address
+    disable=False
+    # Configure the online service where public IP address information will be downloaded
+    # - public_disabled: Disable public IP address information (set to True for offline platform)
+    # - public_refresh_interval: Refresh interval between to calls to the online service
+    # - public_api: URL of the API (the API should return an JSON object)
+    # - public_username: Login for the online service (if needed)
+    # - public_password: Password for the online service (if needed)
+    # - public_field: Field name of the public IP address in onlibe service JSON message
+    # - public_template: Template to build the public message
+    #
+    # Example for IPLeak service:
+    # public_api=https://ipv4.ipleak.net/json/
+    # public_field=ip
+    # public_template={ip} {continent_name}/{country_name}/{city_name}
+    #
+    public_disabled=False
     public_refresh_interval=300
-    public_ip_disabled=True
-
+    public_api=https://ipv4.ipleak.net/json/
+    #public_username=<myname>
+    #public_password=<mysecret>
+    public_field=ip
+    public_template={continent_name}/{country_name}/{city_name}
 
 **NOTE:** Setting low values for `public_refresh_interval` will result in frequent
-HTTP requests to the IP detection servers. Recommended range: 120-600 seconds.
-Glances uses online services in order to get the IP addresses. Your IP address could be
-blocked if too many requests are done.
+HTTP requests to the onlive service defined in public_api. Recommended range: 120-600 seconds.
+Glances uses online services in order to get the IP addresses and the additional informations.
+Your IP address could be blocked if too many requests are done.
 
-If the Censys options are configured, the public IP address is also analysed (with the same interval)
-and additional information is displayed.
-
-.. code-block:: ini
-    [ip]
-    public_refresh_interval=300
-    public_ip_disabled=True
-    censys_url=https://search.censys.io/api
-    # Get your own credential here: https://search.censys.io/account/api
-    censys_username=CENSYS_API_ID
-    censys_password=CENSYS_API_SECRET
-    # List of fields to be displayed in user interface (comma separated)
-    censys_fields=location:continent,location:country,autonomous_system:name
-
-**Note:** Access to the Censys Search API need an account (https://censys.io/login).
 
 Example:
 
