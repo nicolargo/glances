@@ -297,14 +297,18 @@ class PluginModel(GlancesPluginModel):
                 to_bit = 8
                 unit = 'b'
 
-            if args.network_cumul:
+            if args.network_cumul and 'bytes_recv' in i:
                 rx = self.auto_unit(int(i['bytes_recv'] * to_bit)) + unit
                 tx = self.auto_unit(int(i['bytes_sent'] * to_bit)) + unit
                 ax = self.auto_unit(int(i['bytes_all'] * to_bit)) + unit
-            else:
+            elif 'bytes_recv_rate_per_sec' in i:
                 rx = self.auto_unit(int(i['bytes_recv_rate_per_sec'] * to_bit)) + unit
                 tx = self.auto_unit(int(i['bytes_sent_rate_per_sec'] * to_bit)) + unit
                 ax = self.auto_unit(int(i['bytes_all_rate_per_sec'] * to_bit)) + unit
+            else:
+                # Avoid issue when a new interface is created on the fly
+                # Example: start Glances, then start a new container
+                continue
 
             # New line
             ret.append(self.curse_new_line())
