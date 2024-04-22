@@ -9,7 +9,7 @@
 """Podman Extension unit for Glances' Containers plugin."""
 from datetime import datetime
 
-from glances.globals import iterkeys, itervalues, nativestr, pretty_date, string_value_to_float
+from glances.globals import iterkeys, itervalues, nativestr, pretty_date, string_value_to_float, replace_special_chars
 from glances.logger import logger
 from glances.plugins.containers.stats_streamer import StatsStreamer
 
@@ -334,7 +334,8 @@ class PodmanContainersExtension:
             stats['network_rx'] = stats['network'].get('rx') // stats['network'].get('time_since_update')
             stats['network_tx'] = stats['network'].get('tx') // stats['network'].get('time_since_update')
             stats['uptime'] = pretty_date(started_at)
-            stats['command'] = ' '.join(stats['command'])
+            # Manage special chars in command (see isse#2733)
+            stats['command'] = replace_special_chars(' '.join(stats['command']))
         else:
             stats['io'] = {}
             stats['cpu'] = {}

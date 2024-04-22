@@ -13,7 +13,7 @@ import os
 import copy
 
 from glances.logger import logger
-from glances.globals import WINDOWS, key_exist_value_not_none_not_v
+from glances.globals import WINDOWS, key_exist_value_not_none_not_v, replace_special_chars
 from glances.processes import glances_processes, sort_stats
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.core import PluginModel as CorePluginModel
@@ -487,9 +487,7 @@ class PluginModel(GlancesPluginModel):
             if cmdline:
                 path, cmd, arguments = split_cmdline(bare_process_name, cmdline)
                 # Manage end of line in arguments (see #1692)
-                arguments = arguments.replace('\r\n', ' ')
-                arguments = arguments.replace('\n', ' ')
-                arguments = arguments.replace('\t', ' ')
+                arguments = replace_special_chars(arguments)
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = self.layout_stat['command'].format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
