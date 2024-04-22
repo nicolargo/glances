@@ -436,3 +436,9 @@ def namedtuple_to_dict(data):
 def list_of_namedtuple_to_list_of_dict(data):
     """Convert a list of namedtuples to a dict, using the _asdict() method embeded in PsUtil stats."""
     return [namedtuple_to_dict(d) for d in data]
+
+
+def replace_special_chars(input_string, by=' '):
+    """Replace some special char by another in the input_string
+    Return: the string with the chars replaced"""
+    return input_string.replace('\r\n', by).replace('\n', by).replace('\t', by)

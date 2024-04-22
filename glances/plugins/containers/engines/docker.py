@@ -10,7 +10,7 @@
 """Docker Extension unit for Glances' Containers plugin."""
 import time
 
-from glances.globals import iterkeys, itervalues, nativestr, pretty_date
+from glances.globals import iterkeys, itervalues, nativestr, pretty_date, replace_special_chars
 from glances.logger import logger
 from glances.plugins.containers.stats_streamer import StatsStreamer
 
@@ -334,7 +334,7 @@ class DockerContainersExtension:
                 stats['network_rx'] = stats['network'].get('rx') // stats['network'].get('time_since_update')
                 stats['network_tx'] = stats['network'].get('tx') // stats['network'].get('time_since_update')
             stats['uptime'] = pretty_date(parser.parse(started_at).astimezone(tz.tzlocal()).replace(tzinfo=None))
-            stats['command'] = ' '.join(stats['command'])
+            stats['command'] = replace_special_chars(' '.join(stats['command']))
         else:
             stats['io'] = {}
             stats['cpu'] = {}
