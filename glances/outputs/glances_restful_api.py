@@ -43,8 +43,35 @@ try:
 except ImportError:
     logger.critical('Uvicorn import error. Glances cannot start in web server mode.')
     sys.exit(2)
+import contextlib
+import threading
+import time
 
 security = HTTPBasic()
+
+
+class GlancesUvicornServer(uvicorn.Server):
+    def install_signal_handlers(self):
+        pass
+
+    @contextlib.contextmanager
+    def run_in_thread(self, timeout=3):
+        thread = threading.Thread(target=self.run)
+        thread.start()
+        try:
+            chrono = Timer(timeout)
+            while not self.started and not chrono.finished():
+                time.sleep(0.5)
+            # Timeout reached
+            # Something go wrong...
+            # The Uvicorn server should be stopped
+            if not self.started:
+                self.should_exit = True
+                thread.join()
+            yield
+        finally:
+            self.should_exit = True
+            thread.join()
 
 
 class GlancesRestfulApi(object):
@@ -269,11 +296,23 @@ class GlancesRestfulApi(object):
             # 2) Glances standalone mode is running on Windows OS
             webbrowser.open(self.bind_url, new=2, autoraise=1)
 
-        # Run the Web application
+        # Start Uvicorn server
+        self._start_uvicorn()
+
+    def _start_uvicorn(self):
+        # Run the Uvicorn Web server
+        uvicorn_config = uvicorn.Config(self._app,
+                                        host=self.args.bind_address, port=self.args.port,
+                                        access_log=self.args.debug)
         try:
-            uvicorn.run(self._app, host=self.args.bind_address, port=self.args.port, access_log=self.args.debug)
-        except socket.error as e:
+            self.uvicorn_server = GlancesUvicornServer(config=uvicorn_config)
+        except Exception as e:
             logger.critical('Error: Can not ran Glances Web server ({})'.format(e))
+            self.uvicorn_server = None
+        else:
+            with self.uvicorn_server.run_in_thread():
+                while not self.uvicorn_server.should_exit:
+                    time.sleep(1)
 
     def end(self):
         """End the Web server"""
