@@ -9,6 +9,7 @@
 
 """Glances Restful/API and Web based interface."""
 
+from glances.logger import logger
 from glances.globals import WINDOWS
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
