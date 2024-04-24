@@ -8,7 +8,7 @@
 # Ex: Python 3.10 for Ubuntu 22.04
 # Note: ENV is for future running containers. ARG for building your Docker image.
 
-ARG IMAGE_VERSION=23.04
+ARG IMAGE_VERSION=23.10
 ARG PYTHON_VERSION=3.11
 
 ##############################################################################
