@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -30,15 +30,21 @@ class GlancesStdout(object):
     def build_list(self):
         """Return a list of tuples taken from self.args.stdout
 
-        :return: A list of tuples. Example -[(plugin, attribute), ... ]
+        :return: A list of tuples. Example [(plugin, key, attribute), ... ]
         """
         ret = []
         for p in self.args.stdout.split(','):
-            if '.' in p:
-                p, a = p.split('.')
-            else:
-                a = None
-            ret.append((p, a))
+            pka = p.split('.')
+            if len(pka) == 1:
+                # Only plugin name is provided
+                new = (pka[0], None, None)
+            elif len(pka) == 2:
+                # Plugin name and attribute is provided
+                new = (pka[0], None, pka[1])
+            elif len(pka) == 3:
+                # Plugin name, key and attribute are provided
+                new = (pka[0], pka[1], pka[2])
+            ret.append(new)
         return ret
 
     def end(self):
@@ -49,7 +55,7 @@ class GlancesStdout(object):
 
         Refresh every duration second.
         """
-        for plugin, attribute in self.plugins_list:
+        for plugin, key, attribute in self.plugins_list:
             # Check if the plugin exist and is enable
             if plugin in stats.getPluginsList() and stats.get_plugin(plugin).is_enabled():
                 stat = stats.get_plugin(plugin).get_export()
@@ -58,10 +64,26 @@ class GlancesStdout(object):
             # Display stats
             if attribute is not None:
                 # With attribute
-                try:
-                    printandflush("{}.{}: {}".format(plugin, attribute, stat[attribute]))
-                except KeyError as err:
-                    logger.error("Can not display stat {}.{} ({})".format(plugin, attribute, err))
+                if isinstance(stat, dict):
+                    try:
+                        printandflush("{}.{}: {}".format(plugin, attribute, stat[attribute]))
+                    except KeyError as err:
+                        logger.error("Can not display stat {}.{} ({})".format(plugin, attribute, err))
+                elif isinstance(stat, list):
+                    for i in stat:
+                        if key is None:
+                            i_key = i[i['key']]
+                        elif str(key) == str(i[i['key']]):
+                            i_key = key
+                        else:
+                            continue
+                        try:
+                            printandflush("{}.{}.{}: {}".format(plugin,
+                                                                i_key,
+                                                                attribute,
+                                                                i[attribute]))
+                        except KeyError as err:
+                            logger.error("Can not display stat {}.{} ({})".format(plugin, attribute, err))
             else:
                 # Without attribute
                 printandflush("{}: {}".format(plugin, stat))

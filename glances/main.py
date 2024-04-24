@@ -611,6 +611,10 @@ Examples of use:
         if getattr(args, 'enable_processlist', False):
             enable(args, 'processcount')
 
+        # Set a default export_process_filter (with all process) when using the stdout mode
+        if getattr(args, 'stdout', True) and args.process_filter is None:
+            setattr(args, 'export_process_filter', '.*')
+
     def init_client_server(self, args):
         """Init Glances client/server mode."""
 

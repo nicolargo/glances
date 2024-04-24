@@ -28,16 +28,18 @@ It is also possible to display RAW (Python) stats directly to stdout using:
 
 .. code-block:: console
 
-    $ glances --stdout cpu.user,mem.used,load
+    $ glances --stdout cpu.user,mem.used,load,network.wlp2s0.bytes_all
     cpu.user: 30.7
     mem.used: 3278204928
     load: {'cpucore': 4, 'min1': 0.21, 'min5': 0.4, 'min15': 0.27}
+    network.wlp2s0.bytes_all: 13479
     cpu.user: 3.4
     mem.used: 3275251712
     load: {'cpucore': 4, 'min1': 0.19, 'min5': 0.39, 'min15': 0.27}
+    network.wlp2s0.bytes_all: 12868
     ...
 
-or in a CSV format thanks to the stdout-csv option:
+or in a CSV format thanks to the stdout-csv option (key not supported in this mode):
 
 .. code-block:: console
 
