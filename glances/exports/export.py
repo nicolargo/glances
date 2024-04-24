@@ -183,7 +183,7 @@ class GlancesExport(object):
             else:
                 pre_key = ''
             # Walk through the dict
-            for key, value in iteritems(stats):
+            for key, value in sorted(iteritems(stats)):
                 if isinstance(value, bool):
                     value = json_dumps(value)
                 if isinstance(value, list):

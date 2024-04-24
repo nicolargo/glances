@@ -42,11 +42,6 @@ class GlancesProcesses(object):
         # Should be set by the set_args method
         self.args = None
 
-        # Add internals caches because psutil do not cache all the stats
-        # See: https://github.com/giampaolo/psutil/issues/462
-        self.username_cache = {}
-        self.cmdline_cache = {}
-
         # The internals caches will be cleaned each 'cache_timeout' seconds
         self.cache_timeout = cache_timeout
         # First iteration, no cache
@@ -363,14 +358,14 @@ class GlancesProcesses(object):
     def is_selected_extended_process(self, position):
         """Return True if the process is the selected one for extended stats."""
         return (
-            hasattr(self.args, 'programs')
-            and not self.args.programs
-            and hasattr(self.args, 'enable_process_extended')
-            and self.args.enable_process_extended
-            and not self.disable_extended_tag
-            and hasattr(self.args, 'cursor_position')
-            and position == self.args.cursor_position
-            and not self.args.disable_cursor
+            hasattr(self.args, 'programs') and
+            not self.args.programs and
+            hasattr(self.args, 'enable_process_extended') and
+            self.args.enable_process_extended and
+            not self.disable_extended_tag and
+            hasattr(self.args, 'cursor_position') and
+            position == self.args.cursor_position and
+            not self.args.disable_cursor
         )
 
     def update(self):
@@ -389,7 +384,8 @@ class GlancesProcesses(object):
         #####################
         sorted_attrs = ['cpu_percent', 'cpu_times', 'memory_percent', 'name', 'status', 'num_threads']
         displayed_attr = ['memory_info', 'nice', 'pid']
-        # 'name' can not be cached because it is used for filtering
+        # The following attributes are cached and only retreive every self.cache_timeout seconds
+        # Warning: 'name' can not be cached because it is used for filtering
         cached_attrs = ['cmdline', 'username']
 
         # Some stats are optional
