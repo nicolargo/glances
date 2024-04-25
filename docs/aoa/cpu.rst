@@ -53,6 +53,19 @@ To switch to per-CPU stats, just hit the ``1`` key:
 .. image:: ../_static/per-cpu.png
 
 In this case, Glances will show on line per logical CPU on the system.
+If you have multiple core, it is possible to define the maximun number
+of CPU to display. The top 'max_cpu_display' will be display and an
+extra line with the mean of all others CPU will be added.
+
+.. code-block:: ini
+
+  [percpu]
+  # Define the maximum number of CPU display at a time
+  # If the number of CPU is higher than:
+  # - display the top 'max_cpu_display' (sorted by CPU consumption)
+  # - a last line will be added with the sum of all other CPUs
+  max_cpu_display=4
+
 Logical cores means the number of physical cores multiplied by the number
 of threads that can run on each core (this is known as Hyper Threading).
 

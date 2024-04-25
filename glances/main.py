@@ -175,7 +175,13 @@ Examples of use:
             help='task\'s cpu usage will be divided by the total number of CPUs',
         )
         parser.add_argument(
-            '-1', '--percpu', action='store_true', default=False, dest='percpu', help='start Glances in per CPU mode'
+            '-1',
+            '--percpu',
+            '--per-cpu',
+            action='store_true',
+            default=False,
+            dest='percpu',
+            help='start Glances in per CPU mode'
         )
         parser.add_argument(
             '-2',
