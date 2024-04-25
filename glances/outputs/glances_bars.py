@@ -13,6 +13,8 @@ from __future__ import division
 
 from math import modf
 
+from glances.logger import logger
+
 
 class Bar(object):
     """Manage bar (progression or status).

@@ -9,6 +9,7 @@
 
 """Per-CPU plugin."""
 
+from glances.logger import logger
 from glances.cpu_percent import cpu_percent
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -106,6 +107,9 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+        # Manage the maximum number of CPU to display (related to enhancement request #2734)
+        self.max_cpu_display = config.get_int_value('percpu', 'max_cpu_display', 4)
+
     def get_key(self):
         """Return the key of the list."""
         return 'cpu_number'
@@ -139,29 +143,44 @@ class PluginModel(GlancesPluginModel):
         if not self.stats or not self.args.percpu or self.is_disabled():
             return ret
 
+        # Define the default header
+        header = ['user', 'system', 'idle', 'iowait', 'steal']
+
         # Build the string message
         if self.is_disabled('quicklook'):
-            msg = '{:7}'.format('PER CPU')
+            msg = '{:5}'.format('CPU')
             ret.append(self.curse_add_line(msg, "TITLE"))
+            header.insert(0, 'total')
 
         # Per CPU stats displayed per line
-        for stat in ['user', 'system', 'idle', 'iowait', 'steal']:
+        for stat in header:
             if stat not in self.stats[0]:
                 continue
             msg = '{:>7}'.format(stat)
             ret.append(self.curse_add_line(msg))
 
+        # Manage the maximum number of CPU to display (related to enhancement request #2734)
+        if len(self.stats) > self.max_cpu_display:
+            # If the number of CPU is > max_cpu_display then sort and display top 'n'
+            percpu_list = sorted(self.stats, key=lambda x: x['total'], reverse=True)
+        else:
+            percpu_list = self.stats
+
         # Per CPU stats displayed per column
-        for cpu in self.stats:
+        for cpu in percpu_list[0: self.max_cpu_display]:
             ret.append(self.curse_new_line())
             if self.is_disabled('quicklook'):
                 try:
-                    msg = '{:6.1f}%'.format(cpu['total'])
+                    cpu_id = cpu[cpu['key']]
+                    if cpu_id < 10:
+                        msg = 'CPU{:1} '.format(cpu_id)
+                    else:
+                        msg = '{:4} '.format(cpu_id)
                 except TypeError:
                     # TypeError: string indices must be integers (issue #1027)
-                    msg = '{:>6}%'.format('?')
+                    msg = '{:4} '.format('?')
                 ret.append(self.curse_add_line(msg))
-            for stat in ['user', 'system', 'idle', 'iowait', 'steal']:
+            for stat in header:
                 if stat not in self.stats[0]:
                     continue
                 try:
@@ -169,5 +188,22 @@ class PluginModel(GlancesPluginModel):
                 except TypeError:
                     msg = '{:>6}%'.format('?')
                 ret.append(self.curse_add_line(msg, self.get_alert(cpu[stat], header=stat)))
+
+        # Add a new line with sum of all others CPU
+        if len(self.stats) > self.max_cpu_display:
+            ret.append(self.curse_new_line())
+            if self.is_disabled('quicklook'):
+                ret.append(self.curse_add_line('CPU* '))
+            for stat in header:
+                if stat not in self.stats[0]:
+                    continue
+                cpu_stat = sum([i[stat] for i in percpu_list[0: self.max_cpu_display]]) / len(
+                    [i[stat] for i in percpu_list[0: self.max_cpu_display]]
+                )
+                try:
+                    msg = '{:6.1f}%'.format(cpu_stat)
+                except TypeError:
+                    msg = '{:>6}%'.format('?')
+                ret.append(self.curse_add_line(msg, self.get_alert(cpu_stat, header=stat)))
 
         return ret

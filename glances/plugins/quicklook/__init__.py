@@ -85,12 +85,14 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the quicklook plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config,
-            items_history_list=items_history_list,
-            fields_description=fields_description
+            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
         )
+
         # We want to display the stat in the curse interface
         self.display_curse = True
+
+        # Manage the maximum number of CPU to display (related to enhancement request #2734)
+        self.max_cpu_display = config.get_int_value('percpu', 'max_cpu_display', 4)
 
         # Define the stats list
         self.stats_list = self.get_conf_value('list', default=self.DEFAULT_STATS_LIST)
@@ -158,9 +160,7 @@ class PluginModel(GlancesPluginModel):
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
 
         # Alert for LOAD
-        self.views['load']['decoration'] = self.get_alert(
-            self.stats['load'], header='load'
-        )
+        self.views['load']['decoration'] = self.get_alert(self.stats['load'], header='load')
 
         # Define the list of stats to display
         self.views['list'] = self.stats_list
@@ -186,8 +186,7 @@ class PluginModel(GlancesPluginModel):
                 data[key] = Sparkline(max_width)
             else:
                 # Fallback to bar if Sparkline module is not installed
-                data[key] = Bar(max_width,
-                                bar_char=self.get_conf_value('bar_char', default=['|'])[0])
+                data[key] = Bar(max_width, bar_char=self.get_conf_value('bar_char', default=['|'])[0])
 
         # Build the string message
         ##########################
@@ -209,23 +208,7 @@ class PluginModel(GlancesPluginModel):
         # Loop over CPU, MEM and LOAD
         for key in self.stats_list:
             if key == 'cpu' and args.percpu:
-                if type(data[key]).__name__ == 'Sparkline':
-                    raw_cpu = self.get_raw_history(item='percpu', nb=data[key].size)
-                for cpu_index, cpu in enumerate(self.stats['percpu']):
-                    if type(data[key]).__name__ == 'Sparkline':
-                        # Sparkline display an history
-                        data[key].percents = [i[1][cpu_index]['total'] for i in raw_cpu]
-                        # A simple padding in order to align metrics to the right
-                        data[key].percents += [None] * (data[key].size - len(data[key].percents))
-                    else:
-                        # Bar only the last value
-                        data[key].percent = cpu['total']
-                    if cpu[cpu['key']] < 10:
-                        msg = '{:3}{} '.format(key.upper(), cpu['cpu_number'])
-                    else:
-                        msg = '{:4} '.format(cpu['cpu_number'])
-                    ret.extend(self._msg_create_line(msg, data[key], key))
-                    ret.append(self.curse_new_line())
+                ret.extend(self._msg_per_cpu(data, key, max_width))
             else:
                 if type(data[key]).__name__ == 'Sparkline':
                     # Sparkline display an history
@@ -243,6 +226,63 @@ class PluginModel(GlancesPluginModel):
         ret.pop()
 
         # Return the message with decoration
+        return ret
+
+    def _msg_per_cpu(self, data, key, max_width):
+        """Create per-cpu view"""
+        ret = []
+
+        # Get history (only used with the sparkline option)
+        if type(data[key]).__name__ == 'Sparkline':
+            raw_cpu = self.get_raw_history(item='percpu', nb=data[key].size)
+
+        # Manage the maximum number of CPU to display (related to enhancement request #2734)
+        if len(self.stats['percpu']) > self.max_cpu_display:
+            # If the number of CPU is > max_cpu_display then sort and display top 'n'
+            percpu_list = sorted(self.stats['percpu'], key=lambda x: x['total'], reverse=True)
+        else:
+            percpu_list = self.stats['percpu']
+
+        # Display the first max_cpu_display CPU
+        for cpu in percpu_list[0: self.max_cpu_display]:
+            cpu_id = cpu[cpu['key']]
+            if type(data[key]).__name__ == 'Sparkline':
+                # Sparkline display an history
+                data[key].percents = [i[1][cpu_id]['total'] for i in raw_cpu]
+                # A simple padding in order to align metrics to the right
+                data[key].percents += [None] * (data[key].size - len(data[key].percents))
+            else:
+                # Bar will only display the last value
+                data[key].percent = cpu['total']
+            if cpu_id < 10:
+                msg = '{:3}{} '.format(key.upper(), cpu_id)
+            else:
+                msg = '{:4} '.format(cpu_id)
+            ret.extend(self._msg_create_line(msg, data[key], key))
+            ret.append(self.curse_new_line())
+
+        # Add a new line with sum of all others CPU
+        if len(self.stats['percpu']) > self.max_cpu_display:
+            if type(data[key]).__name__ == 'Sparkline':
+                sum_other = Sparkline(max_width)
+                # Sparkline display an history
+                sum_other.percents = [
+                    sum([i['total'] for i in r[1] if i[i['key']] >= self.max_cpu_display])
+                    / len([i['total'] for i in r[1] if i[i['key']] >= self.max_cpu_display])
+                    for r in raw_cpu
+                ]
+                # A simple padding in order to align metrics to the right
+                sum_other.percents += [None] * (sum_other.size - len(sum_other.percents))
+            else:
+                # Bar will only display the last value
+                sum_other = Bar(max_width, bar_char=self.get_conf_value('bar_char', default=['|'])[0])
+                sum_other.percent = sum([i['total'] for i in percpu_list[self.max_cpu_display:]]) / len(
+                    percpu_list[self.max_cpu_display:]
+                )
+            msg = msg = '{:3}* '.format(key.upper())
+            ret.extend(self._msg_create_line(msg, sum_other, key))
+            ret.append(self.curse_new_line())
+
         return ret
 
     def _msg_create_line(self, msg, data, key):
