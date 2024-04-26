@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -14,7 +14,6 @@ import sys
 import tempfile
 from io import open
 import webbrowser
-import socket
 from urllib.parse import urljoin
 
 # Replace typing_extensions by typing when Python 3.8 support will be dropped
@@ -115,8 +114,13 @@ class GlancesRestfulApi(object):
             self._app.include_router(APIRouter(prefix=self.url_prefix.rstrip('/')))
 
         # Set path for WebUI
-        self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/public')
-        self.TEMPLATE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/templates')
+        webui_root_path = config.get_value('outputs',
+                                           'webui_root_path',
+                                           default=os.path.dirname(os.path.realpath(__file__)))
+        if webui_root_path == '':
+            webui_root_path = os.path.dirname(os.path.realpath(__file__))
+        self.STATIC_PATH = os.path.join(webui_root_path, 'static/public')
+        self.TEMPLATE_PATH = os.path.join(webui_root_path, 'static/templates')
         self._templates = Jinja2Templates(directory=self.TEMPLATE_PATH)
 
         # FastAPI Enable CORS

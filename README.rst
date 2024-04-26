@@ -201,8 +201,8 @@ or
 *Note*: This is only supported on some GNU/Linux distributions and Mac OS X.
 If you want to support other distributions, please contribute to `glancesautoinstall`_.
 
-Docker: the fun way
--------------------
+Docker: the cloudy way
+----------------------
 
 Glances Docker images are availables. You can use it to monitor your
 server and all your containers !
@@ -268,7 +268,8 @@ may not be the latest version and only basics plugins are enabled.
 Note: The Debian package (and all other Debian-based distributions) do
 not include anymore the JS statics files used by the Web interface
 (see ``issue2021``). If you want to add it to your Glances installation,
-follow the instructions: ``issue2021comment``.
+follow the instructions: ``issue2021comment``. In Glances version 4 and
+higher, the path to the statics file is configurable (see ``issue2612``).
 
 FreeBSD
 -------
@@ -490,6 +491,7 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _package: https://repology.org/project/glances/versions
 .. _sponsors: https://github.com/sponsors/nicolargo
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
-.. _issue2021: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
+.. _issue2021: https://github.com/nicolargo/glances/issues/2021
 .. _issue2021comment: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
+.. _issue2612: https://github.com/nicolargo/glances/issues/2612
 .. _Docker: https://github.com/nicolargo/glances/blob/develop/docs/docker.rst
