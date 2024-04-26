@@ -82,6 +82,9 @@ export default {
         args() {
             return this.store.args || {};
         },
+        config() {
+            return this.store.config || {};
+        },
         stats() {
             return this.data.stats['quicklook'];
         },
@@ -101,10 +104,22 @@ export default {
             return this.stats.cpu_hz;
         },
         percpus() {
-            return this.stats.percpu.map(({ cpu_number: number, total }) => ({
-                number,
-                total
-            }));
+            var cpu_list = this.stats.percpu.map(({ cpu_number: number, total }) => ({ number, total }))
+            var max_cpu_display = parseInt(this.config.percpu.max_cpu_display)
+            if (this.stats.percpu.length > max_cpu_display) {
+                var cpu_list_sorted = cpu_list.sort(function (a, b) { return b.total - a.total; })
+                var other_cpu = {
+                    number: "x",
+                    total: Number((cpu_list_sorted.slice(max_cpu_display).reduce((n, { total }) => n + total, 0) / (this.stats.percpu.length - max_cpu_display)).toFixed(1))
+                }
+                // Add the top n this
+                // and the mean of others CPU
+                cpu_list_sorted = cpu_list_sorted.slice(0, max_cpu_display)
+                cpu_list_sorted.push(other_cpu)
+            }
+            return this.stats.percpu.length <= max_cpu_display
+                ? cpu_list
+                : cpu_list_sorted
         },
         stats_list_after_cpu() {
             return this.view.list.filter((key) => !key.includes('cpu'));
