@@ -56,6 +56,7 @@ fields_description = {
     },
 }
 
+
 class PluginModel(GlancesPluginModel):
     """Glances sensors plugin.
 
@@ -155,13 +156,10 @@ class PluginModel(GlancesPluginModel):
         # Global change on stats
         self.stats = self.get_init_value()
         for stat in stats:
-            # Do not take hide stat into account
+            # Hide sensors configured in the hide ou show configuration key
             if not self.is_display(stat["label"].lower()):
                 continue
-            # Set the alias for each stat
-            # alias = self.has_alias(stat["label"].lower())
-            # if alias:
-            #     stat["label"] = alias
+            # Set alias for sensors
             stat["label"] = self.__get_alias(stat)
             # Update the stats
             self.stats.append(stat)

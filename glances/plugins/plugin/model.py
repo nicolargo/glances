@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -908,7 +908,7 @@ class GlancesPluginModel(object):
 
     def read_alias(self):
         if self.plugin_name + '_' + 'alias' in self._limits:
-            return {i.split(':')[0]: i.split(':')[1] for i in self._limits[self.plugin_name + '_' + 'alias'][0].split(',')}
+            return {i.split(':')[0].lower(): i.split(':')[1] for i in self._limits[self.plugin_name + '_' + 'alias']}
         else:
             return dict()
 
