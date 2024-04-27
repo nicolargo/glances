@@ -253,6 +253,9 @@ run-docker-ubuntu-dev: ## Start Glances Ubuntu Docker dev in console mode
 run-webserver: ## Start Glances in Web server mode
 	./venv/bin/python -m glances -C ./conf/glances.conf -w
 
+run-webserver-local-conf: ## Start Glances in Web server mode with the system conf file
+	./venv/bin/python -m glances -w
+
 run-restapiserver: ## Start Glances in REST API server mode
 	./venv/bin/python -m glances -C ./conf/glances.conf -w --disable-webui
 
