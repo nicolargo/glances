@@ -95,10 +95,7 @@ export default {
     },
     methods: {
         formatDate(date) {
-            return new Date(date)
-                .toISOString()
-                .slice(0, 19)
-                .replace(/[^\d-:]/, ' ');
+            return new Date(date).toLocaleString();
         }
     }
 };

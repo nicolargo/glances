@@ -1,7 +1,7 @@
 <template>
     <section id="now" class="plugin">
         <div class="table-row">
-            <div class="table-cell text-left">{{ localDate(value) }}</div>
+            <div class="table-cell text-left">{{ localDate(date_iso) }}</div>
         </div>
     </section>
 </template>
@@ -14,16 +14,13 @@ export default {
         }
     },
     computed: {
-        value() {
-            return this.data.stats['now'];
+        date_iso() {
+            return this.data.stats['now']['iso'];
         }
     },
     methods: {
         localDate(date) {
-            console.log(date)
-            var local_date = new Date(date)
-            console.log(local_date)
-            return local_date.toISOString().slice(0, 19).replace(/[^\d-:]/, ' ');
+            return new Date(date).toLocaleString();
         }
     }
 };

@@ -13,7 +13,7 @@ NodeJS should be installed/updated on your system.
 Example on Ubuntu OS:
 
 ```bash
-sudo apt install nodejs
+sudo apt install nodejs npm
 ```
 
 ### Upgrade NodeJS
@@ -22,7 +22,7 @@ Example on Ubuntu OS:
 
 ```bash
 sudo apt update
-sudo apt install nodejs
+sudo apt install nodejs npm
 sudo npm install -g n
 sudo n lts
 hash -r
