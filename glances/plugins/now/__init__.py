@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -10,18 +10,42 @@
 """Now (current date) plugin."""
 
 from time import tzname, strftime
+import datetime
 from glances.plugins.plugin.model import GlancesPluginModel
+
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: if True then compute and add *_gauge and *_rate_per_is fields
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'custom': {
+        'description': 'Current date in custom format.'
+    },
+    'iso': {
+        'description': 'Current date in ISO 8601 format.'
+    }
+}
 
 
 class PluginModel(GlancesPluginModel):
     """Plugin to get the current date/time.
 
-    stats is (string)
+    stats is a dict:
+    {
+        "custom": "2024-04-27 16:43:52 CEST",
+        "iso": "2024-04-27T16:28:23.382748"
+    }
     """
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config)
+        super(PluginModel, self).__init__(
+            args=args,
+            config=config,
+            fields_description=fields_description,
+            stats_init_value={})
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -35,23 +59,23 @@ class PluginModel(GlancesPluginModel):
             if 'global' in config.as_dict():
                 self.strftime = config.as_dict()['global']['strftime_format']
 
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = ''
-
     def update(self):
         """Update current date/time."""
-        # Had to convert it to string because datetime is not JSON serializable
-        # Add the time zone (issue #1249 / #1337 / #1598)
+        stats = self.get_init_value()
 
+        # Start with the ISO format
+        stats['iso'] = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()
+
+        # Then the custom
         if self.strftime:
-            self.stats = strftime(self.strftime)
+            stats['custom'] = strftime(self.strftime)
         else:
             if len(tzname[1]) > 6:
-                self.stats = strftime('%Y-%m-%d %H:%M:%S %z')
+                stats['custom'] = strftime('%Y-%m-%d %H:%M:%S %z')
             else:
-                self.stats = strftime('%Y-%m-%d %H:%M:%S %Z')
+                stats['custom'] = strftime('%Y-%m-%d %H:%M:%S %Z')
 
+        self.stats = stats
         return self.stats
 
     def msg_curse(self, args=None, max_width=None):
@@ -64,7 +88,7 @@ class PluginModel(GlancesPluginModel):
 
         # Build the string message
         # 23 is the padding for the process list
-        msg = '{:23}'.format(self.stats)
+        msg = '{:23}'.format(self.stats['custom'])
         ret.append(self.curse_add_line(msg))
 
         return ret
