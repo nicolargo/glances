@@ -533,12 +533,14 @@ class _GlancesCurses(object):
             curses.echo()
         if hasattr(curses, 'nocbreak'):
             curses.nocbreak()
-        if hasattr(curses, 'curs_set'):
-            try:
-                curses.curs_set(1)
-            except Exception:
-                pass
-        curses.endwin()
+        try:
+            curses.curs_set(1)
+        except Exception:
+            pass
+        try:
+            curses.endwin()
+        except Exception:
+            pass
 
     def init_line_column(self):
         """Init the line and column position for the curses interface."""
