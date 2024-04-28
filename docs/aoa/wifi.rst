@@ -3,9 +3,7 @@
 Wi-Fi
 =====
 
-*Availability: Linux only*
-
-*Dependency: this plugin uses the optional wifi Python lib*
+*Availability: Linux (with an /proc/net/wireless file) only*
 
 .. image:: ../_static/wifi.png
 

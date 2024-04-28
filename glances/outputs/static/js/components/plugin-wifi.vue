@@ -8,13 +8,10 @@
         <div class="table-row" v-for="(hotspot, hotspotId) in hotspots" :key="hotspotId">
             <div class="table-cell text-left">
                 {{ $filters.limitTo(hotspot.ssid, 20) }}
-                <span>
-                    {{ hotspot.security }}
-                </span>
             </div>
             <div class="table-cell"></div>
-            <div class="table-cell" :class="getDecoration(hotspot, 'signal')">
-                {{ hotspot.signal }}
+            <div class="table-cell" :class="getDecoration(hotspot, 'quality_level')">
+                {{ hotspot.quality_level }}
             </div>
         </div>
     </section>
@@ -44,8 +41,7 @@ export default {
                     }
                     return {
                         ssid: hotspotData['ssid'],
-                        signal: hotspotData['signal'],
-                        security: hotspotData['security']
+                        quality_level: hotspotData['quality_level']
                     };
                 })
                 .filter(Boolean);

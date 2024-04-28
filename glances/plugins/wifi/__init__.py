@@ -9,15 +9,7 @@
 
 """Wifi plugin.
 
-Stats are retreived from the nmcli command line (Linux only):
-
-# nmcli -t -f active,ssid,signal,security,chan dev wifi
-
-# nmcli -t -f active,ssid,signal dev wifi
-no:Livebox-C820:77
-yes:Livebox-C820:72
-
-or the /proc/net/wireless file (Linux only):
+Stats are retreived from the /proc/net/wireless file (Linux only):
 
 # cat /proc/net/wireless
 Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE
@@ -26,28 +18,38 @@ wlp2s0: 0000   51.  -59.  -256        0      0      0      0   5881        0
 """
 
 import operator
-from shutil import which
-import threading
-import time
 
 from glances.globals import nativestr, file_exists
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.secure import secure_popen
 from glances.logger import logger
-
-# Test if the nmcli command exists and is executable
-# it allows to get the list of the available hotspots
-NMCLI_COMMAND = which('nmcli')
-NMCLI_ARGS = '-t -f active,ssid,signal,security dev wifi'
-nmcli_command_exists = NMCLI_COMMAND is not None
 
 # Backup solution is to use the /proc/net/wireless file
 # but it only give signal information about the current hotspot
 WIRELESS_FILE = '/proc/net/wireless'
 wireless_file_exists = file_exists(WIRELESS_FILE)
 
-if not nmcli_command_exists and not wireless_file_exists:
-    logger.debug("Wifi plugin is disabled (no %s command or %s file found)" % ('nmcli', WIRELESS_FILE))
+if not wireless_file_exists:
+    logger.debug("Wifi plugin is disabled (no %s file found)" % (WIRELESS_FILE))
+
+# Fields description
+# description: human readable description
+# short_name: shortname to use un UI
+# unit: unit type
+# rate: if True then compute and add *_gauge and *_rate_per_is fields
+# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+fields_description = {
+    'ssid': {
+        'description': 'Wi-Fi network name.'
+    },
+    'quality_link': {
+        'description': 'Signal quality level.',
+        'unit': 'dBm',
+    },
+    'quality_level': {
+        'description': 'Signal strong level.',
+        'unit': 'dBm',
+    },
+}
 
 
 class PluginModel(GlancesPluginModel):
@@ -93,22 +95,10 @@ class PluginModel(GlancesPluginModel):
         stats = self.get_init_value()
 
         # Exist if we can not grab the stats
-        if not nmcli_command_exists and not wireless_file_exists:
+        if not wireless_file_exists:
             return stats
 
-        if self.input_method == 'local' and nmcli_command_exists:
-            # Only refresh if there is not other scanning thread
-            if self._thread is None:
-                thread_is_running = False
-            else:
-                thread_is_running = self._thread.is_alive()
-            if not thread_is_running:
-                # Run hotspot scanner thanks to the nmcli command
-                self._thread = ThreadHotspot(self.get_refresh_time())
-                self._thread.start()
-            # Get the result (or [] if the scan is ongoing)
-            stats = self._thread.stats
-        elif self.input_method == 'local' and wireless_file_exists:
+        if self.input_method == 'local' and wireless_file_exists:
             # As a backup solution, use the /proc/net/wireless file
             with open(WIRELESS_FILE, 'r') as f:
                 # The first two lines are header
@@ -124,8 +114,8 @@ class PluginModel(GlancesPluginModel):
                         {
                             'key': self.get_key(),
                             'ssid': wifi_stats[0][:-1],
-                            'signal': float(wifi_stats[3]),
-                            'security': '',
+                            'quality_link': float(wifi_stats[2]),
+                            'quality_level': float(wifi_stats[3]),
                         }
                     )
                     # Next line
@@ -169,9 +159,9 @@ class PluginModel(GlancesPluginModel):
         super(PluginModel, self).update_views()
 
         # Add specifics information
-        # Alert on signal thresholds
+        # Alert on quality_level thresholds
         for i in self.stats:
-            self.views[i[self.get_key()]]['signal']['decoration'] = self.get_alert(i['signal'])
+            self.views[i[self.get_key()]]['quality_level']['decoration'] = self.get_alert(i['quality_level'])
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -201,73 +191,23 @@ class PluginModel(GlancesPluginModel):
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
             # Do not display hotspot with no name (/ssid)...
             # of ssid/signal None... See issue #1151 and #issue1973
-            if i['ssid'] == '' or i['ssid'] is None or i['signal'] is None:
+            if i['ssid'] == '' or i['ssid'] is None or i['quality_level'] is None:
                 continue
             ret.append(self.curse_new_line())
             # New hotspot
             hotspot_name = i['ssid']
-            # Cut hotspot_name if it is too long
-            if len(hotspot_name) > if_name_max_width:
-                hotspot_name = '_' + hotspot_name[-if_name_max_width - len(i['security']) + 1 :]
-            # Add the new hotspot to the message
-            msg = '{:{width}} {security}'.format(
-                nativestr(hotspot_name), width=if_name_max_width - len(i['security']) - 1, security=i['security']
+            msg = '{:{width}}'.format(
+                nativestr(hotspot_name),
+                width=if_name_max_width
             )
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format(
-                i['signal'],
+                i['quality_level'],
             )
             ret.append(
-                self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='signal', option='decoration'))
+                self.curse_add_line(msg, self.get_views(item=i[self.get_key()],
+                                                        key='quality_level',
+                                                        option='decoration'))
             )
 
         return ret
-
-
-class ThreadHotspot(threading.Thread):
-    """
-    Specific thread for the Wifi hotspot scanner.
-    """
-
-    def __init__(self, refresh_time=2):
-        """Init the class."""
-        super(ThreadHotspot, self).__init__()
-        # Refresh time
-        self.refresh_time = refresh_time
-        # Event needed to stop properly the thread
-        self._stopper = threading.Event()
-        # Is part of Ports plugin
-        self.plugin_name = "wifi"
-
-    def run(self):
-        """Get hotspots stats using the nmcli command line"""
-        while not self.stopped():
-            # Run the nmcli command
-            nmcli_raw = secure_popen(NMCLI_COMMAND + ' ' + NMCLI_ARGS).split('\n')
-            nmcli_result = []
-            for h in nmcli_raw:
-                h = h.split(':')
-                if len(h) != 4 or h[0] != 'yes':
-                    # Do not process the line if it is not the active hotspot
-                    continue
-                nmcli_result.append({'key': 'ssid', 'ssid': h[1], 'signal': -float(h[2]), 'security': h[3]})
-            self.thread_stats = nmcli_result
-            # Wait refresh time until next scan
-            # Note: nmcli cache the result for x seconds
-            time.sleep(self.refresh_time)
-
-    @property
-    def stats(self):
-        """Stats getter."""
-        if hasattr(self, 'thread_stats'):
-            return self.thread_stats
-        else:
-            return []
-
-    def stop(self, timeout=None):
-        """Stop the thread."""
-        self._stopper.set()
-
-    def stopped(self):
-        """Return True is the thread is stopped."""
-        return self._stopper.is_set()
