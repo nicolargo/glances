@@ -157,7 +157,6 @@ class _GlancesCurses(object):
                 logger.critical("Cannot init the curses library ({})".format(e))
                 sys.exit(1)
 
-
         # Load configuration file
         self.load_config(config)
 
@@ -204,7 +203,6 @@ class _GlancesCurses(object):
             self._left_sidebar = config.get_list_value('outputs',
                                                        'left_menu',
                                                        default=self._left_sidebar)
-
 
     def _init_history(self):
         """Init the history option."""
@@ -439,7 +437,6 @@ class _GlancesCurses(object):
         else:
             self.enable_top()
 
-
     def _handle_process_extended(self):
         self.args.enable_process_extended = not self.args.enable_process_extended
         if not self.args.enable_process_extended:
@@ -620,6 +617,33 @@ class _GlancesCurses(object):
 
         return ret
 
+    def set_number_of_processes(self, stat_display):
+        """Set the number of processes to display
+        The value is dynamicaly computed."""
+        max_processes_displayed = (
+            self.term_window.getmaxyx()[0]
+            - 11
+            - (0 if 'containers' not in stat_display else self.get_stats_display_height(stat_display["containers"]))
+            - (
+                0
+                if 'processcount' not in stat_display
+                else self.get_stats_display_height(stat_display["processcount"])
+            )
+            - (0 if 'amps' not in stat_display else self.get_stats_display_height(stat_display["amps"]))
+            - (0 if 'alert' not in stat_display else self.get_stats_display_height(stat_display["alert"]))
+        )
+
+        try:
+            if self.args.enable_process_extended:
+                max_processes_displayed -= 4
+        except AttributeError:
+            pass
+        if max_processes_displayed < 0:
+            max_processes_displayed = 0
+        if glances_processes.max_processes is None or glances_processes.max_processes != max_processes_displayed:
+            logger.debug("Set number of displayed processes to {}".format(max_processes_displayed))
+            glances_processes.max_processes = max_processes_displayed
+
     def display(self, stats, cs_status=None):
         """Display stats on the screen.
 
@@ -643,29 +667,7 @@ class _GlancesCurses(object):
         __stat_display = self.__get_stat_display(stats, layer=cs_status)
 
         # Adapt number of processes to the available space
-        max_processes_displayed = (
-            self.term_window.getmaxyx()[0]
-            - 11
-            - (0 if 'containers' not in __stat_display else self.get_stats_display_height(__stat_display["containers"]))
-            - (
-                0
-                if 'processcount' not in __stat_display
-                else self.get_stats_display_height(__stat_display["processcount"])
-            )
-            - (0 if 'amps' not in __stat_display else self.get_stats_display_height(__stat_display["amps"]))
-            - (0 if 'alert' not in __stat_display else self.get_stats_display_height(__stat_display["alert"]))
-        )
-
-        try:
-            if self.args.enable_process_extended:
-                max_processes_displayed -= 4
-        except AttributeError:
-            pass
-        if max_processes_displayed < 0:
-            max_processes_displayed = 0
-        if glances_processes.max_processes is None or glances_processes.max_processes != max_processes_displayed:
-            logger.debug("Set number of displayed processes to {}".format(max_processes_displayed))
-            glances_processes.max_processes = max_processes_displayed
+        self.set_number_of_processes(__stat_display)
 
         # Get the processlist
         __stat_display["processlist"] = stats.get_plugin('processlist').get_stats_display(args=self.args)
