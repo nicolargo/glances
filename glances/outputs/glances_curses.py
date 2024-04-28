@@ -596,14 +596,7 @@ class _GlancesCurses(object):
         ret = {}
 
         for p in stats.getPluginsList(enable=False):
-            if p == 'quicklook' or p == 'processlist':
-                # - processlist is done later
-                # because we need to know how many processes could be displayed
-                # - quicklook is done later
-                # because it is based on CPU, MEM, SWAP and LOAD
-                continue
-
-            # Compute the plugin max size
+            # Compute the plugin max size for the left sidebar
             plugin_max_width = None
             if p in self._left_sidebar:
                 plugin_max_width = min(self._left_sidebar_max_width,
@@ -615,33 +608,6 @@ class _GlancesCurses(object):
                                                            max_width=plugin_max_width)
 
         return ret
-
-    def set_number_of_processes(self, stat_display):
-        """Set the number of processes to display
-        The value is dynamicaly computed."""
-        max_processes_displayed = (
-            self.term_window.getmaxyx()[0]
-            - 11  # Glances header + Top + Process header
-            - (0 if 'containers' not in stat_display else self.get_stats_display_height(stat_display["containers"]))
-            - (
-                0
-                if 'processcount' not in stat_display
-                else self.get_stats_display_height(stat_display["processcount"])
-            )
-            - (0 if 'amps' not in stat_display else self.get_stats_display_height(stat_display["amps"]))
-            - (0 if 'alert' not in stat_display else self.get_stats_display_height(stat_display["alert"]))
-        )
-
-        try:
-            if self.args.enable_process_extended:
-                max_processes_displayed -= 4
-        except AttributeError:
-            pass
-        if max_processes_displayed < 0:
-            max_processes_displayed = 0
-        if glances_processes.max_processes is None or glances_processes.max_processes != max_processes_displayed:
-            logger.info("Set number of displayed processes to {}".format(max_processes_displayed))
-            glances_processes.max_processes = max_processes_displayed
 
     def display(self, stats, cs_status=None):
         """Display stats on the screen.
@@ -661,15 +627,9 @@ class _GlancesCurses(object):
         # Update the stats messages
         ###########################
 
-        # Get all the plugins but quicklook and process list
+        # Get all the plugins view
         self.args.cs_status = cs_status
         __stat_display = self.__get_stat_display(stats, layer=cs_status)
-
-        # Adapt number of processes to the available space
-        self.set_number_of_processes(__stat_display)
-
-        # Get the processlist
-        __stat_display["processlist"] = stats.get_plugin('processlist').get_stats_display(args=self.args)
 
         # Display the stats on the curses interface
         ###########################################
@@ -681,10 +641,10 @@ class _GlancesCurses(object):
             # ... and exit
             return False
 
-        # =====================================
+        # =======================================
         # Display first line (system+ip+uptime)
-        # Optionally: Cloud on second line
-        # =====================================
+        # Optionally: Cloud is on the second line
+        # =======================================
         self.__display_header(__stat_display)
         self.separator_line()
 
@@ -919,7 +879,15 @@ class _GlancesCurses(object):
         for p in self._left_sidebar:
             if (hasattr(self.args, 'enable_' + p) or hasattr(self.args, 'disable_' + p)) and p in stat_display:
                 self.new_line()
-                self.display_plugin(stat_display[p])
+                if p == 'sensors':
+                    self.display_plugin(
+                        stat_display['sensors'],
+                        max_y=(
+                            self.term_window.getmaxyx()[0] - self.get_stats_display_height(stat_display['now']) - 2
+                        ),
+                    )
+                else:
+                    self.display_plugin(stat_display[p])
 
     def __display_right(self, stat_display):
         """Display the right sidebar in the Curses interface.
@@ -937,9 +905,6 @@ class _GlancesCurses(object):
         self.new_column()
         for p in self._right_sidebar:
             if (hasattr(self.args, 'enable_' + p) or hasattr(self.args, 'disable_' + p)) and p in stat_display:
-                if p not in p:
-                    # Catch for issue #1470
-                    continue
                 self.new_line()
                 if p == 'processlist':
                     self.display_plugin(
