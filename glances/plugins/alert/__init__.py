@@ -10,8 +10,6 @@
 """Alert plugin."""
 
 from datetime import datetime
-from time import tzname
-import pytz
 
 from glances.logger import logger
 from glances.events_list import glances_events
@@ -152,8 +150,7 @@ class PluginModel(GlancesPluginModel):
             # New line
             ret.append(self.curse_new_line())
             # Start
-            msg = str(datetime.fromtimestamp(alert['begin'],
-                                             tz=pytz.timezone(tzname[0] if tzname[0] else 'UTC')))
+            msg = str(datetime.fromtimestamp(alert['begin'], tz=datetime.now().astimezone().tzinfo))
             ret.append(self.curse_add_line(msg))
             # Duration
             if alert['end'] > 0:
