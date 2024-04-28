@@ -13,6 +13,7 @@ from datetime import datetime
 from time import tzname
 import pytz
 
+from glances.logger import logger
 from glances.events_list import glances_events
 
 # from glances.logger import logger
@@ -120,6 +121,10 @@ class PluginModel(GlancesPluginModel):
             glances_events.set_max_events(config.get_int_value('alert', 'max_events', default=10))
             glances_events.set_min_duration(config.get_int_value('alert', 'min_duration', default=6))
             glances_events.set_min_interval(config.get_int_value('alert', 'min_interval', default=6))
+        else:
+            glances_events.set_max_events(10)
+            glances_events.set_min_duration(6)
+            glances_events.set_min_interval(6)
 
     def update(self):
         """Nothing to do here. Just return the global glances_log."""
