@@ -606,10 +606,9 @@ class _GlancesCurses(object):
             # Compute the plugin max size
             plugin_max_width = None
             if p in self._left_sidebar:
-                plugin_max_width = max(self._left_sidebar_min_width,
-                                       self.term_window.getmaxyx()[1] - 105)
                 plugin_max_width = min(self._left_sidebar_max_width,
-                                       plugin_max_width)
+                                       max(self._left_sidebar_min_width,
+                                           self.term_window.getmaxyx()[1] - 105))
 
             # Get the view
             ret[p] = stats.get_plugin(p).get_stats_display(args=self.args,
@@ -622,7 +621,7 @@ class _GlancesCurses(object):
         The value is dynamicaly computed."""
         max_processes_displayed = (
             self.term_window.getmaxyx()[0]
-            - 11
+            - 11  # Glances header + Top + Process header
             - (0 if 'containers' not in stat_display else self.get_stats_display_height(stat_display["containers"]))
             - (
                 0
@@ -641,7 +640,7 @@ class _GlancesCurses(object):
         if max_processes_displayed < 0:
             max_processes_displayed = 0
         if glances_processes.max_processes is None or glances_processes.max_processes != max_processes_displayed:
-            logger.debug("Set number of displayed processes to {}".format(max_processes_displayed))
+            logger.info("Set number of displayed processes to {}".format(max_processes_displayed))
             glances_processes.max_processes = max_processes_displayed
 
     def display(self, stats, cs_status=None):
