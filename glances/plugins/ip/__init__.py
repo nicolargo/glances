@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -12,7 +12,7 @@
 import threading
 from ujson import loads
 
-from glances.globals import urlopen, queue, urlopen_auth
+from glances.globals import queue, urlopen_auth
 from glances.logger import logger
 from glances.timer import Timer
 from glances.timer import getTimeSinceLastUpdate
@@ -135,8 +135,12 @@ class PluginModel(GlancesPluginModel):
             except (KeyError, AttributeError) as e:
                 logger.debug("Cannot grab public IP information ({})".format(e))
             else:
-                stats['public_address'] = self.public_address
-                stats['public_info_human'] = self.public_info_for_human(self.public_info)
+                stats['public_address'] = (
+                    self.public_address if not self.args.hide_public_info else self.__hide_ip(self.public_address)
+                )
+                stats['public_info_human'] = (
+                    self.public_info_for_human(self.public_info)
+                )
 
         elif self.input_method == 'snmp':
             # Not implemented yet
@@ -146,6 +150,10 @@ class PluginModel(GlancesPluginModel):
         self.stats = stats
 
         return self.stats
+
+    def __hide_ip(self, ip):
+        """Hide last to digit of the given IP address"""
+        return '.'.join(ip.split('.')[0:2]) + '.*.*'
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""

@@ -537,9 +537,10 @@ Examples of use:
             help='disable unicode characters in the curses interface',
         )
         parser.add_argument(
-            '--theme-white',
+            '--hide-public-info',
+            action='store_true',
             default=False,
-            help='(deprecated, no effect)',
+            help='hide public information (like public IP)',
         )
         # Globals options
         parser.add_argument(
