@@ -133,10 +133,9 @@ class DockerStatsFetcher:
 
         stats = {field: memory_stats[field] for field in self.MANDATORY_MEMORY_FIELDS}
 
-        # Optional field stats:inactive_file 
-        stats['inactive_file'] = 0
-        if 'stats' in memory_stats:
-            stats['inactive_file'] = memory_stats['stats'].get('inactive_file', 0)
+        # Optional field stats: inactive_file
+        if memory_stats.get('stats', {}).get('inactive_file') is not None:
+            stats['inactive_file'] = memory_stats['stats']['inactive_file']
 
         # Return the stats
         return stats
