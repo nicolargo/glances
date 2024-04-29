@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -154,15 +154,18 @@ class PluginModel(GlancesPluginModel):
             pass
 
         # Global change on stats
-        self.stats = self.get_init_value()
+        stats_transformed = []
         for stat in stats:
             # Hide sensors configured in the hide ou show configuration key
             if not self.is_display(stat["label"].lower()):
                 continue
             # Set alias for sensors
             stat["label"] = self.__get_alias(stat)
-            # Update the stats
-            self.stats.append(stat)
+            # Add the stat to the stats_transformed list
+            stats_transformed.append(stat)
+
+        # Update the stats
+        self.stats = stats_transformed
 
         return self.stats
 
