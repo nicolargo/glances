@@ -5,9 +5,9 @@
         </div>
         <div class="table-row" v-for="(sensor, sensorId) in sensors" :key="sensorId">
             <div class="table-cell text-left">{{ sensor.label }}</div>
-            <div class="table-cell">{{ sensor.unit }}</div>
-            <div class="table-cell" :class="getAlert(sensor)">
-                {{ sensor.value }}
+            <div class="table-cell"></div>
+            <div class="table-cell" :class="getDecoration(sensor.label)">
+                {{ sensor.value }}{{ sensor.unit }}
             </div>
         </div>
     </section>
@@ -35,13 +35,16 @@ export default {
         stats() {
             return this.data.stats['sensors'];
         },
+        view() {
+            return this.data.views['sensors'];
+        },
         sensors() {
             return this.stats
-                .filter((sensor) => {
-                    // prettier-ignore
-                    const isEmpty = (Array.isArray(sensor.value) && sensor.value.length === 0) || sensor.value === 0;
-                    return !isEmpty;
-                })
+                // .filter((sensor) => {
+                //     // prettier-ignore
+                //     const isEmpty = (Array.isArray(sensor.value) && sensor.value.length === 0) || sensor.value === 0;
+                //     return !isEmpty;
+                // })
                 .map((sensor) => {
                     if (
                         this.args.fahrenheit &&
@@ -57,9 +60,11 @@ export default {
         }
     },
     methods: {
-        getAlert(sensor) {
-            const current = sensor.type == 'battery' ? 100 - sensor.value : sensor.value;
-            return GlancesHelper.getAlert('sensors', 'sensors_' + sensor.type + '_', current);
+        getDecoration(key) {
+            if (this.view[key].value.decoration === undefined) {
+                return;
+            }
+            return this.view[key].value.decoration.toLowerCase();
         }
     }
 };
