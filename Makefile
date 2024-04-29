@@ -223,6 +223,9 @@ run-debug: ## Start Glances in debug console mode (also called standalone)
 run-local-conf: ## Start Glances in console mode with the system conf file
 	./venv/bin/python -m glances
 
+run-local-conf-hide-public: ## Start Glances in console mode with the system conf file and hide public information
+	./venv/bin/python -m glances --hide-public-info
+
 run-min: ## Start minimal Glances in console mode (also called standalone)
 	./venv-min/bin/python -m glances -C ./conf/glances.conf
 
@@ -255,6 +258,9 @@ run-webserver: ## Start Glances in Web server mode
 
 run-webserver-local-conf: ## Start Glances in Web server mode with the system conf file
 	./venv/bin/python -m glances -w
+
+run-webserver-local-conf-hide-public: ## Start Glances in Web server mode with the system conf file and hide public info
+	./venv/bin/python -m glances -w --hide-public-info
 
 run-restapiserver: ## Start Glances in REST API server mode
 	./venv/bin/python -m glances -C ./conf/glances.conf -w --disable-webui
