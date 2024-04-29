@@ -1,5 +1,5 @@
 name: glances
-version: '4.0.0+beta1'  ## '4.0.0'
+version: '4.0.0+rc01'  ## '4.0.0'
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
@@ -8,14 +8,14 @@ description: |
   Web based interface. It can adapt dynamically the displayed information
   depending on the user interface size.
 
-base: core22
+base: core24
 grade: devel  ## stable
 confinement: strict
 
 apps:
   glances:
     command: bin/glances
-    plugs:
+    plugs:  # https://snapcraft.io/docs/supported-interfaces
       - network
       - system-observe
       - mount-observe
@@ -26,6 +26,11 @@ apps:
       - upower-observe
       - home
       - network-bind
+      - uio
+      - raw-volume
+      - removable-media
+      - power-control
+      - process-control
     environment:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
