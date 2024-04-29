@@ -188,7 +188,7 @@ class PluginModel(GlancesPluginModel):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or self.is_disabled():
+        if not self.stats or self.is_disabled() or not max_width:
             return ret
 
         # Header
