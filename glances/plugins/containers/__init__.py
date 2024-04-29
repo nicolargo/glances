@@ -288,6 +288,16 @@ class PluginModel(GlancesPluginModel):
                     alert = self.get_alert(i['memory']['usage'], maximum=i['memory']['limit'], header='mem')
                 self.views[i[self.get_key()]]['mem']['decoration'] = alert
 
+        # Display Engine and Pod name ?
+        show_pod_name = False
+        if any(ct.get("pod_name") for ct in self.stats):
+            show_pod_name = True
+        self.views['show_pod_name'] = show_pod_name
+        show_engine_name = False
+        if len(set(ct["engine"] for ct in self.stats)) > 1:
+            show_engine_name = True
+        self.views['show_engine_name'] = show_engine_name
+
         return True
 
     def msg_curse(self, args=None, max_width=None):
@@ -298,14 +308,6 @@ class PluginModel(GlancesPluginModel):
         # Only process if stats exist (and non null) and display plugin enable...
         if not self.stats or len(self.stats) == 0 or self.is_disabled():
             return ret
-
-        show_pod_name = False
-        if any(ct.get("pod_name") for ct in self.stats):
-            show_pod_name = True
-
-        show_engine_name = False
-        if len(set(ct["engine"] for ct in self.stats)) > 1:
-            show_engine_name = True
 
         # Build the string message
         # Title
@@ -325,10 +327,10 @@ class PluginModel(GlancesPluginModel):
             len(max(self.stats, key=lambda x: len(x['name']))['name']),
         )
 
-        if show_engine_name:
+        if self.views['show_engine_name']:
             msg = ' {:{width}}'.format('Engine', width=6)
             ret.append(self.curse_add_line(msg))
-        if show_pod_name:
+        if self.views['show_pod_name']:
             msg = ' {:{width}}'.format('Pod', width=12)
             ret.append(self.curse_add_line(msg))
         msg = ' {:{width}}'.format('Name', width=name_max_width)
@@ -357,9 +359,9 @@ class PluginModel(GlancesPluginModel):
         # Data
         for container in self.stats:
             ret.append(self.curse_new_line())
-            if show_engine_name:
+            if self.views['show_engine_name']:
                 ret.append(self.curse_add_line(' {:{width}}'.format(container["engine"], width=6)))
-            if show_pod_name:
+            if self.views['show_pod_name']:
                 ret.append(self.curse_add_line(' {:{width}}'.format(container.get("pod_id", "-"), width=12)))
             # Name
             ret.append(self.curse_add_line(self._msg_name(container=container, max_width=name_max_width)))
@@ -376,18 +378,18 @@ class PluginModel(GlancesPluginModel):
             # CPU
             try:
                 msg = '{:>6.1f}'.format(container['cpu']['total'])
-            except KeyError:
+            except (KeyError, TypeError):
                 msg = '{:>6}'.format('_')
             ret.append(self.curse_add_line(msg, self.get_views(item=container['name'], key='cpu', option='decoration')))
             # MEM
             try:
                 msg = '{:>7}'.format(self.auto_unit(container['memory']['usage']))
-            except KeyError:
+            except (KeyError, TypeError):
                 msg = '{:>7}'.format('_')
             ret.append(self.curse_add_line(msg, self.get_views(item=container['name'], key='mem', option='decoration')))
             try:
                 msg = '/{:<7}'.format(self.auto_unit(container['memory']['limit']))
-            except KeyError:
+            except (KeyError, TypeError):
                 msg = '/{:<7}'.format('_')
             ret.append(self.curse_add_line(msg))
             # IO R/W
@@ -395,13 +397,13 @@ class PluginModel(GlancesPluginModel):
             try:
                 value = self.auto_unit(int(container['io_rx'])) + unit
                 msg = '{:>7}'.format(value)
-            except KeyError:
+            except (KeyError, TypeError):
                 msg = '{:>7}'.format('_')
             ret.append(self.curse_add_line(msg))
             try:
                 value = self.auto_unit(int(container['io_wx'])) + unit
                 msg = ' {:<7}'.format(value)
-            except KeyError:
+            except (KeyError, TypeError):
                 msg = ' {:<7}'.format('_')
             ret.append(self.curse_add_line(msg))
             # NET RX/TX
@@ -421,7 +423,7 @@ class PluginModel(GlancesPluginModel):
                     + unit
                 )
                 msg = '{:>7}'.format(value)
-            except KeyError:
+            except (KeyError, TypeError):
                 msg = '{:>7}'.format('_')
             ret.append(self.curse_add_line(msg))
             try:
@@ -432,7 +434,7 @@ class PluginModel(GlancesPluginModel):
                     + unit
                 )
                 msg = ' {:<7}'.format(value)
-            except KeyError:
+            except (KeyError, TypeError):
                 msg = ' {:<7}'.format('_')
             ret.append(self.curse_add_line(msg))
             # Command

@@ -4,8 +4,8 @@
         {{ containers.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}
         <div class="table">
             <div class="table-row">
-                <div class="table-cell text-left">Engine</div>
-                <div class="table-cell text-left">Pod</div>
+                <div class="table-cell text-left" v-show="showEngine">Engine</div>
+                <div class="table-cell text-left" v-show="showPod">Pod</div>
                 <div
                     class="table-cell text-left"
                     :class="['sortable', sorter.column === 'name' && 'sort']"
@@ -41,8 +41,8 @@
                 v-for="(container, containerId) in containers"
                 :key="containerId"
             >
-                <div class="table-cell text-left">{{ container.engine }}</div>
-                <div class="table-cell text-left">{{ container.pod_id || '-' }}</div>
+                <div class="table-cell text-left" v-show="showEngine">{{ container.engine }}</div>
+                <div class="table-cell text-left" v-show="showPod">{{ container.pod_id || '-' }}</div>
                 <div class="table-cell text-left">{{ container.name }}</div>
                 <div class="table-cell" :class="container.status == 'Paused' ? 'careful' : 'ok'">
                     {{ container.status }}
@@ -105,6 +105,9 @@ export default {
         stats() {
             return this.data.stats['containers'];
         },
+        views() {
+            return this.data.views['containers'];
+        },
         containers() {
             const { sorter } = this;
             const containers = (this.stats || []).map(
@@ -139,6 +142,12 @@ export default {
                 }, []),
                 [sorter.isReverseColumn(sorter.column) ? 'desc' : 'asc']
             );
+        },
+        showEngine() {
+            return this.views.show_engine_name;
+        },
+        showPod() {
+            return this.views.show_pod_name;
         }
     },
     watch: {
