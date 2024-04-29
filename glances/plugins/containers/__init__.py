@@ -258,6 +258,7 @@ class PluginModel(GlancesPluginModel):
 
     def memory_usage_no_cache(self, mem):
         """Return the 'real' memory usage by removing inactive_file to usage"""
+        # Ref: https://github.com/docker/docker-py/issues/3210
         return mem['usage'] - (mem['inactive_file'] if 'inactive_file' in mem else 0)
 
     def update_views(self):
