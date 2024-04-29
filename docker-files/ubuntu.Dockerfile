@@ -5,11 +5,11 @@
 #
 
 # WARNING: the versions should be set.
-# Ex: Python 3.10 for Ubuntu 22.04
+# Ex: Python 3.12 for Ubuntu 24.04
 # Note: ENV is for future running containers. ARG for building your Docker image.
 
-ARG IMAGE_VERSION=23.10
-ARG PYTHON_VERSION=3.11
+ARG IMAGE_VERSION=24.04
+ARG PYTHON_VERSION=3.12
 
 ##############################################################################
 # Base layer to be used for building dependencies and the release images
@@ -53,7 +53,7 @@ RUN apt-get install -y --no-install-recommends \
 RUN apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-RUN python${PYTHON_VERSION} -m venv --without-pip venv
+RUN python3 -m venv --without-pip venv
 
 COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-requirements.txt ./
 
@@ -61,8 +61,8 @@ COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-re
 # BUILD: Install the minimal image deps
 FROM build as buildMinimal
 
-RUN python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
-    # Note: requirements.txt is include by dep
+RUN python3 -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
+    -r requirements.txt \
     -r docker-requirements.txt \
     -r webui-requirements.txt
 
@@ -70,8 +70,8 @@ RUN python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VE
 # BUILD: Install all the deps
 FROM build as buildFull
 
-RUN python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
-    # Note: requirements.txt is include by dep
+RUN python3 -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
+    -r requirements.txt \
     -r optional-requirements.txt
 
 ##############################################################################

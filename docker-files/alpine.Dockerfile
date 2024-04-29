@@ -69,7 +69,7 @@ COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-re
 FROM build as buildMinimal
 
 RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
-    # Note: requirements.txt is include by dep
+    -r requirements.txt \
     -r docker-requirements.txt \
     -r webui-requirements.txt
 
@@ -83,7 +83,7 @@ ARG CASS_DRIVER_NO_CYTHON=1
 ARG CARGO_NET_GIT_FETCH_WITH_CLI=true
 
 RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
-    # Note: requirements.txt is include by dep
+    -r requirements.txt \
     -r optional-requirements.txt
 
 ##############################################################################
