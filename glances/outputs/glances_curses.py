@@ -109,9 +109,9 @@ class _GlancesCurses(object):
     # Both can be overwritten by the configuration file ([outputs] left_menu option)
     _left_sidebar = [
         'network',
+        'ports',
         'wifi',
         'connections',
-        'ports',
         'diskio',
         'fs',
         'irq',
