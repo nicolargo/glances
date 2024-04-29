@@ -1,9 +1,9 @@
 {
     "leftMenu": [
         "network",
+        "ports",
         "wifi",
         "connections",
-        "ports",
         "diskio",
         "fs",
         "irq",
