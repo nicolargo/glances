@@ -132,7 +132,7 @@ class PluginModel(GlancesPluginModel):
                         self.public_api, self.public_username, self.public_password
                     ).get()
                     self.public_address = self.public_info['ip']
-            except (KeyError, AttributeError) as e:
+            except (KeyError, AttributeError, TypeError) as e:
                 logger.debug("Cannot grab public IP information ({})".format(e))
             else:
                 stats['public_address'] = (

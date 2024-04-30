@@ -60,6 +60,7 @@ COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-re
 ##############################################################################
 # BUILD: Install the minimal image deps
 FROM build as buildMinimal
+ARG PYTHON_VERSION
 
 RUN python3 -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
     -r requirements.txt \
@@ -69,6 +70,7 @@ RUN python3 -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-pack
 ##############################################################################
 # BUILD: Install all the deps
 FROM build as buildFull
+ARG PYTHON_VERSION
 
 RUN python3 -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
     -r requirements.txt \
@@ -79,10 +81,11 @@ RUN python3 -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-pack
 ##############################################################################
 # Base image shared by all releases
 FROM base as release
+ARG PYTHON_VERSION
 
 # Copy Glances source code and config file
 COPY ./docker-compose/glances.conf /etc/glances/glances.conf
-COPY /glances /app/glances
+COPY ./glances/. /app/glances/
 
 # Copy binary and update PATH
 COPY docker-bin.sh /usr/local/bin/glances
@@ -99,12 +102,14 @@ CMD /venv/bin/python3 -m glances $GLANCES_OPT
 ################################################################################
 # RELEASE: minimal
 FROM release as minimal
+ARG PYTHON_VERSION
 
 COPY --from=buildMinimal /venv /venv
 
 ################################################################################
 # RELEASE: full
 FROM release as full
+ARG PYTHON_VERSION
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends libzmq5 \
@@ -116,6 +121,7 @@ COPY --from=buildFull /venv /venv
 ################################################################################
 # RELEASE: dev - to be compatible with CI
 FROM full as dev
+ARG PYTHON_VERSION
 
 # Forward access and error logs to Docker's log collector
 RUN ln -sf /dev/stdout /tmp/glances-root.log \

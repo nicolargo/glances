@@ -67,6 +67,7 @@ COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-re
 ##############################################################################
 # BUILD: Install the minimal image deps
 FROM build as buildMinimal
+ARG PYTHON_VERSION
 
 RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
     -r requirements.txt \
@@ -76,6 +77,7 @@ RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --target="/venv/lib/p
 ##############################################################################
 # BUILD: Install all the deps
 FROM build as buildFull
+ARG PYTHON_VERSION
 
 # Required for optional dependency cassandra-driver
 ARG CASS_DRIVER_NO_CYTHON=1
@@ -91,10 +93,11 @@ RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --target="/venv/lib/p
 ##############################################################################
 # Base image shared by all releases
 FROM base as release
+ARG PYTHON_VERSION
 
 # Copy source code and config file
 COPY ./docker-compose/glances.conf /etc/glances/glances.conf
-COPY /glances /app/glances
+COPY ./glances/. /app/glances/
 
 # Copy binary and update PATH
 COPY docker-bin.sh /usr/local/bin/glances
