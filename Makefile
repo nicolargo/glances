@@ -184,6 +184,7 @@ snapcraft:
 
 # ===================================================================
 # Docker
+# Need Docker Buildx package (apt install docker-buildx on Ubuntu)
 # ===================================================================
 
 docker: docker-alpine docker-ubuntu ## Generate local docker images
@@ -191,24 +192,24 @@ docker: docker-alpine docker-ubuntu ## Generate local docker images
 docker-alpine: docker-alpine-full docker-alpine-minimal docker-alpine-dev ## Generate local docker images (Alpine)
 
 docker-alpine-full: ## Generate local docker image (Alpine full)
-	docker build --target full -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-full .
+	docker buildx build --target full -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-full .
 
 docker-alpine-minimal: ## Generate local docker image (Alpine minimal)
-	docker build --target minimal -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-minimal .
+	docker buildx build --target minimal -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-minimal .
 
 docker-alpine-dev: ## Generate local docker image (Alpine dev)
-	docker build --target dev -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-dev .
+	docker buildx build --target dev -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-dev .
 
 docker-ubuntu: docker-ubuntu-full docker-ubuntu-minimal docker-ubuntu-dev ## Generate local docker images (Ubuntu)
 
 docker-ubuntu-full: ## Generate local docker image (Ubuntu full)
-	docker build --target full -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-full .
+	docker buildx build --target full -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-full .
 
 docker-ubuntu-minimal: ## Generate local docker image (Ubuntu minimal)
-	docker build --target minimal -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-minimal .
+	docker buildx build --target minimal -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-minimal .
 
 docker-ubuntu-dev: ## Generate local docker image (Ubuntu dev)
-	docker build --target dev -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-dev .
+	docker buildx build --target dev -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-dev .
 
 # ===================================================================
 # Run
