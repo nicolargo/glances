@@ -26,6 +26,11 @@ SENSOR_TEMP_UNIT = 'C'
 SENSOR_FAN_TYPE = 'fan_speed'
 SENSOR_FAN_UNIT = 'R'
 
+# Define the default refresh multiplicator
+# Default value is 3 * Glances refresh time
+# Can be overwritten by the refresh option in the sensors section of the glances.conf file
+DEFAULT_REFRESH = 3
+
 # Fields description
 # description: human readable description
 # short_name: shortname to use un UI
@@ -96,9 +101,8 @@ class PluginModel(GlancesPluginModel):
         self.display_curse = True
 
         # Not necessary to refresh every refresh time
-        # By default set to refresh * 2
         if self.get_refresh() == args.time:
-            self.set_refresh(self.get_refresh() * 2)
+            self.set_refresh(self.get_refresh() * DEFAULT_REFRESH)
 
     def get_key(self):
         """Return the key of the list."""
