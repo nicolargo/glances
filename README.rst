@@ -121,7 +121,7 @@ Optional dependencies:
 - ``pygal`` (for the graph export module)
 - ``pymdstat`` (for RAID support) [Linux-only]
 - ``pymongo`` (for the MongoDB export module)
-- ``pysnmp`` (for SNMP support)
+- ``pysnmp-lextudio`` (for SNMP support)
 - ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
 - ``pyzmq`` (for the ZeroMQ export module)
 - ``requests`` (for the Ports, Cloud plugins and RESTful export module)

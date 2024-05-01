@@ -194,7 +194,7 @@ class PluginModel(GlancesPluginModel):
                         config.as_dict()['processlist']['export']))
 
         # The default sort key could also be overwrite by command line (see #1903)
-        if args.sort_processes_key is not None:
+        if args and args.sort_processes_key is not None:
             glances_processes.set_sort_key(args.sort_processes_key, False)
 
         # Note: 'glances_processes' is already init in the processes.py script
