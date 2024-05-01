@@ -135,25 +135,26 @@ Installation
 
 There are several methods to test/install Glances on your system. Choose your weapon!
 
-PyPI: The standard way
-----------------------
+PyPI: Pip, the standard way
+---------------------------
 
 Glances is on ``PyPI``. By using PyPI, you will be using the latest
 stable version.
 
-To install Glances, simply use ``pip``:
+To install Glances, simply use the ``pip`` command line.
+
+Warning: on modern Linux operating systems, you may have an externally-managed-environment
+error message when you try to use ``pip``. In this case, go to the the PipX section bellow.
 
 .. code-block:: console
 
     pip install --user glances
 
 *Note*: Python headers are required to install `psutil`_, a Glances
-dependency. For example, on Debian/Ubuntu **the simplest** is ``apt install python3-psutil`` or alternatively need to install first
+dependency. For example, on Debian/Ubuntu **the simplest** is
+``apt install python3-psutil`` or alternatively need to install first
 the *python-dev* package and gcc (*python-devel* on Fedora/CentOS/RHEL).
 For Windows, just install psutil from the binary installation file.
-
-*Note 2 (for the Wifi plugin)*: If you want to use the Wifi plugin, you need
-to install the *wireless-tools* package on your system.
 
 By default, Glances is installed without the Web interface dependencies.
 To install it, use the following command:
@@ -181,24 +182,18 @@ If you want to test the develop version (could be instable), enter:
 
     pip install --user -i https://test.pypi.org/simple/ Glances
 
-Glances Auto Install script: the easy way
------------------------------------------
+PyPI: PipX, the alternative way
+-------------------------------
 
-To install both dependencies and the latest Glances production ready version
-(aka *master* branch), just enter the following command line:
+Install PipX on your system (apt install pipx on Ubuntu).
 
-.. code-block:: console
-
-    curl -L https://bit.ly/glances | /bin/bash
-
-or
+Install Glances (with all features):
 
 .. code-block:: console
 
-    wget -O- https://bit.ly/glances | /bin/bash
+    pipx install 'glances[all]'
 
-*Note*: This is only supported on some GNU/Linux distributions and Mac OS X.
-If you want to support other distributions, please contribute to `glancesautoinstall`_.
+The glances script will be installed in the ~/.local/bin folder.
 
 Docker: the cloudy way
 ----------------------
@@ -256,8 +251,8 @@ Run the container in *Web server mode*:
 
 For a full list of options, see the Glances `Docker`_ documentation page.
 
-GNU/Linux
----------
+GNU/Linux package
+-----------------
 
 `Glances` is available on many Linux distributions, so you should be
 able to install it using your favorite package manager. Be aware that
