@@ -101,7 +101,7 @@ class PluginModel(GlancesPluginModel):
         self.display_curse = True
 
         # Not necessary to refresh every refresh time
-        if self.get_refresh() == args.time:
+        if args and self.get_refresh() == args.time:
             self.set_refresh(self.get_refresh() * DEFAULT_REFRESH)
 
     def get_key(self):
