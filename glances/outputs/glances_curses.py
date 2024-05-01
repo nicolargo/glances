@@ -1130,6 +1130,10 @@ class _GlancesCurses(object):
         update the terminal."""
         self.term_window.erase()
 
+    def refresh(self):
+        """Refresh the windows"""
+        self.term_window.refresh()
+
     def flush(self, stats, cs_status=None):
         """Erase and update the screen.
 
@@ -1139,8 +1143,10 @@ class _GlancesCurses(object):
             "Connected": Client is connected to the server
             "Disconnected": Client is disconnected from the server
         """
+        # See https://stackoverflow.com/a/43486979/1919431
         self.erase()
         self.display(stats, cs_status=cs_status)
+        self.refresh()
 
     def update(self, stats, duration=3, cs_status=None, return_to_browser=False):
         """Update the screen.
