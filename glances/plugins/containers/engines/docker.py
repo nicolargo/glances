@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -29,7 +29,7 @@ else:
 
 
 class DockerStatsFetcher:
-    MANDATORY_MEMORY_FIELDS = ["usage", 'limit']
+    MANDATORY_MEMORY_FIELDS = ['usage', 'limit']
 
     def __init__(self, container):
         self._container = container
@@ -120,7 +120,9 @@ class DockerStatsFetcher:
     def _get_memory_stats(self):
         """Return the container MEMORY.
 
-        Output: a dict {'rss': 1015808, 'cache': 356352,  'usage': ..., 'max_usage': ...}
+        Output: a dict {'usage': ..., 'limit': ..., 'inactive_file': ...}
+
+        Note:the displayed memory usage is 'usage - inactive_file'
         """
         memory_stats = self._streamer.stats.get('memory_stats')
 
@@ -130,15 +132,10 @@ class DockerStatsFetcher:
             return None
 
         stats = {field: memory_stats[field] for field in self.MANDATORY_MEMORY_FIELDS}
-        try:
-            # Issue #1857 - Some stats are not always available in ['memory_stats']['stats']
-            detailed_stats = memory_stats['stats']
-            stats['rss'] = detailed_stats.get('rss') or detailed_stats.get('total_rss')
-            stats['max_usage'] = detailed_stats.get('max_usage')
-            stats['cache'] = detailed_stats.get('cache')
-        except (KeyError, TypeError) as e:
-            self._log_debug("Can't grab MEM usage", e)  # stats do not have MEM information
-            return None
+
+        # Optional field stats: inactive_file
+        if memory_stats.get('stats', {}).get('inactive_file') is not None:
+            stats['inactive_file'] = memory_stats['stats']['inactive_file']
 
         # Return the stats
         return stats
