@@ -41,12 +41,9 @@ class GlancesSNMPClient(object):
         ret = {}
         for name, val in varBinds:
             if str(val) == '':
-                ret[name.prettyPrint()] = ''
+                ret[str(name)] = ''
             else:
-                ret[name.prettyPrint()] = val.prettyPrint()
-                # In Python 3, prettyPrint() return 'b'linux'' instead of 'linux'
-                if ret[name.prettyPrint()].startswith('b\''):
-                    ret[name.prettyPrint()] = ret[name.prettyPrint()][2:-1]
+                ret[str(name)] = val.prettyPrint()
         return ret
 
     def __get_result__(self, errorIndication, errorStatus, errorIndex, varBinds):

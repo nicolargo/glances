@@ -132,7 +132,7 @@ class PluginModel(GlancesPluginModel):
             self.set_refresh(60)
 
         # Get the default message (if defined)
-        self.system_info_msg = config.get_value('system', 'system_info_msg')
+        self.system_info_msg = config.get_value('system', 'system_info_msg') if config else None
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator

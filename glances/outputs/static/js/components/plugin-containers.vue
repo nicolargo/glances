@@ -29,7 +29,7 @@
                 >
                     MEM
                 </div>
-                <div class="table-cell">/MAX</div>
+                <div class="table-cell text-left">/MAX</div>
                 <div class="table-cell">IOR/s</div>
                 <div class="table-cell">IOW/s</div>
                 <div class="table-cell">RX/s</div>
@@ -56,8 +56,8 @@
                 <div class="table-cell">
                     {{ $filters.bytes(container.memory_usage) }}
                 </div>
-                <div class="table-cell">
-                    {{ $filters.bytes(container.limit) }}
+                <div class="table-cell text-left">
+                    /{{ $filters.bytes(container.limit) }}
                 </div>
                 <div class="table-cell">
                     {{ $filters.bytes(container.io_rx) }}

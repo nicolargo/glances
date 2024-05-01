@@ -53,9 +53,9 @@ class PluginModel(GlancesPluginModel):
         # Set the message position
         self.align = 'bottom'
 
-        if args.strftime_format:
+        if args and args.strftime_format:
             self.strftime = args.strftime_format
-        elif config is not None:
+        elif config:
             if 'global' in config.as_dict():
                 self.strftime = config.as_dict()['global']['strftime_format']
 
