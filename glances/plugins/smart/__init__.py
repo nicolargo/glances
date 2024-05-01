@@ -125,7 +125,7 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None, stats_init_value=[]):
         """Init the plugin."""
         # check if user is admin
-        if not is_admin():
+        if not is_admin() and args:
             disable(args, "smart")
             logger.debug("Current user is not admin, HDD SMART plugin disabled.")
 
