@@ -92,7 +92,7 @@ class PluginModel(GlancesPluginModel):
         self.display_curse = True
 
         # Manage the maximum number of CPU to display (related to enhancement request #2734)
-        self.max_cpu_display = config.get_int_value('percpu', 'max_cpu_display', 4)
+        self.max_cpu_display = config.get_int_value('percpu', 'max_cpu_display', 4) if config else 4
 
         # Define the stats list
         self.stats_list = self.get_conf_value('list', default=self.DEFAULT_STATS_LIST)

@@ -27,7 +27,7 @@ pygal
 pymdstat
 pymongo; python_version >= "3.7"
 nvidia-ml-py; python_version >= "3.5"
-pysnmp
+pysnmp-lextudio; python_version >= "3.7"
 pySMART.smartx
 python-dateutil
 pyzmq

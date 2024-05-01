@@ -204,12 +204,8 @@ class PluginModel(GlancesPluginModel):
                     self.reset()
                     return self.stats
 
-                for key in iterkeys(stats):
-                    if stats[key] != '':
-                        stats[key] = float(stats[key]) * 1024
-
-                # Use the 'free'/htop calculation
-                stats['free'] = stats['free'] - stats['total'] + (stats['buffers'] + stats['cached'])
+                for k in stats:
+                    stats[k] = int(stats[k]) * 1024
 
                 # used=total-free
                 stats['used'] = stats['total'] - stats['free']

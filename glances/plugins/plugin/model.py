@@ -350,8 +350,10 @@ class GlancesPluginModel(object):
         ret = {}
         if bulk:
             # Bulk request
-            snmp_result = snmp_client.getbulk_by_oid(0, 10, itervalues(*snmp_oid))
-
+            snmp_result = snmp_client.getbulk_by_oid(0,
+                                                     10,
+                                                     *list(itervalues(snmp_oid)))
+            logger.info(snmp_result)
             if len(snmp_oid) == 1:
                 # Bulk command for only one OID
                 # Note: key is the item indexed but the OID result
@@ -379,7 +381,7 @@ class GlancesPluginModel(object):
                     index += 1
         else:
             # Simple get request
-            snmp_result = snmp_client.get_by_oid(itervalues(*snmp_oid))
+            snmp_result = snmp_client.get_by_oid(*list(itervalues(snmp_oid)))
 
             # Build the internal dict with the SNMP result
             for key in iterkeys(snmp_oid):
@@ -623,7 +625,7 @@ class GlancesPluginModel(object):
         """Return the plugin refresh time"""
         ret = self.get_limits(item='refresh')
         if ret is None:
-            ret = self.args.time
+            ret = self.args.time if hasattr(self.args, 'time') else 2
         return ret
 
     def get_refresh_time(self):
