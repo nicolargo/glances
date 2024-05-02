@@ -11,7 +11,8 @@ env:
   # Alpine image platform: https://hub.docker.com/_/alpine
   DOCKER_PLATFORMS: linux/amd64,linux/arm64/v8,linux/arm/v6,linux/arm/v7
   # Ubuntu image platforms list: https://hub.docker.com/_/ubuntu
-  DOCKER_PLATFORMS_UBUNTU: linux/amd64,linux/arm64/v8,linux/arm/v7
+  # linux/arm/v7 do not work (Cargo/Rust not available)
+  DOCKER_PLATFORMS_UBUNTU: linux/amd64,linux/arm64/v8
 
 on:
   workflow_call:

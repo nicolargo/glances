@@ -14,8 +14,8 @@ I am your father...
 """
 
 from glances.globals import json_dumps
-
 from glances.globals import NoOptionError, NoSectionError, iteritems, iterkeys
+from glances.timer import Counter
 from glances.logger import logger
 
 
@@ -57,6 +57,22 @@ class GlancesExport(object):
 
         # Save last export list
         self._last_exported_list = None
+
+    def _log_result_decorator(fct):
+        """Log (DEBUG) the result of the function fct."""
+
+        def wrapper(*args, **kw):
+            counter = Counter()
+            ret = fct(*args, **kw)
+            duration = counter.get()
+            logger.debug(
+                "{} {} {} return {} in {} seconds".format(
+                    args[0].__class__.__name__, args[0].__class__.__module__, fct.__name__, ret, duration
+                )
+            )
+            return ret
+
+        return wrapper
 
     def exit(self):
         """Close the export module."""

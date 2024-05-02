@@ -402,7 +402,7 @@ class GlancesPluginModel(object):
 
     def get_stats(self):
         """Return the stats object in JSON format."""
-        return json_dumps(self.stats)
+        return json_dumps(self.get_raw())
 
     def get_json(self):
         """Return the stats object in JSON format."""
@@ -413,14 +413,14 @@ class GlancesPluginModel(object):
 
         Stats should be a list of dict (processlist, network...)
         """
-        return dictlist(self.stats, item)
+        return dictlist(self.get_raw(), item)
 
     def get_stats_item(self, item):
         """Return the stats object for a specific item in JSON format.
 
         Stats should be a list of dict (processlist, network...)
         """
-        return json_dumps_dictlist(self.stats, item)
+        return json_dumps_dictlist(self.get_raw(), item)
 
     def get_raw_stats_value(self, item, value):
         """Return the stats object for a specific item=value.
@@ -428,13 +428,13 @@ class GlancesPluginModel(object):
         Return None if the item=value does not exist
         Return None if the item is not a list of dict
         """
-        if not isinstance(self.stats, list):
+        if not isinstance(self.get_raw(), list):
             return None
         else:
             if (not isinstance(value, int) and not isinstance(value, float)) and value.isdigit():
                 value = int(value)
             try:
-                return {value: [i for i in self.stats if i[item] == value]}
+                return {value: [i for i in self.get_raw() if i[item] == value]}
             except (KeyError, ValueError) as e:
                 logger.error("Cannot get item({})=value({}) ({})".format(item, value, e))
                 return None

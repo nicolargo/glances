@@ -50,7 +50,7 @@ class GlancesStats(object):
         # Check if the attribute starts with 'get'
         if item.startswith('getViews'):
             # Get the plugin name
-            plugname = item[len('getViews') :].lower()
+            plugname = item[len('getViews'):].lower()
             # Get the plugin instance
             plugin = self._plugins[plugname]
             if hasattr(plugin, 'get_json_views'):
@@ -61,7 +61,7 @@ class GlancesStats(object):
                 raise AttributeError(item)
         elif item.startswith('get'):
             # Get the plugin name
-            plugname = item[len('get') :].lower()
+            plugname = item[len('get'):].lower()
             # Get the plugin instance
             plugin = self._plugins[plugname]
             if hasattr(plugin, 'get_stats'):
@@ -260,21 +260,26 @@ class GlancesStats(object):
         for p in self._plugins:
             self._plugins[p].load_limits(config)
 
+    def __update_plugin(self, p):
+        """Update stats, history and views for the given plugin name p"""
+        self._plugins[p].update()
+        self._plugins[p].update_stats_history()
+        self._plugins[p].update_views()
+
     def update(self):
-        """Wrapper method to update the stats."""
-        # For standalone and server modes
-        # For each plugins, call the update method
-        for p in self._plugins:
-            if self._plugins[p].is_disabled():
-                # If current plugin is disable
-                # then continue to next plugin
-                continue
-            # Update the stats...
-            self._plugins[p].update()
-            # ... the history
-            self._plugins[p].update_stats_history()
-            # ... and the views
-            self._plugins[p].update_views()
+        """Wrapper method to update the stats.
+
+        Only called by standalone and server modes
+        """
+        threads = []
+        # Start update of all enable plugins
+        for p in self.getPluginsList(enable=True):
+            thread = threading.Thread(target=self.__update_plugin, args=(p,))
+            thread.start()
+            threads.append(thread)
+        # Wait the end of the update
+        for t in threads:
+            t.join()
 
     def export(self, input_stats=None):
         """Export all the stats.
@@ -288,7 +293,7 @@ class GlancesStats(object):
 
         input_stats = input_stats or {}
 
-        for e in self._exports:
+        for e in self.getExportsList(enable=True):
             logger.debug("Export stats using the %s module" % e)
             thread = threading.Thread(target=self._exports[e].update, args=(input_stats,))
             thread.start()
