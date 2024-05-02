@@ -8,10 +8,10 @@ env:
   DEFAULT_DOCKER_IMAGE: nicolargo/glances
   NODE_ENV: ${{ (contains('refs/heads/master', github.ref) || startsWith(github.ref, 'refs/tags/v')) && 'prod' || 'dev' }}
   PUSH_BRANCH: ${{ 'refs/heads/develop' == github.ref || 'refs/heads/master' == github.ref || startsWith(github.ref, 'refs/tags/v') }}
-  # Alpine image do not support linux/arm/v6 and linux/arm/v6 - See issue #2735
-  DOCKER_PLATFORMS: linux/amd64,linux/arm64,linux/386
-  # Ubuntu image only support linux/amd64 and linux/arm64 - See issue #2185
-  DOCKER_PLATFORMS_UBUNTU: linux/amd64,linux/arm64
+  # Alpine image platform: https://hub.docker.com/_/alpine
+  DOCKER_PLATFORMS: linux/amd64,linux/arm64/v8,linux/arm/v6,linux/arm/v7
+  # Ubuntu image platforms list: https://hub.docker.com/_/ubuntu
+  DOCKER_PLATFORMS_UBUNTU: linux/amd64,linux/arm64/v8,linux/arm/v7
 
 on:
   workflow_call:
