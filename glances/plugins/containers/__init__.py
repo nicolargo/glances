@@ -147,9 +147,9 @@ class PluginModel(GlancesPluginModel):
 
         # Init the Podman API
         if import_podman_error_tag:
-            self.podman_client = None
+            self.podman_extension = None
         else:
-            self.podman_client = PodmanContainersExtension(podman_sock=self._podman_sock())
+            self.podman_extension = PodmanContainersExtension(podman_sock=self._podman_sock())
 
         # Sort key
         self.sort_key = None
@@ -173,8 +173,8 @@ class PluginModel(GlancesPluginModel):
         """Overwrite the exit method to close threads."""
         if self.docker_extension:
             self.docker_extension.stop()
-        if self.podman_client:
-            self.podman_client.stop()
+        if self.podman_extension:
+            self.podman_extension.stop()
         # Call the father class
         super(PluginModel, self).exit()
 
@@ -219,13 +219,13 @@ class PluginModel(GlancesPluginModel):
     def update(self):
         """Update Docker and podman stats using the input method."""
         # Connection should be ok
-        if self.docker_extension is None and self.podman_client is None:
+        if self.docker_extension is None and self.podman_extension is None:
             return self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats
             stats_docker = self.update_docker() if self.docker_extension else {}
-            stats_podman = self.update_podman() if self.podman_client else {}
+            stats_podman = self.update_podman() if self.podman_extension else {}
             stats = stats_docker.get('containers', []) + stats_podman.get('containers', [])
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -247,7 +247,7 @@ class PluginModel(GlancesPluginModel):
 
     def update_podman(self):
         """Update Podman stats."""
-        version, containers = self.podman_client.update(all_tag=self._all_tag())
+        version, containers = self.podman_extension.update(all_tag=self._all_tag())
         for container in containers:
             container["engine"] = 'podman'
         return {"version": version, "containers": containers}
