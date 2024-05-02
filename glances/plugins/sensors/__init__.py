@@ -11,6 +11,7 @@
 
 import psutil
 import warnings
+import threading
 
 from glances.logger import logger
 from glances.globals import iteritems, to_fahrenheit
@@ -25,6 +26,12 @@ SENSOR_TEMP_UNIT = 'C'
 
 SENSOR_FAN_TYPE = 'fan_speed'
 SENSOR_FAN_UNIT = 'R'
+
+SENSOR_HDDTEMP_TYPE = 'temperature_hdd'
+SENSOR_HDDTEMP_UNIT = 'C'
+
+SENSORS_BATTERY_TYPE = 'battery'
+SENSORS_BATTERY_UNIT = '%'
 
 # Define the default refresh multiplicator
 # Default value is 3 * Glances refresh time
@@ -66,8 +73,8 @@ class PluginModel(GlancesPluginModel):
     """Glances sensors plugin.
 
     The stats list includes both sensors and hard disks stats, if any.
-    The sensors are already grouped by chip type and then sorted by name.
-    The hard disks are already sorted by name.
+    The sensors are already grouped by chip type and then sorted by label.
+    The hard disks are already sorted by label.
     """
 
     def __init__(self, args=None, config=None):
@@ -108,6 +115,55 @@ class PluginModel(GlancesPluginModel):
         """Return the key of the list."""
         return 'label'
 
+    def __get_temperature(self, stats, index):
+        try:
+            temperature = self.__set_type(self.glances_grab_sensors.get(SENSOR_TEMP_TYPE), SENSOR_TEMP_TYPE)
+        except Exception as e:
+            logger.error("Cannot grab sensors temperatures (%s)" % e)
+        else:
+            stats[index] = self.__transform_sensors(temperature)
+
+    def __get_fan_speed(self, stats, index):
+        try:
+            fan_speed = self.__set_type(self.glances_grab_sensors.get(SENSOR_FAN_TYPE), SENSOR_FAN_TYPE)
+        except Exception as e:
+            logger.error("Cannot grab FAN speed (%s)" % e)
+        else:
+            stats[index] = self.__transform_sensors(fan_speed)
+
+    def __get_hddtemp(self, stats, index):
+        try:
+            hddtemp = self.__set_type(self.hddtemp_plugin.update(), SENSOR_HDDTEMP_TYPE)
+        except Exception as e:
+            logger.error("Cannot grab HDD temperature (%s)" % e)
+        else:
+            stats[index] = self.__transform_sensors(hddtemp)
+
+    def __get_bat_percent(self, stats, index):
+        try:
+            bat_percent = self.__set_type(self.batpercent_plugin.update(), SENSORS_BATTERY_TYPE)
+        except Exception as e:
+            logger.error("Cannot grab battery percent (%s)" % e)
+        else:
+            stats[index] = self.__transform_sensors(bat_percent)
+
+    def __transform_sensors(self, threads_stats):
+        """Hide, alias and sort the result"""
+        stats_transformed = []
+        for stat in threads_stats:
+            # Hide sensors configured in the hide ou show configuration key
+            if not self.is_display(stat["label"].lower()):
+                continue
+            # Set alias for sensors
+            stat["label"] = self.__get_alias(stat)
+            # Add the stat to the stats_transformed list
+            stats_transformed.append(stat)
+        # Remove duplicates thanks to https://stackoverflow.com/a/9427216/1919431
+        stats_transformed = [dict(t) for t in {tuple(d.items()) for d in stats_transformed}]
+        # Sort by label
+        stats_transformed = sorted(stats_transformed, key=lambda d: d['label'])
+        return stats_transformed
+
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
@@ -116,60 +172,38 @@ class PluginModel(GlancesPluginModel):
         stats = self.get_init_value()
 
         if self.input_method == 'local':
-            # Update stats using the dedicated lib
-            stats = []
-            # Get the temperature
-            try:
-                temperature = self.__set_type(self.glances_grab_sensors.get(SENSOR_TEMP_TYPE), SENSOR_TEMP_TYPE)
-            except Exception as e:
-                logger.error("Cannot grab sensors temperatures (%s)" % e)
-            else:
-                # Append temperature
-                stats.extend(temperature)
-            # Get the FAN speed
-            try:
-                fan_speed = self.__set_type(self.glances_grab_sensors.get(SENSOR_FAN_TYPE), SENSOR_FAN_TYPE)
-            except Exception as e:
-                logger.error("Cannot grab FAN speed (%s)" % e)
-            else:
-                # Append FAN speed
-                stats.extend(fan_speed)
-            # Update HDDtemp stats
-            try:
-                hddtemp = self.__set_type(self.hddtemp_plugin.update(), 'temperature_hdd')
-            except Exception as e:
-                logger.error("Cannot grab HDD temperature (%s)" % e)
-            else:
-                # Append HDD temperature
-                stats.extend(hddtemp)
-            # Update batteries stats
-            try:
-                bat_percent = self.__set_type(self.batpercent_plugin.update(), 'battery')
-            except Exception as e:
-                logger.error("Cannot grab battery percent (%s)" % e)
-            else:
-                # Append Batteries %
-                stats.extend(bat_percent)
-
+            threads_stats = [None] * 4
+            threads = [
+                threading.Thread(name=SENSOR_TEMP_TYPE,
+                                 target=self.__get_temperature,
+                                 args=(threads_stats, 0)),
+                threading.Thread(name=SENSOR_FAN_TYPE,
+                                 target=self.__get_fan_speed,
+                                 args=(threads_stats, 1)),
+                threading.Thread(name=SENSOR_HDDTEMP_TYPE,
+                                 target=self.__get_hddtemp,
+                                 args=(threads_stats, 2)),
+                threading.Thread(name=SENSORS_BATTERY_TYPE,
+                                 target=self.__get_bat_percent,
+                                 args=(threads_stats, 3))
+            ]
+            # Start threads in //
+            for t in threads:
+                t.start()
+            # Wait threads are finished
+            for t in threads:
+                t.join()
+            # Merge the results
+            for s in threads_stats:
+                stats.extend(s)
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             # No standard:
             # http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
             pass
 
-        # Global change on stats
-        stats_transformed = []
-        for stat in stats:
-            # Hide sensors configured in the hide ou show configuration key
-            if not self.is_display(stat["label"].lower()):
-                continue
-            # Set alias for sensors
-            stat["label"] = self.__get_alias(stat)
-            # Add the stat to the stats_transformed list
-            stats_transformed.append(stat)
-
         # Update the stats
-        self.stats = stats_transformed
+        self.stats = stats
 
         return self.stats
 
@@ -270,7 +304,7 @@ class PluginModel(GlancesPluginModel):
         # Stats
         for i in self.stats:
             # Do not display anything if no battery are detected
-            if i['type'] == 'battery' and i['value'] == []:
+            if i['type'] == SENSORS_BATTERY_TYPE and i['value'] == []:
                 continue
             # New line
             ret.append(self.curse_new_line())
@@ -282,7 +316,7 @@ class PluginModel(GlancesPluginModel):
                     self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='value', option='decoration'))
                 )
             else:
-                if args.fahrenheit and i['type'] != 'battery' and i['type'] != SENSOR_FAN_TYPE:
+                if args.fahrenheit and i['type'] != SENSORS_BATTERY_TYPE and i['type'] != SENSOR_FAN_TYPE:
                     trend = ''
                     value = to_fahrenheit(i['value'])
                     unit = 'F'
