@@ -10,7 +10,7 @@ jobs:
   test-linux:
 
     # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
@@ -55,7 +55,7 @@ jobs:
   # test-windows:
 
   #   # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
-  #   runs-on: windows-latest
+  #   runs-on: windows-2022
   #   strategy:
   #     matrix:
   #       # Python version "3.12" introduce this issue:
@@ -83,7 +83,7 @@ jobs:
   test-macos:
 
     # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
-    runs-on: macos-latest
+    runs-on: macos-14
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
@@ -99,6 +99,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Unitary tests
