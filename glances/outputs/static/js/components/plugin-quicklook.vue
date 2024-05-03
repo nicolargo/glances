@@ -1,8 +1,11 @@
 <template>
     <section id="quicklook" class="plugin">
-        <div class="cpu-name">
+        <div class="cpu-name text-left">
             {{ cpu_name }}
         </div>
+        <!-- <div class="cpu-freq text-right" v-if="cpu_hz_current">
+            {{ cpu_hz_current }}/{{ cpu_hz }}Ghz
+        </div> -->
         <div class="table">
             <div class="table-row" v-if="!args.percpu">
                 <div class="table-cell text-left">CPU</div>

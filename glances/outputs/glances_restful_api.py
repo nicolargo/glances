@@ -276,6 +276,8 @@ class GlancesRestfulApi(object):
             # Statics files
             self._app.mount("/static", StaticFiles(directory=self.STATIC_PATH), name="static")
 
+            logger.info("Get WebUI in {}".format(self.STATIC_PATH))
+
             bindmsg = 'Glances Web User Interface started on {}'.format(self.bind_url)
         else:
             bindmsg = 'The WebUI is disable (--disable-webui)'
