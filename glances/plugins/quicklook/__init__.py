@@ -175,7 +175,7 @@ class PluginModel(GlancesPluginModel):
             return ret
 
         if not max_width:
-            # No max_width defined, return an emptu curse message
+            # No max_width defined, return an empty message
             logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
             return ret
 
@@ -192,18 +192,22 @@ class PluginModel(GlancesPluginModel):
         ##########################
 
         # System information
-        if 'cpu_name' in self.stats and 'cpu_hz_current' in self.stats and 'cpu_hz' in self.stats:
-            msg_name = self.stats['cpu_name']
-            if self.stats['cpu_hz_current'] and self.stats['cpu_hz']:
-                msg_freq = ' - {:.2f}/{:.2f}GHz'.format(
-                    self._hz_to_ghz(self.stats['cpu_hz_current']), self._hz_to_ghz(self.stats['cpu_hz'])
-                )
-            else:
-                msg_freq = ''
-            if len(msg_name + msg_freq) - 6 <= max_width:
-                ret.append(self.curse_add_line(msg_name))
-            ret.append(self.curse_add_line(msg_freq))
-            ret.append(self.curse_new_line())
+        if 'cpu_hz_current' in self.stats and 'cpu_hz' in self.stats:
+            msg_freq = ' {:.2f}/{:.2f}GHz'.format(
+                self._hz_to_ghz(self.stats['cpu_hz_current']), self._hz_to_ghz(self.stats['cpu_hz'])
+            )
+        else:
+            msg_freq = ''
+
+        if 'cpu_name' in self.stats and (max_width - len(msg_freq) + 7) > 0:
+            msg_name = '{:{width}}'.format(self.stats['cpu_name'],
+                                           width=max_width - len(msg_freq) + 7)
+        else:
+            msg_name = '' if msg_freq == '' else 'Frequency'
+
+        ret.append(self.curse_add_line(msg_name))
+        ret.append(self.curse_add_line(msg_freq))
+        ret.append(self.curse_new_line())
 
         # Loop over CPU, MEM and LOAD
         for key in self.stats_list:

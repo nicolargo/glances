@@ -192,7 +192,7 @@ export default {
             return title ? `${title} - Glances` : 'Glances';
         },
         leftMenu() {
-            return this.config.outputs.left_menu !== undefined
+            return this.config.outputs !== undefined && this.config.outputs.left_menu !== undefined
                 ? this.config.outputs.left_menu.split(',')
                 : uiconfig.leftMenu;
         }

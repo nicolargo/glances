@@ -101,7 +101,7 @@ class _GlancesCurses(object):
 
     # Define top menu
     _top = ['quicklook', 'cpu', 'percpu', 'gpu', 'mem', 'memswap', 'load']
-    _quicklook_max_width = 68
+    _quicklook_max_width = 58
 
     # Define left sidebar
     # This default list is also defined in the glances/outputs/static/js/uiconfig.json
@@ -598,6 +598,10 @@ class _GlancesCurses(object):
         ret = {}
 
         for p in stats.getPluginsList(enable=False):
+            # Ignore Quicklook because it is compute later in __display_top
+            if p == 'quicklook':
+                continue
+
             # Compute the plugin max size for the left sidebar
             plugin_max_width = None
             if p in self._left_sidebar:
