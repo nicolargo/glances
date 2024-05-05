@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2023 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -296,6 +296,8 @@ class GlancesProcesses(object):
 
         ret = {}
         try:
+            logger.debug('Grab extended stats for process {}'.format(proc['pid']))
+
             # Get PID of the selected process
             selected_process = psutil.Process(proc['pid'])
 
@@ -312,38 +314,39 @@ class GlancesProcesses(object):
             self.extended_process = None
             ret['extended_stats'] = False
         else:
-            logger.debug('Grab extended stats for process {}'.format(proc['pid']))
-
             # Compute CPU and MEM min/max/mean
-            for stat_prefix in ['cpu', 'memory']:
-                if stat_prefix + '_min' not in self.extended_process:
-                    ret[stat_prefix + '_min'] = proc[stat_prefix + '_percent']
-                else:
-                    ret[stat_prefix + '_min'] = (
-                        proc[stat_prefix + '_percent']
-                        if proc[stat_prefix + '_min'] > proc[stat_prefix + '_percent']
-                        else proc[stat_prefix + '_min']
-                    )
-                if stat_prefix + '_max' not in self.extended_process:
-                    ret[stat_prefix + '_max'] = proc[stat_prefix + '_percent']
-                else:
-                    ret[stat_prefix + '_max'] = (
-                        proc[stat_prefix + '_percent']
-                        if proc[stat_prefix + '_max'] < proc[stat_prefix + '_percent']
-                        else proc[stat_prefix + '_max']
-                    )
-                if stat_prefix + '_mean_sum' not in self.extended_process:
-                    ret[stat_prefix + '_mean_sum'] = proc[stat_prefix + '_percent']
-                else:
-                    ret[stat_prefix + '_mean_sum'] = proc[stat_prefix + '_mean_sum'] + proc[stat_prefix + '_percent']
-                if stat_prefix + '_mean_counter' not in self.extended_process:
-                    ret[stat_prefix + '_mean_counter'] = 1
-                else:
-                    ret[stat_prefix + '_mean_counter'] = proc[stat_prefix + '_mean_counter'] + 1
-                ret[stat_prefix + '_mean'] = ret[stat_prefix + '_mean_sum'] / ret[stat_prefix + '_mean_counter']
-
+            # Merge the returned dict with the current on
+            ret.update(self.__get_min_max_mean(proc))
+            self.extended_process = ret
             ret['extended_stats'] = True
         return namedtuple_to_dict(ret)
+
+    def __get_min_max_mean(self, proc, prefix=['cpu', 'memory']):
+        """Return the min/max/mean for the given process"""
+        ret = {}
+        for stat_prefix in prefix:
+            min_key = stat_prefix + '_min'
+            max_key = stat_prefix + '_max'
+            mean_sum_key = stat_prefix + '_mean_sum'
+            mean_counter_key = stat_prefix + '_mean_counter'
+            if min_key not in self.extended_process:
+                ret[min_key] = proc[stat_prefix + '_percent']
+            else:
+                ret[min_key] = min(proc[stat_prefix + '_percent'], self.extended_process[min_key])
+            if max_key not in self.extended_process:
+                ret[max_key] = proc[stat_prefix + '_percent']
+            else:
+                ret[max_key] = max(proc[stat_prefix + '_percent'], self.extended_process[max_key])
+            if mean_sum_key not in self.extended_process:
+                ret[mean_sum_key] = proc[stat_prefix + '_percent']
+            else:
+                ret[mean_sum_key] = self.extended_process[mean_sum_key] + proc[stat_prefix + '_percent']
+            if mean_counter_key not in self.extended_process:
+                ret[mean_counter_key] = 1
+            else:
+                ret[mean_counter_key] = self.extended_process[mean_counter_key] + 1
+            ret[stat_prefix + '_mean'] = ret[mean_sum_key] / ret[mean_counter_key]
+        return ret
 
     def __get_extended_memory_swap(self, process):
         """Return the memory swap for the given process"""
@@ -659,6 +662,7 @@ def _sort_lambda(sorted_by='cpu_percent', sorted_by_secondary='memory_percent'):
 
 def sort_stats(stats, sorted_by='cpu_percent', sorted_by_secondary='memory_percent', reverse=True):
     """Return the stats (dict) sorted by (sorted_by).
+    A secondary sort key should be specified.
 
     Reverse the sort if reverse is True.
     """
