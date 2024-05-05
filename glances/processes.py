@@ -17,6 +17,7 @@ from glances.programs import processes_to_programs
 from glances.logger import logger
 
 import psutil
+psutil_version_info = tuple([int(num) for num in psutil.__version__.split('.')])
 
 # This constant defines the list of available processes sort key
 sort_processes_key_list = ['cpu_percent', 'memory_percent', 'username', 'cpu_times', 'io_counters', 'name']
@@ -295,28 +296,17 @@ class GlancesProcesses(object):
 
         ret = {}
         try:
-            # Get the extended stats
+            # Get PID of the selected process
             selected_process = psutil.Process(proc['pid'])
+
+            # Get the extended stats for the selected process
             ret = selected_process.as_dict(attrs=extended_stats, ad_value=None)
 
-            if LINUX:
-                try:
-                    ret['memory_swap'] = sum([v.swap for v in selected_process.memory_maps()])
-                except (psutil.NoSuchProcess, KeyError):
-                    # (KeyError catch for issue #1551)
-                    pass
-                except (psutil.AccessDenied, NotImplementedError):
-                    # NotImplementedError: /proc/${PID}/smaps file doesn't exist
-                    # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
-                    # is not enabled (see psutil #533/glances #413).
-                    ret['memory_swap'] = None
-            try:
-                ret['tcp'] = len(selected_process.connections(kind="tcp"))
-                ret['udp'] = len(selected_process.connections(kind="udp"))
-            except (psutil.AccessDenied, psutil.NoSuchProcess):
-                # Manage issue1283 (psutil.AccessDenied)
-                ret['tcp'] = None
-                ret['udp'] = None
+            # Get memory swap for the selected process (Linux Only)
+            ret['memory_swap'] = self.__get_extended_memory_swap(selected_process)
+
+            # Get number of TCP and UDP network connections for the selected process
+            ret['tcp'], ret['udp'] = self.__get_extended_connections(selected_process)
         except (psutil.NoSuchProcess, ValueError, AttributeError) as e:
             logger.error('Can not grab extended stats ({})'.format(e))
             self.extended_process = None
@@ -354,6 +344,40 @@ class GlancesProcesses(object):
 
             ret['extended_stats'] = True
         return namedtuple_to_dict(ret)
+
+    def __get_extended_memory_swap(self, process):
+        """Return the memory swap for the given process"""
+        if not LINUX:
+            return None
+        try:
+            memory_swap = sum([v.swap for v in process.memory_maps()])
+        except (psutil.NoSuchProcess, KeyError):
+            # (KeyError catch for issue #1551)
+            pass
+        except (psutil.AccessDenied, NotImplementedError):
+            # NotImplementedError: /proc/${PID}/smaps file doesn't exist
+            # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
+            # is not enabled (see psutil #533/glances #413).
+            memory_swap = None
+        return memory_swap
+
+    def __get_extended_connections(self, process):
+        """Return a tuple with (tcp, udp) connections count
+        The code is compliant with both PsUtil<6 and Psutil>=6
+        """
+        try:
+            # Hack for issue #2754 (PsUtil 6+)
+            if psutil_version_info[0] >= 6:
+                tcp = len(process.net_connections(kind="tcp"))
+                udp = len(process.net_connections(kind="udp"))
+            else:
+                tcp = len(process.connections(kind="tcp"))
+                udp = len(process.connections(kind="udp"))
+        except (psutil.AccessDenied, psutil.NoSuchProcess):
+            # Manage issue1283 (psutil.AccessDenied)
+            tcp = None
+            udp = None
+        return tcp, udp
 
     def is_selected_extended_process(self, position):
         """Return True if the process is the selected one for extended stats."""
@@ -408,7 +432,7 @@ class GlancesProcesses(object):
 
         # Build the processes stats list (it is why we need psutil>=5.3.0)
         # This is one of the main bottleneck of Glances (see flame graph)
-        # Filter processes
+        # It may be optimized with PsUtil 6+ (see issue #2755)
         processlist = list(
             filter(
                 lambda p: not (BSD and p.info['name'] == 'idle')
