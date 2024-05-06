@@ -10,7 +10,7 @@ on:
 
 jobs:
     quality:
-      uses: ./.github/workflows/codeql-analysis.yml
+      uses: ./.github/workflows/quality.yml
     test:
       uses: ./.github/workflows/test.yml
       needs: [quality]
