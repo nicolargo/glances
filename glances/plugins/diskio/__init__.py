@@ -12,7 +12,6 @@ from __future__ import unicode_literals
 
 from glances.logger import logger
 from glances.globals import nativestr
-from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.plugin.model import GlancesPluginModel
 
 import psutil
