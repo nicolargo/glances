@@ -104,10 +104,25 @@ codespell: ## Run codespell to fix common misspellings in text files
 semgrep: ## Run semgrep to find bugs and enforce code standards
 	./venv-dev/bin/semgrep scan --config=auto
 
-profiling: ## How to start the profiling of the Glances software
-	@echo "Start a Glances instance and get its PID"
-	@echo "Run: sudo ./venv-dev/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s --pid <GLANCES PID>"
-	@echo "Open the SVG file (./docs/_static/glances-flame.svg) with a Web browser"
+profiling-gprof: ## Callgraph profiling (need "apt install graphviz")
+	@echo "Start Glances for 30 iterations (more or less 1 mins, please do not exit !)"
+	sleep 3
+	./venv/bin/python -m cProfile -o ./glances.cprof ./run.py --stop-after 30
+	./venv-dev/bin/gprof2dot -f pstats ./glances.cprof | dot -Tsvg -o ./docs/_static/glances-cgraph.svg
+	rm -f ./glances.cprof
+
+profiling-pyinstrument: ## PyInstrument profiling
+	@echo "Start Glances for 30 iterations (more or less 1 mins, please do not exit !)"
+	sleep 3
+	./venv/bin/pip install pyinstrument
+	./venv/bin/python -m pyinstrument -r html -o ./docs/_static/glances-pyinstrument.html -m glances --stop-after 30
+
+profiling-pyspy: ## Flame profiling (currently not compatible with Python 3.12)
+	@echo "Start Glances for 30 iterations (more or less 1 mins, please do not exit !)"
+	sleep 3
+	./venv-dev/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s -- ./venv/bin/python ./run.py --stop-after 30
+
+profiling: profiling-gprof profiling-pyinstrument profiling-pyspy ## Profiling of the Glances software
 
 trace-malloc: ## Trace the malloc() calls
 	@echo "Malloc test is running, please wait ~30 secondes..."

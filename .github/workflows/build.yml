@@ -106,7 +106,7 @@ jobs:
           TAG_ARRAY="${TAG_ARRAY::-1} ]"
 
           echo "Tags to build: $TAG_ARRAY"
-          echo "::set-output name=tags::$TAG_ARRAY"
+          echo "tags=$TAG_ARRAY" >> $GITHUB_OUTPUT
 
   build_Docker_image:
     runs-on: ubuntu-latest
@@ -130,7 +130,7 @@ jobs:
             org.opencontainers.image.url=https://nicolargo.github.io/glances/
 
       - name: Cache Docker layers
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ matrix.os }}-${{ matrix.tag.tag }}

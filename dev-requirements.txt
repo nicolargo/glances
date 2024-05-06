@@ -1,4 +1,5 @@
 py-spy
+gprof2dot
 black
 pyright
 requirements-parser
