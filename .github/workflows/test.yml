@@ -20,9 +20,10 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
 
     - name: Install dependencies
       run: |
@@ -66,9 +67,10 @@ jobs:
   #   - uses: actions/checkout@v4
 
   #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v4
+  #     uses: actions/setup-python@v5
   #     with:
   #       python-version: ${{ matrix.python-version }}
+  #       cache: 'pip'
 
   #   - name: Install dependencies
   #     run: |
@@ -93,9 +95,10 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
 
     - name: Install dependencies
       run: |
@@ -106,21 +109,23 @@ jobs:
       run: |
         python ./unitest.py
 
-  test-freebsd:
+  # Error when trying to implement #2749
+  # pkg: No packages available to install matching 'py-pip' have been found in the repositories
+  # test-freebsd:
 
-    runs-on: ubuntu-22.04
+  #   runs-on: ubuntu-22.04
 
-    steps:
+  #   steps:
 
-      - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v4
 
-      - name: Run tests
-        uses: vmactions/freebsd-vm@v1
-        with:
-          usesh: true
-          prepare: |
-            pkg install -y python3 py-pip
-          run: |
-            set -e -x
-            python3 -m pip install --user -r requirements.txt
-            python ./unitest.py
+  #     - name: Run tests
+  #       uses: vmactions/freebsd-vm@v1
+  #       with:
+  #         usesh: true
+  #         prepare: |
+  #           pkg install -y python3 py-pip
+  #         run: |
+  #           set -e -x
+  #           python3 -m pip install --user -r requirements.txt
+  #           python ./unitest.py
