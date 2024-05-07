@@ -129,7 +129,7 @@ class GlancesPluginModel(object):
 
     def __repr__(self):
         """Return the raw stats."""
-        return self.stats
+        return str(self.stats)
 
     def __str__(self):
         """Return the human-readable stats."""
@@ -301,6 +301,8 @@ class GlancesPluginModel(object):
     def sorted_stats(self):
         """Get the stats sorted by an alias (if present) or key."""
         key = self.get_key()
+        if key is None:
+            return self.stats
         try:
             return sorted(
                 self.stats,
@@ -550,6 +552,10 @@ class GlancesPluginModel(object):
     def set_views(self, input_views):
         """Set the views to input_views."""
         self.views = input_views
+
+    def reset_views(self):
+        """Reset the views to input_views."""
+        self.views = dict()
 
     def get_views(self, item=None, key=None, option=None):
         """Return the views object.
