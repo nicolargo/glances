@@ -100,7 +100,7 @@ class TestGlances(unittest.TestCase):
             print("HTTP RESTful request: %s/%s" % (URL, p))
             req = self.http_get("%s/%s" % (URL, p))
             self.assertTrue(req.ok)
-            if p in ('uptime', 'now', 'version', 'psutilversion'):
+            if p in ('uptime', 'version', 'psutilversion'):
                 self.assertIsInstance(req.json(), text_type)
             elif p in ('fs', 'percpu', 'sensors', 'alert', 'processlist', 'diskio',
                        'hddtemp', 'batpercent', 'network', 'folders', 'amps', 'ports',
