@@ -6,6 +6,8 @@
 Version 4.0.0
 ===============
 
+See release note in Wiki format here: https://github.com/nicolargo/glances/wiki/Glances-4.0-Release-Note
+
 **BREAKING CHANGES:**
 
 * The minimal Python version is 3.8
