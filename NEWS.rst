@@ -15,6 +15,7 @@ Version 4.0.0
 Glances version 3.x and lower:
 
     sda1_alias=InternalDisk
+
     sdb1_alias=ExternalDisk
 
 Glances version 4.x and higher:
