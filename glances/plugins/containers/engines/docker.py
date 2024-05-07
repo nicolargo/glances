@@ -302,7 +302,7 @@ class DockerContainersExtension:
         # Container Image
         try:
             # API fails on Unraid - See issue 2233
-            stats['image'] = ','.join(container.image.tags if container.image.tags else []),
+            stats['image'] = (','.join(container.image.tags if container.image.tags else []),)
         except requests.exceptions.HTTPError:
             stats['image'] = ''
 

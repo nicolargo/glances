@@ -23,7 +23,6 @@ from glances.timer import Counter
 
 
 class GlancesClientTransport(Transport):
-
     """This class overwrite the default XML-RPC transport and manage timeout."""
 
     def set_timeout(self, timeout):
@@ -31,7 +30,6 @@ class GlancesClientTransport(Transport):
 
 
 class GlancesClient(object):
-
     """This class creates and manages the TCP client."""
 
     def __init__(self, config=None, args=None, timeout=7, return_to_browser=False):

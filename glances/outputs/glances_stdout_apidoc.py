@@ -139,41 +139,47 @@ def print_plugin_description(plugin, stat):
             print(
                 '* **{}**: {} (unit is *{}*)'.format(
                     field,
-                    description['description'][:-1]
-                    if description['description'].endswith('.')
-                    else description['description'],
-                    description['unit']
-                    if 'unit' in description
-                    else 'None'
+                    (
+                        description['description'][:-1]
+                        if description['description'].endswith('.')
+                        else description['description']
+                    ),
+                    description['unit'] if 'unit' in description else 'None',
                 )
             )
             if 'rate' in description and description['rate']:
                 time_since_update = True
-                print('* **{}**: {} (unit is *{}* per second)'.format(
-                    field + '_rate_per_sec',
-                    (description['description'][:-1]
-                     if description['description'].endswith('.')
-                     else description['description']) + ' per second',
-                    description['unit']
-                    if 'unit' in description
-                    else 'None'
-                ))
-                print('* **{}**: {} (unit is *{}*)'.format(
-                    field + '_gauge',
-                    (description['description'][:-1]
-                     if description['description'].endswith('.')
-                     else description['description']) + ' (cumulative)',
-                    description['unit']
-                    if 'unit' in description
-                    else 'None'
-                ))
+                print(
+                    '* **{}**: {} (unit is *{}* per second)'.format(
+                        field + '_rate_per_sec',
+                        (
+                            description['description'][:-1]
+                            if description['description'].endswith('.')
+                            else description['description']
+                        )
+                        + ' per second',
+                        description['unit'] if 'unit' in description else 'None',
+                    )
+                )
+                print(
+                    '* **{}**: {} (unit is *{}*)'.format(
+                        field + '_gauge',
+                        (
+                            description['description'][:-1]
+                            if description['description'].endswith('.')
+                            else description['description']
+                        )
+                        + ' (cumulative)',
+                        description['unit'] if 'unit' in description else 'None',
+                    )
+                )
 
         if time_since_update:
-            print('* **{}**: {} (unit is *{}*)'.format(
-                'time_since_update',
-                'Number of seconds since last update',
-                'seconds'
-            ))
+            print(
+                '* **{}**: {} (unit is *{}*)'.format(
+                    'time_since_update', 'Number of seconds since last update', 'seconds'
+                )
+            )
 
         print('')
     else:
@@ -310,7 +316,6 @@ def print_limits(stats):
 
 
 class GlancesStdoutApiDoc(object):
-
     """This class manages the fields description display."""
 
     def __init__(self, config=None, args=None):

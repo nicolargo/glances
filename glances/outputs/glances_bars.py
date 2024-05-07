@@ -13,8 +13,6 @@ from __future__ import division
 
 from math import modf
 
-from glances.logger import logger
-
 
 class Bar(object):
     """Manage bar (progression or status).
@@ -29,13 +27,18 @@ class Bar(object):
         sys.stdout.flush()
     """
 
-    def __init__(self, size,
-                 bar_char='|',
-                 empty_char=' ',
-                 pre_char='[', post_char=']',
-                 unit_char='%',
-                 display_value=True,
-                 min_value=0, max_value=100):
+    def __init__(
+        self,
+        size,
+        bar_char='|',
+        empty_char=' ',
+        pre_char='[',
+        post_char=']',
+        unit_char='%',
+        display_value=True,
+        min_value=0,
+        max_value=100,
+    ):
         """Init a bar (used in Quicllook plugin)
 
         Args:
@@ -107,18 +110,15 @@ class Bar(object):
         # Add the value
         if self.__display_value:
             if self.percent >= self.max_value:
-                ret = '{} {}{:3.0f}{}'.format(ret,
-                                              '>' if self.percent > self.max_value else ' ',
-                                              self.max_value,
-                                              self.__unit_char)
+                ret = '{} {}{:3.0f}{}'.format(
+                    ret, '>' if self.percent > self.max_value else ' ', self.max_value, self.__unit_char
+                )
             else:
-                ret = '{}{:5.1f}{}'.format(ret,
-                                           self.percent,
-                                           self.__unit_char)
+                ret = '{}{:5.1f}{}'.format(ret, self.percent, self.__unit_char)
 
         # Add overlay
         if overlay and len(overlay) < len(ret) - 6:
-            ret = overlay + ret[len(overlay):]
+            ret = overlay + ret[len(overlay) :]
 
         return ret
 

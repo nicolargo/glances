@@ -20,7 +20,6 @@ from glances.logger import logger
 
 
 class GlancesExport(object):
-
     """Main class for Glances export IF."""
 
     # List of non exportable plugins

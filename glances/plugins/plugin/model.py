@@ -276,7 +276,7 @@ class GlancesPluginModel(object):
         if raw_history is None or len(raw_history) < nb:
             return None
         last_nb = [v[1] for v in raw_history]
-        return mean(last_nb[nb // 2:]) - mean(last_nb[:nb // 2])
+        return mean(last_nb[nb // 2 :]) - mean(last_nb[: nb // 2])
 
     @property
     def input_method(self):
@@ -350,9 +350,7 @@ class GlancesPluginModel(object):
         ret = {}
         if bulk:
             # Bulk request
-            snmp_result = snmp_client.getbulk_by_oid(0,
-                                                     10,
-                                                     *list(itervalues(snmp_oid)))
+            snmp_result = snmp_client.getbulk_by_oid(0, 10, *list(itervalues(snmp_oid)))
             logger.info(snmp_result)
             if len(snmp_oid) == 1:
                 # Bulk command for only one OID
@@ -523,11 +521,13 @@ class GlancesPluginModel(object):
                         'additional': False,
                         'splittable': False,
                         'hidden': False,
-                        '_zero': self.views[i[self.get_key()]][key]['_zero']
-                        if i[self.get_key()] in self.views
-                        and key in self.views[i[self.get_key()]]
-                        and 'zero' in self.views[i[self.get_key()]][key]
-                        else True,
+                        '_zero': (
+                            self.views[i[self.get_key()]][key]['_zero']
+                            if i[self.get_key()] in self.views
+                            and key in self.views[i[self.get_key()]]
+                            and 'zero' in self.views[i[self.get_key()]][key]
+                            else True
+                        ),
                     }
                     ret[i[self.get_key()]][key] = value
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
@@ -1039,9 +1039,9 @@ class GlancesPluginModel(object):
 
         # Is it a rate ? Yes, get the pre-computed rate value
         if (
-            key in self.fields_description and
-            'rate' in self.fields_description[key] and
-            self.fields_description[key]['rate'] is True
+            key in self.fields_description
+            and 'rate' in self.fields_description[key]
+            and self.fields_description[key]['rate'] is True
         ):
             value = self.stats.get(key + '_rate_per_sec', None)
         else:
@@ -1064,12 +1064,8 @@ class GlancesPluginModel(object):
         elif unit_type == 'float':
             msg_value = msg_template_float.format(value, unit_short)
         elif 'min_symbol' in self.fields_description[key]:
-            msg_value = (
-                msg_template.format(
-                    self.auto_unit(int(value),
-                                   min_symbol=self.fields_description[key]['min_symbol']),
-                    unit_short
-                )
+            msg_value = msg_template.format(
+                self.auto_unit(int(value), min_symbol=self.fields_description[key]['min_symbol']), unit_short
             )
         else:
             msg_value = msg_template.format(int(value), unit_short)
@@ -1119,7 +1115,7 @@ class GlancesPluginModel(object):
             return none_symbol
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         if min_symbol in symbols:
-            symbols = symbols[symbols.index(min_symbol):]
+            symbols = symbols[symbols.index(min_symbol) :]
         prefix = {
             'Y': 1208925819614629174706176,
             'Z': 1180591620717411303424,

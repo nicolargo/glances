@@ -11,6 +11,7 @@
 
 from glances.logger import logger
 from glances.globals import nativestr
+
 try:
     import pynvml
 except Exception as e:

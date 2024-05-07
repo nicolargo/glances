@@ -16,7 +16,6 @@ import psutil
 
 
 class CpuPercent(object):
-
     """Get and store the CPU percent."""
 
     def __init__(self, cached_timer_cpu=3):

@@ -23,7 +23,6 @@ else:
 
 
 class GlancesActions(object):
-
     """This class manage action if an alert is reached."""
 
     def __init__(self, args=None):

@@ -21,7 +21,6 @@ from zmq.utils.strtypes import asbytes
 
 
 class Export(GlancesExport):
-
     """This class manages the ZeroMQ export module."""
 
     def __init__(self, config=None, args=None):

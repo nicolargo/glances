@@ -22,7 +22,6 @@ from glances.logger import logger
 
 
 class GlancesPassword(object):
-
     """This class contains all the methods relating to password."""
 
     def __init__(self, username='glances', config=None):

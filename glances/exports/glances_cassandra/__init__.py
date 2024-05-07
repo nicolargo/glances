@@ -23,7 +23,6 @@ from cassandra import InvalidRequest
 
 
 class Export(GlancesExport):
-
     """This class manages the Cassandra/Scylla export module."""
 
     def __init__(self, config=None, args=None):

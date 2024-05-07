@@ -58,7 +58,6 @@ glances_thresholds = GlancesThresholds()
 
 @total_ordering
 class _GlancesThreshold(object):
-
     """Father class for all other Thresholds"""
 
     def description(self):
@@ -81,28 +80,24 @@ class _GlancesThreshold(object):
 
 
 class GlancesThresholdOk(_GlancesThreshold):
-
     """Ok Threshold class"""
 
     _threshold = {'description': 'OK', 'value': 0}
 
 
 class GlancesThresholdCareful(_GlancesThreshold):
-
     """Careful Threshold class"""
 
     _threshold = {'description': 'CAREFUL', 'value': 1}
 
 
 class GlancesThresholdWarning(_GlancesThreshold):
-
     """Warning Threshold class"""
 
     _threshold = {'description': 'WARNING', 'value': 2}
 
 
 class GlancesThresholdCritical(_GlancesThreshold):
-
     """Warning Threshold class"""
 
     _threshold = {'description': 'CRITICAL', 'value': 3}

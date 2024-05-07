@@ -32,7 +32,6 @@ except ImportError:
 
 
 class _GlancesCurses(object):
-
     """This class manages the curses display (and key pressed).
 
     Note: It is a private class, use GlancesCursesClient or GlancesCursesBrowser.
@@ -200,9 +199,7 @@ class _GlancesCurses(object):
             # Separator ?
             self.args.enable_separator = config.get_bool_value('outputs', 'separator', default=True)
             # Set the left sidebar list
-            self._left_sidebar = config.get_list_value('outputs',
-                                                       'left_menu',
-                                                       default=self._left_sidebar)
+            self._left_sidebar = config.get_list_value('outputs', 'left_menu', default=self._left_sidebar)
 
     def _init_history(self):
         """Init the history option."""
@@ -605,13 +602,13 @@ class _GlancesCurses(object):
             # Compute the plugin max size for the left sidebar
             plugin_max_width = None
             if p in self._left_sidebar:
-                plugin_max_width = min(self._left_sidebar_max_width,
-                                       max(self._left_sidebar_min_width,
-                                           self.term_window.getmaxyx()[1] - 105))
+                plugin_max_width = min(
+                    self._left_sidebar_max_width,
+                    max(self._left_sidebar_min_width, self.term_window.getmaxyx()[1] - 105),
+                )
 
             # Get the view
-            ret[p] = stats.get_plugin(p).get_stats_display(args=self.args,
-                                                           max_width=plugin_max_width)
+            ret[p] = stats.get_plugin(p).get_stats_display(args=self.args, max_width=plugin_max_width)
 
         return ret
 
@@ -888,9 +885,7 @@ class _GlancesCurses(object):
                 if p == 'sensors':
                     self.display_plugin(
                         stat_display['sensors'],
-                        max_y=(
-                            self.term_window.getmaxyx()[0] - self.get_stats_display_height(stat_display['now']) - 2
-                        ),
+                        max_y=(self.term_window.getmaxyx()[0] - self.get_stats_display_height(stat_display['now']) - 2),
                     )
                 else:
                     self.display_plugin(stat_display[p])
@@ -1261,12 +1256,10 @@ class _GlancesCurses(object):
 
 
 class GlancesCursesStandalone(_GlancesCurses):
-
     """Class for the Glances curse standalone."""
 
 
 class GlancesCursesClient(_GlancesCurses):
-
     """Class for the Glances curse client."""
 
 

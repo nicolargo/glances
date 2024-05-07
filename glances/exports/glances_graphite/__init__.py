@@ -19,7 +19,6 @@ from graphitesend import GraphiteClient
 
 
 class Export(GlancesExport):
-
     """This class manages the Graphite export module."""
 
     def __init__(self, config=None, args=None):

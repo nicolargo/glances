@@ -20,7 +20,6 @@ from prometheus_client import start_http_server, Gauge
 
 
 class Export(GlancesExport):
-
     """This class manages the Prometheus export module."""
 
     METRIC_SEPARATOR = '_'

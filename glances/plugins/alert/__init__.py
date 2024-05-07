@@ -11,7 +11,6 @@
 
 from datetime import datetime
 
-from glances.logger import logger
 from glances.events_list import glances_events
 
 # from glances.logger import logger
@@ -90,7 +89,7 @@ fields_description = {
     'global_msg': {
         'description': 'Global alert message',
         'unit': 'string',
-    }
+    },
 }
 
 
@@ -103,9 +102,7 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config,
-            stats_init_value=[],
-            fields_description=fields_description
+            args=args, config=config, stats_init_value=[], fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface
@@ -172,9 +169,7 @@ class PluginModel(GlancesPluginModel):
             if self.approx_equal(alert['min'], alert['max'], tolerance=0.1):
                 msg = ' ({:.1f})'.format(alert['avg'])
             else:
-                msg = ' (Min:{:.1f} Mean:{:.1f} Max:{:.1f})'.format(alert['min'],
-                                                                    alert['avg'],
-                                                                    alert['max'])
+                msg = ' (Min:{:.1f} Mean:{:.1f} Max:{:.1f})'.format(alert['min'], alert['avg'], alert['max'])
             ret.append(self.curse_add_line(msg))
             # Top processes
             top_process = ', '.join(alert['top'])

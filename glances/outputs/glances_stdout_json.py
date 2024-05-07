@@ -15,7 +15,6 @@ from glances.globals import printandflush
 
 
 class GlancesStdoutJson(object):
-
     """This class manages the Stdout JSON display."""
 
     def __init__(self, config=None, args=None):

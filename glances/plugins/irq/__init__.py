@@ -44,9 +44,7 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config,
-            stats_init_value=[],
-            fields_description=fields_description
+            args=args, config=config, stats_init_value=[], fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface

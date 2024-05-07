@@ -19,7 +19,6 @@ from kafka import KafkaProducer
 
 
 class Export(GlancesExport):
-
     """This class manages the Kafka export module."""
 
     def __init__(self, config=None, args=None):

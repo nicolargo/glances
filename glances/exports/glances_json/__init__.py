@@ -8,7 +8,6 @@ from glances.exports.export import GlancesExport
 
 
 class Export(GlancesExport):
-
     """This class manages the JSON export module."""
 
     def __init__(self, config=None, args=None):

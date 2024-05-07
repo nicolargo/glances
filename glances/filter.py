@@ -56,7 +56,6 @@ class GlancesFilterList(object):
 
 
 class GlancesFilter(object):
-
     """Allow Glances to filter processes
 
     >>> f = GlancesFilter()
@@ -122,9 +121,9 @@ class GlancesFilter(object):
 
         self._filter_re = None
         if self.filter is not None:
-            logger.debug("Set filter to {} on {}".format(
-                self.filter,
-                self.filter_key if self.filter_key else 'name or cmdline'))
+            logger.debug(
+                "Set filter to {} on {}".format(self.filter, self.filter_key if self.filter_key else 'name or cmdline')
+            )
             # Compute the regular expression
             try:
                 self._filter_re = re.compile(self.filter)

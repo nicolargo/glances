@@ -98,7 +98,7 @@ class PluginModel(GlancesPluginModel):
             config=config,
             # items_history_list=items_history_list,
             stats_init_value={'net_connections_enabled': True, 'nf_conntrack_enabled': True},
-            fields_description=fields_description
+            fields_description=fields_description,
         )
 
         # We want to display the stat in the curse interface

@@ -40,7 +40,6 @@ class colors:
 
 
 class GlancesStdoutIssue(object):
-
     """This class manages the Issue display."""
 
     def __init__(self, config=None, args=None):

@@ -200,8 +200,7 @@ class PluginModel(GlancesPluginModel):
             msg_freq = ''
 
         if 'cpu_name' in self.stats and (max_width - len(msg_freq) + 7) > 0:
-            msg_name = '{:{width}}'.format(self.stats['cpu_name'],
-                                           width=max_width - len(msg_freq) + 7)
+            msg_name = '{:{width}}'.format(self.stats['cpu_name'], width=max_width - len(msg_freq) + 7)
         else:
             msg_name = '' if msg_freq == '' else 'Frequency'
 
@@ -248,7 +247,7 @@ class PluginModel(GlancesPluginModel):
             percpu_list = self.stats['percpu']
 
         # Display the first max_cpu_display CPU
-        for cpu in percpu_list[0: self.max_cpu_display]:
+        for cpu in percpu_list[0 : self.max_cpu_display]:
             cpu_id = cpu[cpu['key']]
             if type(data[key]).__name__ == 'Sparkline':
                 # Sparkline display an history
@@ -280,8 +279,8 @@ class PluginModel(GlancesPluginModel):
             else:
                 # Bar will only display the last value
                 sum_other = Bar(max_width, bar_char=self.get_conf_value('bar_char', default=['|'])[0])
-                sum_other.percent = sum([i['total'] for i in percpu_list[self.max_cpu_display:]]) / len(
-                    percpu_list[self.max_cpu_display:]
+                sum_other.percent = sum([i['total'] for i in percpu_list[self.max_cpu_display :]]) / len(
+                    percpu_list[self.max_cpu_display :]
                 )
             msg = msg = '{:3}* '.format(key.upper())
             ret.extend(self._msg_create_line(msg, sum_other, key))

@@ -23,7 +23,6 @@ from glances.timer import Counter
 
 
 class GlancesStats(object):
-
     """This class stores, updates and gives stats."""
 
     # Script header constant
@@ -50,7 +49,7 @@ class GlancesStats(object):
         # Check if the attribute starts with 'get'
         if item.startswith('getViews'):
             # Get the plugin name
-            plugname = item[len('getViews'):].lower()
+            plugname = item[len('getViews') :].lower()
             # Get the plugin instance
             plugin = self._plugins[plugname]
             if hasattr(plugin, 'get_json_views'):
@@ -61,7 +60,7 @@ class GlancesStats(object):
                 raise AttributeError(item)
         elif item.startswith('get'):
             # Get the plugin name
-            plugname = item[len('get'):].lower()
+            plugname = item[len('get') :].lower()
             # Get the plugin instance
             plugin = self._plugins[plugname]
             if hasattr(plugin, 'get_stats'):

@@ -23,9 +23,7 @@ import psutil
 # rate: if True then compute and add *_gauge and *_rate_per_is fields
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
-    'disk_name': {
-        'description': 'Disk name.'
-    },
+    'disk_name': {'description': 'Disk name.'},
     'read_count': {
         'description': 'Number of reads.',
         'rate': True,
@@ -50,16 +48,8 @@ fields_description = {
 
 # Define the history items list
 items_history_list = [
-    {
-        'name': 'read_bytes_rate_per_sec',
-        'description': 'Bytes read per second',
-        'y_unit': 'B/s'
-    },
-    {
-        'name': 'write_bytes_rate_per_sec',
-        'description': 'Bytes write per second',
-        'y_unit': 'B/s'
-    },
+    {'name': 'read_bytes_rate_per_sec', 'description': 'Bytes read per second', 'y_unit': 'B/s'},
+    {'name': 'write_bytes_rate_per_sec', 'description': 'Bytes write per second', 'y_unit': 'B/s'},
 ]
 
 
@@ -72,10 +62,11 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config,
+            args=args,
+            config=config,
             items_history_list=items_history_list,
             stats_init_value=[],
-            fields_description=fields_description
+            fields_description=fields_description,
         )
 
         # We want to display the stat in the curse interface
@@ -122,8 +113,7 @@ class PluginModel(GlancesPluginModel):
 
         for disk_name, disk_stat in diskio.items():
             # By default, RamFS is not displayed (issue #714)
-            if self.args is not None and \
-               not self.args.diskio_show_ramfs and disk_name.startswith('ram'):
+            if self.args is not None and not self.args.diskio_show_ramfs and disk_name.startswith('ram'):
                 continue
 
             # Shall we display the stats ?
@@ -161,12 +151,10 @@ class PluginModel(GlancesPluginModel):
         for i in self.get_raw():
             disk_real_name = i['disk_name']
             self.views[i[self.get_key()]]['read_bytes']['decoration'] = self.get_alert(
-                i['read_bytes'],
-                header=disk_real_name + '_rx'
+                i['read_bytes'], header=disk_real_name + '_rx'
             )
             self.views[i[self.get_key()]]['write_bytes']['decoration'] = self.get_alert(
-                i['write_bytes'],
-                header=disk_real_name + '_tx'
+                i['write_bytes'], header=disk_real_name + '_tx'
             )
 
     def msg_curse(self, args=None, max_width=None):
@@ -220,17 +208,13 @@ class PluginModel(GlancesPluginModel):
                 msg = '{:>7}'.format(txps)
                 ret.append(
                     self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()],
-                                            key='read_count',
-                                            option='decoration')
+                        msg, self.get_views(item=i[self.get_key()], key='read_count', option='decoration')
                     )
                 )
                 msg = '{:>7}'.format(rxps)
                 ret.append(
                     self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()],
-                                            key='write_count',
-                                            option='decoration')
+                        msg, self.get_views(item=i[self.get_key()], key='write_count', option='decoration')
                     )
                 )
             else:
@@ -240,17 +224,13 @@ class PluginModel(GlancesPluginModel):
                 msg = '{:>7}'.format(txps)
                 ret.append(
                     self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()],
-                                            key='read_bytes',
-                                            option='decoration')
+                        msg, self.get_views(item=i[self.get_key()], key='read_bytes', option='decoration')
                     )
                 )
                 msg = '{:>7}'.format(rxps)
                 ret.append(
                     self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()],
-                                            key='write_bytes',
-                                            option='decoration')
+                        msg, self.get_views(item=i[self.get_key()], key='write_bytes', option='decoration')
                     )
                 )
 

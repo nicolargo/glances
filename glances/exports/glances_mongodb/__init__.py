@@ -19,7 +19,6 @@ from urllib.parse import quote_plus
 
 
 class Export(GlancesExport):
-
     """This class manages the MongoDB export module."""
 
     def __init__(self, config=None, args=None):

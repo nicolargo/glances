@@ -13,7 +13,6 @@ from glances.attribute import GlancesAttribute
 
 
 class GlancesHistory(object):
-
     """This class manage a dict of GlancesAttribute
     - key: stats name
     - value: GlancesAttribute"""

@@ -66,13 +66,13 @@ test: ## Run unit tests
 	./venv/bin/python ./unitest.py
 	./venv/bin/python ./unitest-restful.py
 	./venv/bin/python ./unitest-xmlrpc.py
-	./venv/bin/python -m black ./glances --check --exclude outputs/static
+	./venv-dev/bin/python -m black ./glances --check --exclude outputs/static
 
 test-with-upgrade: venv-upgrade venv-dev-upgrade ## Upgrade deps and run unit tests
 	./venv/bin/python ./unitest.py
 	./venv/bin/python ./unitest-restful.py
 	./venv/bin/python ./unitest-xmlrpc.py
-	./venv/bin/python -m black ./glances --check --exclude outputs/static
+	./venv/bin-dev/python -m black ./glances --check --exclude outputs/static
 
 test-min: ## Run unit tests in minimal environment
 	./venv-min/bin/python ./unitest.py

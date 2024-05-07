@@ -23,7 +23,6 @@ import paho.mqtt.client as paho
 
 
 class Export(GlancesExport):
-
     """This class manages the MQTT export module."""
 
     def __init__(self, config=None, args=None):
@@ -38,7 +37,9 @@ class Export(GlancesExport):
 
         # Load the MQTT configuration file
         self.export_enable = self.load_conf(
-            'mqtt', mandatories=['host', 'password'], options=['port', 'devicename', 'user', 'topic', 'tls', 'topic_structure', 'callback_api_version']
+            'mqtt',
+            mandatories=['host', 'password'],
+            options=['port', 'devicename', 'user', 'topic', 'tls', 'topic_structure', 'callback_api_version'],
         )
         if not self.export_enable:
             exit('Missing MQTT config')
@@ -63,7 +64,7 @@ class Export(GlancesExport):
     def init(self):
         # Get the current callback api version
         self.callback_api_version = int(self.callback_api_version) or 2
-        
+
         # Set enum for connection
         if self.callback_api_version == 1:
             self.callback_api_version = paho.CallbackAPIVersion.VERSION1
@@ -74,7 +75,11 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
         try:
-            client = paho.Client(callback_api_version=self.callback_api_version, client_id='glances_' + self.devicename, clean_session=False)
+            client = paho.Client(
+                callback_api_version=self.callback_api_version,
+                client_id='glances_' + self.devicename,
+                clean_session=False,
+            )
             client.username_pw_set(username=self.user, password=self.password)
             if self.tls:
                 client.tls_set(certifi.where())

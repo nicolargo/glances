@@ -66,10 +66,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
-            args=args, config=config,
-            fields_description=fields_description
-        )
+        super(PluginModel, self).__init__(args=args, config=config, fields_description=fields_description)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -83,8 +80,9 @@ class PluginModel(GlancesPluginModel):
         self.public_field = self.get_conf_value("public_field", default=[None])
         self.public_template = self.get_conf_value("public_template", default=[None])[0]
         self.public_disabled = (
-            self.get_conf_value('public_disabled', default='False')[0].lower() != 'false' or
-            self.public_api is None or self.public_field is None
+            self.get_conf_value('public_disabled', default='False')[0].lower() != 'false'
+            or self.public_api is None
+            or self.public_field is None
         )
         self.public_address_refresh_interval = self.get_conf_value(
             "public_refresh_interval", default=self._default_public_refresh_interval
@@ -128,9 +126,7 @@ class PluginModel(GlancesPluginModel):
                 if not self.public_disabled and (
                     self.public_address == "" or time_since_update > self.public_address_refresh_interval
                 ):
-                    self.public_info = PublicIpInfo(
-                        self.public_api, self.public_username, self.public_password
-                    ).get()
+                    self.public_info = PublicIpInfo(self.public_api, self.public_username, self.public_password).get()
                     self.public_address = self.public_info['ip']
             except (KeyError, AttributeError, TypeError) as e:
                 logger.debug("Cannot grab public IP information ({})".format(e))
@@ -138,9 +134,7 @@ class PluginModel(GlancesPluginModel):
                 stats['public_address'] = (
                     self.public_address if not self.args.hide_public_info else self.__hide_ip(self.public_address)
                 )
-                stats['public_info_human'] = (
-                    self.public_info_for_human(self.public_info)
-                )
+                stats['public_info_human'] = self.public_info_for_human(self.public_info)
 
         elif self.input_method == 'snmp':
             # Not implemented yet

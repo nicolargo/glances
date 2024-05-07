@@ -114,9 +114,9 @@ class GlancesRestfulApi(object):
             self._app.include_router(APIRouter(prefix=self.url_prefix.rstrip('/')))
 
         # Set path for WebUI
-        webui_root_path = config.get_value('outputs',
-                                           'webui_root_path',
-                                           default=os.path.dirname(os.path.realpath(__file__)))
+        webui_root_path = config.get_value(
+            'outputs', 'webui_root_path', default=os.path.dirname(os.path.realpath(__file__))
+        )
         if webui_root_path == '':
             webui_root_path = os.path.dirname(os.path.realpath(__file__))
         self.STATIC_PATH = os.path.join(webui_root_path, 'static/public')
@@ -307,9 +307,9 @@ class GlancesRestfulApi(object):
 
     def _start_uvicorn(self):
         # Run the Uvicorn Web server
-        uvicorn_config = uvicorn.Config(self._app,
-                                        host=self.args.bind_address, port=self.args.port,
-                                        access_log=self.args.debug)
+        uvicorn_config = uvicorn.Config(
+            self._app, host=self.args.bind_address, port=self.args.port, access_log=self.args.debug
+        )
         try:
             self.uvicorn_server = GlancesUvicornServer(config=uvicorn_config)
         except Exception as e:

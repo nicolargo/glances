@@ -23,7 +23,6 @@ from glances.timer import Timer
 
 
 class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
-
     """Main XML-RPC handler."""
 
     rpc_paths = ('/RPC2',)
@@ -88,7 +87,6 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
 
 
 class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
-
     """Init a SimpleXMLRPCServer instance (IPv6-ready)."""
 
     finished = False
@@ -117,7 +115,6 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
 
 
 class GlancesInstance(object):
-
     """All the methods of this class are published as XML-RPC methods."""
 
     def __init__(self, config=None, args=None):
@@ -182,7 +179,6 @@ class GlancesInstance(object):
 
 
 class GlancesServer(object):
-
     """This class creates and manages the TCP server."""
 
     def __init__(self, requestHandler=GlancesXMLRPCHandler, config=None, args=None):

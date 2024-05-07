@@ -20,12 +20,8 @@ from glances.plugins.plugin.model import GlancesPluginModel
 # rate: if True then compute and add *_gauge and *_rate_per_is fields
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
-    'custom': {
-        'description': 'Current date in custom format.'
-    },
-    'iso': {
-        'description': 'Current date in ISO 8601 format.'
-    }
+    'custom': {'description': 'Current date in custom format.'},
+    'iso': {'description': 'Current date in ISO 8601 format.'},
 }
 
 
@@ -42,10 +38,8 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args,
-            config=config,
-            fields_description=fields_description,
-            stats_init_value={})
+            args=args, config=config, fields_description=fields_description, stats_init_value={}
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True

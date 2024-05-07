@@ -14,7 +14,6 @@ from glances.logger import logger
 
 
 class GlancesWebList(object):
-
     """Manage the Web/Url list for the ports plugin."""
 
     _section = "ports"

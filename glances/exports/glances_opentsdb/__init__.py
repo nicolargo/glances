@@ -19,7 +19,6 @@ import potsdb
 
 
 class Export(GlancesExport):
-
     """This class manages the OpenTSDB export module."""
 
     def __init__(self, config=None, args=None):

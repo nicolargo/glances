@@ -17,7 +17,6 @@ from glances.logger import logger
 
 
 class GlancesStatsClient(GlancesStats):
-
     """This class stores, updates and gives stats for the client."""
 
     def __init__(self, config=None, args=None):

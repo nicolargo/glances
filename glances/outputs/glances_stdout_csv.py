@@ -15,7 +15,6 @@ from glances.globals import printandflush
 
 
 class GlancesStdoutCsv(object):
-
     """This class manages the StdoutCsv display."""
 
     separator = ','

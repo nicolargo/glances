@@ -80,9 +80,7 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config,
-            stats_init_value=[],
-            fields_description=fields_description
+            args=args, config=config, stats_init_value=[], fields_description=fields_description
         )
 
         start_duration = Counter()
@@ -174,18 +172,10 @@ class PluginModel(GlancesPluginModel):
         if self.input_method == 'local':
             threads_stats = [None] * 4
             threads = [
-                threading.Thread(name=SENSOR_TEMP_TYPE,
-                                 target=self.__get_temperature,
-                                 args=(threads_stats, 0)),
-                threading.Thread(name=SENSOR_FAN_TYPE,
-                                 target=self.__get_fan_speed,
-                                 args=(threads_stats, 1)),
-                threading.Thread(name=SENSOR_HDDTEMP_TYPE,
-                                 target=self.__get_hddtemp,
-                                 args=(threads_stats, 2)),
-                threading.Thread(name=SENSORS_BATTERY_TYPE,
-                                 target=self.__get_bat_percent,
-                                 args=(threads_stats, 3))
+                threading.Thread(name=SENSOR_TEMP_TYPE, target=self.__get_temperature, args=(threads_stats, 0)),
+                threading.Thread(name=SENSOR_FAN_TYPE, target=self.__get_fan_speed, args=(threads_stats, 1)),
+                threading.Thread(name=SENSOR_HDDTEMP_TYPE, target=self.__get_hddtemp, args=(threads_stats, 2)),
+                threading.Thread(name=SENSORS_BATTERY_TYPE, target=self.__get_bat_percent, args=(threads_stats, 3)),
             ]
             # Start threads in //
             for t in threads:

@@ -15,7 +15,6 @@ from glances.logger import logger
 
 
 class GlancesStaticServer(object):
-
     """Manage the static servers list for the client browser."""
 
     _section = "serverlist"
