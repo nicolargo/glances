@@ -512,11 +512,13 @@ class GlancesRestfulApi(object):
 
         try:
             # Get the RAW value of the stat ID
-            statval = self.stats.get_plugin(plugin).get_export()
+            statval = self.stats.get_plugin(plugin).get_raw()
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get plugin %s (%s)" % (plugin, str(e))
             )
+
+        print(statval)
 
         if isinstance(statval, list):
             statval = statval[:nb]
