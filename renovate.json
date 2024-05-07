@@ -3,6 +3,5 @@
   "extends": [
     "config:recommended"
   ],
-  "prHourlyLimit": 3,
-  "ignorePaths": ["**/static/package-lock.json"]
+  "prHourlyLimit": 3
 }
