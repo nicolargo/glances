@@ -25,6 +25,7 @@ Glances version 4.x and higher:
 * Docker memory usage uses the same algorithm than docker stats #2637
 
 Enhancements:
+
 * Export individual processes stats #794
 * [WebUI] Feature Request: Ability to hide Engine and Pod columns in Containers #2423
 * [IP plugin] Make the public ip information more configurable (not only from the Censys service) #2732
