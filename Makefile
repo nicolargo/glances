@@ -63,22 +63,22 @@ venv-dev-upgrade: ## Upgrade Python 3 dev dependencies
 # ===================================================================
 
 test: ## Run unit tests
-	./venv/bin/python ./unittest.py
+	./venv/bin/python ./unittest-core.py
 	./venv/bin/python ./unittest-restful.py
 	./venv/bin/python ./unittest-xmlrpc.py
 	./venv-dev/bin/python -m black ./glances --check --exclude outputs/static
 
 test-with-upgrade: venv-upgrade venv-dev-upgrade ## Upgrade deps and run unit tests
-	./venv/bin/python ./unittest.py
+	./venv/bin/python ./unittest-core.py
 	./venv/bin/python ./unittest-restful.py
 	./venv/bin/python ./unittest-xmlrpc.py
 	./venv/bin-dev/python -m black ./glances --check --exclude outputs/static
 
 test-min: ## Run unit tests in minimal environment
-	./venv-min/bin/python ./unittest.py
+	./venv-min/bin/python ./unittest-core.py
 
 test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in minimal environment
-	./venv-min/bin/python ./unittest.py
+	./venv-min/bin/python ./unittest-core.py
 
 test-restful-api: ## Run unit tests of the RESTful API
 	./venv/bin/python ./unittest-restful.py
