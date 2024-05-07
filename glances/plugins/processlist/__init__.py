@@ -155,9 +155,9 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config,
-                                          fields_description=fields_description,
-                                          stats_init_value=[])
+        super(PluginModel, self).__init__(
+            args=args, config=config, fields_description=fields_description, stats_init_value=[]
+        )
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -190,8 +190,7 @@ class PluginModel(GlancesPluginModel):
             if 'export' in config.as_dict()['processlist']:
                 glances_processes.export_process_filter = config.as_dict()['processlist']['export']
                 if args.export:
-                    logger.info("Export process filter is set to: {}".format(
-                        config.as_dict()['processlist']['export']))
+                    logger.info("Export process filter is set to: {}".format(config.as_dict()['processlist']['export']))
 
         # The default sort key could also be overwrite by command line (see #1903)
         if args and args.sort_processes_key is not None:

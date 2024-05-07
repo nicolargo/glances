@@ -38,9 +38,7 @@ if not wireless_file_exists:
 # rate: if True then compute and add *_gauge and *_rate_per_is fields
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
-    'ssid': {
-        'description': 'Wi-Fi network name.'
-    },
+    'ssid': {'description': 'Wi-Fi network name.'},
     'quality_link': {
         'description': 'Signal quality level.',
         'unit': 'dBm',
@@ -196,18 +194,15 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_new_line())
             # New hotspot
             hotspot_name = i['ssid']
-            msg = '{:{width}}'.format(
-                nativestr(hotspot_name),
-                width=if_name_max_width
-            )
+            msg = '{:{width}}'.format(nativestr(hotspot_name), width=if_name_max_width)
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format(
                 i['quality_level'],
             )
             ret.append(
-                self.curse_add_line(msg, self.get_views(item=i[self.get_key()],
-                                                        key='quality_level',
-                                                        option='decoration'))
+                self.curse_add_line(
+                    msg, self.get_views(item=i[self.get_key()], key='quality_level', option='decoration')
+                )
             )
 
         return ret

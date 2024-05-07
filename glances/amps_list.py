@@ -19,7 +19,6 @@ from glances.processes import glances_processes
 
 
 class AmpsList(object):
-
     """This class describes the optional application monitoring process list.
 
     The AMP list is a list of processes with a specific monitoring action.

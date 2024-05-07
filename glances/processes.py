@@ -17,6 +17,7 @@ from glances.programs import processes_to_programs
 from glances.logger import logger
 
 import psutil
+
 psutil_version_info = tuple([int(num) for num in psutil.__version__.split('.')])
 
 # This constant defines the list of available processes sort key
@@ -385,14 +386,14 @@ class GlancesProcesses(object):
     def is_selected_extended_process(self, position):
         """Return True if the process is the selected one for extended stats."""
         return (
-            hasattr(self.args, 'programs') and
-            not self.args.programs and
-            hasattr(self.args, 'enable_process_extended') and
-            self.args.enable_process_extended and
-            not self.disable_extended_tag and
-            hasattr(self.args, 'cursor_position') and
-            position == self.args.cursor_position and
-            not self.args.disable_cursor
+            hasattr(self.args, 'programs')
+            and not self.args.programs
+            and hasattr(self.args, 'enable_process_extended')
+            and self.args.enable_process_extended
+            and not self.disable_extended_tag
+            and hasattr(self.args, 'cursor_position')
+            and position == self.args.cursor_position
+            and not self.args.disable_cursor
         )
 
     def update(self):
@@ -548,16 +549,14 @@ class GlancesProcesses(object):
         """Return the process list after filtering and transformation (namedtuple to dict)."""
         if self._filter.filter is None:
             return list_of_namedtuple_to_list_of_dict(processlist)
-        ret = list(filter(lambda p: self._filter.is_filtered(p),
-                          processlist))
+        ret = list(filter(lambda p: self._filter.is_filtered(p), processlist))
         return list_of_namedtuple_to_list_of_dict(ret)
 
     def update_export_list(self, processlist):
         """Return the process export list after filtering and transformation (namedtuple to dict)."""
         if self._filter_export.filter == []:
             return []
-        ret = list(filter(lambda p: self._filter_export.is_filtered(p),
-                          processlist))
+        ret = list(filter(lambda p: self._filter_export.is_filtered(p), processlist))
         return list_of_namedtuple_to_list_of_dict(ret)
 
     def get_count(self):

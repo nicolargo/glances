@@ -15,7 +15,6 @@ Currently supported:
 - AMD GPU (no lib needed)
 """
 
-from glances.logger import logger
 from glances.globals import to_fahrenheit
 from glances.plugins.gpu.cards.nvidia import NvidiaGPU
 from glances.plugins.gpu.cards.amd import AmdGPU
@@ -69,10 +68,11 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config,
+            args=args,
+            config=config,
             items_history_list=items_history_list,
             stats_init_value=[],
-            fields_description=fields_description
+            fields_description=fields_description,
         )
         # Init the GPU API
         self.nvidia = NvidiaGPU()

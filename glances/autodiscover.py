@@ -38,7 +38,6 @@ zeroconf_type = "_%s._tcp.local." % 'glances'
 
 
 class AutoDiscovered(object):
-
     """Class to manage the auto discovered servers dict."""
 
     def __init__(self):
@@ -82,7 +81,6 @@ class AutoDiscovered(object):
 
 
 class GlancesAutoDiscoverListener(object):
-
     """Zeroconf listener for Glances server."""
 
     def __init__(self):
@@ -127,7 +125,6 @@ class GlancesAutoDiscoverListener(object):
 
 
 class GlancesAutoDiscoverServer(object):
-
     """Implementation of the Zeroconf protocol (server side for the Glances client)."""
 
     def __init__(self, args=None):
@@ -164,7 +161,6 @@ class GlancesAutoDiscoverServer(object):
 
 
 class GlancesAutoDiscoverClient(object):
-
     """Implementation of the zeroconf protocol (client side for the Glances server)."""
 
     def __init__(self, hostname, args=None):

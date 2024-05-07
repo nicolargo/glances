@@ -16,7 +16,6 @@ from glances.globals import printandflush
 
 
 class GlancesStdout(object):
-
     """This class manages the Stdout display."""
 
     def __init__(self, config=None, args=None):
@@ -78,10 +77,7 @@ class GlancesStdout(object):
                         else:
                             continue
                         try:
-                            printandflush("{}.{}.{}: {}".format(plugin,
-                                                                i_key,
-                                                                attribute,
-                                                                i[attribute]))
+                            printandflush("{}.{}.{}: {}".format(plugin, i_key, attribute, i[attribute]))
                         except KeyError as err:
                             logger.error("Can not display stat {}.{} ({})".format(plugin, attribute, err))
             else:

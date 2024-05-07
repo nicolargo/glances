@@ -28,7 +28,6 @@ oid_to_short_system_name = {
 
 
 class GlancesStatsClientSNMP(GlancesStats):
-
     """This class stores, updates and gives stats for the SNMP client."""
 
     def __init__(self, config=None, args=None):

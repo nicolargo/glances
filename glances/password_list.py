@@ -14,7 +14,6 @@ from glances.password import GlancesPassword
 
 
 class GlancesPasswordList(GlancesPassword):
-
     """Manage the Glances passwords list for the client|browser/server."""
 
     _section = "passwords"

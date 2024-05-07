@@ -25,15 +25,9 @@ import psutil
 # rate: is it a rate ? If yes, // by time_since_update when displayed,
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
-    'device_name': {
-        'description': 'Device name.'
-    },
-    'fs_type': {
-        'description': 'File system type.'
-    },
-    'mnt_point': {
-        'description': 'Mount point.'
-    },
+    'device_name': {'description': 'Device name.'},
+    'fs_type': {'description': 'File system type.'},
+    'mnt_point': {'description': 'Mount point.'},
     'size': {
         'description': 'Total size.',
         'unit': 'byte',
@@ -104,10 +98,11 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config,
+            args=args,
+            config=config,
             items_history_list=items_history_list,
             stats_init_value=[],
-            fields_description=fields_description
+            fields_description=fields_description,
         )
 
         # We want to display the stat in the curse interface

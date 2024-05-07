@@ -19,7 +19,6 @@ from elasticsearch import Elasticsearch, helpers
 
 
 class Export(GlancesExport):
-
     """This class manages the ElasticSearch (ES) export module."""
 
     def __init__(self, config=None, args=None):

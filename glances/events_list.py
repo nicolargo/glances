@@ -163,7 +163,6 @@ def build_global_message():
 
 
 class GlancesEventsList(object):
-
     """This class manages events inside the Glances software.
     GlancesEventsList is a list of GlancesEvent.
     GlancesEvent is defined in the event.py file
@@ -215,9 +214,9 @@ class GlancesEventsList(object):
         Return -1 if the item is not found.
         """
         for i in range(self.len()):
-            if (self.events_list[i].is_ongoing() or
-                (event_time - self.events_list[i].end < self.min_interval)) and \
-               self.events_list[i].type == event_type:
+            if (
+                self.events_list[i].is_ongoing() or (event_time - self.events_list[i].end < self.min_interval)
+            ) and self.events_list[i].type == event_type:
                 return i
         return -1
 
@@ -267,17 +266,16 @@ class GlancesEventsList(object):
         event_index = self.__event_exist(event_time, event_type)
         if event_index < 0:
             # Event did not exist, add it
-            self._create_event(event_time, event_state, event_type, event_value,
-                               proc_desc, global_message)
+            self._create_event(event_time, event_state, event_type, event_value, proc_desc, global_message)
         else:
             # Event exist, update it
-            self._update_event(event_time, event_index, event_state, event_type, event_value,
-                               proc_list, proc_desc, global_message)
+            self._update_event(
+                event_time, event_index, event_state, event_type, event_value, proc_list, proc_desc, global_message
+            )
 
         return self.len()
 
-    def _create_event(self, event_time, event_state, event_type, event_value,
-                      proc_desc, global_message):
+    def _create_event(self, event_time, event_state, event_type, event_value, proc_desc, global_message):
         """Add a new item in the log list.
 
         Item is added only if the criticality (event_state) is WARNING or CRITICAL.
@@ -291,14 +289,20 @@ class GlancesEventsList(object):
         # Create the new log item
         # Time is stored in Epoch format
         # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
-        event = GlancesEvent(begin=event_time,
-                             state=event_state,
-                             type=event_type,
-                             min=event_value, max=event_value, sum=event_value, count=1, avg=event_value,
-                             top=[],
-                             desc=proc_desc,
-                             sort=glances_processes.sort_key,
-                             global_msg=global_message)
+        event = GlancesEvent(
+            begin=event_time,
+            state=event_state,
+            type=event_type,
+            min=event_value,
+            max=event_value,
+            sum=event_value,
+            count=1,
+            avg=event_value,
+            top=[],
+            desc=proc_desc,
+            sort=glances_processes.sort_key,
+            global_msg=global_message,
+        )
 
         # Add the event to the list
         self.events_list.insert(0, event)
@@ -307,8 +311,9 @@ class GlancesEventsList(object):
         if self.len() > self.max_events:
             self.events_list.pop()
 
-    def _update_event(self, event_time, event_index, event_state, event_type, event_value,
-                      proc_list, proc_desc, global_message):
+    def _update_event(
+        self, event_time, event_index, event_state, event_type, event_value, proc_list, proc_desc, global_message
+    ):
         """Update an event in the list"""
         if event_state in ('OK', 'CAREFUL') and self.events_list[event_index].is_ongoing():
             # Close the event
@@ -327,7 +332,8 @@ class GlancesEventsList(object):
                 sort_key=self.get_event_sort_key(event_type),
                 proc_list=proc_list,
                 proc_desc=proc_desc,
-                global_msg=global_message)
+                global_msg=global_message,
+            )
 
     def _close_event(self, event_time, event_index):
         """Close an event in the list"""

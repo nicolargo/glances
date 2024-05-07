@@ -20,7 +20,6 @@ import bernhard
 
 
 class Export(GlancesExport):
-
     """This class manages the Riemann export module."""
 
     def __init__(self, config=None, args=None):

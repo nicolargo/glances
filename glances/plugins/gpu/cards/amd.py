@@ -35,7 +35,6 @@ See: https://wiki.archlinux.org/title/AMDGPU#Manually
 #                 └── 0
 #                     └── amdgpu_pm_info
 
-from glances.logger import logger
 import re
 import os
 
@@ -59,7 +58,6 @@ class AmdGPU:
 
     def exit(self):
         """Close AMD GPU class."""
-        pass
 
     def get_device_stats(self):
         """Get AMD GPU stats."""
@@ -91,9 +89,11 @@ def get_device_list(drm_root_folder: str) -> list:
     ret = []
     for root, dirs, _ in os.walk(drm_root_folder):
         for d in dirs:
-            if re.match(CARD_REGEX, d) and \
-               DEVICE_FOLDER in os.listdir(os.path.join(root, d)) and \
-               os.path.isfile(os.path.join(root, d, DEVICE_FOLDER, GPU_PROC_PERCENT)):
+            if (
+                re.match(CARD_REGEX, d)
+                and DEVICE_FOLDER in os.listdir(os.path.join(root, d))
+                and os.path.isfile(os.path.join(root, d, DEVICE_FOLDER, GPU_PROC_PERCENT))
+            ):
                 # If the GPU busy file is present then take the card into account
                 ret.append(os.path.join(root, d, DEVICE_FOLDER))
     return ret

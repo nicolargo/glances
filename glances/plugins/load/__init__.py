@@ -72,6 +72,7 @@ else:
     if 'phys' in core:
         nb_phys_core = core['phys']
 
+
 class PluginModel(GlancesPluginModel):
     """Glances load plugin.
 
@@ -102,12 +103,7 @@ class PluginModel(GlancesPluginModel):
             if load is None:
                 stats = self.get_init_value()
             else:
-                stats = {
-                    'min1': load[0],
-                    'min5': load[1],
-                    'min15': load[2],
-                    'cpucore': get_nb_log_core()
-                }
+                stats = {'min1': load[0], 'min5': load[1], 'min15': load[2], 'cpucore': get_nb_log_core()}
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP

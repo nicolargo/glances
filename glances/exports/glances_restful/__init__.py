@@ -18,7 +18,6 @@ from requests import post
 
 
 class Export(GlancesExport):
-
     """This class manages the RESTful export module.
     Be aware that stats will be exported in one big POST request"""
 

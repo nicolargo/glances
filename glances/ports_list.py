@@ -27,7 +27,6 @@ else:
 
 
 class GlancesPortsList(object):
-
     """Manage the ports list for the ports plugin."""
 
     _section = "ports"

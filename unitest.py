@@ -151,14 +151,14 @@ class TestGlances(unittest.TestCase):
         """Check NETWORK plugin."""
         print('INFO: [TEST_007] Check NETWORK stats')
         stats_grab = stats.get_plugin('network').get_raw()
-        self.assertTrue(type(stats_grab) is list, msg='Network stats is not a list')
+        self.assertTrue(isinstance(stats_grab, list), msg='Network stats is not a list')
         print('INFO: NETWORK stats: %s' % stats_grab)
 
     def test_008_diskio(self):
         """Check DISKIO plugin."""
         print('INFO: [TEST_008] Check DISKIO stats')
         stats_grab = stats.get_plugin('diskio').get_raw()
-        self.assertTrue(type(stats_grab) is list, msg='DiskIO stats is not a list')
+        self.assertTrue(isinstance(stats_grab, list), msg='DiskIO stats is not a list')
         print('INFO: diskio stats: %s' % stats_grab)
 
     def test_009_fs(self):
@@ -166,7 +166,7 @@ class TestGlances(unittest.TestCase):
         # stats_to_check = [ ]
         print('INFO: [TEST_009] Check FS stats')
         stats_grab = stats.get_plugin('fs').get_raw()
-        self.assertTrue(type(stats_grab) is list, msg='FileSystem stats is not a list')
+        self.assertTrue(isinstance(stats_grab, list), msg='FileSystem stats is not a list')
         print('INFO: FS stats: %s' % stats_grab)
 
     def test_010_processes(self):
@@ -175,10 +175,10 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_010] Check PROCESS stats')
         stats_grab = stats.get_plugin('processcount').get_raw()
         # total = stats_grab['total']
-        self.assertTrue(type(stats_grab) is dict, msg='Process count stats is not a dict')
+        self.assertTrue(isinstance(stats_grab, dict), msg='Process count stats is not a dict')
         print('INFO: PROCESS count stats: %s' % stats_grab)
         stats_grab = stats.get_plugin('processlist').get_raw()
-        self.assertTrue(type(stats_grab) is list, msg='Process count stats is not a list')
+        self.assertTrue(isinstance(stats_grab, list), msg='Process count stats is not a list')
         print('INFO: PROCESS list stats: %s items in the list' % len(stats_grab))
         # Check if number of processes in the list equal counter
         # self.assertEqual(total, len(stats_grab))
@@ -188,14 +188,14 @@ class TestGlances(unittest.TestCase):
         # stats_to_check = [ ]
         print('INFO: [TEST_011] Check FOLDER stats')
         stats_grab = stats.get_plugin('folders').get_raw()
-        self.assertTrue(type(stats_grab) is list, msg='Folders stats is not a list')
+        self.assertTrue(isinstance(stats_grab, list), msg='Folders stats is not a list')
         print('INFO: Folders stats: %s' % stats_grab)
 
     def test_012_ip(self):
         """Check IP plugin."""
         print('INFO: [TEST_012] Check IP stats')
         stats_grab = stats.get_plugin('ip').get_raw()
-        self.assertTrue(type(stats_grab) is dict, msg='IP stats is not a dict')
+        self.assertTrue(isinstance(stats_grab, dict), msg='IP stats is not a dict')
         print('INFO: IP stats: %s' % stats_grab)
 
     @unittest.skipIf(not LINUX, "IRQs available only on Linux")
@@ -203,7 +203,7 @@ class TestGlances(unittest.TestCase):
         """Check IRQ plugin."""
         print('INFO: [TEST_013] Check IRQ stats')
         stats_grab = stats.get_plugin('irq').get_raw()
-        self.assertTrue(type(stats_grab) is list, msg='IRQ stats is not a list')
+        self.assertTrue(isinstance(stats_grab, list), msg='IRQ stats is not a list')
         print('INFO: IRQ stats: %s' % stats_grab)
 
     @unittest.skipIf(not LINUX, "GPU available only on Linux")
@@ -211,7 +211,7 @@ class TestGlances(unittest.TestCase):
         """Check GPU plugin."""
         print('INFO: [TEST_014] Check GPU stats')
         stats_grab = stats.get_plugin('gpu').get_raw()
-        self.assertTrue(type(stats_grab) is list, msg='GPU stats is not a list')
+        self.assertTrue(isinstance(stats_grab, list), msg='GPU stats is not a list')
         print('INFO: GPU stats: %s' % stats_grab)
 
     def test_015_sorted_stats(self):
@@ -404,7 +404,7 @@ class TestGlances(unittest.TestCase):
         for plugin in plugins_list:
             stats.get_plugin(plugin).get_raw()
             views_grab = stats.get_plugin(plugin).get_views()
-            self.assertTrue(type(views_grab) is dict,
+            self.assertTrue(isinstance(views_grab, dict),
                             msg='{} view is not a dict'.format(plugin))
 
     def test_097_attribute(self):

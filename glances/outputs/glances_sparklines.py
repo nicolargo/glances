@@ -31,13 +31,9 @@ except (UnicodeEncodeError, TypeError) as e:
 
 
 class Sparkline(object):
-
     """Manage sparklines (see https://pypi.org/project/sparklines/)."""
 
-    def __init__(self, size,
-                 pre_char='[', post_char=']',
-                 unit_char='%',
-                 display_value=True):
+    def __init__(self, size, pre_char='[', post_char=']', unit_char='%', display_value=True):
         # If the sparklines python module available ?
         self.__available = sparklines_module
         # Sparkline size
@@ -85,12 +81,10 @@ class Sparkline(object):
         if self.__display_value:
             percents_without_none = [x for x in self.percents if x is not None]
             if len(percents_without_none) > 0:
-                ret = '{}{:5.1f}{}'.format(ret,
-                                           percents_without_none[-1],
-                                           self.__unit_char)
+                ret = '{}{:5.1f}{}'.format(ret, percents_without_none[-1], self.__unit_char)
         ret = nativestr(ret)
         if overwrite and len(overwrite) < len(ret) - 6:
-            ret = overwrite + ret[len(overwrite):]
+            ret = overwrite + ret[len(overwrite) :]
         return ret
 
     def __str__(self):

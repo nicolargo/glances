@@ -23,7 +23,6 @@ from glances.outputs.glances_curses_browser import GlancesCursesBrowser
 
 
 class GlancesClientBrowser(object):
-
     """This class creates and manages the TCP client browser (servers list)."""
 
     def __init__(self, config=None, args=None):

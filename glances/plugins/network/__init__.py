@@ -22,12 +22,8 @@ import psutil
 # rate: if True then compute and add *_gauge and *_rate_per_is fields
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
-    'interface_name': {
-        'description': 'Interface name.'
-    },
-    'alias': {
-        'description': 'Interface alias name (optional).'
-    },
+    'interface_name': {'description': 'Interface name.'},
+    'alias': {'description': 'Interface alias name (optional).'},
     'bytes_recv': {
         'description': 'Number of bytes received.',
         'rate': True,
@@ -47,10 +43,7 @@ fields_description = {
         'description': 'Maximum interface speed (in bit per second). Can return 0 on some operating-system.',
         'unit': 'bitpersecond',
     },
-    'is_up': {
-        'description': 'Is the interface up ?',
-        'unit': 'bool'
-    }
+    'is_up': {'description': 'Is the interface up ?', 'unit': 'bool'},
 }
 
 # SNMP OID
@@ -66,16 +59,8 @@ snmp_oid = {
 
 # Define the history items list
 items_history_list = [
-    {
-        'name': 'bytes_recv_rate_per_sec',
-        'description': 'Download rate per second',
-        'y_unit': 'B/s'
-    },
-    {
-        'name': 'bytes_sent_rate_per_sec',
-        'description': 'Upload rate per second',
-        'y_unit': 'B/s'
-    },
+    {'name': 'bytes_recv_rate_per_sec', 'description': 'Download rate per second', 'y_unit': 'B/s'},
+    {'name': 'bytes_sent_rate_per_sec', 'description': 'Upload rate per second', 'y_unit': 'B/s'},
 ]
 
 
@@ -320,17 +305,15 @@ class PluginModel(GlancesPluginModel):
             else:
                 msg = '{:>7}'.format(rx)
                 ret.append(
-                    self.curse_add_line(msg,
-                                        self.get_views(item=i[self.get_key()],
-                                                       key='bytes_recv',
-                                                       option='decoration'))
+                    self.curse_add_line(
+                        msg, self.get_views(item=i[self.get_key()], key='bytes_recv', option='decoration')
+                    )
                 )
                 msg = '{:>7}'.format(tx)
                 ret.append(
-                    self.curse_add_line(msg,
-                                        self.get_views(item=i[self.get_key()],
-                                                       key='bytes_sent',
-                                                       option='decoration'))
+                    self.curse_add_line(
+                        msg, self.get_views(item=i[self.get_key()], key='bytes_sent', option='decoration')
+                    )
                 )
 
         return ret

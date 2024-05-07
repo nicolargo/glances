@@ -181,7 +181,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='percpu',
-            help='start Glances in per CPU mode'
+            help='start Glances in per CPU mode',
         )
         parser.add_argument(
             '-2',

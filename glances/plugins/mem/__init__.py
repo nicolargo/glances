@@ -9,9 +9,7 @@
 
 """Virtual memory plugin."""
 
-from glances.globals import iterkeys
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.logger import logger
 
 import psutil
 

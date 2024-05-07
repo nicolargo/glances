@@ -61,9 +61,15 @@ class GlancesEvent:
         """Return True if the event is finished"""
         return self.end != -1
 
-    def update(self, state: str, value: float,
-               sort_key: str = None, proc_list: list = None,
-               proc_desc: str = None, global_msg: str = None):
+    def update(
+        self,
+        state: str,
+        value: float,
+        sort_key: str = None,
+        proc_list: list = None,
+        proc_desc: str = None,
+        global_msg: str = None,
+    ):
         """Update an ongoing event"""
 
         self.end = -1

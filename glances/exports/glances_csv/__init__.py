@@ -14,13 +14,11 @@ import csv
 import sys
 import time
 
-from glances.globals import iterkeys, itervalues
 from glances.logger import logger
 from glances.exports.export import GlancesExport
 
 
 class Export(GlancesExport):
-
     """This class manages the CSV export module."""
 
     def __init__(self, config=None, args=None):
@@ -112,7 +110,6 @@ class Export(GlancesExport):
     def export(self, name, columns, points):
         """Export the stats to the CSV file.
         For the moment everything is done in the update method."""
-        pass
 
 
 def open_csv_file(file_name, file_mode):

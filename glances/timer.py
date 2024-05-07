@@ -31,7 +31,6 @@ def getTimeSinceLastUpdate(IOType):
 
 
 class Timer(object):
-
     """The timer class. A simple chronometer."""
 
     def __init__(self, duration):
@@ -57,7 +56,6 @@ class Timer(object):
 
 
 class Counter(object):
-
     """The counter class."""
 
     def __init__(self):

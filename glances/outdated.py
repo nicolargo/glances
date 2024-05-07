@@ -33,7 +33,6 @@ PYPI_API_URL = 'https://pypi.python.org/pypi/Glances/json'
 
 
 class Outdated(object):
-
     """
     This class aims at providing methods to warn the user when a new Glances
     version is available on the PyPI repository (https://pypi.python.org/pypi/Glances/).

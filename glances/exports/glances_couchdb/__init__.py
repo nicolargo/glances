@@ -27,7 +27,6 @@ import pycouchdb
 
 
 class Export(GlancesExport):
-
     """This class manages the CouchDB export module."""
 
     def __init__(self, config=None, args=None):

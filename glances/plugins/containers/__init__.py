@@ -128,9 +128,7 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config,
-            items_history_list=items_history_list,
-            fields_description=fields_description
+            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
         )
 
         # The plugin can be disabled using: args.disable_docker
@@ -288,14 +286,13 @@ class PluginModel(GlancesPluginModel):
                 alert = self.get_alert(
                     self.memory_usage_no_cache(i['memory']),
                     maximum=i['memory']['limit'],
-                    header=i['name'] + '_mem', action_key=i['name']
+                    header=i['name'] + '_mem',
+                    action_key=i['name'],
                 )
                 if alert == 'DEFAULT':
                     # Not found ? Get back to default MEM threshold value
                     alert = self.get_alert(
-                        self.memory_usage_no_cache(i['memory']),
-                        maximum=i['memory']['limit'],
-                        header='mem'
+                        self.memory_usage_no_cache(i['memory']), maximum=i['memory']['limit'], header='mem'
                     )
                 self.views[i[self.get_key()]]['mem']['decoration'] = alert
 
@@ -427,23 +424,13 @@ class PluginModel(GlancesPluginModel):
                 to_bit = 8
                 unit = 'b'
             try:
-                value = (
-                    self.auto_unit(
-                        int(container['network_rx'] * to_bit)
-                    )
-                    + unit
-                )
+                value = self.auto_unit(int(container['network_rx'] * to_bit)) + unit
                 msg = '{:>7}'.format(value)
             except (KeyError, TypeError):
                 msg = '{:>7}'.format('_')
             ret.append(self.curse_add_line(msg))
             try:
-                value = (
-                    self.auto_unit(
-                        int(container['network_tx'] * to_bit)
-                    )
-                    + unit
-                )
+                value = self.auto_unit(int(container['network_tx'] * to_bit)) + unit
                 msg = ' {:<7}'.format(value)
             except (KeyError, TypeError):
                 msg = ' {:<7}'.format('_')

@@ -18,7 +18,6 @@ from statsd import StatsClient
 
 
 class Export(GlancesExport):
-
     """This class manages the Statsd export module."""
 
     def __init__(self, config=None, args=None):

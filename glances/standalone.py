@@ -28,7 +28,6 @@ from glances.timer import Counter
 
 
 class GlancesStandalone(object):
-
     """This class creates and manages the Glances standalone session."""
 
     def __init__(self, config=None, args=None):

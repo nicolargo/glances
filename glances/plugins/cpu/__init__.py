@@ -23,10 +23,7 @@ import psutil
 # rate: if True then compute and add *_gauge and *_rate_per_is fields
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
-    'total': {
-        'description': 'Sum of all CPU percentages (except idle).',
-        'unit': 'percent'
-    },
+    'total': {'description': 'Sum of all CPU percentages (except idle).', 'unit': 'percent'},
     'system': {
         'description': 'Percent time spent in kernel space. System CPU time is the \
 time spent running code in the Operating System kernel.',
@@ -148,9 +145,7 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the CPU plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config,
-            items_history_list=items_history_list,
-            fields_description=fields_description
+            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
         )
 
         # We want to display the stat in the curse interface
@@ -299,8 +294,17 @@ class PluginModel(GlancesPluginModel):
                     self.stats[key], maximum=100 * self.stats['cpucore'], header=key
                 )
         # Optional
-        for key in ['nice', 'irq', 'idle', 'steal', 'guest',
-                    'ctx_switches', 'interrupts', 'soft_interrupts', 'syscalls']:
+        for key in [
+            'nice',
+            'irq',
+            'idle',
+            'steal',
+            'guest',
+            'ctx_switches',
+            'interrupts',
+            'soft_interrupts',
+            'syscalls',
+        ]:
             if key in self.stats:
                 self.views[key]['optional'] = True
 

@@ -9,7 +9,6 @@
 
 """Per-CPU plugin."""
 
-from glances.logger import logger
 from glances.cpu_percent import cpu_percent
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -98,10 +97,11 @@ class PluginModel(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config,
+            args=args,
+            config=config,
             items_history_list=items_history_list,
             stats_init_value=[],
-            fields_description=fields_description
+            fields_description=fields_description,
         )
 
         # We want to display the stat in the curse interface
@@ -170,7 +170,7 @@ class PluginModel(GlancesPluginModel):
             percpu_list = self.stats
 
         # Per CPU stats displayed per column
-        for cpu in percpu_list[0: self.max_cpu_display]:
+        for cpu in percpu_list[0 : self.max_cpu_display]:
             ret.append(self.curse_new_line())
             if self.is_disabled('quicklook'):
                 try:
@@ -200,8 +200,8 @@ class PluginModel(GlancesPluginModel):
             for stat in header:
                 if stat not in self.stats[0]:
                     continue
-                cpu_stat = sum([i[stat] for i in percpu_list[0: self.max_cpu_display]]) / len(
-                    [i[stat] for i in percpu_list[0: self.max_cpu_display]]
+                cpu_stat = sum([i[stat] for i in percpu_list[0 : self.max_cpu_display]]) / len(
+                    [i[stat] for i in percpu_list[0 : self.max_cpu_display]]
                 )
                 try:
                     msg = '{:6.1f}%'.format(cpu_stat)

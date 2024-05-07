@@ -22,7 +22,6 @@ import pika
 
 
 class Export(GlancesExport):
-
     """This class manages the rabbitMQ export module."""
 
     def __init__(self, config=None, args=None):

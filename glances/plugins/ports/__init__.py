@@ -66,15 +66,14 @@ fields_description = {
     },
 }
 
+
 class PluginModel(GlancesPluginModel):
     """Glances ports scanner plugin."""
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(PluginModel, self).__init__(
-            args=args, config=config,
-            stats_init_value=[],
-            fields_description=fields_description
+            args=args, config=config, stats_init_value=[], fields_description=fields_description
         )
         self.args = args
         self.config = config

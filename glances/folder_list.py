@@ -17,7 +17,6 @@ from glances.logger import logger
 
 
 class FolderList(object):
-
     """This class describes the optional monitored folder list.
 
     The folder list is a list of 'important' folder to monitor.
