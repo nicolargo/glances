@@ -13,6 +13,7 @@
 import time
 import unittest
 import sys
+import json
 
 # Check Python version
 if sys.version_info < (3, 8):
@@ -480,9 +481,46 @@ class TestGlances(unittest.TestCase):
         bar.percent = 110
         self.assertEqual(bar.get(), '|||||||||||||||||||||||||||||||||||||||||||| >100%')
 
-    def test_100_secure(self):
+    def test_100_plugin_model_dict(self):
+        """Test a standard plugin returning a dict"""
+        print('INFO: [TEST_100] Test standard plugin returning a dict')
+        plugin_instance = stats.get_plugin('mem')
+        plugin_instance.reset()  # reset stats
+        plugin_instance.reset_views()  # reset views
+        plugin_instance.reset_stats_history()  # reset history
+        # Check before update
+        self.assertEqual(plugin_instance.get_raw(), plugin_instance.stats_init_value)
+        self.assertIsInstance(plugin_instance.get_raw(), dict)
+        self.assertEqual(plugin_instance.get_key(), None)
+        self.assertEqual(plugin_instance.is_enabled(), True)
+        self.assertEqual(plugin_instance.is_disabled(), False)
+        self.assertEqual(plugin_instance.history_enable(), True)
+        self.assertTrue(all([f in [h['name'] for h in plugin_instance.items_history_list] for f in plugin_instance.get_raw_history()]))
+        self.assertEqual(plugin_instance.get_views(), {})
+        # Update stats
+        plugin_instance.update()
+        plugin_instance.update_stats_history()
+        plugin_instance.update_views()
+        # Check stats
+        self.assertIsInstance(plugin_instance.get_raw(), dict)
+        self.assertTrue(all([f in plugin_instance.fields_description for f in plugin_instance.get_raw()]))
+        self.assertEqual(plugin_instance.get_raw(), plugin_instance.get_export())
+        self.assertEqual(plugin_instance.get_stats(), plugin_instance.get_json())
+        self.assertEqual(json.loads(plugin_instance.get_stats()), plugin_instance.get_raw())
+        # Check history
+        pass
+        # Check views
+        pass
+
+    def test_110_plugin_model_list(self):
+        """Test a standard plugin returning a list"""
+        print('INFO: [TEST_110] Test standard plugin returning a list')
+        plugin_instance = stats.get_plugin('network')
+        # + sorted_stats
+
+    def test_700_secure(self):
         """Test secure functions"""
-        print('INFO: [TEST_100] Secure functions')
+        print('INFO: [TEST_700] Secure functions')
 
         if WINDOWS:
             self.assertIn(secure_popen('echo TEST'), ['TEST\n',
@@ -496,10 +534,10 @@ class TestGlances(unittest.TestCase):
             # but not on my localLinux computer...
             # self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
 
-    def test_200_memory_leak(self):
+    def test_800_memory_leak(self):
         """Memory leak check"""
         import tracemalloc
-        print('INFO: [TEST_200] Memory leak check')
+        print('INFO: [TEST_800] Memory leak check')
         tracemalloc.start()
         # 3 iterations just to init the stats and fill the memory
         for _ in range(3):
