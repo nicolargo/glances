@@ -46,7 +46,7 @@ jobs:
 
     - name: Unitary tests
       run: |
-        python ./unittest.py
+        python ./unittest-core.py
 
   # Error appear with h11, not related to Glances
   # Should be tested if correction is done
@@ -80,7 +80,7 @@ jobs:
 
   #   - name: Unitary tests
   #     run: |
-  #       python ./unittest.py
+  #       python ./unittest-core.py
 
   test-macos:
 
@@ -107,7 +107,7 @@ jobs:
 
     - name: Unitary tests
       run: |
-        python ./unittest.py
+        python ./unittest-core.py
 
   # Error when trying to implement #2749
   # pkg: No packages available to install matching 'py-pip' have been found in the repositories
@@ -128,4 +128,4 @@ jobs:
   #         run: |
   #           set -e -x
   #           python3 -m pip install --user -r requirements.txt
-  #           python ./unittest.py
+  #           python ./unittest-core.py
