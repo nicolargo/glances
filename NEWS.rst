@@ -6,30 +6,59 @@
 Version 4.0.0
 ===============
 
-Under development: https://github.com/nicolargo/glances/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Glances+4.0.0%22
+**BREAKING CHANGES:**     1	     1
 
-**BREAKING CHANGES:**
+* The minimal Python version is 3.8
+* The Glances API version 3 is replaced by the version 4. So Restfull API URL is now /api/4/ #2610
+* Alias definition change in the configuration file #1735
 
-    * The Glances API version 3 is replaced by the version 4. So Restfull API URL is now /api/4/ #2610
-    * Alias definition change in the configuration file #1735
+    Glances version 3.x and lower:
 
-      Glances version 3.x and lower:
+    sda1_alias=InternalDisk
 
-        sda1_alias=InternalDisk
-        sdb1_alias=ExternalDisk
+    sdb1_alias=ExternalDisk
 
-      Glances version 4.x and higher:
+    Glances version 4.x and higher:
 
-        alias=sda1:InternalDisk,sdb1:ExternalDisk
+    alias=sda1:InternalDisk,sdb1:ExternalDisk
 
-    * Alert data model change from a list of list to a list of dict #2633
-    * Docker memory usage uses the same algorithm than docker stats #2637
+* Alert data model change from a list of list to a list of dict #2633
+* Docker memory usage uses the same algorithm than docker stats #2637
+
+Enhancements:
+
+
+Bug corrected:
+
+
+Many thinks to the contributors:
+
+    * Bharath Vignesh J K
+    * Christoph Zimmermann
+    * RazCrimson
+    * Robin Candau
+    * Github GPG acces
+    * Continuous Integration
+    * Georgiy Timchenko
+    * turbocrime
+    * Kiskae
+    * snyk-bot
+    * Alexander Grigoryev
+    * Claes Hallström
+    * Francois Pires
+    * Maarten Kossen (mpkossen)
+    * Osama Albahrani
+    * csteiner
+    * k26pl
+    * kdkd
+    * monochromec
+    * and all the beta testers !
 
 ===============
 Version 3.4.0.5
 ===============
 
-Correct issur with GPU plugin in Docker images #2705
+Correct issue with GPU plugin in Docker images #2705
 
 ===============
 Version 3.4.0.4
