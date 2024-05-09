@@ -62,26 +62,24 @@ venv-dev-upgrade: ## Upgrade Python 3 dev dependencies
 # Tests
 # ===================================================================
 
-test: ## Run unit tests
-	./venv/bin/python ./unitest.py
-	./venv/bin/python ./unitest-restful.py
-	./venv/bin/python ./unitest-xmlrpc.py
-	./venv-dev/bin/python -m black ./glances --check --exclude outputs/static
+test-core: ## Run core unit tests
+	./venv/bin/python ./unittest-core.py
 
-test-with-upgrade: venv-upgrade venv-dev-upgrade ## Upgrade deps and run unit tests
-	./venv/bin/python ./unitest.py
-	./venv/bin/python ./unitest-restful.py
-	./venv/bin/python ./unitest-xmlrpc.py
-	./venv/bin-dev/python -m black ./glances --check --exclude outputs/static
+test-restful: ## Run Restful unit tests
+	./venv/bin/python ./unittest-restful.py
 
-test-min: ## Run unit tests in minimal environment
-	./venv-min/bin/python ./unitest.py
+test-xmlrpc: ## Run XMLRPC unit tests
+	./venv/bin/python ./unittest-xmlrpc.py
+
+test: test-core test-restful test-xmlrpc ## Run unit tests
+
+test-with-upgrade: venv-upgrade venv-dev-upgrade test ## Upgrade deps and run unit tests
+
+test-min: ## Run core unit tests in minimal environment
+	./venv-min/bin/python ./unittest-core.py
 
 test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in minimal environment
-	./venv-min/bin/python ./unitest.py
-
-test-restful-api: ## Run unit tests of the RESTful API
-	./venv/bin/python ./unitest-restful.py
+	./venv-min/bin/python ./unittest-core.py
 
 # ===================================================================
 # Linters, profilers and cyber security
