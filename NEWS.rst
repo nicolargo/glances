@@ -48,6 +48,7 @@ Enhancements:
 * [WebUI] Added smart plugin support #2435
 * No more threshold display in the WebUI cpu/mem and memswap plugins #2420
 * Refactor Glances curses code #2580
+* Hide password in the Glances browser form #503
 * Replace Bottle by FastAPI #2181
 * Replace py3nvml with nvidia-ml-py #2688
 

@@ -59,7 +59,6 @@ class GlancesPassword(object):
 
         Return the comparison with the encrypted_password.
         """
-        logger.info("Check password")
         salt, encrypted_password = hashed_password.split('$')
         re_encrypted_password = self.get_hash(plain_password, salt=salt)
         return encrypted_password == re_encrypted_password
