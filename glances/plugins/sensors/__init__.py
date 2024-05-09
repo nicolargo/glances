@@ -236,9 +236,9 @@ class PluginModel(GlancesPluginModel):
                 continue
             # Alert processing
             if i['type'] == SENSOR_TEMP_TYPE:
-                if self.is_limit('critical', stat_name='sensors_temperature_' + i['label']):
+                if self.is_limit('critical', stat_name=SENSOR_TEMP_TYPE + '_' + i['label']):
                     # By default use the thresholds configured in the glances.conf file (see #2058)
-                    alert = self.get_alert(current=i['value'], header='temperature_' + i['label'])
+                    alert = self.get_alert(current=i['value'], header=SENSOR_TEMP_TYPE + '_' + i['label'])
                 else:
                     # Else use the system thresholds
                     if i['critical'] is None:
@@ -251,7 +251,8 @@ class PluginModel(GlancesPluginModel):
                         alert = 'WARNING'
                     else:
                         alert = 'OK'
-            elif i['type'] == 'battery':
+            elif i['type'] == SENSORS_BATTERY_TYPE:
+                # Battery is in %
                 alert = self.get_alert(current=100 - i['value'], header=i['type'])
             else:
                 alert = self.get_alert(current=i['value'], header=i['type'])
