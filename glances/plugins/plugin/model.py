@@ -188,33 +188,31 @@ class GlancesPluginModel(object):
     def update_stats_history(self):
         """Update stats history."""
         # Build the history
-        if self.get_export() and self.history_enable():
-            # If the plugin data is a dict, the dict's key should be used
-            if self.get_key() is None:
-                item_name = ''
+        if not (self.get_export() and self.history_enable()):
+            return
+        # Itern through items history
+        item_name = '' if self.get_key() is None else self.get_key()
+        for i in self.get_items_history_list():
+            if isinstance(self.get_export(), list):
+                # Stats is a list of data
+                # Iter through stats (for example, iter through network interface)
+                for l_export in self.get_export():
+                    if i['name'] in l_export:
+                        self.stats_history.add(
+                            nativestr(l_export[item_name]) + '_' + nativestr(i['name']),
+                            l_export[i['name']],
+                            description=i['description'],
+                            history_max_size=self._limits['history_size'],
+                        )
             else:
-                item_name = self.get_key()
-            for i in self.get_items_history_list():
-                if isinstance(self.get_export(), list):
-                    # Stats is a list of data
-                    # Iter through it (for example, iter through network interface)
-                    for l_export in self.get_export():
-                        if i['name'] in l_export:
-                            self.stats_history.add(
-                                nativestr(l_export[item_name]) + '_' + nativestr(i['name']),
-                                l_export[i['name']],
-                                description=i['description'],
-                                history_max_size=self._limits['history_size'],
-                            )
-                else:
-                    # Stats is not a list
-                    # Add the item to the history directly
-                    self.stats_history.add(
-                        nativestr(i['name']),
-                        self.get_export()[i['name']],
-                        description=i['description'],
-                        history_max_size=self._limits['history_size'],
-                    )
+                # Stats is not a list
+                # Add the item to the history directly
+                self.stats_history.add(
+                    nativestr(i['name']),
+                    self.get_export()[i['name']],
+                    description=i['description'],
+                    history_max_size=self._limits['history_size'],
+                )
 
     def get_items_history_list(self):
         """Return the items history list."""
