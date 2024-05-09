@@ -694,19 +694,32 @@ class GlancesPluginModel(object):
         stat_name = self.get_stat_name(header=header)
 
         # Manage limits
-        # If is_max is set then display the value in MAX
+        # If is_max is set then default style is set to MAX else default is set to OK
         ret = 'MAX' if is_max else 'OK'
+
+        # Iter through limits
         try:
-            if value >= self.get_limit('critical', stat_name=stat_name):
-                ret = 'CRITICAL'
-            elif value >= self.get_limit('warning', stat_name=stat_name):
-                ret = 'WARNING'
-            elif value >= self.get_limit('careful', stat_name=stat_name):
-                ret = 'CAREFUL'
-            elif current < minimum:
-                ret = 'CAREFUL'
+            limit = self.get_limit('critical', stat_name=stat_name)
         except KeyError:
-            return 'DEFAULT'
+            try:
+                limit = self.get_limit('warning', stat_name=stat_name)
+            except KeyError:
+                try:
+                    limit = self.get_limit('careful', stat_name=stat_name)
+                except KeyError:
+                    return 'DEFAULT'
+                else:
+                    if value >= limit:
+                        ret = 'CAREFUL'
+            else:
+                if value >= limit:
+                    ret = 'WARNING'
+        else:
+            if value >= limit:
+                ret = 'CRITICAL'
+
+        if current < minimum:
+            ret = 'CAREFUL'
 
         # Manage log
         log_str = ""
@@ -792,17 +805,13 @@ class GlancesPluginModel(object):
 
         # Get the limit for stat + header
         # Example: network_wlan0_rx_careful
-        try:
-            limit = self._limits[stat_name + '_' + criticality]
-        except KeyError:
-            # Try fallback to plugin default limit
-            # Example: network_careful
-            limit = self._limits[self.plugin_name + '_' + criticality]
+        if stat_name + '_' + criticality in self._limits:
+            return self._limits[stat_name + '_' + criticality]
+        elif self.plugin_name + '_' + criticality in self._limits:
+            return self._limits[self.plugin_name + '_' + criticality]
 
-        # logger.debug("{} {} value is {}".format(stat_name, criticality, limit))
-
-        # Return the limiter
-        return limit
+        # No key found, the raise an error
+        raise KeyError
 
     def get_limit_action(self, criticality, stat_name=""):
         """Return the tuple (action, repeat) for the alert.
@@ -830,19 +839,12 @@ class GlancesPluginModel(object):
         """Return the log tag for the alert."""
         # Get the log tag for stat + header
         # Example: network_wlan0_rx_log
-        try:
-            log_tag = self._limits[stat_name + '_log']
-        except KeyError:
-            # Try fallback to plugin default log
-            # Example: network_log
-            try:
-                log_tag = self._limits[self.plugin_name + '_log']
-            except KeyError:
-                # By default, log are disabled
-                return default_action
-
-        # Return the action list
-        return log_tag[0].lower() == 'true'
+        if stat_name + '_log' in self._limits:
+            return self._limits[stat_name + '_log'][0].lower() == 'true'
+        elif self.plugin_name + '_log' in self._limits:
+            return self._limits[self.plugin_name + '_log'][0].lower() == 'true'
+        else:
+            return default_action
 
     def get_conf_value(self, value, header="", plugin_name=None, default=[]):
         """Return the configuration (header_) value for the current plugin.
