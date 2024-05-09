@@ -236,30 +236,13 @@ class GlancesPluginModel(object):
             else:
                 return None
 
-    def get_json_history(self, item=None, nb=0):
-        """Return the history (JSON format).
-
-        - the stats history (dict of list) if item is None
-        - the stats history for the given item (list) instead
-        - None if item did not exist in the history
-        Limit to lasts nb items (all if nb=0)
-        """
-        s = self.stats_history.get_json(nb=nb)
-        if item is None:
-            return s
-        else:
-            if item in s:
-                return s[item]
-            else:
-                return None
-
     def get_export_history(self, item=None):
         """Return the stats history object to export."""
         return self.get_raw_history(item=item)
 
     def get_stats_history(self, item=None, nb=0):
         """Return the stats history (JSON format)."""
-        s = self.get_json_history(nb=nb)
+        s = self.stats_history.get_json(nb=nb)
 
         if item is None:
             return json_dumps(s)
@@ -751,6 +734,8 @@ class GlancesPluginModel(object):
             return {k: v for k, v in stats._asdict().items() if k in self.fields_description}
         elif isinstance(stats, dict):
             return {k: v for k, v in stats.items() if k in self.fields_description}
+        elif isinstance(stats, list):
+            return [self.filter_stats(s) for s in stats]
         else:
             return stats
 

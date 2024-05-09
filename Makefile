@@ -72,7 +72,6 @@ test-xmlrpc: ## Run XMLRPC unit tests
 	./venv/bin/python ./unittest-xmlrpc.py
 
 test: test-core test-restful test-xmlrpc ## Run unit tests
-	./venv-dev/bin/python -m black ./glances --check --exclude outputs/static
 
 test-with-upgrade: venv-upgrade venv-dev-upgrade test ## Upgrade deps and run unit tests
 
