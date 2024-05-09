@@ -11,6 +11,7 @@
 from __future__ import unicode_literals
 
 import sys
+import getpass
 
 from glances.globals import MACOS, WINDOWS, nativestr, u, itervalues, enable, disable
 from glances.logger import logger
@@ -920,12 +921,17 @@ class _GlancesCurses(object):
                     self.display_plugin(stat_display[p])
 
     def display_popup(
-        self, message, size_x=None, size_y=None, duration=3, popup_type='info', input_size=30, input_value=None
+        self, message,
+        size_x=None, size_y=None,
+        duration=3,
+        popup_type='info',
+        input_size=30, input_value=None,
+        is_password=False
     ):
         """
         Display a centered popup.
 
-         popup_type: ='info'
+        popup_type: ='info'
          Just an information popup, no user interaction
          Display a centered popup with the given message during duration seconds
          If size_x and size_y: set the popup size
@@ -978,6 +984,8 @@ class _GlancesCurses(object):
             self.wait(duration * 1000)
             return True
         elif popup_type == 'input':
+            logger.info(popup_type)
+            logger.info(is_password)
             # Create a sub-window for the text field
             sub_pop = popup.derwin(1, input_size, 2, 2 + len(m))
             sub_pop.attron(self.colors_list['FILTER'])
@@ -990,16 +998,21 @@ class _GlancesCurses(object):
             # Create the textbox inside the sub-windows
             self.set_cursor(2)
             self.term_window.keypad(1)
-            textbox = GlancesTextbox(sub_pop, insert_mode=True)
-            textbox.edit()
-            self.set_cursor(0)
-            # self.term_window.keypad(0)
-            if textbox.gather() != '':
-                logger.debug("User enters the following string: %s" % textbox.gather())
-                return textbox.gather()[:-1]
+            if is_password:
+                textbox = getpass.getpass('')
+                self.set_cursor(0)
+                if textbox != '':
+                    return textbox
+                else:
+                    return None
             else:
-                logger.debug("User enters an empty string")
-                return None
+                textbox = GlancesTextbox(sub_pop, insert_mode=True)
+                textbox.edit()
+                self.set_cursor(0)
+                if textbox.gather() != '':
+                    return textbox.gather()[:-1]
+                else:
+                    return None
         elif popup_type == 'yesno':
             # # Create a sub-window for the text field
             sub_pop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)

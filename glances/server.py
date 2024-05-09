@@ -66,7 +66,8 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
         if username in self.server.user_dict:
             from glances.password import GlancesPassword
 
-            pwd = GlancesPassword(username=username, config=self.config)
+            # TODO: config is not taken into account: it may be a problem ?
+            pwd = GlancesPassword(username=username, config=None)
             return pwd.check_password(self.server.user_dict[username], password)
         else:
             return False
