@@ -94,7 +94,7 @@ class tests(Command):
     def run(self):
         import subprocess
         import sys
-        for t in glob.glob('unitest.py'):
+        for t in glob.glob('unittest-core.py'):
             ret = subprocess.call([sys.executable, t]) != 0
             if ret != 0:
                 raise SystemExit(ret)
@@ -120,7 +120,7 @@ setup(
     include_package_data=True,
     data_files=get_data_files(),
     cmdclass={'test': tests},
-    test_suite="unitest.py",
+    test_suite="unittest-core.py",
     entry_points={"console_scripts": ["glances=glances:main"]},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
