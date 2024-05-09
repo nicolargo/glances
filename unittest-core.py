@@ -90,18 +90,16 @@ class TestGlances(unittest.TestCase):
         # Check stats
         self.assertIsInstance(plugin_instance.get_raw(), (dict, list))
         if isinstance(plugin_instance.get_raw(), dict):
-            # self.assertTrue(any([f in plugin_instance.get_raw() for f in plugin_instance.fields_description]))
             res = False
             for f in plugin_instance.fields_description:
                 if f not in plugin_instance.get_raw():
-                    print(f"WARNING: {f} not found in {plugin} plugin fields_description")
+                    print(f"WARNING: {f} field not found in {plugin} plugin stats")
                 else:
                     res = True
             self.assertTrue(res)
         elif isinstance(plugin_instance.get_raw(), list):
             res = False
             for i in plugin_instance.get_raw():
-                # self.assertTrue(all([f in plugin_instance.fields_description for f in i]))
                 for f in i:
                     if f in plugin_instance.fields_description:
                         res = True
