@@ -239,7 +239,7 @@ variable setting parameters for the glances startup command):
 
 .. code-block:: console
 
-    docker run -e TZ="${TZ}" -v $HOME/.config/glances/glances.conf:/glances.conf:ro -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host -e GLANCES_OPT="-C /glances.conf" -it nicolargo/glances:latest-full
+    docker run -e TZ="${TZ}" -v $HOME/.config/glances/glances.conf:/root/.config/glances/glances.conf:ro -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host -e GLANCES_OPT="-C /glances.conf" -it nicolargo/glances:latest-full
 
 Where $HOME/.config/glances/glances.conf is a local directory containing your glances.conf file.
 
