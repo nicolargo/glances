@@ -92,6 +92,11 @@ COPY docker-bin.sh /usr/local/bin/glances
 RUN chmod a+x /usr/local/bin/glances
 ENV PATH="/venv/bin:$PATH"
 
+# Copy binary and update PATH
+COPY docker-bin.sh /usr/local/bin/glances
+RUN chmod a+x /usr/local/bin/glances
+ENV PATH="/venv/bin:$PATH"
+
 # EXPOSE PORT (XMLRPC / WebUI)
 EXPOSE 61209 61208
 

@@ -61,6 +61,9 @@ RUN apk add --no-cache \
 RUN python${PYTHON_VERSION} -m venv venv-build
 RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --upgrade pip
 
+RUN python${PYTHON_VERSION} -m venv venv-build
+RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --upgrade pip
+
 RUN python${PYTHON_VERSION} -m venv --without-pip venv
 
 COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-requirements.txt ./
@@ -99,6 +102,11 @@ ARG PYTHON_VERSION
 # Copy source code and config file
 COPY ./docker-compose/glances.conf /etc/glances/glances.conf
 COPY ./glances/. /app/glances/
+
+# Copy binary and update PATH
+COPY docker-bin.sh /usr/local/bin/glances
+RUN chmod a+x /usr/local/bin/glances
+ENV PATH="/venv/bin:$PATH"
 
 # Copy binary and update PATH
 COPY docker-bin.sh /usr/local/bin/glances

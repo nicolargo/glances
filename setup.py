@@ -8,6 +8,10 @@ from io import open
 
 from setuptools import setup, Command
 
+# Predication warning
+# Glances version 4 will only be compatible with Python 3.7 and above
+if sys.version_info < (3, 7):
+    print('WARNING: Glances version 4 will only be compatible with Python 3.7 and above.')
 
 if sys.version_info < (3, 8):
     print('Glances requires at least Python 3.8 to run.')
@@ -46,7 +50,6 @@ def get_install_requires():
     if sys.platform.startswith('win'):
         requires.append('fastapi')
         requires.append('uvicorn')
-        requires.append('orjson')
         requires.append('jinja2')
         requires.append('requests')
 
@@ -70,7 +73,7 @@ def get_install_extras_require():
         'smart': ['pySMART.smartx'],
         'snmp': ['pysnmp'],
         'sparklines': ['sparklines'],
-        'web': ['fastapi', 'uvicorn', 'jinja2', 'orjson', 'requests'],
+        'web': ['fastapi', 'uvicorn', 'jinja2', 'requests'],
         'wifi': ['wifi']
     }
     if sys.platform.startswith('linux'):
