@@ -8,11 +8,6 @@ from io import open
 
 from setuptools import setup, Command
 
-# Predication warning
-# Glances version 4 will only be compatible with Python 3.7 and above
-if sys.version_info < (3, 7):
-    print('WARNING: Glances version 4 will only be compatible with Python 3.7 and above.')
-
 if sys.version_info < (3, 8):
     print('Glances requires at least Python 3.8 to run.')
     sys.exit(1)
@@ -59,7 +54,7 @@ def get_install_requires():
 def get_install_extras_require():
     extras_require = {
         'action': ['chevron'],
-        'browser': ['zeroconf>=0.19.1'],
+        'browser': ['zeroconf==0.131.0'],
         'cloud': ['requests'],
         'containers': ['docker>=6.1.1', 'python-dateutil', 'six', 'podman', 'packaging'],
         'export': ['bernhard', 'cassandra-driver', 'elasticsearch', 'graphitesender',
