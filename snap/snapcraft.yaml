@@ -1,5 +1,5 @@
 name: glances
-version: '4.0.0+rc02'  ## '4.0.0'
+version: '4.0.0'
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
@@ -9,7 +9,7 @@ description: |
   depending on the user interface size.
 
 base: core22
-grade: devel  ## stable
+grade: stable
 confinement: strict
 
 apps:
@@ -49,6 +49,7 @@ parts:
   glances:
     plugin: python
     source: https://github.com/nicolargo/glances.git
-    source-branch: develop  ## master
+    source-branch: master
     python-requirements:
       - requirements.txt
+      - webui-requirements.txt
