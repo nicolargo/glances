@@ -39,14 +39,11 @@ def get_data_files():
 
     return data_files
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
 
 def get_install_requires():
-    requires = [
-        'psutil>=5.6.7',
-        'defusedxml',
-        'packaging',
-        'ujson>=5.4.0',
-    ]
+    requires = required
     if sys.platform.startswith('win'):
         requires.append('fastapi')
         requires.append('uvicorn')
