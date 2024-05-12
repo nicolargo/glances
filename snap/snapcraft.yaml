@@ -1,5 +1,5 @@
 name: glances
-version: '4.0.0+rc02'  ## '4.0.0'
+version: '4.1.0+beta01'  ## '4.0.0'
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
@@ -52,3 +52,5 @@ parts:
     source-branch: develop  ## master
     python-requirements:
       - requirements.txt
+      - webui-requirements.txt
+
