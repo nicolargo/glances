@@ -9,7 +9,7 @@ description: |
   depending on the user interface size.
 
 base: core22
-grade: devel  ## stable
+grade: devel
 confinement: strict
 
 apps:
@@ -49,6 +49,7 @@ parts:
   glances:
     plugin: python
     source: https://github.com/nicolargo/glances.git
-    source-branch: develop  ## master
+    source-branch: devel
     python-requirements:
       - requirements.txt
+      - webui-requirements.txt
