@@ -21,7 +21,7 @@ jobs:
     cyber:
       if: github.event_name != 'pull_request'
       uses: ./.github/workflows/cyber.yml
-      needs: [quality, test, webui]
+      needs: [quality, test]
     build:
       if: github.event_name != 'pull_request'
       uses: ./.github/workflows/build.yml
@@ -30,4 +30,4 @@ jobs:
         PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-      needs: [quality, test, webui, cyber]
+      needs: [quality, test]
