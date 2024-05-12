@@ -3,6 +3,14 @@
 ==============================================================================
 
 ===============
+Version 4.1.0
+===============
+
+Under development, see roadmap here: https://github.com/nicolargo/glances/milestone/68
+
+Contributors are welcome !
+
+===============
 Version 4.0.0
 ===============
 
