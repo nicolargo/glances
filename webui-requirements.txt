@@ -3,5 +3,4 @@
 
 fastapi; python_version >= "3.8"
 uvicorn; python_version >= "3.8"
-orjson; python_version >= "3.8"
 jinja2

@@ -110,7 +110,6 @@ Optional dependencies:
 - ``jinja2`` (for templating, used under the hood by FastAPI)
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces`` (for the IP plugin)
-- ``orjson`` (fast JSON library, used under the hood by FastAPI)
 - ``nvidia-ml-py`` (for the GPU plugin)
 - ``pycouchdb`` (for the CouchDB export module)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
@@ -224,6 +223,8 @@ Run last version of Glances container in *console mode*:
 
 By default, the /etc/glances/glances.conf file is used (based on docker-compose/glances.conf).
 
+By default, the /etc/glances/glances.conf file is used (based on docker-compose/glances.conf).
+
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
 
@@ -325,7 +326,7 @@ Start Termux on your device and enter:
     $ apt update
     $ apt upgrade
     $ apt install clang python
-    $ pip install fastapi uvicorn orjson jinja2
+    $ pip install fastapi uvicorn jinja2
     $ pip install glances
 
 And start Glances:

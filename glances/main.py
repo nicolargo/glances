@@ -382,7 +382,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='webserver',
-            help='run Glances in web server mode (FastAPI, Uvicorn, Jinja2 and OrJsonLib needed)',
+            help='run Glances in web server mode (FastAPI, Uvicorn, Jinja2 libs needed)',
         )
         parser.add_argument(
             '--cached-time',

@@ -146,8 +146,7 @@ class GlancesClientBrowser(object):
                 # Else, the password should be enter by the user
                 # Display a popup to enter password
                 clear_password = self.screen.display_popup(
-                    'Password needed for {}: '.format(server['name']),
-                    popup_type='input', is_password=True
+                    'Password needed for {}: '.format(server['name']), popup_type='input', is_password=True
                 )
             # Store the password for the selected server
             if clear_password is not None:

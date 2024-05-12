@@ -6,7 +6,7 @@
 Version 4.0.0
 ===============
 
-See release note in Wiki format here: https://github.com/nicolargo/glances/wiki/Glances-4.0-Release-Note
+See release note in Wiki format: https://github.com/nicolargo/glances/wiki/Glances-4.0-Release-Note
 
 **BREAKING CHANGES:**
 
@@ -26,6 +26,26 @@ Glances version 4.x and higher:
 
 * Alert data model change from a list of list to a list of dict #2633
 * Docker memory usage uses the same algorithm than docker stats #2637
+
+Special notes for package maintainers:
+
+Minimal requirements for Glances version 4 are:
+
+* psutil
+* defusedxml
+* packaging
+* ujson
+* pydantic
+* fastapi (for WebUI / RestFull API)
+* uvicorn (for WebUI / RestFull API)
+* jinja2 (for WebUI / RestFull API)
+
+Majors changes between Glances version 3 and version 4:
+
+* Bottle has been replaced by FastAPI and Uvicorn
+* CouchDB has been replaced by PyCouchDB
+* nvidia-ml-py has been replaced by py3nvml
+* pysnmp has been replaced by pysnmp-lextudio
 
 Enhancements:
 

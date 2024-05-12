@@ -921,12 +921,15 @@ class _GlancesCurses(object):
                     self.display_plugin(stat_display[p])
 
     def display_popup(
-        self, message,
-        size_x=None, size_y=None,
+        self,
+        message,
+        size_x=None,
+        size_y=None,
         duration=3,
         popup_type='info',
-        input_size=30, input_value=None,
-        is_password=False
+        input_size=30,
+        input_value=None,
+        is_password=False,
     ):
         """
         Display a centered popup.
