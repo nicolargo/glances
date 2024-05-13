@@ -11,6 +11,12 @@ Under development, see roadmap here: https://github.com/nicolargo/glances/milest
 Contributors are welcome !
 
 ===============
+Version 4.0.1
+===============
+
+Correct issue with CI (miss pydantic dep).
+
+===============
 Version 4.0.0
 ===============
 
