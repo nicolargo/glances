@@ -39,18 +39,20 @@ def get_data_files():
 
     return data_files
 
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
 
 def get_install_requires():
-    requires = required
-    if sys.platform.startswith('win'):
-        requires.append('fastapi')
-        requires.append('uvicorn')
-        requires.append('jinja2')
-        requires.append('requests')
+    required = []
+    with open('requirements.txt') as f:
+        required = f.read().splitlines()
 
-    return requires
+    # On Windows, install WebUI by default
+    if sys.platform.startswith('win'):
+        required.append('fastapi')
+        required.append('uvicorn')
+        required.append('jinja2')
+        required.append('requests')
+
+    return required
 
 
 def get_install_extras_require():

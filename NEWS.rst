@@ -2,6 +2,22 @@
                                 Glances ChangeLog
 ==============================================================================
 
+===============
+Version 4.1.0
+===============
+
+Under development, see roadmap here: https://github.com/nicolargo/glances/milestone/68
+
+Contributors are welcome !
+
+===============
+Version 4.0.2
+===============
+
+* hotfix: plugin(sensors) - race conditions btw fan_speed & temperature… #2766
+* fix: include requirements.txt and SECURITY.md for pypi dist #2761
+
+Thanks to RazCrimson for the sensors patch !
 
 ===============
 Version 4.0.1
