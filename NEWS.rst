@@ -2,6 +2,11 @@
                                 Glances ChangeLog
 ==============================================================================
 
+===============
+Version 4.0.2
+===============
+
+Fix: Sensor plugin buggy due to race conditions.
 
 ===============
 Version 4.0.1
