@@ -87,7 +87,9 @@ class PluginModel(GlancesPluginModel):
 
         # Init the sensor class
         start_duration.reset()
-        self.glances_grab_sensors = GlancesGrabSensors()
+        # Hotfix! Refactor to use only one `GlancesGrabSensors` later
+        self.glances_grab_sensors_fan_speed = GlancesGrabSensors()
+        self.glances_grab_sensors_temperature = GlancesGrabSensors()
         logger.debug("Generic sensor plugin init duration: {} seconds".format(start_duration.get()))
 
         # Instance for the HDDTemp Plugin in order to display the hard disks
@@ -115,7 +117,7 @@ class PluginModel(GlancesPluginModel):
 
     def __get_temperature(self, stats, index):
         try:
-            temperature = self.__set_type(self.glances_grab_sensors.get(SENSOR_TEMP_TYPE), SENSOR_TEMP_TYPE)
+            temperature = self.__set_type(self.glances_grab_sensors_temperature.get(SENSOR_TEMP_TYPE), SENSOR_TEMP_TYPE)
         except Exception as e:
             logger.error("Cannot grab sensors temperatures (%s)" % e)
         else:
@@ -123,7 +125,7 @@ class PluginModel(GlancesPluginModel):
 
     def __get_fan_speed(self, stats, index):
         try:
-            fan_speed = self.__set_type(self.glances_grab_sensors.get(SENSOR_FAN_TYPE), SENSOR_FAN_TYPE)
+            fan_speed = self.__set_type(self.glances_grab_sensors_fan_speed.get(SENSOR_FAN_TYPE), SENSOR_FAN_TYPE)
         except Exception as e:
             logger.error("Cannot grab FAN speed (%s)" % e)
         else:
