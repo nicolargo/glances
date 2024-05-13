@@ -477,7 +477,13 @@ GET gpu
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/gpu
-    []
+    [{"fan_speed": 29,
+      "gpu_id": "nvidia0",
+      "key": "gpu_id",
+      "mem": 46.144612630208336,
+      "name": "NVIDIA GeForce GTX 1060 3GB",
+      "proc": 2,
+      "temperature": 57}]
 
 Fields descriptions:
 
@@ -487,6 +493,22 @@ Fields descriptions:
 * **proc**: GPU processor consumption (unit is *percent*)
 * **temperature**: GPU temperature (unit is *celsius*)
 * **fan_speed**: GPU fan speed (unit is *roundperminute*)
+
+Get a specific field::
+
+    # curl http://localhost:61208/api/4/gpu/gpu_id
+    {"gpu_id": ["nvidia0"]}
+
+Get a specific item when field matches the given value::
+
+    # curl http://localhost:61208/api/4/gpu/gpu_id/nvidia0
+    {"nvidia0": [{"fan_speed": 29,
+                  "gpu_id": "nvidia0",
+                  "key": "gpu_id",
+                  "mem": 46.144612630208336,
+                  "name": "NVIDIA GeForce GTX 1060 3GB",
+                  "proc": 2,
+                  "temperature": 57}]}
 
 GET help
 --------
@@ -701,7 +723,7 @@ GET now
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/now
-    {"custom": "2024-05-12 19:00:51 CEST", "iso": "2024-05-12T19:00:51+02:00"}
+    {"custom": "2024-05-14 01:49:24 IST", "iso": "2024-05-14T01:49:24+05:30"}
 
 Fields descriptions:
 
@@ -711,7 +733,7 @@ Fields descriptions:
 Get a specific field::
 
     # curl http://localhost:61208/api/4/now/iso
-    {"iso": "2024-05-12T19:00:51+02:00"}
+    {"iso": "2024-05-14T01:49:24+05:30"}
 
 GET percpu
 ----------
@@ -1058,7 +1080,7 @@ GET version
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/version
-    "4.0.1"
+    "4.0.2"
 
 GET wifi
 --------
