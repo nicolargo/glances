@@ -1080,7 +1080,7 @@ GET version
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/version
-    "4.0.2"
+    "4.0.3"
 
 GET wifi
 --------
