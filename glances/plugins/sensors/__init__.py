@@ -347,7 +347,7 @@ class GlancesGrabSensors(object):
 
         raise ValueError(f"Unsupported sensor_type: {self.sensor_type}")
 
-    def update(self) -> list[dict]:
+    def update(self) -> List[dict]:
         """Update the stats."""
         if not self.init:
             return []
