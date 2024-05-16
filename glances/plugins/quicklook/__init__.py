@@ -179,7 +179,7 @@ class PluginModel(GlancesPluginModel):
             return ret
 
         # Define the data: Bar (default behavior) or Sparkline
-        data = dict()
+        data = {}
         for key in self.stats_list:
             if self.args.sparkline and self.history_enable() and not self.args.client:
                 data[key] = Sparkline(max_width)

@@ -115,7 +115,7 @@ class Export(GlancesExport):
                 sensor_values = dict(zip(columns, points))
 
                 # Build the value to output
-                output_value = dict()
+                output_value = {}
                 for key in sensor_values:
                     split_key = key.split('.')
 
@@ -123,7 +123,7 @@ class Export(GlancesExport):
                     current_level = output_value
                     for depth in range(len(split_key) - 1):
                         if split_key[depth] not in current_level:
-                            current_level[split_key[depth]] = dict()
+                            current_level[split_key[depth]] = {}
                         current_level = current_level[split_key[depth]]
 
                     # Add the value

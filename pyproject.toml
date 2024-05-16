@@ -20,7 +20,7 @@ select = [
 #    "N", # pep8-naming
     "W", # pycodestyle
     "UP", # pyupgrde
-#    "C4", # flake8-comprehensions
+    "C4", # flake8-comprehensions
     "RET", # flake8-return
 #    "FBT", # flake8-boolean-trap
 #    "RUF", # Ruff-specific rules

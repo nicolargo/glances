@@ -233,7 +233,7 @@ class GlancesStats:
         """
         if enable:
             return [p for p in self._plugins if self._plugins[p].is_enabled()]
-        return [p for p in self._plugins]
+        return list(self._plugins)
 
     def getExportsList(self, enable=True):
         """Return the exports list.
@@ -244,8 +244,8 @@ class GlancesStats:
         :return: list of export module names
         """
         if enable:
-            return [e for e in self._exports]
-        return [e for e in self._exports_all]
+            return list(self._exports)
+        return list(self._exports_all)
 
     def load_limits(self, config=None):
         """Load the stats limits (except the one in the exclude list)."""

@@ -299,7 +299,7 @@ class PluginModel(GlancesPluginModel):
             show_pod_name = True
         self.views['show_pod_name'] = show_pod_name
         show_engine_name = False
-        if len(set(ct["engine"] for ct in self.stats)) > 1:
+        if len({ct["engine"] for ct in self.stats}) > 1:
             show_engine_name = True
         self.views['show_engine_name'] = show_engine_name
 

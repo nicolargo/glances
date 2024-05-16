@@ -278,7 +278,7 @@ class PodmanContainersExtension:
                 self.container_stats_fetchers[container.id] = PodmanContainerStatsFetcher(container)
 
         # Stop threads for non-existing containers
-        absent_containers = set(iterkeys(self.container_stats_fetchers)) - set(c.id for c in containers)
+        absent_containers = set(iterkeys(self.container_stats_fetchers)) - {c.id for c in containers}
         for container_id in absent_containers:
             # Stop the StatsFetcher
             logger.debug(f"{self.ext_name} plugin - Stop thread for old container {container_id[:12]}")
