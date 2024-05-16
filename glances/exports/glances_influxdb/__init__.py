@@ -18,7 +18,7 @@ from glances.exports.export import GlancesExport
 from influxdb import InfluxDBClient
 from influxdb.client import InfluxDBClientError
 
-FIELD_TO_TAG = ['name', 'cmdline']
+FIELD_TO_TAG = ['name', 'cmdline', 'type']
 
 
 class Export(GlancesExport):
