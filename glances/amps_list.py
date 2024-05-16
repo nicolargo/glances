@@ -13,7 +13,7 @@ import os
 import re
 import threading
 
-from glances.globals import listkeys, iteritems, amps_path
+from glances.globals import amps_path, iteritems, listkeys
 from glances.logger import logger
 from glances.processes import glances_processes
 

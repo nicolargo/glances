@@ -13,21 +13,21 @@
 # GLOBAL IMPORTS
 ################
 
-import errno
-import os
-import sys
-import platform
-import ujson
-from operator import itemgetter, methodcaller
-import subprocess
-from datetime import datetime
-import re
 import base64
+import errno
 import functools
+import os
+import platform
+import re
+import subprocess
+import sys
 import weakref
-
+from datetime import datetime
+from operator import itemgetter, methodcaller
 from statistics import mean
-from urllib.request import urlopen, Request
+from urllib.request import Request, urlopen
+
+import ujson
 
 # Correct issue #1025 by monkey path the xmlrpc lib
 from defusedxml.xmlrpc import monkey_patch

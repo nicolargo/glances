@@ -9,17 +9,18 @@
 
 """Graph exporter interface class."""
 
-from pygal import DateTimeLine
-import pygal.style
-import sys
-import os
-import tempfile
 import errno
+import os
+import sys
+import tempfile
 
+import pygal.style
+from pygal import DateTimeLine
+
+from glances.exports.export import GlancesExport
+from glances.globals import iteritems, time_serie_subsample
 from glances.logger import logger
 from glances.timer import Timer
-from glances.globals import iteritems, time_serie_subsample
-from glances.exports.export import GlancesExport
 
 
 class Export(GlancesExport):

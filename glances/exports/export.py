@@ -13,10 +13,9 @@ I am your father...
 ...for all Glances exports IF.
 """
 
-from glances.globals import json_dumps
-from glances.globals import NoOptionError, NoSectionError, iteritems, iterkeys
-from glances.timer import Counter
+from glances.globals import NoOptionError, NoSectionError, iteritems, iterkeys, json_dumps
 from glances.logger import logger
+from glances.timer import Counter
 
 
 class GlancesExport(object):

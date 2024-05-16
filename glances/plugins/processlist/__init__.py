@@ -9,15 +9,15 @@
 
 """Process list plugin."""
 
-import os
 import copy
+import os
 
-from glances.logger import logger
 from glances.globals import WINDOWS, key_exist_value_not_none_not_v, replace_special_chars
-from glances.processes import glances_processes, sort_stats
+from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.core import PluginModel as CorePluginModel
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.processes import glances_processes, sort_stats
 
 # Fields description
 # description: human readable description

@@ -14,10 +14,11 @@ Just a stupid plugin to display the help screen.
 """
 
 import sys
-from glances.globals import iteritems
-from glances import __version__, psutil_version
-from glances.plugins.plugin.model import GlancesPluginModel
 from itertools import chain
+
+from glances import __version__, psutil_version
+from glances.globals import iteritems
+from glances.plugins.plugin.model import GlancesPluginModel
 
 
 class PluginModel(GlancesPluginModel):

@@ -9,8 +9,8 @@
 
 """NVidia Extension unit for Glances' GPU plugin."""
 
-from glances.logger import logger
 from glances.globals import nativestr
+from glances.logger import logger
 
 try:
     import pynvml

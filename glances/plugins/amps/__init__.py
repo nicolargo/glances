@@ -9,8 +9,8 @@
 
 """Monitor plugin."""
 
-from glances.globals import iteritems
 from glances.amps_list import AmpsList as glancesAmpsList
+from glances.globals import iteritems
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description

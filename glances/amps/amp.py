@@ -23,8 +23,8 @@ If the *one_line* var is true then the AMP will be displayed in one line.
 """
 
 from glances.globals import u
-from glances.timer import Timer
 from glances.logger import logger
+from glances.timer import Timer
 
 
 class GlancesAmp(object):

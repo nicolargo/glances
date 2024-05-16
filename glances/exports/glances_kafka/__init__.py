@@ -11,11 +11,11 @@
 
 import sys
 
-from glances.logger import logger
-from glances.globals import json_dumps
-from glances.exports.export import GlancesExport
-
 from kafka import KafkaProducer
+
+from glances.exports.export import GlancesExport
+from glances.globals import json_dumps
+from glances.logger import logger
 
 
 class Export(GlancesExport):

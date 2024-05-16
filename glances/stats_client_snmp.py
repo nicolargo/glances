@@ -11,9 +11,9 @@
 
 import re
 
-from glances.stats import GlancesStats
 from glances.globals import iteritems
 from glances.logger import logger
+from glances.stats import GlancesStats
 
 # SNMP OID regexp pattern to short system name dict
 oid_to_short_system_name = {

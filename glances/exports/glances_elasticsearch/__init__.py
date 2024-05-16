@@ -12,10 +12,10 @@
 import sys
 from datetime import datetime
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-
 from elasticsearch import Elasticsearch, helpers
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 
 class Export(GlancesExport):

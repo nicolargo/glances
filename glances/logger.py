@@ -9,13 +9,12 @@
 
 """Custom logger class."""
 
-import os
-import json
 import getpass
-import tempfile
-
+import json
 import logging
 import logging.config
+import os
+import tempfile
 
 from glances.globals import safe_makedirs
 

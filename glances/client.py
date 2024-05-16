@@ -9,16 +9,17 @@
 
 """Manage the Glances client."""
 
-import ujson
 import socket
 import sys
 import time
 
+import ujson
+
 from glances import __version__
 from glances.globals import Fault, ProtocolError, ServerProxy, Transport
 from glances.logger import logger
-from glances.stats_client import GlancesStatsClient
 from glances.outputs.glances_curses import GlancesCursesClient
+from glances.stats_client import GlancesStatsClient
 from glances.timer import Counter
 
 

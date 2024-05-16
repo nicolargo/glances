@@ -10,13 +10,13 @@
 """IP plugin."""
 
 import threading
+
 from ujson import loads
 
 from glances.globals import queue, urlopen_auth
 from glances.logger import logger
-from glances.timer import Timer
-from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.timer import Timer, getTimeSinceLastUpdate
 
 # Import plugin specific dependency
 try:

@@ -46,8 +46,8 @@ status_url=http://localhost/nginx_status
 
 import requests
 
-from glances.logger import logger
 from glances.amps.amp import GlancesAmp
+from glances.logger import logger
 
 
 class Amp(GlancesAmp):

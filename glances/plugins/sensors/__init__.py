@@ -9,20 +9,20 @@
 
 """Sensors plugin."""
 
-from enum import Enum
+import warnings
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Dict, Literal, Any
+from enum import Enum
+from typing import Any, Dict, List, Literal
 
 import psutil
-import warnings
 
-from glances.logger import logger
 from glances.globals import to_fahrenheit
-from glances.timer import Counter
-from glances.plugins.sensors.sensor.glances_batpercent import PluginModel as BatPercentPluginModel
-from glances.plugins.sensors.sensor.glances_hddtemp import PluginModel as HddTempPluginModel
+from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.plugins.sensors.sensor.glances_batpercent import PluginModel as BatPercentPluginModel
+from glances.plugins.sensors.sensor.glances_hddtemp import PluginModel as HddTempPluginModel
+from glances.timer import Counter
 
 
 class SensorType(str, Enum):

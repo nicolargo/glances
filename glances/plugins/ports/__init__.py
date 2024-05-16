@@ -9,19 +9,19 @@
 
 """Ports scanner plugin."""
 
+import numbers
 import os
+import socket
 import subprocess
 import threading
-import socket
 import time
-import numbers
 
-from glances.globals import WINDOWS, MACOS, BSD, bool_type
-from glances.ports_list import GlancesPortsList
-from glances.web_list import GlancesWebList
-from glances.timer import Counter
+from glances.globals import BSD, MACOS, WINDOWS, bool_type
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.ports_list import GlancesPortsList
+from glances.timer import Counter
+from glances.web_list import GlancesWebList
 
 try:
     import requests

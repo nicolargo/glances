@@ -11,11 +11,11 @@
 """Init the Glances software."""
 
 # Import system libs
-import tracemalloc
 import locale
 import platform
 import signal
 import sys
+import tracemalloc
 
 # Global name
 # Version should start and end with a numerical char

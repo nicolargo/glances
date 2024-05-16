@@ -9,14 +9,13 @@
 
 import os
 
-from glances.globals import BSD, LINUX, MACOS, WINDOWS, iterkeys
-from glances.globals import namedtuple_to_dict, list_of_namedtuple_to_list_of_dict
-from glances.timer import Timer, getTimeSinceLastUpdate
-from glances.filter import GlancesFilterList, GlancesFilter
-from glances.programs import processes_to_programs
-from glances.logger import logger
-
 import psutil
+
+from glances.filter import GlancesFilter, GlancesFilterList
+from glances.globals import BSD, LINUX, MACOS, WINDOWS, iterkeys, list_of_namedtuple_to_list_of_dict, namedtuple_to_dict
+from glances.logger import logger
+from glances.programs import processes_to_programs
+from glances.timer import Timer, getTimeSinceLastUpdate
 
 psutil_version_info = tuple([int(num) for num in psutil.__version__.split('.')])
 

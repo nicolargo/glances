@@ -16,7 +16,8 @@ from glances.globals import BSD
 from glances.logger import logger
 
 try:
-    from zeroconf import __version__ as __zeroconf_version, ServiceBrowser, ServiceInfo, Zeroconf
+    from zeroconf import ServiceBrowser, ServiceInfo, Zeroconf
+    from zeroconf import __version__ as __zeroconf_version
 
     zeroconf_tag = True
 except ImportError:

@@ -9,16 +9,16 @@
 
 """Manage Glances update."""
 
-from datetime import datetime, timedelta
-import threading
 import json
-import pickle
 import os
+import pickle
+import threading
+from datetime import datetime, timedelta
 from ssl import CertificateError
 
 from glances import __version__
-from glances.globals import nativestr, urlopen, HTTPError, URLError, safe_makedirs
 from glances.config import user_cache_dir
+from glances.globals import HTTPError, URLError, nativestr, safe_makedirs, urlopen
 from glances.logger import logger
 
 try:

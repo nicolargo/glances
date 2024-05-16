@@ -11,9 +11,9 @@
 
 import psutil
 
+from glances.globals import LINUX
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.globals import LINUX
 
 # Batinfo library (optional; Linux-only)
 if LINUX:

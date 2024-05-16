@@ -13,18 +13,17 @@ I am your father...
 ...of all Glances model plugins.
 """
 
-import re
 import copy
+import re
 
-from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr, json_dumps, json_dumps_dictlist, dictlist
 from glances.actions import GlancesActions
+from glances.events_list import glances_events
+from glances.globals import dictlist, iterkeys, itervalues, json_dumps, json_dumps_dictlist, listkeys, mean, nativestr
 from glances.history import GlancesHistory
 from glances.logger import logger
-from glances.events_list import glances_events
+from glances.outputs.glances_unicode import unicode_message
 from glances.thresholds import glances_thresholds
 from glances.timer import Counter, Timer, getTimeSinceLastUpdate
-from glances.outputs.glances_unicode import unicode_message
-
 
 fields_unit_short = {'percent': '%'}
 

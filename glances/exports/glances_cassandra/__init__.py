@@ -13,13 +13,13 @@ import sys
 from datetime import datetime
 from numbers import Number
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-
+from cassandra import InvalidRequest
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import Cluster
 from cassandra.util import uuid_from_time
-from cassandra import InvalidRequest
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 
 class Export(GlancesExport):

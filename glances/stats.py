@@ -11,14 +11,14 @@
 
 import collections
 import os
+import pathlib
 import sys
 import threading
 import traceback
 from importlib import import_module
-import pathlib
 
-from glances.logger import logger
 from glances.globals import exports_path, plugins_path, sys_path
+from glances.logger import logger
 from glances.timer import Counter
 
 

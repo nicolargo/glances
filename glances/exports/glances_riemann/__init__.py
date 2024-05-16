@@ -12,11 +12,11 @@
 import socket
 from numbers import Number
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-
 # Import bernhard for Riemann
 import bernhard
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 
 class Export(GlancesExport):

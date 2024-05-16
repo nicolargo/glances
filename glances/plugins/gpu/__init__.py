@@ -16,8 +16,8 @@ Currently supported:
 """
 
 from glances.globals import to_fahrenheit
-from glances.plugins.gpu.cards.nvidia import NvidiaGPU
 from glances.plugins.gpu.cards.amd import AmdGPU
+from glances.plugins.gpu.cards.nvidia import NvidiaGPU
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description

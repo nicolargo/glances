@@ -9,9 +9,9 @@
 
 """Virtual memory plugin."""
 
-from glances.plugins.plugin.model import GlancesPluginModel
-
 import psutil
+
+from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
 fields_description = {

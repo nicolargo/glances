@@ -14,11 +14,11 @@ import socket
 import sys
 from numbers import Number
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-
 # Import pika for RabbitMQ
 import pika
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 
 class Export(GlancesExport):

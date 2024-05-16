@@ -9,13 +9,13 @@
 
 """CSV interface class."""
 
-import os.path
 import csv
+import os.path
 import sys
 import time
 
-from glances.logger import logger
 from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 
 class Export(GlancesExport):

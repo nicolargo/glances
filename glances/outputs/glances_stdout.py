@@ -11,8 +11,8 @@
 
 import time
 
-from glances.logger import logger
 from glances.globals import printandflush
+from glances.logger import logger
 
 
 class GlancesStdout(object):

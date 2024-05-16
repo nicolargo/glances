@@ -9,11 +9,12 @@
 
 """Manage sparklines for Glances output."""
 
-from __future__ import unicode_literals
-from __future__ import division
+from __future__ import division, unicode_literals
+
 import sys
-from glances.logger import logger
+
 from glances.globals import nativestr
+from glances.logger import logger
 
 sparklines_module = True
 

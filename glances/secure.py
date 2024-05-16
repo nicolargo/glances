@@ -9,8 +9,8 @@
 
 """Secures functions for Glances"""
 
-from subprocess import Popen, PIPE
 import re
+from subprocess import PIPE, Popen
 
 from glances.globals import nativestr
 
