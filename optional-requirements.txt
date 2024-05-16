@@ -22,6 +22,7 @@ podman; python_version >= "3.6"
 potsdb
 prometheus_client
 pycouchdb
+pydantic
 pygal
 pymdstat
 pymongo; python_version >= "3.7"
