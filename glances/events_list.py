@@ -11,7 +11,7 @@
 
 import time
 from datetime import datetime
-from pydantic import RootModel
+from dataclasses import asdict
 
 from glances.processes import glances_processes
 from glances.thresholds import glances_thresholds
@@ -201,7 +201,7 @@ class GlancesEventsList(object):
 
     def get(self):
         """Return the RAW events list."""
-        return [RootModel[GlancesEvent](e).model_dump() for e in self.events_list]
+        return [asdict(e) for e in self.events_list]
 
     def len(self):
         """Return the number of events in the logs list."""
