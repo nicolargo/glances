@@ -13,7 +13,7 @@ quote-style = "preserve"
 [tool.ruff.lint]
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
 select = [
-#    "C90", # mccabe
+    "C90", # mccabe
     "E", # pycodestyle
     "F", # Pyflakes
     "I", # isort
@@ -63,4 +63,4 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.
-max-complexity = 18
+max-complexity = 21
