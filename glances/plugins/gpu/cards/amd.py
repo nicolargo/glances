@@ -64,7 +64,7 @@ class AmdGPU:
         stats = []
 
         for index, device in enumerate(self.device_folders):
-            device_stats = dict()
+            device_stats = {}
             # Dictionary key is the GPU_ID
             device_stats['key'] = 'gpu_id'
             # GPU id (for multiple GPU, start at 0)

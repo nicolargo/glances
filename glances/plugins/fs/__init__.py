@@ -139,7 +139,7 @@ class PluginModel(GlancesPluginModel):
                     logger.debug("Plugin - fs: PsUtil extended fetch failed")
                 else:
                     # Discard duplicates (#2299) and add entries matching allowed fs types
-                    tracked_mnt_points = set(f.mountpoint for f in fs_stat)
+                    tracked_mnt_points = {f.mountpoint for f in fs_stat}
                     for f in all_mounted_fs:
                         if (
                             any(f.fstype.find(fs_type) >= 0 for fs_type in allowed_fs_types)

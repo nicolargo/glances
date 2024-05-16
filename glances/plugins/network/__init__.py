@@ -259,7 +259,7 @@ class PluginModel(GlancesPluginModel):
             if ('is_up' in i) and (i['is_up'] is False):
                 continue
             # Hide stats if never be different from 0 (issue #1787)
-            if all([self.get_views(item=i[self.get_key()], key=f, option='hidden') for f in self.hide_zero_fields]):
+            if all(self.get_views(item=i[self.get_key()], key=f, option='hidden') for f in self.hide_zero_fields):
                 continue
             # Format stats
             # Is there an alias for the interface name ?

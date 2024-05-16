@@ -74,10 +74,8 @@ class TestGlances(unittest.TestCase):
             self.assertEqual(plugin_instance.get_key(), None)
             self.assertTrue(
                 all(
-                    [
-                        f in [h['name'] for h in plugin_instance.items_history_list]
-                        for f in plugin_instance.get_raw_history()
-                    ]
+                    f in [h['name'] for h in plugin_instance.items_history_list]
+                    for f in plugin_instance.get_raw_history()
                 )
             )
         elif plugin_instance.history_enable() and isinstance(plugin_instance.get_raw(), list):

@@ -93,7 +93,7 @@ class GlancesPluginModel:
         self.stats_history = self.init_stats_history()
 
         # Init the limits (configuration keys) dictionary
-        self._limits = dict()
+        self._limits = {}
         if config is not None:
             logger.debug(f'Load section {self.plugin_name} in {config.config_file_paths()}')
             self.load_limits(config=config)
@@ -105,7 +105,7 @@ class GlancesPluginModel:
         self.actions = GlancesActions(args=args)
 
         # Init the views
-        self.views = dict()
+        self.views = {}
 
         # Hide stats if all the hide_zero_fields has never been != 0
         # Default is False, always display stats
@@ -284,10 +284,8 @@ class GlancesPluginModel:
             return sorted(
                 self.stats,
                 key=lambda stat: tuple(
-                    map(
-                        lambda part: int(part) if part.isdigit() else part.lower(),
-                        re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key]),
-                    )
+                    int(part) if part.isdigit() else part.lower()
+                    for part in re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key])
                 ),
             )
         except TypeError:
@@ -295,7 +293,7 @@ class GlancesPluginModel:
             return sorted(
                 self.stats,
                 key=lambda stat: tuple(
-                    map(lambda part: part.lower(), re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key]))
+                    part.lower() for part in re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key])
                 ),
             )
 
@@ -453,7 +451,7 @@ class GlancesPluginModel:
         if isinstance(self.get_raw(), list) and self.get_raw() is not None and self.get_key() is not None:
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
-                if any([i[f] for f in self.hide_zero_fields]):
+                if any(i[f] for f in self.hide_zero_fields):
                     for f in self.hide_zero_fields:
                         self.views[i[self.get_key()]][f]['_zero'] = self.views[i[self.get_key()]][f]['hidden']
                 for f in self.hide_zero_fields:
@@ -465,7 +463,7 @@ class GlancesPluginModel:
             #
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for key in listkeys(self.get_raw()):
-                if any([self.get_raw()[f] for f in self.hide_zero_fields]):
+                if any(self.get_raw()[f] for f in self.hide_zero_fields):
                     for f in self.hide_zero_fields:
                         self.views[f]['_zero'] = self.views[f]['hidden']
                 for f in self.hide_zero_fields:
@@ -530,7 +528,7 @@ class GlancesPluginModel:
 
     def reset_views(self):
         """Reset the views to input_views."""
-        self.views = dict()
+        self.views = {}
 
     def get_views(self, item=None, key=None, option=None):
         """Return the views object.
@@ -888,7 +886,7 @@ class GlancesPluginModel:
     def read_alias(self):
         if self.plugin_name + '_' + 'alias' in self._limits:
             return {i.split(':')[0].lower(): i.split(':')[1] for i in self._limits[self.plugin_name + '_' + 'alias']}
-        return dict()
+        return {}
 
     def has_alias(self, header):
         """Return the alias name for the relative header it it exists otherwise None."""
