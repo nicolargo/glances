@@ -11,6 +11,19 @@ Under development, see roadmap here: https://github.com/nicolargo/glances/milest
 Contributors are welcome !
 
 ===============
+Version 4.0.4
+===============
+
+Hostfix release for support sensors plugin on python3.8
+
+===============
+Version 4.0.3
+===============
+
+Additional fixes for Sensor plugin.
+
+
+===============
 Version 4.0.2
 ===============
 

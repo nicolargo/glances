@@ -480,7 +480,13 @@ GET gpu
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/gpu
-    []
+    [{"fan_speed": 29,
+      "gpu_id": "nvidia0",
+      "key": "gpu_id",
+      "mem": 46.144612630208336,
+      "name": "NVIDIA GeForce GTX 1060 3GB",
+      "proc": 2,
+      "temperature": 57}]
 
 Fields descriptions:
 
@@ -490,6 +496,22 @@ Fields descriptions:
 * **proc**: GPU processor consumption (unit is *percent*)
 * **temperature**: GPU temperature (unit is *celsius*)
 * **fan_speed**: GPU fan speed (unit is *roundperminute*)
+
+Get a specific field::
+
+    # curl http://localhost:61208/api/4/gpu/gpu_id
+    {"gpu_id": ["nvidia0"]}
+
+Get a specific item when field matches the given value::
+
+    # curl http://localhost:61208/api/4/gpu/gpu_id/nvidia0
+    {"nvidia0": [{"fan_speed": 29,
+                  "gpu_id": "nvidia0",
+                  "key": "gpu_id",
+                  "mem": 46.144612630208336,
+                  "name": "NVIDIA GeForce GTX 1060 3GB",
+                  "proc": 2,
+                  "temperature": 57}]}
 
 GET help
 --------
@@ -1226,7 +1248,7 @@ GET version
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/version
-    "4.0.2"
+    "4.0.4"
 
 GET wifi
 --------
