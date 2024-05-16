@@ -52,6 +52,7 @@ venv-dev-python: ## Install Python 3 venv
 venv-dev: venv-python ## Install Python 3 dev dependencies
 	./venv-dev/bin/pip install -r dev-requirements.txt
 	./venv-dev/bin/pip install -r doc-requirements.txt
+	./venv-dev/bin/pre-commit install --hook-type pre-commit
 
 venv-dev-upgrade: ## Upgrade Python 3 dev dependencies
 	./venv-dev/bin/pip install --upgrade pip
@@ -86,15 +87,10 @@ test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in mi
 # ===================================================================
 
 format: ## Format the code
-	@git ls-files 'glances/*.py' | xargs ./venv-dev/bin/python -m autopep8 --in-place --jobs 0 --global-config=.flake8
-	@git ls-files 'glances/*.py' | xargs ./venv-dev/bin/python -m autoflake --in-place --remove-all-unused-imports --remove-unused-variables --remove-duplicate-keys --exclude="compat.py,globals.py"
-	./venv-dev/bin/python -m black ./glances --exclude outputs/static
+	./venv-dev/bin/python -m ruff format .
 
-flake8: ## Run flake8 linter.
-	@git ls-files 'glances/ *.py' | xargs ./venv-dev/bin/python -m flake8 --config=.flake8
-
-ruff: ## Run Ruff (fastest) linter.
-	./venv-dev/bin/python -m ruff check . --config=./pyproject.toml
+lint: ## Lint the code.
+	./venv-dev/bin/python -m ruff check . --fix
 
 codespell: ## Run codespell to fix common misspellings in text files
 	./venv-dev/bin/codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics
