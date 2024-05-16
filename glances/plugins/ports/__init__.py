@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -29,7 +28,7 @@ try:
     requests_tag = True
 except ImportError as e:
     requests_tag = False
-    logger.warning("Missing Python Lib ({}), Ports plugin is limited to port scanning".format(e))
+    logger.warning(f"Missing Python Lib ({e}), Ports plugin is limited to port scanning")
 
 # Fields description
 # description: human readable description
@@ -72,9 +71,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
-            args=args, config=config, stats_init_value=[], fields_description=fields_description
-        )
+        super().__init__(args=args, config=config, stats_init_value=[], fields_description=fields_description)
         self.args = args
         self.config = config
 
@@ -95,7 +92,7 @@ class PluginModel(GlancesPluginModel):
         if self._thread is not None:
             self._thread.stop()
         # Call the father class
-        super(PluginModel, self).exit()
+        super().exit()
 
     def get_key(self):
         """Return the key of the list."""
@@ -183,7 +180,7 @@ class PluginModel(GlancesPluginModel):
             name_max_width = max_width - 7
         else:
             # No max_width defined, return an emptu curse message
-            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Build the string message
@@ -199,11 +196,11 @@ class PluginModel(GlancesPluginModel):
                     status = 'Timeout'
                 else:
                     # Convert second to ms
-                    status = '{0:.0f}ms'.format(p['status'] * 1000.0)
+                    status = '{:.0f}ms'.format(p['status'] * 1000.0)
 
                 msg = '{:{width}}'.format(p['description'][0:name_max_width], width=name_max_width)
                 ret.append(self.curse_add_line(msg))
-                msg = '{:>9}'.format(status)
+                msg = f'{status:>9}'
                 ret.append(self.curse_add_line(msg, self.get_ports_alert(p, header=p['indice'] + '_rtt')))
                 ret.append(self.curse_new_line())
             elif 'url' in p:
@@ -215,7 +212,7 @@ class PluginModel(GlancesPluginModel):
                     status = 'Scanning'
                 else:
                     status = p['status']
-                msg = '{:>9}'.format(status)
+                msg = f'{status:>9}'
                 ret.append(self.curse_add_line(msg, self.get_web_alert(p, header=p['indice'] + '_rtt')))
                 ret.append(self.curse_new_line())
 
@@ -237,8 +234,8 @@ class ThreadScanner(threading.Thread):
 
     def __init__(self, stats):
         """Init the class."""
-        logger.debug("ports plugin - Create thread for scan list {}".format(stats))
-        super(ThreadScanner, self).__init__()
+        logger.debug(f"ports plugin - Create thread for scan list {stats}")
+        super().__init__()
         # Event needed to stop properly the thread
         self._stopper = threading.Event()
         # The class return the stats as a list of dict
@@ -283,7 +280,7 @@ class ThreadScanner(threading.Thread):
 
     def stop(self, timeout=None):
         """Stop the thread."""
-        logger.debug("ports plugin - Close thread for scan list {}".format(self._stats))
+        logger.debug(f"ports plugin - Close thread for scan list {self._stats}")
         self._stopper.set()
 
     def stopped(self):
@@ -321,7 +318,7 @@ class ThreadScanner(threading.Thread):
         try:
             ip = socket.gethostbyname(hostname)
         except Exception as e:
-            logger.debug("{}: Cannot convert {} to IP address ({})".format(self.plugin_name, hostname, e))
+            logger.debug(f"{self.plugin_name}: Cannot convert {hostname} to IP address ({e})")
         return ip
 
     def _port_scan_icmp(self, port):
@@ -379,7 +376,7 @@ class ThreadScanner(threading.Thread):
             socket.setdefaulttimeout(port['timeout'])
             _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except Exception as e:
-            logger.debug("{}: Error while creating scanning socket ({})".format(self.plugin_name, e))
+            logger.debug(f"{self.plugin_name}: Error while creating scanning socket ({e})")
 
         # Scan port
         ip = self._resolv_name(port['host'])
@@ -387,7 +384,7 @@ class ThreadScanner(threading.Thread):
         try:
             ret = _socket.connect_ex((ip, int(port['port'])))
         except Exception as e:
-            logger.debug("{}: Error while scanning port {} ({})".format(self.plugin_name, port, e))
+            logger.debug(f"{self.plugin_name}: Error while scanning port {port} ({e})")
         else:
             if ret == 0:
                 port['status'] = counter.get()

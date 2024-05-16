@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,7 +8,6 @@
 
 """Manage the Glances client."""
 
-import socket
 import sys
 import time
 
@@ -30,7 +28,7 @@ class GlancesClientTransport(Transport):
         self.timeout = timeout
 
 
-class GlancesClient(object):
+class GlancesClient:
     """This class creates and manages the TCP client."""
 
     def __init__(self, config=None, args=None, timeout=7, return_to_browser=False):
@@ -49,10 +47,10 @@ class GlancesClient(object):
 
         # Build the URI
         if args.password != "":
-            self.uri = 'http://{}:{}@{}:{}'.format(args.username, args.password, args.client, args.port)
+            self.uri = f'http://{args.username}:{args.password}@{args.client}:{args.port}'
         else:
-            self.uri = 'http://{}:{}'.format(args.client, args.port)
-        logger.debug("Try to connect to {}".format(self.uri))
+            self.uri = f'http://{args.client}:{args.port}'
+        logger.debug(f"Try to connect to {self.uri}")
 
         # Try to connect to the URI
         transport = GlancesClientTransport()
@@ -61,7 +59,7 @@ class GlancesClient(object):
         try:
             self.client = ServerProxy(self.uri, transport=transport)
         except Exception as e:
-            self.log_and_exit("Client couldn't create socket {}: {}".format(self.uri, e))
+            self.log_and_exit(f"Client couldn't create socket {self.uri}: {e}")
 
     @property
     def quiet(self):
@@ -94,10 +92,10 @@ class GlancesClient(object):
         client_version = None
         try:
             client_version = self.client.init()
-        except socket.error as err:
+        except OSError as err:
             # Fallback to SNMP
             self.client_mode = 'snmp'
-            logger.error("Connection to Glances server failed ({} {})".format(err.errno, err.strerror))
+            logger.error(f"Connection to Glances server failed ({err.errno} {err.strerror})")
             fall_back_msg = 'No Glances server found. Trying fallback to SNMP...'
             if not self.return_to_browser:
                 print(fall_back_msg)
@@ -105,11 +103,11 @@ class GlancesClient(object):
                 logger.info(fall_back_msg)
         except ProtocolError as err:
             # Other errors
-            msg = "Connection to server {} failed".format(self.uri)
+            msg = f"Connection to server {self.uri} failed"
             if err.errcode == 401:
                 msg += " (Bad username/password)"
             else:
-                msg += " ({} {})".format(err.errcode, err.errmsg)
+                msg += f" ({err.errcode} {err.errmsg})"
             self.log_and_exit(msg)
             return False
 
@@ -119,14 +117,11 @@ class GlancesClient(object):
                 # Init stats
                 self.stats = GlancesStatsClient(config=self.config, args=self.args)
                 self.stats.set_plugins(ujson.loads(self.client.getAllPlugins()))
-                logger.debug("Client version: {} / Server version: {}".format(__version__, client_version))
+                logger.debug(f"Client version: {__version__} / Server version: {client_version}")
             else:
                 self.log_and_exit(
-                    (
-                        'Client and server not compatible: ' 'Client version: {} / Server version: {}'.format(
-                            __version__, client_version
-                        )
-                    )
+                    'Client and server not compatible: '
+                    f'Client version: {__version__} / Server version: {client_version}'
                 )
                 return False
 
@@ -186,7 +181,7 @@ class GlancesClient(object):
             return self.update_snmp()
 
         self.end()
-        logger.critical("Unknown server mode: {}".format(self.client_mode))
+        logger.critical(f"Unknown server mode: {self.client_mode}")
         sys.exit(2)
 
     def update_glances(self):
@@ -199,7 +194,7 @@ class GlancesClient(object):
         # Update the stats
         try:
             server_stats = ujson.loads(self.client.getAll())
-        except socket.error:
+        except OSError:
             # Client cannot get server stats
             return "Disconnected"
         except Fault:
@@ -242,12 +237,12 @@ class GlancesClient(object):
                 # Update the stats
                 counter = Counter()
                 cs_status = self.update()
-                logger.debug('Stats updated duration: {} seconds'.format(counter.get()))
+                logger.debug(f'Stats updated duration: {counter.get()} seconds')
 
                 # Export stats using export modules
                 counter_export = Counter()
                 self.stats.export(self.stats)
-                logger.debug('Stats exported duration: {} seconds'.format(counter_export.get()))
+                logger.debug(f'Stats exported duration: {counter_export.get()} seconds')
 
                 # Patch for issue1326 to avoid < 0 refresh
                 adapted_refresh = self.refresh_time - counter.get()

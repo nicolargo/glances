@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,10 +8,10 @@
 
 """System plugin."""
 
+import builtins
 import os
 import platform
 import re
-from io import open
 
 from glances.globals import iteritems
 from glances.logger import logger
@@ -92,12 +91,12 @@ def _linux_os_release():
     ashtray = {}
     keys = ['NAME', 'VERSION_ID']
     try:
-        with open(os.path.join('/etc', 'os-release')) as f:
+        with builtins.open(os.path.join('/etc', 'os-release')) as f:
             for line in f:
                 for key in keys:
                     if line.startswith(key):
                         ashtray[key] = re.sub(r'^"|"$', '', line.strip().split('=')[1])
-    except (OSError, IOError):
+    except OSError:
         return pretty_name
 
     if ashtray:
@@ -117,7 +116,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, fields_description=fields_description)
+        super().__init__(args=args, config=config, fields_description=fields_description)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -36,7 +35,7 @@ elif os.path.isdir(_XDG_CACHE_HOME) and os.access(_XDG_CACHE_HOME, os.W_OK):
     safe_makedirs(os.path.join(_XDG_CACHE_HOME, 'glances'))
     LOG_FILENAME = os.path.join(_XDG_CACHE_HOME, 'glances', 'glances.log')
 else:
-    LOG_FILENAME = os.path.join(tempfile.gettempdir(), 'glances-{}.log'.format(getpass.getuser()))
+    LOG_FILENAME = os.path.join(tempfile.gettempdir(), f'glances-{getpass.getuser()}.log')
 
 # Define the logging configuration
 LOGGING_CFG = {
@@ -88,7 +87,7 @@ def glances_logger(env_key='LOG_CFG'):
     user_file = os.getenv(env_key, None)
     if user_file and os.path.exists(user_file):
         # A user file as been defined. Use it...
-        with open(user_file, 'rt') as f:
+        with open(user_file) as f:
             config = json.load(f)
 
     # Load the configuration

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -27,7 +26,7 @@ from glances.logger import logger
 from glances.timer import Timer
 
 
-class GlancesAmp(object):
+class GlancesAmp:
     """Main class for Glances AMP."""
 
     NAME = '?'
@@ -38,7 +37,7 @@ class GlancesAmp(object):
 
     def __init__(self, name=None, args=None):
         """Init AMP class."""
-        logger.debug("AMP - Init {} version {}".format(self.NAME, self.VERSION))
+        logger.debug(f"AMP - Init {self.NAME} version {self.VERSION}")
 
         # AMP name (= module name without glances_)
         if name is None:
@@ -74,7 +73,7 @@ class GlancesAmp(object):
 
         amp_section = 'amp_' + self.amp_name
         if hasattr(config, 'has_section') and config.has_section(amp_section):
-            logger.debug("AMP - {}: Load configuration".format(self.NAME))
+            logger.debug(f"AMP - {self.NAME}: Load configuration")
             for param, _ in config.items(amp_section):
                 try:
                     self.configs[param] = config.get_float_value(amp_section, param)
@@ -82,9 +81,9 @@ class GlancesAmp(object):
                     self.configs[param] = config.get_value(amp_section, param).split(',')
                     if len(self.configs[param]) == 1:
                         self.configs[param] = self.configs[param][0]
-                logger.debug("AMP - {}: Load parameter: {} = {}".format(self.NAME, param, self.configs[param]))
+                logger.debug(f"AMP - {self.NAME}: Load parameter: {param} = {self.configs[param]}")
         else:
-            logger.debug("AMP - {}: Can not find section {} in the configuration file".format(self.NAME, self.amp_name))
+            logger.debug(f"AMP - {self.NAME}: Can not find section {self.amp_name} in the configuration file")
             return False
 
         if self.enable():
@@ -92,13 +91,12 @@ class GlancesAmp(object):
             for k in ['refresh']:
                 if k not in self.configs:
                     logger.warning(
-                        "AMP - {}: Can not find configuration key {} in section {} (the AMP will be disabled)".format(
-                            self.NAME, k, self.amp_name
-                        )
+                        f"AMP - {self.NAME}: Can not find configuration key {k} in section {self.amp_name} "
+                        f"(the AMP will be disabled)"
                     )
                     self.configs['enable'] = 'false'
         else:
-            logger.debug("AMP - {} is disabled".format(self.NAME))
+            logger.debug(f"AMP - {self.NAME} is disabled")
 
         # Init the count to 0
         self.configs['count'] = 0

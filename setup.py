@@ -1,32 +1,27 @@
 #!/usr/bin/env python
 
+import builtins
 import glob
 import os
 import re
 import sys
-from io import open
 
 from setuptools import Command, setup
 
-# Predication warning
-# Glances version 4 will only be compatible with Python 3.7 and above
-if sys.version_info < (3, 7):
-    print('WARNING: Glances version 4 will only be compatible with Python 3.7 and above.')
-
-if sys.version_info < (3, 8):
+if not (sys.version_info >= (3, 8)):
     print('Glances requires at least Python 3.8 to run.')
     sys.exit(1)
 
 # Global functions
 ##################
 
-with open(os.path.join('glances', '__init__.py'), encoding='utf-8') as f:
+with builtins.open(os.path.join('glances', '__init__.py'), encoding='utf-8') as f:
     version = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", f.read(), re.M).group(1)
 
 if not version:
     raise RuntimeError('Cannot find Glances version information.')
 
-with open('README.rst', encoding='utf-8') as f:
+with builtins.open('README.rst', encoding='utf-8') as f:
     long_description = f.read()
 
 
@@ -40,7 +35,7 @@ def get_data_files():
     ]
 
 
-with open('requirements.txt') as f:
+with builtins.open('requirements.txt') as f:
     required = f.read().splitlines()
 
 

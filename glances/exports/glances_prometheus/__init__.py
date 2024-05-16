@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -26,7 +25,7 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the Prometheus export IF."""
-        super(Export, self).__init__(config=config, args=args)
+        super().__init__(config=config, args=args)
 
         # Load the Prometheus configuration file section
         self.export_enable = self.load_conf('prometheus', mandatories=['host', 'port', 'labels'], options=['prefix'])
@@ -52,14 +51,14 @@ class Export(GlancesExport):
         try:
             start_http_server(port=int(self.port), addr=self.host)
         except Exception as e:
-            logger.critical("Can not start Prometheus exporter on {}:{} ({})".format(self.host, self.port, e))
+            logger.critical(f"Can not start Prometheus exporter on {self.host}:{self.port} ({e})")
             sys.exit(2)
         else:
-            logger.info("Start Prometheus exporter on {}:{}".format(self.host, self.port))
+            logger.info(f"Start Prometheus exporter on {self.host}:{self.port}")
 
     def export(self, name, columns, points):
         """Write the points to the Prometheus exporter using Gauge."""
-        logger.debug("Export {} stats to Prometheus exporter".format(name))
+        logger.debug(f"Export {name} stats to Prometheus exporter")
 
         # Remove non number stats and convert all to float (for Boolean)
         data = {k: float(v) for (k, v) in iteritems(dict(zip(columns, points))) if isinstance(v, Number)}

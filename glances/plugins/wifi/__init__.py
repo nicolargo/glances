@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -29,7 +28,7 @@ WIRELESS_FILE = '/proc/net/wireless'
 wireless_file_exists = file_exists(WIRELESS_FILE)
 
 if not wireless_file_exists:
-    logger.debug("Wifi plugin is disabled (no %s file found)" % (WIRELESS_FILE))
+    logger.debug(f"Wifi plugin is disabled (no {WIRELESS_FILE} file found)")
 
 # Fields description
 # description: human readable description
@@ -58,7 +57,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super().__init__(args=args, config=config, stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -71,7 +70,7 @@ class PluginModel(GlancesPluginModel):
         if self._thread is not None:
             self._thread.stop()
         # Call the father class
-        super(PluginModel, self).exit()
+        super().exit()
 
     def get_key(self):
         """Return the key of the list.
@@ -98,7 +97,7 @@ class PluginModel(GlancesPluginModel):
 
         if self.input_method == 'local' and wireless_file_exists:
             # As a backup solution, use the /proc/net/wireless file
-            with open(WIRELESS_FILE, 'r') as f:
+            with open(WIRELESS_FILE) as f:
                 # The first two lines are header
                 f.readline()
                 f.readline()
@@ -154,7 +153,7 @@ class PluginModel(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(PluginModel, self).update_views()
+        super().update_views()
 
         # Add specifics information
         # Alert on quality_level thresholds
@@ -175,7 +174,7 @@ class PluginModel(GlancesPluginModel):
             if_name_max_width = max_width - 5
         else:
             # No max_width defined, return an emptu curse message
-            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Build the string message

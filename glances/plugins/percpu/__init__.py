@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -96,7 +95,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
+        super().__init__(
             args=args,
             config=config,
             items_history_list=items_history_list,
@@ -159,7 +158,7 @@ class PluginModel(GlancesPluginModel):
         for stat in header:
             if stat not in self.stats[0]:
                 continue
-            msg = '{:>7}'.format(stat)
+            msg = f'{stat:>7}'
             ret.append(self.curse_add_line(msg))
 
         # Manage the maximum number of CPU to display (related to enhancement request #2734)
@@ -176,9 +175,9 @@ class PluginModel(GlancesPluginModel):
                 try:
                     cpu_id = cpu[cpu['key']]
                     if cpu_id < 10:
-                        msg = 'CPU{:1} '.format(cpu_id)
+                        msg = f'CPU{cpu_id:1} '
                     else:
-                        msg = '{:4} '.format(cpu_id)
+                        msg = f'{cpu_id:4} '
                 except TypeError:
                     # TypeError: string indices must be integers (issue #1027)
                     msg = '{:4} '.format('?')
@@ -187,7 +186,7 @@ class PluginModel(GlancesPluginModel):
                 if stat not in self.stats[0]:
                     continue
                 try:
-                    msg = '{:6.1f}%'.format(cpu[stat])
+                    msg = f'{cpu[stat]:6.1f}%'
                 except TypeError:
                     msg = '{:>6}%'.format('?')
                 ret.append(self.curse_add_line(msg, self.get_alert(cpu[stat], header=stat)))
@@ -204,7 +203,7 @@ class PluginModel(GlancesPluginModel):
                     [i[stat] for i in percpu_list[0 : self.max_cpu_display]]
                 )
                 try:
-                    msg = '{:6.1f}%'.format(cpu_stat)
+                    msg = f'{cpu_stat:6.1f}%'
                 except TypeError:
                     msg = '{:>6}%'.format('?')
                 ret.append(self.curse_add_line(msg, self.get_alert(cpu_stat, header=stat)))

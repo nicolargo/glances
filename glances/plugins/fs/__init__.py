@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -8,8 +7,6 @@
 #
 
 """File system plugin."""
-
-from __future__ import unicode_literals
 
 import operator
 
@@ -98,7 +95,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
+        super().__init__(
             args=args,
             config=config,
             items_history_list=items_history_list,
@@ -241,7 +238,7 @@ class PluginModel(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(PluginModel, self).update_views()
+        super().update_views()
 
         # Add specifics information
         # Alert
@@ -264,7 +261,7 @@ class PluginModel(GlancesPluginModel):
             name_max_width = max_width - 13
         else:
             # No max_width defined, return an emptu curse message
-            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Build the string message

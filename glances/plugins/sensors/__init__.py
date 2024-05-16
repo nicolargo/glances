@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -83,29 +82,27 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
-            args=args, config=config, stats_init_value=[], fields_description=fields_description
-        )
+        super().__init__(args=args, config=config, stats_init_value=[], fields_description=fields_description)
         start_duration = Counter()
 
         # Init the sensor class
         start_duration.reset()
         glances_grab_sensors_cpu_temp = GlancesGrabSensors(SensorType.CPU_TEMP)
-        logger.debug("CPU Temp sensor plugin init duration: {} seconds".format(start_duration.get()))
+        logger.debug(f"CPU Temp sensor plugin init duration: {start_duration.get()} seconds")
 
         start_duration.reset()
         glances_grab_sensors_fan_speed = GlancesGrabSensors(SensorType.FAN_SPEED)
-        logger.debug("Fan speed sensor plugin init duration: {} seconds".format(start_duration.get()))
+        logger.debug(f"Fan speed sensor plugin init duration: {start_duration.get()} seconds")
 
         # Instance for the HDDTemp Plugin in order to display the hard disks temperatures
         start_duration.reset()
         hddtemp_plugin = HddTempPluginModel(args=args, config=config)
-        logger.debug("HDDTemp sensor plugin init duration: {} seconds".format(start_duration.get()))
+        logger.debug(f"HDDTemp sensor plugin init duration: {start_duration.get()} seconds")
 
         # Instance for the BatPercent in order to display the batteries capacities
         start_duration.reset()
         batpercent_plugin = BatPercentPluginModel(args=args, config=config)
-        logger.debug("Battery sensor plugin init duration: {} seconds".format(start_duration.get()))
+        logger.debug(f"Battery sensor plugin init duration: {start_duration.get()} seconds")
 
         self.sensors_grab_map: Dict[SensorType, Any] = {}
 
@@ -214,7 +211,7 @@ class PluginModel(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(PluginModel, self).update_views()
+        super().update_views()
 
         # Add specifics information
         # Alert
@@ -272,7 +269,7 @@ class PluginModel(GlancesPluginModel):
             name_max_width = max_width - 12
         else:
             # No max_width defined, return an emptu curse message
-            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Header
@@ -303,8 +300,8 @@ class PluginModel(GlancesPluginModel):
                     value = i['value']
                     unit = i['unit']
                 try:
-                    msg = '{:.0f}{}{}'.format(value, unit, trend)
-                    msg = '{:>14}'.format(msg)
+                    msg = f'{value:.0f}{unit}{trend}'
+                    msg = f'{msg:>14}'
                     ret.append(
                         self.curse_add_line(
                             msg, self.get_views(item=i[self.get_key()], key='value', option='decoration')
@@ -316,7 +313,7 @@ class PluginModel(GlancesPluginModel):
         return ret
 
 
-class GlancesGrabSensors(object):
+class GlancesGrabSensors:
     """Get sensors stats."""
 
     def __init__(self, sensor_type: Literal[SensorType.FAN_SPEED, SensorType.CPU_TEMP]):

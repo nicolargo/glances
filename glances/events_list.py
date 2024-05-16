@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -161,7 +160,7 @@ def build_global_message():
     return tree[0]['msg']
 
 
-class GlancesEventsList(object):
+class GlancesEventsList:
     """This class manages events inside the Glances software.
     GlancesEventsList is a list of GlancesEvent.
     GlancesEvent is defined in the event.py file

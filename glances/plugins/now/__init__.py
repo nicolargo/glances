@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -38,9 +37,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
-            args=args, config=config, fields_description=fields_description, stats_init_value={}
-        )
+        super().__init__(args=args, config=config, fields_description=fields_description, stats_init_value={})
 
         # We want to display the stat in the curse interface
         self.display_curse = True

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -8,8 +7,6 @@
 #
 
 """Network plugin."""
-
-from __future__ import unicode_literals
 
 import psutil
 
@@ -73,7 +70,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
+        super().__init__(
             args=args,
             config=config,
             items_history_list=items_history_list,
@@ -131,7 +128,7 @@ class PluginModel(GlancesPluginModel):
         try:
             net_io_counters = psutil.net_io_counters(pernic=True)
         except UnicodeDecodeError as e:
-            logger.debug('Can not get network interface counters ({})'.format(e))
+            logger.debug(f'Can not get network interface counters ({e})')
             return self.stats
 
         # Grab interface's status (issue #765)
@@ -145,7 +142,7 @@ class PluginModel(GlancesPluginModel):
             net_status = psutil.net_if_stats()
         except OSError as e:
             # see psutil #797/glances #1106
-            logger.debug('Can not get network interface status ({})'.format(e))
+            logger.debug(f'Can not get network interface status ({e})')
 
         for interface_name, interface_stat in net_io_counters.items():
             # Do not take hidden interface into account
@@ -181,7 +178,7 @@ class PluginModel(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(PluginModel, self).update_views()
+        super().update_views()
 
         # Check if the stats should be hidden
         self.update_views_hidden()
@@ -227,7 +224,7 @@ class PluginModel(GlancesPluginModel):
             name_max_width = max_width - 12
         else:
             # No max_width defined, return an emptu curse message
-            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Header
@@ -301,16 +298,16 @@ class PluginModel(GlancesPluginModel):
             msg = '{:{width}}'.format(if_name, width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if args.network_sum:
-                msg = '{:>14}'.format(ax)
+                msg = f'{ax:>14}'
                 ret.append(self.curse_add_line(msg))
             else:
-                msg = '{:>7}'.format(rx)
+                msg = f'{rx:>7}'
                 ret.append(
                     self.curse_add_line(
                         msg, self.get_views(item=i[self.get_key()], key='bytes_recv', option='decoration')
                     )
                 )
-                msg = '{:>7}'.format(tx)
+                msg = f'{tx:>7}'
                 ret.append(
                     self.curse_add_line(
                         msg, self.get_views(item=i[self.get_key()], key='bytes_sent', option='decoration')

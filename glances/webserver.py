@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -15,7 +14,7 @@ from glances.processes import glances_processes
 from glances.stats import GlancesStats
 
 
-class GlancesWebServer(object):
+class GlancesWebServer:
     """This class creates and manages the Glances Web server session."""
 
     def __init__(self, config=None, args=None):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,12 +8,10 @@
 
 """Manage bars for Glances output."""
 
-from __future__ import division
-
 from math import modf
 
 
-class Bar(object):
+class Bar:
     """Manage bar (progression or status).
 
     import sys
@@ -115,7 +112,7 @@ class Bar(object):
                     ret, '>' if self.percent > self.max_value else ' ', self.max_value, self.__unit_char
                 )
             else:
-                ret = '{}{:5.1f}{}'.format(ret, self.percent, self.__unit_char)
+                ret = f'{ret}{self.percent:5.1f}{self.__unit_char}'
 
         # Add overlay
         if overlay and len(overlay) < len(ret) - 6:

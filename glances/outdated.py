@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -26,13 +25,13 @@ try:
 
     PACKAGING_IMPORT = True
 except Exception as e:
-    logger.warning("Unable to import 'packaging' module ({}). Glances cannot check for updates.".format(e))
+    logger.warning(f"Unable to import 'packaging' module ({e}). Glances cannot check for updates.")
     PACKAGING_IMPORT = False
 
 PYPI_API_URL = 'https://pypi.python.org/pypi/Glances/json'
 
 
-class Outdated(object):
+class Outdated:
     """
     This class aims at providing methods to warn the user when a new Glances
     version is available on the PyPI repository (https://pypi.python.org/pypi/Glances/).
@@ -56,7 +55,7 @@ class Outdated(object):
         if not self.args.disable_check_update:
             self.load_config(config)
 
-        logger.debug("Check Glances version up-to-date: {}".format(not self.args.disable_check_update))
+        logger.debug(f"Check Glances version up-to-date: {not self.args.disable_check_update}")
 
         # And update !
         self.get_pypi_version()
@@ -68,7 +67,7 @@ class Outdated(object):
         if hasattr(config, 'has_section') and config.has_section(global_section):
             self.args.disable_check_update = config.get_value(global_section, 'check_update').lower() == 'false'
         else:
-            logger.debug("Cannot find section {} in the configuration file".format(global_section))
+            logger.debug(f"Cannot find section {global_section} in the configuration file")
             return False
 
         return True
@@ -110,9 +109,7 @@ class Outdated(object):
             # Check is disabled by configuration
             return False
 
-        logger.debug(
-            "Check Glances version (installed: {} / latest: {})".format(self.installed_version(), self.latest_version())
-        )
+        logger.debug(f"Check Glances version (installed: {self.installed_version()} / latest: {self.latest_version()})")
         return Version(self.latest_version()) > Version(self.installed_version())
 
     def _load_cache(self):
@@ -124,7 +121,7 @@ class Outdated(object):
             with open(self.cache_file, 'rb') as f:
                 cached_data = pickle.load(f)
         except Exception as e:
-            logger.debug("Cannot read version from cache file: {} ({})".format(self.cache_file, e))
+            logger.debug(f"Cannot read version from cache file: {self.cache_file} ({e})")
         else:
             logger.debug("Read version from cache file")
             if (
@@ -147,11 +144,11 @@ class Outdated(object):
             with open(self.cache_file, 'wb') as f:
                 pickle.dump(self.data, f)
         except Exception as e:
-            logger.error("Cannot write version to cache file {} ({})".format(self.cache_file, e))
+            logger.error(f"Cannot write version to cache file {self.cache_file} ({e})")
 
     def _update_pypi_version(self):
         """Get the latest PyPI version (as a string) via the RESTful JSON API"""
-        logger.debug("Get latest Glances version from the PyPI RESTful API ({})".format(PYPI_API_URL))
+        logger.debug(f"Get latest Glances version from the PyPI RESTful API ({PYPI_API_URL})")
 
         # Update the current time
         self.data['refresh_date'] = datetime.now()
@@ -159,7 +156,7 @@ class Outdated(object):
         try:
             res = urlopen(PYPI_API_URL, timeout=3).read()
         except (HTTPError, URLError, CertificateError) as e:
-            logger.debug("Cannot get Glances version from the PyPI RESTful API ({})".format(e))
+            logger.debug(f"Cannot get Glances version from the PyPI RESTful API ({e})")
         else:
             self.data['latest_version'] = json.loads(nativestr(res))['info']['version']
             logger.debug("Save Glances version to the cache file")

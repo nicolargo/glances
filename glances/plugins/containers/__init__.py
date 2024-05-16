@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -127,7 +126,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
+        super().__init__(
             args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
         )
 
@@ -173,7 +172,7 @@ class PluginModel(GlancesPluginModel):
         if self.podman_extension:
             self.podman_extension.stop()
         # Call the father class
-        super(PluginModel, self).exit()
+        super().exit()
 
     def get_key(self):
         """Return the key of the list."""
@@ -188,7 +187,7 @@ class PluginModel(GlancesPluginModel):
         try:
             ret = deepcopy(self.stats)
         except KeyError as e:
-            logger.debug("docker plugin - Docker export error {}".format(e))
+            logger.debug(f"docker plugin - Docker export error {e}")
             ret = []
 
         # Remove fields uses to compute rate
@@ -260,7 +259,7 @@ class PluginModel(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(PluginModel, self).update_views()
+        super().update_views()
 
         if not self.stats:
             return False
@@ -319,9 +318,9 @@ class PluginModel(GlancesPluginModel):
         # Title
         msg = '{}'.format('CONTAINERS')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = ' {}'.format(len(self.stats))
+        msg = f' {len(self.stats)}'
         ret.append(self.curse_add_line(msg))
-        msg = ' sorted by {}'.format(sort_for_human[self.sort_key])
+        msg = f' sorted by {sort_for_human[self.sort_key]}'
         ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
         # Header
@@ -402,13 +401,13 @@ class PluginModel(GlancesPluginModel):
             unit = 'B'
             try:
                 value = self.auto_unit(int(container['io_rx'])) + unit
-                msg = '{:>7}'.format(value)
+                msg = f'{value:>7}'
             except (KeyError, TypeError):
                 msg = '{:>7}'.format('_')
             ret.append(self.curse_add_line(msg))
             try:
                 value = self.auto_unit(int(container['io_wx'])) + unit
-                msg = ' {:<7}'.format(value)
+                msg = f' {value:<7}'
             except (KeyError, TypeError):
                 msg = ' {:<7}'.format('_')
             ret.append(self.curse_add_line(msg))
@@ -423,13 +422,13 @@ class PluginModel(GlancesPluginModel):
                 unit = 'b'
             try:
                 value = self.auto_unit(int(container['network_rx'] * to_bit)) + unit
-                msg = '{:>7}'.format(value)
+                msg = f'{value:>7}'
             except (KeyError, TypeError):
                 msg = '{:>7}'.format('_')
             ret.append(self.curse_add_line(msg))
             try:
                 value = self.auto_unit(int(container['network_tx'] * to_bit)) + unit
-                msg = ' {:<7}'.format(value)
+                msg = f' {value:<7}'
             except (KeyError, TypeError):
                 msg = ' {:<7}'.format('_')
             ret.append(self.curse_add_line(msg))

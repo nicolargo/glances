@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -8,8 +7,6 @@
 #
 
 """Curses interface class."""
-
-from __future__ import unicode_literals
 
 import getpass
 import sys
@@ -33,7 +30,7 @@ except ImportError:
     sys.exit(1)
 
 
-class _GlancesCurses(object):
+class _GlancesCurses:
     """This class manages the curses display (and key pressed).
 
     Note: It is a private class, use GlancesCursesClient or GlancesCursesBrowser.
@@ -148,14 +145,14 @@ class _GlancesCurses(object):
                 logger.critical("Cannot init the curses library.\n")
                 sys.exit(1)
             else:
-                logger.debug("Curses library initialized with term: {}".format(curses.longname()))
+                logger.debug(f"Curses library initialized with term: {curses.longname()}")
         except Exception as e:
             if args.export:
                 logger.info("Cannot init the curses library, quiet mode on and export.")
                 args.quiet = True
                 return
 
-            logger.critical("Cannot init the curses library ({})".format(e))
+            logger.critical(f"Cannot init the curses library ({e})")
             sys.exit(1)
 
         # Load configuration file
@@ -224,11 +221,11 @@ class _GlancesCurses(object):
         try:
             if hasattr(curses, 'start_color'):
                 curses.start_color()
-                logger.debug('Curses interface compatible with {} colors'.format(curses.COLORS))
+                logger.debug(f'Curses interface compatible with {curses.COLORS} colors')
             if hasattr(curses, 'use_default_colors'):
                 curses.use_default_colors()
         except Exception as e:
-            logger.warning('Error initializing terminal color ({})'.format(e))
+            logger.warning(f'Error initializing terminal color ({e})')
 
         # Init colors
         if self.args.disable_bold:
@@ -368,7 +365,7 @@ class _GlancesCurses(object):
             return -1
 
         # Actions (available in the global hotkey dict)...
-        logger.debug("Keypressed (code: {})".format(self.pressedkey))
+        logger.debug(f"Keypressed (code: {self.pressedkey})")
         for hotkey in self._hotkeys:
             if self.pressedkey == ord(hotkey) and 'switch' in self._hotkeys[hotkey]:
                 self._handle_switch(hotkey)
@@ -495,7 +492,7 @@ class _GlancesCurses(object):
         if return_to_browser:
             logger.info("Stop Glances client and return to the browser")
         else:
-            logger.info("Stop Glances (keypressed: {})".format(self.pressedkey))
+            logger.info(f"Stop Glances (keypressed: {self.pressedkey})")
 
     def _handle_refresh(self):
         pass
@@ -716,7 +713,7 @@ class _GlancesCurses(object):
         # Display graph generation popup
         if self.args.generate_graph:
             if 'graph' in stats.getExportsList():
-                self.display_popup('Generate graph in {}'.format(self.args.export_graph_path))
+                self.display_popup(f'Generate graph in {self.args.export_graph_path}')
             else:
                 logger.warning('Graph export module is disable. Run Glances with --export graph to enable it.')
                 self.args.generate_graph = False
@@ -735,7 +732,7 @@ class _GlancesCurses(object):
         :param process
         :return: None
         """
-        logger.debug("Selected process to kill: {}".format(process))
+        logger.debug(f"Selected process to kill: {process}")
 
         if 'childrens' in process:
             pid_to_kill = process['childrens']
@@ -755,9 +752,9 @@ class _GlancesCurses(object):
                 try:
                     ret_kill = glances_processes.kill(pid)
                 except Exception as e:
-                    logger.error('Can not kill process {} ({})'.format(pid, e))
+                    logger.error(f'Can not kill process {pid} ({e})')
                 else:
-                    logger.info('Kill signal has been sent to process {} (return code: {})'.format(pid, ret_kill))
+                    logger.info(f'Kill signal has been sent to process {pid} (return code: {ret_kill})')
 
     def __display_header(self, stat_display):
         """Display the firsts lines (header) in the Curses interface.
@@ -829,7 +826,7 @@ class _GlancesCurses(object):
                     max_width=quicklook_width, args=self.args
                 )
             except AttributeError as e:
-                logger.debug("Quicklook plugin not available (%s)" % e)
+                logger.debug(f"Quicklook plugin not available ({e})")
             else:
                 plugin_widths['quicklook'] = self.get_stats_display_width(stat_display["quicklook"])
                 stats_width = sum(itervalues(plugin_widths)) + 1
@@ -1258,7 +1255,7 @@ class _GlancesCurses(object):
                     )
                 )
         except Exception as e:
-            logger.debug('ERROR: Can not compute plugin width ({})'.format(e))
+            logger.debug(f'ERROR: Can not compute plugin width ({e})')
             return 0
         else:
             return c
@@ -1271,7 +1268,7 @@ class _GlancesCurses(object):
         try:
             c = [i['msg'] for i in curse_msg['msgdict']].count('\n')
         except Exception as e:
-            logger.debug('ERROR: Can not compute plugin height ({})'.format(e))
+            logger.debug(f'ERROR: Can not compute plugin height ({e})')
             return 0
         else:
             return c + 1
@@ -1285,21 +1282,21 @@ class GlancesCursesClient(_GlancesCurses):
     """Class for the Glances curse client."""
 
 
-class GlancesTextbox(Textbox, object):
+class GlancesTextbox(Textbox):
     def __init__(self, *args, **kwargs):
-        super(GlancesTextbox, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def do_command(self, ch):
         if ch == 10:  # Enter
             return 0
         if ch == 127:  # Back
             return 8
-        return super(GlancesTextbox, self).do_command(ch)
+        return super().do_command(ch)
 
 
-class GlancesTextboxYesNo(Textbox, object):
+class GlancesTextboxYesNo(Textbox):
     def __init__(self, *args, **kwargs):
-        super(GlancesTextboxYesNo, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def do_command(self, ch):
-        return super(GlancesTextboxYesNo, self).do_command(ch)
+        return super().do_command(ch)

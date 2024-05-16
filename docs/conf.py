@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Glances documentation build configuration file, created by
 # sphinx-quickstart on Tue Mar  1 10:53:59 2016.

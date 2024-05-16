@@ -19,7 +19,7 @@ select = [
     "I", # isort
 #    "N", # pep8-naming
     "W", # pycodestyle
-#    "UP", # pyupgrde
+    "UP", # pyupgrde
 #    "C4", # flake8-comprehensions
     "RET", # flake8-return
 #    "FBT", # flake8-boolean-trap

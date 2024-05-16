@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -24,7 +23,7 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the Riemann export IF."""
-        super(Export, self).__init__(config=config, args=args)
+        super().__init__(config=config, args=args)
 
         # Mandatory configuration keys (additional to host and port)
         # N/A
@@ -50,7 +49,7 @@ class Export(GlancesExport):
         try:
             return bernhard.Client(host=self.host, port=self.port)
         except Exception as e:
-            logger.critical("Connection to Riemann failed : %s " % e)
+            logger.critical(f"Connection to Riemann failed : {e} ")
             return None
 
     def export(self, name, columns, points):
@@ -64,4 +63,4 @@ class Export(GlancesExport):
             try:
                 self.client.send(data)
             except Exception as e:
-                logger.error("Cannot export stats to Riemann (%s)" % e)
+                logger.error(f"Cannot export stats to Riemann ({e})")
