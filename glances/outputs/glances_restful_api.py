@@ -16,8 +16,12 @@ from io import open
 import webbrowser
 from urllib.parse import urljoin
 
-# Replace typing_extensions by typing when Python 3.8 support will be dropped
-from typing import Annotated
+try:    
+    from typing import Annotated
+except ImportError:
+    # Only for Python 3.8
+    # To be removed when Python 3.8 support will be dropped
+    from typing_extensions import Annotated
 
 from glances import __version__, __apiversion__
 from glances.password import GlancesPassword
