@@ -17,7 +17,7 @@ select = [
     "E", # pycodestyle
     "F", # Pyflakes
     "I", # isort
-#    "N", # pep8-naming
+    "N", # pep8-naming
     "W", # pycodestyle
     "UP", # pyupgrde
     "C4", # flake8-comprehensions
@@ -26,7 +26,7 @@ select = [
 #    "RUF", # Ruff-specific rules
 #    "PERF", # Perflint
 ]
-ignore = []
+ignore = ["N801", "N802", "N803", "N805", "N806", "N807", "N811", "N812", "N813", "N814", "N815", "N816", "N817", "N818"]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "EM", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
