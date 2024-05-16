@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -43,7 +42,7 @@ fields_unit_type = {
 }
 
 
-class GlancesPluginModel(object):
+class GlancesPluginModel:
     """Main class for Glances plugin model."""
 
     def __init__(self, args=None, config=None, items_history_list=None, stats_init_value={}, fields_description=None):
@@ -77,7 +76,7 @@ class GlancesPluginModel(object):
 
         if self.plugin_name.startswith('glances_'):
             self.plugin_name = self.plugin_name.split('glances_')[1]
-        logger.debug("Init {} plugin".format(self.plugin_name))
+        logger.debug(f"Init {self.plugin_name} plugin")
 
         # Init the args
         self.args = args
@@ -96,7 +95,7 @@ class GlancesPluginModel(object):
         # Init the limits (configuration keys) dictionary
         self._limits = dict()
         if config is not None:
-            logger.debug('Load section {} in {}'.format(self.plugin_name, config.config_file_paths()))
+            logger.debug(f'Load section {self.plugin_name} in {config.config_file_paths()}')
             self.load_limits(config=config)
 
         # Init the alias (dictionnary)
@@ -147,7 +146,7 @@ class GlancesPluginModel(object):
 
     def exit(self):
         """Just log an event when Glances exit."""
-        logger.debug("Stop the {} plugin".format(self.plugin_name))
+        logger.debug(f"Stop the {self.plugin_name} plugin")
 
     def get_key(self):
         """Return the key of the list."""
@@ -174,14 +173,14 @@ class GlancesPluginModel(object):
         """Init the stats history (dict of GlancesAttribute)."""
         if self.history_enable():
             init_list = [a['name'] for a in self.get_items_history_list()]
-            logger.debug("Stats history activated for plugin {} (items: {})".format(self.plugin_name, init_list))
+            logger.debug(f"Stats history activated for plugin {self.plugin_name} (items: {init_list})")
         return GlancesHistory()
 
     def reset_stats_history(self):
         """Reset the stats history (dict of GlancesAttribute)."""
         if self.history_enable():
             reset_list = [a['name'] for a in self.get_items_history_list()]
-            logger.debug("Reset history for plugin {} (items: {})".format(self.plugin_name, reset_list))
+            logger.debug(f"Reset history for plugin {self.plugin_name} (items: {reset_list})")
             self.stats_history.reset()
 
     def update_stats_history(self):
@@ -414,7 +413,7 @@ class GlancesPluginModel(object):
         try:
             return {value: [i for i in self.get_raw() if i[item] == value]}
         except (KeyError, ValueError) as e:
-            logger.error("Cannot get item({})=value({}) ({})".format(item, value, e))
+            logger.error(f"Cannot get item({item})=value({value}) ({e})")
             return None
 
     def get_stats_value(self, item, value):
@@ -582,7 +581,7 @@ class GlancesPluginModel(object):
                     self._limits[limit] = config.get_float_value(self.plugin_name, level)
                 except ValueError:
                     self._limits[limit] = config.get_value(self.plugin_name, level).split(",")
-                logger.debug("Load limit: {} = {}".format(limit, self._limits[limit]))
+                logger.debug(f"Load limit: {limit} = {self._limits[limit]}")
 
         return True
 
@@ -613,13 +612,13 @@ class GlancesPluginModel(object):
 
     def set_limits(self, item, value):
         """Set the limits object."""
-        self._limits['{}_{}'.format(self.plugin_name, item)] = value
+        self._limits[f'{self.plugin_name}_{item}'] = value
 
     def get_limits(self, item=None):
         """Return the limits object."""
         if item is None:
             return self._limits
-        return self._limits.get('{}_{}'.format(self.plugin_name, item), None)
+        return self._limits.get(f'{self.plugin_name}_{item}', None)
 
     def get_stats_action(self):
         """Return stats for the action.
@@ -1025,7 +1024,7 @@ class GlancesPluginModel(object):
             value = self.stats.get(key, None)
 
         if width is None:
-            msg_item = header + '{}'.format(key_name) + separator
+            msg_item = header + f'{key_name}' + separator
             msg_template_float = '{:.1f}{}'
             msg_template = '{}{}'
         else:
@@ -1124,7 +1123,7 @@ class GlancesPluginModel(object):
                 elif symbol in 'K':
                     decimal_precision = 0
                 return '{:.{decimal}f}{symbol}'.format(value, decimal=decimal_precision, symbol=symbol)
-        return '{!s}'.format(number)
+        return f'{number!s}'
 
     def trend_msg(self, trend, significant=1):
         """Return the trend message.
@@ -1170,11 +1169,9 @@ class GlancesPluginModel(object):
             counter = Counter()
             ret = fct(*args, **kw)
             duration = counter.get()
-            logger.debug(
-                "{} {} {} return {} in {} seconds".format(
-                    args[0].__class__.__name__, args[0].__class__.__module__, fct.__name__, ret, duration
-                )
-            )
+            class_name = args[0].__class__.__name__
+            class_module = args[0].__class__.__module__
+            logger.debug(f"{class_name} {class_module} {fct.__name__} return {ret} in {duration} seconds")
             return ret
 
         return wrapper

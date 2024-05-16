@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 # Glances - An eye on your system
 #
@@ -11,14 +10,8 @@
 """Glances unitary tests suite."""
 
 import json
-import sys
 import time
 import unittest
-
-# Check Python version
-if sys.version_info < (3, 8):
-    print('Glances requires at least Python 3.8 to run.')
-    sys.exit(1)
 
 from glances import __version__
 from glances.events_list import GlancesEventsList
@@ -51,7 +44,7 @@ stats = GlancesStats(config=test_config, args=test_args)
 
 # Unitest class
 # ==============
-print('Unitary tests for Glances %s' % __version__)
+print(f'Unitary tests for Glances {__version__}')
 
 
 class TestGlances(unittest.TestCase):
@@ -186,13 +179,13 @@ class TestGlances(unittest.TestCase):
         try:
             stats.update()
         except Exception as e:
-            print('ERROR: Stats update failed: %s' % e)
+            print(f'ERROR: Stats update failed: {e}')
             self.assertTrue(False)
         time.sleep(1)
         try:
             stats.update()
         except Exception as e:
-            print('ERROR: Stats update failed: %s' % e)
+            print(f'ERROR: Stats update failed: {e}')
             self.assertTrue(False)
 
         self.assertTrue(True)
@@ -200,7 +193,7 @@ class TestGlances(unittest.TestCase):
     def test_001_plugins(self):
         """Check mandatory plugins."""
         plugins_to_check = ['system', 'cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs']
-        print('INFO: [TEST_001] Check the mandatory plugins list: %s' % ', '.join(plugins_to_check))
+        print('INFO: [TEST_001] Check the mandatory plugins list: {}'.format(', '.join(plugins_to_check)))
         plugins_list = stats.getPluginsList()
         for plugin in plugins_to_check:
             self.assertTrue(plugin in plugins_list)
@@ -208,38 +201,38 @@ class TestGlances(unittest.TestCase):
     def test_002_system(self):
         """Check SYSTEM plugin."""
         stats_to_check = ['hostname', 'os_name']
-        print('INFO: [TEST_002] Check SYSTEM stats: %s' % ', '.join(stats_to_check))
+        print('INFO: [TEST_002] Check SYSTEM stats: {}'.format(', '.join(stats_to_check)))
         stats_grab = stats.get_plugin('system').get_raw()
         for stat in stats_to_check:
             # Check that the key exist
-            self.assertTrue(stat in stats_grab, msg='Cannot find key: %s' % stat)
-        print('INFO: SYSTEM stats: %s' % stats_grab)
+            self.assertTrue(stat in stats_grab, msg=f'Cannot find key: {stat}')
+        print(f'INFO: SYSTEM stats: {stats_grab}')
 
     def test_003_cpu(self):
         """Check CPU plugin."""
         stats_to_check = ['system', 'user', 'idle']
-        print('INFO: [TEST_003] Check mandatory CPU stats: %s' % ', '.join(stats_to_check))
+        print('INFO: [TEST_003] Check mandatory CPU stats: {}'.format(', '.join(stats_to_check)))
         stats_grab = stats.get_plugin('cpu').get_raw()
         for stat in stats_to_check:
             # Check that the key exist
-            self.assertTrue(stat in stats_grab, msg='Cannot find key: %s' % stat)
+            self.assertTrue(stat in stats_grab, msg=f'Cannot find key: {stat}')
             # Check that % is > 0 and < 100
             self.assertGreaterEqual(stats_grab[stat], 0)
             self.assertLessEqual(stats_grab[stat], 100)
-        print('INFO: CPU stats: %s' % stats_grab)
+        print(f'INFO: CPU stats: {stats_grab}')
 
     @unittest.skipIf(WINDOWS, "Load average not available on Windows")
     def test_004_load(self):
         """Check LOAD plugin."""
         stats_to_check = ['cpucore', 'min1', 'min5', 'min15']
-        print('INFO: [TEST_004] Check LOAD stats: %s' % ', '.join(stats_to_check))
+        print('INFO: [TEST_004] Check LOAD stats: {}'.format(', '.join(stats_to_check)))
         stats_grab = stats.get_plugin('load').get_raw()
         for stat in stats_to_check:
             # Check that the key exist
-            self.assertTrue(stat in stats_grab, msg='Cannot find key: %s' % stat)
+            self.assertTrue(stat in stats_grab, msg=f'Cannot find key: {stat}')
             # Check that % is > 0
             self.assertGreaterEqual(stats_grab[stat], 0)
-        print('INFO: LOAD stats: %s' % stats_grab)
+        print(f'INFO: LOAD stats: {stats_grab}')
 
     def test_005_mem(self):
         """Check MEM plugin."""
@@ -249,36 +242,36 @@ class TestGlances(unittest.TestCase):
         stats_grab = stats.get_plugin('mem').get_raw()
         for stat in stats_to_check:
             # Check that the key exist
-            self.assertTrue(stat in stats_grab, msg='Cannot find key: %s' % stat)
+            self.assertTrue(stat in stats_grab, msg=f'Cannot find key: {stat}')
             # Check that % is > 0
             self.assertGreaterEqual(stats_grab[stat], 0)
-        print('INFO: MEM stats: %s' % stats_grab)
+        print(f'INFO: MEM stats: {stats_grab}')
 
     def test_006_memswap(self):
         """Check MEMSWAP plugin."""
         stats_to_check = ['used', 'free', 'total']
-        print('INFO: [TEST_006] Check MEMSWAP stats: %s' % ', '.join(stats_to_check))
+        print('INFO: [TEST_006] Check MEMSWAP stats: {}'.format(', '.join(stats_to_check)))
         stats_grab = stats.get_plugin('memswap').get_raw()
         for stat in stats_to_check:
             # Check that the key exist
-            self.assertTrue(stat in stats_grab, msg='Cannot find key: %s' % stat)
+            self.assertTrue(stat in stats_grab, msg=f'Cannot find key: {stat}')
             # Check that % is > 0
             self.assertGreaterEqual(stats_grab[stat], 0)
-        print('INFO: MEMSWAP stats: %s' % stats_grab)
+        print(f'INFO: MEMSWAP stats: {stats_grab}')
 
     def test_007_network(self):
         """Check NETWORK plugin."""
         print('INFO: [TEST_007] Check NETWORK stats')
         stats_grab = stats.get_plugin('network').get_raw()
         self.assertTrue(isinstance(stats_grab, list), msg='Network stats is not a list')
-        print('INFO: NETWORK stats: %s' % stats_grab)
+        print(f'INFO: NETWORK stats: {stats_grab}')
 
     def test_008_diskio(self):
         """Check DISKIO plugin."""
         print('INFO: [TEST_008] Check DISKIO stats')
         stats_grab = stats.get_plugin('diskio').get_raw()
         self.assertTrue(isinstance(stats_grab, list), msg='DiskIO stats is not a list')
-        print('INFO: diskio stats: %s' % stats_grab)
+        print(f'INFO: diskio stats: {stats_grab}')
 
     def test_009_fs(self):
         """Check File System plugin."""
@@ -286,7 +279,7 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_009] Check FS stats')
         stats_grab = stats.get_plugin('fs').get_raw()
         self.assertTrue(isinstance(stats_grab, list), msg='FileSystem stats is not a list')
-        print('INFO: FS stats: %s' % stats_grab)
+        print(f'INFO: FS stats: {stats_grab}')
 
     def test_010_processes(self):
         """Check Process plugin."""
@@ -295,10 +288,10 @@ class TestGlances(unittest.TestCase):
         stats_grab = stats.get_plugin('processcount').get_raw()
         # total = stats_grab['total']
         self.assertTrue(isinstance(stats_grab, dict), msg='Process count stats is not a dict')
-        print('INFO: PROCESS count stats: %s' % stats_grab)
+        print(f'INFO: PROCESS count stats: {stats_grab}')
         stats_grab = stats.get_plugin('processlist').get_raw()
         self.assertTrue(isinstance(stats_grab, list), msg='Process count stats is not a list')
-        print('INFO: PROCESS list stats: %s items in the list' % len(stats_grab))
+        print(f'INFO: PROCESS list stats: {len(stats_grab)} items in the list')
         # Check if number of processes in the list equal counter
         # self.assertEqual(total, len(stats_grab))
 
@@ -308,14 +301,14 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_011] Check FOLDER stats')
         stats_grab = stats.get_plugin('folders').get_raw()
         self.assertTrue(isinstance(stats_grab, list), msg='Folders stats is not a list')
-        print('INFO: Folders stats: %s' % stats_grab)
+        print(f'INFO: Folders stats: {stats_grab}')
 
     def test_012_ip(self):
         """Check IP plugin."""
         print('INFO: [TEST_012] Check IP stats')
         stats_grab = stats.get_plugin('ip').get_raw()
         self.assertTrue(isinstance(stats_grab, dict), msg='IP stats is not a dict')
-        print('INFO: IP stats: %s' % stats_grab)
+        print(f'INFO: IP stats: {stats_grab}')
 
     @unittest.skipIf(not LINUX, "IRQs available only on Linux")
     def test_013_irq(self):
@@ -323,7 +316,7 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_013] Check IRQ stats')
         stats_grab = stats.get_plugin('irq').get_raw()
         self.assertTrue(isinstance(stats_grab, list), msg='IRQ stats is not a list')
-        print('INFO: IRQ stats: %s' % stats_grab)
+        print(f'INFO: IRQ stats: {stats_grab}')
 
     @unittest.skipIf(not LINUX, "GPU available only on Linux")
     def test_014_gpu(self):
@@ -331,7 +324,7 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_014] Check GPU stats')
         stats_grab = stats.get_plugin('gpu').get_raw()
         self.assertTrue(isinstance(stats_grab, list), msg='GPU stats is not a list')
-        print('INFO: GPU stats: %s' % stats_grab)
+        print(f'INFO: GPU stats: {stats_grab}')
 
     def test_015_sorted_stats(self):
         """Check sorted stats method."""
@@ -384,7 +377,7 @@ class TestGlances(unittest.TestCase):
             return
 
         stat = 'DeviceName'
-        print('INFO: [TEST_017] Check SMART stats: {}'.format(stat))
+        print(f'INFO: [TEST_017] Check SMART stats: {stat}')
         stats_grab = stats.get_plugin('smart').get_raw()
         if not is_admin():
             print("INFO: Not admin, SMART list should be empty")
@@ -394,9 +387,9 @@ class TestGlances(unittest.TestCase):
             assert len(stats_grab) == 0
         else:
             print(stats_grab)
-            self.assertTrue(stat in stats_grab[0].keys(), msg='Cannot find key: %s' % stat)
+            self.assertTrue(stat in stats_grab[0].keys(), msg=f'Cannot find key: {stat}')
 
-        print('INFO: SMART stats: %s' % stats_grab)
+        print(f'INFO: SMART stats: {stats_grab}')
 
     def test_017_programs(self):
         """Check Programs function (it's not a plugin)."""
@@ -515,9 +508,7 @@ class TestGlances(unittest.TestCase):
         plugins_list = stats.getPluginsList()
         for plugin in plugins_list:
             for method in mandatories_methods:
-                self.assertTrue(
-                    hasattr(stats.get_plugin(plugin), method), msg='{} has no method {}()'.format(plugin, method)
-                )
+                self.assertTrue(hasattr(stats.get_plugin(plugin), method), msg=f'{plugin} has no method {method}()')
 
     def test_096_views(self):
         """Test get_views method"""
@@ -526,7 +517,7 @@ class TestGlances(unittest.TestCase):
         for plugin in plugins_list:
             stats.get_plugin(plugin).get_raw()
             views_grab = stats.get_plugin(plugin).get_views()
-            self.assertTrue(isinstance(views_grab, dict), msg='{} view is not a dict'.format(plugin))
+            self.assertTrue(isinstance(views_grab, dict), msg=f'{plugin} view is not a dict')
 
     def test_097_attribute(self):
         """Test GlancesAttribute classes"""
@@ -675,7 +666,7 @@ class TestGlances(unittest.TestCase):
         snapshot_end = tracemalloc.take_snapshot()
         snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
         memory_leak = sum([s.size_diff for s in snapshot_diff])
-        print('INFO: Memory leak: {} bytes'.format(memory_leak))
+        print(f'INFO: Memory leak: {memory_leak} bytes')
 
         # snapshot_begin = tracemalloc.take_snapshot()
         for _ in range(30):
@@ -683,7 +674,7 @@ class TestGlances(unittest.TestCase):
         snapshot_end = tracemalloc.take_snapshot()
         snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
         memory_leak = sum([s.size_diff for s in snapshot_diff])
-        print('INFO: Memory leak: {} bytes'.format(memory_leak))
+        print(f'INFO: Memory leak: {memory_leak} bytes')
 
         # snapshot_begin = tracemalloc.take_snapshot()
         for _ in range(300):
@@ -691,7 +682,7 @@ class TestGlances(unittest.TestCase):
         snapshot_end = tracemalloc.take_snapshot()
         snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
         memory_leak = sum([s.size_diff for s in snapshot_diff])
-        print('INFO: Memory leak: {} bytes'.format(memory_leak))
+        print(f'INFO: Memory leak: {memory_leak} bytes')
         snapshot_top = snapshot_end.compare_to(snapshot_begin, 'traceback')
         print("Memory consumption (top 5):")
         for stat in snapshot_top[:5]:

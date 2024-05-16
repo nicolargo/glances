@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -44,11 +43,6 @@ try:
 except locale.Error:
     print("Warning: Unable to set locale. Expect encoding problems.")
 
-# Check Python version
-if sys.version_info < (3, 4):
-    print('Glances requires at least Python 3.4 to run.')
-    sys.exit(1)
-
 # Check psutil version
 psutil_min_version = (5, 3, 0)
 psutil_version_info = tuple([int(num) for num in psutil_version.split('.')])
@@ -56,11 +50,12 @@ if psutil_version_info < psutil_min_version:
     print('psutil 5.3.0 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
+
 # Trac malloc is only available on Python 3.4 or higher
 
 
 def __signal_handler(signal, frame):
-    logger.debug("Signal {} catched".format(signal))
+    logger.debug(f"Signal {signal} catched")
     end()
 
 
@@ -103,20 +98,16 @@ def start(config, args):
         from glances.webserver import GlancesWebServer as GlancesMode
 
     # Init the mode
-    logger.info("Start {} mode".format(GlancesMode.__name__))
+    logger.info(f"Start {GlancesMode.__name__} mode")
     mode = GlancesMode(config=config, args=args)
 
     # Start the main loop
-    logger.debug("Glances started in {} seconds".format(start_duration.get()))
+    logger.debug(f"Glances started in {start_duration.get()} seconds")
     if args.stop_after:
-        logger.info('Glances will be stopped in ~{} seconds'.format(args.stop_after * args.time))
+        logger.info(f'Glances will be stopped in ~{args.stop_after * args.time} seconds')
 
     if args.memory_leak:
-        print(
-            'Memory leak detection, please wait ~{} seconds...'.format(
-                args.stop_after * args.time * args.memory_leak * 2
-            )
-        )
+        print(f'Memory leak detection, please wait ~{args.stop_after * args.time * args.memory_leak * 2} seconds...')
         # First run without dump to fill the memory
         mode.serve_n(args.stop_after)
         # Then start the memory-leak loop
@@ -133,7 +124,7 @@ def start(config, args):
         snapshot_end = tracemalloc.take_snapshot()
         snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
         memory_leak = sum([s.size_diff for s in snapshot_diff])
-        print("Memory consumption: {0:.1f}KB (see log for details)".format(memory_leak / 1000))
+        print(f"Memory consumption: {memory_leak / 1000:.1f}KB (see log for details)")
         logger.info("Memory consumption (top 5):")
         for stat in snapshot_diff[:5]:
             logger.info(stat)
@@ -165,12 +156,10 @@ def main():
         signal.signal(sig, __signal_handler)
 
     # Log Glances and psutil version
-    logger.info('Start Glances {}'.format(__version__))
-    logger.info(
-        '{} {} ({}) and psutil {} detected'.format(
-            platform.python_implementation(), platform.python_version(), sys.executable, psutil_version
-        )
-    )
+    logger.info(f'Start Glances {__version__}')
+    python_impl = platform.python_implementation()
+    python_ver = platform.python_version()
+    logger.info(f'{python_impl} {python_ver} ({sys.executable}) and psutil {psutil_version} detected')
 
     # Share global var
     global core

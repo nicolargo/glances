@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -17,15 +16,15 @@ from glances import __apiversion__
 from glances.globals import iteritems
 from glances.logger import logger
 
-API_URL = "http://localhost:61208/api/{api_version}".format(api_version=__apiversion__)
+API_URL = f"http://localhost:61208/api/{__apiversion__}"
 
-APIDOC_HEADER = """\
+APIDOC_HEADER = f"""\
 .. _api:
 
 API (Restfull/JSON) documentation
 =================================
 
-This documentation describes the Glances API version {api_version} (Restfull/JSON) interface.
+This documentation describes the Glances API version {__apiversion__} (Restfull/JSON) interface.
 
 For Glances version 3, please have a look on:
 ``https://github.com/nicolargo/glances/blob/support/glancesv3/docs/api.rst``
@@ -44,7 +43,7 @@ It is also ran automatically when Glances is started in Web server mode (-w).
 API URL
 -------
 
-The default root API URL is ``http://localhost:61208/api/{api_version}``.
+The default root API URL is ``http://localhost:61208/api/{__apiversion__}``.
 
 The bind address and port could be changed using the ``--bind`` and ``--port`` command line options.
 
@@ -59,7 +58,7 @@ For example:
     [outputs]
     url_prefix = /glances/
 
-will change the root API URL to ``http://localhost:61208/glances/api/{api_version}`` and the Web UI URL to
+will change the root API URL to ``http://localhost:61208/glances/api/{__apiversion__}`` and the Web UI URL to
 ``http://localhost:61208/glances/``
 
 API documentation URL
@@ -74,7 +73,7 @@ WebUI refresh
 It is possible to change the Web UI refresh rate (default is 2 seconds) using the following option in the URL:
 ``http://localhost:61208/glances/?refresh=5``
 
-""".format(api_version=__apiversion__)
+"""
 
 
 def indent_stat(stat, indent='    '):
@@ -95,7 +94,7 @@ def print_api_status():
     print('')
     print('Get the Rest API status::')
     print('')
-    print('    # curl -I {}/status'.format(API_URL))
+    print(f'    # curl -I {API_URL}/status')
     print(indent_stat('HTTP/1.0 200 OK'))
     print('')
 
@@ -107,20 +106,20 @@ def print_plugins_list(stat):
     print('')
     print('Get the plugins list::')
     print('')
-    print('    # curl {}/pluginslist'.format(API_URL))
+    print(f'    # curl {API_URL}/pluginslist')
     print(indent_stat(stat))
     print('')
 
 
 def print_plugin_stats(plugin, stat):
-    sub_title = 'GET {}'.format(plugin)
+    sub_title = f'GET {plugin}'
     print(sub_title)
     print('-' * len(sub_title))
     print('')
 
     print('Get plugin stats::')
     print('')
-    print('    # curl {}/{}'.format(API_URL, plugin))
+    print(f'    # curl {API_URL}/{plugin}')
     print(indent_stat(json.loads(stat.get_stats())))
     print('')
 
@@ -179,7 +178,7 @@ def print_plugin_description(plugin, stat):
 
         print('')
     else:
-        logger.error('No fields_description variable defined for plugin {}'.format(plugin))
+        logger.error(f'No fields_description variable defined for plugin {plugin}')
 
 
 def print_plugin_item_value(plugin, stat, stat_export):
@@ -201,13 +200,13 @@ def print_plugin_item_value(plugin, stat, stat_export):
             value = stat_item[item]
         print('Get a specific field::')
         print('')
-        print('    # curl {}/{}/{}'.format(API_URL, plugin, item))
+        print(f'    # curl {API_URL}/{plugin}/{item}')
         print(indent_stat(stat_item))
         print('')
     if item and value and stat.get_stats_value(item, value):
         print('Get a specific item when field matches the given value::')
         print('')
-        print('    # curl {}/{}/{}/{}'.format(API_URL, plugin, item, value))
+        print(f'    # curl {API_URL}/{plugin}/{item}/{value}')
         print(indent_stat(json.loads(stat.get_stats_value(item, value))))
         print('')
 
@@ -219,7 +218,7 @@ def print_all():
     print('')
     print('Get all Glances stats::')
     print('')
-    print('    # curl {}/all'.format(API_URL))
+    print(f'    # curl {API_URL}/all')
     print('    Return a very big dictionary (avoid using this request, performances will be poor)...')
     print('')
 
@@ -233,7 +232,7 @@ def print_top(stats):
     print('')
     print('Get top 2 processes of the processlist plugin::')
     print('')
-    print('    # curl {}/processlist/top/2'.format(API_URL))
+    print(f'    # curl {API_URL}/processlist/top/2')
     print(indent_stat(stats.get_plugin('processlist').get_export()[:2]))
     print('')
     print('Note: Only work for plugin with a list of items')
@@ -246,7 +245,7 @@ def print_fields_info(stats):
     print('-' * len(sub_title))
     print('Get item description (human readable) for a specific plugin/item::')
     print('')
-    print('    # curl {}/diskio/read_bytes/description'.format(API_URL))
+    print(f'    # curl {API_URL}/diskio/read_bytes/description')
     print(indent_stat(stats.get_plugin('diskio').get_item_info('read_bytes', 'description')))
     print('')
     print('Note: the description is defined in the fields_description variable of the plugin.')
@@ -256,7 +255,7 @@ def print_fields_info(stats):
     print('-' * len(sub_title))
     print('Get item unit for a specific plugin/item::')
     print('')
-    print('    # curl {}/diskio/read_bytes/unit'.format(API_URL))
+    print(f'    # curl {API_URL}/diskio/read_bytes/unit')
     print(indent_stat(stats.get_plugin('diskio').get_item_info('read_bytes', 'unit')))
     print('')
     print('Note: the description is defined in the fields_description variable of the plugin.')
@@ -274,22 +273,22 @@ def print_history(stats):
     print('')
     print('History of a plugin::')
     print('')
-    print('    # curl {}/cpu/history'.format(API_URL))
+    print(f'    # curl {API_URL}/cpu/history')
     print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history(nb=3))))
     print('')
     print('Limit history to last 2 values::')
     print('')
-    print('    # curl {}/cpu/history/2'.format(API_URL))
+    print(f'    # curl {API_URL}/cpu/history/2')
     print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history(nb=2))))
     print('')
     print('History for a specific field::')
     print('')
-    print('    # curl {}/cpu/system/history'.format(API_URL))
+    print(f'    # curl {API_URL}/cpu/system/history')
     print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history('system'))))
     print('')
     print('Limit history for a specific field to last 2 values::')
     print('')
-    print('    # curl {}/cpu/system/history'.format(API_URL))
+    print(f'    # curl {API_URL}/cpu/system/history')
     print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history('system', nb=2))))
     print('')
 
@@ -301,17 +300,17 @@ def print_limits(stats):
     print('')
     print('All limits/thresholds::')
     print('')
-    print('    # curl {}/all/limits'.format(API_URL))
+    print(f'    # curl {API_URL}/all/limits')
     print(indent_stat(stats.getAllLimitsAsDict()))
     print('')
     print('Limits/thresholds for the cpu plugin::')
     print('')
-    print('    # curl {}/cpu/limits'.format(API_URL))
+    print(f'    # curl {API_URL}/cpu/limits')
     print(indent_stat(stats.get_plugin('cpu').limits))
     print('')
 
 
-class GlancesStdoutApiDoc(object):
+class GlancesStdoutApiDoc:
     """This class manages the fields description display."""
 
     def __init__(self, config=None, args=None):

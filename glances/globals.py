@@ -1,5 +1,4 @@
 # ruff: noqa: F401
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -145,7 +144,7 @@ def system_exec(command):
     try:
         res = subprocess.run(command.split(' '), stdout=subprocess.PIPE).stdout.decode('utf-8')
     except Exception as e:
-        res = 'ERROR: {}'.format(e)
+        res = f'ERROR: {e}'
     return res.rstrip()
 
 
@@ -202,7 +201,7 @@ def is_admin():
         try:
             return ctypes.windll.shell32.IsUserAnAdmin()
         except Exception as e:
-            print("Admin check failed with error: %s" % e)
+            print(f"Admin check failed with error: {e}")
             traceback.print_exc()
             return False
     else:
@@ -299,7 +298,7 @@ def urlopen_auth(url, username, password):
     return urlopen(
         Request(
             url,
-            headers={'Authorization': 'Basic ' + base64.b64encode(('%s:%s' % (username, password)).encode()).decode()},
+            headers={'Authorization': 'Basic ' + base64.b64encode((f'{username}:{password}').encode()).decode()},
         )
     )
 

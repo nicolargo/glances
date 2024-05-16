@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 # Glances - An eye on your system
 #
@@ -21,7 +20,7 @@ from glances import __version__
 from glances.globals import ServerProxy
 
 SERVER_PORT = 61234
-URL = "http://localhost:%s" % SERVER_PORT
+URL = f"http://localhost:{SERVER_PORT}"
 pid = None
 
 # Init the XML-RPC client
@@ -29,7 +28,7 @@ client = ServerProxy(URL)
 
 # Unitest class
 # ==============
-print('XML-RPC API unitary tests for Glances %s' % __version__)
+print(f'XML-RPC API unitary tests for Glances {__version__}')
 
 
 class TestGlances(unittest.TestCase):
@@ -48,8 +47,8 @@ class TestGlances(unittest.TestCase):
             cmdline = "./venv/bin/python"
         else:
             cmdline = "python"
-        cmdline += " -m glances -B localhost -s -p %s" % SERVER_PORT
-        print("Run the Glances Server on port %s" % SERVER_PORT)
+        cmdline += f" -m glances -B localhost -s -p {SERVER_PORT}"
+        print(f"Run the Glances Server on port {SERVER_PORT}")
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
         print("Please wait...")
@@ -61,7 +60,7 @@ class TestGlances(unittest.TestCase):
         """All."""
         method = "getAll()"
         print('INFO: [TEST_001] Connection test')
-        print("XML-RPC request: %s" % method)
+        print(f"XML-RPC request: {method}")
         req = json.loads(client.getAll())
 
         self.assertIsInstance(req, dict)
@@ -70,7 +69,7 @@ class TestGlances(unittest.TestCase):
         """Plugins list."""
         method = "getAllPlugins()"
         print('INFO: [TEST_002] Get plugins list')
-        print("XML-RPC request: %s" % method)
+        print(f"XML-RPC request: {method}")
         req = json.loads(client.getAllPlugins())
 
         self.assertIsInstance(req, list)
@@ -78,7 +77,7 @@ class TestGlances(unittest.TestCase):
     def test_003_system(self):
         """System."""
         method = "getSystem()"
-        print('INFO: [TEST_003] Method: %s' % method)
+        print(f'INFO: [TEST_003] Method: {method}')
         req = json.loads(client.getSystem())
 
         self.assertIsInstance(req, dict)
@@ -86,7 +85,7 @@ class TestGlances(unittest.TestCase):
     def test_004_cpu(self):
         """CPU."""
         method = "getCpu(), getPerCpu(), getLoad() and getCore()"
-        print('INFO: [TEST_004] Method: %s' % method)
+        print(f'INFO: [TEST_004] Method: {method}')
 
         req = json.loads(client.getCpu())
         self.assertIsInstance(req, dict)
@@ -103,7 +102,7 @@ class TestGlances(unittest.TestCase):
     def test_005_mem(self):
         """MEM."""
         method = "getMem() and getMemSwap()"
-        print('INFO: [TEST_005] Method: %s' % method)
+        print(f'INFO: [TEST_005] Method: {method}')
 
         req = json.loads(client.getMem())
         self.assertIsInstance(req, dict)
@@ -114,7 +113,7 @@ class TestGlances(unittest.TestCase):
     def test_006_net(self):
         """NETWORK."""
         method = "getNetwork()"
-        print('INFO: [TEST_006] Method: %s' % method)
+        print(f'INFO: [TEST_006] Method: {method}')
 
         req = json.loads(client.getNetwork())
         self.assertIsInstance(req, list)
@@ -122,7 +121,7 @@ class TestGlances(unittest.TestCase):
     def test_007_disk(self):
         """DISK."""
         method = "getFs(), getFolders() and getDiskIO()"
-        print('INFO: [TEST_007] Method: %s' % method)
+        print(f'INFO: [TEST_007] Method: {method}')
 
         req = json.loads(client.getFs())
         self.assertIsInstance(req, list)
@@ -136,7 +135,7 @@ class TestGlances(unittest.TestCase):
     def test_008_sensors(self):
         """SENSORS."""
         method = "getSensors()"
-        print('INFO: [TEST_008] Method: %s' % method)
+        print(f'INFO: [TEST_008] Method: {method}')
 
         req = json.loads(client.getSensors())
         self.assertIsInstance(req, list)
@@ -144,7 +143,7 @@ class TestGlances(unittest.TestCase):
     def test_009_process(self):
         """PROCESS."""
         method = "getProcessCount() and getProcessList()"
-        print('INFO: [TEST_009] Method: %s' % method)
+        print(f'INFO: [TEST_009] Method: {method}')
 
         req = json.loads(client.getProcessCount())
         self.assertIsInstance(req, dict)
@@ -155,7 +154,7 @@ class TestGlances(unittest.TestCase):
     def test_010_all_limits(self):
         """All limits."""
         method = "getAllLimits()"
-        print('INFO: [TEST_010] Method: %s' % method)
+        print(f'INFO: [TEST_010] Method: {method}')
 
         req = json.loads(client.getAllLimits())
         self.assertIsInstance(req, dict)
@@ -164,7 +163,7 @@ class TestGlances(unittest.TestCase):
     def test_011_all_views(self):
         """All views."""
         method = "getAllViews()"
-        print('INFO: [TEST_011] Method: %s' % method)
+        print(f'INFO: [TEST_011] Method: {method}')
 
         req = json.loads(client.getAllViews())
         self.assertIsInstance(req, dict)
@@ -173,14 +172,14 @@ class TestGlances(unittest.TestCase):
     def test_012_irq(self):
         """IRQS"""
         method = "getIrqs()"
-        print('INFO: [TEST_012] Method: %s' % method)
+        print(f'INFO: [TEST_012] Method: {method}')
         req = json.loads(client.getIrq())
         self.assertIsInstance(req, list)
 
     def test_013_plugin_views(self):
         """Plugin views."""
         method = "getViewsCpu()"
-        print('INFO: [TEST_013] Method: %s' % method)
+        print(f'INFO: [TEST_013] Method: {method}')
 
         req = json.loads(client.getViewsCpu())
         self.assertIsInstance(req, dict)

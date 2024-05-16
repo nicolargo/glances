@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -19,7 +18,7 @@ class GlancesPasswordList(GlancesPassword):
     _section = "passwords"
 
     def __init__(self, config=None, args=None):
-        super(GlancesPasswordList, self).__init__()
+        super().__init__()
         # password_dict is a dict (JSON compliant)
         # {'host': 'password', ... }
         # Load the configuration file
@@ -32,14 +31,14 @@ class GlancesPasswordList(GlancesPassword):
         if config is None:
             logger.warning("No configuration file available. Cannot load password list.")
         elif not config.has_section(self._section):
-            logger.warning("No [%s] section in the configuration file. Cannot load password list." % self._section)
+            logger.warning(f"No [{self._section}] section in the configuration file. Cannot load password list.")
         else:
-            logger.info("Start reading the [%s] section in the configuration file" % self._section)
+            logger.info(f"Start reading the [{self._section}] section in the configuration file")
 
             password_dict = dict(config.items(self._section))
 
             # Password list loaded
-            logger.info("%s password(s) loaded from the configuration file" % len(password_dict))
+            logger.info(f"{len(password_dict)} password(s) loaded from the configuration file")
 
         return password_dict
 

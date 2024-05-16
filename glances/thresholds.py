@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -15,7 +14,7 @@ import sys
 from functools import total_ordering
 
 
-class GlancesThresholds(object):
+class GlancesThresholds:
     """Class to manage thresholds dict for all Glances plugins:
 
     key: Glances stats (example: cpu_user)
@@ -56,7 +55,7 @@ glances_thresholds = GlancesThresholds()
 
 
 @total_ordering
-class _GlancesThreshold(object):
+class _GlancesThreshold:
     """Father class for all other Thresholds"""
 
     def description(self):

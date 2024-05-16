@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -44,7 +43,7 @@ try:
     from pySMART import DeviceList
 except ImportError as e:
     import_error_tag = True
-    logger.warning("Missing Python Lib ({}), HDD Smart plugin is disabled".format(e))
+    logger.warning(f"Missing Python Lib ({e}), HDD Smart plugin is disabled")
 else:
     import_error_tag = False
 
@@ -89,7 +88,7 @@ def get_smart_data():
         devlist = DeviceList()
     except TypeError as e:
         # Catch error  (see #1806)
-        logger.debug('Smart plugin error - Can not grab device list ({})'.format(e))
+        logger.debug(f'Smart plugin error - Can not grab device list ({e})')
         global import_error_tag
         import_error_tag = True
         return stats
@@ -97,7 +96,7 @@ def get_smart_data():
     for dev in devlist.devices:
         stats.append(
             {
-                'DeviceName': '{} {}'.format(dev.name, dev.model),
+                'DeviceName': f'{dev.name} {dev.model}',
             }
         )
         for attribute in dev.attributes:
@@ -112,7 +111,7 @@ def get_smart_data():
                     assert num is not None
                 except Exception as e:
                     # we should never get here, but if we do, continue to next iteration and skip this attribute
-                    logger.debug('Smart plugin error - Skip the attribute {} ({})'.format(attribute, e))
+                    logger.debug(f'Smart plugin error - Skip the attribute {attribute} ({e})')
                     continue
 
                 stats[-1][num] = attrib_dict
@@ -129,7 +128,7 @@ class PluginModel(GlancesPluginModel):
             disable(args, "smart")
             logger.debug("Current user is not admin, HDD SMART plugin disabled.")
 
-        super(PluginModel, self).__init__(args=args, config=config)
+        super().__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -172,7 +171,7 @@ class PluginModel(GlancesPluginModel):
             name_max_width = max_width - 6
         else:
             # No max_width defined, return an emptu curse message
-            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Header

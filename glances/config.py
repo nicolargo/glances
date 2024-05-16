@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,11 +8,11 @@
 
 """Manage the configuration file."""
 
+import builtins
 import multiprocessing
 import os
 import re
 import sys
-from io import open
 
 from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS, ConfigParser, NoOptionError, NoSectionError, system_exec
 from glances.logger import logger
@@ -94,7 +93,7 @@ def default_config_dir():
     return [path]
 
 
-class Config(object):
+class Config:
     """This class is used to access/read config file, if it exists.
 
     :param config_dir: the path to search for config file
@@ -153,15 +152,15 @@ class Config(object):
     def read(self):
         """Read the config file, if it exists. Using defaults otherwise."""
         for config_file in self.config_file_paths():
-            logger.debug('Search glances.conf file in {}'.format(config_file))
+            logger.debug(f'Search glances.conf file in {config_file}')
             if os.path.exists(config_file):
                 try:
-                    with open(config_file, encoding='utf-8') as f:
+                    with builtins.open(config_file, encoding='utf-8') as f:
                         self.parser.read_file(f)
                         self.parser.read(f)
-                    logger.info("Read configuration file '{}'".format(config_file))
+                    logger.info(f"Read configuration file '{config_file}'")
                 except UnicodeDecodeError as err:
-                    logger.error("Can not read configuration file '{}': {}".format(config_file, err))
+                    logger.error(f"Can not read configuration file '{config_file}': {err}")
                     sys.exit(1)
                 # Save the loaded configuration file path (issue #374)
                 self._loaded_config_file = config_file

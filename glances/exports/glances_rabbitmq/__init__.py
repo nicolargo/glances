@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -26,7 +25,7 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the RabbitMQ export IF."""
-        super(Export, self).__init__(config=config, args=args)
+        super().__init__(config=config, args=args)
 
         # Mandatory configuration keys (additional to host and port)
         self.user = None
@@ -69,7 +68,7 @@ class Export(GlancesExport):
             connection = pika.BlockingConnection(parameters)
             return connection.channel()
         except Exception as e:
-            logger.critical("Connection to rabbitMQ server %s:%s failed. %s" % (self.host, self.port, e))
+            logger.critical(f"Connection to rabbitMQ server {self.host}:{self.port} failed. {e}")
             sys.exit(2)
 
     def export(self, name, columns, points):
@@ -84,4 +83,4 @@ class Export(GlancesExport):
         try:
             self.client.basic_publish(exchange='', routing_key=self.queue, body=data)
         except Exception as e:
-            logger.error("Can not export stats to RabbitMQ (%s)" % e)
+            logger.error(f"Can not export stats to RabbitMQ ({e})")

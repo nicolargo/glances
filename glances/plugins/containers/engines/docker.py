@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -24,7 +23,7 @@ try:
 except Exception as e:
     import_docker_error_tag = True
     # Display debug message if import KeyError
-    logger.warning("Error loading Docker deps Lib. Docker plugin is disabled ({})".format(e))
+    logger.warning(f"Error loading Docker deps Lib. Docker plugin is disabled ({e})")
 else:
     import_docker_error_tag = False
 
@@ -47,7 +46,7 @@ class DockerStatsFetcher:
         self._streamer = StatsStreamer(stats_iterable, initial_stream_value={})
 
     def _log_debug(self, msg, exception=None):
-        logger.debug("containers (Docker) ID: {} - {} ({}) ".format(self._container.id, msg, exception))
+        logger.debug(f"containers (Docker) ID: {self._container.id} - {msg} ({exception}) ")
         logger.debug(self._streamer.stats)
 
     def stop(self):
@@ -229,7 +228,7 @@ class DockerContainersExtension:
             # Do not use the timeout option (see issue #1878)
             self.client = docker.from_env()
         except Exception as e:
-            logger.error("{} plugin - Can't connect to Docker ({})".format(self.ext_name, e))
+            logger.error(f"{self.ext_name} plugin - Can't connect to Docker ({e})")
             self.client = None
 
     def update_version(self):
@@ -256,7 +255,7 @@ class DockerContainersExtension:
             # The Containers/all key of the configuration file should be set to True
             containers = self.client.containers.list(all=all_tag)
         except Exception as e:
-            logger.error("{} plugin - Can't get containers list ({})".format(self.ext_name, e))
+            logger.error(f"{self.ext_name} plugin - Can't get containers list ({e})")
             return version_stats, []
 
         # Start new thread for new container
@@ -264,14 +263,14 @@ class DockerContainersExtension:
             if container.id not in self.stats_fetchers:
                 # StatsFetcher did not exist in the internal dict
                 # Create it, add it to the internal dict
-                logger.debug("{} plugin - Create thread for container {}".format(self.ext_name, container.id[:12]))
+                logger.debug(f"{self.ext_name} plugin - Create thread for container {container.id[:12]}")
                 self.stats_fetchers[container.id] = DockerStatsFetcher(container)
 
         # Stop threads for non-existing containers
         absent_containers = set(iterkeys(self.stats_fetchers)) - set(c.id for c in containers)
         for container_id in absent_containers:
             # Stop the StatsFetcher
-            logger.debug("{} plugin - Stop thread for old container {}".format(self.ext_name, container_id[:12]))
+            logger.debug(f"{self.ext_name} plugin - Stop thread for old container {container_id[:12]}")
             self.stats_fetchers[container_id].stop()
             # Delete the StatsFetcher from the dict
             del self.stats_fetchers[container_id]

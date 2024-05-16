@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -20,7 +19,7 @@ class GlancesStatsServer(GlancesStats):
 
     def __init__(self, config=None, args=None):
         # Init the stats
-        super(GlancesStatsServer, self).__init__(config=config, args=args)
+        super().__init__(config=config, args=args)
 
         # Init the all_stats dict used by the server
         # all_stats is a dict of dicts filled by the server
@@ -34,7 +33,7 @@ class GlancesStatsServer(GlancesStats):
         input_stats = input_stats or {}
 
         # Force update of all the stats
-        super(GlancesStatsServer, self).update()
+        super().update()
 
         # Disable the extended processes stats because it cause an high CPU load
         self._plugins['processcount'].disable_extended()

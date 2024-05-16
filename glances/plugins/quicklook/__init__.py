@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -84,7 +83,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the quicklook plugin."""
-        super(PluginModel, self).__init__(
+        super().__init__(
             args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
         )
 
@@ -97,7 +96,7 @@ class PluginModel(GlancesPluginModel):
         # Define the stats list
         self.stats_list = self.get_conf_value('list', default=self.DEFAULT_STATS_LIST)
         if not set(self.stats_list).issubset(self.AVAILABLE_STATS_LIST):
-            logger.warning('Quicklook plugin: Invalid stats list: {}'.format(self.stats_list))
+            logger.warning(f'Quicklook plugin: Invalid stats list: {self.stats_list}')
             self.stats_list = self.AVAILABLE_STATS_LIST
 
     @GlancesPluginModel._check_decorator
@@ -152,7 +151,7 @@ class PluginModel(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(PluginModel, self).update_views()
+        super().update_views()
 
         # Alert for CPU, MEM and SWAP
         for key in self.stats_list:
@@ -176,7 +175,7 @@ class PluginModel(GlancesPluginModel):
 
         if not max_width:
             # No max_width defined, return an empty message
-            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Define the data: Bar (default behavior) or Sparkline
@@ -221,7 +220,7 @@ class PluginModel(GlancesPluginModel):
                 else:
                     # Bar only the last value
                     data[key].percent = self.stats[key]
-                msg = '{:4} '.format(key.upper())
+                msg = f'{key.upper():4} '
                 ret.extend(self._msg_create_line(msg, data[key], key))
                 ret.append(self.curse_new_line())
 
@@ -258,9 +257,9 @@ class PluginModel(GlancesPluginModel):
                 # Bar will only display the last value
                 data[key].percent = cpu['total']
             if cpu_id < 10:
-                msg = '{:3}{} '.format(key.upper(), cpu_id)
+                msg = f'{key.upper():3}{cpu_id} '
             else:
-                msg = '{:4} '.format(cpu_id)
+                msg = f'{cpu_id:4} '
             ret.extend(self._msg_create_line(msg, data[key], key))
             ret.append(self.curse_new_line())
 
@@ -282,7 +281,7 @@ class PluginModel(GlancesPluginModel):
                 sum_other.percent = sum([i['total'] for i in percpu_list[self.max_cpu_display :]]) / len(
                     percpu_list[self.max_cpu_display :]
                 )
-            msg = msg = '{:3}* '.format(key.upper())
+            msg = msg = f'{key.upper():3}* '
             ret.extend(self._msg_create_line(msg, sum_other, key))
             ret.append(self.curse_new_line())
 

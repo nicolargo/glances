@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -22,7 +21,7 @@ class GlancesCursesBrowser(_GlancesCurses):
 
     def __init__(self, args=None):
         """Init the father class."""
-        super(GlancesCursesBrowser, self).__init__(args=args)
+        super().__init__(args=args)
 
         _colors_list = {
             'UNKNOWN': self.no_color,
@@ -151,7 +150,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         self.pressedkey = self.get_key(self.term_window)
         refresh = False
         if self.pressedkey != -1:
-            logger.debug("Key pressed. Code=%s" % self.pressedkey)
+            logger.debug(f"Key pressed. Code={self.pressedkey}")
 
         # Actions...
         if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
@@ -163,23 +162,23 @@ class GlancesCursesBrowser(_GlancesCurses):
         elif self.pressedkey == 10:
             # 'ENTER' > Run Glances on the selected server
             self.active_server = self._current_page * self._page_max_lines + self.cursor_position
-            logger.debug("Server {}/{} selected".format(self.active_server, len(stats)))
+            logger.debug(f"Server {self.active_server}/{len(stats)} selected")
         elif self.pressedkey == curses.KEY_UP or self.pressedkey == 65:
             # 'UP' > Up in the server list
             self.cursor_up(stats)
-            logger.debug("Server {}/{} selected".format(self.cursor + 1, len(stats)))
+            logger.debug(f"Server {self.cursor + 1}/{len(stats)} selected")
         elif self.pressedkey == curses.KEY_DOWN or self.pressedkey == 66:
             # 'DOWN' > Down in the server list
             self.cursor_down(stats)
-            logger.debug("Server {}/{} selected".format(self.cursor + 1, len(stats)))
+            logger.debug(f"Server {self.cursor + 1}/{len(stats)} selected")
         elif self.pressedkey == curses.KEY_PPAGE:
             # 'Page UP' > Prev page in the server list
             self.cursor_pageup(stats)
-            logger.debug("PageUP: Server ({}/{}) pages.".format(self._current_page + 1, self._page_max))
+            logger.debug(f"PageUP: Server ({self._current_page + 1}/{self._page_max}) pages.")
         elif self.pressedkey == curses.KEY_NPAGE:
             # 'Page Down' > Next page in the server list
             self.cursor_pagedown(stats)
-            logger.debug("PageDown: Server {}/{} pages".format(self._current_page + 1, self._page_max))
+            logger.debug(f"PageDown: Server {self._current_page + 1}/{self._page_max} pages")
         elif self.pressedkey == ord('1'):
             self._stats_list = None
             refresh = True
@@ -211,7 +210,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         :param return_to_browser:
         """
         # Flush display
-        logger.debug('Servers list: {}'.format(stats))
+        logger.debug(f'Servers list: {stats}')
         self.flush(stats)
 
         # Wait
@@ -268,19 +267,19 @@ class GlancesCursesBrowser(_GlancesCurses):
         elif len(stats) == 1:
             msg = 'One Glances server available'
         else:
-            msg = '{} Glances servers available'.format(stats_len)
+            msg = f'{stats_len} Glances servers available'
         if self.args.disable_autodiscover:
             msg += ' (auto discover is disabled)'
         if screen_y > 1:
             self.term_window.addnstr(y, x, msg, screen_x - x, self.colors_list['TITLE'])
 
-            msg = '{}'.format(self._get_status_count(stats))
+            msg = f'{self._get_status_count(stats)}'
             self.term_window.addnstr(y + 1, x, msg, screen_x - x)
 
         if stats_len > stats_max and screen_y > 2:
-            msg = '{} servers displayed.({}/{}) {}'.format(
-                self.get_pagelines(stats), self._current_page + 1, self._page_max, self._get_status_count(stats)
-            )
+            page_lines = self.get_pagelines(stats)
+            status_count = self._get_status_count(stats)
+            msg = f'{page_lines} servers displayed.({self._current_page + 1}/{self._page_max}) {status_count}'
             self.term_window.addnstr(y + 1, x, msg, screen_x - x)
 
         if stats_len == 0:
@@ -335,7 +334,7 @@ class GlancesCursesBrowser(_GlancesCurses):
                 try:
                     server_stat[c[0]] = v[c[0]]
                 except KeyError as e:
-                    logger.debug("Cannot grab stats {} from server (KeyError: {})".format(c[0], e))
+                    logger.debug(f"Cannot grab stats {c[0]} from server (KeyError: {e})")
                     server_stat[c[0]] = '?'
                 # Display alias instead of name
                 try:

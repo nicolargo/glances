@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -155,9 +154,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
-            args=args, config=config, fields_description=fields_description, stats_init_value=[]
-        )
+        super().__init__(args=args, config=config, fields_description=fields_description, stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -341,11 +338,11 @@ class PluginModel(GlancesPluginModel):
         else:
             hours, minutes, seconds = seconds_to_hms(user_system_time)
             if hours > 99:
-                msg = '{:<7}h'.format(hours)
+                msg = f'{hours:<7}h'
             elif 0 < hours < 100:
-                msg = '{}h{}:{}'.format(hours, minutes, seconds)
+                msg = f'{hours}h{minutes}:{seconds}'
             else:
-                msg = '{}:{}'.format(minutes, seconds)
+                msg = f'{minutes}:{seconds}'
             msg = self.layout_stat['time'].format(msg)
             if hours > 0:
                 ret = self.curse_add_line(msg, decoration='CPU_TIME', optional=True)
@@ -502,7 +499,7 @@ class PluginModel(GlancesPluginModel):
                 ret.append(self.curse_add_line(msg, decoration=process_decoration, splittable=True))
         except (TypeError, UnicodeEncodeError) as e:
             # Avoid crash after running fine for several hours #1335
-            logger.debug("Can not decode command line '{}' ({})".format(cmdline, e))
+            logger.debug(f"Can not decode command line '{cmdline}' ({e})")
             ret.append(self.curse_add_line('', splittable=True))
 
         return ret
@@ -643,7 +640,7 @@ class PluginModel(GlancesPluginModel):
             #  value is a number which goes from 0 to 7.
             # The higher the value, the lower the I/O priority of the process.
             if hasattr(p['ionice'], 'value') and p['ionice'].value != 0:
-                msg += ' (value %s/7)' % str(p['ionice'].value)
+                msg += ' (value {}/7)'.format(str(p['ionice'].value))
             ret.append(self.curse_add_line(msg, splittable=True))
 
         # Second line is memory info
@@ -826,7 +823,7 @@ class PluginModel(GlancesPluginModel):
             msg = ' < {}'.format('current')
             ret.append(self.curse_add_line(msg, optional=True))
         else:
-            msg = ' < {}'.format(mmm)
+            msg = f' < {mmm}'
             ret.append(self.curse_add_line(msg, optional=True))
             msg = ' (\'M\' to reset)'
             ret.append(self.curse_add_line(msg, optional=True))

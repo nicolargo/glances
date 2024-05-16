@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -23,7 +22,7 @@ try:
     import netifaces
 except ImportError as e:
     import_error_tag = True
-    logger.warning("Missing Python Lib ({}), IP plugin is disabled".format(e))
+    logger.warning(f"Missing Python Lib ({e}), IP plugin is disabled")
 else:
     import_error_tag = False
 
@@ -66,7 +65,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, fields_description=fields_description)
+        super().__init__(args=args, config=config, fields_description=fields_description)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -104,7 +103,7 @@ class PluginModel(GlancesPluginModel):
             try:
                 default_gw = netifaces.gateways()['default'][netifaces.AF_INET]
             except (KeyError, AttributeError) as e:
-                logger.debug("Cannot grab default gateway IP address ({})".format(e))
+                logger.debug(f"Cannot grab default gateway IP address ({e})")
                 return self.get_init_value()
             else:
                 stats['gateway'] = default_gw[0]
@@ -113,7 +112,7 @@ class PluginModel(GlancesPluginModel):
                 address = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['addr']
                 mask = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['netmask']
             except (KeyError, AttributeError) as e:
-                logger.debug("Cannot grab private IP address ({})".format(e))
+                logger.debug(f"Cannot grab private IP address ({e})")
                 return self.get_init_value()
             else:
                 stats['address'] = address
@@ -129,7 +128,7 @@ class PluginModel(GlancesPluginModel):
                     self.public_info = PublicIpInfo(self.public_api, self.public_username, self.public_password).get()
                     self.public_address = self.public_info['ip']
             except (KeyError, AttributeError, TypeError) as e:
-                logger.debug("Cannot grab public IP information ({})".format(e))
+                logger.debug(f"Cannot grab public IP information ({e})")
             else:
                 stats['public_address'] = (
                     self.public_address if not self.args.hide_public_info else self.__hide_ip(self.public_address)
@@ -211,7 +210,7 @@ class PluginModel(GlancesPluginModel):
         return sum(bin(int(x)).count('1') for x in ip.split('.'))
 
 
-class PublicIpInfo(object):
+class PublicIpInfo:
     """Get public IP information from online service."""
 
     def __init__(self, url, username, password, timeout=2):
@@ -242,11 +241,11 @@ class PublicIpInfo(object):
         try:
             response = urlopen_auth(url, username, password).read()
         except Exception as e:
-            logger.debug("IP plugin - Cannot get public IP information from {} ({})".format(url, e))
+            logger.debug(f"IP plugin - Cannot get public IP information from {url} ({e})")
             queue_target.put(None)
         else:
             try:
                 queue_target.put(loads(response))
             except (ValueError, KeyError) as e:
-                logger.debug("IP plugin - Cannot load public IP information from {} ({})".format(url, e))
+                logger.debug(f"IP plugin - Cannot load public IP information from {url} ({e})")
                 queue_target.put(None)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -26,7 +25,7 @@ try:
 except ImportError as e:
     import_error_tag = True
     # Display debug message if import error
-    logger.warning("Missing Python Lib ({}), Cloud plugin is disabled".format(e))
+    logger.warning(f"Missing Python Lib ({e}), Cloud plugin is disabled")
 else:
     import_error_tag = False
 
@@ -44,7 +43,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config)
+        super().__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -65,7 +64,7 @@ class PluginModel(GlancesPluginModel):
         self.OPENSTACK.stop()
         self.OPENSTACKEC2.stop()
         # Call the father class
-        super(PluginModel, self).exit()
+        super().exit()
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
@@ -145,7 +144,7 @@ class ThreadOpenStack(threading.Thread):
     def __init__(self):
         """Init the class."""
         logger.debug("cloud plugin - Create thread for OpenStack metadata")
-        super(ThreadOpenStack, self).__init__()
+        super().__init__()
         # Event needed to stop properly the thread
         self._stopper = threading.Event()
         # The class return the stats as a dict
@@ -161,12 +160,12 @@ class ThreadOpenStack(threading.Thread):
             return False
 
         for k, v in iteritems(self.OPENSTACK_API_METADATA):
-            r_url = '{}/{}'.format(self.OPENSTACK_API_URL, v)
+            r_url = f'{self.OPENSTACK_API_URL}/{v}'
             try:
                 # Local request, a timeout of 3 seconds is OK
                 r = requests.get(r_url, timeout=3)
             except Exception as e:
-                logger.debug('cloud plugin - Cannot connect to the OpenStack metadata API {}: {}'.format(r_url, e))
+                logger.debug(f'cloud plugin - Cannot connect to the OpenStack metadata API {r_url}: {e}')
                 break
             else:
                 if r.ok:

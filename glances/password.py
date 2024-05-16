@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,19 +8,19 @@
 
 """Manage password."""
 
+import builtins
 import getpass
 import hashlib
 import os
 import sys
 import uuid
-from io import open
 
 from glances.config import user_config_dir
 from glances.globals import b, safe_makedirs, weak_lru_cache
 from glances.logger import logger
 
 
-class GlancesPassword(object):
+class GlancesPassword:
     """This class contains all the methods relating to password."""
 
     def __init__(self, username='glances', config=None):
@@ -77,7 +76,7 @@ class GlancesPassword(object):
         """
         if os.path.exists(self.password_file) and not clear:
             # If the password file exist then use it
-            logger.info("Read password from file {}".format(self.password_file))
+            logger.info(f"Read password from file {self.password_file}")
             password = self.load_password()
         else:
             # password_hash is the plain SHA-pbkdf2_hmac password
@@ -112,11 +111,11 @@ class GlancesPassword(object):
         safe_makedirs(self.password_dir)
 
         # Create/overwrite the password file
-        with open(self.password_file, 'wb') as file_pwd:
+        with builtins.open(self.password_file, 'wb') as file_pwd:
             file_pwd.write(b(hashed_password))
 
     def load_password(self):
         """Load the hashed password from the Glances folder."""
         # Read the password file, if it exists
-        with open(self.password_file, 'r') as file_pwd:
+        with builtins.open(self.password_file) as file_pwd:
             return file_pwd.read()

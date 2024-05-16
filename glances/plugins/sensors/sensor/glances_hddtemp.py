@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -25,7 +24,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super().__init__(args=args, config=config, stats_init_value=[])
 
         # Init the sensor class
         hddtemp_host = self.get_conf_value("host", default=["127.0.0.1"])[0]
@@ -58,7 +57,7 @@ class PluginModel(GlancesPluginModel):
         return self.stats
 
 
-class GlancesGrabHDDTemp(object):
+class GlancesGrabHDDTemp:
     """Get hddtemp stats using a socket connection."""
 
     def __init__(self, host='127.0.0.1', port=7634, args=None):
@@ -133,7 +132,7 @@ class GlancesGrabHDDTemp(object):
                     break
                 data += received
         except Exception as e:
-            logger.debug("Cannot connect to an HDDtemp server ({}:{} => {})".format(self.host, self.port, e))
+            logger.debug(f"Cannot connect to an HDDtemp server ({self.host}:{self.port} => {e})")
             logger.debug("Disable the HDDtemp module. Use the --disable-hddtemp to hide the previous message.")
             if self.args is not None:
                 self.args.disable_hddtemp = True
@@ -141,7 +140,7 @@ class GlancesGrabHDDTemp(object):
         finally:
             sck.close()
             if data != "":
-                logger.debug("Received data from the HDDtemp server: {}".format(data))
+                logger.debug(f"Received data from the HDDtemp server: {data}")
 
         return data
 

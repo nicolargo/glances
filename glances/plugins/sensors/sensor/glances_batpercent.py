@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -31,7 +30,7 @@ psutil_tag = True
 try:
     psutil.sensors_battery()
 except Exception as e:
-    logger.error("Cannot grab battery status {}.".format(e))
+    logger.error(f"Cannot grab battery status {e}.")
     psutil_tag = False
 
 
@@ -43,13 +42,13 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super().__init__(args=args, config=config, stats_init_value=[])
 
         # Init the sensor class
         try:
             self.glances_grab_bat = GlancesGrabBat()
         except Exception as e:
-            logger.error("Can not init battery class ({})".format(e))
+            logger.error(f"Can not init battery class ({e})")
             global batinfo_tag
             global psutil_tag
             batinfo_tag = False
@@ -82,7 +81,7 @@ class PluginModel(GlancesPluginModel):
         return self.stats
 
 
-class GlancesGrabBat(object):
+class GlancesGrabBat:
     """Get batteries stats using the batinfo library."""
 
     def __init__(self):

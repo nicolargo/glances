@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -34,7 +33,7 @@ sort_for_human = {
 }
 
 
-class GlancesProcesses(object):
+class GlancesProcesses:
     """Get processed stats using the psutil library."""
 
     def __init__(self, cache_timeout=60):
@@ -83,7 +82,7 @@ class GlancesProcesses(object):
             p = psutil.Process()
             p.io_counters()
         except Exception as e:
-            logger.warning('PsUtil can not grab processes io_counters ({})'.format(e))
+            logger.warning(f'PsUtil can not grab processes io_counters ({e})')
             self.disable_io_counters = True
         else:
             logger.debug('PsUtil can grab processes io_counters')
@@ -94,7 +93,7 @@ class GlancesProcesses(object):
             p = psutil.Process()
             p.gids()
         except Exception as e:
-            logger.warning('PsUtil can not grab processes gids ({})'.format(e))
+            logger.warning(f'PsUtil can not grab processes gids ({e})')
             self.disable_gids = True
         else:
             logger.debug('PsUtil can grab processes gids')
@@ -183,7 +182,7 @@ class GlancesProcesses(object):
             try:
                 with open('/proc/sys/kernel/pid_max', 'rb') as f:
                     return int(f.read())
-            except (OSError, IOError):
+            except OSError:
                 return None
         else:
             return None
@@ -310,7 +309,7 @@ class GlancesProcesses(object):
             # Get number of TCP and UDP network connections for the selected process
             ret['tcp'], ret['udp'] = self.__get_extended_connections(selected_process)
         except (psutil.NoSuchProcess, ValueError, AttributeError) as e:
-            logger.error('Can not grab extended stats ({})'.format(e))
+            logger.error(f'Can not grab extended stats ({e})')
             self.extended_process = None
             ret['extended_stats'] = False
         else:
@@ -595,11 +594,9 @@ class GlancesProcesses(object):
         p = psutil.Process(pid)
         try:
             p.nice(p.nice() - 1)
-            logger.info('Set nice level of process {} to {} (higher the priority)'.format(pid, p.nice()))
+            logger.info(f'Set nice level of process {pid} to {p.nice()} (higher the priority)')
         except psutil.AccessDenied:
-            logger.warning(
-                'Can not decrease (higher the priority) the nice level of process {} (access denied)'.format(pid)
-            )
+            logger.warning(f'Can not decrease (higher the priority) the nice level of process {pid} (access denied)')
 
     def nice_increase(self, pid):
         """Increase nice level
@@ -608,17 +605,15 @@ class GlancesProcesses(object):
         p = psutil.Process(pid)
         try:
             p.nice(p.nice() + 1)
-            logger.info('Set nice level of process {} to {} (lower the priority)'.format(pid, p.nice()))
+            logger.info(f'Set nice level of process {pid} to {p.nice()} (lower the priority)')
         except psutil.AccessDenied:
-            logger.warning(
-                'Can not increase (lower the priority) the nice level of process {} (access denied)'.format(pid)
-            )
+            logger.warning(f'Can not increase (lower the priority) the nice level of process {pid} (access denied)')
 
     def kill(self, pid, timeout=3):
         """Kill process with pid"""
         assert pid != os.getpid(), "Glances can kill itself..."
         p = psutil.Process(pid)
-        logger.debug('Send kill signal to process: {}'.format(p))
+        logger.debug(f'Send kill signal to process: {p}')
         p.kill()
         return p.wait(timeout)
 

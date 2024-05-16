@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -27,7 +26,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config)
+        super().__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -83,4 +82,4 @@ class PluginModel(GlancesPluginModel):
         if not self.stats or self.is_disabled():
             return ret
 
-        return [self.curse_add_line('Uptime: {}'.format(self.stats))]
+        return [self.curse_add_line(f'Uptime: {self.stats}')]

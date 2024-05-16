@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -12,7 +11,7 @@
 from datetime import datetime
 
 
-class GlancesAttribute(object):
+class GlancesAttribute:
     def __init__(self, name, description='', history_max_size=None):
         """Init the attribute
 
