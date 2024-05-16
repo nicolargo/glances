@@ -1,17 +1,17 @@
-py-spy
-gprof2dot
-black
-pyright
-requirements-parser
-flake8
-autopep8
 autoflake
-ruff
+autopep8
+black
 codespell
-memory-profiler
+flake8
+fonttools>=4.43.0 # not directly required, pinned by Snyk to avoid a vulnerability
+gprof2dot
 matplotlib
-semgrep
-setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
+memory-profiler
 numpy>=1.22.2 # not directly required, pinned by Snyk to avoid a vulnerability
 pillow>=10.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
-fonttools>=4.43.0 # not directly required, pinned by Snyk to avoid a vulnerability
+py-spy
+pyright
+requirements-parser
+ruff
+semgrep
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
