@@ -12,10 +12,10 @@
 import sys
 from platform import node
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-
 from influxdb_client import InfluxDBClient, WriteOptions
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 FIELD_TO_TAG = ['name', 'cmdline', 'type']
 

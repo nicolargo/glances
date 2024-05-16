@@ -11,10 +11,10 @@
 
 from numbers import Number
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-
 from statsd import StatsClient
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 
 class Export(GlancesExport):

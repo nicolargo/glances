@@ -9,8 +9,8 @@
 
 """The timer manager."""
 
-from time import time
 from datetime import datetime
+from time import time
 
 # Global list to manage the elapsed time
 last_update_times = {}

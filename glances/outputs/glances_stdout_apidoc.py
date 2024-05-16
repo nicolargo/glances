@@ -9,14 +9,13 @@
 
 """Fields description interface class."""
 
-from pprint import pformat
 import json
 import time
+from pprint import pformat
 
 from glances import __apiversion__
-from glances.logger import logger
 from glances.globals import iteritems
-
+from glances.logger import logger
 
 API_URL = "http://localhost:61208/api/{api_version}".format(api_version=__apiversion__)
 

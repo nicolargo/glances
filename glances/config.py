@@ -9,13 +9,13 @@
 
 """Manage the configuration file."""
 
-import os
-import sys
 import multiprocessing
-from io import open
+import os
 import re
+import sys
+from io import open
 
-from glances.globals import ConfigParser, NoOptionError, NoSectionError, system_exec, BSD, LINUX, MACOS, SUNOS, WINDOWS
+from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS, ConfigParser, NoOptionError, NoSectionError, system_exec
 from glances.logger import logger
 
 

@@ -11,8 +11,8 @@
 
 import collections
 
-from glances.stats import GlancesStats
 from glances.logger import logger
+from glances.stats import GlancesStats
 
 
 class GlancesStatsServer(GlancesStats):

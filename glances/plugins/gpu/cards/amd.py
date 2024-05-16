@@ -35,8 +35,8 @@ See: https://wiki.archlinux.org/title/AMDGPU#Manually
 #                 └── 0
 #                     └── amdgpu_pm_info
 
-import re
 import os
+import re
 
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 CARD_REGEX: str = r"^card\d$"

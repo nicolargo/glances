@@ -11,10 +11,9 @@
 
 from __future__ import unicode_literals
 
-
-from glances.timer import Timer
-from glances.globals import nativestr, folder_size
+from glances.globals import folder_size, nativestr
 from glances.logger import logger
+from glances.timer import Timer
 
 
 class FolderList(object):

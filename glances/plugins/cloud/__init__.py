@@ -17,8 +17,8 @@ Supported Cloud API:
 import threading
 
 from glances.globals import iteritems, to_ascii
-from glances.plugins.plugin.model import GlancesPluginModel
 from glances.logger import logger
+from glances.plugins.plugin.model import GlancesPluginModel
 
 # Import plugin specific dependency
 try:

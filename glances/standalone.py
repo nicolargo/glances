@@ -12,18 +12,17 @@
 import sys
 import time
 
-from glances.logger import logger
-
 from glances.globals import WINDOWS
-from glances.processes import glances_processes
-from glances.stats import GlancesStats
+from glances.logger import logger
+from glances.outdated import Outdated
 from glances.outputs.glances_curses import GlancesCursesStandalone
 from glances.outputs.glances_stdout import GlancesStdout
-from glances.outputs.glances_stdout_json import GlancesStdoutJson
+from glances.outputs.glances_stdout_apidoc import GlancesStdoutApiDoc
 from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
 from glances.outputs.glances_stdout_issue import GlancesStdoutIssue
-from glances.outputs.glances_stdout_apidoc import GlancesStdoutApiDoc
-from glances.outdated import Outdated
+from glances.outputs.glances_stdout_json import GlancesStdoutJson
+from glances.processes import glances_processes
+from glances.stats import GlancesStats
 from glances.timer import Counter
 
 

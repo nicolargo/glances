@@ -9,8 +9,8 @@
 
 """Manage the Glances ports list (Ports plugin)."""
 
-from glances.logger import logger
 from glances.globals import BSD
+from glances.logger import logger
 
 # XXX *BSDs: Segmentation fault (core dumped)
 # -- https://bitbucket.org/al45tair/netifaces/issues/15

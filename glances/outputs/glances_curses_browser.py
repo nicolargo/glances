@@ -9,11 +9,11 @@
 
 """Curses browser interface class ."""
 
-import math
 import curses
-from glances.outputs.glances_curses import _GlancesCurses
+import math
 
 from glances.logger import logger
+from glances.outputs.glances_curses import _GlancesCurses
 from glances.timer import Timer
 
 

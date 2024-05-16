@@ -25,11 +25,11 @@ one_line=false
 command=foo status
 """
 
-from subprocess import check_output, STDOUT, CalledProcessError
+from subprocess import STDOUT, CalledProcessError, check_output
 
-from glances.globals import u, to_ascii
-from glances.logger import logger
 from glances.amps.amp import GlancesAmp
+from glances.globals import to_ascii, u
+from glances.logger import logger
 
 
 class Amp(GlancesAmp):

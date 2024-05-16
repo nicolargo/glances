@@ -13,11 +13,11 @@ from __future__ import unicode_literals
 
 import operator
 
-from glances.globals import u, nativestr, PermissionError
+import psutil
+
+from glances.globals import PermissionError, nativestr, u
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
-
-import psutil
 
 # Fields description
 # description: human readable description

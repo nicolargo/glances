@@ -16,8 +16,8 @@ import sys
 import uuid
 from io import open
 
-from glances.globals import b, safe_makedirs, weak_lru_cache
 from glances.config import user_config_dir
+from glances.globals import b, safe_makedirs, weak_lru_cache
 from glances.logger import logger
 
 

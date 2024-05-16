@@ -10,12 +10,12 @@
 """Manage Glances events list (previously Glances logs in Glances < 3.1)."""
 
 import time
-from datetime import datetime
 from dataclasses import asdict
+from datetime import datetime
 
+from glances.event import GlancesEvent
 from glances.processes import glances_processes
 from glances.thresholds import glances_thresholds
-from glances.event import GlancesEvent
 
 # Static decision tree for the global alert message
 # - msg: Message to be displayed (result of the decision tree)

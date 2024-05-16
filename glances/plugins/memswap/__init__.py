@@ -9,11 +9,11 @@
 
 """Swap memory plugin."""
 
-from glances.globals import iterkeys
-from glances.timer import getTimeSinceLastUpdate
-from glances.plugins.plugin.model import GlancesPluginModel
-
 import psutil
+
+from glances.globals import iterkeys
+from glances.plugins.plugin.model import GlancesPluginModel
+from glances.timer import getTimeSinceLastUpdate
 
 # Fields description
 fields_description = {

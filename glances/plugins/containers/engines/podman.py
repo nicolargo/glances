@@ -10,7 +10,7 @@
 
 from datetime import datetime
 
-from glances.globals import iterkeys, itervalues, nativestr, pretty_date, string_value_to_float, replace_special_chars
+from glances.globals import iterkeys, itervalues, nativestr, pretty_date, replace_special_chars, string_value_to_float
 from glances.logger import logger
 from glances.plugins.containers.stats_streamer import StatsStreamer
 

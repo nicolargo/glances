@@ -15,11 +15,11 @@ import tempfile
 from logging import DEBUG
 from warnings import simplefilter
 
-from glances import __version__, psutil_version, __apiversion__
-from glances.globals import WINDOWS, disable, enable
+from glances import __apiversion__, __version__, psutil_version
 from glances.config import Config
+from glances.globals import WINDOWS, disable, enable
+from glances.logger import LOG_FILENAME, logger
 from glances.processes import sort_processes_key_list
-from glances.logger import logger, LOG_FILENAME
 
 
 class GlancesMain(object):

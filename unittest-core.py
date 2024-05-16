@@ -10,31 +10,33 @@
 
 """Glances unitary tests suite."""
 
+import json
+import sys
 import time
 import unittest
-import sys
-import json
 
 # Check Python version
 if sys.version_info < (3, 8):
     print('Glances requires at least Python 3.8 to run.')
     sys.exit(1)
 
-from glances.main import GlancesMain
-from glances.stats import GlancesStats
 from glances import __version__
-from glances.globals import WINDOWS, LINUX, subsample, string_value_to_float
+from glances.events_list import GlancesEventsList
+from glances.filter import GlancesFilter, GlancesFilterList
+from glances.globals import LINUX, WINDOWS, string_value_to_float, subsample
+from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
-from glances.thresholds import GlancesThresholdOk
-from glances.thresholds import GlancesThresholdCareful
-from glances.thresholds import GlancesThresholdWarning
-from glances.thresholds import GlancesThresholdCritical
-from glances.thresholds import GlancesThresholds
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.programs import processes_to_programs
 from glances.secure import secure_popen
-from glances.events_list import GlancesEventsList
-from glances.filter import GlancesFilterList, GlancesFilter
+from glances.stats import GlancesStats
+from glances.thresholds import (
+    GlancesThresholdCareful,
+    GlancesThresholdCritical,
+    GlancesThresholdOk,
+    GlancesThresholds,
+    GlancesThresholdWarning,
+)
 
 # Global variables
 # =================

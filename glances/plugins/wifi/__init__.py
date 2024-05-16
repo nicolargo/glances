@@ -19,9 +19,9 @@ wlp2s0: 0000   51.  -59.  -256        0      0      0      0   5881        0
 
 import operator
 
-from glances.globals import nativestr, file_exists
-from glances.plugins.plugin.model import GlancesPluginModel
+from glances.globals import file_exists, nativestr
 from glances.logger import logger
+from glances.plugins.plugin.model import GlancesPluginModel
 
 # Backup solution is to use the /proc/net/wireless file
 # but it only give signal information about the current hotspot

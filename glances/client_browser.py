@@ -9,17 +9,18 @@
 
 """Manage the Glances client browser (list of Glances server)."""
 
-import ujson
 import socket
 import threading
 
-from glances.globals import Fault, ProtocolError, ServerProxy
+import ujson
+
+from glances.autodiscover import GlancesAutoDiscoverServer
 from glances.client import GlancesClient, GlancesClientTransport
-from glances.logger import logger, LOG_FILENAME
+from glances.globals import Fault, ProtocolError, ServerProxy
+from glances.logger import LOG_FILENAME, logger
+from glances.outputs.glances_curses_browser import GlancesCursesBrowser
 from glances.password_list import GlancesPasswordList as GlancesPassword
 from glances.static_list import GlancesStaticServer
-from glances.autodiscover import GlancesAutoDiscoverServer
-from glances.outputs.glances_curses_browser import GlancesCursesBrowser
 
 
 class GlancesClientBrowser(object):

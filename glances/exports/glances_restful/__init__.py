@@ -9,11 +9,11 @@
 
 """RESTful interface class."""
 
+from requests import post
+
+from glances.exports.export import GlancesExport
 from glances.globals import listkeys
 from glances.logger import logger
-from glances.exports.export import GlancesExport
-
-from requests import post
 
 
 class Export(GlancesExport):

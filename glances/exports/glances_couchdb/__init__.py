@@ -20,10 +20,10 @@
 import sys
 from datetime import datetime
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-
 import pycouchdb
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 
 class Export(GlancesExport):

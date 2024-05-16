@@ -34,11 +34,11 @@ one_line=true
 service_cmd=/usr/bin/service --status-all
 """
 
-from subprocess import check_output, STDOUT
+from subprocess import STDOUT, check_output
 
-from glances.logger import logger
-from glances.globals import iteritems
 from glances.amps.amp import GlancesAmp
+from glances.globals import iteritems
+from glances.logger import logger
 
 
 class Amp(GlancesAmp):

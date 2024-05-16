@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import re
 import sys
+
 from glances import main
 
 if __name__ == '__main__':

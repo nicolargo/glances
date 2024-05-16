@@ -10,12 +10,12 @@
 """MongoDB interface class."""
 
 import sys
-
-from glances.logger import logger
-from glances.exports.export import GlancesExport
+from urllib.parse import quote_plus
 
 import pymongo
-from urllib.parse import quote_plus
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 
 class Export(GlancesExport):

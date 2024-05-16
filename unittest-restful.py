@@ -10,18 +10,18 @@
 
 """Glances unitary tests suite for the RESTful API."""
 
+import numbers
 import os
 import shlex
 import subprocess
 import time
-import numbers
 import unittest
 
-from glances.outputs.glances_restful_api import GlancesRestfulApi
+import requests
+
 from glances import __version__
 from glances.globals import text_type
-
-import requests
+from glances.outputs.glances_restful_api import GlancesRestfulApi
 
 SERVER_PORT = 61234
 API_VERSION = GlancesRestfulApi.API_VERSION

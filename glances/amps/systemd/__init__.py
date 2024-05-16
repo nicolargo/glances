@@ -35,11 +35,11 @@ one_line=true
 systemctl_cmd=/usr/bin/systemctl --plain
 """
 
-from subprocess import check_output, CalledProcessError
+from subprocess import CalledProcessError, check_output
 
-from glances.logger import logger
-from glances.globals import iteritems, to_ascii
 from glances.amps.amp import GlancesAmp
+from glances.globals import iteritems, to_ascii
+from glances.logger import logger
 
 
 class Amp(GlancesAmp):

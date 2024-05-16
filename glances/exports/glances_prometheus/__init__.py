@@ -12,11 +12,11 @@
 import sys
 from numbers import Number
 
-from glances.logger import logger
+from prometheus_client import Gauge, start_http_server
+
 from glances.exports.export import GlancesExport
 from glances.globals import iteritems, listkeys
-
-from prometheus_client import start_http_server, Gauge
+from glances.logger import logger
 
 
 class Export(GlancesExport):

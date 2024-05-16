@@ -10,12 +10,13 @@
 """Load plugin."""
 
 import os
+
 import psutil
 
 from glances.globals import iteritems
+from glances.logger import logger
 from glances.plugins.core import PluginModel as CorePluginModel
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.logger import logger
 
 # Fields description
 fields_description = {

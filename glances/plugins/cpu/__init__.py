@@ -9,12 +9,12 @@
 
 """CPU plugin."""
 
-from glances.globals import LINUX, WINDOWS, SUNOS, iterkeys
+import psutil
+
 from glances.cpu_percent import cpu_percent
+from glances.globals import LINUX, SUNOS, WINDOWS, iterkeys
 from glances.plugins.core import PluginModel as CorePluginModel
 from glances.plugins.plugin.model import GlancesPluginModel
-
-import psutil
 
 # Fields description
 # description: human readable description

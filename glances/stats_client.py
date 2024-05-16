@@ -11,9 +11,9 @@
 
 import sys
 
-from glances.stats import GlancesStats
 from glances.globals import sys_path
 from glances.logger import logger
+from glances.stats import GlancesStats
 
 
 class GlancesStatsClient(GlancesStats):

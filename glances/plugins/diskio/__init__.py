@@ -11,11 +11,11 @@
 
 from __future__ import unicode_literals
 
-from glances.logger import logger
-from glances.globals import nativestr
-from glances.plugins.plugin.model import GlancesPluginModel
-
 import psutil
+
+from glances.globals import nativestr
+from glances.logger import logger
+from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
 # description: human readable description

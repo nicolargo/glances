@@ -9,8 +9,9 @@
 
 """Now (current date) plugin."""
 
-from time import tzname, strftime
 import datetime
+from time import strftime, tzname
+
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description

@@ -6,7 +6,7 @@ import re
 import sys
 from io import open
 
-from setuptools import setup, Command
+from setuptools import Command, setup
 
 # Predication warning
 # Glances version 4 will only be compatible with Python 3.7 and above

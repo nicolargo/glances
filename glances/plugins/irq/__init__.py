@@ -9,14 +9,13 @@
 
 """IRQ plugin."""
 
-import os
 import operator
+import os
 
-from glances.logger import logger
 from glances.globals import LINUX
-from glances.timer import getTimeSinceLastUpdate
+from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
-
+from glances.timer import getTimeSinceLastUpdate
 
 # Fields description
 # description: human readable description

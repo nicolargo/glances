@@ -10,8 +10,8 @@
 """Manage on alert actions."""
 
 from glances.logger import logger
-from glances.timer import Timer
 from glances.secure import secure_popen
+from glances.timer import Timer
 
 try:
     import chevron

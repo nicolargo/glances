@@ -2,9 +2,9 @@
 
 import sys
 
-from glances.globals import listkeys, json_dumps
-from glances.logger import logger
 from glances.exports.export import GlancesExport
+from glances.globals import json_dumps, listkeys
+from glances.logger import logger
 
 
 class Export(GlancesExport):

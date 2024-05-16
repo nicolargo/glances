@@ -18,8 +18,8 @@ from glances.plugins.containers.stats_streamer import StatsStreamer
 # Docker-py library (optional and Linux-only)
 # https://github.com/docker/docker-py
 try:
-    import requests
     import docker
+    import requests
     from dateutil import parser, tz
 except Exception as e:
     import_docker_error_tag = True

@@ -12,8 +12,8 @@
 import os
 import sys
 import tempfile
-from io import open
 import webbrowser
+from io import open
 from urllib.parse import urljoin
 
 try:
@@ -23,20 +23,20 @@ except ImportError:
     # To be removed when Python 3.8 support will be dropped
     from typing_extensions import Annotated
 
-from glances import __version__, __apiversion__
+from glances import __apiversion__, __version__
+from glances.logger import logger
 from glances.password import GlancesPassword
 from glances.timer import Timer
-from glances.logger import logger
 
 # FastAPI import
 try:
-    from fastapi import FastAPI, Depends, HTTPException, status, APIRouter, Request
-    from fastapi.security import HTTPBasic, HTTPBasicCredentials
+    from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.middleware.gzip import GZipMiddleware
     from fastapi.responses import HTMLResponse, ORJSONResponse
-    from fastapi.templating import Jinja2Templates
+    from fastapi.security import HTTPBasic, HTTPBasicCredentials
     from fastapi.staticfiles import StaticFiles
+    from fastapi.templating import Jinja2Templates
 except ImportError:
     logger.critical('FastAPI import error. Glances cannot start in web server mode.')
     sys.exit(2)

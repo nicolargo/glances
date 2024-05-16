@@ -13,13 +13,13 @@ import socket
 import string
 import sys
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-from glances.globals import json_dumps
-
 # Import paho for MQTT
 import certifi
 import paho.mqtt.client as paho
+
+from glances.exports.export import GlancesExport
+from glances.globals import json_dumps
+from glances.logger import logger
 
 
 class Export(GlancesExport):

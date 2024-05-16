@@ -10,16 +10,16 @@
 """Issue interface class."""
 
 import os
-import sys
 import platform
-import time
 import pprint
-
-from glances.timer import Counter
-from glances import __version__, psutil_version
+import sys
+import time
 
 import psutil
+
 import glances
+from glances import __version__, psutil_version
+from glances.timer import Counter
 
 TERMINAL_WIDTH = 79
 

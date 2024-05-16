@@ -11,9 +11,9 @@
 
 from datetime import datetime, timedelta
 
-from glances.plugins.plugin.model import GlancesPluginModel
-
 import psutil
+
+from glances.plugins.plugin.model import GlancesPluginModel
 
 # SNMP OID
 snmp_oid = {'_uptime': '1.3.6.1.2.1.1.3.0'}

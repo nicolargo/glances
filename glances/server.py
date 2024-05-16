@@ -9,14 +9,13 @@
 
 """Manage the Glances server."""
 
-from glances.globals import json_dumps
 import socket
 import sys
 from base64 import b64decode
 
 from glances import __version__
-from glances.globals import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 from glances.autodiscover import GlancesAutoDiscoverClient
+from glances.globals import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer, json_dumps
 from glances.logger import logger
 from glances.stats_server import GlancesStatsServer
 from glances.timer import Timer

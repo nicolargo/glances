@@ -9,8 +9,8 @@
 
 """Process count plugin."""
 
-from glances.processes import glances_processes, sort_for_human
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.processes import glances_processes, sort_for_human
 
 # Fields description
 # description: human readable description

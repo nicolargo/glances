@@ -12,8 +12,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
+import sys
 from datetime import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -26,7 +26,6 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # WARNING: Do not move this import before the sys.path.insert() call.
 from glances import __version__
-
 
 # -- General configuration ------------------------------------------------
 

@@ -11,13 +11,12 @@
 
 import sys
 
-from glances.globals import b
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-from glances.globals import json_dumps
-
 import zmq
 from zmq.utils.strtypes import asbytes
+
+from glances.exports.export import GlancesExport
+from glances.globals import b, json_dumps
+from glances.logger import logger
 
 
 class Export(GlancesExport):
