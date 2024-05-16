@@ -13,6 +13,9 @@ quote-style = "preserve"
 [tool.ruff.lint]
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
 select = [
+#    "A",
+#    "B",
+#    "S",
     "C90", # mccabe
     "E", # pycodestyle
     "F", # Pyflakes
@@ -22,6 +25,7 @@ select = [
     "UP", # pyupgrde
     "C4", # flake8-comprehensions
     "RET", # flake8-return
+#    "PL",
 #    "FBT", # flake8-boolean-trap
 #    "RUF", # Ruff-specific rules
 #    "PERF", # Perflint
