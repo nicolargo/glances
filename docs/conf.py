@@ -125,8 +125,7 @@ html_theme = 'sphinx_rtd_theme'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-}
+html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -166,14 +165,7 @@ html_static_path = ['_static']
 # html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = {
-    '**': [
-        'about.html',
-        'navigation.html',
-        'links.html',
-        'searchbox.html'
-    ]
-}
+html_sidebars = {'**': ['about.html', 'navigation.html', 'links.html', 'searchbox.html']}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -227,13 +219,10 @@ htmlhelp_basename = 'Glancesdoc'
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     # 'preamble': '',
-
     # Latex figure (float) alignment
     # 'figure_align': 'htbp',
 }
@@ -242,8 +231,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Glances.tex', 'Glances Documentation',
-     'Nicolas Hennion', 'manual'),
+    (master_doc, 'Glances.tex', 'Glances Documentation', 'Nicolas Hennion', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -271,10 +259,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ('glances', 'glances', 'An eye on your system',
-     '', 1)
-]
+man_pages = [('glances', 'glances', 'An eye on your system', '', 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -286,9 +271,15 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'Glances', 'Glances Documentation',
-     author, 'Glances', 'One line description of project.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        'Glances',
+        'Glances Documentation',
+        author,
+        'Glances',
+        'One line description of project.',
+        'Miscellaneous',
+    ),
 ]
 
 # Documents to append as an appendix to all manuals.

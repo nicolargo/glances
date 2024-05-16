@@ -19,8 +19,6 @@ import sys
 import platform
 import ujson
 from operator import itemgetter, methodcaller
-import unicodedata
-import types
 import subprocess
 from datetime import datetime
 import re
@@ -28,14 +26,8 @@ import base64
 import functools
 import weakref
 
-import queue
-from configparser import ConfigParser, NoOptionError, NoSectionError
 from statistics import mean
-from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
-from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 from urllib.request import urlopen, Request
-from urllib.error import HTTPError, URLError
-from urllib.parse import urlparse
 
 # Correct issue #1025 by monkey path the xmlrpc lib
 from defusedxml.xmlrpc import monkey_patch

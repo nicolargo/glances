@@ -97,7 +97,7 @@ class GlancesSNMPClient(object):
                 cmdgen.UdpTransportTarget((self.host, self.port)),
                 non_repeaters,
                 max_repetitions,
-                *oid
+                *oid,
             )
         if self.version.startswith('2'):
             errorIndication, errorStatus, errorIndex, varBindTable = self.cmdGen.bulkCmd(
@@ -105,7 +105,7 @@ class GlancesSNMPClient(object):
                 cmdgen.UdpTransportTarget((self.host, self.port)),
                 non_repeaters,
                 max_repetitions,
-                *oid
+                *oid,
             )
         else:
             # Bulk request are not available with SNMP version 1

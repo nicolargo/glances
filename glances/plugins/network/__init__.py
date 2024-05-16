@@ -8,6 +8,7 @@
 #
 
 """Network plugin."""
+
 from __future__ import unicode_literals
 
 from glances.plugins.plugin.model import GlancesPluginModel

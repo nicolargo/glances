@@ -8,6 +8,7 @@
 #
 
 """Sensors plugin."""
+
 from enum import Enum
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict, Literal, Any
@@ -369,8 +370,7 @@ class GlancesGrabSensors(object):
                     sensors_current['label'] = feature.label
                 # Sensors value, limit and unit
                 sensors_current['unit'] = self.sensor_unit
-                sensors_current['value'] = int(
-                    getattr(feature, 'current', 0) if getattr(feature, 'current', 0) else 0)
+                sensors_current['value'] = int(getattr(feature, 'current', 0) if getattr(feature, 'current', 0) else 0)
                 system_warning = getattr(feature, 'high', None)
                 system_critical = getattr(feature, 'critical', None)
                 sensors_current['warning'] = int(system_warning) if system_warning is not None else None

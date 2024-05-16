@@ -241,7 +241,7 @@ Examples of use:
         )
         parser.add_argument(
             '--enable-irq', action='store_true', default=False, dest='enable_irq', help='enable IRQ module'
-        ),
+        )
         parser.add_argument(
             '--enable-process-extended',
             action='store_true',
@@ -255,14 +255,14 @@ Examples of use:
             default=True,
             dest='enable_separator',
             help='disable separator in the UI (between top and others modules)',
-        ),
+        )
         parser.add_argument(
             '--disable-cursor',
             action='store_true',
             default=False,
             dest='disable_cursor',
             help='disable cursor (process selection) in the UI',
-        ),
+        )
         # Sort processes list
         parser.add_argument(
             '--sort-processes',

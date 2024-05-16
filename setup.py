@@ -32,15 +32,19 @@ with open('README.rst', encoding='utf-8') as f:
 
 def get_data_files():
     data_files = [
-        ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS.rst', 'README.rst', "SECURITY.md",
-                               'CONTRIBUTING.md', 'conf/glances.conf']),
-        ('share/man/man1', ['docs/man/glances.1'])
+        (
+            'share/doc/glances',
+            ['AUTHORS', 'COPYING', 'NEWS.rst', 'README.rst', "SECURITY.md", 'CONTRIBUTING.md', 'conf/glances.conf'],
+        ),
+        ('share/man/man1', ['docs/man/glances.1']),
     ]
 
     return data_files
 
+
 with open('requirements.txt') as f:
     required = f.read().splitlines()
+
 
 def get_install_requires():
     requires = required
@@ -59,10 +63,23 @@ def get_install_extras_require():
         'browser': ['zeroconf>=0.19.1'],
         'cloud': ['requests'],
         'containers': ['docker>=6.1.1', 'python-dateutil', 'six', 'podman', 'packaging'],
-        'export': ['bernhard', 'cassandra-driver', 'elasticsearch', 'graphitesender',
-                   'ibmcloudant', 'influxdb>=1.0.0', 'influxdb-client', 'pymongo',
-                   'kafka-python', 'pika', 'paho-mqtt', 'potsdb', 'prometheus_client',
-                   'pyzmq', 'statsd'],
+        'export': [
+            'bernhard',
+            'cassandra-driver',
+            'elasticsearch',
+            'graphitesender',
+            'ibmcloudant',
+            'influxdb>=1.0.0',
+            'influxdb-client',
+            'pymongo',
+            'kafka-python',
+            'pika',
+            'paho-mqtt',
+            'potsdb',
+            'prometheus_client',
+            'pyzmq',
+            'statsd',
+        ],
         'gpu': ['nvidia-ml-py'],
         'graph': ['pygal'],
         'ip': ['netifaces'],
@@ -71,7 +88,7 @@ def get_install_extras_require():
         'snmp': ['pysnmp'],
         'sparklines': ['sparklines'],
         'web': ['fastapi', 'uvicorn', 'jinja2', 'requests'],
-        'wifi': ['wifi']
+        'wifi': ['wifi'],
     }
     if sys.platform.startswith('linux'):
         extras_require['sensors'] = ['batinfo']
@@ -94,6 +111,7 @@ class tests(Command):
     def run(self):
         import subprocess
         import sys
+
         for t in glob.glob('unittest-core.py'):
             ret = subprocess.call([sys.executable, t]) != 0
             if ret != 0:
@@ -138,6 +156,6 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
-        'Topic :: System :: Monitoring'
-    ]
+        'Topic :: System :: Monitoring',
+    ],
 )

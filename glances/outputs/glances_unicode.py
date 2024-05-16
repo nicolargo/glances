@@ -10,14 +10,14 @@
 """Manage unicode message for Glances output."""
 
 _unicode_message = {
-    'ARROW_LEFT': [u'\u2190', u'<'],
-    'ARROW_RIGHT': [u'\u2192', u'>'],
-    'ARROW_UP': [u'\u2191', u'^'],
-    'ARROW_DOWN': [u'\u2193', u'v'],
-    'CHECK': [u'\u2713', u''],
-    'PROCESS_SELECTOR': [u'>', u'>'],
-    'MEDIUM_LINE': [u'\u23AF', u'-'],
-    'LOW_LINE': [u'\u2581', u'_'],
+    'ARROW_LEFT': ['\u2190', '<'],
+    'ARROW_RIGHT': ['\u2192', '>'],
+    'ARROW_UP': ['\u2191', '^'],
+    'ARROW_DOWN': ['\u2193', 'v'],
+    'CHECK': ['\u2713', ''],
+    'PROCESS_SELECTOR': ['>', '>'],
+    'MEDIUM_LINE': ['\u23af', '-'],
+    'LOW_LINE': ['\u2581', '_'],
 }
 
 
