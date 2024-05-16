@@ -84,7 +84,7 @@ class Export(GlancesExport):
             )
 
         # Create the write client
-        write_client = client.write_api(
+        return client.write_api(
             write_options=WriteOptions(
                 batch_size=500,
                 flush_interval=self.interval * 1000,
@@ -95,7 +95,6 @@ class Export(GlancesExport):
                 exponential_base=2,
             )
         )
-        return write_client
 
     def _normalize(self, name, columns, points):
         """Normalize data for the InfluxDB's data model.

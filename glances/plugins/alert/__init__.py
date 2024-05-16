@@ -183,5 +183,4 @@ class PluginModel(GlancesPluginModel):
         """Compare a with b using the tolerance (if numerical)."""
         if str(int(a)).isdigit() and str(int(b)).isdigit():
             return abs(a - b) <= max(abs(a), abs(b)) * tolerance
-        else:
-            return a == b
+        return a == b

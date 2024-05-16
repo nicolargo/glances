@@ -67,8 +67,7 @@ class Export(GlancesExport):
                 self.protocol + '://' + self.user + ':' + self.password + '@' + self.host + ':' + self.port + '/'
             )
             connection = pika.BlockingConnection(parameters)
-            channel = connection.channel()
-            return channel
+            return connection.channel()
         except Exception as e:
             logger.critical("Connection to rabbitMQ server %s:%s failed. %s" % (self.host, self.port, e))
             sys.exit(2)
@@ -79,8 +78,8 @@ class Export(GlancesExport):
         for i in range(len(columns)):
             if not isinstance(points[i], Number):
                 continue
-            else:
-                data += ", " + columns[i] + "=" + str(points[i])
+            data += ", " + columns[i] + "=" + str(points[i])
+
         logger.debug(data)
         try:
             self.client.basic_publish(exchange='', routing_key=self.queue, body=data)

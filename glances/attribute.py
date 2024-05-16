@@ -66,8 +66,7 @@ class GlancesAttribute(object):
     def value(self):
         if self.history_len() > 0:
             return (self._value[1] - self.history_value()[1]) / (self._value[0] - self.history_value()[0])
-        else:
-            return None
+        return None
 
     @value.setter
     def value(self, new_value):

@@ -71,13 +71,12 @@ class DockerStatsFetcher:
             memory_stats = self._get_memory_stats()
             network_stats = self._get_network_stats()
 
-        computed_stats = {
+        return {
             "io": io_stats or {},
             "memory": memory_stats or {},
             "network": network_stats or {},
             "cpu": cpu_stats or {"total": 0.0},
         }
-        return computed_stats
 
     @property
     def time_since_update(self):

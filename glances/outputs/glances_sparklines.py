@@ -59,6 +59,7 @@ class Sparkline(object):
             return self.__size
         if self.__display_value:
             return self.__size - 6
+        return None
 
     @property
     def percents(self):

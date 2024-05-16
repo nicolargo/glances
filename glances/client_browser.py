@@ -77,8 +77,7 @@ class GlancesClientBrowser(object):
                 if clear_password is not None:
                     server['password'] = self.password.get_hash(clear_password)
             return 'http://{}:{}@{}:{}'.format(server['username'], server['password'], server['ip'], server['port'])
-        else:
-            return 'http://{}:{}'.format(server['ip'], server['port'])
+        return 'http://{}:{}'.format(server['ip'], server['port'])
 
     def __update_stats(self, server):
         """Update stats for the given server (picked from the server list)"""

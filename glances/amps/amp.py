@@ -109,16 +109,14 @@ class GlancesAmp(object):
         """Generic method to get the item in the AMP configuration"""
         if key in self.configs:
             return self.configs[key]
-        else:
-            return None
+        return None
 
     def enable(self):
         """Return True|False if the AMP is enabled in the configuration file (enable=true|false)."""
         ret = self.get('enable')
         if ret is None:
             return False
-        else:
-            return ret.lower().startswith('true')
+        return ret.lower().startswith('true')
 
     def regex(self):
         """Return regular expression used to identified the current application."""
@@ -133,8 +131,7 @@ class GlancesAmp(object):
         ret = self.get('one_line')
         if ret is None:
             return False
-        else:
-            return ret.lower().startswith('true')
+        return ret.lower().startswith('true')
 
     def time_until_refresh(self):
         """Return time in seconds until refresh."""
@@ -193,5 +190,4 @@ class GlancesAmp(object):
         # Call the children update method
         if self.should_update():
             return self.update(process_list)
-        else:
-            return self.result()
+        return self.result()

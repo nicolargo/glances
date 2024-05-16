@@ -100,6 +100,4 @@ def normalize(name):
     """Normalize name for the Graphite convention"""
 
     # Name should not contain space
-    ret = name.replace(' ', '_')
-
-    return ret
+    return name.replace(' ', '_')

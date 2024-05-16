@@ -153,8 +153,7 @@ class PluginModel(GlancesPluginModel):
         # Remove duplicates thanks to https://stackoverflow.com/a/9427216/1919431
         stats_transformed = [dict(t) for t in {tuple(d.items()) for d in stats_transformed}]
         # Sort by label
-        stats_transformed = sorted(stats_transformed, key=lambda d: d['label'])
-        return stats_transformed
+        return sorted(stats_transformed, key=lambda d: d['label'])
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
@@ -191,10 +190,9 @@ class PluginModel(GlancesPluginModel):
         # Get the alias for each stat
         if self.has_alias(stats["label"].lower()):
             return self.has_alias(stats["label"].lower())
-        elif self.has_alias("{}_{}".format(stats["label"], stats["type"]).lower()):
+        if self.has_alias("{}_{}".format(stats["label"], stats["type"]).lower()):
             return self.has_alias("{}_{}".format(stats["label"], stats["type"]).lower())
-        else:
-            return stats["label"]
+        return stats["label"]
 
     def __set_type(self, stats, sensor_type):
         """Set the plugin type.
@@ -254,9 +252,9 @@ class PluginModel(GlancesPluginModel):
             return ''
         if stats['status'].startswith('Charg'):
             return unicode_message('ARROW_UP')
-        elif stats['status'].startswith('Discharg'):
+        if stats['status'].startswith('Discharg'):
             return unicode_message('ARROW_DOWN')
-        elif stats['status'].startswith('Full'):
+        if stats['status'].startswith('Full'):
             return unicode_message('CHECK')
         return ''
 

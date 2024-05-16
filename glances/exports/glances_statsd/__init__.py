@@ -69,6 +69,4 @@ def normalize(name):
     # Name should not contain some specials chars (issue #1068)
     ret = name.replace(':', '')
     ret = ret.replace('%', '')
-    ret = ret.replace(' ', '_')
-
-    return ret
+    return ret.replace(' ', '_')

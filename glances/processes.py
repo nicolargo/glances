@@ -568,8 +568,7 @@ class GlancesProcesses(object):
         If as_programs is True, return the list of programs."""
         if as_programs:
             return processes_to_programs(self.processlist)
-        else:
-            return self.processlist
+        return self.processlist
 
     def get_export(self):
         """Return the processlist for export."""

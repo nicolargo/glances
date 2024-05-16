@@ -182,12 +182,12 @@ class GlancesClient(object):
         """Update stats from Glances/SNMP server."""
         if self.client_mode == 'glances':
             return self.update_glances()
-        elif self.client_mode == 'snmp':
+        if self.client_mode == 'snmp':
             return self.update_snmp()
-        else:
-            self.end()
-            logger.critical("Unknown server mode: {}".format(self.client_mode))
-            sys.exit(2)
+
+        self.end()
+        logger.critical("Unknown server mode: {}".format(self.client_mode))
+        sys.exit(2)
 
     def update_glances(self):
         """Get stats from Glances server.

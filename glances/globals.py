@@ -128,10 +128,9 @@ def b(s, errors='replace'):
 def nativestr(s, errors='replace'):
     if isinstance(s, text_type):
         return s
-    elif isinstance(s, (int, float)):
+    if isinstance(s, (int, float)):
         return s.__str__()
-    else:
-        return s.decode('utf-8', errors=errors)
+    return s.decode('utf-8', errors=errors)
 
 
 def system_exec(command):
@@ -331,8 +330,7 @@ def json_dumps_dictlist(data, item):
     dl = dictlist(data, item)
     if dl is None:
         return None
-    else:
-        return json_dumps(dl)
+    return json_dumps(dl)
 
 
 def string_value_to_float(s):

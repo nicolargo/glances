@@ -835,8 +835,7 @@ class PluginModel(GlancesPluginModel):
         """Return the decoration string for the current mmm status."""
         if mmm is not None:
             return 'DEFAULT'
-        else:
-            return 'FILTER'
+        return 'FILTER'
 
     def __mmm_reset(self):
         """Reset the MMM stats."""
@@ -902,6 +901,6 @@ class PluginModel(GlancesPluginModel):
         """Return the maximum PID size in number of char."""
         if self.pid_max is not None:
             return len(str(self.pid_max))
-        else:
-            # By default return 5 (corresponding to 99999 PID number)
-            return 5
+
+        # By default return 5 (corresponding to 99999 PID number)
+        return 5

@@ -216,8 +216,7 @@ class PluginModel(GlancesPluginModel):
                     # Do not take hidden file system into account
                     if self.is_hide(fs_current['mnt_point']):
                         continue
-                    else:
-                        stats.append(fs_current)
+                    stats.append(fs_current)
             else:
                 # Default behavior
                 for fs in fs_stat:
@@ -232,8 +231,7 @@ class PluginModel(GlancesPluginModel):
                     # Do not take hidden file system into account
                     if self.is_hide(fs_current['mnt_point']) or self.is_hide(fs_current['device_name']):
                         continue
-                    else:
-                        stats.append(fs_current)
+                    stats.append(fs_current)
 
         # Update the stats
         self.stats = stats

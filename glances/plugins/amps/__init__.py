@@ -93,13 +93,11 @@ class PluginModel(GlancesPluginModel):
         if nbprocess > 0:
             if int(countmin) <= int(nbprocess) <= int(countmax):
                 return 'OK'
-            else:
-                return 'WARNING'
-        else:
-            if int(countmin) == 0:
-                return 'OK'
-            else:
-                return 'CRITICAL'
+            return 'WARNING'
+
+        if int(countmin) == 0:
+            return 'OK'
+        return 'CRITICAL'
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""

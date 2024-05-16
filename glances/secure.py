@@ -40,7 +40,7 @@ def __secure_popen(cmd):
     cmd_split_redirect = cmd.split('>')
     if len(cmd_split_redirect) > 2:
         return 'Glances error: Only one file redirection allowed ({})'.format(cmd)
-    elif len(cmd_split_redirect) == 2:
+    if len(cmd_split_redirect) == 2:
         stdout_redirect = cmd_split_redirect[1].strip()
         cmd = cmd_split_redirect[0]
     else:

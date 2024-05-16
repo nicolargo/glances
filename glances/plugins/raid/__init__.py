@@ -161,6 +161,6 @@ class PluginModel(GlancesPluginModel):
             return 'CRITICAL'
         if used is None or available is None:
             return 'DEFAULT'
-        elif used < available:
+        if used < available:
             return 'WARNING'
         return 'OK'

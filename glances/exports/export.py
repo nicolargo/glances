@@ -122,8 +122,7 @@ class GlancesExport(object):
             logger.error("No 'key' available in {}".format(item))
         if isinstance(ret, list):
             return ret[0]
-        else:
-            return ret
+        return ret
 
     def parse_tags(self, tags):
         """Parse tags into a dict.

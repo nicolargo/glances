@@ -68,17 +68,15 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
             # TODO: config is not taken into account: it may be a problem ?
             pwd = GlancesPassword(username=username, config=None)
             return pwd.check_password(self.server.user_dict[username], password)
-        else:
-            return False
+        return False
 
     def parse_request(self):
         if SimpleXMLRPCRequestHandler.parse_request(self):
             # Next we authenticate
             if self.authenticate(self.headers):
                 return True
-            else:
-                # if authentication fails, tell the client
-                self.send_error(401, 'Authentication failed')
+            # if authentication fails, tell the client
+            self.send_error(401, 'Authentication failed')
         return False
 
     def log_message(self, log_format, *args):

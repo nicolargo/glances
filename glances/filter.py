@@ -156,9 +156,9 @@ class GlancesFilter(object):
         if self.filter_key is None:
             # Apply filter on command line and process name
             return self._is_process_filtered(process, key='name') or self._is_process_filtered(process, key='cmdline')
-        else:
-            # Apply filter on <key>
-            return self._is_process_filtered(process)
+
+        # Apply filter on <key>
+        return self._is_process_filtered(process)
 
     def _is_process_filtered(self, process, key=None):
         """Return True if the process[key] should be filtered according to the current filter"""

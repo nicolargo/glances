@@ -83,6 +83,4 @@ class PluginModel(GlancesPluginModel):
         if not self.stats or self.is_disabled():
             return ret
 
-        ret = [self.curse_add_line('Uptime: {}'.format(self.stats))]
-
-        return ret
+        return [self.curse_add_line('Uptime: {}'.format(self.stats))]
