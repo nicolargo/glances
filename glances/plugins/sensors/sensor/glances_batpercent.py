@@ -13,18 +13,20 @@ import psutil
 
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.globals import LINUX
 
 # Batinfo library (optional; Linux-only)
-batinfo_tag = True
-try:
-    import batinfo
-except ImportError:
-    logger.debug("batinfo library not found. Fallback to psutil.")
+if LINUX:
+    batinfo_tag = True
+    try:
+        import batinfo
+    except ImportError:
+        logger.debug("batinfo library not found. Fallback to psutil.")
+        batinfo_tag = False
+else:
     batinfo_tag = False
 
-# Availability:
-# Linux, Windows, FreeBSD (psutil>=5.1.0)
-# macOS (psutil>=5.4.2)
+# PsUtil Sensors_battery available on Linux, Windows, FreeBSD, macOS
 psutil_tag = True
 try:
     psutil.sensors_battery()
