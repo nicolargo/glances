@@ -25,5 +25,4 @@ def unicode_message(key, args=None):
     """Return the unicode message for the given key."""
     if args and hasattr(args, 'disable_unicode') and args.disable_unicode:
         return _unicode_message[key][1]
-    else:
-        return _unicode_message[key][0]
+    return _unicode_message[key][0]

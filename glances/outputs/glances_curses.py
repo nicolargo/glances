@@ -154,9 +154,9 @@ class _GlancesCurses(object):
                 logger.info("Cannot init the curses library, quiet mode on and export.")
                 args.quiet = True
                 return
-            else:
-                logger.critical("Cannot init the curses library ({})".format(e))
-                sys.exit(1)
+
+            logger.critical("Cannot init the curses library ({})".format(e))
+            sys.exit(1)
 
         # Load configuration file
         self.load_config(config)
@@ -359,8 +359,7 @@ class _GlancesCurses(object):
 
     def get_key(self, window):
         # TODO: Check issue #163
-        ret = window.getch()
-        return ret
+        return window.getch()
 
     def __catch_key(self, return_to_browser=False):
         # Catch the pressed key
@@ -990,7 +989,8 @@ class _GlancesCurses(object):
             popup.refresh()
             self.wait(duration * 1000)
             return True
-        elif popup_type == 'input':
+
+        if popup_type == 'input':
             logger.info(popup_type)
             logger.info(is_password)
             # Create a sub-window for the text field
@@ -1010,17 +1010,17 @@ class _GlancesCurses(object):
                 self.set_cursor(0)
                 if textbox != '':
                     return textbox
-                else:
-                    return None
-            else:
-                textbox = GlancesTextbox(sub_pop, insert_mode=True)
-                textbox.edit()
-                self.set_cursor(0)
-                if textbox.gather() != '':
-                    return textbox.gather()[:-1]
-                else:
-                    return None
-        elif popup_type == 'yesno':
+                return None
+
+            # No password
+            textbox = GlancesTextbox(sub_pop, insert_mode=True)
+            textbox.edit()
+            self.set_cursor(0)
+            if textbox.gather() != '':
+                return textbox.gather()[:-1]
+            return None
+
+        if popup_type == 'yesno':
             # # Create a sub-window for the text field
             sub_pop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)
             sub_pop.attron(self.colors_list['FILTER'])
@@ -1037,6 +1037,8 @@ class _GlancesCurses(object):
             self.set_cursor(0)
             # self.term_window.keypad(0)
             return textbox.gather()
+
+        return None
 
     def display_plugin(self, plugin_stats, display_optional=True, display_additional=True, max_y=65535, add_space=0):
         """Display the plugin_stats on the screen.
@@ -1132,6 +1134,7 @@ class _GlancesCurses(object):
 
         # Have empty lines after the plugins
         self.next_line += add_space
+        return None
 
     def clear(self):
         """Erase the content of the screen.
@@ -1214,8 +1217,7 @@ class _GlancesCurses(object):
             if isexitkey and self.args.help_tag:
                 # Quit from help should return to main screen, not exit #1874
                 self.args.help_tag = not self.args.help_tag
-                isexitkey = False
-                return isexitkey
+                return False
 
             if not isexitkey and pressedkey > -1:
                 # Redraw display

@@ -55,10 +55,9 @@ class GlancesStats(object):
             if hasattr(plugin, 'get_json_views'):
                 # The method get_views exist, return it
                 return getattr(plugin, 'get_json_views')
-            else:
-                # The method get_views is not found for the plugin
-                raise AttributeError(item)
-        elif item.startswith('get'):
+            # The method get_views is not found for the plugin
+            raise AttributeError(item)
+        if item.startswith('get'):
             # Get the plugin name
             plugname = item[len('get') :].lower()
             # Get the plugin instance
@@ -66,12 +65,10 @@ class GlancesStats(object):
             if hasattr(plugin, 'get_stats'):
                 # The method get_stats exist, return it
                 return getattr(plugin, 'get_stats')
-            else:
-                # The method get_stats is not found for the plugin
-                raise AttributeError(item)
-        else:
-            # Default behavior
+            # The method get_stats is not found for the plugin
             raise AttributeError(item)
+        # Default behavior
+        raise AttributeError(item)
 
     def load_modules(self, args):
         """Wrapper to load: plugins and export modules."""
@@ -237,8 +234,7 @@ class GlancesStats(object):
         """
         if enable:
             return [p for p in self._plugins if self._plugins[p].is_enabled()]
-        else:
-            return [p for p in self._plugins]
+        return [p for p in self._plugins]
 
     def getExportsList(self, enable=True):
         """Return the exports list.
@@ -250,8 +246,7 @@ class GlancesStats(object):
         """
         if enable:
             return [e for e in self._exports]
-        else:
-            return [e for e in self._exports_all]
+        return [e for e in self._exports_all]
 
     def load_limits(self, config=None):
         """Load the stats limits (except the one in the exclude list)."""
@@ -367,8 +362,7 @@ class GlancesStats(object):
         """Return the plugin name."""
         if plugin_name in self._plugins:
             return self._plugins[plugin_name]
-        else:
-            return None
+        return None
 
     def end(self):
         """End of the Glances stats."""

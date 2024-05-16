@@ -37,6 +37,7 @@ See: https://wiki.archlinux.org/title/AMDGPU#Manually
 
 import os
 import re
+from typing import Optional
 
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 CARD_REGEX: str = r"^card\d$"
@@ -104,7 +105,7 @@ def get_device_name(device_folder: str) -> str:
     return 'AMD GPU'
 
 
-def get_mem(device_folder: str) -> int:
+def get_mem(device_folder: str) -> Optional[int]:
     """Return the memory consumption in %."""
     mem_info_vram_total = os.path.join(device_folder, GPU_MEM_TOTAL)
     mem_info_vram_used = os.path.join(device_folder, GPU_MEM_USED)
@@ -118,7 +119,7 @@ def get_mem(device_folder: str) -> int:
     return None
 
 
-def get_proc(device_folder: str) -> int:
+def get_proc(device_folder: str) -> Optional[int]:
     """Return the processor consumption in %."""
     gpu_busy_percent = os.path.join(device_folder, GPU_PROC_PERCENT)
     if os.path.isfile(gpu_busy_percent):
@@ -127,7 +128,7 @@ def get_proc(device_folder: str) -> int:
     return None
 
 
-def get_temperature(device_folder: str) -> int:
+def get_temperature(device_folder: str) -> Optional[int]:
     """Return the processor temperature in °C (mean of all HWMON)"""
     temp_input = []
     for root, dirs, _ in os.walk(device_folder):
@@ -140,10 +141,9 @@ def get_temperature(device_folder: str) -> int:
                                 temp_input.append(int(f.read()))
     if len(temp_input) > 0:
         return round(sum(temp_input) / len(temp_input) / 1000)
-    else:
-        return None
+    return None
 
 
-def get_fan_speed(device_folder: str) -> int:
+def get_fan_speed(device_folder: str) -> Optional[int]:
     """Return the fan speed in %."""
     return None

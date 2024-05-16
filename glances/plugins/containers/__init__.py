@@ -164,8 +164,7 @@ class PluginModel(GlancesPluginModel):
         conf_podman_sock = self.get_conf_value('podman_sock')
         if len(conf_podman_sock) == 0:
             return "unix:///run/user/1000/podman/podman.sock"
-        else:
-            return conf_podman_sock[0]
+        return conf_podman_sock[0]
 
     def exit(self):
         """Overwrite the exit method to close threads."""
@@ -209,8 +208,7 @@ class PluginModel(GlancesPluginModel):
         all_tag = self.get_conf_value('all')
         if len(all_tag) == 0:
             return False
-        else:
-            return all_tag[0].lower() == 'true'
+        return all_tag[0].lower() == 'true'
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
@@ -453,12 +451,11 @@ class PluginModel(GlancesPluginModel):
         """Analyse the container status."""
         if status == 'running':
             return 'OK'
-        elif status == 'exited':
+        if status == 'exited':
             return 'WARNING'
-        elif status == 'dead':
+        if status == 'dead':
             return 'CRITICAL'
-        else:
-            return 'CAREFUL'
+        return 'CAREFUL'
 
 
 def sort_docker_stats(stats):

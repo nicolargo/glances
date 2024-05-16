@@ -111,8 +111,7 @@ class PluginModel(GlancesPluginModel):
             stats = self.get_stats_snmp(snmp_oid=snmp_oid)
 
             if stats['min1'] == '':
-                stats = self.get_init_value()
-                return stats
+                return self.get_init_value()
 
             # Python 3 return a dict like:
             # {'min1': "b'0.08'", 'min5': "b'0.12'", 'min15': "b'0.15'"}
@@ -206,5 +205,4 @@ def get_load_average(percent: bool = False):
 
     if load_average and percent:
         return tuple([round(i / get_nb_log_core() * 100, 1) for i in load_average])
-    else:
-        return load_average
+    return load_average

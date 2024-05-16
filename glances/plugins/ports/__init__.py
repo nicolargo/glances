@@ -313,8 +313,7 @@ class ThreadScanner(threading.Thread):
         """Scan the port structure (dict) and update the status key."""
         if int(port['port']) == 0:
             return self._port_scan_icmp(port)
-        else:
-            return self._port_scan_tcp(port)
+        return self._port_scan_tcp(port)
 
     def _resolv_name(self, hostname):
         """Convert hostname to IP address."""

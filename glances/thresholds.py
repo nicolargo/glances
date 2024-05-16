@@ -38,18 +38,17 @@ class GlancesThresholds(object):
 
         if stat_name in self._thresholds:
             return self._thresholds[stat_name]
-        else:
-            return {}
+        return {}
 
     def add(self, stat_name, threshold_description):
         """Add a new threshold to the dict (key = stat_name)"""
         if threshold_description not in self.threshold_list:
             return False
-        else:
-            self._thresholds[stat_name] = getattr(
-                self.current_module, 'GlancesThreshold' + threshold_description.capitalize()
-            )()
-            return True
+
+        self._thresholds[stat_name] = getattr(
+            self.current_module, 'GlancesThreshold' + threshold_description.capitalize()
+        )()
+        return True
 
 
 # Global variable uses to share thresholds between Glances components

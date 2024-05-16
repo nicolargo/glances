@@ -148,8 +148,7 @@ class GlancesAutoDiscoverServer(object):
         """Return the current server list (dict of dict)."""
         if zeroconf_tag and self.zeroconf_enable_tag:
             return self.listener.get_servers_list()
-        else:
-            return []
+        return []
 
     def set_server(self, server_pos, key, value):
         """Set the key to the value for the server_pos (position in the list)."""

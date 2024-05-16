@@ -46,8 +46,7 @@ class CpuPercent(object):
         If percpu, return the percpu stats"""
         if percpu:
             return self.__get_percpu()
-        else:
-            return self.__get_cpu()
+        return self.__get_cpu()
 
     def get_info(self):
         """Get additional information about the CPU"""

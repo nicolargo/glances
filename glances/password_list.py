@@ -51,14 +51,14 @@ class GlancesPasswordList(GlancesPassword):
         """
         if host is None:
             return self._password_dict
-        else:
+
+        try:
+            return self._password_dict[host]
+        except (KeyError, TypeError):
             try:
-                return self._password_dict[host]
+                return self._password_dict['default']
             except (KeyError, TypeError):
-                try:
-                    return self._password_dict['default']
-                except (KeyError, TypeError):
-                    return None
+                return None
 
     def set_password(self, host, password):
         """Set a password for a specific host."""

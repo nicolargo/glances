@@ -67,8 +67,7 @@ class FolderList(object):
             value['path'] = self.config.get_value(section, key + 'path')
             if value['path'] is None:
                 continue
-            else:
-                value['path'] = nativestr(value['path'])
+            value['path'] = nativestr(value['path'])
 
             # Optional conf keys
             # Refresh time

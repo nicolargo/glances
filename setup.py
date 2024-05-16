@@ -31,15 +31,13 @@ with open('README.rst', encoding='utf-8') as f:
 
 
 def get_data_files():
-    data_files = [
+    return [
         (
             'share/doc/glances',
             ['AUTHORS', 'COPYING', 'NEWS.rst', 'README.rst', "SECURITY.md", 'CONTRIBUTING.md', 'conf/glances.conf'],
         ),
         ('share/man/man1', ['docs/man/glances.1']),
     ]
-
-    return data_files
 
 
 with open('requirements.txt') as f:

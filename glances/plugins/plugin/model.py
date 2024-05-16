@@ -151,7 +151,7 @@ class GlancesPluginModel(object):
 
     def get_key(self):
         """Return the key of the list."""
-        return None
+        return
 
     def is_enabled(self, plugin_name=None):
         """Return true if plugin is enabled."""
@@ -227,11 +227,9 @@ class GlancesPluginModel(object):
         s = self.stats_history.get(nb=nb)
         if item is None:
             return s
-        else:
-            if item in s:
-                return s[item]
-            else:
-                return None
+        if item in s:
+            return s[item]
+        return None
 
     def get_export_history(self, item=None):
         """Return the stats history object to export."""
@@ -410,14 +408,14 @@ class GlancesPluginModel(object):
         """
         if not isinstance(self.get_raw(), list):
             return None
-        else:
-            if (not isinstance(value, int) and not isinstance(value, float)) and value.isdigit():
-                value = int(value)
-            try:
-                return {value: [i for i in self.get_raw() if i[item] == value]}
-            except (KeyError, ValueError) as e:
-                logger.error("Cannot get item({})=value({}) ({})".format(item, value, e))
-                return None
+
+        if (not isinstance(value, int) and not isinstance(value, float)) and value.isdigit():
+            value = int(value)
+        try:
+            return {value: [i for i in self.get_raw() if i[item] == value]}
+        except (KeyError, ValueError) as e:
+            logger.error("Cannot get item({})=value({}) ({})".format(item, value, e))
+            return None
 
     def get_stats_value(self, item, value):
         """Return the stats object for a specific item=value in JSON format.
@@ -427,15 +425,13 @@ class GlancesPluginModel(object):
         rsv = self.get_raw_stats_value(item, value)
         if rsv is None:
             return None
-        else:
-            return json_dumps(rsv)
+        return json_dumps(rsv)
 
     def get_item_info(self, item, key, default=None):
         """Return the item info grabbed into self.fields_description."""
         if self.fields_description is None or item not in self.fields_description:
             return default
-        else:
-            return self.fields_description[item].get(key, default)
+        return self.fields_description[item].get(key, default)
 
     def update_views_hidden(self):
         """Update the hidden views
@@ -553,14 +549,11 @@ class GlancesPluginModel(object):
 
         if key is None:
             return item_views
-        else:
-            if option is None:
-                return item_views[key]
-            else:
-                if option in item_views[key]:
-                    return item_views[key][option]
-                else:
-                    return 'DEFAULT'
+        if option is None:
+            return item_views[key]
+        if option in item_views[key]:
+            return item_views[key][option]
+        return 'DEFAULT'
 
     def get_json_views(self, item=None, key=None, option=None):
         """Return the views (in JSON)."""
@@ -626,8 +619,7 @@ class GlancesPluginModel(object):
         """Return the limits object."""
         if item is None:
             return self._limits
-        else:
-            return self._limits.get('{}_{}'.format(self.plugin_name, item), None)
+        return self._limits.get('{}_{}'.format(self.plugin_name, item), None)
 
     def get_stats_action(self):
         """Return stats for the action.
@@ -742,12 +734,11 @@ class GlancesPluginModel(object):
         """Filter the stats to keep only the fields we want (the one defined in fields_description)."""
         if hasattr(stats, '_asdict'):
             return {k: v for k, v in stats._asdict().items() if k in self.fields_description}
-        elif isinstance(stats, dict):
+        if isinstance(stats, dict):
             return {k: v for k, v in stats.items() if k in self.fields_description}
-        elif isinstance(stats, list):
+        if isinstance(stats, list):
             return [self.filter_stats(s) for s in stats]
-        else:
-            return stats
+        return stats
 
     def manage_threshold(self, stat_name, trigger):
         """Manage the threshold for the current stat."""
@@ -793,8 +784,7 @@ class GlancesPluginModel(object):
         """Return true if the criticality limit exist for the given stat_name"""
         if stat_name == "":
             return self.plugin_name + '_' + criticality in self._limits
-        else:
-            return stat_name + '_' + criticality in self._limits
+        return stat_name + '_' + criticality in self._limits
 
     def get_limit(self, criticality=None, stat_name=""):
         """Return the limit value for the given criticality.
@@ -806,7 +796,7 @@ class GlancesPluginModel(object):
         # Example: network_wlan0_rx_careful
         if stat_name + '_' + criticality in self._limits:
             return self._limits[stat_name + '_' + criticality]
-        elif self.plugin_name + '_' + criticality in self._limits:
+        if self.plugin_name + '_' + criticality in self._limits:
             return self._limits[self.plugin_name + '_' + criticality]
 
         # No key found, the raise an error
@@ -840,10 +830,9 @@ class GlancesPluginModel(object):
         # Example: network_wlan0_rx_log
         if stat_name + '_log' in self._limits:
             return self._limits[stat_name + '_log'][0].lower() == 'true'
-        elif self.plugin_name + '_log' in self._limits:
+        if self.plugin_name + '_log' in self._limits:
             return self._limits[self.plugin_name + '_log'][0].lower() == 'true'
-        else:
-            return default_action
+        return default_action
 
     def get_conf_value(self, value, header="", plugin_name=None, default=[]):
         """Return the configuration (header_) value for the current plugin.
@@ -895,14 +884,12 @@ class GlancesPluginModel(object):
         """Return True if the value should be displayed in the UI"""
         if self.get_conf_value('show', header=header) != []:
             return self.is_show(value, header=header)
-        else:
-            return not self.is_hide(value, header=header)
+        return not self.is_hide(value, header=header)
 
     def read_alias(self):
         if self.plugin_name + '_' + 'alias' in self._limits:
             return {i.split(':')[0].lower(): i.split(':')[1] for i in self._limits[self.plugin_name + '_' + 'alias']}
-        else:
-            return dict()
+        return dict()
 
     def has_alias(self, header):
         """Return the alias name for the relative header it it exists otherwise None."""

@@ -38,8 +38,7 @@ class GlancesPassword(object):
         """
         if self.config is None:
             return user_config_dir()[0]
-        else:
-            return self.config.get_value('passwords', 'local_password_path', default=user_config_dir()[0])
+        return self.config.get_value('passwords', 'local_password_path', default=user_config_dir()[0])
 
     @weak_lru_cache(maxsize=32)
     def get_hash(self, plain_password, salt=''):
@@ -120,6 +119,4 @@ class GlancesPassword(object):
         """Load the hashed password from the Glances folder."""
         # Read the password file, if it exists
         with open(self.password_file, 'r') as file_pwd:
-            hashed_password = file_pwd.read()
-
-        return hashed_password
+            return file_pwd.read()

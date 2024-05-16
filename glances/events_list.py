@@ -158,8 +158,7 @@ def build_global_message():
     if themax['weight'] >= themax['thresholds_min']:
         # Check if the weight is > to the minimal threshold value
         return themax['msg']
-    else:
-        return tree[0]['msg']
+    return tree[0]['msg']
 
 
 class GlancesEventsList(object):
