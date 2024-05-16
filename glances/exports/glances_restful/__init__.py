@@ -9,7 +9,6 @@
 
 """RESTful interface class."""
 
-
 from glances.globals import listkeys
 from glances.logger import logger
 from glances.exports.export import GlancesExport

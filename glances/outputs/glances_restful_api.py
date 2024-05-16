@@ -16,7 +16,7 @@ from io import open
 import webbrowser
 from urllib.parse import urljoin
 
-try:    
+try:
     from typing import Annotated
 except ImportError:
     # Only for Python 3.8

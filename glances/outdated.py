@@ -46,7 +46,7 @@ class Outdated(object):
         self.cache_file = os.path.join(self.cache_dir, 'glances-version.db')
 
         # Set default value...
-        self.data = {u'installed_version': __version__, u'latest_version': '0.0', u'refresh_date': datetime.now()}
+        self.data = {'installed_version': __version__, 'latest_version': '0.0', 'refresh_date': datetime.now()}
 
         # Disable update check if `packaging` is not installed
         if not PACKAGING_IMPORT:
@@ -154,14 +154,14 @@ class Outdated(object):
         logger.debug("Get latest Glances version from the PyPI RESTful API ({})".format(PYPI_API_URL))
 
         # Update the current time
-        self.data[u'refresh_date'] = datetime.now()
+        self.data['refresh_date'] = datetime.now()
 
         try:
             res = urlopen(PYPI_API_URL, timeout=3).read()
         except (HTTPError, URLError, CertificateError) as e:
             logger.debug("Cannot get Glances version from the PyPI RESTful API ({})".format(e))
         else:
-            self.data[u'latest_version'] = json.loads(nativestr(res))['info']['version']
+            self.data['latest_version'] = json.loads(nativestr(res))['info']['version']
             logger.debug("Save Glances version to the cache file")
 
         # Save result to the cache file

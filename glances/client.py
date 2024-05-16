@@ -122,8 +122,9 @@ class GlancesClient(object):
             else:
                 self.log_and_exit(
                     (
-                        'Client and server not compatible: '
-                        'Client version: {} / Server version: {}'.format(__version__, client_version)
+                        'Client and server not compatible: ' 'Client version: {} / Server version: {}'.format(
+                            __version__, client_version
+                        )
                     )
                 )
                 return False

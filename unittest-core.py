@@ -45,8 +45,7 @@ test_config = core.get_config()
 test_args = core.get_args()
 
 # Init Glances stats
-stats = GlancesStats(config=test_config,
-                     args=test_args)
+stats = GlancesStats(config=test_config, args=test_args)
 
 # Unitest class
 # ==============
@@ -78,7 +77,14 @@ class TestGlances(unittest.TestCase):
         self.assertIsInstance(plugin_instance.get_raw(), (dict, list))
         if plugin_instance.history_enable() and isinstance(plugin_instance.get_raw(), dict):
             self.assertEqual(plugin_instance.get_key(), None)
-            self.assertTrue(all([f in [h['name'] for h in plugin_instance.items_history_list] for f in plugin_instance.get_raw_history()]))
+            self.assertTrue(
+                all(
+                    [
+                        f in [h['name'] for h in plugin_instance.items_history_list]
+                        for f in plugin_instance.get_raw_history()
+                    ]
+                )
+            )
         elif plugin_instance.history_enable() and isinstance(plugin_instance.get_raw(), list):
             self.assertNotEqual(plugin_instance.get_key(), None)
 
@@ -135,11 +141,17 @@ class TestGlances(unittest.TestCase):
             if isinstance(plugin_instance.get_raw(), dict):
                 first_history_field = plugin_instance.get_items_history_list()[0]['name']
             elif isinstance(plugin_instance.get_raw(), list):
-                first_history_field = '_'.join([plugin_instance.get_raw()[0][plugin_instance.get_key()],
-                                                plugin_instance.get_items_history_list()[0]['name']])
+                first_history_field = '_'.join(
+                    [
+                        plugin_instance.get_raw()[0][plugin_instance.get_key()],
+                        plugin_instance.get_items_history_list()[0]['name'],
+                    ]
+                )
             self.assertEqual(len(plugin_instance.get_raw_history(first_history_field)), 2)
-            self.assertGreater(plugin_instance.get_raw_history(first_history_field)[1][0],
-                               plugin_instance.get_raw_history(first_history_field)[0][0])
+            self.assertGreater(
+                plugin_instance.get_raw_history(first_history_field)[1][0],
+                plugin_instance.get_raw_history(first_history_field)[0][0],
+            )
 
             # Update stats (add third element)
             plugin_instance.update()
@@ -158,10 +170,8 @@ class TestGlances(unittest.TestCase):
         elif isinstance(plugin_instance.get_raw(), list):
             first_history_field = plugin_instance.get_items_history_list()[0]['name']
             first_item = plugin_instance.get_raw()[0][plugin_instance.get_key()]
-            self.assertIsInstance(plugin_instance.get_views(item=first_item,
-                                                            key=first_history_field), dict)
-            self.assertTrue('decoration' in plugin_instance.get_views(item=first_item,
-                                                                      key=first_history_field))
+            self.assertIsInstance(plugin_instance.get_views(item=first_item, key=first_history_field), dict)
+            self.assertTrue('decoration' in plugin_instance.get_views(item=first_item, key=first_history_field))
         self.assertIsInstance(json.loads(plugin_instance.get_json_views()), dict)
         self.assertEqual(json.loads(plugin_instance.get_json_views()), plugin_instance.get_views())
 
@@ -352,12 +362,14 @@ class TestGlances(unittest.TestCase):
     def test_016_subsample(self):
         """Test subsampling function."""
         print('INFO: [TEST_016] Subsampling')
-        for l_test in [([1, 2, 3], 4),
-                       ([1, 2, 3, 4], 4),
-                       ([1, 2, 3, 4, 5, 6, 7], 4),
-                       ([1, 2, 3, 4, 5, 6, 7, 8], 4),
-                       (list(range(1, 800)), 4),
-                       (list(range(1, 8000)), 800)]:
+        for l_test in [
+            ([1, 2, 3], 4),
+            ([1, 2, 3, 4], 4),
+            ([1, 2, 3, 4, 5, 6, 7], 4),
+            ([1, 2, 3, 4, 5, 6, 7, 8], 4),
+            (list(range(1, 800)), 4),
+            (list(range(1, 8000)), 800),
+        ]:
             l_subsample = subsample(l_test[0], l_test[1])
             self.assertLessEqual(len(l_subsample), l_test[1])
 
@@ -501,8 +513,9 @@ class TestGlances(unittest.TestCase):
         plugins_list = stats.getPluginsList()
         for plugin in plugins_list:
             for method in mandatories_methods:
-                self.assertTrue(hasattr(stats.get_plugin(plugin), method),
-                                msg='{} has no method {}()'.format(plugin, method))
+                self.assertTrue(
+                    hasattr(stats.get_plugin(plugin), method), msg='{} has no method {}()'.format(plugin, method)
+                )
 
     def test_096_views(self):
         """Test get_views method"""
@@ -511,14 +524,14 @@ class TestGlances(unittest.TestCase):
         for plugin in plugins_list:
             stats.get_plugin(plugin).get_raw()
             views_grab = stats.get_plugin(plugin).get_views()
-            self.assertTrue(isinstance(views_grab, dict),
-                            msg='{} view is not a dict'.format(plugin))
+            self.assertTrue(isinstance(views_grab, dict), msg='{} view is not a dict'.format(plugin))
 
     def test_097_attribute(self):
         """Test GlancesAttribute classes"""
         print('INFO: [TEST_097] Test attribute')
         # GlancesAttribute
         from glances.attribute import GlancesAttribute
+
         a = GlancesAttribute('a', description='ad', history_max_size=3)
         self.assertEqual(a.name, 'a')
         self.assertEqual(a.description, 'ad')
@@ -542,6 +555,7 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_098] Test history')
         # GlancesHistory
         from glances.history import GlancesHistory
+
         h = GlancesHistory()
         h.add('a', 1, history_max_size=100)
         h.add('a', 2, history_max_size=100)
@@ -633,10 +647,8 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_700] Secure functions')
 
         if WINDOWS:
-            self.assertIn(secure_popen('echo TEST'), ['TEST\n',
-                                                      'TEST\r\n'])
-            self.assertIn(secure_popen('echo TEST1 && echo TEST2'), ['TEST1\nTEST2\n',
-                                                                     'TEST1\r\nTEST2\r\n'])
+            self.assertIn(secure_popen('echo TEST'), ['TEST\n', 'TEST\r\n'])
+            self.assertIn(secure_popen('echo TEST1 && echo TEST2'), ['TEST1\nTEST2\n', 'TEST1\r\nTEST2\r\n'])
         else:
             self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
             self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
@@ -647,6 +659,7 @@ class TestGlances(unittest.TestCase):
     def test_800_memory_leak(self):
         """Memory leak check"""
         import tracemalloc
+
         print('INFO: [TEST_800] Memory leak check')
         tracemalloc.start()
         # 3 iterations just to init the stats and fill the memory

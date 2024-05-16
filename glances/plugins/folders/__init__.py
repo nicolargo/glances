@@ -8,6 +8,7 @@
 #
 
 """Folder plugin."""
+
 from __future__ import unicode_literals
 
 from glances.logger import logger

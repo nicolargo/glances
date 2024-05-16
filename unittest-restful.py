@@ -43,12 +43,9 @@ class TestGlances(unittest.TestCase):
     def http_get(self, url, gzip=False):
         """Make the request"""
         if gzip:
-            ret = requests.get(url,
-                               stream=True,
-                               headers={'Accept-encoding': 'gzip'})
+            ret = requests.get(url, stream=True, headers={'Accept-encoding': 'gzip'})
         else:
-            ret = requests.get(url,
-                               headers={'Accept-encoding': 'identity'})
+            ret = requests.get(url, headers={'Accept-encoding': 'identity'})
         return ret
 
     def test_000_start_server(self):
@@ -102,9 +99,24 @@ class TestGlances(unittest.TestCase):
             self.assertTrue(req.ok)
             if p in ('uptime', 'version', 'psutilversion'):
                 self.assertIsInstance(req.json(), text_type)
-            elif p in ('fs', 'percpu', 'sensors', 'alert', 'processlist', 'diskio',
-                       'hddtemp', 'batpercent', 'network', 'folders', 'amps', 'ports',
-                       'irq', 'wifi', 'gpu', 'containers'):
+            elif p in (
+                'fs',
+                'percpu',
+                'sensors',
+                'alert',
+                'processlist',
+                'diskio',
+                'hddtemp',
+                'batpercent',
+                'network',
+                'folders',
+                'amps',
+                'ports',
+                'irq',
+                'wifi',
+                'gpu',
+                'containers',
+            ):
                 self.assertIsInstance(req.json(), list)
                 if len(req.json()) > 0:
                     self.assertIsInstance(req.json()[0], dict)

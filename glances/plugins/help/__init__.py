@@ -12,6 +12,7 @@ Help plugin.
 
 Just a stupid plugin to display the help screen.
 """
+
 import sys
 from glances.globals import iteritems
 from glances import __version__, psutil_version

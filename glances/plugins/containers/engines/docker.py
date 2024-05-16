@@ -8,6 +8,7 @@
 #
 
 """Docker Extension unit for Glances' Containers plugin."""
+
 import time
 
 from glances.globals import iterkeys, itervalues, nativestr, pretty_date, replace_special_chars
