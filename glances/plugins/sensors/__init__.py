@@ -214,7 +214,7 @@ class PluginModel(GlancesPluginModel):
         """
         for i in stats:
             # Set the sensors type
-            i.update({'type': str(sensor_type)})
+            i.update({'type': sensor_type})
             # also add the key name
             i.update({'key': self.get_key()})
 
