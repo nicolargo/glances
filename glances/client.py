@@ -50,7 +50,9 @@ class GlancesClient:
             self.uri = f'http://{args.username}:{args.password}@{args.client}:{args.port}'
         else:
             self.uri = f'http://{args.client}:{args.port}'
-        logger.debug(f"Try to connect to {self.uri}")
+
+        # Avoid logging user credentials
+        logger.debug(f"Try to connect to 'http://{args.client}:{args.port}'")
 
         # Try to connect to the URI
         transport = GlancesClientTransport()
