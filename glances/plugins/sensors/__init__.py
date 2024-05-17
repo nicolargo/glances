@@ -25,6 +25,7 @@ from glances.plugins.plugin.model import GlancesPluginModel
 
 
 class SensorType(str, Enum):
+    # Switch to `enum.StrEnum` when we only support py311+
     CPU_TEMP = 'temperature_core'
     FAN_SPEED = 'fan_speed'
     HDD_TEMP = 'temperature_hdd'
@@ -195,7 +196,7 @@ class PluginModel(GlancesPluginModel):
         else:
             return stats["label"]
 
-    def __set_type(self, stats, sensor_type):
+    def __set_type(self, stats: List[Dict[str, Any]], sensor_type: SensorType) -> List[Dict[str, Any]]:
         """Set the plugin type.
 
         4 types of stats is possible in the sensors plugin:
@@ -206,7 +207,7 @@ class PluginModel(GlancesPluginModel):
         """
         for i in stats:
             # Set the sensors type
-            i.update({'type': str(sensor_type)})
+            i.update({'type': sensor_type})
             # also add the key name
             i.update({'key': self.get_key()})
 
