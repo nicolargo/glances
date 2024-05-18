@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,20 +8,20 @@
 
 """Manage the Glances client browser (list of Glances server)."""
 
-import ujson
-import socket
 import threading
 
-from glances.globals import Fault, ProtocolError, ServerProxy
+import ujson
+
+from glances.autodiscover import GlancesAutoDiscoverServer
 from glances.client import GlancesClient, GlancesClientTransport
-from glances.logger import logger, LOG_FILENAME
+from glances.globals import Fault, ProtocolError, ServerProxy
+from glances.logger import LOG_FILENAME, logger
+from glances.outputs.glances_curses_browser import GlancesCursesBrowser
 from glances.password_list import GlancesPasswordList as GlancesPassword
 from glances.static_list import GlancesStaticServer
-from glances.autodiscover import GlancesAutoDiscoverServer
-from glances.outputs.glances_curses_browser import GlancesCursesBrowser
 
 
-class GlancesClientBrowser(object):
+class GlancesClientBrowser:
     """This class creates and manages the TCP client browser (servers list)."""
 
     def __init__(self, config=None, args=None):
@@ -76,8 +75,7 @@ class GlancesClientBrowser(object):
                 if clear_password is not None:
                     server['password'] = self.password.get_hash(clear_password)
             return 'http://{}:{}@{}:{}'.format(server['username'], server['password'], server['ip'], server['port'])
-        else:
-            return 'http://{}:{}'.format(server['ip'], server['port'])
+        return 'http://{}:{}'.format(server['ip'], server['port'])
 
     def __update_stats(self, server):
         """Update stats for the given server (picked from the server list)"""
@@ -92,19 +90,19 @@ class GlancesClientBrowser(object):
         try:
             s = ServerProxy(uri, transport=t)
         except Exception as e:
-            logger.warning("Client browser couldn't create socket ({})".format(e))
+            logger.warning(f"Client browser couldn't create socket ({e})")
         else:
             # Mandatory stats
             try:
                 # CPU%
                 cpu_percent = 100 - ujson.loads(s.getCpu())['idle']
-                server['cpu_percent'] = '{:.1f}'.format(cpu_percent)
+                server['cpu_percent'] = f'{cpu_percent:.1f}'
                 # MEM%
                 server['mem_percent'] = ujson.loads(s.getMem())['percent']
                 # OS (Human Readable name)
                 server['hr_name'] = ujson.loads(s.getSystem())['hr_name']
-            except (socket.error, Fault, KeyError) as e:
-                logger.debug("Error while grabbing stats form server ({})".format(e))
+            except (OSError, Fault, KeyError) as e:
+                logger.debug(f"Error while grabbing stats form server ({e})")
                 server['status'] = 'OFFLINE'
             except ProtocolError as e:
                 if e.errcode == 401:
@@ -114,7 +112,7 @@ class GlancesClientBrowser(object):
                     server['status'] = 'PROTECTED'
                 else:
                     server['status'] = 'OFFLINE'
-                logger.debug("Cannot grab stats from server ({} {})".format(e.errcode, e.errmsg))
+                logger.debug(f"Cannot grab stats from server ({e.errcode} {e.errmsg})")
             else:
                 # Status
                 server['status'] = 'ONLINE'
@@ -123,16 +121,16 @@ class GlancesClientBrowser(object):
                 try:
                     # LOAD
                     load_min5 = ujson.loads(s.getLoad())['min5']
-                    server['load_min5'] = '{:.2f}'.format(load_min5)
+                    server['load_min5'] = f'{load_min5:.2f}'
                 except Exception as e:
-                    logger.warning("Error while grabbing stats form server ({})".format(e))
+                    logger.warning(f"Error while grabbing stats form server ({e})")
 
         return server
 
     def __display_server(self, server):
         """Connect and display the given server"""
         # Display the Glances client for the selected server
-        logger.debug("Selected server {}".format(server))
+        logger.debug(f"Selected server {server}")
 
         # Connection can take time
         # Display a popup
@@ -201,7 +199,7 @@ class GlancesClientBrowser(object):
         # For each server in the list, grab elementary stats (CPU, LOAD, MEM, OS...)
         thread_list = {}
         while not self.screen.is_end:
-            logger.debug("Iter through the following server list: {}".format(self.get_servers_list()))
+            logger.debug(f"Iter through the following server list: {self.get_servers_list()}")
             for v in self.get_servers_list():
                 key = v["key"]
                 thread = thread_list.get(key, None)

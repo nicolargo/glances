@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -11,9 +10,9 @@
 
 from datetime import datetime, timedelta
 
-from glances.plugins.plugin.model import GlancesPluginModel
-
 import psutil
+
+from glances.plugins.plugin.model import GlancesPluginModel
 
 # SNMP OID
 snmp_oid = {'_uptime': '1.3.6.1.2.1.1.3.0'}
@@ -27,7 +26,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config)
+        super().__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -83,6 +82,4 @@ class PluginModel(GlancesPluginModel):
         if not self.stats or self.is_disabled():
             return ret
 
-        ret = [self.curse_add_line('Uptime: {}'.format(self.stats))]
-
-        return ret
+        return [self.curse_add_line(f'Uptime: {self.stats}')]

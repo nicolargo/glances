@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -8,13 +7,11 @@
 #
 
 """Folder plugin."""
-from __future__ import unicode_literals
 
-from glances.logger import logger
-from glances.globals import nativestr
 from glances.folder_list import FolderList as glancesFolderList
+from glances.globals import nativestr
+from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
-
 
 # Fields description
 # description: human readable description
@@ -56,9 +53,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
-            args=args, config=config, stats_init_value=[], fields_description=fields_description
-        )
+        super().__init__(args=args, config=config, stats_init_value=[], fields_description=fields_description)
 
         self.args = args
         self.config = config
@@ -138,7 +133,7 @@ class PluginModel(GlancesPluginModel):
             name_max_width = max_width - 7
         else:
             # No max_width defined, return an emptu curse message
-            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Header

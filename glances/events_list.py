@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -10,12 +9,12 @@
 """Manage Glances events list (previously Glances logs in Glances < 3.1)."""
 
 import time
-from datetime import datetime
 from dataclasses import asdict
+from datetime import datetime
 
+from glances.event import GlancesEvent
 from glances.processes import glances_processes
 from glances.thresholds import glances_thresholds
-from glances.event import GlancesEvent
 
 # Static decision tree for the global alert message
 # - msg: Message to be displayed (result of the decision tree)
@@ -158,11 +157,10 @@ def build_global_message():
     if themax['weight'] >= themax['thresholds_min']:
         # Check if the weight is > to the minimal threshold value
         return themax['msg']
-    else:
-        return tree[0]['msg']
+    return tree[0]['msg']
 
 
-class GlancesEventsList(object):
+class GlancesEventsList:
     """This class manages events inside the Glances software.
     GlancesEventsList is a list of GlancesEvent.
     GlancesEvent is defined in the event.py file

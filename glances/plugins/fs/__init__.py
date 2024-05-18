@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -8,15 +7,14 @@
 #
 
 """File system plugin."""
-from __future__ import unicode_literals
 
 import operator
 
-from glances.globals import u, nativestr, PermissionError
+import psutil
+
+from glances.globals import PermissionError, nativestr, u
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
-
-import psutil
 
 # Fields description
 # description: human readable description
@@ -97,7 +95,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
+        super().__init__(
             args=args,
             config=config,
             items_history_list=items_history_list,
@@ -141,7 +139,7 @@ class PluginModel(GlancesPluginModel):
                     logger.debug("Plugin - fs: PsUtil extended fetch failed")
                 else:
                     # Discard duplicates (#2299) and add entries matching allowed fs types
-                    tracked_mnt_points = set(f.mountpoint for f in fs_stat)
+                    tracked_mnt_points = {f.mountpoint for f in fs_stat}
                     for f in all_mounted_fs:
                         if (
                             any(f.fstype.find(fs_type) >= 0 for fs_type in allowed_fs_types)
@@ -166,7 +164,7 @@ class PluginModel(GlancesPluginModel):
                     'device_name': fs.device,
                     'fs_type': fs.fstype,
                     # Manage non breaking space (see issue #1065)
-                    'mnt_point': u(fs.mountpoint).replace(u'\u00A0', ' '),
+                    'mnt_point': u(fs.mountpoint).replace('\u00a0', ' '),
                     'size': fs_usage.total,
                     'used': fs_usage.used,
                     'free': fs_usage.free,
@@ -215,8 +213,7 @@ class PluginModel(GlancesPluginModel):
                     # Do not take hidden file system into account
                     if self.is_hide(fs_current['mnt_point']):
                         continue
-                    else:
-                        stats.append(fs_current)
+                    stats.append(fs_current)
             else:
                 # Default behavior
                 for fs in fs_stat:
@@ -231,8 +228,7 @@ class PluginModel(GlancesPluginModel):
                     # Do not take hidden file system into account
                     if self.is_hide(fs_current['mnt_point']) or self.is_hide(fs_current['device_name']):
                         continue
-                    else:
-                        stats.append(fs_current)
+                    stats.append(fs_current)
 
         # Update the stats
         self.stats = stats
@@ -242,7 +238,7 @@ class PluginModel(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(PluginModel, self).update_views()
+        super().update_views()
 
         # Add specifics information
         # Alert
@@ -265,7 +261,7 @@ class PluginModel(GlancesPluginModel):
             name_max_width = max_width - 13
         else:
             # No max_width defined, return an emptu curse message
-            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Build the string message

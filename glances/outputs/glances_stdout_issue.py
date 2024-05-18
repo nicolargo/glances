@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -10,16 +9,16 @@
 """Issue interface class."""
 
 import os
-import sys
 import platform
-import time
 import pprint
-
-from glances.timer import Counter
-from glances import __version__, psutil_version
+import sys
+import time
 
 import psutil
+
 import glances
+from glances import __version__, psutil_version
+from glances.timer import Counter
 
 TERMINAL_WIDTH = 79
 
@@ -39,7 +38,7 @@ class colors:
         self.NO = ''
 
 
-class GlancesStdoutIssue(object):
+class GlancesStdoutIssue:
     """This class manages the Issue display."""
 
     def __init__(self, config=None, args=None):
@@ -52,18 +51,14 @@ class GlancesStdoutIssue(object):
 
     def print_version(self):
         sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
-        sys.stdout.write(
-            'Glances {} ({})\n'.format(colors.BLUE + __version__ + colors.NO, os.path.realpath(glances.__file__))
-        )
-        sys.stdout.write('Python {} ({})\n'.format(colors.BLUE + platform.python_version() + colors.NO, sys.executable))
-        sys.stdout.write(
-            'PsUtil {} ({})\n'.format(colors.BLUE + psutil_version + colors.NO, os.path.realpath(psutil.__file__))
-        )
+        sys.stdout.write(f'Glances {colors.BLUE + __version__ + colors.NO} ({os.path.realpath(glances.__file__)})\n')
+        sys.stdout.write(f'Python {colors.BLUE + platform.python_version() + colors.NO} ({sys.executable})\n')
+        sys.stdout.write(f'PsUtil {colors.BLUE + psutil_version + colors.NO} ({os.path.realpath(psutil.__file__)})\n')
         sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
         sys.stdout.flush()
 
     def print_issue(self, plugin, result, message):
-        sys.stdout.write('{}{}{}'.format(colors.BLUE + plugin, result, message))
+        sys.stdout.write(f'{colors.BLUE + plugin}{result}{message}')
         sys.stdout.write(colors.NO + '\n')
         sys.stdout.flush()
 
@@ -108,9 +103,7 @@ class GlancesStdoutIssue(object):
             except Exception as e:
                 stat_error = e
             if stat_error is None:
-                result = (colors.GREEN + '[OK]   ' + colors.BLUE + ' {:.5f}s '.format(counter.get())).rjust(
-                    41 - len(plugin)
-                )
+                result = (colors.GREEN + '[OK]   ' + colors.BLUE + f' {counter.get():.5f}s ').rjust(41 - len(plugin))
                 if isinstance(stat, list) and len(stat) > 0 and 'key' in stat[0]:
                     key = 'key={} '.format(stat[0]['key'])
                     stat_output = pprint.pformat([stat[0]], compact=True, width=120, depth=3)
@@ -118,9 +111,7 @@ class GlancesStdoutIssue(object):
                 else:
                     message = '\n' + colors.NO + pprint.pformat(stat, compact=True, width=120, depth=2)
             else:
-                result = (colors.RED + '[ERROR]' + colors.BLUE + ' {:.5f}s '.format(counter.get())).rjust(
-                    41 - len(plugin)
-                )
+                result = (colors.RED + '[ERROR]' + colors.BLUE + f' {counter.get():.5f}s ').rjust(41 - len(plugin))
                 message = colors.NO + str(stat_error)[0 : TERMINAL_WIDTH - 41]
 
             # Display the result
@@ -128,7 +119,7 @@ class GlancesStdoutIssue(object):
 
         # Display total time need to update all plugins
         sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
-        print("Total time to update all stats: {}{:.5f}s{}".format(colors.BLUE, counter_total.get(), colors.NO))
+        print(f"Total time to update all stats: {colors.BLUE}{counter_total.get():.5f}s{colors.NO}")
         sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
 
         # Return True to exit directly (no refresh)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -13,13 +12,13 @@ import socket
 import string
 import sys
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-from glances.globals import json_dumps
-
 # Import paho for MQTT
 import certifi
 import paho.mqtt.client as paho
+
+from glances.exports.export import GlancesExport
+from glances.globals import json_dumps
+from glances.logger import logger
 
 
 class Export(GlancesExport):
@@ -27,7 +26,7 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the MQTT export IF."""
-        super(Export, self).__init__(config=config, args=args)
+        super().__init__(config=config, args=args)
 
         # Mandatory configuration keys (additional to host and port)
         self.user = None
@@ -87,7 +86,7 @@ class Export(GlancesExport):
             client.loop_start()
             return client
         except Exception as e:
-            logger.critical("Connection to MQTT server %s:%s failed with error: %s " % (self.host, self.port, e))
+            logger.critical(f"Connection to MQTT server {self.host}:{self.port} failed with error: {e} ")
             return None
 
     def export(self, name, columns, points):
@@ -109,14 +108,14 @@ class Export(GlancesExport):
 
                     self.client.publish(topic, value)
                 except Exception as e:
-                    logger.error("Can not export stats to MQTT server (%s)" % e)
+                    logger.error(f"Can not export stats to MQTT server ({e})")
         elif self.topic_structure == 'per-plugin':
             try:
                 topic = '/'.join([self.topic, self.devicename, name])
                 sensor_values = dict(zip(columns, points))
 
                 # Build the value to output
-                output_value = dict()
+                output_value = {}
                 for key in sensor_values:
                     split_key = key.split('.')
 
@@ -124,7 +123,7 @@ class Export(GlancesExport):
                     current_level = output_value
                     for depth in range(len(split_key) - 1):
                         if split_key[depth] not in current_level:
-                            current_level[split_key[depth]] = dict()
+                            current_level[split_key[depth]] = {}
                         current_level = current_level[split_key[depth]]
 
                     # Add the value
@@ -133,4 +132,4 @@ class Export(GlancesExport):
                 json_value = json_dumps(output_value)
                 self.client.publish(topic, json_value)
             except Exception as e:
-                logger.error("Can not export stats to MQTT server (%s)" % e)
+                logger.error(f"Can not export stats to MQTT server ({e})")

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -12,10 +11,10 @@
 import sys
 from platform import node
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-
 from influxdb_client import InfluxDBClient, WriteOptions
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 FIELD_TO_TAG = ['name', 'cmdline', 'type']
 
@@ -25,7 +24,7 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the InfluxDB export IF."""
-        super(Export, self).__init__(config=config, args=args)
+        super().__init__(config=config, args=args)
 
         # Mandatory configuration keys (additional to host and port)
         self.org = None
@@ -58,7 +57,7 @@ class Export(GlancesExport):
             self.interval = 0
         # and should be set to the Glances refresh time if the value is 0
         self.interval = self.interval if self.interval > 0 else self.args.time
-        logger.debug("InfluxDB export interval is set to {} seconds".format(self.interval))
+        logger.debug(f"InfluxDB export interval is set to {self.interval} seconds")
 
         # The hostname is always add as a tag
         self.hostname = node().split('.')[0]
@@ -71,20 +70,18 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
 
-        url = '{}://{}:{}'.format(self.protocol, self.host, self.port)
+        url = f'{self.protocol}://{self.host}:{self.port}'
         try:
             # See docs: https://influxdb-client.readthedocs.io/en/stable/api.html#influxdbclient
             client = InfluxDBClient(url=url, enable_gzip=False, verify_ssl=False, org=self.org, token=self.token)
         except Exception as e:
-            logger.critical("Cannot connect to InfluxDB server '%s' (%s)" % (url, e))
+            logger.critical(f"Cannot connect to InfluxDB server '{url}' ({e})")
             sys.exit(2)
         else:
-            logger.info(
-                "Connected to InfluxDB server version {} ({})".format(client.health().version, client.health().message)
-            )
+            logger.info(f"Connected to InfluxDB server version {client.health().version} ({client.health().message})")
 
         # Create the write client
-        write_client = client.write_api(
+        return client.write_api(
             write_options=WriteOptions(
                 batch_size=500,
                 flush_interval=self.interval * 1000,
@@ -95,7 +92,6 @@ class Export(GlancesExport):
                 exponential_base=2,
             )
         )
-        return write_client
 
     def _normalize(self, name, columns, points):
         """Normalize data for the InfluxDB's data model.
@@ -117,9 +113,7 @@ class Export(GlancesExport):
             # Manage field
             if measurement is not None:
                 fields = {
-                    k.replace('{}.'.format(measurement), ''): data_dict[k]
-                    for k in data_dict
-                    if k.startswith('{}.'.format(measurement))
+                    k.replace(f'{measurement}.', ''): data_dict[k] for k in data_dict if k.startswith(f'{measurement}.')
                 }
             else:
                 fields = data_dict
@@ -166,12 +160,12 @@ class Export(GlancesExport):
             name = self.prefix + '.' + name
         # Write input to the InfluxDB database
         if len(points) == 0:
-            logger.debug("Cannot export empty {} stats to InfluxDB".format(name))
+            logger.debug(f"Cannot export empty {name} stats to InfluxDB")
         else:
             try:
                 self.client.write(self.bucket, self.org, self._normalize(name, columns, points), time_precision="s")
             except Exception as e:
                 # Log level set to debug instead of error (see: issue #1561)
-                logger.debug("Cannot export {} stats to InfluxDB ({})".format(name, e))
+                logger.debug(f"Cannot export {name} stats to InfluxDB ({e})")
             else:
-                logger.debug("Export {} stats to InfluxDB".format(name))
+                logger.debug(f"Export {name} stats to InfluxDB")

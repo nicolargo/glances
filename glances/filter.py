@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -12,7 +11,7 @@ import re
 from glances.logger import logger
 
 
-class GlancesFilterList(object):
+class GlancesFilterList:
     """Manage a lis of GlancesFilter objects
 
     >>> fl = GlancesFilterList()
@@ -55,7 +54,7 @@ class GlancesFilterList(object):
         return False
 
 
-class GlancesFilter(object):
+class GlancesFilter:
     """Allow Glances to filter processes
 
     >>> f = GlancesFilter()
@@ -127,9 +126,9 @@ class GlancesFilter(object):
             # Compute the regular expression
             try:
                 self._filter_re = re.compile(self.filter)
-                logger.debug("Filter regex compilation OK: {}".format(self.filter))
+                logger.debug(f"Filter regex compilation OK: {self.filter}")
             except Exception as e:
-                logger.error("Cannot compile filter regex: {} ({})".format(self.filter, e))
+                logger.error(f"Cannot compile filter regex: {self.filter} ({e})")
                 self._filter = None
                 self._filter_re = None
                 self._filter_key = None
@@ -156,9 +155,9 @@ class GlancesFilter(object):
         if self.filter_key is None:
             # Apply filter on command line and process name
             return self._is_process_filtered(process, key='name') or self._is_process_filtered(process, key='cmdline')
-        else:
-            # Apply filter on <key>
-            return self._is_process_filtered(process)
+
+        # Apply filter on <key>
+        return self._is_process_filtered(process)
 
     def _is_process_filtered(self, process, key=None):
         """Return True if the process[key] should be filtered according to the current filter"""

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -11,18 +10,18 @@
 
 import collections
 import os
+import pathlib
 import sys
 import threading
 import traceback
 from importlib import import_module
-import pathlib
 
-from glances.logger import logger
 from glances.globals import exports_path, plugins_path, sys_path
+from glances.logger import logger
 from glances.timer import Counter
 
 
-class GlancesStats(object):
+class GlancesStats:
     """This class stores, updates and gives stats."""
 
     # Script header constant
@@ -55,10 +54,9 @@ class GlancesStats(object):
             if hasattr(plugin, 'get_json_views'):
                 # The method get_views exist, return it
                 return getattr(plugin, 'get_json_views')
-            else:
-                # The method get_views is not found for the plugin
-                raise AttributeError(item)
-        elif item.startswith('get'):
+            # The method get_views is not found for the plugin
+            raise AttributeError(item)
+        if item.startswith('get'):
             # Get the plugin name
             plugname = item[len('get') :].lower()
             # Get the plugin instance
@@ -66,12 +64,10 @@ class GlancesStats(object):
             if hasattr(plugin, 'get_stats'):
                 # The method get_stats exist, return it
                 return getattr(plugin, 'get_stats')
-            else:
-                # The method get_stats is not found for the plugin
-                raise AttributeError(item)
-        else:
-            # Default behavior
+            # The method get_stats is not found for the plugin
             raise AttributeError(item)
+        # Default behavior
+        raise AttributeError(item)
 
     def load_modules(self, args):
         """Wrapper to load: plugins and export modules."""
@@ -107,7 +103,7 @@ class GlancesStats(object):
         except Exception as e:
             # If a plugin can not be loaded, display a critical message
             # on the console but do not crash
-            logger.critical("Error while initializing the {} plugin ({})".format(plugin_path, e))
+            logger.critical(f"Error while initializing the {plugin_path} plugin ({e})")
             logger.error(traceback.format_exc())
             # An error occurred, disable the plugin
             if args is not None:
@@ -131,10 +127,10 @@ class GlancesStats(object):
                 # Load the plugin
                 start_duration.reset()
                 self._load_plugin(os.path.basename(item), args=args, config=self.config)
-                logger.debug("Plugin {} started in {} seconds".format(item, start_duration.get()))
+                logger.debug(f"Plugin {item} started in {start_duration.get()} seconds")
 
         # Log plugins list
-        logger.debug("Active plugins list: {}".format(self.getPluginsList()))
+        logger.debug(f"Active plugins list: {self.getPluginsList()}")
 
     def load_additional_plugins(self, args=None, config=None):
         """Load additional plugins if defined"""
@@ -177,11 +173,11 @@ class GlancesStats(object):
                     try:
                         _mod_loaded = import_module(plugin + '.model')
                         self._plugins[plugin] = _mod_loaded.PluginModel(args=args, config=config)
-                        logger.debug("Plugin {} started in {} seconds".format(plugin, start_duration.get()))
+                        logger.debug(f"Plugin {plugin} started in {start_duration.get()} seconds")
                     except Exception as e:
                         # If a plugin can not be loaded, display a critical message
                         # on the console but do not crash
-                        logger.critical("Error while initializing the {} plugin ({})".format(plugin, e))
+                        logger.critical(f"Error while initializing the {plugin} plugin ({e})")
                         logger.error(traceback.format_exc())
                         # An error occurred, disable the plugin
                         if args:
@@ -189,7 +185,7 @@ class GlancesStats(object):
 
             sys.path = _sys_path
             # Log plugins list
-            logger.debug("Active additional plugins list: {}".format(self.getPluginsList()))
+            logger.debug(f"Active additional plugins list: {self.getPluginsList()}")
 
     def load_exports(self, args=None):
         """Load all exporters in the 'exports' folder."""
@@ -221,10 +217,10 @@ class GlancesStats(object):
                 else:
                     # Add the exporter name to the available exporters dictionary
                     self._exports_all[exporter_name] = exporter_name
-                logger.debug("Exporter {} started in {} seconds".format(exporter_name, start_duration.get()))
+                logger.debug(f"Exporter {exporter_name} started in {start_duration.get()} seconds")
 
         # Log plugins list
-        logger.debug("Active exports modules list: {}".format(self.getExportsList()))
+        logger.debug(f"Active exports modules list: {self.getExportsList()}")
         return True
 
     def getPluginsList(self, enable=True):
@@ -237,8 +233,7 @@ class GlancesStats(object):
         """
         if enable:
             return [p for p in self._plugins if self._plugins[p].is_enabled()]
-        else:
-            return [p for p in self._plugins]
+        return list(self._plugins)
 
     def getExportsList(self, enable=True):
         """Return the exports list.
@@ -249,9 +244,8 @@ class GlancesStats(object):
         :return: list of export module names
         """
         if enable:
-            return [e for e in self._exports]
-        else:
-            return [e for e in self._exports_all]
+            return list(self._exports)
+        return list(self._exports_all)
 
     def load_limits(self, config=None):
         """Load the stats limits (except the one in the exclude list)."""
@@ -293,7 +287,7 @@ class GlancesStats(object):
         input_stats = input_stats or {}
 
         for e in self.getExportsList(enable=True):
-            logger.debug("Export stats using the %s module" % e)
+            logger.debug(f"Export stats using the {e} module")
             thread = threading.Thread(target=self._exports[e].update, args=(input_stats,))
             thread.start()
 
@@ -367,8 +361,7 @@ class GlancesStats(object):
         """Return the plugin name."""
         if plugin_name in self._plugins:
             return self._plugins[plugin_name]
-        else:
-            return None
+        return None
 
     def end(self):
         """End of the Glances stats."""

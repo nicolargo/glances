@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -12,22 +11,21 @@
 import sys
 import time
 
-from glances.logger import logger
-
 from glances.globals import WINDOWS
-from glances.processes import glances_processes
-from glances.stats import GlancesStats
+from glances.logger import logger
+from glances.outdated import Outdated
 from glances.outputs.glances_curses import GlancesCursesStandalone
 from glances.outputs.glances_stdout import GlancesStdout
-from glances.outputs.glances_stdout_json import GlancesStdoutJson
+from glances.outputs.glances_stdout_apidoc import GlancesStdoutApiDoc
 from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
 from glances.outputs.glances_stdout_issue import GlancesStdoutIssue
-from glances.outputs.glances_stdout_apidoc import GlancesStdoutApiDoc
-from glances.outdated import Outdated
+from glances.outputs.glances_stdout_json import GlancesStdoutJson
+from glances.processes import glances_processes
+from glances.stats import GlancesStats
 from glances.timer import Counter
 
 
-class GlancesStandalone(object):
+class GlancesStandalone:
     """This class creates and manages the Glances standalone session."""
 
     def __init__(self, config=None, args=None):
@@ -42,7 +40,7 @@ class GlancesStandalone(object):
         start_duration = Counter()
         start_duration.reset()
         self.stats = GlancesStats(config=config, args=args)
-        logger.debug("Plugins initialisation duration: {} seconds".format(start_duration.get()))
+        logger.debug(f"Plugins initialisation duration: {start_duration.get()} seconds")
 
         # Modules (plugins and exporters) are loaded at this point
         # Glances can display the list if asked...
@@ -63,11 +61,11 @@ class GlancesStandalone(object):
 
         # Manage optional process filter
         if args.process_filter is not None:
-            logger.info("Process filter is set to: {}".format(args.process_filter))
+            logger.info(f"Process filter is set to: {args.process_filter}")
             glances_processes.process_filter = args.process_filter
 
         if (args.export or args.stdout) and args.export_process_filter is not None:
-            logger.info("Export process filter is set to: {}".format(args.export_process_filter))
+            logger.info(f"Export process filter is set to: {args.export_process_filter}")
             glances_processes.export_process_filter = args.export_process_filter
 
         if (not WINDOWS) and args.no_kernel_threads:
@@ -77,7 +75,7 @@ class GlancesStandalone(object):
         # Initial system information update
         start_duration.reset()
         self.stats.update()
-        logger.debug("First stats update duration: {} seconds".format(start_duration.get()))
+        logger.debug(f"First stats update duration: {start_duration.get()} seconds")
 
         if self.quiet:
             logger.info("Quiet mode is ON, nothing will be displayed")
@@ -92,15 +90,15 @@ class GlancesStandalone(object):
             # Init screen
             self.screen = GlancesStdoutApiDoc(config=config, args=args)
         elif args.stdout:
-            logger.info("Stdout mode is ON, following stats will be displayed: {}".format(args.stdout))
+            logger.info(f"Stdout mode is ON, following stats will be displayed: {args.stdout}")
             # Init screen
             self.screen = GlancesStdout(config=config, args=args)
         elif args.stdout_json:
-            logger.info("Stdout JSON mode is ON, following stats will be displayed: {}".format(args.stdout_json))
+            logger.info(f"Stdout JSON mode is ON, following stats will be displayed: {args.stdout_json}")
             # Init screen
             self.screen = GlancesStdoutJson(config=config, args=args)
         elif args.stdout_csv:
-            logger.info("Stdout CSV mode is ON, following stats will be displayed: {}".format(args.stdout_csv))
+            logger.info(f"Stdout CSV mode is ON, following stats will be displayed: {args.stdout_csv}")
             # Init screen
             self.screen = GlancesStdoutCsv(config=config, args=args)
         else:
@@ -144,7 +142,7 @@ class GlancesStandalone(object):
         # Start a counter used to compute the time needed
         counter = Counter()
         self.stats.update()
-        logger.debug('Stats updated duration: {} seconds'.format(counter.get()))
+        logger.debug(f'Stats updated duration: {counter.get()} seconds')
 
         # Patch for issue1326 to avoid < 0 refresh
         adapted_refresh = (self.refresh_time - counter.get()) if (self.refresh_time - counter.get()) > 0 else 0
@@ -156,7 +154,7 @@ class GlancesStandalone(object):
             # has been pressed.
             counter_display = Counter()
             ret = not self.screen.update(self.stats, duration=adapted_refresh)
-            logger.debug('Stats display duration: {} seconds'.format(counter_display.get() - adapted_refresh))
+            logger.debug(f'Stats display duration: {counter_display.get() - adapted_refresh} seconds')
         else:
             # Nothing is displayed
             # Break should be done via a signal (CTRL-C)
@@ -167,7 +165,7 @@ class GlancesStandalone(object):
         # Start a counter used to compute the time needed
         counter_export = Counter()
         self.stats.export(self.stats)
-        logger.debug('Stats exported duration: {} seconds'.format(counter_export.get()))
+        logger.debug(f'Stats exported duration: {counter_export.get()} seconds')
 
         return ret
 
@@ -197,11 +195,9 @@ class GlancesStandalone(object):
 
         # Check Glances version versus PyPI one
         if self.outdated.is_outdated():
-            print(
-                "You are using Glances version {}, however version {} is available.".format(
-                    self.outdated.installed_version(), self.outdated.latest_version()
-                )
-            )
+            latest_version = self.outdated.latest_version()
+            installed_version = self.outdated.installed_version()
+            print(f"You are using Glances version {installed_version}, however version {latest_version} is available.")
             print("You should consider upgrading using: pip install --upgrade glances")
             print("Disable this warning temporarily using: glances --disable-check-update")
             print(

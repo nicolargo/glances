@@ -10,7 +10,6 @@ the developers managing and developing this open source project. In return,
 they should reciprocate that respect in addressing your issue or assessing
 patches and features.
 
-
 ## Using the issue tracker
 
 The [issue tracker](https://github.com/nicolargo/glances/issues) is
@@ -23,7 +22,6 @@ restrictions:
 
 * Please **do not** derail or troll issues. Keep the discussion on topic and
   respect the opinions of others.
-
 
 ## Bug reports
 
@@ -65,18 +63,16 @@ Example:
 > causing the bug, and potential solutions (and your opinions on their
 > merits).
 >
-> You can also run Glances in debug mode (-d) and paste/bin the glances.conf file (https://glances.readthedocs.io/en/latest/config.html).
+> You can also run Glances in debug mode (-d) and paste/bin the glances.conf file (<https://glances.readthedocs.io/en/latest/config.html>).
 >
 > Glances 3.2.0 or higher have also a --issue option to run a simple test. Please use it and copy/paste the output.
-
 
 ## Feature requests
 
 Feature requests are welcome. But take a moment to find out whether your idea
-fits with the scope and aims of the project. It's up to *you* to make a strong
+fits with the scope and aims of the project. It's up to _you* to make a strong
 case to convince the project's developers of the merits of this feature. Please
 provide as much detail and context as possible.
-
 
 ## Pull requests
 
@@ -133,6 +129,7 @@ included in the project:
 
 5. Test you code using the Makefile:
 
+   * make format ==> Format your code thanks to the Ruff linter
    * make run ==> Run Glances
    * make run-webserver ==> Run a Glances Web Server
    * make test ==> Run unit tests

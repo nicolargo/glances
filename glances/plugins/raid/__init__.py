@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -18,7 +17,7 @@ try:
     from pymdstat import MdStat
 except ImportError as e:
     import_error_tag = True
-    logger.warning("Missing Python Lib ({}), Raid plugin is disabled".format(e))
+    logger.warning(f"Missing Python Lib ({e}), Raid plugin is disabled")
 else:
     import_error_tag = False
 
@@ -31,7 +30,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config)
+        super().__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -54,7 +53,7 @@ class PluginModel(GlancesPluginModel):
                 # mds = MdStat(path='/home/nicolargo/dev/pymdstat/tests/mdstat.10')
                 stats = mds.get_stats()['arrays']
             except Exception as e:
-                logger.debug("Can not grab RAID stats (%s)" % e)
+                logger.debug(f"Can not grab RAID stats ({e})")
                 return self.stats
 
         elif self.input_method == 'snmp':
@@ -81,7 +80,7 @@ class PluginModel(GlancesPluginModel):
             name_max_width = max_width - 12
         else:
             # No max_width defined, return an emptu curse message
-            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Header
@@ -108,7 +107,7 @@ class PluginModel(GlancesPluginModel):
             # Data: RAID type name | disk used | disk available
             array_type = self.stats[array]['type'].upper() if self.stats[array]['type'] is not None else 'UNKNOWN'
             # Build the full name = array type + array name
-            full_name = '{} {}'.format(array_type, array)
+            full_name = f'{array_type} {array}'
             msg = '{:{width}}'.format(full_name, width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if self.stats[array]['type'] == 'raid0' and self.stats[array]['status'] == 'active':
@@ -134,7 +133,7 @@ class PluginModel(GlancesPluginModel):
                     ret.append(self.curse_new_line())
                     msg = '   {} disk {}: '.format(tree_char, self.stats[array]['components'][component])
                     ret.append(self.curse_add_line(msg))
-                    msg = '{}'.format(component)
+                    msg = f'{component}'
                     ret.append(self.curse_add_line(msg))
             if self.stats[array]['type'] != 'raid0' and (self.stats[array]['used'] < self.stats[array]['available']):
                 # Display current array configuration
@@ -161,6 +160,6 @@ class PluginModel(GlancesPluginModel):
             return 'CRITICAL'
         if used is None or available is None:
             return 'DEFAULT'
-        elif used < available:
+        if used < available:
             return 'WARNING'
         return 'OK'
