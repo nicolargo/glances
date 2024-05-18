@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -35,11 +34,11 @@ one_line=true
 systemctl_cmd=/usr/bin/systemctl --plain
 """
 
-from subprocess import check_output, CalledProcessError
+from subprocess import CalledProcessError, check_output
 
-from glances.logger import logger
-from glances.globals import iteritems, to_ascii
 from glances.amps.amp import GlancesAmp
+from glances.globals import iteritems, to_ascii
+from glances.logger import logger
 
 
 class Amp(GlancesAmp):
@@ -62,7 +61,7 @@ class Amp(GlancesAmp):
         try:
             res = check_output(self.get('systemctl_cmd').split())
         except (OSError, CalledProcessError) as e:
-            logger.debug('{}: Error while executing systemctl ({})'.format(self.NAME, e))
+            logger.debug(f'{self.NAME}: Error while executing systemctl ({e})')
         else:
             status = {}
             # For each line
@@ -79,7 +78,7 @@ class Amp(GlancesAmp):
             # Build the output (string) message
             output = 'Services\n'
             for k, v in iteritems(status):
-                output += '{}: {}\n'.format(k, v)
+                output += f'{k}: {v}\n'
             self.set_result(output, separator=' ')
 
         return self.result()

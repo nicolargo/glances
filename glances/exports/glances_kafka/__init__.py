@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -11,11 +10,11 @@
 
 import sys
 
-from glances.logger import logger
-from glances.globals import json_dumps
-from glances.exports.export import GlancesExport
-
 from kafka import KafkaProducer
+
+from glances.exports.export import GlancesExport
+from glances.globals import json_dumps
+from glances.logger import logger
 
 
 class Export(GlancesExport):
@@ -23,7 +22,7 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the Kafka export IF."""
-        super(Export, self).__init__(config=config, args=args)
+        super().__init__(config=config, args=args)
 
         # Mandatory configuration keys (additional to host and port)
         self.topic = None
@@ -48,7 +47,7 @@ class Export(GlancesExport):
             return None
 
         # Build the server URI with host and port
-        server_uri = '{}:{}'.format(self.host, self.port)
+        server_uri = f'{self.host}:{self.port}'
 
         try:
             s = KafkaProducer(
@@ -57,16 +56,16 @@ class Export(GlancesExport):
                 compression_type=self.compression,
             )
         except Exception as e:
-            logger.critical("Cannot connect to Kafka server %s (%s)" % (server_uri, e))
+            logger.critical(f"Cannot connect to Kafka server {server_uri} ({e})")
             sys.exit(2)
         else:
-            logger.info("Connected to the Kafka server %s" % server_uri)
+            logger.info(f"Connected to the Kafka server {server_uri}")
 
         return s
 
     def export(self, name, columns, points):
         """Write the points to the kafka server."""
-        logger.debug("Export {} stats to Kafka".format(name))
+        logger.debug(f"Export {name} stats to Kafka")
 
         # Create DB input
         data = dict(zip(columns, points))
@@ -84,7 +83,7 @@ class Export(GlancesExport):
                 value=data,
             )
         except Exception as e:
-            logger.error("Cannot export {} stats to Kafka ({})".format(name, e))
+            logger.error(f"Cannot export {name} stats to Kafka ({e})")
 
     def exit(self):
         """Close the Kafka export module."""
@@ -92,4 +91,4 @@ class Export(GlancesExport):
         self.client.flush()
         self.client.close()
         # Call the father method
-        super(Export, self).exit()
+        super().exit()

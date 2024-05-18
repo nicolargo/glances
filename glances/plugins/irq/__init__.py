@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,14 +8,13 @@
 
 """IRQ plugin."""
 
-import os
 import operator
+import os
 
-from glances.logger import logger
 from glances.globals import LINUX
-from glances.timer import getTimeSinceLastUpdate
+from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
-
+from glances.timer import getTimeSinceLastUpdate
 
 # Fields description
 # description: human readable description
@@ -43,9 +41,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
-            args=args, config=config, stats_init_value=[], fields_description=fields_description
-        )
+        super().__init__(args=args, config=config, stats_init_value=[], fields_description=fields_description)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -87,7 +83,7 @@ class PluginModel(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(PluginModel, self).update_views()
+        super().update_views()
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -104,7 +100,7 @@ class PluginModel(GlancesPluginModel):
             name_max_width = max_width - 7
         else:
             # No max_width defined, return an emptu curse message
-            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Build the string message
@@ -124,7 +120,7 @@ class PluginModel(GlancesPluginModel):
         return ret
 
 
-class GlancesIRQ(object):
+class GlancesIRQ:
     """This class manages the IRQ file."""
 
     IRQ_FILE = '/proc/interrupts'
@@ -170,7 +166,7 @@ class GlancesIRQ(object):
         irq_line = splitted_line[0].replace(':', '')
         if irq_line.isdigit():
             # If the first column is a digit, use the alias (last column)
-            irq_line += '_{}'.format(splitted_line[-1])
+            irq_line += f'_{splitted_line[-1]}'
         return irq_line
 
     def __sum(self, line):
@@ -217,7 +213,7 @@ class GlancesIRQ(object):
                     }
                     self.stats.append(irq_current)
                     self.lasts[irq_line] = current_irqs
-        except (OSError, IOError):
+        except OSError:
             pass
 
         return self.stats

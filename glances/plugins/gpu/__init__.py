@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -16,8 +15,8 @@ Currently supported:
 """
 
 from glances.globals import to_fahrenheit
-from glances.plugins.gpu.cards.nvidia import NvidiaGPU
 from glances.plugins.gpu.cards.amd import AmdGPU
+from glances.plugins.gpu.cards.nvidia import NvidiaGPU
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
@@ -67,7 +66,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
+        super().__init__(
             args=args,
             config=config,
             items_history_list=items_history_list,
@@ -89,7 +88,7 @@ class PluginModel(GlancesPluginModel):
         self.amd.exit()
 
         # Call the father exit method
-        super(PluginModel, self).exit()
+        super().exit()
 
     def get_key(self):
         """Return the key of the list."""
@@ -150,7 +149,7 @@ class PluginModel(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(PluginModel, self).update_views()
+        super().update_views()
 
         # Add specifics information
         # Alert
@@ -190,7 +189,7 @@ class PluginModel(GlancesPluginModel):
         # Header
         header = ''
         if len(self.stats) > 1:
-            header += '{}'.format(len(self.stats))
+            header += f'{len(self.stats)}'
             if same_name:
                 header += ' {}'.format(gpu_stats['name'])
             else:
@@ -213,7 +212,7 @@ class PluginModel(GlancesPluginModel):
             except TypeError:
                 mean_proc_msg = '{:>4}'.format('N/A')
             else:
-                mean_proc_msg = '{:>3.0f}%'.format(mean_proc)
+                mean_proc_msg = f'{mean_proc:>3.0f}%'
             if len(self.stats) > 1:
                 msg = '{:13}'.format('proc mean:')
             else:
@@ -232,7 +231,7 @@ class PluginModel(GlancesPluginModel):
             except TypeError:
                 mean_mem_msg = '{:>4}'.format('N/A')
             else:
-                mean_mem_msg = '{:>3.0f}%'.format(mean_mem)
+                mean_mem_msg = f'{mean_mem:>3.0f}%'
             if len(self.stats) > 1:
                 msg = '{:13}'.format('mem mean:')
             else:
@@ -255,7 +254,7 @@ class PluginModel(GlancesPluginModel):
                 if args.fahrenheit:
                     mean_temperature = to_fahrenheit(mean_temperature)
                     unit = 'F'
-                mean_temperature_msg = '{:>3.0f}{}'.format(mean_temperature, unit)
+                mean_temperature_msg = f'{mean_temperature:>3.0f}{unit}'
             if len(self.stats) > 1:
                 msg = '{:13}'.format('temp mean:')
             else:
@@ -283,7 +282,7 @@ class PluginModel(GlancesPluginModel):
                     mem_msg = '{:>3.0f}%'.format(gpu_stats['mem'])
                 except (ValueError, TypeError):
                     mem_msg = '{:>4}'.format('N/A')
-                msg = '{} {} mem {}'.format(id_msg, proc_msg, mem_msg)
+                msg = f'{id_msg} {proc_msg} mem {mem_msg}'
                 ret.append(self.curse_add_line(msg))
 
         return ret

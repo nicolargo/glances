@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -13,13 +12,12 @@ I am your father...
 ...for all Glances exports IF.
 """
 
-from glances.globals import json_dumps
-from glances.globals import NoOptionError, NoSectionError, iteritems, iterkeys
-from glances.timer import Counter
+from glances.globals import NoOptionError, NoSectionError, iteritems, iterkeys, json_dumps
 from glances.logger import logger
+from glances.timer import Counter
 
 
-class GlancesExport(object):
+class GlancesExport:
     """Main class for Glances export IF."""
 
     # List of non exportable plugins
@@ -40,7 +38,7 @@ class GlancesExport(object):
         """Init the export class."""
         # Export name
         self.export_name = self.__class__.__module__
-        logger.debug("Init export module %s" % self.export_name)
+        logger.debug(f"Init export module {self.export_name}")
 
         # Init the config & args
         self.config = config
@@ -64,18 +62,16 @@ class GlancesExport(object):
             counter = Counter()
             ret = fct(*args, **kw)
             duration = counter.get()
-            logger.debug(
-                "{} {} {} return {} in {} seconds".format(
-                    args[0].__class__.__name__, args[0].__class__.__module__, fct.__name__, ret, duration
-                )
-            )
+            class_name = args[0].__class__.__name__
+            class_module = args[0].__class__.__module__
+            logger.debug(f"{class_name} {class_module} {fct.__name__} return {ret} in {duration} seconds")
             return ret
 
         return wrapper
 
     def exit(self):
         """Close the export module."""
-        logger.debug("Finalise export interface %s" % self.export_name)
+        logger.debug(f"Finalise export interface {self.export_name}")
 
     def load_conf(self, section, mandatories=['host', 'port'], options=None):
         """Load the export <section> configuration in the Glances configuration file.
@@ -96,10 +92,10 @@ class GlancesExport(object):
             for opt in mandatories:
                 setattr(self, opt, self.config.get_value(section, opt))
         except NoSectionError:
-            logger.error("No {} configuration found".format(section))
+            logger.error(f"No {section} configuration found")
             return False
         except NoOptionError as e:
-            logger.error("Error in the {} configuration ({})".format(section, e))
+            logger.error(f"Error in the {section} configuration ({e})")
             return False
 
         # Load options
@@ -109,8 +105,8 @@ class GlancesExport(object):
             except NoOptionError:
                 pass
 
-        logger.debug("Load {} from the Glances configuration file".format(section))
-        logger.debug("{} parameters: {}".format(section, {opt: getattr(self, opt) for opt in mandatories + options}))
+        logger.debug(f"Load {section} from the Glances configuration file")
+        logger.debug(f"{section} parameters: {({opt: getattr(self, opt) for opt in mandatories + options})}")
 
         return True
 
@@ -120,11 +116,10 @@ class GlancesExport(object):
         try:
             ret = item[item['key']]
         except KeyError:
-            logger.error("No 'key' available in {}".format(item))
+            logger.error(f"No 'key' available in {item}")
         if isinstance(ret, list):
             return ret[0]
-        else:
-            return ret
+        return ret
 
     def parse_tags(self, tags):
         """Parse tags into a dict.

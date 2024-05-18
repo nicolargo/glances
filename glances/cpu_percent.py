@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,13 +8,13 @@
 
 """CPU percent stats shared between CPU and Quicklook plugins."""
 
+import psutil
+
 from glances.logger import logger
 from glances.timer import Timer
 
-import psutil
 
-
-class CpuPercent(object):
+class CpuPercent:
     """Get and store the CPU percent."""
 
     def __init__(self, cached_timer_cpu=3):
@@ -46,8 +45,7 @@ class CpuPercent(object):
         If percpu, return the percpu stats"""
         if percpu:
             return self.__get_percpu()
-        else:
-            return self.__get_cpu()
+        return self.__get_cpu()
 
     def get_info(self):
         """Get additional information about the CPU"""
@@ -57,7 +55,7 @@ class CpuPercent(object):
             try:
                 cpu_freq = psutil.cpu_freq()
             except Exception as e:
-                logger.debug('Can not grab CPU information ({})'.format(e))
+                logger.debug(f'Can not grab CPU information ({e})')
             else:
                 if hasattr(cpu_freq, 'current'):
                     self.cpu_info['cpu_hz_current'] = cpu_freq.current
@@ -75,7 +73,7 @@ class CpuPercent(object):
         # Get the CPU name once from the /proc/cpuinfo file
         # TODO: Multisystem...
         try:
-            self.cpu_info['cpu_name'] = open('/proc/cpuinfo', 'r').readlines()[4].split(':')[1].strip()
+            self.cpu_info['cpu_name'] = open('/proc/cpuinfo').readlines()[4].split(':')[1].strip()
         except (FileNotFoundError, PermissionError, IndexError, KeyError, AttributeError):
             self.cpu_info['cpu_name'] = 'CPU'
         return self.cpu_info['cpu_name']

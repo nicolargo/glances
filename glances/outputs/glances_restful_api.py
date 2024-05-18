@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -12,31 +11,30 @@
 import os
 import sys
 import tempfile
-from io import open
 import webbrowser
 from urllib.parse import urljoin
 
-try:    
+try:
     from typing import Annotated
 except ImportError:
     # Only for Python 3.8
     # To be removed when Python 3.8 support will be dropped
     from typing_extensions import Annotated
 
-from glances import __version__, __apiversion__
+from glances import __apiversion__, __version__
+from glances.logger import logger
 from glances.password import GlancesPassword
 from glances.timer import Timer
-from glances.logger import logger
 
 # FastAPI import
 try:
-    from fastapi import FastAPI, Depends, HTTPException, status, APIRouter, Request
-    from fastapi.security import HTTPBasic, HTTPBasicCredentials
+    from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.middleware.gzip import GZipMiddleware
     from fastapi.responses import HTMLResponse, ORJSONResponse
-    from fastapi.templating import Jinja2Templates
+    from fastapi.security import HTTPBasic, HTTPBasicCredentials
     from fastapi.staticfiles import StaticFiles
+    from fastapi.templating import Jinja2Templates
 except ImportError:
     logger.critical('FastAPI import error. Glances cannot start in web server mode.')
     sys.exit(2)
@@ -46,6 +44,7 @@ try:
 except ImportError:
     logger.critical('Uvicorn import error. Glances cannot start in web server mode.')
     sys.exit(2)
+import builtins
 import contextlib
 import threading
 import time
@@ -77,7 +76,7 @@ class GlancesUvicornServer(uvicorn.Server):
             thread.join()
 
 
-class GlancesRestfulApi(object):
+class GlancesRestfulApi:
     """This class manages the Restful API server."""
 
     API_VERSION = __apiversion__
@@ -102,7 +101,7 @@ class GlancesRestfulApi(object):
         self.load_config(config)
 
         # Set the bind URL
-        self.bind_url = urljoin('http://{}:{}/'.format(self.args.bind_address, self.args.port), self.url_prefix)
+        self.bind_url = urljoin(f'http://{self.args.bind_address}:{self.args.port}/', self.url_prefix)
 
         # FastAPI Init
         if self.args.password:
@@ -151,9 +150,9 @@ class GlancesRestfulApi(object):
         self.url_prefix = '/'
         if config is not None and config.has_section('outputs'):
             n = config.get_value('outputs', 'max_processes_display', default=None)
-            logger.debug('Number of processes to display in the WebUI: {}'.format(n))
+            logger.debug(f'Number of processes to display in the WebUI: {n}')
             self.url_prefix = config.get_value('outputs', 'url_prefix', default='/')
-            logger.debug('URL prefix: {}'.format(self.url_prefix))
+            logger.debug(f'URL prefix: {self.url_prefix}')
 
     def __update__(self):
         # Never update more than 1 time per cached_time
@@ -184,92 +183,92 @@ class GlancesRestfulApi(object):
 
         # REST API
         router.add_api_route(
-            '/api/%s/status' % self.API_VERSION,
+            f'/api/{self.API_VERSION}/status',
             status_code=status.HTTP_200_OK,
             response_class=ORJSONResponse,
             endpoint=self._api_status,
         )
 
         router.add_api_route(
-            '/api/%s/config' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_config
+            f'/api/{self.API_VERSION}/config', response_class=ORJSONResponse, endpoint=self._api_config
         )
         router.add_api_route(
-            '/api/%s/config/{section}' % self.API_VERSION,
+            f'/api/{self.API_VERSION}/config/{{section}}',
             response_class=ORJSONResponse,
             endpoint=self._api_config_section,
         )
         router.add_api_route(
-            '/api/%s/config/{section}/{item}' % self.API_VERSION,
+            f'/api/{self.API_VERSION}/config/{{section}}/{{item}}',
             response_class=ORJSONResponse,
             endpoint=self._api_config_section_item,
         )
 
-        router.add_api_route('/api/%s/args' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_args)
+        router.add_api_route(f'/api/{self.API_VERSION}/args', response_class=ORJSONResponse, endpoint=self._api_args)
         router.add_api_route(
-            '/api/%s/args/{item}' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_args_item
+            f'/api/{self.API_VERSION}/args/{{item}}', response_class=ORJSONResponse, endpoint=self._api_args_item
         )
 
         router.add_api_route(
-            '/api/%s/pluginslist' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_plugins
+            f'/api/{self.API_VERSION}/pluginslist', response_class=ORJSONResponse, endpoint=self._api_plugins
         )
-        router.add_api_route('/api/%s/all' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_all)
+        router.add_api_route(f'/api/{self.API_VERSION}/all', response_class=ORJSONResponse, endpoint=self._api_all)
         router.add_api_route(
-            '/api/%s/all/limits' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_all_limits
+            f'/api/{self.API_VERSION}/all/limits', response_class=ORJSONResponse, endpoint=self._api_all_limits
         )
         router.add_api_route(
-            '/api/%s/all/views' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_all_views
+            f'/api/{self.API_VERSION}/all/views', response_class=ORJSONResponse, endpoint=self._api_all_views
         )
 
-        router.add_api_route('/api/%s/help' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_help)
-        router.add_api_route('/api/%s/{plugin}' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api)
+        router.add_api_route(f'/api/{self.API_VERSION}/help', response_class=ORJSONResponse, endpoint=self._api_help)
+        router.add_api_route(f'/api/{self.API_VERSION}/{{plugin}}', response_class=ORJSONResponse, endpoint=self._api)
         router.add_api_route(
-            '/api/%s/{plugin}/history' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_history
+            f'/api/{self.API_VERSION}/{{plugin}}/history', response_class=ORJSONResponse, endpoint=self._api_history
         )
         router.add_api_route(
-            '/api/%s/{plugin}/history/{nb}' % self.API_VERSION,
+            f'/api/{self.API_VERSION}/{{plugin}}/history/{{nb}}',
             response_class=ORJSONResponse,
             endpoint=self._api_history,
         )
         router.add_api_route(
-            '/api/%s/{plugin}/top/{nb}' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_top
+            f'/api/{self.API_VERSION}/{{plugin}}/top/{{nb}}', response_class=ORJSONResponse, endpoint=self._api_top
         )
         router.add_api_route(
-            '/api/%s/{plugin}/limits' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_limits
+            f'/api/{self.API_VERSION}/{{plugin}}/limits', response_class=ORJSONResponse, endpoint=self._api_limits
         )
         router.add_api_route(
-            '/api/%s/{plugin}/views' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_views
+            f'/api/{self.API_VERSION}/{{plugin}}/views', response_class=ORJSONResponse, endpoint=self._api_views
         )
         router.add_api_route(
-            '/api/%s/{plugin}/{item}' % self.API_VERSION, response_class=ORJSONResponse, endpoint=self._api_item
+            f'/api/{self.API_VERSION}/{{plugin}}/{{item}}', response_class=ORJSONResponse, endpoint=self._api_item
         )
         router.add_api_route(
-            '/api/%s/{plugin}/{item}/history' % self.API_VERSION,
+            f'/api/{self.API_VERSION}/{{plugin}}/{{item}}/history',
             response_class=ORJSONResponse,
             endpoint=self._api_item_history,
         )
         router.add_api_route(
-            '/api/%s/{plugin}/{item}/history/{nb}' % self.API_VERSION,
+            f'/api/{self.API_VERSION}/{{plugin}}/{{item}}/history/{{nb}}',
             response_class=ORJSONResponse,
             endpoint=self._api_item_history,
         )
         router.add_api_route(
-            '/api/%s/{plugin}/{item}/description' % self.API_VERSION,
+            f'/api/{self.API_VERSION}/{{plugin}}/{{item}}/description',
             response_class=ORJSONResponse,
             endpoint=self._api_item_description,
         )
         router.add_api_route(
-            '/api/%s/{plugin}/{item}/unit' % self.API_VERSION,
+            f'/api/{self.API_VERSION}/{{plugin}}/{{item}}/unit',
             response_class=ORJSONResponse,
             endpoint=self._api_item_unit,
         )
         router.add_api_route(
-            '/api/%s/{plugin}/{item}/{value}' % self.API_VERSION,
+            f'/api/{self.API_VERSION}/{{plugin}}/{{item}}/{{value}}',
             response_class=ORJSONResponse,
             endpoint=self._api_value,
         )
 
         # Restful API
-        bindmsg = 'Glances RESTful API Server started on {}api/{}'.format(self.bind_url, self.API_VERSION)
+        bindmsg = f'Glances RESTful API Server started on {self.bind_url}api/{self.API_VERSION}'
         logger.info(bindmsg)
 
         # WEB UI
@@ -280,9 +279,9 @@ class GlancesRestfulApi(object):
             # Statics files
             self._app.mount("/static", StaticFiles(directory=self.STATIC_PATH), name="static")
 
-            logger.info("Get WebUI in {}".format(self.STATIC_PATH))
+            logger.info(f"Get WebUI in {self.STATIC_PATH}")
 
-            bindmsg = 'Glances Web User Interface started on {}'.format(self.bind_url)
+            bindmsg = f'Glances Web User Interface started on {self.bind_url}'
         else:
             bindmsg = 'The WebUI is disable (--disable-webui)'
 
@@ -317,7 +316,7 @@ class GlancesRestfulApi(object):
         try:
             self.uvicorn_server = GlancesUvicornServer(config=uvicorn_config)
         except Exception as e:
-            logger.critical('Error: Can not ran Glances Web server ({})'.format(e))
+            logger.critical(f'Error: Can not ran Glances Web server ({e})')
             self.uvicorn_server = None
         else:
             with self.uvicorn_server.run_in_thread():
@@ -369,7 +368,7 @@ class GlancesRestfulApi(object):
         try:
             plist = self.stats.get_plugin("help").get_view_data()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get help view data (%s)" % str(e))
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get help view data ({str(e)})")
 
         return ORJSONResponse(plist)
 
@@ -405,7 +404,7 @@ class GlancesRestfulApi(object):
         try:
             plist = self.plugins_list
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get plugin list (%s)" % str(e))
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get plugin list ({str(e)})")
 
         return ORJSONResponse(plist)
 
@@ -420,10 +419,10 @@ class GlancesRestfulApi(object):
         if self.args.debug:
             fname = os.path.join(tempfile.gettempdir(), 'glances-debug.json')
             try:
-                with open(fname) as f:
+                with builtins.open(fname) as f:
                     return f.read()
-            except IOError:
-                logger.debug("Debug file (%s) not found" % fname)
+            except OSError:
+                logger.debug(f"Debug file ({fname}) not found")
 
         # Update the stat
         self.__update__()
@@ -432,7 +431,7 @@ class GlancesRestfulApi(object):
             # Get the RAW value of the stat ID
             statval = self.stats.getAllAsDict()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get stats (%s)" % str(e))
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get stats ({str(e)})")
 
         return ORJSONResponse(statval)
 
@@ -448,7 +447,7 @@ class GlancesRestfulApi(object):
             # Get the RAW value of the stat limits
             limits = self.stats.getAllLimitsAsDict()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get limits (%s)" % str(e))
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get limits ({str(e)})")
 
         return ORJSONResponse(limits)
 
@@ -464,7 +463,7 @@ class GlancesRestfulApi(object):
             # Get the RAW value of the stat view
             limits = self.stats.getAllViewsAsDict()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get views (%s)" % str(e))
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get views ({str(e)})")
 
         return ORJSONResponse(limits)
 
@@ -479,7 +478,7 @@ class GlancesRestfulApi(object):
         if plugin not in self.plugins_list:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list),
+                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
             )
 
         # Update the stat
@@ -489,9 +488,7 @@ class GlancesRestfulApi(object):
             # Get the RAW value of the stat ID
             statval = self.stats.get_plugin(plugin).get_raw()
         except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get plugin %s (%s)" % (plugin, str(e))
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get plugin {plugin} ({str(e)})")
 
         return ORJSONResponse(statval)
 
@@ -508,7 +505,7 @@ class GlancesRestfulApi(object):
         if plugin not in self.plugins_list:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list),
+                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
             )
 
         # Update the stat
@@ -518,9 +515,7 @@ class GlancesRestfulApi(object):
             # Get the RAW value of the stat ID
             statval = self.stats.get_plugin(plugin).get_raw()
         except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get plugin %s (%s)" % (plugin, str(e))
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get plugin {plugin} ({str(e)})")
 
         print(statval)
 
@@ -541,7 +536,7 @@ class GlancesRestfulApi(object):
         if plugin not in self.plugins_list:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list),
+                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
             )
 
         # Update the stat
@@ -552,7 +547,7 @@ class GlancesRestfulApi(object):
             statval = self.stats.get_plugin(plugin).get_raw_history(nb=int(nb))
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get plugin history %s (%s)" % (plugin, str(e))
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get plugin history {plugin} ({str(e)})"
             )
 
         return statval
@@ -568,7 +563,7 @@ class GlancesRestfulApi(object):
         if plugin not in self.plugins_list:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list),
+                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
             )
 
         try:
@@ -576,7 +571,7 @@ class GlancesRestfulApi(object):
             ret = self.stats.get_plugin(plugin).limits
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get limits for plugin %s (%s)" % (plugin, str(e))
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get limits for plugin {plugin} ({str(e)})"
             )
 
         return ORJSONResponse(ret)
@@ -592,7 +587,7 @@ class GlancesRestfulApi(object):
         if plugin not in self.plugins_list:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list),
+                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
             )
 
         try:
@@ -600,7 +595,7 @@ class GlancesRestfulApi(object):
             ret = self.stats.get_plugin(plugin).get_views()
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get views for plugin %s (%s)" % (plugin, str(e))
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get views for plugin {plugin} ({str(e)})"
             )
 
         return ORJSONResponse(ret)
@@ -616,7 +611,7 @@ class GlancesRestfulApi(object):
         if plugin not in self.plugins_list:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list),
+                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
             )
 
         # Update the stat
@@ -628,7 +623,7 @@ class GlancesRestfulApi(object):
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Cannot get item %s in plugin %s (%s)" % (item, plugin, str(e)),
+                detail=f"Cannot get item {item} in plugin {plugin} ({str(e)})",
             )
 
         return ORJSONResponse(ret)
@@ -645,7 +640,7 @@ class GlancesRestfulApi(object):
         if plugin not in self.plugins_list:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list),
+                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
             )
 
         # Update the stat
@@ -656,7 +651,7 @@ class GlancesRestfulApi(object):
             ret = self.stats.get_plugin(plugin).get_raw_history(item, nb=nb)
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get history for plugin %s (%s)" % (plugin, str(e))
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get history for plugin {plugin} ({str(e)})"
             )
         else:
             return ORJSONResponse(ret)
@@ -672,7 +667,7 @@ class GlancesRestfulApi(object):
         if plugin not in self.plugins_list:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list),
+                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
             )
 
         try:
@@ -681,7 +676,7 @@ class GlancesRestfulApi(object):
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Cannot get %s description for plugin %s (%s)" % (item, plugin, str(e)),
+                detail=f"Cannot get {item} description for plugin {plugin} ({str(e)})",
             )
         else:
             return ORJSONResponse(ret)
@@ -697,7 +692,7 @@ class GlancesRestfulApi(object):
         if plugin not in self.plugins_list:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list),
+                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
             )
 
         try:
@@ -706,7 +701,7 @@ class GlancesRestfulApi(object):
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Cannot get %s unit for plugin %s (%s)" % (item, plugin, str(e)),
+                detail=f"Cannot get {item} unit for plugin {plugin} ({str(e)})",
             )
         else:
             return ORJSONResponse(ret)
@@ -722,7 +717,7 @@ class GlancesRestfulApi(object):
         if plugin not in self.plugins_list:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list),
+                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
             )
 
         # Update the stat
@@ -734,7 +729,7 @@ class GlancesRestfulApi(object):
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Cannot get %s = %s for plugin %s (%s)" % (item, value, plugin, str(e)),
+                detail=f"Cannot get {item} = {value} for plugin {plugin} ({str(e)})",
             )
         else:
             return ORJSONResponse(ret)
@@ -750,7 +745,7 @@ class GlancesRestfulApi(object):
             # Get the RAW value of the config' dict
             args_json = self.config.as_dict()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get config (%s)" % str(e))
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get config ({str(e)})")
         else:
             return ORJSONResponse(args_json)
 
@@ -764,16 +759,14 @@ class GlancesRestfulApi(object):
         """
         config_dict = self.config.as_dict()
         if section not in config_dict:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown configuration item %s" % section
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unknown configuration item {section}")
 
         try:
             # Get the RAW value of the config' dict
             ret_section = config_dict[section]
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get config section %s (%s)" % (section, str(e))
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get config section {section} ({str(e)})"
             )
 
         return ORJSONResponse(ret_section)
@@ -788,16 +781,14 @@ class GlancesRestfulApi(object):
         """
         config_dict = self.config.as_dict()
         if section not in config_dict:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown configuration item %s" % section
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unknown configuration item {section}")
 
         try:
             # Get the RAW value of the config' dict section
             ret_section = config_dict[section]
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get config section %s (%s)" % (section, str(e))
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get config section {section} ({str(e)})"
             )
 
         try:
@@ -806,7 +797,7 @@ class GlancesRestfulApi(object):
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Cannot get item %s in config section %s (%s)" % (item, section, str(e)),
+                detail=f"Cannot get item {item} in config section {section} ({str(e)})",
             )
 
         return ORJSONResponse(ret_item)
@@ -824,7 +815,7 @@ class GlancesRestfulApi(object):
             # Source: https://docs.python.org/%s/library/functions.html#vars
             args_json = vars(self.args)
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get args (%s)" % str(e))
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get args ({str(e)})")
 
         return ORJSONResponse(args_json)
 
@@ -837,7 +828,7 @@ class GlancesRestfulApi(object):
         HTTP/404 if others error
         """
         if item not in self.args:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown argument item %s" % item)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unknown argument item {item}")
 
         try:
             # Get the RAW value of the args' dict
@@ -845,6 +836,6 @@ class GlancesRestfulApi(object):
             # Source: https://docs.python.org/%s/library/functions.html#vars
             args_json = vars(self.args)[item]
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cannot get args item (%s)" % str(e))
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get args item ({str(e)})")
 
         return ORJSONResponse(args_json)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -10,8 +9,8 @@
 """Manage on alert actions."""
 
 from glances.logger import logger
-from glances.timer import Timer
 from glances.secure import secure_popen
+from glances.timer import Timer
 
 try:
     import chevron
@@ -22,7 +21,7 @@ else:
     chevron_tag = True
 
 
-class GlancesActions(object):
+class GlancesActions:
     """This class manage action if an alert is reached."""
 
     def __init__(self, args=None):
@@ -80,13 +79,13 @@ class GlancesActions(object):
             else:
                 cmd_full = cmd
             # Execute the action
-            logger.info("Action triggered for {} ({}): {}".format(stat_name, criticality, cmd_full))
+            logger.info(f"Action triggered for {stat_name} ({criticality}): {cmd_full}")
             try:
                 ret = secure_popen(cmd_full)
             except OSError as e:
-                logger.error("Action error for {} ({}): {}".format(stat_name, criticality, e))
+                logger.error(f"Action error for {stat_name} ({criticality}): {e}")
             else:
-                logger.debug("Action result for {} ({}): {}".format(stat_name, criticality, ret))
+                logger.debug(f"Action result for {stat_name} ({criticality}): {ret}")
 
         self.set(stat_name, criticality)
 
