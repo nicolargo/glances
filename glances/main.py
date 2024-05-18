@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -15,14 +14,14 @@ import tempfile
 from logging import DEBUG
 from warnings import simplefilter
 
-from glances import __version__, psutil_version, __apiversion__
-from glances.globals import WINDOWS, disable, enable
+from glances import __apiversion__, __version__, psutil_version
 from glances.config import Config
+from glances.globals import WINDOWS, disable, enable
+from glances.logger import LOG_FILENAME, logger
 from glances.processes import sort_processes_key_list
-from glances.logger import logger, LOG_FILENAME
 
 
-class GlancesMain(object):
+class GlancesMain:
     """Main class to manage Glances instance."""
 
     # Default stats' minimum refresh time is 2 seconds
@@ -101,10 +100,10 @@ Examples of use:
 
     def version_msg(self):
         """Return the version message."""
-        version = 'Glances version:\t{}\n'.format(__version__)
-        version += 'Glances API version:\t{}\n'.format(__apiversion__)
-        version += 'PsUtil version:\t\t{}\n'.format(psutil_version)
-        version += 'Log file:\t\t{}\n'.format(LOG_FILENAME)
+        version = f'Glances version:\t{__version__}\n'
+        version += f'Glances API version:\t{__apiversion__}\n'
+        version += f'PsUtil version:\t\t{psutil_version}\n'
+        version += f'Log file:\t\t{LOG_FILENAME}\n'
         return version
 
     def init_args(self):
@@ -241,7 +240,7 @@ Examples of use:
         )
         parser.add_argument(
             '--enable-irq', action='store_true', default=False, dest='enable_irq', help='enable IRQ module'
-        ),
+        )
         parser.add_argument(
             '--enable-process-extended',
             action='store_true',
@@ -255,14 +254,14 @@ Examples of use:
             default=True,
             dest='enable_separator',
             help='disable separator in the UI (between top and others modules)',
-        ),
+        )
         parser.add_argument(
             '--disable-cursor',
             action='store_true',
             default=False,
             dest='disable_cursor',
             help='disable cursor (process selection) in the UI',
-        ),
+        )
         # Sort processes list
         parser.add_argument(
             '--sort-processes',
@@ -334,7 +333,7 @@ Examples of use:
             default=None,
             type=int,
             dest='port',
-            help='define the client/server TCP port [default: {}]'.format(self.server_port),
+            help=f'define the client/server TCP port [default: {self.server_port}]',
         )
         parser.add_argument(
             '-B',
@@ -374,7 +373,7 @@ Examples of use:
             default=self.DEFAULT_REFRESH_TIME,
             type=float,
             dest='time',
-            help='set minimum refresh rate in seconds [default: {} sec]'.format(self.DEFAULT_REFRESH_TIME),
+            help=f'set minimum refresh rate in seconds [default: {self.DEFAULT_REFRESH_TIME} sec]',
         )
         parser.add_argument(
             '-w',
@@ -389,7 +388,7 @@ Examples of use:
             default=self.cached_time,
             type=int,
             dest='cached_time',
-            help='set the server cache time [default: {} sec]'.format(self.cached_time),
+            help=f'set the server cache time [default: {self.cached_time} sec]',
         )
         parser.add_argument(
             '--stop-after',
@@ -577,7 +576,7 @@ Examples of use:
         if args.time == self.DEFAULT_REFRESH_TIME:
             args.time = global_refresh
 
-        logger.debug('Global refresh rate is set to {} seconds'.format(args.time))
+        logger.debug(f'Global refresh rate is set to {args.time} seconds')
 
     def init_plugins(self, args):
         """Init Glances plugins"""
@@ -585,7 +584,7 @@ Examples of use:
         for s in self.config.sections():
             if self.config.has_section(s) and (self.config.get_bool_value(s, 'disable', False)):
                 disable(args, s)
-                logger.debug('{} disabled by the configuration file'.format(s))
+                logger.debug(f'{s} disabled by the configuration file')
         # The configuration key can be overwrite from the command line
         if args and args.disable_plugin and 'all' in args.disable_plugin.split(','):
             if not args.enable_plugin:
@@ -664,19 +663,19 @@ Examples of use:
             # Interactive or file password
             if args.server:
                 args.password = self.__get_password(
-                    description='Define the Glances server password ({} username): '.format(args.username),
+                    description=f'Define the Glances server password ({args.username} username): ',
                     confirm=True,
                     username=args.username,
                 )
             elif args.webserver:
                 args.password = self.__get_password(
-                    description='Define the Glances webserver password ({} username): '.format(args.username),
+                    description=f'Define the Glances webserver password ({args.username} username): ',
                     confirm=True,
                     username=args.username,
                 )
             elif args.client:
                 args.password = self.__get_password(
-                    description='Enter the Glances server password ({} username): '.format(args.username),
+                    description=f'Enter the Glances server password ({args.username} username): ',
                     clear=True,
                     username=args.username,
                 )

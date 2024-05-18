@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -10,12 +9,13 @@
 """Load plugin."""
 
 import os
+
 import psutil
 
 from glances.globals import iteritems
+from glances.logger import logger
 from glances.plugins.core import PluginModel as CorePluginModel
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.logger import logger
 
 # Fields description
 fields_description = {
@@ -65,7 +65,7 @@ nb_phys_core = 1
 try:
     core = CorePluginModel().update()
 except Exception as e:
-    logger.warning('Error: Can not retrieve the CPU core number (set it to 1) ({})'.format(e))
+    logger.warning(f'Error: Can not retrieve the CPU core number (set it to 1) ({e})')
 else:
     if 'log' in core:
         nb_log_core = core['log']
@@ -81,7 +81,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
+        super().__init__(
             args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
         )
 
@@ -110,8 +110,7 @@ class PluginModel(GlancesPluginModel):
             stats = self.get_stats_snmp(snmp_oid=snmp_oid)
 
             if stats['min1'] == '':
-                stats = self.get_init_value()
-                return stats
+                return self.get_init_value()
 
             # Python 3 return a dict like:
             # {'min1': "b'0.08'", 'min5': "b'0.12'", 'min15': "b'0.15'"}
@@ -128,7 +127,7 @@ class PluginModel(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(PluginModel, self).update_views()
+        super().update_views()
 
         # Add specifics information
         try:
@@ -164,17 +163,17 @@ class PluginModel(GlancesPluginModel):
         # Loop over 1min, 5min and 15min load
         for load_time in ['1', '5', '15']:
             ret.append(self.curse_new_line())
-            msg = '{:7}'.format('{} min'.format(load_time))
+            msg = '{:7}'.format(f'{load_time} min')
             ret.append(self.curse_add_line(msg))
             if args.disable_irix and get_nb_log_core() != 0:
                 # Enable Irix mode for load (see issue #1554)
-                load_stat = self.stats['min{}'.format(load_time)] / get_nb_log_core() * 100
-                msg = '{:>5.1f}%'.format(load_stat)
+                load_stat = self.stats[f'min{load_time}'] / get_nb_log_core() * 100
+                msg = f'{load_stat:>5.1f}%'
             else:
                 # Default mode for load
-                load_stat = self.stats['min{}'.format(load_time)]
-                msg = '{:>6.2f}'.format(load_stat)
-            ret.append(self.curse_add_line(msg, self.get_views(key='min{}'.format(load_time), option='decoration')))
+                load_stat = self.stats[f'min{load_time}']
+                msg = f'{load_stat:>6.2f}'
+            ret.append(self.curse_add_line(msg, self.get_views(key=f'min{load_time}', option='decoration')))
 
         return ret
 
@@ -205,5 +204,4 @@ def get_load_average(percent: bool = False):
 
     if load_average and percent:
         return tuple([round(i / get_nb_log_core() * 100, 1) for i in load_average])
-    else:
-        return load_average
+    return load_average

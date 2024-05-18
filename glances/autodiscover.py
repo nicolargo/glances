@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -16,7 +15,8 @@ from glances.globals import BSD
 from glances.logger import logger
 
 try:
-    from zeroconf import __version__ as __zeroconf_version, ServiceBrowser, ServiceInfo, Zeroconf
+    from zeroconf import ServiceBrowser, ServiceInfo, Zeroconf
+    from zeroconf import __version__ as __zeroconf_version
 
     zeroconf_tag = True
 except ImportError:
@@ -26,7 +26,7 @@ except ImportError:
 if zeroconf_tag:
     zeroconf_min_version = (0, 17, 0)
     zeroconf_version = tuple([int(num) for num in __zeroconf_version.split('.')])
-    logger.debug("Zeroconf version {} detected.".format(__zeroconf_version))
+    logger.debug(f"Zeroconf version {__zeroconf_version} detected.")
     if zeroconf_version < zeroconf_min_version:
         logger.critical("Please install zeroconf 0.17 or higher.")
         sys.exit(1)
@@ -34,10 +34,10 @@ if zeroconf_tag:
 # Global var
 # Recent versions of the zeroconf python package doesn't like a zeroconf type that ends with '._tcp.'.
 # Correct issue: zeroconf problem with zeroconf_type = "_%s._tcp." % 'glances' #888
-zeroconf_type = "_%s._tcp.local." % 'glances'
+zeroconf_type = "_{}._tcp.local.".format('glances')
 
 
-class AutoDiscovered(object):
+class AutoDiscovered:
     """Class to manage the auto discovered servers dict."""
 
     def __init__(self):
@@ -66,7 +66,7 @@ class AutoDiscovered(object):
             'type': 'DYNAMIC',
         }  # Server type: 'STATIC' or 'DYNAMIC'
         self._server_list.append(new_server)
-        logger.debug("Updated servers list (%s servers): %s" % (len(self._server_list), self._server_list))
+        logger.debug(f"Updated servers list ({len(self._server_list)} servers): {self._server_list}")
 
     def remove_server(self, name):
         """Remove a server from the dict."""
@@ -74,13 +74,13 @@ class AutoDiscovered(object):
             if i['key'] == name:
                 try:
                     self._server_list.remove(i)
-                    logger.debug("Remove server %s from the list" % name)
-                    logger.debug("Updated servers list (%s servers): %s" % (len(self._server_list), self._server_list))
+                    logger.debug(f"Remove server {name} from the list")
+                    logger.debug(f"Updated servers list ({len(self._server_list)} servers): {self._server_list}")
                 except ValueError:
-                    logger.error("Cannot remove server %s from the list" % name)
+                    logger.error(f"Cannot remove server {name} from the list")
 
 
-class GlancesAutoDiscoverListener(object):
+class GlancesAutoDiscoverListener:
     """Zeroconf listener for Glances server."""
 
     def __init__(self):
@@ -104,7 +104,7 @@ class GlancesAutoDiscoverListener(object):
         """
         if srv_type != zeroconf_type:
             return False
-        logger.debug("Check new Zeroconf server: %s / %s" % (srv_type, srv_name))
+        logger.debug(f"Check new Zeroconf server: {srv_type} / {srv_name}")
         info = zeroconf.get_service_info(srv_type, srv_name)
         if info and (info.addresses or info.parsed_addresses):
             address = info.addresses[0] if info.addresses else info.parsed_addresses[0]
@@ -113,7 +113,7 @@ class GlancesAutoDiscoverListener(object):
 
             # Add server to the global dict
             self.servers.add_server(srv_name, new_server_ip, new_server_port)
-            logger.info("New Glances server detected (%s from %s:%s)" % (srv_name, new_server_ip, new_server_port))
+            logger.info(f"New Glances server detected ({srv_name} from {new_server_ip}:{new_server_port})")
         else:
             logger.warning("New Glances server detected, but failed to be get Zeroconf ServiceInfo ")
         return True
@@ -121,10 +121,10 @@ class GlancesAutoDiscoverListener(object):
     def remove_service(self, zeroconf, srv_type, srv_name):
         """Remove the server from the list."""
         self.servers.remove_server(srv_name)
-        logger.info("Glances server %s removed from the autodetect list" % srv_name)
+        logger.info(f"Glances server {srv_name} removed from the autodetect list")
 
 
-class GlancesAutoDiscoverServer(object):
+class GlancesAutoDiscoverServer:
     """Implementation of the Zeroconf protocol (server side for the Glances client)."""
 
     def __init__(self, args=None):
@@ -132,8 +132,8 @@ class GlancesAutoDiscoverServer(object):
             logger.info("Init autodiscover mode (Zeroconf protocol)")
             try:
                 self.zeroconf = Zeroconf()
-            except socket.error as e:
-                logger.error("Cannot start Zeroconf (%s)" % e)
+            except OSError as e:
+                logger.error(f"Cannot start Zeroconf ({e})")
                 self.zeroconf_enable_tag = False
             else:
                 self.listener = GlancesAutoDiscoverListener()
@@ -147,8 +147,7 @@ class GlancesAutoDiscoverServer(object):
         """Return the current server list (dict of dict)."""
         if zeroconf_tag and self.zeroconf_enable_tag:
             return self.listener.get_servers_list()
-        else:
-            return []
+        return []
 
     def set_server(self, server_pos, key, value):
         """Set the key to the value for the server_pos (position in the list)."""
@@ -160,7 +159,7 @@ class GlancesAutoDiscoverServer(object):
             self.zeroconf.close()
 
 
-class GlancesAutoDiscoverClient(object):
+class GlancesAutoDiscoverClient:
     """Implementation of the zeroconf protocol (client side for the Glances server)."""
 
     def __init__(self, hostname, args=None):
@@ -168,8 +167,8 @@ class GlancesAutoDiscoverClient(object):
             zeroconf_bind_address = args.bind_address
             try:
                 self.zeroconf = Zeroconf()
-            except socket.error as e:
-                logger.error("Cannot start zeroconf: {}".format(e))
+            except OSError as e:
+                logger.error(f"Cannot start zeroconf: {e}")
 
             # XXX *BSDs: Segmentation fault (core dumped)
             # -- https://bitbucket.org/al45tair/netifaces/issues/15
@@ -192,7 +191,7 @@ class GlancesAutoDiscoverClient(object):
             try:
                 self.info = ServiceInfo(
                     zeroconf_type,
-                    '{}:{}.{}'.format(hostname, args.port, zeroconf_type),
+                    f'{hostname}:{args.port}.{zeroconf_type}',
                     address=socket.inet_pton(address_family, zeroconf_bind_address),
                     port=args.port,
                     weight=0,
@@ -205,7 +204,7 @@ class GlancesAutoDiscoverClient(object):
                 # address (only one address) is replaced by addresses (list of addresses)
                 self.info = ServiceInfo(
                     zeroconf_type,
-                    name='{}:{}.{}'.format(hostname, args.port, zeroconf_type),
+                    name=f'{hostname}:{args.port}.{zeroconf_type}',
                     addresses=[socket.inet_pton(address_family, zeroconf_bind_address)],
                     port=args.port,
                     weight=0,
@@ -216,9 +215,9 @@ class GlancesAutoDiscoverClient(object):
             try:
                 self.zeroconf.register_service(self.info)
             except Exception as e:
-                logger.error("Error while announcing Glances server: {}".format(e))
+                logger.error(f"Error while announcing Glances server: {e}")
             else:
-                print("Announce the Glances server on the LAN (using {} IP address)".format(zeroconf_bind_address))
+                print(f"Announce the Glances server on the LAN (using {zeroconf_bind_address} IP address)")
         else:
             logger.error("Cannot announce Glances server on the network: zeroconf library not found.")
 

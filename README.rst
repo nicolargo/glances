@@ -87,7 +87,6 @@ Requirements
 - ``defusedxml`` (in order to monkey patch xmlrpc)
 - ``packaging`` (for the version comparison)
 - ``ujson`` (an optimized alternative to the standard json module)
-- ``pydantic`` (for the data validation support)
 
 *Note for Python 2 users*
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -20,10 +19,10 @@
 import sys
 from datetime import datetime
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-
 import pycouchdb
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 
 class Export(GlancesExport):
@@ -31,7 +30,7 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the CouchDB export IF."""
-        super(Export, self).__init__(config=config, args=args)
+        super().__init__(config=config, args=args)
 
         # Load the CouchDB configuration file section
         # User and Password are mandatory with CouchDB 3.0 and higher
@@ -48,15 +47,15 @@ class Export(GlancesExport):
             return None
 
         # @TODO: https
-        server_uri = 'http://{}:{}@{}:{}/'.format(self.user, self.password, self.host, self.port)
+        server_uri = f'http://{self.user}:{self.password}@{self.host}:{self.port}/'
 
         try:
             s = pycouchdb.Server(server_uri)
         except Exception as e:
-            logger.critical("Cannot connect to CouchDB server (%s)" % e)
+            logger.critical(f"Cannot connect to CouchDB server ({e})")
             sys.exit(2)
         else:
-            logger.info("Connected to the CouchDB server version %s" % s.info()['version'])
+            logger.info("Connected to the CouchDB server version {}".format(s.info()['version']))
 
         try:
             s.database(self.db)
@@ -64,15 +63,15 @@ class Export(GlancesExport):
             # Database did not exist
             # Create it...
             s.create(self.db)
-            logger.info("Create CouchDB database %s" % self.db)
+            logger.info(f"Create CouchDB database {self.db}")
         else:
-            logger.info("CouchDB database %s already exist" % self.db)
+            logger.info(f"CouchDB database {self.db} already exist")
 
         return s.database(self.db)
 
     def export(self, name, columns, points):
         """Write the points to the CouchDB server."""
-        logger.debug("Export {} stats to CouchDB".format(name))
+        logger.debug(f"Export {name} stats to CouchDB")
 
         # Create DB input
         data = dict(zip(columns, points))
@@ -85,4 +84,4 @@ class Export(GlancesExport):
         try:
             self.client.save(data)
         except Exception as e:
-            logger.error("Cannot export {} stats to CouchDB ({})".format(name, e))
+            logger.error(f"Cannot export {name} stats to CouchDB ({e})")

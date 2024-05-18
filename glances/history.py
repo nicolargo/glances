@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -12,7 +11,7 @@
 from glances.attribute import GlancesAttribute
 
 
-class GlancesHistory(object):
+class GlancesHistory:
     """This class manage a dict of GlancesAttribute
     - key: stats name
     - value: GlancesAttribute"""

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -12,11 +11,11 @@
 import sys
 from platform import node
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-
 from influxdb import InfluxDBClient
 from influxdb.client import InfluxDBClientError
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 FIELD_TO_TAG = ['name', 'cmdline', 'type']
 
@@ -26,7 +25,7 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the InfluxDB export IF."""
-        super(Export, self).__init__(config=config, args=args)
+        super().__init__(config=config, args=args)
 
         # Mandatory configuration keys (additional to host and port)
         self.user = None
@@ -75,13 +74,13 @@ class Export(GlancesExport):
             )
             get_all_db = [i['name'] for i in db.get_list_database()]
         except InfluxDBClientError as e:
-            logger.critical("Cannot connect to InfluxDB database '%s' (%s)" % (self.db, e))
+            logger.critical(f"Cannot connect to InfluxDB database '{self.db}' ({e})")
             sys.exit(2)
 
         if self.db in get_all_db:
-            logger.info("Stats will be exported to InfluxDB server: {}".format(db._baseurl))
+            logger.info(f"Stats will be exported to InfluxDB server: {db._baseurl}")
         else:
-            logger.critical("InfluxDB database '%s' did not exist. Please create it" % self.db)
+            logger.critical(f"InfluxDB database '{self.db}' did not exist. Please create it")
             sys.exit(2)
 
         return db
@@ -106,9 +105,7 @@ class Export(GlancesExport):
             # Manage field
             if measurement is not None:
                 fields = {
-                    k.replace('{}.'.format(measurement), ''): data_dict[k]
-                    for k in data_dict
-                    if k.startswith('{}.'.format(measurement))
+                    k.replace(f'{measurement}.', ''): data_dict[k] for k in data_dict if k.startswith(f'{measurement}.')
                 }
             else:
                 fields = data_dict
@@ -155,12 +152,12 @@ class Export(GlancesExport):
             name = self.prefix + '.' + name
         # Write input to the InfluxDB database
         if len(points) == 0:
-            logger.debug("Cannot export empty {} stats to InfluxDB".format(name))
+            logger.debug(f"Cannot export empty {name} stats to InfluxDB")
         else:
             try:
                 self.client.write_points(self._normalize(name, columns, points), time_precision="s")
             except Exception as e:
                 # Log level set to debug instead of error (see: issue #1561)
-                logger.debug("Cannot export {} stats to InfluxDB ({})".format(name, e))
+                logger.debug(f"Cannot export {name} stats to InfluxDB ({e})")
             else:
-                logger.debug("Export {} stats to InfluxDB".format(name))
+                logger.debug(f"Export {name} stats to InfluxDB")

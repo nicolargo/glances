@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,28 +8,27 @@
 
 """Manage sparklines for Glances output."""
 
-from __future__ import unicode_literals
-from __future__ import division
 import sys
-from glances.logger import logger
+
 from glances.globals import nativestr
+from glances.logger import logger
 
 sparklines_module = True
 
 try:
     from sparklines import sparklines
 except ImportError as e:
-    logger.warning("Sparklines module not found ({})".format(e))
+    logger.warning(f"Sparklines module not found ({e})")
     sparklines_module = False
 
 try:
     '┌┬┐╔╦╗╒╤╕╓╥╖│║─═├┼┤╠╬╣╞╪╡╟╫╢└┴┘╚╩╝╘╧╛╙╨╜'.encode(sys.stdout.encoding)
 except (UnicodeEncodeError, TypeError) as e:
-    logger.warning("UTF-8 is mandatory for sparklines ({})".format(e))
+    logger.warning(f"UTF-8 is mandatory for sparklines ({e})")
     sparklines_module = False
 
 
-class Sparkline(object):
+class Sparkline:
     """Manage sparklines (see https://pypi.org/project/sparklines/)."""
 
     def __init__(self, size, pre_char='[', post_char=']', unit_char='%', display_value=True):
@@ -58,6 +56,7 @@ class Sparkline(object):
             return self.__size
         if self.__display_value:
             return self.__size - 6
+        return None
 
     @property
     def percents(self):
@@ -81,7 +80,7 @@ class Sparkline(object):
         if self.__display_value:
             percents_without_none = [x for x in self.percents if x is not None]
             if len(percents_without_none) > 0:
-                ret = '{}{:5.1f}{}'.format(ret, percents_without_none[-1], self.__unit_char)
+                ret = f'{ret}{percents_without_none[-1]:5.1f}{self.__unit_char}'
         ret = nativestr(ret)
         if overwrite and len(overwrite) < len(ret) - 6:
             ret = overwrite + ret[len(overwrite) :]

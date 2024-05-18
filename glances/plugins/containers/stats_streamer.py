@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -63,7 +62,7 @@ class StatsStreamer:
                     break
 
         except Exception as e:
-            logger.debug("docker plugin - Exception thrown during run ({})".format(e))
+            logger.debug(f"docker plugin - Exception thrown during run ({e})")
             self.stop()
 
     def _pre_update_hook(self):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -101,9 +100,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
-            args=args, config=config, stats_init_value=[], fields_description=fields_description
-        )
+        super().__init__(args=args, config=config, stats_init_value=[], fields_description=fields_description)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -174,7 +171,7 @@ class PluginModel(GlancesPluginModel):
             # Top processes
             top_process = ', '.join(alert['top'])
             if top_process != '':
-                msg = ': {}'.format(top_process)
+                msg = f': {top_process}'
                 ret.append(self.curse_add_line(msg))
 
         return ret
@@ -183,5 +180,4 @@ class PluginModel(GlancesPluginModel):
         """Compare a with b using the tolerance (if numerical)."""
         if str(int(a)).isdigit() and str(int(b)).isdigit():
             return abs(a - b) <= max(abs(a), abs(b)) * tolerance
-        else:
-            return a == b
+        return a == b

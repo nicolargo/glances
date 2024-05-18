@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,15 +8,15 @@
 
 """NVidia Extension unit for Glances' GPU plugin."""
 
-from glances.logger import logger
 from glances.globals import nativestr
+from glances.logger import logger
 
 try:
     import pynvml
 except Exception as e:
     nvidia_gpu_enable = False
     # Display debug message if import KeyError
-    logger.warning("Missing Python Lib ({}), Nvidia GPU plugin is disabled".format(e))
+    logger.warning(f"Missing Python Lib ({e}), Nvidia GPU plugin is disabled")
 else:
     nvidia_gpu_enable = True
 
@@ -43,14 +42,14 @@ class NvidiaGPU:
             try:
                 pynvml.nvmlShutdown()
             except Exception as e:
-                logger.debug("pynvml failed to shutdown correctly ({})".format(e))
+                logger.debug(f"pynvml failed to shutdown correctly ({e})")
 
     def get_device_stats(self):
         """Get Nvidia GPU stats."""
         stats = []
 
         for index, device_handle in enumerate(self.device_handles):
-            device_stats = dict()
+            device_stats = {}
             # Dictionary key is the GPU_ID
             device_stats['key'] = 'gpu_id'
             # GPU id (for multiple GPU, start at 0)

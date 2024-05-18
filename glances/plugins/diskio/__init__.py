@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -8,13 +7,12 @@
 #
 
 """Disk I/O plugin."""
-from __future__ import unicode_literals
-
-from glances.logger import logger
-from glances.globals import nativestr
-from glances.plugins.plugin.model import GlancesPluginModel
 
 import psutil
+
+from glances.globals import nativestr
+from glances.logger import logger
+from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
 # description: human readable description
@@ -61,7 +59,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
+        super().__init__(
             args=args,
             config=config,
             items_history_list=items_history_list,
@@ -141,7 +139,7 @@ class PluginModel(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(PluginModel, self).update_views()
+        super().update_views()
 
         # Check if the stats should be hidden
         self.update_views_hidden()
@@ -171,7 +169,7 @@ class PluginModel(GlancesPluginModel):
             name_max_width = max_width - 13
         else:
             # No max_width defined, return an emptu curse message
-            logger.debug("No max_width defined for the {} plugin, it will not be displayed.".format(self.plugin_name))
+            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Header
@@ -190,7 +188,7 @@ class PluginModel(GlancesPluginModel):
         # Disk list (sorted by name)
         for i in self.sorted_stats():
             # Hide stats if never be different from 0 (issue #1787)
-            if all([self.get_views(item=i[self.get_key()], key=f, option='hidden') for f in self.hide_zero_fields]):
+            if all(self.get_views(item=i[self.get_key()], key=f, option='hidden') for f in self.hide_zero_fields):
                 continue
             # Is there an alias for the disk name ?
             disk_name = i['alias'] if 'alias' in i else i['disk_name']
@@ -205,13 +203,13 @@ class PluginModel(GlancesPluginModel):
                 # count
                 txps = self.auto_unit(i.get('read_count_rate_per_sec', None))
                 rxps = self.auto_unit(i.get('write_count_rate_per_sec', None))
-                msg = '{:>7}'.format(txps)
+                msg = f'{txps:>7}'
                 ret.append(
                     self.curse_add_line(
                         msg, self.get_views(item=i[self.get_key()], key='read_count', option='decoration')
                     )
                 )
-                msg = '{:>7}'.format(rxps)
+                msg = f'{rxps:>7}'
                 ret.append(
                     self.curse_add_line(
                         msg, self.get_views(item=i[self.get_key()], key='write_count', option='decoration')
@@ -221,13 +219,13 @@ class PluginModel(GlancesPluginModel):
                 # Bitrate
                 txps = self.auto_unit(i.get('read_bytes_rate_per_sec', None))
                 rxps = self.auto_unit(i.get('write_bytes_rate_per_sec', None))
-                msg = '{:>7}'.format(txps)
+                msg = f'{txps:>7}'
                 ret.append(
                     self.curse_add_line(
                         msg, self.get_views(item=i[self.get_key()], key='read_bytes', option='decoration')
                     )
                 )
-                msg = '{:>7}'.format(rxps)
+                msg = f'{rxps:>7}'
                 ret.append(
                     self.curse_add_line(
                         msg, self.get_views(item=i[self.get_key()], key='write_bytes', option='decoration')

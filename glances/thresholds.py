@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -15,7 +14,7 @@ import sys
 from functools import total_ordering
 
 
-class GlancesThresholds(object):
+class GlancesThresholds:
     """Class to manage thresholds dict for all Glances plugins:
 
     key: Glances stats (example: cpu_user)
@@ -38,18 +37,17 @@ class GlancesThresholds(object):
 
         if stat_name in self._thresholds:
             return self._thresholds[stat_name]
-        else:
-            return {}
+        return {}
 
     def add(self, stat_name, threshold_description):
         """Add a new threshold to the dict (key = stat_name)"""
         if threshold_description not in self.threshold_list:
             return False
-        else:
-            self._thresholds[stat_name] = getattr(
-                self.current_module, 'GlancesThreshold' + threshold_description.capitalize()
-            )()
-            return True
+
+        self._thresholds[stat_name] = getattr(
+            self.current_module, 'GlancesThreshold' + threshold_description.capitalize()
+        )()
+        return True
 
 
 # Global variable uses to share thresholds between Glances components
@@ -57,7 +55,7 @@ glances_thresholds = GlancesThresholds()
 
 
 @total_ordering
-class _GlancesThreshold(object):
+class _GlancesThreshold:
     """Father class for all other Thresholds"""
 
     def description(self):
