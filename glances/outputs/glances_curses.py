@@ -287,10 +287,13 @@ class _GlancesCurses(object):
                 self.filter_color = curses.color_pair(9) | A_BOLD
                 self.selected_color = curses.color_pair(10) | A_BOLD
                 # Define separator line style
-                curses.init_color(11, 500, 500, 500)
-                curses.init_pair(11, curses.COLOR_BLACK, -1)
-                self.separator = curses.color_pair(11)
-
+                try:
+                    curses.init_color(11, 500, 500, 500)
+                    curses.init_pair(11, curses.COLOR_BLACK, -1)
+                    self.separator = curses.color_pair(11)
+                except Exception:
+                    # Catch exception in TMUX
+                    pass
         else:
             # The screen is NOT compatible with a colored design
             # switch to B&W text styles

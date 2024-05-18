@@ -17,7 +17,7 @@ from glances.exports.export import GlancesExport
 
 from influxdb_client import InfluxDBClient, WriteOptions
 
-FIELD_TO_TAG = ['name', 'cmdline']
+FIELD_TO_TAG = ['name', 'cmdline', 'type']
 
 
 class Export(GlancesExport):
