@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -19,11 +18,11 @@ except ImportError:
     sys.exit(2)
 
 
-class GlancesSNMPClient(object):
+class GlancesSNMPClient:
     """SNMP client class (based on pysnmp library)."""
 
     def __init__(self, host='localhost', port=161, version='2c', community='public', user='private', auth=''):
-        super(GlancesSNMPClient, self).__init__()
+        super().__init__()
         self.cmdGen = cmdgen.CommandGenerator()
 
         self.version = version
@@ -97,7 +96,7 @@ class GlancesSNMPClient(object):
                 cmdgen.UdpTransportTarget((self.host, self.port)),
                 non_repeaters,
                 max_repetitions,
-                *oid
+                *oid,
             )
         if self.version.startswith('2'):
             errorIndication, errorStatus, errorIndex, varBindTable = self.cmdGen.bulkCmd(
@@ -105,7 +104,7 @@ class GlancesSNMPClient(object):
                 cmdgen.UdpTransportTarget((self.host, self.port)),
                 non_repeaters,
                 max_repetitions,
-                *oid
+                *oid,
             )
         else:
             # Bulk request are not available with SNMP version 1

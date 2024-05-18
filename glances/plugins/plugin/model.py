@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -13,18 +12,17 @@ I am your father...
 ...of all Glances model plugins.
 """
 
-import re
 import copy
+import re
 
-from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr, json_dumps, json_dumps_dictlist, dictlist
 from glances.actions import GlancesActions
+from glances.events_list import glances_events
+from glances.globals import dictlist, iterkeys, itervalues, json_dumps, json_dumps_dictlist, listkeys, mean, nativestr
 from glances.history import GlancesHistory
 from glances.logger import logger
-from glances.events_list import glances_events
+from glances.outputs.glances_unicode import unicode_message
 from glances.thresholds import glances_thresholds
 from glances.timer import Counter, Timer, getTimeSinceLastUpdate
-from glances.outputs.glances_unicode import unicode_message
-
 
 fields_unit_short = {'percent': '%'}
 
@@ -44,7 +42,7 @@ fields_unit_type = {
 }
 
 
-class GlancesPluginModel(object):
+class GlancesPluginModel:
     """Main class for Glances plugin model."""
 
     def __init__(self, args=None, config=None, items_history_list=None, stats_init_value={}, fields_description=None):
@@ -78,7 +76,7 @@ class GlancesPluginModel(object):
 
         if self.plugin_name.startswith('glances_'):
             self.plugin_name = self.plugin_name.split('glances_')[1]
-        logger.debug("Init {} plugin".format(self.plugin_name))
+        logger.debug(f"Init {self.plugin_name} plugin")
 
         # Init the args
         self.args = args
@@ -95,9 +93,9 @@ class GlancesPluginModel(object):
         self.stats_history = self.init_stats_history()
 
         # Init the limits (configuration keys) dictionary
-        self._limits = dict()
+        self._limits = {}
         if config is not None:
-            logger.debug('Load section {} in {}'.format(self.plugin_name, config.config_file_paths()))
+            logger.debug(f'Load section {self.plugin_name} in {config.config_file_paths()}')
             self.load_limits(config=config)
 
         # Init the alias (dictionnary)
@@ -107,7 +105,7 @@ class GlancesPluginModel(object):
         self.actions = GlancesActions(args=args)
 
         # Init the views
-        self.views = dict()
+        self.views = {}
 
         # Hide stats if all the hide_zero_fields has never been != 0
         # Default is False, always display stats
@@ -148,11 +146,11 @@ class GlancesPluginModel(object):
 
     def exit(self):
         """Just log an event when Glances exit."""
-        logger.debug("Stop the {} plugin".format(self.plugin_name))
+        logger.debug(f"Stop the {self.plugin_name} plugin")
 
     def get_key(self):
         """Return the key of the list."""
-        return None
+        return
 
     def is_enabled(self, plugin_name=None):
         """Return true if plugin is enabled."""
@@ -175,14 +173,14 @@ class GlancesPluginModel(object):
         """Init the stats history (dict of GlancesAttribute)."""
         if self.history_enable():
             init_list = [a['name'] for a in self.get_items_history_list()]
-            logger.debug("Stats history activated for plugin {} (items: {})".format(self.plugin_name, init_list))
+            logger.debug(f"Stats history activated for plugin {self.plugin_name} (items: {init_list})")
         return GlancesHistory()
 
     def reset_stats_history(self):
         """Reset the stats history (dict of GlancesAttribute)."""
         if self.history_enable():
             reset_list = [a['name'] for a in self.get_items_history_list()]
-            logger.debug("Reset history for plugin {} (items: {})".format(self.plugin_name, reset_list))
+            logger.debug(f"Reset history for plugin {self.plugin_name} (items: {reset_list})")
             self.stats_history.reset()
 
     def update_stats_history(self):
@@ -228,11 +226,9 @@ class GlancesPluginModel(object):
         s = self.stats_history.get(nb=nb)
         if item is None:
             return s
-        else:
-            if item in s:
-                return s[item]
-            else:
-                return None
+        if item in s:
+            return s[item]
+        return None
 
     def get_export_history(self, item=None):
         """Return the stats history object to export."""
@@ -288,10 +284,8 @@ class GlancesPluginModel(object):
             return sorted(
                 self.stats,
                 key=lambda stat: tuple(
-                    map(
-                        lambda part: int(part) if part.isdigit() else part.lower(),
-                        re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key]),
-                    )
+                    int(part) if part.isdigit() else part.lower()
+                    for part in re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key])
                 ),
             )
         except TypeError:
@@ -299,7 +293,7 @@ class GlancesPluginModel(object):
             return sorted(
                 self.stats,
                 key=lambda stat: tuple(
-                    map(lambda part: part.lower(), re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key]))
+                    part.lower() for part in re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key])
                 ),
             )
 
@@ -411,14 +405,14 @@ class GlancesPluginModel(object):
         """
         if not isinstance(self.get_raw(), list):
             return None
-        else:
-            if (not isinstance(value, int) and not isinstance(value, float)) and value.isdigit():
-                value = int(value)
-            try:
-                return {value: [i for i in self.get_raw() if i[item] == value]}
-            except (KeyError, ValueError) as e:
-                logger.error("Cannot get item({})=value({}) ({})".format(item, value, e))
-                return None
+
+        if (not isinstance(value, int) and not isinstance(value, float)) and value.isdigit():
+            value = int(value)
+        try:
+            return {value: [i for i in self.get_raw() if i[item] == value]}
+        except (KeyError, ValueError) as e:
+            logger.error(f"Cannot get item({item})=value({value}) ({e})")
+            return None
 
     def get_stats_value(self, item, value):
         """Return the stats object for a specific item=value in JSON format.
@@ -428,15 +422,13 @@ class GlancesPluginModel(object):
         rsv = self.get_raw_stats_value(item, value)
         if rsv is None:
             return None
-        else:
-            return json_dumps(rsv)
+        return json_dumps(rsv)
 
     def get_item_info(self, item, key, default=None):
         """Return the item info grabbed into self.fields_description."""
         if self.fields_description is None or item not in self.fields_description:
             return default
-        else:
-            return self.fields_description[item].get(key, default)
+        return self.fields_description[item].get(key, default)
 
     def update_views_hidden(self):
         """Update the hidden views
@@ -459,7 +451,7 @@ class GlancesPluginModel(object):
         if isinstance(self.get_raw(), list) and self.get_raw() is not None and self.get_key() is not None:
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
-                if any([i[f] for f in self.hide_zero_fields]):
+                if any(i[f] for f in self.hide_zero_fields):
                     for f in self.hide_zero_fields:
                         self.views[i[self.get_key()]][f]['_zero'] = self.views[i[self.get_key()]][f]['hidden']
                 for f in self.hide_zero_fields:
@@ -471,7 +463,7 @@ class GlancesPluginModel(object):
             #
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for key in listkeys(self.get_raw()):
-                if any([self.get_raw()[f] for f in self.hide_zero_fields]):
+                if any(self.get_raw()[f] for f in self.hide_zero_fields):
                     for f in self.hide_zero_fields:
                         self.views[f]['_zero'] = self.views[f]['hidden']
                 for f in self.hide_zero_fields:
@@ -536,7 +528,7 @@ class GlancesPluginModel(object):
 
     def reset_views(self):
         """Reset the views to input_views."""
-        self.views = dict()
+        self.views = {}
 
     def get_views(self, item=None, key=None, option=None):
         """Return the views object.
@@ -554,14 +546,11 @@ class GlancesPluginModel(object):
 
         if key is None:
             return item_views
-        else:
-            if option is None:
-                return item_views[key]
-            else:
-                if option in item_views[key]:
-                    return item_views[key][option]
-                else:
-                    return 'DEFAULT'
+        if option is None:
+            return item_views[key]
+        if option in item_views[key]:
+            return item_views[key][option]
+        return 'DEFAULT'
 
     def get_json_views(self, item=None, key=None, option=None):
         """Return the views (in JSON)."""
@@ -590,7 +579,7 @@ class GlancesPluginModel(object):
                     self._limits[limit] = config.get_float_value(self.plugin_name, level)
                 except ValueError:
                     self._limits[limit] = config.get_value(self.plugin_name, level).split(",")
-                logger.debug("Load limit: {} = {}".format(limit, self._limits[limit]))
+                logger.debug(f"Load limit: {limit} = {self._limits[limit]}")
 
         return True
 
@@ -621,14 +610,13 @@ class GlancesPluginModel(object):
 
     def set_limits(self, item, value):
         """Set the limits object."""
-        self._limits['{}_{}'.format(self.plugin_name, item)] = value
+        self._limits[f'{self.plugin_name}_{item}'] = value
 
     def get_limits(self, item=None):
         """Return the limits object."""
         if item is None:
             return self._limits
-        else:
-            return self._limits.get('{}_{}'.format(self.plugin_name, item), None)
+        return self._limits.get(f'{self.plugin_name}_{item}', None)
 
     def get_stats_action(self):
         """Return stats for the action.
@@ -743,12 +731,11 @@ class GlancesPluginModel(object):
         """Filter the stats to keep only the fields we want (the one defined in fields_description)."""
         if hasattr(stats, '_asdict'):
             return {k: v for k, v in stats._asdict().items() if k in self.fields_description}
-        elif isinstance(stats, dict):
+        if isinstance(stats, dict):
             return {k: v for k, v in stats.items() if k in self.fields_description}
-        elif isinstance(stats, list):
+        if isinstance(stats, list):
             return [self.filter_stats(s) for s in stats]
-        else:
-            return stats
+        return stats
 
     def manage_threshold(self, stat_name, trigger):
         """Manage the threshold for the current stat."""
@@ -794,8 +781,7 @@ class GlancesPluginModel(object):
         """Return true if the criticality limit exist for the given stat_name"""
         if stat_name == "":
             return self.plugin_name + '_' + criticality in self._limits
-        else:
-            return stat_name + '_' + criticality in self._limits
+        return stat_name + '_' + criticality in self._limits
 
     def get_limit(self, criticality=None, stat_name=""):
         """Return the limit value for the given criticality.
@@ -807,7 +793,7 @@ class GlancesPluginModel(object):
         # Example: network_wlan0_rx_careful
         if stat_name + '_' + criticality in self._limits:
             return self._limits[stat_name + '_' + criticality]
-        elif self.plugin_name + '_' + criticality in self._limits:
+        if self.plugin_name + '_' + criticality in self._limits:
             return self._limits[self.plugin_name + '_' + criticality]
 
         # No key found, the raise an error
@@ -841,10 +827,9 @@ class GlancesPluginModel(object):
         # Example: network_wlan0_rx_log
         if stat_name + '_log' in self._limits:
             return self._limits[stat_name + '_log'][0].lower() == 'true'
-        elif self.plugin_name + '_log' in self._limits:
+        if self.plugin_name + '_log' in self._limits:
             return self._limits[self.plugin_name + '_log'][0].lower() == 'true'
-        else:
-            return default_action
+        return default_action
 
     def get_conf_value(self, value, header="", plugin_name=None, default=[]):
         """Return the configuration (header_) value for the current plugin.
@@ -896,14 +881,12 @@ class GlancesPluginModel(object):
         """Return True if the value should be displayed in the UI"""
         if self.get_conf_value('show', header=header) != []:
             return self.is_show(value, header=header)
-        else:
-            return not self.is_hide(value, header=header)
+        return not self.is_hide(value, header=header)
 
     def read_alias(self):
         if self.plugin_name + '_' + 'alias' in self._limits:
             return {i.split(':')[0].lower(): i.split(':')[1] for i in self._limits[self.plugin_name + '_' + 'alias']}
-        else:
-            return dict()
+        return {}
 
     def has_alias(self, header):
         """Return the alias name for the relative header it it exists otherwise None."""
@@ -1039,7 +1022,7 @@ class GlancesPluginModel(object):
             value = self.stats.get(key, None)
 
         if width is None:
-            msg_item = header + '{}'.format(key_name) + separator
+            msg_item = header + f'{key_name}' + separator
             msg_template_float = '{:.1f}{}'
             msg_template = '{}{}'
         else:
@@ -1138,7 +1121,7 @@ class GlancesPluginModel(object):
                 elif symbol in 'K':
                     decimal_precision = 0
                 return '{:.{decimal}f}{symbol}'.format(value, decimal=decimal_precision, symbol=symbol)
-        return '{!s}'.format(number)
+        return f'{number!s}'
 
     def trend_msg(self, trend, significant=1):
         """Return the trend message.
@@ -1184,11 +1167,9 @@ class GlancesPluginModel(object):
             counter = Counter()
             ret = fct(*args, **kw)
             duration = counter.get()
-            logger.debug(
-                "{} {} {} return {} in {} seconds".format(
-                    args[0].__class__.__name__, args[0].__class__.__module__, fct.__name__, ret, duration
-                )
-            )
+            class_name = args[0].__class__.__name__
+            class_module = args[0].__class__.__module__
+            logger.debug(f"{class_name} {class_module} {fct.__name__} return {ret} in {duration} seconds")
             return ret
 
         return wrapper

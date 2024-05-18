@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# ruff: noqa: F401
 #
 # This file is part of Glances.
 #
@@ -13,29 +13,27 @@
 # GLOBAL IMPORTS
 ################
 
-import errno
-import os
-import sys
-import platform
-import ujson
-from operator import itemgetter, methodcaller
-import unicodedata
-import types
-import subprocess
-from datetime import datetime
-import re
 import base64
+import errno
 import functools
-import weakref
-
+import os
+import platform
 import queue
+import re
+import subprocess
+import sys
+import weakref
 from configparser import ConfigParser, NoOptionError, NoSectionError
+from datetime import datetime
+from operator import itemgetter, methodcaller
 from statistics import mean
-from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
-from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-from urllib.request import urlopen, Request
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
+from urllib.request import Request, urlopen
+from xmlrpc.client import Fault, ProtocolError, Server, ServerProxy, Transport
+from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
+
+import ujson
 
 # Correct issue #1025 by monkey path the xmlrpc lib
 from defusedxml.xmlrpc import monkey_patch
@@ -136,10 +134,9 @@ def b(s, errors='replace'):
 def nativestr(s, errors='replace'):
     if isinstance(s, text_type):
         return s
-    elif isinstance(s, (int, float)):
+    if isinstance(s, (int, float)):
         return s.__str__()
-    else:
-        return s.decode('utf-8', errors=errors)
+    return s.decode('utf-8', errors=errors)
 
 
 def system_exec(command):
@@ -147,7 +144,7 @@ def system_exec(command):
     try:
         res = subprocess.run(command.split(' '), stdout=subprocess.PIPE).stdout.decode('utf-8')
     except Exception as e:
-        res = 'ERROR: {}'.format(e)
+        res = f'ERROR: {e}'
     return res.rstrip()
 
 
@@ -204,7 +201,7 @@ def is_admin():
         try:
             return ctypes.windll.shell32.IsUserAnAdmin()
         except Exception as e:
-            print("Admin check failed with error: %s" % e)
+            print(f"Admin check failed with error: {e}")
             traceback.print_exc()
             return False
     else:
@@ -301,7 +298,7 @@ def urlopen_auth(url, username, password):
     return urlopen(
         Request(
             url,
-            headers={'Authorization': 'Basic ' + base64.b64encode(('%s:%s' % (username, password)).encode()).decode()},
+            headers={'Authorization': 'Basic ' + base64.b64encode((f'{username}:{password}').encode()).decode()},
         )
     )
 
@@ -339,8 +336,7 @@ def json_dumps_dictlist(data, item):
     dl = dictlist(data, item)
     if dl is None:
         return None
-    else:
-        return json_dumps(dl)
+    return json_dumps(dl)
 
 
 def string_value_to_float(s):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -10,12 +9,12 @@
 """MongoDB interface class."""
 
 import sys
-
-from glances.logger import logger
-from glances.exports.export import GlancesExport
+from urllib.parse import quote_plus
 
 import pymongo
-from urllib.parse import quote_plus
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 
 class Export(GlancesExport):
@@ -23,7 +22,7 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the MongoDB export IF."""
-        super(Export, self).__init__(config=config, args=args)
+        super().__init__(config=config, args=args)
 
         # Mandatory configuration keys (additional to host and port)
         self.db = None
@@ -45,13 +44,13 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
 
-        server_uri = 'mongodb://%s:%s@%s:%s' % (quote_plus(self.user), quote_plus(self.password), self.host, self.port)
+        server_uri = f'mongodb://{quote_plus(self.user)}:{quote_plus(self.password)}@{self.host}:{self.port}'
 
         try:
             client = pymongo.MongoClient(server_uri)
             client.admin.command('ping')
         except Exception as e:
-            logger.critical("Cannot connect to MongoDB server %s:%s (%s)" % (self.host, self.port, e))
+            logger.critical(f"Cannot connect to MongoDB server {self.host}:{self.port} ({e})")
             sys.exit(2)
         else:
             logger.info("Connected to the MongoDB server")
@@ -64,7 +63,7 @@ class Export(GlancesExport):
 
     def export(self, name, columns, points):
         """Write the points to the MongoDB server."""
-        logger.debug("Export {} stats to MongoDB".format(name))
+        logger.debug(f"Export {name} stats to MongoDB")
 
         # Create DB input
         data = dict(zip(columns, points))
@@ -73,4 +72,4 @@ class Export(GlancesExport):
         try:
             self.database()[name].insert_one(data)
         except Exception as e:
-            logger.error("Cannot export {} stats to MongoDB ({})".format(name, e))
+            logger.error(f"Cannot export {name} stats to MongoDB ({e})")

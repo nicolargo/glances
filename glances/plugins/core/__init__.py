@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,9 +8,9 @@
 
 """CPU core plugin."""
 
-from glances.plugins.plugin.model import GlancesPluginModel
-
 import psutil
+
+from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
 fields_description = {
@@ -34,7 +33,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, fields_description=fields_description)
+        super().__init__(args=args, config=config, fields_description=fields_description)
 
         # We dot not want to display the stat in the curse interface
         # The core number is displayed by the load plugin

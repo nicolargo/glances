@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -8,7 +7,8 @@
 #
 
 """Manage Glances event class
-This class is a Pydantic data class for the Glances event.
+
+This class is a data class for the Glances event.
 
 event_state = "OK|CAREFUL|WARNING|CRITICAL"
 event_type = "CPU*|LOAD|MEM|MON"
