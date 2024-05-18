@@ -11,6 +11,39 @@ Under development, see roadmap here: https://github.com/nicolargo/glances/milest
 Contributors are welcome !
 
 ===============
+Version 4.0.5
+===============
+
+* SensorType change in REST API breaks compatibility in 4.0.4 #2788
+* Please make pydantic optional dependency, not required one #2777
+* Update the Grafana dashboard #2780
+* 4.0.4 - On Glances startup "ERROR -- Can not init battery class #2776
+* In codeSpace (with Python 3.8), an error occurs in ./unittest-restful.py #2773
+
+Use Ruff as default Linter.
+
+===============
+Version 4.0.4
+===============
+
+Hostfix release for support sensors plugin on python 3.8
+
+===============
+Version 4.0.3
+===============
+
+Additional fixes for Sensor plugin
+
+===============
+Version 4.0.2
+===============
+
+* hotfix: plugin(sensors) - race conditions btw fan_speed & temperature… #2766
+* fix: include requirements.txt and SECURITY.md for pypi dist #2761
+
+Thanks to RazCrimson for the sensors patch !
+
+===============
 Version 4.0.1
 ===============
 
