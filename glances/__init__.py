@@ -89,7 +89,8 @@ def start(config, args):
         from glances.standalone import GlancesStandalone as GlancesMode
     elif core.is_client():
         if core.is_client_browser():
-            from glances.client_browser import GlancesClientBrowser as GlancesMode
+            from glances.client_browser import \
+                GlancesClientBrowser as GlancesMode
         else:
             from glances.client import GlancesClient as GlancesMode
     elif core.is_server():
