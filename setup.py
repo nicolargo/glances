@@ -8,6 +8,9 @@ import sys
 
 from setuptools import Command, setup
 
+# If the minimal Python version is changed then do not forget to change it in:
+# - ./pyproject.toml
+# - .github/workflows/test.yml
 if not (sys.version_info >= (3, 8)):
     print('Glances requires at least Python 3.8 to run.')
     sys.exit(1)

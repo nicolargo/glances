@@ -58,7 +58,10 @@ exclude = [
     "dist",
     "node_modules",
     "venv",
+    "venv-dev",
+    "venv-min",
     "docs",
+    "test-data",
     "./glances/outputs/static/*"
 ]
 
