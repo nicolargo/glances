@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,8 +8,8 @@
 
 """Monitor plugin."""
 
-from glances.globals import iteritems
 from glances.amps_list import AmpsList as glancesAmpsList
+from glances.globals import iteritems
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
@@ -35,9 +34,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
-            args=args, config=config, stats_init_value=[], fields_description=fields_description
-        )
+        super().__init__(args=args, config=config, stats_init_value=[], fields_description=fields_description)
         self.args = args
         self.config = config
 
@@ -93,13 +90,11 @@ class PluginModel(GlancesPluginModel):
         if nbprocess > 0:
             if int(countmin) <= int(nbprocess) <= int(countmax):
                 return 'OK'
-            else:
-                return 'WARNING'
-        else:
-            if int(countmin) == 0:
-                return 'OK'
-            else:
-                return 'CRITICAL'
+            return 'WARNING'
+
+        if int(countmin) == 0:
+            return 'OK'
+        return 'CRITICAL'
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -121,10 +116,10 @@ class PluginModel(GlancesPluginModel):
             second_column = '{}'.format(m['count'] if m['regex'] else '')
             for line in m['result'].split('\n'):
                 # Display first column with the process name...
-                msg = '{:<16} '.format(first_column)
+                msg = f'{first_column:<16} '
                 ret.append(self.curse_add_line(msg, first_column_style))
                 # ... and second column with the number of matching processes...
-                msg = '{:<4} '.format(second_column)
+                msg = f'{second_column:<4} '
                 ret.append(self.curse_add_line(msg))
                 # ... only on the first line
                 first_column = second_column = ''

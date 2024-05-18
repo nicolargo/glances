@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -8,13 +7,12 @@
 #
 
 """Connections plugin."""
-from __future__ import unicode_literals
-
-from glances.logger import logger
-from glances.plugins.plugin.model import GlancesPluginModel
-from glances.globals import nativestr
 
 import psutil
+
+from glances.globals import nativestr
+from glances.logger import logger
+from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
 # description: human readable description
@@ -93,7 +91,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
+        super().__init__(
             args=args,
             config=config,
             # items_history_list=items_history_list,
@@ -122,7 +120,7 @@ class PluginModel(GlancesPluginModel):
                 try:
                     net_connections = psutil.net_connections(kind="tcp")
                 except Exception as e:
-                    logger.warning('Can not get network connections stats ({})'.format(e))
+                    logger.warning(f'Can not get network connections stats ({e})')
                     logger.info('Disable connections stats')
                     stats['net_connections_enabled'] = False
                     self.stats = stats
@@ -145,10 +143,10 @@ class PluginModel(GlancesPluginModel):
                 # Grab connections track directly from the /proc file
                 for i in self.conntrack:
                     try:
-                        with open(self.conntrack[i], 'r') as f:
+                        with open(self.conntrack[i]) as f:
                             stats[i] = float(f.readline().rstrip("\n"))
-                    except (IOError, FileNotFoundError) as e:
-                        logger.warning('Can not get network connections track ({})'.format(e))
+                    except (OSError, FileNotFoundError) as e:
+                        logger.warning(f'Can not get network connections track ({e})')
                         logger.info('Disable connections track')
                         stats['nf_conntrack_enabled'] = False
                         self.stats = stats
@@ -171,7 +169,7 @@ class PluginModel(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(PluginModel, self).update_views()
+        super().update_views()
 
         # Add specific information
         try:

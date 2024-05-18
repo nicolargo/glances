@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -14,7 +13,7 @@ import time
 from glances.globals import printandflush
 
 
-class GlancesStdoutCsv(object):
+class GlancesStdoutCsv:
     """This class manages the StdoutCsv display."""
 
     separator = ','
@@ -53,18 +52,18 @@ class GlancesStdoutCsv(object):
         line = ''
 
         if attribute is not None:
-            line += '{}.{}{}'.format(plugin, attribute, self.separator)
+            line += f'{plugin}.{attribute}{self.separator}'
         else:
             if isinstance(stat, dict):
                 for k in stat.keys():
-                    line += '{}.{}{}'.format(plugin, str(k), self.separator)
+                    line += f'{plugin}.{str(k)}{self.separator}'
             elif isinstance(stat, list):
                 for i in stat:
                     if isinstance(i, dict) and 'key' in i:
                         for k in i.keys():
                             line += '{}.{}.{}{}'.format(plugin, str(i[i['key']]), str(k), self.separator)
             else:
-                line += '{}{}'.format(plugin, self.separator)
+                line += f'{plugin}{self.separator}'
 
         return line
 
@@ -73,18 +72,18 @@ class GlancesStdoutCsv(object):
         line = ''
 
         if attribute is not None:
-            line += '{}{}'.format(str(stat.get(attribute, self.na)), self.separator)
+            line += f'{str(stat.get(attribute, self.na))}{self.separator}'
         else:
             if isinstance(stat, dict):
                 for v in stat.values():
-                    line += '{}{}'.format(str(v), self.separator)
+                    line += f'{str(v)}{self.separator}'
             elif isinstance(stat, list):
                 for i in stat:
                     if isinstance(i, dict) and 'key' in i:
                         for v in i.values():
-                            line += '{}{}'.format(str(v), self.separator)
+                            line += f'{str(v)}{self.separator}'
             else:
-                line += '{}{}'.format(str(stat), self.separator)
+                line += f'{str(stat)}{self.separator}'
 
         return line
 

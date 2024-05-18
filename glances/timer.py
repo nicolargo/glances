@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,8 +8,8 @@
 
 """The timer manager."""
 
-from time import time
 from datetime import datetime
+from time import time
 
 # Global list to manage the elapsed time
 last_update_times = {}
@@ -30,7 +29,7 @@ def getTimeSinceLastUpdate(IOType):
     return time_since_update
 
 
-class Timer(object):
+class Timer:
     """The timer class. A simple chronometer."""
 
     def __init__(self, duration):
@@ -55,7 +54,7 @@ class Timer(object):
         return time() > self.target
 
 
-class Counter(object):
+class Counter:
     """The counter class."""
 
     def __init__(self):

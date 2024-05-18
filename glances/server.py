@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,20 +8,19 @@
 
 """Manage the Glances server."""
 
-from glances.globals import json_dumps
 import socket
 import sys
 from base64 import b64decode
 
 from glances import __version__
-from glances.globals import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 from glances.autodiscover import GlancesAutoDiscoverClient
+from glances.globals import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer, json_dumps
 from glances.logger import logger
 from glances.stats_server import GlancesStatsServer
 from glances.timer import Timer
 
 
-class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
+class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
     """Main XML-RPC handler."""
 
     rpc_paths = ('/RPC2',)
@@ -31,7 +29,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
         # Hack to add a specific header
         # Thk to: https://gist.github.com/rca/4063325
         self.send_my_headers()
-        super(GlancesXMLRPCHandler, self).end_headers()
+        super().end_headers()
 
     def send_my_headers(self):
         # Specific header is here (solved the issue #227)
@@ -69,17 +67,15 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
             # TODO: config is not taken into account: it may be a problem ?
             pwd = GlancesPassword(username=username, config=None)
             return pwd.check_password(self.server.user_dict[username], password)
-        else:
-            return False
+        return False
 
     def parse_request(self):
         if SimpleXMLRPCRequestHandler.parse_request(self):
             # Next we authenticate
             if self.authenticate(self.headers):
                 return True
-            else:
-                # if authentication fails, tell the client
-                self.send_error(401, 'Authentication failed')
+            # if authentication fails, tell the client
+            self.send_error(401, 'Authentication failed')
         return False
 
     def log_message(self, log_format, *args):
@@ -87,7 +83,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
         pass
 
 
-class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
+class GlancesXMLRPCServer(SimpleXMLRPCServer):
     """Init a SimpleXMLRPCServer instance (IPv6-ready)."""
 
     finished = False
@@ -98,11 +94,11 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
         self.config = config
         try:
             self.address_family = socket.getaddrinfo(bind_address, bind_port)[0][0]
-        except socket.error as e:
-            logger.error("Couldn't open socket: {}".format(e))
+        except OSError as e:
+            logger.error(f"Couldn't open socket: {e}")
             sys.exit(1)
 
-        super(GlancesXMLRPCServer, self).__init__((bind_address, bind_port), requestHandler)
+        super().__init__((bind_address, bind_port), requestHandler)
 
     def end(self):
         """Stop the server"""
@@ -115,7 +111,7 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
             self.handle_request()
 
 
-class GlancesInstance(object):
+class GlancesInstance:
     """All the methods of this class are published as XML-RPC methods."""
 
     def __init__(self, config=None, args=None):
@@ -179,7 +175,7 @@ class GlancesInstance(object):
             raise AttributeError(item)
 
 
-class GlancesServer(object):
+class GlancesServer:
     """This class creates and manages the TCP server."""
 
     def __init__(self, requestHandler=GlancesXMLRPCHandler, config=None, args=None):
@@ -190,10 +186,10 @@ class GlancesServer(object):
         try:
             self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler, config=config)
         except Exception as e:
-            logger.critical("Cannot start Glances server: {}".format(e))
+            logger.critical(f"Cannot start Glances server: {e}")
             sys.exit(2)
         else:
-            print('Glances XML-RPC server is running on {}:{}'.format(args.bind_address, args.port))
+            print(f'Glances XML-RPC server is running on {args.bind_address}:{args.port}')
 
         # The users dict
         # username / password couple

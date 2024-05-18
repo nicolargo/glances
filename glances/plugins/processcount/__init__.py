@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -9,8 +8,8 @@
 
 """Process count plugin."""
 
-from glances.processes import glances_processes, sort_for_human
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.processes import glances_processes, sort_for_human
 
 # Fields description
 # description: human readable description
@@ -58,7 +57,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(
+        super().__init__(
             args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
         )
 
@@ -113,9 +112,9 @@ class PluginModel(GlancesPluginModel):
         if glances_processes.process_filter is not None:
             msg = 'Processes filter:'
             ret.append(self.curse_add_line(msg, "TITLE"))
-            msg = ' {} '.format(glances_processes.process_filter)
+            msg = f' {glances_processes.process_filter} '
             if glances_processes.process_filter_key is not None:
-                msg += 'on column {} '.format(glances_processes.process_filter_key)
+                msg += f'on column {glances_processes.process_filter_key} '
             ret.append(self.curse_add_line(msg, "FILTER"))
             msg = '(\'ENTER\' to edit, \'E\' to reset)'
             ret.append(self.curse_add_line(msg))
@@ -144,7 +143,7 @@ class PluginModel(GlancesPluginModel):
             msg = ' {} slp,'.format(self.stats['sleeping'])
             ret.append(self.curse_add_line(msg))
 
-        msg = ' {} oth '.format(other)
+        msg = f' {other} oth '
         ret.append(self.curse_add_line(msg))
 
         # Display sort information
@@ -156,9 +155,9 @@ class PluginModel(GlancesPluginModel):
         if glances_processes.auto_sort:
             msg += ' sorted automatically'
             ret.append(self.curse_add_line(msg))
-            msg = ' by {}'.format(sort_human)
+            msg = f' by {sort_human}'
         else:
-            msg += ' sorted by {}'.format(sort_human)
+            msg += f' sorted by {sort_human}'
         ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration

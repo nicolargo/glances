@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -25,11 +24,11 @@ one_line=false
 command=foo status
 """
 
-from subprocess import check_output, STDOUT, CalledProcessError
+from subprocess import STDOUT, CalledProcessError, check_output
 
-from glances.globals import u, to_ascii
-from glances.logger import logger
 from glances.amps.amp import GlancesAmp
+from glances.globals import to_ascii, u
+from glances.logger import logger
 
 
 class Amp(GlancesAmp):
@@ -44,7 +43,7 @@ class Amp(GlancesAmp):
     def __init__(self, name=None, args=None):
         """Init the AMP."""
         self.NAME = name.capitalize()
-        super(Amp, self).__init__(name=name, args=args)
+        super().__init__(name=name, args=args)
 
     def update(self, process_list):
         """Update the AMP"""
@@ -54,7 +53,7 @@ class Amp(GlancesAmp):
         try:
             res = self.get('command')
         except OSError as e:
-            logger.debug('{}: Error while executing command ({})'.format(self.NAME, e))
+            logger.debug(f'{self.NAME}: Error while executing command ({e})')
             return self.result()
         # No command found, use default message
         if res is None:

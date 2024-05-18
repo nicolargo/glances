@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -8,15 +7,13 @@
 #
 
 """Manage the folder list."""
-from __future__ import unicode_literals
 
-
-from glances.timer import Timer
-from glances.globals import nativestr, folder_size
+from glances.globals import folder_size, nativestr
 from glances.logger import logger
+from glances.timer import Timer
 
 
-class FolderList(object):
+class FolderList:
     """This class describes the optional monitored folder list.
 
     The folder list is a list of 'important' folder to monitor.
@@ -67,8 +64,7 @@ class FolderList(object):
             value['path'] = self.config.get_value(section, key + 'path')
             if value['path'] is None:
                 continue
-            else:
-                value['path'] = nativestr(value['path'])
+            value['path'] = nativestr(value['path'])
 
             # Optional conf keys
             # Refresh time
