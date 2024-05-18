@@ -7,6 +7,7 @@
 #
 
 """Sensors plugin."""
+
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
@@ -18,10 +19,8 @@ from glances.globals import to_fahrenheit
 from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.plugins.sensors.sensor.glances_batpercent import \
-    PluginModel as BatPercentPluginModel
-from glances.plugins.sensors.sensor.glances_hddtemp import \
-    PluginModel as HddTempPluginModel
+from glances.plugins.sensors.sensor.glances_batpercent import PluginModel as BatPercentPluginModel
+from glances.plugins.sensors.sensor.glances_hddtemp import PluginModel as HddTempPluginModel
 from glances.timer import Counter
 
 
