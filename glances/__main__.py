@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Glances - An eye on your system
 #

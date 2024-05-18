@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -12,10 +11,10 @@
 import sys
 from numbers import Number
 
-from glances.logger import logger
-from glances.exports.export import GlancesExport
-
 import potsdb
+
+from glances.exports.export import GlancesExport
+from glances.logger import logger
 
 
 class Export(GlancesExport):
@@ -23,7 +22,7 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the OpenTSDB export IF."""
-        super(Export, self).__init__(config=config, args=args)
+        super().__init__(config=config, args=args)
 
         # Mandatory configuration keys (additional to host and port)
         # N/A
@@ -52,7 +51,7 @@ class Export(GlancesExport):
         try:
             db = potsdb.Client(self.host, port=int(self.port), check_host=True)
         except Exception as e:
-            logger.critical("Cannot connect to OpenTSDB server %s:%s (%s)" % (self.host, self.port, e))
+            logger.critical(f"Cannot connect to OpenTSDB server {self.host}:{self.port} ({e})")
             sys.exit(2)
 
         return db
@@ -62,18 +61,18 @@ class Export(GlancesExport):
         for i in range(len(columns)):
             if not isinstance(points[i], Number):
                 continue
-            stat_name = '{}.{}.{}'.format(self.prefix, name, columns[i])
+            stat_name = f'{self.prefix}.{name}.{columns[i]}'
             stat_value = points[i]
             tags = self.parse_tags(self.tags)
             try:
                 self.client.send(stat_name, stat_value, **tags)
             except Exception as e:
-                logger.error("Can not export stats %s to OpenTSDB (%s)" % (name, e))
-        logger.debug("Export {} stats to OpenTSDB".format(name))
+                logger.error(f"Can not export stats {name} to OpenTSDB ({e})")
+        logger.debug(f"Export {name} stats to OpenTSDB")
 
     def exit(self):
         """Close the OpenTSDB export module."""
         # Waits for all outstanding metrics to be sent and background thread closes
         self.client.wait()
         # Call the father method
-        super(Export, self).exit()
+        super().exit()

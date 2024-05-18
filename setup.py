@@ -1,43 +1,41 @@
 #!/usr/bin/env python
 
+import builtins
 import glob
 import os
 import re
 import sys
-from io import open
 
-from setuptools import setup, Command
+from setuptools import Command, setup
 
-# Predication warning
-# Glances version 4 will only be compatible with Python 3.7 and above
-if sys.version_info < (3, 7):
-    print('WARNING: Glances version 4 will only be compatible with Python 3.7 and above.')
-
-if sys.version_info < (3, 8):
+# If the minimal Python version is changed then do not forget to change it in:
+# - ./pyproject.toml
+# - .github/workflows/test.yml
+if not (sys.version_info >= (3, 8)):
     print('Glances requires at least Python 3.8 to run.')
     sys.exit(1)
 
 # Global functions
 ##################
 
-with open(os.path.join('glances', '__init__.py'), encoding='utf-8') as f:
+with builtins.open(os.path.join('glances', '__init__.py'), encoding='utf-8') as f:
     version = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", f.read(), re.M).group(1)
 
 if not version:
     raise RuntimeError('Cannot find Glances version information.')
 
-with open('README.rst', encoding='utf-8') as f:
+with builtins.open('README.rst', encoding='utf-8') as f:
     long_description = f.read()
 
 
 def get_data_files():
-    data_files = [
-        ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS.rst', 'README.rst',
-                               'CONTRIBUTING.md', 'conf/glances.conf']),
-        ('share/man/man1', ['docs/man/glances.1'])
+    return [
+        (
+            'share/doc/glances',
+            ['AUTHORS', 'COPYING', 'NEWS.rst', 'README.rst', "SECURITY.md", 'CONTRIBUTING.md', 'conf/glances.conf'],
+        ),
+        ('share/man/man1', ['docs/man/glances.1']),
     ]
-
-    return data_files
 
 
 def get_install_requires():
@@ -61,10 +59,23 @@ def get_install_extras_require():
         'browser': ['zeroconf>=0.19.1'],
         'cloud': ['requests'],
         'containers': ['docker>=6.1.1', 'python-dateutil', 'six', 'podman', 'packaging'],
-        'export': ['bernhard', 'cassandra-driver', 'elasticsearch', 'graphitesender',
-                   'ibmcloudant', 'influxdb>=1.0.0', 'influxdb-client', 'pymongo',
-                   'kafka-python', 'pika', 'paho-mqtt', 'potsdb', 'prometheus_client',
-                   'pyzmq', 'statsd'],
+        'export': [
+            'bernhard',
+            'cassandra-driver',
+            'elasticsearch',
+            'graphitesender',
+            'ibmcloudant',
+            'influxdb>=1.0.0',
+            'influxdb-client',
+            'pymongo',
+            'kafka-python',
+            'pika',
+            'paho-mqtt',
+            'potsdb',
+            'prometheus_client',
+            'pyzmq',
+            'statsd',
+        ],
         'gpu': ['nvidia-ml-py'],
         'graph': ['pygal'],
         'ip': ['netifaces'],
@@ -73,7 +84,7 @@ def get_install_extras_require():
         'snmp': ['pysnmp'],
         'sparklines': ['sparklines'],
         'web': ['fastapi', 'uvicorn', 'jinja2', 'requests'],
-        'wifi': ['wifi']
+        'wifi': ['wifi'],
     }
     if sys.platform.startswith('linux'):
         extras_require['sensors'] = ['batinfo']
@@ -96,6 +107,7 @@ class tests(Command):
     def run(self):
         import subprocess
         import sys
+
         for t in glob.glob('unittest-core.py'):
             ret = subprocess.call([sys.executable, t]) != 0
             if ret != 0:
@@ -140,6 +152,6 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
-        'Topic :: System :: Monitoring'
-    ]
+        'Topic :: System :: Monitoring',
+    ],
 )

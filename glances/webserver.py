@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -10,12 +9,12 @@
 """Glances Restful/API and Web based interface."""
 
 from glances.globals import WINDOWS
+from glances.outputs.glances_restful_api import GlancesRestfulApi
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
-from glances.outputs.glances_restful_api import GlancesRestfulApi
 
 
-class GlancesWebServer(object):
+class GlancesWebServer:
     """This class creates and manages the Glances Web server session."""
 
     def __init__(self, config=None, args=None):

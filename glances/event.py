@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -8,7 +7,8 @@
 #
 
 """Manage Glances event class
-This class is a Pydantic data class for the Glances event.
+
+This class is a data class for the Glances event.
 
 event_state = "OK|CAREFUL|WARNING|CRITICAL"
 event_type = "CPU*|LOAD|MEM|MON"
@@ -32,7 +32,13 @@ Item (or event) is defined by:
     }
 """
 
-from pydantic.dataclasses import dataclass
+from glances.logger import logger
+
+try:
+    from pydantic.dataclasses import dataclass
+except ImportError as e:
+    logger.warning(f"Missing Python Lib ({e}), EventList will be skipping data validation")
+    from dataclasses import dataclass
 
 from glances.processes import sort_stats
 

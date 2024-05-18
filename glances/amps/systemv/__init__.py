@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -34,11 +33,11 @@ one_line=true
 service_cmd=/usr/bin/service --status-all
 """
 
-from subprocess import check_output, STDOUT
+from subprocess import STDOUT, check_output
 
-from glances.logger import logger
-from glances.globals import iteritems
 from glances.amps.amp import GlancesAmp
+from glances.globals import iteritems
+from glances.logger import logger
 
 
 class Amp(GlancesAmp):
@@ -61,7 +60,7 @@ class Amp(GlancesAmp):
         try:
             res = check_output(self.get('service_cmd').split(), stderr=STDOUT).decode('utf-8')
         except OSError as e:
-            logger.debug('{}: Error while executing service ({})'.format(self.NAME, e))
+            logger.debug(f'{self.NAME}: Error while executing service ({e})')
         else:
             status = {'running': 0, 'stopped': 0, 'upstart': 0}
             # For each line
@@ -79,7 +78,7 @@ class Amp(GlancesAmp):
             # Build the output (string) message
             output = 'Services\n'
             for k, v in iteritems(status):
-                output += '{}: {}\n'.format(k, v)
+                output += f'{k}: {v}\n'
             self.set_result(output, separator=' ')
 
         return self.result()

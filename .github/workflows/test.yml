@@ -7,8 +7,32 @@ on:
 
 jobs:
 
+  source-code-checks:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check formatting with Ruff
+        uses: chartboost/ruff-action@v1
+        with:
+          args: 'format --check'
+
+      - name: Check linting with Ruff
+        uses: chartboost/ruff-action@v1
+        with:
+          args: 'check'
+
+      - name: Static type check
+        run: |
+          echo "Skipping static type check for the moment, too much error...";
+          # pip install pyright
+          # pyright glances
+
+
   test-linux:
 
+    needs: source-code-checks
     # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
     runs-on: ubuntu-22.04
     strategy:
@@ -17,36 +41,22 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-    - name: Lint with flake8
-      run: |
-        # Stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.git,./docs,./glances/outputs/static
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=.git,./docs,./glances/outputs/static
-
-    - name: Static type check
-      run: |
-        echo "Skipping static type check for the moment, too much error...";
-        # pip install pyright
-        # pyright glances
-
-    - name: Unitary tests
-      run: |
-        python ./unittest-core.py
+      - name: Unitary tests
+        run: |
+          python ./unittest-core.py
 
   # Error appear with h11, not related to Glances
   # Should be tested if correction is done
@@ -84,6 +94,7 @@ jobs:
 
   test-macos:
 
+    needs: source-code-checks
     # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
     runs-on: macos-14
     strategy:
@@ -92,22 +103,22 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-    - name: Unitary tests
-      run: |
-        python ./unittest-core.py
+      - name: Unitary tests
+        run: |
+          python ./unittest-core.py
 
   # Error when trying to implement #2749
   # pkg: No packages available to install matching 'py-pip' have been found in the repositories

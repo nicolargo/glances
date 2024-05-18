@@ -15,6 +15,7 @@ influxdb-client; python_version >= "3.7" # For InfluxDB >= 1.8
 jinja2
 kafka-python
 netifaces
+nvidia-ml-py; python_version >= "3.5"
 packaging; python_version >= "3.7"
 paho-mqtt
 pika
@@ -22,12 +23,12 @@ podman; python_version >= "3.6"
 potsdb
 prometheus_client
 pycouchdb
+pydantic
 pygal
 pymdstat
 pymongo; python_version >= "3.7"
-nvidia-ml-py; python_version >= "3.5"
-pysnmp-lextudio; python_version >= "3.7"
 pySMART.smartx
+pysnmp-lextudio; python_version >= "3.7"
 python-dateutil
 pyzmq
 requests

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -14,7 +13,7 @@ import time
 from glances.globals import printandflush
 
 
-class GlancesStdoutJson(object):
+class GlancesStdoutJson:
     """This class manages the Stdout JSON display."""
 
     def __init__(self, config=None, args=None):
@@ -47,7 +46,7 @@ class GlancesStdoutJson(object):
             else:
                 continue
             # Display stats
-            printandflush('{}: {}'.format(plugin, stat))
+            printandflush(f'{plugin}: {stat}')
 
         # Wait until next refresh
         if duration > 0:

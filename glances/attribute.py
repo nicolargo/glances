@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -12,7 +11,7 @@
 from datetime import datetime
 
 
-class GlancesAttribute(object):
+class GlancesAttribute:
     def __init__(self, name, description='', history_max_size=None):
         """Init the attribute
 
@@ -66,8 +65,7 @@ class GlancesAttribute(object):
     def value(self):
         if self.history_len() > 0:
             return (self._value[1] - self.history_value()[1]) / (self._value[0] - self.history_value()[0])
-        else:
-            return None
+        return None
 
     @value.setter
     def value(self, new_value):

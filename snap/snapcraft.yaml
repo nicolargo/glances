@@ -1,5 +1,5 @@
 name: glances
-version: '4.0.4'
+version: '4.0.5'
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |

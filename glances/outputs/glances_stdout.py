@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -11,11 +10,11 @@
 
 import time
 
-from glances.logger import logger
 from glances.globals import printandflush
+from glances.logger import logger
 
 
-class GlancesStdout(object):
+class GlancesStdout:
     """This class manages the Stdout display."""
 
     def __init__(self, config=None, args=None):
@@ -65,9 +64,9 @@ class GlancesStdout(object):
                 # With attribute
                 if isinstance(stat, dict):
                     try:
-                        printandflush("{}.{}: {}".format(plugin, attribute, stat[attribute]))
+                        printandflush(f"{plugin}.{attribute}: {stat[attribute]}")
                     except KeyError as err:
-                        logger.error("Can not display stat {}.{} ({})".format(plugin, attribute, err))
+                        logger.error(f"Can not display stat {plugin}.{attribute} ({err})")
                 elif isinstance(stat, list):
                     for i in stat:
                         if key is None:
@@ -77,12 +76,12 @@ class GlancesStdout(object):
                         else:
                             continue
                         try:
-                            printandflush("{}.{}.{}: {}".format(plugin, i_key, attribute, i[attribute]))
+                            printandflush(f"{plugin}.{i_key}.{attribute}: {i[attribute]}")
                         except KeyError as err:
-                            logger.error("Can not display stat {}.{} ({})".format(plugin, attribute, err))
+                            logger.error(f"Can not display stat {plugin}.{attribute} ({err})")
             else:
                 # Without attribute
-                printandflush("{}: {}".format(plugin, stat))
+                printandflush(f"{plugin}: {stat}")
 
         # Wait until next refresh
         if duration > 0:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -12,11 +11,12 @@ Help plugin.
 
 Just a stupid plugin to display the help screen.
 """
-import sys
-from glances.globals import iteritems
-from glances import __version__, psutil_version
-from glances.plugins.plugin.model import GlancesPluginModel
+
 from itertools import chain
+
+from glances import __version__, psutil_version
+from glances.globals import iteritems
+from glances.plugins.plugin.model import GlancesPluginModel
 
 
 class PluginModel(GlancesPluginModel):
@@ -24,7 +24,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config)
+        super().__init__(args=args, config=config)
 
         # Set the config instance
         self.config = config
@@ -34,12 +34,7 @@ class PluginModel(GlancesPluginModel):
         self.display_curse = True
 
         # init data dictionary, to preserve insertion order
-        if sys.version_info < (3, 6):
-            from collections import OrderedDict
-
-            self.view_data = OrderedDict()
-        else:
-            self.view_data = {}
+        self.view_data = {}
         self.generate_view_data()
 
     def reset(self):
@@ -51,10 +46,10 @@ class PluginModel(GlancesPluginModel):
     def generate_view_data(self):
         """Generate the views."""
         self.view_data['version'] = '{} {}'.format('Glances', __version__)
-        self.view_data['psutil_version'] = ' with psutil {}'.format(psutil_version)
+        self.view_data['psutil_version'] = f' with psutil {psutil_version}'
 
         try:
-            self.view_data['configuration_file'] = 'Configuration file: {}'.format(self.config.loaded_config_file)
+            self.view_data['configuration_file'] = f'Configuration file: {self.config.loaded_config_file}'
         except AttributeError:
             pass
 

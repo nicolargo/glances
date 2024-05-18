@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -11,25 +10,27 @@
 
 import psutil
 
+from glances.globals import LINUX
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Batinfo library (optional; Linux-only)
-batinfo_tag = True
-try:
-    import batinfo
-except ImportError:
-    logger.debug("batinfo library not found. Fallback to psutil.")
+if LINUX:
+    batinfo_tag = True
+    try:
+        import batinfo
+    except ImportError:
+        logger.debug("batinfo library not found. Fallback to psutil.")
+        batinfo_tag = False
+else:
     batinfo_tag = False
 
-# Availability:
-# Linux, Windows, FreeBSD (psutil>=5.1.0)
-# macOS (psutil>=5.4.2)
+# PsUtil Sensors_battery available on Linux, Windows, FreeBSD, macOS
 psutil_tag = True
 try:
     psutil.sensors_battery()
 except Exception as e:
-    logger.error("Cannot grab battery status {}.".format(e))
+    logger.error(f"Cannot grab battery status {e}.")
     psutil_tag = False
 
 
@@ -41,13 +42,13 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config, stats_init_value=[])
+        super().__init__(args=args, config=config, stats_init_value=[])
 
         # Init the sensor class
         try:
             self.glances_grab_bat = GlancesGrabBat()
         except Exception as e:
-            logger.error("Can not init battery class ({})".format(e))
+            logger.error(f"Can not init battery class ({e})")
             global batinfo_tag
             global psutil_tag
             batinfo_tag = False
@@ -80,7 +81,7 @@ class PluginModel(GlancesPluginModel):
         return self.stats
 
 
-class GlancesGrabBat(object):
+class GlancesGrabBat:
     """Get batteries stats using the batinfo library."""
 
     def __init__(self):
