@@ -33,7 +33,7 @@ from urllib.request import Request, urlopen
 from xmlrpc.client import Fault, ProtocolError, Server, ServerProxy, Transport
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
-import ujson
+import orjson
 
 # Correct issue #1025 by monkey path the xmlrpc lib
 from defusedxml.xmlrpc import monkey_patch
@@ -309,9 +309,9 @@ def json_dumps(data):
     Manage the issue #815 for Windows OS with UnicodeDecodeError catching.
     """
     try:
-        return ujson.dumps(data)
+        return orjson.dumps(data)
     except UnicodeDecodeError:
-        return ujson.dumps(data, ensure_ascii=False)
+        return orjson.dumps(data, ensure_ascii=False)
 
 
 def dictlist(data, item):

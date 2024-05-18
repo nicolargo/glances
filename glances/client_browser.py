@@ -10,7 +10,7 @@
 
 import threading
 
-import ujson
+import orjson
 
 from glances.autodiscover import GlancesAutoDiscoverServer
 from glances.client import GlancesClient, GlancesClientTransport
@@ -95,12 +95,12 @@ class GlancesClientBrowser:
             # Mandatory stats
             try:
                 # CPU%
-                cpu_percent = 100 - ujson.loads(s.getCpu())['idle']
+                cpu_percent = 100 - orjson.loads(s.getCpu())['idle']
                 server['cpu_percent'] = f'{cpu_percent:.1f}'
                 # MEM%
-                server['mem_percent'] = ujson.loads(s.getMem())['percent']
+                server['mem_percent'] = orjson.loads(s.getMem())['percent']
                 # OS (Human Readable name)
-                server['hr_name'] = ujson.loads(s.getSystem())['hr_name']
+                server['hr_name'] = orjson.loads(s.getSystem())['hr_name']
             except (OSError, Fault, KeyError) as e:
                 logger.debug(f"Error while grabbing stats form server ({e})")
                 server['status'] = 'OFFLINE'
@@ -120,7 +120,7 @@ class GlancesClientBrowser:
                 # Optional stats (load is not available on Windows OS)
                 try:
                     # LOAD
-                    load_min5 = ujson.loads(s.getLoad())['min5']
+                    load_min5 = orjson.loads(s.getLoad())['min5']
                     server['load_min5'] = f'{load_min5:.2f}'
                 except Exception as e:
                     logger.warning(f"Error while grabbing stats form server ({e})")

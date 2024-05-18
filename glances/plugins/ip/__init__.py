@@ -10,7 +10,7 @@
 
 import threading
 
-from ujson import loads
+from orjson import loads
 
 from glances.globals import queue, urlopen_auth
 from glances.logger import logger
