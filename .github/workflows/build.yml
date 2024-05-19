@@ -160,4 +160,6 @@ jobs:
           target: ${{ matrix.tag.target }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # GHA default behaviour overwrites last build cache. Causes alpine and ubuntu cache to overwrite each other.
+          # Use `scope` with the os name to prevent that
+          cache-to: 'type=gha,mode=max,scope=${{ matrix.os }}'
