@@ -129,13 +129,6 @@ jobs:
           labels: |
             org.opencontainers.image.url=https://nicolargo.github.io/glances/
 
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ matrix.os }}-${{ matrix.tag.tag }}
-          restore-keys: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ matrix.os }}
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -166,5 +159,5 @@ jobs:
           platforms: ${{ matrix.os != 'ubuntu' && env.DOCKER_PLATFORMS || env.DOCKER_PLATFORMS_UBUNTU }}
           target: ${{ matrix.tag.target }}
           labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
