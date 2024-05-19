@@ -159,7 +159,7 @@ jobs:
           platforms: ${{ matrix.os != 'ubuntu' && env.DOCKER_PLATFORMS || env.DOCKER_PLATFORMS_UBUNTU }}
           target: ${{ matrix.tag.target }}
           labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: type=gha
           # GHA default behaviour overwrites last build cache. Causes alpine and ubuntu cache to overwrite each other.
           # Use `scope` with the os name to prevent that
+          cache-from: 'type=gha,scope=${{ matrix.os }}'
           cache-to: 'type=gha,mode=max,scope=${{ matrix.os }}'
