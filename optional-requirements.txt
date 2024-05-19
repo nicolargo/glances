@@ -32,10 +32,8 @@ pysnmp-lextudio; python_version >= "3.7"
 python-dateutil
 pyzmq
 requests
-scandir; python_version < "3.5"
 six
 sparklines
 statsd
 uvicorn; python_version >= "3.8"
-wifi
 zeroconf==0.131.0 # Waiting correction for ARMv7: https://github.com/python-zeroconf/python-zeroconf/issues/1372
