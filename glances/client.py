@@ -36,6 +36,7 @@ class GlancesClient:
         self.args = args
         self.config = config
 
+        print(args)
         self._quiet = args.quiet
         self.refresh_time = args.time
 
