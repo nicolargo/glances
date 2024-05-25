@@ -191,7 +191,12 @@ class PluginModel(GlancesPluginModel):
         ##########################
 
         # System information
-        if 'cpu_hz_current' in self.stats and 'cpu_hz' in self.stats:
+        if (
+            'cpu_hz_current' in self.stats
+            and self.stats['cpu_hz_current'] is not None
+            and 'cpu_hz' in self.stats
+            and self.stats['cpu_hz'] is not None
+        ):
             msg_freq = ' {:.2f}/{:.2f}GHz'.format(
                 self._hz_to_ghz(self.stats['cpu_hz_current']), self._hz_to_ghz(self.stats['cpu_hz'])
             )
