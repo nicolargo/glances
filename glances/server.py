@@ -8,13 +8,14 @@
 
 """Manage the Glances server."""
 
+import json
 import socket
 import sys
 from base64 import b64decode
 
 from glances import __version__
 from glances.autodiscover import GlancesAutoDiscoverClient
-from glances.globals import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer, json_dumps
+from glances.globals import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 from glances.logger import logger
 from glances.stats_server import GlancesStatsServer
 from glances.timer import Timer
@@ -140,39 +141,28 @@ class GlancesInstance:
     def getAll(self):
         # Update and return all the stats
         self.__update__()
-        return json_dumps(self.stats.getAll())
+        return json.dumps(self.stats.getAll())
 
     def getAllPlugins(self):
         # Return the plugins list
-        return json_dumps(self.stats.getPluginsList())
+        return json.dumps(self.stats.getPluginsList())
 
     def getAllLimits(self):
         # Return all the plugins limits
-        return json_dumps(self.stats.getAllLimitsAsDict())
+        return json.dumps(self.stats.getAllLimitsAsDict())
 
     def getAllViews(self):
         # Return all the plugins views
-        return json_dumps(self.stats.getAllViewsAsDict())
+        return json.dumps(self.stats.getAllViewsAsDict())
 
-    def __getattr__(self, item):
-        """Overwrite the getattr method in case of attribute is not found.
+    def getPlugin(self, plugin):
+        # Update and return the plugin stat
+        self.__update__()
+        return json.dumps(self.stats.get_plugin(plugin).get_raw())
 
-        The goal is to dynamically generate the API get'Stats'() methods.
-        """
-        header = 'get'
-        # Check if the attribute starts with 'get'
-        if item.startswith(header):
-            try:
-                # Update the stat
-                self.__update__()
-                # Return the attribute
-                return getattr(self.stats, item)
-            except Exception:
-                # The method is not found for the plugin
-                raise AttributeError(item)
-        else:
-            # Default behavior
-            raise AttributeError(item)
+    def getPluginView(self, plugin):
+        # Update and return the plugin view
+        return json.dumps(self.stats.get_plugin(plugin).get_views())
 
 
 class GlancesServer:

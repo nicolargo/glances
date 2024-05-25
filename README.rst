@@ -86,7 +86,7 @@ Requirements
 - ``psutil`` (better with latest version)
 - ``defusedxml`` (in order to monkey patch xmlrpc)
 - ``packaging`` (for the version comparison)
-- ``ujson`` (an optimized alternative to the standard json module)
+- ``orjson`` (an optimized alternative to the standard json module)
 
 *Note for Python 2 users*
 
