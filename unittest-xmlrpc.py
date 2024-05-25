@@ -185,7 +185,7 @@ class TestGlances(unittest.TestCase):
         """IRQS"""
         method = "getIrqs()"
         print(f'INFO: [TEST_012] Method: {method}')
-        req = json.loads(client.getIrq())
+        req = json.loads(client.getPlugin('irq'))
         self.assertIsInstance(req, list)
 
     def test_013_plugin_views(self):
@@ -193,7 +193,7 @@ class TestGlances(unittest.TestCase):
         method = "getViewsCpu()"
         print(f'INFO: [TEST_013] Method: {method}')
 
-        req = json.loads(client.getViewsCpu())
+        req = json.loads(client.getPluginView('cpu'))
         self.assertIsInstance(req, dict)
 
     def test_999_stop_server(self):
