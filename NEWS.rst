@@ -11,6 +11,13 @@ Under development, see roadmap here: https://github.com/nicolargo/glances/milest
 Contributors are welcome !
 
 ===============
+Version 4.0.7
+===============
+
+* cpu_hz_current not available on NetBSD #2792
+* SensorType change in REST API breaks compatibility in 4.0.4 #2788
+
+===============
 Version 4.0.6
 ===============
 
