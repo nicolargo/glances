@@ -11,6 +11,12 @@ Under development, see roadmap here: https://github.com/nicolargo/glances/milest
 Contributors are welcome !
 
 ===============
+Version 4.0.6
+===============
+
+*  No GPU info on Web View #2796
+
+===============
 Version 4.0.5
 ===============
 
