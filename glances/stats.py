@@ -52,7 +52,7 @@ class GlancesStats:
             # Get the plugin instance
             plugin = self._plugins[plugname]
             if hasattr(plugin, 'get_json_views'):
-                # The method get_views exist, return it
+                # The method get_json_views exist, return it
                 return getattr(plugin, 'get_json_views')
             # The method get_views is not found for the plugin
             raise AttributeError(item)
@@ -61,9 +61,9 @@ class GlancesStats:
             plugname = item[len('get') :].lower()
             # Get the plugin instance
             plugin = self._plugins[plugname]
-            if hasattr(plugin, 'get_stats'):
-                # The method get_stats exist, return it
-                return getattr(plugin, 'get_stats')
+            if hasattr(plugin, 'get_json'):
+                # The method get_json exist, return it
+                return getattr(plugin, 'get_json')
             # The method get_stats is not found for the plugin
             raise AttributeError(item)
         # Default behavior
@@ -358,9 +358,15 @@ class GlancesStats:
         return self._plugins
 
     def get_plugin(self, plugin_name):
-        """Return the plugin name."""
+        """Return the plugin stats."""
         if plugin_name in self._plugins:
             return self._plugins[plugin_name]
+        return None
+
+    def get_plugin_view(self, plugin_name):
+        """Return the plugin views."""
+        if plugin_name in self._plugins:
+            return self._plugins[plugin_name].get_views()
         return None
 
     def end(self):
