@@ -156,35 +156,13 @@ class GlancesInstance:
         return json.dumps(self.stats.getAllViewsAsDict())
 
     def getPlugin(self, plugin):
-        # Update and return the system stats
+        # Update and return the plugin stat
         self.__update__()
         return json.dumps(self.stats.get_plugin(plugin).get_raw())
 
-    # ['alert', 'ports', 'diskio', 'containers', 'processcount', 'gpu',
-    #  'percpu', 'system', 'network', 'cpu', 'amps', 'processlist',
-    #  'load', 'sensors', 'uptime', 'now', 'fs', 'wifi', 'ip', 'help',
-    #  'version', 'psutilversion', 'core', 'mem', 'folders', 'quicklook', 'memswap', 'raid']
-
-    # It works...
-    # def getSystem(self):
-    #     return self._get_plugin('system')
-
-    # Do not work...
-    # def __getattr__(self, item):
-    #     """Overwrite the getattr method in case of attribute is not found.
-    #     The goal is to dynamically generate the API get'Stats'() methods.
-    #     """
-    #     header = 'get'
-    #     # Check if the attribute starts with 'get'
-    #     if item.startswith(header):
-    #         try:
-    #             return self._get_plugin(item[len(header):])
-    #         except Exception:
-    #             # The method is not found for the plugin
-    #             raise AttributeError(item)
-    #     else:
-    #         # Default behavior
-    #         raise AttributeError(item)
+    def getPluginView(self, plugin):
+        # Update and return the plugin view
+        return json.dumps(self.stats.get_plugin(plugin).get_views())
 
 
 class GlancesServer:

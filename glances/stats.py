@@ -358,9 +358,15 @@ class GlancesStats:
         return self._plugins
 
     def get_plugin(self, plugin_name):
-        """Return the plugin name."""
+        """Return the plugin stats."""
         if plugin_name in self._plugins:
             return self._plugins[plugin_name]
+        return None
+
+    def get_plugin_view(self, plugin_name):
+        """Return the plugin views."""
+        if plugin_name in self._plugins:
+            return self._plugins[plugin_name].get_views()
         return None
 
     def end(self):
