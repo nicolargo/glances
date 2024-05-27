@@ -115,7 +115,6 @@ Optional dependencies:
 - ``podman`` (for the Containers Podman monitoring support)
 - ``potsdb`` (for the OpenTSDB export module)
 - ``prometheus_client`` (for the Prometheus export module)
-- ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``pygal`` (for the graph export module)
 - ``pymdstat`` (for RAID support) [Linux-only]
 - ``pymongo`` (for the MongoDB export module)
