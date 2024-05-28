@@ -81,16 +81,29 @@ def default_config_dir():
     - Linux, SunOS, *BSD, macOS: /usr/share/doc (as defined in the setup.py files)
     - Windows: %APPDATA%\glances
     """
-    if LINUX or SUNOS or BSD or MACOS:
-        path = '/usr/share/doc'
-    else:
-        path = os.environ.get('APPDATA')
-    if path is None:
-        path = ''
-    else:
-        path = os.path.join(path, 'glances')
+    path = []
+    # Add venv path (solve issue #2803)
+    if in_virtualenv():
+        path.append(os.path.join(sys.prefix, 'share', 'doc', 'glances'))
 
-    return [path]
+    # Add others system path
+    if LINUX or SUNOS or BSD or MACOS:
+        path.append('/usr/share/doc')
+    else:
+        path.append(os.environ.get('APPDATA'))
+
+    return path
+
+
+def in_virtualenv():
+    # Source: https://stackoverflow.com/questions/1871549/how-to-determine-if-python-is-running-inside-a-virtualenv/1883251#1883251
+    return sys.prefix != get_base_prefix_compat()
+
+
+def get_base_prefix_compat():
+    """Get base/real prefix, or sys.prefix if there is none."""
+    # Source: https://stackoverflow.com/questions/1871549/how-to-determine-if-python-is-running-inside-a-virtualenv/1883251#1883251
+    return getattr(sys, "base_prefix", None) or getattr(sys, "real_prefix", None) or sys.prefix
 
 
 class Config:
