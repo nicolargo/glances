@@ -21,6 +21,7 @@ You can place your ``glances.conf`` file in the following locations:
 ``*BSD``             ~/.config/glances/, /usr/local/etc/glances/, /usr/share/docs/glances/
 ``macOS``            ~/.config/glances/, ~/Library/Application Support/glances/, /usr/local/etc/glances/, /usr/share/docs/glances/
 ``Windows``          %APPDATA%\\glances\\glances.conf
+``All``              + <venv_root_folder>/share/doc/glances/
 ==================== =============================================================
 
 - On Windows XP, ``%APPDATA%`` is: ``C:\Documents and Settings\<USERNAME>\Application Data``.
