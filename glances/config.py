@@ -117,6 +117,7 @@ class Config:
         self.config_dir = config_dir
         self.config_filename = 'glances.conf'
         self._loaded_config_file = None
+        self._config_file_paths = self.config_file_paths()
 
         # Re pattern for optimize research of `foo`
         self.re_pattern = re.compile(r'(\`.+?\`)')
@@ -164,7 +165,7 @@ class Config:
 
     def read(self):
         """Read the config file, if it exists. Using defaults otherwise."""
-        for config_file in self.config_file_paths():
+        for config_file in self._config_file_paths:
             logger.debug(f'Search glances.conf file in {config_file}')
             if os.path.exists(config_file):
                 try:
