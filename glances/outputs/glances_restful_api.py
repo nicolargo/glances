@@ -130,8 +130,9 @@ class GlancesRestfulApi:
         # https://fastapi.tiangolo.com/tutorial/cors/
         self._app.add_middleware(
             CORSMiddleware,
-            # allow_origins=["*"],
-            allow_origins=[self.bind_url],
+            # Related to https://github.com/nicolargo/glances/discussions/2802
+            # allow_origins=[self.bind_url],
+            allow_origins=["*"],
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
