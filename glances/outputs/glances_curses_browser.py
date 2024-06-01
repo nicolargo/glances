@@ -249,15 +249,19 @@ class GlancesCursesBrowser(_GlancesCurses):
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
         stats_max = screen_y - 3
-        stats_len = len(stats)
-
         self._page_max_lines = stats_max
-        self._page_max = int(math.ceil(stats_len / stats_max))
-        # Init position
-        x = 0
-        y = 0
+        self._page_max = int(math.ceil(len(stats) / stats_max))
 
-        # Display top header
+        # Display header
+        x, y = self.__display_header(stats, 0, 0, screen_x, screen_y)
+
+        # Display Glances server list
+        # ================================
+        return self.__display_server_list(stats, x, y, screen_x, screen_y)
+
+    def __display_header(self, stats, x, y, screen_x, screen_y):
+        stats_len = len(stats)
+        stats_max = screen_y - 3
         if stats_len == 0:
             if self.first_scan and not self.args.disable_autodiscover:
                 msg = 'Glances is scanning your network. Please wait...'
@@ -282,11 +286,14 @@ class GlancesCursesBrowser(_GlancesCurses):
             msg = f'{page_lines} servers displayed.({self._current_page + 1}/{self._page_max}) {status_count}'
             self.term_window.addnstr(y + 1, x, msg, screen_x - x)
 
-        if stats_len == 0:
+        return x, y
+
+    def __display_server_list(self, stats, x, y, screen_x, screen_y):
+        if len(stats) == 0:
+            # No server to display
             return False
 
-        # Display the Glances server list
-        # ================================
+        stats_max = screen_y - 3
 
         # Table of table
         # Item description: [stats_id, column name, column size]
