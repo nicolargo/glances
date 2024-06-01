@@ -88,6 +88,11 @@ class PluginModel(GlancesPluginModel):
             self.hide_zero = False
         self.hide_zero_fields = ['bytes_recv', 'bytes_sent']
 
+        #  Add support for automatically hiding network interfaces that are down
+        # or that don't have any IP addresses #2799
+        self.hide_no_up = config.get_bool_value(self.plugin_name, 'hide_no_up', default=False)
+        self.hide_no_ip = config.get_bool_value(self.plugin_name, 'hide_no_ip', default=False)
+
         # Force a first update because we need two updates to have the first stat
         self.update()
         self.refresh_timer.set(0)
@@ -140,9 +145,20 @@ class PluginModel(GlancesPluginModel):
         net_status = {}
         try:
             net_status = psutil.net_if_stats()
+            net_addrs = psutil.net_if_addrs()
         except OSError as e:
             # see psutil #797/glances #1106
             logger.debug(f'Can not get network interface status ({e})')
+
+        # Filter interfaces (related to #2799)
+        if self.hide_no_up:
+            net_status = {k: v for k, v in net_status.items() if v.isup}
+        if self.hide_no_ip:
+            net_status = {
+                k: v
+                for k, v in net_status.items()
+                if k in net_addrs and any(a.family != psutil.AF_LINK for a in net_addrs[k])
+            }
 
         for interface_name, interface_stat in net_io_counters.items():
             # Do not take hidden interface into account

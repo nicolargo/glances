@@ -17,6 +17,8 @@ In this case thresholds values are define in bps.
 Additionally, you can define:
 
 - a list of network interfaces to hide
+- automatically hide interfaces not up
+- automatically hide interfaces without IP address
 - per-interface limit values
 - aliases for interface name
 
@@ -41,6 +43,10 @@ virtual docker interface (docker0, docker1, ...):
     hide=docker.*,lo
     # Define the list of network interfaces to show (comma-separated regexp)
     #show=eth0,eth1
+    # Automatically hide interface not up (default is False)
+    hide_no_up=True
+    # Automatically hide interface with no IP address (default is False)
+    hide_no_ip=True
     # WLAN 0 alias
     wlan0_alias=Wireless IF
     # It is possible to overwrite the bitrate thresholds per interface
