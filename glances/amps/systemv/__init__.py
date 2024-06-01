@@ -33,11 +33,10 @@ one_line=true
 service_cmd=/usr/bin/service --status-all
 """
 
-from subprocess import STDOUT, check_output
-
 from glances.amps.amp import GlancesAmp
 from glances.globals import iteritems
 from glances.logger import logger
+from glances.secure import secure_popen
 
 
 class Amp(GlancesAmp):
@@ -58,8 +57,9 @@ class Amp(GlancesAmp):
         # Get the systemctl status
         logger.debug('{}: Update stats using service {}'.format(self.NAME, self.get('service_cmd')))
         try:
-            res = check_output(self.get('service_cmd').split(), stderr=STDOUT).decode('utf-8')
-        except OSError as e:
+            # res = check_output(self.get('service_cmd').split(), stderr=STDOUT).decode('utf-8')
+            res = secure_popen(self.get('service_cmd'))
+        except Exception as e:
             logger.debug(f'{self.NAME}: Error while executing service ({e})')
         else:
             status = {'running': 0, 'stopped': 0, 'upstart': 0}
