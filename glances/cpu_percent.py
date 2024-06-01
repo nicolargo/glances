@@ -71,9 +71,8 @@ class CpuPercent:
 
     def __get_cpu_name(self):
         # Get the CPU name once from the /proc/cpuinfo file
-        # Linux/Unix only
         # Read the first line with the "model name"
-        ret = 'CPU'
+        ret = None
         try:
             cpuinfo_file = open('/proc/cpuinfo').readlines()
         except (FileNotFoundError, PermissionError):
@@ -83,7 +82,7 @@ class CpuPercent:
                 if line.startswith('model name'):
                     ret = line.split(':')[1].strip()
                     break
-        return ret
+        return ret if ret else 'CPU'
 
     def __get_cpu(self):
         """Update and/or return the CPU using the psutil library."""
