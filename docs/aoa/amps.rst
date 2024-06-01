@@ -61,9 +61,11 @@ For example:
     enable=false
     refresh=30
     one_line=false
-    command=sysctl net.netfilter.nf_conntrack_count;sysctl net.netfilter.nf_conntrack_max
+    command=sysctl net.netfilter.nf_conntrack_count && sysctl net.netfilter.nf_conntrack_max
 
-For security reason, pipe is not directly allowed in a AMP command but you create a sheel
+Note: for multiple command, please use the '&&'' separator.
+
+For security reason, pipe is not directly allowed in a AMP command but you create a shell
 script with your command:
 
 .. code-block:: ini
