@@ -130,11 +130,11 @@ class GlancesRestfulApi:
         # https://fastapi.tiangolo.com/tutorial/cors/
         self._app.add_middleware(
             CORSMiddleware,
-            # allow_origins=["*"],
-            allow_origins=[self.bind_url],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
+            # Related to https://github.com/nicolargo/glances/issues/2812
+            allow_origins=config.get_list_value('outputs', 'cors_origins', default=["*"]),
+            allow_credentials=config.get_bool_value('outputs', 'cors_credentials', default=True),
+            allow_methods=config.get_list_value('outputs', 'cors_methods', default=["*"]),
+            allow_headers=config.get_list_value('outputs', 'cors_headers', default=["*"]),
         )
 
         # FastAPI Enable GZIP compression

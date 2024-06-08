@@ -86,7 +86,7 @@ Requirements
 - ``psutil`` (better with latest version)
 - ``defusedxml`` (in order to monkey patch xmlrpc)
 - ``packaging`` (for the version comparison)
-- ``ujson`` (an optimized alternative to the standard json module)
+- ``orjson`` (an optimized alternative to the standard json module)
 
 *Note for Python 2 users*
 
@@ -115,7 +115,6 @@ Optional dependencies:
 - ``podman`` (for the Containers Podman monitoring support)
 - ``potsdb`` (for the OpenTSDB export module)
 - ``prometheus_client`` (for the Prometheus export module)
-- ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``pygal`` (for the graph export module)
 - ``pymdstat`` (for RAID support) [Linux-only]
 - ``pymongo`` (for the MongoDB export module)

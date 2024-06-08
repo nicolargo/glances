@@ -95,7 +95,7 @@ class GlancesPluginModel:
         # Init the limits (configuration keys) dictionary
         self._limits = {}
         if config is not None:
-            logger.debug(f'Load section {self.plugin_name} in {config.config_file_paths()}')
+            logger.debug(f'Load section {self.plugin_name} in Glances configuration file')
             self.load_limits(config=config)
 
         # Init the alias (dictionnary)

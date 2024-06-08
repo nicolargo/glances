@@ -1,4 +1,4 @@
 defusedxml
+orjson
 packaging
 psutil>=5.6.7
-ujson>=5.4.0

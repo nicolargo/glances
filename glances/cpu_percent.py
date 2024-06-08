@@ -23,7 +23,7 @@ class CpuPercent:
         self.percpu_percent = []
 
         # Get CPU name
-        self.__get_cpu_name()
+        self.cpu_info['cpu_name'] = self.__get_cpu_name()
 
         # cached_timer_cpu is the minimum time interval between stats updates
         # since last update is passed (will retrieve old cached info instead)
@@ -71,12 +71,18 @@ class CpuPercent:
 
     def __get_cpu_name(self):
         # Get the CPU name once from the /proc/cpuinfo file
-        # TODO: Multisystem...
+        # Read the first line with the "model name"
+        ret = None
         try:
-            self.cpu_info['cpu_name'] = open('/proc/cpuinfo').readlines()[4].split(':')[1].strip()
-        except (FileNotFoundError, PermissionError, IndexError, KeyError, AttributeError):
-            self.cpu_info['cpu_name'] = 'CPU'
-        return self.cpu_info['cpu_name']
+            cpuinfo_file = open('/proc/cpuinfo').readlines()
+        except (FileNotFoundError, PermissionError):
+            pass
+        else:
+            for line in cpuinfo_file:
+                if line.startswith('model name'):
+                    ret = line.split(':')[1].strip()
+                    break
+        return ret if ret else 'CPU'
 
     def __get_cpu(self):
         """Update and/or return the CPU using the psutil library."""
