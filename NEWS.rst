@@ -12,6 +12,8 @@ Version 4.0.8
 * Screen frequently flickers when outputting to local display bug needs test #2490
 * Retire ujson for being in maintenance mode dependencies enhancement #2791
 
+Minor breaking change in AMP: please use && instead of ; as command line separator.
+
 ===============
 Version 4.0.7
 ===============
