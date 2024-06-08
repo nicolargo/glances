@@ -3,6 +3,16 @@
 ==============================================================================
 
 ===============
+Version 4.0.8
+===============
+
+* Make CORS option configurable security webui #2812
+* When Glances is installed via venv, default configuration file is not used documentation packaging #2803
+* GET /1272f6e9e8f9d6bfd6de.png results in 404 bug webui #2781 by Emporea was closed May 25, 2024
+* Screen frequently flickers when outputting to local display bug needs test #2490
+* Retire ujson for being in maintenance mode dependencies enhancement #2791
+
+===============
 Version 4.0.7
 ===============
 
