@@ -49,6 +49,62 @@ Version 4.0.2
 Thanks to RazCrimson for the sensors patch !
 
 ===============
+Version 4.0.8
+===============
+
+* Make CORS option configurable security webui #2812
+* When Glances is installed via venv, default configuration file is not used documentation packaging #2803
+* GET /1272f6e9e8f9d6bfd6de.png results in 404 bug webui #2781 by Emporea was closed May 25, 2024
+* Screen frequently flickers when outputting to local display bug needs test #2490
+* Retire ujson for being in maintenance mode dependencies enhancement #2791
+
+===============
+Version 4.0.7
+===============
+
+* cpu_hz_current not available on NetBSD #2792
+* SensorType change in REST API breaks compatibility in 4.0.4 #2788
+
+===============
+Version 4.0.6
+===============
+
+*  No GPU info on Web View #2796
+
+===============
+Version 4.0.5
+===============
+
+* SensorType change in REST API breaks compatibility in 4.0.4 #2788
+* Please make pydantic optional dependency, not required one #2777
+* Update the Grafana dashboard #2780
+* 4.0.4 - On Glances startup "ERROR -- Can not init battery class #2776
+* In codeSpace (with Python 3.8), an error occurs in ./unittest-restful.py #2773
+
+Use Ruff as default Linter.
+
+===============
+Version 4.0.4
+===============
+
+Hostfix release for support sensors plugin on python 3.8
+
+===============
+Version 4.0.3
+===============
+
+Additional fixes for Sensor plugin
+
+===============
+Version 4.0.2
+===============
+
+* hotfix: plugin(sensors) - race conditions btw fan_speed & temperature… #2766
+* fix: include requirements.txt and SECURITY.md for pypi dist #2761
+
+Thanks to RazCrimson for the sensors patch !
+
+===============
 Version 4.0.1
 ===============
 

@@ -23,7 +23,7 @@ def secure_popen(cmd):
     """
     ret = ''
 
-    # Split by multiple commands '&&'
+    # Split by multiple commands (only '&&' separator is supported)
     for c in cmd.split('&&'):
         ret += __secure_popen(c)
 

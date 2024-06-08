@@ -24,11 +24,9 @@ one_line=false
 command=foo status
 """
 
-from subprocess import STDOUT, CalledProcessError, check_output
-
 from glances.amps.amp import GlancesAmp
-from glances.globals import to_ascii, u
 from glances.logger import logger
+from glances.secure import secure_popen
 
 
 class Amp(GlancesAmp):
@@ -68,10 +66,7 @@ class Amp(GlancesAmp):
         # Run command(s)
         # Comma separated commands can be executed
         try:
-            msg = ''
-            for cmd in res.split(';'):
-                msg += u(check_output(cmd.split(), stderr=STDOUT))
-            self.set_result(to_ascii(msg.rstrip()))
-        except CalledProcessError as e:
+            self.set_result(secure_popen(res).rstrip())
+        except Exception as e:
             self.set_result(e.output)
         return self.result()

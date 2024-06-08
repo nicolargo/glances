@@ -1,7 +1,6 @@
 <template>
     <div v-if="!dataLoaded" class="container-fluid" id="loading-page">
-        <div class="glances-logo"></div>
-        <div class="loader">Loading...</div>
+        <div class="loader">Glances is loading...</div>
     </div>
     <glances-help v-else-if="args.help_tag"></glances-help>
     <main v-else>

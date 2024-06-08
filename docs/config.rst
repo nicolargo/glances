@@ -21,6 +21,7 @@ You can place your ``glances.conf`` file in the following locations:
 ``*BSD``             ~/.config/glances/, /usr/local/etc/glances/, /usr/share/docs/glances/
 ``macOS``            ~/.config/glances/, ~/Library/Application Support/glances/, /usr/local/etc/glances/, /usr/share/docs/glances/
 ``Windows``          %APPDATA%\\glances\\glances.conf
+``All``              + <venv_root_folder>/share/doc/glances/
 ==================== =============================================================
 
 - On Windows XP, ``%APPDATA%`` is: ``C:\Documents and Settings\<USERNAME>\Application Data``.
@@ -59,17 +60,41 @@ than a second one concerning the user interface:
 .. code-block:: ini
 
     [outputs]
+    # Options for all UIs
+    #--------------------
     # Separator in the Curses and WebUI interface (between top and others plugins)
     separator=True
     # Set the the Curses and WebUI interface left menu plugin list (comma-separated)
     #left_menu=network,wifi,connections,ports,diskio,fs,irq,folders,raid,smart,sensors,now
-    # Limit the number of processes to display (for the WebUI)
+    # Limit the number of processes to display (in the WebUI)
     max_processes_display=25
-    # Set the URL prefix (for the WebUI and the API)
+    # Options for WebUI
+    #------------------
+    # Set URL prefix for the WebUI and the API
     # Example: url_prefix=/glances/ => http://localhost/glances/
-    # The final / is mandatory
+    # Note: The final / is mandatory
     # Default is no prefix (/)
     #url_prefix=/glances/
+    # Set root path for WebUI statics files
+    # Why ? On Debian system, WebUI statics files are not provided.
+    # You can download it in a specific folder
+    # thanks to https://github.com/nicolargo/glances/issues/2021
+    # then configure this folder with the webui_root_path key
+    # Default is folder where glances_restfull_api.py is hosted
+    #webui_root_path=
+    # CORS options
+    # Comma separated list of origins that should be permitted to make cross-origin requests.
+    # Default is *
+    #cors_origins=*
+    # Indicate that cookies should be supported for cross-origin requests.
+    # Default is True
+    #cors_credentials=True
+    # Comma separated list of HTTP methods that should be allowed for cross-origin requests.
+    # Default is *
+    #cors_methods=*
+    # Comma separated list of HTTP request headers that should be supported for cross-origin requests.
+    # Default is *
+    #cors_headers=*
 
 Each plugin, export module, and application monitoring process (AMP) can
 have a section. Below is an example for the CPU plugin:
