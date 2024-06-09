@@ -572,13 +572,14 @@ class _GlancesCurses:
         self.new_line()
         self.line -= 1
         line_width = self.term_window.getmaxyx()[1] - self.column
-        self.term_window.addnstr(
-            self.line,
-            self.column,
-            unicode_message('MEDIUM_LINE', self.args) * line_width,
-            line_width,
-            self.colors_list[color],
-        )
+        if self.line >= 0:
+            self.term_window.addnstr(
+                self.line,
+                self.column,
+                unicode_message('MEDIUM_LINE', self.args) * line_width,
+                line_width,
+                self.colors_list[color],
+            )
 
     def __get_stat_display(self, stats, layer):
         """Return a dict of dict with all the stats display.
