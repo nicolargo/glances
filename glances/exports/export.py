@@ -196,11 +196,10 @@ class GlancesExport:
             for key, value in sorted(iteritems(stats)):
                 if isinstance(value, bool):
                     value = json_dumps(value)
+
                 if isinstance(value, list):
-                    try:
-                        value = value[0]
-                    except IndexError:
-                        value = ''
+                    value = ' '.join([str(v) for v in value])
+
                 if isinstance(value, dict):
                     item_names, item_values = self.build_export(value)
                     item_names = [pre_key + key.lower() + str(i) for i in item_names]
