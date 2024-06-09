@@ -195,8 +195,10 @@ class _GlancesCurses:
         """Load the outputs section of the configuration file."""
         if config is not None and config.has_section('outputs'):
             logger.debug('Read the outputs section in the configuration file')
-            # Separator ?
-            self.args.enable_separator = config.get_bool_value('outputs', 'separator', default=True)
+            # Separator
+            self.args.enable_separator = config.get_bool_value(
+                'outputs', 'separator', default=self.args.enable_separator
+            )
             # Set the left sidebar list
             self._left_sidebar = config.get_list_value('outputs', 'left_menu', default=self._left_sidebar)
 
