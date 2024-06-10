@@ -188,8 +188,8 @@ class PluginModel(GlancesPluginModel):
         # Get the alias for each stat
         if self.has_alias(stats["label"].lower()):
             return self.has_alias(stats["label"].lower())
-        if self.has_alias("{}_{}".format(stats["label"], stats["type"]).lower()):
-            return self.has_alias("{}_{}".format(stats["label"], stats["type"]).lower())
+        if self.has_alias("{}_{}".format(stats["label"], stats["type"].value).lower()):
+            return self.has_alias("{}_{}".format(stats["label"], stats["type"].value).lower())
         return stats["label"]
 
     def __set_type(self, stats: List[Dict[str, Any]], sensor_type: SensorType) -> List[Dict[str, Any]]:
