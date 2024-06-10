@@ -5,7 +5,7 @@
         "favico.js": "^0.3.10",
         "hotkeys-js": "^3.10.2",
         "lodash": "^4.17.21",
-        "sanitize-html": "^2.10.0",
+        "sanitize-html": "^2.12.1",
         "vue": "^3.3.2"
     },
     "devDependencies": {
