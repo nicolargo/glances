@@ -324,31 +324,34 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_time(self, p, selected, args):
         """Return process time curses"""
+        cpu_times = p['cpu_times']
         try:
             # Sum user and system time
-            user_system_time = p['cpu_times']['user'] + p['cpu_times']['system']
-        except (OverflowError, TypeError):
+            user_system_time = cpu_times['user'] + cpu_times['system']
+        except (OverflowError, TypeError, KeyError):
             # Catch OverflowError on some Amazon EC2 server
             # See https://github.com/nicolargo/glances/issues/87
             # Also catch TypeError on macOS
             # See: https://github.com/nicolargo/glances/issues/622
+            # Also catch KeyError (as no stats be present for processes of other users)
+            # See: https://github.com/nicolargo/glances/issues/2831
             # logger.debug("Cannot get TIME+ ({})".format(e))
             msg = self.layout_header['time'].format('?')
-            ret = self.curse_add_line(msg, optional=True)
+            return self.curse_add_line(msg, optional=True)
+
+        hours, minutes, seconds = seconds_to_hms(user_system_time)
+        if hours > 99:
+            msg = f'{hours:<7}h'
+        elif 0 < hours < 100:
+            msg = f'{hours}h{minutes}:{seconds}'
         else:
-            hours, minutes, seconds = seconds_to_hms(user_system_time)
-            if hours > 99:
-                msg = f'{hours:<7}h'
-            elif 0 < hours < 100:
-                msg = f'{hours}h{minutes}:{seconds}'
-            else:
-                msg = f'{minutes}:{seconds}'
-            msg = self.layout_stat['time'].format(msg)
-            if hours > 0:
-                ret = self.curse_add_line(msg, decoration='CPU_TIME', optional=True)
-            else:
-                ret = self.curse_add_line(msg, optional=True)
-        return ret
+            msg = f'{minutes}:{seconds}'
+
+        msg = self.layout_stat['time'].format(msg)
+        if hours > 0:
+            return self.curse_add_line(msg, decoration='CPU_TIME', optional=True)
+
+        return self.curse_add_line(msg, optional=True)
 
     def _get_process_curses_thread(self, p, selected, args):
         """Return process thread curses"""
