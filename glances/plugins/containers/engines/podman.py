@@ -7,11 +7,13 @@
 
 """Podman Extension unit for Glances' Containers plugin."""
 
+import time
 from datetime import datetime
+from typing import Any, Dict, Optional, Tuple
 
 from glances.globals import iterkeys, itervalues, nativestr, pretty_date, replace_special_chars, string_value_to_float
 from glances.logger import logger
-from glances.plugins.containers.stats_streamer import StatsStreamer
+from glances.plugins.containers.stats_streamer import ThreadedIterableStreamer
 
 # Podman library (optional and Linux-only)
 # https://pypi.org/project/podman/
@@ -26,63 +28,94 @@ else:
 
 
 class PodmanContainerStatsFetcher:
-    MANDATORY_FIELDS = ["CPU", "MemUsage", "MemLimit", "NetInput", "NetOutput", "BlockInput", "BlockOutput"]
+    MANDATORY_FIELDS = ["CPU", "MemUsage", "MemLimit", "BlockInput", "BlockOutput"]
 
     def __init__(self, container):
         self._container = container
 
+        # Previous stats are stored in the self._old_computed_stats variable
+        # We store time data to enable rate calculations to avoid complexity for consumers of the APIs exposed.
+        self._old_computed_stats = {}
+
+        # Last time when output stats (results) were computed
+        self._last_stats_computed_time = 0
+
         # Threaded Streamer
         stats_iterable = container.stats(decode=True)
-        self._streamer = StatsStreamer(stats_iterable, initial_stream_value={})
-
-    def _log_debug(self, msg, exception=None):
-        logger.debug(f"containers (Podman) ID: {self._container.id} - {msg} ({exception})")
-        logger.debug(self._streamer.stats)
+        self._streamer = ThreadedIterableStreamer(stats_iterable, initial_stream_value={})
 
     def stop(self):
         self._streamer.stop()
 
-    @property
-    def stats(self):
+    def get_streamed_stats(self) -> Dict[str, Any]:
         stats = self._streamer.stats
         if stats["Error"]:
-            self._log_debug("Stats fetching failed", stats["Error"])
+            logger.error(f"containers (Podman) Container({self._container.id}): Stats fetching failed")
+            logger.debug(f"containers (Podman) Container({self._container.id}): ", stats)
 
         return stats["Stats"][0]
 
     @property
-    def activity_stats(self):
-        result_stats = {"cpu": {}, "memory": {}, "io": {}, "network": {}}
-        api_stats = self.stats
+    def activity_stats(self) -> Dict[str, Any]:
+        """Activity Stats
 
-        if any(field not in api_stats for field in self.MANDATORY_FIELDS):
-            self._log_debug("Missing mandatory fields")
-            return result_stats
+        Each successive access of activity_stats will cause computation of activity_stats
+        """
+        computed_activity_stats = self._compute_activity_stats()
+        self._old_computed_stats = computed_activity_stats
+        self._last_stats_computed_time = time.time()
+        return computed_activity_stats
+
+    def _compute_activity_stats(self) -> Dict[str, Dict[str, Any]]:
+        stats = {"cpu": {}, "memory": {}, "io": {}, "network": {}}
+        api_stats = self.get_streamed_stats()
+
+        if any(field not in api_stats for field in self.MANDATORY_FIELDS) or (
+            "Network" not in api_stats and any(k not in api_stats for k in ['NetInput', 'NetOutput'])
+        ):
+            logger.error(f"containers (Podman) Container({self._container.id}): Missing mandatory fields")
+            return stats
 
         try:
-            cpu_usage = float(api_stats.get("CPU", 0))
+            stats["cpu"]["total"] = api_stats['CPU']
 
-            mem_usage = float(api_stats["MemUsage"])
-            mem_limit = float(api_stats["MemLimit"])
+            stats["memory"]["usage"] = api_stats["MemUsage"]
+            stats["memory"]["limit"] = api_stats["MemLimit"]
 
-            rx = float(api_stats["NetInput"])
-            tx = float(api_stats["NetOutput"])
+            stats["io"]["ior"] = api_stats["BlockInput"]
+            stats["io"]["iow"] = api_stats["BlockOutput"]
+            stats["io"]["time_since_update"] = 1
+            # Hardcode `time_since_update` to 1 as podman already sends at the same fixed rate per second
 
-            ior = float(api_stats["BlockInput"])
-            iow = float(api_stats["BlockOutput"])
+            if "Network" not in api_stats:
+                # For podman rooted mode
+                stats["network"]['rx'] = api_stats["NetInput"]
+                stats["network"]['tx'] = api_stats["NetOutput"]
+                stats["network"]['time_since_update'] = 1
+                # Hardcode to 1 as podman already sends at the same fixed rate per second
+            else:
+                # For podman in rootless mode
+                # Note: No stats are being sent as of now in rootless mode. They are defaulting to 0 on podman end.
+                stats['network'] = {
+                    "cumulative_rx": sum(interface["RxBytes"] for interface in api_stats["Network"].values()),
+                    "cumulative_tx": sum(interface["TxBytes"] for interface in api_stats["Network"].values()),
+                }
+                # Using previous stats to calculate rates
+                old_network_stats = self._old_computed_stats.get("network")
+                if old_network_stats:
+                    stats['network']['time_since_update'] = round(self.time_since_update)
+                    stats['network']['rx'] = stats['network']['cumulative_rx'] - old_network_stats["cumulative_rx"]
+                    stats['network']['tx'] = stats['network']['cumulative_tx'] - old_network_stats['cumulative_tx']
 
-            # Hardcode `time_since_update` to 1 as podman
-            # already sends the calculated rate per second
-            result_stats = {
-                "cpu": {"total": cpu_usage},
-                "memory": {"usage": mem_usage, "limit": mem_limit},
-                "io": {"ior": ior, "iow": iow, "time_since_update": 1},
-                "network": {"rx": rx, "tx": tx, "time_since_update": 1},
-            }
         except ValueError as e:
-            self._log_debug("Non float stats values found", e)
+            logger.error(f"containers (Podman) Container({self._container.id}): Non float stats values found", e)
 
-        return result_stats
+        return stats
+
+    @property
+    def time_since_update(self) -> float:
+        # In case no update (at startup), default to 1
+        return max(1, self._streamer.last_update_time - self._last_stats_computed_time)
 
 
 class PodmanPodStatsFetcher:
@@ -92,7 +125,7 @@ class PodmanPodStatsFetcher:
         # Threaded Streamer
         # Temporary patch to get podman extension working
         stats_iterable = (pod_manager.stats(decode=True) for _ in iter(int, 1))
-        self._streamer = StatsStreamer(stats_iterable, initial_stream_value={}, sleep_duration=2)
+        self._streamer = ThreadedIterableStreamer(stats_iterable, initial_stream_value={}, sleep_duration=2)
 
     def _log_debug(self, msg, exception=None):
         logger.debug(f"containers (Podman): Pod Manager - {msg} ({exception})")
@@ -118,13 +151,13 @@ class PodmanPodStatsFetcher:
                 "io": io_stats or {},
                 "memory": memory_stats or {},
                 "network": network_stats or {},
-                "cpu": cpu_stats or {"total": 0.0},
+                "cpu": cpu_stats or {},
             }
             result_stats[stat["CID"]] = computed_stats
 
         return result_stats
 
-    def _get_cpu_stats(self, stats):
+    def _get_cpu_stats(self, stats: Dict) -> Optional[Dict]:
         """Return the container CPU usage.
 
         Output: a dict {'total': 1.49}
@@ -136,7 +169,7 @@ class PodmanPodStatsFetcher:
         cpu_usage = string_value_to_float(stats["CPU"].rstrip("%"))
         return {"total": cpu_usage}
 
-    def _get_memory_stats(self, stats):
+    def _get_memory_stats(self, stats) -> Optional[Dict]:
         """Return the container MEMORY.
 
         Output: a dict {'usage': ..., 'limit': ...}
@@ -157,7 +190,7 @@ class PodmanPodStatsFetcher:
 
         return {'usage': usage, 'limit': limit, 'inactive_file': 0}
 
-    def _get_network_stats(self, stats):
+    def _get_network_stats(self, stats) -> Optional[Dict]:
         """Return the container network usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}.
@@ -180,10 +213,10 @@ class PodmanPodStatsFetcher:
             self._log_debug("Compute MEM usage failed", e)
             return None
 
-        # Hardcode `time_since_update` to 1 as podman docs don't specify the rate calculated procedure
+        # Hardcode `time_since_update` to 1 as podman docs don't specify the rate calculation procedure
         return {"rx": rx, "tx": tx, "time_since_update": 1}
 
-    def _get_io_stats(self, stats):
+    def _get_io_stats(self, stats) -> Optional[Dict]:
         """Return the container IO usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'ior': 10, 'iow': 65}.
@@ -206,7 +239,7 @@ class PodmanPodStatsFetcher:
             self._log_debug("Compute BlockIO usage failed", e)
             return None
 
-        # Hardcode `time_since_update` to 1 as podman docs don't specify the rate calculated procedure
+        # Hardcode `time_since_update` to 1 as podman docs don't specify the rate calculation procedure
         return {"ior": ior, "iow": iow, "time_since_update": 1}
 
 
@@ -242,7 +275,7 @@ class PodmanContainersExtension:
         # return self.client.version()
         return {}
 
-    def stop(self):
+    def stop(self) -> None:
         # Stop all streaming threads
         for t in itervalues(self.container_stats_fetchers):
             t.stop()
@@ -250,7 +283,7 @@ class PodmanContainersExtension:
         if self.pods_stats_fetcher:
             self.pods_stats_fetcher.stop()
 
-    def update(self, all_tag):
+    def update(self, all_tag) -> Tuple[Dict, list[Dict[str, Any]]]:
         """Update Podman stats using the input method."""
 
         if not self.client:
@@ -298,55 +331,58 @@ class PodmanContainersExtension:
         return version_stats, container_stats
 
     @property
-    def key(self):
+    def key(self) -> str:
         """Return the key of the list."""
         return 'name'
 
-    def generate_stats(self, container):
+    def generate_stats(self, container) -> Dict[str, Any]:
         # Init the stats for the current container
         stats = {
             'key': self.key,
-            # Export name
             'name': nativestr(container.name),
-            # Container Id
             'id': container.id,
-            # Container Image
             'image': ','.join(container.image.tags if container.image.tags else []),
-            # Container Status (from attrs)
             'status': container.attrs['State'],
             'created': container.attrs['Created'],
             'command': container.attrs.get('Command') or [],
+            'io': {},
+            'cpu': {},
+            'memory': {},
+            'network': {},
+            'io_rx': None,
+            'io_wx': None,
+            'cpu_percent': None,
+            'memory_percent': None,
+            'network_rx': None,
+            'network_tx': None,
+            'uptime': None,
         }
 
-        if stats['status'] in self.CONTAINER_ACTIVE_STATUS:
-            started_at = datetime.fromtimestamp(container.attrs['StartedAt'])
-            stats_fetcher = self.container_stats_fetchers[container.id]
-            activity_stats = stats_fetcher.activity_stats
-            stats.update(activity_stats)
+        if stats['status'] not in self.CONTAINER_ACTIVE_STATUS:
+            return stats
 
-            # Additional fields
-            stats['cpu_percent'] = stats["cpu"]['total']
-            stats['memory_usage'] = stats["memory"].get('usage')
-            if stats['memory'].get('cache') is not None:
-                stats['memory_usage'] -= stats['memory']['cache']
-            stats['io_rx'] = stats['io'].get('ior') // stats['io'].get('time_since_update')
-            stats['io_wx'] = stats['io'].get('iow') // stats['io'].get('time_since_update')
-            stats['network_rx'] = stats['network'].get('rx') // stats['network'].get('time_since_update')
-            stats['network_tx'] = stats['network'].get('tx') // stats['network'].get('time_since_update')
-            stats['uptime'] = pretty_date(started_at)
-            # Manage special chars in command (see isse#2733)
-            stats['command'] = replace_special_chars(' '.join(stats['command']))
-        else:
-            stats['io'] = {}
-            stats['cpu'] = {}
-            stats['memory'] = {}
-            stats['network'] = {}
-            stats['io_rx'] = None
-            stats['io_wx'] = None
-            stats['cpu_percent'] = None
-            stats['memory_percent'] = None
-            stats['network_rx'] = None
-            stats['network_tx'] = None
-            stats['uptime'] = None
+        stats_fetcher = self.container_stats_fetchers[container.id]
+        activity_stats = stats_fetcher.activity_stats
+        stats.update(activity_stats)
+
+        # Additional fields
+        stats['cpu_percent'] = stats['cpu'].get('total')
+        stats['memory_usage'] = stats['memory'].get('usage')
+        if stats['memory'].get('cache') is not None:
+            stats['memory_usage'] -= stats['memory']['cache']
+
+        if all(k in stats['io'] for k in ('ior', 'iow', 'time_since_update')):
+            stats['io_rx'] = stats['io']['ior'] // stats['io']['time_since_update']
+            stats['io_wx'] = stats['io']['iow'] // stats['io']['time_since_update']
+
+        if all(k in stats['network'] for k in ('rx', 'tx', 'time_since_update')):
+            stats['network_rx'] = stats['network']['rx'] // stats['network']['time_since_update']
+            stats['network_tx'] = stats['network']['tx'] // stats['network']['time_since_update']
+
+        started_at = datetime.fromtimestamp(container.attrs['StartedAt'])
+        stats['uptime'] = pretty_date(started_at)
+
+        # Manage special chars in command (see issue#2733)
+        stats['command'] = replace_special_chars(' '.join(stats['command']))
 
         return stats
