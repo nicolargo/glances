@@ -24,11 +24,11 @@ class GlancesCursesBrowser(_GlancesCurses):
         super().__init__(args=args)
 
         _colors_list = {
-            'UNKNOWN': self.no_color,
-            'SNMP': self.default_color2,
-            'ONLINE': self.default_color2,
-            'OFFLINE': self.ifCRITICAL_color2,
-            'PROTECTED': self.ifWARNING_color2,
+            'UNKNOWN': self.colors_list['DEFAULT'],
+            'SNMP': self.colors_list['OK'],
+            'ONLINE': self.colors_list['OK'],
+            'OFFLINE': self.colors_list['CRITICAL'],
+            'PROTECTED': self.colors_list['WARNING'],
         }
         self.colors_list.update(_colors_list)
 
@@ -299,13 +299,11 @@ class GlancesCursesBrowser(_GlancesCurses):
         # Item description: [stats_id, column name, column size]
         column_def = [
             ['name', 'Name', 16],
-            ['alias', None, None],
             ['load_min5', 'LOAD', 6],
             ['cpu_percent', 'CPU%', 5],
             ['mem_percent', 'MEM%', 5],
             ['status', 'STATUS', 9],
             ['ip', 'IP', 15],
-            # ['port', 'PORT', 5],
             ['hr_name', 'OS', 16],
         ]
         y = 2
@@ -331,24 +329,10 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         # Display table
         line = 0
-        for v in current_page:
+        for server_stat in current_page:
             # Limit the number of displayed server (see issue #1256)
             if line >= stats_max:
                 continue
-            # Get server stats
-            server_stat = {}
-            for c in column_def:
-                try:
-                    server_stat[c[0]] = v[c[0]]
-                except KeyError as e:
-                    logger.debug(f"Cannot grab stats {c[0]} from server (KeyError: {e})")
-                    server_stat[c[0]] = '?'
-                # Display alias instead of name
-                try:
-                    if c[0] == 'alias' and v[c[0]] is not None:
-                        server_stat['name'] = v[c[0]]
-                except KeyError:
-                    pass
 
             # Display line for server stats
             cpt = 0
@@ -362,9 +346,20 @@ class GlancesCursesBrowser(_GlancesCurses):
             # Display the line
             xc += 2
             for c in column_def:
-                if xc < screen_x and y < screen_y and c[1] is not None:
+                if xc < screen_x and y < screen_y:
                     # Display server stats
-                    self.term_window.addnstr(y, xc, format(server_stat[c[0]]), c[2], self.colors_list[v['status']])
+                    value = format(server_stat.get(c[0], '?'))
+                    if c[0] == 'name' and 'alias' in server_stat:
+                        value = server_stat['alias']
+                    decoration = self.colors_list.get(
+                        server_stat[c[0] + '_decoration'].replace('_LOG', '')
+                        if c[0] + '_decoration' in server_stat
+                        else self.colors_list[server_stat['status']],
+                        self.colors_list['DEFAULT'],
+                    )
+                    if c[0] == 'status':
+                        decoration = self.colors_list[server_stat['status']]
+                    self.term_window.addnstr(y, xc, value, c[2], decoration)
                     xc += c[2] + self.space_between_column
                 cpt += 1
             # Next line, next server...
