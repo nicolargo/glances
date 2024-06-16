@@ -93,9 +93,9 @@ class PodmanContainerStatsFetcher:
                 stats["network"]['tx'] = api_stats["NetOutput"]
                 stats["network"]['time_since_update'] = 1
                 # Hardcode to 1 as podman already sends at the same fixed rate per second
-            else:
+            elif api_stats["Network"] is not None:
+                # api_stats["Network"] can be None if the infra container of the pod is killed
                 # For podman in rootless mode
-                # Note: No stats are being sent as of now in rootless mode. They are defaulting to 0 on podman end.
                 stats['network'] = {
                     "cumulative_rx": sum(interface["RxBytes"] for interface in api_stats["Network"].values()),
                     "cumulative_tx": sum(interface["TxBytes"] for interface in api_stats["Network"].values()),
