@@ -95,12 +95,16 @@ class GlancesClientBrowser:
             # Mandatory stats
             try:
                 # CPU%
-                cpu_percent = 100 - orjson.loads(s.getPlugin('cpu'))['idle']
-                server['cpu_percent'] = f'{cpu_percent:.1f}'
+                # logger.info(f"CPU stats {s.getPlugin('cpu')}")
+                # logger.info(f"CPU views {s.getPluginView('cpu')}")
+                server['cpu_percent'] = orjson.loads(s.getPlugin('cpu'))['total']
+                server['cpu_percent_decoration'] = orjson.loads(s.getPluginView('cpu'))['total']['decoration']
                 # MEM%
                 server['mem_percent'] = orjson.loads(s.getPlugin('mem'))['percent']
+                server['mem_percent_decoration'] = orjson.loads(s.getPluginView('mem'))['percent']['decoration']
                 # OS (Human Readable name)
                 server['hr_name'] = orjson.loads(s.getPlugin('system'))['hr_name']
+                server['hr_name_decoration'] = 'DEFAULT'
             except (OSError, Fault, KeyError) as e:
                 logger.debug(f"Error while grabbing stats form server ({e})")
                 server['status'] = 'OFFLINE'
@@ -120,8 +124,8 @@ class GlancesClientBrowser:
                 # Optional stats (load is not available on Windows OS)
                 try:
                     # LOAD
-                    load_min5 = orjson.loads(s.getPlugin('load'))['min5']
-                    server['load_min5'] = f'{load_min5:.2f}'
+                    server['load_min5'] = round(orjson.loads(s.getPlugin('load'))['min5'], 1)
+                    server['load_min5_decoration'] = orjson.loads(s.getPluginView('load'))['min5']['decoration']
                 except Exception as e:
                     logger.warning(f"Error while grabbing stats form server ({e})")
 
