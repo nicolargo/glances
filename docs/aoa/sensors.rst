@@ -27,8 +27,7 @@ There is no alert on this information.
 .. note 3::
     If a sensors has temperature and fan speed with the same name unit,
     it is possible to alias it using:
-    unitname_temperature_core_alias=Alias for temp
-    unitname_fan_speed_alias=Alias for fan speed
+    alias=unitname_temperature_core_alias:Alias for temp,unitname_fan_speed_alias:Alias for fan speed
 
 .. note 4::
     If a sensors has multiple identical features names (see #2280), then
