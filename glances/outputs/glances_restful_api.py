@@ -185,6 +185,7 @@ class GlancesRestfulApi:
         router.add_api_route(
             f'/api/{self.API_VERSION}/status',
             status_code=status.HTTP_200_OK,
+            methods=['HEAD', 'GET'],
             response_class=ORJSONResponse,
             endpoint=self._api_status,
         )
