@@ -114,126 +114,142 @@ class PluginModel(GlancesPluginModel):
     @GlancesPluginModel._log_result_decorator
     def update(self):
         """Update the FS stats using the input method."""
-        # Init new stats
-        stats = self.get_init_value()
-
+        # Update the stats
         if self.input_method == 'local':
-            # Update stats using the standard system lib
-
-            # Grab the stats using the psutil disk_partitions
-            # If 'all'=False return physical devices only (e.g. hard disks, cd-rom drives, USB keys)
-            # and ignore all others (e.g. memory partitions such as /dev/shm)
-            try:
-                fs_stat = psutil.disk_partitions(all=False)
-            except (UnicodeDecodeError, PermissionError):
-                logger.debug("Plugin - fs: PsUtil fetch failed")
-                return self.stats
-
-            # Optional hack to allow logical mounts points (issue #448)
-            allowed_fs_types = self.get_conf_value('allow')
-            if allowed_fs_types:
-                # Avoid Psutil call unless mounts need to be allowed
-                try:
-                    all_mounted_fs = psutil.disk_partitions(all=True)
-                except (UnicodeDecodeError, PermissionError):
-                    logger.debug("Plugin - fs: PsUtil extended fetch failed")
-                else:
-                    # Discard duplicates (#2299) and add entries matching allowed fs types
-                    tracked_mnt_points = {f.mountpoint for f in fs_stat}
-                    for f in all_mounted_fs:
-                        if (
-                            any(f.fstype.find(fs_type) >= 0 for fs_type in allowed_fs_types)
-                            and f.mountpoint not in tracked_mnt_points
-                        ):
-                            fs_stat.append(f)
-
-            # Loop over fs
-            for fs in fs_stat:
-                # Hide the stats if the mount point is in the exclude list
-                if not self.is_display(fs.mountpoint):
-                    continue
-
-                # Grab the disk usage
-                try:
-                    fs_usage = psutil.disk_usage(fs.mountpoint)
-                except OSError:
-                    # Correct issue #346
-                    # Disk is ejected during the command
-                    continue
-                fs_current = {
-                    'device_name': fs.device,
-                    'fs_type': fs.fstype,
-                    # Manage non breaking space (see issue #1065)
-                    'mnt_point': u(fs.mountpoint).replace('\u00a0', ' '),
-                    'size': fs_usage.total,
-                    'used': fs_usage.used,
-                    'free': fs_usage.free,
-                    'percent': fs_usage.percent,
-                    'key': self.get_key(),
-                }
-
-                # Hide the stats if the device name is in the exclude list
-                # Correct issue: glances.conf FS hide not applying #1666
-                if not self.is_display(fs_current['device_name']):
-                    continue
-
-                # Add alias if exist (define in the configuration file)
-                if self.has_alias(fs_current['mnt_point']) is not None:
-                    fs_current['alias'] = self.has_alias(fs_current['mnt_point'])
-
-                stats.append(fs_current)
-
-        elif self.input_method == 'snmp':
-            # Update stats using SNMP
-
-            # SNMP bulk command to get all file system in one shot
-            try:
-                fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name], bulk=True)
-            except KeyError:
-                fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid['default'], bulk=True)
-
-            # Loop over fs
-            if self.short_system_name in ('windows', 'esxi'):
-                # Windows or ESXi tips
-                for fs in fs_stat:
-                    # Memory stats are grabbed in the same OID table (ignore it)
-                    if fs == 'Virtual Memory' or fs == 'Physical Memory' or fs == 'Real Memory':
-                        continue
-                    size = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
-                    used = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
-                    percent = float(used * 100 / size)
-                    fs_current = {
-                        'device_name': '',
-                        'mnt_point': fs.partition(' ')[0],
-                        'size': size,
-                        'used': used,
-                        'percent': percent,
-                        'key': self.get_key(),
-                    }
-                    # Do not take hidden file system into account
-                    if self.is_hide(fs_current['mnt_point']):
-                        continue
-                    stats.append(fs_current)
-            else:
-                # Default behavior
-                for fs in fs_stat:
-                    fs_current = {
-                        'device_name': fs_stat[fs]['device_name'],
-                        'mnt_point': fs,
-                        'size': int(fs_stat[fs]['size']) * 1024,
-                        'used': int(fs_stat[fs]['used']) * 1024,
-                        'percent': float(fs_stat[fs]['percent']),
-                        'key': self.get_key(),
-                    }
-                    # Do not take hidden file system into account
-                    if self.is_hide(fs_current['mnt_point']) or self.is_hide(fs_current['device_name']):
-                        continue
-                    stats.append(fs_current)
+            stats = self.update_local()
+        else:
+            stats = self.get_init_value()
 
         # Update the stats
         self.stats = stats
 
         return self.stats
+
+    def update_local(self):
+        """Update the FS stats using the input method."""
+        # Init new stats
+        stats = self.get_init_value()
+
+        # Update stats using the standard system lib
+
+        # Grab the stats using the psutil disk_partitions
+        # If 'all'=False return physical devices only (e.g. hard disks, cd-rom drives, USB keys)
+        # and ignore all others (e.g. memory partitions such as /dev/shm)
+        try:
+            fs_stat = psutil.disk_partitions(all=False)
+        except (UnicodeDecodeError, PermissionError):
+            logger.debug("Plugin - fs: PsUtil fetch failed")
+            return stats
+
+        # Optional hack to allow logical mounts points (issue #448)
+        allowed_fs_types = self.get_conf_value('allow')
+        if allowed_fs_types:
+            # Avoid Psutil call unless mounts need to be allowed
+            try:
+                all_mounted_fs = psutil.disk_partitions(all=True)
+            except (UnicodeDecodeError, PermissionError):
+                logger.debug("Plugin - fs: PsUtil extended fetch failed")
+            else:
+                # Discard duplicates (#2299) and add entries matching allowed fs types
+                tracked_mnt_points = {f.mountpoint for f in fs_stat}
+                for f in all_mounted_fs:
+                    if (
+                        any(f.fstype.find(fs_type) >= 0 for fs_type in allowed_fs_types)
+                        and f.mountpoint not in tracked_mnt_points
+                    ):
+                        fs_stat.append(f)
+
+        # Loop over fs
+        for fs in fs_stat:
+            # Hide the stats if the mount point is in the exclude list
+            # It avoids unnecessary call to PsUtil disk_usage
+            if not self.is_display(fs.mountpoint):
+                continue
+
+            # Grab the disk usage
+            try:
+                fs_usage = psutil.disk_usage(fs.mountpoint)
+            except OSError:
+                # Correct issue #346
+                # Disk is ejected during the command
+                continue
+            fs_current = {
+                'device_name': fs.device,
+                'fs_type': fs.fstype,
+                # Manage non breaking space (see issue #1065)
+                'mnt_point': u(fs.mountpoint).replace('\u00a0', ' '),
+                'size': fs_usage.total,
+                'used': fs_usage.used,
+                'free': fs_usage.free,
+                'percent': fs_usage.percent,
+                'key': self.get_key(),
+            }
+
+            # Hide the stats if the device name is in the exclude list
+            # Correct issue: glances.conf FS hide not applying #1666
+            if not self.is_display(fs_current['device_name']):
+                continue
+
+            # Add alias if exist (define in the configuration file)
+            if self.has_alias(fs_current['mnt_point']) is not None:
+                fs_current['alias'] = self.has_alias(fs_current['mnt_point'])
+
+            stats.append(fs_current)
+
+        return stats
+
+    def update_snmp(self):
+        """Update the FS stats using the input method."""
+        # Init new stats
+        stats = self.get_init_value()
+
+        # Update stats using SNMP
+
+        # SNMP bulk command to get all file system in one shot
+        try:
+            fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name], bulk=True)
+        except KeyError:
+            fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid['default'], bulk=True)
+
+        # Loop over fs
+        if self.short_system_name in ('windows', 'esxi'):
+            # Windows or ESXi tips
+            for fs in fs_stat:
+                # Memory stats are grabbed in the same OID table (ignore it)
+                if fs == 'Virtual Memory' or fs == 'Physical Memory' or fs == 'Real Memory':
+                    continue
+                size = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
+                used = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
+                percent = float(used * 100 / size)
+                fs_current = {
+                    'device_name': '',
+                    'mnt_point': fs.partition(' ')[0],
+                    'size': size,
+                    'used': used,
+                    'percent': percent,
+                    'key': self.get_key(),
+                }
+                # Do not take hidden file system into account
+                if self.is_hide(fs_current['mnt_point']):
+                    continue
+                stats.append(fs_current)
+        else:
+            # Default behavior
+            for fs in fs_stat:
+                fs_current = {
+                    'device_name': fs_stat[fs]['device_name'],
+                    'mnt_point': fs,
+                    'size': int(fs_stat[fs]['size']) * 1024,
+                    'used': int(fs_stat[fs]['used']) * 1024,
+                    'percent': float(fs_stat[fs]['percent']),
+                    'key': self.get_key(),
+                }
+                # Do not take hidden file system into account
+                if self.is_hide(fs_current['mnt_point']) or self.is_hide(fs_current['device_name']):
+                    continue
+                stats.append(fs_current)
+
+        return stats
 
     def update_views(self):
         """Update stats views."""
