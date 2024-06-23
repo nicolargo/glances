@@ -118,8 +118,8 @@ class PluginModel(GlancesPluginModel):
 
             # Get the CPU percent value (global and per core)
             # Stats is shared across all plugins
-            stats['cpu'] = cpu_percent.get()
-            stats['percpu'] = cpu_percent.get(percpu=True)
+            stats['cpu'] = cpu_percent.get_cpu()
+            stats['percpu'] = cpu_percent.get_percpu()
 
             # Get the virtual and swap memory
             stats['mem'] = psutil.virtual_memory().percent
