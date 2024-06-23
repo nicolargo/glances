@@ -260,19 +260,13 @@ class GlancesStats:
         self._plugins[p].update_views()
 
     def update(self):
-        """Wrapper method to update the stats.
+        """Wrapper method to update all stats.
 
         Only called by standalone and server modes
         """
-        threads = []
         # Start update of all enable plugins
-        for p in self.getPluginsList():
-            thread = threading.Thread(target=self.__update_plugin, args=(p,))
-            thread.start()
-            threads.append(thread)
-        # Wait the end of the update
-        for t in threads:
-            t.join()
+        for p in self.getPluginsList(enable=True):
+            self.__update_plugin(p)
 
     def export(self, input_stats=None):
         """Export all the stats.
