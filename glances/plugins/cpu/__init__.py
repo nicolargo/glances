@@ -165,8 +165,6 @@ class PluginModel(GlancesPluginModel):
             stats = self.update_local()
         elif self.input_method == 'snmp':
             stats = self.update_snmp()
-        else:
-            stats = self.get_init_value()
 
         # Update the stats
         self.stats = stats
@@ -185,7 +183,7 @@ class PluginModel(GlancesPluginModel):
         # Init new stats
         stats = self.get_init_value()
 
-        stats['total'] = cpu_percent.get()
+        stats['total'] = cpu_percent.get_cpu()
 
         # Standards stats
         # - user: time spent by normal processes executing in user mode; on Linux this also includes guest time
