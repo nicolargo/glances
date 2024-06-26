@@ -73,7 +73,7 @@ class CpuPercent:
             pass
         else:
             for line in cpuinfo_file:
-                if line.startswith('model name') or line.startswith('Model'):
+                if line.startswith('model name') or line.startswith('Model') or line.startswith('cpu model'):
                     ret = line.split(':')[1].strip()
                     break
         return ret if ret else 'CPU'
