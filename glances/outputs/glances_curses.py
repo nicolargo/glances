@@ -370,7 +370,7 @@ class _GlancesCurses:
             logger.info(f"Stop Glances (keypressed: {self.pressedkey})")
 
     def _handle_refresh(self):
-        pass
+        glances_processes.reset_internal_cache()
 
     def loop_position(self):
         """Return the current sort in the loop"""
