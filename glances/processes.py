@@ -119,6 +119,12 @@ class GlancesProcesses:
         """Set args."""
         self.args = args
 
+    def reset_internal_cache(self):
+        """Reset the internal cache."""
+        self.cache_timer = Timer(0)
+        self.processlist_cache = {}
+        psutil.process_iter.cache_clear()
+
     def reset_processcount(self):
         """Reset the global process count"""
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0, 'pid_max': None}
