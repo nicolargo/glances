@@ -164,7 +164,7 @@ class Export(GlancesExport):
             try:
                 self.client.write(self.bucket, self.org, self._normalize(name, columns, points), time_precision="s")
             except Exception as e:
-                # Log level set to debug instead of error (see: issue #1561)
-                logger.debug(f"Cannot export {name} stats to InfluxDB ({e})")
+                # Log level set to warning instead of error (see: issue #1561)
+                logger.warning(f"Cannot export {name} stats to InfluxDB ({e})")
             else:
                 logger.debug(f"Export {name} stats to InfluxDB")
