@@ -162,7 +162,7 @@ class _GlancesCurses:
         self._init_cursor()
 
         # Init the colors
-        self._init_colors()
+        self.colors_list = build_colors_list(args)
 
         # Init main window
         self.term_window = self.screen.subwin(0, 0)
@@ -195,8 +195,10 @@ class _GlancesCurses:
         """Load the outputs section of the configuration file."""
         if config is not None and config.has_section('outputs'):
             logger.debug('Read the outputs section in the configuration file')
-            # Separator ?
-            self.args.enable_separator = config.get_bool_value('outputs', 'separator', default=True)
+            # Separator
+            self.args.enable_separator = config.get_bool_value(
+                'outputs', 'separator', default=self.args.enable_separator
+            )
             # Set the left sidebar list
             self._left_sidebar = config.get_list_value('outputs', 'left_menu', default=self._left_sidebar)
 
@@ -213,133 +215,6 @@ class _GlancesCurses:
         if hasattr(curses, 'cbreak'):
             curses.cbreak()
         self.set_cursor(0)
-
-    def _init_colors(self):
-        """Init the Curses color layout."""
-
-        # Set curses options
-        try:
-            if hasattr(curses, 'start_color'):
-                curses.start_color()
-                logger.debug(f'Curses interface compatible with {curses.COLORS} colors')
-            if hasattr(curses, 'use_default_colors'):
-                curses.use_default_colors()
-        except Exception as e:
-            logger.warning(f'Error initializing terminal color ({e})')
-
-        # Init colors
-        if self.args.disable_bold:
-            A_BOLD = 0
-            self.args.disable_bg = True
-        else:
-            A_BOLD = curses.A_BOLD
-
-        self.title_color = A_BOLD
-        self.title_underline_color = A_BOLD | curses.A_UNDERLINE
-        self.help_color = A_BOLD
-
-        if curses.has_colors():
-            # The screen is compatible with a colored design
-            # ex: export TERM=xterm-256color
-            #     export TERM=xterm-color
-
-            curses.init_pair(1, -1, -1)
-            if self.args.disable_bg:
-                curses.init_pair(2, curses.COLOR_RED, -1)
-                curses.init_pair(3, curses.COLOR_GREEN, -1)
-                curses.init_pair(5, curses.COLOR_MAGENTA, -1)
-            else:
-                curses.init_pair(2, -1, curses.COLOR_RED)
-                curses.init_pair(3, -1, curses.COLOR_GREEN)
-                curses.init_pair(5, -1, curses.COLOR_MAGENTA)
-            curses.init_pair(4, curses.COLOR_BLUE, -1)
-            curses.init_pair(6, curses.COLOR_RED, -1)
-            curses.init_pair(7, curses.COLOR_GREEN, -1)
-            curses.init_pair(8, curses.COLOR_MAGENTA, -1)
-
-            # Colors text styles
-            self.no_color = curses.color_pair(1)
-            self.default_color = curses.color_pair(3) | A_BOLD
-            self.nice_color = curses.color_pair(8)
-            self.cpu_time_color = curses.color_pair(8)
-            self.ifCAREFUL_color = curses.color_pair(4) | A_BOLD
-            self.ifWARNING_color = curses.color_pair(5) | A_BOLD
-            self.ifCRITICAL_color = curses.color_pair(2) | A_BOLD
-            self.default_color2 = curses.color_pair(7)
-            self.ifCAREFUL_color2 = curses.color_pair(4)
-            self.ifWARNING_color2 = curses.color_pair(8) | A_BOLD
-            self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
-            self.ifINFO_color = curses.color_pair(4)
-            self.filter_color = A_BOLD
-            self.selected_color = A_BOLD
-            self.separator = curses.color_pair(1)
-
-            if curses.COLORS > 8:
-                # ex: export TERM=xterm-256color
-                colors_list = [curses.COLOR_CYAN, curses.COLOR_YELLOW]
-                for i in range(0, 3):
-                    try:
-                        curses.init_pair(i + 9, colors_list[i], -1)
-                    except Exception:
-                        curses.init_pair(i + 9, -1, -1)
-                self.filter_color = curses.color_pair(9) | A_BOLD
-                self.selected_color = curses.color_pair(10) | A_BOLD
-                # Define separator line style
-                try:
-                    curses.init_color(11, 500, 500, 500)
-                    curses.init_pair(11, curses.COLOR_BLACK, -1)
-                    self.separator = curses.color_pair(11)
-                except Exception:
-                    # Catch exception in TMUX
-                    pass
-        else:
-            # The screen is NOT compatible with a colored design
-            # switch to B&W text styles
-            # ex: export TERM=xterm-mono
-            self.no_color = -1
-            self.default_color = -1
-            self.nice_color = A_BOLD
-            self.cpu_time_color = A_BOLD
-            self.ifCAREFUL_color = A_BOLD
-            self.ifWARNING_color = curses.A_UNDERLINE
-            self.ifCRITICAL_color = curses.A_REVERSE
-            self.default_color2 = -1
-            self.ifCAREFUL_color2 = A_BOLD
-            self.ifWARNING_color2 = curses.A_UNDERLINE
-            self.ifCRITICAL_color2 = curses.A_REVERSE
-            self.ifINFO_color = A_BOLD
-            self.filter_color = A_BOLD
-            self.selected_color = A_BOLD
-            self.separator = -1
-
-        # Define the colors list (hash table) for stats
-        self.colors_list = {
-            'DEFAULT': self.no_color,
-            'UNDERLINE': curses.A_UNDERLINE,
-            'BOLD': A_BOLD,
-            'SORT': curses.A_UNDERLINE | A_BOLD,
-            'OK': self.default_color2,
-            'MAX': self.default_color2 | A_BOLD,
-            'FILTER': self.filter_color,
-            'TITLE': self.title_color,
-            'PROCESS': self.default_color2,
-            'PROCESS_SELECTED': self.default_color2 | curses.A_UNDERLINE,
-            'STATUS': self.default_color2,
-            'NICE': self.nice_color,
-            'CPU_TIME': self.cpu_time_color,
-            'CAREFUL': self.ifCAREFUL_color2,
-            'WARNING': self.ifWARNING_color2,
-            'CRITICAL': self.ifCRITICAL_color2,
-            'OK_LOG': self.default_color,
-            'CAREFUL_LOG': self.ifCAREFUL_color,
-            'WARNING_LOG': self.ifWARNING_color,
-            'CRITICAL_LOG': self.ifCRITICAL_color,
-            'PASSWORD': curses.A_PROTECT,
-            'SELECTED': self.selected_color,
-            'INFO': self.ifINFO_color,
-            'ERROR': self.selected_color,
-            'SEPARATOR': self.separator,
-        }
 
     def set_cursor(self, value):
         """Configure the curse cursor appearance.
@@ -495,7 +370,7 @@ class _GlancesCurses:
             logger.info(f"Stop Glances (keypressed: {self.pressedkey})")
 
     def _handle_refresh(self):
-        pass
+        glances_processes.reset_internal_cache()
 
     def loop_position(self):
         """Return the current sort in the loop"""
@@ -570,13 +445,14 @@ class _GlancesCurses:
         self.new_line()
         self.line -= 1
         line_width = self.term_window.getmaxyx()[1] - self.column
-        self.term_window.addnstr(
-            self.line,
-            self.column,
-            unicode_message('MEDIUM_LINE', self.args) * line_width,
-            line_width,
-            self.colors_list[color],
-        )
+        if self.line >= 0:
+            self.term_window.addnstr(
+                self.line,
+                self.column,
+                unicode_message('MEDIUM_LINE', self.args) * line_width,
+                line_width,
+                self.colors_list[color],
+            )
 
     def __get_stat_display(self, stats, layer):
         """Return a dict of dict with all the stats display.
@@ -1300,3 +1176,128 @@ class GlancesTextboxYesNo(Textbox):
 
     def do_command(self, ch):
         return super().do_command(ch)
+
+
+def build_colors_list(args):
+    """Init the Curses color layout."""
+    # Set curses options
+    try:
+        if hasattr(curses, 'start_color'):
+            curses.start_color()
+            logger.debug(f'Curses interface compatible with {curses.COLORS} colors')
+        if hasattr(curses, 'use_default_colors'):
+            curses.use_default_colors()
+    except Exception as e:
+        logger.warning(f'Error initializing terminal color ({e})')
+
+    # Init colors
+    if args.disable_bold:
+        A_BOLD = 0
+        args.disable_bg = True
+    else:
+        A_BOLD = curses.A_BOLD
+
+    title_color = A_BOLD
+
+    if curses.has_colors():
+        # The screen is compatible with a colored design
+        # ex: export TERM=xterm-256color
+        #     export TERM=xterm-color
+
+        curses.init_pair(1, -1, -1)
+        if args.disable_bg:
+            curses.init_pair(2, curses.COLOR_RED, -1)
+            curses.init_pair(3, curses.COLOR_GREEN, -1)
+            curses.init_pair(5, curses.COLOR_MAGENTA, -1)
+        else:
+            curses.init_pair(2, -1, curses.COLOR_RED)
+            curses.init_pair(3, -1, curses.COLOR_GREEN)
+            curses.init_pair(5, -1, curses.COLOR_MAGENTA)
+        curses.init_pair(4, curses.COLOR_BLUE, -1)
+        curses.init_pair(6, curses.COLOR_RED, -1)
+        curses.init_pair(7, curses.COLOR_GREEN, -1)
+        curses.init_pair(8, curses.COLOR_MAGENTA, -1)
+
+        # Colors text styles
+        no_color = curses.color_pair(1)
+        default_color = curses.color_pair(3) | A_BOLD
+        nice_color = curses.color_pair(8)
+        cpu_time_color = curses.color_pair(8)
+        ifCAREFUL_color = curses.color_pair(4) | A_BOLD
+        ifWARNING_color = curses.color_pair(5) | A_BOLD
+        ifCRITICAL_color = curses.color_pair(2) | A_BOLD
+        default_color2 = curses.color_pair(7)
+        ifCAREFUL_color2 = curses.color_pair(4)
+        ifWARNING_color2 = curses.color_pair(8) | A_BOLD
+        ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
+        ifINFO_color = curses.color_pair(4)
+        filter_color = A_BOLD
+        selected_color = A_BOLD
+        separator = curses.color_pair(1)
+
+        if curses.COLORS > 8:
+            # ex: export TERM=xterm-256color
+            colors_list = [curses.COLOR_CYAN, curses.COLOR_YELLOW]
+            for i in range(0, 3):
+                try:
+                    curses.init_pair(i + 9, colors_list[i], -1)
+                except Exception:
+                    curses.init_pair(i + 9, -1, -1)
+            filter_color = curses.color_pair(9) | A_BOLD
+            selected_color = curses.color_pair(10) | A_BOLD
+            # Define separator line style
+            try:
+                curses.init_color(11, 500, 500, 500)
+                curses.init_pair(11, curses.COLOR_BLACK, -1)
+                separator = curses.color_pair(11)
+            except Exception:
+                # Catch exception in TMUX
+                pass
+    else:
+        # The screen is NOT compatible with a colored design
+        # switch to B&W text styles
+        # ex: export TERM=xterm-mono
+        no_color = -1
+        default_color = -1
+        nice_color = A_BOLD
+        cpu_time_color = A_BOLD
+        ifCAREFUL_color = A_BOLD
+        ifWARNING_color = curses.A_UNDERLINE
+        ifCRITICAL_color = curses.A_REVERSE
+        default_color2 = -1
+        ifCAREFUL_color2 = A_BOLD
+        ifWARNING_color2 = curses.A_UNDERLINE
+        ifCRITICAL_color2 = curses.A_REVERSE
+        ifINFO_color = A_BOLD
+        filter_color = A_BOLD
+        selected_color = A_BOLD
+        separator = -1
+
+    # Define the colors list (hash table) for stats
+    return {
+        'DEFAULT': no_color,
+        'UNDERLINE': curses.A_UNDERLINE,
+        'BOLD': A_BOLD,
+        'SORT': curses.A_UNDERLINE | A_BOLD,
+        'OK': default_color2,
+        'MAX': default_color2 | A_BOLD,
+        'FILTER': filter_color,
+        'TITLE': title_color,
+        'PROCESS': default_color2,
+        'PROCESS_SELECTED': default_color2 | curses.A_UNDERLINE,
+        'STATUS': default_color2,
+        'NICE': nice_color,
+        'CPU_TIME': cpu_time_color,
+        'CAREFUL': ifCAREFUL_color2,
+        'WARNING': ifWARNING_color2,
+        'CRITICAL': ifCRITICAL_color2,
+        'OK_LOG': default_color,
+        'CAREFUL_LOG': ifCAREFUL_color,
+        'WARNING_LOG': ifWARNING_color,
+        'CRITICAL_LOG': ifCRITICAL_color,
+        'PASSWORD': curses.A_PROTECT,
+        'SELECTED': selected_color,
+        'INFO': ifINFO_color,
+        'ERROR': selected_color,
+        'SEPARATOR': separator,
+    }

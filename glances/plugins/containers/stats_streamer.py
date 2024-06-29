@@ -11,11 +11,11 @@ import time
 from glances.logger import logger
 
 
-class StatsStreamer:
+class ThreadedIterableStreamer:
     """
     Utility class to stream an iterable using a background / daemon Thread
 
-    Use `StatsStreamer.stats` to access the latest streamed results
+    Use `ThreadedIterableStreamer.stats` to access the latest streamed results
     """
 
     def __init__(self, iterable, initial_stream_value=None, sleep_duration=0.1):

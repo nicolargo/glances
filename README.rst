@@ -221,8 +221,6 @@ Run last version of Glances container in *console mode*:
 
 By default, the /etc/glances/glances.conf file is used (based on docker-compose/glances.conf).
 
-By default, the /etc/glances/glances.conf file is used (based on docker-compose/glances.conf).
-
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
 

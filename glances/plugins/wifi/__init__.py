@@ -22,13 +22,13 @@ from glances.globals import file_exists, nativestr
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
-# Backup solution is to use the /proc/net/wireless file
-# but it only give signal information about the current hotspot
+# Use stats available in the /proc/net/wireless file
+# Note: it only give signal information about the current hotspot
 WIRELESS_FILE = '/proc/net/wireless'
 wireless_file_exists = file_exists(WIRELESS_FILE)
 
 if not wireless_file_exists:
-    logger.debug(f"Wifi plugin is disabled (no {WIRELESS_FILE} file found)")
+    logger.debug(f"Wifi plugin is disabled (can not read {WIRELESS_FILE} file)")
 
 # Fields description
 # description: human readable description
@@ -96,31 +96,12 @@ class PluginModel(GlancesPluginModel):
             return stats
 
         if self.input_method == 'local' and wireless_file_exists:
-            # As a backup solution, use the /proc/net/wireless file
-            with open(WIRELESS_FILE) as f:
-                # The first two lines are header
-                f.readline()
-                f.readline()
-                # Others lines are Wifi stats
-                wifi_stats = f.readline()
-                while wifi_stats != '':
-                    # Extract the stats
-                    wifi_stats = wifi_stats.split()
-                    # Add the Wifi link to the list
-                    stats.append(
-                        {
-                            'key': self.get_key(),
-                            'ssid': wifi_stats[0][:-1],
-                            'quality_link': float(wifi_stats[2]),
-                            'quality_level': float(wifi_stats[3]),
-                        }
-                    )
-                    # Next line
-                    wifi_stats = f.readline()
-
+            try:
+                stats = self._get_wireless_stats()
+            except (PermissionError, FileNotFoundError) as e:
+                logger.debug(f"Wifi plugin error: can not read {WIRELESS_FILE} file ({e})")
         elif self.input_method == 'snmp':
             # Update stats using SNMP
-
             # Not implemented yet
             pass
 
@@ -128,6 +109,31 @@ class PluginModel(GlancesPluginModel):
         self.stats = stats
 
         return self.stats
+
+    def _get_wireless_stats(self):
+        ret = self.get_init_value()
+        # As a backup solution, use the /proc/net/wireless file
+        with open(WIRELESS_FILE) as f:
+            # The first two lines are header
+            f.readline()
+            f.readline()
+            # Others lines are Wifi stats
+            wifi_stats = f.readline()
+            while wifi_stats != '':
+                # Extract the stats
+                wifi_stats = wifi_stats.split()
+                # Add the Wifi link to the list
+                ret.append(
+                    {
+                        'key': self.get_key(),
+                        'ssid': wifi_stats[0][:-1],
+                        'quality_link': float(wifi_stats[2]),
+                        'quality_level': float(wifi_stats[3]),
+                    }
+                )
+                # Next line
+                wifi_stats = f.readline()
+        return ret
 
     def get_alert(self, value):
         """Overwrite the default get_alert method.

@@ -2,13 +2,10 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
-
 | Version | Support security updates |
 | ------- | ------------------------ |
-| 3.x     | :white_check_mark:       |
-| < 3.0   | :x:                      |
+| 4.x     | :white_check_mark:       |
+| < 4.0   | :x:                      |
 
 ## Reporting a Vulnerability
 
@@ -31,4 +28,3 @@ If there are any vulnerabilities in {{cookiecutter.project_name}}, don't hesitat
     4. Please do not disclose the vulnerability publicly until a fix is released!
 
 Once we have either a) published a fix, or b) declined to address the vulnerability for whatever reason, you are free to publicly disclose it.
-
