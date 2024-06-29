@@ -49,7 +49,7 @@ Trend    Status
 ======== ==============================================================
 ``-``    Mean 15 lasts values equal mean 15 previous values
 ``↓``    Mean 15 lasts values is lower mean 15 previous values
-``↑``    Mean 15 lasts values is higher mean 15 previous valuess
+``↑``    Mean 15 lasts values is higher mean 15 previous values
 ======== ==============================================================
 
 Alerts are only set for used memory and used swap.

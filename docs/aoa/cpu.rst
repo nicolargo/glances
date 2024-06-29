@@ -53,7 +53,7 @@ To switch to per-CPU stats, just hit the ``1`` key:
 .. image:: ../_static/per-cpu.png
 
 In this case, Glances will show on line per logical CPU on the system.
-If you have multiple core, it is possible to define the maximun number
+If you have multiple core, it is possible to define the maximum number
 of CPU to display. The top 'max_cpu_display' will be display and an
 extra line with the mean of all others CPU will be added.
 

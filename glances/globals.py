@@ -89,7 +89,7 @@ def printandflush(string):
 
 def to_ascii(s):
     """Convert the bytes string to a ASCII string
-    Usefull to remove accent (diacritics)"""
+    Useful to remove accent (diacritics)"""
     if isinstance(s, binary_type):
         return s.decode()
     return s.encode('ascii', 'ignore').decode()
@@ -153,7 +153,7 @@ def subsample(data, sampling):
 
     Data should be a list of numerical itervalues
 
-    Return a subsampled list of sampling lenght
+    Return a subsampled list of sampling length
     """
     if len(data) <= sampling:
         return data
@@ -216,13 +216,13 @@ def key_exist_value_not_none(k, d):
     return k in d and d[k] is not None
 
 
-def key_exist_value_not_none_not_v(k, d, value='', lengh=None):
+def key_exist_value_not_none_not_v(k, d, value='', length=None):
     # Return True if:
     # - key k exists
     # - d[k] is not None
     # - d[k] != value
-    # - if lengh is not None and len(d[k]) >= lengh
-    return k in d and d[k] is not None and d[k] != value and (lengh is None or len(d[k]) >= lengh)
+    # - if length is not None and len(d[k]) >= length
+    return k in d and d[k] is not None and d[k] != value and (length is None or len(d[k]) >= length)
 
 
 def disable(class_name, var):
@@ -425,12 +425,12 @@ def weak_lru_cache(maxsize=128, typed=False):
 
 
 def namedtuple_to_dict(data):
-    """Convert a namedtuple to a dict, using the _asdict() method embeded in PsUtil stats."""
+    """Convert a namedtuple to a dict, using the _asdict() method embedded in PsUtil stats."""
     return {k: (v._asdict() if hasattr(v, '_asdict') else v) for k, v in data.items()}
 
 
 def list_of_namedtuple_to_list_of_dict(data):
-    """Convert a list of namedtuples to a dict, using the _asdict() method embeded in PsUtil stats."""
+    """Convert a list of namedtuples to a dict, using the _asdict() method embedded in PsUtil stats."""
     return [namedtuple_to_dict(d) for d in data]
 
 

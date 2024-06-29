@@ -3,7 +3,7 @@
 CLOUD
 =====
 
-This plugin diplays information about the cloud provider if your host is running on OpenStack.
+This plugin displays information about the cloud provider if your host is running on OpenStack.
 
 The plugin use the standard OpenStack `metadata`_ service to retrieve the information.
 

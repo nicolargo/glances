@@ -27,7 +27,7 @@ services:
     environment:
       - TZ=${TZ}
       - "GLANCES_OPT=-C /glances/conf/glances.conf -w"
-    # Uncomment for GPU compatibilty (Nvidia) inside the container
+    # Uncomment for GPU compatibility (Nvidia) inside the container
     # deploy:
     #   resources:
     #     reservations:

@@ -55,7 +55,7 @@ if psutil_version_info < psutil_min_version:
 
 
 def __signal_handler(signal, frame):
-    logger.debug(f"Signal {signal} catched")
+    logger.debug(f"Signal {signal} caught")
     end()
 
 

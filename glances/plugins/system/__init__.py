@@ -48,7 +48,7 @@ fields_description = {
         'description': 'Operating system version',
     },
     'hr_name': {
-        'description': 'Human readable operating sytem name',
+        'description': 'Human readable operating system name',
     },
 }
 
