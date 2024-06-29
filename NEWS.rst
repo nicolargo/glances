@@ -3,12 +3,47 @@
 ==============================================================================
 
 ===============
+Version 4.2.0
+===============
+
+Under development, see roadmap here: https://github.com/nicolargo/glances/milestone/73
+
+Contributors are welcome !
+
+===============
 Version 4.1.0
 ===============
 
-Under development, see roadmap here: https://github.com/nicolargo/glances/milestone/68
+Enhancements:
 
-Contributors are welcome !
+* Call process_iter.clear_cache() (PsUtil 6+) when Glances user force a refresh (F5 or CTRL-R) #2753
+* PsUtil 6+ no longer check PID reused #2755
+* Add support for automatically hiding network interfaces that are down or that don't have any IP addresses #2799
+
+Bug corrected:
+
+* API: Network module is disabled but appears in endpoint "all" #2815
+* API is not compatible with requests containing spcial/encoding char #2820
+* 'j' hot key crashs Glances #2831
+* Raspberry PI - CPU info is not correct #2616
+* Graph export is broken if there is no graph section in Glances configuration file #2839
+* Glances API status check returns Error 405 - Method Not Allowed #2841
+* Rootless podman containers cause glances to fail with KeyError #2827
+* --export-process-filter Filter using complete command #2824
+* Exception when Glances is ran with limited plugin list #2822
+* Disable separator option do not work #2823
+
+Continious integration and documentation:
+
+* test test_107_fs_plugin_method fails on aarch64-linux #2819
+
+Thanks to all contibutors and bug reporters !
+
+Special thanks to:
+
+* Bharath Vignesh J K
+* RazCrimson
+* Vadim Smal
 
 ===============
 Version 4.0.8
