@@ -8,12 +8,14 @@
 
 """Containers plugin."""
 
-import os
 from copy import deepcopy
+from typing import Any, Dict, List, Optional, Tuple
 
+from glances.globals import iteritems, itervalues
 from glances.logger import logger
-from glances.plugins.containers.engines.docker import DockerContainersExtension, import_docker_error_tag
-from glances.plugins.containers.engines.podman import PodmanContainersExtension, import_podman_error_tag
+from glances.plugins.containers.engines import ContainersExtension
+from glances.plugins.containers.engines.docker import DockerExtension, import_docker_error_tag
+from glances.plugins.containers.engines.podman import PodmanExtension, import_podman_error_tag
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.processes import glances_processes
 from glances.processes import sort_stats as sort_stats_processes
@@ -139,14 +141,15 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+        self.watchers: Dict[str, ContainersExtension] = {}
+
         # Init the Docker API
-        self.docker_extension = DockerContainersExtension() if not import_docker_error_tag else None
+        if not import_docker_error_tag:
+            self.watchers['docker'] = DockerExtension()
 
         # Init the Podman API
-        if import_podman_error_tag:
-            self.podman_extension = None
-        else:
-            self.podman_extension = PodmanContainersExtension(podman_sock=self._podman_sock())
+        if not import_podman_error_tag:
+            self.watchers['podman'] = PodmanExtension(podman_sock=self._podman_sock())
 
         # Sort key
         self.sort_key = None
@@ -155,7 +158,7 @@ class PluginModel(GlancesPluginModel):
         self.update()
         self.refresh_timer.set(0)
 
-    def _podman_sock(self):
+    def _podman_sock(self) -> str:
         """Return the podman sock.
         Could be desfined in the [docker] section thanks to the podman_sock option.
         Default value: unix:///run/user/1000/podman/podman.sock
@@ -165,20 +168,19 @@ class PluginModel(GlancesPluginModel):
             return "unix:///run/user/1000/podman/podman.sock"
         return conf_podman_sock[0]
 
-    def exit(self):
+    def exit(self) -> None:
         """Overwrite the exit method to close threads."""
-        if self.docker_extension:
-            self.docker_extension.stop()
-        if self.podman_extension:
-            self.podman_extension.stop()
+        for watcher in itervalues(self.watchers):
+            watcher.stop()
+
         # Call the father class
         super().exit()
 
-    def get_key(self):
+    def get_key(self) -> str:
         """Return the key of the list."""
         return 'name'
 
-    def get_export(self):
+    def get_export(self) -> List[Dict]:
         """Overwrite the default export method.
 
         - Only exports containers
@@ -197,7 +199,7 @@ class PluginModel(GlancesPluginModel):
 
         return ret
 
-    def _all_tag(self):
+    def _all_tag(self) -> bool:
         """Return the all tag of the Glances/Docker configuration file.
 
         # By default, Glances only display running containers
@@ -211,52 +213,35 @@ class PluginModel(GlancesPluginModel):
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
-    def update(self):
+    def update(self) -> List[Dict]:
         """Update Docker and podman stats using the input method."""
         # Connection should be ok
-        if self.docker_extension is None and self.podman_extension is None:
+        if not self.watchers:
             return self.get_init_value()
 
-        if self.input_method == 'local':
-            # Update stats
-            stats_docker = self.update_docker() if self.docker_extension else {}
-            stats_podman = self.update_podman() if self.podman_extension else {}
-            stats = stats_docker.get('containers', []) + stats_podman.get('containers', [])
-        elif self.input_method == 'snmp':
-            # Update stats using SNMP
-            # Not available
-            pass
+        if self.input_method != 'local':
+            return self.get_init_value()
+
+        # Update stats
+        stats = []
+        for engine, watcher in iteritems(self.watchers):
+            version, containers = watcher.update(all_tag=self._all_tag())
+            for container in containers:
+                container["engine"] = 'docker'
+            stats.extend(containers)
 
         # Sort and update the stats
         # @TODO: Have a look because sort did not work for the moment (need memory stats ?)
         self.sort_key, self.stats = sort_docker_stats(stats)
-
         return self.stats
 
-    def update_docker(self):
-        """Update Docker stats using the input method."""
-        version, containers = self.docker_extension.update(all_tag=self._all_tag())
-        for container in containers:
-            container["engine"] = 'docker'
-        return {"version": version, "containers": containers}
-
-    def update_podman(self):
-        """Update Podman stats."""
-        version, containers = self.podman_extension.update(all_tag=self._all_tag())
-        for container in containers:
-            container["engine"] = 'podman'
-        return {"version": version, "containers": containers}
-
-    def get_user_ticks(self):
-        """Return the user ticks by reading the environment variable."""
-        return os.sysconf(os.sysconf_names['SC_CLK_TCK'])
-
-    def memory_usage_no_cache(self, mem):
+    @staticmethod
+    def memory_usage_no_cache(mem: Dict[str, float]) -> float:
         """Return the 'real' memory usage by removing inactive_file to usage"""
         # Ref: https://github.com/docker/docker-py/issues/3210
         return mem['usage'] - (mem['inactive_file'] if 'inactive_file' in mem else 0)
 
-    def update_views(self):
+    def update_views(self) -> bool:
         """Update stats views."""
         # Call the father's method
         super().update_views()
@@ -305,7 +290,7 @@ class PluginModel(GlancesPluginModel):
 
         return True
 
-    def msg_curse(self, args=None, max_width=None):
+    def msg_curse(self, args=None, max_width: Optional[int] = None) -> List[str]:
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
@@ -369,7 +354,9 @@ class PluginModel(GlancesPluginModel):
             if self.views['show_pod_name']:
                 ret.append(self.curse_add_line(' {:{width}}'.format(container.get("pod_id", "-"), width=12)))
             # Name
-            ret.append(self.curse_add_line(self._msg_name(container=container, max_width=name_max_width)))
+            ret.append(
+                self.curse_add_line(' {:{width}}'.format(container['name'][:name_max_width], width=name_max_width))
+            )
             # Status
             status = self.container_alert(container['status'])
             msg = '{:>10}'.format(container['status'][0:10])
@@ -441,12 +428,8 @@ class PluginModel(GlancesPluginModel):
 
         return ret
 
-    def _msg_name(self, container, max_width):
-        """Build the container name."""
-        name = container['name'][:max_width]
-        return ' {:{width}}'.format(name, width=max_width)
-
-    def container_alert(self, status):
+    @staticmethod
+    def container_alert(status: str) -> str:
         """Analyse the container status."""
         if status == 'running':
             return 'OK'
@@ -457,7 +440,7 @@ class PluginModel(GlancesPluginModel):
         return 'CAREFUL'
 
 
-def sort_docker_stats(stats):
+def sort_docker_stats(stats: List[Dict[str, Any]]) -> Tuple[str, List[Dict[str, Any]]]:
     # Sort Docker stats using the same function than processes
     sort_by = glances_processes.sort_key
     sort_by_secondary = 'memory_usage'
