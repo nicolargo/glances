@@ -1211,7 +1211,7 @@ def build_colors_list(args):
             curses.init_pair(5, curses.COLOR_MAGENTA, -1)
         else:
             curses.init_pair(2, -1, curses.COLOR_RED)
-            curses.init_pair(3, -1, curses.COLOR_GREEN)
+            curses.init_pair(3, 0, curses.COLOR_GREEN)
             curses.init_pair(5, -1, curses.COLOR_MAGENTA)
         curses.init_pair(4, curses.COLOR_BLUE, -1)
         curses.init_pair(6, curses.COLOR_RED, -1)
