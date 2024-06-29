@@ -31,8 +31,8 @@ Enhancements:
 Bug corrected:
 
 * API: Network module is disabled but appears in endpoint "all" #2815
-* API is not compatible with requests containing spcial/encoding char #2820
-* 'j' hot key crashs Glances #2831
+* API is not compatible with requests containing special/encoding char #2820
+* 'j' hot key crashes Glances #2831
 * Raspberry PI - CPU info is not correct #2616
 * Graph export is broken if there is no graph section in Glances configuration file #2839
 * Glances API status check returns Error 405 - Method Not Allowed #2841
@@ -41,17 +41,17 @@ Bug corrected:
 * Exception when Glances is ran with limited plugin list #2822
 * Disable separator option do not work #2823
 
-Continious integration and documentation:
+Continuous integration and documentation:
 
 * test test_107_fs_plugin_method fails on aarch64-linux #2819
 
-Thanks to all contibutors and bug reporters !
+Thanks to all contributors and bug reporters !
 
 Special thanks to:
 
 * Bharath Vignesh J K
 * RazCrimson
-* Vadim Smal
+* Vadim Small
 
 ===============
 Version 4.0.8
@@ -226,7 +226,7 @@ Many thinks to the contributors:
 * Christoph Zimmermann
 * RazCrimson
 * Robin Candau
-* Github GPG acces
+* Github GPG access
 * Continuous Integration
 * Georgiy Timchenko
 * turbocrime
@@ -400,7 +400,7 @@ Documentation and CI:
 * Update Makefile with comments
 * Update Python minimal requirement for py3nvlm
 * Update security policy (user can open private issue directly in Github)
-* Add a simple run script. Entry point for IDE debuger
+* Add a simple run script. Entry point for IDE debugger
 
 Cyber security update:
 
@@ -429,7 +429,7 @@ And also a big thanks to @RazCrimson (https://github.com/RazCrimson) for the sup
 Version 3.3.0.4
 ===============
 
-Refactor the Docker images factory, from now, only Alpine image wll be provided.
+Refactor the Docker images factory, from now, only Alpine image will be provided.
 
 The following Docker images (nicolargo/glances) are availables:
 
@@ -477,9 +477,9 @@ Bug corrected:
 * Correct issue with the regexp filter (use fullmatch instead of match)
 * Errors when running Glances as web service #1702
 * Apply alias to Duplicate sensor name #1686
-* Make the hide function in sensors section compliant with lower/upercase #1590
+* Make the hide function in sensors section compliant with lower/uppercase #1590
 * Web UI truncates the days part of CPU time counter of the process list #2108
-* Correct alignement issue with the diskio plugin (Console UI)
+* Correct alignment issue with the diskio plugin (Console UI)
 
 Documentation and CI:
 
@@ -746,7 +746,7 @@ Bugs corrected:
 * Docker containers information missing with Docker 20.10.x #1878
 * Get system sensors temperatures thresholds #1864
 
-Contibutors for this version:
+Contributors for this version:
 
 * Nicolargo
 * Markus Pöschl
@@ -1353,7 +1353,7 @@ Enhancements and new features:
 * Add ZeroMQ exporter (issue #939)
 * Add CouchDB exporter (issue #928)
 * Add hotspot Wifi information (issue #937)
-* Add default interface speed and automatic rate thresolds (issue #718)
+* Add default interface speed and automatic rate thresholds (issue #718)
 * Highlight max stats in the processes list (issue #878)
 * Docker alerts and actions (issue #875)
 * Glances API returns the processes PPID (issue #926)

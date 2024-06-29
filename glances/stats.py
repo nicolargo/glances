@@ -136,7 +136,7 @@ class GlancesStats:
         """Load additional plugins if defined"""
 
         def get_addl_plugins(self, plugin_path):
-            """Get list of additonal plugins"""
+            """Get list of additional plugins"""
             _plugin_list = []
             for plugin in os.listdir(plugin_path):
                 path = os.path.join(plugin_path, plugin)
@@ -167,7 +167,7 @@ class GlancesStats:
             sys.path.insert(0, path)
             for plugin in get_addl_plugins(self, path):
                 if plugin in sys.modules:
-                    logger.warn(f"Pugin {plugin} already in sys.modules, skipping (workaround: rename plugin)")
+                    logger.warn(f"Plugin {plugin} already in sys.modules, skipping (workaround: rename plugin)")
                 else:
                     start_duration.reset()
                     try:
