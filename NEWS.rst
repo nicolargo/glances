@@ -11,6 +11,14 @@ Under development, see roadmap here: https://github.com/nicolargo/glances/milest
 Contributors are welcome !
 
 ===============
+Version 4.1.1
+===============
+
+Bug corrected:
+
+*  Sensors data is not exported using InfluxDB2 exporter #2856
+
+===============
 Version 4.1.0
 ===============
 
