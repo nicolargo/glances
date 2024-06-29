@@ -147,8 +147,7 @@ class Export(GlancesExport):
                 if k in fields:
                     tags[k] = str(fields[k])
                     # Remove it from the field list (can not be a field and a tag)
-                    if k in fields:
-                        fields.pop(fields[k])
+                    fields.pop(k)
             # Add the measurement to the list
             ret.append({'measurement': name, 'tags': tags, 'fields': fields})
         return ret
