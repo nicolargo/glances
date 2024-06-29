@@ -6,6 +6,9 @@ labels: ''
 assignees: ''
 
 ---
+**Check the bug**
+Before filling this bug report, please search if a similar issue already exists.
+In this case, just add a comment on this existing issue.
 
 **Describe the bug**
 A clear and concise description of what the bug is.
@@ -26,11 +29,7 @@ If applicable, add screenshots to help explain your problem.
  - Operating System (lsb_release -a or OS name/version): `To be completed with result of: lsb_release -a`
  - Glances & psutil versions: `To be completed with result of: glances -V`
  - How do you install Glances (Pypi package, script, package manager, source): `To be completed`
- - Glances test (only available with Glances 3.1.7 or higher):
-
- ```
- To be completed with result of: glances --issue
- ```
+ - Glances test: ` To be completed with result of: glances --issue`
 
 **Additional context**
 Add any other context about the problem here.

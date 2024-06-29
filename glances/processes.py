@@ -119,6 +119,14 @@ class GlancesProcesses:
         """Set args."""
         self.args = args
 
+    def reset_internal_cache(self):
+        """Reset the internal cache."""
+        self.cache_timer = Timer(0)
+        self.processlist_cache = {}
+        if hasattr(psutil.process_iter, 'cache_clear'):
+            # Cache clear only available in PsUtil 6 or higher
+            psutil.process_iter.cache_clear()
+
     def reset_processcount(self):
         """Reset the global process count"""
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0, 'pid_max': None}
@@ -445,7 +453,9 @@ class GlancesProcesses:
             )
         )
         # Only get the info key
-        processlist = [p.info for p in processlist]
+        # PsUtil 6+ no longer check PID reused #2755 so use is_running in the loop
+        # Note: not sure it is realy needed but CPU consumption look teh same with or without it
+        processlist = [p.info for p in processlist if p.is_running()]
         # Sort the processes list by the current sort_key
         processlist = sort_stats(processlist, sorted_by=self.sort_key, reverse=True)
 

@@ -88,7 +88,7 @@ class TestGlances(unittest.TestCase):
 
         # Check stats
         self.assertIsInstance(plugin_instance.get_raw(), (dict, list))
-        if isinstance(plugin_instance.get_raw(), dict):
+        if isinstance(plugin_instance.get_raw(), dict) and plugin_instance.get_raw() != {}:
             res = False
             for f in plugin_instance.fields_description:
                 if f not in plugin_instance.get_raw():
@@ -96,7 +96,7 @@ class TestGlances(unittest.TestCase):
                 else:
                     res = True
             self.assertTrue(res)
-        elif isinstance(plugin_instance.get_raw(), list):
+        elif isinstance(plugin_instance.get_raw(), list) and len(plugin_instance.get_raw()) > 0:
             res = False
             for i in plugin_instance.get_raw():
                 for f in i:
@@ -119,7 +119,7 @@ class TestGlances(unittest.TestCase):
             current_stats['foo'] = 'bar'
             current_stats = plugin_instance.filter_stats(current_stats)
             self.assertTrue('foo' not in current_stats)
-        elif isinstance(plugin_instance.get_raw(), list):
+        elif isinstance(plugin_instance.get_raw(), list) and len(plugin_instance.get_raw()) > 0:
             current_stats[0]['foo'] = 'bar'
             current_stats = plugin_instance.filter_stats(current_stats)
             self.assertTrue('foo' not in current_stats[0])
@@ -133,34 +133,36 @@ class TestGlances(unittest.TestCase):
         if plugin_instance.history_enable():
             if isinstance(plugin_instance.get_raw(), dict):
                 first_history_field = plugin_instance.get_items_history_list()[0]['name']
-            elif isinstance(plugin_instance.get_raw(), list):
+            elif isinstance(plugin_instance.get_raw(), list) and len(plugin_instance.get_raw()) > 0:
                 first_history_field = '_'.join(
                     [
                         plugin_instance.get_raw()[0][plugin_instance.get_key()],
                         plugin_instance.get_items_history_list()[0]['name'],
                     ]
                 )
-            self.assertEqual(len(plugin_instance.get_raw_history(first_history_field)), 2)
-            self.assertGreater(
-                plugin_instance.get_raw_history(first_history_field)[1][0],
-                plugin_instance.get_raw_history(first_history_field)[0][0],
-            )
+            if len(plugin_instance.get_raw()) > 0:
+                self.assertEqual(len(plugin_instance.get_raw_history(first_history_field)), 2)
+                self.assertGreater(
+                    plugin_instance.get_raw_history(first_history_field)[1][0],
+                    plugin_instance.get_raw_history(first_history_field)[0][0],
+                )
 
             # Update stats (add third element)
             plugin_instance.update()
             plugin_instance.update_stats_history()
             plugin_instance.update_views()
 
-            self.assertEqual(len(plugin_instance.get_raw_history(first_history_field)), 3)
-            self.assertEqual(len(plugin_instance.get_raw_history(first_history_field, 2)), 2)
-            self.assertIsInstance(json.loads(plugin_instance.get_stats_history()), dict)
+            if len(plugin_instance.get_raw()) > 0:
+                self.assertEqual(len(plugin_instance.get_raw_history(first_history_field)), 3)
+                self.assertEqual(len(plugin_instance.get_raw_history(first_history_field, 2)), 2)
+                self.assertIsInstance(json.loads(plugin_instance.get_stats_history()), dict)
 
         # Check views
         self.assertIsInstance(plugin_instance.get_views(), dict)
         if isinstance(plugin_instance.get_raw(), dict):
             self.assertIsInstance(plugin_instance.get_views(first_history_field), dict)
             self.assertTrue('decoration' in plugin_instance.get_views(first_history_field))
-        elif isinstance(plugin_instance.get_raw(), list):
+        elif isinstance(plugin_instance.get_raw(), list) and len(plugin_instance.get_raw()) > 0:
             first_history_field = plugin_instance.get_items_history_list()[0]['name']
             first_item = plugin_instance.get_raw()[0][plugin_instance.get_key()]
             self.assertIsInstance(plugin_instance.get_views(item=first_item, key=first_history_field), dict)
@@ -592,6 +594,7 @@ class TestGlances(unittest.TestCase):
         bar.percent = 110
         self.assertEqual(bar.get(), '|||||||||||||||||||||||||||||||||||||||||||| >100%')
 
+    # Error in Github Action. Do not remove the comment.
     # def test_100_system_plugin_method(self):
     #     """Test system plugin methods"""
     #     print('INFO: [TEST_100] Test system plugin methods')
@@ -623,6 +626,7 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_105] Test network plugin methods')
         self._common_plugin_tests('network')
 
+    # Error in Github Action. Do not remove the comment.
     # def test_106_diskio_plugin_method(self):
     #     """Test diskio plugin methods"""
     #     print('INFO: [TEST_106] Test diskio plugin methods')

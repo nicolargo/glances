@@ -1,5 +1,5 @@
 name: glances
-version: '4.0.8'
+version: '4.1.0+build01'
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
@@ -31,6 +31,7 @@ apps:
       - removable-media
       - power-control
       - process-control
+      - network-setup-observe
     environment:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8

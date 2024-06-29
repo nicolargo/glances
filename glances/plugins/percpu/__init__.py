@@ -120,16 +120,12 @@ class PluginModel(GlancesPluginModel):
     @GlancesPluginModel._log_result_decorator
     def update(self):
         """Update per-CPU stats using the input method."""
-        # Init new stats
-        stats = self.get_init_value()
-
-        # Grab per-CPU stats using psutil's cpu_percent(percpu=True) and
-        # cpu_times_percent(percpu=True) methods
+        # Grab per-CPU stats using psutil's
         if self.input_method == 'local':
-            stats = cpu_percent.get(percpu=True)
+            stats = cpu_percent.get_percpu()
         else:
             # Update stats using SNMP
-            pass
+            stats = self.get_init_value()
 
         # Update the stats
         self.stats = stats

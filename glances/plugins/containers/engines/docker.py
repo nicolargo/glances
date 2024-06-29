@@ -9,10 +9,11 @@
 """Docker Extension unit for Glances' Containers plugin."""
 
 import time
+from typing import Any, Dict, List, Optional, Tuple
 
 from glances.globals import iterkeys, itervalues, nativestr, pretty_date, replace_special_chars
 from glances.logger import logger
-from glances.plugins.containers.stats_streamer import StatsStreamer
+from glances.plugins.containers.stats_streamer import ThreadedIterableStreamer
 
 # Docker-py library (optional and Linux-only)
 # https://github.com/docker/docker-py
@@ -43,7 +44,7 @@ class DockerStatsFetcher:
 
         # Threaded Streamer
         stats_iterable = container.stats(decode=True)
-        self._streamer = StatsStreamer(stats_iterable, initial_stream_value={})
+        self._streamer = ThreadedIterableStreamer(stats_iterable, initial_stream_value={})
 
     def _log_debug(self, msg, exception=None):
         logger.debug(f"containers (Docker) ID: {self._container.id} - {msg} ({exception}) ")
@@ -53,7 +54,7 @@ class DockerStatsFetcher:
         self._streamer.stop()
 
     @property
-    def activity_stats(self):
+    def activity_stats(self) -> Dict[str, Dict[str, Any]]:
         """Activity Stats
 
         Each successive access of activity_stats will cause computation of activity_stats
@@ -63,7 +64,7 @@ class DockerStatsFetcher:
         self._last_stats_computed_time = time.time()
         return computed_activity_stats
 
-    def _compute_activity_stats(self):
+    def _compute_activity_stats(self) -> Dict[str, Dict[str, Any]]:
         with self._streamer.result_lock:
             io_stats = self._get_io_stats()
             cpu_stats = self._get_cpu_stats()
@@ -78,11 +79,11 @@ class DockerStatsFetcher:
         }
 
     @property
-    def time_since_update(self):
+    def time_since_update(self) -> float:
         # In case no update, default to 1
         return max(1, self._streamer.last_update_time - self._last_stats_computed_time)
 
-    def _get_cpu_stats(self):
+    def _get_cpu_stats(self) -> Optional[Dict[str, float]]:
         """Return the container CPU usage.
 
         Output: a dict {'total': 1.49}
@@ -116,7 +117,7 @@ class DockerStatsFetcher:
         # Return the stats
         return stats
 
-    def _get_memory_stats(self):
+    def _get_memory_stats(self) -> Optional[Dict[str, float]]:
         """Return the container MEMORY.
 
         Output: a dict {'usage': ..., 'limit': ..., 'inactive_file': ...}
@@ -139,7 +140,7 @@ class DockerStatsFetcher:
         # Return the stats
         return stats
 
-    def _get_network_stats(self):
+    def _get_network_stats(self) -> Optional[Dict[str, float]]:
         """Return the container network usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}.
@@ -168,7 +169,7 @@ class DockerStatsFetcher:
         # Return the stats
         return stats
 
-    def _get_io_stats(self):
+    def _get_io_stats(self) -> Optional[Dict[str, float]]:
         """Return the container IO usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'ior': 10, 'iow': 65}.
@@ -221,7 +222,7 @@ class DockerContainersExtension:
 
         self.connect()
 
-    def connect(self):
+    def connect(self) -> None:
         """Connect to the Docker server."""
         # Init the Docker API Client
         try:
@@ -236,12 +237,12 @@ class DockerContainersExtension:
         # return self.client.version()
         return {}
 
-    def stop(self):
+    def stop(self) -> None:
         # Stop all streaming threads
         for t in itervalues(self.stats_fetchers):
             t.stop()
 
-    def update(self, all_tag):
+    def update(self, all_tag) -> Tuple[Dict, List[Dict]]:
         """Update Docker stats using the input method."""
 
         if not self.client:
@@ -280,22 +281,30 @@ class DockerContainersExtension:
         return version_stats, container_stats
 
     @property
-    def key(self):
+    def key(self) -> str:
         """Return the key of the list."""
         return 'name'
 
-    def generate_stats(self, container):
+    def generate_stats(self, container) -> Dict[str, Any]:
         # Init the stats for the current container
         stats = {
             'key': self.key,
-            # Export name
             'name': nativestr(container.name),
-            # Container Id
             'id': container.id,
-            # Container Status (from attrs)
             'status': container.attrs['State']['Status'],
             'created': container.attrs['Created'],
             'command': [],
+            'io': {},
+            'cpu': {},
+            'memory': {},
+            'network': {},
+            'io_rx': None,
+            'io_wx': None,
+            'cpu_percent': None,
+            'memory_percent': None,
+            'network_rx': None,
+            'network_tx': None,
+            'uptime': None,
         }
 
         # Container Image
@@ -312,37 +321,31 @@ class DockerContainersExtension:
         if not stats['command']:
             stats['command'] = None
 
-        if stats['status'] in self.CONTAINER_ACTIVE_STATUS:
-            started_at = container.attrs['State']['StartedAt']
-            stats_fetcher = self.stats_fetchers[container.id]
-            activity_stats = stats_fetcher.activity_stats
-            stats.update(activity_stats)
+        if stats['status'] not in self.CONTAINER_ACTIVE_STATUS:
+            return stats
 
-            # Additional fields
-            stats['cpu_percent'] = stats["cpu"]['total']
-            stats['memory_usage'] = stats["memory"].get('usage')
-            if stats['memory'].get('cache') is not None:
-                stats['memory_usage'] -= stats['memory']['cache']
-            if 'time_since_update' in stats['io']:
-                stats['io_rx'] = stats['io'].get('ior') // stats['io'].get('time_since_update')
-                stats['io_wx'] = stats['io'].get('iow') // stats['io'].get('time_since_update')
-            if 'time_since_update' in stats['network']:
-                stats['network_rx'] = stats['network'].get('rx') // stats['network'].get('time_since_update')
-                stats['network_tx'] = stats['network'].get('tx') // stats['network'].get('time_since_update')
-            stats['uptime'] = pretty_date(parser.parse(started_at).astimezone(tz.tzlocal()).replace(tzinfo=None))
-            # Manage special chars in command (see isse#2733)
-            stats['command'] = replace_special_chars(' '.join(stats['command']))
-        else:
-            stats['io'] = {}
-            stats['cpu'] = {}
-            stats['memory'] = {}
-            stats['network'] = {}
-            stats['io_rx'] = None
-            stats['io_wx'] = None
-            stats['cpu_percent'] = None
-            stats['memory_percent'] = None
-            stats['network_rx'] = None
-            stats['network_tx'] = None
-            stats['uptime'] = None
+        stats_fetcher = self.stats_fetchers[container.id]
+        activity_stats = stats_fetcher.activity_stats
+        stats.update(activity_stats)
+
+        # Additional fields
+        stats['cpu_percent'] = stats['cpu']['total']
+        stats['memory_usage'] = stats['memory'].get('usage')
+        if stats['memory'].get('cache') is not None:
+            stats['memory_usage'] -= stats['memory']['cache']
+
+        if all(k in stats['io'] for k in ('ior', 'iow', 'time_since_update')):
+            stats['io_rx'] = stats['io']['ior'] // stats['io']['time_since_update']
+            stats['io_wx'] = stats['io']['iow'] // stats['io']['time_since_update']
+
+        if all(k in stats['network'] for k in ('rx', 'tx', 'time_since_update')):
+            stats['network_rx'] = stats['network']['rx'] // stats['network']['time_since_update']
+            stats['network_tx'] = stats['network']['tx'] // stats['network']['time_since_update']
+
+        started_at = container.attrs['State']['StartedAt']
+        stats['uptime'] = pretty_date(parser.parse(started_at).astimezone(tz.tzlocal()).replace(tzinfo=None))
+
+        # Manage special chars in command (see issue#2733)
+        stats['command'] = replace_special_chars(' '.join(stats['command']))
 
         return stats

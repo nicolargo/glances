@@ -3,62 +3,39 @@
 ==============================================================================
 
 ===============
-Version 4.0.8
+Version 4.1.0
 ===============
 
-* Make CORS option configurable security webui #2812
-* When Glances is installed via venv, default configuration file is not used documentation packaging #2803
-* GET /1272f6e9e8f9d6bfd6de.png results in 404 bug webui #2781 by Emporea was closed May 25, 2024
-* Screen frequently flickers when outputting to local display bug needs test #2490
-* Retire ujson for being in maintenance mode dependencies enhancement #2791
+Enhancements:
 
-Minor breaking change in AMP: please use && instead of ; as command line separator.
+* Call process_iter.clear_cache() (PsUtil 6+) when Glances user force a refresh (F5 or CTRL-R) #2753
+* PsUtil 6+ no longer check PID reused #2755
+* Add support for automatically hiding network interfaces that are down or that don't have any IP addresses #2799
 
-===============
-Version 4.0.7
-===============
+Bug corrected:
 
-* cpu_hz_current not available on NetBSD #2792
-* SensorType change in REST API breaks compatibility in 4.0.4 #2788
+* API: Network module is disabled but appears in endpoint "all" #2815
+* API is not compatible with requests containing spcial/encoding char #2820
+* 'j' hot key crashs Glances #2831
+* Raspberry PI - CPU info is not correct #2616
+* Graph export is broken if there is no graph section in Glances configuration file #2839
+* Glances API status check returns Error 405 - Method Not Allowed #2841
+* Rootless podman containers cause glances to fail with KeyError #2827
+* --export-process-filter Filter using complete command #2824
+* Exception when Glances is ran with limited plugin list #2822
+* Disable separator option do not work #2823
 
-===============
-Version 4.0.6
-===============
+Continious integration and documentation:
 
-*  No GPU info on Web View #2796
+* test test_107_fs_plugin_method fails on aarch64-linux #2819
 
-===============
-Version 4.0.5
-===============
+Thanks to all contibutors and bug reporters !
 
-* SensorType change in REST API breaks compatibility in 4.0.4 #2788
-* Please make pydantic optional dependency, not required one #2777
-* Update the Grafana dashboard #2780
-* 4.0.4 - On Glances startup "ERROR -- Can not init battery class #2776
-* In codeSpace (with Python 3.8), an error occurs in ./unittest-restful.py #2773
+Special thanks to:
 
-Use Ruff as default Linter.
-
-===============
-Version 4.0.4
-===============
-
-Hostfix release for support sensors plugin on python 3.8
-
-===============
-Version 4.0.3
-===============
-
-Additional fixes for Sensor plugin
-
-===============
-Version 4.0.2
-===============
-
-* hotfix: plugin(sensors) - race conditions btw fan_speed & temperature… #2766
-* fix: include requirements.txt and SECURITY.md for pypi dist #2761
-
-Thanks to RazCrimson for the sensors patch !
+* Bharath Vignesh J K
+* RazCrimson
+* Vadim Smal
 
 ===============
 Version 4.0.8

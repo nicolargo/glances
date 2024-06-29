@@ -48,7 +48,7 @@ virtual docker interface (docker0, docker1, ...):
     # Automatically hide interface with no IP address (default is False)
     hide_no_ip=True
     # WLAN 0 alias
-    wlan0_alias=Wireless IF
+    alias=wlan0:Wireless IF
     # It is possible to overwrite the bitrate thresholds per interface
     # WLAN 0 Default limits (in bits per second aka bps) for interface bitrate
     wlan0_rx_careful=4000000

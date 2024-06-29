@@ -249,8 +249,8 @@ class GlancesStats:
 
     def load_limits(self, config=None):
         """Load the stats limits (except the one in the exclude list)."""
-        # For each plugins, call the load_limits method
-        for p in self._plugins:
+        # For each plugins (enable or not), call the load_limits method
+        for p in self.getPluginsList(enable=False):
             self._plugins[p].load_limits(config)
 
     def __update_plugin(self, p):
@@ -260,19 +260,13 @@ class GlancesStats:
         self._plugins[p].update_views()
 
     def update(self):
-        """Wrapper method to update the stats.
+        """Wrapper method to update all stats.
 
         Only called by standalone and server modes
         """
-        threads = []
         # Start update of all enable plugins
         for p in self.getPluginsList(enable=True):
-            thread = threading.Thread(target=self.__update_plugin, args=(p,))
-            thread.start()
-            threads.append(thread)
-        # Wait the end of the update
-        for t in threads:
-            t.join()
+            self.__update_plugin(p)
 
     def export(self, input_stats=None):
         """Export all the stats.
@@ -286,7 +280,7 @@ class GlancesStats:
 
         input_stats = input_stats or {}
 
-        for e in self.getExportsList(enable=True):
+        for e in self.getExportsList():
             logger.debug(f"Export stats using the {e} module")
             thread = threading.Thread(target=self._exports[e].update, args=(input_stats,))
             thread.start()
@@ -294,12 +288,20 @@ class GlancesStats:
         return True
 
     def getAll(self):
-        """Return all the stats (list)."""
-        return [self._plugins[p].get_raw() for p in self._plugins]
+        """Return all the stats (list).
+        This method is called byt the XML/RPC API.
+        It should return all the plugins (enable or not) because filtering can be done by the client.
+        """
+        return [self._plugins[p].get_raw() for p in self.getPluginsList(enable=False)]
 
-    def getAllAsDict(self):
-        """Return all the stats (dict)."""
-        return {p: self._plugins[p].get_raw() for p in self._plugins}
+    def getAllAsDict(self, plugin_list=None):
+        """Return all the stats (as dict).
+        This method is called by the RESTFul API.
+        """
+        if plugin_list is None:
+            # All enabled plugins should be exported
+            plugin_list = self.getPluginsList()
+        return {p: self._plugins[p].get_raw() for p in plugin_list}
 
     def getAllExports(self, plugin_list=None):
         """Return all the stats to be exported as a list.
@@ -310,7 +312,7 @@ class GlancesStats:
         if plugin_list is None:
             # All enabled plugins should be exported
             plugin_list = self.getPluginsList()
-        return [self._plugins[p].get_export() for p in self._plugins]
+        return [self._plugins[p].get_export() for p in plugin_list]
 
     def getAllExportsAsDict(self, plugin_list=None):
         """Return all the stats to be exported as a dict.
@@ -345,17 +347,23 @@ class GlancesStats:
             plugin_list = self.getPluginsList()
         return {p: self._plugins[p].limits for p in plugin_list}
 
-    def getAllViews(self):
-        """Return the plugins views."""
-        return [self._plugins[p].get_views() for p in self._plugins]
+    def getAllViews(self, plugin_list=None):
+        """Return the plugins views.
+        This method is called byt the XML/RPC API.
+        It should return all the plugins views (enable or not) because filtering can be done by the client.
+        """
+        if plugin_list is None:
+            plugin_list = self.getPluginsList(enable=False)
+        return [self._plugins[p].get_views() for p in plugin_list]
 
-    def getAllViewsAsDict(self):
-        """Return all the stats views (dict)."""
-        return {p: self._plugins[p].get_views() for p in self._plugins}
-
-    def get_plugin_list(self):
-        """Return the plugin list."""
-        return self._plugins
+    def getAllViewsAsDict(self, plugin_list=None):
+        """Return all the stats views (dict).
+        This method is called by the RESTFul API.
+        """
+        if plugin_list is None:
+            # All enabled plugins should be exported
+            plugin_list = self.getPluginsList()
+        return {p: self._plugins[p].get_views() for p in plugin_list}
 
     def get_plugin(self, plugin_name):
         """Return the plugin stats."""
