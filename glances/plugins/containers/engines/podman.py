@@ -243,7 +243,7 @@ class PodmanPodStatsFetcher:
         return {"ior": ior, "iow": iow, "time_since_update": 1}
 
 
-class PodmanContainersExtension:
+class PodmanExtension:
     """Glances' Containers Plugin's Docker Extension unit"""
 
     CONTAINER_ACTIVE_STATUS = ['running', 'paused']

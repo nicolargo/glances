@@ -207,7 +207,7 @@ class DockerStatsFetcher:
         return stats
 
 
-class DockerContainersExtension:
+class DockerExtension:
     """Glances' Containers Plugin's Docker Extension unit"""
 
     CONTAINER_ACTIVE_STATUS = ['running', 'paused']
