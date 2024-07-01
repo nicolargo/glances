@@ -9,6 +9,7 @@
 """Per-CPU plugin."""
 
 from glances.cpu_percent import cpu_percent
+from glances.globals import BSD, LINUX, MACOS, WINDOWS
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
@@ -76,6 +77,14 @@ guest operating systems under the control of the Linux kernel.',
         'description': '*(Linux)*: percent of time spent handling software interrupts.',
         'unit': 'percent',
     },
+    'dpc': {
+        'description': '*(Windows)*: percent of time spent handling deferred procedure calls.',
+        'unit': 'percent',
+    },
+    'interrupt': {
+        'description': '*(Windows)*: percent of time spent handling software interrupts.',
+        'unit': 'percent',
+    },
 }
 
 # Define the history items list
@@ -140,11 +149,17 @@ class PluginModel(GlancesPluginModel):
         if not self.stats or not self.args.percpu or self.is_disabled():
             return ret
 
-        # Define the default header
-        all_headers = ['user', 'system', 'idle', 'iowait', 'steal']
+        # Define the headers based on OS
+        header = ['user', 'system']
 
-        # Determine applicable headers
-        header = [h for h in all_headers if self.stats[0].get(h) is not None]
+        if LINUX:
+            header.extend(['iowait', 'idle', 'irq', 'nice', 'steal', 'guest'])
+        elif MACOS:
+            header.extend(['idle', 'nice'])
+        elif BSD:
+            header.extend(['idle', 'irq', 'nice'])
+        elif WINDOWS:
+            header.extend(['dpc', 'interrupt'])
 
         # Build the string message
         if self.is_disabled('quicklook'):
