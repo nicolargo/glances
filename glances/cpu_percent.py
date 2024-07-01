@@ -38,6 +38,8 @@ class PerCpuPercentInfo(TypedDict):
     steal: Optional[float]
     guest: Optional[float]
     guest_nice: Optional[float]
+    dpc: Optional[float]
+    interrupt: Optional[float]
 
 
 class CpuPercent:
@@ -146,6 +148,8 @@ class CpuPercent:
                 'steal': cpu_times.steal if hasattr(cpu_times, 'steal') else None,
                 'guest': cpu_times.guest if hasattr(cpu_times, 'guest') else None,
                 'guest_nice': cpu_times.steal if hasattr(cpu_times, 'guest_nice') else None,
+                'dpc': cpu_times.dpc if hasattr(cpu_times, 'dpc') else None,
+                'interrupt': cpu_times.interrupt if hasattr(cpu_times, 'interrupt') else None,
             }
             for cpu_number, cpu_times in psutil_percpu
         ]
