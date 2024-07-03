@@ -19,7 +19,7 @@ import tracemalloc
 # Global name
 # Version should start and end with a numerical char
 # See https://packaging.python.org/specifications/core-metadata/#version
-__version__ = '4.1.1'
+__version__ = '4.1.2'
 __apiversion__ = '4'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
@@ -55,7 +55,7 @@ if psutil_version_info < psutil_min_version:
 
 
 def __signal_handler(signal, frame):
-    logger.debug(f"Signal {signal} catched")
+    logger.debug(f"Signal {signal} caught")
     end()
 
 

@@ -93,7 +93,7 @@ lint: ## Lint the code.
 	./venv-dev/bin/python -m ruff check . --fix
 
 codespell: ## Run codespell to fix common misspellings in text files
-	./venv-dev/bin/codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics
+	./venv-dev/bin/codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics -w
 
 semgrep: ## Run semgrep to find bugs and enforce code standards
 	./venv-dev/bin/semgrep scan --config=auto
@@ -185,7 +185,7 @@ flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
 	rm -rf ./flatpak-builder-tools
 	@echo "Now follow: https://github.com/flathub/flathub/wiki/App-Submission"
 
-# Snap package is automaticaly build on the Snapcraft.io platform
+# Snap package is automatically build on the Snapcraft.io platform
 # https://snapcraft.io/glances
 # But you can try an offline build with the following command
 snapcraft:

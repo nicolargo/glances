@@ -543,7 +543,7 @@ class PluginModel(GlancesPluginModel):
         # Process list
         # Loop over processes (sorted by the sort key previously compute)
         # This is a Glances bottleneck (see flame graph),
-        # TODO: get_process_curses_data should be optimzed
+        # TODO: get_process_curses_data should be optimized
         for position, process in enumerate(processes_list_sorted):
             ret.extend(self.get_process_curses_data(process, position == args.cursor_position, args))
 

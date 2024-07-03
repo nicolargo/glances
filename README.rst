@@ -2,7 +2,7 @@
 Glances - An eye on your system
 ===============================
 
-|  |pypi| |test| |contibutors| |quality|
+|  |pypi| |test| |contributors| |quality|
 |  |starts| |docker| |pypistat|
 |  |sponsors| |twitter|
 
@@ -25,9 +25,9 @@ Glances - An eye on your system
     :target: https://github.com/nicolargo/glances/actions
     :alt: Linux tests (GitHub Actions)
 
-.. |contibutors| image:: https://img.shields.io/github/contributors/nicolargo/glances
+.. |contributors| image:: https://img.shields.io/github/contributors/nicolargo/glances
     :target: https://github.com/nicolargo/glances/issues?q=is%3Aissue+is%3Aopen+label%3A%22needs+contributor%22
-    :alt: Contibutors
+    :alt: Contributors
 
 .. |quality| image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=develop
     :target: https://scrutinizer-ci.com/g/nicolargo/glances/?branch=develop
@@ -141,7 +141,7 @@ stable version.
 To install Glances, simply use the ``pip`` command line.
 
 Warning: on modern Linux operating systems, you may have an externally-managed-environment
-error message when you try to use ``pip``. In this case, go to the the PipX section bellow.
+error message when you try to use ``pip``. In this case, go to the the PipX section below.
 
 .. code-block:: console
 

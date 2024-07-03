@@ -57,7 +57,7 @@ Example:
 
 **NOTE:** Setting low values for `public_refresh_interval` will result in frequent
 HTTP requests to the onlive service defined in public_api. Recommended range: 120-600 seconds.
-Glances uses online services in order to get the IP addresses and the additional informations.
+Glances uses online services in order to get the IP addresses and the additional information.
 Your IP address could be blocked if too many requests are done.
 
 
