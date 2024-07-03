@@ -9,6 +9,7 @@
 """Per-CPU plugin."""
 
 from glances.cpu_percent import cpu_percent
+from glances.globals import BSD, LINUX, MACOS, WINDOWS
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
@@ -76,8 +77,15 @@ guest operating systems under the control of the Linux kernel.',
         'description': '*(Linux)*: percent of time spent handling software interrupts.',
         'unit': 'percent',
     },
+    'dpc': {
+        'description': '*(Windows)*: percent of time spent handling deferred procedure calls.',
+        'unit': 'percent',
+    },
+    'interrupt': {
+        'description': '*(Windows)*: percent of time spent handling software interrupts.',
+        'unit': 'percent',
+    },
 }
-
 
 # Define the history items list
 items_history_list = [
@@ -141,8 +149,17 @@ class PluginModel(GlancesPluginModel):
         if not self.stats or not self.args.percpu or self.is_disabled():
             return ret
 
-        # Define the default header
-        header = ['user', 'system', 'idle', 'iowait', 'steal']
+        # Define the headers based on OS
+        header = ['user', 'system']
+
+        if LINUX:
+            header.extend(['iowait', 'idle', 'irq', 'nice', 'steal', 'guest'])
+        elif MACOS:
+            header.extend(['idle', 'nice'])
+        elif BSD:
+            header.extend(['idle', 'irq', 'nice'])
+        elif WINDOWS:
+            header.extend(['dpc', 'interrupt'])
 
         # Build the string message
         if self.is_disabled('quicklook'):
@@ -152,8 +169,6 @@ class PluginModel(GlancesPluginModel):
 
         # Per CPU stats displayed per line
         for stat in header:
-            if stat not in self.stats[0]:
-                continue
             msg = f'{stat:>7}'
             ret.append(self.curse_add_line(msg))
 
@@ -179,8 +194,6 @@ class PluginModel(GlancesPluginModel):
                     msg = '{:4} '.format('?')
                 ret.append(self.curse_add_line(msg))
             for stat in header:
-                if stat not in self.stats[0]:
-                    continue
                 try:
                     msg = f'{cpu[stat]:6.1f}%'
                 except TypeError:
@@ -192,12 +205,10 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_new_line())
             if self.is_disabled('quicklook'):
                 ret.append(self.curse_add_line('CPU* '))
+
             for stat in header:
-                if stat not in self.stats[0]:
-                    continue
-                cpu_stat = sum([i[stat] for i in percpu_list[0 : self.max_cpu_display]]) / len(
-                    [i[stat] for i in percpu_list[0 : self.max_cpu_display]]
-                )
+                percpu_stats = [i[stat] for i in percpu_list[0 : self.max_cpu_display]]
+                cpu_stat = sum(percpu_stats) / len(percpu_stats)
                 try:
                     msg = f'{cpu_stat:6.1f}%'
                 except TypeError:
