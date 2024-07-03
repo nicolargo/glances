@@ -8,7 +8,7 @@
 
 """Wifi plugin.
 
-Stats are retreived from the /proc/net/wireless file (Linux only):
+Stats are retrieved from the /proc/net/wireless file (Linux only):
 
 # cat /proc/net/wireless
 Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE

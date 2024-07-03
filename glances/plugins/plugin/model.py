@@ -98,7 +98,7 @@ class GlancesPluginModel:
             logger.debug(f'Load section {self.plugin_name} in Glances configuration file')
             self.load_limits(config=config)
 
-        # Init the alias (dictionnary)
+        # Init the alias (dictionary)
         self.alias = self.read_alias()
 
         # Init the actions

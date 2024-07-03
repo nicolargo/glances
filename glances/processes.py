@@ -293,7 +293,7 @@ class GlancesProcesses:
         # - connections (TCP and UDP)
         # - CPU min/max/mean
 
-        # Set the extended stats list (OS dependant)
+        # Set the extended stats list (OS dependent)
         extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
         if LINUX:
             # num_fds only available on Unix system (see issue #1351)
@@ -418,7 +418,7 @@ class GlancesProcesses:
         #####################
         sorted_attrs = ['cpu_percent', 'cpu_times', 'memory_percent', 'name', 'status', 'num_threads']
         displayed_attr = ['memory_info', 'nice', 'pid']
-        # The following attributes are cached and only retreive every self.cache_timeout seconds
+        # The following attributes are cached and only retrieve every self.cache_timeout seconds
         # Warning: 'name' can not be cached because it is used for filtering
         cached_attrs = ['cmdline', 'username']
 
@@ -454,7 +454,7 @@ class GlancesProcesses:
         )
         # Only get the info key
         # PsUtil 6+ no longer check PID reused #2755 so use is_running in the loop
-        # Note: not sure it is realy needed but CPU consumption look teh same with or without it
+        # Note: not sure it is realy needed but CPU consumption look the same with or without it
         processlist = [p.info for p in processlist if p.is_running()]
         # Sort the processes list by the current sort_key
         processlist = sort_stats(processlist, sorted_by=self.sort_key, reverse=True)

@@ -11,7 +11,7 @@ It should implement a Class named PluginModel (inherited from GlancesPluginModel
 This class should be based on the MVC model.
 - model: where the stats are updated (update method)
 - view: where the stats are prepare to be displayed (update_views)
-- controler: where the stats are displayed (msg_curse method)
+- controller: where the stats are displayed (msg_curse method)
 
 A plugin should define the following global variables:
 
