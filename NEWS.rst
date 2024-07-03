@@ -11,6 +11,14 @@ Under development, see roadmap here: https://github.com/nicolargo/glances/milest
 Contributors are welcome !
 
 ===============
+Version 4.1.2
+===============
+
+Bug corrected:
+
+*  AttributeError: 'CpuPercent' object has no attribute 'cpu_percent' #2859
+
+===============
 Version 4.1.1
 ===============
 

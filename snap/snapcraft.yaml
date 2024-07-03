@@ -1,5 +1,5 @@
 name: glances
-version: '4.1.1+build01'  # Put the current stable version+buildXX
+version: '4.1.2+build01'  # Put the current stable version+buildXX
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
