@@ -348,8 +348,8 @@ class GlancesCursesBrowser(_GlancesCurses):
             for c in column_def:
                 if xc < screen_x and y < screen_y:
                     # Display server stats
-                    value = format(server_stat.get(c[0], '?'))
-                    if c[0] == 'name' and 'alias' in server_stat:
+                    value = server_stat.get(c[0], '?')
+                    if c[0] == 'name' and 'alias' in server_stat and server_stat['alias'] is not None:
                         value = server_stat['alias']
                     decoration = self.colors_list.get(
                         server_stat[c[0] + '_decoration'].replace('_LOG', '')
@@ -359,7 +359,7 @@ class GlancesCursesBrowser(_GlancesCurses):
                     )
                     if c[0] == 'status':
                         decoration = self.colors_list[server_stat['status']]
-                    self.term_window.addnstr(y, xc, value, c[2], decoration)
+                    self.term_window.addnstr(y, xc, format(value), c[2], decoration)
                     xc += c[2] + self.space_between_column
                 cpt += 1
             # Next line, next server...
