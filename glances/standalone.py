@@ -140,12 +140,14 @@ class GlancesStandalone:
         """
         # Update stats
         # Start a counter used to compute the time needed
-        counter = Counter()
+        counter_update = Counter()
         self.stats.update()
-        logger.debug(f'Stats updated duration: {counter.get()} seconds')
+        logger.debug(f'Stats updated duration: {counter_update.get()} seconds')
 
         # Patch for issue1326 to avoid < 0 refresh
-        adapted_refresh = (self.refresh_time - counter.get()) if (self.refresh_time - counter.get()) > 0 else 0
+        adapted_refresh = (
+            (self.refresh_time - counter_update.get()) if (self.refresh_time - counter_update.get()) > 0 else 0
+        )
 
         # Display stats
         # and wait refresh_time - counter
@@ -179,7 +181,7 @@ class GlancesStandalone:
     def serve_forever(self):
         """Wrapper to the serve_forever function."""
         if self.args.stop_after:
-            self.serve_n(self.args.stop_after)
+            self.serve_n(n=self.args.stop_after)
         else:
             while self.__serve_once():
                 pass

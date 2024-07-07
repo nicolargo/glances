@@ -287,6 +287,13 @@ run-browser: ## Start Glances in browser mode (RPC)
 run-issue: ## Start Glances in issue mode
 	./venv/bin/python -m glances -C ./conf/glances.conf --issue
 
+run-multipass: ## Install and start Glances in a VM (only available on Ubuntu with multipass already installed)
+	multipass launch -n glances-on-lts lts
+	multipass exec glances-on-lts -- sudo snap install glances
+	multipass exec glances-on-lts -- glances
+	multipass stop glances-on-lts
+	multipass delete glances-on-lts
+
 show-version: ## Show Glances version number
 	./venv/bin/python -m glances -C ./conf/glances.conf -V
 
