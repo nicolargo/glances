@@ -32,7 +32,6 @@ apps:
       - power-control
       - process-control
       - network-setup-observe
-      - all-home
     environment:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
@@ -46,6 +45,11 @@ plugs:
     interface: system-files
     read:
       - /etc/glances/glances.conf
+  proc-sys:
+    interface: system-observe
+    read:
+      - /proc
+      - /sys
 
 parts:
   glances:
