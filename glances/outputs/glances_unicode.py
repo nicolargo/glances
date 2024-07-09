@@ -15,7 +15,7 @@ _unicode_message = {
     'ARROW_DOWN': ['\u2193', 'v'],
     'CHECK': ['\u2713', ''],
     'PROCESS_SELECTOR': ['>', '>'],
-    'MEDIUM_LINE': ['\u23af', '-'],
+    'MEDIUM_LINE': ['\u2500', '─'],
     'LOW_LINE': ['\u2581', '_'],
 }
 
