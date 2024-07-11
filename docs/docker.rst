@@ -79,7 +79,7 @@ Alternatively, you can specify something along the same lines with docker run op
 
 .. code-block:: console
 
-    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host -it docker.io/nicolargo/glances
+    docker run -v `pwd`/glances.conf:/etc/glances/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host -it docker.io/nicolargo/glances
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
