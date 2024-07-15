@@ -446,12 +446,15 @@ class _GlancesCurses:
         self.line -= 1
         line_width = self.term_window.getmaxyx()[1] - self.column
         if self.line >= 0:
-            self.term_window.addnstr(
-                self.line,
-                self.column,
-                unicode_message('MEDIUM_LINE', self.args) * line_width,
+            position = [self.line, self.column]
+            line_color = self.colors_list[color]
+            line_type = curses.ACS_HLINE if not self.args.disable_unicode else unicode_message('MEDIUM_LINE', self.args)
+
+            self.term_window.hline(
+                *position,
+                line_type,
                 line_width,
-                self.colors_list[color],
+                line_color,
             )
 
     def __get_stat_display(self, stats, layer):
