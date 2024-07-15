@@ -448,22 +448,14 @@ class _GlancesCurses:
         if self.line >= 0:
             position = [self.line, self.column]
             line_color = self.colors_list[color]
+            line_type = curses.ACS_HLINE if not self.args.disable_unicode else unicode_message('MEDIUM_LINE', self.args)
 
-            if not self.args.disable_unicode:
-                # Use curses.ACS_HLINE for the separator line
-                self.term_window.hline(
-                    *position,
-                    curses.ACS_HLINE,
-                    line_width,
-                    line_color,
-                )
-            else:
-                self.term_window.addnstr(
-                    *position,
-                    unicode_message('MEDIUM_LINE', self.args) * line_width,
-                    line_width,
-                    line_color,
-                )
+            self.term_window.hline(
+                *position,
+                line_type,
+                line_width,
+                line_color,
+            )
 
     def __get_stat_display(self, stats, layer):
         """Return a dict of dict with all the stats display.
