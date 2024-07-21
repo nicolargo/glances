@@ -720,6 +720,10 @@ Examples of use:
             args.time = 1
             args.disable_history = True
 
+        # Unicode => No separator
+        if args.disable_unicode:
+            args.enable_separator = False
+
     def parse_args(self):
         """Parse command line arguments."""
         args = self.init_args().parse_args()
