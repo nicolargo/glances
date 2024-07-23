@@ -9,7 +9,7 @@
 from typing import Any, Dict, Protocol, Tuple
 
 
-class ContainersExtension(Protocol):
+class VmsExtension(Protocol):
     def stop(self) -> None:
         raise NotImplementedError
 

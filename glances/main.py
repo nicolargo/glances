@@ -692,6 +692,7 @@ Examples of use:
             disable(args, 'alert')
             disable(args, 'amps')
             disable(args, 'containers')
+            disable(args, 'vms')
 
         # Manage full quicklook option
         if getattr(args, 'full_quicklook', False):
