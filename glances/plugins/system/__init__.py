@@ -163,15 +163,9 @@ class PluginModel(GlancesPluginModel):
         os_version = platform.win32_ver()
         # if the python version is 32 bit perhaps the windows operating
         # system is 64bit
-        conditions = [
-            stats['platform'] == '32bit',
-            'PROCESSOR_ARCHITEW6432' in os.environ
-        ]
+        conditions = [stats['platform'] == '32bit', 'PROCESSOR_ARCHITEW6432' in os.environ]
 
-        return {
-            'os_version' : ' '.join(os_version[::2]),
-            'platform'   : '64bit' if all(conditions) else stats['platform']
-        }
+        return {'os_version': ' '.join(os_version[::2]), 'platform': '64bit' if all(conditions) else stats['platform']}
 
     def get_linux_version_and_distro(self):
         try:
@@ -184,10 +178,7 @@ class PluginModel(GlancesPluginModel):
             else:
                 distro = ' '.join(linux_distro[:2])
 
-        return {
-            'os_version'   : platform.release(),
-            'linux_distro' : distro
-        }
+        return {'os_version': platform.release(), 'linux_distro': distro}
 
     def get_stats_from_std_sys_lib(self, stats):
         stats['os_name'] = platform.system()
