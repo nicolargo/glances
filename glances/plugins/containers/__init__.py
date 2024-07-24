@@ -227,7 +227,7 @@ class PluginModel(GlancesPluginModel):
         for engine, watcher in iteritems(self.watchers):
             version, containers = watcher.update(all_tag=self._all_tag())
             for container in containers:
-                container["engine"] = 'docker'
+                container["engine"] = engine
             stats.extend(containers)
 
         # Sort and update the stats
@@ -306,6 +306,9 @@ class PluginModel(GlancesPluginModel):
         msg = f' {len(self.stats)}'
         ret.append(self.curse_add_line(msg))
         msg = f' sorted by {sort_for_human[self.sort_key]}'
+        ret.append(self.curse_add_line(msg))
+        if not self.views['show_engine_name']:
+            msg = f' (served by {self.stats[0].get("engine", "")})'
         ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
         # Header
@@ -430,25 +433,29 @@ class PluginModel(GlancesPluginModel):
 
     @staticmethod
     def container_alert(status: str) -> str:
-        """Analyse the container status."""
+        """Analyse the container status.
+        One of created, restarting, running, removing, paused, exited, or dead
+        """
         if status == 'running':
             return 'OK'
-        if status == 'exited':
-            return 'WARNING'
         if status == 'dead':
-            return 'CRITICAL'
-        return 'CAREFUL'
+            return 'ERROR'
+        if status in ['created', 'restarting', 'exited']:
+            return 'WARNING'
+        return 'INFO'
 
 
 def sort_docker_stats(stats: List[Dict[str, Any]]) -> Tuple[str, List[Dict[str, Any]]]:
-    # Sort Docker stats using the same function than processes
-    sort_by = glances_processes.sort_key
-    sort_by_secondary = 'memory_usage'
-    if sort_by == 'memory_percent':
+    # Make VM sort related to process sort
+    if glances_processes.sort_key == 'memory_percent':
         sort_by = 'memory_usage'
         sort_by_secondary = 'cpu_percent'
-    elif sort_by in ['username', 'io_counters', 'cpu_times']:
+    elif glances_processes.sort_key == 'name':
+        sort_by = 'name'
+        sort_by_secondary = 'cpu_percent'
+    else:
         sort_by = 'cpu_percent'
+        sort_by_secondary = 'memory_usage'
 
     # Sort docker stats
     sort_stats_processes(

@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from glances.globals import iterkeys, itervalues, nativestr, pretty_date, replace_special_chars
 from glances.logger import logger
-from glances.plugins.containers.stats_streamer import ThreadedIterableStreamer
+from glances.stats_streamer import ThreadedIterableStreamer
 
 # Docker-py library (optional and Linux-only)
 # https://github.com/docker/docker-py
