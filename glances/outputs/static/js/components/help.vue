@@ -61,6 +61,9 @@
                         {{ help.sort_io_rate }}
                     </div>
                     <div class="divTableCell">
+                        {{ help.show_hide_vms }}
+                    </div>
+                    <div class="divTableCell">
                         {{ help.show_hide_containers }}
                     </div>
                     <div class="divTableCell">

@@ -41,7 +41,8 @@ class VmExtension:
         #     "multipass": "1.13.1",
         #     "multipassd": "1.13.1"
         # }
-        return orjson.loads(secure_popen(f'{MULTIPASS_PATH} {MULTIPASS_VERSION_OPTIONS}'))
+        ret = orjson.loads(secure_popen(f'{MULTIPASS_PATH} {MULTIPASS_VERSION_OPTIONS}'))
+        return ret.get('multipass', None)
 
     def update_info(self):
         # > multipass info  --format json
