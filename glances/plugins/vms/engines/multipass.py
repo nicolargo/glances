@@ -31,7 +31,7 @@ class VmExtension:
 
     def __init__(self):
         if import_multipass_error_tag:
-            raise Exception(f"Multipass binary ({MULTIPASS_PATH})is mandatory to get Vm stats")
+            raise Exception(f"Multipass binary ({MULTIPASS_PATH}) is mandatory to get VM stats")
 
         self.ext_name = "Multipass (Vm)"
 
