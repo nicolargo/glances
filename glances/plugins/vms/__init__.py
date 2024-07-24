@@ -61,6 +61,12 @@ fields_description = {
     'ipv4': {
         'description': 'Vm IP v4 address',
     },
+    'engine': {
+        'description': 'VM engine name (only Mutlipass is currently supported)',
+    },
+    'engine_version': {
+        'description': 'VM engine version',
+    },
 }
 
 # Define the items history list (list of items to add to history)
@@ -73,7 +79,8 @@ export_exclude_list = []
 sort_for_human = {
     'cpu_count': 'CPU count',
     'memory_usage': 'memory consumption',
-    'name': 'vm name',
+    'load_1min': 'load',
+    'name': 'VM name',
     None: 'None',
 }
 
@@ -155,9 +162,9 @@ class PluginModel(GlancesPluginModel):
         stats = []
         for engine, watcher in iteritems(self.watchers):
             version, vms = watcher.update(all_tag=self._all_tag())
-            # print(engine, version, vms)
             for vm in vms:
-                vm["engine"] = 'vm'
+                vm["engine"] = engine
+                vm["engine_version"] = version
             stats.extend(vms)
 
         # Sort and update the stats
@@ -172,36 +179,6 @@ class PluginModel(GlancesPluginModel):
 
         if not self.stats:
             return False
-
-        # Add specifics information
-        # Alert
-        # TODO
-        # for i in self.stats:
-        #     # Init the views for the current vm (key = vm name)
-        #     self.views[i[self.get_key()]] = {'cpu': {}, 'mem': {}}
-        #     # CPU alert
-        #     if 'cpu' in i and 'total' in i['cpu']:
-        #         # Looking for specific CPU vm threshold in the conf file
-        #         alert = self.get_alert(i['cpu']['total'], header=i['name'] + '_cpu', action_key=i['name'])
-        #         if alert == 'DEFAULT':
-        #             # Not found ? Get back to default CPU threshold value
-        #             alert = self.get_alert(i['cpu']['total'], header='cpu')
-        #         self.views[i[self.get_key()]]['cpu']['decoration'] = alert
-        #     # MEM alert
-        #     if 'memory' in i and 'usage' in i['memory']:
-        #         # Looking for specific MEM vm threshold in the conf file
-        #         alert = self.get_alert(
-        #             self.memory_usage_no_cache(i['memory']),
-        #             maximum=i['memory']['limit'],
-        #             header=i['name'] + '_mem',
-        #             action_key=i['name'],
-        #         )
-        #         if alert == 'DEFAULT':
-        #             # Not found ? Get back to default MEM threshold value
-        #             alert = self.get_alert(
-        #                 self.memory_usage_no_cache(i['memory']), maximum=i['memory']['limit'], header='mem'
-        #             )
-        #         self.views[i[self.get_key()]]['mem']['decoration'] = alert
 
         # Display Engine ?
         show_engine_name = False
@@ -228,6 +205,9 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg))
         msg = f' sorted by {sort_for_human[self.sort_key]}'
         ret.append(self.curse_add_line(msg))
+        if not self.views['show_engine_name']:
+            msg = f' (served by {self.stats[0].get("engine", "")})'
+        ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
         # Header
         ret.append(self.curse_new_line())
@@ -239,13 +219,13 @@ class PluginModel(GlancesPluginModel):
         )
 
         if self.views['show_engine_name']:
-            msg = ' {:{width}}'.format('Engine', width=6)
+            msg = ' {:{width}}'.format('Engine', width=8)
             ret.append(self.curse_add_line(msg))
         msg = ' {:{width}}'.format('Name', width=name_max_width)
         ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'name' else 'DEFAULT'))
         msg = '{:>10}'.format('Status')
         ret.append(self.curse_add_line(msg))
-        msg = '{:>6}'.format('CPU')
+        msg = '{:>6}'.format('Core')
         ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'cpu_count' else 'DEFAULT'))
         msg = '{:>7}'.format('MEM')
         ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'memory_usage' else 'DEFAULT'))
@@ -260,7 +240,7 @@ class PluginModel(GlancesPluginModel):
         for vm in self.stats:
             ret.append(self.curse_new_line())
             if self.views['show_engine_name']:
-                ret.append(self.curse_add_line(' {:{width}}'.format(vm["engine"], width=6)))
+                ret.append(self.curse_add_line(' {:{width}}'.format(vm["engine"], width=8)))
             # Name
             ret.append(self.curse_add_line(' {:{width}}'.format(vm['name'][:name_max_width], width=name_max_width)))
             # Status
@@ -269,7 +249,7 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_add_line(msg, status))
             # CPU (count)
             try:
-                msg = '{:>6.1f}'.format(vm['cpu_count'])
+                msg = '{:>6}'.format(vm['cpu_count'])
             except (KeyError, TypeError):
                 msg = '{:>6}'.format('-')
             ret.append(self.curse_add_line(msg, self.get_views(item=vm['name'], key='cpu_count', option='decoration')))
@@ -309,23 +289,20 @@ class PluginModel(GlancesPluginModel):
         if status == 'running':
             return 'OK'
         if status in ['starting', 'restarting', 'delayed shutdown']:
-            return 'INFO'
-        if status in ['stopped', 'deleted', 'suspending', 'suspended']:
-            return 'CRITICAL'
-        return 'CAREFUL'
+            return 'WARNING'
+        return 'INFO'
 
 
 def sort_vm_stats(stats: List[Dict[str, Any]]) -> Tuple[str, List[Dict[str, Any]]]:
-    # Sort Vm stats using the same function than processes
-    sort_by = glances_processes.sort_key
-    if sort_by == 'cpu_percent':
-        sort_by = 'cpu_count'
-        sort_by_secondary = 'memory_usage'
-    elif sort_by == 'memory_percent':
+    # Make VM sort related to process sort
+    if glances_processes.sort_key == 'memory_percent':
         sort_by = 'memory_usage'
-        sort_by_secondary = 'cpu_count'
-    elif sort_by in ['username', 'io_counters', 'cpu_times']:
-        sort_by = 'cpu_count'
+        sort_by_secondary = 'load_1min'
+    elif glances_processes.sort_key == 'name':
+        sort_by = 'name'
+        sort_by_secondary = 'load_1min'
+    else:
+        sort_by = 'load_1min'
         sort_by_secondary = 'memory_usage'
 
     # Sort vm stats

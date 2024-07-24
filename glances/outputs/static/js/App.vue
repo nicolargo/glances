@@ -79,6 +79,10 @@
                     </div>
                 </div>
                 <div class="col-sm-18">
+                    <glances-plugin-vms
+                        v-if="!args.disable_vms"
+                        :data="data"
+                    ></glances-plugin-vms>
                     <glances-plugin-containers
                         v-if="!args.disable_containers"
                         :data="data"
@@ -126,6 +130,7 @@ import GlancesPluginSmart from './components/plugin-smart.vue';
 import GlancesPluginSensors from './components/plugin-sensors.vue';
 import GlancesPluginSystem from './components/plugin-system.vue';
 import GlancesPluginUptime from './components/plugin-uptime.vue';
+import GlancesPluginVms from './components/plugin-vms.vue';
 import GlancesPluginWifi from './components/plugin-wifi.vue';
 
 import uiconfig from './uiconfig.json';
@@ -159,6 +164,7 @@ export default {
         GlancesPluginSmart,
         GlancesPluginSystem,
         GlancesPluginUptime,
+        GlancesPluginVms,
         GlancesPluginWifi
     },
     data() {
@@ -372,6 +378,11 @@ export default {
             // P => Enable/disable ports module
             hotkeys('shift+P', () => {
                 this.store.args.disable_ports = !this.store.args.disable_ports;
+            });
+
+            // V => Enable/disable VMs stats
+            hotkeys('shift+V', () => {
+                this.store.args.disable_vms = !this.store.args.disable_vms;
             });
 
             // 'W' > Enable/Disable Wifi plugin
