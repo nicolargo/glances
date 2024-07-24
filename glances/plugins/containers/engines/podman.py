@@ -13,7 +13,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from glances.globals import iterkeys, itervalues, nativestr, pretty_date, replace_special_chars, string_value_to_float
 from glances.logger import logger
-from glances.plugins.containers.stats_streamer import ThreadedIterableStreamer
+from glances.stats_streamer import ThreadedIterableStreamer
 
 # Podman library (optional and Linux-only)
 # https://pypi.org/project/podman/

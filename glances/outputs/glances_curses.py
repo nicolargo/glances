@@ -84,6 +84,7 @@ class _GlancesCurses:
         'T': {'switch': 'network_sum'},
         'u': {'sort_key': 'username'},
         'U': {'switch': 'network_cumul'},
+        'V': {'switch': 'disable_vms'},
         'w': {'handler': '_handle_clean_logs'},
         'W': {'switch': 'disable_wifi'},
         'x': {'handler': '_handle_clean_critical_logs'},
@@ -124,7 +125,7 @@ class _GlancesCurses:
     _left_sidebar_max_width = 34
 
     # Define right sidebar
-    _right_sidebar = ['containers', 'processcount', 'amps', 'processlist', 'alert']
+    _right_sidebar = ['vms', 'containers', 'processcount', 'amps', 'processlist', 'alert']
 
     def __init__(self, config=None, args=None):
         # Init
