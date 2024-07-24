@@ -41,8 +41,13 @@ class VmExtension:
         #     "multipass": "1.13.1",
         #     "multipassd": "1.13.1"
         # }
-        ret = orjson.loads(secure_popen(f'{MULTIPASS_PATH} {MULTIPASS_VERSION_OPTIONS}'))
-        return ret.get('multipass', None)
+        ret_cmd = secure_popen(f'{MULTIPASS_PATH} {MULTIPASS_VERSION_OPTIONS}')
+        try:
+            ret = orjson.loads(ret_cmd)
+        except orjson.JSONDecodeError:
+            return {}
+        else:
+            return ret.get('multipass', None)
 
     def update_info(self):
         # > multipass info  --format json
@@ -80,7 +85,13 @@ class VmExtension:
         #         }
         #     }
         # }
-        return orjson.loads(secure_popen(f'{MULTIPASS_PATH} {MULTIPASS_INFO_OPTIONS}')).get('info')
+        ret_cmd = secure_popen(f'{MULTIPASS_PATH} {MULTIPASS_INFO_OPTIONS}')
+        try:
+            ret = orjson.loads(ret_cmd)
+        except orjson.JSONDecodeError:
+            return {}
+        else:
+            return ret.get('info', {})
 
     def update(self, all_tag) -> Tuple[Dict, List[Dict]]:
         """Update Vm stats using the input method."""
