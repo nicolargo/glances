@@ -222,7 +222,7 @@ class PluginModel(GlancesPluginModel):
         return return_
 
     def msg_curse(self, args=None, max_width=None):
-        """Return the dict to display in the curse interface."""
+        """Return the list of dict to display in the curse interface."""
 
         # Init the return message
         return_ = []
@@ -250,6 +250,4 @@ class PluginModel(GlancesPluginModel):
             stats_added = self.display_cpu_stats_in_columns(cpu, header, header_added)
 
         # Add a new line with sum of all others CPU
-        return_ = self.summarize_all_cpus_not_displayed(percpu_list, header, stats_added)
-
-        return return_
+        return self.summarize_all_cpus_not_displayed(percpu_list, header, stats_added)
