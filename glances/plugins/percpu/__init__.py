@@ -140,71 +140,75 @@ class PluginModel(GlancesPluginModel):
 
         return self.stats
 
-    def msg_curse(self, args=None, max_width=None):
-        """Return the dict to display in the curse interface."""
-        # Init the return message
-        ret = []
-
-        # Only process if stats exist...
-        if not self.stats or not self.args.percpu or self.is_disabled():
-            return ret
-
-        # Define the headers based on OS
-        header = ['user', 'system']
+    def define_headers_from_os(self):
+        base = ['user', 'system']
 
         if LINUX:
-            header.extend(['iowait', 'idle', 'irq', 'nice', 'steal', 'guest'])
+            extension = ['iowait', 'idle', 'irq', 'nice', 'steal', 'guest']
         elif MACOS:
-            header.extend(['idle', 'nice'])
+            extension = ['idle', 'nice']
         elif BSD:
-            header.extend(['idle', 'irq', 'nice'])
+            extension = ['idle', 'irq', 'nice']
         elif WINDOWS:
-            header.extend(['dpc', 'interrupt'])
+            extension = ['dpc', 'interrupt']
 
-        # Build the string message
+        return base + extension
+
+    def maybe_build_string_msg(self, header, return_):
         if self.is_disabled('quicklook'):
             msg = '{:5}'.format('CPU')
-            ret.append(self.curse_add_line(msg, "TITLE"))
+            return_.append(self.curse_add_line(msg, "TITLE"))
             header.insert(0, 'total')
 
-        # Per CPU stats displayed per line
+        return (header, return_)
+
+    def display_cpu_stats_per_line(self, header, return_):
         for stat in header:
             msg = f'{stat:>7}'
-            ret.append(self.curse_add_line(msg))
+            return_.append(self.curse_add_line(msg))
 
-        # Manage the maximum number of CPU to display (related to enhancement request #2734)
+        return return_
+
+    def manage_max_cpu_to_display(self):
         if len(self.stats) > self.max_cpu_display:
-            # If the number of CPU is > max_cpu_display then sort and display top 'n'
+            # sort and display top 'n'
             percpu_list = sorted(self.stats, key=lambda x: x['total'], reverse=True)
         else:
             percpu_list = self.stats
 
-        # Per CPU stats displayed per column
-        for cpu in percpu_list[0 : self.max_cpu_display]:
-            ret.append(self.curse_new_line())
-            if self.is_disabled('quicklook'):
-                try:
-                    cpu_id = cpu[cpu['key']]
-                    if cpu_id < 10:
-                        msg = f'CPU{cpu_id:1} '
-                    else:
-                        msg = f'{cpu_id:4} '
-                except TypeError:
-                    # TypeError: string indices must be integers (issue #1027)
-                    msg = '{:4} '.format('?')
-                ret.append(self.curse_add_line(msg))
-            for stat in header:
-                try:
-                    msg = f'{cpu[stat]:6.1f}%'
-                except TypeError:
-                    msg = '{:>6}%'.format('?')
-                ret.append(self.curse_add_line(msg, self.get_alert(cpu[stat], header=stat)))
+        return percpu_list
 
-        # Add a new line with sum of all others CPU
+    def display_cpu_header_in_columns(self, cpu, return_):
+        return_.append(self.curse_new_line())
+        if self.is_disabled('quicklook'):
+            try:
+                cpu_id = cpu[cpu['key']]
+                if cpu_id < 10:
+                    msg = f'CPU{cpu_id:1} '
+                else:
+                    msg = f'{cpu_id:4} '
+            except TypeError:
+                # TypeError: string indices must be integers (issue #1027)
+                msg = '{:4} '.format('?')
+            return_.append(self.curse_add_line(msg))
+
+        return return_
+
+    def display_cpu_stats_in_columns(self, cpu, header, return_):
+        for stat in header:
+            try:
+                msg = f'{cpu[stat]:6.1f}%'
+            except TypeError:
+                msg = '{:>6}%'.format('?')
+            return_.append(self.curse_add_line(msg, self.get_alert(cpu[stat], header=stat)))
+
+        return return_
+
+    def summarize_all_cpus_not_displayed(self, percpu_list, header, return_):
         if len(self.stats) > self.max_cpu_display:
-            ret.append(self.curse_new_line())
+            return_.append(self.curse_new_line())
             if self.is_disabled('quicklook'):
-                ret.append(self.curse_add_line('CPU* '))
+                return_.append(self.curse_add_line('CPU* '))
 
             for stat in header:
                 percpu_stats = [i[stat] for i in percpu_list[0 : self.max_cpu_display]]
@@ -213,6 +217,39 @@ class PluginModel(GlancesPluginModel):
                     msg = f'{cpu_stat:6.1f}%'
                 except TypeError:
                     msg = '{:>6}%'.format('?')
-                ret.append(self.curse_add_line(msg, self.get_alert(cpu_stat, header=stat)))
+                return_.append(self.curse_add_line(msg, self.get_alert(cpu_stat, header=stat)))
 
-        return ret
+        return return_
+
+    def msg_curse(self, args=None, max_width=None):
+        """Return the dict to display in the curse interface."""
+
+        # Init the return message
+        return_ = []
+
+        # Only process if stats exist...
+        missing = [not self.stats, not self.args.percpu, self.is_disabled()]
+        if any(missing):
+            return return_
+
+        # Define the headers based on OS
+        header = self.define_headers_from_os()
+
+        # Build the string message
+        header, return_ = self.maybe_build_string_msg(header, return_)
+
+        # Per CPU stats displayed per line
+        return_ = self.display_cpu_stats_per_line(header, return_)
+
+        # Manage the maximum number of CPU to display (related to enhancement request #2734)
+        percpu_list = self.manage_max_cpu_to_display()
+
+        # Per CPU stats displayed per column
+        for cpu in percpu_list[0 : self.max_cpu_display]:
+            header_added = self.display_cpu_header_in_columns(cpu, return_)
+            stats_added = self.display_cpu_stats_in_columns(cpu, header, header_added)
+
+        # Add a new line with sum of all others CPU
+        return_ = self.summarize_all_cpus_not_displayed(percpu_list, header, stats_added)
+
+        return return_
