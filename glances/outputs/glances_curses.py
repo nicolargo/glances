@@ -447,11 +447,10 @@ class _GlancesCurses:
         self.new_line()
         self.line -= 1
         line_width = self.term_window.getmaxyx()[1] - self.column
-        if self.line >= 0:
+        if self.line >= 0 and self.line < self.term_window.getmaxyx()[0]:
             position = [self.line, self.column]
             line_color = self.colors_list[color]
             line_type = curses.ACS_HLINE if not self.args.disable_unicode else unicode_message('MEDIUM_LINE', self.args)
-
             self.term_window.hline(
                 *position,
                 line_type,
