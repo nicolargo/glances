@@ -235,24 +235,16 @@ class _GlancesCurses:
         # TODO: Check issue #163
         return window.getch()
 
-    def __catch_key(self, return_to_browser=False):
-        # Catch the pressed key
-        self.pressedkey = self.get_key(self.term_window)
-        if self.pressedkey == -1:
-            return -1
+    def catch_actions_from_hotkey(self, hotkey):
+        if self.pressedkey == ord(hotkey) and 'switch' in self._hotkeys[hotkey]:
+            self._handle_switch(hotkey)
+        elif self.pressedkey == ord(hotkey) and 'sort_key' in self._hotkeys[hotkey]:
+            self._handle_sort_key(hotkey)
+        if self.pressedkey == ord(hotkey) and 'handler' in self._hotkeys[hotkey]:
+            action = getattr(self, self._hotkeys[hotkey]['handler'])
+            action()
 
-        # Actions (available in the global hotkey dict)...
-        logger.debug(f"Keypressed (code: {self.pressedkey})")
-        for hotkey in self._hotkeys:
-            if self.pressedkey == ord(hotkey) and 'switch' in self._hotkeys[hotkey]:
-                self._handle_switch(hotkey)
-            elif self.pressedkey == ord(hotkey) and 'sort_key' in self._hotkeys[hotkey]:
-                self._handle_sort_key(hotkey)
-            if self.pressedkey == ord(hotkey) and 'handler' in self._hotkeys[hotkey]:
-                action = getattr(self, self._hotkeys[hotkey]['handler'])
-                action()
-
-        # Other actions with key > 255 (ord will not work) and/or additional test...
+    def catch_other_actions_maybe_return_to_browser(self, return_to_browser):
         if self.pressedkey == ord('e') and not self.args.programs:
             self._handle_process_extended()
         elif self.pressedkey == ord('k') and not self.args.disable_cursor:
@@ -269,6 +261,19 @@ class _GlancesCurses:
             self._handle_quit(return_to_browser)
         elif self.pressedkey == curses.KEY_F5 or self.pressedkey == 18:
             self._handle_refresh()
+
+    def __catch_key(self, return_to_browser=False):
+        # Catch the pressed key
+        self.pressedkey = self.get_key(self.term_window)
+        if self.pressedkey == -1:
+            return self.pressedkey
+
+        # Actions (available in the global hotkey dict)...
+        logger.debug(f"Keypressed (code: {self.pressedkey})")
+        [self.catch_actions_from_hotkey(hotkey) for hotkey in self._hotkeys]
+
+        # Other actions with key > 255 (ord will not work) and/or additional test...
+        self.catch_other_actions_maybe_return_to_browser(return_to_browser)
 
         # Return the key code
         return self.pressedkey
