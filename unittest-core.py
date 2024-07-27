@@ -6,6 +6,7 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
+# Refactor by @ariel-anieli in 2024
 
 """Glances unitary tests suite."""
 

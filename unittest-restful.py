@@ -115,6 +115,7 @@ class TestGlances(unittest.TestCase):
                 'wifi',
                 'gpu',
                 'containers',
+                'vms',
             ):
                 self.assertIsInstance(req.json(), list)
                 if len(req.json()) > 0:
