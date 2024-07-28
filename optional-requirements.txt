@@ -35,4 +35,4 @@ six
 sparklines
 statsd
 uvicorn
-zeroconf==0.131.0 # Waiting correction for ARMv7: https://github.com/python-zeroconf/python-zeroconf/issues/1372
+zeroconf==0.132.2 # Waiting correction for ARMv7: https://github.com/python-zeroconf/python-zeroconf/issues/1372

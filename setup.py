@@ -56,7 +56,7 @@ def get_install_requires():
 def get_install_extras_require():
     extras_require = {
         'action': ['chevron'],
-        'browser': ['zeroconf==0.131.0'],
+        'browser': ['zeroconf==0.132.2'],
         'cloud': ['requests'],
         'containers': ['docker>=6.1.1', 'python-dateutil', 'six', 'podman', 'packaging'],
         'export': [
