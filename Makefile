@@ -169,7 +169,7 @@ trivy: ## Run Trivy to find vulnerabilities in container images
 # ===================================================================
 
 docs: ## Create the documentation
-	./venv/bin/python -m glances -C ./conf/glances.conf --api-doc > ./docs/api.rst
+	$(PYTHON) -m glances -C $(CONF) --api-doc > ./docs/api.rst
 	cd docs && ./build.sh && cd ..
 
 docs-server: docs ## Start a Web server to serve the documentation
