@@ -24,7 +24,12 @@ LASTTAG  =  $(shell git describe --tags --abbrev=0)
 .PHONY: help test docs docs-server venv venv-min venv-dev
 
 help: ## List all make commands available
-	@grep -E '^[\.a-zA-Z_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk -F ":" '{print $1}' | grep -v % | sed 's/\\//g' | sort | awk 'BEGIN {FS = ":[^:]*?##"}; {printf "\033[1;34mmake %-50s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[\.a-zA-Z_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	awk -F ":" '{print $1}' | \
+	grep -v % | \
+	sed 's/\\//g' | \
+	sort | \
+	awk 'BEGIN {FS = ":[^:]*?##"}; {printf "\033[1;34mmake %-50s\033[0m %s\n", $$1, $$2}'
 
 # ===================================================================
 # Virtualenv
