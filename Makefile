@@ -119,7 +119,7 @@ codespell: ## Run codespell to fix common misspellings in text files
 	$(VENV_DEV)/codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics -w
 
 semgrep: ## Run semgrep to find bugs and enforce code standards
-	./venv-dev/bin/semgrep scan --config=auto
+	$(VENV_DEV)/semgrep scan --config=auto
 
 profiling-gprof: ## Callgraph profiling (need "apt install graphviz")
 	@echo "Start Glances for 30 iterations (more or less 1 mins, please do not exit !)"
