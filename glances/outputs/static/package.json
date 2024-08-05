@@ -13,7 +13,7 @@
         "copy-webpack-plugin": "^11.0.0",
         "css-loader": "^6.7.3",
         "del": "^7.0.0",
-        "eslint": "^8.40.0",
+        "eslint": "^9.0.0",
         "eslint-plugin-vue": "^9.12.0",
         "html-webpack-plugin": "^5.5.1",
         "less": "^4.1.3",
