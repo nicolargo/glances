@@ -204,7 +204,7 @@ webui-audit-fix: ## Fix audit the Web UI
 
 flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
 	git clone https://github.com/flatpak/flatpak-builder-tools.git
-	./venv/bin/python ./flatpak-builder-tools/pip/flatpak-pip-generator glances
+	$(PYTHON) ./flatpak-builder-tools/pip/flatpak-pip-generator glances
 	rm -rf ./flatpak-builder-tools
 	@echo "Now follow: https://github.com/flathub/flathub/wiki/App-Submission"
 
