@@ -1,5 +1,22 @@
-PORT?=8008
-LASTTAG = $(shell git describe --tags --abbrev=0)
+PORT     ?= 8008
+VENV     := venv/bin
+VENV_DEV := venv-dev/bin
+VENV_MIN := venv-min/bin
+CONF     := conf/glances.conf
+PIP      := $(VENV)/pip
+PYTHON   := $(VENV)/python
+UNITTEST := unittest
+
+DOCKER_BUILD      := docker buildx build
+DOCKER_RUN        := docker run
+DOCKERFILE_UBUNTU := docker-files/ubuntu.Dockerfile
+DOCKERFILE_ALPINE := docker-files/alpine.Dockerfile
+PODMAN_SOCK       ?= /run/user/$(shell id -u)/podman/podman.sock
+DOCKER_SOCK       ?= /var/run/docker.sock
+DOCKER_SOCKS      := -v $(PODMAN_SOCK):$(PODMAN_SOCK):ro -v $(DOCKER_SOCK):$(DOCKER_SOCK):ro
+DOCKER_OPTS       := --rm -e TZ="${TZ}" -e GLANCES_OPT="" --pid host --network host
+
+LASTTAG  =  $(shell git describe --tags --abbrev=0)
 
 # if the command is only `make`, the default tasks will be the printing of the help.
 .DEFAULT_GOAL := help
@@ -225,25 +242,25 @@ docker-ubuntu-dev: ## Generate local docker image (Ubuntu dev)
 # ===================================================================
 
 run: ## Start Glances in console mode (also called standalone)
-	./venv/bin/python -m glances -C ./conf/glances.conf
+	$(PYTHON) -m glances -C $(CONF)
 
 run-debug: ## Start Glances in debug console mode (also called standalone)
-	./venv/bin/python -m glances -C ./conf/glances.conf -d
+	$(PYTHON) -m glances -C $(CONF) -d
 
 run-local-conf: ## Start Glances in console mode with the system conf file
-	./venv/bin/python -m glances
+	$(PYTHON) -m glances
 
 run-local-conf-hide-public: ## Start Glances in console mode with the system conf file and hide public information
-	./venv/bin/python -m glances --hide-public-info
+	$(PYTHON) -m glances --hide-public-info
 
 run-min: ## Start minimal Glances in console mode (also called standalone)
-	./venv-min/bin/python -m glances -C ./conf/glances.conf
+	$(VENV_MIN)/python -m glances -C $(CONF)
 
 run-min-debug: ## Start minimal Glances in debug console mode (also called standalone)
-	./venv-min/bin/python -m glances -C ./conf/glances.conf -d
+	$(VENV_MIN)/python -m glances -C $(CONF) -d
 
 run-min-local-conf: ## Start minimal Glances in console mode with the system conf file
-	./venv-min/bin/python -m glances
+	$(VENV_MIN)/python -m glances
 
 run-docker-alpine-minimal: ## Start Glances Alpine Docker minimal in console mode
 	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-minimal
@@ -264,28 +281,28 @@ run-docker-ubuntu-dev: ## Start Glances Ubuntu Docker dev in console mode
 	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-dev
 
 run-webserver: ## Start Glances in Web server mode
-	./venv/bin/python -m glances -C ./conf/glances.conf -w
+	$(PYTHON) -m glances -C $(CONF) -w
 
 run-webserver-local-conf: ## Start Glances in Web server mode with the system conf file
-	./venv/bin/python -m glances -w
+	$(PYTHON) -m glances -w
 
 run-webserver-local-conf-hide-public: ## Start Glances in Web server mode with the system conf file and hide public info
-	./venv/bin/python -m glances -w --hide-public-info
+	$(PYTHON) -m glances -w --hide-public-info
 
 run-restapiserver: ## Start Glances in REST API server mode
-	./venv/bin/python -m glances -C ./conf/glances.conf -w --disable-webui
+	$(PYTHON) -m glances -C $(CONF) -w --disable-webui
 
 run-server: ## Start Glances in server mode (RPC)
-	./venv/bin/python -m glances -C ./conf/glances.conf -s
+	$(PYTHON) -m glances -C $(CONF) -s
 
 run-client: ## Start Glances in client mode (RPC)
-	./venv/bin/python -m glances -C ./conf/glances.conf -c localhost
+	$(PYTHON) -m glances -C $(CONF) -c localhost
 
 run-browser: ## Start Glances in browser mode (RPC)
-	./venv/bin/python -m glances -C ./conf/glances.conf --browser
+	$(PYTHON) -m glances -C $(CONF) --browser
 
 run-issue: ## Start Glances in issue mode
-	./venv/bin/python -m glances -C ./conf/glances.conf --issue
+	$(PYTHON) -m glances -C $(CONF) --issue
 
 run-multipass: ## Install and start Glances in a VM (only available on Ubuntu with multipass already installed)
 	multipass launch -n glances-on-lts lts
