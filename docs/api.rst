@@ -43,7 +43,7 @@ will change the root API URL to ``http://localhost:61208/glances/api/4`` and the
 API documentation URL
 ---------------------
 
-The API documentation is embeded in the server and available at the following URL:
+The API documentation is embedded in the server and available at the following URL:
 ``http://localhost:61208/docs#/``.
 
 WebUI refresh
