@@ -143,21 +143,21 @@ profiling: profiling-gprof profiling-pyinstrument profiling-pyspy ## Profiling o
 
 trace-malloc: ## Trace the malloc() calls
 	@echo "Malloc test is running, please wait ~30 secondes..."
-	./venv/bin/python -m glances -C ./conf/glances.conf --trace-malloc --stop-after 15 --quiet
+	$(PYTHON) -m glances -C $(CONF) --trace-malloc --stop-after 15 --quiet
 
 memory-leak: ## Profile memory leaks
-	./venv/bin/python -m glances -C ./conf/glances.conf --memory-leak
+	$(PYTHON) -m glances -C $(CONF) --memory-leak
 
 memory-profiling: ## Profile memory usage
 	@echo "It's a very long test (~4 hours)..."
 	rm -f mprofile_*.dat
 	@echo "1/2 - Start memory profiling with the history option enable"
-	./venv-dev/bin/mprof run -T 1 -C run.py -C ./conf/glances.conf --stop-after 2400 --quiet
-	./venv-dev/bin/mprof plot --output ./docs/_static/glances-memory-profiling-with-history.png
+	$(VENV_DEV)/mprof run -T 1 -C run.py -C $(CONF) --stop-after 2400 --quiet
+	$(VENV_DEV)/mprof plot --output ./docs/_static/glances-memory-profiling-with-history.png
 	rm -f mprofile_*.dat
 	@echo "2/2 - Start memory profiling with the history option disable"
-	./venv-dev/bin/mprof run -T 1 -C run.py -C ./conf/glances.conf --disable-history --stop-after 2400 --quiet
-	./venv-dev/bin/mprof plot --output ./docs/_static/glances-memory-profiling-without-history.png
+	$(VENV_DEV)/mprof run -T 1 -C run.py -C $(CONF) --disable-history --stop-after 2400 --quiet
+	$(VENV_DEV)/mprof plot --output ./docs/_static/glances-memory-profiling-without-history.png
 	rm -f mprofile_*.dat
 
 # Trivy installation: https://aquasecurity.github.io/trivy/latest/getting-started/installation/
