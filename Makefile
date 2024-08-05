@@ -110,13 +110,13 @@ test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in mi
 # ===================================================================
 
 format: ## Format the code
-	./venv-dev/bin/python -m ruff format .
+	$(VENV_DEV)/python -m ruff format .
 
 lint: ## Lint the code.
-	./venv-dev/bin/python -m ruff check . --fix
+	$(VENV_DEV)/python -m ruff check . --fix
 
 codespell: ## Run codespell to fix common misspellings in text files
-	./venv-dev/bin/codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics -w
+	$(VENV_DEV)/codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics -w
 
 semgrep: ## Run semgrep to find bugs and enforce code standards
 	./venv-dev/bin/semgrep scan --config=auto
