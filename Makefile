@@ -47,13 +47,13 @@ venv-full-python: ## Install Python 3 venv
 	virtualenv -p /usr/bin/python3 venv
 
 venv-full: venv-python ## Install Python 3 run-time dependencies
-	./venv/bin/pip install -r requirements.txt
-	./venv/bin/pip install -r optional-requirements.txt
+	$(PIP) install -r requirements.txt
+	$(PIP) install -r optional-requirements.txt
 
 venv-full-upgrade: ## Upgrade Python 3 run-time dependencies
-	./venv/bin/pip install --upgrade pip
-	./venv/bin/pip install --upgrade -r requirements.txt
-	./venv/bin/pip install --upgrade -r optional-requirements.txt
+	$(PIP) install --upgrade pip
+	$(PIP) install --upgrade -r requirements.txt
+	$(PIP) install --upgrade -r optional-requirements.txt
 
 # For minimal installation (without optional dependencies)
 
@@ -61,11 +61,11 @@ venv-min-python: ## Install Python 3 venv minimal
 	virtualenv -p /usr/bin/python3 venv-min
 
 venv-min: venv-min-python ## Install Python 3 minimal run-time dependencies
-	./venv-min/bin/pip install -r requirements.txt
+	$(VENV_MIN)/pip install -r requirements.txt
 
 venv-min-upgrade: ## Upgrade Python 3 minimal run-time dependencies
-	./venv-min/bin/pip install --upgrade pip
-	./venv-min/bin/pip install --upgrade -r requirements.txt
+	$(VENV_MIN)/pip install --upgrade pip
+	$(VENV_MIN)/pip install --upgrade -r requirements.txt
 
 # For development
 
@@ -73,14 +73,14 @@ venv-dev-python: ## Install Python 3 venv
 	virtualenv -p /usr/bin/python3 venv-dev
 
 venv-dev: venv-python ## Install Python 3 dev dependencies
-	./venv-dev/bin/pip install -r dev-requirements.txt
-	./venv-dev/bin/pip install -r doc-requirements.txt
-	./venv-dev/bin/pre-commit install --hook-type pre-commit
+	$(VENV_DEV)/pip install -r dev-requirements.txt
+	$(VENV_DEV)/pip install -r doc-requirements.txt
+	$(VENV_DEV)/pre-commit install --hook-type pre-commit
 
 venv-dev-upgrade: ## Upgrade Python 3 dev dependencies
-	./venv-dev/bin/pip install --upgrade pip
-	./venv-dev/bin/pip install --upgrade -r dev-requirements.txt
-	./venv-dev/bin/pip install --upgrade -r doc-requirements.txt
+	$(VENV_DEV)/pip install --upgrade pip
+	$(VENV_DEV)/pip install --upgrade -r dev-requirements.txt
+	$(VENV_DEV)/pip install --upgrade -r doc-requirements.txt
 
 # ===================================================================
 # Tests
