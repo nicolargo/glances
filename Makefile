@@ -21,7 +21,8 @@ LASTTAG  =  $(shell git describe --tags --abbrev=0)
 # if the command is only `make`, the default tasks will be the printing of the help.
 .DEFAULT_GOAL := help
 
-.PHONY: help
+.PHONY: help test docs docs-server venv venv-min venv-dev
+
 help: ## List all make commands available
 	@grep -E '^[\.a-zA-Z_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk -F ":" '{print $1}' | grep -v % | sed 's/\\//g' | sort | awk 'BEGIN {FS = ":[^:]*?##"}; {printf "\033[1;34mmake %-50s\033[0m %s\n", $$1, $$2}'
 
@@ -312,6 +313,4 @@ run-multipass: ## Install and start Glances in a VM (only available on Ubuntu wi
 	multipass delete glances-on-lts
 
 show-version: ## Show Glances version number
-	./venv/bin/python -m glances -C ./conf/glances.conf -V
-
-.PHONY: test docs docs-server venv venv-min venv-dev
+	$(PYTHON) -m glances -C $(CONF) -V
