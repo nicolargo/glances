@@ -87,23 +87,23 @@ venv-dev-upgrade: ## Upgrade Python 3 dev dependencies
 # ===================================================================
 
 test-core: ## Run core unit tests
-	./venv/bin/python ./unittest-core.py
+	$(PYTHON) $(UNITTEST)-core.py
 
 test-restful: ## Run Restful unit tests
-	./venv/bin/python ./unittest-restful.py
+	$(PYTHON) $(UNITTEST)-restful.py
 
 test-xmlrpc: ## Run XMLRPC unit tests
-	./venv/bin/python ./unittest-xmlrpc.py
+	$(PYTHON) $(UNITTEST)-xmlrpc.py
 
 test: test-core test-restful test-xmlrpc ## Run unit tests
 
 test-with-upgrade: venv-upgrade venv-dev-upgrade test ## Upgrade deps and run unit tests
 
 test-min: ## Run core unit tests in minimal environment
-	./venv-min/bin/python ./unittest-core.py
+	$(VENV_MIN)/python $(UNITTEST)-core.py
 
 test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in minimal environment
-	./venv-min/bin/python ./unittest-core.py
+	$(VENV_MIN)/python $(UNITTEST)-core.py
 
 # ===================================================================
 # Linters, profilers and cyber security
