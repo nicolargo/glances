@@ -224,24 +224,24 @@ docker: docker-alpine docker-ubuntu ## Generate local docker images
 docker-alpine: docker-alpine-full docker-alpine-minimal docker-alpine-dev ## Generate local docker images (Alpine)
 
 docker-alpine-full: ## Generate local docker image (Alpine full)
-	docker buildx build --target full -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-full .
+	$(DOCKER_BUILD) --target full -f $(DOCKERFILE_ALPINE) -t glances:local-alpine-full .
 
 docker-alpine-minimal: ## Generate local docker image (Alpine minimal)
-	docker buildx build --target minimal -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-minimal .
+	$(DOCKER_BUILD) --target minimal -f $(DOCKERFILE_ALPINE) -t glances:local-alpine-minimal .
 
 docker-alpine-dev: ## Generate local docker image (Alpine dev)
-	docker buildx build --target dev -f ./docker-files/alpine.Dockerfile -t glances:local-alpine-dev .
+	$(DOCKER_BUILD) --target dev -f $(DOCKERFILE_ALPINE) -t glances:local-alpine-dev .
 
 docker-ubuntu: docker-ubuntu-full docker-ubuntu-minimal docker-ubuntu-dev ## Generate local docker images (Ubuntu)
 
 docker-ubuntu-full: ## Generate local docker image (Ubuntu full)
-	docker buildx build --target full -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-full .
+	$(DOCKER_BUILD) --target full -f $(DOCKERFILE_UBUNTU) -t glances:local-ubuntu-full .
 
 docker-ubuntu-minimal: ## Generate local docker image (Ubuntu minimal)
-	docker buildx build --target minimal -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-minimal .
+	$(DOCKER_BUILD) --target minimal -f $(DOCKERFILE_UBUNTU) -t glances:local-ubuntu-minimal .
 
 docker-ubuntu-dev: ## Generate local docker image (Ubuntu dev)
-	docker buildx build --target dev -f ./docker-files/ubuntu.Dockerfile -t glances:local-ubuntu-dev .
+	$(DOCKER_BUILD) --target dev -f $(DOCKERFILE_UBUNTU) -t glances:local-ubuntu-dev .
 
 # ===================================================================
 # Run
@@ -269,22 +269,22 @@ run-min-local-conf: ## Start minimal Glances in console mode with the system con
 	$(VENV_MIN)/python -m glances
 
 run-docker-alpine-minimal: ## Start Glances Alpine Docker minimal in console mode
-	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-minimal
+	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-alpine-minimal
 
 run-docker-alpine-full: ## Start Glances Alpine Docker full in console mode
-	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-full
+	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-alpine-full
 
 run-docker-alpine-dev: ## Start Glances Alpine Docker dev in console mode
-	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-alpine-dev
+	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-alpine-dev
 
 run-docker-ubuntu-minimal: ## Start Glances Ubuntu Docker minimal in console mode
-	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-minimal
+	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-ubuntu-minimal
 
 run-docker-ubuntu-full: ## Start Glances Ubuntu Docker full in console mode
-	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-full
+	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-ubuntu-full
 
 run-docker-ubuntu-dev: ## Start Glances Ubuntu Docker dev in console mode
-	docker run --rm -e TZ="${TZ}" -e GLANCES_OPT="" -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it glances:local-ubuntu-dev
+	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-ubuntu-dev
 
 run-webserver: ## Start Glances in Web server mode
 	$(PYTHON) -m glances -C $(CONF) -w
