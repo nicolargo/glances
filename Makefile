@@ -5,18 +5,24 @@ VENV_MIN := venv-min/bin
 CONF     := conf/glances.conf
 PIP      := $(VENV)/pip
 PYTHON   := $(VENV)/python
-UNITTEST := unittest
+LASTTAG  = $(shell git describe --tags --abbrev=0)
 
+IMAGES_TYPES      := full minimal dev
+ALPINE_IMAGES     := $(IMAGES_TYPES:%=docker-alpine-%)
+UBUNTU_IMAGES     := $(IMAGES_TYPES:%=docker-ubuntu-%)
+DOCKER_IMAGES     := $(ALPINE_IMAGES) $(UBUNTU_IMAGES)
+DOCKER_RUNTIMES   := $(DOCKER_IMAGES:%=run-%)
+UNIT_TESTS        := test-core test-restful test-xmlrpc
 DOCKER_BUILD      := docker buildx build
 DOCKER_RUN        := docker run
-DOCKERFILE_UBUNTU := docker-files/ubuntu.Dockerfile
-DOCKERFILE_ALPINE := docker-files/alpine.Dockerfile
 PODMAN_SOCK       ?= /run/user/$(shell id -u)/podman/podman.sock
 DOCKER_SOCK       ?= /var/run/docker.sock
 DOCKER_SOCKS      := -v $(PODMAN_SOCK):$(PODMAN_SOCK):ro -v $(DOCKER_SOCK):$(DOCKER_SOCK):ro
 DOCKER_OPTS       := --rm -e TZ="${TZ}" -e GLANCES_OPT="" --pid host --network host
 
-LASTTAG  =  $(shell git describe --tags --abbrev=0)
+define DOCKER_TAG
+glances:local-$*
+endef
 
 # if the command is only `make`, the default tasks will be the printing of the help.
 .DEFAULT_GOAL := help
@@ -86,24 +92,22 @@ venv-dev-upgrade: ## Upgrade Python 3 dev dependencies
 # Tests
 # ===================================================================
 
+$(UNIT_TESTS): test-%: unittest-%.py
+	$(PYTHON) $<
+
 test-core: ## Run core unit tests
-	$(PYTHON) $(UNITTEST)-core.py
-
 test-restful: ## Run Restful unit tests
-	$(PYTHON) $(UNITTEST)-restful.py
-
 test-xmlrpc: ## Run XMLRPC unit tests
-	$(PYTHON) $(UNITTEST)-xmlrpc.py
 
-test: test-core test-restful test-xmlrpc ## Run unit tests
+test: $(UNIT_TESTS) ## Run unit tests
 
 test-with-upgrade: venv-upgrade venv-dev-upgrade test ## Upgrade deps and run unit tests
 
 test-min: ## Run core unit tests in minimal environment
-	$(VENV_MIN)/python $(UNITTEST)-core.py
+	$(VENV_MIN)/python unittest-core.py
 
 test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in minimal environment
-	$(VENV_MIN)/python $(UNITTEST)-core.py
+	$(VENV_MIN)/python unittest-core.py
 
 # ===================================================================
 # Linters, profilers and cyber security
