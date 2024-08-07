@@ -271,23 +271,15 @@ run-min-debug: ## Start minimal Glances in debug console mode (also called stand
 run-min-local-conf: ## Start minimal Glances in console mode with the system conf file
 	$(VENV_MIN)/python -m glances
 
+$(DOCKER_RUNTIMES): run-docker-%:
+	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it $(DOCKER_TAG)
+
 run-docker-alpine-minimal: ## Start Glances Alpine Docker minimal in console mode
-	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-alpine-minimal
-
 run-docker-alpine-full: ## Start Glances Alpine Docker full in console mode
-	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-alpine-full
-
 run-docker-alpine-dev: ## Start Glances Alpine Docker dev in console mode
-	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-alpine-dev
-
 run-docker-ubuntu-minimal: ## Start Glances Ubuntu Docker minimal in console mode
-	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-ubuntu-minimal
-
 run-docker-ubuntu-full: ## Start Glances Ubuntu Docker full in console mode
-	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-ubuntu-full
-
 run-docker-ubuntu-dev: ## Start Glances Ubuntu Docker dev in console mode
-	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-ubuntu-dev
 
 run-webserver: ## Start Glances in Web server mode
 	$(PYTHON) -m glances -C $(CONF) -w
