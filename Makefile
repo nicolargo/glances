@@ -223,29 +223,28 @@ snapcraft:
 # Need Docker Buildx package (apt install docker-buildx on Ubuntu)
 # ===================================================================
 
+define DOCKERFILE
+docker-files/$(word 1,$(subst -, ,$*)).Dockerfile
+endef
+
+define TARGET
+$(word 2,$(subst -, ,$*))
+endef
+
+$(DOCKER_IMAGES): docker-%:
+	$(DOCKER_BUILD) --target $(TARGET) -f $(DOCKERFILE) -t $(DOCKER_TAG) .
+
 docker: docker-alpine docker-ubuntu ## Generate local docker images
 
-docker-alpine: docker-alpine-full docker-alpine-minimal docker-alpine-dev ## Generate local docker images (Alpine)
+docker-alpine: $(ALPINE_IMAGES) ## Generate local docker images (Alpine)
+docker-ubuntu: $(UBUNTU_IMAGES) ## Generate local docker images (Ubuntu)
 
 docker-alpine-full: ## Generate local docker image (Alpine full)
-	$(DOCKER_BUILD) --target full -f $(DOCKERFILE_ALPINE) -t glances:local-alpine-full .
-
 docker-alpine-minimal: ## Generate local docker image (Alpine minimal)
-	$(DOCKER_BUILD) --target minimal -f $(DOCKERFILE_ALPINE) -t glances:local-alpine-minimal .
-
 docker-alpine-dev: ## Generate local docker image (Alpine dev)
-	$(DOCKER_BUILD) --target dev -f $(DOCKERFILE_ALPINE) -t glances:local-alpine-dev .
-
-docker-ubuntu: docker-ubuntu-full docker-ubuntu-minimal docker-ubuntu-dev ## Generate local docker images (Ubuntu)
-
 docker-ubuntu-full: ## Generate local docker image (Ubuntu full)
-	$(DOCKER_BUILD) --target full -f $(DOCKERFILE_UBUNTU) -t glances:local-ubuntu-full .
-
 docker-ubuntu-minimal: ## Generate local docker image (Ubuntu minimal)
-	$(DOCKER_BUILD) --target minimal -f $(DOCKERFILE_UBUNTU) -t glances:local-ubuntu-minimal .
-
 docker-ubuntu-dev: ## Generate local docker image (Ubuntu dev)
-	$(DOCKER_BUILD) --target dev -f $(DOCKERFILE_UBUNTU) -t glances:local-ubuntu-dev .
 
 # ===================================================================
 # Run
