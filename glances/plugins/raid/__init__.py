@@ -79,7 +79,7 @@ class PluginModel(GlancesPluginModel):
         if max_width:
             name_max_width = max_width - 12
         else:
-            # No max_width defined, return an emptu curse message
+            # No max_width defined, return an empty curse message
             logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
@@ -93,68 +93,76 @@ class PluginModel(GlancesPluginModel):
         # Data
         arrays = sorted(iterkeys(self.stats))
         for array in arrays:
+            array_stats = self.stats[array]
+
+            if not isinstance(array_stats, dict):
+                continue
+
+            # Display the current status
+            status = self.raid_alert(
+                array_stats['status'],
+                array_stats['used'],
+                array_stats['available'],
+                array_stats['type'],
+            )
+
             # New line
             ret.append(self.curse_new_line())
-            # Display the current status
-            if not isinstance(self.stats[array], dict):
-                continue
-            status = self.raid_alert(
-                self.stats[array]['status'],
-                self.stats[array]['used'],
-                self.stats[array]['available'],
-                self.stats[array]['type'],
-            )
             # Data: RAID type name | disk used | disk available
-            array_type = self.stats[array]['type'].upper() if self.stats[array]['type'] is not None else 'UNKNOWN'
+            array_type = array_stats['type'].upper() if array_stats['type'] is not None else 'UNKNOWN'
             # Build the full name = array type + array name
             full_name = f'{array_type} {array}'
             msg = '{:{width}}'.format(full_name, width=name_max_width)
             ret.append(self.curse_add_line(msg))
-            if self.stats[array]['type'] == 'raid0' and self.stats[array]['status'] == 'active':
-                msg = '{:>7}'.format(len(self.stats[array]['components']))
+            if array_stats['type'] == 'raid0' and array_stats['status'] == 'active':
+                msg = '{:>7}'.format(len(array_stats['components']))
                 ret.append(self.curse_add_line(msg, status))
                 msg = '{:>7}'.format('-')
                 ret.append(self.curse_add_line(msg, status))
-            elif self.stats[array]['status'] == 'active':
-                msg = '{:>7}'.format(self.stats[array]['used'])
+            elif array_stats['status'] == 'active':
+                msg = '{:>7}'.format(array_stats['used'])
                 ret.append(self.curse_add_line(msg, status))
-                msg = '{:>7}'.format(self.stats[array]['available'])
+                msg = '{:>7}'.format(array_stats['available'])
                 ret.append(self.curse_add_line(msg, status))
-            elif self.stats[array]['status'] == 'inactive':
+            elif array_stats['status'] == 'inactive':
                 ret.append(self.curse_new_line())
-                msg = '└─ Status {}'.format(self.stats[array]['status'])
+                msg = '└─ Status {}'.format(array_stats['status'])
                 ret.append(self.curse_add_line(msg, status))
-                components = sorted(iterkeys(self.stats[array]['components']))
+                components = sorted(iterkeys(array_stats['components']))
                 for i, component in enumerate(components):
                     if i == len(components) - 1:
                         tree_char = '└─'
                     else:
                         tree_char = '├─'
                     ret.append(self.curse_new_line())
-                    msg = '   {} disk {}: '.format(tree_char, self.stats[array]['components'][component])
+                    msg = '   {} disk {}: '.format(tree_char, array_stats['components'][component])
                     ret.append(self.curse_add_line(msg))
                     msg = f'{component}'
                     ret.append(self.curse_add_line(msg))
-            if self.stats[array]['type'] != 'raid0' and (self.stats[array]['used'] < self.stats[array]['available']):
+
+            if array_stats['type'] != 'raid0' and (
+                array_stats['used'] and array_stats['available'] and array_stats['used'] < array_stats['available']
+            ):
                 # Display current array configuration
                 ret.append(self.curse_new_line())
                 msg = '└─ Degraded mode'
                 ret.append(self.curse_add_line(msg, status))
-                if len(self.stats[array]['config']) < 17:
+                if len(array_stats['config']) < 17:
                     ret.append(self.curse_new_line())
-                    msg = '   └─ {}'.format(self.stats[array]['config'].replace('_', 'A'))
+                    msg = '   └─ {}'.format(array_stats['config'].replace('_', 'A'))
                     ret.append(self.curse_add_line(msg))
 
         return ret
 
-    def raid_alert(self, status, used, available, type):
+    @staticmethod
+    def raid_alert(status, used, available, raid_type) -> str:
         """RAID alert messages.
 
         [available/used] means that ideally the array may have _available_
         devices however, _used_ devices are in use.
         Obviously when used >= available then things are good.
         """
-        if type == 'raid0':
+        if raid_type == 'raid0':
             return 'OK'
         if status == 'inactive':
             return 'CRITICAL'
