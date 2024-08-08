@@ -23,10 +23,12 @@ import re
 import subprocess
 import sys
 import weakref
+from argparse import Namespace
 from configparser import ConfigParser, NoOptionError, NoSectionError
-from datetime import datetime
+from datetime import datetime, timedelta
 from operator import itemgetter, methodcaller
 from statistics import mean
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
@@ -95,43 +97,43 @@ def to_ascii(s):
     return s.encode('ascii', 'ignore').decode()
 
 
-def listitems(d):
+def listitems(d: Dict) -> List:
     return list(d.items())
 
 
-def listkeys(d):
+def listkeys(d: Dict[str, Any]) -> List[Union[str, Any]]:
     return list(d.keys())
 
 
-def listvalues(d):
+def listvalues(d: Dict) -> List:
     return list(d.values())
 
 
-def iteritems(d):
+def iteritems(d: Dict) -> Iterable:
     return iter(d.items())
 
 
-def iterkeys(d):
+def iterkeys(d: Dict) -> Iterable:
     return iter(d.keys())
 
 
-def itervalues(d):
+def itervalues(d: Dict) -> Iterable:
     return iter(d.values())
 
 
-def u(s, errors='replace'):
+def u(s: Union[str, bytes], errors: str = 'replace') -> str:
     if isinstance(s, text_type):
         return s
     return s.decode('utf-8', errors=errors)
 
 
-def b(s, errors='replace'):
+def b(s, errors='replace') -> bytes:
     if isinstance(s, binary_type):
         return s
     return s.encode('utf-8', errors=errors)
 
 
-def nativestr(s, errors='replace'):
+def nativestr(s: Union[str, bytes, int, float], errors: str = 'replace') -> str:
     if isinstance(s, text_type):
         return s
     if isinstance(s, (int, float)):
@@ -178,12 +180,12 @@ def time_serie_subsample(data, sampling):
     return list(zip(t_subsampled, v_subsampled))
 
 
-def to_fahrenheit(celsius):
+def to_fahrenheit(celsius: float) -> float:
     """Convert Celsius to Fahrenheit."""
     return celsius * 1.8 + 32
 
 
-def is_admin():
+def is_admin() -> bool:
     """
     https://stackoverflow.com/a/19719292
     @return: True if the current user is an 'Admin' whatever that
@@ -209,14 +211,14 @@ def is_admin():
         return os.getuid() == 0
 
 
-def key_exist_value_not_none(k, d):
+def key_exist_value_not_none(k: str, d: Dict[str, Any]) -> bool:
     # Return True if:
     # - key k exists
     # - d[k] is not None
     return k in d and d[k] is not None
 
 
-def key_exist_value_not_none_not_v(k, d, value='', length=None):
+def key_exist_value_not_none_not_v(k: str, d: Dict[str, Any], value: str = '', length: Optional[int] = None) -> bool:
     # Return True if:
     # - key k exists
     # - d[k] is not None
@@ -225,19 +227,19 @@ def key_exist_value_not_none_not_v(k, d, value='', length=None):
     return k in d and d[k] is not None and d[k] != value and (length is None or len(d[k]) >= length)
 
 
-def disable(class_name, var):
+def disable(class_name: Namespace, var: str) -> None:
     """Set disable_<var> to True in the class class_name."""
     setattr(class_name, 'enable_' + var, False)
     setattr(class_name, 'disable_' + var, True)
 
 
-def enable(class_name, var):
+def enable(class_name: Namespace, var: str) -> None:
     """Set disable_<var> to False in the class class_name."""
     setattr(class_name, 'enable_' + var, True)
     setattr(class_name, 'disable_' + var, False)
 
 
-def safe_makedirs(path):
+def safe_makedirs(path: str):
     """A safe function for creating a directory tree."""
     try:
         os.makedirs(path)
@@ -249,7 +251,7 @@ def safe_makedirs(path):
             raise
 
 
-def pretty_date(time=False):
+def pretty_date(time: Union[datetime, int, None] = None) -> str:
     """
     Get a datetime object or a int() Epoch timestamp and return a
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
@@ -261,8 +263,8 @@ def pretty_date(time=False):
         diff = now - datetime.fromtimestamp(time)
     elif isinstance(time, datetime):
         diff = now - time
-    elif not time:
-        diff = 0
+    else:
+        diff = timedelta()
     second_diff = diff.seconds
     day_diff = diff.days
 
@@ -339,7 +341,7 @@ def json_dumps_dictlist(data, item):
     return json_dumps(dl)
 
 
-def string_value_to_float(s):
+def string_value_to_float(s: str) -> Union[float, None]:
     """Convert a string with a value and an unit to a float.
     Example:
     '12.5 MB' -> 12500000.0
@@ -375,12 +377,12 @@ def string_value_to_float(s):
     return value * convert_dict[unit]
 
 
-def file_exists(filename):
+def file_exists(filename: str) -> bool:
     """Return True if the file exists and is readable."""
     return os.path.isfile(filename) and os.access(filename, os.R_OK)
 
 
-def folder_size(path, errno=0):
+def folder_size(path: str, errno: int = 0) -> Tuple[int, int]:
     """Return a tuple with the size of the directory given by path and the errno.
     If an error occurs (for example one file or subfolder is not accessible),
     errno is set to the error number.
@@ -424,17 +426,17 @@ def weak_lru_cache(maxsize=128, typed=False):
     return wrapper
 
 
-def namedtuple_to_dict(data):
+def namedtuple_to_dict(data: Dict[str, Any]) -> Dict[str, Any]:
     """Convert a namedtuple to a dict, using the _asdict() method embedded in PsUtil stats."""
     return {k: (v._asdict() if hasattr(v, '_asdict') else v) for k, v in data.items()}
 
 
-def list_of_namedtuple_to_list_of_dict(data):
+def list_of_namedtuple_to_list_of_dict(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Convert a list of namedtuples to a dict, using the _asdict() method embedded in PsUtil stats."""
     return [namedtuple_to_dict(d) for d in data]
 
 
-def replace_special_chars(input_string, by=' '):
+def replace_special_chars(input_string: str, by: str = ' ') -> str:
     """Replace some special char by another in the input_string
     Return: the string with the chars replaced"""
     return input_string.replace('\r\n', by).replace('\n', by).replace('\t', by)

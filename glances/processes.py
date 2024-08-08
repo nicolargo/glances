@@ -7,6 +7,7 @@
 #
 
 import os
+from typing import Any, Dict, List, Union
 
 import psutil
 
@@ -662,7 +663,12 @@ def _sort_lambda(sorted_by='cpu_percent', sorted_by_secondary='memory_percent'):
     return ret
 
 
-def sort_stats(stats, sorted_by='cpu_percent', sorted_by_secondary='memory_percent', reverse=True):
+def sort_stats(
+    stats: List[Dict[str, Any]],
+    sorted_by: Union[str, None] = 'cpu_percent',
+    sorted_by_secondary: Union[str, None] = 'memory_percent',
+    reverse: bool = True,
+) -> List[Dict[str, Any]]:
     """Return the stats (dict) sorted by (sorted_by).
     A secondary sort key should be specified.
 

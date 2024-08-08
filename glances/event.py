@@ -32,6 +32,8 @@ Item (or event) is defined by:
     }
 """
 
+from typing import Union
+
 from glances.logger import logger
 
 try:
@@ -54,9 +56,9 @@ class GlancesEvent:
     count: int
     avg: float
     top: list
-    desc: str
-    sort: str
-    global_msg: str
+    desc: Union[str, None]
+    sort: Union[str, None]
+    global_msg: Union[str, None]
     end: int = -1
 
     def is_ongoing(self):
@@ -71,10 +73,10 @@ class GlancesEvent:
         self,
         state: str,
         value: float,
-        sort_key: str = None,
-        proc_list: list = None,
-        proc_desc: str = None,
-        global_msg: str = None,
+        sort_key: Union[str, None] = None,
+        proc_list: Union[list, None] = None,
+        proc_desc: Union[str, None] = None,
+        global_msg: Union[str, None] = None,
     ):
         """Update an ongoing event"""
 
