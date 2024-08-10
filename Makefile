@@ -8,9 +8,10 @@ PYTHON   := $(VENV)/python
 LASTTAG  = $(shell git describe --tags --abbrev=0)
 
 IMAGES_TYPES      := full minimal dev
-ALPINE_IMAGES     := $(IMAGES_TYPES:%=docker-alpine-%)
-UBUNTU_IMAGES     := $(IMAGES_TYPES:%=docker-ubuntu-%)
-DOCKER_IMAGES     := $(ALPINE_IMAGES) $(UBUNTU_IMAGES)
+DISTROS           := alpine ubuntu
+alpine_images     := $(IMAGES_TYPES:%=docker-alpine-%)
+ubuntu_images     := $(IMAGES_TYPES:%=docker-ubuntu-%)
+DOCKER_IMAGES     := $(alpine_images) $(ubuntu_images)
 DOCKER_RUNTIMES   := $(DOCKER_IMAGES:%=run-%)
 UNIT_TESTS        := test-core test-restful test-xmlrpc
 DOCKER_BUILD      := docker buildx build
@@ -19,10 +20,6 @@ PODMAN_SOCK       ?= /run/user/$(shell id -u)/podman/podman.sock
 DOCKER_SOCK       ?= /var/run/docker.sock
 DOCKER_SOCKS      := -v $(PODMAN_SOCK):$(PODMAN_SOCK):ro -v $(DOCKER_SOCK):$(DOCKER_SOCK):ro
 DOCKER_OPTS       := --rm -e TZ="${TZ}" -e GLANCES_OPT="" --pid host --network host
-
-define DOCKER_TAG
-glances:local-$*
-endef
 
 # if the command is only `make`, the default tasks will be the printing of the help.
 .DEFAULT_GOAL := help
@@ -223,21 +220,17 @@ snapcraft:
 # Need Docker Buildx package (apt install docker-buildx on Ubuntu)
 # ===================================================================
 
-define DOCKERFILE
-docker-files/$(word 1,$(subst -, ,$*)).Dockerfile
+define MAKE_DOCKER_BUILD_RULES
+$($(DISTRO)_images): docker-$(DISTRO)-%: docker-files/$(DISTRO).Dockerfile
+	$(DOCKER_BUILD) --target $$* -f $$< -t glances:local-$(DISTRO)-$$* .
 endef
 
-define TARGET
-$(word 2,$(subst -, ,$*))
-endef
-
-$(DOCKER_IMAGES): docker-%:
-	$(DOCKER_BUILD) --target $(TARGET) -f $(DOCKERFILE) -t $(DOCKER_TAG) .
+$(foreach DISTRO,$(DISTROS),$(eval $(MAKE_DOCKER_BUILD_RULES)))
 
 docker: docker-alpine docker-ubuntu ## Generate local docker images
 
-docker-alpine: $(ALPINE_IMAGES) ## Generate local docker images (Alpine)
-docker-ubuntu: $(UBUNTU_IMAGES) ## Generate local docker images (Ubuntu)
+docker-alpine: $(alpine_images) ## Generate local docker images (Alpine)
+docker-ubuntu: $(ubuntu_images) ## Generate local docker images (Ubuntu)
 
 docker-alpine-full: ## Generate local docker image (Alpine full)
 docker-alpine-minimal: ## Generate local docker image (Alpine minimal)
@@ -272,7 +265,7 @@ run-min-local-conf: ## Start minimal Glances in console mode with the system con
 	$(VENV_MIN)/python -m glances
 
 $(DOCKER_RUNTIMES): run-docker-%:
-	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it $(DOCKER_TAG)
+	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-$*
 
 run-docker-alpine-minimal: ## Start Glances Alpine Docker minimal in console mode
 run-docker-alpine-full: ## Start Glances Alpine Docker full in console mode
