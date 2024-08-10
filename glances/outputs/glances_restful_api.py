@@ -279,7 +279,7 @@ class GlancesRestfulApi:
             router.add_api_route('/', response_class=HTMLResponse, endpoint=self._index)
 
             # Statics files
-            self._app.mount(urljoin(self.url_prefix, '/static'), StaticFiles(directory=self.STATIC_PATH), name="static")
+            self._app.mount(self.url_prefix + '/static', StaticFiles(directory=self.STATIC_PATH), name="static")
 
             logger.info(f"Get WebUI in {self.STATIC_PATH}")
 
