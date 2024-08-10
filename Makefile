@@ -8,9 +8,10 @@ PYTHON   := $(VENV)/python
 LASTTAG  = $(shell git describe --tags --abbrev=0)
 
 IMAGES_TYPES      := full minimal dev
-ALPINE_IMAGES     := $(IMAGES_TYPES:%=docker-alpine-%)
-UBUNTU_IMAGES     := $(IMAGES_TYPES:%=docker-ubuntu-%)
-DOCKER_IMAGES     := $(ALPINE_IMAGES) $(UBUNTU_IMAGES)
+DISTROS           := alpine ubuntu
+alpine_images     := $(IMAGES_TYPES:%=docker-alpine-%)
+ubuntu_images     := $(IMAGES_TYPES:%=docker-ubuntu-%)
+DOCKER_IMAGES     := $(alpine_images) $(ubuntu_images)
 DOCKER_RUNTIMES   := $(DOCKER_IMAGES:%=run-%)
 UNIT_TESTS        := test-core test-restful test-xmlrpc
 DOCKER_BUILD      := docker buildx build
@@ -236,8 +237,8 @@ $(DOCKER_IMAGES): docker-%:
 
 docker: docker-alpine docker-ubuntu ## Generate local docker images
 
-docker-alpine: $(ALPINE_IMAGES) ## Generate local docker images (Alpine)
-docker-ubuntu: $(UBUNTU_IMAGES) ## Generate local docker images (Ubuntu)
+docker-alpine: $(alpine_images) ## Generate local docker images (Alpine)
+docker-ubuntu: $(ubuntu_images) ## Generate local docker images (Ubuntu)
 
 docker-alpine-full: ## Generate local docker image (Alpine full)
 docker-alpine-minimal: ## Generate local docker image (Alpine minimal)
