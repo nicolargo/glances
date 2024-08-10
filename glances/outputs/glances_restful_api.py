@@ -112,10 +112,6 @@ class GlancesRestfulApi:
             self._app = FastAPI()
             self._password = None
 
-        # Change the default root path
-        if self.url_prefix != '/':
-            self._app.include_router(APIRouter(prefix=self.url_prefix.rstrip('/')))
-
         # Set path for WebUI
         webui_root_path = config.get_value(
             'outputs', 'webui_root_path', default=os.path.dirname(os.path.realpath(__file__))
@@ -147,11 +143,15 @@ class GlancesRestfulApi:
     def load_config(self, config):
         """Load the outputs section of the configuration file."""
         # Limit the number of processes to display in the WebUI
-        self.url_prefix = '/'
+        self.url_prefix = ''
         if config is not None and config.has_section('outputs'):
+            # Max process to display in the WebUI
             n = config.get_value('outputs', 'max_processes_display', default=None)
             logger.debug(f'Number of processes to display in the WebUI: {n}')
-            self.url_prefix = config.get_value('outputs', 'url_prefix', default='/')
+            # URL prefix
+            self.url_prefix = config.get_value('outputs', 'url_prefix', default='')
+            if self.url_prefix != '':
+                self.url_prefix = self.url_prefix.rstrip('/')
             logger.debug(f'URL prefix: {self.url_prefix}')
 
     def __update__(self):
@@ -179,7 +179,8 @@ class GlancesRestfulApi:
 
     def _router(self):
         """Define a custom router for Glances path."""
-        router = APIRouter()
+        # Create une main router
+        router = APIRouter(prefix=self.url_prefix)
 
         # REST API
         router.add_api_route(
@@ -278,7 +279,7 @@ class GlancesRestfulApi:
             router.add_api_route('/', response_class=HTMLResponse, endpoint=self._index)
 
             # Statics files
-            self._app.mount("/static", StaticFiles(directory=self.STATIC_PATH), name="static")
+            self._app.mount(urljoin(self.url_prefix, '/static'), StaticFiles(directory=self.STATIC_PATH), name="static")
 
             logger.info(f"Get WebUI in {self.STATIC_PATH}")
 
