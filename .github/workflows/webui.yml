@@ -23,8 +23,9 @@ jobs:
         cache-dependency-path: ./glances/outputs/static/package-lock.json
     - name: Build Glances WebUI
       working-directory: ./glances/outputs/static
+      # TODO: add the following line when https://github.com/nicolargo/glances/issues/2914 will be solved
+      #  npm audit fix
       run: |
-        npm audit fix
         npm ci
         npm run build
     - name: Commit and push WebUI
