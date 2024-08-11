@@ -9,6 +9,7 @@
 """Process list plugin."""
 
 import copy
+import functools
 import os
 
 from glances.globals import WINDOWS, key_exist_value_not_none_not_v, replace_special_chars
@@ -599,87 +600,127 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_new_line())
         ret.append(self.curse_new_line())
 
-    def __msg_curse_extended_process_thread(self, ret, p):
-        # Title
+    def add_title_line(self, ret, prog):
         ret.append(self.curse_add_line("Pinned thread ", "TITLE"))
-        ret.append(self.curse_add_line(p['name'], "UNDERLINE"))
+        ret.append(self.curse_add_line(prog['name'], "UNDERLINE"))
         ret.append(self.curse_add_line(" ('e' to unpin)"))
 
-        # First line is CPU affinity
+        return ret
+
+    def add_cpu_line(self, ret, prog):
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(' CPU Min/Max/Mean: '))
-        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(p['cpu_min'], p['cpu_max'], p['cpu_mean'])
+        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(prog['cpu_min'], prog['cpu_max'], prog['cpu_mean'])
         ret.append(self.curse_add_line(msg, decoration='INFO'))
-        if 'cpu_affinity' in p and p['cpu_affinity'] is not None:
+
+        return ret
+
+    def maybe_add_cpu_affinity_line(self, ret, prog):
+        if 'cpu_affinity' in prog and prog['cpu_affinity'] is not None:
             ret.append(self.curse_add_line(' Affinity: '))
-            ret.append(self.curse_add_line(str(len(p['cpu_affinity'])), decoration='INFO'))
+            ret.append(self.curse_add_line(str(len(prog['cpu_affinity'])), decoration='INFO'))
             ret.append(self.curse_add_line(' cores', decoration='INFO'))
-        if 'ionice' in p and p['ionice'] is not None and hasattr(p['ionice'], 'ioclass'):
+
+        return ret
+
+    def add_ionice_line(self, headers, default):
+        def add_ionice_using_matches(msg, v):
+            return msg + headers.get(v, default(v))
+
+        return add_ionice_using_matches
+
+    def get_headers(self, k):
+        # Linux: The scheduling class. 0 for none, 1 for real time, 2 for best-effort, 3 for idle.
+        default = {0: 'No specific I/O priority', 1: k + 'Real Time', 2: k + 'Best Effort', 3: k + 'IDLE'}
+
+        # Windows: On Windows only ioclass is used and it can be set to 2 (normal), 1 (low) or 0 (very low).
+        windows = {0: k + 'Very Low', 1: k + 'Low', 2: 'No specific I/O priority'}
+
+        return windows if WINDOWS else default
+
+    def maybe_add_ionice_line(self, ret, prog):
+        if 'ionice' in prog and prog['ionice'] is not None and hasattr(prog['ionice'], 'ioclass'):
             msg = ' IO nice: '
             k = 'Class is '
-            v = p['ionice'].ioclass
-            # Linux: The scheduling class. 0 for none, 1 for real time, 2 for best-effort, 3 for idle.
-            # Windows: On Windows only ioclass is used and it can be set to 2 (normal), 1 (low) or 0 (very low).
-            if WINDOWS:
-                if v == 0:
-                    msg += k + 'Very Low'
-                elif v == 1:
-                    msg += k + 'Low'
-                elif v == 2:
-                    msg += 'No specific I/O priority'
-                else:
-                    msg += k + str(v)
-            else:
-                if v == 0:
-                    msg += 'No specific I/O priority'
-                elif v == 1:
-                    msg += k + 'Real Time'
-                elif v == 2:
-                    msg += k + 'Best Effort'
-                elif v == 3:
-                    msg += k + 'IDLE'
-                else:
-                    msg += k + str(v)
+            v = prog['ionice'].ioclass
+
+            def default(v):
+                return k + str(v)
+
+            headers = self.get_headers(k)
+            msg = self.add_ionice_line(headers, default)(msg, v)
             #  value is a number which goes from 0 to 7.
             # The higher the value, the lower the I/O priority of the process.
-            if hasattr(p['ionice'], 'value') and p['ionice'].value != 0:
-                msg += ' (value {}/7)'.format(str(p['ionice'].value))
+            if hasattr(prog['ionice'], 'value') and prog['ionice'].value != 0:
+                msg += ' (value {}/7)'.format(str(prog['ionice'].value))
             ret.append(self.curse_add_line(msg, splittable=True))
 
-        # Second line is memory info
+        return ret
+
+    def maybe_add_memory_swap_line(self, ret, prog):
+        if 'memory_swap' in prog and prog['memory_swap'] is not None:
+            ret.append(
+                self.curse_add_line(
+                    self.auto_unit(prog['memory_swap'], low_precision=False), decoration='INFO', splittable=True
+                )
+            )
+            ret.append(self.curse_add_line(' swap ', splittable=True))
+
+        return ret
+
+    def add_memory_info_lines(self, ret, prog):
+        for key, val in prog['memory_info'].items():
+            ret.append(
+                self.curse_add_line(
+                    self.auto_unit(val, low_precision=False),
+                    decoration='INFO',
+                    splittable=True,
+                )
+            )
+            ret.append(self.curse_add_line(' ' + key + ' ', splittable=True))
+
+        return ret
+
+    def add_memory_line(self, ret, prog):
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(' MEM Min/Max/Mean: '))
-        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(p['memory_min'], p['memory_max'], p['memory_mean'])
+        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(prog['memory_min'], prog['memory_max'], prog['memory_mean'])
         ret.append(self.curse_add_line(msg, decoration='INFO'))
-        if 'memory_info' in p and p['memory_info'] is not None:
+        if 'memory_info' in prog and prog['memory_info'] is not None:
             ret.append(self.curse_add_line(' Memory info: '))
-            for k, v in p['memory_info'].items():
-                ret.append(
-                    self.curse_add_line(
-                        self.auto_unit(v, low_precision=False),
-                        decoration='INFO',
-                        splittable=True,
-                    )
-                )
-                ret.append(self.curse_add_line(' ' + k + ' ', splittable=True))
-            if 'memory_swap' in p and p['memory_swap'] is not None:
-                ret.append(
-                    self.curse_add_line(
-                        self.auto_unit(p['memory_swap'], low_precision=False), decoration='INFO', splittable=True
-                    )
-                )
-                ret.append(self.curse_add_line(' swap ', splittable=True))
+            steps = [self.add_memory_info_lines, self.maybe_add_memory_swap_line]
+            ret = functools.reduce(lambda ret, step: step(ret, prog), steps, ret)
 
-        # Third line is for open files/network sessions
+        return ret
+
+    def add_io_and_network_lines(self, ret, prog):
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(' Open: '))
         for stat_prefix in ['num_threads', 'num_fds', 'num_handles', 'tcp', 'udp']:
-            if stat_prefix in p and p[stat_prefix] is not None:
-                ret.append(self.curse_add_line(str(p[stat_prefix]), decoration='INFO'))
+            if stat_prefix in prog and prog[stat_prefix] is not None:
+                ret.append(self.curse_add_line(str(prog[stat_prefix]), decoration='INFO'))
                 ret.append(self.curse_add_line(' {} '.format(stat_prefix.replace('num_', ''))))
+        return ret
 
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_new_line())
+    def __msg_curse_extended_process_thread(self, ret, prog):
+        # `append_newlines` has dummy arguments for piping thru `functools.reduce`
+        def append_newlines(ret, prog):
+            (ret.append(self.curse_new_line()),)
+            ret.append(self.curse_new_line())
+
+            return ret
+
+        steps = [
+            self.add_title_line,
+            self.add_cpu_line,
+            self.maybe_add_cpu_affinity_line,
+            self.maybe_add_ionice_line,
+            self.add_memory_line,
+            self.add_io_and_network_lines,
+            append_newlines,
+        ]
+
+        functools.reduce(lambda ret, step: step(ret, prog), steps, ret)
 
     def __msg_curse_header(self, ret, process_sort_key, args=None):
         """Build the header and add it to the ret dict."""
