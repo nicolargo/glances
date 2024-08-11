@@ -1,10 +1,10 @@
 PORT     ?= 8008
-VENV     := venv/bin
-VENV_DEV := venv-dev/bin
-VENV_MIN := venv-min/bin
+venv_full:= venv/bin
+venv_dev := venv-dev/bin
+venv_min := venv-min/bin
 CONF     := conf/glances.conf
-PIP      := $(VENV)/pip
-PYTHON   := $(VENV)/python
+PIP      := $(venv_full)/pip
+PYTHON   := $(venv_full)/python
 LASTTAG  = $(shell git describe --tags --abbrev=0)
 
 IMAGES_TYPES      := full minimal dev
@@ -101,32 +101,32 @@ test: $(UNIT_TESTS) ## Run unit tests
 test-with-upgrade: venv-upgrade venv-dev-upgrade test ## Upgrade deps and run unit tests
 
 test-min: ## Run core unit tests in minimal environment
-	$(VENV_MIN)/python unittest-core.py
+	$(venv_min)/python unittest-core.py
 
 test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in minimal environment
-	$(VENV_MIN)/python unittest-core.py
+	$(venv_min)/python unittest-core.py
 
 # ===================================================================
 # Linters, profilers and cyber security
 # ===================================================================
 
 format: ## Format the code
-	$(VENV_DEV)/python -m ruff format .
+	$(venv_dev)/python -m ruff format .
 
 lint: ## Lint the code.
-	$(VENV_DEV)/python -m ruff check . --fix
+	$(venv_dev)/python -m ruff check . --fix
 
 codespell: ## Run codespell to fix common misspellings in text files
-	$(VENV_DEV)/codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics -w
+	$(venv_dev)/codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics -w
 
 semgrep: ## Run semgrep to find bugs and enforce code standards
-	$(VENV_DEV)/semgrep scan --config=auto
+	$(venv_dev)/semgrep scan --config=auto
 
 profiling-gprof: ## Callgraph profiling (need "apt install graphviz")
 	@echo "Start Glances for 30 iterations (more or less 1 mins, please do not exit !)"
 	sleep 3
 	$(PYTHON) -m cProfile -o ./glances.cprof ./run.py --stop-after 30
-	$(VENV_DEV)/gprof2dot -f pstats ./glances.cprof | dot -Tsvg -o ./docs/_static/glances-cgraph.svg
+	$(venv_dev)/gprof2dot -f pstats ./glances.cprof | dot -Tsvg -o ./docs/_static/glances-cgraph.svg
 	rm -f ./glances.cprof
 
 profiling-pyinstrument: ## PyInstrument profiling
@@ -138,7 +138,7 @@ profiling-pyinstrument: ## PyInstrument profiling
 profiling-pyspy: ## Flame profiling (currently not compatible with Python 3.12)
 	@echo "Start Glances for 30 iterations (more or less 1 mins, please do not exit !)"
 	sleep 3
-	$(VENV_DEV)/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s -- $(PYTHON) ./run.py --stop-after 30
+	$(venv_dev)/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s -- $(PYTHON) ./run.py --stop-after 30
 
 profiling: profiling-gprof profiling-pyinstrument profiling-pyspy ## Profiling of the Glances software
 
@@ -153,12 +153,12 @@ memory-profiling: ## Profile memory usage
 	@echo "It's a very long test (~4 hours)..."
 	rm -f mprofile_*.dat
 	@echo "1/2 - Start memory profiling with the history option enable"
-	$(VENV_DEV)/mprof run -T 1 -C run.py -C $(CONF) --stop-after 2400 --quiet
-	$(VENV_DEV)/mprof plot --output ./docs/_static/glances-memory-profiling-with-history.png
+	$(venv_dev)/mprof run -T 1 -C run.py -C $(CONF) --stop-after 2400 --quiet
+	$(venv_dev)/mprof plot --output ./docs/_static/glances-memory-profiling-with-history.png
 	rm -f mprofile_*.dat
 	@echo "2/2 - Start memory profiling with the history option disable"
-	$(VENV_DEV)/mprof run -T 1 -C run.py -C $(CONF) --disable-history --stop-after 2400 --quiet
-	$(VENV_DEV)/mprof plot --output ./docs/_static/glances-memory-profiling-without-history.png
+	$(venv_dev)/mprof run -T 1 -C run.py -C $(CONF) --disable-history --stop-after 2400 --quiet
+	$(venv_dev)/mprof plot --output ./docs/_static/glances-memory-profiling-without-history.png
 	rm -f mprofile_*.dat
 
 # Trivy installation: https://aquasecurity.github.io/trivy/latest/getting-started/installation/
@@ -256,13 +256,13 @@ run-local-conf-hide-public: ## Start Glances in console mode with the system con
 	$(PYTHON) -m glances --hide-public-info
 
 run-min: ## Start minimal Glances in console mode (also called standalone)
-	$(VENV_MIN)/python -m glances -C $(CONF)
+	$(venv_min)/python -m glances -C $(CONF)
 
 run-min-debug: ## Start minimal Glances in debug console mode (also called standalone)
-	$(VENV_MIN)/python -m glances -C $(CONF) -d
+	$(venv_min)/python -m glances -C $(CONF) -d
 
 run-min-local-conf: ## Start minimal Glances in console mode with the system conf file
-	$(VENV_MIN)/python -m glances
+	$(venv_min)/python -m glances
 
 $(DOCKER_RUNTIMES): run-docker-%:
 	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-$*
