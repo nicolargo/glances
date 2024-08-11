@@ -7,6 +7,12 @@ PIP      := $(venv_full)/pip
 PYTHON   := $(venv_full)/python
 LASTTAG  = $(shell git describe --tags --abbrev=0)
 
+VENV_TYPES    := full min dev
+VENV_PYTHON   := $(VENV_TYPES:%=venv-%-python)
+VENV_UPG      := $(VENV_TYPES:%=venv-%-upgrade)
+VENV_DEPS     := $(VENV_TYPES:%=venv-%)
+VENV_INST_UPG := $(VENV_DEPS) $(VENV_UPG)
+
 IMAGES_TYPES      := full minimal dev
 DISTROS           := alpine ubuntu
 alpine_images     := $(IMAGES_TYPES:%=docker-alpine-%)
@@ -38,52 +44,50 @@ help: ## List all make commands available
 # Virtualenv
 # ===================================================================
 
-venv-python: venv-full-python venv-min-python venv-dev-python ## Install all Python 3 venv
+venv-%-upgrade: UPGRADE = --upgrade
 
-venv: venv-full venv-min venv-dev ## Install all Python 3 dependencies
+define DEFINE_VARS_FOR_TYPE
+venv-$(TYPE) venv-$(TYPE)-upgrade: VIRTUAL_ENV = $(venv_$(TYPE))
+endef
 
-venv-upgrade: venv-full-upgrade venv-min-upgrade venv-dev-upgrade ## Upgrade all Python 3 dependencies
+$(foreach TYPE,$(VENV_TYPES),$(eval $(DEFINE_VARS_FOR_TYPE)))
+
+$(VENV_PYTHON): venv-%-python:
+	virtualenv -p /usr/bin/python3 $(if $(filter full,$*),venv,venv-$*)
+
+$(VENV_INST_UPG): venv-%:
+	$(if $(UPGRADE),$(VIRTUAL_ENV)/install install --upgrade pip,)
+	$(foreach REQ,$(REQS), $(VIRTUAL_ENV)/pip install $(UPGRADE) -r $(REQ);)
+	$(if $(PRE_COMMIT),$(VIRTUAL_ENV)/pre-commit install --hook-type pre-commit,)
+
+venv-python: $(VENV_PYTHON) ## Install all Python 3 venv
+venv: $(VENV_DEPS) ## Install all Python 3 dependencies
+venv-upgrade: $(VENV_UPG) ## Upgrade all Python 3 dependencies
 
 # For full installation (with optional dependencies)
 
+venv-full venv-full-upgrade: REQS = requirements.txt optional-requirements.txt
+
 venv-full-python: ## Install Python 3 venv
-	virtualenv -p /usr/bin/python3 venv
-
-venv-full: venv-python ## Install Python 3 run-time dependencies
-	$(PIP) install -r requirements.txt
-	$(PIP) install -r optional-requirements.txt
-
+venv-full: venv-python ## Install Python 3 run-time
 venv-full-upgrade: ## Upgrade Python 3 run-time dependencies
-	$(PIP) install --upgrade pip
-	$(PIP) install --upgrade -r requirements.txt
-	$(PIP) install --upgrade -r optional-requirements.txt
 
 # For minimal installation (without optional dependencies)
 
+venv-min venv-min-upgrade: REQS = requirements.txt
+
 venv-min-python: ## Install Python 3 venv minimal
-	virtualenv -p /usr/bin/python3 venv-min
-
 venv-min: venv-min-python ## Install Python 3 minimal run-time dependencies
-	$(VENV_MIN)/pip install -r requirements.txt
-
 venv-min-upgrade: ## Upgrade Python 3 minimal run-time dependencies
-	$(VENV_MIN)/pip install --upgrade pip
-	$(VENV_MIN)/pip install --upgrade -r requirements.txt
 
 # For development
 
+venv-dev venv-dev-upgrade: REQS = dev-requirements.txt doc-requirements.txt
+venv-dev: PRE_COMMIT = 1
+
 venv-dev-python: ## Install Python 3 venv
-	virtualenv -p /usr/bin/python3 venv-dev
-
 venv-dev: venv-python ## Install Python 3 dev dependencies
-	$(VENV_DEV)/pip install -r dev-requirements.txt
-	$(VENV_DEV)/pip install -r doc-requirements.txt
-	$(VENV_DEV)/pre-commit install --hook-type pre-commit
-
 venv-dev-upgrade: ## Upgrade Python 3 dev dependencies
-	$(VENV_DEV)/pip install --upgrade pip
-	$(VENV_DEV)/pip install --upgrade -r dev-requirements.txt
-	$(VENV_DEV)/pip install --upgrade -r doc-requirements.txt
 
 # ===================================================================
 # Tests
