@@ -15,7 +15,7 @@ from glances.globals import iteritems
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.plugins.vms.engines import VmsExtension
-from glances.plugins.vms.engines.multipass import VmExtension, import_multipass_error_tag
+from glances.plugins.vms.engines.multipass import VmExtension
 from glances.processes import glances_processes
 from glances.processes import sort_stats as sort_stats_processes
 
@@ -109,8 +109,7 @@ class PluginModel(GlancesPluginModel):
         self.watchers: Dict[str, VmsExtension] = {}
 
         # Init the Multipass API
-        if not import_multipass_error_tag:
-            self.watchers['multipass'] = VmExtension()
+        self.watchers['multipass'] = VmExtension()
 
         # Sort key
         self.sort_key = None
