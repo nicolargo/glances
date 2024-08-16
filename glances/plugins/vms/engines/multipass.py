@@ -30,9 +30,6 @@ class VmExtension:
     CONTAINER_ACTIVE_STATUS = ['running']
 
     def __init__(self):
-        if import_multipass_error_tag:
-            raise Exception(f"Multipass binary ({MULTIPASS_PATH}) is mandatory to get VM stats")
-
         self.ext_name = "Multipass (Vm)"
 
     def update_version(self):
@@ -95,6 +92,11 @@ class VmExtension:
 
     def update(self, all_tag) -> Tuple[Dict, List[Dict]]:
         """Update Vm stats using the input method."""
+        # Can not run multipass on this system then...
+        if import_multipass_error_tag:
+            return {}, []
+
+        # Get the stats from the system
         version_stats = self.update_version()
 
         # TODO: manage all_tag option
