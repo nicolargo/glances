@@ -98,13 +98,13 @@ class VmExtension:
 
         # Get the stats from the system
         version_stats = self.update_version()
-
-        # TODO: manage all_tag option
         info_stats = self.update_info()
-
         returned_stats = []
         for k, v in info_stats.items():
-            returned_stats.append(self.generate_stats(k, v))
+            # Only display when VM in on 'running' states
+            # See states list here: https://multipass.run/docs/instance-states
+            if self._want_display(v, 'state', ['Running', 'Starting', 'Restarting']):
+                returned_stats.append(self.generate_stats(k, v))
 
         return version_stats, returned_stats
 
@@ -112,6 +112,9 @@ class VmExtension:
     def key(self) -> str:
         """Return the key of the list."""
         return 'name'
+
+    def _want_display(self, vm_stats, key, values):
+        return vm_stats.get(key).lower() in [v.lower() for v in values]
 
     def generate_stats(self, vm_name, vm_stats) -> Dict[str, Any]:
         # Init the stats for the current vm
