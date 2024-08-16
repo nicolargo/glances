@@ -103,7 +103,7 @@ class VmExtension:
         for k, v in info_stats.items():
             # Only display when VM in on 'running' states
             # See states list here: https://multipass.run/docs/instance-states
-            if self._want_display(v, 'state', ['Running', 'Starting', 'Restarting']):
+            if all_tag or self._want_display(v, 'state', ['Running', 'Starting', 'Restarting']):
                 returned_stats.append(self.generate_stats(k, v))
 
         return version_stats, returned_stats
