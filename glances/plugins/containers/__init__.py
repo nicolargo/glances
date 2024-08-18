@@ -9,6 +9,7 @@
 """Containers plugin."""
 
 from copy import deepcopy
+from functools import partial, reduce
 from typing import Any, Dict, List, Optional, Tuple
 
 from glances.globals import iteritems, itervalues
@@ -290,17 +291,7 @@ class PluginModel(GlancesPluginModel):
 
         return True
 
-    def msg_curse(self, args=None, max_width: Optional[int] = None) -> List[str]:
-        """Return the dict to display in the curse interface."""
-        # Init the return message
-        ret = []
-
-        # Only process if stats exist (and non null) and display plugin enable...
-        if not self.stats or len(self.stats) == 0 or self.is_disabled():
-            return ret
-
-        # Build the string message
-        # Title
+    def build_title(self, ret):
         msg = '{}'.format('CONTAINERS')
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = f' {len(self.stats)}'
@@ -311,97 +302,130 @@ class PluginModel(GlancesPluginModel):
             msg = f' (served by {self.stats[0].get("engine", "")})'
         ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
-        # Header
-        ret.append(self.curse_new_line())
-        # Get the maximum containers name
-        # Max size is configurable. See feature request #1723.
-        name_max_width = min(
-            self.config.get_int_value('containers', 'max_name_size', default=20) if self.config is not None else 20,
-            len(max(self.stats, key=lambda x: len(x['name']))['name']),
-        )
+        return ret
 
+    def maybe_add_engine_name_or_pod_line(self, ret):
         if self.views['show_engine_name']:
-            msg = ' {:{width}}'.format('Engine', width=6)
-            ret.append(self.curse_add_line(msg))
+            ret = self.add_msg_to_line(ret, ' {:{width}}'.format('Engine', width=6))
         if self.views['show_pod_name']:
-            msg = ' {:{width}}'.format('Pod', width=12)
-            ret.append(self.curse_add_line(msg))
+            ret = self.add_msg_to_line(ret, ' {:{width}}'.format('Pod', width=12))
+
+        return ret
+
+    def maybe_add_engine_name_or_pod_name(self, ret, container):
+        ret.append(self.curse_new_line())
+        if self.views['show_engine_name']:
+            ret.append(self.curse_add_line(' {:{width}}'.format(container["engine"], width=6)))
+        if self.views['show_pod_name']:
+            ret.append(self.curse_add_line(' {:{width}}'.format(container.get("pod_id", "-"), width=12)))
+
+        return ret
+
+    def build_container_name(self, name_max_width):
+        def build_for_this_max_length(ret, container):
+            ret.append(
+                self.curse_add_line(' {:{width}}'.format(container['name'][:name_max_width], width=name_max_width))
+            )
+
+            return ret
+
+        return build_for_this_max_length
+
+    def build_header(self, ret, name_max_width):
+        ret.append(self.curse_new_line())
+
+        ret = self.maybe_add_engine_name_or_pod_line(ret)
+
         msg = ' {:{width}}'.format('Name', width=name_max_width)
         ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'name' else 'DEFAULT'))
-        msg = '{:>10}'.format('Status')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>10}'.format('Uptime')
-        ret.append(self.curse_add_line(msg))
+
+        msgs = ['{:>10}'.format('Status'), '{:>10}'.format('Uptime')]
+        ret = reduce(self.add_msg_to_line, msgs, ret)
+
         msg = '{:>6}'.format('CPU%')
         ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'cpu_percent' else 'DEFAULT'))
         msg = '{:>7}'.format('MEM')
         ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'memory_usage' else 'DEFAULT'))
-        msg = '/{:<7}'.format('MAX')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>7}'.format('IOR/s')
-        ret.append(self.curse_add_line(msg))
-        msg = ' {:<7}'.format('IOW/s')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>7}'.format('Rx/s')
-        ret.append(self.curse_add_line(msg))
-        msg = ' {:<7}'.format('Tx/s')
-        ret.append(self.curse_add_line(msg))
-        msg = ' {:8}'.format('Command')
+
+        msgs = [
+            '/{:<7}'.format('MAX'),
+            '{:>7}'.format('IOR/s'),
+            ' {:<7}'.format('IOW/s'),
+            '{:>7}'.format('Rx/s'),
+            ' {:<7}'.format('Tx/s'),
+            ' {:8}'.format('Command'),
+        ]
+
+        return reduce(self.add_msg_to_line, msgs, ret)
+
+    def add_msg_to_line(self, ret, msg):
         ret.append(self.curse_add_line(msg))
 
-        # Data
-        for container in self.stats:
-            ret.append(self.curse_new_line())
-            if self.views['show_engine_name']:
-                ret.append(self.curse_add_line(' {:{width}}'.format(container["engine"], width=6)))
-            if self.views['show_pod_name']:
-                ret.append(self.curse_add_line(' {:{width}}'.format(container.get("pod_id", "-"), width=12)))
-            # Name
-            ret.append(
-                self.curse_add_line(' {:{width}}'.format(container['name'][:name_max_width], width=name_max_width))
-            )
-            # Status
-            status = self.container_alert(container['status'])
-            msg = '{:>10}'.format(container['status'][0:10])
-            ret.append(self.curse_add_line(msg, status))
-            # Uptime
-            if container['uptime']:
-                msg = '{:>10}'.format(container['uptime'])
-            else:
-                msg = '{:>10}'.format('_')
-            ret.append(self.curse_add_line(msg))
-            # CPU
-            try:
-                msg = '{:>6.1f}'.format(container['cpu']['total'])
-            except (KeyError, TypeError):
-                msg = '{:>6}'.format('_')
-            ret.append(self.curse_add_line(msg, self.get_views(item=container['name'], key='cpu', option='decoration')))
-            # MEM
-            try:
-                msg = '{:>7}'.format(self.auto_unit(self.memory_usage_no_cache(container['memory'])))
-            except KeyError:
-                msg = '{:>7}'.format('_')
-            ret.append(self.curse_add_line(msg, self.get_views(item=container['name'], key='mem', option='decoration')))
-            try:
-                msg = '/{:<7}'.format(self.auto_unit(container['memory']['limit']))
-            except (KeyError, TypeError):
-                msg = '/{:<7}'.format('_')
-            ret.append(self.curse_add_line(msg))
-            # IO R/W
-            unit = 'B'
-            try:
-                value = self.auto_unit(int(container['io_rx'])) + unit
-                msg = f'{value:>7}'
-            except (KeyError, TypeError):
-                msg = '{:>7}'.format('_')
-            ret.append(self.curse_add_line(msg))
-            try:
-                value = self.auto_unit(int(container['io_wx'])) + unit
-                msg = f' {value:<7}'
-            except (KeyError, TypeError):
-                msg = ' {:<7}'.format('_')
-            ret.append(self.curse_add_line(msg))
-            # NET RX/TX
+        return ret
+
+    def get_max_of_container_names(self):
+        return min(
+            self.config.get_int_value('containers', 'max_name_size', default=20) if self.config is not None else 20,
+            len(max(self.stats, key=lambda x: len(x['name']))['name']),
+        )
+
+    def build_status_name(self, ret, container):
+        status = self.container_alert(container['status'])
+        msg = '{:>10}'.format(container['status'][0:10])
+        ret.append(self.curse_add_line(msg, status))
+
+        return ret
+
+    def build_uptime_line(self, ret, container):
+        if container['uptime']:
+            msg = '{:>10}'.format(container['uptime'])
+        else:
+            msg = '{:>10}'.format('_')
+
+        return self.add_msg_to_line(ret, msg)
+
+    def build_cpu_line(self, ret, container):
+        try:
+            msg = '{:>6.1f}'.format(container['cpu']['total'])
+        except (KeyError, TypeError):
+            msg = '{:>6}'.format('_')
+        ret.append(self.curse_add_line(msg, self.get_views(item=container['name'], key='cpu', option='decoration')))
+
+        return ret
+
+    def build_memory_line(self, ret, container):
+        try:
+            msg = '{:>7}'.format(self.auto_unit(self.memory_usage_no_cache(container['memory'])))
+        except KeyError:
+            msg = '{:>7}'.format('_')
+        ret.append(self.curse_add_line(msg, self.get_views(item=container['name'], key='mem', option='decoration')))
+        try:
+            msg = '/{:<7}'.format(self.auto_unit(container['memory']['limit']))
+        except (KeyError, TypeError):
+            msg = '/{:<7}'.format('_')
+        ret.append(self.curse_add_line(msg))
+
+        return ret
+
+    def build_io_line(self, ret, container):
+        unit = 'B'
+        try:
+            value = self.auto_unit(int(container['io_rx'])) + unit
+            msg = f'{value:>7}'
+        except (KeyError, TypeError):
+            msg = '{:>7}'.format('_')
+        ret.append(self.curse_add_line(msg))
+        try:
+            value = self.auto_unit(int(container['io_wx'])) + unit
+            msg = f' {value:<7}'
+        except (KeyError, TypeError):
+            msg = ' {:<7}'.format('_')
+        ret.append(self.curse_add_line(msg))
+
+        return ret
+
+    def build_net_line(self, args):
+        def build_with_this_args(ret, container):
             if args.byte:
                 # Bytes per second (for dummy)
                 to_bit = 1
@@ -422,14 +446,67 @@ class PluginModel(GlancesPluginModel):
             except (KeyError, TypeError):
                 msg = ' {:<7}'.format('_')
             ret.append(self.curse_add_line(msg))
-            # Command
-            if container['command'] is not None:
-                msg = ' {}'.format(container['command'])
-            else:
-                msg = ' {}'.format('_')
-            ret.append(self.curse_add_line(msg, splittable=True))
+
+            return ret
+
+        return build_with_this_args
+
+    def build_cmd_line(self, ret, container):
+        if container['command'] is not None:
+            msg = ' {}'.format(container['command'])
+        else:
+            msg = ' {}'.format('_')
+        ret.append(self.curse_add_line(msg, splittable=True))
 
         return ret
+
+    def msg_curse(self, args=None, max_width: Optional[int] = None) -> List[str]:
+        """Return the dict to display in the curse interface."""
+        # Init the return message
+        init = []
+
+        # Only process if stats exist (and non null) and display plugin enable...
+        conditions = [not self.stats, len(self.stats) == 0, self.is_disabled()]
+        if any(conditions):
+            return init
+
+        # Build the string message
+        # Get the maximum containers name
+        # Max size is configurable. See feature request #1723.
+        name_max_width = self.get_max_of_container_names()
+
+        steps = [
+            self.build_title,
+            partial(self.build_header, name_max_width=name_max_width),
+            self.build_data_line(name_max_width, args),
+        ]
+
+        return reduce(lambda ret, step: step(ret), steps, init)
+
+    def build_data_line(self, name_max_width, args):
+        def build_for_this_params(ret):
+            build_data_with_params = self.build_container_data(name_max_width, args)
+            return reduce(build_data_with_params, self.stats, ret)
+
+        return build_for_this_params
+
+    def build_container_data(self, name_max_width, args):
+        def build_with_this_params(ret, container):
+            steps = [
+                self.maybe_add_engine_name_or_pod_name,
+                self.build_container_name(name_max_width),
+                self.build_status_name,
+                self.build_uptime_line,
+                self.build_cpu_line,
+                self.build_memory_line,
+                self.build_io_line,
+                self.build_net_line(args),
+                self.build_cmd_line,
+            ]
+
+            return reduce(lambda ret, step: step(ret, container), steps, ret)
+
+        return build_with_this_params
 
     @staticmethod
     def container_alert(status: str) -> str:
