@@ -144,8 +144,8 @@ class PluginModel(GlancesPluginModel):
             # New line
             ret.append(self.curse_new_line())
             # Start
-            msg = str(datetime.fromtimestamp(alert['begin'], tz=datetime.now().astimezone().tzinfo))
-            ret.append(self.curse_add_line(msg))
+            alert_dt = datetime.fromtimestamp(alert['begin'], tz=datetime.now().astimezone().tzinfo)
+            ret.append(self.curse_add_line(alert_dt.strftime("%Y-%m-%d %H:%M:%S(%z)")))
             # Duration
             if alert['end'] > 0:
                 # If finished display duration
