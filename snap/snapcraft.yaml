@@ -1,5 +1,5 @@
 name: glances
-version: '4.1.2+build02'  # Put the current stable version+buildXX
+version: '4.1.2+build03'  # Put the current stable version+buildXX
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
@@ -47,9 +47,9 @@ plugs:
       - /etc/glances/glances.conf
   proc-sys:
     interface: system-observe
-    read:
-      - /proc
-      - /sys
+    # read:
+    #   - /proc
+    #   - /sys
 
 parts:
   glances:
@@ -59,3 +59,5 @@ parts:
     python-requirements:
       - requirements.txt
       - webui-requirements.txt
+      - docker-requirements.txt
+
