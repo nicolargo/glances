@@ -269,10 +269,6 @@ class GlancesRestfulApi:
             endpoint=self._api_value,
         )
 
-        # Restful API
-        bindmsg = f'Glances RESTful API Server started on {self.bind_url}api/{self.API_VERSION}'
-        logger.info(bindmsg)
-
         # WEB UI
         if not self.args.disable_webui:
             # Template for the root index.html file
@@ -281,12 +277,16 @@ class GlancesRestfulApi:
             # Statics files
             self._app.mount(self.url_prefix + '/static', StaticFiles(directory=self.STATIC_PATH), name="static")
 
-            logger.info(f"Get WebUI in {self.STATIC_PATH}")
+            logger.info(f"The WebUI is enable and got statics files in {self.STATIC_PATH}")
 
             bindmsg = f'Glances Web User Interface started on {self.bind_url}'
+            logger.info(bindmsg)
+            print(bindmsg)
         else:
-            bindmsg = 'The WebUI is disable (--disable-webui)'
+            logger.info('The WebUI is disable (--disable-webui)')
 
+        # Restful API
+        bindmsg = f'Glances RESTful API Server started on {self.bind_url}api/{self.API_VERSION}'
         logger.info(bindmsg)
         print(bindmsg)
 
