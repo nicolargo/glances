@@ -56,7 +56,7 @@ $(VENV_PYTHON): venv-%-python:
 	virtualenv -p /usr/bin/python3 $(if $(filter full,$*),venv,venv-$*)
 
 $(VENV_INST_UPG): venv-%:
-	$(if $(UPGRADE),$(VIRTUAL_ENV)/install install --upgrade pip,)
+	$(if $(UPGRADE),$(VIRTUAL_ENV)/pip install --upgrade pip,)
 	$(foreach REQ,$(REQS), $(VIRTUAL_ENV)/pip install $(UPGRADE) -r $(REQ);)
 	$(if $(PRE_COMMIT),$(VIRTUAL_ENV)/pre-commit install --hook-type pre-commit,)
 
