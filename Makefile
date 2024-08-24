@@ -126,23 +126,30 @@ codespell: ## Run codespell to fix common misspellings in text files
 semgrep: ## Run semgrep to find bugs and enforce code standards
 	$(venv_dev)/semgrep scan --config=auto
 
+profiling-%: SLEEP = 3
+profiling-%: TIMES = 30
+profiling-%: OUT_DIR = docs/_static
+
+define DISPLAY-BANNER
+@echo "Start Glances for $(TIMES) iterations (more or less 1 mins, please do not exit !)"
+sleep $(SLEEP)
+endef
+
+profiling-gprof: CPROF = glances.cprof
 profiling-gprof: ## Callgraph profiling (need "apt install graphviz")
-	@echo "Start Glances for 30 iterations (more or less 1 mins, please do not exit !)"
-	sleep 3
-	$(PYTHON) -m cProfile -o ./glances.cprof ./run.py --stop-after 30
-	$(venv_dev)/gprof2dot -f pstats ./glances.cprof | dot -Tsvg -o ./docs/_static/glances-cgraph.svg
-	rm -f ./glances.cprof
+	$(DISPLAY-BANNER)
+	$(PYTHON) -m cProfile -o $(CPROF) run.py --stop-after $(TIMES)
+	$(venv_dev)/gprof2dot -f pstats $(CPROF) | dot -Tsvg -o $(OUT_DIR)/glances-cgraph.svg
+	rm -f $(CPROF)
 
 profiling-pyinstrument: ## PyInstrument profiling
-	@echo "Start Glances for 30 iterations (more or less 1 mins, please do not exit !)"
-	sleep 3
+	$(DISPLAY-BANNER)
 	$(PIP) install pyinstrument
-	$(PYTHON) -m pyinstrument -r html -o ./docs/_static/glances-pyinstrument.html -m glances --stop-after 30
+	$(PYTHON) -m pyinstrument -r html -o $(OUT_DIR)/glances-pyinstrument.html -m glances --stop-after $(TIMES)
 
 profiling-pyspy: ## Flame profiling (currently not compatible with Python 3.12)
-	@echo "Start Glances for 30 iterations (more or less 1 mins, please do not exit !)"
-	sleep 3
-	$(venv_dev)/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s -- $(PYTHON) ./run.py --stop-after 30
+	$(DISPLAY-BANNER)
+	$(venv_dev)/py-spy record -o $(OUT_DIR)/glances-flame.svg -d 60 -s -- $(PYTHON) run.py --stop-after $(TIMES)
 
 profiling: profiling-gprof profiling-pyinstrument profiling-pyspy ## Profiling of the Glances software
 
@@ -153,17 +160,19 @@ trace-malloc: ## Trace the malloc() calls
 memory-leak: ## Profile memory leaks
 	$(PYTHON) -m glances -C $(CONF) --memory-leak
 
+memory-profiling: TIMES = 2400
+memory-profiling: PROFILE = mprofile_*.dat
 memory-profiling: ## Profile memory usage
 	@echo "It's a very long test (~4 hours)..."
-	rm -f mprofile_*.dat
+	rm -f $(PROFILE)
 	@echo "1/2 - Start memory profiling with the history option enable"
-	$(venv_dev)/mprof run -T 1 -C run.py -C $(CONF) --stop-after 2400 --quiet
-	$(venv_dev)/mprof plot --output ./docs/_static/glances-memory-profiling-with-history.png
-	rm -f mprofile_*.dat
+	$(venv_dev)/mprof run -T 1 -C run.py -C $(CONF) --stop-after $(TIMES) --quiet
+	$(venv_dev)/mprof plot --output $(OUT_DIR)/glances-memory-profiling-with-history.png
+	rm -f $(PROFILE)
 	@echo "2/2 - Start memory profiling with the history option disable"
-	$(venv_dev)/mprof run -T 1 -C run.py -C $(CONF) --disable-history --stop-after 2400 --quiet
-	$(venv_dev)/mprof plot --output ./docs/_static/glances-memory-profiling-without-history.png
-	rm -f mprofile_*.dat
+	$(venv_dev)/mprof run -T 1 -C run.py -C $(CONF) --disable-history --stop-after $(TIMES) --quiet
+	$(venv_dev)/mprof plot --output $(OUT_DIR)/glances-memory-profiling-without-history.png
+	rm -f $(PROFILE)
 
 # Trivy installation: https://aquasecurity.github.io/trivy/latest/getting-started/installation/
 trivy: ## Run Trivy to find vulnerabilities in container images
