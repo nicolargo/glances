@@ -7,7 +7,7 @@ cassandra-driver
 chevron
 docker>=6.1.1
 elasticsearch
-fastapi
+fastapi>=0.82.0
 graphitesender
 hddtemp
 influxdb>=1.0.0 # For InfluxDB < 1.8

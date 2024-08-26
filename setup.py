@@ -83,7 +83,7 @@ def get_install_extras_require():
         'smart': ['pySMART.smartx'],
         'snmp': ['pysnmp'],
         'sparklines': ['sparklines'],
-        'web': ['fastapi', 'uvicorn', 'jinja2', 'requests'],
+        'web': ['fastapi>=0.82.0', 'uvicorn', 'jinja2', 'requests'],
         'wifi': ['wifi'],
     }
     if sys.platform.startswith('linux'):
