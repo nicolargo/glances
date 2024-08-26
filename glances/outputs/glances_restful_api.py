@@ -35,8 +35,9 @@ try:
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
     from fastapi.staticfiles import StaticFiles
     from fastapi.templating import Jinja2Templates
-except ImportError:
-    logger.critical('FastAPI import error. Glances cannot start in web server mode.')
+except ImportError as e:
+    logger.critical(f'FastAPI import error: {e}')
+    logger.critical('Glances cannot start in web server mode.')
     sys.exit(2)
 
 try:

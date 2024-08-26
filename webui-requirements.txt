@@ -1,6 +1,6 @@
 # install with base requirements file
 -r requirements.txt
 
-fastapi; python_version >= "3.8"
+fastapi>=0.82.0; python_version >= "3.8"
 jinja2
 uvicorn; python_version >= "3.8"
