@@ -8,12 +8,11 @@
 
 """Multipass Extension unit for Glances' Vms plugin."""
 
+import json
 import os
 from typing import Any, Dict, List, Tuple
 
-import orjson
-
-from glances.globals import nativestr
+from glances.globals import json_loads, nativestr
 from glances.secure import secure_popen
 
 # Check if multipass binary exist
@@ -40,8 +39,8 @@ class VmExtension:
         # }
         ret_cmd = secure_popen(f'{MULTIPASS_PATH} {MULTIPASS_VERSION_OPTIONS}')
         try:
-            ret = orjson.loads(ret_cmd)
-        except orjson.JSONDecodeError:
+            ret = json_loads(ret_cmd)
+        except json.JSONDecodeError:
             return {}
         else:
             return ret.get('multipass', None)
@@ -84,8 +83,8 @@ class VmExtension:
         # }
         ret_cmd = secure_popen(f'{MULTIPASS_PATH} {MULTIPASS_INFO_OPTIONS}')
         try:
-            ret = orjson.loads(ret_cmd)
-        except orjson.JSONDecodeError:
+            ret = json_loads(ret_cmd)
+        except json.JSONDecodeError:
             return {}
         else:
             return ret.get('info', {})

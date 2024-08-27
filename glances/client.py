@@ -11,10 +11,8 @@
 import sys
 import time
 
-import orjson
-
 from glances import __version__
-from glances.globals import Fault, ProtocolError, ServerProxy, Transport
+from glances.globals import Fault, ProtocolError, ServerProxy, Transport, json_loads
 from glances.logger import logger
 from glances.outputs.glances_curses import GlancesCursesClient
 from glances.stats_client import GlancesStatsClient
@@ -118,7 +116,7 @@ class GlancesClient:
             if __version__.split('.')[0] == client_version.split('.')[0]:
                 # Init stats
                 self.stats = GlancesStatsClient(config=self.config, args=self.args)
-                self.stats.set_plugins(orjson.loads(self.client.getAllPlugins()))
+                self.stats.set_plugins(json_loads(self.client.getAllPlugins()))
                 logger.debug(f"Client version: {__version__} / Server version: {client_version}")
             else:
                 self.log_and_exit(
@@ -195,7 +193,7 @@ class GlancesClient:
         """
         # Update the stats
         try:
-            server_stats = orjson.loads(self.client.getAll())
+            server_stats = json_loads(self.client.getAll())
         except OSError:
             # Client cannot get server stats
             return "Disconnected"

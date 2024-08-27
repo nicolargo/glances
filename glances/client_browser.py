@@ -10,11 +10,9 @@
 
 import threading
 
-import orjson
-
 from glances.autodiscover import GlancesAutoDiscoverServer
 from glances.client import GlancesClient, GlancesClientTransport
-from glances.globals import Fault, ProtocolError, ServerProxy
+from glances.globals import Fault, ProtocolError, ServerProxy, json_loads
 from glances.logger import LOG_FILENAME, logger
 from glances.outputs.glances_curses_browser import GlancesCursesBrowser
 from glances.password_list import GlancesPasswordList as GlancesPassword
@@ -97,13 +95,13 @@ class GlancesClientBrowser:
                 # CPU%
                 # logger.info(f"CPU stats {s.getPlugin('cpu')}")
                 # logger.info(f"CPU views {s.getPluginView('cpu')}")
-                server['cpu_percent'] = orjson.loads(s.getPlugin('cpu'))['total']
-                server['cpu_percent_decoration'] = orjson.loads(s.getPluginView('cpu'))['total']['decoration']
+                server['cpu_percent'] = json_loads(s.getPlugin('cpu'))['total']
+                server['cpu_percent_decoration'] = json_loads(s.getPluginView('cpu'))['total']['decoration']
                 # MEM%
-                server['mem_percent'] = orjson.loads(s.getPlugin('mem'))['percent']
-                server['mem_percent_decoration'] = orjson.loads(s.getPluginView('mem'))['percent']['decoration']
+                server['mem_percent'] = json_loads(s.getPlugin('mem'))['percent']
+                server['mem_percent_decoration'] = json_loads(s.getPluginView('mem'))['percent']['decoration']
                 # OS (Human Readable name)
-                server['hr_name'] = orjson.loads(s.getPlugin('system'))['hr_name']
+                server['hr_name'] = json_loads(s.getPlugin('system'))['hr_name']
                 server['hr_name_decoration'] = 'DEFAULT'
             except (OSError, Fault, KeyError) as e:
                 logger.debug(f"Error while grabbing stats form server ({e})")
@@ -124,8 +122,8 @@ class GlancesClientBrowser:
                 # Optional stats (load is not available on Windows OS)
                 try:
                     # LOAD
-                    server['load_min5'] = round(orjson.loads(s.getPlugin('load'))['min5'], 1)
-                    server['load_min5_decoration'] = orjson.loads(s.getPluginView('load'))['min5']['decoration']
+                    server['load_min5'] = round(json_loads(s.getPlugin('load'))['min5'], 1)
+                    server['load_min5_decoration'] = json_loads(s.getPluginView('load'))['min5']['decoration']
                 except Exception as e:
                     logger.warning(f"Error while grabbing stats form server ({e})")
 
