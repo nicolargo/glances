@@ -27,17 +27,22 @@ from configparser import ConfigParser, NoOptionError, NoSectionError
 from datetime import datetime
 from operator import itemgetter, methodcaller
 from statistics import mean
+from typing import Dict, List, Union
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 from xmlrpc.client import Fault, ProtocolError, Server, ServerProxy, Transport
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
-import orjson
-
-# Correct issue #1025 by monkey path the xmlrpc lib
 from defusedxml.xmlrpc import monkey_patch
 
+# Optionally use orjson if available
+try:
+    import orjson as json
+except ImportError:
+    import json
+
+# Correct issue #1025 by monkey path the xmlrpc lib
 monkey_patch()
 
 ##############
@@ -303,15 +308,20 @@ def urlopen_auth(url, username, password):
     )
 
 
-def json_dumps(data):
+def json_dumps(data) -> str:
     """Return the object data in a JSON format.
 
     Manage the issue #815 for Windows OS with UnicodeDecodeError catching.
     """
     try:
-        return orjson.dumps(data)
+        return json.dumps(data)
     except UnicodeDecodeError:
-        return orjson.dumps(data, ensure_ascii=False)
+        return json.dumps(data, ensure_ascii=False)
+
+
+def json_loads(data: Union[str, bytes, bytearray]) -> Union[Dict, List]:
+    """Load a JSON buffer into memory as a Python object"""
+    return json.loads(data)
 
 
 def dictlist(data, item):
