@@ -2,6 +2,7 @@
 -r requirements.txt
 
 docker>=6.1.1
+orjson # JSON Serialization speedup
 podman
 python-dateutil
 requests
