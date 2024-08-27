@@ -16,6 +16,7 @@ jinja2
 kafka-python
 netifaces
 nvidia-ml-py
+orjson # JSON Serialization speedup
 paho-mqtt
 pika
 podman
