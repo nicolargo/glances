@@ -322,15 +322,17 @@ def urlopen_auth(url, username, password):
     )
 
 
-def json_dumps(data) -> str:
+def json_dumps(data) -> bytes:
     """Return the object data in a JSON format.
 
     Manage the issue #815 for Windows OS with UnicodeDecodeError catching.
     """
     try:
-        return json.dumps(data)
+        res = json.dumps(data)
     except UnicodeDecodeError:
-        return json.dumps(data, ensure_ascii=False)
+        res = json.dumps(data, ensure_ascii=False)
+    # ujson & json libs return strings, but our contract expects bytes
+    return b(res)
 
 
 def json_loads(data: Union[str, bytes, bytearray]) -> Union[Dict, List]:
