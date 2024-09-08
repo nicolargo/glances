@@ -16,6 +16,7 @@
 import base64
 import errno
 import functools
+import importlib
 import os
 import platform
 import queue
@@ -36,14 +37,27 @@ from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 from defusedxml.xmlrpc import monkey_patch
 
-# Optionally use orjson if available
-try:
-    import orjson as json
-except ImportError:
-    import json
-
 # Correct issue #1025 by monkey path the xmlrpc lib
 monkey_patch()
+
+# Prefer faster libs for JSON (de)serialization
+# Preference Order: orjson > ujson > json (builtin)
+try:
+    import orjson as json
+
+    json.dumps = functools.partial(json.dumps, option=json.OPT_NON_STR_KEYS)
+except ImportError:
+    # Need to log info but importing logger will cause cyclic imports
+    pass
+
+try:
+    import ujson as json
+except ImportError:
+    # Need to log info but importing logger will cause cyclic imports
+    pass
+
+if 'json' not in globals():
+    import json
 
 ##############
 # GLOBALS VARS
@@ -303,7 +317,7 @@ def urlopen_auth(url, username, password):
     return urlopen(
         Request(
             url,
-            headers={'Authorization': 'Basic ' + base64.b64encode((f'{username}:{password}').encode()).decode()},
+            headers={'Authorization': 'Basic ' + base64.b64encode(f'{username}:{password}'.encode()).decode()},
         )
     )
 
