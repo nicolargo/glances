@@ -166,7 +166,7 @@ def subsample(data, sampling):
     return [mean(data[s * sampling_length : (s + 1) * sampling_length]) for s in range(0, sampling)]
 
 
-def time_serie_subsample(data, sampling):
+def time_series_subsample(data, sampling):
     """Compute a simple mean subsampling.
 
     Data should be a list of set (time, value)
