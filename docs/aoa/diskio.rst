@@ -42,4 +42,12 @@ Filtering is based on regular expression. Please be sure that your regular
 expression works as expected. You can use an online tool like `regex101`_ in
 order to test your regular expression.
 
+You also can automatically hide disk with no read or write using the
+``hide_zero`` configuration key.
+
+.. code-block:: ini
+
+    [diskio]
+    hide_zero=True
+
 .. _regex101: https://regex101.com/

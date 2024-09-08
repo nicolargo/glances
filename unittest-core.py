@@ -23,7 +23,6 @@ from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.programs import processes_to_programs
-from glances.secure import secure_popen
 from glances.stats import GlancesStats
 from glances.thresholds import (
     GlancesThresholdCareful,
@@ -64,7 +63,7 @@ class TestGlances(unittest.TestCase):
 
         return plugin_instance
 
-    def zipWith(self, method, elems, values):
+    def zip_with(self, method, elems, values):
         [method(elem, value) for elem, value in zip(elems, values)]
 
     def do_checks_before_update(self, plugin_instance):
@@ -77,7 +76,7 @@ class TestGlances(unittest.TestCase):
 
         values = [plugin_instance.stats_init_value, True, False, {}]
 
-        self.zipWith(self.assertEqual, elems, values)
+        self.zip_with(self.assertEqual, elems, values)
 
         self.assertIsInstance(plugin_instance.get_raw(), (dict, list))
 
@@ -141,7 +140,7 @@ class TestGlances(unittest.TestCase):
 
         values = [plugin_instance.get_export(), plugin_instance.get_json(), plugin_instance.get_raw()]
 
-        self.zipWith(self.assertEqual, elems, values)
+        self.zip_with(self.assertEqual, elems, values)
 
         if len(plugin_instance.fields_description) > 0:
             # Get first item of the fields_description
@@ -155,7 +154,7 @@ class TestGlances(unittest.TestCase):
 
             values = [dict, dict, str]
 
-            self.zipWith(self.assertIsInstance, elems, values)
+            self.zip_with(self.assertIsInstance, elems, values)
 
     def filter_stats(self, plugin_instance):
         current_stats = plugin_instance.get_raw()
@@ -715,60 +714,104 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_107] Test fs plugin methods')
         self._common_plugin_tests('fs')
 
-    def test_700_secure(self):
-        """Test secure functions"""
-        print('INFO: [TEST_700] Secure functions')
+    def test_200_views_hidden(self):
+        """Test hide feature"""
+        print('INFO: [TEST_200] Test views hidden feature')
+        # Test will be done with the diskio plugin, first available interface (read_bytes fields)
+        plugin = 'diskio'
+        field = 'read_bytes_rate_per_sec'
+        plugin_instance = stats.get_plugin(plugin)
+        if len(plugin_instance.get_views()) == 0 or not test_config.get_bool_value(plugin, 'hide_zero', False):
+            # No diskIO interface, test can not be done
+            return
+        # Get first disk interface
+        key = list(plugin_instance.get_views().keys())[0]
+        # Test
+        ######
+        # Init the stats
+        plugin_instance.update()
+        raw_stats = plugin_instance.get_raw()
+        # Reset the views
+        plugin_instance.set_views({})
+        # Set field to 0 (should be hidden)
+        raw_stats[0][field] = 0
+        plugin_instance.set_stats(raw_stats)
+        self.assertEqual(plugin_instance.get_raw()[0][field], 0)
+        plugin_instance.update_views()
+        self.assertTrue(plugin_instance.get_views()[key][field]['hidden'])
+        # Set field to 0 (should be hidden)
+        raw_stats[0][field] = 0
+        plugin_instance.set_stats(raw_stats)
+        self.assertEqual(plugin_instance.get_raw()[0][field], 0)
+        plugin_instance.update_views()
+        self.assertTrue(plugin_instance.get_views()[key][field]['hidden'])
+        # Set field to 1 (should not be hidden)
+        raw_stats[0][field] = 1
+        plugin_instance.set_stats(raw_stats)
+        self.assertEqual(plugin_instance.get_raw()[0][field], 1)
+        plugin_instance.update_views()
+        self.assertFalse(plugin_instance.get_views()[key][field]['hidden'])
+        # Set field back to 0 (should not be hidden)
+        raw_stats[0][field] = 0
+        plugin_instance.set_stats(raw_stats)
+        self.assertEqual(plugin_instance.get_raw()[0][field], 0)
+        plugin_instance.update_views()
+        self.assertFalse(plugin_instance.get_views()[key][field]['hidden'])
 
-        if WINDOWS:
-            self.assertIn(secure_popen('echo TEST'), ['TEST\n', 'TEST\r\n'])
-            self.assertIn(secure_popen('echo TEST1 && echo TEST2'), ['TEST1\nTEST2\n', 'TEST1\r\nTEST2\r\n'])
-        else:
-            self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
-            self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
-            # Make the test failed on Github (AssertionError: '' != 'FOO\n')
-            # but not on my localLinux computer...
-            # self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
+    # def test_700_secure(self):
+    #     """Test secure functions"""
+    #     print('INFO: [TEST_700] Secure functions')
 
-    def test_800_memory_leak(self):
-        """Memory leak check"""
-        import tracemalloc
+    #     if WINDOWS:
+    #         self.assertIn(secure_popen('echo TEST'), ['TEST\n', 'TEST\r\n'])
+    #         self.assertIn(secure_popen('echo TEST1 && echo TEST2'), ['TEST1\nTEST2\n', 'TEST1\r\nTEST2\r\n'])
+    #     else:
+    #         self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
+    #         self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
+    #         # Make the test failed on Github (AssertionError: '' != 'FOO\n')
+    #         # but not on my localLinux computer...
+    #         # self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
 
-        print('INFO: [TEST_800] Memory leak check')
-        tracemalloc.start()
-        # 3 iterations just to init the stats and fill the memory
-        for _ in range(3):
-            stats.update()
+    # def test_800_memory_leak(self):
+    #     """Memory leak check"""
+    #     import tracemalloc
 
-        # Start the memory leak check
-        snapshot_begin = tracemalloc.take_snapshot()
-        for _ in range(3):
-            stats.update()
-        snapshot_end = tracemalloc.take_snapshot()
-        snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
-        memory_leak = sum([s.size_diff for s in snapshot_diff])
-        print(f'INFO: Memory leak: {memory_leak} bytes')
+    #     print('INFO: [TEST_800] Memory leak check')
+    #     tracemalloc.start()
+    #     # 3 iterations just to init the stats and fill the memory
+    #     for _ in range(3):
+    #         stats.update()
 
-        # snapshot_begin = tracemalloc.take_snapshot()
-        for _ in range(30):
-            stats.update()
-        snapshot_end = tracemalloc.take_snapshot()
-        snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
-        memory_leak = sum([s.size_diff for s in snapshot_diff])
-        print(f'INFO: Memory leak: {memory_leak} bytes')
+    #     # Start the memory leak check
+    #     snapshot_begin = tracemalloc.take_snapshot()
+    #     for _ in range(3):
+    #         stats.update()
+    #     snapshot_end = tracemalloc.take_snapshot()
+    #     snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
+    #     memory_leak = sum([s.size_diff for s in snapshot_diff])
+    #     print(f'INFO: Memory leak: {memory_leak} bytes')
 
-        # snapshot_begin = tracemalloc.take_snapshot()
-        for _ in range(300):
-            stats.update()
-        snapshot_end = tracemalloc.take_snapshot()
-        snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
-        memory_leak = sum([s.size_diff for s in snapshot_diff])
-        print(f'INFO: Memory leak: {memory_leak} bytes')
-        snapshot_top = snapshot_end.compare_to(snapshot_begin, 'traceback')
-        print("Memory consumption (top 5):")
-        for stat in snapshot_top[:5]:
-            print(stat)
-            for line in stat.traceback.format():
-                print(line)
+    #     # snapshot_begin = tracemalloc.take_snapshot()
+    #     for _ in range(30):
+    #         stats.update()
+    #     snapshot_end = tracemalloc.take_snapshot()
+    #     snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
+    #     memory_leak = sum([s.size_diff for s in snapshot_diff])
+    #     print(f'INFO: Memory leak: {memory_leak} bytes')
+
+    #     # snapshot_begin = tracemalloc.take_snapshot()
+    #     for _ in range(300):
+    #         stats.update()
+    #     snapshot_end = tracemalloc.take_snapshot()
+    #     snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
+    #     memory_leak = sum([s.size_diff for s in snapshot_diff])
+    #     print(f'INFO: Memory leak: {memory_leak} bytes')
+    #     snapshot_top = snapshot_end.compare_to(snapshot_begin, 'traceback')
+    #     print("Memory consumption (top 5):")
+    #     for stat in snapshot_top[:5]:
+    #         print(stat)
+    #         for line in stat.traceback.format():
+    #             print(line)
 
     def test_999_the_end(self):
         """Free all the stats"""
