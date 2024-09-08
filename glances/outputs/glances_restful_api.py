@@ -174,9 +174,6 @@ class GlancesRestfulApi:
             self.stats.update()
             self.timer = Timer(self.args.cached_time)
 
-    def app(self):
-        return self._app()
-
     def authentication(self, creds: Annotated[HTTPBasicCredentials, Depends(security)]):
         """Check if a username/password combination is valid."""
         if creds.username == self.args.username:
