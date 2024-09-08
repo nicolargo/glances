@@ -86,7 +86,7 @@ class PluginModel(GlancesPluginModel):
             self.hide_zero = config.get_bool_value(self.plugin_name, 'hide_zero', default=False)
         else:
             self.hide_zero = False
-        self.hide_zero_fields = ['bytes_recv', 'bytes_sent']
+        self.hide_zero_fields = ['bytes_recv_rate_per_sec', 'bytes_sent_rate_per_sec']
 
         #  Add support for automatically hiding network interfaces that are down
         # or that don't have any IP addresses #2799
@@ -195,9 +195,6 @@ class PluginModel(GlancesPluginModel):
         """Update stats views."""
         # Call the father's method
         super().update_views()
-
-        # Check if the stats should be hidden
-        self.update_views_hidden()
 
         # Add specifics information
         # Alert

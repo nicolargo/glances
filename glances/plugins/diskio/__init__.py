@@ -75,7 +75,7 @@ class PluginModel(GlancesPluginModel):
             self.hide_zero = config.get_bool_value(self.plugin_name, 'hide_zero', default=False)
         else:
             self.hide_zero = False
-        self.hide_zero_fields = ['read_bytes', 'write_bytes']
+        self.hide_zero_fields = ['read_bytes_rate_per_sec', 'write_bytes_rate_per_sec']
 
         # Force a first update because we need two updates to have the first stat
         self.update()
@@ -140,9 +140,6 @@ class PluginModel(GlancesPluginModel):
         """Update stats views."""
         # Call the father's method
         super().update_views()
-
-        # Check if the stats should be hidden
-        self.update_views_hidden()
 
         # Add specifics information
         # Alert
