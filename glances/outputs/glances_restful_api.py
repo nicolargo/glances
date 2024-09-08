@@ -14,6 +14,8 @@ import tempfile
 import webbrowser
 from urllib.parse import urljoin
 
+from glances.stats import GlancesStats
+
 try:
     from typing import Annotated, Any
 except ImportError:
@@ -51,6 +53,8 @@ import contextlib
 import threading
 import time
 
+security = HTTPBasic()
+
 
 class GlancesJSONResponse(JSONResponse):
     """
@@ -61,9 +65,6 @@ class GlancesJSONResponse(JSONResponse):
 
     def render(self, content: Any) -> bytes:
         return json_dumps(content)
-
-
-security = HTTPBasic()
 
 
 class GlancesUvicornServer(uvicorn.Server):
@@ -183,9 +184,7 @@ class GlancesRestfulApi:
 
         # If the username/password combination is invalid, return an HTTP 401
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Basic"},
+            status.HTTP_401_UNAUTHORIZED, "Incorrect username or password", {"WWW-Authenticate": "Basic"}
         )
 
     def _router(self) -> APIRouter:
@@ -250,7 +249,7 @@ class GlancesRestfulApi:
 
         return router
 
-    def start(self, stats):
+    def start(self, stats: GlancesStats) -> None:
         """Start the bottle."""
         # Init stats
         self.stats = stats
@@ -301,13 +300,7 @@ class GlancesRestfulApi:
         self.__update__()
 
         # Display
-        return self._templates.TemplateResponse(
-            "index.html",
-            {
-                "request": request,
-                "refresh_time": refresh_time,
-            },
-        )
+        return self._templates.TemplateResponse("index.html", {"request": request, "refresh_time": refresh_time})
 
     def _api_status(self):
         """Glances API RESTful implementation.
@@ -328,7 +321,7 @@ class GlancesRestfulApi:
         try:
             plist = self.stats.get_plugin("help").get_view_data()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get help view data ({str(e)})")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get help view data ({str(e)})")
 
         return GlancesJSONResponse(plist)
 
@@ -364,7 +357,7 @@ class GlancesRestfulApi:
         try:
             plist = self.plugins_list
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get plugin list ({str(e)})")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get plugin list ({str(e)})")
 
         return GlancesJSONResponse(plist)
 
@@ -391,7 +384,7 @@ class GlancesRestfulApi:
             # Get the RAW value of the stat ID
             statval = self.stats.getAllAsDict()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get stats ({str(e)})")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get stats ({str(e)})")
 
         return GlancesJSONResponse(statval)
 
@@ -407,7 +400,7 @@ class GlancesRestfulApi:
             # Get the RAW value of the stat limits
             limits = self.stats.getAllLimitsAsDict()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get limits ({str(e)})")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get limits ({str(e)})")
 
         return GlancesJSONResponse(limits)
 
@@ -423,11 +416,11 @@ class GlancesRestfulApi:
             # Get the RAW value of the stat view
             limits = self.stats.getAllViewsAsDict()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get views ({str(e)})")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get views ({str(e)})")
 
         return GlancesJSONResponse(limits)
 
-    def _api(self, plugin):
+    def _api(self, plugin: str):
         """Glances API RESTful implementation.
 
         Return the JSON representation of a given plugin
@@ -435,11 +428,7 @@ class GlancesRestfulApi:
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        if plugin not in self.plugins_list:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
-            )
+        self._check_if_plugin_available(plugin)
 
         # Update the stat
         self.__update__()
@@ -448,11 +437,19 @@ class GlancesRestfulApi:
             # Get the RAW value of the stat ID
             statval = self.stats.get_plugin(plugin).get_raw()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get plugin {plugin} ({str(e)})")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get plugin {plugin} ({str(e)})")
 
         return GlancesJSONResponse(statval)
 
-    def _api_top(self, plugin, nb: int = 0):
+    def _check_if_plugin_available(self, plugin: str) -> None:
+        if plugin in self.plugins_list:
+            return
+
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, f"Unknown plugin {plugin} (available plugins: {self.plugins_list})"
+        )
+
+    def _api_top(self, plugin: str, nb: int = 0):
         """Glances API RESTful implementation.
 
         Return the JSON representation of a given plugin limited to the top nb items.
@@ -462,11 +459,7 @@ class GlancesRestfulApi:
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        if plugin not in self.plugins_list:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
-            )
+        self._check_if_plugin_available(plugin)
 
         # Update the stat
         self.__update__()
@@ -475,7 +468,7 @@ class GlancesRestfulApi:
             # Get the RAW value of the stat ID
             statval = self.stats.get_plugin(plugin).get_raw()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get plugin {plugin} ({str(e)})")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get plugin {plugin} ({str(e)})")
 
         print(statval)
 
@@ -484,7 +477,7 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(statval)
 
-    def _api_history(self, plugin, nb: int = 0):
+    def _api_history(self, plugin: str, nb: int = 0):
         """Glances API RESTful implementation.
 
         Return the JSON representation of a given plugin history
@@ -493,11 +486,7 @@ class GlancesRestfulApi:
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        if plugin not in self.plugins_list:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
-            )
+        self._check_if_plugin_available(plugin)
 
         # Update the stat
         self.__update__()
@@ -506,13 +495,11 @@ class GlancesRestfulApi:
             # Get the RAW value of the stat ID
             statval = self.stats.get_plugin(plugin).get_raw_history(nb=int(nb))
         except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get plugin history {plugin} ({str(e)})"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get plugin history {plugin} ({str(e)})")
 
         return statval
 
-    def _api_limits(self, plugin):
+    def _api_limits(self, plugin: str):
         """Glances API RESTful implementation.
 
         Return the JSON limits of a given plugin
@@ -520,23 +507,17 @@ class GlancesRestfulApi:
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        if plugin not in self.plugins_list:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
-            )
+        self._check_if_plugin_available(plugin)
 
         try:
             # Get the RAW value of the stat limits
             ret = self.stats.get_plugin(plugin).limits
         except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get limits for plugin {plugin} ({str(e)})"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get limits for plugin {plugin} ({str(e)})")
 
         return GlancesJSONResponse(ret)
 
-    def _api_views(self, plugin):
+    def _api_views(self, plugin: str):
         """Glances API RESTful implementation.
 
         Return the JSON views of a given plugin
@@ -546,21 +527,18 @@ class GlancesRestfulApi:
         """
         if plugin not in self.plugins_list:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
+                status.HTTP_400_BAD_REQUEST, f"Unknown plugin {plugin} (available plugins: {self.plugins_list})"
             )
 
         try:
             # Get the RAW value of the stat views
             ret = self.stats.get_plugin(plugin).get_views()
         except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get views for plugin {plugin} ({str(e)})"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get views for plugin {plugin} ({str(e)})")
 
         return GlancesJSONResponse(ret)
 
-    def _api_item(self, plugin, item):
+    def _api_item(self, plugin: str, item: str):
         """Glances API RESTful implementation.
 
         Return the JSON representation of the couple plugin/item
@@ -568,11 +546,7 @@ class GlancesRestfulApi:
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        if plugin not in self.plugins_list:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
-            )
+        self._check_if_plugin_available(plugin)
 
         # Update the stat
         self.__update__()
@@ -582,13 +556,13 @@ class GlancesRestfulApi:
             ret = self.stats.get_plugin(plugin).get_raw_stats_item(item)
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Cannot get item {item} in plugin {plugin} ({str(e)})",
+                status.HTTP_404_NOT_FOUND,
+                f"Cannot get item {item} in plugin {plugin} ({str(e)})",
             )
 
         return GlancesJSONResponse(ret)
 
-    def _api_item_history(self, plugin, item, nb: int = 0):
+    def _api_item_history(self, plugin: str, item: str, nb: int = 0):
         """Glances API RESTful implementation.
 
         Return the JSON representation of the couple plugin/history of item
@@ -597,11 +571,7 @@ class GlancesRestfulApi:
         HTTP/404 if others error
 
         """
-        if plugin not in self.plugins_list:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
-            )
+        self._check_if_plugin_available(plugin)
 
         # Update the stat
         self.__update__()
@@ -610,13 +580,11 @@ class GlancesRestfulApi:
             # Get the RAW value of the stat history
             ret = self.stats.get_plugin(plugin).get_raw_history(item, nb=nb)
         except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get history for plugin {plugin} ({str(e)})"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get history for plugin {plugin} ({str(e)})")
         else:
             return GlancesJSONResponse(ret)
 
-    def _api_item_description(self, plugin, item):
+    def _api_item_description(self, plugin: str, item: str):
         """Glances API RESTful implementation.
 
         Return the JSON representation of the couple plugin/item description
@@ -624,24 +592,19 @@ class GlancesRestfulApi:
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        if plugin not in self.plugins_list:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
-            )
+        self._check_if_plugin_available(plugin)
 
         try:
             # Get the description
             ret = self.stats.get_plugin(plugin).get_item_info(item, 'description')
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Cannot get {item} description for plugin {plugin} ({str(e)})",
+                status.HTTP_404_NOT_FOUND, f"Cannot get {item} description for plugin {plugin} ({str(e)})"
             )
         else:
             return GlancesJSONResponse(ret)
 
-    def _api_item_unit(self, plugin, item):
+    def _api_item_unit(self, plugin: str, item: str):
         """Glances API RESTful implementation.
 
         Return the JSON representation of the couple plugin/item unit
@@ -649,24 +612,17 @@ class GlancesRestfulApi:
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        if plugin not in self.plugins_list:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
-            )
+        self._check_if_plugin_available(plugin)
 
         try:
             # Get the unit
             ret = self.stats.get_plugin(plugin).get_item_info(item, 'unit')
         except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Cannot get {item} unit for plugin {plugin} ({str(e)})",
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get {item} unit for plugin {plugin} ({str(e)})")
         else:
             return GlancesJSONResponse(ret)
 
-    def _api_value(self, plugin, item, value):
+    def _api_value(self, plugin: str, item: str, value: Any):
         """Glances API RESTful implementation.
 
         Return the process stats (dict) for the given item=value
@@ -674,11 +630,7 @@ class GlancesRestfulApi:
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        if plugin not in self.plugins_list:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown plugin {plugin} (available plugins: {self.plugins_list})",
-            )
+        self._check_if_plugin_available(plugin)
 
         # Update the stat
         self.__update__()
@@ -688,8 +640,7 @@ class GlancesRestfulApi:
             ret = self.stats.get_plugin(plugin).get_raw_stats_value(item, value)
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Cannot get {item} = {value} for plugin {plugin} ({str(e)})",
+                status.HTTP_404_NOT_FOUND, f"Cannot get {item} = {value} for plugin {plugin} ({str(e)})"
             )
         else:
             return GlancesJSONResponse(ret)
@@ -705,11 +656,11 @@ class GlancesRestfulApi:
             # Get the RAW value of the config' dict
             args_json = self.config.as_dict()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get config ({str(e)})")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get config ({str(e)})")
         else:
             return GlancesJSONResponse(args_json)
 
-    def _api_config_section(self, section):
+    def _api_config_section(self, section: str):
         """Glances API RESTful implementation.
 
         Return the JSON representation of the Glances configuration section
@@ -719,19 +670,17 @@ class GlancesRestfulApi:
         """
         config_dict = self.config.as_dict()
         if section not in config_dict:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unknown configuration item {section}")
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Unknown configuration item {section}")
 
         try:
             # Get the RAW value of the config' dict
             ret_section = config_dict[section]
         except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get config section {section} ({str(e)})"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get config section {section} ({str(e)})")
 
         return GlancesJSONResponse(ret_section)
 
-    def _api_config_section_item(self, section, item):
+    def _api_config_section_item(self, section: str, item: str):
         """Glances API RESTful implementation.
 
         Return the JSON representation of the Glances configuration section/item
@@ -741,23 +690,20 @@ class GlancesRestfulApi:
         """
         config_dict = self.config.as_dict()
         if section not in config_dict:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unknown configuration item {section}")
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Unknown configuration item {section}")
 
         try:
             # Get the RAW value of the config' dict section
             ret_section = config_dict[section]
         except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get config section {section} ({str(e)})"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get config section {section} ({str(e)})")
 
         try:
             # Get the RAW value of the config' dict item
             ret_item = ret_section[item]
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Cannot get item {item} in config section {section} ({str(e)})",
+                status.HTTP_404_NOT_FOUND, f"Cannot get item {item} in config section {section} ({str(e)})"
             )
 
         return GlancesJSONResponse(ret_item)
@@ -775,11 +721,11 @@ class GlancesRestfulApi:
             # Source: https://docs.python.org/%s/library/functions.html#vars
             args_json = vars(self.args)
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get args ({str(e)})")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get args ({str(e)})")
 
         return GlancesJSONResponse(args_json)
 
-    def _api_args_item(self, item):
+    def _api_args_item(self, item: str):
         """Glances API RESTful implementation.
 
         Return the JSON representation of the Glances command line arguments item
@@ -788,7 +734,7 @@ class GlancesRestfulApi:
         HTTP/404 if others error
         """
         if item not in self.args:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unknown argument item {item}")
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Unknown argument item {item}")
 
         try:
             # Get the RAW value of the args' dict
@@ -796,6 +742,6 @@ class GlancesRestfulApi:
             # Source: https://docs.python.org/%s/library/functions.html#vars
             args_json = vars(self.args)[item]
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get args item ({str(e)})")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get args item ({str(e)})")
 
         return GlancesJSONResponse(args_json)
