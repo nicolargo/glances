@@ -430,46 +430,6 @@ class GlancesPluginModel:
             return default
         return self.fields_description[item].get(key, default)
 
-    def update_views_hidden(self):
-        """Update the hidden views
-
-        If the self.hide_zero is set then update the hidden field of the view
-        It will check if all fields values are already be different from 0
-        In this case, the hidden field is set to True
-
-        Note: This function should be called by plugin (in the update_views method)
-
-        Example (for network plugin):
-        __Init__
-            self.hide_zero_fields = ['rx', 'tx']
-        Update views
-            ...
-            self.update_views_hidden()
-        """
-        if not self.hide_zero:
-            return False
-        if isinstance(self.get_raw(), list) and self.get_raw() is not None and self.get_key() is not None:
-            # Stats are stored in a list of dict (ex: NETWORK, FS...)
-            for i in self.get_raw():
-                if any(i[f] for f in self.hide_zero_fields):
-                    for f in self.hide_zero_fields:
-                        self.views[i[self.get_key()]][f]['_zero'] = self.views[i[self.get_key()]][f]['hidden']
-                for f in self.hide_zero_fields:
-                    self.views[i[self.get_key()]][f]['hidden'] = self.views[i[self.get_key()]][f]['_zero'] and i[f] == 0
-        elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
-            #
-            # Warning: This code has never been tested because
-            # no plugin with dict instance use the hidden function...
-            #
-            # Stats are stored in a dict (ex: CPU, LOAD...)
-            for key in listkeys(self.get_raw()):
-                if any(self.get_raw()[f] for f in self.hide_zero_fields):
-                    for f in self.hide_zero_fields:
-                        self.views[f]['_zero'] = self.views[f]['hidden']
-                for f in self.hide_zero_fields:
-                    self.views[f]['hidden'] = self.views['_zero'] and self.views[f] == 0
-        return True
-
     def update_views(self):
         """Update the stats views.
 
@@ -480,43 +440,56 @@ class GlancesPluginModel:
                 'optional': False,        >>> Is the stat optional
                 'additional': False,      >>> Is the stat provide additional information
                 'splittable': False,      >>> Is the stat can be cut (like process lon name)
-                'hidden': False,          >>> Is the stats should be hidden in the UI
-                '_zero': True}            >>> For internal purpose only
+                'hidden': False}          >>> Is the stats should be hidden in the UI
         """
         ret = {}
 
         if isinstance(self.get_raw(), list) and self.get_raw() is not None and self.get_key() is not None:
             # Stats are stored in a list of dict (ex: DISKIO, NETWORK, FS...)
             for i in self.get_raw():
-                ret[i[self.get_key()]] = {}
-                for key in listkeys(i):
+                key = i[self.get_key()]
+                ret[key] = {}
+                for field in listkeys(i):
                     value = {
                         'decoration': 'DEFAULT',
                         'optional': False,
                         'additional': False,
                         'splittable': False,
-                        'hidden': False,
-                        '_zero': (
-                            self.views[i[self.get_key()]][key]['_zero']
-                            if i[self.get_key()] in self.views
-                            and key in self.views[i[self.get_key()]]
-                            and 'zero' in self.views[i[self.get_key()]][key]
-                            else True
-                        ),
                     }
-                    ret[i[self.get_key()]][key] = value
+                    # Manage the hidden feature
+                    # Allow to automatically hide fields when values is never different than 0
+                    # Refactoring done for #2929
+                    if not self.hide_zero:
+                        value['hidden'] = False
+                    elif key in self.views and field in self.views[key] and 'hidden' in self.views[key][field]:
+                        value['hidden'] = self.views[key][field]['hidden']
+                        if field in self.hide_zero_fields and i[field] != 0:
+                            value['hidden'] = False
+                    else:
+                        value['hidden'] = field in self.hide_zero_fields
+                    ret[key][field] = value
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
-            for key in listkeys(self.get_raw()):
+            for field in listkeys(self.get_raw()):
                 value = {
                     'decoration': 'DEFAULT',
                     'optional': False,
                     'additional': False,
                     'splittable': False,
                     'hidden': False,
-                    '_zero': self.views[key]['_zero'] if key in self.views and '_zero' in self.views[key] else True,
                 }
-                ret[key] = value
+                # Manage the hidden feature
+                # Allow to automatically hide fields when values is never different than 0
+                # Refactoring done for #2929
+                if not self.hide_zero:
+                    value['hidden'] = False
+                elif field in self.views and 'hidden' in self.views[field]:
+                    value['hidden'] = self.views[field]['hidden']
+                    if field in self.hide_zero_fields and self.get_raw()[field] != 0:
+                        value['hidden'] = False
+                else:
+                    value['hidden'] = field in self.hide_zero_fields
+                ret[field] = value
 
         self.views = ret
 
@@ -544,7 +517,7 @@ class GlancesPluginModel:
         else:
             item_views = self.views[item]
 
-        if key is None:
+        if key is None or key not in item_views:
             return item_views
         if option is None:
             return item_views[key]

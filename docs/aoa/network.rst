@@ -47,6 +47,8 @@ virtual docker interface (docker0, docker1, ...):
     hide_no_up=True
     # Automatically hide interface with no IP address (default is False)
     hide_no_ip=True
+    # Set hide_zero to True to automatically hide interface with no traffic
+    hide_zero=False
     # WLAN 0 alias
     alias=wlan0:Wireless IF
     # It is possible to overwrite the bitrate thresholds per interface
@@ -63,5 +65,13 @@ virtual docker interface (docker0, docker1, ...):
 Filtering is based on regular expression. Please be sure that your regular
 expression works as expected. You can use an online tool like `regex101`_ in
 order to test your regular expression.
+
+You also can automatically hide intercae with no traffic using the
+``hide_zero`` configuration key.
+
+.. code-block:: ini
+
+    [diskio]
+    hide_zero=True
 
 .. _regex101: https://regex101.com/
