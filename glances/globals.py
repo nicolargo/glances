@@ -28,7 +28,7 @@ from configparser import ConfigParser, NoOptionError, NoSectionError
 from datetime import datetime
 from operator import itemgetter, methodcaller
 from statistics import mean
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
@@ -50,14 +50,21 @@ except ImportError:
     # Need to log info but importing logger will cause cyclic imports
     pass
 
-try:
-    import ujson as json
-except ImportError:
-    # Need to log info but importing logger will cause cyclic imports
-    pass
-
 if 'json' not in globals():
-    import json
+    try:
+        # Note: ujson is not officially supported
+        # Available as a fallback to allow orjson's unsupported platforms to use a faster serialization lib
+        import ujson as json
+    except ImportError:
+        import json
+
+    # To allow ujson & json dumps to serialize datetime
+    def _json_default(v: Any) -> Any:
+        if isinstance(v, datetime):
+            return v.isoformat()
+        return v
+
+    json.dumps = functools.partial(json.dumps, default=_json_default)
 
 ##############
 # GLOBALS VARS
