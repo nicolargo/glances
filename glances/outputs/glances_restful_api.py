@@ -15,13 +15,14 @@ import webbrowser
 from urllib.parse import urljoin
 
 try:
-    from typing import Annotated
+    from typing import Annotated, Any
 except ImportError:
     # Only for Python 3.8
     # To be removed when Python 3.8 support will be dropped
     from typing_extensions import Annotated
 
 from glances import __apiversion__, __version__
+from glances.globals import json_dumps
 from glances.logger import logger
 from glances.password import GlancesPassword
 from glances.timer import Timer
@@ -31,7 +32,7 @@ try:
     from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.middleware.gzip import GZipMiddleware
-    from fastapi.responses import HTMLResponse, ORJSONResponse
+    from fastapi.responses import HTMLResponse, JSONResponse
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
     from fastapi.staticfiles import StaticFiles
     from fastapi.templating import Jinja2Templates
@@ -49,6 +50,18 @@ import builtins
 import contextlib
 import threading
 import time
+
+
+class GlancesJSONResponse(JSONResponse):
+    """
+    Glances impl of fastapi's JSONResponse to use internal JSON Serialization features
+
+    Ref: https://fastapi.tiangolo.com/advanced/custom-response/
+    """
+
+    def render(self, content: Any) -> bytes:
+        return json_dumps(content)
+
 
 security = HTTPBasic()
 
@@ -106,11 +119,11 @@ class GlancesRestfulApi:
 
         # FastAPI Init
         if self.args.password:
-            self._app = FastAPI(dependencies=[Depends(self.authentication)])
+            self._app = FastAPI(default_response_class=GlancesJSONResponse, dependencies=[Depends(self.authentication)])
             self._password = GlancesPassword(username=args.username, config=config)
 
         else:
-            self._app = FastAPI()
+            self._app = FastAPI(default_response_class=GlancesJSONResponse)
             self._password = None
 
         # Set path for WebUI
@@ -178,102 +191,49 @@ class GlancesRestfulApi:
             headers={"WWW-Authenticate": "Basic"},
         )
 
-    def _router(self):
+    def _router(self) -> APIRouter:
         """Define a custom router for Glances path."""
-        # Create une main router
+        base_path = f'/api/{self.API_VERSION}'
+        plugin_path = f"{base_path}/{{plugin}}"
+
+        # Create the main router
         router = APIRouter(prefix=self.url_prefix)
 
         # REST API
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/status',
-            status_code=status.HTTP_200_OK,
-            methods=['HEAD', 'GET'],
-            response_class=ORJSONResponse,
-            endpoint=self._api_status,
-        )
+        router.add_api_route(f'{base_path}/status', self._api_status, methods=['HEAD', 'GET'])
 
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/config', response_class=ORJSONResponse, endpoint=self._api_config
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/config/{{section}}',
-            response_class=ORJSONResponse,
-            endpoint=self._api_config_section,
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/config/{{section}}/{{item}}',
-            response_class=ORJSONResponse,
-            endpoint=self._api_config_section_item,
-        )
+        route_mapping = {
+            f'{base_path}/config': self._api_config,
+            f'{base_path}/config/{{section}}': self._api_config_section,
+            f'{base_path}/config/{{section}}/{{item}}': self._api_config_section_item,
+            f'{base_path}/args': self._api_args,
+            f'{base_path}/args/{{item}}': self._api_args_item,
+            f'{base_path}/help': self._api_help,
+            f'{base_path}/all': self._api_all,
+            f'{base_path}/all/limits': self._api_all_limits,
+            f'{base_path}/all/views': self._api_all_views,
+            f'{base_path}/pluginslist': self._api_plugins,
+            f'{plugin_path}': self._api,
+            f'{plugin_path}/history': self._api_history,
+            f'{plugin_path}/history/{{nb}}': self._api_history,
+            f'{plugin_path}/top/{{nb}}': self._api_top,
+            f'{plugin_path}/limits': self._api_limits,
+            f'{plugin_path}/views': self._api_views,
+            f'{plugin_path}/{{item}}': self._api_item,
+            f'{plugin_path}/{{item}}/history': self._api_item_history,
+            f'{plugin_path}/{{item}}/history/{{nb}}': self._api_item_history,
+            f'{plugin_path}/{{item}}/description': self._api_item_description,
+            f'{plugin_path}/{{item}}/unit': self._api_item_unit,
+            f'{plugin_path}/{{item}}/{{value:path}}': self._api_value,
+        }
 
-        router.add_api_route(f'/api/{self.API_VERSION}/args', response_class=ORJSONResponse, endpoint=self._api_args)
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/args/{{item}}', response_class=ORJSONResponse, endpoint=self._api_args_item
-        )
-
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/pluginslist', response_class=ORJSONResponse, endpoint=self._api_plugins
-        )
-        router.add_api_route(f'/api/{self.API_VERSION}/all', response_class=ORJSONResponse, endpoint=self._api_all)
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/all/limits', response_class=ORJSONResponse, endpoint=self._api_all_limits
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/all/views', response_class=ORJSONResponse, endpoint=self._api_all_views
-        )
-
-        router.add_api_route(f'/api/{self.API_VERSION}/help', response_class=ORJSONResponse, endpoint=self._api_help)
-        router.add_api_route(f'/api/{self.API_VERSION}/{{plugin}}', response_class=ORJSONResponse, endpoint=self._api)
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/{{plugin}}/history', response_class=ORJSONResponse, endpoint=self._api_history
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/{{plugin}}/history/{{nb}}',
-            response_class=ORJSONResponse,
-            endpoint=self._api_history,
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/{{plugin}}/top/{{nb}}', response_class=ORJSONResponse, endpoint=self._api_top
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/{{plugin}}/limits', response_class=ORJSONResponse, endpoint=self._api_limits
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/{{plugin}}/views', response_class=ORJSONResponse, endpoint=self._api_views
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/{{plugin}}/{{item}}', response_class=ORJSONResponse, endpoint=self._api_item
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/{{plugin}}/{{item}}/history',
-            response_class=ORJSONResponse,
-            endpoint=self._api_item_history,
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/{{plugin}}/{{item}}/history/{{nb}}',
-            response_class=ORJSONResponse,
-            endpoint=self._api_item_history,
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/{{plugin}}/{{item}}/description',
-            response_class=ORJSONResponse,
-            endpoint=self._api_item_description,
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/{{plugin}}/{{item}}/unit',
-            response_class=ORJSONResponse,
-            endpoint=self._api_item_unit,
-        )
-        router.add_api_route(
-            f'/api/{self.API_VERSION}/{{plugin}}/{{item}}/{{value:path}}',
-            response_class=ORJSONResponse,
-            endpoint=self._api_value,
-        )
+        for path, endpoint in route_mapping.items():
+            router.add_api_route(path, endpoint)
 
         # WEB UI
         if not self.args.disable_webui:
             # Template for the root index.html file
-            router.add_api_route('/', response_class=HTMLResponse, endpoint=self._index)
+            router.add_api_route('/', self._index, response_class=HTMLResponse)
 
             # Statics files
             self._app.mount(self.url_prefix + '/static', StaticFiles(directory=self.STATIC_PATH), name="static")
@@ -361,7 +321,7 @@ class GlancesRestfulApi:
         See related issue:  Web server health check endpoint #1988
         """
 
-        return ORJSONResponse({'version': __version__})
+        return GlancesJSONResponse({'version': __version__})
 
     def _api_help(self):
         """Glances API RESTful implementation.
@@ -373,7 +333,7 @@ class GlancesRestfulApi:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get help view data ({str(e)})")
 
-        return ORJSONResponse(plist)
+        return GlancesJSONResponse(plist)
 
     def _api_plugins(self):
         """Glances API RESTFul implementation.
@@ -409,7 +369,7 @@ class GlancesRestfulApi:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get plugin list ({str(e)})")
 
-        return ORJSONResponse(plist)
+        return GlancesJSONResponse(plist)
 
     def _api_all(self):
         """Glances API RESTful implementation.
@@ -436,7 +396,7 @@ class GlancesRestfulApi:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get stats ({str(e)})")
 
-        return ORJSONResponse(statval)
+        return GlancesJSONResponse(statval)
 
     def _api_all_limits(self):
         """Glances API RESTful implementation.
@@ -452,7 +412,7 @@ class GlancesRestfulApi:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get limits ({str(e)})")
 
-        return ORJSONResponse(limits)
+        return GlancesJSONResponse(limits)
 
     def _api_all_views(self):
         """Glances API RESTful implementation.
@@ -468,7 +428,7 @@ class GlancesRestfulApi:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get views ({str(e)})")
 
-        return ORJSONResponse(limits)
+        return GlancesJSONResponse(limits)
 
     def _api(self, plugin):
         """Glances API RESTful implementation.
@@ -493,7 +453,7 @@ class GlancesRestfulApi:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get plugin {plugin} ({str(e)})")
 
-        return ORJSONResponse(statval)
+        return GlancesJSONResponse(statval)
 
     def _api_top(self, plugin, nb: int = 0):
         """Glances API RESTful implementation.
@@ -525,7 +485,7 @@ class GlancesRestfulApi:
         if isinstance(statval, list):
             statval = statval[:nb]
 
-        return ORJSONResponse(statval)
+        return GlancesJSONResponse(statval)
 
     def _api_history(self, plugin, nb: int = 0):
         """Glances API RESTful implementation.
@@ -577,7 +537,7 @@ class GlancesRestfulApi:
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get limits for plugin {plugin} ({str(e)})"
             )
 
-        return ORJSONResponse(ret)
+        return GlancesJSONResponse(ret)
 
     def _api_views(self, plugin):
         """Glances API RESTful implementation.
@@ -601,7 +561,7 @@ class GlancesRestfulApi:
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get views for plugin {plugin} ({str(e)})"
             )
 
-        return ORJSONResponse(ret)
+        return GlancesJSONResponse(ret)
 
     def _api_item(self, plugin, item):
         """Glances API RESTful implementation.
@@ -629,7 +589,7 @@ class GlancesRestfulApi:
                 detail=f"Cannot get item {item} in plugin {plugin} ({str(e)})",
             )
 
-        return ORJSONResponse(ret)
+        return GlancesJSONResponse(ret)
 
     def _api_item_history(self, plugin, item, nb: int = 0):
         """Glances API RESTful implementation.
@@ -657,7 +617,7 @@ class GlancesRestfulApi:
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get history for plugin {plugin} ({str(e)})"
             )
         else:
-            return ORJSONResponse(ret)
+            return GlancesJSONResponse(ret)
 
     def _api_item_description(self, plugin, item):
         """Glances API RESTful implementation.
@@ -682,7 +642,7 @@ class GlancesRestfulApi:
                 detail=f"Cannot get {item} description for plugin {plugin} ({str(e)})",
             )
         else:
-            return ORJSONResponse(ret)
+            return GlancesJSONResponse(ret)
 
     def _api_item_unit(self, plugin, item):
         """Glances API RESTful implementation.
@@ -707,7 +667,7 @@ class GlancesRestfulApi:
                 detail=f"Cannot get {item} unit for plugin {plugin} ({str(e)})",
             )
         else:
-            return ORJSONResponse(ret)
+            return GlancesJSONResponse(ret)
 
     def _api_value(self, plugin, item, value):
         """Glances API RESTful implementation.
@@ -735,7 +695,7 @@ class GlancesRestfulApi:
                 detail=f"Cannot get {item} = {value} for plugin {plugin} ({str(e)})",
             )
         else:
-            return ORJSONResponse(ret)
+            return GlancesJSONResponse(ret)
 
     def _api_config(self):
         """Glances API RESTful implementation.
@@ -750,7 +710,7 @@ class GlancesRestfulApi:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get config ({str(e)})")
         else:
-            return ORJSONResponse(args_json)
+            return GlancesJSONResponse(args_json)
 
     def _api_config_section(self, section):
         """Glances API RESTful implementation.
@@ -772,7 +732,7 @@ class GlancesRestfulApi:
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get config section {section} ({str(e)})"
             )
 
-        return ORJSONResponse(ret_section)
+        return GlancesJSONResponse(ret_section)
 
     def _api_config_section_item(self, section, item):
         """Glances API RESTful implementation.
@@ -803,7 +763,7 @@ class GlancesRestfulApi:
                 detail=f"Cannot get item {item} in config section {section} ({str(e)})",
             )
 
-        return ORJSONResponse(ret_item)
+        return GlancesJSONResponse(ret_item)
 
     def _api_args(self):
         """Glances API RESTful implementation.
@@ -820,7 +780,7 @@ class GlancesRestfulApi:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get args ({str(e)})")
 
-        return ORJSONResponse(args_json)
+        return GlancesJSONResponse(args_json)
 
     def _api_args_item(self, item):
         """Glances API RESTful implementation.
@@ -841,4 +801,4 @@ class GlancesRestfulApi:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Cannot get args item ({str(e)})")
 
-        return ORJSONResponse(args_json)
+        return GlancesJSONResponse(args_json)
