@@ -10,9 +10,7 @@
 
 import threading
 
-from orjson import loads
-
-from glances.globals import queue, urlopen_auth
+from glances.globals import json_loads, queue, urlopen_auth
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.timer import Timer, getTimeSinceLastUpdate
@@ -245,7 +243,7 @@ class PublicIpInfo:
             queue_target.put(None)
         else:
             try:
-                queue_target.put(loads(response))
+                queue_target.put(json_loads(response))
             except (ValueError, KeyError) as e:
                 logger.debug(f"IP plugin - Cannot load public IP information from {url} ({e})")
                 queue_target.put(None)

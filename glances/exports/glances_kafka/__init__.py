@@ -52,7 +52,7 @@ class Export(GlancesExport):
         try:
             s = KafkaProducer(
                 bootstrap_servers=server_uri,
-                value_serializer=lambda v: json_dumps(v).encode('utf-8'),
+                value_serializer=lambda v: json_dumps(v),
                 compression_type=self.compression,
             )
         except Exception as e:
