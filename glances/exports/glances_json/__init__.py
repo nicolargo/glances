@@ -47,8 +47,8 @@ class Export(GlancesExport):
             logger.debug(f"Exporting stats ({listkeys(self.buffer)}) to JSON file ({self.json_filename})")
 
             # Export stats to JSON file
-            with open(self.json_filename, "w") as self.json_file:
-                self.json_file.write(f"{json_dumps(self.buffer)}\n")
+            with open(self.json_filename, "wb") as self.json_file:
+                self.json_file.write(json_dumps(self.buffer) + b'\n')
 
             # Reset buffer
             self.buffer = {}

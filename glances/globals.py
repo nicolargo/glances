@@ -16,6 +16,7 @@
 import base64
 import errno
 import functools
+import importlib
 import os
 import platform
 import queue
@@ -27,7 +28,7 @@ from configparser import ConfigParser, NoOptionError, NoSectionError
 from datetime import datetime
 from operator import itemgetter, methodcaller
 from statistics import mean
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
@@ -36,14 +37,34 @@ from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 from defusedxml.xmlrpc import monkey_patch
 
-# Optionally use orjson if available
-try:
-    import orjson as json
-except ImportError:
-    import json
-
 # Correct issue #1025 by monkey path the xmlrpc lib
 monkey_patch()
+
+# Prefer faster libs for JSON (de)serialization
+# Preference Order: orjson > ujson > json (builtin)
+try:
+    import orjson as json
+
+    json.dumps = functools.partial(json.dumps, option=json.OPT_NON_STR_KEYS)
+except ImportError:
+    # Need to log info but importing logger will cause cyclic imports
+    pass
+
+if 'json' not in globals():
+    try:
+        # Note: ujson is not officially supported
+        # Available as a fallback to allow orjson's unsupported platforms to use a faster serialization lib
+        import ujson as json
+    except ImportError:
+        import json
+
+    # To allow ujson & json dumps to serialize datetime
+    def _json_default(v: Any) -> Any:
+        if isinstance(v, datetime):
+            return v.isoformat()
+        return v
+
+    json.dumps = functools.partial(json.dumps, default=_json_default)
 
 ##############
 # GLOBALS VARS
@@ -166,7 +187,7 @@ def subsample(data, sampling):
     return [mean(data[s * sampling_length : (s + 1) * sampling_length]) for s in range(0, sampling)]
 
 
-def time_serie_subsample(data, sampling):
+def time_series_subsample(data, sampling):
     """Compute a simple mean subsampling.
 
     Data should be a list of set (time, value)
@@ -303,20 +324,22 @@ def urlopen_auth(url, username, password):
     return urlopen(
         Request(
             url,
-            headers={'Authorization': 'Basic ' + base64.b64encode((f'{username}:{password}').encode()).decode()},
+            headers={'Authorization': 'Basic ' + base64.b64encode(f'{username}:{password}'.encode()).decode()},
         )
     )
 
 
-def json_dumps(data) -> str:
+def json_dumps(data) -> bytes:
     """Return the object data in a JSON format.
 
     Manage the issue #815 for Windows OS with UnicodeDecodeError catching.
     """
     try:
-        return json.dumps(data)
+        res = json.dumps(data)
     except UnicodeDecodeError:
-        return json.dumps(data, ensure_ascii=False)
+        res = json.dumps(data, ensure_ascii=False)
+    # ujson & json libs return strings, but our contract expects bytes
+    return b(res)
 
 
 def json_loads(data: Union[str, bytes, bytearray]) -> Union[Dict, List]:
