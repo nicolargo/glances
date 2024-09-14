@@ -3,7 +3,7 @@ if (module.hot) {
     module.hot.accept();
 }
 
-import '../css/bootstrap.less';
+import '../css/custom.scss';
 import '../css/style.scss';
 
 import { createApp } from 'vue';

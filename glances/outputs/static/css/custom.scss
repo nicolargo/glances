@@ -1,0 +1,11 @@
+// Custom.scss
+// Option A: Include all of Bootstrap
+// It's also possible to import specifics module only:
+// See https://getbootstrap.com/docs/5.3/customize/sass/
+
+// Include any default variable overrides here (though functions won't be available)
+
+@import '../node_modules/bootstrap/scss/bootstrap.scss';
+
+// Then add additional custom code
+@grid-columns: 24;
