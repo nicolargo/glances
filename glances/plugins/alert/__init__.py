@@ -9,6 +9,7 @@
 """Alert plugin."""
 
 from datetime import datetime
+from functools import reduce
 
 from glances.events_list import glances_events
 
@@ -123,58 +124,92 @@ class PluginModel(GlancesPluginModel):
         # Set the stats to the glances_events
         self.stats = glances_events.get()
 
+    def build_hdr_msg(self, ret):
+        def cond(elem):
+            return elem['end'] == -1 and 'global_msg' in elem
+
+        global_message = [elem['global_msg'] for elem in self.stats if cond(elem)]
+        title = global_message[0] if len(global_message) > 0 else "EVENTS history"
+
+        ret.append(self.curse_add_line(title, "TITLE"))
+
+        return ret
+
+    def add_new_line(self, ret, alert):
+        ret.append(self.curse_new_line())
+
+        return ret
+
+    def add_start_time(self, ret, alert):
+        timezone = datetime.now().astimezone().tzinfo
+        alert_dt = datetime.fromtimestamp(alert['begin'], tz=timezone)
+        ret.append(self.curse_add_line(alert_dt.strftime("%Y-%m-%d %H:%M:%S(%z)")))
+
+        return ret
+
+    def add_duration(self, ret, alert):
+        if alert['end'] > 0:
+            # If finished display duration
+            end = datetime.fromtimestamp(alert['end'])
+            begin = datetime.fromtimestamp(alert['begin'])
+            msg = f' ({end - begin})'
+        else:
+            msg = ' (ongoing)'
+        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(" - "))
+
+        return ret
+
+    def add_infos(self, ret, alert):
+        if alert['end'] > 0:
+            # If finished do not display status
+            msg = '{} on {}'.format(alert['state'], alert['type'])
+            ret.append(self.curse_add_line(msg))
+        else:
+            msg = str(alert['type'])
+            ret.append(self.curse_add_line(msg, decoration=alert['state']))
+
+        return ret
+
+    def add_min_mean_max(self, ret, alert):
+        if self.approx_equal(alert['min'], alert['max'], tolerance=0.1):
+            msg = ' ({:.1f})'.format(alert['avg'])
+        else:
+            msg = ' (Min:{:.1f} Mean:{:.1f} Max:{:.1f})'.format(alert['min'], alert['avg'], alert['max'])
+        ret.append(self.curse_add_line(msg))
+
+        return ret
+
+    def add_top_proc(self, ret, alert):
+        top_process = ', '.join(alert['top'])
+        if top_process != '':
+            msg = f': {top_process}'
+            ret.append(self.curse_add_line(msg))
+
+        return ret
+
+    def loop_over_alert(self, init, alert):
+        steps = [
+            self.add_new_line,
+            self.add_start_time,
+            self.add_duration,
+            self.add_infos,
+            self.add_min_mean_max,
+            self.add_top_proc,
+        ]
+
+        return reduce(lambda ret, step: step(ret, alert), steps, init)
+
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
-        ret = []
+        init = []
 
         # Only process if display plugin enable...
         if not self.stats or self.is_disabled():
-            return ret
+            return init
 
-        # Build the string message
-        # Header with the global message
-        global_message = [e['global_msg'] for e in self.stats if (e['end'] == -1 and 'global_msg' in e)]
-        if len(global_message) > 0:
-            ret.append(self.curse_add_line(global_message[0], "TITLE"))
-        else:
-            ret.append(self.curse_add_line("EVENTS history", "TITLE"))
-        # Loop over alerts
-        for alert in self.stats:
-            # New line
-            ret.append(self.curse_new_line())
-            # Start
-            alert_dt = datetime.fromtimestamp(alert['begin'], tz=datetime.now().astimezone().tzinfo)
-            ret.append(self.curse_add_line(alert_dt.strftime("%Y-%m-%d %H:%M:%S(%z)")))
-            # Duration
-            if alert['end'] > 0:
-                # If finished display duration
-                msg = ' ({})'.format(datetime.fromtimestamp(alert['end']) - datetime.fromtimestamp(alert['begin']))
-            else:
-                msg = ' (ongoing)'
-            ret.append(self.curse_add_line(msg))
-            ret.append(self.curse_add_line(" - "))
-            # Infos
-            if alert['end'] > 0:
-                # If finished do not display status
-                msg = '{} on {}'.format(alert['state'], alert['type'])
-                ret.append(self.curse_add_line(msg))
-            else:
-                msg = str(alert['type'])
-                ret.append(self.curse_add_line(msg, decoration=alert['state']))
-            # Min / Mean / Max
-            if self.approx_equal(alert['min'], alert['max'], tolerance=0.1):
-                msg = ' ({:.1f})'.format(alert['avg'])
-            else:
-                msg = ' (Min:{:.1f} Mean:{:.1f} Max:{:.1f})'.format(alert['min'], alert['avg'], alert['max'])
-            ret.append(self.curse_add_line(msg))
-            # Top processes
-            top_process = ', '.join(alert['top'])
-            if top_process != '':
-                msg = f': {top_process}'
-                ret.append(self.curse_add_line(msg))
-
-        return ret
+        return reduce(self.loop_over_alert, self.stats, self.build_hdr_msg(init))
 
     def approx_equal(self, a, b, tolerance=0.0):
         """Compare a with b using the tolerance (if numerical)."""
