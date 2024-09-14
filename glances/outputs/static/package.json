@@ -11,7 +11,7 @@
     "devDependencies": {
         "@vue/compiler-sfc": "^3.3.2",
         "copy-webpack-plugin": "^11.0.0",
-        "css-loader": "^6.7.3",
+        "css-loader": "^7.0.0",
         "del": "^7.0.0",
         "eslint": "^8.40.0",
         "eslint-plugin-vue": "^9.12.0",
