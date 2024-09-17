@@ -922,6 +922,85 @@ class _GlancesCurses:
 
         return None
 
+    def setup_upper_left_pos(self, plugin_stats):
+        screen_y, screen_x = self.term_window.getmaxyx()
+
+        if plugin_stats['align'] == 'right':
+            # Right align (last column)
+            display_x = screen_x - self.get_stats_display_width(plugin_stats)
+        else:
+            display_x = self.column
+
+        if plugin_stats['align'] == 'bottom':
+            # Bottom (last line)
+            display_y = screen_y - self.get_stats_display_height(plugin_stats)
+        else:
+            display_y = self.line
+
+        return display_y, display_x
+
+    def get_next_x_and_x_max(self, m, x, x_max):
+        # New column
+        # Python 2: we need to decode to get real screen size because
+        # UTF-8 special tree chars occupy several bytes.
+        # Python 3: strings are strings and bytes are bytes, all is
+        # good.
+        try:
+            x += len(u(m['msg']))
+        except UnicodeDecodeError:
+            # Quick and dirty hack for issue #745
+            pass
+        if x > x_max:
+            x_max = x
+
+        return x, x_max
+
+    def display_stats_with_current_size(self, m, y, x):
+        screen_x = self.term_window.getmaxyx()[1]
+        self.term_window.addnstr(
+            y,
+            x,
+            m['msg'],
+            # Do not display outside the screen
+            screen_x - x,
+            self.colors_list[m['decoration']],
+        )
+
+    def display_stats(self, plugin_stats, init, helper):
+        y, x, x_max = init
+        for m in plugin_stats['msgdict']:
+            # New line
+            try:
+                if m['msg'].startswith('\n'):
+                    y, x = helper['goto next, add first col'](y, x)
+                    continue
+            except Exception:
+                # Avoid exception (see issue #1692)
+                pass
+            # Do not display outside the screen
+            if x < 0:
+                continue
+            if helper['x overbound?'](m, x):
+                continue
+            if helper['y overbound?'](y):
+                break
+            # If display_optional = False do not display optional stats
+            if helper['display optional?'](m):
+                continue
+            # If display_additional = False do not display additional stats
+            if helper['display additional?'](m):
+                continue
+            # Is it possible to display the stat with the current screen size
+            # !!! Crash if not try/except... Why ???
+            try:
+                self.display_stats_with_current_size(m, y, x)
+            except Exception:
+                pass
+            else:
+                x, x_max = self.get_next_x_and_x_max(m, x, x_max)
+
+        return y, x, x_max
+
     def display_plugin(self, plugin_stats, display_optional=True, display_additional=True, max_y=65535, add_space=0):
         """Display the plugin_stats on the screen.
 
@@ -939,76 +1018,22 @@ class _GlancesCurses:
             return 0
 
         # Get the screen size
-        screen_x = self.term_window.getmaxyx()[1]
-        screen_y = self.term_window.getmaxyx()[0]
+        screen_y, screen_x = self.term_window.getmaxyx()
 
         # Set the upper/left position of the message
-        if plugin_stats['align'] == 'right':
-            # Right align (last column)
-            display_x = screen_x - self.get_stats_display_width(plugin_stats)
-        else:
-            display_x = self.column
-        if plugin_stats['align'] == 'bottom':
-            # Bottom (last line)
-            display_y = screen_y - self.get_stats_display_height(plugin_stats)
-        else:
-            display_y = self.line
+        display_y, display_x = self.setup_upper_left_pos(plugin_stats)
+
+        helper = {
+            'goto next, add first col': lambda y, x: (y + 1, display_x),
+            'x overbound?': lambda m, x: not m['splittable'] and (x + len(m['msg']) > screen_x),
+            'y overbound?': lambda y: y < 0 or (y + 1 > screen_y) or (y > max_y),
+            'display optional?': lambda m: not display_optional and m['optional'],
+            'display additional?': lambda m: not display_additional and m['additional'],
+        }
 
         # Display
-        x = display_x
-        x_max = x
-        y = display_y
-        for m in plugin_stats['msgdict']:
-            # New line
-            try:
-                if m['msg'].startswith('\n'):
-                    # Go to the next line
-                    y += 1
-                    # Return to the first column
-                    x = display_x
-                    continue
-            except Exception:
-                # Avoid exception (see issue #1692)
-                pass
-            # Do not display outside the screen
-            if x < 0:
-                continue
-            if not m['splittable'] and (x + len(m['msg']) > screen_x):
-                continue
-            if y < 0 or (y + 1 > screen_y) or (y > max_y):
-                break
-            # If display_optional = False do not display optional stats
-            if not display_optional and m['optional']:
-                continue
-            # If display_additional = False do not display additional stats
-            if not display_additional and m['additional']:
-                continue
-            # Is it possible to display the stat with the current screen size
-            # !!! Crash if not try/except... Why ???
-            try:
-                self.term_window.addnstr(
-                    y,
-                    x,
-                    m['msg'],
-                    # Do not display outside the screen
-                    screen_x - x,
-                    self.colors_list[m['decoration']],
-                )
-            except Exception:
-                pass
-            else:
-                # New column
-                # Python 2: we need to decode to get real screen size because
-                # UTF-8 special tree chars occupy several bytes.
-                # Python 3: strings are strings and bytes are bytes, all is
-                # good.
-                try:
-                    x += len(u(m['msg']))
-                except UnicodeDecodeError:
-                    # Quick and dirty hack for issue #745
-                    pass
-                if x > x_max:
-                    x_max = x
+        init = display_y, display_x, display_x
+        y, x, x_max = self.display_stats(plugin_stats, init, helper)
 
         # Compute the next Glances column/line position
         self.next_column = max(self.next_column, x_max + self.space_between_column)
