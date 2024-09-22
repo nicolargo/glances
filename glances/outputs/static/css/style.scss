@@ -76,9 +76,35 @@
     padding-left: 10px;
 }
 
-#ip {
-    padding-left: 10px;
-}
 #ip span {
     padding-left: 10px;
+}
+
+#quicklook {
+    .progress {
+        margin-bottom: 0px;
+        min-width: 100px;
+        background-color: #000;
+        height: 12px;
+        border-radius: 0px;
+        text-align: right;
+    }
+    .progress-bar-ok {
+        background-color: #3E7B04;
+    }
+    .progress-bar-careful {
+        background-color: #295183;
+    }
+    .progress-bar-warning {
+        background-color: #5D4062;
+    }
+    .progress-bar-critical {
+        background-color: #A30000;
+    }
+    .cpu-name {
+        white-space: nowrap;
+        overflow: hidden;
+        width: 100%;
+        text-overflow: ellipsis;
+    }
 }
