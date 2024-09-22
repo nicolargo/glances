@@ -5,45 +5,58 @@
     <glances-help v-else-if="args.help_tag"></glances-help>
     <main v-else>
         <div class="container-fluid">
-            <div class="row">
-                <div class="col-auto">
+            <div class="row justify-content-between">
+                <div class="col-auto" v-if="!args.disable_system">
                     <glances-plugin-system :data="data"></glances-plugin-system>
                 </div>
                 <div class="col" v-if="!args.disable_ip">
                     <glances-plugin-ip :data="data"></glances-plugin-ip>
                 </div>
-                <div class="col-auto ml-auto">
+                <div class="col-auto ml-auto" v-if="!args.disable_uptime">
                     <glances-plugin-uptime :data="data"></glances-plugin-uptime>
                 </div>
             </div>
         </div>
         <div class="container-fluid">
             <div class="row">
-                <div class="col">
+                <div class="col" v-if="!args.disable_cloud">
                     <glances-plugin-cloud :data="data"></glances-plugin-cloud>
                 </div>
             </div>
             <div class="row separator" v-if="args.enable_separator"></div>
-            <div class="row">
-                <!-- <div class="col-3 d-none d-lg-block d-xl-block d-xxl-block" v-if="!args.disable_quicklook">
+            <div class="row justify-content-between">
+                <!-- Quicklook -->
+                <div class="col-3 d-none d-lg-block d-xl-block d-xxl-block"
+                     v-if="!args.disable_quicklook">
                     <glances-plugin-quicklook :data="data"></glances-plugin-quicklook>
-                </div> -->
-                <div class="col" v-if="!args.disable_cpu && !args.percpu">
+                </div>
+                <!-- CPU -->
+                <div class="col"
+                        v-if="!args.disable_cpu && !args.percpu">
                     <glances-plugin-cpu :data="data"></glances-plugin-cpu>
                 </div>
-                <!-- <div class="col-auto" v-if="!args.disable_cpu && args.percpu">
+                <div class="col"
+                        v-if="!args.disable_cpu && args.percpu">
                     <glances-plugin-percpu :data="data"></glances-plugin-percpu>
-                </div> -->
-                <!-- <div class="col-auto" v-if="!args.disable_gpu && hasGpu">
+                </div>
+                <!-- GPU -->
+                <div class="col"
+                        v-if="!args.disable_gpu && hasGpu">
                     <glances-plugin-gpu :data="data"></glances-plugin-gpu>
-                </div> -->
-                <div class="col" v-if="!args.disable_mem">
+                </div>
+                <!-- MEM -->
+                <div class="col"
+                        v-if="!args.disable_mem">
                     <glances-plugin-mem :data="data"></glances-plugin-mem>
                 </div>
-                <!-- <div class="col-auto" v-if="!args.disable_memswap">
+                <!-- SWAP -->
+                <div class="col-auto d-none d-md-block d-lg-block d-xl-block d-xxl-block"
+                        v-if="!args.disable_memswap">
                     <glances-plugin-memswap :data="data"></glances-plugin-memswap>
-                </div> -->
-                <div class="col-auto ml-auto" v-if="!args.disable_load">
+                </div>
+                <!-- LOAD -->
+                <div class="col-auto"
+                        v-if="!args.disable_load">
                     <glances-plugin-load :data="data"></glances-plugin-load>
                 </div>
             </div>
