@@ -32,13 +32,19 @@
                 </div>
                 <!-- CPU -->
                 <div class="col"
+                        v-if="!args.disable_cpu || !args.percpu">
+                    <glances-plugin-cpu :data="data"></glances-plugin-cpu>
+                </div>
+                <!-- TODO: percpu need to be refactor
+                <div class="col"
                         v-if="!args.disable_cpu && !args.percpu">
                     <glances-plugin-cpu :data="data"></glances-plugin-cpu>
                 </div>
                 <div class="col"
                         v-if="!args.disable_cpu && args.percpu">
                     <glances-plugin-percpu :data="data"></glances-plugin-percpu>
-                </div>
+                </div> -->
+
                 <!-- GPU -->
                 <div class="col"
                         v-if="!args.disable_gpu && hasGpu">
@@ -65,29 +71,15 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-3 sidebar" v-if="!args.disable_left_sidebar">
-                    <!-- <div class="table">
-                        <template v-for="plugin in leftMenu">
-                            <component
-                                v-if="!args[`disable_${plugin}`]"
-                                :is="`glances-plugin-${plugin}`"
-                                :id="`plugin-${plugin}`"
-                                class="plugin table-row-group"
-                                :data="data">
-                            </component>
-                        </template>
-                    </div> -->
-
-                    <div class="row">
-                        <div class="col">
-                            <glances-plugin-network :data="data"></glances-plugin-network>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <glances-plugin-diskio :data="data"></glances-plugin-diskio>
-                        </div>
-                    </div>
-
+                    <template v-for="plugin in leftMenu">
+                        <component
+                            v-if="!args[`disable_${plugin}`]"
+                            :is="`glances-plugin-${plugin}`"
+                            :id="`plugin-${plugin}`"
+                            class="plugin"
+                            :data="data">
+                        </component>
+                    </template>
                 </div>
                 <div class="col">
                     <glances-plugin-vms

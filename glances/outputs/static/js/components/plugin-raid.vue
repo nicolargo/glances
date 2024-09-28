@@ -1,32 +1,38 @@
-<template>
+<template v-if="hasDisks">
     <section class="plugin" id="raid">
-        <div class="table-row" v-if="hasDisks">
-            <div class="table-cell text-left title">RAID disks</div>
-            <div class="table-cell">Used</div>
-            <div class="table-cell">Total</div>
-        </div>
-        <div class="table-row" v-for="(disk, diskId) in disks" :key="diskId">
-            <div class="table-cell text-left">
-                {{ disk.type.toUpperCase() }} {{ disk.name }}
-                <div class="warning" v-show="disk.degraded">└─ Degraded mode</div>
-                <div v-show="disk.degraded">&nbsp; &nbsp;└─ {{ disk.config }}</div>
-                <div class="critical" v-show="disk.inactive">└─ Status {{ disk.status }}</div>
-                <template v-if="disk.inactive">
-                    <div v-for="(component, componentId) in disk.components" :key="componentId">
-                        &nbsp; &nbsp;{{
-                            componentId === disk.components.length - 1 ? '└─' : '├─'
-                        }}
-                        disk {{ component.number }}: {{ component.name }}
-                    </div>
-                </template>
-            </div>
-            <div class="table-cell" v-show="disk.status == 'active'" :class="getAlert(disk)">
-                {{ disk.used }}
-            </div>
-            <div class="table-cell" v-show="disk.status == 'active'" :class="getAlert(disk)">
-                {{ disk.available }}
-            </div>
-        </div>
+        <table class="table table-sm table-borderless">
+            <thead>
+                <tr>
+                    <th scope="col">RAID disks</th>
+                    <th scope="col" class="text-end">Used</th>
+                    <th scope="col" class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(disk, diskId) in disks" :key="diskId">
+                    <td scope="row">
+                        {{ disk.type.toUpperCase() }} {{ disk.name }}
+                        <div class="warning" v-show="disk.degraded">└─ Degraded mode</div>
+                        <div v-show="disk.degraded">&nbsp; &nbsp;└─ {{ disk.config }}</div>
+                        <div class="critical" v-show="disk.inactive">└─ Status {{ disk.status }}</div>
+                        <template v-if="disk.inactive">
+                            <div v-for="(component, componentId) in disk.components" :key="componentId">
+                                &nbsp; &nbsp;{{
+                                    componentId === disk.components.length - 1 ? '└─' : '├─'
+                                }}
+                                disk {{ component.number }}: {{ component.name }}
+                            </div>
+                        </template>
+                    </td>
+                    <td scope="row" class="text-end" v-show="disk.status == 'active'" :class="getAlert(disk)">
+                        {{ disk.used }}
+                    </td>
+                    <td scope="row" class="text-end" v-show="disk.status == 'active'" :class="getAlert(disk)">
+                        {{ disk.available }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </template>
 

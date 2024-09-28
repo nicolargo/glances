@@ -4,7 +4,7 @@
         <div class="table-responsive">
             <table class="table-sm table-borderless">
                 <tbody>
-                    <tr>
+                    <tr class="justify-content-between">
                         <td scope="col">
                             <table class="table table-sm table-borderless">
                                 <tbody>

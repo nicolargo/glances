@@ -1,5 +1,5 @@
 <template>
-    <section id="vms-plugin" class="plugin" v-if="vms.length">
+    <section id="vms" class="plugin" v-if="vms.length">
         <span class="title">VMs</span>
         {{ vms.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}
         <div class="table">

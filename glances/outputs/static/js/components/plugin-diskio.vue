@@ -1,4 +1,4 @@
-<template>
+<template v-if="hasDisks">
     <section class="plugin" id="diskio">
         <table class="table table-sm table-borderless">
             <thead>
@@ -73,6 +73,9 @@ export default {
                 };
             });
             return orderBy(disks, ['name']);
+        },
+        hasDisks() {
+            return this.disks.length > 0;
         }
     }
 };
