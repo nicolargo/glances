@@ -1,4 +1,4 @@
-<template>
+<template v-if="hasNetworks">
     <section class="plugin" id="network">
         <table class="table table-sm table-borderless">
             <thead>
@@ -85,6 +85,9 @@ export default {
                 return network;
             });
             return orderBy(networks, ['interfaceName']);
+        },
+        hasNetworks() {
+            return this.networks.length > 0;
         }
     }
 };

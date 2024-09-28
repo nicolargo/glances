@@ -1,5 +1,5 @@
 <template>
-    <section id="processcount" class="plugin">
+    <section class="plugin" id="processcount">
         <span class="title">TASKS</span>
         <span>{{ total }} ({{ thread }} thr),</span>
         <span>{{ running }} run,</span>

@@ -22,7 +22,7 @@
                         <td scope="col" :class="getSystemAlert(percpu)">{{ percpu.system }}%</td>
                         <td scope="col" v-show="percpu.idle != undefined">{{ percpu.idle }}%</td>
                         <td scope="col" v-show="percpu.iowait != undefined" :class="getIOWaitAlert(percpu)">{{ percpu.iowait }}%</td>
-                        <td scope="col" v-show="percpu.steel != undefined">{{ percpu.steel }}%</td>
+                        <td scope="col" v-show="percpu.steal != undefined">{{ percpu.steal }}%</td>
                     </tr>
                 </tbody>
             </table>
