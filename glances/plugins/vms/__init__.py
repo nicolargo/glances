@@ -200,10 +200,11 @@ class PluginModel(GlancesPluginModel):
         # Title
         msg = '{}'.format('VMs')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = f' {len(self.stats)}'
-        ret.append(self.curse_add_line(msg))
-        msg = f' sorted by {sort_for_human[self.sort_key]}'
-        ret.append(self.curse_add_line(msg))
+        if len(self.stats) > 1:
+            msg = f' {len(self.stats)}'
+            ret.append(self.curse_add_line(msg))
+            msg = f' sorted by {sort_for_human[self.sort_key]}'
+            ret.append(self.curse_add_line(msg))
         if not self.views['show_engine_name']:
             msg = f' (served by {self.stats[0].get("engine", "")})'
         ret.append(self.curse_add_line(msg))

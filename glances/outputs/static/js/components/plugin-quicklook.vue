@@ -1,10 +1,12 @@
 <template>
     <section id="quicklook" class="plugin">
-        <div class="cpu-name text-left">
-            {{ cpu_name }}
-        </div>
-        <div class="cpu-freq text-left" v-if="cpu_hz_current">
-            Frequency: {{ cpu_hz_current }}/{{ cpu_hz }}Ghz
+        <div>
+            <span>
+                {{ cpu_name }}
+            </span>
+            <span class="text-right" v-if="cpu_hz_current">
+                {{ cpu_hz_current }}/{{ cpu_hz }}Ghz
+            </span>
         </div>
         <div class="table-responsive">
             <table class="table table-sm table-borderless">

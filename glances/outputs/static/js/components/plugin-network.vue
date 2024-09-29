@@ -1,6 +1,6 @@
-<template v-if="hasNetworks">
-    <section class="plugin" id="network">
-        <table class="table table-sm table-borderless">
+<template>
+    <section class="plugin" id="network" v-if="hasNetworks">
+        <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
                     <th scope="col">NETWORK</th>

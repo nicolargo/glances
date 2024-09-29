@@ -1,9 +1,9 @@
-<template v-if="hasDisks">
-    <section class="plugin" id="raid">
-        <table class="table table-sm table-borderless">
+<template>
+    <section class="plugin" id="raid" v-if="hasDisks">
+        <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
-                    <th scope="col">RAID disks</th>
+                    <th scope="col">RAID disks {{ disks.length }}</th>
                     <th scope="col" class="text-end">Used</th>
                     <th scope="col" class="text-end">Total</th>
                 </tr>

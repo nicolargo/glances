@@ -1,5 +1,5 @@
-<template v-if="hasSensors">
-    <section class="plugin" id="sensors">
+<template>
+    <section class="plugin" id="sensors" v-if="hasSensors">
         <table class="table table-sm table-borderless">
             <thead>
                 <tr>
