@@ -37,7 +37,7 @@
                         THR
                     </td>
                     <td scope="row">NI</td>
-                    <td scope="row" class="table-cell width-60">S</td>
+                    <td scope="row" class="table-cell widtd-60">S</td>
                     <td scope="row"
                         v-show="ioReadWritePresent"
                         class="hidden-xs hidden-sm"

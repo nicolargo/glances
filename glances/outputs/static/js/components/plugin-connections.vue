@@ -1,6 +1,6 @@
 <template>
     <section class="plugin" id="connections">
-        <table class="table table-sm table-borderless">
+        <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
                     <th scope="col">TCP CONNECTIONS</th>

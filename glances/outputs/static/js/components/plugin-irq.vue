@@ -1,6 +1,6 @@
 <template>
     <section class="plugin" id="irq">
-        <table class="table table-sm table-borderless">
+        <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
                     <th scope="col">IRQ</th>

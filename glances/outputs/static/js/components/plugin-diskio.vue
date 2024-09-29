@@ -1,6 +1,6 @@
-<template v-if="hasDisks">
-    <section class="plugin" id="diskio">
-        <table class="table table-sm table-borderless">
+<template>
+    <section class="plugin" id="diskio" v-if="hasDisks">
+        <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
                     <th scope="col">DISK I/O</th>

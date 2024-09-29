@@ -1,6 +1,6 @@
-<template v-if="hasDrives">
-    <section id="smart" class="plugin">
-        <table class="table table-sm table-borderless">
+<template>
+    <section id="smart" class="plugin" v-if="hasDrives">
+        <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
                     <th scope="col">SMART DISKS</th>

@@ -4,7 +4,7 @@
     </div>
     <glances-help v-else-if="args.help_tag"></glances-help>
     <main v-else>
-        <div class="container-fluid">
+        <div class="container-fluid margin-bottom">
             <div class="row justify-content-between">
                 <div class="col-auto" v-if="!args.disable_system">
                     <glances-plugin-system :data="data"></glances-plugin-system>
@@ -16,14 +16,14 @@
                     <glances-plugin-uptime :data="data"></glances-plugin-uptime>
                 </div>
             </div>
-        </div>
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col" v-if="!args.disable_cloud">
+            <div class="row" v-if="!args.disable_cloud">
+                <div class="col">
                     <glances-plugin-cloud :data="data"></glances-plugin-cloud>
                 </div>
             </div>
-            <div class="row separator" v-if="args.enable_separator"></div>
+        </div>
+        <div class="row separator" v-if="args.enable_separator"></div>
+        <div class="container-fluid margin-top margin-bottom">
             <div class="row justify-content-between">
                 <!-- Quicklook -->
                 <div class="col-3 d-none d-lg-block d-xl-block d-xxl-block"
@@ -66,9 +66,9 @@
                     <glances-plugin-load :data="data"></glances-plugin-load>
                 </div>
             </div>
-            <div class="row separator" v-if="args.enable_separator"></div>
         </div>
-        <div class="container-fluid">
+        <div class="row separator" v-if="args.enable_separator"></div>
+        <div class="container-fluid margin-top">
             <div class="row">
                 <div class="col-3 sidebar" v-if="!args.disable_left_sidebar">
                     <template v-for="plugin in leftMenu">

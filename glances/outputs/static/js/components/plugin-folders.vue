@@ -1,6 +1,6 @@
-<template v-if="hasFolders">
-    <section class="plugin" id="folders">
-        <table class="table table-sm table-borderless">
+<template>
+    <section class="plugin" id="folders" v-if="hasFolders">
+        <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
                     <th scope="col">FOLDERS</th>

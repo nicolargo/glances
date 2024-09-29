@@ -1,7 +1,7 @@
 <template>
     <section class="plugin" id="containers" v-if="containers.length">
         <span class="title">CONTAINERS</span>
-        {{ containers.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}
+        <span v-show="containers.length > 1"> {{ containers.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}</span>
         <table class="table table-sm table-borderless table-striped table-hover">
             <thead>
                 <tr>

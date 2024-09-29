@@ -1,6 +1,6 @@
-<template v-if="hasHotpots">
-    <section class="plugin" id="wifi">
-        <table class="table table-sm table-borderless">
+<template>
+    <section class="plugin" id="wifi" v-if="hasHotpots">
+        <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
                     <th scope="col">WIFI</th>
