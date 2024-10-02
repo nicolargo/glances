@@ -203,14 +203,16 @@ install: ## Open a Web Browser to the installation procedure
 # Follow ./glances/outputs/static/README.md for more information
 # ===================================================================
 
+webui webui%: DIR = glances/outputs/static/
+
 webui: ## Build the Web UI
-	cd glances/outputs/static/ && npm ci && npm run build
+	cd $(DIR) && npm ci && npm run build
 
 webui-audit: ## Audit the Web UI
-	cd glances/outputs/static/ && npm audit
+	cd $(DIR) && npm audit
 
 webui-audit-fix: ## Fix audit the Web UI
-	cd glances/outputs/static/ && npm audit fix && npm ci && npm run build
+	cd $(DIR) && npm audit fix && npm ci && npm run build
 
 # ===================================================================
 # Packaging
