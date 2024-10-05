@@ -46,7 +46,7 @@
                         IOR/s
                     </td>
                     <td scope="row"
-                        v-show="ioReadWritePresent" class="text-left hidden-xs hidden-sm"
+                        v-show="ioReadWritePresent" class="text-start hidden-xs hidden-sm"
                         :class="['sortable', sorter.column === 'io_counters' && 'sort']"
                         @click="$emit('update:sorter', 'io_counters')">
                         IOW/s

@@ -12,7 +12,10 @@
                 <div class="col" v-if="!args.disable_ip">
                     <glances-plugin-ip :data="data"></glances-plugin-ip>
                 </div>
-                <div class="col-auto ml-auto" v-if="!args.disable_uptime">
+                <div class="col-auto ms-auto" v-if="!args.disable_now">
+                    <glances-plugin-now :data="data"></glances-plugin-now>
+                </div>
+                <div class="col-auto ms-auto" v-if="!args.disable_uptime">
                     <glances-plugin-uptime :data="data"></glances-plugin-uptime>
                 </div>
             </div>
