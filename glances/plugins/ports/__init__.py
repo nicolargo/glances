@@ -121,40 +121,34 @@ class PluginModel(GlancesPluginModel):
 
         return self.stats
 
+    def get_conds_if_port(self, port):
+        return {
+            'CAREFUL': port['status'] is None,
+            'CRITICAL': port['status'] == 0,
+            'WARNING': isinstance(port['status'], (float, int))
+            and port['rtt_warning'] is not None
+            and port['status'] > port['rtt_warning'],
+        }
+
     def get_ports_alert(self, port, header="", log=False):
         """Return the alert status relative to the port scan return value."""
-        ret = 'OK'
-        if port['status'] is None:
-            ret = 'CAREFUL'
-        elif port['status'] == 0:
-            ret = 'CRITICAL'
-        elif (
-            isinstance(port['status'], (float, int))
-            and port['rtt_warning'] is not None
-            and port['status'] > port['rtt_warning']
-        ):
-            ret = 'WARNING'
 
-        # Get stat name
-        stat_name = self.get_stat_name(header=header)
+        return self.get_p_alert(self.get_conds_if_port(port), port, header, log)
 
-        # Manage threshold
-        self.manage_threshold(stat_name, ret)
-
-        # Manage action
-        self.manage_action(stat_name, ret.lower(), header, port[self.get_key()])
-
-        return ret
+    def get_conds_if_url(self, web):
+        return {
+            'CAREFUL': web['status'] is None,
+            'CRITICAL': web['status'] not in [200, 301, 302],
+            'WARNING': web['rtt_warning'] is not None and web['elapsed'] > web['rtt_warning'],
+        }
 
     def get_web_alert(self, web, header="", log=False):
         """Return the alert status relative to the web/url scan return value."""
-        ret = 'OK'
-        if web['status'] is None:
-            ret = 'CAREFUL'
-        elif web['status'] not in [200, 301, 302]:
-            ret = 'CRITICAL'
-        elif web['rtt_warning'] is not None and web['elapsed'] > web['rtt_warning']:
-            ret = 'WARNING'
+
+        return self.get_p_alert(self.get_conds_if_url(web), web, header, log)
+
+    def get_p_alert(self, conds, p, header="", log=False):
+        ret = self.get_default_ret_value(conds)
 
         # Get stat name
         stat_name = self.get_stat_name(header=header)
@@ -163,9 +157,14 @@ class PluginModel(GlancesPluginModel):
         self.manage_threshold(stat_name, ret)
 
         # Manage action
-        self.manage_action(stat_name, ret.lower(), header, web[self.get_key()])
+        self.manage_action(stat_name, ret.lower(), header, p[self.get_key()])
 
         return ret
+
+    def get_default_ret_value(self, conds):
+        ret_as_dict_val = {'ret': key for key, cond in conds.items() if cond}
+
+        return ret_as_dict_val.get('ret', 'OK')
 
     def set_status_if_host(self, p):
         if p['host'] is None:
@@ -193,13 +192,7 @@ class PluginModel(GlancesPluginModel):
         return status
 
     def build_str(self, name_max_width, ret, p):
-        if 'host' in p:
-            helper = self.get_ports_alert
-            status = self.set_status_if_host(p)
-        elif 'url' in p:
-            helper = self.get_web_alert
-            status = self.set_status_if_url(p)
-
+        helper, status = self.get_status_and_helper(p).get(True)
         msg = '{:{width}}'.format(p['description'][0:name_max_width], width=name_max_width)
         ret.append(self.curse_add_line(msg))
         msg = f'{status:>9}'
@@ -207,6 +200,12 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_new_line())
 
         return ret
+
+    def get_status_and_helper(self, p):
+        return {
+            'host' in p: (self.get_ports_alert, self.set_status_if_host(p)),
+            'url' in p: (self.get_web_alert, self.set_status_if_url(p)),
+        }
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
