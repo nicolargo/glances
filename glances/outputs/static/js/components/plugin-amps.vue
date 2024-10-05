@@ -12,12 +12,12 @@
 
         <!-- <div class="table">
             <div class="table-row" v-for="(process, processId) in processes" :key="processId">
-                <div class="table-cell text-left" :class="getNameDecoration(process)">
+                <div class="table-cell text-start" :class="getNameDecoration(process)">
                     {{ process.name }}
                 </div>
-                <div class="table-cell text-left" v-if="process.regex">{{ process.count }}</div>
+                <div class="table-cell text-start" v-if="process.regex">{{ process.count }}</div>
                 <div
-                    class="table-cell text-left process-result"
+                    class="table-cell text-start process-result"
                     v-html="$filters.nl2br(process.result)"
                 ></div>
             </div>

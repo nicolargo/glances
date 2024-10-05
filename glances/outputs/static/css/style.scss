@@ -83,10 +83,6 @@
     text-decoration: underline;
 }
 
-.text-right {
-    text-align: right;
-}
-
 .text-truncate {
     display: block;
     overflow: hidden;
@@ -131,21 +127,33 @@
 
 #quicklook {
     span {
+        padding: 0;
+        margin: 0;
         padding-left: 10px;
     }
     span:nth-child(1) {
         padding-left: 0px;
     }
+    * > th, td {
+        margin: 0;
+        padding: 0;
+    }
+    * > th:nth-child(1), td:nth-child(1) {
+        width: 4em;
+    }
+    * > th:nth-last-child(1), td:nth-last-child(1) {
+        width: 4em;
+    }
     .progress {
-        margin-bottom: 0px;
         min-width: 100px;
         background-color: #000;
-        height: 12px;
+        height: 1.5em;
         border-radius: 0px;
         text-align: right;
     }
     .progress-bar-ok {
         background-color: #3E7B04;
+
     }
     .progress-bar-careful {
         background-color: #295183;
