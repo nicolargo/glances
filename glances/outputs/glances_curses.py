@@ -922,15 +922,15 @@ class _GlancesCurses:
 
         return None
 
-    def set_upper_left_pos(self, plugin_stats):
-        screen_x = self.term_window.getmaxyx()[1]
-        screen_y = self.term_window.getmaxyx()[0]
+    def setup_upper_left_pos(self, plugin_stats):
+        screen_y, screen_x = self.term_window.getmaxyx()
 
         if plugin_stats['align'] == 'right':
             # Right align (last column)
             display_x = screen_x - self.get_stats_display_width(plugin_stats)
         else:
             display_x = self.column
+
         if plugin_stats['align'] == 'bottom':
             # Bottom (last line)
             display_y = screen_y - self.get_stats_display_height(plugin_stats)
@@ -939,104 +939,7 @@ class _GlancesCurses:
 
         return display_y, display_x
 
-    def check_opt_and_add(self, display_optional, display_additional):
-        def neither_optional_nor_additional(m):
-            has_optional = not display_optional and m['optional']
-            has_additional = not display_additional and m['additional']
-
-            return any([has_optional, has_additional])
-
-        return neither_optional_nor_additional
-
-    def display_plugin(self, plugin_stats, display_optional=True, display_additional=True, max_y=65535, add_space=0):
-        """Display the plugin_stats on the screen.
-
-        :param plugin_stats:
-        :param display_optional: display the optional stats if True
-        :param display_additional: display additional stats if True
-        :param max_y: do not display line > max_y
-        :param add_space: add x space (line) after the plugin
-        """
-        # Exit if:
-        # - the plugin_stats message is empty
-        # - the display tag = False
-        conditions = [plugin_stats is None, not plugin_stats['msgdict'], not plugin_stats['display']]
-        if any(conditions):
-            # Exit
-            return 0
-
-        # Set the upper/left position of the message
-        display_y, display_x = self.set_upper_left_pos(plugin_stats)
-
-        helper = {
-            'goto next and ret first col': self.goto_next_and_ret_first_col(display_x),
-            'neither opt nor add?': self.check_opt_and_add(display_optional, display_additional),
-            'x overbound?': self.x_overbound,
-            'y overbound?': self.y_overbound(max_y),
-        }
-
-        init = {'x': display_x, 'x max': display_x, 'y': display_y}
-        y, x, x_max = self.display_msg(plugin_stats, init, helper)
-
-        # Compute the next Glances column/line position
-        self.next_column = max(self.next_column, x_max + self.space_between_column)
-        self.next_line = max(self.next_line, y + self.space_between_line)
-
-        # Have empty lines after the plugins
-        self.next_line += add_space
-        return None
-
-    def y_overbound(self, max_y):
-        screen_y = self.term_window.getmaxyx()[0]
-
-        return lambda y: y < 0 or (y + 1 > screen_y) or (y > max_y)
-
-    def x_overbound(self, m, x):
-        screen_x = self.term_window.getmaxyx()[1]
-
-        return x < 0 or not m['splittable'] and (x + len(m['msg']) > screen_x)
-
-    def goto_next_and_ret_first_col(self, display_x):
-        return lambda y: (y + 1, display_x)
-
-    def display_msg(self, plugin_stats, init, helper):
-        y, x, x_max = init['y'], init['x'], init['x max']
-        for m in plugin_stats['msgdict']:
-            # New line
-            try:
-                if m['msg'].startswith('\n'):
-                    y, x = helper['goto next and ret first col'](y)
-                    continue
-            except Exception:
-                # Avoid exception (see issue #1692)
-                pass
-            if helper['x overbound?'](m, x) or helper['neither opt nor add?'](m):
-                continue
-            if helper['y overbound?'](y):
-                break
-            x, x_max = self.display_stats_with_current_size(m, y, x, x_max)
-
-        return y, x, x_max
-
-    def display_stats_with_current_size(self, m, y, x, x_max):
-        # Is it possible to display the stat with the current screen size
-        # !!! Crash if not try/except... Why ???
-        screen_x = self.term_window.getmaxyx()[1]
-        try:
-            self.term_window.addnstr(
-                y,
-                x,
-                m['msg'],
-                # Do not display outside the screen
-                screen_x - x,
-                self.colors_list[m['decoration']],
-            )
-        except Exception:
-            pass
-        else:
-            return self.add_new_colum(m, x, x_max)
-
-    def add_new_colum(self, m, x, x_max):
+    def get_next_x_and_x_max(self, m, x, x_max):
         # New column
         # Python 2: we need to decode to get real screen size because
         # UTF-8 special tree chars occupy several bytes.
@@ -1051,6 +954,94 @@ class _GlancesCurses:
             x_max = x
 
         return x, x_max
+
+    def display_stats_with_current_size(self, m, y, x):
+        screen_x = self.term_window.getmaxyx()[1]
+        self.term_window.addnstr(
+            y,
+            x,
+            m['msg'],
+            # Do not display outside the screen
+            screen_x - x,
+            self.colors_list[m['decoration']],
+        )
+
+    def display_stats(self, plugin_stats, init, helper):
+        y, x, x_max = init
+        for m in plugin_stats['msgdict']:
+            # New line
+            try:
+                if m['msg'].startswith('\n'):
+                    y, x = helper['goto next, add first col'](y, x)
+                    continue
+            except Exception:
+                # Avoid exception (see issue #1692)
+                pass
+            # Do not display outside the screen
+            if x < 0:
+                continue
+            if helper['x overbound?'](m, x):
+                continue
+            if helper['y overbound?'](y):
+                break
+            # If display_optional = False do not display optional stats
+            if helper['display optional?'](m):
+                continue
+            # If display_additional = False do not display additional stats
+            if helper['display additional?'](m):
+                continue
+            # Is it possible to display the stat with the current screen size
+            # !!! Crash if not try/except... Why ???
+            try:
+                self.display_stats_with_current_size(m, y, x)
+            except Exception:
+                pass
+            else:
+                x, x_max = self.get_next_x_and_x_max(m, x, x_max)
+
+        return y, x, x_max
+
+    def display_plugin(self, plugin_stats, display_optional=True, display_additional=True, max_y=65535, add_space=0):
+        """Display the plugin_stats on the screen.
+
+        :param plugin_stats:
+        :param display_optional: display the optional stats if True
+        :param display_additional: display additional stats if True
+        :param max_y: do not display line > max_y
+        :param add_space: add x space (line) after the plugin
+        """
+        # Exit if:
+        # - the plugin_stats message is empty
+        # - the display tag = False
+        if plugin_stats is None or not plugin_stats['msgdict'] or not plugin_stats['display']:
+            # Exit
+            return 0
+
+        # Get the screen size
+        screen_y, screen_x = self.term_window.getmaxyx()
+
+        # Set the upper/left position of the message
+        display_y, display_x = self.setup_upper_left_pos(plugin_stats)
+
+        helper = {
+            'goto next, add first col': lambda y, x: (y + 1, display_x),
+            'x overbound?': lambda m, x: not m['splittable'] and (x + len(m['msg']) > screen_x),
+            'y overbound?': lambda y: y < 0 or (y + 1 > screen_y) or (y > max_y),
+            'display optional?': lambda m: not display_optional and m['optional'],
+            'display additional?': lambda m: not display_additional and m['additional'],
+        }
+
+        # Display
+        init = display_y, display_x, display_x
+        y, x, x_max = self.display_stats(plugin_stats, init, helper)
+
+        # Compute the next Glances column/line position
+        self.next_column = max(self.next_column, x_max + self.space_between_column)
+        self.next_line = max(self.next_line, y + self.space_between_line)
+
+        # Have empty lines after the plugins
+        self.next_line += add_space
+        return None
 
     def clear(self):
         """Erase the content of the screen.
