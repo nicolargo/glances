@@ -1,26 +1,25 @@
 <template>
-    <section id="smart" class="plugin">
-        <div class="table-row">
-            <div class="table-cell text-left title">SMART disks</div>
-            <div class="table-cell"></div>
-            <div class="table-cell"></div>
-        </div>
-        <template v-for="(drive, driveId) in drives" :key="driveId">
-            <div class="table-row">
-                <div class="table-cell text-left text-truncate">{{ drive.name }}</div>
-                <div class="table-cell"></div>
-                <div class="table-cell"></div>
-            </div>
-            <template v-for="(metric, metricId) in drive.details" :key="metricId">
-                <div class="table-row">
-                    <div class="table-cell text-left">&nbsp;&nbsp;{{ metric.name }}</div>
-                    <div class="table-cell"></div>
-                    <div class="table-cell text-truncate">
-                        <span>{{ metric.raw }}</span>
-                    </div>
-                </div>
-            </template>
-        </template>
+    <section id="smart" class="plugin" v-if="hasDrives">
+        <table class="table table-sm table-borderless margin-bottom">
+            <thead>
+                <tr>
+                    <th scope="col">SMART DISKS</th>
+                    <th scope="col" class="text-end"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <template v-for="(drive, driveId) in drives" :key="driveId">
+                    <tr>
+                        <td scope="row">{{ drive.name }}</td>
+                        <td scope="col" class="text-end"></td>
+                    </tr>
+                    <tr v-for="(metric, metricId) in drive.details" :key="metricId">
+                        <td scope="row">{{ metric.name }}</td>
+                        <td scope="row" class="text-end text-truncate">{{ metric.raw }}</td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
     </section>
 </template>
 
@@ -44,6 +43,9 @@ export default {
                     .map(([prop, value]) => value);
                 return { name, details };
             });
+        },
+        hasDrives() {
+            return this.drives.length > 0;
         }
     }
 };

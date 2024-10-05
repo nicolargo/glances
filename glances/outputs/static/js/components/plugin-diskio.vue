@@ -1,29 +1,35 @@
 <template>
-    <section class="plugin" id="diskio">
-        <div class="table-row" v-if="disks.length > 0">
-            <div class="table-cell text-left title">DISK I/O</div>
-            <div class="table-cell" v-show="!args.diskio_iops">R/s</div>
-            <div class="table-cell" v-show="!args.diskio_iops">W/s</div>
-            <div class="table-cell" v-show="args.diskio_iops">IOR/s</div>
-            <div class="table-cell" v-show="args.diskio_iops">IOW/s</div>
-        </div>
-        <div class="table-row" v-for="(disk, diskId) in disks" :key="diskId">
-            <div class="table-cell text-left">
-                {{ $filters.minSize(disk.alias ? disk.alias : disk.name, 32) }}
-            </div>
-            <div class="table-cell" v-show="!args.diskio_iops">
-                {{ disk.bitrate.txps }}
-            </div>
-            <div class="table-cell" v-show="!args.diskio_iops">
-                {{ disk.bitrate.rxps }}
-            </div>
-            <div class="table-cell" v-show="args.diskio_iops">
-                {{ disk.count.txps }}
-            </div>
-            <div class="table-cell" v-show="args.diskio_iops">
-                {{ disk.count.rxps }}
-            </div>
-        </div>
+    <section class="plugin" id="diskio" v-if="hasDisks">
+        <table class="table table-sm table-borderless margin-bottom">
+            <thead>
+                <tr>
+                    <th scope="col">DISK I/O</th>
+                    <th scope="col" class="text-end w-25" v-show="!args.diskio_iops">R/s</th>
+                    <th scope="col" class="text-end w-25" v-show="!args.diskio_iops">W/s</th>
+                    <th scope="col" class="text-end w-25" v-show="args.diskio_iops">IOR/s</th>
+                    <th scope="col" class="text-end w-25" v-show="args.diskio_iops">IOW/s</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(disk, diskId) in disks" :key="diskId">
+                    <td scope="row">
+                        {{ $filters.minSize(disk.alias ? disk.alias : disk.name, 32) }}
+                    </td>
+                    <td class="text-end w-25" v-show="!args.diskio_iops">
+                        {{ disk.bitrate.txps }}
+                    </td>
+                    <td class="text-end w-25" v-show="!args.diskio_iops">
+                        {{ disk.bitrate.rxps }}
+                    </td>
+                    <td class="text-end w-25" v-show="args.diskio_iops">
+                        {{ disk.count.txps }}
+                    </td>
+                    <td class="text-end w-25" v-show="args.diskio_iops">
+                        {{ disk.count.rxps }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </template>
 
@@ -67,6 +73,9 @@ export default {
                 };
             });
             return orderBy(disks, ['name']);
+        },
+        hasDisks() {
+            return this.disks.length > 0;
         }
     }
 };

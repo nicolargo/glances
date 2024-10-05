@@ -190,12 +190,15 @@ class PluginModel(GlancesPluginModel):
             return ret
 
         # Header
+        logger.info(self.stats)
         if self.stats['net_connections_enabled'] or self.stats['nf_conntrack_enabled']:
             msg = '{}'.format('TCP CONNECTIONS')
             ret.append(self.curse_add_line(msg, "TITLE"))
         # Connections status
         if self.stats['net_connections_enabled']:
             for s in [psutil.CONN_LISTEN, 'initiated', psutil.CONN_ESTABLISHED, 'terminated']:
+                if s not in self.stats:
+                    continue
                 ret.append(self.curse_new_line())
                 msg = '{:{width}}'.format(nativestr(s).capitalize(), width=len(s))
                 ret.append(self.curse_add_line(msg))

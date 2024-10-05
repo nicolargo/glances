@@ -1,42 +1,47 @@
 <template>
-    <section class="plugin" id="network">
-        <div class="table-row">
-            <div class="table-cell text-left title">NETWORK</div>
-            <div class="table-cell" v-show="!args.network_cumul && !args.network_sum">Rx/s</div>
-            <div class="table-cell" v-show="!args.network_cumul && !args.network_sum">Tx/s</div>
-            <div class="table-cell" v-show="!args.network_cumul && args.network_sum"></div>
-            <div class="table-cell" v-show="!args.network_cumul && args.network_sum">Rx+Tx/s</div>
-            <div class="table-cell" v-show="args.network_cumul && !args.network_sum">Rx</div>
-            <div class="table-cell" v-show="args.network_cumul && !args.network_sum">Tx</div>
-            <div class="table-cell" v-show="args.network_cumul && args.network_sum"></div>
-            <div class="table-cell" v-show="args.network_cumul && args.network_sum">Rx+Tx</div>
-        </div>
-        <div class="table-row" v-for="(network, networkId) in networks" :key="networkId">
-            <div class="table-cell text-left">
-                <span class="visible-lg-inline">{{ network.ifname }}</span>
-                <span class="hidden-lg">{{ $filters.minSize(network.ifname) }}</span>
-            </div>
-            <div class="table-cell" v-show="!args.network_cumul && !args.network_sum">
-                {{ args.byte ? $filters.bytes(network.bytes_recv_rate_per_sec) : $filters.bits(network.bytes_recv_rate_per_sec) }}
-            </div>
-            <div class="table-cell" v-show="!args.network_cumul && !args.network_sum">
-                {{ args.byte ? $filters.bytes(network.bytes_sent_rate_per_sec) : $filters.bits(network.bytes_sent_rate_per_sec) }}
-            </div>
-            <div class="table-cell" v-show="!args.network_cumul && args.network_sum"></div>
-            <div class="table-cell" v-show="!args.network_cumul && args.network_sum">
-                {{ args.byte ? $filters.bytes(network.bytes_all_rate_per_sec) : $filters.bits(network.bytes_all_rate_per_sec) }}
-            </div>
-            <div class="table-cell" v-show="args.network_cumul && !args.network_sum">
-                {{ args.byte ? $filters.bytes(network.bytes_recv) : $filters.bits(network.bytes_recv) }}
-            </div>
-            <div class="table-cell" v-show="args.network_cumul && !args.network_sum">
-                {{ args.byte ? $filters.bytes(network.bytes_sent) : $filters.bits(network.bytes_sent) }}
-            </div>
-            <div class="table-cell" v-show="args.network_cumul && args.network_sum"></div>
-            <div class="table-cell" v-show="args.network_cumul && args.network_sum">
-                {{ args.byte ? $filters.bytes(network.bytes_all) : $filters.bits(network.bytes_all) }}
-            </div>
-        </div>
+    <section class="plugin" id="network" v-if="hasNetworks">
+        <table class="table table-sm table-borderless margin-bottom">
+            <thead>
+                <tr>
+                    <th scope="col">NETWORK</th>
+                    <th scope="col" class="text-end w-25" v-show="!args.network_cumul && !args.network_sum">Rx/s</th>
+                    <th scope="col" class="text-end w-25" v-show="!args.network_cumul && !args.network_sum">Tx/s</th>
+                    <th scope="col" class="text-end w-25" v-show="!args.network_cumul && args.network_sum"></th>
+                    <th scope="col" class="text-end w-25" v-show="!args.network_cumul && args.network_sum">Rx+Tx/s</th>
+                    <th scope="col" class="text-end w-25" v-show="args.network_cumul && !args.network_sum">Rx</th>
+                    <th scope="col" class="text-end w-25" v-show="args.network_cumul && !args.network_sum">Tx</th>
+                    <th scope="col" class="text-end w-25" v-show="args.network_cumul && args.network_sum"></th>
+                    <th scope="col" class="text-end w-25" v-show="args.network_cumul && args.network_sum">Rx+Tx</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(network, networkId) in networks" :key="networkId">
+                    <td scope="row" class="visible-lg-inline">
+                        {{ network.ifname }}
+                    </td>
+                    <td class="text-end w-25" v-show="!args.network_cumul && !args.network_sum">
+                        {{ args.byte ? $filters.bytes(network.bytes_recv_rate_per_sec) : $filters.bits(network.bytes_recv_rate_per_sec) }}
+                    </td>
+                    <td class="text-end w-25" v-show="!args.network_cumul && !args.network_sum">
+                        {{ args.byte ? $filters.bytes(network.bytes_sent_rate_per_sec) : $filters.bits(network.bytes_sent_rate_per_sec) }}
+                    </td>
+                    <td class="text-end w-25" v-show="!args.network_cumul && args.network_sum"></td>
+                    <td class="text-end w-25" v-show="!args.network_cumul && args.network_sum">
+                        {{ args.byte ? $filters.bytes(network.bytes_all_rate_per_sec) : $filters.bits(network.bytes_all_rate_per_sec) }}
+                    </td>
+                    <td class="text-end w-25" v-show="args.network_cumul && !args.network_sum">
+                        {{ args.byte ? $filters.bytes(network.bytes_recv) : $filters.bits(network.bytes_recv) }}
+                    </td>
+                    <td class="text-end w-25" v-show="args.network_cumul && !args.network_sum">
+                        {{ args.byte ? $filters.bytes(network.bytes_sent) : $filters.bits(network.bytes_sent) }}
+                    </td>
+                    <td class="text-end w-25" v-show="args.network_cumul && args.network_sum"></td>
+                    <td class="text-end w-25" v-show="args.network_cumul && args.network_sum">
+                        {{ args.byte ? $filters.bytes(network.bytes_all) : $filters.bits(network.bytes_all) }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </template>
 
@@ -80,6 +85,9 @@ export default {
                 return network;
             });
             return orderBy(networks, ['interfaceName']);
+        },
+        hasNetworks() {
+            return this.networks.length > 0;
         }
     }
 };

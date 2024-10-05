@@ -1,36 +1,37 @@
 <template>
     <section class="plugin" id="connections">
-        <div class="table-row">
-            <div class="table-cell text-left title">TCP CONNECTIONS</div>
-            <div class="table-cell"></div>
-        </div>
-        <div class="table-row">
-            <div class="table-cell text-left">Listen</div>
-            <div class="table-cell"></div>
-            <div class="table-cell">{{ listen }}</div>
-        </div>
-        <div class="table-row">
-            <div class="table-cell text-left">Initiated</div>
-            <div class="table-cell"></div>
-            <div class="table-cell">{{ initiated }}</div>
-        </div>
-        <div class="table-row">
-            <div class="table-cell text-left">Established</div>
-            <div class="table-cell"></div>
-            <div class="table-cell">{{ established }}</div>
-        </div>
-        <div class="table-row">
-            <div class="table-cell text-left">Terminated</div>
-            <div class="table-cell"></div>
-            <div class="table-cell">{{ terminated }}</div>
-        </div>
-        <div class="table-row">
-            <div class="table-cell text-left">Tracked</div>
-            <div class="table-cell"></div>
-            <div class="table-cell" :class="getDecoration('nf_conntrack_percent')">
-                {{ tracked.count }}/{{ tracked.max }}
-            </div>
-        </div>
+        <table class="table table-sm table-borderless margin-bottom">
+            <thead>
+                <tr>
+                    <th scope="col">TCP CONNECTIONS</th>
+                    <th scope="col" class="text-end"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td scope="row">Listen</td>
+                    <td class="text-end">{{ listen }}</td>
+                </tr>
+                <tr>
+                    <td scope="row">Initiated</td>
+                    <td class="text-end">{{ initiated }}</td>
+                </tr>
+                <tr>
+                    <td scope="row">Established</td>
+                    <td class="text-end">{{ established }}</td>
+                </tr>
+                <tr>
+                    <td scope="row">Terminated</td>
+                    <td class="text-end">{{ terminated }}</td>
+                </tr>
+                <tr>
+                    <td scope="row">Tracked</td>
+                    <td class="text-end" :class="getDecoration('nf_conntrack_percent')">
+                        {{ tracked.count }}/{{ tracked.max }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </template>
 

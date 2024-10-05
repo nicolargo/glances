@@ -1,17 +1,19 @@
 <template>
     <section class="plugin" id="irq">
-        <div class="table-row" v-if="irqs.length > 0">
-            <div class="table-cell text-left title">IRQ</div>
-            <div class="table-cell"></div>
-            <div class="table-cell">Rate/s</div>
-        </div>
-        <div class="table-row" v-for="(irq, irqId) in irqs" :key="irqId">
-            <div class="table-cell text-left">{{ irq.irq_line }}</div>
-            <div class="table-cell"></div>
-            <div class="table-cell">
-                <span>{{ irq.irq_rate }}</span>
-            </div>
-        </div>
+        <table class="table table-sm table-borderless margin-bottom">
+            <thead>
+                <tr>
+                    <th scope="col">IRQ</th>
+                    <th scope="col" class="text-end">Rate/s</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(irq, irqId) in irqs" :key="irqId">
+                    <td scope="row">{{ irq.irq_line }}</td>
+                    <td scope="row" class="text-end">{{ irq.irq_rate }}</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </template>
 

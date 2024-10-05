@@ -23,11 +23,11 @@ module.exports = (_, env) => {
         module: {
             rules: [
                 {
-                    test: /\.vue$/,
+                    test: /\.vue$/i,
                     loader: 'vue-loader'
                 },
                 {
-                    test: /\.scss$/,
+                    test: /\.scss$/i,
                     use: [{
                         loader: "style-loader",
                     }, {
@@ -37,17 +37,7 @@ module.exports = (_, env) => {
                     }]
                 },
                 {
-                    test: /\.less$/,
-                    use: [{
-                        loader: "style-loader",
-                    }, {
-                        loader: "css-loader",
-                    }, {
-                        loader: "less-loader",
-                    }]
-                },
-                {
-                    test: /\.css$/,
+                    test: /\.css$/i,
                     use: [{
                         loader: "style-loader",
                     }, {
@@ -67,7 +57,7 @@ module.exports = (_, env) => {
                 ]
             }),
             !isProd && new HtmlWebpackPlugin({
-                template: './templates/index.html.tpl',
+                template: './templates/index.html',
                 inject: false
             }),
             isProd && new TerserWebpackPlugin({ extractComments: false }),
