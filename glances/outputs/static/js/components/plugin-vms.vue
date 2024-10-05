@@ -1,63 +1,55 @@
 <template>
-    <section id="vms-plugin" class="plugin" v-if="vms.length">
+    <section class="plugin" id="vms" v-if="vms.length">
         <span class="title">VMs</span>
-        {{ vms.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}
-        <div class="table">
-            <div class="table-row">
-                <div class="table-cell text-left" v-show="showEngine">Engine</div>
-                <div
-                    class="table-cell text-left"
-                    :class="['sortable', sorter.column === 'name' && 'sort']"
-                    @click="args.sort_processes_key = 'name'"
-                >
-                    Name
-                </div>
-                <div class="table-cell">Status</div>
-                <div class="table-cell">Core</div>
-                <div
-                    class="table-cell"
-                    :class="['sortable', sorter.column === 'memory_usage' && 'sort']"
-                    @click="args.sort_processes_key = 'memory_usage'"
-                >
-                    MEM
-                </div>
-                <div class="table-cell text-left">/MAX</div>
-                <div
-                    class="table-cell"
-                    :class="['sortable', sorter.column === 'load_1min' && 'sort']"
-                    @click="args.sort_processes_key = 'load_1min'"
-                >
-                     LOAD 1/5/15min
-                </div>
-                <div class="table-cell text-right">Release</div>
-            </div>
-            <div
-                class="table-row"
-                v-for="(vm, vmId) in vms"
-                :key="vmId"
-            >
-                <div class="table-cell text-left" v-show="showEngine">{{ vm.engine }}</div>
-                <div class="table-cell text-left">{{ vm.name }}</div>
-                <div class="table-cell" :class="vm.status == 'stopped' ? 'careful' : 'ok'">
-                    {{ vm.status }}
-                </div>
-                <div class="table-cell">
-                    {{ $filters.number(vm.cpu_count, 1) }}
-                </div>
-                <div class="table-cell">
-                    {{ $filters.bytes(vm.memory_usage) }}
-                </div>
-                <div class="table-cell text-left">
-                    /{{ $filters.bytes(vm.memory_total) }}
-                </div>
-                <div class="table-cell">
-                    {{ $filters.number(vm.load_1min) }}/{{ $filters.number(vm.load_5min) }}/{{ $filters.number(vm.load_15min) }}
-                </div>
-                <div class="table-cell text-right">
-                    {{ vm.release }}
-                </div>
-            </div>
-        </div>
+        <span v-show="vms.length > 1"> {{ vms.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}</span>
+        <table class="table table-sm table-borderless table-striped table-hover">
+            <thead>
+                <tr>
+                    <td v-show="showEngine">Engine</td>
+                    <td :class="['sortable', sorter.column === 'name' && 'sort']"
+                        @click="args.sort_processes_key = 'name'">
+                        Name
+                    </td>
+                    <td>Status</td>
+                    <td>Core</td>
+                    <td :class="['sortable', sorter.column === 'memory_usage' && 'sort']"
+                        @click="args.sort_processes_key = 'memory_usage'">
+                        MEM
+                    </td>
+                    <td>/ MAX</td>
+                    <td :class="['sortable', sorter.column === 'load_1min' && 'sort']"
+                        @click="args.sort_processes_key = 'load_1min'">
+                        LOAD 1/5/15min
+                    </td>
+                    <td>Release</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(vm, vmId) in vms" :key="vmId">
+                    <td v-show="showEngine">{{ vm.engine }}</td>
+                    <td>{{ vm.name }}</td>
+                    <td :class="vm.status == 'stopped' ? 'careful' : 'ok'">
+                        {{ vm.status }}
+                    </td>
+                    <td>
+                        {{ $filters.number(vm.cpu_count, 1) }}
+                    </td>
+                    <td>
+                        {{ $filters.bytes(vm.memory_usage) }}
+                    </td>
+                    <td>
+                        / {{ $filters.bytes(vm.memory_total) }}
+                    </td>
+                    <td>
+                        {{ $filters.number(vm.load_1min) }}/{{ $filters.number(vm.load_5min) }}/{{
+                            $filters.number(vm.load_15min) }}
+                    </td>
+                    <td>
+                        {{ vm.release }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </template>
 

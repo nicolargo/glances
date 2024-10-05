@@ -1,81 +1,72 @@
 <template>
-    <section id="containers-plugin" class="plugin" v-if="containers.length">
+    <section class="plugin" id="containers" v-if="containers.length">
         <span class="title">CONTAINERS</span>
-        {{ containers.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}
-        <div class="table">
-            <div class="table-row">
-                <div class="table-cell text-left" v-show="showEngine">Engine</div>
-                <div class="table-cell text-left" v-show="showPod">Pod</div>
-                <div
-                    class="table-cell text-left"
-                    :class="['sortable', sorter.column === 'name' && 'sort']"
-                    @click="args.sort_processes_key = 'name'"
-                >
-                    Name
-                </div>
-                <div class="table-cell">Status</div>
-                <div class="table-cell">Uptime</div>
-                <div
-                    class="table-cell"
-                    :class="['sortable', sorter.column === 'cpu_percent' && 'sort']"
-                    @click="args.sort_processes_key = 'cpu_percent'"
-                >
-                    CPU%
-                </div>
-                <div
-                    class="table-cell"
-                    :class="['sortable', sorter.column === 'memory_percent' && 'sort']"
-                    @click="args.sort_processes_key = 'memory_percent'"
-                >
-                    MEM
-                </div>
-                <div class="table-cell text-left">/MAX</div>
-                <div class="table-cell">IOR/s</div>
-                <div class="table-cell">IOW/s</div>
-                <div class="table-cell">RX/s</div>
-                <div class="table-cell">TX/s</div>
-                <div class="table-cell text-left">Command</div>
-            </div>
-            <div
-                class="table-row"
-                v-for="(container, containerId) in containers"
-                :key="containerId"
-            >
-                <div class="table-cell text-left" v-show="showEngine">{{ container.engine }}</div>
-                <div class="table-cell text-left" v-show="showPod">{{ container.pod_id || '-' }}</div>
-                <div class="table-cell text-left">{{ container.name }}</div>
-                <div class="table-cell" :class="container.status == 'Paused' ? 'careful' : 'ok'">
-                    {{ container.status }}
-                </div>
-                <div class="table-cell">
-                    {{ container.uptime }}
-                </div>
-                <div class="table-cell">
-                    {{ $filters.number(container.cpu_percent, 1) }}
-                </div>
-                <div class="table-cell">
-                    {{ $filters.bytes(container.memory_usage) }}
-                </div>
-                <div class="table-cell text-left">
-                    /{{ $filters.bytes(container.limit) }}
-                </div>
-                <div class="table-cell">
-                    {{ $filters.bytes(container.io_rx) }}
-                </div>
-                <div class="table-cell">
-                    {{ $filters.bytes(container.io_wx) }}
-                </div>
-                <div class="table-cell">
-                    {{ $filters.bits(container.network_rx) }}
-                </div>
-                <div class="table-cell">
-                    {{ $filters.bits(container.network_tx) }}
-                </div>
-                <div class="table-cell text-left">
-                    {{ container.command }}
-                </div>
-            </div>
-        </div>
+        <span v-show="containers.length > 1"> {{ containers.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}</span>
+        <table class="table table-sm table-borderless table-striped table-hover">
+            <thead>
+                <tr>
+                    <td v-show="showEngine">Engine</td>
+                    <td v-show="showPod">Pod</td>
+                    <td :class="['sortable', sorter.column === 'name' && 'sort']"
+                        @click="args.sort_processes_key = 'name'">
+                        Name
+                    </td>
+                    <td>Status</td>
+                    <td>Uptime</td>
+                    <td :class="['sortable', sorter.column === 'cpu_percent' && 'sort']"
+                        @click="args.sort_processes_key = 'cpu_percent'">
+                        CPU%
+                    </td>
+                    <td :class="['sortable', sorter.column === 'memory_percent' && 'sort']"
+                        @click="args.sort_processes_key = 'memory_percent'">
+                        MEM
+                    </td>
+                    <td>/ MAX</td>
+                    <td>IOR/s</td>
+                    <td>IOW/s</td>
+                    <td>RX/s</td>
+                    <td>TX/s</td>
+                    <td>Command</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(container, containerId) in containers" :key="containerId">
+                    <td v-show="showEngine">{{ container.engine }}</td>
+                    <td v-show="showPod">{{ container.pod_id || '-' }}</td>
+                    <td>{{ container.name }}</td>
+                    <td :class="container.status == 'Paused' ? 'careful' : 'ok'">
+                        {{ container.status }}
+                    </td>
+                    <td>
+                        {{ container.uptime }}
+                    </td>
+                    <td>
+                        {{ $filters.number(container.cpu_percent, 1) }}
+                    </td>
+                    <td>
+                        {{ $filters.bytes(container.memory_usage) }}
+                    </td>
+                    <td>
+                        / {{ $filters.bytes(container.limit) }}
+                    </td>
+                    <td>
+                        {{ $filters.bytes(container.io_rx) }}
+                    </td>
+                    <td>
+                        {{ $filters.bytes(container.io_wx) }}
+                    </td>
+                    <td>
+                        {{ $filters.bits(container.network_rx) }}
+                    </td>
+                    <td>
+                        {{ $filters.bits(container.network_tx) }}
+                    </td>
+                    <td>
+                        {{ container.command }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </template>
 
@@ -119,7 +110,7 @@ export default {
                             memory_usage_no_cache = memory_usage_no_cache - containerData.memory.inactive_file;
                         }
                     }
-                
+
                     return {
                         'id': containerData.id,
                         'name': containerData.name,

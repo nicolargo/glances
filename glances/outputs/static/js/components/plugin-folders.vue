@@ -1,20 +1,24 @@
 <template>
-    <section class="plugin" id="folders">
-        <div class="table-row" v-if="folders.length > 0">
-            <div class="table-cell text-left title">FOLDERS</div>
-            <div class="table-cell"></div>
-            <div class="table-cell">Size</div>
-        </div>
-        <div class="table-row" v-for="(folder, folderId) in folders" :key="folderId">
-            <div class="table-cell text-left">{{ folder.path }}</div>
-            <div class="table-cell"></div>
-            <div class="table-cell" :class="getDecoration(folder)">
-                <span v-if="folder.errno > 0" class="visible-lg-inline">
-                    ?
-                </span>
-                {{ $filters.bytes(folder.size) }}
-            </div>
-        </div>
+    <section class="plugin" id="folders" v-if="hasFolders">
+        <table class="table table-sm table-borderless margin-bottom">
+            <thead>
+                <tr>
+                    <th scope="col">FOLDERS</th>
+                    <th scope="col" class="text-end">Size</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(folder, folderId) in folders" :key="folderId">
+                    <td scope="row">
+                        {{ folder.path }}
+                    </td>
+                    <td class="text-end" :class="getDecoration(folder)">
+                        <span v-if="folder.errno > 0" class="visible-lg-inline">?</span>
+                        {{ $filters.bytes(folder.size) }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </template>
 
@@ -40,6 +44,9 @@ export default {
                     critical: folderData['critical']
                 };
             });
+        },
+        hasFolders() {
+            return this.folders.length > 0;
         }
     },
     methods: {

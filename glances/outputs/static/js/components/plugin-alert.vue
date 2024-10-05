@@ -1,28 +1,27 @@
 <template>
-  <div class="plugin">
-    <section id="alerts">
-            <span class="title" v-if="hasAlerts">
-                Warning or critical alerts (last {{ countAlerts }} entries)
-            </span>
-      <span class="title" v-else>No warning or critical alert detected</span>
-    </section>
-    <section id="alert">
-      <div class="table">
-        <div class="table-row" v-for="(alert, alertId) in alerts" :key="alertId">
-          <div class="table-cell text-left">
-            {{ formatDate(alert.begin) }}
-            ({{ alert.ongoing ? 'ongoing' : alert.duration }}) -
+  <section class="plugin" id="alerts">
+    <span class="title" v-if="hasAlerts">
+        Warning or critical alerts (last {{ countAlerts }} entries)
+    </span>
+    <span class="title" v-else>No warning or critical alert detected</span>
+    <table class="table table-sm table-borderless">
+      <tbody>
+        <tr v-for="(alert, alertId) in alerts" :key="alertId">
+          <td scope="row">
+            <span>{{ formatDate(alert.begin) }}</span>
+            <span>({{ alert.ongoing ? 'ongoing' : alert.duration }})</span>
+          </td>
+          <td scope="row"></td>
+          <td scope="row">
             <span v-show="!alert.ongoing"> {{ alert.state }} on </span>
-            <span :class="alert.state.toLowerCase()">
-                            {{ alert.type }}
-            </span>
-            ({{ $filters.number(alert.max, 1) }})
-            {{ alert.top }}
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
+            <span :class="alert.state.toLowerCase()">{{ alert.type }}</span>
+            <span>({{ $filters.number(alert.max, 1) }})</span>
+            <span>: {{ alert.top }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 </template>
 
 <script>

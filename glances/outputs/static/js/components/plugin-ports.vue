@@ -1,23 +1,30 @@
 <template>
-    <section class="plugin" id="ports">
-        <div class="table-row" v-for="(port, portId) in ports" :key="portId">
-            <div class="table-cell text-left">
-                <!-- prettier-ignore -->
-                {{ $filters.minSize(port.description ? port.description : port.host + ' ' + port.port, 20) }}
-            </div>
-            <div class="table-cell"></div>
-            <div :class="getPortDecoration(port)" class="table-cell" v-if="port.host">
-                <span v-if="port.status == 'null'">Scanning</span>
-                <span v-else-if="port.status == 'false'">Timeout</span>
-                <span v-else-if="port.status == 'true'">Open</span>
-                <span v-else>{{ $filters.number(port.status * 1000.0, 0) }}ms</span>
-            </div>
-            <div :class="getWebDecoration(port)" class="table-cell" v-if="port.url">
-                <span v-if="port.status == 'null'">Scanning</span>
-                <span v-else-if="port.status == 'Error'">Error</span>
-                <span v-else>Code {{ port.status }}</span>
-            </div>
-        </div>
+    <section class="plugin" id="ports" v-if="hasPorts">
+        <table class="table table-sm table-borderless margin-bottom">
+            <tbody>
+                <tr v-for="(port, portId) in ports" :key="portId">
+                    <td scope="row">
+                        <!-- prettier-ignore -->
+                        {{ $filters.minSize(port.description ? port.description : port.host + ' ' + port.port, 20) }}
+                    </td>
+                    <template v-if="port.host">
+                        <td scope="row" class="text-end" :class="getPortDecoration(port)">
+                            <span v-if="port.status == 'null'">Scanning</span>
+                            <span v-else-if="port.status == 'false'">Timeout</span>
+                            <span v-else-if="port.status == 'true'">Open</span>
+                            <span v-else>{{ $filters.number(port.status * 1000.0, 0) }}ms</span>
+                        </td>
+                    </template>
+                    <template v-if="port.url">
+                        <td scope="row" class="text-end" :class="getPortDecoration(port)">
+                            <span v-if="port.status == 'null'">Scanning</span>
+                            <span v-else-if="port.status == 'Error'">Error</span>
+                            <span v-else>Code {{ port.status }}</span>
+                        </td>
+                    </template>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </template>
 
@@ -34,6 +41,9 @@ export default {
         },
         ports() {
             return this.stats;
+        },
+        hasPorts() {
+            return this.ports.length > 0;
         }
     },
     methods: {

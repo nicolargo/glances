@@ -1,19 +1,21 @@
 <template>
-    <section class="plugin" id="wifi">
-        <div class="table-row" v-if="hotspots.length > 0">
-            <div class="table-cell text-left title">WIFI</div>
-            <div class="table-cell"></div>
-            <div class="table-cell">dBm</div>
-        </div>
-        <div class="table-row" v-for="(hotspot, hotspotId) in hotspots" :key="hotspotId">
-            <div class="table-cell text-left">
-                {{ $filters.limitTo(hotspot.ssid, 20) }}
-            </div>
-            <div class="table-cell"></div>
-            <div class="table-cell" :class="getDecoration(hotspot, 'quality_level')">
-                {{ hotspot.quality_level }}
-            </div>
-        </div>
+    <section class="plugin" id="wifi" v-if="hasHotpots">
+        <table class="table table-sm table-borderless margin-bottom">
+            <thead>
+                <tr>
+                    <th scope="col">WIFI</th>
+                    <th scope="col" class="text-end">dBm</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(hotspot, hotspotId) in hotspots" :key="hotspotId">
+                    <td scope="row">{{ $filters.limitTo(hotspot.ssid, 20) }}</td>
+                    <td scope="row" class="text-end" :class="getDecoration(hotspot, 'quality_level')">
+                        {{ hotspot.quality_level }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </template>
 
@@ -46,6 +48,9 @@ export default {
                 })
                 .filter(Boolean);
             return orderBy(hotspots, ['ssid']);
+        },
+        hasHotpots() {
+            return this.hotspots.length > 0;
         }
     },
     methods: {

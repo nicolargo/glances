@@ -1,5 +1,5 @@
 <template>
-    <section id="cloud" class="plugin" v-if="instance || provider">
+    <section class="plugin" id="cloud" v-if="instance || provider">
         <span class="title">{{ provider }}</span> {{ instance }}
     </section>
 </template>

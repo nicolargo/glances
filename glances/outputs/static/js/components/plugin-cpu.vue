@@ -1,96 +1,88 @@
 <template>
     <section id="cpu" class="plugin">
-        <div class="row">
-            <div class="col-sm-24 col-md-12 col-lg-8">
-                <div class="table">
-                    <div class="table-row">
-                        <div class="table-cell text-left title">CPU</div>
-                        <div class="table-cell" :class="getDecoration('total')">{{ total }}%</div>
-                    </div>
-                    <div class="table-row">
-                        <div class="table-cell text-left">user:</div>
-                        <div class="table-cell" :class="getDecoration('user')">{{ user }}%</div>
-                    </div>
-                    <div class="table-row">
-                        <div class="table-cell text-left">system:</div>
-                        <div class="table-cell" :class="getDecoration('system')">{{ system }}%</div>
-                    </div>
-                    <div class="table-row" v-show="iowait != undefined">
-                        <div class="table-cell text-left">iowait:</div>
-                        <div class="table-cell" :class="getDecoration('iowait')">{{ iowait }}%</div>
-                    </div>
-                    <div class="table-row" v-show="iowait == undefined && dpc != undefined">
-                        <div class="table-cell text-left">dpc:</div>
-                        <div class="table-cell" :class="getDecoration('dpc')">{{ dpc }}%</div>
-                    </div>
-                </div>
-            </div>
-            <div class="hidden-xs hidden-sm col-md-12 col-lg-8">
-                <div class="table">
-                    <div class="table-row">
-                        <div class="table-cell text-left">idle:</div>
-                        <div class="table-cell">{{ idle }}%</div>
-                    </div>
-                    <div class="table-row" v-show="irq != undefined">
-                        <div class="table-cell text-left">irq:</div>
-                        <div class="table-cell">{{ irq }}%</div>
-                    </div>
-                    <!-- If no irq, display interrupts -->
-                    <div class="table-row" v-show="irq == undefined">
-                        <div class="table-cell text-left">inter:</div>
-                        <div class="table-cell">
-                            {{ interrupts }}
-                        </div>
-                    </div>
-                    <div class="table-row" v-show="nice != undefined">
-                        <div class="table-cell text-left">nice:</div>
-                        <div class="table-cell">{{ nice }}%</div>
-                    </div>
-                    <!-- If no nice, display ctx_switches -->
-                    <div class="table-row" v-if="nice == undefined && ctx_switches != undefined">
-                        <div class="table-cell text-left">ctx_sw:</div>
-                        <div class="table-cell" :class="getDecoration('ctx_switches')">
-                            {{ ctx_switches }}
-                        </div>
-                    </div>
-                    <div class="table-row" v-show="steal != undefined">
-                        <div class="table-cell text-left">steal:</div>
-                        <div class="table-cell" :class="getDecoration('steal')">{{ steal }}%</div>
-                    </div>
-                    <div class="table-row" v-if="!isLinux && syscalls != undefined">
-                        <div class="table-cell text-left">syscal:</div>
-                        <div class="table-cell">{{ syscalls }}</div>
-                    </div>
-                </div>
-            </div>
-            <div class="hidden-xs hidden-sm hidden-md col-lg-8">
-                <div class="table">
-                    <!-- If not already display instead of nice, then display ctx_switches -->
-                    <div class="table-row" v-if="nice != undefined && ctx_switches != undefined">
-                        <div class="table-cell text-left">ctx_sw:</div>
-                        <div class="table-cell" :class="getDecoration('ctx_switches')">
-                            {{ ctx_switches }}
-                        </div>
-                    </div>
-                    <!-- If not already display instead of irq, then display interrupts -->
-                    <div class="table-row" v-if="irq != undefined && interrupts != undefined">
-                        <div class="table-cell text-left">inter:</div>
-                        <div class="table-cell">
-                            {{ interrupts }}
-                        </div>
-                    </div>
-                    <div class="table-row" v-if="!isWindows && !isSunOS && soft_interrupts != undefined">
-                        <div class="table-cell text-left">sw_int:</div>
-                        <div class="table-cell">
-                            {{ soft_interrupts }}
-                        </div>
-                    </div>
-                    <div class="table-row" v-if="isLinux && guest != undefined">
-                        <div class="table-cell text-left">guest:</div>
-                        <div class="table-cell">{{ guest }}%</div>
-                    </div>
-                </div>
-            </div>
+        <!-- d-none d-xxl-block -->
+        <div class="table-responsive">
+            <table class="table-sm table-borderless">
+                <tbody>
+                    <tr class="justify-content-between">
+                        <td scope="col">
+                            <table class="table table-sm table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <th scope="col">CPU</th>
+                                        <td scope="col" class="text-end" :class="getDecoration('total')">{{ total }}%</td>
+                                    </tr>
+                                    <tr>
+                                        <td scope="col">user:</td>
+                                        <td scope="col" class="text-end" :class="getDecoration('user')">{{ user }}%</td>
+                                    </tr>
+                                    <tr>
+                                        <td scope="col">system:</td>
+                                        <td scope="col" class="text-end" :class="getDecoration('system')">{{ system }}%</td>
+                                    </tr>
+                                    <tr>
+                                        <td scope="col" v-if="iowait != undefined">iowait:</td>
+                                        <td scope="col" class="text-end" v-if="iowait != undefined" :class="getDecoration('iowait')">{{ iowait }}%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                        <td>
+                            <template class="d-none d-xl-block d-xxl-block">
+                                <table class="table table-sm table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td scope="col" v-show="idle != undefined">idle:</td>
+                                            <td scope="col" class="text-end" v-show="idle != undefined">{{ idle }}%</td>
+                                        </tr>
+                                        <tr>
+                                            <td scope="col" v-show="irq != undefined">irq:</td>
+                                            <td scope="col" class="text-end" v-show="irq != undefined">{{ irq }}%</td>
+                                        </tr>
+                                        <tr>
+                                            <td scope="col" v-show="nice != undefined">nice:</td>
+                                            <td scope="col" class="text-end" v-show="nice != undefined">{{ nice }}%</td>
+                                        </tr>
+                                        <tr>
+                                            <td scope="col" v-if="iowait == undefined && dpc != undefined">dpc:</td>
+                                            <td scope="col" class="text-end" v-if="iowait == undefined && dpc != undefined" :class="getDecoration('dpc')">{{ dpc }}%</td>
+                                            <td scope="col" v-show="steal != undefined">steal:</td>
+                                            <td scope="col" class="text-end" v-show="steal != undefined" :class="getDecoration('steal')">{{ steal }}%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </template>
+                        </td>
+                        <td>
+                            <template class="d-none d-xxl-block">
+                                <table class="table table-sm table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td scope="col" v-if="nice != undefined && ctx_switches != undefined">ctx_sw:</td>
+                                            <td scope="col"
+                                                class="text-end"
+                                                v-if="nice != undefined && ctx_switches != undefined"
+                                                :class="getDecoration('ctx_switches')">{{ ctx_switches }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td scope="col" v-show="interrupts != undefined">inter:</td>
+                                            <td scope="col" class="text-end" v-show="interrupts != undefined">{{ interrupts }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td scope="col" v-if="!isWindows && !isSunOS && soft_interrupts != undefined">sw_int:</td>
+                                            <td scope="col" class="text-end" v-if="!isWindows && !isSunOS && soft_interrupts != undefined">{{ soft_interrupts }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td scope="col" v-if="isLinux && guest != undefined">guest:</td>
+                                            <td scope="col" class="text-end" v-if="isLinux && guest != undefined">{{ guest }}%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </template>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </section>
 </template>
