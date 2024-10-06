@@ -154,6 +154,10 @@
             </p>
         </div>
         <div>
+            <p><a href="/docs">API documentation</a> / <a href="/openapi.json">OpenAPI file</a></p>
+        </div>
+        <div class="row">&nbsp;</div>
+        <div>
             <p>Press <b>h</b> to came back to Glances.</p>
         </div>
     </div>
