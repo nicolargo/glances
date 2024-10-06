@@ -84,26 +84,30 @@ class GlancesClientBrowser:
         t = GlancesClientTransport()
         t.set_timeout(3)
 
-        # Get common stats
+        # Get common stats from Glances server
         try:
             s = ServerProxy(uri, transport=t)
         except Exception as e:
             logger.warning(f"Client browser couldn't create socket ({e})")
-        else:
-            # Mandatory stats
+            return server
+
+        # Get the stats
+        for column in self.static_server.get_columns():
+            server_key = column['plugin'] + '_' + column['field']
             try:
-                # CPU%
-                # logger.info(f"CPU stats {s.getPlugin('cpu')}")
-                # logger.info(f"CPU views {s.getPluginView('cpu')}")
-                server['cpu_percent'] = json_loads(s.getPlugin('cpu'))['total']
-                server['cpu_percent_decoration'] = json_loads(s.getPluginView('cpu'))['total']['decoration']
-                # MEM%
-                server['mem_percent'] = json_loads(s.getPlugin('mem'))['percent']
-                server['mem_percent_decoration'] = json_loads(s.getPluginView('mem'))['percent']['decoration']
-                # OS (Human Readable name)
-                server['hr_name'] = json_loads(s.getPlugin('system'))['hr_name']
-                server['hr_name_decoration'] = 'DEFAULT'
-            except (OSError, Fault, KeyError) as e:
+                # Value
+                v_json = json_loads(s.getPlugin(column['plugin']))
+                if 'key' in column:
+                    v_json = [i for i in v_json if i[i['key']].lower() == column['key'].lower()][0]
+                server[server_key] = v_json[column['field']]
+                # Decoration
+                d_json = json_loads(s.getPluginView(column['plugin']))
+                if 'key' in column:
+                    d_json = d_json.get(column['key'])
+                server[server_key + '_decoration'] = d_json[column['field']]['decoration']
+            except (KeyError, IndexError, Fault) as e:
+                logger.debug(f"Error while grabbing stats form server ({e})")
+            except OSError as e:
                 logger.debug(f"Error while grabbing stats form server ({e})")
                 server['status'] = 'OFFLINE'
             except ProtocolError as e:
@@ -118,14 +122,6 @@ class GlancesClientBrowser:
             else:
                 # Status
                 server['status'] = 'ONLINE'
-
-                # Optional stats (load is not available on Windows OS)
-                try:
-                    # LOAD
-                    server['load_min5'] = round(json_loads(s.getPlugin('load'))['min5'], 1)
-                    server['load_min5_decoration'] = json_loads(s.getPluginView('load'))['min5']['decoration']
-                except Exception as e:
-                    logger.warning(f"Error while grabbing stats form server ({e})")
 
         return server
 
