@@ -102,6 +102,10 @@ Example:
 .. code-block:: ini
 
     [serverlist]
+    # Define columns (comma separated list of <plugin>:<field>:(<key>)) to grab/display
+    # Default is: system:hr_name,load:min5,cpu:total,mem:percent
+    # You can also add stats with key, like sensors:value:Ambient (key is case sensitive)
+    columns=system:hr_name,load:min5,cpu:total,mem:percent,memswap:percent
     # Define the static servers list
     server_1_name=xps
     server_1_alias=xps
