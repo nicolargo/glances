@@ -12,6 +12,8 @@ from socket import gaierror, gethostbyname
 
 from glances.logger import logger
 
+DEFAULT_COLUMNS = "system:hr_name,load:min5,cpu:total,mem:percent"
+
 
 class GlancesStaticServer:
     """Manage the static servers list for the client browser."""
@@ -21,10 +23,12 @@ class GlancesStaticServer:
     def __init__(self, config=None, args=None):
         # server_list is a list of dict (JSON compliant)
         # [ {'key': 'zeroconf name', ip': '172.1.2.3', 'port': 61209, 'cpu': 3, 'mem': 34 ...} ... ]
-        # Load the configuration file
-        self._server_list = self.load(config)
+        # Load server list from the Glances configuration file
+        self._server_list = self.load_server_list(config)
+        # Load columns to grab/display in the browser mode
+        self._columns = self.load_columns(config)
 
-    def load(self, config):
+    def load_server_list(self, config):
         """Load the server list from the configuration file."""
         server_list = []
 
@@ -70,6 +74,28 @@ class GlancesStaticServer:
 
         return server_list
 
+    def load_columns(self, config):
+        """Load columns definition from the configuration file.
+        Read:   'system:hr_name,load:min5,cpu:total,mem:percent,sensors:value:Ambient'
+        Return: [{'plugin': 'system', 'field': 'hr_name'},
+                 {'plugin': 'load', 'field': 'min5'},
+                 {'plugin': 'cpu', 'field': 'total'},
+                 {'plugin': 'mem', 'field': 'percent'},
+                 {'plugin': 'sensors', 'field': 'value', 'key': 'Ambient'}]
+        """
+        if config is None:
+            logger.debug("No configuration file available. Cannot load columns definition.")
+        elif not config.has_section(self._section):
+            logger.warning(f"No [{self._section}] section in the configuration file. Cannot load columns definition.")
+
+        columns_def = (
+            config.get_value(self._section, 'columns')
+            if config.get_value(self._section, 'columns')
+            else DEFAULT_COLUMNS
+        )
+
+        return [dict(zip(['plugin', 'field', 'key'], i.split(':'))) for i in columns_def.split(',')]
+
     def get_servers_list(self):
         """Return the current server list (list of dict)."""
         return self._server_list
@@ -77,3 +103,7 @@ class GlancesStaticServer:
     def set_server(self, server_pos, key, value):
         """Set the key to the value for the server_pos (position in the list)."""
         self._server_list[server_pos][key] = value
+
+    def get_columns(self):
+        """Return the columns definitions"""
+        return self._columns
