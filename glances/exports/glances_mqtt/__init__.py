@@ -79,6 +79,19 @@ class Export(GlancesExport):
                 client_id='glances_' + self.devicename,
                 clean_session=False,
             )
+
+            def on_connect(client, userdata, flags, reason_code, properties):
+                """Action to perform when connecting."""
+                self.client.publish(topic='/'.join([self.topic, self.devicename, "availability"]), payload="Online")
+
+            def on_disconnect(client, userdata, flags, reason_code, properties):
+                """Action to perform when the connection is over."""
+                self.client.publish(topic='/'.join([self.topic, self.devicename, "availability"]), payload="Offline")
+
+            client.on_connect = on_connect
+            client.on_disconnect = on_disconnect
+            client.will_set(topic='/'.join([self.topic, self.devicename, "availability"]), payload="Offline")
+
             client.username_pw_set(username=self.user, password=self.password)
             if self.tls:
                 client.tls_set(certifi.where())
