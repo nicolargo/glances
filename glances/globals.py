@@ -24,6 +24,7 @@ import re
 import subprocess
 import sys
 import weakref
+from collections import OrderedDict
 from configparser import ConfigParser, NoOptionError, NoSectionError
 from datetime import datetime
 from operator import itemgetter, methodcaller
@@ -275,6 +276,53 @@ def safe_makedirs(path):
             raise
 
 
+def get_diff_time(time):
+    now = datetime.now()
+    cond = {
+        isinstance(time, int): now - datetime.fromtimestamp(time),
+        isinstance(time, datetime): now - time,
+        not time: 0,
+    }
+
+    return cond.get(True)
+
+
+def get_msg_for_true_cond(conds):
+    return next(val for key, val in conds if key)
+
+
+def get_conds_for_sec_diff_msg(diff):
+    second_diff = diff.seconds
+
+    return OrderedDict(
+        {
+            second_diff < 10: "just now",
+            second_diff < 60: str(second_diff) + " secs",
+            second_diff < 120: "a min",
+            second_diff < 3600: str(second_diff // 60) + " mins",
+            second_diff < 7200: "an hour",
+            second_diff < 86400: str(second_diff // 3600) + " hours",
+        }
+    )
+
+
+def get_conds_for_day_diff_msg(diff):
+    day_diff = diff.days
+    second_diff_msgs = get_conds_for_sec_diff_msg(diff)
+
+    return OrderedDict(
+        {
+            day_diff < 0: '',
+            day_diff == 0: get_msg_for_true_cond(second_diff_msgs),
+            day_diff == 1: "yesterday",
+            day_diff < 7: str(day_diff) + " days",
+            day_diff < 31: str(day_diff // 7) + " weeks",
+            day_diff < 365: str(day_diff // 30) + " months",
+            day_diff >= 365: str(day_diff // 365) + " years",
+        }
+    )
+
+
 def pretty_date(time=False):
     """
     Get a datetime object or a int() Epoch timestamp and return a
@@ -282,41 +330,10 @@ def pretty_date(time=False):
     'just now', etc
     Source: https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
     """
-    now = datetime.now()
-    if isinstance(time, int):
-        diff = now - datetime.fromtimestamp(time)
-    elif isinstance(time, datetime):
-        diff = now - time
-    elif not time:
-        diff = 0
-    second_diff = diff.seconds
-    day_diff = diff.days
+    diff = get_diff_time(time)
+    day_diff_msgs = get_conds_for_day_diff_msg(diff)
 
-    if day_diff < 0:
-        return ''
-
-    if day_diff == 0:
-        if second_diff < 10:
-            return "just now"
-        if second_diff < 60:
-            return str(second_diff) + " secs"
-        if second_diff < 120:
-            return "a min"
-        if second_diff < 3600:
-            return str(second_diff // 60) + " mins"
-        if second_diff < 7200:
-            return "an hour"
-        if second_diff < 86400:
-            return str(second_diff // 3600) + " hours"
-    if day_diff == 1:
-        return "yesterday"
-    if day_diff < 7:
-        return str(day_diff) + " days"
-    if day_diff < 31:
-        return str(day_diff // 7) + " weeks"
-    if day_diff < 365:
-        return str(day_diff // 30) + " months"
-    return str(day_diff // 365) + " years"
+    return get_msg_for_true_cond(day_diff_msgs)
 
 
 def urlopen_auth(url, username, password):
