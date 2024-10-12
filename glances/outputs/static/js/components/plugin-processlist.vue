@@ -101,7 +101,7 @@
                     <td scope="row" class="hidden-xs hidden-sm" v-show="ioReadWritePresent">
                         {{ $filters.bytes(process.io_write) }}
                     </td>
-                    <td scope="row" v-show="args.process_short_name">
+                    <td scope="row" class="text-truncate" v-show="args.process_short_name">
                         {{ process.name }}
                     </td>
                     <td scope="row" v-show="!args.process_short_name">

@@ -1,10 +1,10 @@
 <template>
     <section id="quicklook" class="plugin">
         <div class="d-flex justify-content-between">
-            <span class="text-start">
+            <span class="text-start text-truncate">
                 {{ cpu_name }}
             </span>
-            <span class="text-end" v-if="cpu_hz_current">
+            <span class="text-end d-none d-xxl-block" v-if="cpu_hz_current">
                 {{ cpu_hz_current }}/{{ cpu_hz }}Ghz
             </span>
         </div>

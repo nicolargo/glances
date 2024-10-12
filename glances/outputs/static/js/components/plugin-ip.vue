@@ -4,7 +4,7 @@
         <span v-if="address">{{ address }}/{{ maskCdir }}</span>
         <span v-if="publicAddress" class="title">Pub</span>
         <span v-if="publicAddress">{{ publicAddress }}</span>
-        <span v-if="publicInfo">{{ publicInfo }}</span>
+        <span class="text-truncate" v-if="publicInfo">{{ publicInfo }}</span>
     </section>
 </template>
 

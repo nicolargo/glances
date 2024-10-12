@@ -9,10 +9,10 @@
                 <div class="col-auto" v-if="!args.disable_system">
                     <glances-plugin-system :data="data"></glances-plugin-system>
                 </div>
-                <div class="col" v-if="!args.disable_ip">
+                <div class="col d-none d-xl-block d-xxl-block" v-if="!args.disable_ip">
                     <glances-plugin-ip :data="data"></glances-plugin-ip>
                 </div>
-                <div class="col-auto ms-auto" v-if="!args.disable_now">
+                <div class="col-auto ms-auto d-none d-xxl-block" v-if="!args.disable_now">
                     <glances-plugin-now :data="data"></glances-plugin-now>
                 </div>
                 <div class="col-auto ms-auto" v-if="!args.disable_uptime">
