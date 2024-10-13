@@ -93,7 +93,9 @@ class GlancesClientBrowser:
 
         # Get the stats
         for column in self.static_server.get_columns():
-            server_key = column['plugin'] + '_' + column['field']
+            server_key = column.get('plugin') + '_' + column.get('field')
+            if 'key' in column:
+                server_key += '_' + column.get('key')
             try:
                 # Value
                 v_json = json_loads(s.getPlugin(column['plugin']))

@@ -315,8 +315,21 @@ class GlancesCursesBrowser(_GlancesCurses):
         y = 2
         xc = x + 2
         for k, v in column_def.items():
+            k_split = k.split('_')
+            if len(k_split) == 1:
+                xc += v + self.space_between_column
+                continue
             if xc < screen_x and y < screen_y and v is not None:
-                self.term_window.addnstr(y, xc, k.split('_')[0].upper(), screen_x - x, self.colors_list['BOLD'])
+                self.term_window.addnstr(y, xc, k_split[0].upper(), screen_x - x, self.colors_list['BOLD'])
+                xc += v + self.space_between_column
+        xc = x + 2
+        y += 1
+        for k, v in column_def.items():
+            k_split = k.split('_')
+            if xc < screen_x and y < screen_y and v is not None:
+                self.term_window.addnstr(
+                    y, xc, k_split[len(k_split) - 1].upper(), screen_x - x, self.colors_list['BOLD']
+                )
                 xc += v + self.space_between_column
         y += 1
 
