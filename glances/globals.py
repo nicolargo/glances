@@ -275,19 +275,18 @@ def safe_makedirs(path):
             raise
 
 
-def pretty_date(time=False):
+def pretty_date(ref=False, now=datetime.now()):
     """
     Get a datetime object or a int() Epoch timestamp and return a
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
     'just now', etc
     Source: https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
     """
-    now = datetime.now()
-    if isinstance(time, int):
-        diff = now - datetime.fromtimestamp(time)
-    elif isinstance(time, datetime):
-        diff = now - time
-    elif not time:
+    if isinstance(ref, int):
+        diff = now - datetime.fromtimestamp(ref)
+    elif isinstance(ref, datetime):
+        diff = now - ref
+    elif not ref:
         diff = 0
     second_diff = diff.seconds
     day_diff = diff.days
@@ -313,10 +312,10 @@ def pretty_date(time=False):
     if day_diff < 7:
         return str(day_diff) + " days"
     if day_diff < 31:
-        return str(day_diff // 7) + " weeks"
+        return str(day_diff // 7) + " weeks" if (day_diff // 7) > 1 else "1 week"
     if day_diff < 365:
-        return str(day_diff // 30) + " months"
-    return str(day_diff // 365) + " years"
+        return str(day_diff // 30) + " months" if (day_diff // 30) > 1 else "1 month"
+    return str(day_diff // 365) + " years" if (day_diff // 365) > 1 else "1 year"
 
 
 def urlopen_auth(url, username, password):
