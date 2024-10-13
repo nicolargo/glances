@@ -566,6 +566,7 @@ class TestGlances(unittest.TestCase):
         """Test pretty_date"""
         print('INFO: [TEST_021] pretty_date')
         self.assertEqual(pretty_date(datetime(2024, 1, 1, 12, 0), datetime(2024, 1, 1, 12, 0)), 'just now')
+        self.assertEqual(pretty_date(1704106790, datetime(2024, 1, 1, 12, 0)), '10 secs')
         self.assertEqual(pretty_date(datetime(2024, 1, 1, 11, 59), datetime(2024, 1, 1, 12, 0)), 'a min')
         self.assertEqual(pretty_date(datetime(2024, 1, 1, 11, 55), datetime(2024, 1, 1, 12, 0)), '5 mins')
         self.assertEqual(pretty_date(datetime(2024, 1, 1, 11, 0), datetime(2024, 1, 1, 12, 0)), 'an hour')
