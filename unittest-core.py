@@ -14,11 +14,12 @@ import functools
 import json
 import time
 import unittest
+from datetime import datetime
 
 from glances import __version__
 from glances.events_list import GlancesEventsList
 from glances.filter import GlancesFilter, GlancesFilterList
-from glances.globals import LINUX, WINDOWS, string_value_to_float, subsample
+from glances.globals import LINUX, WINDOWS, pretty_date, string_value_to_float, subsample
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -560,6 +561,21 @@ class TestGlances(unittest.TestCase):
         self.assertFalse(gfl.is_filtered({'name': 'snake is in the place'}))
         self.assertTrue(gfl.is_filtered({'name': 'snake is in the place', 'username': 'nicolargo'}))
         self.assertFalse(gfl.is_filtered({'name': 'snake is in the place', 'username': 'notme'}))
+
+    def test_021_pretty_date(self):
+        """Test pretty_date"""
+        print('INFO: [TEST_021] pretty_date')
+        self.assertEqual(pretty_date(datetime(2024, 1, 1, 12, 0), datetime(2024, 1, 1, 12, 0)), 'just now')
+        self.assertEqual(pretty_date(datetime(2024, 1, 1, 11, 59), datetime(2024, 1, 1, 12, 0)), 'a min')
+        self.assertEqual(pretty_date(datetime(2024, 1, 1, 11, 55), datetime(2024, 1, 1, 12, 0)), '5 mins')
+        self.assertEqual(pretty_date(datetime(2024, 1, 1, 11, 0), datetime(2024, 1, 1, 12, 0)), 'an hour')
+        self.assertEqual(pretty_date(datetime(2024, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '12 hours')
+        self.assertEqual(pretty_date(datetime(2023, 12, 20, 0, 0), datetime(2024, 1, 1, 12, 0)), '1 week')
+        self.assertEqual(pretty_date(datetime(2023, 12, 5, 0, 0), datetime(2024, 1, 1, 12, 0)), '3 weeks')
+        self.assertEqual(pretty_date(datetime(2023, 12, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '1 month')
+        self.assertEqual(pretty_date(datetime(2023, 6, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '7 months')
+        self.assertEqual(pretty_date(datetime(2023, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '1 year')
+        self.assertEqual(pretty_date(datetime(2020, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '4 years')
 
     def test_094_thresholds(self):
         """Test thresholds classes"""
