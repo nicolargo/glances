@@ -37,3 +37,4 @@ sparklines
 statsd
 uvicorn
 zeroconf==0.131.0 # Waiting correction for ARMv7: https://github.com/python-zeroconf/python-zeroconf/issues/1372
+starlette>=0.40.0 # not directly required, pinned by Snyk to avoid a vulnerability
