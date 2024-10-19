@@ -1163,7 +1163,7 @@ class GlancesPluginModel:
                     # Create a new metadata with the gauge
                     stat['time_since_update'] = self.time_since_last_update
                     stat[field + '_gauge'] = stat[field]
-                    if field + '_gauge' in stat_previous:
+                    if field + '_gauge' in stat_previous and stat[field] and stat_previous[field + '_gauge']:
                         # The stat becomes the delta between the current and the previous value
                         stat[field] = stat[field] - stat_previous[field + '_gauge']
                         # Compute the rate
