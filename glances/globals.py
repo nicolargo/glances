@@ -32,7 +32,6 @@ from typing import Any, Dict, List, Union
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
-from xmlrpc.client import Fault, ProtocolError, Server, ServerProxy, Transport
 
 # Prefer faster libs for JSON (de)serialization
 # Preference Order: orjson > ujson > json (builtin)
