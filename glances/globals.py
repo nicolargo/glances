@@ -33,12 +33,6 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 from xmlrpc.client import Fault, ProtocolError, Server, ServerProxy, Transport
-from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-
-from defusedxml.xmlrpc import monkey_patch
-
-# Correct issue #1025 by monkey path the xmlrpc lib
-monkey_patch()
 
 # Prefer faster libs for JSON (de)serialization
 # Preference Order: orjson > ujson > json (builtin)
