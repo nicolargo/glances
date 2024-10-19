@@ -903,11 +903,14 @@ class _GlancesCurses:
             return None
 
         if popup_type == 'yesno':
-            # # Create a sub-window for the text field
+            # Create a sub-window for the text field
             sub_pop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)
             sub_pop.attron(self.colors_list['FILTER'])
             # Init the field with the current value
-            sub_pop.addnstr(0, 0, '', 0)
+            try:
+                sub_pop.addnstr(0, 0, '', 0)
+            except curses.error:
+                pass
             # Display the popup
             popup.refresh()
             sub_pop.refresh()
