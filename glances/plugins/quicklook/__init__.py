@@ -159,7 +159,8 @@ class PluginModel(GlancesPluginModel):
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
 
         # Alert for LOAD
-        self.views['load']['decoration'] = self.get_alert(self.stats['load'], header='load')
+        if 'load' in self.stats:
+            self.views['load']['decoration'] = self.get_alert(self.stats['load'], header='load')
 
         # Define the list of stats to display
         self.views['list'] = self.stats_list

@@ -117,7 +117,7 @@ class PluginModel(GlancesPluginModel):
                 self._thread.start()
         else:
             # Not available in SNMP mode
-            pass
+            self.stats = None
 
         return self.stats
 

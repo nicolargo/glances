@@ -90,8 +90,12 @@ class PluginModel(GlancesPluginModel):
 
         #  Add support for automatically hiding network interfaces that are down
         # or that don't have any IP addresses #2799
-        self.hide_no_up = config.get_bool_value(self.plugin_name, 'hide_no_up', default=False)
-        self.hide_no_ip = config.get_bool_value(self.plugin_name, 'hide_no_ip', default=False)
+        if config is not None:
+            self.hide_no_up = config.get_bool_value(self.plugin_name, 'hide_no_up', default=False)
+            self.hide_no_ip = config.get_bool_value(self.plugin_name, 'hide_no_ip', default=False)
+        else:
+            self.hide_no_up = False
+            self.hide_no_ip = False
 
         # Force a first update because we need two updates to have the first stat
         self.update()
