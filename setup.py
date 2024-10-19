@@ -45,7 +45,7 @@ def get_install_requires():
 
     # On Windows, install WebUI by default
     if sys.platform.startswith('win'):
-        required.append('fastapi')
+        required.append('fastapi>=0.82.0')
         required.append('uvicorn')
         required.append('jinja2')
         required.append('requests')
@@ -90,7 +90,9 @@ def get_install_extras_require():
         extras_require['sensors'] = ['batinfo']
 
     # Add automatically the 'all' target
-    extras_require.update({'all': [i[0] for i in extras_require.values()]})
+    extras_require['all'] = []
+    for p in extras_require.values():
+        extras_require['all'].extend(p)
 
     return extras_require
 
