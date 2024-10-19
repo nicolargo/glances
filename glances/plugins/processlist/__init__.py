@@ -792,7 +792,8 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_add_line(sep_char * 69))
             ret.append(self.curse_new_line())
         # CPU percent sum
-        msg = self.layout_stat['cpu'].format(self.__sum_stats('cpu_percent', mmm=mmm))
+        msg = ' '
+        msg += self.layout_stat['cpu'].format(self.__sum_stats('cpu_percent', mmm=mmm))
         ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm)))
         # MEM percent sum
         msg = self.layout_stat['mem'].format(self.__sum_stats('memory_percent', mmm=mmm))
@@ -864,12 +865,12 @@ class PluginModel(GlancesPluginModel):
             msg = self.layout_header['iow'].format('')
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
         if mmm is None:
-            msg = ' < {}'.format('current')
+            msg = '< {}'.format('current')
             ret.append(self.curse_add_line(msg, optional=True))
         else:
-            msg = f' < {mmm}'
+            msg = f'< {mmm}'
             ret.append(self.curse_add_line(msg, optional=True))
-            msg = ' (\'M\' to reset)'
+            msg = '(\'M\' to reset)'
             ret.append(self.curse_add_line(msg, optional=True))
 
     def __mmm_deco(self, mmm):
