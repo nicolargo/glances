@@ -87,11 +87,7 @@ class PluginModel(GlancesPluginModel):
                 stats = self.OPENSTACKEC2.stats
             # Example:
             # Uncomment to test on physical computer (only for test purpose)
-            # stats = {'id': 'ami-id',
-            #          'name': 'My VM',
-            #          'type': 'Gold',
-            #          'region': 'France',
-            #          'platform': 'OpenStack'}
+            # stats = {'id': 'ami-id', 'name': 'My VM', 'type': 'Gold', 'region': 'France', 'platform': 'OpenStack'}
 
         # Update the stats
         self.stats = stats
@@ -104,6 +100,10 @@ class PluginModel(GlancesPluginModel):
         ret = []
 
         if not self.stats or self.stats == {} or self.is_disabled():
+            return ret
+
+        # Do not display Unknown information in the cloud plugin #2485
+        if not self.stats.get('platform') or not self.stats.get('name'):
             return ret
 
         # Generate the output
