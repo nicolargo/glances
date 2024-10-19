@@ -10,13 +10,18 @@
 
 import threading
 
+from defusedxml import xmlrpc
+
 from glances.autodiscover import GlancesAutoDiscoverServer
 from glances.client import GlancesClient, GlancesClientTransport
-from glances.globals import Fault, ProtocolError, ServerProxy, json_loads
+from glances.globals import json_loads
 from glances.logger import LOG_FILENAME, logger
 from glances.outputs.glances_curses_browser import GlancesCursesBrowser
 from glances.password_list import GlancesPasswordList as GlancesPassword
 from glances.static_list import GlancesStaticServer
+
+# Correct issue #1025 by monkey path the xmlrpc lib
+xmlrpc.monkey_patch()
 
 
 class GlancesClientBrowser:
@@ -86,7 +91,7 @@ class GlancesClientBrowser:
 
         # Get common stats from Glances server
         try:
-            s = ServerProxy(uri, transport=t)
+            s = xmlrpc.xmlrpc_client.ServerProxy(uri, transport=t)
         except Exception as e:
             logger.warning(f"Client browser couldn't create socket ({e})")
             return server
@@ -107,12 +112,12 @@ class GlancesClientBrowser:
                 if 'key' in column:
                     d_json = d_json.get(column['key'])
                 server[server_key + '_decoration'] = d_json[column['field']]['decoration']
-            except (KeyError, IndexError, Fault) as e:
+            except (KeyError, IndexError, xmlrpc.xmlrpc_client.Fault) as e:
                 logger.debug(f"Error while grabbing stats form server ({e})")
             except OSError as e:
                 logger.debug(f"Error while grabbing stats form server ({e})")
                 server['status'] = 'OFFLINE'
-            except ProtocolError as e:
+            except xmlrpc.xmlrpc_client.ProtocolError as e:
                 if e.errcode == 401:
                     # Error 401 (Authentication failed)
                     # Password is not the good one...
