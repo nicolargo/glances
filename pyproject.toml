@@ -1,3 +1,93 @@
+[project]
+name = "Glances"
+version = "4.3.0_dev01"
+description = "A cross-platform curses-based monitoring tool"
+keywords = ["cli", "curses", "monitoring", "system"]
+readme = "README.rst"
+authors = [{ name = "Nicolas Hennion", email = "nicolas@nicolargo.com" }]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console :: Curses",
+    "Environment :: Web Environment",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Monitoring",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "defusedxml",
+    "packaging",
+    "psutil>=5.6.7",
+    "fastapi>=0.82.0; platform_system == 'Windows'",
+    "uvicorn; platform_system == 'Windows'",
+    "jinja2; platform_system == 'Windows'",
+    "requests; platform_system == 'Windows'",
+]
+license = { text = "LGPLv3" }
+urls.Homepage = "https://github.com/nicolargo/glances"
+
+[project.optional-dependencies]
+action = ["chevron"]
+browser = ["zeroconf>=0.19.1"]
+cloud = ["requests"]
+containers = ["docker>=6.1.1", "packaging", "podman", "python-dateutil", "six"]
+export = [
+    "bernhard",
+    "cassandra-driver",
+    "elasticsearch",
+    "graphitesender",
+    "ibmcloudant",
+    "influxdb-client",
+    "influxdb>=1.0.0",
+    "kafka-python",
+    "paho-mqtt",
+    "pika",
+    "potsdb",
+    "prometheus_client",
+    "pymongo",
+    "pyzmq",
+    "statsd",
+]
+gpu = ["nvidia-ml-py"]
+graph = ["pygal"]
+ip = ["netifaces"]
+raid = ["pymdstat"]
+sensors = ["batinfo; platform_system == 'Linux'"]
+smart = ["pySMART.smartx"]
+snmp = ["pysnmp"]
+sparklines = ["sparklines"]
+web = ["fastapi>=0.82.0", "jinja2", "requests", "uvicorn"]
+wifi = ["wifi"]
+all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,raid,sensors,smart,snmp,sparklines,web,wifi]"]
+
+[project.scripts]
+glances = "glances:main"
+
+[tool.setuptools.data-files]
+"share/doc/glances" = [
+    "AUTHORS",
+    "COPYING",
+    "NEWS.rst",
+    "README.rst",
+    "SECURITY.md",
+    "CONTRIBUTING.md",
+    "conf/glances.conf",
+]
+"share/man/man1" = ["docs/man/glances.1"]
+
+[tool.setuptools.packages.find]
+include = ["glances*"]
+
 [tool.ruff]
 line-length = 120
 target-version = "py38"
@@ -66,3 +156,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 [tool.ruff.lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.
 max-complexity = 21
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

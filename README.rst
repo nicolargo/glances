@@ -341,9 +341,7 @@ To install Glances from source:
 
 .. code-block:: console
 
-    $ wget https://github.com/nicolargo/glances/archive/vX.Y.tar.gz -O - | tar xz
-    $ cd glances-*
-    # python setup.py install
+    $ pip install https://github.com/nicolargo/glances/archive/vX.Y.tar.gz
 
 *Note*: Python headers are required to install psutil.
 
