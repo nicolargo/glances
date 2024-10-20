@@ -3,12 +3,73 @@
 ==============================================================================
 
 ===============
+Version 4.2.0
+===============
+
+Enhancements:
+* [WEBUI] Migration to bootstrap 5 #2914
+* New Ubuntu Multipass VM orchestartor plugin #2252
+* Show only active Disk I/O (and network interface) #2929
+* Make the central client UI configurable (example: GPU status) #1289
+* Please make py-orjson optional: it pulls in dependency on Rust #2930
+* Use defusedxml lib #2979
+* Do not display Unknown information in the cloud plugin #2485
+* Filter Docker containers - #2962
+* Add retain to availability topic in MQTT plugin #2974
+* Make fields labelled in Green easier to see #2882
+
+Bug corrected:
+* In TUI, when processes are filtered, column are not aligned #2980
+* Can't kill process. Standalone, Ubuntu 24.04 #2942
+* Internal Server Error #2943
+* Timezone for warning/errors is incorrect #2901
+* Error while initializing the containers plugin ('type' object is not subscriptable) #2922
+* url_prefix do not work in Glances < 4.2.0 - Correct issue with mount #2912
+* Raid plugin breaks with inactive raid0 arrays #2908
+* Crash when terminal is resized #2872
+* Check if server name is not null in the Glances browser - Related to #2861
+* Only display VMs with a running status (in the Vms plugin)
+
+Continuous integration and documentation:
+* Incomplete pipx install to allow webui + containers #2955
+* Stick FastAPI version to 0.82.0 or higher (latest is better) - Related to #2926
+* api/4/vms returns a dict, thus breaking make test-restful #2918
+* Migration to Alpine 3.20 and Python 3.12 for Alpine Docker
+
+Improve code quality (thanks to Ariel Otilibili !):
+* Merge pull request #2959 from ariel-anieli/plugins-port-alerts
+* Merge pull request #2957 from ariel-anieli/plugin-port-msg
+* Merge pull request #2954 from ariel-anieli/makefile
+* Merge pull request #2941 from ariel-anieli/refactor-alert
+* Merge pull request #2950 from ariel-anieli/revert-commit-01823df9
+* Merge pull request #2932 from ariel-anieli/refactorize-display-plugin
+* Merge pull request #2924 from ariel-anieli/makefile
+* Merge pull request #2919 from ariel-anieli/refactor-plugin-model-msg-curse
+* Merge pull request #2917 from ariel-anieli/makefile
+* Merge pull request #2915 from ariel-anieli/refactor-process-thread
+* Merge pull request #2913 from ariel-anieli/makefile
+* Merge pull request #2910 from ariel-anieli/makefile
+* Merge pull request #2900 from ariel-anieli/issue-2801-catch-key
+* Merge pull request #2907 from ariel-anieli/refactorize-makefile
+* Merge pull request #2891 from ariel-anieli/issue-2801-plugin-msg-curse
+* Merge pull request #2884 from ariel-anieli/issue-2801-plugin-update
+
+Thanks to all contributors and bug reporters !
+
+Special thanks to:
+* Ariel Otilibili, he has made an incredible work to improve Glances code quality !
+* RazCrimson, thanks for all your contributions !
+* Bharath Vignesh J K
+* Neveda
+* ey-jo
+
+===============
 Version 4.1.2
 ===============
 
 Bug corrected:
 
-*  AttributeError: 'CpuPercent' object has no attribute 'cpu_percent' #2859
+* AttributeError: 'CpuPercent' object has no attribute 'cpu_percent' #2859
 
 ===============
 Version 4.1.1
@@ -16,7 +77,7 @@ Version 4.1.1
 
 Bug corrected:
 
-*  Sensors data is not exported using InfluxDB2 exporter #2856
+* Sensors data is not exported using InfluxDB2 exporter #2856
 
 ===============
 Version 4.1.0
