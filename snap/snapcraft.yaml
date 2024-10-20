@@ -1,5 +1,5 @@
 name: glances
-version: '4.1.2+build03'  # Put the current stable version+buildXX
+version: '4.2.0+build01'  # Put the current stable version+buildXX
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
@@ -8,7 +8,7 @@ description: |
   Web based interface. It can adapt dynamically the displayed information
   depending on the user interface size.
 
-base: core22
+base: core24
 grade: stable  # devel
 confinement: strict
 
