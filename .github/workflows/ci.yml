@@ -14,14 +14,6 @@ jobs:
     test:
       uses: ./.github/workflows/test.yml
       needs: [quality]
-    webui:
-      if: github.event_name != 'pull_request' && !contains(github.ref, 'refs/tags/')
-      uses: ./.github/workflows/webui.yml
-      needs: [quality, test]
-    cyber:
-      if: github.event_name != 'pull_request'
-      uses: ./.github/workflows/cyber.yml
-      needs: [quality, test]
     build:
       if: github.event_name != 'pull_request'
       uses: ./.github/workflows/build.yml
