@@ -64,8 +64,10 @@ jobs:
       - name: Publish distribution package to Test PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          # user and password should be removed
+          # because Github action is a trusted publiser
+          # user: __token__
+          # password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
           skip-existing: true
 
@@ -73,8 +75,10 @@ jobs:
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          # user and password should be removed (if it is ok on test.pypi)
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+          skip-existing: true
 
   create_Docker_builds:
     runs-on: ubuntu-latest
