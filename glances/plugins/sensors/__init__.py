@@ -116,6 +116,17 @@ class PluginModel(GlancesPluginModel):
         self.sensors_grab_map[SensorType.HDD_TEMP] = hddtemp_plugin
         self.sensors_grab_map[SensorType.BATTERY] = batpercent_plugin
 
+        self.sensors_grab_map: Dict[SensorType, Any] = {}
+
+        if glances_grab_sensors_cpu_temp.init:
+            self.sensors_grab_map[SensorType.CPU_TEMP] = glances_grab_sensors_cpu_temp
+
+        if glances_grab_sensors_fan_speed.init:
+            self.sensors_grab_map[SensorType.FAN_SPEED] = glances_grab_sensors_fan_speed
+
+        self.sensors_grab_map[SensorType.HDD_TEMP] = hddtemp_plugin
+        self.sensors_grab_map[SensorType.BATTERY] = batpercent_plugin
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
