@@ -7,6 +7,7 @@ Version 4.2.0
 ===============
 
 Enhancements:
+
 * [WEBUI] Migration to bootstrap 5 #2914
 * New Ubuntu Multipass VM orchestartor plugin #2252
 * Show only active Disk I/O (and network interface) #2929
@@ -19,6 +20,7 @@ Enhancements:
 * Make fields labelled in Green easier to see #2882
 
 Bug corrected:
+
 * In TUI, when processes are filtered, column are not aligned #2980
 * Can't kill process. Standalone, Ubuntu 24.04 #2942
 * Internal Server Error #2943
@@ -31,12 +33,14 @@ Bug corrected:
 * Only display VMs with a running status (in the Vms plugin)
 
 Continuous integration and documentation:
+
 * Incomplete pipx install to allow webui + containers #2955
 * Stick FastAPI version to 0.82.0 or higher (latest is better) - Related to #2926
 * api/4/vms returns a dict, thus breaking make test-restful #2918
 * Migration to Alpine 3.20 and Python 3.12 for Alpine Docker
 
 Improve code quality (thanks to Ariel Otilibili !):
+
 * Merge pull request #2959 from ariel-anieli/plugins-port-alerts
 * Merge pull request #2957 from ariel-anieli/plugin-port-msg
 * Merge pull request #2954 from ariel-anieli/makefile
@@ -57,6 +61,7 @@ Improve code quality (thanks to Ariel Otilibili !):
 Thanks to all contributors and bug reporters !
 
 Special thanks to:
+
 * Ariel Otilibili, he has made an incredible work to improve Glances code quality !
 * RazCrimson, thanks for all your contributions !
 * Bharath Vignesh J K
