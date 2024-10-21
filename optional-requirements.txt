@@ -28,7 +28,7 @@ pygal
 pymdstat
 pymongo
 pySMART.smartx
-pysnmp-lextudio<6.2.0
+pysnmp-lextudio<6.3.1
 python-dateutil
 pyzmq
 requests
