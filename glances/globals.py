@@ -24,6 +24,7 @@ import re
 import subprocess
 import sys
 import weakref
+from collections import OrderedDict
 from configparser import ConfigParser, NoOptionError, NoSectionError
 from datetime import datetime
 from operator import itemgetter, methodcaller
@@ -268,6 +269,62 @@ def safe_makedirs(path):
             raise
 
 
+def get_time_diffs(ref, now):
+    if isinstance(ref, int):
+        diff = now - datetime.fromtimestamp(ref)
+    elif isinstance(ref, datetime):
+        diff = now - ref
+    elif not ref:
+        diff = 0
+
+    return diff
+
+
+def get_first_true_val(conds):
+    return next(key for key, val in conds.items() if val)
+
+
+def maybe_add_plural(count):
+    return "s" if count > 1 else ""
+
+
+def build_str_when_more_than_seven_days(day_diff, unit):
+    scale = {'week': 7, 'month': 30, 'year': 365}[unit]
+
+    count = day_diff // scale
+
+    return str(count) + " " + unit + maybe_add_plural(count)
+
+
+def get_conds_day_diff(diff):
+    day_diff = diff.days
+    return OrderedDict(
+        {
+            '': day_diff < 0,
+            get_first_true_val(get_conds_sec_diff(diff)): day_diff == 0,
+            "yesterday": day_diff == 1,
+            str(day_diff) + " days": day_diff < 7,
+            build_str_when_more_than_seven_days(day_diff, "week"): day_diff < 31,
+            build_str_when_more_than_seven_days(day_diff, "month"): day_diff < 365,
+            build_str_when_more_than_seven_days(day_diff, "year"): day_diff >= 365,
+        }
+    )
+
+
+def get_conds_sec_diff(diff):
+    second_diff = diff.seconds
+    return OrderedDict(
+        {
+            "just now": second_diff < 10,
+            str(second_diff) + " secs": second_diff < 60,
+            "a min": second_diff < 120,
+            str(second_diff // 60) + " mins": second_diff < 3600,
+            "an hour": second_diff < 7200,
+            str(second_diff // 3600) + " hours": second_diff < 86400,
+        }
+    )
+
+
 def pretty_date(ref=False, now=datetime.now()):
     """
     Get a datetime object or a int() Epoch timestamp and return a
@@ -275,40 +332,9 @@ def pretty_date(ref=False, now=datetime.now()):
     'just now', etc
     Source: https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
     """
-    if isinstance(ref, int):
-        diff = now - datetime.fromtimestamp(ref)
-    elif isinstance(ref, datetime):
-        diff = now - ref
-    elif not ref:
-        diff = 0
-    second_diff = diff.seconds
-    day_diff = diff.days
+    diff = get_time_diffs(ref, now)
 
-    if day_diff < 0:
-        return ''
-
-    if day_diff == 0:
-        if second_diff < 10:
-            return "just now"
-        if second_diff < 60:
-            return str(second_diff) + " secs"
-        if second_diff < 120:
-            return "a min"
-        if second_diff < 3600:
-            return str(second_diff // 60) + " mins"
-        if second_diff < 7200:
-            return "an hour"
-        if second_diff < 86400:
-            return str(second_diff // 3600) + " hours"
-    if day_diff == 1:
-        return "yesterday"
-    if day_diff < 7:
-        return str(day_diff) + " days"
-    if day_diff < 31:
-        return str(day_diff // 7) + " weeks" if (day_diff // 7) > 1 else "1 week"
-    if day_diff < 365:
-        return str(day_diff // 30) + " months" if (day_diff // 30) > 1 else "1 month"
-    return str(day_diff // 365) + " years" if (day_diff // 365) > 1 else "1 year"
+    return get_first_true_val(get_conds_day_diff(diff))
 
 
 def urlopen_auth(url, username, password):
