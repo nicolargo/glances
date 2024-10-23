@@ -80,8 +80,8 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           # user and password should be removed (if it is ok on test.pypi)
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          # user: __token__
+          # password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
 
   create_Docker_builds:
