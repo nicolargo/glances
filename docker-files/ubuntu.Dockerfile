@@ -59,6 +59,7 @@ COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-re
 
 ##############################################################################
 # BUILD: Install the minimal image deps
+# Minimal in Docker mean: Docker + WebUI
 FROM build as buildMinimal
 ARG PYTHON_VERSION
 
@@ -86,6 +87,7 @@ ARG PYTHON_VERSION
 # Copy Glances source code and config file
 COPY ./docker-compose/glances.conf /etc/glances/glances.conf
 COPY ./glances/. /app/glances/
+COPY pyproject.toml /app
 
 # Copy binary and update PATH
 COPY docker-bin.sh /usr/local/bin/glances
