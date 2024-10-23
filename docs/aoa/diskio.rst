@@ -43,11 +43,13 @@ expression works as expected. You can use an online tool like `regex101`_ in
 order to test your regular expression.
 
 You also can automatically hide disk with no read or write using the
-``hide_zero`` configuration key.
+``hide_zero`` configuration key. The optional ``hide_threshold_bytes`` option
+can also be used to set a threshold higher than zero.
 
 .. code-block:: ini
 
     [diskio]
     hide_zero=True
+    hide_threshold_bytes=0
 
 .. _regex101: https://regex101.com/
