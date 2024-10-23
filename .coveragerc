@@ -4,7 +4,6 @@ include =
     *glances*
 
 omit =
-    setup.py
     glances/outputs/*
     glances/exports/*
     glances/compat.py
