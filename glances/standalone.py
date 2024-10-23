@@ -196,7 +196,7 @@ class GlancesStandalone:
         self.stats.end()
 
         # Check Glances version versus PyPI one
-        if self.outdated.is_outdated():
+        if self.outdated.is_outdated() and 'unknown' not in self.outdated.installed_version():
             latest_version = self.outdated.latest_version()
             installed_version = self.outdated.installed_version()
             print(f"You are using Glances version {installed_version}, however version {latest_version} is available.")
