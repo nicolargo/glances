@@ -106,7 +106,7 @@ COPY ./glances/. /app/glances/
 
 # Copy pyproject file in order to have the version
 # Note: Glances is not installed as a Pypi pkg in Docker
-COPY pyproject.toml /app
+COPY ./pyproject.toml /app
 
 # Copy binary and update PATH
 COPY docker-bin.sh /usr/local/bin/glances
