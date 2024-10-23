@@ -29,13 +29,13 @@ dependencies = [
   "requests; platform_system == 'Windows'",
 ]
 description = "A cross-platform curses-based monitoring tool"
+dynamic = ["version"]
 keywords = ["cli", "curses", "monitoring", "system"]
 license = {text = "LGPLv3"}
 name = "Glances"
 readme = "README.rst"
 requires-python = ">=3.8"
 urls.Homepage = "https://github.com/nicolargo/glances"
-version = "4.3.0_dev02"
 
 [project.optional-dependencies]
 action = ["chevron"]
@@ -85,6 +85,9 @@ glances = "glances:main"
   "conf/glances.conf",
 ]
 "share/man/man1" = ["docs/man/glances.1"]
+
+[tool.setuptools.dynamic]
+version = { attr = "glances.__version__" }
 
 [tool.setuptools.packages.find]
 include = ["glances*"]
