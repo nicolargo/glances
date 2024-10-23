@@ -110,6 +110,8 @@ class GlancesPluginModel:
         # Hide stats if all the hide_zero_fields has never been != 0
         # Default is False, always display stats
         self.hide_zero = False
+        # The threshold needed to display a value if hide_zero is true. Only hide a value if it is less than hide_threshold_bytes.
+        self.hide_threshold_bytes = 0
         self.hide_zero_fields = []
 
         # Set the initial refresh time to display stats the first time
@@ -463,7 +465,7 @@ class GlancesPluginModel:
                         value['hidden'] = False
                     elif key in self.views and field in self.views[key] and 'hidden' in self.views[key][field]:
                         value['hidden'] = self.views[key][field]['hidden']
-                        if field in self.hide_zero_fields and i[field] != 0:
+                        if field in self.hide_zero_fields and i[field] >= self.hide_threshold_bytes:
                             value['hidden'] = False
                     else:
                         value['hidden'] = field in self.hide_zero_fields
@@ -485,7 +487,7 @@ class GlancesPluginModel:
                     value['hidden'] = False
                 elif field in self.views and 'hidden' in self.views[field]:
                     value['hidden'] = self.views[field]['hidden']
-                    if field in self.hide_zero_fields and self.get_raw()[field] != 0:
+                    if field in self.hide_zero_fields and self.get_raw()[field] >= self.hide_threshold_bytes:
                         value['hidden'] = False
                 else:
                     value['hidden'] = field in self.hide_zero_fields
