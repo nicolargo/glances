@@ -11,19 +11,30 @@
 
 # Import system libs
 import locale
+import os
 import platform
+import re
 import signal
 import sys
 import tracemalloc
 from importlib import metadata
 
 # Global name
-# Version should start and end with a numerical char
+# Version is now set in the pyproject.toml file
+# and should start and end with a numerical char
 # See https://packaging.python.org/specifications/core-metadata/#version
 try:
+    # Read the version from the metadata (when deployed with Pypi)
     __version__ = metadata.version("glances")
 except metadata.PackageNotFoundError:
-    __version__ = "0.0.0+unknown"
+    if os.path.exists('pyproject.toml'):
+        # In local try to read the version in the pyproject.toml file
+        # Dirty but it make the job
+        with open('pyproject.toml', encoding='utf-8') as f:
+            __version__ = re.search(r"^version = ['\"]([^'\"]*)['\"]", f.read(), re.M).group(1)
+    else:
+        # Else set a unknown version
+        __version__ = "0.0.0+unknown"
 __apiversion__ = '4'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
