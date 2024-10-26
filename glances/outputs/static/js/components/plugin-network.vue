@@ -19,15 +19,20 @@
                     <td scope="row" class="visible-lg-inline">
                         {{ network.ifname }}
                     </td>
-                    <td class="text-end w-25" v-show="!args.network_cumul && !args.network_sum">
-                        {{ args.byte ? $filters.bytes(network.bytes_recv_rate_per_sec) : $filters.bits(network.bytes_recv_rate_per_sec) }}
+                    <td class="text-end w-25" :class="getDecoration(network.interfaceName, 'bytes_recv_rate_per_sec')"
+                        v-show="!args.network_cumul && !args.network_sum">
+                        {{ args.byte ? $filters.bytes(network.bytes_recv_rate_per_sec) :
+                            $filters.bits(network.bytes_recv_rate_per_sec) }}
                     </td>
-                    <td class="text-end w-25" v-show="!args.network_cumul && !args.network_sum">
-                        {{ args.byte ? $filters.bytes(network.bytes_sent_rate_per_sec) : $filters.bits(network.bytes_sent_rate_per_sec) }}
+                    <td class="text-end w-25" :class="getDecoration(network.interfaceName, 'bytes_sent_rate_per_sec')"
+                        v-show="!args.network_cumul && !args.network_sum">
+                        {{ args.byte ? $filters.bytes(network.bytes_sent_rate_per_sec) :
+                            $filters.bits(network.bytes_sent_rate_per_sec) }}
                     </td>
                     <td class="text-end w-25" v-show="!args.network_cumul && args.network_sum"></td>
                     <td class="text-end w-25" v-show="!args.network_cumul && args.network_sum">
-                        {{ args.byte ? $filters.bytes(network.bytes_all_rate_per_sec) : $filters.bits(network.bytes_all_rate_per_sec) }}
+                        {{ args.byte ? $filters.bytes(network.bytes_all_rate_per_sec) :
+                            $filters.bits(network.bytes_all_rate_per_sec) }}
                     </td>
                     <td class="text-end w-25" v-show="args.network_cumul && !args.network_sum">
                         {{ args.byte ? $filters.bytes(network.bytes_recv) : $filters.bits(network.bytes_recv) }}
@@ -67,6 +72,9 @@ export default {
         stats() {
             return this.data.stats['network'];
         },
+        view() {
+            return this.data.views['network'];
+        },
         networks() {
             const networks = this.stats.map((networkData) => {
                 const alias = networkData['alias'] !== undefined ? networkData['alias'] : null;
@@ -83,11 +91,19 @@ export default {
                 };
 
                 return network;
-            });
+            }).filter(network => (this.view[network.interfaceName]['bytes_recv_rate_per_sec'].hidden === false) && (this.view[network.interfaceName]['bytes_sent_rate_per_sec'].hidden === false));
             return orderBy(networks, ['interfaceName']);
         },
         hasNetworks() {
             return this.networks.length > 0;
+        }
+    },
+    methods: {
+        getDecoration(interfaceName, field) {
+            if (this.view[interfaceName][field] == undefined) {
+                return;
+            }
+            return this.view[interfaceName][field].decoration.toLowerCase();
         }
     }
 };

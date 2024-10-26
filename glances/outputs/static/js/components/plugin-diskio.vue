@@ -15,16 +15,20 @@
                     <td scope="row">
                         {{ $filters.minSize(disk.alias ? disk.alias : disk.name, 32) }}
                     </td>
-                    <td class="text-end w-25" v-show="!args.diskio_iops">
+                    <td class="text-end w-25" :class="getDecoration(disk.name, 'write_bytes_rate_per_sec')"
+                        v-show="!args.diskio_iops">
                         {{ disk.bitrate.txps }}
                     </td>
-                    <td class="text-end w-25" v-show="!args.diskio_iops">
+                    <td class="text-end w-25" :class="getDecoration(disk.name, 'read_bytes_rate_per_sec')"
+                        v-show="!args.diskio_iops">
                         {{ disk.bitrate.rxps }}
                     </td>
-                    <td class="text-end w-25" v-show="args.diskio_iops">
+                    <td class="text-end w-25" :class="getDecoration(disk.name, 'write_bytes_rate_per_sec')"
+                        v-show="args.diskio_iops">
                         {{ disk.count.txps }}
                     </td>
-                    <td class="text-end w-25" v-show="args.diskio_iops">
+                    <td class="text-end w-25" :class="getDecoration(disk.name, 'read_bytes_rate_per_sec')"
+                        v-show="args.diskio_iops">
                         {{ disk.count.rxps }}
                     </td>
                 </tr>
@@ -56,26 +60,36 @@ export default {
         stats() {
             return this.data.stats['diskio'];
         },
+        view() {
+            return this.data.views['diskio'];
+        },
         disks() {
             const disks = this.stats.map((diskioData) => {
-                const timeSinceUpdate = diskioData['time_since_update'];
                 return {
                     name: diskioData['disk_name'],
+                    alias: diskioData['alias'] !== undefined ? diskioData['alias'] : null,
                     bitrate: {
-                        txps: bytes(diskioData['read_bytes'] / timeSinceUpdate),
-                        rxps: bytes(diskioData['write_bytes'] / timeSinceUpdate)
+                        txps: bytes(diskioData['read_bytes_rate_per_sec']),
+                        rxps: bytes(diskioData['write_bytes_rate_per_sec'])
                     },
                     count: {
-                        txps: bytes(diskioData['read_count'] / timeSinceUpdate),
-                        rxps: bytes(diskioData['write_count'] / timeSinceUpdate)
-                    },
-                    alias: diskioData['alias'] !== undefined ? diskioData['alias'] : null
+                        txps: bytes(diskioData['read_count_rate_per_sec']),
+                        rxps: bytes(diskioData['write_count_rate_per_sec'])
+                    }
                 };
-            });
+            }).filter(disk => (this.view[disk.name]['read_bytes_rate_per_sec'].hidden === false) && (this.view[disk.name]['write_bytes_rate_per_sec'].hidden === false));
             return orderBy(disks, ['name']);
         },
         hasDisks() {
             return this.disks.length > 0;
+        }
+    },
+    methods: {
+        getDecoration(diskName, field) {
+            if (this.view[diskName][field] == undefined) {
+                return;
+            }
+            return this.view[diskName][field].decoration.toLowerCase();
         }
     }
 };

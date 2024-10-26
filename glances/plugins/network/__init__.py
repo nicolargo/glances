@@ -225,7 +225,9 @@ class PluginModel(GlancesPluginModel):
 
             # then decorates
             self.views[i[self.get_key()]]['bytes_recv']['decoration'] = alert_rx
+            self.views[i[self.get_key()]]['bytes_recv_rate_per_sec']['decoration'] = alert_rx
             self.views[i[self.get_key()]]['bytes_sent']['decoration'] = alert_tx
+            self.views[i[self.get_key()]]['bytes_sent_rate_per_sec']['decoration'] = alert_rx
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
