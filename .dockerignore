@@ -15,6 +15,7 @@
 
 # Include Config file
 !/docker-compose/glances.conf
+!/docker-files/docker-logger.json
 
 # Include Binary file
 !/docker-bin.sh
