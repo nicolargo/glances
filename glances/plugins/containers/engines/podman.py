@@ -20,11 +20,11 @@ from glances.stats_streamer import ThreadedIterableStreamer
 try:
     from podman import PodmanClient
 except Exception as e:
-    import_podman_error_tag = True
+    disable_plugin_podman = True
     # Display debug message if import KeyError
     logger.warning(f"Error loading Podman deps Lib. Podman feature in the Containers plugin is disabled ({e})")
 else:
-    import_podman_error_tag = False
+    disable_plugin_podman = False
 
 
 class PodmanContainerStatsFetcher:
@@ -249,8 +249,11 @@ class PodmanExtension:
     CONTAINER_ACTIVE_STATUS = ['running', 'paused']
 
     def __init__(self, podman_sock):
-        if import_podman_error_tag:
+        self.disable = disable_plugin_podman
+        if self.disable:
             raise Exception("Missing libs required to run Podman Extension (Containers)")
+
+        self.display_error = True
 
         self.client = None
         self.ext_name = "containers (Podman)"
@@ -261,7 +264,7 @@ class PodmanExtension:
         self.connect()
 
     def connect(self):
-        """Connect to Podman."""
+        """Connect to Podman."""        
         try:
             self.client = PodmanClient(base_url=self.podman_sock)
             # PodmanClient works lazily, so make a ping to determine if socket is open
@@ -269,6 +272,7 @@ class PodmanExtension:
         except Exception as e:
             logger.debug(f"{self.ext_name} plugin - Can't connect to Podman ({e})")
             self.client = None
+            self.disable = True
 
     def update_version(self):
         # Long and not useful anymore because the information is no more displayed in UIs
@@ -286,7 +290,7 @@ class PodmanExtension:
     def update(self, all_tag) -> Tuple[Dict, list[Dict[str, Any]]]:
         """Update Podman stats using the input method."""
 
-        if not self.client:
+        if not self.client or self.disable:
             return {}, []
 
         version_stats = self.update_version()
@@ -298,8 +302,13 @@ class PodmanExtension:
             containers = self.client.containers.list(all=all_tag)
             if not self.pods_stats_fetcher:
                 self.pods_stats_fetcher = PodmanPodStatsFetcher(self.client.pods)
+            self.display_error = True
         except Exception as e:
-            logger.error(f"{self.ext_name} plugin - Can't get containers list ({e})")
+            if self.display_error:
+                logger.error(f"{self.ext_name} plugin - Can't get containers list ({e})")
+                self.display_error = False
+            else:
+                logger.debug(f"{self.ext_name} plugin - Can't get containers list ({e})")
             return version_stats, []
 
         # Start new thread for new container
