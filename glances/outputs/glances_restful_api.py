@@ -12,12 +12,13 @@ import os
 import sys
 import tempfile
 import webbrowser
+from typing import Any, Union
 from urllib.parse import urljoin
 
 from glances.stats import GlancesStats
 
 try:
-    from typing import Annotated, Any
+    from typing import Annotated
 except ImportError:
     # Only for Python 3.8
     # To be removed when Python 3.8 support will be dropped
@@ -622,7 +623,7 @@ class GlancesRestfulApi:
         else:
             return GlancesJSONResponse(ret)
 
-    def _api_value(self, plugin: str, item: str, value: Any):
+    def _api_value(self, plugin: str, item: str, value: Union[str, int, float]):
         """Glances API RESTful implementation.
 
         Return the process stats (dict) for the given item=value
