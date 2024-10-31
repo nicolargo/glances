@@ -15,8 +15,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from glances.globals import iteritems, itervalues, nativestr
 from glances.logger import logger
 from glances.plugins.containers.engines import ContainersExtension
-from glances.plugins.containers.engines.docker import DockerExtension, import_docker_error_tag
-from glances.plugins.containers.engines.podman import PodmanExtension, import_podman_error_tag
+from glances.plugins.containers.engines.docker import DockerExtension, disable_plugin_docker
+from glances.plugins.containers.engines.podman import PodmanExtension, disable_plugin_podman
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.processes import glances_processes
 from glances.processes import sort_stats as sort_stats_processes
@@ -145,11 +145,11 @@ class PluginModel(GlancesPluginModel):
         self.watchers: Dict[str, ContainersExtension] = {}
 
         # Init the Docker API
-        if not import_docker_error_tag:
+        if not disable_plugin_docker:
             self.watchers['docker'] = DockerExtension()
 
         # Init the Podman API
-        if not import_podman_error_tag:
+        if not disable_plugin_podman:
             self.watchers['podman'] = PodmanExtension(podman_sock=self._podman_sock())
 
         # Sort key
