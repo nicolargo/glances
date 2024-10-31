@@ -535,6 +535,13 @@ class GlancesProcesses:
                 except KeyError:
                     pass
 
+        # Remove non running process from the cache (avoid issue #2976)
+        pids_running = [p['pid'] for p in processlist]
+        pids_cached = [p for p in self.processlist_cache.keys()]
+        for pid in pids_cached:
+            if pid not in pids_running:                                                                               
+                self.processlist_cache.pop(pid, None)
+
         # Filter and transform process export list
         self.processlist_export = self.update_export_list(processlist)
 
