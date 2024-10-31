@@ -22,11 +22,11 @@ try:
     import requests
     from dateutil import parser, tz
 except Exception as e:
-    import_docker_error_tag = True
+    disable_plugin_docker = True
     # Display debug message if import KeyError
     logger.warning(f"Error loading Docker deps Lib. Docker plugin is disabled ({e})")
 else:
-    import_docker_error_tag = False
+    disable_plugin_docker = False
 
 
 class DockerStatsFetcher:
@@ -213,8 +213,11 @@ class DockerExtension:
     CONTAINER_ACTIVE_STATUS = ['running', 'paused']
 
     def __init__(self):
-        if import_docker_error_tag:
+        self.disable = disable_plugin_docker
+        if self.disable:
             raise Exception("Missing libs required to run Docker Extension (Containers) ")
+
+        self.display_error = True
 
         self.client = None
         self.ext_name = "containers (Docker)"
@@ -245,7 +248,7 @@ class DockerExtension:
     def update(self, all_tag) -> Tuple[Dict, List[Dict]]:
         """Update Docker stats using the input method."""
 
-        if not self.client:
+        if not self.client or self.disable:
             return {}, []
 
         version_stats = self.update_version()
@@ -255,8 +258,13 @@ class DockerExtension:
             # Issue #1152: Docker module doesn't export details about stopped containers
             # The Containers/all key of the configuration file should be set to True
             containers = self.client.containers.list(all=all_tag)
+            self.display_error = True
         except Exception as e:
-            logger.error(f"{self.ext_name} plugin - Can't get containers list ({e})")
+            if self.display_error:
+                logger.error(f"{self.ext_name} plugin - Can't get containers list ({e})")
+                self.display_error = False
+            else:
+                logger.debug(f"{self.ext_name} plugin - Can't get containers list ({e})")
             return version_stats, []
 
         # Start new thread for new container
