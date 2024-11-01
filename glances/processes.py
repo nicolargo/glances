@@ -537,7 +537,7 @@ class GlancesProcesses:
 
         # Remove non running process from the cache (avoid issue #2976)
         pids_running = [p['pid'] for p in processlist]
-        pids_cached = self.processlist_cache.keys()
+        pids_cached = list(self.processlist_cache.keys()).copy()
         for pid in pids_cached:
             if pid not in pids_running:
                 self.processlist_cache.pop(pid, None)
