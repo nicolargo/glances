@@ -9,9 +9,11 @@
 """Manage the Glances client browser (list of Glances server)."""
 
 import threading
+import webbrowser
 
 from defusedxml import xmlrpc
 
+from glances import __apiversion__
 from glances.autodiscover import GlancesAutoDiscoverServer
 from glances.client import GlancesClient, GlancesClientTransport
 from glances.globals import json_loads
@@ -19,6 +21,15 @@ from glances.logger import LOG_FILENAME, logger
 from glances.outputs.glances_curses_browser import GlancesCursesBrowser
 from glances.password_list import GlancesPasswordList as GlancesPassword
 from glances.static_list import GlancesStaticServer
+
+try:
+    import requests
+except ImportError as e:
+    import_requests_error_tag = True
+    # Display debug message if import error
+    logger.warning(f"Missing Python Lib ({e}), Client browser will not grab stats from Glances REST server")
+else:
+    import_requests_error_tag = False
 
 # Correct issue #1025 by monkey path the xmlrpc lib
 xmlrpc.monkey_patch()
@@ -77,14 +88,18 @@ class GlancesClientBrowser:
                 clear_password = self.password.get_password(server['name'])
                 if clear_password is not None:
                     server['password'] = self.password.get_hash(clear_password)
-            return 'http://{}:{}@{}:{}'.format(server['username'], server['password'], server['ip'], server['port'])
-        return 'http://{}:{}'.format(server['ip'], server['port'])
+            uri = 'http://{}:{}@{}:{}'.format(server['username'], server['password'], server['ip'], server['port'])
+        else:
+            uri = 'http://{}:{}'.format(server['ip'], server['port'])
+        return uri
 
-    def __update_stats(self, server):
-        """Update stats for the given server (picked from the server list)"""
-        # Get the server URI
-        uri = self.__get_uri(server)
+    def __get_key(self, column):
+        server_key = column.get('plugin') + '_' + column.get('field')
+        if 'key' in column:
+            server_key += '_' + column.get('key')
+        return server_key
 
+    def __update_stats_rpc(self, uri, server):
         # Try to connect to the server
         t = GlancesClientTransport()
         t.set_timeout(3)
@@ -98,9 +113,7 @@ class GlancesClientBrowser:
 
         # Get the stats
         for column in self.static_server.get_columns():
-            server_key = column.get('plugin') + '_' + column.get('field')
-            if 'key' in column:
-                server_key += '_' + column.get('key')
+            server_key = self.__get_key(column)
             try:
                 # Value
                 v_json = json_loads(s.getPlugin(column['plugin']))
@@ -132,10 +145,54 @@ class GlancesClientBrowser:
 
         return server
 
+    def __update_stats_rest(self, uri, server):
+        try:
+            requests.get(f'{uri}/status', timeout=3)
+        except requests.exceptions.RequestException as e:
+            logger.debug(f"Error while grabbing stats form server ({e})")
+            server['status'] = 'OFFLINE'
+            return server
+        else:
+            server['status'] = 'ONLINE'
+
+        for column in self.static_server.get_columns():
+            server_key = self.__get_key(column)
+            try:
+                r = requests.get(f'{uri}/{column['plugin']}/{column['field']}', timeout=3)
+            except requests.exceptions.RequestException as e:
+                logger.debug(f"Error while grabbing stats form server ({e})")
+                return server
+            else:
+                server[server_key] = r.json()[column['field']]
+
+        return server
+
+    def __update_stats(self, server):
+        """Update stats for the given server (picked from the server list)"""
+        # Get the server URI
+        uri = self.__get_uri(server)
+
+        if server['protocol'].lower() == 'rpc':
+            self.__update_stats_rpc(uri, server)
+        elif server['protocol'].lower() == 'rest' and not import_requests_error_tag:
+            self.__update_stats_rest(f'{uri}/api/{__apiversion__}', server)
+
+        return server
+
     def __display_server(self, server):
         """Connect and display the given server"""
         # Display the Glances client for the selected server
         logger.debug(f"Selected server {server}")
+
+        if server['protocol'].lower() == 'rest':
+            # Display a popup
+            self.screen.display_popup(
+                'Open the WebUI {}:{} in a Web Browser'.format(server['name'], server['port']), duration=1
+            )
+            # Try to open a Webbrowser
+            webbrowser.open(self.__get_uri(server), new=2, autoraise=1)
+            self.screen.active_server = None
+            return
 
         # Connection can take time
         # Display a popup

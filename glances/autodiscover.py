@@ -42,7 +42,7 @@ class AutoDiscovered:
 
     def __init__(self):
         # server_dict is a list of dict (JSON compliant)
-        # [ {'key': 'zeroconf name', ip': '172.1.2.3', 'port': 61209, 'cpu': 3, 'mem': 34 ...} ... ]
+        # [ {'key': 'zeroconf name', ip': '172.1.2.3', 'port': 61209, 'protocol': 'rpc', 'cpu': 3, 'mem': 34 ...} ... ]
         self._server_list = []
 
     def get_servers_list(self):
@@ -60,6 +60,7 @@ class AutoDiscovered:
             'name': name.split(':')[0],  # Short name
             'ip': ip,  # IP address seen by the client
             'port': port,  # TCP port
+            'protocol': 'rpc',  # RPC protocol
             'username': 'glances',  # Default username
             'password': '',  # Default password
             'status': 'UNKNOWN',  # Server status: 'UNKNOWN', 'OFFLINE', 'ONLINE', 'PROTECTED'
