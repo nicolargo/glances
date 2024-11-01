@@ -1,7 +1,7 @@
 # install with base requirements file
 -r requirements.txt
 
-batinfo
+batinfo; platform_system == 'Linux'
 bernhard
 cassandra-driver
 chevron
@@ -16,7 +16,7 @@ jinja2
 kafka-python
 netifaces
 nvidia-ml-py
-orjson # JSON Serialization speedup
+orjson
 paho-mqtt
 pika
 podman
@@ -28,7 +28,7 @@ pygal
 pymdstat
 pymongo
 pySMART.smartx
-pysnmp-lextudio<6.2.0
+pysnmp-lextudio<6.2.0 # Pinned witing implementation of #2874
 python-dateutil
 pyzmq
 requests
@@ -36,4 +36,4 @@ six
 sparklines
 statsd
 uvicorn
-zeroconf==0.131.0 # Waiting correction for ARMv7: https://github.com/python-zeroconf/python-zeroconf/issues/1372
+zeroconf
