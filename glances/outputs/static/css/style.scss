@@ -1,4 +1,26 @@
-// Theme
+// Glances theme
+
+$glances-bg: #000;
+$glances-fg: #CCC;
+$glances-fonts: "Lucida Sans Typewriter","Lucida Console",Monaco,"Bitstream Vera Sans Mono",monospace;
+
+// Define colors and fonts
+
+body {
+    background-color: $glances-bg;
+}
+
+#app {
+    background-color: $glances-bg;
+    color: $glances-fg;
+    font-family: $glances-fonts;
+    font-size: 14px;
+}
+
+.table-sm > :not(caption) > * > * {
+    background-color: $glances-bg;
+    color: $glances-fg;
+}
 
 .title {
     font-weight: bold;
@@ -109,6 +131,10 @@
 
 // Plugins
 
+.plugin {
+    margin-bottom: 1em;
+}
+
 #system {
     span {
         padding-left: 10px;
@@ -177,7 +203,7 @@
         margin-bottom: 1em;
     }
     * > th:not(:last-child), td:not(:last-child) {
-        width: 4em;
+        width: 5em;
     }
     * > td:nth-child(2) {
         width: 15em;
@@ -198,7 +224,7 @@
         margin-bottom: 1em;
     }
     * > th:not(:last-child), td:not(:last-child) {
-        width: 4em;
+        width: 5em;
     }
     * > td:nth-child(1) {
         width: 10em;
@@ -238,7 +264,7 @@
 
 #processlist {
     * > td:nth-child(-n+12) {
-        width: 4em;
+        width: 5em;
     }
     * > td:nth-child(5), td:nth-child(7), td:nth-child(9), td:nth-child(11) {
         text-align: right;
