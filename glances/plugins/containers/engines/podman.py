@@ -264,7 +264,7 @@ class PodmanExtension:
         self.connect()
 
     def connect(self):
-        """Connect to Podman."""        
+        """Connect to Podman."""
         try:
             self.client = PodmanClient(base_url=self.podman_sock)
             # PodmanClient works lazily, so make a ping to determine if socket is open
