@@ -3,6 +3,33 @@
 ==============================================================================
 
 ===============
+Version 4.2.1
+===============
+
+Enhancements:
+
+* [WEBUI] Came back to default Black Theme / Reduce font size #2993
+* Improve hide_zero option #2958
+
+Bug corrected:
+
+* Possible memory leak #2976
+* Docker/Podman shoud not flood log file with ERROR if containers list can not be retreived #2994
+* Using "-w" option gives error: NameError: name 'Any' is not defined #2992
+* Non blocking error message when Glances starts from a container (alpine-dev image) #2991
+
+Continuous integration and documentation:
+
+* Migrate from setup.py to pyproject.yml #2956
+* Make pyproject.toml's version dynamic #2990
+
+Thanks to all contributors and bug reporters !
+
+Special thanks to:
+
+* @branchvincent for pyproject migration
+
+===============
 Version 4.2.0
 ===============
 
