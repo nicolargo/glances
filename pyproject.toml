@@ -40,7 +40,7 @@ urls.Homepage = "https://github.com/nicolargo/glances"
 [project.optional-dependencies]
 action = ["chevron"]
 all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,raid,sensors,smart,snmp,sparklines,web,wifi]"]
-browser = ["zeroconf>=0.19.1"]
+browser = ["zeroconf"]
 cloud = ["requests"]
 containers = ["docker>=6.1.1", "packaging", "podman", "python-dateutil", "six"]
 export = [
@@ -66,7 +66,7 @@ ip = ["netifaces"]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART.smartx"]
-snmp = ["pysnmp"]
+snmp = ["pysnmp-lextudio<6.2.0"]
 sparklines = ["sparklines"]
 web = ["fastapi>=0.82.0", "jinja2", "requests", "uvicorn"]
 wifi = ["wifi"]
@@ -87,7 +87,7 @@ glances = "glances:main"
 "share/man/man1" = ["docs/man/glances.1"]
 
 [tool.setuptools.dynamic]
-version = { attr = "glances.__version__" }
+version = {attr = "glances.__version__"}
 
 [tool.setuptools.packages.find]
 include = ["glances*"]
