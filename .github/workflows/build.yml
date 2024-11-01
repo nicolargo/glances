@@ -66,6 +66,7 @@ jobs:
           --outdir dist/
 
       - name: Publish distribution package to Test PyPI
+        if: github.ref == 'refs/heads/develop'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           # user and password should be removed
