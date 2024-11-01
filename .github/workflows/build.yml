@@ -72,12 +72,14 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
           skip-existing: true
+          attestations: false
 
       - name: Publish distribution package to PyPI
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           skip-existing: true
+          attestations: false
 
   create_Docker_builds:
     runs-on: ubuntu-latest
