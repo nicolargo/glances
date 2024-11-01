@@ -16,9 +16,10 @@ NVML_LIB = 'libnvidia-ml.so.1'
 try:
     # Avoid importing pynvml if NVML_LIB is not installed
     from ctypes import CDLL
+
     CDLL(NVML_LIB)
     import pynvml
-except OSError as e:
+except OSError:
     nvidia_gpu_enable = False
     # NNVML_LIB lib not found (NVidia driver not installed)
     logger.warning(f"NVML Shared Library ({NVML_LIB}) not Found, Nvidia GPU plugin is disabled")
