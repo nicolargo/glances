@@ -16,8 +16,8 @@ from base64 import b64decode
 from defusedxml import xmlrpc
 
 from glances import __version__
-from glances.autodiscover import GlancesAutoDiscoverClient
 from glances.logger import logger
+from glances.servers_list_dynamic import GlancesAutoDiscoverClient
 from glances.stats_server import GlancesStatsServer
 from glances.timer import Timer
 

@@ -1,7 +1,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -14,13 +14,12 @@ import webbrowser
 from defusedxml import xmlrpc
 
 from glances import __apiversion__
-from glances.autodiscover import GlancesAutoDiscoverServer
 from glances.client import GlancesClient, GlancesClientTransport
 from glances.globals import json_loads
 from glances.logger import LOG_FILENAME, logger
 from glances.outputs.glances_curses_browser import GlancesCursesBrowser
 from glances.password_list import GlancesPasswordList as GlancesPassword
-from glances.static_list import GlancesStaticServer
+from glances.servers_list import GlancesServersList
 
 try:
     import requests
@@ -42,26 +41,18 @@ class GlancesClientBrowser:
         # Store the arg/config
         self.args = args
         self.config = config
-        self.static_server = None
-        self.password = None
 
         # Load the configuration file
+        self.password = None
         self.load()
 
-        # Start the autodiscover mode (Zeroconf listener)
-        if not self.args.disable_autodiscover:
-            self.autodiscover_server = GlancesAutoDiscoverServer()
-        else:
-            self.autodiscover_server = None
+        # Init the server list
+        self.servers_list = GlancesServersList(config=config, args=args)
 
         # Init screen
         self.screen = GlancesCursesBrowser(args=self.args)
 
     def load(self):
-        """Load server and password list from the configuration file."""
-        # Init the static server list (if defined)
-        self.static_server = GlancesStaticServer(config=self.config)
-
         # Init the password list (if defined)
         self.password = GlancesPassword(config=self.config)
 
@@ -70,14 +61,7 @@ class GlancesClientBrowser:
 
         Merge of static + autodiscover servers list.
         """
-        ret = []
-
-        if self.args.browser:
-            ret = self.static_server.get_servers_list()
-            if self.autodiscover_server is not None:
-                ret = self.static_server.get_servers_list() + self.autodiscover_server.get_servers_list()
-
-        return ret
+        return self.servers_list.get_servers_list()
 
     def __get_uri(self, server):
         """Return the URI for the given server dict."""
@@ -112,7 +96,7 @@ class GlancesClientBrowser:
             return server
 
         # Get the stats
-        for column in self.static_server.get_columns():
+        for column in self.servers_list.get_columns():
             server_key = self.__get_key(column)
             try:
                 # Value
@@ -155,7 +139,7 @@ class GlancesClientBrowser:
         else:
             server['status'] = 'ONLINE'
 
-        for column in self.static_server.get_columns():
+        for column in self.servers_list.get_columns():
             server_key = self.__get_key(column)
             try:
                 r = requests.get(f'{uri}/{column['plugin']}/{column['field']}', timeout=3)
@@ -295,13 +279,7 @@ class GlancesClientBrowser:
 
     def set_in_selected(self, key, value):
         """Set the (key, value) for the selected server in the list."""
-        # Static list then dynamic one
-        if self.screen.active_server >= len(self.static_server.get_servers_list()):
-            self.autodiscover_server.set_server(
-                self.screen.active_server - len(self.static_server.get_servers_list()), key, value
-            )
-        else:
-            self.static_server.set_server(self.screen.active_server, key, value)
+        self.servers_list.set_in_selected(self.screen.active_server, key, value)
 
     def end(self):
         """End of the client browser session."""
