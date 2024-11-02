@@ -170,7 +170,13 @@ class GlancesRestfulApi:
                 self.url_prefix = self.url_prefix.rstrip('/')
             logger.debug(f'URL prefix: {self.url_prefix}')
 
-    def __update__(self):
+    def __update_stats(self):
+        # Never update more than 1 time per cached_time
+        if self.timer.finished():
+            self.stats.update()
+            self.timer = Timer(self.args.cached_time)
+
+    def __update_servers_list(self):
         # Never update more than 1 time per cached_time
         if self.timer.finished():
             self.stats.update()
@@ -210,6 +216,7 @@ class GlancesRestfulApi:
             f'{base_path}/all/limits': self._api_all_limits,
             f'{base_path}/all/views': self._api_all_views,
             f'{base_path}/pluginslist': self._api_plugins,
+            f'{base_path}/serverslist': self._api_servers_list,
             f'{plugin_path}': self._api,
             f'{plugin_path}/history': self._api_history,
             f'{plugin_path}/history/{{nb}}': self._api_history,
@@ -310,7 +317,7 @@ class GlancesRestfulApi:
         refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         # Display
         return self._templates.TemplateResponse("index.html", {"request": request, "refresh_time": refresh_time})
@@ -375,7 +382,7 @@ class GlancesRestfulApi:
             HTTP/1.1 404 Not Found
         """
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             plist = self.plugins_list
@@ -383,6 +390,14 @@ class GlancesRestfulApi:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get plugin list ({str(e)})")
 
         return GlancesJSONResponse(plist)
+
+    def _api_servers_list(self):
+        """Glances API RESTful implementation.
+
+        Return the JSON representation of the servers list (for browser mode)
+        HTTP/200 if OK
+        """
+        self.__update_servers_list()
 
     def _api_all(self):
         """Glances API RESTful implementation.
@@ -401,7 +416,7 @@ class GlancesRestfulApi:
                 logger.debug(f"Debug file ({fname}) not found")
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value of the stat ID
@@ -454,7 +469,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value of the stat ID
@@ -485,7 +500,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value of the stat ID
@@ -512,7 +527,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value of the stat ID
@@ -572,7 +587,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value of the stat views
@@ -597,7 +612,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value of the stat history
@@ -656,7 +671,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value
