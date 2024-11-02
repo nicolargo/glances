@@ -8,6 +8,9 @@
 
 """NVidia Extension unit for Glances' GPU plugin."""
 
+import os
+import sys
+
 from glances.globals import nativestr
 from glances.logger import logger
 
@@ -17,7 +20,13 @@ try:
     # Avoid importing pynvml if NVML_LIB is not installed
     from ctypes import CDLL
 
-    CDLL(NVML_LIB)
+    if (sys.platform[:3] == "win"):
+        try:
+            CDLL(os.path.join(os.getenv("WINDIR", "C:/Windows"), "System32/nvml.dll"))
+        except OSError as ose:
+            CDLL(os.path.join(os.getenv("ProgramFiles", "C:/Program Files"), "NVIDIA Corporation/NVSMI/nvml.dll"))
+    else:
+        CDLL(NVML_LIB)
     import pynvml
 except OSError:
     nvidia_gpu_enable = False
