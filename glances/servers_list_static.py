@@ -46,7 +46,6 @@ class GlancesStaticServer:
                     new_server[s] = config.get_value(self._section, f'{postfix}{s}')
 
                 if new_server['name'] is None:
-                    logger.error(f'Name not define for {postfix}, skip it.')
                     continue
 
                 # Type in order to support both RPC and REST servers (see #1121)

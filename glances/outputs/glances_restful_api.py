@@ -227,15 +227,27 @@ class GlancesRestfulApi:
         for path, endpoint in route_mapping.items():
             router.add_api_route(path, endpoint)
 
-        # WEB UI
+        # Browser WEBUI
+        if self.args.browser:
+            # Template for the root browser.html file
+            router.add_api_route('/browser', self._browser, response_class=HTMLResponse)
+
+            # Statics files
+            self._app.mount(self.url_prefix + '/static', StaticFiles(directory=self.STATIC_PATH), name="static")
+            logger.debug(f"The Browser WebUI is enable and got statics files in {self.STATIC_PATH}")
+
+            bindmsg = f'Glances Browser Web User Interface started on {self.bind_url}browser'
+            logger.info(bindmsg)
+            print(bindmsg)
+
+        # WEBUI
         if not self.args.disable_webui:
             # Template for the root index.html file
             router.add_api_route('/', self._index, response_class=HTMLResponse)
 
             # Statics files
             self._app.mount(self.url_prefix + '/static', StaticFiles(directory=self.STATIC_PATH), name="static")
-
-            logger.info(f"The WebUI is enable and got statics files in {self.STATIC_PATH}")
+            logger.debug(f"The WebUI is enable and got statics files in {self.STATIC_PATH}")
 
             bindmsg = f'Glances Web User Interface started on {self.bind_url}'
             logger.info(bindmsg)
@@ -302,6 +314,16 @@ class GlancesRestfulApi:
 
         # Display
         return self._templates.TemplateResponse("index.html", {"request": request, "refresh_time": refresh_time})
+
+    def _browser(self, request: Request):
+        """Return main browser.html (/browser) file.
+
+        Note: This function is only called the first time the page is loaded.
+        """
+        refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
+
+        # Display
+        return self._templates.TemplateResponse("browser.html", {"request": request, "refresh_time": refresh_time})
 
     def _api_status(self):
         """Glances API RESTful implementation.

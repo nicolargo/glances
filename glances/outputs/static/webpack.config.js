@@ -12,10 +12,13 @@ module.exports = (_, env) => {
 
     return {
         mode: isProd ? 'production' : 'development',
-        entry: "./js/app.js",
+        entry: {
+            glances: "./js/app.js",
+            browser: "./js/browser.js"
+        },
         output: {
             path: path.join(__dirname, "public"),
-            filename: "glances.js",
+            filename: "[name].js",
             publicPath: '/',
             clean: true
         },
