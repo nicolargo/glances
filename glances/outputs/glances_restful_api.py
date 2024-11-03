@@ -28,6 +28,7 @@ from glances import __apiversion__, __version__
 from glances.globals import json_dumps
 from glances.logger import logger
 from glances.password import GlancesPassword
+from glances.servers_list import GlancesServersList
 from glances.timer import Timer
 
 # FastAPI import
@@ -108,6 +109,12 @@ class GlancesRestfulApi:
         # Will be updated within route
         self.stats = None
 
+        # Init servers list (only for the browser mode)
+        if self.args.browser:
+            self.servers_list = GlancesServersList(config=config, args=args)
+        else:
+            self.servers_list = None
+
         # cached_time is the minimum time interval between stats updates
         # i.e. HTTP/RESTful calls will not retrieve updated info until the time
         # since last update is passed (will retrieve old cached info instead)
@@ -179,7 +186,7 @@ class GlancesRestfulApi:
     def __update_servers_list(self):
         # Never update more than 1 time per cached_time
         if self.timer.finished():
-            self.stats.update()
+            self.servers_list.update_servers_stats()
             self.timer = Timer(self.args.cached_time)
 
     def authentication(self, creds: Annotated[HTTPBasicCredentials, Depends(security)]):
@@ -397,7 +404,10 @@ class GlancesRestfulApi:
         Return the JSON representation of the servers list (for browser mode)
         HTTP/200 if OK
         """
+        # Update the servers list (and the stats for all the servers)
         self.__update_servers_list()
+
+        return GlancesJSONResponse(self.servers_list.get_servers_list())
 
     def _api_all(self):
         """Glances API RESTful implementation.
