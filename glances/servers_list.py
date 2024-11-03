@@ -110,14 +110,13 @@ class GlancesServersList:
             self.static_server.set_server(selected, key, value)
 
     def __update_stats(self, server):
-        """Update stats for the given server (picked from the server list)"""
-        # Get the server URI
-        uri = self.get_uri(server)
-
+        """Update stats for the given server"""
+        server['uri'] = self.get_uri(server)
+        server['columns'] = [self.__get_key(column) for column in self.static_server.get_columns()]
         if server['protocol'].lower() == 'rpc':
-            self.__update_stats_rpc(uri, server)
+            self.__update_stats_rpc(server['uri'], server)
         elif server['protocol'].lower() == 'rest' and not import_requests_error_tag:
-            self.__update_stats_rest(f'{uri}/api/{__apiversion__}', server)
+            self.__update_stats_rest(f'{server['uri']}/api/{__apiversion__}', server)
 
         return server
 

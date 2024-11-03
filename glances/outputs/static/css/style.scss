@@ -17,6 +17,13 @@ body {
     font-size: 14px;
 }
 
+#browser {
+    background-color: $glances-bg;
+    color: $glances-fg;
+    font-family: $glances-fonts;
+    font-size: 14px;
+}
+
 .table-sm > :not(caption) > * > * {
     background-color: $glances-bg;
     color: $glances-fg;
@@ -91,6 +98,11 @@ body {
     padding-right: 0.25rem;
     padding-bottom: 0em;
     padding-left: 0.25rem;
+}
+
+// DO NOT WORK...
+.table-hover tbody tr:hover {
+  background-color: #57cb6a !important;
 }
 
 // Text

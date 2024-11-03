@@ -148,9 +148,7 @@
         <div>
             <p>
                 For an exhaustive list of key bindings,
-                <a href="https://glances.readthedocs.io/en/latest/cmds.html#interactive-commands"
-                    >click here</a
-                >.
+                <a href="https://glances.readthedocs.io/en/latest/cmds.html#interactive-commands">click here</a>.
             </p>
         </div>
         <div>
