@@ -100,13 +100,6 @@ body {
     padding-left: 0.25rem;
 }
 
-// DO NOT WORK...
-.table-hover tbody tr:hover {
-  background-color: #57cb6a !important;
-}
-
-// Text
-
 .sort {
     font-weight: bold;
     color: white;
@@ -304,5 +297,13 @@ body {
     }
     * > td:nth-child(1) {
         width: 20em;
+    }
+}
+
+// Central Glances Browser
+
+#browser {
+    table {
+        margin-top: 1em;
     }
 }
