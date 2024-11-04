@@ -3,7 +3,9 @@
         <div class="loader">Glances Central Browser is loading...</div>
     </div>
     <main v-else>
-        <p>{{ servers }}</p>
+        <span class="title" v-show="servers.length == 0">No Glances server available</span>
+        <span class="title" v-show="servers.length == 1">One Glances server available</span>
+        <span class="title" v-show="servers.length > 1"> {{ servers.length }} Glances servers available</span>
         <table class="table table-sm table-borderless margin-bottom table-hover">
             <thead>
                 <tr>
@@ -17,7 +19,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(server, serverId) in servers" :key="serverId" @click="goToGlances(server.uri)"
+                <tr v-for="(server, serverId) in servers" :key="serverId" @click="goToGlances(server)"
                     style="cursor: pointer">
                     <td scope=" row">
                         {{ server.alias ? server.alias : server.name, 32 }}
@@ -37,6 +39,8 @@
                 </tr>
             </tbody>
         </table>
+        <!-- DEBUGGING -->
+        <!-- <p>{{ servers }}</p> -->
     </main>
 </template>
 
@@ -73,8 +77,12 @@ export default {
             }
             return value;
         },
-        goToGlances(uri) {
-            window.location.href = uri;
+        goToGlances(server) {
+            if (server.protocol === 'rpc') {
+                alert("You just clock on a Glances RPC server.\nPlease open a terminal and enter the following command line:\n\nglances -c ${server.ip}:${server.port}")
+            } else {
+                window.location.href = server.uri;
+            }
         }
     },
     computed: {
