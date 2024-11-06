@@ -2,31 +2,26 @@
 
 $glances-bg: #000;
 $glances-fg: #CCC;
+$glances-link-hover-color: #57cb6a;
 $glances-fonts: "Lucida Sans Typewriter","Lucida Console",Monaco,"Bitstream Vera Sans Mono",monospace;
+$glances-fonts-size: 14px;
 
 // Define colors and fonts
 
-body {
-    background-color: $glances-bg;
+// https://getbootstrap.com/docs/5.2/customize/css-variables/#root-variables
+:root {
+    --bs-body-bg: $glances-bg;
+    --bs-body-color: $glances-fg;
+    --bs-link-hover-color: $glances-link-hover-color;
+    --bs-body-font-size: $glances-fonts-size;
 }
 
 #app {
-    background-color: $glances-bg;
-    color: $glances-fg;
     font-family: $glances-fonts;
-    font-size: 14px;
 }
 
 #browser {
-    background-color: $glances-bg;
-    color: $glances-fg;
     font-family: $glances-fonts;
-    font-size: 14px;
-}
-
-.table-sm > :not(caption) > * > * {
-    background-color: $glances-bg;
-    color: $glances-fg;
 }
 
 .title {
