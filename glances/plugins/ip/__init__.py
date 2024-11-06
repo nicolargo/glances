@@ -85,6 +85,51 @@ class PluginModel(GlancesPluginModel):
             "public_refresh_interval", default=self._default_public_refresh_interval
         )
 
+    def get_private_ip(self, stats, stop=False):
+        # Get the default gateway thanks to the netifaces lib
+        try:
+            default_gw = netifaces.gateways()['default'][netifaces.AF_INET]
+        except (KeyError, AttributeError) as e:
+            logger.debug(f"Cannot grab default gateway IP address ({e})")
+            stop = True
+        else:
+            stats['gateway'] = default_gw[0]
+
+        return (stop, stats)
+
+    def get_first_ip(self, stats, stop=False):
+        try:
+            default_gw = netifaces.gateways()['default'][netifaces.AF_INET]
+            address = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['addr']
+            mask = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['netmask']
+        except (KeyError, AttributeError) as e:
+            logger.debug(f"Cannot grab private IP address ({e})")
+            stop = True
+        else:
+            stats['address'] = address
+            stats['mask'] = mask
+            stats['mask_cidr'] = self.ip_to_cidr(stats['mask'])
+
+        return (stop, stats)
+
+    def get_public_ip(self, stats, stop=True):
+        time_since_update = getTimeSinceLastUpdate('public-ip')
+        try:
+            if not self.public_disabled and (
+                self.public_address == "" or time_since_update > self.public_address_refresh_interval
+            ):
+                self.public_info = PublicIpInfo(self.public_api, self.public_username, self.public_password).get()
+                self.public_address = self.public_info['ip']
+        except (KeyError, AttributeError, TypeError) as e:
+            logger.debug(f"Cannot grab public IP information ({e})")
+        else:
+            stats['public_address'] = (
+                self.public_address if not self.args.hide_public_info else self.__hide_ip(self.public_address)
+            )
+            stats['public_info_human'] = self.public_info_for_human(self.public_info)
+
+        return (stop, stats)
+
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
@@ -96,42 +141,7 @@ class PluginModel(GlancesPluginModel):
         stats = self.get_init_value()
 
         if self.input_method == 'local' and not import_error_tag:
-            # Private IP address
-            # Get the default gateway thanks to the netifaces lib
-            try:
-                default_gw = netifaces.gateways()['default'][netifaces.AF_INET]
-            except (KeyError, AttributeError) as e:
-                logger.debug(f"Cannot grab default gateway IP address ({e})")
-                return self.get_init_value()
-            else:
-                stats['gateway'] = default_gw[0]
-            # If multiple IP addresses are available, only the one with the default gateway is returned
-            try:
-                address = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['addr']
-                mask = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['netmask']
-            except (KeyError, AttributeError) as e:
-                logger.debug(f"Cannot grab private IP address ({e})")
-                return self.get_init_value()
-            else:
-                stats['address'] = address
-                stats['mask'] = mask
-                stats['mask_cidr'] = self.ip_to_cidr(stats['mask'])
-
-            # Public IP address
-            time_since_update = getTimeSinceLastUpdate('public-ip')
-            try:
-                if not self.public_disabled and (
-                    self.public_address == "" or time_since_update > self.public_address_refresh_interval
-                ):
-                    self.public_info = PublicIpInfo(self.public_api, self.public_username, self.public_password).get()
-                    self.public_address = self.public_info['ip']
-            except (KeyError, AttributeError, TypeError) as e:
-                logger.debug(f"Cannot grab public IP information ({e})")
-            else:
-                stats['public_address'] = (
-                    self.public_address if not self.args.hide_public_info else self.__hide_ip(self.public_address)
-                )
-                stats['public_info_human'] = self.public_info_for_human(self.public_info)
+            stats = self.get_stats_for_local_input(stats)
 
         elif self.input_method == 'snmp':
             # Not implemented yet
@@ -141,6 +151,18 @@ class PluginModel(GlancesPluginModel):
         self.stats = stats
 
         return self.stats
+
+    def get_stats_for_local_input(self, stats):
+        # Private IP address
+        stop, stats = self.get_private_ip(stats)
+        # If multiple IP addresses are available, only the one with the default gateway is returned
+        if not stop:
+            stop, stats = self.get_first_ip(stats)
+        # Public IP address
+        if not stop:
+            stop, stats = self.get_public_ip(stats)
+
+        return stats
 
     def __hide_ip(self, ip):
         """Hide last to digit of the given IP address"""
