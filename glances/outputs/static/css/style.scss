@@ -115,7 +115,7 @@ body {
     white-space: nowrap;
 }
 
-.table-hover tbody tr:hover td {
+#browser .table-hover tbody tr:hover td {
     background: $glances-link-hover-color;
 }
 
