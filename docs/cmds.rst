@@ -120,7 +120,8 @@ Command-Line Options
 
 .. option:: --browser
 
-    start the client browser (list of servers)
+    start TUI Central Glances Browser
+    use --browser -w to start WebUI Central Glances Browser
 
 .. option:: --disable-autodiscover
 

@@ -34,16 +34,17 @@ CONFIGURATION
 EXAMPLES
 --------
 
-Monitor local machine (standalone mode):
+Monitor local machine, also called standalone mode,
+with the Text-based user interface (TUI):
 
     $ glances
 
-To monitor the local machine with the web interface (Web UI),
+To monitor the local machine with the Web user interface (WebUI),
 , run the following command line:
 
     $ glances -w
 
-then, open a web browser to the provided URL.
+then, open a Web Browser to the provided URL.
 
 Monitor local machine and export stats to a CSV file:
 
@@ -71,9 +72,15 @@ Connect to a Glances server and export stats to a StatsD server:
 
     $ glances -c <ip_server> --export statsd
 
-Start the client browser (browser mode):
+Start the TUI Central Glances Browser:
 
     $ glances --browser
+
+Start the WebUI Central Glances Browser (new in Glances 4.3 or higher):
+
+    $ glances --browser -w
+
+If you do not want to see the local Glances Web Server in the browser list please use --disable-autodiscover option.
 
 AUTHOR
 ------

@@ -166,6 +166,7 @@ class GlancesRestfulApi:
         self._app.include_router(self._router())
 
         # Enable auto discovering of the service
+        self.autodiscover_client = None
         if not self.args.disable_autodiscover:
             logger.info('Autodiscover is enabled with service name {}'.format(socket.gethostname().split('.', 1)[0]))
             self.autodiscover_client = GlancesAutoDiscoverClient(socket.gethostname().split('.', 1)[0], self.args)
@@ -321,6 +322,8 @@ class GlancesRestfulApi:
 
     def end(self):
         """End the Web server"""
+        if not self.args.disable_autodiscover and self.autodiscover_client:
+            self.autodiscover_client.close()
         logger.info("Close the Web server")
 
     def _index(self, request: Request):
