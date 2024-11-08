@@ -231,6 +231,7 @@ class GlancesRestfulApi:
             f'{plugin_path}/limits': self._api_limits,
             f'{plugin_path}/views': self._api_views,
             f'{plugin_path}/{{item}}': self._api_item,
+            f'{plugin_path}/{{item}}/views': self._api_item_views,
             f'{plugin_path}/{{item}}/history': self._api_item_history,
             f'{plugin_path}/{{item}}/history/{{nb}}': self._api_item_history,
             f'{plugin_path}/{{item}}/description': self._api_item_description,
@@ -606,6 +607,30 @@ class GlancesRestfulApi:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND,
                 f"Cannot get item {item} in plugin {plugin} ({str(e)})",
+            )
+
+        return GlancesJSONResponse(ret)
+
+    def _api_item_views(self, plugin: str, item: str):
+        """Glances API RESTful implementation.
+
+        Return the JSON view representation of the couple plugin/item
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        self._check_if_plugin_available(plugin)
+
+        # Update the stat
+        self.__update_stats()
+
+        try:
+            # Get the RAW value of the stat views
+            ret = self.stats.get_plugin(plugin).get_views().get(item)
+        except Exception as e:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                f"Cannot get item {item} in plugin view {plugin} ({str(e)})",
             )
 
         return GlancesJSONResponse(ret)
