@@ -314,8 +314,11 @@ class GlancesCursesBrowser(_GlancesCurses):
         stats_max = screen_y - 3
         y = 2
         xc = x + 2
+        # First line (plugin name)
         for k, v in column_def.items():
+            logger.info(k)
             k_split = k.split('_')
+            logger.info(k_split)
             if len(k_split) == 1:
                 xc += v + self.space_between_column
                 continue
@@ -324,12 +327,11 @@ class GlancesCursesBrowser(_GlancesCurses):
                 xc += v + self.space_between_column
         xc = x + 2
         y += 1
+        # Second line (for item/key)
         for k, v in column_def.items():
             k_split = k.split('_')
             if xc < screen_x and y < screen_y and v is not None:
-                self.term_window.addnstr(
-                    y, xc, k_split[len(k_split) - 1].upper(), screen_x - x, self.colors_list['BOLD']
-                )
+                self.term_window.addnstr(y, xc, ' '.join(k_split[1:]).upper(), screen_x - x, self.colors_list['BOLD'])
                 xc += v + self.space_between_column
         y += 1
 
