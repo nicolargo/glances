@@ -6,7 +6,7 @@
         <span class="title" v-show="servers.length == 0">No Glances server available</span>
         <span class="title" v-show="servers.length == 1">One Glances server available</span>
         <span class="title" v-show="servers.length > 1"> {{ servers.length }} Glances servers available</span>
-        <table class="table table-sm table-borderless margin-bottom table-hover">
+        <table class="table table-sm table-borderless margin-bottom table-hover" v-show="servers.length > 0">
             <thead>
                 <tr>
                     <th scope="col">NAME</th>
@@ -80,7 +80,7 @@ export default {
         },
         goToGlances(server) {
             if (server.protocol === 'rpc') {
-                alert("You just clock on a Glances RPC server.\nPlease open a terminal and enter the following command line:\n\nglances -c ${server.ip}:${server.port}")
+                alert("You just click on a Glances RPC server.\nPlease open a terminal and enter the following command line:\n\nglances -c ${server.ip}:${server.port}")
             } else {
                 window.location.href = server.uri;
             }
@@ -89,7 +89,7 @@ export default {
             if (server[column + '_decoration'] === undefined) {
                 return;
             }
-            return server[column + '_decoration'].decoration.replace('_LOG', '').toLowerCase();
+            return server[column + '_decoration'].replace('_LOG', '').toLowerCase();
         }
     },
     computed: {

@@ -9,6 +9,7 @@
 """RestFull API interface class."""
 
 import os
+import socket
 import sys
 import tempfile
 import webbrowser
@@ -29,6 +30,7 @@ from glances.globals import json_dumps
 from glances.logger import logger
 from glances.password import GlancesPassword
 from glances.servers_list import GlancesServersList
+from glances.servers_list_dynamic import GlancesAutoDiscoverClient
 from glances.timer import Timer
 
 # FastAPI import
@@ -162,6 +164,13 @@ class GlancesRestfulApi:
 
         # FastAPI Define routes
         self._app.include_router(self._router())
+
+        # Enable auto discovering of the service
+        if not self.args.disable_autodiscover:
+            logger.info('Autodiscover is enabled with service name {}'.format(socket.gethostname().split('.', 1)[0]))
+            self.autodiscover_client = GlancesAutoDiscoverClient(socket.gethostname().split('.', 1)[0], self.args)
+        else:
+            logger.info("Glances autodiscover announce is disabled")
 
     def load_config(self, config):
         """Load the outputs section of the configuration file."""
