@@ -66,7 +66,7 @@ Filtering is based on regular expression. Please be sure that your regular
 expression works as expected. You can use an online tool like `regex101`_ in
 order to test your regular expression.
 
-You also can automatically hide intercae with no traffic using the
+You also can automatically hide interface with no traffic using the
 ``hide_zero`` configuration key. The optional ``hide_threshold_bytes`` option
 can also be used to set a threshold higher than zero.
 
