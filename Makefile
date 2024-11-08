@@ -310,6 +310,9 @@ run-client: ## Start Glances in client mode (RPC)
 run-browser: ## Start Glances in browser mode (RPC)
 	$(PYTHON) -m glances -C $(CONF) --browser
 
+run-web-browser: ## Start Web Central Browser
+	$(PYTHON) -m glances -C $(CONF) -w --browser
+
 run-issue: ## Start Glances in issue mode
 	$(PYTHON) -m glances -C $(CONF) --issue
 

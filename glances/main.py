@@ -70,8 +70,11 @@ Examples of use:
   Connect Glances to a Glances server and export stats to a StatsD server (client mode):
     $ glances -c <ip_server> --export statsd
 
-  Start the client browser (browser mode):
+  Start TUI Central Glances Browser:
     $ glances --browser
+
+  Start WebUI Central Glances Browser:
+    $ glances --browser -w
 
   Display stats to stdout (one stat per line, possible to go inside stats using plugin.attribute):
     $ glances --stdout now,cpu.user,mem.used,load
@@ -318,7 +321,7 @@ Examples of use:
             action='store_true',
             default=False,
             dest='browser',
-            help='start the client browser (list of servers)',
+            help='start TUI Central Glances Browser (use --browser -w to start WebUI Central Glances Browser)',
         )
         parser.add_argument(
             '--disable-autodiscover',
@@ -811,11 +814,11 @@ Examples of use:
 
     def is_client(self):
         """Return True if Glances is running in client mode."""
-        return (self.args.client or self.args.browser) and not self.args.server
+        return (self.args.client or self.args.browser) and not self.args.server and not self.args.webserver
 
     def is_client_browser(self):
         """Return True if Glances is running in client browser mode."""
-        return self.args.browser and not self.args.server
+        return self.args.browser and not self.args.server and not self.args.webserver
 
     def is_server(self):
         """Return True if Glances is running in server mode."""
