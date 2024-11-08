@@ -317,7 +317,6 @@ class GlancesCursesBrowser(_GlancesCurses):
         # First line (plugin name)
         for k, v in column_def.items():
             k_split = k.split('_')
-            logger.info(k_split)
             if len(k_split) == 1:
                 xc += v + self.space_between_column
                 continue
