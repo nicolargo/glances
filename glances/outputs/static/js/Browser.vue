@@ -3,7 +3,12 @@
         <div class="loader">Glances Central Browser is loading...</div>
     </div>
     <main v-else>
-        <span class="title" v-show="servers.length == 0">No Glances server available</span>
+        <span v-show="servers.length == 0">
+            <p class="title">No Glances server available</p>
+            <br />
+            <p>Glances servers can be defined in the glances.conf file.</p>
+            <p>Glances servers can be detected automaticaly on the same local area network.</p>
+        </span>
         <span class="title" v-show="servers.length == 1">One Glances server available</span>
         <span class="title" v-show="servers.length > 1"> {{ servers.length }} Glances servers available</span>
         <table class="table table-sm table-borderless margin-bottom table-hover" v-show="servers.length > 0">
