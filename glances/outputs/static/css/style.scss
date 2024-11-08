@@ -12,16 +12,14 @@ $glances-fonts-size: 14px;
 :root {
     --bs-body-bg: $glances-bg;
     --bs-body-color: $glances-fg;
-    --bs-link-hover-color: $glances-link-hover-color;
     --bs-body-font-size: $glances-fonts-size;
 }
 
-#app {
+body {
+    background-color: $glances-bg;
+    color: $glances-fg;
     font-family: $glances-fonts;
-}
-
-#browser {
-    font-family: $glances-fonts;
+    font-size: $glances-fonts-size;
 }
 
 .title {
@@ -73,6 +71,11 @@ $glances-fonts-size: 14px;
     color: #EE6600 !important;
     font-weight: bold !important;
 }
+.error_log {
+    background-color: #EE6600 !important;
+    color: white !important;
+    font-weight: bold !important;
+}
 
 // Table
 
@@ -110,6 +113,10 @@ $glances-fonts-size: 14px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.table-hover tbody tr:hover td {
+    background: $glances-link-hover-color;
 }
 
 // Separator

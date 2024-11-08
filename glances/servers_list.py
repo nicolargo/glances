@@ -178,6 +178,7 @@ class GlancesServersList:
 
         for column in self.static_server.get_columns():
             server_key = self.__get_key(column)
+            # Value
             try:
                 r = requests.get(f'{uri}/{column['plugin']}/{column['field']}', timeout=3)
             except requests.exceptions.RequestException as e:
@@ -185,6 +186,15 @@ class GlancesServersList:
                 return server
             else:
                 server[server_key] = r.json()[column['field']]
+            # Decoration
+            try:
+                r = requests.get(f'{uri}/{column['plugin']}/{column['field']}/views', timeout=3)
+            except requests.exceptions.RequestException as e:
+                logger.debug(f"Error while grabbing stats view form server ({e})")
+                return server
+            else:
+                if r.json():
+                    server[server_key + '_decoration'] = r.json()
 
         return server
 

@@ -33,7 +33,8 @@
                     <td class="">
                         {{ server.protocol }}
                     </td>
-                    <td v-if="servers.length" v-for="(column, columnId) in server.columns" :key="columnId">
+                    <td v-if="servers.length" v-for="(column, columnId) in server.columns" :key="columnId"
+                        :class="getDecoration(server, column)">
                         {{ formatNumber(server[column]) }}
                     </td>
                 </tr>
@@ -83,6 +84,12 @@ export default {
             } else {
                 window.location.href = server.uri;
             }
+        },
+        getDecoration(server, column) {
+            if (server[column + '_decoration'] === undefined) {
+                return;
+            }
+            return server[column + '_decoration'].decoration.replace('_LOG', '').toLowerCase();
         }
     },
     computed: {
