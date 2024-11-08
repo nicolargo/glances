@@ -20,7 +20,7 @@ try:
     # Avoid importing pynvml if NVML_LIB is not installed
     from ctypes import CDLL
 
-    if (sys.platform[:3] == "win"):
+    if sys.platform[:3] == "win":
         try:
             CDLL(os.path.join(os.getenv("WINDIR", "C:/Windows"), "System32/nvml.dll"))
         except OSError:
