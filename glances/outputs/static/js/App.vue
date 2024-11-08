@@ -29,13 +29,11 @@
         <div class="container-fluid margin-top margin-bottom">
             <div class="row justify-content-between">
                 <!-- Quicklook -->
-                <div class="col-3 d-none d-lg-block d-xl-block d-xxl-block"
-                     v-if="!args.disable_quicklook">
+                <div class="col-3 d-none d-lg-block d-xl-block d-xxl-block" v-if="!args.disable_quicklook">
                     <glances-plugin-quicklook :data="data"></glances-plugin-quicklook>
                 </div>
                 <!-- CPU -->
-                <div class="col"
-                        v-if="!args.disable_cpu || !args.percpu">
+                <div class="col" v-if="!args.disable_cpu || !args.percpu">
                     <glances-plugin-cpu :data="data"></glances-plugin-cpu>
                 </div>
                 <!-- TODO: percpu need to be refactor
@@ -49,23 +47,19 @@
                 </div> -->
 
                 <!-- GPU -->
-                <div class="col"
-                        v-if="!args.disable_gpu && hasGpu">
+                <div class="col" v-if="!args.disable_gpu && hasGpu">
                     <glances-plugin-gpu :data="data"></glances-plugin-gpu>
                 </div>
                 <!-- MEM -->
-                <div class="col"
-                        v-if="!args.disable_mem">
+                <div class="col" v-if="!args.disable_mem">
                     <glances-plugin-mem :data="data"></glances-plugin-mem>
                 </div>
                 <!-- SWAP -->
-                <div class="col-auto d-none d-md-block d-lg-block d-xl-block d-xxl-block"
-                        v-if="!args.disable_memswap">
+                <div class="col-auto d-none d-md-block d-lg-block d-xl-block d-xxl-block" v-if="!args.disable_memswap">
                     <glances-plugin-memswap :data="data"></glances-plugin-memswap>
                 </div>
                 <!-- LOAD -->
-                <div class="col-auto"
-                        v-if="!args.disable_load">
+                <div class="col-auto" v-if="!args.disable_load">
                     <glances-plugin-load :data="data"></glances-plugin-load>
                 </div>
             </div>
@@ -75,29 +69,16 @@
             <div class="row">
                 <div class="col-3 sidebar" v-if="!args.disable_left_sidebar">
                     <template v-for="plugin in leftMenu">
-                        <component
-                            v-if="!args[`disable_${plugin}`]"
-                            :is="`glances-plugin-${plugin}`"
-                            :id="`plugin-${plugin}`"
-                            class="plugin"
-                            :data="data">
+                        <component v-if="!args[`disable_${plugin}`]" :is="`glances-plugin-${plugin}`"
+                            :id="`plugin-${plugin}`" class="plugin" :data="data">
                         </component>
                     </template>
                 </div>
                 <div class="col">
-                    <glances-plugin-vms
-                        v-if="!args.disable_vms"
-                        :data="data"
-                    ></glances-plugin-vms>
-                    <glances-plugin-containers
-                        v-if="!args.disable_containers"
-                        :data="data"
-                    ></glances-plugin-containers>
+                    <glances-plugin-vms v-if="!args.disable_vms" :data="data"></glances-plugin-vms>
+                    <glances-plugin-containers v-if="!args.disable_containers" :data="data"></glances-plugin-containers>
                     <glances-plugin-process :data="data"></glances-plugin-process>
-                    <glances-plugin-alert
-                        v-if="!args.disable_alert"
-                        :data="data"
-                    ></glances-plugin-alert>
+                    <glances-plugin-alert v-if="!args.disable_alert" :data="data"></glances-plugin-alert>
                 </div>
             </div>
         </div>

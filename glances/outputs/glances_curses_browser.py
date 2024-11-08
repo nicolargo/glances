@@ -290,7 +290,7 @@ class GlancesCursesBrowser(_GlancesCurses):
 
     def __build_column_def(self, current_page):
         """Define the column and it size to display in the browser"""
-        column_def = {'name': 16, 'ip': 15, 'status': 9}
+        column_def = {'name': 16, 'ip': 15, 'status': 9, 'protocol': 8}
 
         # Add dynamic columns
         for server_stat in current_page:

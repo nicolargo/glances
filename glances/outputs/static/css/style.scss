@@ -2,24 +2,24 @@
 
 $glances-bg: #000;
 $glances-fg: #CCC;
+$glances-link-hover-color: #57cb6a;
 $glances-fonts: "Lucida Sans Typewriter","Lucida Console",Monaco,"Bitstream Vera Sans Mono",monospace;
+$glances-fonts-size: 14px;
 
 // Define colors and fonts
 
-body {
-    background-color: $glances-bg;
+// https://getbootstrap.com/docs/5.2/customize/css-variables/#root-variables
+:root {
+    --bs-body-bg: $glances-bg;
+    --bs-body-color: $glances-fg;
+    --bs-body-font-size: $glances-fonts-size;
 }
 
-#app {
+body {
     background-color: $glances-bg;
     color: $glances-fg;
     font-family: $glances-fonts;
-    font-size: 14px;
-}
-
-.table-sm > :not(caption) > * > * {
-    background-color: $glances-bg;
-    color: $glances-fg;
+    font-size: $glances-fonts-size;
 }
 
 .title {
@@ -71,6 +71,11 @@ body {
     color: #EE6600 !important;
     font-weight: bold !important;
 }
+.error_log {
+    background-color: #EE6600 !important;
+    color: white !important;
+    font-weight: bold !important;
+}
 
 // Table
 
@@ -93,8 +98,6 @@ body {
     padding-left: 0.25rem;
 }
 
-// Text
-
 .sort {
     font-weight: bold;
     color: white;
@@ -110,6 +113,10 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.table-hover tbody tr:hover td {
+    background: $glances-link-hover-color;
 }
 
 // Separator
@@ -292,5 +299,13 @@ body {
     }
     * > td:nth-child(1) {
         width: 20em;
+    }
+}
+
+// Central Glances Browser
+
+#browser {
+    table {
+        margin-top: 1em;
     }
 }
