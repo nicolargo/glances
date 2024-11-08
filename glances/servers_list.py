@@ -207,26 +207,27 @@ class GlancesServersList:
 
         for column in self.get_columns():
             server_key = self.__get_key(column)
-            request_uri = f'{uri}/{column['plugin']}/{column['field']}'
+            # Build the URI (URL encoded)
+            request_uri = f'{column['plugin']}/{column['field']}'
             if 'key' in column:
                 request_uri += f'/{column['key']}'
+            request_uri = f'{uri}/' + requests.utils.quote(request_uri)
             # Value
             try:
                 r = requests.get(request_uri, timeout=3)
             except requests.exceptions.RequestException as e:
                 logger.debug(f"Error while grabbing stats form server ({e})")
-                return server
             else:
-                server[server_key] = r.json()[column['field']]
+                if r.json() and column['field'] in r.json():
+                    server[server_key] = r.json()[column['field']]
             # Decoration
             try:
-                r = requests.get(request_uri + '/views', timeout=3)
+                d = requests.get(request_uri + '/views', timeout=3)
             except requests.exceptions.RequestException as e:
                 logger.debug(f"Error while grabbing stats view form server ({e})")
-                return server
             else:
-                if r.json():
-                    server[server_key + '_decoration'] = r.json()['decoration']
+                if d.json() and 'decoration' in d.json():
+                    server[server_key + '_decoration'] = d.json()['decoration']
 
         return server
 
