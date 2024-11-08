@@ -53,14 +53,14 @@ class AutoDiscovered:
         """Set the key to the value for the server_pos (position in the list)."""
         self._server_list[server_pos][key] = value
 
-    def add_server(self, name, ip, port):
+    def add_server(self, name, ip, port, protocol='rpc'):
         """Add a new server to the list."""
         new_server = {
             'key': name,  # Zeroconf name with both hostname and port
             'name': name.split(':')[0],  # Short name
             'ip': ip,  # IP address seen by the client
             'port': port,  # TCP port
-            'protocol': 'rpc',  # RPC protocol
+            'protocol': str(protocol),  # RPC or RESTFUL protocol
             'username': 'glances',  # Default username
             'password': '',  # Default password
             'status': 'UNKNOWN',  # Server status: 'UNKNOWN', 'OFFLINE', 'ONLINE', 'PROTECTED'
@@ -111,10 +111,18 @@ class GlancesAutoDiscoverListener:
             address = info.addresses[0] if info.addresses else info.parsed_addresses[0]
             new_server_ip = socket.inet_ntoa(address)
             new_server_port = info.port
+            new_server_protocol = info.properties[b'protocol'].decode() if b'protocol' in info.properties else 'rpc'
 
             # Add server to the global dict
-            self.servers.add_server(srv_name, new_server_ip, new_server_port)
-            logger.info(f"New Glances server detected ({srv_name} from {new_server_ip}:{new_server_port})")
+            self.servers.add_server(
+                srv_name,
+                new_server_ip,
+                new_server_port,
+                protocol=new_server_protocol,
+            )
+            logger.info(
+                f"New {new_server_protocol} Glances server detected ({srv_name} from {new_server_ip}:{new_server_port})"
+            )
         else:
             logger.warning("New Glances server detected, but failed to be get Zeroconf ServiceInfo ")
         return True
@@ -197,7 +205,7 @@ class GlancesAutoDiscoverClient:
                     port=args.port,
                     weight=0,
                     priority=0,
-                    properties={},
+                    properties={'protocol': 'rest' if args.webserver else 'rpc'},
                     server=hostname,
                 )
             except TypeError:
@@ -210,7 +218,7 @@ class GlancesAutoDiscoverClient:
                     port=args.port,
                     weight=0,
                     priority=0,
-                    properties={},
+                    properties={'protocol': 'rest' if args.webserver else 'rpc'},
                     server=hostname,
                 )
             try:

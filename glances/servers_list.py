@@ -46,7 +46,7 @@ class GlancesServersList:
 
         # Init the dynamic servers list by starting a Zeroconf listener
         self.autodiscover_server = None
-        if not self.args.disable_autodiscover:
+        if self.args.browser or not self.args.disable_autodiscover:
             self.autodiscover_server = GlancesAutoDiscoverServer()
 
         # Stats are updated in thread
@@ -194,7 +194,7 @@ class GlancesServersList:
                 return server
             else:
                 if r.json():
-                    server[server_key + '_decoration'] = r.json()
+                    server[server_key + '_decoration'] = r.json()['decoration']
 
         return server
 
