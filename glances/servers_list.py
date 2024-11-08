@@ -32,8 +32,12 @@ else:
 # Correct issue #1025 by monkey path the xmlrpc lib
 xmlrpc.monkey_patch()
 
+DEFAULT_COLUMNS = "system:hr_name,load:min5,cpu:total,mem:percent"
+
 
 class GlancesServersList:
+    _section = "serverlist"
+
     def __init__(self, config=None, args=None):
         # Store the arg/config
         self.args = args
@@ -59,6 +63,30 @@ class GlancesServersList:
         self.static_server = GlancesStaticServer(config=self.config)
         # Init the password list (if defined)
         self.password = GlancesPassword(config=self.config)
+        # Load columns to grab/display
+        self._columns = self.load_columns()
+
+    def load_columns(self):
+        """Load columns definition from the configuration file.
+        Read:   'system:hr_name,load:min5,cpu:total,mem:percent,sensors:value:Ambient'
+        Return: [{'plugin': 'system', 'field': 'hr_name'},
+                 {'plugin': 'load', 'field': 'min5'},
+                 {'plugin': 'cpu', 'field': 'total'},
+                 {'plugin': 'mem', 'field': 'percent'},
+                 {'plugin': 'sensors', 'field': 'value', 'key': 'Ambient'}]
+        """
+        if self.config is None:
+            logger.debug("No configuration file available. Cannot load columns definition.")
+        elif not self.config.has_section(self._section):
+            logger.warning(f"No [{self._section}] section in the configuration file. Cannot load columns definition.")
+
+        columns_def = (
+            self.config.get_value(self._section, 'columns')
+            if self.config.get_value(self._section, 'columns')
+            else DEFAULT_COLUMNS
+        )
+
+        return [dict(zip(['plugin', 'field', 'key'], i.split(':'))) for i in columns_def.split(',')]
 
     def get_servers_list(self):
         """Return the current server list (list of dict).
@@ -74,6 +102,10 @@ class GlancesServersList:
 
         return ret
 
+    def get_columns(self):
+        """Return the columns definitions"""
+        return self._columns
+
     def update_servers_stats(self):
         """For each server in the servers list, update the stats"""
         for v in self.get_servers_list():
@@ -83,9 +115,6 @@ class GlancesServersList:
                 thread = threading.Thread(target=self.__update_stats, args=[v])
                 self.threads_list[key] = thread
                 thread.start()
-
-    def get_columns(self):
-        return self.static_server.get_columns()
 
     def get_uri(self, server):
         """Return the URI for the given server dict."""
@@ -112,7 +141,7 @@ class GlancesServersList:
     def __update_stats(self, server):
         """Update stats for the given server"""
         server['uri'] = self.get_uri(server)
-        server['columns'] = [self.__get_key(column) for column in self.static_server.get_columns()]
+        server['columns'] = [self.__get_key(column) for column in self.get_columns()]
         if server['protocol'].lower() == 'rpc':
             self.__update_stats_rpc(server['uri'], server)
         elif server['protocol'].lower() == 'rest' and not import_requests_error_tag:
@@ -133,7 +162,7 @@ class GlancesServersList:
             return server
 
         # Get the stats
-        for column in self.static_server.get_columns():
+        for column in self.get_columns():
             server_key = self.__get_key(column)
             try:
                 # Value
@@ -176,11 +205,14 @@ class GlancesServersList:
         else:
             server['status'] = 'ONLINE'
 
-        for column in self.static_server.get_columns():
+        for column in self.get_columns():
             server_key = self.__get_key(column)
+            request_uri = f'{uri}/{column['plugin']}/{column['field']}'
+            if 'key' in column:
+                request_uri += f'/{column['key']}'
             # Value
             try:
-                r = requests.get(f'{uri}/{column['plugin']}/{column['field']}', timeout=3)
+                r = requests.get(request_uri, timeout=3)
             except requests.exceptions.RequestException as e:
                 logger.debug(f"Error while grabbing stats form server ({e})")
                 return server
@@ -188,7 +220,7 @@ class GlancesServersList:
                 server[server_key] = r.json()[column['field']]
             # Decoration
             try:
-                r = requests.get(f'{uri}/{column['plugin']}/{column['field']}/views', timeout=3)
+                r = requests.get(request_uri + '/views', timeout=3)
             except requests.exceptions.RequestException as e:
                 logger.debug(f"Error while grabbing stats view form server ({e})")
                 return server

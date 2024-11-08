@@ -393,6 +393,17 @@ class GlancesPluginModel:
         """
         return dictlist(self.get_raw(), item)
 
+    def get_raw_stats_key(self, item, key):
+        """Return the stats object for a specific item in RAW format.
+
+        Stats should be a list of dict (processlist, network...)
+        """
+        try:
+            return {item: [i for i in self.get_raw() if 'key' in i and i[i['key']] == key][0].get(item)}
+        except (KeyError, ValueError) as e:
+            logger.error(f"Cannot get item ({item}) for key ({key}) ({e})")
+            return None
+
     def get_stats_item(self, item):
         """Return the stats object for a specific item in JSON format.
 
