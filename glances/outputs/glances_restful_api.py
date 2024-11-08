@@ -644,7 +644,7 @@ class GlancesRestfulApi:
         except Exception as e:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND,
-                f"Cannot get item {item} in plugin {plugin} ({str(e)})",
+                f"Cannot get item {item} for key {key} in plugin {plugin} ({str(e)})",
             )
 
         return GlancesJSONResponse(ret)
@@ -692,7 +692,7 @@ class GlancesRestfulApi:
         except Exception as e:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND,
-                f"Cannot get item {item} in plugin view {plugin} ({str(e)})",
+                f"Cannot get item {item} for key {key} in plugin view {plugin} ({str(e)})",
             )
 
         return GlancesJSONResponse(ret)
