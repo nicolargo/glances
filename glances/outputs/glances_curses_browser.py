@@ -316,7 +316,6 @@ class GlancesCursesBrowser(_GlancesCurses):
         xc = x + 2
         # First line (plugin name)
         for k, v in column_def.items():
-            logger.info(k)
             k_split = k.split('_')
             logger.info(k_split)
             if len(k_split) == 1:
