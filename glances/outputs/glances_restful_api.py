@@ -13,17 +13,8 @@ import socket
 import sys
 import tempfile
 import webbrowser
-from typing import Any, Union
+from typing import Annotated, Any, Union
 from urllib.parse import urljoin
-
-from glances.stats import GlancesStats
-
-try:
-    from typing import Annotated
-except ImportError:
-    # Only for Python 3.8
-    # To be removed when Python 3.8 support will be dropped
-    from typing_extensions import Annotated
 
 from glances import __apiversion__, __version__
 from glances.globals import json_dumps
@@ -31,6 +22,7 @@ from glances.logger import logger
 from glances.password import GlancesPassword
 from glances.servers_list import GlancesServersList
 from glances.servers_list_dynamic import GlancesAutoDiscoverClient
+from glances.stats import GlancesStats
 from glances.timer import Timer
 
 # FastAPI import
