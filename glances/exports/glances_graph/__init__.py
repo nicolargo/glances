@@ -33,7 +33,7 @@ class Export(GlancesExport):
         self.export_enable = self.load_conf('graph', options=['path', 'generate_every', 'width', 'height', 'style'])
 
         # Manage options (command line arguments overwrite configuration file)
-        self.path = args.export_graph_path or self.path
+        self.path = self.path or args.export_graph_path
         self.generate_every = int(getattr(self, 'generate_every', 0) or 0)
         self.width = int(getattr(self, 'width', 800) or 800)
         self.height = int(getattr(self, 'height', 600) or 600)
