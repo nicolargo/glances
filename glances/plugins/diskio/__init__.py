@@ -151,12 +151,12 @@ class PluginModel(GlancesPluginModel):
                 continue
 
             disk_real_name = i['disk_name']
-            self.views[i[self.get_key()]]['read_bytes']['decoration'] = self.get_alert(
-                i['read_bytes'], header=disk_real_name + '_rx'
-            )
-            self.views[i[self.get_key()]]['write_bytes']['decoration'] = self.get_alert(
-                i['write_bytes'], header=disk_real_name + '_tx'
-            )
+            alert_rx = self.get_alert(i['read_bytes'], header=disk_real_name + '_rx')
+            alert_tx = self.get_alert(i['write_bytes'], header=disk_real_name + '_tx')
+            self.views[i[self.get_key()]]['read_bytes']['decoration'] = alert_rx
+            self.views[i[self.get_key()]]['read_bytes_rate_per_sec']['decoration'] = alert_rx
+            self.views[i[self.get_key()]]['write_bytes']['decoration'] = alert_tx
+            self.views[i[self.get_key()]]['write_bytes_rate_per_sec']['decoration'] = alert_tx
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""

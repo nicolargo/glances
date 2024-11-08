@@ -23,12 +23,10 @@
                         v-show="!args.diskio_iops">
                         {{ disk.bitrate.rxps }}
                     </td>
-                    <td class="text-end w-25" :class="getDecoration(disk.name, 'write_bytes_rate_per_sec')"
-                        v-show="args.diskio_iops">
+                    <td class="text-end w-25" v-show="args.diskio_iops">
                         {{ disk.count.txps }}
                     </td>
-                    <td class="text-end w-25" :class="getDecoration(disk.name, 'read_bytes_rate_per_sec')"
-                        v-show="args.diskio_iops">
+                    <td class="text-end w-25" v-show="args.diskio_iops">
                         {{ disk.count.rxps }}
                     </td>
                 </tr>
