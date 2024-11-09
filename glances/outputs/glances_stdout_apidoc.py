@@ -206,7 +206,7 @@ def print_plugin_item_value(plugin, stat, stat_export):
     if item and value and stat.get_stats_value(item, value):
         print('Get a specific item when field matches the given value::')
         print('')
-        print(f'    # curl {API_URL}/{plugin}/{item}/{value}')
+        print(f'    # curl {API_URL}/{plugin}/{item}/value/{value}')
         print(indent_stat(json.loads(stat.get_stats_value(item, value))))
         print('')
 
