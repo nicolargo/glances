@@ -40,6 +40,12 @@ The Glances Restfull/API server could be ran using the following command line:
 
 It is also ran automatically when Glances is started in Web server mode (-w).
 
+If you want to enable the Glances Central Browser, use:
+
+.. code-block:: bash
+
+    # glances -w --browser --disable-webui
+
 API URL
 -------
 
@@ -71,7 +77,7 @@ WebUI refresh
 -------------
 
 It is possible to change the Web UI refresh rate (default is 2 seconds) using the following option in the URL:
-``http://localhost:61208/glances/?refresh=5``
+``http://localhost:61208/?refresh=5``
 
 """
 
