@@ -9,7 +9,7 @@
 """Docker Extension unit for Glances' Containers plugin."""
 
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from glances.globals import iterkeys, itervalues, nativestr, pretty_date, replace_special_chars
 from glances.logger import logger
@@ -54,7 +54,7 @@ class DockerStatsFetcher:
         self._streamer.stop()
 
     @property
-    def activity_stats(self) -> Dict[str, Dict[str, Any]]:
+    def activity_stats(self) -> dict[str, dict[str, Any]]:
         """Activity Stats
 
         Each successive access of activity_stats will cause computation of activity_stats
@@ -64,7 +64,7 @@ class DockerStatsFetcher:
         self._last_stats_computed_time = time.time()
         return computed_activity_stats
 
-    def _compute_activity_stats(self) -> Dict[str, Dict[str, Any]]:
+    def _compute_activity_stats(self) -> dict[str, dict[str, Any]]:
         with self._streamer.result_lock:
             io_stats = self._get_io_stats()
             cpu_stats = self._get_cpu_stats()
@@ -83,7 +83,7 @@ class DockerStatsFetcher:
         # In case no update, default to 1
         return max(1, self._streamer.last_update_time - self._last_stats_computed_time)
 
-    def _get_cpu_stats(self) -> Optional[Dict[str, float]]:
+    def _get_cpu_stats(self) -> Optional[dict[str, float]]:
         """Return the container CPU usage.
 
         Output: a dict {'total': 1.49}
@@ -117,7 +117,7 @@ class DockerStatsFetcher:
         # Return the stats
         return stats
 
-    def _get_memory_stats(self) -> Optional[Dict[str, float]]:
+    def _get_memory_stats(self) -> Optional[dict[str, float]]:
         """Return the container MEMORY.
 
         Output: a dict {'usage': ..., 'limit': ..., 'inactive_file': ...}
@@ -140,7 +140,7 @@ class DockerStatsFetcher:
         # Return the stats
         return stats
 
-    def _get_network_stats(self) -> Optional[Dict[str, float]]:
+    def _get_network_stats(self) -> Optional[dict[str, float]]:
         """Return the container network usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}.
@@ -169,7 +169,7 @@ class DockerStatsFetcher:
         # Return the stats
         return stats
 
-    def _get_io_stats(self) -> Optional[Dict[str, float]]:
+    def _get_io_stats(self) -> Optional[dict[str, float]]:
         """Return the container IO usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'ior': 10, 'iow': 65}.
@@ -245,7 +245,7 @@ class DockerExtension:
         for t in itervalues(self.stats_fetchers):
             t.stop()
 
-    def update(self, all_tag) -> Tuple[Dict, List[Dict]]:
+    def update(self, all_tag) -> tuple[dict, list[dict]]:
         """Update Docker stats using the input method."""
 
         if not self.client or self.disable:
@@ -293,7 +293,7 @@ class DockerExtension:
         """Return the key of the list."""
         return 'name'
 
-    def generate_stats(self, container) -> Dict[str, Any]:
+    def generate_stats(self, container) -> dict[str, Any]:
         # Init the stats for the current container
         stats = {
             'key': self.key,
