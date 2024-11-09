@@ -11,7 +11,6 @@ classifiers = [
   "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -34,7 +33,7 @@ keywords = ["cli", "curses", "monitoring", "system"]
 license = {text = "LGPLv3"}
 name = "Glances"
 readme = "README.rst"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 urls.Homepage = "https://github.com/nicolargo/glances"
 
 [project.optional-dependencies]
