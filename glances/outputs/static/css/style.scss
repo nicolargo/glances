@@ -8,8 +8,8 @@ $glances-fonts-size: 14px;
 
 // Define colors and fonts
 
-// https://getbootstrap.com/docs/5.2/customize/css-variables/#root-variables
-:root {
+// https://getbootstrap.com/docs/5.3/customize/css-variables/#root-variables
+:root,[data-bs-theme=dark] {
     --bs-body-bg: $glances-bg;
     --bs-body-color: $glances-fg;
     --bs-body-font-size: $glances-fonts-size;
