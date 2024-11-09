@@ -238,9 +238,9 @@ class GlancesRestfulApi:
             f'{plugin_path}/{{item}}/history/{{nb}}': self._api_item_history,
             f'{plugin_path}/{{item}}/description': self._api_item_description,
             f'{plugin_path}/{{item}}/unit': self._api_item_unit,
+            f'{plugin_path}/{{item}}/value/{{value:path}}': self._api_value,
             f'{plugin_path}/{{item}}/{{key}}': self._api_key,
             f'{plugin_path}/{{item}}/{{key}}/views': self._api_key_views,
-            f'{plugin_path}/{{item}}/{{value:path}}': self._api_value,
         }
 
         for path, endpoint in route_mapping.items():
