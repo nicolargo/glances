@@ -6,12 +6,12 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-from typing import Any, Dict, List, Protocol, Tuple
+from typing import Any, Protocol
 
 
 class ContainersExtension(Protocol):
     def stop(self) -> None:
         raise NotImplementedError
 
-    def update(self, all_tag) -> Tuple[Dict, List[Dict[str, Any]]]:
+    def update(self, all_tag) -> tuple[dict, list[dict[str, Any]]]:
         raise NotImplementedError
