@@ -272,8 +272,8 @@ class GlancesCursesBrowser(_GlancesCurses):
             msg = 'One Glances server available'
         else:
             msg = f'{stats_len} Glances servers available'
-        if self.args.disable_autodiscover:
-            msg += ' (auto discover is disabled)'
+        # if self.args.disable_autodiscover:
+        #     msg += ' (auto discover is disabled)'
         if screen_y > 1:
             self.term_window.addnstr(y, x, msg, screen_x - x, self.colors_list['TITLE'])
 
