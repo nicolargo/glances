@@ -10,7 +10,7 @@
 
 from copy import deepcopy
 from functools import partial, reduce
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from glances.globals import iteritems, itervalues, nativestr
 from glances.logger import logger
@@ -142,7 +142,7 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        self.watchers: Dict[str, ContainersExtension] = {}
+        self.watchers: dict[str, ContainersExtension] = {}
 
         # Init the Docker API
         if not disable_plugin_docker:
@@ -181,7 +181,7 @@ class PluginModel(GlancesPluginModel):
         """Return the key of the list."""
         return 'name'
 
-    def get_export(self) -> List[Dict]:
+    def get_export(self) -> list[dict]:
         """Overwrite the default export method.
 
         - Only exports containers
@@ -214,7 +214,7 @@ class PluginModel(GlancesPluginModel):
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
-    def update(self) -> List[Dict]:
+    def update(self) -> list[dict]:
         """Update Docker and podman stats using the input method."""
         # Connection should be ok
         if not self.watchers:
@@ -243,7 +243,7 @@ class PluginModel(GlancesPluginModel):
         return self.stats
 
     @staticmethod
-    def memory_usage_no_cache(mem: Dict[str, float]) -> float:
+    def memory_usage_no_cache(mem: dict[str, float]) -> float:
         """Return the 'real' memory usage by removing inactive_file to usage"""
         # Ref: https://github.com/docker/docker-py/issues/3210
         return mem['usage'] - (mem['inactive_file'] if 'inactive_file' in mem else 0)
@@ -467,7 +467,7 @@ class PluginModel(GlancesPluginModel):
 
         return ret
 
-    def msg_curse(self, args=None, max_width: Optional[int] = None) -> List[str]:
+    def msg_curse(self, args=None, max_width: Optional[int] = None) -> list[str]:
         """Return the dict to display in the curse interface."""
         # Init the return message
         init = []
@@ -529,7 +529,7 @@ class PluginModel(GlancesPluginModel):
         return 'INFO'
 
 
-def sort_docker_stats(stats: List[Dict[str, Any]]) -> Tuple[str, List[Dict[str, Any]]]:
+def sort_docker_stats(stats: list[dict[str, Any]]) -> tuple[str, list[dict[str, Any]]]:
     # Make VM sort related to process sort
     if glances_processes.sort_key == 'memory_percent':
         sort_by = 'memory_usage'
