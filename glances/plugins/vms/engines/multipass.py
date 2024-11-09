@@ -10,7 +10,7 @@
 
 import json
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from glances.globals import json_loads, nativestr
 from glances.secure import secure_popen
@@ -89,7 +89,7 @@ class VmExtension:
         else:
             return ret.get('info', {})
 
-    def update(self, all_tag) -> Tuple[Dict, List[Dict]]:
+    def update(self, all_tag) -> tuple[dict, list[dict]]:
         """Update Vm stats using the input method."""
         # Can not run multipass on this system then...
         if import_multipass_error_tag:
@@ -115,7 +115,7 @@ class VmExtension:
     def _want_display(self, vm_stats, key, values):
         return vm_stats.get(key).lower() in [v.lower() for v in values]
 
-    def generate_stats(self, vm_name, vm_stats) -> Dict[str, Any]:
+    def generate_stats(self, vm_name, vm_stats) -> dict[str, Any]:
         # Init the stats for the current vm
         return {
             'key': self.key,

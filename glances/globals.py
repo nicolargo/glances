@@ -29,7 +29,7 @@ from configparser import ConfigParser, NoOptionError, NoSectionError
 from datetime import datetime
 from operator import itemgetter, methodcaller
 from statistics import mean
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
@@ -360,7 +360,7 @@ def json_dumps(data) -> bytes:
     return b(res)
 
 
-def json_loads(data: Union[str, bytes, bytearray]) -> Union[Dict, List]:
+def json_loads(data: Union[str, bytes, bytearray]) -> Union[dict, list]:
     """Load a JSON buffer into memory as a Python object"""
     return json.loads(data)
 
