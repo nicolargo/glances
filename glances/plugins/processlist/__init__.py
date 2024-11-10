@@ -403,7 +403,7 @@ class PluginModel(GlancesPluginModel):
             ret = self.curse_add_line(msg)
         return ret
 
-    def _get_process_curses_io(self, p, selected, args, rorw='ior'):
+    def _get_process_curses_io_read_write(self, p, selected, args, rorw='ior'):
         """Return process IO Read or Write curses"""
         if 'io_counters' in p and p['io_counters'][4] == 1 and p['time_since_update'] != 0:
             # Display rate if stats is available and io_tag ([4]) == 1
@@ -422,13 +422,11 @@ class PluginModel(GlancesPluginModel):
             ret = self.curse_add_line(msg, optional=True, additional=True)
         return ret
 
-    def _get_process_curses_io_read(self, p, selected, args):
-        """Return process IO Read curses"""
-        return self._get_process_curses_io(p, selected, args, rorw='ior')
-
-    def _get_process_curses_io_write(self, p, selected, args):
-        """Return process IO Write curses"""
-        return self._get_process_curses_io(p, selected, args, rorw='iow')
+    def _get_process_curses_io(self, p, selected, args):
+        return [
+            self._get_process_curses_io_read_write(p, selected, args, rorw='ior'),
+            self._get_process_curses_io_read_write(p, selected, args, rorw='iow'),
+        ]
 
     def _get_process_curses_command(self, p, selected, args):
         """Return process command curses"""
@@ -489,14 +487,15 @@ class PluginModel(GlancesPluginModel):
             'thread',
             'nice',
             'status',
-            'io_read',
-            'io_write',
+            'io',
             'command',
         ]:
             msg = getattr(self, f'_get_process_curses_{stat}')(p, selected, args)
-            if stat == 'command':
+            if isinstance(msg, list):
+                # ex: _get_process_curses_command return a list, so extend
                 ret.extend(msg)
             else:
+                # ex: _get_process_curses_cpu return a dict, so append
                 ret.append(msg)
 
         return ret
