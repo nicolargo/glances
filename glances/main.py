@@ -18,7 +18,7 @@ from glances import __apiversion__, __version__, psutil_version
 from glances.config import Config
 from glances.globals import WINDOWS, disable, enable
 from glances.logger import LOG_FILENAME, logger
-from glances.processes import sort_processes_key_list
+from glances.processes import sort_processes_stats_list
 
 
 class GlancesMain:
@@ -269,8 +269,8 @@ Examples of use:
         parser.add_argument(
             '--sort-processes',
             dest='sort_processes_key',
-            choices=sort_processes_key_list,
-            help='Sort processes by: {}'.format(', '.join(sort_processes_key_list)),
+            choices=sort_processes_stats_list,
+            help='Sort processes by: {}'.format(', '.join(sort_processes_stats_list)),
         )
         # Display processes list by program name and not by thread
         parser.add_argument(
