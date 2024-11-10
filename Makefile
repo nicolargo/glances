@@ -138,7 +138,7 @@ endef
 profiling-gprof: CPROF = glances.cprof
 profiling-gprof: ## Callgraph profiling (need "apt install graphviz")
 	$(DISPLAY-BANNER)
-	$(PYTHON) -m cProfile -o $(CPROF) run.py --stop-after $(TIMES)
+	$(PYTHON) -m cProfile -o $(CPROF) run-venv.py --stop-after $(TIMES)
 	$(venv_dev)/gprof2dot -f pstats $(CPROF) | dot -Tsvg -o $(OUT_DIR)/glances-cgraph.svg
 	rm -f $(CPROF)
 
@@ -147,9 +147,9 @@ profiling-pyinstrument: ## PyInstrument profiling
 	$(PIP) install pyinstrument
 	$(PYTHON) -m pyinstrument -r html -o $(OUT_DIR)/glances-pyinstrument.html -m glances --stop-after $(TIMES)
 
-profiling-pyspy: ## Flame profiling (currently not compatible with Python 3.12)
+profiling-pyspy: ## Flame profiling
 	$(DISPLAY-BANNER)
-	$(venv_dev)/py-spy record -o $(OUT_DIR)/glances-flame.svg -d 60 -s -- $(PYTHON) run.py --stop-after $(TIMES)
+	$(venv_dev)/py-spy record -o $(OUT_DIR)/glances-flame.svg -d 60 -s -- $(PYTHON) run-venv.py --stop-after $(TIMES)
 
 profiling: profiling-gprof profiling-pyinstrument profiling-pyspy ## Profiling of the Glances software
 
@@ -162,15 +162,16 @@ memory-leak: ## Profile memory leaks
 
 memory-profiling: TIMES = 2400
 memory-profiling: PROFILE = mprofile_*.dat
+memory-profiling: OUT_DIR = docs/_static
 memory-profiling: ## Profile memory usage
 	@echo "It's a very long test (~4 hours)..."
 	rm -f $(PROFILE)
 	@echo "1/2 - Start memory profiling with the history option enable"
-	$(venv_dev)/mprof run -T 1 -C run.py -C $(CONF) --stop-after $(TIMES) --quiet
+	$(venv_dev)/mprof run -T 1 -C run-venv.py -C $(CONF) --stop-after $(TIMES) --quiet
 	$(venv_dev)/mprof plot --output $(OUT_DIR)/glances-memory-profiling-with-history.png
 	rm -f $(PROFILE)
 	@echo "2/2 - Start memory profiling with the history option disable"
-	$(venv_dev)/mprof run -T 1 -C run.py -C $(CONF) --disable-history --stop-after $(TIMES) --quiet
+	$(venv_dev)/mprof run -T 1 -C run-venv.py -C $(CONF) --disable-history --stop-after $(TIMES) --quiet
 	$(venv_dev)/mprof plot --output $(OUT_DIR)/glances-memory-profiling-without-history.png
 	rm -f $(PROFILE)
 
