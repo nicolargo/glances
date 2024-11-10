@@ -311,17 +311,28 @@ class PluginModel(GlancesPluginModel):
             ret = self.curse_add_line(msg)
         return ret
 
+    def _get_process_curses_pid(self, p, selected, args):
+        """Return process PID curses"""
+        if not self.args.programs:
+            # Display processes, so the PID should be displayed
+            msg = self.layout_stat['pid'].format(p['pid'], width=self.__max_pid_size())
+        else:
+            # Display programs, so the PID should not be displayed
+            # Instead displays the number of children
+            msg = self.layout_stat['pid'].format(
+                len(p['childrens']) if 'childrens' in p else '_', width=self.__max_pid_size()
+            )
+        return self.curse_add_line(msg)
+
     def _get_process_curses_username(self, p, selected, args):
         """Return process username curses"""
         if 'username' in p:
             # docker internal users are displayed as ints only, therefore str()
             # Correct issue #886 on Windows OS
             msg = self.layout_stat['user'].format(str(p['username'])[:9])
-            ret = self.curse_add_line(msg)
         else:
             msg = self.layout_header['user'].format('?')
-            ret = self.curse_add_line(msg)
-        return ret
+        return self.curse_add_line(msg)
 
     def _get_process_curses_time(self, p, selected, args):
         """Return process time curses"""
@@ -361,11 +372,9 @@ class PluginModel(GlancesPluginModel):
             if num_threads is None:
                 num_threads = '?'
             msg = self.layout_stat['thread'].format(num_threads)
-            ret = self.curse_add_line(msg)
         else:
             msg = self.layout_header['thread'].format('?')
-            ret = self.curse_add_line(msg)
-        return ret
+        return self.curse_add_line(msg)
 
     def _get_process_curses_nice(self, p, selected, args):
         """Return process nice curses"""
@@ -421,67 +430,12 @@ class PluginModel(GlancesPluginModel):
         """Return process IO Write curses"""
         return self._get_process_curses_io(p, selected, args, rorw='iow')
 
-    def get_process_curses_data(self, p, selected, args):
-        """Get curses data to display for a process.
-
-        - p is the process to display
-        - selected is a tag=True if p is the selected process
-        """
-        ret = [self.curse_new_line()]
-
-        # When a process is selected:
-        # * display a special character at the beginning of the line
-        # * underline the command name
-        ret.append(
-            self.curse_add_line(
-                unicode_message('PROCESS_SELECTOR') if (selected and not args.disable_cursor) else ' ', 'SELECTED'
-            )
-        )
-
-        # CPU
-        ret.append(self._get_process_curses_cpu(p, selected, args))
-
-        # MEM
-        ret.append(self._get_process_curses_mem(p, selected, args))
-        ret.append(self._get_process_curses_vms(p, selected, args))
-        ret.append(self._get_process_curses_rss(p, selected, args))
-
-        # PID
-        if not self.args.programs:
-            # Display processes, so the PID should be displayed
-            msg = self.layout_stat['pid'].format(p['pid'], width=self.__max_pid_size())
-        else:
-            # Display programs, so the PID should not be displayed
-            # Instead displays the number of children
-            msg = self.layout_stat['pid'].format(
-                len(p['childrens']) if 'childrens' in p else '_', width=self.__max_pid_size()
-            )
-        ret.append(self.curse_add_line(msg))
-
-        # USER
-        ret.append(self._get_process_curses_username(p, selected, args))
-
-        # TIME+
-        ret.append(self._get_process_curses_time(p, selected, args))
-
-        # THREAD
-        ret.append(self._get_process_curses_thread(p, selected, args))
-
-        # NICE
-        ret.append(self._get_process_curses_nice(p, selected, args))
-
-        # STATUS
-        ret.append(self._get_process_curses_status(p, selected, args))
-
-        # IO read/write
-        ret.append(self._get_process_curses_io_read(p, selected, args))
-        ret.append(self._get_process_curses_io_write(p, selected, args))
-
-        # Command line
+    def _get_process_curses_command(self, p, selected, args):
+        """Return process command curses"""
+        ret = []
         # If no command line for the process is available, fallback to the bare process name instead
         bare_process_name = p['name']
         cmdline = p.get('cmdline', '?')
-
         try:
             process_decoration = 'PROCESS_SELECTED' if (selected and not args.disable_cursor) else 'PROCESS'
             if cmdline:
@@ -505,6 +459,45 @@ class PluginModel(GlancesPluginModel):
             # Avoid crash after running fine for several hours #1335
             logger.debug(f"Can not decode command line '{cmdline}' ({e})")
             ret.append(self.curse_add_line('', splittable=True))
+        return ret
+
+    def get_process_curses_data(self, p, selected, args):
+        """Get curses data to display for a process.
+
+        - p is the process to display
+        - selected is a tag=True if p is the selected process
+        """
+        ret = [self.curse_new_line()]
+
+        # When a process is selected:
+        # * display a special character at the beginning of the line
+        # * underline the command name
+        ret.append(
+            self.curse_add_line(
+                unicode_message('PROCESS_SELECTOR') if (selected and not args.disable_cursor) else ' ', 'SELECTED'
+            )
+        )
+
+        for stat in [
+            'cpu',
+            'mem',
+            'vms',
+            'rss',
+            'pid',
+            'username',
+            'time',
+            'thread',
+            'nice',
+            'status',
+            'io_read',
+            'io_write',
+            'command',
+        ]:
+            msg = getattr(self, f'_get_process_curses_{stat}')(p, selected, args)
+            if stat == 'command':
+                ret.extend(msg)
+            else:
+                ret.append(msg)
 
         return ret
 

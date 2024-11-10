@@ -445,9 +445,7 @@ class GlancesProcesses:
         else:
             is_cached = True
 
-        # Build the processes stats list (it is why we need psutil>=5.3.0)
-        # This is one of the main bottleneck of Glances (see flame graph)
-        # It may be optimized with PsUtil 6+ (see issue #2755)
+        # Build the processes stats list (it is why we need psutil>=5.3.0) (see issue #2755)
         processlist = list(
             filter(
                 lambda p: not (BSD and p.info['name'] == 'idle')
