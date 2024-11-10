@@ -77,6 +77,27 @@ class GlancesProcesses:
         self.disable_extended_tag = False
         self.extended_process = None
 
+        # Tests (and disable if not available) optionals features
+        self._test_grab()
+
+        # Maximum number of processes showed in the UI (None if no limit)
+        self._max_processes = None
+
+        # Process filter
+        self._filter = GlancesFilter()
+
+        # Whether or not to hide kernel threads
+        self.no_kernel_threads = False
+
+        # Store maximums values in a dict
+        # Used in the UI to highlight the maximum value
+        self._max_values_list = ('cpu_percent', 'memory_percent')
+        # { 'cpu_percent': 0.0, 'memory_percent': 0.0 }
+        self._max_values = {}
+        self.reset_max_values()
+
+    def _test_grab(self):
+        """Test somes optionals features"""
         # Test if the system can grab io_counters
         try:
             p = psutil.Process()
@@ -98,22 +119,6 @@ class GlancesProcesses:
         else:
             logger.debug('PsUtil can grab processes gids')
             self.disable_gids = False
-
-        # Maximum number of processes showed in the UI (None if no limit)
-        self._max_processes = None
-
-        # Process filter
-        self._filter = GlancesFilter()
-
-        # Whether or not to hide kernel threads
-        self.no_kernel_threads = False
-
-        # Store maximums values in a dict
-        # Used in the UI to highlight the maximum value
-        self._max_values_list = ('cpu_percent', 'memory_percent')
-        # { 'cpu_percent': 0.0, 'memory_percent': 0.0 }
-        self._max_values = {}
-        self.reset_max_values()
 
     def set_args(self, args):
         """Set args."""
