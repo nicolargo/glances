@@ -17,6 +17,7 @@ from defusedxml import xmlrpc
 
 from glances import __version__
 from glances.logger import logger
+from glances.processes import glances_processes
 from glances.servers_list_dynamic import GlancesAutoDiscoverClient
 from glances.stats_server import GlancesStatsServer
 from glances.timer import Timer
@@ -175,6 +176,9 @@ class GlancesServer:
     def __init__(self, requestHandler=GlancesXMLRPCHandler, config=None, args=None):
         # Args
         self.args = args
+
+        # Set the args for the glances_processes instance
+        glances_processes.set_args(args)
 
         # Init the XML RPC server
         try:

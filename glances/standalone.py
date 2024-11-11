@@ -48,7 +48,7 @@ class GlancesStandalone:
             self.display_modules_list()
             sys.exit(0)
 
-        # The args is needed to get the selected process in the process list (Curses mode)
+        # Set the args for the glances_processes instance
         glances_processes.set_args(args)
 
         # If process extended stats is disabled by user
