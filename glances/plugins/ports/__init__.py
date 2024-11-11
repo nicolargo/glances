@@ -203,8 +203,8 @@ class PluginModel(GlancesPluginModel):
 
     def get_status_and_helper(self, p):
         return {
-            'host' in p: (self.get_ports_alert, self.set_status_if_host(p)),
-            'url' in p: (self.get_web_alert, self.set_status_if_url(p)),
+            'host' in p: (self.get_ports_alert, self.set_status_if_host(p)) if 'host' in p else None,
+            'url' in p: (self.get_web_alert, self.set_status_if_url(p)) if 'url' in p else None,
         }
 
     def msg_curse(self, args=None, max_width=None):
