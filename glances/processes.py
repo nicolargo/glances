@@ -18,8 +18,11 @@ from glances.timer import Timer, getTimeSinceLastUpdate
 
 psutil_version_info = tuple([int(num) for num in psutil.__version__.split('.')])
 
+# This constant defines the list of mandatory processes stats. Thoses stats can not be disabled by the user
+mandatory_processes_stats_list = ['pid', 'name']
+
 # This constant defines the list of available processes sort key
-sort_processes_key_list = ['cpu_percent', 'memory_percent', 'username', 'cpu_times', 'io_counters', 'name']
+sort_processes_stats_list = ['cpu_percent', 'memory_percent', 'username', 'cpu_times', 'io_counters', 'name']
 
 # Sort dictionary for human
 sort_for_human = {
@@ -38,7 +41,7 @@ class GlancesProcesses:
 
     def __init__(self, cache_timeout=60):
         """Init the class to collect stats about processes."""
-        # Init the args, coming from the GlancesStandalone class
+        # Init the args, coming from the classes derived from GlancesMode
         # Should be set by the set_args method
         self.args = None
 
@@ -96,6 +99,9 @@ class GlancesProcesses:
         self._max_values = {}
         self.reset_max_values()
 
+        # Set the key's list be disabled in order to only display specific attribte in the process list
+        self.disable_stats = []
+
     def _test_grab(self):
         """Test somes optionals features"""
         # Test if the system can grab io_counters
@@ -143,9 +149,12 @@ class GlancesProcesses:
         # For each key in the processcount dict
         # count the number of processes with the same status
         for k in iterkeys(self.processcount):
-            self.processcount[k] = len(list(filter(lambda v: v['status'] is k, plist)))
+            self.processcount[k] = len(list(filter(lambda v: v.get('status', '?') is k, plist)))
         # Compute thread
-        self.processcount['thread'] = sum(i['num_threads'] for i in plist if i['num_threads'] is not None)
+        try:
+            self.processcount['thread'] = sum(i['num_threads'] for i in plist if i['num_threads'] is not None)
+        except KeyError:
+            self.processcount['thread'] = None
         # Compute total
         self.processcount['total'] = len(plist)
 
@@ -215,7 +224,15 @@ class GlancesProcesses:
         """Set the maximum number of processes showed in the UI."""
         self._max_processes = value
 
-    # Process filter
+    @property
+    def disable_stats(self):
+        """Set disable_stats list"""
+        return self._disable_stats
+
+    @disable_stats.setter
+    def disable_stats(self, stats_list):
+        """Set disable_stats list"""
+        self._disable_stats = [i for i in stats_list if i not in mandatory_processes_stats_list]
 
     @property
     def process_filter_input(self):
@@ -445,6 +462,9 @@ class GlancesProcesses:
         else:
             is_cached = True
 
+        # Remove attributes set by the user in the config file (see #1524)
+        sorted_attrs = [i for i in sorted_attrs if i not in self.disable_stats]
+
         # Build the processes stats list (it is why we need psutil>=5.3.0) (see issue #2755)
         processlist = list(
             filter(
@@ -491,7 +511,7 @@ class GlancesProcesses:
             proc['time_since_update'] = time_since_update
 
             # Process status (only keep the first char)
-            proc['status'] = str(proc['status'])[:1].upper()
+            proc['status'] = str(proc.get('status', '?'))[:1].upper()
 
             # Process IO
             # procstat['io_counters'] is a list:
@@ -553,7 +573,7 @@ class GlancesProcesses:
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Useful to highlight the processes with maximum values
-        for k in self._max_values_list:
+        for k in [i for i in self._max_values_list if i not in self.disable_stats]:
             values_list = [i[k] for i in processlist if i[k] is not None]
             if values_list:
                 self.set_max_values(k, max(values_list))
