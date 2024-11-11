@@ -280,6 +280,9 @@ run-min-debug: ## Start minimal Glances in debug console mode (also called stand
 run-min-local-conf: ## Start minimal Glances in console mode with the system conf file
 	$(venv_min)/python -m glances
 
+run-like-htop: ## Start Glances with the same features than Htop
+	$(venv_min)/python -m glances --disable-plugin network,ports,wifi,connections,diskio,fs,irq,folders,raid,smart,sensors,vms,containers,ip,amps --disable-left-sidebar
+
 $(DOCKER_RUNTIMES): run-docker-%:
 	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-$*
 
