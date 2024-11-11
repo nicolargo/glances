@@ -21,6 +21,15 @@ class GlancesHelperService {
         this.limits = limits;
     }
 
+    getLimit(pluginName, limitName) {
+        if (this.limits[pluginName] != undefined) {
+            if (this.limits[pluginName][limitName] != undefined) {
+                return this.limits[pluginName][limitName]
+            }
+        }
+        return null
+    }
+
     getAlert(pluginName, limitNamePrefix, current, maximum, log) {
         current = current || 0;
         maximum = maximum || 100;
