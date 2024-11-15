@@ -145,7 +145,7 @@ class GlancesServersList:
         if server['protocol'].lower() == 'rpc':
             self.__update_stats_rpc(server['uri'], server)
         elif server['protocol'].lower() == 'rest' and not import_requests_error_tag:
-            self.__update_stats_rest(f'{server['uri']}/api/{__apiversion__}', server)
+            self.__update_stats_rest(f"{server['uri']}/api/{__apiversion__}", server)
 
         return server
 
@@ -208,9 +208,9 @@ class GlancesServersList:
         for column in self.get_columns():
             server_key = self.__get_key(column)
             # Build the URI (URL encoded)
-            request_uri = f'{column['plugin']}/{column['field']}'
+            request_uri = f"{column['plugin']}/{column['field']}"
             if 'key' in column:
-                request_uri += f'/{column['key']}'
+                request_uri += f"/{column['key']}"
             request_uri = f'{uri}/' + requests.utils.quote(request_uri)
             # Value
             try:
