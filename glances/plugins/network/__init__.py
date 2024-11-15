@@ -299,11 +299,11 @@ class PluginModel(GlancesPluginModel):
                 to_bit = 8
                 unit = 'b'
 
-            if args.network_cumul and 'bytes_recv' in i:
+            if args.network_cumul and 'bytes_recv' in i and 'bytes_sent' in i:
                 rx = self.auto_unit(int(i['bytes_recv'] * to_bit)) + unit
                 tx = self.auto_unit(int(i['bytes_sent'] * to_bit)) + unit
                 ax = self.auto_unit(int(i['bytes_all'] * to_bit)) + unit
-            elif 'bytes_recv_rate_per_sec' in i:
+            elif 'bytes_recv_rate_per_sec' in i and 'bytes_sent_rate_per_sec' in i:
                 rx = self.auto_unit(int(i['bytes_recv_rate_per_sec'] * to_bit)) + unit
                 tx = self.auto_unit(int(i['bytes_sent_rate_per_sec'] * to_bit)) + unit
                 ax = self.auto_unit(int(i['bytes_all_rate_per_sec'] * to_bit)) + unit
