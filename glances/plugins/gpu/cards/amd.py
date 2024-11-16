@@ -138,7 +138,7 @@ def get_temperature(device_folder: str) -> Optional[int]:
                         if re.match(GPU_TEMPERATURE_REGEXP, f):
                             with open(os.path.join(root, d, f)) as f:
                                 temp_input.append(int(f.read()))
-    if len(temp_input) > 0:
+    if temp_input:
         return round(sum(temp_input) / len(temp_input) / 1000)
     return None
 

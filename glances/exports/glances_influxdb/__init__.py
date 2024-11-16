@@ -98,7 +98,7 @@ class Export(GlancesExport):
         # issue1871 - Check if a key exist. If a key exist, the value of
         # the key should be used as a tag to identify the measurement.
         keys_list = [k.split('.')[0] for k in columns if k.endswith('.key')]
-        if len(keys_list) == 0:
+        if not keys_list:
             keys_list = [None]
 
         for measurement in keys_list:
@@ -150,7 +150,7 @@ class Export(GlancesExport):
         if self.prefix is not None:
             name = self.prefix + '.' + name
         # Write input to the InfluxDB database
-        if len(points) == 0:
+        if not points:
             logger.debug(f"Cannot export empty {name} stats to InfluxDB")
         else:
             try:

@@ -95,7 +95,7 @@ class GlancesGrabHDDTemp:
         # Safety check to avoid malformed data
         # Considering the size of "|/dev/sda||0||" as the minimum
         if len(data) < 14:
-            data = self.cache if len(self.cache) > 0 else self.fetch()
+            data = self.cache if self.cache else self.fetch()
         self.cache = data
 
         try:

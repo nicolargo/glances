@@ -300,7 +300,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         return column_def
 
     def __display_server_list(self, stats, x, y, screen_x, screen_y):
-        if len(stats) == 0:
+        if not stats:
             # No server to display
             return False
 

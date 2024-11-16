@@ -129,7 +129,7 @@ class PluginModel(GlancesPluginModel):
             return elem['end'] == -1 and 'global_msg' in elem
 
         global_message = [elem['global_msg'] for elem in self.stats if cond(elem)]
-        title = global_message[0] if len(global_message) > 0 else "EVENTS history"
+        title = global_message[0] if global_message else "EVENTS history"
 
         ret.append(self.curse_add_line(title, "TITLE"))
 

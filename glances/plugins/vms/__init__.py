@@ -145,7 +145,7 @@ class PluginModel(GlancesPluginModel):
         all=True
         """
         all_tag = self.get_conf_value('all')
-        if len(all_tag) == 0:
+        if not all_tag:
             return False
         return all_tag[0].lower() == 'true'
 
