@@ -144,7 +144,8 @@ class PluginModel(GlancesPluginModel):
             return self.stats
 
         if self.input_method == 'local':
-            stats = get_smart_data()
+            # Update stats and hide some sensors(#2996)
+            stats = [s for s in get_smart_data() if self.is_display(s[self.get_key()])]
         elif self.input_method == 'snmp':
             pass
 
