@@ -71,7 +71,9 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
-          skip-existing: false
+          #https://github.com/nicolargo/glances/issues/3020
+          #skip-existing: false
+          skip-existing: true
           attestations: false
 
       - name: Publish distribution package to PyPI
