@@ -252,9 +252,10 @@ export default {
             });
 
             // j => Accumulate processes by program
-            hotkeys('j', () => {
-                this.store.args.programs = !this.store.args.programs;
-            });
+            // Disable for the moment, see https://github.com/nicolargo/glances/issues/3019
+            // hotkeys('j', () => {
+            //     this.store.args.programs = !this.store.args.programs;
+            // });
 
             // k => Show/hide connections stats
             hotkeys('k', () => {
