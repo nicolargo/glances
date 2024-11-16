@@ -100,7 +100,7 @@ class GlancesPassword:
             # Save the hashed password to the password file
             if not clear:
                 save_input = input('Do you want to save the password? [Yes/No]: ')
-                if len(save_input) > 0 and save_input[0].upper() == 'Y':
+                if save_input and save_input[0].upper() == 'Y':
                     self.save_password(password_hashed)
 
         return password

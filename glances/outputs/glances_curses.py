@@ -863,7 +863,7 @@ class _GlancesCurses:
 
         # Add the message
         for y, m in enumerate(sentence_list):
-            if len(m) > 0:
+            if m:
                 popup.addnstr(2 + y, 2, m, len(m))
 
         if popup_type == 'info':

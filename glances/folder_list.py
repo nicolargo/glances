@@ -113,7 +113,7 @@ class FolderList:
     def update(self, key='path'):
         """Update the command result attributed."""
         # Only continue if monitor list is not empty
-        if len(self.__folder_list) == 0:
+        if not self.__folder_list:
             return self.__folder_list
 
         # Iter upon the folder list

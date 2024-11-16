@@ -122,13 +122,13 @@ class VmExtension:
             'name': nativestr(vm_name),
             'id': vm_stats.get('image_hash'),
             'status': vm_stats.get('state').lower() if vm_stats.get('state') else None,
-            'release': vm_stats.get('release') if len(vm_stats.get('release')) > 0 else vm_stats.get('image_release'),
-            'cpu_count': int(vm_stats.get('cpu_count', 1)) if len(vm_stats.get('cpu_count', 1)) > 0 else None,
+            'release': vm_stats.get('release') if vm_stats.get('release') else vm_stats.get('image_release'),
+            'cpu_count': int(vm_stats.get('cpu_count', 1)) if vm_stats.get('cpu_count', 1) else None,
             'memory_usage': vm_stats.get('memory').get('used') if vm_stats.get('memory') else None,
             'memory_total': vm_stats.get('memory').get('total') if vm_stats.get('memory') else None,
             'load_1min': vm_stats.get('load')[0] if vm_stats.get('load') else None,
             'load_5min': vm_stats.get('load')[1] if vm_stats.get('load') else None,
             'load_15min': vm_stats.get('load')[2] if vm_stats.get('load') else None,
-            'ipv4': vm_stats.get('ipv4')[0] if len(vm_stats.get('ipv4')) > 0 else None,
+            'ipv4': vm_stats.get('ipv4')[0] if vm_stats.get('ipv4') else None,
             # TODO: disk
         }

@@ -165,7 +165,7 @@ class PluginModel(GlancesPluginModel):
         Default value: unix:///run/user/1000/podman/podman.sock
         """
         conf_podman_sock = self.get_conf_value('podman_sock')
-        if len(conf_podman_sock) == 0:
+        if not conf_podman_sock:
             return "unix:///run/user/1000/podman/podman.sock"
         return conf_podman_sock[0]
 
@@ -208,7 +208,7 @@ class PluginModel(GlancesPluginModel):
         all=True
         """
         all_tag = self.get_conf_value('all')
-        if len(all_tag) == 0:
+        if not all_tag:
             return False
         return all_tag[0].lower() == 'true'
 

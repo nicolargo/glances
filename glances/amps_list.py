@@ -105,7 +105,7 @@ class AmpsList:
 
             amps_list = self._build_amps_list(v, processlist)
 
-            if len(amps_list) > 0:
+            if amps_list:
                 # At least one process is matching the regex
                 logger.debug(f"AMPS: {len(amps_list)} processes {k} detected ({amps_list})")
                 # Call the AMP update method
