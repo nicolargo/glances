@@ -96,14 +96,14 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
-          skip-existing: false
+          skip-existing: true
           attestations: false
 
   create_Docker_builds:
     runs-on: ubuntu-latest
-    # Make sure we release the python package first. So we are sure to get the latest.
     needs:
       - pypi
+      - pypi_test
     outputs:
       tags: ${{ steps.config.outputs.tags }}
     steps:
