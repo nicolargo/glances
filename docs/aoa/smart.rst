@@ -37,7 +37,7 @@ Example to only show .*Drive_Temperature.* sensors:
 
 .. code-block:: ini
 
-     [fs]
+     [smart]
      show=.*Drive_Temperature.*
 
 Filtering is based on regular expression. Please be sure that your regular
