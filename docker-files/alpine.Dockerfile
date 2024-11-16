@@ -56,7 +56,8 @@ RUN apk add --no-cache \
   pkgconfig \
   libffi-dev \
   openssl-dev \
-  cmake # Issue:  https://github.com/nicolargo/glances/issues/2735
+  cmake
+  # for cmake: Issue:  https://github.com/nicolargo/glances/issues/2735
 
 RUN python${PYTHON_VERSION} -m venv venv-build
 RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --upgrade pip

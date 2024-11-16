@@ -17,6 +17,10 @@ jobs:
     build:
       if: github.event_name != 'pull_request'
       uses: ./.github/workflows/build.yml
+      needs: [quality, test]
+    build_docker:
+      if: github.event_name != 'pull_request'
+      uses: ./.github/workflows/build_docker.yml
       secrets:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
