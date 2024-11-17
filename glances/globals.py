@@ -296,45 +296,51 @@ def build_str_when_more_than_seven_days(day_diff, unit):
     return str(count) + " " + unit + maybe_add_plural(count)
 
 
-def get_conds_day_diff(diff):
-    day_diff = diff.days
-    return OrderedDict(
-        {
-            '': day_diff < 0,
-            get_first_true_val(get_conds_sec_diff(diff)): day_diff == 0,
-            "yesterday": day_diff == 1,
-            str(day_diff) + " days": day_diff < 7,
-            build_str_when_more_than_seven_days(day_diff, "week"): day_diff < 31,
-            build_str_when_more_than_seven_days(day_diff, "month"): day_diff < 365,
-            build_str_when_more_than_seven_days(day_diff, "year"): day_diff >= 365,
-        }
-    )
-
-
-def get_conds_sec_diff(diff):
-    second_diff = diff.seconds
-    return OrderedDict(
-        {
-            "just now": second_diff < 10,
-            str(second_diff) + " secs": second_diff < 60,
-            "a min": second_diff < 120,
-            str(second_diff // 60) + " mins": second_diff < 3600,
-            "an hour": second_diff < 7200,
-            str(second_diff // 3600) + " hours": second_diff < 86400,
-        }
-    )
-
-
-def pretty_date(ref=False, now=datetime.now()):
+def pretty_date(time=False):
     """
     Get a datetime object or a int() Epoch timestamp and return a
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
     'just now', etc
     Source: https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
-    """
-    diff = get_time_diffs(ref, now)
 
-    return get_first_true_val(get_conds_day_diff(diff))
+    Refactoring done in commit https://github.com/nicolargo/glances/commit/f6279baacd4cf0b27ca10df6dc01f091ea86a40a
+    break the function. Get back to the old fashion way.
+    """
+    now = datetime.now()
+    if isinstance(time, int):
+        diff = now - datetime.fromtimestamp(time)
+    elif isinstance(time, datetime):
+        diff = now - time
+    elif not time:
+        diff = 0
+    second_diff = diff.seconds
+    day_diff = diff.days
+
+    if day_diff < 0:
+        return ''
+
+    if day_diff == 0:
+        if second_diff < 10:
+            return "just now"
+        if second_diff < 60:
+            return str(second_diff) + " secs"
+        if second_diff < 120:
+            return "a min"
+        if second_diff < 3600:
+            return str(second_diff // 60) + " mins"
+        if second_diff < 7200:
+            return "an hour"
+        if second_diff < 86400:
+            return str(second_diff // 3600) + " hours"
+    if day_diff == 1:
+        return "yesterday"
+    if day_diff < 7:
+        return str(day_diff) + " days"
+    if day_diff < 31:
+        return str(day_diff // 7) + " weeks"
+    if day_diff < 365:
+        return str(day_diff // 30) + " months"
+    return str(day_diff // 365) + " years"
 
 
 def urlopen_auth(url, username, password):
