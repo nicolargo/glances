@@ -230,7 +230,10 @@ class PluginModel(GlancesPluginModel):
         """Update processes stats using the input method."""
         # Update the stats
         if self.input_method == 'local':
-            stats = self.update_local()
+            # Update stats using the standard system lib
+            # Note: Update is done in the processcount plugin
+            # Just return the result
+            stats = glances_processes.get_list()
         else:
             stats = self.get_init_value()
 
@@ -242,17 +245,6 @@ class PluginModel(GlancesPluginModel):
         self.stats = stats
 
         return self.stats
-
-    def update_local(self):
-        # Update stats using the standard system lib
-        # Note: Update is done in the processcount plugin
-        # Just return the result
-        if self.args.programs:
-            stats = glances_processes.get_list(as_programs=True)
-        else:
-            stats = glances_processes.get_list()
-
-        return stats
 
     def get_export(self):
         """Return the processes list to export.
@@ -345,15 +337,8 @@ class PluginModel(GlancesPluginModel):
 
     def _get_process_curses_pid(self, p, selected, args):
         """Return process PID curses"""
-        if not self.args.programs:
-            # Display processes, so the PID should be displayed
-            msg = self.layout_stat['pid'].format(p['pid'], width=self.__max_pid_size())
-        else:
-            # Display programs, so the PID should not be displayed
-            # Instead displays the number of children
-            msg = self.layout_stat['pid'].format(
-                len(p['childrens']) if 'childrens' in p else '_', width=self.__max_pid_size()
-            )
+        # Display processes, so the PID should be displayed
+        msg = self.layout_stat['pid'].format(p['pid'], width=self._max_pid_size())
         return self.curse_add_line(msg)
 
     def _get_process_curses_username(self, p, selected, args):
@@ -538,19 +523,19 @@ class PluginModel(GlancesPluginModel):
 
         # Compute the sort key
         process_sort_key = glances_processes.sort_key
-        processes_list_sorted = self.__sort_stats(process_sort_key)
+        processes_list_sorted = self._sort_stats(process_sort_key)
 
         # Display extended stats for selected process
         #############################################
 
         if self.is_selected_process(args):
-            self.__msg_curse_extended_process(ret, glances_processes.extended_process)
+            self._msg_curse_extended_process(ret, glances_processes.extended_process)
 
         # Display others processes list
         ###############################
 
         # Header
-        self.__msg_curse_header(ret, process_sort_key, args)
+        self._msg_curse_header(ret, process_sort_key, args)
 
         # Process list
         # Loop over processes (sorted by the sort key previously compute)
@@ -563,15 +548,15 @@ class PluginModel(GlancesPluginModel):
         if glances_processes.process_filter is not None:
             if args.reset_minmax_tag:
                 args.reset_minmax_tag = not args.reset_minmax_tag
-                self.__mmm_reset()
-            self.__msg_curse_sum(ret, args=args)
-            self.__msg_curse_sum(ret, mmm='min', args=args)
-            self.__msg_curse_sum(ret, mmm='max', args=args)
+                self._mmm_reset()
+            self._msg_curse_sum(ret, args=args)
+            self._msg_curse_sum(ret, mmm='min', args=args)
+            self._msg_curse_sum(ret, mmm='max', args=args)
 
         # Return the message with decoration
         return ret
 
-    def __msg_curse_extended_process(self, ret, p):
+    def _msg_curse_extended_process(self, ret, p):
         """Get extended curses data for the selected process (see issue #2225)
 
         The result depends of the process type (process or thread).
@@ -598,18 +583,7 @@ class PluginModel(GlancesPluginModel):
          'cpu_max': 7.0,
          'cpu_mean': 3.2}
         """
-        if self.args.programs:
-            self.__msg_curse_extended_process_program(ret, p)
-        else:
-            self.__msg_curse_extended_process_thread(ret, p)
-
-    def __msg_curse_extended_process_program(self, ret, p):
-        # Title
-        msg = "Pinned program {} ('e' to unpin)".format(p['name'])
-        ret.append(self.curse_add_line(msg, "TITLE"))
-
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_new_line())
+        self._msg_curse_extended_process_thread(ret, p)
 
     def add_title_line(self, ret, prog):
         ret.append(self.curse_add_line("Pinned thread ", "TITLE"))
@@ -713,7 +687,7 @@ class PluginModel(GlancesPluginModel):
                 ret.append(self.curse_add_line(' {} '.format(stat_prefix.replace('num_', ''))))
         return ret
 
-    def __msg_curse_extended_process_thread(self, ret, prog):
+    def _msg_curse_extended_process_thread(self, ret, prog):
         # `append_newlines` has dummy arguments for piping thru `functools.reduce`
         def append_newlines(ret, prog):
             (ret.append(self.curse_new_line()),)
@@ -733,7 +707,7 @@ class PluginModel(GlancesPluginModel):
 
         functools.reduce(lambda ret, step: step(ret, prog), steps, ret)
 
-    def __msg_curse_header(self, ret, process_sort_key, args=None):
+    def _msg_curse_header(self, ret, process_sort_key, args=None):
         """Build the header and add it to the ret dict."""
         sort_style = 'SORT'
 
@@ -757,10 +731,7 @@ class PluginModel(GlancesPluginModel):
             msg = self.layout_header['res'].format('RES')
             ret.append(self.curse_add_line(msg, optional=True))
         if 'pid' in display_stats:
-            if not self.args.programs:
-                msg = self.layout_header['pid'].format('PID', width=self.__max_pid_size())
-            else:
-                msg = self.layout_header['pid'].format('NPROCS', width=self.__max_pid_size())
+            msg = self.layout_header['pid'].format('PID', width=self._max_pid_size())
             ret.append(self.curse_add_line(msg))
         if 'username' in display_stats:
             msg = self.layout_header['user'].format('USER')
@@ -793,17 +764,14 @@ class PluginModel(GlancesPluginModel):
                 )
             )
         if args.is_standalone and not args.disable_cursor:
-            if self.args.programs:
-                shortkey = "('k' to kill)"
-            else:
-                shortkey = "('e' to pin | 'k' to kill)"
+            shortkey = "('e' to pin | 'k' to kill)"
         else:
             shortkey = ""
         if 'cmdline' in display_stats:
-            msg = self.layout_header['command'].format("Programs" if self.args.programs else "Command", shortkey)
+            msg = self.layout_header['command'].format("Command", shortkey)
             ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
-    def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):
+    def _msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):
         """
         Build the sum message (only when filter is on) and add it to the ret dict.
 
@@ -818,11 +786,11 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_new_line())
         # CPU percent sum
         msg = ' '
-        msg += self.layout_stat['cpu'].format(self.__sum_stats('cpu_percent', mmm=mmm))
-        ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm)))
+        msg += self.layout_stat['cpu'].format(self._sum_stats('cpu_percent', mmm=mmm))
+        ret.append(self.curse_add_line(msg, decoration=self._mmm_deco(mmm)))
         # MEM percent sum
-        msg = self.layout_stat['mem'].format(self.__sum_stats('memory_percent', mmm=mmm))
-        ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm)))
+        msg = self.layout_stat['mem'].format(self._sum_stats('memory_percent', mmm=mmm))
+        ret.append(self.curse_add_line(msg, decoration=self._mmm_deco(mmm)))
         # VIRT and RES memory sum
         if (
             'memory_info' in self.stats[0]
@@ -831,21 +799,21 @@ class PluginModel(GlancesPluginModel):
         ):
             # VMS
             msg = self.layout_stat['virt'].format(
-                self.auto_unit(self.__sum_stats('memory_info', sub_key='vms', mmm=mmm), low_precision=False)
+                self.auto_unit(self._sum_stats('memory_info', sub_key='vms', mmm=mmm), low_precision=False)
             )
-            ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True))
+            ret.append(self.curse_add_line(msg, decoration=self._mmm_deco(mmm), optional=True))
             # RSS
             msg = self.layout_stat['res'].format(
-                self.auto_unit(self.__sum_stats('memory_info', sub_key='rss', mmm=mmm), low_precision=False)
+                self.auto_unit(self._sum_stats('memory_info', sub_key='rss', mmm=mmm), low_precision=False)
             )
-            ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True))
+            ret.append(self.curse_add_line(msg, decoration=self._mmm_deco(mmm), optional=True))
         else:
             msg = self.layout_header['virt'].format('')
             ret.append(self.curse_add_line(msg))
             msg = self.layout_header['res'].format('')
             ret.append(self.curse_add_line(msg))
         # PID
-        msg = self.layout_header['pid'].format('', width=self.__max_pid_size())
+        msg = self.layout_header['pid'].format('', width=self._max_pid_size())
         ret.append(self.curse_add_line(msg))
         # USER
         msg = self.layout_header['user'].format('')
@@ -866,24 +834,24 @@ class PluginModel(GlancesPluginModel):
         if 'io_counters' in self.stats[0] and mmm is None:
             # IO read
             io_rs = int(
-                (self.__sum_stats('io_counters', 0) - self.__sum_stats('io_counters', sub_key=2, mmm=mmm))
+                (self._sum_stats('io_counters', 0) - self._sum_stats('io_counters', sub_key=2, mmm=mmm))
                 / self.stats[0]['time_since_update']
             )
             if io_rs == 0:
                 msg = self.layout_stat['ior'].format('0')
             else:
                 msg = self.layout_stat['ior'].format(self.auto_unit(io_rs, low_precision=True))
-            ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True, additional=True))
+            ret.append(self.curse_add_line(msg, decoration=self._mmm_deco(mmm), optional=True, additional=True))
             # IO write
             io_ws = int(
-                (self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters', sub_key=3, mmm=mmm))
+                (self._sum_stats('io_counters', 1) - self._sum_stats('io_counters', sub_key=3, mmm=mmm))
                 / self.stats[0]['time_since_update']
             )
             if io_ws == 0:
                 msg = self.layout_stat['iow'].format('0')
             else:
                 msg = self.layout_stat['iow'].format(self.auto_unit(io_ws, low_precision=True))
-            ret.append(self.curse_add_line(msg, decoration=self.__mmm_deco(mmm), optional=True, additional=True))
+            ret.append(self.curse_add_line(msg, decoration=self._mmm_deco(mmm), optional=True, additional=True))
         else:
             msg = self.layout_header['ior'].format('')
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
@@ -898,18 +866,18 @@ class PluginModel(GlancesPluginModel):
             msg = '(\'M\' to reset)'
             ret.append(self.curse_add_line(msg, optional=True))
 
-    def __mmm_deco(self, mmm):
+    def _mmm_deco(self, mmm):
         """Return the decoration string for the current mmm status."""
         if mmm is not None:
             return 'DEFAULT'
         return 'FILTER'
 
-    def __mmm_reset(self):
+    def _mmm_reset(self):
         """Reset the MMM stats."""
         self.mmm_min = {}
         self.mmm_max = {}
 
-    def __sum_stats(self, key, sub_key=None, mmm=None):
+    def _sum_stats(self, key, sub_key=None, mmm=None):
         """Return the sum of the stats value for the given key.
 
         :param sub_key: If sub_key is set, get the p[key][sub_key]
@@ -930,7 +898,7 @@ class PluginModel(GlancesPluginModel):
                 ret += p[key][sub_key]
 
         # Manage Min/Max/Mean
-        mmm_key = self.__mmm_key(key, sub_key)
+        mmm_key = self._mmm_key(key, sub_key)
         if mmm == 'min':
             try:
                 if self.mmm_min[mmm_key] > ret:
@@ -954,17 +922,17 @@ class PluginModel(GlancesPluginModel):
 
         return ret
 
-    def __mmm_key(self, key, sub_key):
+    def _mmm_key(self, key, sub_key):
         ret = key
         if sub_key is not None:
             ret += str(sub_key)
         return ret
 
-    def __sort_stats(self, sorted_by=None):
+    def _sort_stats(self, sorted_by=None):
         """Return the stats (dict) sorted by (sorted_by)."""
         return sort_stats(self.stats, sorted_by, reverse=glances_processes.sort_reverse)
 
-    def __max_pid_size(self):
+    def _max_pid_size(self):
         """Return the maximum PID size in number of char."""
         if self.pid_max is not None:
             return len(str(self.pid_max))

@@ -616,8 +616,8 @@ Examples of use:
         args.network_sum = False
         args.network_cumul = False
 
-        # Processlist id updated in processcount
-        if getattr(args, 'enable_processlist', False):
+        # Processlist is updated in processcount
+        if getattr(args, 'enable_processlist', False) or getattr(args, 'enable_programlist', False):
             enable(args, 'processcount')
 
         # Set a default export_process_filter (with all process) when using the stdout mode
