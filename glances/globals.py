@@ -296,7 +296,7 @@ def build_str_when_more_than_seven_days(day_diff, unit):
     return str(count) + " " + unit + maybe_add_plural(count)
 
 
-def pretty_date(time=False):
+def pretty_date(ref, now=None):
     """
     Get a datetime object or a int() Epoch timestamp and return a
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
@@ -306,12 +306,13 @@ def pretty_date(time=False):
     Refactoring done in commit https://github.com/nicolargo/glances/commit/f6279baacd4cf0b27ca10df6dc01f091ea86a40a
     break the function. Get back to the old fashion way.
     """
-    now = datetime.now()
-    if isinstance(time, int):
-        diff = now - datetime.fromtimestamp(time)
-    elif isinstance(time, datetime):
-        diff = now - time
-    elif not time:
+    if not now:
+        now = datetime.now()
+    if isinstance(ref, int):
+        diff = now - datetime.fromtimestamp(ref)
+    elif isinstance(ref, datetime):
+        diff = now - ref
+    elif not ref:
         diff = 0
     second_diff = diff.seconds
     day_diff = diff.days
@@ -335,12 +336,15 @@ def pretty_date(time=False):
     if day_diff == 1:
         return "yesterday"
     if day_diff < 7:
-        return str(day_diff) + " days"
+        return str(day_diff) + " days" if day_diff > 1 else "a day"
     if day_diff < 31:
-        return str(day_diff // 7) + " weeks"
+        week = day_diff // 7
+        return str(week) + " weeks" if week > 1 else "a week"
     if day_diff < 365:
-        return str(day_diff // 30) + " months"
-    return str(day_diff // 365) + " years"
+        month = day_diff // 30
+        return str(month) + " months" if month > 1 else "a month"
+    year = day_diff // 365
+    return str(year) + " years" if year > 1 else "an year"
 
 
 def urlopen_auth(url, username, password):
