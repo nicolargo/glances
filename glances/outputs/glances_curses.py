@@ -124,8 +124,8 @@ class _GlancesCurses:
     _left_sidebar_min_width = 23
     _left_sidebar_max_width = 34
 
-    # Define right sidebar
-    _right_sidebar = ['vms', 'containers', 'processcount', 'amps', 'processlist', 'alert']
+    # Define right sidebar in a method because it depends of self.args.programs
+    # See def _right_sidebar method
 
     def __init__(self, config=None, args=None):
         # Init
@@ -203,6 +203,16 @@ class _GlancesCurses:
             )
             # Set the left sidebar list
             self._left_sidebar = config.get_list_value('outputs', 'left_menu', default=self._left_sidebar)
+
+    def _right_sidebar(self):
+        return [
+            'vms',
+            'containers',
+            'processcount',
+            'amps',
+            'programlist' if self.args.programs else 'processlist',
+            'alert',
+        ]
 
     def _init_history(self):
         """Init the history option."""
@@ -790,7 +800,7 @@ class _GlancesCurses:
 
         # Display right sidebar
         self.new_column()
-        for p in self._right_sidebar:
+        for p in self._right_sidebar():
             if (hasattr(self.args, 'enable_' + p) or hasattr(self.args, 'disable_' + p)) and p in stat_display:
                 self.new_line()
                 if p == 'processlist':
