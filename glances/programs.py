@@ -54,6 +54,11 @@ def update_program_dict(program, p):
     program['status'] = p['status'] if p['status'] == program['status'] else '_'
 
 
+def compute_nprocs(p):
+    p['nprocs'] = len(p['childrens'])
+    return p
+
+
 def processes_to_programs(processes):
     """Convert a list of processes to a list of programs."""
     # Start to build a dict of programs (key is program name)
@@ -66,4 +71,4 @@ def processes_to_programs(processes):
             update_program_dict(programs_dict[p[key]], p)
 
     # Convert the dict to a list of programs
-    return [programs_dict[p] for p in programs_dict]
+    return [compute_nprocs(p) for p in programs_dict.values()]

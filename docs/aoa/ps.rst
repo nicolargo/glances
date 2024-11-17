@@ -123,6 +123,7 @@ Columns display
                           The non-swapped physical memory a process is
                           using (what's currently in the physical memory).
 ``PID``                   Process ID (column is replaced by NPROCS in accumulated mode)
+``NPROCS``                Number of process + childs (only in accumulated mode)
 ``USER``                  User ID
 ``THR``                   Threads number of the process
 ``TIME+``                 Cumulative CPU time used by the process
