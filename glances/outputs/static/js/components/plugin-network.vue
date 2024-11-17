@@ -91,7 +91,11 @@ export default {
                 };
 
                 return network;
-            }).filter(network => (this.view[network.interfaceName]['bytes_recv_rate_per_sec'].hidden === false) && (this.view[network.interfaceName]['bytes_sent_rate_per_sec'].hidden === false));
+            }).filter(network => {
+              const bytesRecvRate = this.view[network.interfaceName]['bytes_recv_rate_per_sec'];
+              const bytesSentRate = this.view[network.interfaceName]['bytes_sent_rate_per_sec'];
+              return (!bytesRecvRate || bytesRecvRate.hidden === false) && (!bytesSentRate || bytesSentRate.hidden === false);
+            });
             return orderBy(networks, ['interfaceName']);
         },
         hasNetworks() {
