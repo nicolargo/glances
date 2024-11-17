@@ -293,8 +293,8 @@ export default {
                 process.timeplus = '?';
                 process.timemillis = '?';
                 if (process.cpu_times) {
-                    process.timeplus = timedelta(process.cpu_times);
-                    process.timemillis = timemillis(process.cpu_times);
+                    process.timeplus = timedelta([process.cpu_times['user'], process.cpu_times['system']]);
+                    process.timemillis = timemillis([process.cpu_times['user'], process.cpu_times['system']]);
                 }
 
                 if (process.num_threads === null) {
@@ -371,8 +371,8 @@ export default {
                 process.timeplus = '?';
                 process.timemillis = '?';
                 if (process.cpu_times) {
-                    process.timeplus = timedelta(process.cpu_times);
-                    process.timemillis = timemillis(process.cpu_times);
+                    process.timeplus = timedelta([process.cpu_times['user'], process.cpu_times['system']]);
+                    process.timemillis = timemillis([process.cpu_times['user'], process.cpu_times['system']]);
                 }
 
                 if (process.num_threads === null) {
