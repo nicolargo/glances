@@ -81,7 +81,7 @@ class PluginModel(GlancesPluginModel):
         # Update the stats
         if self.input_method == 'local':
             # Update stats using the standard system lib
-            # Here, update is call for processcount AND processlist
+            # Here, update is call for processcount, processlist and programlist
             glances_processes.update()
 
             # For the ProcessCount, only return the processes count

@@ -23,7 +23,6 @@ from glances.globals import LINUX, WINDOWS, pretty_date, string_value_to_float, 
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.programs import processes_to_programs
 from glances.stats import GlancesStats
 from glances.thresholds import (
     GlancesThresholdCareful,
@@ -470,12 +469,14 @@ class TestGlances(unittest.TestCase):
         print(f'INFO: SMART stats: {stats_grab}')
 
     def test_017_programs(self):
-        """Check Programs function (it's not a plugin)."""
+        """Check Programs plugin."""
         # stats_to_check = [ ]
-        print('INFO: [TEST_017] Check PROGRAM stats')
-        stats_grab = processes_to_programs(stats.get_plugin('processlist').get_raw())
-        self.assertIsInstance(stats_grab, list, msg='Programs stats list is not a list')
-        self.assertIsInstance(stats_grab[0], dict, msg='First item should be a dict')
+        print('INFO: [TEST_022] Check PROGRAMS stats')
+        stats_grab = stats.get_plugin('programlist').get_raw()
+        self.assertTrue(isinstance(stats_grab, list), msg='Programs stats is not a list')
+        if stats_grab:
+            self.assertTrue(isinstance(stats_grab[0], dict), msg='Programs stats is not a list of dict')
+            self.assertTrue('nprocs' in stats_grab[0], msg='No nprocs')
 
     def test_018_string_value_to_float(self):
         """Check string_value_to_float function"""
