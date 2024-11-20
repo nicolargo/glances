@@ -20,6 +20,7 @@ body {
     color: $glances-fg;
     font-family: $glances-fonts;
     font-size: $glances-fonts-size;
+    overflow: hidden;
 }
 
 .title {
@@ -77,6 +78,26 @@ body {
     font-weight: bold !important;
 }
 
+// Layout
+
+.header {
+    height: 30px;
+}
+
+.top {
+    height: 140px;
+}
+
+.left-sidebar {
+    overflow-y: auto;
+    height: calc(100vh - 30px - 140px);
+}
+
+.right-sidebar {
+    overflow-y: auto;
+    height: calc(100vh - 30px - 140px);
+}
+
 // Table
 
 .table {
@@ -117,23 +138,6 @@ body {
 
 #browser .table-hover tbody tr:hover td {
     background: $glances-link-hover-color;
-}
-
-// Separator
-
-.separator {
-    overflow: hidden;
-    height: 5px;
-}
-
-.separator:after {
-    content: '';
-    display: block;
-    margin: -25px auto 0;
-    width: 100%;
-    height: 24px;
-    border-radius: 125px / 12px;
-    box-shadow: 0 0 8px #555555;
 }
 
 // Plugins
@@ -270,6 +274,8 @@ body {
 }
 
 #processlist {
+    overflow-y: auto;
+    height: 600px;
     * > td:nth-child(-n+12) {
         width: 5em;
     }
@@ -280,7 +286,7 @@ body {
         width: 7em;
     }
     * > td:nth-child(7) {
-        width: 6em;
+        width: 7em;
     }
     * > td:nth-child(9),td:nth-child(10) {
         width: 2em;

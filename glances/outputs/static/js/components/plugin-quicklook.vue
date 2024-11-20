@@ -13,14 +13,8 @@
                 <tr v-if="!args.percpu">
                     <td scope="col">CPU</td>
                     <td scope="col" class="progress">
-                        <div
-                            :class="`progress-bar progress-bar-${getDecoration('cpu')}`"
-                            role="progressbar"
-                            :aria-valuenow="cpu"
-                            aria-valuemin="0"
-                            aria-valuemax="100"
-                            :style="`width: ${cpu}%;`"
-                        >
+                        <div :class="`progress-bar progress-bar-${getDecoration('cpu')}`" role="progressbar"
+                            :aria-valuenow="cpu" aria-valuemin="0" aria-valuemax="100" :style="`width: ${cpu}%;`">
                             &nbsp;
                         </div>
                     </td>
@@ -29,30 +23,20 @@
                 <tr v-if="args.percpu" v-for="(percpu, percpuId) in percpus" :key="percpuId">
                     <td scope="col">CPU{{ percpu.number }}</td>
                     <td scope="col" class="progress">
-                        <div
-                            :class="`progress-bar progress-bar-${getDecoration('cpu')}`"
-                            role="progressbar"
-                            :aria-valuenow="percpu.total"
-                            aria-valuemin="0"
-                            aria-valuemax="100"
-                            :style="`width: ${percpu.total}%;`"
-                        >
+                        <div :class="`progress-bar progress-bar-${getDecoration('cpu')}`" role="progressbar"
+                            :aria-valuenow="percpu.total" aria-valuemin="0" aria-valuemax="100"
+                            :style="`width: ${percpu.total}%;`">
                             &nbsp;
                         </div>
                     </td>
                     <td scope="col" class="text-end">{{ percpu.total }}%</td>
                 </tr>
-                <tr v-for="(key) in stats_list_after_cpu">
+                <tr v-if="!args.percpu" v-for="(key) in stats_list_after_cpu">
                     <td scope="col">{{ key.toUpperCase() }}</td>
                     <td scope="col" class="progress">
-                        <div
-                            :class="`progress-bar progress-bar-${getDecoration(key)}`"
-                            role="progressbar"
-                            :aria-valuenow="stats[key]"
-                            aria-valuemin="0"
-                            aria-valuemax="100"
-                            :style="`width: ${stats[key]}%;`"
-                        >
+                        <div :class="`progress-bar progress-bar-${getDecoration(key)}`" role="progressbar"
+                            :aria-valuenow="stats[key]" aria-valuemin="0" aria-valuemax="100"
+                            :style="`width: ${stats[key]}%;`">
                             &nbsp;
                         </div>
                     </td>
