@@ -75,7 +75,11 @@ export default {
                         rxps: bytes(diskioData['write_count_rate_per_sec'])
                     }
                 };
-            }).filter(disk => (this.view[disk.name]['read_bytes_rate_per_sec'].hidden === false) && (this.view[disk.name]['write_bytes_rate_per_sec'].hidden === false));
+            }).filter(disk => {
+              const readBytesRate = this.view[disk.name]['read_bytes_rate_per_sec'];
+              const writeBytesRate = this.view[disk.name]['write_bytes_rate_per_sec'];
+              return (!readBytesRate || readBytesRate.hidden === false) && (!writeBytesRate || writeBytesRate.hidden === false);
+            });
             return orderBy(disks, ['name']);
         },
         hasDisks() {
