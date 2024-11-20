@@ -4,7 +4,7 @@
     </div>
     <glances-help v-else-if="args.help_tag"></glances-help>
     <main v-else>
-        <div class="container-fluid margin-bottom">
+        <div class="container-fluidheader">
             <div class="row justify-content-between">
                 <div class="col-auto" v-if="!args.disable_system">
                     <glances-plugin-system :data="data"></glances-plugin-system>
@@ -25,8 +25,7 @@
                 </div>
             </div>
         </div>
-        <div class="row separator" v-if="args.enable_separator"></div>
-        <div class="container-fluid margin-top margin-bottom">
+        <div class="container-fluid top">
             <div class="row justify-content-between">
                 <!-- Quicklook -->
                 <div class="col-3 d-none d-lg-block d-xl-block d-xxl-block" v-if="!args.disable_quicklook">
@@ -64,17 +63,16 @@
                 </div>
             </div>
         </div>
-        <div class="row separator" v-if="args.enable_separator"></div>
-        <div class="container-fluid margin-top">
+        <div class="container-fluid">
             <div class="row">
-                <div class="col-3 sidebar" v-if="!args.disable_left_sidebar">
+                <div class="col-3 left-sidebar" v-if="!args.disable_left_sidebar">
                     <template v-for="plugin in leftMenu">
                         <component v-if="!args[`disable_${plugin}`]" :is="`glances-plugin-${plugin}`"
-                            :id="`plugin-${plugin}`" class="plugin" :data="data">
+                            :id="`plugin-${plugin}`" :data="data">
                         </component>
                     </template>
                 </div>
-                <div class="col">
+                <div class="col right-sidebar">
                     <glances-plugin-vms v-if="!args.disable_vms" :data="data"></glances-plugin-vms>
                     <glances-plugin-containers v-if="!args.disable_containers" :data="data"></glances-plugin-containers>
                     <glances-plugin-process :data="data"></glances-plugin-process>
