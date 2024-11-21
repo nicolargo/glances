@@ -25,7 +25,7 @@
                 </div>
             </div>
         </div>
-        <div class="container-fluid top">
+        <div class="container-fluid" :class="{ 'top-min': !args.percpu, 'top-max': args.percpu }">
             <div class="row justify-content-between">
                 <!-- Quicklook -->
                 <div class="col-3 d-none d-lg-block d-xl-block d-xxl-block" v-if="!args.disable_quicklook">
@@ -65,14 +65,15 @@
         </div>
         <div class="container-fluid">
             <div class="row">
-                <div class="col-3 left-sidebar" v-if="!args.disable_left_sidebar">
+                <div class="col-3" :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }"
+                    v-if="!args.disable_left_sidebar">
                     <template v-for="plugin in leftMenu">
                         <component v-if="!args[`disable_${plugin}`]" :is="`glances-plugin-${plugin}`"
                             :id="`plugin-${plugin}`" :data="data">
                         </component>
                     </template>
                 </div>
-                <div class="col right-sidebar">
+                <div class="col" :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }">
                     <glances-plugin-vms v-if="!args.disable_vms" :data="data"></glances-plugin-vms>
                     <glances-plugin-containers v-if="!args.disable_containers" :data="data"></glances-plugin-containers>
                     <glances-plugin-process :data="data"></glances-plugin-process>

@@ -84,18 +84,22 @@ body {
     height: 30px;
 }
 
-.top {
-    height: 140px;
+.top-min {
+    height: 100px;
 }
 
-.left-sidebar {
-    overflow-y: auto;
-    height: calc(100vh - 30px - 140px);
+.top-max {
+    height: 180px;
 }
 
-.right-sidebar {
+.sidebar-min {
     overflow-y: auto;
-    height: calc(100vh - 30px - 140px);
+    height: calc(100vh - 30px - 100px);
+}
+
+.sidebar-max {
+    overflow-y: auto;
+    height: calc(100vh - 30px - 180px);
 }
 
 // Table
