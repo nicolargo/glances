@@ -287,6 +287,8 @@ body {
         text-align: right;
     }
     * > td:nth-child(6) {
+        text-overflow: ellipsis;
+        white-space: nowrap;
         width: 7em;
     }
     * > td:nth-child(7) {
@@ -294,6 +296,10 @@ body {
     }
     * > td:nth-child(9),td:nth-child(10) {
         width: 2em;
+    }
+    * > td:nth-child(13),* > td:nth-child(14) {
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .table {
         margin-bottom: 1em;

@@ -80,15 +80,8 @@
                     <td scope="row" v-show="!getDisableStats().includes('username')">
                         {{ process.username }}
                     </td>
-                    <td scope="row" class="hidden-xs hidden-sm" v-if="process.timeplus != '?'"
-                        v-show="!getDisableStats().includes('cpu_times')">
-                        <span v-show="process.timeplus.hours > 0" class="highlight">{{ process.timeplus.hours }}h</span>
-                        {{ $filters.leftPad(process.timeplus.minutes, 2, '0') }}:{{
-                            $filters.leftPad(process.timeplus.seconds,
-                                2, '0') }}
-                        <span v-show="process.timeplus.hours <= 0">.{{ $filters.leftPad(process.timeplus.milliseconds,
-                            2, '0')
-                            }}</span>
+                    <td scope="row" class="hidden-xs hidden-sm" v-show="!getDisableStats().includes('cpu_times')">
+                        {{ process.timeforhuman }}
                     </td>
                     <td scope="row" class="hidden-xs hidden-sm" v-if="process.timeplus == '?'"
                         v-show="!getDisableStats().includes('cpu_times')">?</td>
@@ -202,18 +195,9 @@
                     <td scope="row" v-show="!getDisableStats().includes('username')">
                         {{ process.username }}
                     </td>
-                    <td scope="row" class="hidden-xs hidden-sm" v-if="process.timeplus != '?'"
-                        v-show="!getDisableStats().includes('cpu_times')">
-                        <span v-show="process.timeplus.hours > 0" class="highlight">{{ process.timeplus.hours }}h</span>
-                        {{ $filters.leftPad(process.timeplus.minutes, 2, '0') }}:{{
-                            $filters.leftPad(process.timeplus.seconds,
-                                2, '0') }}
-                        <span v-show="process.timeplus.hours <= 0">.{{ $filters.leftPad(process.timeplus.milliseconds,
-                            2, '0')
-                            }}</span>
+                    <td scope="row" class="hidden-xs hidden-sm" v-show="!getDisableStats().includes('cpu_times')">
+                        {{ process.timeforhuman }}
                     </td>
-                    <td scope="row" class="hidden-xs hidden-sm" v-if="process.timeplus == '?'"
-                        v-show="!getDisableStats().includes('cpu_times')">?</td>
                     <td scope="row" class="hidden-xs hidden-sm" v-show="!getDisableStats().includes('num_threads')">
                         {{ process.num_threads == -1 ? '?' : process.num_threads }}
                     </td>
@@ -290,11 +274,12 @@ export default {
                     process.username = last(process.username.split('\\'));
                 }
 
-                process.timeplus = '?';
-                process.timemillis = '?';
+                process.timeforhuman = '?';
                 if (process.cpu_times) {
                     process.timeplus = timedelta([process.cpu_times['user'], process.cpu_times['system']]);
-                    process.timemillis = timemillis([process.cpu_times['user'], process.cpu_times['system']]);
+                    process.timeforhuman = process.timeplus.hours.toString().padStart(2, '0') + ':' +
+                        process.timeplus.minutes.toString().padStart(2, '0') + ':' +
+                        process.timeplus.seconds.toString().padStart(2, '0')
                 }
 
                 if (process.num_threads === null) {
@@ -368,11 +353,12 @@ export default {
                     process.username = last(process.username.split('\\'));
                 }
 
-                process.timeplus = '?';
-                process.timemillis = '?';
+                process.timeforhuman = '?';
                 if (process.cpu_times) {
                     process.timeplus = timedelta([process.cpu_times['user'], process.cpu_times['system']]);
-                    process.timemillis = timemillis([process.cpu_times['user'], process.cpu_times['system']]);
+                    process.timeforhuman = process.timeplus.hours.toString().padStart(2, '0') + ':' +
+                        process.timeplus.minutes.toString().padStart(2, '0') + ':' +
+                        process.timeplus.seconds.toString().padStart(2, '0')
                 }
 
                 if (process.num_threads === null) {
