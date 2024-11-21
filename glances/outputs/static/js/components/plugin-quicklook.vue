@@ -31,7 +31,7 @@
                     </td>
                     <td scope="col" class="text-end">{{ percpu.total }}%</td>
                 </tr>
-                <tr v-if="!args.percpu" v-for="(key) in stats_list_after_cpu">
+                <tr v-for="(key) in stats_list_after_cpu">
                     <td scope="col">{{ key.toUpperCase() }}</td>
                     <td scope="col" class="progress">
                         <div :class="`progress-bar progress-bar-${getDecoration(key)}`" role="progressbar"
