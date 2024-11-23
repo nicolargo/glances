@@ -214,6 +214,12 @@ body {
 }
 
 #vms {
+    span {
+        padding-left: 10px;
+    }
+    span:nth-child(1) {
+        padding-left: 0px;
+    }
     .table {
         margin-bottom: 1em;
     }
@@ -232,13 +238,23 @@ body {
     * > td:nth-child(7) {
         width: 10em;
     }
+    * > td:nth-child(6), td:nth-child(7), td:nth-child(8) {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }
 
 #containers {
+    span {
+        padding-left: 10px;
+    }
+    span:nth-child(1) {
+        padding-left: 0px;
+    }
     .table {
         margin-bottom: 1em;
     }
-    * > th:not(:last-child), td:not(:last-child) {
+    * > td:not(:last-child) {
         width: 5em;
     }
     * > td:nth-child(1) {
@@ -247,11 +263,30 @@ body {
     * > td:nth-child(2), td:nth-child(3) {
         width: 15em;
     }
-    * > td:nth-child(4), td:nth-child(5) {
+    * > td:nth-child(4) {
         width: 6em;
+    }
+    * > td:nth-child(5) {
+        width: 10em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    * > td:nth-child(8) {
+        width: 10em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    * > td:nth-child(9), td:nth-child(10) {
+        width: 8em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     * > td:nth-child(7), td:nth-child(9), td:nth-child(11) {
         text-align: right;
+    }
+    * > td:nth-child(13) {
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 }
 
@@ -274,6 +309,10 @@ body {
     }
     .table {
         margin-bottom: 1em;
+    }
+    * > td:nth-child(8) {
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 }
 

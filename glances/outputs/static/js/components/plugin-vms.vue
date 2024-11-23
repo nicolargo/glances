@@ -1,7 +1,7 @@
 <template>
     <section class="plugin" id="vms" v-if="vms.length">
         <span class="title">VMs</span>
-        <span v-show="vms.length > 1"> {{ vms.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}</span>
+        <span v-show="vms.length > 1">{{ vms.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}</span>
         <table class="table table-sm table-borderless table-striped table-hover">
             <thead>
                 <tr>

@@ -1,67 +1,68 @@
 <template>
     <section class="plugin" id="containers" v-if="containers.length">
         <span class="title">CONTAINERS</span>
-        <span v-show="containers.length > 1"> {{ containers.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}</span>
+        <span v-show="containers.length > 1">{{ containers.length }} sorted by {{ sorter.getColumnLabel(sorter.column)
+            }}</span>
         <table class="table table-sm table-borderless table-striped table-hover">
             <thead>
                 <tr>
-                    <td v-show="showEngine">Engine</td>
-                    <td v-show="showPod">Pod</td>
-                    <td :class="['sortable', sorter.column === 'name' && 'sort']"
+                    <td scope="col" v-show="showEngine">Engine</td>
+                    <td scope="col" v-show="showPod">Pod</td>
+                    <td scope="col" :class="['sortable', sorter.column === 'name' && 'sort']"
                         @click="args.sort_processes_key = 'name'">
                         Name
                     </td>
-                    <td>Status</td>
-                    <td>Uptime</td>
-                    <td :class="['sortable', sorter.column === 'cpu_percent' && 'sort']"
+                    <td scope="col">Status</td>
+                    <td scope="col">Uptime</td>
+                    <td scope="col" :class="['sortable', sorter.column === 'cpu_percent' && 'sort']"
                         @click="args.sort_processes_key = 'cpu_percent'">
                         CPU%
                     </td>
-                    <td :class="['sortable', sorter.column === 'memory_percent' && 'sort']"
+                    <td scope="col" :class="['sortable', sorter.column === 'memory_percent' && 'sort']"
                         @click="args.sort_processes_key = 'memory_percent'">
                         MEM
                     </td>
-                    <td>/ MAX</td>
-                    <td>IOR/s</td>
-                    <td>IOW/s</td>
-                    <td>RX/s</td>
-                    <td>TX/s</td>
-                    <td>Command</td>
+                    <td scope="col">/ MAX</td>
+                    <td scope="col">IOR/s</td>
+                    <td scope="col">IOW/s</td>
+                    <td scope="col">RX/s</td>
+                    <td scope="col">TX/s</td>
+                    <td scope="col">Command</td>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(container, containerId) in containers" :key="containerId">
-                    <td v-show="showEngine">{{ container.engine }}</td>
-                    <td v-show="showPod">{{ container.pod_id || '-' }}</td>
-                    <td>{{ container.name }}</td>
-                    <td :class="container.status == 'Paused' ? 'careful' : 'ok'">
+                    <td scope="row" v-show="showEngine">{{ container.engine }}</td>
+                    <td scope="row" v-show="showPod">{{ container.pod_id || '-' }}</td>
+                    <td scope="row">{{ container.name }}</td>
+                    <td scope="row" :class="container.status == 'Paused' ? 'careful' : 'ok'">
                         {{ container.status }}
                     </td>
-                    <td>
+                    <td scope="row">
                         {{ container.uptime }}
                     </td>
-                    <td>
+                    <td scope="row">
                         {{ $filters.number(container.cpu_percent, 1) }}
                     </td>
-                    <td>
+                    <td scope="row">
                         {{ $filters.bytes(container.memory_usage) }}
                     </td>
-                    <td>
+                    <td scope="row">
                         / {{ $filters.bytes(container.limit) }}
                     </td>
-                    <td>
+                    <td scope="row">
                         {{ $filters.bytes(container.io_rx) }}
                     </td>
-                    <td>
+                    <td scope="row">
                         {{ $filters.bytes(container.io_wx) }}
                     </td>
-                    <td>
+                    <td scope="row">
                         {{ $filters.bits(container.network_rx) }}
                     </td>
-                    <td>
+                    <td scope="row">
                         {{ $filters.bits(container.network_tx) }}
                     </td>
-                    <td>
+                    <td scope="row">
                         {{ container.command }}
                     </td>
                 </tr>
@@ -118,11 +119,11 @@ export default {
                         'uptime': containerData.uptime,
                         'cpu_percent': containerData.cpu.total,
                         'memory_usage': memory_usage_no_cache,
-                        'limit': containerData.memory.limit != undefined ? containerData.memory.limit : '?',
-                        'io_rx': containerData.io_rx != undefined ? containerData.io_rx : '?',
-                        'io_wx': containerData.io_wx != undefined ? containerData.io_wx : '?',
-                        'network_rx': containerData.network_rx != undefined ? containerData.network_rx : '?',
-                        'network_tx': containerData.network_tx != undefined ? containerData.network_tx : '?',
+                        'limit': containerData.memory.limit != undefined && containerData.memory.limit != NaN ? containerData.memory.limit : '-',
+                        'io_rx': containerData.io_rx != undefined && containerData.io_rx != NaN ? containerData.io_rx : '-',
+                        'io_wx': containerData.io_wx != undefined && containerData.io_wx != NaN ? containerData.io_wx : '-',
+                        'network_rx': containerData.network_rx != undefined && containerData.network_rx != NaN ? containerData.network_rx : '-',
+                        'network_tx': containerData.network_tx != undefined && containerData.network_tx != NaN ? containerData.network_tx : '-',
                         'command': containerData.command,
                         'image': containerData.image,
                         'engine': containerData.engine,
