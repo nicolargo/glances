@@ -190,6 +190,12 @@ class PluginModel(GlancesPluginModel):
                 if args.export:
                     logger.info("Export process filter is set to: {}".format(config.as_dict()['processlist']['export']))
 
+        # For #2995. Load the username of a process to decorate with waning colours as from the config file.
+        if config is not None:
+            self.username_warning = config.get_value(self.plugin_name, 'username_warning')
+        else:
+            self.username_warning = ""
+
         # The default sort key could also be overwrite by command line (see #1903)
         if args and args.sort_processes_key is not None:
             glances_processes.set_sort_key(args.sort_processes_key, False)
@@ -319,7 +325,7 @@ class PluginModel(GlancesPluginModel):
             msg = self.layout_stat['user'].format(str(p['username'])[:9])
 
             # feature for #2995 adding the test to see if a user is root level
-            if (p['username'] == "root"):
+            if (p['username'] == self.username_warning):
                 # Set the decoration colour to be critical if the user is root
                 ret = self.curse_add_line(msg, decoration='CRITICAL')
             else:
