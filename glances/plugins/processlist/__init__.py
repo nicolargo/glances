@@ -317,7 +317,9 @@ class PluginModel(GlancesPluginModel):
             # docker internal users are displayed as ints only, therefore str()
             # Correct issue #886 on Windows OS
             msg = self.layout_stat['user'].format(str(p['username'])[:9])
-            ret = self.curse_add_line(msg)
+            
+            # Test to see if the colour will change as per the decoration
+            ret = self.curse_add_line(msg, decoration='CRITICAL')
         else:
             msg = self.layout_header['user'].format('?')
             ret = self.curse_add_line(msg)
