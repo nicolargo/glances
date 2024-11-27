@@ -317,9 +317,14 @@ class PluginModel(GlancesPluginModel):
             # docker internal users are displayed as ints only, therefore str()
             # Correct issue #886 on Windows OS
             msg = self.layout_stat['user'].format(str(p['username'])[:9])
-            
-            # Test to see if the colour will change as per the decoration
-            ret = self.curse_add_line(msg, decoration='CRITICAL')
+
+            # feature for #2995 adding the test to see if a user is root level
+            if (msg == "root"):
+                # Set the decoration colour to be critical if the user is root
+                ret = self.curse_add_line(msg, decoration='CRITICAL')
+            else:
+                # Set the decoration colour to be the default for all other users
+                ret = self.curse_add_line(msg, decoration='DEFAULT')
         else:
             msg = self.layout_header['user'].format('?')
             ret = self.curse_add_line(msg)
