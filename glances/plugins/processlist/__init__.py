@@ -319,7 +319,7 @@ class PluginModel(GlancesPluginModel):
             msg = self.layout_stat['user'].format(str(p['username'])[:9])
 
             # feature for #2995 adding the test to see if a user is root level
-            if (msg == "root"):
+            if (msg == "root       "):
                 # Set the decoration colour to be critical if the user is root
                 ret = self.curse_add_line(msg, decoration='CRITICAL')
             else:
