@@ -144,7 +144,8 @@ class PluginModel(GlancesPluginModel):
             return self.stats
 
         if self.input_method == 'local':
-            stats = get_smart_data()
+            # Update stats and hide some sensors(#2996)
+            stats = [s for s in get_smart_data() if self.is_display(s[self.get_key()])]
         elif self.input_method == 'snmp':
             pass
 
@@ -170,7 +171,7 @@ class PluginModel(GlancesPluginModel):
         if max_width:
             name_max_width = max_width - 6
         else:
-            # No max_width defined, return an emptu curse message
+            # No max_width defined, return an empty curse message
             logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 

@@ -9,7 +9,7 @@
 """Docker Extension unit for Glances' Containers plugin."""
 
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from glances.globals import iterkeys, itervalues, nativestr, pretty_date, replace_special_chars
 from glances.logger import logger
@@ -22,11 +22,11 @@ try:
     import requests
     from dateutil import parser, tz
 except Exception as e:
-    import_docker_error_tag = True
+    disable_plugin_docker = True
     # Display debug message if import KeyError
     logger.warning(f"Error loading Docker deps Lib. Docker plugin is disabled ({e})")
 else:
-    import_docker_error_tag = False
+    disable_plugin_docker = False
 
 
 class DockerStatsFetcher:
@@ -54,7 +54,7 @@ class DockerStatsFetcher:
         self._streamer.stop()
 
     @property
-    def activity_stats(self) -> Dict[str, Dict[str, Any]]:
+    def activity_stats(self) -> dict[str, dict[str, Any]]:
         """Activity Stats
 
         Each successive access of activity_stats will cause computation of activity_stats
@@ -64,7 +64,7 @@ class DockerStatsFetcher:
         self._last_stats_computed_time = time.time()
         return computed_activity_stats
 
-    def _compute_activity_stats(self) -> Dict[str, Dict[str, Any]]:
+    def _compute_activity_stats(self) -> dict[str, dict[str, Any]]:
         with self._streamer.result_lock:
             io_stats = self._get_io_stats()
             cpu_stats = self._get_cpu_stats()
@@ -83,7 +83,7 @@ class DockerStatsFetcher:
         # In case no update, default to 1
         return max(1, self._streamer.last_update_time - self._last_stats_computed_time)
 
-    def _get_cpu_stats(self) -> Optional[Dict[str, float]]:
+    def _get_cpu_stats(self) -> Optional[dict[str, float]]:
         """Return the container CPU usage.
 
         Output: a dict {'total': 1.49}
@@ -117,7 +117,7 @@ class DockerStatsFetcher:
         # Return the stats
         return stats
 
-    def _get_memory_stats(self) -> Optional[Dict[str, float]]:
+    def _get_memory_stats(self) -> Optional[dict[str, float]]:
         """Return the container MEMORY.
 
         Output: a dict {'usage': ..., 'limit': ..., 'inactive_file': ...}
@@ -140,7 +140,7 @@ class DockerStatsFetcher:
         # Return the stats
         return stats
 
-    def _get_network_stats(self) -> Optional[Dict[str, float]]:
+    def _get_network_stats(self) -> Optional[dict[str, float]]:
         """Return the container network usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}.
@@ -169,7 +169,7 @@ class DockerStatsFetcher:
         # Return the stats
         return stats
 
-    def _get_io_stats(self) -> Optional[Dict[str, float]]:
+    def _get_io_stats(self) -> Optional[dict[str, float]]:
         """Return the container IO usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'ior': 10, 'iow': 65}.
@@ -213,8 +213,11 @@ class DockerExtension:
     CONTAINER_ACTIVE_STATUS = ['running', 'paused']
 
     def __init__(self):
-        if import_docker_error_tag:
+        self.disable = disable_plugin_docker
+        if self.disable:
             raise Exception("Missing libs required to run Docker Extension (Containers) ")
+
+        self.display_error = True
 
         self.client = None
         self.ext_name = "containers (Docker)"
@@ -242,10 +245,10 @@ class DockerExtension:
         for t in itervalues(self.stats_fetchers):
             t.stop()
 
-    def update(self, all_tag) -> Tuple[Dict, List[Dict]]:
+    def update(self, all_tag) -> tuple[dict, list[dict]]:
         """Update Docker stats using the input method."""
 
-        if not self.client:
+        if not self.client or self.disable:
             return {}, []
 
         version_stats = self.update_version()
@@ -255,8 +258,13 @@ class DockerExtension:
             # Issue #1152: Docker module doesn't export details about stopped containers
             # The Containers/all key of the configuration file should be set to True
             containers = self.client.containers.list(all=all_tag)
+            self.display_error = True
         except Exception as e:
-            logger.error(f"{self.ext_name} plugin - Can't get containers list ({e})")
+            if self.display_error:
+                logger.error(f"{self.ext_name} plugin - Can't get containers list ({e})")
+                self.display_error = False
+            else:
+                logger.debug(f"{self.ext_name} plugin - Can't get containers list ({e})")
             return version_stats, []
 
         # Start new thread for new container
@@ -285,7 +293,7 @@ class DockerExtension:
         """Return the key of the list."""
         return 'name'
 
-    def generate_stats(self, container) -> Dict[str, Any]:
+    def generate_stats(self, container) -> dict[str, Any]:
         # Init the stats for the current container
         stats = {
             'key': self.key,

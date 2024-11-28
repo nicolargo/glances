@@ -146,13 +146,17 @@ class PluginModel(GlancesPluginModel):
         # Add specifics information
         # Alert
         for i in self.get_raw():
+            # Skip alert if no timespan to measure
+            if 'read_bytes_rate_per_sec' not in i or 'write_bytes_rate_per_sec' not in i:
+                continue
+
             disk_real_name = i['disk_name']
-            self.views[i[self.get_key()]]['read_bytes']['decoration'] = self.get_alert(
-                i['read_bytes'], header=disk_real_name + '_rx'
-            )
-            self.views[i[self.get_key()]]['write_bytes']['decoration'] = self.get_alert(
-                i['write_bytes'], header=disk_real_name + '_tx'
-            )
+            alert_rx = self.get_alert(i['read_bytes'], header=disk_real_name + '_rx')
+            alert_tx = self.get_alert(i['write_bytes'], header=disk_real_name + '_tx')
+            self.views[i[self.get_key()]]['read_bytes']['decoration'] = alert_rx
+            self.views[i[self.get_key()]]['read_bytes_rate_per_sec']['decoration'] = alert_rx
+            self.views[i[self.get_key()]]['write_bytes']['decoration'] = alert_tx
+            self.views[i[self.get_key()]]['write_bytes_rate_per_sec']['decoration'] = alert_tx
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -167,7 +171,7 @@ class PluginModel(GlancesPluginModel):
         if max_width:
             name_max_width = max_width - 13
         else:
-            # No max_width defined, return an emptu curse message
+            # No max_width defined, return an empty curse message
             logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 

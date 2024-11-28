@@ -272,8 +272,8 @@ class GlancesCursesBrowser(_GlancesCurses):
             msg = 'One Glances server available'
         else:
             msg = f'{stats_len} Glances servers available'
-        if self.args.disable_autodiscover:
-            msg += ' (auto discover is disabled)'
+        # if self.args.disable_autodiscover:
+        #     msg += ' (auto discover is disabled)'
         if screen_y > 1:
             self.term_window.addnstr(y, x, msg, screen_x - x, self.colors_list['TITLE'])
 
@@ -288,32 +288,49 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         return x, y
 
+    def __build_column_def(self, current_page):
+        """Define the column and it size to display in the browser"""
+        column_def = {'name': 16, 'ip': 15, 'status': 9, 'protocol': 8}
+
+        # Add dynamic columns
+        for server_stat in current_page:
+            for k, v in server_stat.items():
+                if k.endswith('_decoration'):
+                    column_def[k.split('_decoration')[0]] = 6
+        return column_def
+
     def __display_server_list(self, stats, x, y, screen_x, screen_y):
-        if len(stats) == 0:
+        if not stats:
             # No server to display
             return False
 
-        stats_max = screen_y - 3
-
-        # Table of table
-        # Item description: [stats_id, column name, column size]
-        column_def = [
-            ['name', 'Name', 16],
-            ['load_min5', 'LOAD', 6],
-            ['cpu_percent', 'CPU%', 5],
-            ['mem_percent', 'MEM%', 5],
-            ['status', 'STATUS', 9],
-            ['ip', 'IP', 15],
-            ['hr_name', 'OS', 16],
-        ]
-        y = 2
+        stats_list = self._get_stats(stats)
+        start_line = self._page_max_lines * self._current_page
+        end_line = start_line + self.get_pagelines(stats_list)
+        current_page = stats_list[start_line:end_line]
+        column_def = self.__build_column_def(current_page)
 
         # Display table header
+        stats_max = screen_y - 3
+        y = 2
         xc = x + 2
-        for cpt, c in enumerate(column_def):
-            if xc < screen_x and y < screen_y and c[1] is not None:
-                self.term_window.addnstr(y, xc, c[1], screen_x - x, self.colors_list['BOLD'])
-                xc += c[2] + self.space_between_column
+        # First line (plugin name)
+        for k, v in column_def.items():
+            k_split = k.split('_')
+            if len(k_split) == 1:
+                xc += v + self.space_between_column
+                continue
+            if xc < screen_x and y < screen_y and v is not None:
+                self.term_window.addnstr(y, xc, k_split[0].upper(), screen_x - x, self.colors_list['BOLD'])
+                xc += v + self.space_between_column
+        xc = x + 2
+        y += 1
+        # Second line (for item/key)
+        for k, v in column_def.items():
+            k_split = k.split('_')
+            if xc < screen_x and y < screen_y and v is not None:
+                self.term_window.addnstr(y, xc, ' '.join(k_split[1:]).upper(), screen_x - x, self.colors_list['BOLD'])
+                xc += v + self.space_between_column
         y += 1
 
         # If a servers has been deleted from the list...
@@ -321,11 +338,6 @@ class GlancesCursesBrowser(_GlancesCurses):
         if self.cursor > len(stats) - 1:
             # Set the cursor position to the latest item
             self.cursor = len(stats) - 1
-
-        stats_list = self._get_stats(stats)
-        start_line = self._page_max_lines * self._current_page
-        end_line = start_line + self.get_pagelines(stats_list)
-        current_page = stats_list[start_line:end_line]
 
         # Display table
         line = 0
@@ -345,22 +357,24 @@ class GlancesCursesBrowser(_GlancesCurses):
 
             # Display the line
             xc += 2
-            for c in column_def:
+            for k, v in column_def.items():
                 if xc < screen_x and y < screen_y:
                     # Display server stats
-                    value = server_stat.get(c[0], '?')
-                    if c[0] == 'name' and 'alias' in server_stat and server_stat['alias'] is not None:
+                    value = server_stat.get(k, '?')
+                    if isinstance(value, float):
+                        value = round(value, 1)
+                    if k == 'name' and 'alias' in server_stat and server_stat['alias'] is not None:
                         value = server_stat['alias']
                     decoration = self.colors_list.get(
-                        server_stat[c[0] + '_decoration'].replace('_LOG', '')
-                        if c[0] + '_decoration' in server_stat
+                        server_stat[k + '_decoration'].replace('_LOG', '')
+                        if k + '_decoration' in server_stat
                         else self.colors_list[server_stat['status']],
                         self.colors_list['DEFAULT'],
                     )
-                    if c[0] == 'status':
+                    if k == 'status':
                         decoration = self.colors_list[server_stat['status']]
-                    self.term_window.addnstr(y, xc, format(value), c[2], decoration)
-                    xc += c[2] + self.space_between_column
+                    self.term_window.addnstr(y, xc, format(value), v, decoration)
+                    xc += v + self.space_between_column
                 cpt += 1
             # Next line, next server...
             y += 1

@@ -1,38 +1,31 @@
 <template>
     <section id="percpu" class="plugin">
-        <div class="table">
-            <div class="table-row">
-                <div class="table-cell text-left title" v-if="args.disable_quicklook">CPU</div>
-                <div class="table-cell" v-if="args.disable_quicklook">total</div>
-                <div class="table-cell">user</div>
-                <div class="table-cell">system</div>
-                <div class="table-cell">idle</div>
-                <div class="table-cell">iowait</div>
-                <div class="table-cell">steal</div>
-            </div>
-            <div class="table-row" v-for="(percpu, percpuId) in percpuStats" :key="percpuId">
-                <div class="table-cell text-left" v-if="args.disable_quicklook">
-                    CPU{{ percpu.cpu_number }}
-                </div>
-                <div class="table-cell" v-if="args.disable_quicklook">
-                    {{ percpu.total }}%
-                </div>
-                <div class="table-cell" :class="getUserAlert(percpu)">
-                    {{ percpu.user }}%
-                </div>
-                <div class="table-cell" :class="getSystemAlert(percpu)">
-                    {{ percpu.system }}%
-                </div>
-                <div class="table-cell" v-show="percpu.idle != undefined">
-                    {{ percpu.idle }}%
-                </div>
-                <div class="table-cell" v-show="percpu.iowait != undefined" :class="getIOWaitAlert(percpu)">
-                    {{ percpu.iowait }}%
-                </div>
-                <div class="table-cell" v-show="percpu.steal != undefined">
-                    {{ percpu.steal }}%
-                </div>
-            </div>
+        <!-- d-none d-xl-block d-xxl-block -->
+        <div class="table-responsive">
+            <table class="table table-sm table-borderless">
+                <thead>
+                    <tr>
+                        <th scope="col" v-if="args.disable_quicklook">CPU</th>
+                        <td scope="col" v-if="args.disable_quicklook">total</td>
+                        <td scope="col">user</td>
+                        <td scope="col">system</td>
+                        <td scope="col">idle</td>
+                        <td scope="col">iowait</td>
+                        <td scope="col">steel</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(percpu, percpuId) in percpuStats" :key="percpuId">
+                        <td scope="col" v-if="args.disable_quicklook">CPU{{ percpu.cpu_number }}</td>
+                        <td scope="col" v-if="args.disable_quicklook">{{ percpu.total }}%</td>
+                        <td scope="col" :class="getUserAlert(percpu)">{{ percpu.user }}%</td>
+                        <td scope="col" :class="getSystemAlert(percpu)">{{ percpu.system }}%</td>
+                        <td scope="col" v-show="percpu.idle != undefined">{{ percpu.idle }}%</td>
+                        <td scope="col" v-show="percpu.iowait != undefined" :class="getIOWaitAlert(percpu)">{{ percpu.iowait }}%</td>
+                        <td scope="col" v-show="percpu.steal != undefined">{{ percpu.steal }}%</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </section>
 </template>

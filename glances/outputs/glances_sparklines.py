@@ -79,7 +79,7 @@ class Sparkline:
         ret = sparklines(self.percents, minimum=0, maximum=100)[0]
         if self.__display_value:
             percents_without_none = [x for x in self.percents if x is not None]
-            if len(percents_without_none) > 0:
+            if percents_without_none:
                 ret = f'{ret}{percents_without_none[-1]:5.1f}{self.__unit_char}'
         ret = nativestr(ret)
         if overwrite and len(overwrite) < len(ret) - 6:

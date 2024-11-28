@@ -196,6 +196,8 @@ class PluginModel(GlancesPluginModel):
         # Connections status
         if self.stats['net_connections_enabled']:
             for s in [psutil.CONN_LISTEN, 'initiated', psutil.CONN_ESTABLISHED, 'terminated']:
+                if s not in self.stats:
+                    continue
                 ret.append(self.curse_new_line())
                 msg = '{:{width}}'.format(nativestr(s).capitalize(), width=len(s))
                 ret.append(self.curse_add_line(msg))

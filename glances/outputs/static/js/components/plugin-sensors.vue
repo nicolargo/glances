@@ -1,15 +1,23 @@
 <template>
-    <section class="plugin" id="sensors">
-        <div class="table-row" v-if="sensors.length > 0">
-            <div class="table-cell text-left title">SENSORS</div>
-        </div>
-        <div class="table-row" v-for="(sensor, sensorId) in sensors" :key="sensorId">
-            <div class="table-cell text-left">{{ sensor.label }}</div>
-            <div class="table-cell"></div>
-            <div class="table-cell" :class="getDecoration(sensor.label)">
-                {{ sensor.value }}{{ sensor.unit }}
-            </div>
-        </div>
+    <section class="plugin" id="sensors" v-if="hasSensors">
+        <table class="table table-sm table-borderless">
+            <thead>
+                <tr>
+                    <th scope="col">SENSORS</th>
+                    <th scope="col" class="text-end"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(sensor, sensorId) in sensors" :key="sensorId">
+                    <td scope="row">
+                        {{ sensor.label }}
+                    </td>
+                    <td class="text-end" :class="getDecoration(sensor.label)">
+                        {{ sensor.value }}{{ sensor.unit }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </template>
 
@@ -57,6 +65,9 @@ export default {
                     }
                     return sensor;
                 });
+        },
+        hasSensors() {
+            return this.sensors.length > 0;
         }
     },
     methods: {

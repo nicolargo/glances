@@ -10,13 +10,13 @@
 
 from copy import deepcopy
 from functools import partial, reduce
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
-from glances.globals import iteritems, itervalues
+from glances.globals import iteritems, itervalues, nativestr
 from glances.logger import logger
 from glances.plugins.containers.engines import ContainersExtension
-from glances.plugins.containers.engines.docker import DockerExtension, import_docker_error_tag
-from glances.plugins.containers.engines.podman import PodmanExtension, import_podman_error_tag
+from glances.plugins.containers.engines.docker import DockerExtension, disable_plugin_docker
+from glances.plugins.containers.engines.podman import PodmanExtension, disable_plugin_podman
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.processes import glances_processes
 from glances.processes import sort_stats as sort_stats_processes
@@ -142,14 +142,14 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        self.watchers: Dict[str, ContainersExtension] = {}
+        self.watchers: dict[str, ContainersExtension] = {}
 
         # Init the Docker API
-        if not import_docker_error_tag:
+        if not disable_plugin_docker:
             self.watchers['docker'] = DockerExtension()
 
         # Init the Podman API
-        if not import_podman_error_tag:
+        if not disable_plugin_podman:
             self.watchers['podman'] = PodmanExtension(podman_sock=self._podman_sock())
 
         # Sort key
@@ -165,7 +165,7 @@ class PluginModel(GlancesPluginModel):
         Default value: unix:///run/user/1000/podman/podman.sock
         """
         conf_podman_sock = self.get_conf_value('podman_sock')
-        if len(conf_podman_sock) == 0:
+        if not conf_podman_sock:
             return "unix:///run/user/1000/podman/podman.sock"
         return conf_podman_sock[0]
 
@@ -181,7 +181,7 @@ class PluginModel(GlancesPluginModel):
         """Return the key of the list."""
         return 'name'
 
-    def get_export(self) -> List[Dict]:
+    def get_export(self) -> list[dict]:
         """Overwrite the default export method.
 
         - Only exports containers
@@ -208,13 +208,13 @@ class PluginModel(GlancesPluginModel):
         all=True
         """
         all_tag = self.get_conf_value('all')
-        if len(all_tag) == 0:
+        if not all_tag:
             return False
         return all_tag[0].lower() == 'true'
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
-    def update(self) -> List[Dict]:
+    def update(self) -> list[dict]:
         """Update Docker and podman stats using the input method."""
         # Connection should be ok
         if not self.watchers:
@@ -226,10 +226,16 @@ class PluginModel(GlancesPluginModel):
         # Update stats
         stats = []
         for engine, watcher in iteritems(self.watchers):
-            version, containers = watcher.update(all_tag=self._all_tag())
+            _, containers = watcher.update(all_tag=self._all_tag())
+            containers_filtered = []
             for container in containers:
                 container["engine"] = engine
-            stats.extend(containers)
+                if 'key' in container and container['key'] in container:
+                    if not self.is_hide(nativestr(container[container['key']])):
+                        containers_filtered.append(container)
+                else:
+                    containers_filtered.append(container)
+            stats.extend(containers_filtered)
 
         # Sort and update the stats
         # @TODO: Have a look because sort did not work for the moment (need memory stats ?)
@@ -237,7 +243,7 @@ class PluginModel(GlancesPluginModel):
         return self.stats
 
     @staticmethod
-    def memory_usage_no_cache(mem: Dict[str, float]) -> float:
+    def memory_usage_no_cache(mem: dict[str, float]) -> float:
         """Return the 'real' memory usage by removing inactive_file to usage"""
         # Ref: https://github.com/docker/docker-py/issues/3210
         return mem['usage'] - (mem['inactive_file'] if 'inactive_file' in mem else 0)
@@ -294,10 +300,11 @@ class PluginModel(GlancesPluginModel):
     def build_title(self, ret):
         msg = '{}'.format('CONTAINERS')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = f' {len(self.stats)}'
-        ret.append(self.curse_add_line(msg))
-        msg = f' sorted by {sort_for_human[self.sort_key]}'
-        ret.append(self.curse_add_line(msg))
+        if len(self.stats) > 1:
+            msg = f' {len(self.stats)}'
+            ret.append(self.curse_add_line(msg))
+            msg = f' sorted by {sort_for_human[self.sort_key]}'
+            ret.append(self.curse_add_line(msg))
         if not self.views['show_engine_name']:
             msg = f' (served by {self.stats[0].get("engine", "")})'
         ret.append(self.curse_add_line(msg))
@@ -460,7 +467,7 @@ class PluginModel(GlancesPluginModel):
 
         return ret
 
-    def msg_curse(self, args=None, max_width: Optional[int] = None) -> List[str]:
+    def msg_curse(self, args=None, max_width: Optional[int] = None) -> list[str]:
         """Return the dict to display in the curse interface."""
         # Init the return message
         init = []
@@ -522,7 +529,7 @@ class PluginModel(GlancesPluginModel):
         return 'INFO'
 
 
-def sort_docker_stats(stats: List[Dict[str, Any]]) -> Tuple[str, List[Dict[str, Any]]]:
+def sort_docker_stats(stats: list[dict[str, Any]]) -> tuple[str, list[dict[str, Any]]]:
     # Make VM sort related to process sort
     if glances_processes.sort_key == 'memory_percent':
         sort_by = 'memory_usage'

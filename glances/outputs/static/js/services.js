@@ -12,12 +12,22 @@ const fetchArgs = () => fetch('api/4/args', { method: 'GET' }).then((response) =
 // prettier-ignore
 const fetchConfig = () => fetch('api/4/config', { method: 'GET' }).then((response) => response.json());
 
+
 class GlancesHelperService {
     limits = {};
     limitSuffix = ['critical', 'careful', 'warning'];
 
     setLimits(limits) {
         this.limits = limits;
+    }
+
+    getLimit(pluginName, limitName) {
+        if (this.limits[pluginName] != undefined) {
+            if (this.limits[pluginName][limitName] != undefined) {
+                return this.limits[pluginName][limitName]
+            }
+        }
+        return null
     }
 
     getAlert(pluginName, limitNamePrefix, current, maximum, log) {

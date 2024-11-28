@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
 
@@ -100,7 +100,7 @@ jobs:
     strategy:
       matrix:
         # Only test the latest stable version
-        python-version: ["3.12"]
+        python-version: ["3.13"]
 
     steps:
 

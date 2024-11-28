@@ -25,6 +25,9 @@ class GlancesWebServer:
             # Ignore kernel threads in process list
             glances_processes.disable_kernel_threads()
 
+        # Set the args for the glances_processes instance
+        glances_processes.set_args(args)
+
         # Initial system information update
         self.stats.update()
 

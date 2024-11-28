@@ -1,63 +1,201 @@
+[project]
+authors = [{name = "Nicolas Hennion", email = "nicolas@nicolargo.com"}]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console :: Curses",
+  "Environment :: Web Environment",
+  "Framework :: FastAPI",
+  "Intended Audience :: Developers",
+  "Intended Audience :: End Users/Desktop",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: System :: Monitoring",
+]
+dependencies = [
+  "defusedxml",
+  "packaging",
+  "psutil>=5.6.7",
+  "fastapi>=0.82.0; platform_system == 'Windows'",
+  "uvicorn; platform_system == 'Windows'",
+  "jinja2; platform_system == 'Windows'",
+  "requests; platform_system == 'Windows'",
+]
+description = "A cross-platform curses-based monitoring tool"
+dynamic = ["version"]
+keywords = ["cli", "curses", "monitoring", "system"]
+license = {text = "LGPLv3"}
+name = "Glances"
+readme = "README.rst"
+requires-python = ">=3.9"
+urls.Homepage = "https://github.com/nicolargo/glances"
+
+[project.optional-dependencies]
+action = ["chevron"]
+all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,raid,sensors,smart,snmp,sparklines,web,wifi]"]
+browser = ["zeroconf"]
+cloud = ["requests"]
+containers = ["docker>=6.1.1", "packaging", "podman", "python-dateutil", "six"]
+export = [
+  "bernhard",
+  "cassandra-driver",
+  "elasticsearch",
+  "graphitesender",
+  "ibmcloudant",
+  "influxdb-client",
+  "influxdb>=1.0.0",
+  "kafka-python",
+  "paho-mqtt",
+  "pika",
+  "potsdb",
+  "prometheus_client",
+  "pymongo",
+  "pyzmq",
+  "statsd",
+]
+gpu = ["nvidia-ml-py"]
+graph = ["pygal"]
+ip = ["netifaces"]
+raid = ["pymdstat"]
+sensors = ["batinfo; platform_system == 'Linux'"]
+smart = ["pySMART.smartx"]
+snmp = ["pysnmp-lextudio<6.2.0"]
+sparklines = ["sparklines"]
+web = ["fastapi>=0.82.0", "jinja2", "requests", "uvicorn"]
+wifi = ["wifi"]
+
+[project.scripts]
+glances = "glances:main"
+
+[tool.setuptools.data-files]
+"share/doc/glances" = [
+  "AUTHORS",
+  "COPYING",
+  "NEWS.rst",
+  "README.rst",
+  "SECURITY.md",
+  "CONTRIBUTING.md",
+  "conf/glances.conf",
+]
+"share/man/man1" = ["docs/man/glances.1"]
+
+[tool.setuptools.dynamic]
+version = {attr = "glances.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["glances*"]
+
 [tool.ruff]
 line-length = 120
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.format]
 quote-style = "preserve"
 
 [tool.ruff.lint]
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
-select = [
-#    "A",
-#    "B",
-#    "S",
-    "C90", # mccabe
-    "E", # pycodestyle
-    "F", # Pyflakes
-    "I", # isort
-    "N", # pep8-naming
-    "W", # pycodestyle
-    "UP", # pyupgrde
-    "C4", # flake8-comprehensions
-    "RET", # flake8-return
-#    "PL",
-#    "FBT", # flake8-boolean-trap
-#    "RUF", # Ruff-specific rules
-#    "PERF", # Perflint
-]
 ignore = ["N801", "N802", "N803", "N805", "N806", "N807", "N811", "N812", "N813", "N814", "N815", "N816", "N817", "N818"]
+select = [
+  #    "A",
+  #    "B",
+  #    "S",
+  "C90", # mccabe
+  "E", # pycodestyle
+  "F", # Pyflakes
+  "I", # isort
+  "N", # pep8-naming
+  "W", # pycodestyle
+  "UP", # pyupgrde
+  "C4", # flake8-comprehensions
+  "RET", # flake8-return
+  #    "PL",
+  #    "FBT", # flake8-boolean-trap
+  #    "RUF", # Ruff-specific rules
+  #    "PERF", # Perflint
+]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
-fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "EM", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
+fixable = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "I",
+  "N",
+  "Q",
+  "S",
+  "T",
+  "W",
+  "ANN",
+  "ARG",
+  "BLE",
+  "COM",
+  "DJ",
+  "DTZ",
+  "EM",
+  "ERA",
+  "EXE",
+  "FBT",
+  "ICN",
+  "INP",
+  "ISC",
+  "NPY",
+  "PD",
+  "PGH",
+  "PIE",
+  "PL",
+  "PT",
+  "PTH",
+  "PYI",
+  "RET",
+  "RSE",
+  "RUF",
+  "SIM",
+  "SLF",
+  "TCH",
+  "TID",
+  "TRY",
+  "UP",
+  "YTT",
+]
 unfixable = []
 
 # Exclude a variety of commonly ignored directories.
 exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-    "venv-dev",
-    "venv-min",
-    "docs",
-    "test-data",
-    "./glances/outputs/static/*"
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+  "venv-dev",
+  "venv-min",
+  "docs",
+  "test-data",
+  "./glances/outputs/static/*",
 ]
 
 # Allow unused variables when underscore-prefixed.
@@ -66,3 +204,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 [tool.ruff.lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.
 max-complexity = 21
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=68"]

@@ -8,7 +8,7 @@
 
 """CPU percent stats shared between CPU and Quicklook plugins."""
 
-from typing import List, Optional, TypedDict
+from typing import Optional, TypedDict
 
 import psutil
 
@@ -121,7 +121,7 @@ class CpuPercent:
     def _compute_cpu() -> float:
         return psutil.cpu_percent(interval=0.0)
 
-    def get_percpu(self) -> List[PerCpuPercentInfo]:
+    def get_percpu(self) -> list[PerCpuPercentInfo]:
         """Update and/or return the per CPU list using the psutil library."""
         # Never update more than 1 time per cached_timer_cpu
         if self.timer_percpu.finished():
@@ -131,7 +131,7 @@ class CpuPercent:
             self.percpu_percent = self._compute_percpu()
         return self.percpu_percent
 
-    def _compute_percpu(self) -> List[PerCpuPercentInfo]:
+    def _compute_percpu(self) -> list[PerCpuPercentInfo]:
         psutil_percpu = enumerate(psutil.cpu_times_percent(interval=0.0, percpu=True))
         return [
             {

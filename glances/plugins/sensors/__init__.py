@@ -11,7 +11,7 @@
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
-from typing import Any, Dict, List, Literal
+from typing import Any, Literal
 
 import psutil
 
@@ -105,7 +105,18 @@ class PluginModel(GlancesPluginModel):
         batpercent_plugin = BatPercentPluginModel(args=args, config=config)
         logger.debug(f"Battery sensor plugin init duration: {start_duration.get()} seconds")
 
-        self.sensors_grab_map: Dict[SensorType, Any] = {}
+        self.sensors_grab_map: dict[SensorType, Any] = {}
+
+        if glances_grab_sensors_cpu_temp.init:
+            self.sensors_grab_map[SensorType.CPU_TEMP] = glances_grab_sensors_cpu_temp
+
+        if glances_grab_sensors_fan_speed.init:
+            self.sensors_grab_map[SensorType.FAN_SPEED] = glances_grab_sensors_fan_speed
+
+        self.sensors_grab_map[SensorType.HDD_TEMP] = hddtemp_plugin
+        self.sensors_grab_map[SensorType.BATTERY] = batpercent_plugin
+
+        self.sensors_grab_map: dict[SensorType, Any] = {}
 
         if glances_grab_sensors_cpu_temp.init:
             self.sensors_grab_map[SensorType.CPU_TEMP] = glances_grab_sensors_cpu_temp
@@ -127,7 +138,7 @@ class PluginModel(GlancesPluginModel):
         """Return the key of the list."""
         return 'label'
 
-    def __get_sensor_data(self, sensor_type: SensorType) -> List[Dict]:
+    def __get_sensor_data(self, sensor_type: SensorType) -> list[dict]:
         try:
             data = self.sensors_grab_map[sensor_type].update()
             data = self.__set_type(data, sensor_type)
@@ -192,7 +203,7 @@ class PluginModel(GlancesPluginModel):
             return self.has_alias("{}_{}".format(stats["label"], stats["type"]).lower())
         return stats["label"]
 
-    def __set_type(self, stats: List[Dict[str, Any]], sensor_type: SensorType) -> List[Dict[str, Any]]:
+    def __set_type(self, stats: list[dict[str, Any]], sensor_type: SensorType) -> list[dict[str, Any]]:
         """Set the plugin type.
 
         4 types of stats is possible in the sensors plugin:
@@ -269,7 +280,7 @@ class PluginModel(GlancesPluginModel):
         if max_width:
             name_max_width = max_width - 12
         else:
-            # No max_width defined, return an emptu curse message
+            # No max_width defined, return an empty curse message
             logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
@@ -329,7 +340,7 @@ class GlancesGrabSensors:
         except AttributeError:
             logger.debug(f"Cannot grab {sensor_type}. Platform not supported.")
 
-    def __fetch_psutil(self) -> Dict[str, list]:
+    def __fetch_psutil(self) -> dict[str, list]:
         if self.sensor_type == SensorType.CPU_TEMP:
             # Solve an issue #1203 concerning a RunTimeError warning message displayed
             # in the curses interface.
@@ -344,7 +355,7 @@ class GlancesGrabSensors:
 
         raise ValueError(f"Unsupported sensor_type: {self.sensor_type}")
 
-    def update(self) -> List[dict]:
+    def update(self) -> list[dict]:
         """Update the stats."""
         if not self.init:
             return []

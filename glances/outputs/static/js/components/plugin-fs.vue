@@ -1,30 +1,42 @@
 <template>
-    <section class="plugin" id="fs">
-        <div class="table-row">
-            <div class="table-cell text-left title">FILE SYS</div>
-            <div class="table-cell">
-                <span v-show="!args.fs_free_space">Used</span>
-                <span v-show="args.fs_free_space">Free</span>
-            </div>
-            <div class="table-cell">Total</div>
-        </div>
-        <div class="table-row" v-for="(fs, fsId) in fileSystems" :key="fsId">
-            <div class="table-cell text-left">
-                {{ $filters.minSize(fs.alias ? fs.alias : fs.mountPoint, 26, begin=false) }}
-                <span v-if="(fs.alias ? fs.alias : fs.mountPoint).length + fs.name.length <= 24" class="visible-lg-inline">
-                    ({{ fs.name }})
-                </span>
-            </div>
-            <div class="table-cell" :class="getDecoration(fs.mountPoint, 'used')">
-                <span v-show="!args.fs_free_space">
-                    {{ $filters.bytes(fs.used) }}
-                </span>
-                <span v-show="args.fs_free_space">
-                    {{ $filters.bytes(fs.free) }}
-                </span>
-            </div>
-            <div class="table-cell">{{ $filters.bytes(fs.size) }}</div>
-        </div>
+    <section class="plugin" id="fs" v-if="hasFs">
+        <table class="table table-sm table-borderless margin-bottom">
+            <thead>
+                <tr>
+                    <th scope="col">FILE SYSTEM</th>
+                    <template v-if="!args.fs_free_space">
+                        <th scope="col" class="text-end w-25">Used</th>
+                    </template>
+                    <template v-else>
+                        <th scope="col" class="text-end w-25">Free</th>
+                    </template>
+                    <th scope="col" class="text-end w-25">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(fs, fsId) in fileSystems" :key="fsId">
+                    <td scope="row">
+                        {{ $filters.minSize(fs.alias ? fs.alias : fs.mountPoint, 26, begin=false) }}
+                        <span v-if="(fs.alias ? fs.alias : fs.mountPoint).length + fs.name.length <= 24" class="visible-lg-inline">
+                            ({{ fs.name }})
+                        </span>
+                    </td>
+                    <template v-if="!args.fs_free_space">
+                        <td scope="row" class="text-end" :class="getDecoration(fs.mountPoint, 'used')">
+                            {{ $filters.bytes(fs.used) }}
+                        </td>
+                    </template>
+                    <template v-else>
+                        <td scope="row" class="text-end" :class="getDecoration(fs.mountPoint, 'used')">
+                            {{ $filters.bytes(fs.free) }}
+                        </td>
+                    </template>
+                    <td scope="row" class="text-end">
+                        {{ $filters.bytes(fs.size) }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </template>
 
@@ -66,6 +78,9 @@ export default {
                 };
             });
             return orderBy(fileSystems, ['mnt_point']);
+        },
+        hasFs() {
+            return this.fileSystems.length > 0;
         }
     },
     methods: {

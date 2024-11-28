@@ -16,7 +16,7 @@ from glances.globals import MACOS, WINDOWS, disable, enable, itervalues, natives
 from glances.logger import logger
 from glances.outputs.glances_colors import GlancesColors
 from glances.outputs.glances_unicode import unicode_message
-from glances.processes import glances_processes, sort_processes_key_list
+from glances.processes import glances_processes, sort_processes_stats_list
 from glances.timer import Timer
 
 # Import curses library for "normal" operating system
@@ -97,7 +97,7 @@ class _GlancesCurses:
         # 'DOWN' > Down in the server list
     }
 
-    _sort_loop = sort_processes_key_list
+    _sort_loop = sort_processes_stats_list
 
     # Define top menu
     _top = ['quicklook', 'cpu', 'percpu', 'gpu', 'mem', 'memswap', 'load']
@@ -124,8 +124,8 @@ class _GlancesCurses:
     _left_sidebar_min_width = 23
     _left_sidebar_max_width = 34
 
-    # Define right sidebar
-    _right_sidebar = ['vms', 'containers', 'processcount', 'amps', 'processlist', 'alert']
+    # Define right sidebar in a method because it depends of self.args.programs
+    # See def _right_sidebar method
 
     def __init__(self, config=None, args=None):
         # Init
@@ -203,6 +203,16 @@ class _GlancesCurses:
             )
             # Set the left sidebar list
             self._left_sidebar = config.get_list_value('outputs', 'left_menu', default=self._left_sidebar)
+
+    def _right_sidebar(self):
+        return [
+            'vms',
+            'containers',
+            'processcount',
+            'amps',
+            'programlist' if self.args.programs else 'processlist',
+            'alert',
+        ]
 
     def _init_history(self):
         """Init the history option."""
@@ -790,7 +800,7 @@ class _GlancesCurses:
 
         # Display right sidebar
         self.new_column()
-        for p in self._right_sidebar:
+        for p in self._right_sidebar():
             if (hasattr(self.args, 'enable_' + p) or hasattr(self.args, 'disable_' + p)) and p in stat_display:
                 self.new_line()
                 if p == 'processlist':
@@ -863,7 +873,7 @@ class _GlancesCurses:
 
         # Add the message
         for y, m in enumerate(sentence_list):
-            if len(m) > 0:
+            if m:
                 popup.addnstr(2 + y, 2, m, len(m))
 
         if popup_type == 'info':
@@ -903,11 +913,14 @@ class _GlancesCurses:
             return None
 
         if popup_type == 'yesno':
-            # # Create a sub-window for the text field
+            # Create a sub-window for the text field
             sub_pop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)
             sub_pop.attron(self.colors_list['FILTER'])
             # Init the field with the current value
-            sub_pop.addnstr(0, 0, '', 0)
+            try:
+                sub_pop.addnstr(0, 0, '', 0)
+            except curses.error:
+                pass
             # Display the popup
             popup.refresh()
             sub_pop.refresh()

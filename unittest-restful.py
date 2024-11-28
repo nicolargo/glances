@@ -56,7 +56,7 @@ class TestGlances(unittest.TestCase):
             cmdline = "./venv/bin/python"
         else:
             cmdline = "python"
-        cmdline += f" -m glances -B 0.0.0.0 -w -p {SERVER_PORT} --disable-webui -C ./conf/glances.conf"
+        cmdline += f" -m glances -B 0.0.0.0 -w --browser -p {SERVER_PORT} --disable-webui -C ./conf/glances.conf"
         print(f"Run the Glances Web Server on port {SERVER_PORT}")
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
@@ -141,8 +141,7 @@ class TestGlances(unittest.TestCase):
         """Values."""
         method = "processlist"
         print('INFO: [TEST_005] Item=Value for the PROCESSLIST method')
-        print(f"{URL}/{method}/pid/0")
-        req = self.http_get(f"{URL}/{method}/pid/0")
+        req = self.http_get(f"{URL}/{method}/pid/value/0")
 
         self.assertTrue(req.ok)
         self.assertIsInstance(req.json(), dict)
@@ -282,6 +281,32 @@ class TestGlances(unittest.TestCase):
         req = self.http_get(f"{URL}/cpu/total/unit")
         self.assertTrue(req.ok)
         self.assertTrue(req.json(), str)
+
+    def test_017_item_key(self):
+        """Get /plugin/item/key value."""
+        print('INFO: [TEST_017] Get /plugin/item/key value')
+        plugin = "network"
+        item = "interface_name"
+        req = self.http_get(f"{URL}/{plugin}/{item}")
+        self.assertTrue(req.ok)
+        self.assertIsInstance(req.json(), dict)
+        self.assertIsInstance(req.json()[item], list)
+        if len(req.json()[item]) > 0:
+            key = req.json()[item][0]
+            item = "bytes_all"
+            req = self.http_get(f"{URL}/{plugin}/{item}/{key}")
+            self.assertTrue(req.ok)
+            self.assertIsInstance(req.json(), dict)
+            self.assertIsInstance(req.json()[item], int)
+
+    def test_100_browser(self):
+        """Get /serverslist (for Glances Central Browser)."""
+        print('INFO: [TEST_100] Get /serverslist (for Glances Central Browser)')
+        req = self.http_get(f"{URL}/serverslist")
+        self.assertTrue(req.ok)
+        self.assertIsInstance(req.json(), list)
+        if len(req.json()) > 0:
+            self.assertIsInstance(req.json()[0], dict)
 
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""

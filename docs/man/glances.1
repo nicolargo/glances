@@ -27,7 +27,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "GLANCES" "1" "Jun 29, 2024" "4.2.0_beta01" "Glances"
+.TH "GLANCES" "1" "Nov 17, 2024" "4.3.0_dev04" "Glances"
 .SH NAME
 glances \- An eye on your system
 .SH SYNOPSIS
@@ -189,7 +189,8 @@ run Glances in server mode
 .INDENT 0.0
 .TP
 .B \-\-browser
-start the client browser (list of servers)
+start TUI Central Glances Browser
+use –browser \-w to start WebUI Central Glances Browser
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -620,10 +621,10 @@ A first section (called global) is available:
 # It is also possible to overwrite it in each plugin section
 refresh=2
 # Should Glances check if a newer version is available on PyPI ?
-check_update=false
+check_update=true
 # History size (maximum number of values)
-# Default is 28800: 1 day with 1 point every 3 seconds
-history_size=28800
+# Default is 1200 values (~1h with the default refresh rate)
+history_size=1200
 # Set the way Glances should display the date (default is %Y\-%m\-%d %H:%M:%S %Z)
 #strftime_format=\(dq%Y\-%m\-%d %H:%M:%S %Z\(dq
 # Define external directory for loading additional plugins
@@ -882,14 +883,15 @@ is hosted.
 .UNINDENT
 .SH EXAMPLES
 .sp
-Monitor local machine (standalone mode):
+Monitor local machine, also called standalone mode,
+with the Text\-based user interface (TUI):
 .INDENT 0.0
 .INDENT 3.5
 $ glances
 .UNINDENT
 .UNINDENT
 .sp
-To monitor the local machine with the web interface (Web UI),
+To monitor the local machine with the Web user interface (WebUI),
 , run the following command line:
 .INDENT 0.0
 .INDENT 3.5
@@ -897,7 +899,7 @@ $ glances \-w
 .UNINDENT
 .UNINDENT
 .sp
-then, open a web browser to the provided URL.
+then, open a Web Browser to the provided URL.
 .sp
 Monitor local machine and export stats to a CSV file:
 .INDENT 0.0
@@ -943,12 +945,21 @@ $ glances \-c <ip_server> –export statsd
 .UNINDENT
 .UNINDENT
 .sp
-Start the client browser (browser mode):
+Start the TUI Central Glances Browser:
 .INDENT 0.0
 .INDENT 3.5
 $ glances –browser
 .UNINDENT
 .UNINDENT
+.sp
+Start the WebUI Central Glances Browser (new in Glances 4.3 or higher):
+.INDENT 0.0
+.INDENT 3.5
+$ glances –browser \-w
+.UNINDENT
+.UNINDENT
+.sp
+If you do not want to see the local Glances Web Server in the browser list please use –disable\-autodiscover option.
 .SH AUTHOR
 .sp
 Nicolas Hennion aka Nicolargo <\X'tty: link mailto:contact@nicolargo.com'\fI\%contact@nicolargo.com\fP\X'tty: link'>

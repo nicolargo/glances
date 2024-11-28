@@ -4,94 +4,80 @@
     </div>
     <glances-help v-else-if="args.help_tag"></glances-help>
     <main v-else>
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-sm-24">
-                    <div class="pull-left">
-                        <glances-plugin-system :data="data"></glances-plugin-system>
-                    </div>
-                    <div class="pull-left" v-if="!args.disable_ip">
-                        <glances-plugin-ip :data="data"></glances-plugin-ip>
-                    </div>
-                    <div class="pull-right">
-                        <glances-plugin-uptime :data="data"></glances-plugin-uptime>
-                    </div>
+        <div class="container-fluidheader">
+            <div class="row justify-content-between">
+                <div class="col-auto" v-if="!args.disable_system">
+                    <glances-plugin-system :data="data"></glances-plugin-system>
+                </div>
+                <div class="col d-none d-xl-block d-xxl-block" v-if="!args.disable_ip">
+                    <glances-plugin-ip :data="data"></glances-plugin-ip>
+                </div>
+                <div class="col-auto ms-auto d-none d-xxl-block" v-if="!args.disable_now">
+                    <glances-plugin-now :data="data"></glances-plugin-now>
+                </div>
+                <div class="col-auto ms-auto" v-if="!args.disable_uptime">
+                    <glances-plugin-uptime :data="data"></glances-plugin-uptime>
+                </div>
+            </div>
+            <div class="row" v-if="!args.disable_cloud">
+                <div class="col">
+                    <glances-plugin-cloud :data="data"></glances-plugin-cloud>
                 </div>
             </div>
         </div>
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-sm-24">
-                    <div class="pull-left">
-                        <glances-plugin-cloud :data="data"></glances-plugin-cloud>
-                    </div>
-                </div>
-            </div>
-            <div class="row separator" v-if="args.enable_separator"></div>
-            <div class="row">
-                <div class="hidden-xs hidden-sm hidden-md col-lg-6" v-if="!args.disable_quicklook">
+        <div class="container-fluid" :class="{ 'top-min': !args.percpu, 'top-max': args.percpu }">
+            <div class="row justify-content-between">
+                <!-- Quicklook -->
+                <div class="col-3 d-none d-lg-block d-xl-block d-xxl-block" v-if="!args.disable_quicklook">
                     <glances-plugin-quicklook :data="data"></glances-plugin-quicklook>
                 </div>
-                <div class="col-sm-6 col-md-8 col-lg-6" v-if="!args.disable_cpu && !args.percpu">
+                <!-- CPU -->
+                <div class="col" v-if="!args.disable_cpu || !args.percpu">
                     <glances-plugin-cpu :data="data"></glances-plugin-cpu>
                 </div>
-                <div class="col-sm-12 col-md-8 col-lg-6" v-if="!args.disable_cpu && args.percpu">
-                    <glances-plugin-percpu :data="data"></glances-plugin-percpu>
+                <!-- TODO: percpu need to be refactor
+                <div class="col"
+                        v-if="!args.disable_cpu && !args.percpu">
+                    <glances-plugin-cpu :data="data"></glances-plugin-cpu>
                 </div>
-                <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_gpu && hasGpu">
+                <div class="col"
+                        v-if="!args.disable_cpu && args.percpu">
+                    <glances-plugin-percpu :data="data"></glances-plugin-percpu>
+                </div> -->
+
+                <!-- GPU -->
+                <div class="col" v-if="!args.disable_gpu && hasGpu">
                     <glances-plugin-gpu :data="data"></glances-plugin-gpu>
                 </div>
-                <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_mem">
+                <!-- MEM -->
+                <div class="col" v-if="!args.disable_mem">
                     <glances-plugin-mem :data="data"></glances-plugin-mem>
                 </div>
-                <!-- NOTE: display if MEM enabled and GPU disabled -->
-                <div
-                    v-if="!args.disable_mem && !(!args.disable_gpu && hasGpu)"
-                    class="hidden-xs hidden-sm col-md-4 col-lg-3"
-                >
-                    <glances-plugin-mem-more :data="data"></glances-plugin-mem-more>
-                </div>
-                <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_memswap">
+                <!-- SWAP -->
+                <div class="col-auto d-none d-md-block d-lg-block d-xl-block d-xxl-block" v-if="!args.disable_memswap">
                     <glances-plugin-memswap :data="data"></glances-plugin-memswap>
                 </div>
-                <div class="col-sm-6 col-md-4 col-lg-3" v-if="!args.disable_load">
+                <!-- LOAD -->
+                <div class="col-auto" v-if="!args.disable_load">
                     <glances-plugin-load :data="data"></glances-plugin-load>
                 </div>
             </div>
-            <div class="row separator" v-if="args.enable_separator"></div>
         </div>
         <div class="container-fluid">
             <div class="row">
-                <div class="col-sm-6 sidebar" v-if="!args.disable_left_sidebar">
-                    <div class="table">
-                        <!-- When they exist on the same node, v-if has a higher priority than v-for.
-                            That means the v-if condition will not have access to variables from the
-                            scope of the v-for -->
-                        <template v-for="plugin in leftMenu">
-                            <component
-                                v-if="!args[`disable_${plugin}`]"
-                                :is="`glances-plugin-${plugin}`"
-                                :id="`plugin-${plugin}`"
-                                class="plugin table-row-group"
-                                :data="data">
-                            </component>
-                        </template>
-                    </div>
+                <div class="col-3" :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }"
+                    v-if="!args.disable_left_sidebar">
+                    <template v-for="plugin in leftMenu">
+                        <component v-if="!args[`disable_${plugin}`]" :is="`glances-plugin-${plugin}`"
+                            :id="`plugin-${plugin}`" :data="data">
+                        </component>
+                    </template>
                 </div>
-                <div class="col-sm-18">
-                    <glances-plugin-vms
-                        v-if="!args.disable_vms"
-                        :data="data"
-                    ></glances-plugin-vms>
-                    <glances-plugin-containers
-                        v-if="!args.disable_containers"
-                        :data="data"
-                    ></glances-plugin-containers>
+                <div class="col" :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }">
+                    <glances-plugin-vms v-if="!args.disable_vms" :data="data"></glances-plugin-vms>
+                    <glances-plugin-containers v-if="!args.disable_containers" :data="data"></glances-plugin-containers>
                     <glances-plugin-process :data="data"></glances-plugin-process>
-                    <glances-plugin-alert
-                        v-if="!args.disable_alert"
-                        :data="data"
-                    ></glances-plugin-alert>
+                    <glances-plugin-alert v-if="!args.disable_alert" :data="data"></glances-plugin-alert>
                 </div>
             </div>
         </div>
@@ -117,7 +103,6 @@ import GlancesPluginIp from './components/plugin-ip.vue';
 import GlancesPluginIrq from './components/plugin-irq.vue';
 import GlancesPluginLoad from './components/plugin-load.vue';
 import GlancesPluginMem from './components/plugin-mem.vue';
-import GlancesPluginMemMore from './components/plugin-mem-more.vue';
 import GlancesPluginMemswap from './components/plugin-memswap.vue';
 import GlancesPluginNetwork from './components/plugin-network.vue';
 import GlancesPluginNow from './components/plugin-now.vue';
@@ -151,7 +136,6 @@ export default {
         GlancesPluginIrq,
         GlancesPluginLoad,
         GlancesPluginMem,
-        GlancesPluginMemMore,
         GlancesPluginMemswap,
         GlancesPluginNetwork,
         GlancesPluginNow,

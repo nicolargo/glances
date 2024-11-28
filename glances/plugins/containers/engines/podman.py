@@ -9,7 +9,7 @@
 
 import time
 from datetime import datetime
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 from glances.globals import iterkeys, itervalues, nativestr, pretty_date, replace_special_chars, string_value_to_float
 from glances.logger import logger
@@ -20,11 +20,11 @@ from glances.stats_streamer import ThreadedIterableStreamer
 try:
     from podman import PodmanClient
 except Exception as e:
-    import_podman_error_tag = True
+    disable_plugin_podman = True
     # Display debug message if import KeyError
     logger.warning(f"Error loading Podman deps Lib. Podman feature in the Containers plugin is disabled ({e})")
 else:
-    import_podman_error_tag = False
+    disable_plugin_podman = False
 
 
 class PodmanContainerStatsFetcher:
@@ -47,7 +47,7 @@ class PodmanContainerStatsFetcher:
     def stop(self):
         self._streamer.stop()
 
-    def get_streamed_stats(self) -> Dict[str, Any]:
+    def get_streamed_stats(self) -> dict[str, Any]:
         stats = self._streamer.stats
         if stats["Error"]:
             logger.error(f"containers (Podman) Container({self._container.id}): Stats fetching failed")
@@ -56,7 +56,7 @@ class PodmanContainerStatsFetcher:
         return stats["Stats"][0]
 
     @property
-    def activity_stats(self) -> Dict[str, Any]:
+    def activity_stats(self) -> dict[str, Any]:
         """Activity Stats
 
         Each successive access of activity_stats will cause computation of activity_stats
@@ -66,7 +66,7 @@ class PodmanContainerStatsFetcher:
         self._last_stats_computed_time = time.time()
         return computed_activity_stats
 
-    def _compute_activity_stats(self) -> Dict[str, Dict[str, Any]]:
+    def _compute_activity_stats(self) -> dict[str, dict[str, Any]]:
         stats = {"cpu": {}, "memory": {}, "io": {}, "network": {}}
         api_stats = self.get_streamed_stats()
 
@@ -157,7 +157,7 @@ class PodmanPodStatsFetcher:
 
         return result_stats
 
-    def _get_cpu_stats(self, stats: Dict) -> Optional[Dict]:
+    def _get_cpu_stats(self, stats: dict) -> Optional[dict]:
         """Return the container CPU usage.
 
         Output: a dict {'total': 1.49}
@@ -169,7 +169,7 @@ class PodmanPodStatsFetcher:
         cpu_usage = string_value_to_float(stats["CPU"].rstrip("%"))
         return {"total": cpu_usage}
 
-    def _get_memory_stats(self, stats) -> Optional[Dict]:
+    def _get_memory_stats(self, stats) -> Optional[dict]:
         """Return the container MEMORY.
 
         Output: a dict {'usage': ..., 'limit': ...}
@@ -190,7 +190,7 @@ class PodmanPodStatsFetcher:
 
         return {'usage': usage, 'limit': limit, 'inactive_file': 0}
 
-    def _get_network_stats(self, stats) -> Optional[Dict]:
+    def _get_network_stats(self, stats) -> Optional[dict]:
         """Return the container network usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}.
@@ -216,7 +216,7 @@ class PodmanPodStatsFetcher:
         # Hardcode `time_since_update` to 1 as podman docs don't specify the rate calculation procedure
         return {"rx": rx, "tx": tx, "time_since_update": 1}
 
-    def _get_io_stats(self, stats) -> Optional[Dict]:
+    def _get_io_stats(self, stats) -> Optional[dict]:
         """Return the container IO usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'ior': 10, 'iow': 65}.
@@ -249,8 +249,11 @@ class PodmanExtension:
     CONTAINER_ACTIVE_STATUS = ['running', 'paused']
 
     def __init__(self, podman_sock):
-        if import_podman_error_tag:
+        self.disable = disable_plugin_podman
+        if self.disable:
             raise Exception("Missing libs required to run Podman Extension (Containers)")
+
+        self.display_error = True
 
         self.client = None
         self.ext_name = "containers (Podman)"
@@ -269,6 +272,7 @@ class PodmanExtension:
         except Exception as e:
             logger.debug(f"{self.ext_name} plugin - Can't connect to Podman ({e})")
             self.client = None
+            self.disable = True
 
     def update_version(self):
         # Long and not useful anymore because the information is no more displayed in UIs
@@ -283,10 +287,10 @@ class PodmanExtension:
         if self.pods_stats_fetcher:
             self.pods_stats_fetcher.stop()
 
-    def update(self, all_tag) -> Tuple[Dict, list[Dict[str, Any]]]:
+    def update(self, all_tag) -> tuple[dict, list[dict[str, Any]]]:
         """Update Podman stats using the input method."""
 
-        if not self.client:
+        if not self.client or self.disable:
             return {}, []
 
         version_stats = self.update_version()
@@ -298,8 +302,13 @@ class PodmanExtension:
             containers = self.client.containers.list(all=all_tag)
             if not self.pods_stats_fetcher:
                 self.pods_stats_fetcher = PodmanPodStatsFetcher(self.client.pods)
+            self.display_error = True
         except Exception as e:
-            logger.error(f"{self.ext_name} plugin - Can't get containers list ({e})")
+            if self.display_error:
+                logger.error(f"{self.ext_name} plugin - Can't get containers list ({e})")
+                self.display_error = False
+            else:
+                logger.debug(f"{self.ext_name} plugin - Can't get containers list ({e})")
             return version_stats, []
 
         # Start new thread for new container
@@ -335,7 +344,7 @@ class PodmanExtension:
         """Return the key of the list."""
         return 'name'
 
-    def generate_stats(self, container) -> Dict[str, Any]:
+    def generate_stats(self, container) -> dict[str, Any]:
         # Init the stats for the current container
         stats = {
             'key': self.key,

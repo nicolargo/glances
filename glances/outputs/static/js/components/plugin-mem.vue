@@ -1,24 +1,75 @@
 <template>
     <section id="mem" class="plugin">
-        <div class="table">
-            <div class="table-row">
-                <div class="table-cell text-left title">MEM</div>
-                <div class="table-cell" :class="getDecoration('percent')">{{ percent }}%</div>
-            </div>
-            <div class="table-row">
-                <div class="table-cell text-left">total:</div>
-                <div class="table-cell">{{ $filters.bytes(total) }}</div>
-            </div>
-            <div class="table-row">
-                <div class="table-cell text-left">used:</div>
-                <div class="table-cell" :class="getDecoration('used')">
-                    {{ $filters.bytes(used, 2) }}
-                </div>
-            </div>
-            <div class="table-row">
-                <div class="table-cell text-left">free:</div>
-                <div class="table-cell">{{ $filters.bytes(free) }}</div>
-            </div>
+        <!-- d-none d-xxl-block -->
+        <div class="table-responsive">
+            <table class="table-sm table-borderless">
+                <tbody>
+                    <tr class="justify-content-between">
+                        <td scope="col">
+                            <table class="table table-sm table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <th scope="col">MEM</th>
+                                        <td scope="col" class="text-end" :class="getDecoration('percent')">{{ percent }}%</td>
+                                    </tr>
+                                    <tr>
+                                        <td scope="row">total:</td>
+                                        <td class="text-end">{{ $filters.bytes(total) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td scope="row">used:</td>
+                                        <td class="text-end" :class="getDecoration('used')">{{ $filters.bytes(used, 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td scope="row">free:</td>
+                                        <td class="text-end" :class="getDecoration('free')">{{ $filters.bytes(free, 2) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                        <td>
+                            <template class="d-none d-xl-block d-xxl-block">
+                                <table class="table table-sm table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td scope="col" v-show="active != undefined">
+                                                active:
+                                            </td>
+                                            <td scope="col" v-show="active != undefined">
+                                                {{ $filters.bytes(active) }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td scope="col" v-show="inactive != undefined">
+                                                inactive:
+                                            </td>
+                                            <td scope="col" v-show="inactive != undefined">
+                                                {{ $filters.bytes(inactive) }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td scope="col" v-show="buffers != undefined">
+                                                buffers:
+                                            </td>
+                                            <td scope="col" v-show="buffers != undefined">
+                                                {{ $filters.bytes(buffers) }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td scope="col" v-show="cached != undefined">
+                                                cached:
+                                            </td>
+                                            <td scope="col" v-show="cached != undefined">
+                                                {{ $filters.bytes(cached) }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </template>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </section>
 </template>
@@ -48,6 +99,18 @@ export default {
         },
         free() {
             return this.stats['free'];
+        },
+        active() {
+            return this.stats['active'];
+        },
+        inactive() {
+            return this.stats['inactive'];
+        },
+        buffers() {
+            return this.stats['buffers'];
+        },
+        cached() {
+            return this.stats['cached'];
         }
     },
     methods: {

@@ -14,15 +14,15 @@ import functools
 import json
 import time
 import unittest
+from datetime import datetime
 
 from glances import __version__
 from glances.events_list import GlancesEventsList
 from glances.filter import GlancesFilter, GlancesFilterList
-from glances.globals import LINUX, WINDOWS, string_value_to_float, subsample
+from glances.globals import LINUX, WINDOWS, pretty_date, string_value_to_float, subsample
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.programs import processes_to_programs
 from glances.stats import GlancesStats
 from glances.thresholds import (
     GlancesThresholdCareful,
@@ -469,12 +469,14 @@ class TestGlances(unittest.TestCase):
         print(f'INFO: SMART stats: {stats_grab}')
 
     def test_017_programs(self):
-        """Check Programs function (it's not a plugin)."""
+        """Check Programs plugin."""
         # stats_to_check = [ ]
-        print('INFO: [TEST_017] Check PROGRAM stats')
-        stats_grab = processes_to_programs(stats.get_plugin('processlist').get_raw())
-        self.assertIsInstance(stats_grab, list, msg='Programs stats list is not a list')
-        self.assertIsInstance(stats_grab[0], dict, msg='First item should be a dict')
+        print('INFO: [TEST_022] Check PROGRAMS stats')
+        stats_grab = stats.get_plugin('programlist').get_raw()
+        self.assertTrue(isinstance(stats_grab, list), msg='Programs stats is not a list')
+        if stats_grab:
+            self.assertTrue(isinstance(stats_grab[0], dict), msg='Programs stats is not a list of dict')
+            self.assertTrue('nprocs' in stats_grab[0], msg='No nprocs')
 
     def test_018_string_value_to_float(self):
         """Check string_value_to_float function"""
@@ -560,6 +562,21 @@ class TestGlances(unittest.TestCase):
         self.assertFalse(gfl.is_filtered({'name': 'snake is in the place'}))
         self.assertTrue(gfl.is_filtered({'name': 'snake is in the place', 'username': 'nicolargo'}))
         self.assertFalse(gfl.is_filtered({'name': 'snake is in the place', 'username': 'notme'}))
+
+    def test_021_pretty_date(self):
+        """Test pretty_date"""
+        print('INFO: [TEST_021] pretty_date')
+        self.assertEqual(pretty_date(datetime(2024, 1, 1, 12, 0), datetime(2024, 1, 1, 12, 0)), 'just now')
+        self.assertEqual(pretty_date(datetime(2024, 1, 1, 11, 59), datetime(2024, 1, 1, 12, 0)), 'a min')
+        self.assertEqual(pretty_date(datetime(2024, 1, 1, 11, 55), datetime(2024, 1, 1, 12, 0)), '5 mins')
+        self.assertEqual(pretty_date(datetime(2024, 1, 1, 11, 0), datetime(2024, 1, 1, 12, 0)), 'an hour')
+        self.assertEqual(pretty_date(datetime(2024, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '12 hours')
+        self.assertEqual(pretty_date(datetime(2023, 12, 20, 0, 0), datetime(2024, 1, 1, 12, 0)), 'a week')
+        self.assertEqual(pretty_date(datetime(2023, 12, 5, 0, 0), datetime(2024, 1, 1, 12, 0)), '3 weeks')
+        self.assertEqual(pretty_date(datetime(2023, 12, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), 'a month')
+        self.assertEqual(pretty_date(datetime(2023, 6, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '7 months')
+        self.assertEqual(pretty_date(datetime(2023, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), 'an year')
+        self.assertEqual(pretty_date(datetime(2020, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '4 years')
 
     def test_094_thresholds(self):
         """Test thresholds classes"""

@@ -9,24 +9,20 @@
 """RestFull API interface class."""
 
 import os
+import socket
 import sys
 import tempfile
 import webbrowser
+from typing import Annotated, Any, Union
 from urllib.parse import urljoin
-
-from glances.stats import GlancesStats
-
-try:
-    from typing import Annotated, Any
-except ImportError:
-    # Only for Python 3.8
-    # To be removed when Python 3.8 support will be dropped
-    from typing_extensions import Annotated
 
 from glances import __apiversion__, __version__
 from glances.globals import json_dumps
 from glances.logger import logger
 from glances.password import GlancesPassword
+from glances.servers_list import GlancesServersList
+from glances.servers_list_dynamic import GlancesAutoDiscoverClient
+from glances.stats import GlancesStats
 from glances.timer import Timer
 
 # FastAPI import
@@ -107,6 +103,12 @@ class GlancesRestfulApi:
         # Will be updated within route
         self.stats = None
 
+        # Init servers list (only for the browser mode)
+        if self.args.browser:
+            self.servers_list = GlancesServersList(config=config, args=args)
+        else:
+            self.servers_list = None
+
         # cached_time is the minimum time interval between stats updates
         # i.e. HTTP/RESTful calls will not retrieve updated info until the time
         # since last update is passed (will retrieve old cached info instead)
@@ -155,6 +157,14 @@ class GlancesRestfulApi:
         # FastAPI Define routes
         self._app.include_router(self._router())
 
+        # Enable auto discovering of the service
+        self.autodiscover_client = None
+        if not self.args.disable_autodiscover:
+            logger.info('Autodiscover is enabled with service name {}'.format(socket.gethostname().split('.', 1)[0]))
+            self.autodiscover_client = GlancesAutoDiscoverClient(socket.gethostname().split('.', 1)[0], self.args)
+        else:
+            logger.info("Glances autodiscover announce is disabled")
+
     def load_config(self, config):
         """Load the outputs section of the configuration file."""
         # Limit the number of processes to display in the WebUI
@@ -169,10 +179,16 @@ class GlancesRestfulApi:
                 self.url_prefix = self.url_prefix.rstrip('/')
             logger.debug(f'URL prefix: {self.url_prefix}')
 
-    def __update__(self):
+    def __update_stats(self):
         # Never update more than 1 time per cached_time
         if self.timer.finished():
             self.stats.update()
+            self.timer = Timer(self.args.cached_time)
+
+    def __update_servers_list(self):
+        # Never update more than 1 time per cached_time
+        if self.timer.finished() and self.servers_list is not None:
+            self.servers_list.update_servers_stats()
             self.timer = Timer(self.args.cached_time)
 
     def authentication(self, creds: Annotated[HTTPBasicCredentials, Depends(security)]):
@@ -209,6 +225,7 @@ class GlancesRestfulApi:
             f'{base_path}/all/limits': self._api_all_limits,
             f'{base_path}/all/views': self._api_all_views,
             f'{base_path}/pluginslist': self._api_plugins,
+            f'{base_path}/serverslist': self._api_servers_list,
             f'{plugin_path}': self._api,
             f'{plugin_path}/history': self._api_history,
             f'{plugin_path}/history/{{nb}}': self._api_history,
@@ -216,25 +233,40 @@ class GlancesRestfulApi:
             f'{plugin_path}/limits': self._api_limits,
             f'{plugin_path}/views': self._api_views,
             f'{plugin_path}/{{item}}': self._api_item,
+            f'{plugin_path}/{{item}}/views': self._api_item_views,
             f'{plugin_path}/{{item}}/history': self._api_item_history,
             f'{plugin_path}/{{item}}/history/{{nb}}': self._api_item_history,
             f'{plugin_path}/{{item}}/description': self._api_item_description,
             f'{plugin_path}/{{item}}/unit': self._api_item_unit,
-            f'{plugin_path}/{{item}}/{{value:path}}': self._api_value,
+            f'{plugin_path}/{{item}}/value/{{value:path}}': self._api_value,
+            f'{plugin_path}/{{item}}/{{key}}': self._api_key,
+            f'{plugin_path}/{{item}}/{{key}}/views': self._api_key_views,
         }
 
         for path, endpoint in route_mapping.items():
             router.add_api_route(path, endpoint)
 
-        # WEB UI
+        # Browser WEBUI
+        if self.args.browser:
+            # Template for the root browser.html file
+            router.add_api_route('/browser', self._browser, response_class=HTMLResponse)
+
+            # Statics files
+            self._app.mount(self.url_prefix + '/static', StaticFiles(directory=self.STATIC_PATH), name="static")
+            logger.debug(f"The Browser WebUI is enable and got statics files in {self.STATIC_PATH}")
+
+            bindmsg = f'Glances Browser Web User Interface started on {self.bind_url}browser'
+            logger.info(bindmsg)
+            print(bindmsg)
+
+        # WEBUI
         if not self.args.disable_webui:
             # Template for the root index.html file
             router.add_api_route('/', self._index, response_class=HTMLResponse)
 
             # Statics files
             self._app.mount(self.url_prefix + '/static', StaticFiles(directory=self.STATIC_PATH), name="static")
-
-            logger.info(f"The WebUI is enable and got statics files in {self.STATIC_PATH}")
+            logger.debug(f"The WebUI is enable and got statics files in {self.STATIC_PATH}")
 
             bindmsg = f'Glances Web User Interface started on {self.bind_url}'
             logger.info(bindmsg)
@@ -284,6 +316,8 @@ class GlancesRestfulApi:
 
     def end(self):
         """End the Web server"""
+        if not self.args.disable_autodiscover and self.autodiscover_client:
+            self.autodiscover_client.close()
         logger.info("Close the Web server")
 
     def _index(self, request: Request):
@@ -297,10 +331,20 @@ class GlancesRestfulApi:
         refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         # Display
         return self._templates.TemplateResponse("index.html", {"request": request, "refresh_time": refresh_time})
+
+    def _browser(self, request: Request):
+        """Return main browser.html (/browser) file.
+
+        Note: This function is only called the first time the page is loaded.
+        """
+        refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
+
+        # Display
+        return self._templates.TemplateResponse("browser.html", {"request": request, "refresh_time": refresh_time})
 
     def _api_status(self):
         """Glances API RESTful implementation.
@@ -352,7 +396,7 @@ class GlancesRestfulApi:
             HTTP/1.1 404 Not Found
         """
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             plist = self.plugins_list
@@ -360,6 +404,17 @@ class GlancesRestfulApi:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get plugin list ({str(e)})")
 
         return GlancesJSONResponse(plist)
+
+    def _api_servers_list(self):
+        """Glances API RESTful implementation.
+
+        Return the JSON representation of the servers list (for browser mode)
+        HTTP/200 if OK
+        """
+        # Update the servers list (and the stats for all the servers)
+        self.__update_servers_list()
+
+        return GlancesJSONResponse(self.servers_list.get_servers_list() if self.servers_list else [])
 
     def _api_all(self):
         """Glances API RESTful implementation.
@@ -378,7 +433,7 @@ class GlancesRestfulApi:
                 logger.debug(f"Debug file ({fname}) not found")
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value of the stat ID
@@ -431,7 +486,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value of the stat ID
@@ -462,7 +517,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value of the stat ID
@@ -489,7 +544,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value of the stat ID
@@ -549,7 +604,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value of the stat views
@@ -558,6 +613,78 @@ class GlancesRestfulApi:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND,
                 f"Cannot get item {item} in plugin {plugin} ({str(e)})",
+            )
+
+        return GlancesJSONResponse(ret)
+
+    def _api_key(self, plugin: str, item: str, key: str):
+        """Glances API RESTful implementation.
+
+        Return the JSON representation of  plugin/item/key
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        self._check_if_plugin_available(plugin)
+
+        # Update the stat
+        self.__update_stats()
+
+        try:
+            # Get the RAW value of the stat views
+            ret = self.stats.get_plugin(plugin).get_raw_stats_key(item, key)
+        except Exception as e:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                f"Cannot get item {item} for key {key} in plugin {plugin} ({str(e)})",
+            )
+
+        return GlancesJSONResponse(ret)
+
+    def _api_item_views(self, plugin: str, item: str):
+        """Glances API RESTful implementation.
+
+        Return the JSON view representation of the couple plugin/item
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        self._check_if_plugin_available(plugin)
+
+        # Update the stat
+        self.__update_stats()
+
+        try:
+            # Get the RAW value of the stat views
+            ret = self.stats.get_plugin(plugin).get_views().get(item)
+        except Exception as e:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                f"Cannot get item {item} in plugin view {plugin} ({str(e)})",
+            )
+
+        return GlancesJSONResponse(ret)
+
+    def _api_key_views(self, plugin: str, item: str, key: str):
+        """Glances API RESTful implementation.
+
+        Return the JSON view representation of plugin/item/key
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        self._check_if_plugin_available(plugin)
+
+        # Update the stat
+        self.__update_stats()
+
+        try:
+            # Get the RAW value of the stat views
+            ret = self.stats.get_plugin(plugin).get_views().get(key).get(item)
+        except Exception as e:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                f"Cannot get item {item} for key {key} in plugin view {plugin} ({str(e)})",
             )
 
         return GlancesJSONResponse(ret)
@@ -574,7 +701,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value of the stat history
@@ -622,7 +749,7 @@ class GlancesRestfulApi:
         else:
             return GlancesJSONResponse(ret)
 
-    def _api_value(self, plugin: str, item: str, value: Any):
+    def _api_value(self, plugin: str, item: str, value: Union[str, int, float]):
         """Glances API RESTful implementation.
 
         Return the process stats (dict) for the given item=value
@@ -633,7 +760,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update__()
+        self.__update_stats()
 
         try:
             # Get the RAW value

@@ -110,7 +110,8 @@ class GlancesPluginModel:
         # Hide stats if all the hide_zero_fields has never been != 0
         # Default is False, always display stats
         self.hide_zero = False
-        # The threshold needed to display a value if hide_zero is true. Only hide a value if it is less than hide_threshold_bytes.
+        # The threshold needed to display a value if hide_zero is true.
+        # Only hide a value if it is less than hide_threshold_bytes.
         self.hide_threshold_bytes = 0
         self.hide_zero_fields = []
 
@@ -392,6 +393,13 @@ class GlancesPluginModel:
         """
         return dictlist(self.get_raw(), item)
 
+    def get_raw_stats_key(self, item, key):
+        """Return the stats object for a specific item in RAW format.
+
+        Stats should be a list of dict (processlist, network...)
+        """
+        return {item: [i for i in self.get_raw() if 'key' in i and i[i['key']] == key][0].get(item)}
+
     def get_stats_item(self, item):
         """Return the stats object for a specific item in JSON format.
 
@@ -465,7 +473,7 @@ class GlancesPluginModel:
                         value['hidden'] = False
                     elif key in self.views and field in self.views[key] and 'hidden' in self.views[key][field]:
                         value['hidden'] = self.views[key][field]['hidden']
-                        if field in self.hide_zero_fields and i[field] >= self.hide_threshold_bytes:
+                        if field in self.hide_zero_fields and i[field] > self.hide_threshold_bytes:
                             value['hidden'] = False
                     else:
                         value['hidden'] = field in self.hide_zero_fields
@@ -1165,7 +1173,7 @@ class GlancesPluginModel:
                     # Create a new metadata with the gauge
                     stat['time_since_update'] = self.time_since_last_update
                     stat[field + '_gauge'] = stat[field]
-                    if field + '_gauge' in stat_previous:
+                    if field + '_gauge' in stat_previous and stat[field] and stat_previous[field + '_gauge']:
                         # The stat becomes the delta between the current and the previous value
                         stat[field] = stat[field] - stat_previous[field + '_gauge']
                         # Compute the rate

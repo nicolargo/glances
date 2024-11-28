@@ -1,7 +1,7 @@
 <template>
     <section id="now" class="plugin">
         <div class="table-row">
-            <div class="table-cell text-left">{{ date_custom }}</div>
+            <div class="table-cell text-start">{{ date_custom }}</div>
         </div>
     </section>
 </template>

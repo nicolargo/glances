@@ -13,15 +13,20 @@ import socket
 import sys
 from base64 import b64decode
 
+from defusedxml import xmlrpc
+
 from glances import __version__
-from glances.autodiscover import GlancesAutoDiscoverClient
-from glances.globals import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 from glances.logger import logger
+from glances.processes import glances_processes
+from glances.servers_list_dynamic import GlancesAutoDiscoverClient
 from glances.stats_server import GlancesStatsServer
 from glances.timer import Timer
 
+# Correct issue #1025 by monkey path the xmlrpc lib
+xmlrpc.monkey_patch()
 
-class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
+
+class GlancesXMLRPCHandler(xmlrpc.xmlrpc_server.SimpleXMLRPCRequestHandler):
     """Main XML-RPC handler."""
 
     rpc_paths = ('/RPC2',)
@@ -71,7 +76,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
         return False
 
     def parse_request(self):
-        if SimpleXMLRPCRequestHandler.parse_request(self):
+        if xmlrpc.xmlrpc_server.SimpleXMLRPCRequestHandler.parse_request(self):
             # Next we authenticate
             if self.authenticate(self.headers):
                 return True
@@ -84,7 +89,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
         pass
 
 
-class GlancesXMLRPCServer(SimpleXMLRPCServer):
+class GlancesXMLRPCServer(xmlrpc.xmlrpc_server.SimpleXMLRPCServer):
     """Init a SimpleXMLRPCServer instance (IPv6-ready)."""
 
     finished = False
@@ -171,6 +176,9 @@ class GlancesServer:
     def __init__(self, requestHandler=GlancesXMLRPCHandler, config=None, args=None):
         # Args
         self.args = args
+
+        # Set the args for the glances_processes instance
+        glances_processes.set_args(args)
 
         # Init the XML RPC server
         try:

@@ -82,7 +82,7 @@ Any and all contributions are greatly appreciated.
 Requirements
 ============
 
-- ``python>=3.8`` (use Glances 3.4.x for lower Python version)
+- ``python>=3.9`` (use Glances 3.4.x for lower Python version)
 - ``psutil`` (better with latest version)
 - ``defusedxml`` (in order to monkey patch xmlrpc)
 - ``packaging`` (for the version comparison)
@@ -90,7 +90,7 @@ Requirements
 
 *Note for Python 2 users*
 
-Glances version 4 or higher do not support Python 2 (and Python 3 < 3.8).
+Glances version 4 or higher do not support Python 2 (and Python 3 < 3.9).
 Please uses Glances version 3.4.x if you need Python 2 support.
 
 Optional dependencies:
@@ -341,9 +341,7 @@ To install Glances from source:
 
 .. code-block:: console
 
-    $ wget https://github.com/nicolargo/glances/archive/vX.Y.tar.gz -O - | tar xz
-    $ cd glances-*
-    # python setup.py install
+    $ pip install https://github.com/nicolargo/glances/archive/vX.Y.tar.gz
 
 *Note*: Python headers are required to install psutil.
 

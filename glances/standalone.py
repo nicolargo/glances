@@ -48,7 +48,7 @@ class GlancesStandalone:
             self.display_modules_list()
             sys.exit(0)
 
-        # The args is needed to get the selected process in the process list (Curses mode)
+        # Set the args for the glances_processes instance
         glances_processes.set_args(args)
 
         # If process extended stats is disabled by user
@@ -196,7 +196,7 @@ class GlancesStandalone:
         self.stats.end()
 
         # Check Glances version versus PyPI one
-        if self.outdated.is_outdated():
+        if self.outdated.is_outdated() and 'unknown' not in self.outdated.installed_version():
             latest_version = self.outdated.latest_version()
             installed_version = self.outdated.installed_version()
             print(f"You are using Glances version {installed_version}, however version {latest_version} is available.")

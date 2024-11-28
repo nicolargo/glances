@@ -1,33 +1,33 @@
 <template>
-  <div class="plugin">
-    <section id="alerts">
-            <span class="title" v-if="hasAlerts">
-                Warning or critical alerts (last {{ countAlerts }} entries)
-            </span>
-      <span class="title" v-else>No warning or critical alert detected</span>
-    </section>
-    <section id="alert">
-      <div class="table">
-        <div class="table-row" v-for="(alert, alertId) in alerts" :key="alertId">
-          <div class="table-cell text-left">
-            {{ formatDate(alert.begin) }}
-            ({{ alert.ongoing ? 'ongoing' : alert.duration }}) -
+  <section class="plugin" id="alerts">
+    <span class="title" v-if="hasAlerts">
+      Warning or critical alerts (last {{ countAlerts }} entries)
+    </span>
+    <span class="title" v-else>No warning or critical alert detected</span>
+    <table class="table table-sm table-borderless">
+      <tbody>
+        <tr v-for="(alert, alertId) in alerts" :key="alertId">
+          <td scope="row">
+            <span>{{ formatDate(alert.begin) }}</span>
+          </td>
+          <td scope="row">
+            <span>({{ alert.ongoing ? 'ongoing' : alert.duration }})</span>
+          </td>
+          <td scope="row">
             <span v-show="!alert.ongoing"> {{ alert.state }} on </span>
-            <span :class="alert.state.toLowerCase()">
-                            {{ alert.type }}
-            </span>
-            ({{ $filters.number(alert.max, 1) }})
-            {{ alert.top }}
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
+            <span :class="alert.state.toLowerCase()">{{ alert.type }}</span>
+            <span>({{ $filters.number(alert.max, 1) }})</span>
+            <span>: {{ alert.top }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 </template>
 
 <script>
-import {padStart} from 'lodash';
-import {GlancesFavico} from '../services.js';
+import { padStart } from 'lodash';
+import { GlancesFavico } from '../services.js';
 
 export default {
   props: {
@@ -55,12 +55,12 @@ export default {
         if (!alert.ongoing) {
           const duration = alert.end - alert.begin;
           const seconds = parseInt((duration / 1000) % 60),
-              minutes = parseInt((duration / (1000 * 60)) % 60),
-              hours = parseInt((duration / (1000 * 60 * 60)) % 24);
+            minutes = parseInt((duration / (1000 * 60)) % 60),
+            hours = parseInt((duration / (1000 * 60 * 60)) % 24);
 
           alert.duration = padStart(hours, 2, '0') +
-              ':' + padStart(minutes, 2, '0') +
-              ':' + padStart(seconds, 2, '0');
+            ':' + padStart(minutes, 2, '0') +
+            ':' + padStart(seconds, 2, '0');
         }
 
         return alert;
@@ -76,7 +76,7 @@ export default {
       return this.countOngoingAlerts > 0;
     },
     countOngoingAlerts() {
-      return this.alerts.filter(({ongoing}) => ongoing).length;
+      return this.alerts.filter(({ ongoing }) => ongoing).length;
     }
   },
   watch: {
@@ -99,12 +99,12 @@ export default {
 
       const date = new Date(timestamp);
       return String(date.getFullYear()) +
-          '-' + String(date.getMonth()).padStart(2, '0') +
-          '-' + String(date.getDate()).padStart(2, '0') +
-          ' ' + String(date.getHours()).padStart(2, '0') +
-          ':' + String(date.getMinutes()).padStart(2, '0') +
-          ':' + String(date.getSeconds()).padStart(2, '0') +
-          '(' + tzString + ')';
+        '-' + String(date.getMonth() + 1).padStart(2, '0') +
+        '-' + String(date.getDate()).padStart(2, '0') +
+        ' ' + String(date.getHours()).padStart(2, '0') +
+        ':' + String(date.getMinutes()).padStart(2, '0') +
+        ':' + String(date.getSeconds()).padStart(2, '0') +
+        '(' + tzString + ')';
     }
   }
 };

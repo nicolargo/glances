@@ -276,7 +276,7 @@ class PluginModel(GlancesPluginModel):
         if max_width:
             name_max_width = max_width - 13
         else:
-            # No max_width defined, return an emptu curse message
+            # No max_width defined, return an empty curse message
             logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
@@ -299,7 +299,7 @@ class PluginModel(GlancesPluginModel):
             mnt_point = i['alias'] if 'alias' in i else i['mnt_point']
             if len(mnt_point) + len(i['device_name'].split('/')[-1]) <= name_max_width - 3:
                 # If possible concatenate mode info... Glances touch inside :)
-                mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
+                mnt_point += ' (' + i['device_name'].split('/')[-1] + ')'
             elif len(mnt_point) > name_max_width:
                 mnt_point = mnt_point[:name_max_width] + '_'
             msg = '{:{width}}'.format(nativestr(mnt_point), width=name_max_width + 1)

@@ -56,7 +56,8 @@ RUN apk add --no-cache \
   pkgconfig \
   libffi-dev \
   openssl-dev \
-  cmake # Issue:  https://github.com/nicolargo/glances/issues/2735
+  cmake
+  # for cmake: Issue:  https://github.com/nicolargo/glances/issues/2735
 
 RUN python${PYTHON_VERSION} -m venv venv-build
 RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --upgrade pip
@@ -138,6 +139,10 @@ COPY --from=buildFull /venv /venv
 # RELEASE: dev - to be compatible with CI
 FROM full as dev
 
-# Forward access and error logs to Docker's log collector
-RUN ln -sf /dev/stdout /tmp/glances-root.log \
-    && ln -sf /dev/stderr /var/log/error.log
+# Add the specific logger configuration file for Docker dev
+# All logs will be forwarded to stdout
+COPY ./docker-files/docker-logger.json /app
+ENV LOG_CFG=/app/docker-logger.json
+
+WORKDIR /app
+CMD /venv/bin/python3 -m glances $GLANCES_OPT

@@ -9,7 +9,7 @@
 """Vms plugin."""
 
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from glances.globals import iteritems
 from glances.logger import logger
@@ -106,7 +106,7 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        self.watchers: Dict[str, VmsExtension] = {}
+        self.watchers: dict[str, VmsExtension] = {}
 
         # Init the Multipass API
         self.watchers['multipass'] = VmExtension()
@@ -118,7 +118,7 @@ class PluginModel(GlancesPluginModel):
         """Return the key of the list."""
         return 'name'
 
-    def get_export(self) -> List[Dict]:
+    def get_export(self) -> list[dict]:
         """Overwrite the default export method.
 
         - Only exports vms
@@ -145,13 +145,13 @@ class PluginModel(GlancesPluginModel):
         all=True
         """
         all_tag = self.get_conf_value('all')
-        if len(all_tag) == 0:
+        if not all_tag:
             return False
         return all_tag[0].lower() == 'true'
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
-    def update(self) -> List[Dict]:
+    def update(self) -> list[dict]:
         """Update VMs stats using the input method."""
         # Connection should be ok
         if not self.watchers or self.input_method != 'local':
@@ -187,7 +187,7 @@ class PluginModel(GlancesPluginModel):
 
         return True
 
-    def msg_curse(self, args=None, max_width: Optional[int] = None) -> List[str]:
+    def msg_curse(self, args=None, max_width: Optional[int] = None) -> list[str]:
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
@@ -200,10 +200,11 @@ class PluginModel(GlancesPluginModel):
         # Title
         msg = '{}'.format('VMs')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = f' {len(self.stats)}'
-        ret.append(self.curse_add_line(msg))
-        msg = f' sorted by {sort_for_human[self.sort_key]}'
-        ret.append(self.curse_add_line(msg))
+        if len(self.stats) > 1:
+            msg = f' {len(self.stats)}'
+            ret.append(self.curse_add_line(msg))
+            msg = f' sorted by {sort_for_human[self.sort_key]}'
+            ret.append(self.curse_add_line(msg))
         if not self.views['show_engine_name']:
             msg = f' (served by {self.stats[0].get("engine", "")})'
         ret.append(self.curse_add_line(msg))
@@ -292,7 +293,7 @@ class PluginModel(GlancesPluginModel):
         return 'INFO'
 
 
-def sort_vm_stats(stats: List[Dict[str, Any]]) -> Tuple[str, List[Dict[str, Any]]]:
+def sort_vm_stats(stats: list[dict[str, Any]]) -> tuple[str, list[dict[str, Any]]]:
     # Make VM sort related to process sort
     if glances_processes.sort_key == 'memory_percent':
         sort_by = 'memory_usage'

@@ -1,165 +1,81 @@
-# This pipeline aims at building Glances for the following targets:
-# - Pypi
-# - Docker Hub
+# This pipeline aims at building Glances Pypi packages
 
 name: build
 
-env:
-  DEFAULT_DOCKER_IMAGE: nicolargo/glances
-  NODE_ENV: ${{ (contains('refs/heads/master', github.ref) || startsWith(github.ref, 'refs/tags/v')) && 'prod' || 'dev' }}
-  PUSH_BRANCH: ${{ 'refs/heads/develop' == github.ref || 'refs/heads/master' == github.ref || startsWith(github.ref, 'refs/tags/v') }}
-  # Alpine image platform: https://hub.docker.com/_/alpine
-  # linux/arm/v6,linux/arm/v7 do not work (timeout during the build)
-  DOCKER_PLATFORMS: linux/amd64,linux/arm64/v8
-  # Ubuntu image platforms list: https://hub.docker.com/_/ubuntu
-  # linux/arm/v7 do not work (Cargo/Rust not available)
-  DOCKER_PLATFORMS_UBUNTU: linux/amd64,linux/arm64/v8
-
 on:
   workflow_call:
-    secrets:
-      TEST_PYPI_API_TOKEN:
-        description: 'Test PyPI API token'
-        required: true
-      PYPI_API_TOKEN:
-        description: 'PyPI API token'
-        required: true
-      DOCKER_USERNAME:
-        description: 'Docker Hub username'
-        required: true
-      DOCKER_TOKEN:
-        description: 'Docker Hub token'
-        required: true
 
 jobs:
 
-  pypi:
+  build:
+    name: Build distribution 📦
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-
       - uses: actions/checkout@v4
-
-      - name: Upgrade pip
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install pypa/build
         run: >-
-          python -m
-          pip install
-          --upgrade
-          pip
-
-      - name: Install build tools
-        run: >-
-          python -m
+          python3 -m
           pip install
           build
           --user
-
       - name: Build a binary wheel and a source tarball
-        run: >-
-          python -m
-          build
-          --sdist
-          --wheel
-          --outdir dist/
+        run: python3 -m build
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
 
-      - name: Publish distribution package to Test PyPI
+  pypi:
+    name: Publish Python 🐍 distribution 📦 to PyPI
+    if: startsWith(github.ref, 'refs/tags')
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/glances
+    permissions:
+      attestations: write
+      id-token: write
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          skip-existing: true
+          attestations: false
+
+  pypi_test:
+    name: Publish Python 🐍 distribution 📦 to TestPyPI
+    if: github.ref == 'refs/heads/develop'
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://pypi.org/p/glances
+    permissions:
+      attestations: write
+      id-token: write
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution 📦 to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
           repository-url: https://test.pypi.org/legacy/
           skip-existing: true
-
-      - name: Publish distribution package to PyPI
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-
-  create_Docker_builds:
-    runs-on: ubuntu-latest
-    # Make sure we release the python package first. So we are sure to get the latest.
-    needs:
-      - pypi
-    outputs:
-      tags: ${{ steps.config.outputs.tags }}
-    steps:
-      - name: Determine image tags
-        id: config
-        shell: bash
-        run: |
-          TAG_ARRAY='['
-
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-            TAG_ARRAY="$TAG_ARRAY { \"target\": \"minimal\", \"tag\": \"${VERSION}\" },"
-            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"${VERSION}-full\" },"
-
-          elif [[ $GITHUB_REF == refs/heads/develop ]]; then
-            TAG_ARRAY="$TAG_ARRAY { \"target\": \"dev\", \"tag\": \"dev\" },"
-
-          else
-            TAG_ARRAY="$TAG_ARRAY { \"target\": \"minimal\", \"tag\": \"latest\" },"
-            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"latest-full\" },"
-          fi
-
-          TAG_ARRAY="${TAG_ARRAY::-1} ]"
-
-          echo "Tags to build: $TAG_ARRAY"
-          echo "tags=$TAG_ARRAY" >> $GITHUB_OUTPUT
-
-  build_Docker_image:
-    runs-on: ubuntu-latest
-    needs:
-      - create_Docker_builds
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ['alpine', 'ubuntu']
-        tag: ${{ fromJson(needs.create_Docker_builds.outputs.tags) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Retrieve Repository Docker metadata
-        id: docker_meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.DEFAULT_DOCKER_IMAGE }}
-          labels: |
-            org.opencontainers.image.url=https://nicolargo.github.io/glances/
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          version: latest
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        if: ${{ env.PUSH_BRANCH == 'true' }}
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-
-      - name: Build and push image
-        uses: docker/build-push-action@v5
-        with:
-          push: ${{ env.PUSH_BRANCH == 'true' }}
-          tags: "${{ env.DEFAULT_DOCKER_IMAGE }}:${{ matrix.os != 'alpine' && format('{0}-', matrix.os) || '' }}${{ matrix.tag.tag }}"
-          build-args: |
-            CHANGING_ARG=${{ github.sha }}
-          context: .
-          file: "docker-files/${{ matrix.os }}.Dockerfile"
-          platforms: ${{ matrix.os != 'ubuntu' && env.DOCKER_PLATFORMS || env.DOCKER_PLATFORMS_UBUNTU }}
-          target: ${{ matrix.tag.target }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
-          # GHA default behaviour overwrites last build cache. Causes alpine and ubuntu cache to overwrite each other.
-          # Use `scope` with the os name to prevent that
-          cache-from: 'type=gha,scope=${{ matrix.os }}'
-          cache-to: 'type=gha,mode=max,scope=${{ matrix.os }}'
+          attestations: false

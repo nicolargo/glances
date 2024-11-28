@@ -88,8 +88,8 @@ available network interfaces) and TCP port is ``61209``.
 
 In client/server mode, limits are set by the server side.
 
-Central client
-^^^^^^^^^^^^^^
+Central Glances Browser
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. image:: _static/browser.png
 
@@ -102,6 +102,10 @@ Example:
 .. code-block:: ini
 
     [serverlist]
+    # Define columns (comma separated list of <plugin>:<field>:(<key>)) to grab/display
+    # Default is: system:hr_name,load:min5,cpu:total,mem:percent
+    # You can also add stats with key, like sensors:value:Ambient (key is case sensitive)
+    columns=system:hr_name,load:min5,cpu:total,mem:percent,memswap:percent
     # Define the static servers list
     server_1_name=xps
     server_1_alias=xps
@@ -112,21 +116,29 @@ Example:
 Glances can also detect and display all Glances servers available on
 your network via the ``zeroconf`` protocol (not available on Windows):
 
-To start the central client, use the following option:
+To start the TUI Central Glances Browser, use the following option:
 
 .. code-block:: console
 
     client$ glances --browser
-
-.. note::
-
-    Use ``--disable-autodiscover`` to disable the auto-discovery mode.
 
 When the list is displayed, you can navigate through the Glances servers with
 up/down keys. It is also possible to sort the server using:
 - '1' is normal (do not sort)
 - '2' is using sorting with ascending order (ONLINE > SNMP > PROTECTED > OFFLINE > UNKNOWN)
 - '3' is using sorting with descending order (UNKNOWN > OFFLINE > PROTECTED > SNMP > ONLINE)
+
+To start the WebUI Central Glances Browser (new in Glances 4.3 or higher), use the following option:
+
+.. code-block:: console
+
+    client$ glances --browser -w
+
+Open the URL (/browser) and click on the server to display stats.
+
+.. note::
+
+    Use ``--disable-autodiscover`` to disable the auto-discovery mode.
 
 SNMP
 ^^^^

@@ -24,21 +24,15 @@ import re
 import subprocess
 import sys
 import weakref
+from collections import OrderedDict
 from configparser import ConfigParser, NoOptionError, NoSectionError
 from datetime import datetime
 from operator import itemgetter, methodcaller
 from statistics import mean
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
-from xmlrpc.client import Fault, ProtocolError, Server, ServerProxy, Transport
-from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-
-from defusedxml.xmlrpc import monkey_patch
-
-# Correct issue #1025 by monkey path the xmlrpc lib
-monkey_patch()
 
 # Prefer faster libs for JSON (de)serialization
 # Preference Order: orjson > ujson > json (builtin)
@@ -275,19 +269,50 @@ def safe_makedirs(path):
             raise
 
 
-def pretty_date(time=False):
+def get_time_diffs(ref, now):
+    if isinstance(ref, int):
+        diff = now - datetime.fromtimestamp(ref)
+    elif isinstance(ref, datetime):
+        diff = now - ref
+    elif not ref:
+        diff = 0
+
+    return diff
+
+
+def get_first_true_val(conds):
+    return next(key for key, val in conds.items() if val)
+
+
+def maybe_add_plural(count):
+    return "s" if count > 1 else ""
+
+
+def build_str_when_more_than_seven_days(day_diff, unit):
+    scale = {'week': 7, 'month': 30, 'year': 365}[unit]
+
+    count = day_diff // scale
+
+    return str(count) + " " + unit + maybe_add_plural(count)
+
+
+def pretty_date(ref, now=None):
     """
     Get a datetime object or a int() Epoch timestamp and return a
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
     'just now', etc
     Source: https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
+
+    Refactoring done in commit https://github.com/nicolargo/glances/commit/f6279baacd4cf0b27ca10df6dc01f091ea86a40a
+    break the function. Get back to the old fashion way.
     """
-    now = datetime.now()
-    if isinstance(time, int):
-        diff = now - datetime.fromtimestamp(time)
-    elif isinstance(time, datetime):
-        diff = now - time
-    elif not time:
+    if not now:
+        now = datetime.now()
+    if isinstance(ref, int):
+        diff = now - datetime.fromtimestamp(ref)
+    elif isinstance(ref, datetime):
+        diff = now - ref
+    elif not ref:
         diff = 0
     second_diff = diff.seconds
     day_diff = diff.days
@@ -311,12 +336,15 @@ def pretty_date(time=False):
     if day_diff == 1:
         return "yesterday"
     if day_diff < 7:
-        return str(day_diff) + " days"
+        return str(day_diff) + " days" if day_diff > 1 else "a day"
     if day_diff < 31:
-        return str(day_diff // 7) + " weeks"
+        week = day_diff // 7
+        return str(week) + " weeks" if week > 1 else "a week"
     if day_diff < 365:
-        return str(day_diff // 30) + " months"
-    return str(day_diff // 365) + " years"
+        month = day_diff // 30
+        return str(month) + " months" if month > 1 else "a month"
+    year = day_diff // 365
+    return str(year) + " years" if year > 1 else "an year"
 
 
 def urlopen_auth(url, username, password):
@@ -342,7 +370,7 @@ def json_dumps(data) -> bytes:
     return b(res)
 
 
-def json_loads(data: Union[str, bytes, bytearray]) -> Union[Dict, List]:
+def json_loads(data: Union[str, bytes, bytearray]) -> Union[dict, list]:
     """Load a JSON buffer into memory as a Python object"""
     return json.loads(data)
 
