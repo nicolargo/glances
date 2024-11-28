@@ -193,6 +193,9 @@ class PluginModel(GlancesPluginModel):
         # For #2995. Load the username of a process to decorate with waning colours as from the config file.
         if config is not None:
             self.username_warning = config.get_value(self.plugin_name, 'username_warning')
+            self.cpu_critical = config.get_float_value(self.plugin_name, 'cpu_critical')
+            self.cpu_warning = config.get_float_value(self.plugin_name, 'cpu_warning')
+            self.cpu_careful = config.get_float_value(self.plugin_name, 'cpu_careful')
         else:
             self.username_warning = ""
 
@@ -260,6 +263,17 @@ class PluginModel(GlancesPluginModel):
         except KeyError:
             pass
         return 'DEFAULT'
+    
+    def get_cpu_decoration(self, value):
+        """Return the level of decoration needed for the CPU percentage based on the config file"""
+        if value >= self.cpu_critical:
+            return 'CRITICAL'
+        elif value >= self.cpu_warning:
+            return 'WARNING'
+        elif value >= self.cpu_warning:
+            return 'CAREFUL'
+        else:
+            return 'DEFAULT'
 
     def _get_process_curses_cpu(self, p, selected, args):
         """Return process CPU curses"""
@@ -269,13 +283,7 @@ class PluginModel(GlancesPluginModel):
                 msg = cpu_layout.format(p['cpu_percent'] / float(self.nb_log_core))
             else:
                 msg = cpu_layout.format(p['cpu_percent'])
-            alert = self.get_alert(
-                p['cpu_percent'],
-                highlight_zero=False,
-                is_max=(p['cpu_percent'] == self.max_values['cpu_percent']),
-                header="cpu",
-            )
-            ret = self.curse_add_line(msg, alert)
+            ret = self.curse_add_line(msg, self.get_cpu_decoration(p['cpu_percent']))
         else:
             msg = self.layout_header['cpu'].format('?')
             ret = self.curse_add_line(msg)
