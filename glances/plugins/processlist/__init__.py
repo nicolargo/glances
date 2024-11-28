@@ -263,14 +263,14 @@ class PluginModel(GlancesPluginModel):
         except KeyError:
             pass
         return 'DEFAULT'
-    
+
     def get_cpu_decoration(self, value):
         """Return the level of decoration needed for the CPU percentage based on the config file"""
         if value >= self.cpu_critical:
             return 'CRITICAL'
         elif value >= self.cpu_warning:
             return 'WARNING'
-        elif value >= self.cpu_warning:
+        elif value >= self.cpu_careful:
             return 'CAREFUL'
         else:
             return 'DEFAULT'
