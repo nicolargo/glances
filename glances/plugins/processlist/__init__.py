@@ -370,9 +370,10 @@ class PluginModel(GlancesPluginModel):
             else:
                 # Set the decoration colour to be the default for all other users
                 ret = self.curse_add_line(msg, decoration='DEFAULT')
+            return ret
         else:
             msg = self.layout_header['user'].format('?')
-        return self.curse_add_line(msg)
+            return self.curse_add_line(msg)
 
     def _get_process_curses_cpu_times(self, p, selected, args):
         """Return process time curses"""
