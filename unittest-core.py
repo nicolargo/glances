@@ -10,7 +10,6 @@
 
 """Glances unitary tests suite."""
 
-import functools
 import json
 import time
 import unittest
@@ -55,31 +54,22 @@ class TestGlances(unittest.TestCase):
         """The function is called *every time* before test_*."""
         print('\n' + '=' * 78)
 
-    def reset_stats_history_and_views(self, plugin):
+    def _common_plugin_tests(self, plugin):
+        """Common method to test a Glances plugin
+        This method is called multiple time by test 100 to 1xx"""
+
+        # Reset all the stats, history and views
         plugin_instance = stats.get_plugin(plugin)
         plugin_instance.reset()  # reset stats
         plugin_instance.reset_views()  # reset views
         plugin_instance.reset_stats_history()  # reset history
 
-        return plugin_instance
-
-    def zip_with(self, method, elems, values):
-        [method(elem, value) for elem, value in zip(elems, values)]
-
-    def do_checks_before_update(self, plugin_instance):
-        elems = [
-            plugin_instance.get_raw(),
-            plugin_instance.is_enabled(),
-            plugin_instance.is_disabled(),
-            plugin_instance.get_views(),
-        ]
-
-        values = [plugin_instance.stats_init_value, True, False, {}]
-
-        self.zip_with(self.assertEqual, elems, values)
-
+        # Check before update
+        self.assertEqual(plugin_instance.get_raw(), plugin_instance.stats_init_value)
+        self.assertEqual(plugin_instance.is_enabled(), True)
+        self.assertEqual(plugin_instance.is_disabled(), False)
+        self.assertEqual(plugin_instance.get_views(), {})
         self.assertIsInstance(plugin_instance.get_raw(), (dict, list))
-
         if plugin_instance.history_enable() and isinstance(plugin_instance.get_raw(), dict):
             self.assertEqual(plugin_instance.get_key(), None)
             self.assertTrue(
@@ -91,72 +81,39 @@ class TestGlances(unittest.TestCase):
         elif plugin_instance.history_enable() and isinstance(plugin_instance.get_raw(), list):
             self.assertNotEqual(plugin_instance.get_key(), None)
 
-    def update_stats(self, plugin_instance):
+        # Update stats (add first element)
         plugin_instance.update()
         plugin_instance.update_stats_history()
         plugin_instance.update_views()
 
-        return plugin_instance
-
-    def is_field_in_plugin(self, plugin_instance):
-        def is_in_description(result, f):
-            return True if f in plugin_instance.fields_description else result
-
-        def is_field_in_this_description(result, i):
-            return functools.reduce(is_in_description, i, False)
-
-        return is_field_in_this_description
-
-    def is_field_in_stats(self, plugin_instance, plugin):
-        def is_field_in_this_plugin(result, f):
-            if f not in plugin_instance.get_raw():
-                print(f"WARNING: {f} field not found in {plugin} plugin stats")
-            else:
-                result = True
-
-            return result
-
-        return is_field_in_this_plugin
-
-    def check_stats(self, plugin_instance, plugin):
+        # Check stats
         self.assertIsInstance(plugin_instance.get_raw(), (dict, list))
         if isinstance(plugin_instance.get_raw(), dict) and plugin_instance.get_raw() != {}:
-            init = False
-            is_field_present = self.is_field_in_stats(plugin_instance, plugin)
-            field_description = plugin_instance.fields_description
-            result = functools.reduce(is_field_present, field_description, init)
-
-            self.assertTrue(result)
-
+            res = False
+            for f in plugin_instance.fields_description:
+                if f not in plugin_instance.get_raw():
+                    print(f"WARNING: {f} field not found in {plugin} plugin stats")
+                else:
+                    res = True
+            self.assertTrue(res)
         elif isinstance(plugin_instance.get_raw(), list) and len(plugin_instance.get_raw()) > 0:
-            init = False
-            is_field_present = self.is_field_in_plugin(plugin_instance)
-            raw_from_instance = plugin_instance.get_raw()
-            result = functools.reduce(is_field_present, raw_from_instance, init)
+            res = False
+            for i in plugin_instance.get_raw():
+                for f in i:
+                    if f in plugin_instance.fields_description:
+                        res = True
+            self.assertTrue(res)
 
-            self.assertTrue(result)
-
-        elems = [plugin_instance.get_raw(), plugin_instance.get_stats(), json.loads(plugin_instance.get_stats())]
-
-        values = [plugin_instance.get_export(), plugin_instance.get_json(), plugin_instance.get_raw()]
-
-        self.zip_with(self.assertEqual, elems, values)
-
+        self.assertEqual(plugin_instance.get_raw(), plugin_instance.get_export())
+        self.assertEqual(plugin_instance.get_stats(), plugin_instance.get_json())
+        self.assertEqual(json.loads(plugin_instance.get_stats()), plugin_instance.get_raw())
         if len(plugin_instance.fields_description) > 0:
             # Get first item of the fields_description
             first_field = list(plugin_instance.fields_description.keys())[0]
-
-            elems = [
-                plugin_instance.get_raw_stats_item(first_field),
-                json.loads(plugin_instance.get_stats_item(first_field)),
-                plugin_instance.get_item_info(first_field, 'description'),
-            ]
-
-            values = [dict, dict, str]
-
-            self.zip_with(self.assertIsInstance, elems, values)
-
-    def filter_stats(self, plugin_instance):
+            self.assertIsInstance(plugin_instance.get_raw_stats_item(first_field), dict)
+            self.assertIsInstance(json.loads(plugin_instance.get_stats_item(first_field)), dict)
+            self.assertIsInstance(plugin_instance.get_item_info(first_field, 'description'), str)
+        # Filter stats
         current_stats = plugin_instance.get_raw()
         if isinstance(plugin_instance.get_raw(), dict):
             current_stats['foo'] = 'bar'
@@ -167,46 +124,40 @@ class TestGlances(unittest.TestCase):
             current_stats = plugin_instance.filter_stats(current_stats)
             self.assertTrue('foo' not in current_stats[0])
 
-    def get_first_history_field(self, plugin_instance):
-        if isinstance(plugin_instance.get_raw(), dict):
-            first_history_field = plugin_instance.get_items_history_list()[0]['name']
-        elif isinstance(plugin_instance.get_raw(), list) and len(plugin_instance.get_raw()) > 0:
-            first_history_field = '_'.join(
-                [
-                    plugin_instance.get_raw()[0][plugin_instance.get_key()],
-                    plugin_instance.get_items_history_list()[0]['name'],
-                ]
-            )
+        # Update stats (add second element)
+        plugin_instance.update()
+        plugin_instance.update_stats_history()
+        plugin_instance.update_views()
 
-        return first_history_field
-
-    def maybe_assert_first_for_raw(self, plugin_instance, first_history_field):
-        if len(plugin_instance.get_raw()) > 0:
-            self.assertEqual(len(plugin_instance.get_raw_history(first_history_field)), 2)
-            self.assertGreater(
-                plugin_instance.get_raw_history(first_history_field)[1][0],
-                plugin_instance.get_raw_history(first_history_field)[0][0],
-            )
-
-    def maybe_assert_first_for_stats(self, plugin_instance, first_history_field):
-        if len(plugin_instance.get_raw()) > 0:
-            self.assertEqual(len(plugin_instance.get_raw_history(first_history_field)), 3)
-            self.assertEqual(len(plugin_instance.get_raw_history(first_history_field, 2)), 2)
-            self.assertIsInstance(json.loads(plugin_instance.get_stats_history()), dict)
-
-    def chk_hist_maybe_add_third_elem(self, plugin_instance):
+        # Check history
         if plugin_instance.history_enable():
-            first_history_field = self.get_first_history_field(plugin_instance)
-            self.maybe_assert_first_for_raw(plugin_instance, first_history_field)
+            if isinstance(plugin_instance.get_raw(), dict):
+                first_history_field = plugin_instance.get_items_history_list()[0]['name']
+            elif isinstance(plugin_instance.get_raw(), list) and len(plugin_instance.get_raw()) > 0:
+                first_history_field = '_'.join(
+                    [
+                        plugin_instance.get_raw()[0][plugin_instance.get_key()],
+                        plugin_instance.get_items_history_list()[0]['name'],
+                    ]
+                )
+            if len(plugin_instance.get_raw()) > 0:
+                self.assertEqual(len(plugin_instance.get_raw_history(first_history_field)), 2)
+                self.assertGreater(
+                    plugin_instance.get_raw_history(first_history_field)[1][0],
+                    plugin_instance.get_raw_history(first_history_field)[0][0],
+                )
 
             # Update stats (add third element)
-            plugin_instance = self.update_stats(plugin_instance)
+            plugin_instance.update()
+            plugin_instance.update_stats_history()
+            plugin_instance.update_views()
 
-            self.maybe_assert_first_for_stats(plugin_instance, first_history_field)
+            if len(plugin_instance.get_raw()) > 0:
+                self.assertEqual(len(plugin_instance.get_raw_history(first_history_field)), 3)
+                self.assertEqual(len(plugin_instance.get_raw_history(first_history_field, 2)), 2)
+                self.assertIsInstance(json.loads(plugin_instance.get_stats_history()), dict)
 
-        return first_history_field
-
-    def check_views(self, plugin_instance, first_history_field):
+        # Check views
         self.assertIsInstance(plugin_instance.get_views(), dict)
         if isinstance(plugin_instance.get_raw(), dict):
             self.assertIsInstance(plugin_instance.get_views(first_history_field), dict)
@@ -218,34 +169,6 @@ class TestGlances(unittest.TestCase):
             self.assertTrue('decoration' in plugin_instance.get_views(item=first_item, key=first_history_field))
         self.assertIsInstance(json.loads(plugin_instance.get_json_views()), dict)
         self.assertEqual(json.loads(plugin_instance.get_json_views()), plugin_instance.get_views())
-
-    def _common_plugin_tests(self, plugin):
-        """Common method to test a Glances plugin
-        This method is called multiple time by test 100 to 1xx"""
-
-        # Reset all the stats, history and views
-        plugin_instance = self.reset_stats_history_and_views(plugin)
-
-        # Check before update
-        self.do_checks_before_update(plugin_instance)
-
-        # Update stats (add first element)
-        plugin_instance = self.update_stats(plugin_instance)
-
-        # Check stats
-        self.check_stats(plugin_instance, plugin)
-
-        # Filter stats
-        self.filter_stats(plugin_instance)
-
-        # Update stats (add second element)
-        plugin_instance = self.update_stats(plugin_instance)
-
-        # Check history
-        first_history_field = self.chk_hist_maybe_add_third_elem(plugin_instance)
-
-        # Check views
-        self.check_views(plugin_instance, first_history_field)
 
     def test_000_update(self):
         """Update stats (mandatory step for all the stats).
