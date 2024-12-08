@@ -104,6 +104,7 @@ class TestGlances(unittest.TestCase):
                 'sensors',
                 'alert',
                 'processlist',
+                'programlist',
                 'diskio',
                 'hddtemp',
                 'batpercent',
