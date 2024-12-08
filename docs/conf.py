@@ -58,7 +58,7 @@ try:
     year = datetime.utcfromtimestamp(int(os.environ['SOURCE_DATE_EPOCH'])).year
 except (KeyError, ValueError):
     year = datetime.now().year
-copyright = '%d, %s' % (year, author)
+copyright = f'{year}, {author}'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
