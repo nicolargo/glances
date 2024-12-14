@@ -82,16 +82,20 @@ Any and all contributions are greatly appreciated.
 Requirements
 ============
 
-- ``python>=3.9`` (use Glances 3.4.x for lower Python version)
-- ``psutil`` (better with latest version)
-- ``defusedxml`` (in order to monkey patch xmlrpc)
-- ``packaging`` (for the version comparison)
-- ``orjson`` (an optimized alternative to the standard json module)
+Glances is developped in Python. A minimal Python version 3.9 or higher
+should be installed on your system.
 
 *Note for Python 2 users*
 
 Glances version 4 or higher do not support Python 2 (and Python 3 < 3.9).
 Please uses Glances version 3.4.x if you need Python 2 support.
+
+Dependencies:
+
+- ``psutil`` (better with latest version)
+- ``defusedxml`` (in order to monkey patch xmlrpc)
+- ``packaging`` (for the version comparison)
+- ``windows-curses`` (Windows Curses implementation) [Windows-only]
 
 Optional dependencies:
 
@@ -153,18 +157,37 @@ dependency. For example, on Debian/Ubuntu **the simplest** is
 the *python-dev* package and gcc (*python-devel* on Fedora/CentOS/RHEL).
 For Windows, just install psutil from the binary installation file.
 
-By default, Glances is installed without the Web interface dependencies.
+By default, Glances is installed **without** the Web interface dependencies.
 To install it, use the following command:
 
 .. code-block:: console
 
     pip install --user 'glances[web]'
 
-For a full installation (with all features):
+For a full installation (with all features, see features list bellow):
 
 .. code-block:: console
 
     pip install --user 'glances[all]'
+
+Features list:
+
+- all: install dependencies for all features
+- action: install dependencies for action feature
+- browser: install dependencies for Glances centram browser
+- cloud: install dependencies for cloud plugin
+- containers: install dependencies for container plugin
+- export: install dependencies for all exports modules
+- gpu: install dependencies for GPU plugin
+- graph: install dependencies for graph export
+- ip: install dependencies for IP public option
+- raid: install dependencies for RAID plugin
+- sensors: install dependencies for sensors plugin
+- smart: install dependencies for smart plugin
+- snmp: install dependencies for SNMP
+- sparklines: install dependencies for sparklines option
+- web: install dependencies for Webserver (WebUI) and Web API
+- wifi: install dependencies for Wifi plugin
 
 To upgrade Glances to the latest version:
 
