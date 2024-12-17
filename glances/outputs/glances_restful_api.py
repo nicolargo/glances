@@ -31,7 +31,7 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.middleware.gzip import GZipMiddleware
     from fastapi.responses import HTMLResponse, JSONResponse
-    from fastapi.security import HTTPBasic, HTTPBasicCredentials
+    from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
     from fastapi.staticfiles import StaticFiles
     from fastapi.templating import Jinja2Templates
 except ImportError as e:
@@ -49,7 +49,7 @@ import contextlib
 import threading
 import time
 
-security = HTTPBasic()
+security = OAuth2PasswordBearer(tokenUrl="token")
 
 
 class GlancesJSONResponse(JSONResponse):
@@ -121,13 +121,8 @@ class GlancesRestfulApi:
         self.bind_url = urljoin(f'http://{self.args.bind_address}:{self.args.port}/', self.url_prefix)
 
         # FastAPI Init
-        if self.args.password:
-            self._app = FastAPI(default_response_class=GlancesJSONResponse, dependencies=[Depends(self.authentication)])
-            self._password = GlancesPassword(username=args.username, config=config)
-
-        else:
-            self._app = FastAPI(default_response_class=GlancesJSONResponse)
-            self._password = None
+        self._app = FastAPI(default_response_class=GlancesJSONResponse)
+        self._password = GlancesPassword(username=args.username, config=config) if self.args.password else None
 
         # Set path for WebUI
         webui_root_path = config.get_value(
@@ -191,18 +186,6 @@ class GlancesRestfulApi:
             self.servers_list.update_servers_stats()
             self.timer = Timer(self.args.cached_time)
 
-    def authentication(self, creds: Annotated[HTTPBasicCredentials, Depends(security)]):
-        """Check if a username/password combination is valid."""
-        if creds.username == self.args.username:
-            # check_password and get_hash are (lru) cached to optimize the requests
-            if self._password.check_password(self.args.password, self._password.get_hash(creds.password)):
-                return creds.username
-
-        # If the username/password combination is invalid, return an HTTP 401
-        raise HTTPException(
-            status.HTTP_401_UNAUTHORIZED, "Incorrect username or password", {"WWW-Authenticate": "Basic"}
-        )
-
     def _router(self) -> APIRouter:
         """Define a custom router for Glances path."""
         base_path = f'/api/{self.API_VERSION}'
@@ -212,6 +195,9 @@ class GlancesRestfulApi:
         router = APIRouter(prefix=self.url_prefix)
 
         # REST API
+        router.add_api_route('/login', self._login, methods=['GET'])
+        router.add_api_route('/token', self._authentication, methods=['POST'])
+        router.add_api_route('/user', self._current_user, methods=['GET'])
         router.add_api_route(f'{base_path}/status', self._api_status, methods=['HEAD', 'GET'])
 
         route_mapping = {
@@ -320,6 +306,28 @@ class GlancesRestfulApi:
             self.autodiscover_client.close()
         logger.info("Close the Web server")
 
+    def _authentication(self, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+        """Check if a username/password combination is valid."""
+        if form_data.username == self.args.username:
+            # logger.info(form_data.username)
+            # logger.info(self._password.get_hash(form_data.password))
+            # check_password and get_hash are (lru) cached to optimize the requests
+            if self._password.check_password(self.args.password, self._password.get_hash(form_data.password)):
+                return {"access_token": form_data.username, "token_type": "bearer"}
+
+        # If the username/password combination is invalid, return an HTTP 401
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
+
+    def get_current_user(token: Annotated[str, Depends(security)]):
+        return token
+
+    def _current_user(self, current_user: Annotated[str, Depends(get_current_user)]):
+        return current_user
+
+    def _login(self, request: Request):
+        """Return the login page."""
+        return self._templates.TemplateResponse("login.html", {"request": request})
+
     def _index(self, request: Request):
         """Return main index.html (/) file.
 
@@ -346,7 +354,7 @@ class GlancesRestfulApi:
         # Display
         return self._templates.TemplateResponse("browser.html", {"request": request, "refresh_time": refresh_time})
 
-    def _api_status(self):
+    def _api_status(self, token: Annotated[str, Depends(security)]):
         """Glances API RESTful implementation.
 
         Return a 200 status code.
