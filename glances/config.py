@@ -261,9 +261,8 @@ class Config:
         # Sensors
         if not self.parser.has_section('sensors'):
             self.parser.add_section('sensors')
-        self.set_default_cwc('sensors', 'temperature_core', cwc=['60', '70', '80'])
         self.set_default_cwc('sensors', 'temperature_hdd', cwc=['45', '52', '60'])
-        self.set_default_cwc('sensors', 'battery', cwc=['80', '90', '95'])
+        self.set_default_cwc('sensors', 'battery', cwc=['70', '80', '90'])
 
         # Process list
         if not self.parser.has_section('processlist'):

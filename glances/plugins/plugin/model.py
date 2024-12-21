@@ -613,7 +613,7 @@ class GlancesPluginModel:
     def get_stat_name(self, header=""):
         """Return the stat name with an optional header"""
         ret = self.plugin_name
-        if header != "":
+        if header != '':
             ret += '_' + header
         return ret
 
@@ -662,32 +662,26 @@ class GlancesPluginModel:
             return 'DEFAULT'
 
         # Build the stat_name
-        stat_name = self.get_stat_name(header=header)
+        stat_name = self.get_stat_name(header=header).lower()
 
         # Manage limits
         # If is_max is set then default style is set to MAX else default is set to OK
         ret = 'MAX' if is_max else 'OK'
 
         # Iter through limits
-        try:
-            limit = self.get_limit('critical', stat_name=stat_name)
-        except KeyError:
-            try:
-                limit = self.get_limit('warning', stat_name=stat_name)
-            except KeyError:
-                try:
-                    limit = self.get_limit('careful', stat_name=stat_name)
-                except KeyError:
-                    return 'DEFAULT'
-                else:
-                    if value >= limit:
-                        ret = 'CAREFUL'
-            else:
-                if value >= limit:
-                    ret = 'WARNING'
+        critical = self.get_limit('critical', stat_name=stat_name)
+        warning = self.get_limit('warning', stat_name=stat_name)
+        careful = self.get_limit('careful', stat_name=stat_name)
+        if critical and value >= critical:
+            ret = 'CRITICAL'
+        elif warning and value >= warning:
+            ret = 'WARNING'
+        elif careful and value >= careful:
+            ret = 'CAREFUL'
+        elif not careful and not warning and not critical:
+            ret = 'DEFAULT'
         else:
-            if value >= limit:
-                ret = 'CRITICAL'
+            ret = 'OK'
 
         if current < minimum:
             ret = 'CAREFUL'
@@ -727,9 +721,8 @@ class GlancesPluginModel:
     def manage_action(self, stat_name, trigger, header, action_key):
         """Manage the action for the current stat."""
         # Here is a command line for the current trigger ?
-        try:
-            command, repeat = self.get_limit_action(trigger, stat_name=stat_name)
-        except KeyError:
+        command, repeat = self.get_limit_action(trigger, stat_name=stat_name)
+        if not command and not repeat:
             # Reset the trigger
             self.actions.set(stat_name, trigger)
         else:
@@ -762,9 +755,7 @@ class GlancesPluginModel:
 
     def is_limit(self, criticality, stat_name=""):
         """Return true if the criticality limit exist for the given stat_name"""
-        if stat_name == "":
-            return self.plugin_name + '_' + criticality in self._limits
-        return stat_name + '_' + criticality in self._limits
+        return self.get_stat_name(stat_name).lower() + '_' + criticality in self._limits
 
     def get_limit(self, criticality=None, stat_name=""):
         """Return the limit value for the given criticality.
@@ -774,13 +765,13 @@ class GlancesPluginModel:
 
         # Get the limit for stat + header
         # Example: network_wlan0_rx_careful
+        stat_name = stat_name.lower()
         if stat_name + '_' + criticality in self._limits:
             return self._limits[stat_name + '_' + criticality]
         if self.plugin_name + '_' + criticality in self._limits:
             return self._limits[self.plugin_name + '_' + criticality]
 
-        # No key found, the raise an error
-        raise KeyError
+        return None
 
     def get_limit_action(self, criticality, stat_name=""):
         """Return the tuple (action, repeat) for the alert.
@@ -801,8 +792,8 @@ class GlancesPluginModel:
             if r[0] in self._limits:
                 return self._limits[r[0]], r[1]
 
-        # No key found, the raise an error
-        raise KeyError
+        # No key found, return None
+        return None, None
 
     def get_limit_log(self, stat_name, default_action=False):
         """Return the log tag for the alert."""
