@@ -1,4 +1,4 @@
-psutil>=5.6.7
+psutil>=5.6.7,<=6.1.1
 defusedxml
 packaging; python_version >= "3.7"
 future; python_version < "3.0"
