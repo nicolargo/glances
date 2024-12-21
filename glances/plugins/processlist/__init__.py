@@ -256,21 +256,13 @@ class PluginModel(GlancesPluginModel):
     def get_nice_alert(self, value):
         """Return the alert relative to the Nice configuration list"""
         value = str(value)
-        try:
-            if value in self.get_limit('nice_critical'):
-                return 'CRITICAL'
-        except KeyError:
-            pass
-        try:
-            if value in self.get_limit('nice_warning'):
-                return 'WARNING'
-        except KeyError:
-            pass
-        try:
-            if value in self.get_limit('nice_careful'):
-                return 'CAREFUL'
-        except KeyError:
-            pass
+        if self.get_limit('nice_critical') and value in self.get_limit('nice_critical'):
+            return 'CRITICAL'
+        if self.get_limit('nice_warning') and value in self.get_limit('nice_warning'):
+            return 'WARNING'
+        if self.get_limit('nice_careful') and value in self.get_limit('nice_careful'):
+            return 'CAREFUL'
+
         return 'DEFAULT'
 
     def _get_process_curses_cpu_percent(self, p, selected, args):
