@@ -220,6 +220,19 @@ class PluginModel(GlancesPluginModel):
 
         return stats
 
+    def __get_system_thresholds(self, sensor):
+        """Return the alert level thanks to the system thresholds"""
+        alert = 'OK'
+        if sensor['critical'] is None:
+            alert = 'DEFAULT'
+        elif sensor['value'] >= sensor['critical']:
+            alert = 'CRITICAL'
+        elif sensor['warning'] is None:
+            alert = 'DEFAULT'
+        elif sensor['value'] >= sensor['warning']:
+            alert = 'WARNING'
+        return alert
+
     def update_views(self):
         """Update stats views."""
         # Call the father's method
@@ -232,26 +245,22 @@ class PluginModel(GlancesPluginModel):
                 continue
             # Alert processing
             if i['type'] == SensorType.CPU_TEMP:
-                if self.is_limit('critical', stat_name=SensorType.CPU_TEMP + '_' + i['label']):
-                    # By default use the thresholds configured in the glances.conf file (see #2058)
-                    alert = self.get_alert(current=i['value'], header=SensorType.CPU_TEMP + '_' + i['label'])
+                if self.is_limit('critical', stat_name=i["type"].value + '_' + i['label']):
+                    # Get thresholds for the specific sensor in the glances.conf file (see #2058)
+                    alert = self.get_alert(current=i['value'], header=i["type"].value + '_' + i['label'])
+                elif self.is_limit('critical', stat_name=i["type"].value):
+                    # Get thresholds for the sensor type in the glances.conf file (see #3049)
+                    logger.info("Using sensor type thresholds")
+                    logger.info(self._limits)
+                    alert = self.get_alert(current=i['value'], header=i["type"].value)
                 else:
                     # Else use the system thresholds
-                    if i['critical'] is None:
-                        alert = 'DEFAULT'
-                    elif i['value'] >= i['critical']:
-                        alert = 'CRITICAL'
-                    elif i['warning'] is None:
-                        alert = 'DEFAULT'
-                    elif i['value'] >= i['warning']:
-                        alert = 'WARNING'
-                    else:
-                        alert = 'OK'
+                    alert = self.__get_system_thresholds(i)
             elif i['type'] == SensorType.BATTERY:
                 # Battery is in %
-                alert = self.get_alert(current=100 - i['value'], header=i['type'])
+                alert = self.get_alert(current=100 - i['value'], header=i['type'].value)
             else:
-                alert = self.get_alert(current=i['value'], header=i['type'])
+                alert = self.get_alert(current=i['value'], header=i['type'].value)
             # Set the alert in the view
             self.views[i[self.get_key()]]['value']['decoration'] = alert
 
