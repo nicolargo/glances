@@ -17,6 +17,7 @@ from typing import Annotated, Any, Union
 from urllib.parse import urljoin
 
 from glances import __apiversion__, __version__
+from glances.events_list import glances_events
 from glances.globals import json_dumps
 from glances.logger import logger
 from glances.password import GlancesPassword
@@ -211,9 +212,17 @@ class GlancesRestfulApi:
         # Create the main router
         router = APIRouter(prefix=self.url_prefix)
 
-        # REST API
+        # REST API route definition
+        # ==========================
+
+        # HEAD
         router.add_api_route(f'{base_path}/status', self._api_status, methods=['HEAD', 'GET'])
 
+        # POST
+        router.add_api_route(f'{base_path}/events/clear/warning', self._events_clear_warning, methods=['POST'])
+        router.add_api_route(f'{base_path}/events/clear/all', self._events_clear_all, methods=['POST'])
+
+        # GET
         route_mapping = {
             f'{base_path}/config': self._api_config,
             f'{base_path}/config/{{section}}': self._api_config_section,
@@ -242,7 +251,6 @@ class GlancesRestfulApi:
             f'{plugin_path}/{{item}}/{{key}}': self._api_key,
             f'{plugin_path}/{{item}}/{{key}}/views': self._api_key_views,
         }
-
         for path, endpoint in route_mapping.items():
             router.add_api_route(path, endpoint)
 
@@ -356,6 +364,26 @@ class GlancesRestfulApi:
         """
 
         return GlancesJSONResponse({'version': __version__})
+
+    def _events_clear_warning(self):
+        """Glances API RESTful implementation.
+
+        Return a 200 status code.
+
+        It's a post message to clean warning events
+        """
+        glances_events.clean()
+        return GlancesJSONResponse({})
+
+    def _events_clear_all(self):
+        """Glances API RESTful implementation.
+
+        Return a 200 status code.
+
+        It's a post message to clean all events
+        """
+        glances_events.clean(critical=True)
+        return GlancesJSONResponse({})
 
     def _api_help(self):
         """Glances API RESTful implementation.
