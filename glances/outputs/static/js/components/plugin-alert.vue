@@ -2,6 +2,9 @@
   <section class="plugin" id="alerts">
     <span class="title" v-if="hasAlerts">
       Warning or critical alerts (last {{ countAlerts }} entries)
+      <span>
+        <button class="clear-button" v-on:click="clear()">Clear alerts</button>
+      </span>
     </span>
     <span class="title" v-else>No warning or critical alert detected</span>
     <table class="table table-sm table-borderless">
@@ -105,6 +108,15 @@ export default {
         ':' + String(date.getMinutes()).padStart(2, '0') +
         ':' + String(date.getSeconds()).padStart(2, '0') +
         '(' + tzString + ')';
+    },
+    clear() {
+      const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      };
+      fetch('api/4/events/clear/all', requestOptions)
+        .then(response => response.json())
+        .then(data => product.value = data);
     }
   }
 };

@@ -150,6 +150,21 @@ body {
     margin-bottom: 1em;
 }
 
+.clear-button {
+    background-color: $glances-link-hover-color !important;
+    color: white;
+    border: none;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    transition-duration: 0.4s;
+}
+
+.clear-button:hover {
+    background-color: white;
+    color: black;
+}
+
 #system {
     span {
         padding-left: 10px;
