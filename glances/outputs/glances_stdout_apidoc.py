@@ -316,6 +316,21 @@ def print_limits(stats):
     print('')
 
 
+def print_plugin_post_events():
+    sub_title = 'POST clear events'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('')
+    print('Clear all alarms from the list::')
+    print('')
+    print(f'    # curl -H "Content-Type: application/json" -X POST {API_URL}/events/clear/all')
+    print('')
+    print('Clear warning alarms from the list::')
+    print('')
+    print(f'    # curl -H "Content-Type: application/json" -X POST {API_URL}/events/clear/warning')
+    print('')
+
+
 class GlancesStdoutApiDoc:
     """This class manages the fields description display."""
 
@@ -344,6 +359,8 @@ class GlancesStdoutApiDoc:
             stat = stats.get_plugin(plugin)
             print_plugin_stats(plugin, stat)
             print_plugin_description(plugin, stat)
+            if plugin == 'alert':
+                print_plugin_post_events()
 
             stat_export = stat.get_export()
             if stat_export is None or stat_export == [] or stat_export == {}:
