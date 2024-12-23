@@ -99,7 +99,7 @@ class GlancesProcesses:
         self._max_values = {}
         self.reset_max_values()
 
-        # Set the key's list be disabled in order to only display specific attribte in the process list
+        # Set the key's list be disabled in order to only display specific attribute in the process list
         self.disable_stats = []
 
     def _test_grab(self):
