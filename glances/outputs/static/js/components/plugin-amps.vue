@@ -1,5 +1,5 @@
 <template>
-    <section id="amps" class="plugin">
+    <section id="amps" class="plugin" v-if="hasAmps">
         <table class="table table-sm table-borderless">
             <tbody>
                 <tr v-for="(process, processId) in processes" :key="processId">
@@ -23,7 +23,7 @@
             </div>
         </div> -->
 
-</section>
+    </section>
 </template>
 
 <script>
@@ -39,6 +39,9 @@ export default {
         },
         processes() {
             return this.stats.filter((process) => process.result !== null);
+        },
+        hasAmps() {
+            return this.processes.length > 0;
         }
     },
     methods: {
