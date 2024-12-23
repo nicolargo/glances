@@ -4,7 +4,7 @@
     </div>
     <glances-help v-else-if="args.help_tag"></glances-help>
     <main v-else>
-        <div class="container-fluidheader">
+        <div class="container-fluid header">
             <div class="row justify-content-between">
                 <div class="col-auto" v-if="!args.disable_system">
                     <glances-plugin-system :data="data"></glances-plugin-system>

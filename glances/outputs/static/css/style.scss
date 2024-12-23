@@ -80,6 +80,11 @@ body {
 
 // Layout
 
+.container-fluid {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
 .header {
     height: 30px;
 }
@@ -312,6 +317,7 @@ body {
     span:nth-child(1) {
         padding-left: 0px;
     }
+    margin-bottom: 0px;
 }
 
 #amps {
