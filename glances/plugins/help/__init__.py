@@ -216,7 +216,6 @@ class PluginModel(GlancesPluginModel):
             'PROCESS',
             'PROCESS_SELECTED',
             'STATUS',
-            'NICE',
             'CPU_TIME',
             'CAREFUL',
             'WARNING',
