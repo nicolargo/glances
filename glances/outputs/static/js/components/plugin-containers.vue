@@ -9,60 +9,61 @@
                     <td scope="col" v-show="showEngine">Engine</td>
                     <td scope="col" v-show="showPod">Pod</td>
                     <td scope="col" :class="['sortable', sorter.column === 'name' && 'sort']"
-                        @click="args.sort_processes_key = 'name'">
+                        @click="args.sort_processes_key = 'name'" v-show="!getDisableStats().includes('name')">
                         Name
                     </td>
-                    <td scope="col">Status</td>
-                    <td scope="col">Uptime</td>
+                    <td scope="col" v-show="!getDisableStats().includes('status')">Status</td>
+                    <td scope="col" v-show="!getDisableStats().includes('uptime')">Uptime</td>
                     <td scope="col" :class="['sortable', sorter.column === 'cpu_percent' && 'sort']"
-                        @click="args.sort_processes_key = 'cpu_percent'">
+                        @click="args.sort_processes_key = 'cpu_percent'" v-show="!getDisableStats().includes('cpu')">
                         CPU%
                     </td>
                     <td scope="col" :class="['sortable', sorter.column === 'memory_percent' && 'sort']"
-                        @click="args.sort_processes_key = 'memory_percent'">
+                        @click="args.sort_processes_key = 'memory_percent'" v-show="!getDisableStats().includes('mem')">
                         MEM
                     </td>
-                    <td scope="col">/ MAX</td>
-                    <td scope="col">IOR/s</td>
-                    <td scope="col">IOW/s</td>
-                    <td scope="col">RX/s</td>
-                    <td scope="col">TX/s</td>
-                    <td scope="col">Command</td>
+                    <td scope="col" v-show="!getDisableStats().includes('mem')">/ MAX</td>
+                    <td scope="col" v-show="!getDisableStats().includes('diskio')">IOR/s</td>
+                    <td scope="col" v-show="!getDisableStats().includes('diskio')">IOW/s</td>
+                    <td scope="col" v-show="!getDisableStats().includes('networkio')">RX/s</td>
+                    <td scope="col" v-show="!getDisableStats().includes('networkio')">TX/s</td>
+                    <td scope="col" v-show="!getDisableStats().includes('command')">Command</td>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(container, containerId) in containers" :key="containerId">
                     <td scope="row" v-show="showEngine">{{ container.engine }}</td>
                     <td scope="row" v-show="showPod">{{ container.pod_id || '-' }}</td>
-                    <td scope="row">{{ container.name }}</td>
-                    <td scope="row" :class="container.status == 'Paused' ? 'careful' : 'ok'">
+                    <td scope="row" v-show="!getDisableStats().includes('name')">{{ container.name }}</td>
+                    <td scope="row" :class="container.status == 'Paused' ? 'careful' : 'ok'"
+                        v-show="!getDisableStats().includes('status')">
                         {{ container.status }}
                     </td>
-                    <td scope="row">
+                    <td scope="row" v-show="!getDisableStats().includes('uptime')">
                         {{ container.uptime }}
                     </td>
-                    <td scope="row">
+                    <td scope="row" v-show="!getDisableStats().includes('cpu')">
                         {{ $filters.number(container.cpu_percent, 1) }}
                     </td>
-                    <td scope="row">
+                    <td scope="row" v-show="!getDisableStats().includes('mem')">
                         {{ $filters.bytes(container.memory_usage) }}
                     </td>
-                    <td scope="row">
+                    <td scope="row" v-show="!getDisableStats().includes('mem')">
                         / {{ $filters.bytes(container.limit) }}
                     </td>
-                    <td scope="row">
+                    <td scope="row" v-show="!getDisableStats().includes('iodisk')">
                         {{ $filters.bytes(container.io_rx) }}
                     </td>
-                    <td scope="row">
+                    <td scope="row" v-show="!getDisableStats().includes('iodisk')">
                         {{ $filters.bytes(container.io_wx) }}
                     </td>
-                    <td scope="row">
+                    <td scope="row" v-show="!getDisableStats().includes('networkio')">
                         {{ $filters.bits(container.network_rx) }}
                     </td>
-                    <td scope="row">
+                    <td scope="row" v-show="!getDisableStats().includes('networkio')">
                         {{ $filters.bits(container.network_tx) }}
                     </td>
-                    <td scope="row">
+                    <td scope="row" v-show="!getDisableStats().includes('command')">
                         {{ container.command }}
                     </td>
                 </tr>
@@ -177,6 +178,11 @@ export default {
                     };
                 }
             }
+        }
+    },
+    methods: {
+        getDisableStats() {
+            return GlancesHelper.getLimit('containers', 'containers_disable_stats') || [];
         }
     }
 };
