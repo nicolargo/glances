@@ -77,7 +77,6 @@ class GlancesColors:
         # Colors text styles
         self.DEFAULT = curses.color_pair(1)
         self.OK_LOG = curses.color_pair(3) | self.A_BOLD
-        self.NICE = curses.color_pair(8)
         self.CPU_TIME = curses.color_pair(8)
         self.CAREFUL_LOG = curses.color_pair(4) | self.A_BOLD
         self.WARNING_LOG = curses.color_pair(5) | self.A_BOLD
@@ -111,13 +110,23 @@ class GlancesColors:
                 # Catch exception in TMUX
                 pass
 
+            # Overwrite CAREFUL color
+            try:
+                if self.args.disable_bg:
+                    curses.init_pair(12, curses.COLOR_BLUE, -1)
+                else:
+                    curses.init_pair(12, -1, curses.COLOR_BLUE)
+            except Exception:
+                pass
+            else:
+                self.CAREFUL_LOG = curses.color_pair(12) | self.A_BOLD
+
     def __define_bw(self) -> None:
         # The screen is NOT compatible with a colored design
         # switch to B&W text styles
         # ex: export TERM=xterm-mono
         self.DEFAULT = -1
         self.OK_LOG = -1
-        self.NICE = self.A_BOLD
         self.CPU_TIME = self.A_BOLD
         self.CAREFUL_LOG = self.A_BOLD
         self.WARNING_LOG = curses.A_UNDERLINE
@@ -144,7 +153,6 @@ class GlancesColors:
             'PROCESS': self.OK,
             'PROCESS_SELECTED': self.OK | curses.A_UNDERLINE,
             'STATUS': self.OK,
-            'NICE': self.NICE,
             'CPU_TIME': self.CPU_TIME,
             'CAREFUL': self.CAREFUL,
             'WARNING': self.WARNING,
