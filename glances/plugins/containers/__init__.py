@@ -155,6 +155,9 @@ class PluginModel(GlancesPluginModel):
         # Sort key
         self.sort_key = None
 
+        # Set the key's list be disabled in order to only display specific attribute in the container list
+        self.disable_stats = self.get_conf_value('disable_stats')
+
         # Force a first update because we need two update to have the first stat
         self.update()
         self.refresh_timer.set(0)
@@ -343,25 +346,35 @@ class PluginModel(GlancesPluginModel):
 
         ret = self.maybe_add_engine_name_or_pod_line(ret)
 
-        msg = ' {:{width}}'.format('Name', width=name_max_width)
-        ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'name' else 'DEFAULT'))
+        if 'name' not in self.disable_stats:
+            msg = ' {:{width}}'.format('Name', width=name_max_width)
+            ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'name' else 'DEFAULT'))
 
-        msgs = ['{:>10}'.format('Status'), '{:>10}'.format('Uptime')]
+        msgs = []
+        if 'status' not in self.disable_stats:
+            msgs.append('{:>10}'.format('Status'))
+        if 'uptime' not in self.disable_stats:
+            msgs.append('{:>10}'.format('Uptime'))
         ret = reduce(self.add_msg_to_line, msgs, ret)
 
-        msg = '{:>6}'.format('CPU%')
-        ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'cpu_percent' else 'DEFAULT'))
-        msg = '{:>7}'.format('MEM')
-        ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'memory_usage' else 'DEFAULT'))
+        if 'cpu' not in self.disable_stats:
+            msg = '{:>6}'.format('CPU%')
+            ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'cpu_percent' else 'DEFAULT'))
 
-        msgs = [
-            '/{:<7}'.format('MAX'),
-            '{:>7}'.format('IOR/s'),
-            ' {:<7}'.format('IOW/s'),
-            '{:>7}'.format('Rx/s'),
-            ' {:<7}'.format('Tx/s'),
-            ' {:8}'.format('Command'),
-        ]
+        msgs = []
+        if 'mem' not in self.disable_stats:
+            msg = '{:>7}'.format('MEM')
+            ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'memory_usage' else 'DEFAULT'))
+            msgs.append('/{:<7}'.format('MAX'))
+
+        if 'diskio' not in self.disable_stats:
+            msgs.extend(['{:>7}'.format('IOR/s'), ' {:<7}'.format('IOW/s')])
+
+        if 'networkio' not in self.disable_stats:
+            msgs.extend(['{:>7}'.format('Rx/s'), ' {:<7}'.format('Tx/s')])
+
+        if 'command' not in self.disable_stats:
+            msgs.append(' {:8}'.format('Command'))
 
         return reduce(self.add_msg_to_line, msgs, ret)
 
@@ -499,17 +512,23 @@ class PluginModel(GlancesPluginModel):
 
     def build_container_data(self, name_max_width, args):
         def build_with_this_params(ret, container):
-            steps = [
-                self.maybe_add_engine_name_or_pod_name,
-                self.build_container_name(name_max_width),
-                self.build_status_name,
-                self.build_uptime_line,
-                self.build_cpu_line,
-                self.build_memory_line,
-                self.build_io_line,
-                self.build_net_line(args),
-                self.build_cmd_line,
-            ]
+            steps = [self.maybe_add_engine_name_or_pod_name]
+            if 'name' not in self.disable_stats:
+                steps.append(self.build_container_name(name_max_width))
+            if 'status' not in self.disable_stats:
+                steps.append(self.build_status_name)
+            if 'uptime' not in self.disable_stats:
+                steps.append(self.build_uptime_line)
+            if 'cpu' not in self.disable_stats:
+                steps.append(self.build_cpu_line)
+            if 'mem' not in self.disable_stats:
+                steps.append(self.build_memory_line)
+            if 'diskio' not in self.disable_stats:
+                steps.append(self.build_io_line)
+            if 'networkio' not in self.disable_stats:
+                steps.append(self.build_net_line(args))
+            if 'command' not in self.disable_stats:
+                steps.append(self.build_cmd_line)
 
             return reduce(lambda ret, step: step(ret, container), steps, ret)
 
