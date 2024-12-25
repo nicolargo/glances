@@ -104,9 +104,9 @@ class _GlancesCurses:
     _quicklook_max_width = 58
 
     # Define left sidebar
-    # This default list is also defined in the glances/outputs/static/js/uiconfig.json
-    # file for the web interface
-    # Both can be overwritten by the configuration file ([outputs] left_menu option)
+    # This variable is used in the make webui task in order to generate the
+    # glances/outputs/static/js/uiconfig.json file for the web interface
+    # This lidt can also be overwritten by the configuration file ([outputs] left_menu option)
     _left_sidebar = [
         'network',
         'ports',
