@@ -10,6 +10,7 @@
         "folders",
         "raid",
         "smart",
-        "sensors"
+        "sensors",
+        "now"
     ]
 }
