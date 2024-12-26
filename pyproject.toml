@@ -191,7 +191,7 @@ exclude = [
   "venv-dev",
   "venv-min",
   "docs",
-  "test-data",
+  "tests-data",
   "./glances/outputs/static/*",
 ]
 

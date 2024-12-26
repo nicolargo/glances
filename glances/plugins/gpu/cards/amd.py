@@ -14,7 +14,7 @@ See: https://wiki.archlinux.org/title/AMDGPU#Manually
 """
 
 # Example
-# test-data/plugins/gpu/amd/
+# tests-data/plugins/gpu/amd/
 # └── sys
 #     ├── class
 #     │   └── drm
