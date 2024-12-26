@@ -85,19 +85,25 @@ venv-min-upgrade: ## Upgrade Python 3 minimal run-time dependencies
 # Tests
 # ===================================================================
 
-test: ## Run unit tests
+test: ## Run All unit tests
 	$(PYTEST)
 
 test-core: ## Run Core unit tests
 	$(PYTEST) tests/test_core.py
 
+test-restful: ## Run Restful API unit tests
+	$(PYTEST) tests/test_restful.py
+
+test-xmlrpc: ## Run XMLRPC API unit tests
+	$(PYTEST) tests/test_xmlrpc.py
+
 test-with-upgrade: venv-upgrade test ## Upgrade deps and run unit tests
 
 test-min: ## Run core unit tests in minimal environment
-	$(venv_min)/python unittest-core.py
+	$(venv_min)/python -m pytest tests/test_core.py
 
 test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in minimal environment
-	$(venv_min)/python unittest-core.py
+	$(venv_min)/python -m pytest tests/test_core.py
 
 # ===================================================================
 # Linters, profilers and cyber security
