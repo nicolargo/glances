@@ -3,6 +3,15 @@
 ==============================================================================
 
 ===============
+Version 4.3.0.2
+===============
+
+Enhancements:
+
+* Revert "Replace netifaces by netifaces-plus" #3053 because it break build on Alpine Image
+
+
+===============
 Version 4.3.0.1
 ===============
 
