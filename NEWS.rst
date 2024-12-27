@@ -3,6 +3,18 @@
 ==============================================================================
 
 ===============
+Version 4.3.0.1
+===============
+
+Enhancements:
+
+* Replace netifaces by netifaces-plus #3053
+
+Bug corrected:
+
+* CONTAINERS section missing in 4.3.0 WebUI #3052
+
+===============
 Version 4.3.0
 ===============
 
