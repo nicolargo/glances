@@ -3,6 +3,81 @@
 ==============================================================================
 
 ===============
+Version 4.3.0.3
+===============
+
+Continuous integration and documentation:
+
+* Pin Alpine image to 3.20 (3.21 is not compliant with Netifaces) Related to #3053
+
+===============
+Version 4.3.0.2
+===============
+
+Enhancements:
+
+* Revert "Replace netifaces by netifaces-plus" #3053 because it break build on Alpine Image
+
+===============
+Version 4.3.0.1
+===============
+
+Enhancements:
+
+* Replace netifaces by netifaces-plus #3053
+
+Bug corrected:
+
+* CONTAINERS section missing in 4.3.0 WebUI #3052
+
+===============
+Version 4.3.0
+===============
+
+Enhancements:
+
+* Web Based Glances Central Browser #1121
+* Ability to specify hide or show for smart plugin #2996
+* Thread mode ('j' hotkey) is not taken into accound in the WebUI #3019
+* [WEBUI] Clear old alert messages in the WebUI #3042
+* Raise an (Alert) Event for a group of sensors #3049
+* Allow processlist columns to be selected in config file #1524
+* Allow containers columns to be selected in config file #2722
+* [WebUI] Unecessary space between Processcount and processlist #3032
+* Add comparable NVML_LIB check for Windows #3000
+* Change the default path for graph export to /tmp/glances
+* Improve CCS of WebUI #3024
+
+Bug corrected:
+
+* Thresholds not displayed in the WebUI for the DiskIO plugin #1498
+* FS module alias configuration do not taken into account everytime #3010
+* Unexpected behaviour while running glances in docker with --export influxdb2 #2904
+* Correct issue when key name contains space - Related to #2983
+* Issue with ports plugin (for URL request) #3008
+* Network problem when no bitrate available #3014
+* SyntaxError: f-string: unmatched '[' in server list (on the DEVELOP branch only) #3018
+* Uptime for Docker containers not working #3021
+* WebUI doesn't display valid time for process list #2902
+* Bug In the Web-UI, Timestamps for 'Warning or critical alerts' are showing incorrect month #3023
+* Correct display issue on Containers plugin in WebUI #3028
+
+Continuous integration and documentation:
+
+* Bumped minimal Python version to 3.9 #3005
+* Make the glances/outputs/static/js/uiconfig.json generated automaticaly from the make webui task
+* Update unit-test for Glances Central Browser
+* Add unit-test for new entry point in the API (plugin/item/key)
+* Add a target to start Glances with Htop features
+* Try new build and publish to Pypi CI actions
+
+Thanks to all contributors and bug reporters !
+
+Special thanks to:
+
+* Ariel Otilibili for code quality improvements #2801
+
+===============
 Version 4.2.1
 ===============
 
