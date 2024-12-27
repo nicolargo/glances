@@ -3,13 +3,20 @@
 ==============================================================================
 
 ===============
+Version 4.3.0.3
+===============
+
+Continuous integration and documentation:
+
+* Pin Alpine image to 3.20 (3.21 is not compliant with Netifaces) Related to #3053
+
+===============
 Version 4.3.0.2
 ===============
 
 Enhancements:
 
 * Revert "Replace netifaces by netifaces-plus" #3053 because it break build on Alpine Image
-
 
 ===============
 Version 4.3.0.1
