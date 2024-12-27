@@ -14,7 +14,7 @@ influxdb>=1.0.0 # For InfluxDB < 1.8
 influxdb-client # For InfluxDB >= 1.8
 jinja2
 kafka-python
-netifaces
+netifaces-plus
 nvidia-ml-py
 orjson
 paho-mqtt
