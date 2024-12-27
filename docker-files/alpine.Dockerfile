@@ -11,7 +11,7 @@
 # Be aware that if you change the Alpine version, you may have to change the Python version.
 
 ARG IMAGE_VERSION=3.21
-ARG PYTHON_VERSION=3.13
+ARG PYTHON_VERSION=3.12
 
 ##############################################################################
 # Base layer to be used for building dependencies and the release images
