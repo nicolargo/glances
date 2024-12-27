@@ -58,7 +58,7 @@ export = [
 ]
 gpu = ["nvidia-ml-py"]
 graph = ["pygal"]
-ip = ["netifaces-plus"]
+ip = ["netifaces"]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART.smartx"]
