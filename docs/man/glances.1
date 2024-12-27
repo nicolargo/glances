@@ -1,3 +1,4 @@
+'\" t
 .\" Man page generated from reStructuredText.
 .
 .
@@ -27,7 +28,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "GLANCES" "1" "Dec 23, 2024" "4.3.0_dev06" "Glances"
+.TH "GLANCES" "1" "Dec 27, 2024" "4.3.0" "Glances"
 .SH NAME
 glances \- An eye on your system
 .SH SYNOPSIS
@@ -559,9 +560,8 @@ A template is available in the \fB/usr{,/local}/share/doc/glances\fP
 .sp
 You can place your \fBglances.conf\fP file in the following locations:
 .TS
-center;
-|l|l|.
-_
+box center;
+l|l.
 T{
 \fBLinux\fP, \fBSunOS\fP
 T}	T{
@@ -594,7 +594,6 @@ T}	T{
 <venv_root_folder>/share/doc/glances/
 .UNINDENT
 T}
-_
 .TE
 .INDENT 0.0
 .IP \(bu 2
@@ -613,8 +612,7 @@ A first section (called global) is available:
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 [global]
 # Refresh rate (default is a minimum of 2 seconds)
 # Can be overwritten by the \-t <sec> option
@@ -630,8 +628,7 @@ history_size=1200
 # Define external directory for loading additional plugins
 # The layout follows the glances standard for plugin definitions
 #plugin_dir=/home/user/dev/plugins
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -639,8 +636,7 @@ than a second one concerning the user interface:
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 [outputs]
 # Options for all UIs
 #\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
@@ -677,8 +673,7 @@ max_processes_display=25
 # Comma separated list of HTTP request headers that should be supported for cross\-origin requests.
 # Default is *
 #cors_headers=*
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -687,8 +682,7 @@ have a section. Below is an example for the CPU plugin:
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 [cpu]
 disable=False
 refresh=3
@@ -704,8 +698,7 @@ system_critical=90
 steal_careful=50
 steal_warning=70
 steal_critical=90
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -713,8 +706,7 @@ an InfluxDB export module:
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 [influxdb]
 # Configuration for the \-\-export influxdb option
 # https://influxdb.com/
@@ -725,8 +717,7 @@ password=root
 db=glances
 prefix=localhost
 #tags=foo:bar,spam:eggs
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -734,8 +725,7 @@ or a Nginx AMP:
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 [amp_nginx]
 # Nginx status page should be enabled (https://easyengine.io/tutorials/nginx/status\-page/)
 enable=true
@@ -743,8 +733,7 @@ regex=\e/usr\e/sbin\e/nginx
 refresh=60
 one_line=false
 status_url=http://localhost/nginx_status
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -754,13 +743,11 @@ of an InfluxDB export to the current hostname, use:
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 [influxdb]
 \&...
 prefix=\(gahostname\(ga
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -768,13 +755,11 @@ Or if you want to add the Operating System name as a tag:
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 [influxdb]
 \&...
 tags=system:\(gauname \-a\(ga
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .SH LOGGING
@@ -797,8 +782,7 @@ format):
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 {
     \(dqversion\(dq: 1,
     \(dqdisable_existing_loggers\(dq: \(dqFalse\(dq,
@@ -857,8 +841,7 @@ format):
         }
     }
 }
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -866,11 +849,9 @@ and start Glances using the following command line:
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 LOG_CFG=<path>/glances.json glances
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp

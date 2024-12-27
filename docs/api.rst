@@ -160,7 +160,7 @@ Get plugin stats::
       "refresh": 3.0,
       "regex": True,
       "result": None,
-      "timer": 0.7241387367248535},
+      "timer": 0.7580907344818115},
      {"count": 0,
       "countmax": 20.0,
       "countmin": None,
@@ -169,7 +169,7 @@ Get plugin stats::
       "refresh": 3.0,
       "regex": True,
       "result": None,
-      "timer": 0.7240409851074219}]
+      "timer": 0.757988452911377}]
 
 Fields descriptions:
 
@@ -197,7 +197,7 @@ Get a specific item when field matches the given value::
                   "refresh": 3.0,
                   "regex": True,
                   "result": None,
-                  "timer": 0.7241387367248535}]}
+                  "timer": 0.7580907344818115}]}
 
 GET cloud
 ---------
@@ -238,26 +238,7 @@ GET containers
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/containers
-    [{"command": "/bin/sh -c /venv/bin/python3 -m glances $GLANCES_OPT",
-      "cpu": {"total": 0.0},
-      "cpu_percent": 0.0,
-      "created": "2024-12-23T09:57:24.74297362Z",
-      "engine": "docker",
-      "id": "53ab35eea82df261a8eb592da7896c5b04f4483765c8b72f720d4c946f1f997f",
-      "image": ["glances:local-alpine-minimal"],
-      "io": {},
-      "io_rx": None,
-      "io_wx": None,
-      "key": "name",
-      "memory": {},
-      "memory_percent": None,
-      "memory_usage": None,
-      "name": "serene_shannon",
-      "network": {},
-      "network_rx": None,
-      "network_tx": None,
-      "status": "running",
-      "uptime": "53 mins"}]
+    []
 
 Fields descriptions:
 
@@ -277,36 +258,6 @@ Fields descriptions:
 * **engine**: Container engine (Docker and Podman are currently supported) (unit is *None*)
 * **pod_name**: Pod name (only with Podman) (unit is *None*)
 * **pod_id**: Pod ID (only with Podman) (unit is *None*)
-
-Get a specific field::
-
-    # curl http://localhost:61208/api/4/containers/name
-    {"name": ["serene_shannon"]}
-
-Get a specific item when field matches the given value::
-
-    # curl http://localhost:61208/api/4/containers/name/value/serene_shannon
-    {"serene_shannon": [{"command": "/bin/sh -c /venv/bin/python3 -m glances "
-                                    "$GLANCES_OPT",
-                         "cpu": {"total": 0.0},
-                         "cpu_percent": 0.0,
-                         "created": "2024-12-23T09:57:24.74297362Z",
-                         "engine": "docker",
-                         "id": "53ab35eea82df261a8eb592da7896c5b04f4483765c8b72f720d4c946f1f997f",
-                         "image": ["glances:local-alpine-minimal"],
-                         "io": {},
-                         "io_rx": None,
-                         "io_wx": None,
-                         "key": "name",
-                         "memory": {},
-                         "memory_percent": None,
-                         "memory_usage": None,
-                         "name": "serene_shannon",
-                         "network": {},
-                         "network_rx": None,
-                         "network_tx": None,
-                         "status": "running",
-                         "uptime": "53 mins"}]}
 
 GET core
 --------
@@ -333,19 +284,19 @@ Get plugin stats::
 
     # curl http://localhost:61208/api/4/cpu
     {"cpucore": 16,
-     "ctx_switches": 186200231,
-     "guest": 0.2,
-     "idle": 90.9,
-     "interrupts": 141380121,
-     "iowait": 0.3,
+     "ctx_switches": 358405405,
+     "guest": 0.3,
+     "idle": 91.1,
+     "interrupts": 259684717,
+     "iowait": 0.1,
      "irq": 0.0,
      "nice": 0.0,
-     "soft_interrupts": 51824793,
+     "soft_interrupts": 100202130,
      "steal": 0.0,
      "syscalls": 0,
-     "system": 3.3,
-     "total": 9.9,
-     "user": 5.4}
+     "system": 2.8,
+     "total": 10.1,
+     "user": 6.0}
 
 Fields descriptions:
 
@@ -378,7 +329,7 @@ Fields descriptions:
 Get a specific field::
 
     # curl http://localhost:61208/api/4/cpu/total
-    {"total": 9.9}
+    {"total": 10.1}
 
 GET diskio
 ----------
@@ -388,14 +339,14 @@ Get plugin stats::
     # curl http://localhost:61208/api/4/diskio
     [{"disk_name": "nvme0n1",
       "key": "disk_name",
-      "read_bytes": 7481031168,
-      "read_count": 335905,
-      "write_bytes": 334967751680,
-      "write_count": 3293171},
+      "read_bytes": 9473903104,
+      "read_count": 418008,
+      "write_bytes": 351118611456,
+      "write_count": 4013525},
      {"disk_name": "nvme0n1p1",
       "key": "disk_name",
-      "read_bytes": 14223360,
-      "read_count": 1124,
+      "read_bytes": 18552832,
+      "read_count": 1231,
       "write_bytes": 5120,
       "write_count": 3}]
 
@@ -431,10 +382,10 @@ Get a specific item when field matches the given value::
     # curl http://localhost:61208/api/4/diskio/disk_name/value/nvme0n1
     {"nvme0n1": [{"disk_name": "nvme0n1",
                   "key": "disk_name",
-                  "read_bytes": 7481031168,
-                  "read_count": 335905,
-                  "write_bytes": 334967751680,
-                  "write_count": 3293171}]}
+                  "read_bytes": 9473903104,
+                  "read_count": 418008,
+                  "write_bytes": 351118611456,
+                  "write_count": 4013525}]}
 
 GET folders
 -----------
@@ -461,13 +412,13 @@ Get plugin stats::
 
     # curl http://localhost:61208/api/4/fs
     [{"device_name": "/dev/mapper/ubuntu--vg-ubuntu--lv",
-      "free": 847175311360,
+      "free": 847529414656,
       "fs_type": "ext4",
       "key": "mnt_point",
       "mnt_point": "/",
-      "percent": 11.1,
+      "percent": 11.0,
       "size": 1003736440832,
-      "used": 105498624000},
+      "used": 105144520704},
      {"device_name": "zsfpool",
       "free": 41811968,
       "fs_type": "zfs",
@@ -496,13 +447,13 @@ Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/4/fs/mnt_point/value//
     {"/": [{"device_name": "/dev/mapper/ubuntu--vg-ubuntu--lv",
-            "free": 847175311360,
+            "free": 847529414656,
             "fs_type": "ext4",
             "key": "mnt_point",
             "mnt_point": "/",
-            "percent": 11.1,
+            "percent": 11.0,
             "size": 1003736440832,
-            "used": 105498624000}]}
+            "used": 105144520704}]}
 
 GET gpu
 -------
@@ -535,8 +486,8 @@ GET ip
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/ip
-    {"address": "192.168.1.26",
-     "gateway": "192.168.1.1",
+    {"address": "192.168.0.28",
+     "gateway": "192.168.0.254",
      "mask": "255.255.255.0",
      "mask_cidr": 24,
      "public_address": "",
@@ -554,7 +505,7 @@ Fields descriptions:
 Get a specific field::
 
     # curl http://localhost:61208/api/4/ip/gateway
-    {"gateway": "192.168.1.1"}
+    {"gateway": "192.168.0.254"}
 
 GET irq
 -------
@@ -576,9 +527,9 @@ Get plugin stats::
 
     # curl http://localhost:61208/api/4/load
     {"cpucore": 16,
-     "min1": 1.9677734375,
-     "min15": 1.3525390625,
-     "min5": 1.74951171875}
+     "min1": 1.10498046875,
+     "min15": 0.77197265625,
+     "min5": 0.8623046875}
 
 Fields descriptions:
 
@@ -590,7 +541,7 @@ Fields descriptions:
 Get a specific field::
 
     # curl http://localhost:61208/api/4/load/min1
-    {"min1": 1.9677734375}
+    {"min1": 1.10498046875}
 
 GET mem
 -------
@@ -598,16 +549,16 @@ GET mem
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/mem
-    {"active": 6198247424,
-     "available": 6979837952,
-     "buffers": 238018560,
-     "cached": 4485349376,
-     "free": 6979837952,
-     "inactive": 4703682560,
-     "percent": 57.5,
-     "shared": 929169408,
+    {"active": 7759564800,
+     "available": 6470017024,
+     "buffers": 442040320,
+     "cached": 6893228032,
+     "free": 6470017024,
+     "inactive": 5931581440,
+     "percent": 60.6,
+     "shared": 959242240,
      "total": 16422453248,
-     "used": 9442615296}
+     "used": 9952436224}
 
 Fields descriptions:
 
@@ -634,13 +585,13 @@ GET memswap
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/memswap
-    {"free": 3374575616,
-     "percent": 21.4,
-     "sin": 45301760,
-     "sout": 927838208,
+    {"free": 3183472640,
+     "percent": 25.9,
+     "sin": 81739776,
+     "sout": 1214623744,
      "time_since_update": 1,
      "total": 4294963200,
-     "used": 920387584}
+     "used": 1111490560}
 
 Fields descriptions:
 
@@ -665,26 +616,26 @@ Get plugin stats::
     # curl http://localhost:61208/api/4/network
     [{"alias": None,
       "bytes_all": 0,
-      "bytes_all_gauge": 1973241032,
+      "bytes_all_gauge": 5766918211,
       "bytes_recv": 0,
-      "bytes_recv_gauge": 1792308988,
+      "bytes_recv_gauge": 5479632432,
       "bytes_sent": 0,
-      "bytes_sent_gauge": 180932044,
+      "bytes_sent_gauge": 287285779,
       "interface_name": "wlp0s20f3",
       "key": "interface_name",
       "speed": 0,
-      "time_since_update": 0.7332046031951904},
+      "time_since_update": 0.7653467655181885},
      {"alias": None,
       "bytes_all": 0,
-      "bytes_all_gauge": 20154200,
+      "bytes_all_gauge": 33618129,
       "bytes_recv": 0,
-      "bytes_recv_gauge": 4852300,
+      "bytes_recv_gauge": 6098948,
       "bytes_sent": 0,
-      "bytes_sent_gauge": 15301900,
+      "bytes_sent_gauge": 27519181,
       "interface_name": "mpqemubr0",
       "key": "interface_name",
       "speed": 10485760000,
-      "time_since_update": 0.7332046031951904}]
+      "time_since_update": 0.7653467655181885}]
 
 Fields descriptions:
 
@@ -713,15 +664,15 @@ Get a specific item when field matches the given value::
     # curl http://localhost:61208/api/4/network/interface_name/value/wlp0s20f3
     {"wlp0s20f3": [{"alias": None,
                     "bytes_all": 0,
-                    "bytes_all_gauge": 1973241032,
+                    "bytes_all_gauge": 5766918211,
                     "bytes_recv": 0,
-                    "bytes_recv_gauge": 1792308988,
+                    "bytes_recv_gauge": 5479632432,
                     "bytes_sent": 0,
-                    "bytes_sent_gauge": 180932044,
+                    "bytes_sent_gauge": 287285779,
                     "interface_name": "wlp0s20f3",
                     "key": "interface_name",
                     "speed": 0,
-                    "time_since_update": 0.7332046031951904}]}
+                    "time_since_update": 0.7653467655181885}]}
 
 GET now
 -------
@@ -729,7 +680,7 @@ GET now
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/now
-    {"custom": "2024-12-23 11:50:25 CET", "iso": "2024-12-23T11:50:25+01:00"}
+    {"custom": "2024-12-27 14:52:22 CET", "iso": "2024-12-27T14:52:22+01:00"}
 
 Fields descriptions:
 
@@ -739,7 +690,7 @@ Fields descriptions:
 Get a specific field::
 
     # curl http://localhost:61208/api/4/now/iso
-    {"iso": "2024-12-23T11:50:25+01:00"}
+    {"iso": "2024-12-27T14:52:22+01:00"}
 
 GET percpu
 ----------
@@ -751,7 +702,7 @@ Get plugin stats::
       "dpc": None,
       "guest": 0.0,
       "guest_nice": 0.0,
-      "idle": 43.0,
+      "idle": 44.0,
       "interrupt": None,
       "iowait": 0.0,
       "irq": 0.0,
@@ -760,13 +711,13 @@ Get plugin stats::
       "softirq": 0.0,
       "steal": 0.0,
       "system": 0.0,
-      "total": 57.0,
-      "user": 2.0},
+      "total": 56.0,
+      "user": 4.0},
      {"cpu_number": 1,
       "dpc": None,
       "guest": 0.0,
       "guest_nice": 0.0,
-      "idle": 36.0,
+      "idle": 40.0,
       "interrupt": None,
       "iowait": 0.0,
       "irq": 0.0,
@@ -774,8 +725,8 @@ Get plugin stats::
       "nice": 0.0,
       "softirq": 0.0,
       "steal": 0.0,
-      "system": 8.0,
-      "total": 64.0,
+      "system": 7.0,
+      "total": 60.0,
       "user": 0.0}]
 
 Fields descriptions:
@@ -807,12 +758,12 @@ Get plugin stats::
 
     # curl http://localhost:61208/api/4/ports
     [{"description": "DefaultGateway",
-      "host": "192.168.1.1",
+      "host": "192.168.0.254",
       "indice": "port_0",
       "port": 0,
       "refresh": 30,
       "rtt_warning": None,
-      "status": 0.005522,
+      "status": 0.005803,
       "timeout": 3}]
 
 Fields descriptions:
@@ -829,19 +780,19 @@ Fields descriptions:
 Get a specific field::
 
     # curl http://localhost:61208/api/4/ports/host
-    {"host": ["192.168.1.1"]}
+    {"host": ["192.168.0.254"]}
 
 Get a specific item when field matches the given value::
 
-    # curl http://localhost:61208/api/4/ports/host/value/192.168.1.1
-    {"192.168.1.1": [{"description": "DefaultGateway",
-                      "host": "192.168.1.1",
-                      "indice": "port_0",
-                      "port": 0,
-                      "refresh": 30,
-                      "rtt_warning": None,
-                      "status": 0.005522,
-                      "timeout": 3}]}
+    # curl http://localhost:61208/api/4/ports/host/value/192.168.0.254
+    {"192.168.0.254": [{"description": "DefaultGateway",
+                        "host": "192.168.0.254",
+                        "indice": "port_0",
+                        "port": 0,
+                        "refresh": 30,
+                        "rtt_warning": None,
+                        "status": 0.005803,
+                        "timeout": 3}]}
 
 GET processcount
 ----------------
@@ -849,7 +800,7 @@ GET processcount
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/processcount
-    {"pid_max": 0, "running": 1, "sleeping": 422, "thread": 2003, "total": 562}
+    {"pid_max": 0, "running": 1, "sleeping": 418, "thread": 2037, "total": 621}
 
 Fields descriptions:
 
@@ -862,7 +813,7 @@ Fields descriptions:
 Get a specific field::
 
     # curl http://localhost:61208/api/4/processcount/total
-    {"total": 562}
+    {"total": 621}
 
 GET processlist
 ---------------
@@ -901,19 +852,19 @@ Get plugin stats::
       "cpu_times": {"children_system": 0.0,
                     "children_user": 0.0,
                     "iowait": 0.0,
-                    "system": 32.98,
-                    "user": 207.67},
+                    "system": 75.8,
+                    "user": 376.92},
       "gids": {"effective": 0, "real": 0, "saved": 0},
       "io_counters": [0, 0, 0, 0, 0],
       "key": "pid",
-      "memory_info": {"data": 1394343936,
+      "memory_info": {"data": 1395154944,
                       "dirty": 0,
                       "lib": 0,
-                      "rss": 994623488,
+                      "rss": 1004183552,
                       "shared": 4194304,
                       "text": 6172672,
-                      "vms": 3956453376},
-      "memory_percent": 6.056485428698844,
+                      "vms": 4359106560},
+      "memory_percent": 6.114698801911913,
       "name": "qemu-system-x86_64",
       "nice": 0,
       "num_threads": 4,
@@ -921,28 +872,141 @@ Get plugin stats::
       "status": "S",
       "time_since_update": 1,
       "username": "root"},
-     {"cmdline": ["/snap/firefox/5361/usr/lib/firefox/firefox"],
+     {"cmdline": ["/snap/code/172/usr/share/code/code",
+                  "/home/nicolargo/.vscode/extensions/ms-python.vscode-pylance-2024.12.1/dist/server.bundle.js",
+                  "--cancellationReceive=file:2270db0b977df856f09230673763706254e8fcbbc9",
+                  "--node-ipc",
+                  "--clientProcessId=11100"],
       "cpu_percent": 0.0,
-      "cpu_times": {"children_system": 181.12,
-                    "children_user": 938.84,
+      "cpu_times": {"children_system": 0.23,
+                    "children_user": 1.62,
                     "iowait": 0.0,
-                    "system": 464.81,
-                    "user": 1529.14},
+                    "system": 71.57,
+                    "user": 1167.22},
       "gids": {"effective": 1000, "real": 1000, "saved": 1000},
-      "io_counters": [857285632, 3413405696, 0, 0, 0],
+      "io_counters": [81611776,
+                      970752,
+                      0,
+                      0,
+                      0,
+                      33795072,
+                      3334144,
+                      0,
+                      0,
+                      0,
+                      474426368,
+                      203022336,
+                      0,
+                      0,
+                      0,
+                      14929920,
+                      0,
+                      0,
+                      0,
+                      0,
+                      68964352,
+                      0,
+                      0,
+                      0,
+                      0,
+                      2304000,
+                      0,
+                      0,
+                      0,
+                      0,
+                      91531264,
+                      257851392,
+                      0,
+                      0,
+                      0,
+                      2487296,
+                      0,
+                      0,
+                      0,
+                      0,
+                      7642112,
+                      0,
+                      0,
+                      0,
+                      0,
+                      51968000,
+                      554795008,
+                      0,
+                      0,
+                      0,
+                      4978688,
+                      0,
+                      0,
+                      0,
+                      0,
+                      240640,
+                      0,
+                      0,
+                      0,
+                      0,
+                      36348928,
+                      0,
+                      0,
+                      0,
+                      0,
+                      16163840,
+                      0,
+                      0,
+                      0,
+                      0,
+                      5557248,
+                      6262784,
+                      0,
+                      0,
+                      0,
+                      3462144,
+                      0,
+                      0,
+                      0,
+                      0,
+                      394240,
+                      0,
+                      0,
+                      0,
+                      0,
+                      845824,
+                      0,
+                      0,
+                      0,
+                      0,
+                      184320,
+                      0,
+                      0,
+                      0,
+                      0,
+                      5356544,
+                      7262208,
+                      0,
+                      0,
+                      0,
+                      654336,
+                      0,
+                      0,
+                      0,
+                      0,
+                      951296,
+                      0,
+                      0,
+                      0,
+                      0],
       "key": "pid",
-      "memory_info": {"data": 1195474944,
+      "memory_info": {"data": 1116237824,
                       "dirty": 0,
                       "lib": 0,
-                      "rss": 813187072,
-                      "shared": 271319040,
-                      "text": 942080,
-                      "vms": 21575331840},
-      "memory_percent": 4.951678410769923,
-      "name": "firefox",
+                      "rss": 885317632,
+                      "shared": 66584576,
+                      "text": 132239360,
+                      "vms": 1219821342720},
+      "memory_percent": 5.3908975634186564,
+      "name": "code",
       "nice": 0,
-      "num_threads": 144,
-      "pid": 5518,
+      "num_threads": 14,
+      "pid": 11631,
       "status": "S",
       "time_since_update": 1,
       "username": "nicolargo"}]
@@ -975,17 +1039,17 @@ Get plugin stats::
       "cpu_times": {"children_system": 0.0,
                     "children_user": 0.0,
                     "iowait": 0.0,
-                    "system": 32.98,
-                    "user": 207.67},
+                    "system": 75.8,
+                    "user": 376.92},
       "io_counters": [0, 0, 0, 0, 0],
-      "memory_info": {"data": 1394343936,
+      "memory_info": {"data": 1395154944,
                       "dirty": 0,
                       "lib": 0,
-                      "rss": 994623488,
+                      "rss": 1004183552,
                       "shared": 4194304,
                       "text": 6172672,
-                      "vms": 3956453376},
-      "memory_percent": 6.056485428698844,
+                      "vms": 4359106560},
+      "memory_percent": 6.114698801911913,
       "name": "qemu-system-x86_64",
       "nice": 0,
       "nprocs": 1,
@@ -994,27 +1058,154 @@ Get plugin stats::
       "status": "S",
       "time_since_update": 1,
       "username": "root"},
-     {"childrens": [5518],
-      "cmdline": ["firefox"],
+     {"childrens": [11631,
+                    11003,
+                    11100,
+                    17962,
+                    11819,
+                    293018,
+                    10919,
+                    293017,
+                    187970,
+                    11098,
+                    187968,
+                    308704,
+                    11099,
+                    11630,
+                    293033,
+                    11056,
+                    470255,
+                    11382,
+                    11849,
+                    10969,
+                    10922,
+                    10921],
+      "cmdline": ["code"],
       "cpu_percent": 0,
-      "cpu_times": {"children_system": 181.12,
-                    "children_user": 938.84,
-                    "iowait": 0.0,
-                    "system": 464.81,
-                    "user": 1529.14},
-      "io_counters": [857285632, 3413405696, 0, 0, 0],
-      "memory_info": {"data": 1195474944,
-                      "dirty": 0,
-                      "lib": 0,
-                      "rss": 813187072,
-                      "shared": 271319040,
-                      "text": 942080,
-                      "vms": 21575331840},
-      "memory_percent": 4.951678410769923,
-      "name": "firefox",
+      "cpu_times": {"children_system": 1921.02,
+                    "children_user": 1367.4499999999998,
+                    "system": 1526.83,
+                    "user": 8511.720000000001},
+      "io_counters": [81611776,
+                      970752,
+                      0,
+                      0,
+                      0,
+                      33795072,
+                      3334144,
+                      0,
+                      0,
+                      0,
+                      474426368,
+                      203022336,
+                      0,
+                      0,
+                      0,
+                      14929920,
+                      0,
+                      0,
+                      0,
+                      0,
+                      68964352,
+                      0,
+                      0,
+                      0,
+                      0,
+                      2304000,
+                      0,
+                      0,
+                      0,
+                      0,
+                      91531264,
+                      257851392,
+                      0,
+                      0,
+                      0,
+                      2487296,
+                      0,
+                      0,
+                      0,
+                      0,
+                      7642112,
+                      0,
+                      0,
+                      0,
+                      0,
+                      51968000,
+                      554795008,
+                      0,
+                      0,
+                      0,
+                      4978688,
+                      0,
+                      0,
+                      0,
+                      0,
+                      240640,
+                      0,
+                      0,
+                      0,
+                      0,
+                      36348928,
+                      0,
+                      0,
+                      0,
+                      0,
+                      16163840,
+                      0,
+                      0,
+                      0,
+                      0,
+                      5557248,
+                      6262784,
+                      0,
+                      0,
+                      0,
+                      3462144,
+                      0,
+                      0,
+                      0,
+                      0,
+                      394240,
+                      0,
+                      0,
+                      0,
+                      0,
+                      845824,
+                      0,
+                      0,
+                      0,
+                      0,
+                      184320,
+                      0,
+                      0,
+                      0,
+                      0,
+                      5356544,
+                      7262208,
+                      0,
+                      0,
+                      0,
+                      654336,
+                      0,
+                      0,
+                      0,
+                      0,
+                      951296,
+                      0,
+                      0,
+                      0,
+                      0],
+      "memory_info": {"data": 7217700864,
+                      "rss": 4460605440,
+                      "shared": 1484726272,
+                      "text": 2909265920,
+                      "vms": 22038245015552},
+      "memory_percent": 27.16162666222376,
+      "name": "code",
       "nice": 0,
-      "nprocs": 1,
-      "num_threads": 144,
+      "nprocs": 22,
+      "num_threads": 290,
       "pid": "_",
       "status": "S",
       "time_since_update": 1,
@@ -1042,7 +1233,7 @@ GET psutilversion
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/psutilversion
-    "6.1.0"
+    "6.1.1"
 
 GET quicklook
 -------------
@@ -1050,19 +1241,19 @@ GET quicklook
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/quicklook
-    {"cpu": 9.9,
+    {"cpu": 10.1,
      "cpu_hz": 4475000000.0,
-     "cpu_hz_current": 678087125.0,
+     "cpu_hz_current": 981221187.4999999,
      "cpu_log_core": 16,
      "cpu_name": "13th Gen Intel(R) Core(TM) i7-13620H",
      "cpu_phys_core": 10,
-     "load": 8.5,
-     "mem": 57.5,
+     "load": 4.8,
+     "mem": 60.6,
      "percpu": [{"cpu_number": 0,
                  "dpc": None,
                  "guest": 0.0,
                  "guest_nice": 0.0,
-                 "idle": 43.0,
+                 "idle": 44.0,
                  "interrupt": None,
                  "iowait": 0.0,
                  "irq": 0.0,
@@ -1071,13 +1262,13 @@ Get plugin stats::
                  "softirq": 0.0,
                  "steal": 0.0,
                  "system": 0.0,
-                 "total": 57.0,
-                 "user": 2.0},
+                 "total": 56.0,
+                 "user": 4.0},
                 {"cpu_number": 1,
                  "dpc": None,
                  "guest": 0.0,
                  "guest_nice": 0.0,
-                 "idle": 36.0,
+                 "idle": 40.0,
                  "interrupt": None,
                  "iowait": 0.0,
                  "irq": 0.0,
@@ -1085,25 +1276,10 @@ Get plugin stats::
                  "nice": 0.0,
                  "softirq": 0.0,
                  "steal": 0.0,
-                 "system": 8.0,
-                 "total": 64.0,
+                 "system": 7.0,
+                 "total": 60.0,
                  "user": 0.0},
                 {"cpu_number": 2,
-                 "dpc": None,
-                 "guest": 0.0,
-                 "guest_nice": 0.0,
-                 "idle": 43.0,
-                 "interrupt": None,
-                 "iowait": 0.0,
-                 "irq": 0.0,
-                 "key": "cpu_number",
-                 "nice": 0.0,
-                 "softirq": 0.0,
-                 "steal": 0.0,
-                 "system": 0.0,
-                 "total": 57.0,
-                 "user": 1.0},
-                {"cpu_number": 3,
                  "dpc": None,
                  "guest": 0.0,
                  "guest_nice": 0.0,
@@ -1117,12 +1293,12 @@ Get plugin stats::
                  "steal": 0.0,
                  "system": 0.0,
                  "total": 55.0,
-                 "user": 0.0},
-                {"cpu_number": 4,
+                 "user": 2.0},
+                {"cpu_number": 3,
                  "dpc": None,
                  "guest": 0.0,
                  "guest_nice": 0.0,
-                 "idle": 31.0,
+                 "idle": 48.0,
                  "interrupt": None,
                  "iowait": 0.0,
                  "irq": 0.0,
@@ -1130,9 +1306,24 @@ Get plugin stats::
                  "nice": 0.0,
                  "softirq": 0.0,
                  "steal": 0.0,
-                 "system": 7.0,
-                 "total": 69.0,
-                 "user": 5.0},
+                 "system": 0.0,
+                 "total": 52.0,
+                 "user": 0.0},
+                {"cpu_number": 4,
+                 "dpc": None,
+                 "guest": 0.0,
+                 "guest_nice": 0.0,
+                 "idle": 39.0,
+                 "interrupt": None,
+                 "iowait": 1.0,
+                 "irq": 0.0,
+                 "key": "cpu_number",
+                 "nice": 0.0,
+                 "softirq": 0.0,
+                 "steal": 0.0,
+                 "system": 3.0,
+                 "total": 61.0,
+                 "user": 6.0},
                 {"cpu_number": 5,
                  "dpc": None,
                  "guest": 0.0,
@@ -1145,44 +1336,14 @@ Get plugin stats::
                  "nice": 0.0,
                  "softirq": 0.0,
                  "steal": 0.0,
-                 "system": 0.0,
+                 "system": 2.0,
                  "total": 55.0,
-                 "user": 1.0},
+                 "user": 2.0},
                 {"cpu_number": 6,
                  "dpc": None,
                  "guest": 0.0,
                  "guest_nice": 0.0,
-                 "idle": 36.0,
-                 "interrupt": None,
-                 "iowait": 3.0,
-                 "irq": 0.0,
-                 "key": "cpu_number",
-                 "nice": 0.0,
-                 "softirq": 0.0,
-                 "steal": 0.0,
-                 "system": 5.0,
-                 "total": 64.0,
-                 "user": 2.0},
-                {"cpu_number": 7,
-                 "dpc": None,
-                 "guest": 0.0,
-                 "guest_nice": 0.0,
-                 "idle": 26.0,
-                 "interrupt": None,
-                 "iowait": 0.0,
-                 "irq": 0.0,
-                 "key": "cpu_number",
-                 "nice": 0.0,
-                 "softirq": 0.0,
-                 "steal": 0.0,
-                 "system": 3.0,
-                 "total": 74.0,
-                 "user": 16.0},
-                {"cpu_number": 8,
-                 "dpc": None,
-                 "guest": 0.0,
-                 "guest_nice": 0.0,
-                 "idle": 41.0,
+                 "idle": 45.0,
                  "interrupt": None,
                  "iowait": 0.0,
                  "irq": 0.0,
@@ -1191,69 +1352,24 @@ Get plugin stats::
                  "softirq": 0.0,
                  "steal": 0.0,
                  "system": 2.0,
-                 "total": 59.0,
-                 "user": 1.0},
-                {"cpu_number": 9,
-                 "dpc": None,
-                 "guest": 0.0,
-                 "guest_nice": 0.0,
-                 "idle": 45.0,
-                 "interrupt": None,
-                 "iowait": 0.0,
-                 "irq": 0.0,
-                 "key": "cpu_number",
-                 "nice": 0.0,
-                 "softirq": 0.0,
-                 "steal": 0.0,
-                 "system": 0.0,
                  "total": 55.0,
-                 "user": 0.0},
-                {"cpu_number": 10,
-                 "dpc": None,
-                 "guest": 0.0,
-                 "guest_nice": 0.0,
-                 "idle": 39.0,
-                 "interrupt": None,
-                 "iowait": 0.0,
-                 "irq": 0.0,
-                 "key": "cpu_number",
-                 "nice": 0.0,
-                 "softirq": 0.0,
-                 "steal": 0.0,
-                 "system": 1.0,
-                 "total": 61.0,
-                 "user": 5.0},
-                {"cpu_number": 11,
-                 "dpc": None,
-                 "guest": 0.0,
-                 "guest_nice": 0.0,
-                 "idle": 45.0,
-                 "interrupt": None,
-                 "iowait": 0.0,
-                 "irq": 0.0,
-                 "key": "cpu_number",
-                 "nice": 0.0,
-                 "softirq": 0.0,
-                 "steal": 0.0,
-                 "system": 0.0,
-                 "total": 55.0,
-                 "user": 0.0},
-                {"cpu_number": 12,
-                 "dpc": None,
-                 "guest": 0.0,
-                 "guest_nice": 0.0,
-                 "idle": 43.0,
-                 "interrupt": None,
-                 "iowait": 0.0,
-                 "irq": 0.0,
-                 "key": "cpu_number",
-                 "nice": 0.0,
-                 "softirq": 0.0,
-                 "steal": 0.0,
-                 "system": 0.0,
-                 "total": 57.0,
                  "user": 1.0},
-                {"cpu_number": 13,
+                {"cpu_number": 7,
+                 "dpc": None,
+                 "guest": 0.0,
+                 "guest_nice": 0.0,
+                 "idle": 20.0,
+                 "interrupt": None,
+                 "iowait": 0.0,
+                 "irq": 0.0,
+                 "key": "cpu_number",
+                 "nice": 0.0,
+                 "softirq": 0.0,
+                 "steal": 0.0,
+                 "system": 14.0,
+                 "total": 80.0,
+                 "user": 14.0},
+                {"cpu_number": 8,
                  "dpc": None,
                  "guest": 0.0,
                  "guest_nice": 0.0,
@@ -1265,25 +1381,25 @@ Get plugin stats::
                  "nice": 0.0,
                  "softirq": 0.0,
                  "steal": 0.0,
-                 "system": 0.0,
+                 "system": 1.0,
                  "total": 58.0,
-                 "user": 3.0},
-                {"cpu_number": 14,
+                 "user": 4.0},
+                {"cpu_number": 9,
                  "dpc": None,
                  "guest": 0.0,
                  "guest_nice": 0.0,
-                 "idle": 43.0,
+                 "idle": 48.0,
                  "interrupt": None,
-                 "iowait": 2.0,
+                 "iowait": 0.0,
                  "irq": 0.0,
                  "key": "cpu_number",
                  "nice": 0.0,
                  "softirq": 0.0,
                  "steal": 0.0,
                  "system": 1.0,
-                 "total": 57.0,
+                 "total": 52.0,
                  "user": 0.0},
-                {"cpu_number": 15,
+                {"cpu_number": 10,
                  "dpc": None,
                  "guest": 0.0,
                  "guest_nice": 0.0,
@@ -1295,10 +1411,85 @@ Get plugin stats::
                  "nice": 0.0,
                  "softirq": 0.0,
                  "steal": 0.0,
-                 "system": 1.0,
+                 "system": 3.0,
                  "total": 56.0,
-                 "user": 0.0}],
-     "swap": 21.4}
+                 "user": 2.0},
+                {"cpu_number": 11,
+                 "dpc": None,
+                 "guest": 0.0,
+                 "guest_nice": 0.0,
+                 "idle": 48.0,
+                 "interrupt": None,
+                 "iowait": 0.0,
+                 "irq": 0.0,
+                 "key": "cpu_number",
+                 "nice": 0.0,
+                 "softirq": 0.0,
+                 "steal": 0.0,
+                 "system": 0.0,
+                 "total": 52.0,
+                 "user": 0.0},
+                {"cpu_number": 12,
+                 "dpc": None,
+                 "guest": 0.0,
+                 "guest_nice": 0.0,
+                 "idle": 46.0,
+                 "interrupt": None,
+                 "iowait": 0.0,
+                 "irq": 0.0,
+                 "key": "cpu_number",
+                 "nice": 0.0,
+                 "softirq": 0.0,
+                 "steal": 0.0,
+                 "system": 0.0,
+                 "total": 54.0,
+                 "user": 3.0},
+                {"cpu_number": 13,
+                 "dpc": None,
+                 "guest": 0.0,
+                 "guest_nice": 0.0,
+                 "idle": 46.0,
+                 "interrupt": None,
+                 "iowait": 0.0,
+                 "irq": 0.0,
+                 "key": "cpu_number",
+                 "nice": 0.0,
+                 "softirq": 0.0,
+                 "steal": 0.0,
+                 "system": 0.0,
+                 "total": 54.0,
+                 "user": 2.0},
+                {"cpu_number": 14,
+                 "dpc": None,
+                 "guest": 0.0,
+                 "guest_nice": 0.0,
+                 "idle": 46.0,
+                 "interrupt": None,
+                 "iowait": 0.0,
+                 "irq": 0.0,
+                 "key": "cpu_number",
+                 "nice": 0.0,
+                 "softirq": 0.0,
+                 "steal": 0.0,
+                 "system": 1.0,
+                 "total": 54.0,
+                 "user": 2.0},
+                {"cpu_number": 15,
+                 "dpc": None,
+                 "guest": 0.0,
+                 "guest_nice": 0.0,
+                 "idle": 46.0,
+                 "interrupt": None,
+                 "iowait": 0.0,
+                 "irq": 0.0,
+                 "key": "cpu_number",
+                 "nice": 0.0,
+                 "softirq": 0.0,
+                 "steal": 0.0,
+                 "system": 1.0,
+                 "total": 54.0,
+                 "user": 2.0}],
+     "swap": 25.9}
 
 Fields descriptions:
 
@@ -1336,14 +1527,14 @@ Get plugin stats::
       "label": "Ambient",
       "type": "temperature_core",
       "unit": "C",
-      "value": 35,
+      "value": 23,
       "warning": 0},
      {"critical": None,
       "key": "label",
       "label": "Ambient 3",
       "type": "temperature_core",
       "unit": "C",
-      "value": 29,
+      "value": 22,
       "warning": 0}]
 
 Fields descriptions:
@@ -1404,7 +1595,7 @@ Get a specific item when field matches the given value::
                   "label": "Ambient",
                   "type": "temperature_core",
                   "unit": "C",
-                  "value": 35,
+                  "value": 23,
                   "warning": 0}]}
 
 GET smart
@@ -1448,7 +1639,7 @@ GET uptime
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/uptime
-    "1 day, 22:42:15"
+    "6 days, 1:44:05"
 
 GET version
 -----------
@@ -1456,7 +1647,7 @@ GET version
 Get plugin stats::
 
     # curl http://localhost:61208/api/4/version
-    "4.3.0_dev06"
+    "4.3.0"
 
 GET vms
 -------
@@ -1474,7 +1665,7 @@ Get plugin stats::
       "load_1min": 0,
       "load_5min": 0,
       "memory_total": 1002471424,
-      "memory_usage": 300982272,
+      "memory_usage": 305684480,
       "name": "upstanding-sparrow",
       "release": "Ubuntu 24.04.1 LTS",
       "status": "running"}]
@@ -1513,7 +1704,7 @@ Get a specific item when field matches the given value::
                              "load_1min": 0,
                              "load_5min": 0,
                              "memory_total": 1002471424,
-                             "memory_usage": 300982272,
+                             "memory_usage": 305684480,
                              "name": "upstanding-sparrow",
                              "release": "Ubuntu 24.04.1 LTS",
                              "status": "running"}]}
@@ -1525,8 +1716,8 @@ Get plugin stats::
 
     # curl http://localhost:61208/api/4/wifi
     [{"key": "ssid",
-      "quality_level": -60.0,
-      "quality_link": 50.0,
+      "quality_level": -70.0,
+      "quality_link": 40.0,
       "ssid": "wlp0s20f3"}]
 
 Get a specific field::
@@ -1538,8 +1729,8 @@ Get a specific item when field matches the given value::
 
     # curl http://localhost:61208/api/4/wifi/ssid/value/wlp0s20f3
     {"wlp0s20f3": [{"key": "ssid",
-                    "quality_level": -60.0,
-                    "quality_link": 50.0,
+                    "quality_level": -70.0,
+                    "quality_link": 40.0,
                     "ssid": "wlp0s20f3"}]}
 
 GET all stats
@@ -1584,34 +1775,34 @@ GET stats history
 History of a plugin::
 
     # curl http://localhost:61208/api/4/cpu/history
-    {"system": [["2024-12-23T11:50:26.665965", 3.3],
-                ["2024-12-23T11:50:28.011008", 1.1],
-                ["2024-12-23T11:50:29.031680", 1.1]],
-     "user": [["2024-12-23T11:50:26.665960", 5.4],
-              ["2024-12-23T11:50:28.011004", 1.8],
-              ["2024-12-23T11:50:29.031676", 1.8]]}
+    {"system": [["2024-12-27T14:52:23.336918", 2.8],
+                ["2024-12-27T14:52:24.695755", 1.0],
+                ["2024-12-27T14:52:25.715924", 1.0]],
+     "user": [["2024-12-27T14:52:23.336914", 6.0],
+              ["2024-12-27T14:52:24.695752", 1.3],
+              ["2024-12-27T14:52:25.715920", 1.3]]}
 
 Limit history to last 2 values::
 
     # curl http://localhost:61208/api/4/cpu/history/2
-    {"system": [["2024-12-23T11:50:28.011008", 1.1],
-                ["2024-12-23T11:50:29.031680", 1.1]],
-     "user": [["2024-12-23T11:50:28.011004", 1.8],
-              ["2024-12-23T11:50:29.031676", 1.8]]}
+    {"system": [["2024-12-27T14:52:24.695755", 1.0],
+                ["2024-12-27T14:52:25.715924", 1.0]],
+     "user": [["2024-12-27T14:52:24.695752", 1.3],
+              ["2024-12-27T14:52:25.715920", 1.3]]}
 
 History for a specific field::
 
     # curl http://localhost:61208/api/4/cpu/system/history
-    {"system": [["2024-12-23T11:50:25.516696", 3.3],
-                ["2024-12-23T11:50:26.665965", 3.3],
-                ["2024-12-23T11:50:28.011008", 1.1],
-                ["2024-12-23T11:50:29.031680", 1.1]]}
+    {"system": [["2024-12-27T14:52:22.170350", 2.8],
+                ["2024-12-27T14:52:23.336918", 2.8],
+                ["2024-12-27T14:52:24.695755", 1.0],
+                ["2024-12-27T14:52:25.715924", 1.0]]}
 
 Limit history for a specific field to last 2 values::
 
     # curl http://localhost:61208/api/4/cpu/system/history
-    {"system": [["2024-12-23T11:50:28.011008", 1.1],
-                ["2024-12-23T11:50:29.031680", 1.1]]}
+    {"system": [["2024-12-27T14:52:24.695755", 1.0],
+                ["2024-12-27T14:52:25.715924", 1.0]]}
 
 GET limits (used for thresholds)
 --------------------------------
@@ -1623,7 +1814,6 @@ All limits/thresholds::
      "amps": {"amps_disable": ["False"], "history_size": 1200.0},
      "containers": {"containers_all": ["False"],
                     "containers_disable": ["False"],
-                    "containers_disable_stats": ["diskio", "networkio"],
                     "containers_max_name_size": 20.0,
                     "history_size": 1200.0},
      "core": {"history_size": 1200.0},
