@@ -10,8 +10,8 @@
 # Alpine 3.18 tag is a link to the latest 3.18.x version.
 # Be aware that if you change the Alpine version, you may have to change the Python version.
 
-ARG IMAGE_VERSION=3.20
-ARG PYTHON_VERSION=3.12
+ARG IMAGE_VERSION=3.21
+ARG PYTHON_VERSION=3.13
 
 ##############################################################################
 # Base layer to be used for building dependencies and the release images
