@@ -9,7 +9,7 @@
 # Note: ENV is for future running containers. ARG for building your Docker image.
 
 ARG IMAGE_VERSION=24.04
-ARG PYTHON_VERSION=3.12
+ARG PYTHON_VERSION=3.13
 
 ##############################################################################
 # Base layer to be used for building dependencies and the release images
