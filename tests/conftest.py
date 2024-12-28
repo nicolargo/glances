@@ -7,7 +7,13 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Glances unitary tests suite for the WebUI."""
+"""Glances unitary tests suite for the WebUI.
+
+Need chromedriver command line (example on Ubuntu system):
+$ sudo apt install chromium-chromedriver
+
+The chromedriver command line should be in your path (/usr/bin)
+"""
 
 import os
 import shlex
@@ -16,8 +22,8 @@ import time
 
 import pytest
 from selenium import webdriver
-from selenium.webdriver import FirefoxOptions
-from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver import ChromeOptions
+from selenium.webdriver.chrome.service import Service as ChromeService
 
 SERVER_PORT = 61234
 URL = f"http://localhost:{SERVER_PORT}"
@@ -41,10 +47,11 @@ def glances_webserver():
 @pytest.fixture(scope="session")
 def firefox_browser():
     """Init Firefox browser."""
-    opts = FirefoxOptions()
-    opts.add_argument("--headless")
-    srv = FirefoxService(executable_path="/snap/bin/geckodriver")
-    driver = webdriver.Firefox(options=opts, service=srv)
+    opt = ChromeOptions()
+    opt.add_argument("--headless")
+    opt.add_argument("--start-maximized")
+    srv = ChromeService()
+    driver = webdriver.Chrome(options=opt, service=srv)
 
     # Yield the WebDriver instance
     driver.implicitly_wait(10)
