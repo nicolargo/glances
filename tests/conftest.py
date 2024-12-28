@@ -25,8 +25,19 @@ from selenium import webdriver
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
 
+from glances.main import GlancesMain
+from glances.stats import GlancesStats
+
 SERVER_PORT = 61234
 URL = f"http://localhost:{SERVER_PORT}"
+
+
+@pytest.fixture(scope="session")
+def glances_stats():
+    core = GlancesMain(args_begin_at=2)
+    stats = GlancesStats(config=core.get_config(), args=core.get_args())
+    yield stats
+    stats.end()
 
 
 @pytest.fixture(scope="session")

@@ -23,6 +23,20 @@ def glances_homepage(firefox_browser):
     return firefox_browser
 
 
+def test_loading_time(glances_webserver, glances_homepage):
+    """
+    Test Glances home page loading time.
+    """
+    assert glances_webserver is not None
+    navigation_start = glances_homepage.execute_script("return window.performance.timing.navigationStart")
+    response_start = glances_homepage.execute_script("return window.performance.timing.responseStart")
+    dom_complete = glances_homepage.execute_script("return window.performance.timing.domComplete")
+    backend_perf = response_start - navigation_start
+    frontend_perf = dom_complete - response_start
+    assert backend_perf < 1000  # ms
+    assert frontend_perf < 1000  # ms
+
+
 def test_title(glances_webserver, glances_homepage):
     """
     Test Glances home page title.
