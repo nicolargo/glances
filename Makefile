@@ -91,6 +91,9 @@ test: ## Run All unit tests
 test-core: ## Run Core unit tests
 	$(PYTEST) tests/test_core.py
 
+test-perf: ## Run Perf unit tests
+	$(PYTEST) tests/test_perf.py
+
 test-restful: ## Run Restful API unit tests
 	$(PYTEST) tests/test_restful.py
 

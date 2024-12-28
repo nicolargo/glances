@@ -23,11 +23,11 @@ jobs:
         with:
           args: 'check'
 
-      - name: Static type check
-        run: |
-          echo "Skipping static type check for the moment, too much error...";
-          # pip install pyright
-          # pyright glances
+      # - name: Static type check
+      #   run: |
+      #     echo "Skipping static type check for the moment, too much error...";
+      #     # pip install pyright
+      #     # pyright glances
 
 
   test-linux:
@@ -52,8 +52,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python -m pip install pytest
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
 
       - name: Unitary tests
         run: |
@@ -115,11 +115,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python -m pip install pytest
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
 
       - name: Unitary tests
         run: |
-          python ./unittest-core.py
+          python -m pytest ./tests/test_core.py
 
   # Error when trying to implement #2749
   # pkg: No packages available to install matching 'py-pip' have been found in the repositories
@@ -139,5 +140,6 @@ jobs:
   #           pkg install -y python3 py-pip
   #         run: |
   #           set -e -x
+  #           python3 -m pip install pytest
   #           python3 -m pip install --user -r requirements.txt
-  #           python ./unittest-core.py
+  #           python3 -m pytest ./tests/test_core.py
