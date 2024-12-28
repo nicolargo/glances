@@ -1,13 +1,13 @@
 PORT     ?= 8008
 venv_full:= venv/bin
-venv_dev := venv-dev/bin
 venv_min := venv-min/bin
 CONF     := conf/glances.conf
 PIP      := $(venv_full)/pip
 PYTHON   := $(venv_full)/python
+PYTEST   := $(venv_full)/python -m pytest
 LASTTAG  = $(shell git describe --tags --abbrev=0)
 
-VENV_TYPES    := full min dev
+VENV_TYPES    := full min
 VENV_PYTHON   := $(VENV_TYPES:%=venv-%-python)
 VENV_UPG      := $(VENV_TYPES:%=venv-%-upgrade)
 VENV_DEPS     := $(VENV_TYPES:%=venv-%)
@@ -30,7 +30,7 @@ DOCKER_OPTS       := --rm -e TZ="${TZ}" -e GLANCES_OPT="" --pid host --network h
 # if the command is only `make`, the default tasks will be the printing of the help.
 .DEFAULT_GOAL := help
 
-.PHONY: help test docs docs-server venv venv-min venv-dev
+.PHONY: help test docs docs-server venv venv-min
 
 help: ## List all make commands available
 	@grep -E '^[\.a-zA-Z_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -53,7 +53,7 @@ endef
 $(foreach TYPE,$(VENV_TYPES),$(eval $(DEFINE_VARS_FOR_TYPE)))
 
 $(VENV_PYTHON): venv-%-python:
-	virtualenv -p /usr/bin/python3 $(if $(filter full,$*),venv,venv-$*)
+	virtualenv -p python3 $(if $(filter full,$*),venv,venv-$*)
 
 $(VENV_INST_UPG): venv-%:
 	$(if $(UPGRADE),$(VIRTUAL_ENV)/pip install --upgrade pip,)
@@ -66,65 +66,66 @@ venv-upgrade: $(VENV_UPG) ## Upgrade all Python 3 dependencies
 
 # For full installation (with optional dependencies)
 
-venv-full venv-full-upgrade: REQS = requirements.txt optional-requirements.txt
+venv-full venv-full-upgrade: REQS = requirements.txt optional-requirements.txt dev-requirements.txt doc-requirements.txt
 
 venv-full-python: ## Install Python 3 venv
 venv-full: venv-python ## Install Python 3 run-time
 venv-full-upgrade: ## Upgrade Python 3 run-time dependencies
+venv-full: PRE_COMMIT = 1
 
 # For minimal installation (without optional dependencies)
 
-venv-min venv-min-upgrade: REQS = requirements.txt
+venv-min venv-min-upgrade: REQS = requirements.txt dev-requirements.txt doc-requirements.txt
 
 venv-min-python: ## Install Python 3 venv minimal
 venv-min: venv-min-python ## Install Python 3 minimal run-time dependencies
 venv-min-upgrade: ## Upgrade Python 3 minimal run-time dependencies
 
-# For development
-
-venv-dev venv-dev-upgrade: REQS = dev-requirements.txt doc-requirements.txt
-venv-dev: PRE_COMMIT = 1
-
-venv-dev-python: ## Install Python 3 venv
-venv-dev: venv-python ## Install Python 3 dev dependencies
-venv-dev-upgrade: ## Upgrade Python 3 dev dependencies
-
 # ===================================================================
 # Tests
 # ===================================================================
 
-$(UNIT_TESTS): test-%: unittest-%.py
-	$(PYTHON) $<
+test: ## Run All unit tests
+	$(PYTEST)
 
-test-core: ## Run core unit tests
-test-restful: ## Run Restful unit tests
-test-xmlrpc: ## Run XMLRPC unit tests
+test-core: ## Run Core unit tests
+	$(PYTEST) tests/test_core.py
 
-test: $(UNIT_TESTS) ## Run unit tests
+test-perf: ## Run Perf unit tests
+	$(PYTEST) tests/test_perf.py
 
-test-with-upgrade: venv-upgrade venv-dev-upgrade test ## Upgrade deps and run unit tests
+test-restful: ## Run Restful API unit tests
+	$(PYTEST) tests/test_restful.py
+
+test-webui: ## Run WebUI unit tests
+	$(PYTEST) tests/test_webui.py
+
+test-xmlrpc: ## Run XMLRPC API unit tests
+	$(PYTEST) tests/test_xmlrpc.py
+
+test-with-upgrade: venv-upgrade test ## Upgrade deps and run unit tests
 
 test-min: ## Run core unit tests in minimal environment
-	$(venv_min)/python unittest-core.py
+	$(venv_min)/python -m pytest tests/test_core.py
 
 test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in minimal environment
-	$(venv_min)/python unittest-core.py
+	$(venv_min)/python -m pytest tests/test_core.py
 
 # ===================================================================
 # Linters, profilers and cyber security
 # ===================================================================
 
 format: ## Format the code
-	$(venv_dev)/python -m ruff format .
+	$(venv_full)/python -m ruff format .
 
 lint: ## Lint the code.
-	$(venv_dev)/python -m ruff check . --fix
+	$(venv_full)/python -m ruff check . --fix
 
 codespell: ## Run codespell to fix common misspellings in text files
-	$(venv_dev)/codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics -w
+	$(venv_full)/codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics -w
 
 semgrep: ## Run semgrep to find bugs and enforce code standards
-	$(venv_dev)/semgrep scan --config=auto
+	$(venv_full)/semgrep scan --config=auto
 
 profiling-%: SLEEP = 3
 profiling-%: TIMES = 30
@@ -167,12 +168,12 @@ memory-profiling: ## Profile memory usage
 	@echo "It's a very long test (~4 hours)..."
 	rm -f $(PROFILE)
 	@echo "1/2 - Start memory profiling with the history option enable"
-	$(venv_dev)/mprof run -T 1 -C run-venv.py -C $(CONF) --stop-after $(TIMES) --quiet
-	$(venv_dev)/mprof plot --output $(OUT_DIR)/glances-memory-profiling-with-history.png
+	$(venv_full)/mprof run -T 1 -C run-venv.py -C $(CONF) --stop-after $(TIMES) --quiet
+	$(venv_full)/mprof plot --output $(OUT_DIR)/glances-memory-profiling-with-history.png
 	rm -f $(PROFILE)
 	@echo "2/2 - Start memory profiling with the history option disable"
-	$(venv_dev)/mprof run -T 1 -C run-venv.py -C $(CONF) --disable-history --stop-after $(TIMES) --quiet
-	$(venv_dev)/mprof plot --output $(OUT_DIR)/glances-memory-profiling-without-history.png
+	$(venv_full)/mprof run -T 1 -C run-venv.py -C $(CONF) --disable-history --stop-after $(TIMES) --quiet
+	$(venv_full)/mprof plot --output $(OUT_DIR)/glances-memory-profiling-without-history.png
 	rm -f $(PROFILE)
 
 # Trivy installation: https://aquasecurity.github.io/trivy/latest/getting-started/installation/
@@ -220,7 +221,7 @@ webui-audit-fix: ## Fix audit the Web UI
 # Packaging
 # ===================================================================
 
-flatpak: venv-dev-upgrade ## Generate FlatPack JSON file
+flatpak: venv-upgrade ## Generate FlatPack JSON file
 	git clone https://github.com/flatpak/flatpak-builder-tools.git
 	$(PYTHON) ./flatpak-builder-tools/pip/flatpak-pip-generator glances
 	rm -rf ./flatpak-builder-tools

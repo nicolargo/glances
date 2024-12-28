@@ -20,7 +20,7 @@ from glances import __version__
 from glances.client import GlancesClient
 
 SERVER_HOST = 'localhost'
-SERVER_PORT = 61234
+SERVER_PORT = 61235
 pid = None
 
 
