@@ -6,6 +6,14 @@
 Version 4.3.0.4
 ===============
 
+Bug corrected:
+
+*  WebUI errors in 4.3.0.4 on iPad Air (and Browser with low resolution) #3057
+
+===============
+Version 4.3.0.4
+===============
+
 Continuous integration and documentation:
 
 * Pin Python version in Ubuntu image to 3.12
