@@ -9,11 +9,47 @@
 
 """Glances unitary tests suite for the WebUI."""
 
+import os
+import tempfile
 
-def test_title(glances_webserver, firefox_browser):
+import pytest
+from selenium.webdriver.common.by import By
+
+
+@pytest.fixture(scope="module")
+def glances_homepage(firefox_browser):
+    firefox_browser.get("http://localhost:61234")
+    firefox_browser.save_screenshot(os.path.join(tempfile.gettempdir(), "glances.png"))
+    return firefox_browser
+
+
+def test_title(glances_webserver, glances_homepage):
     """
-    Test the title of the Glances home page
+    Test Glances home page title.
     """
     assert glances_webserver is not None
-    firefox_browser.get("http://localhost:61234")
-    assert "Glances" in firefox_browser.title
+    assert "Glances" in glances_homepage.title
+
+
+def test_plugins(glances_webserver, glances_homepage):
+    """
+    Test Glances defaults plugins.
+    """
+    assert glances_webserver is not None
+    for plugin in [
+        "system",
+        "now",
+        "uptime",
+        "quicklook",
+        "cpu",
+        "mem",
+        "memswap",
+        "load",
+        "network",
+        "diskio",
+        "fs",
+        "sensors",
+        "processcount",
+        "processlist",
+    ]:
+        assert glances_homepage.find_element(By.ID, plugin) is not None

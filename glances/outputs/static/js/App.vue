@@ -68,8 +68,8 @@
                 <div class="col-3" :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }"
                     v-if="!args.disable_left_sidebar">
                     <template v-for="plugin in leftMenu">
-                        <component v-if="!args[`disable_${plugin}`]" :is="`glances-plugin-${plugin}`"
-                            :id="`plugin-${plugin}`" :data="data">
+                        <component v-if="!args[`disable_${plugin}`]" :is="`glances-plugin-${plugin}`" :id="`${plugin}`"
+                            :data="data">
                         </component>
                     </template>
                 </div>
