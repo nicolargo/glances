@@ -94,6 +94,9 @@ test-core: ## Run Core unit tests
 test-restful: ## Run Restful API unit tests
 	$(PYTEST) tests/test_restful.py
 
+test-webui: ## Run WebUI unit tests
+	$(PYTEST) tests/test_webui.py
+
 test-xmlrpc: ## Run XMLRPC API unit tests
 	$(PYTEST) tests/test_xmlrpc.py
 

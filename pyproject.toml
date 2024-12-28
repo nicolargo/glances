@@ -35,10 +35,36 @@ urls.Homepage = "https://github.com/nicolargo/glances"
 
 [project.optional-dependencies]
 action = ["chevron"]
+# all but not dev
 all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,raid,sensors,smart,snmp,sparklines,web,wifi]"]
 browser = ["zeroconf"]
 cloud = ["requests"]
-containers = ["docker>=6.1.1", "packaging", "podman", "python-dateutil", "six"]
+containers = [
+  "docker>=6.1.1",
+  "packaging",
+  "podman",
+  "python-dateutil",
+  "six",
+]
+dev = [
+  "codespell",
+  "fonttools>=4.43.0",
+  "gprof2dot",
+  "matplotlib",
+  "memory-profiler",
+  "numpy>=1.22.2",
+  "pillow>=10.0.1",
+  "pre-commit",
+  "py-spy",
+  "pyright",
+  "pytest",
+  "requirements-parser",
+  "ruff",
+  "selenium",
+  "semgrep",
+  "setuptools>=65.5.1",
+  "webdriver-manager",
+]
 export = [
   "bernhard",
   "cassandra-driver",
@@ -64,7 +90,12 @@ sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART.smartx"]
 snmp = ["pysnmp-lextudio<6.2.0"]
 sparklines = ["sparklines"]
-web = ["fastapi>=0.82.0", "jinja2", "requests", "uvicorn"]
+web = [
+  "fastapi>=0.82.0",
+  "jinja2",
+  "requests",
+  "uvicorn",
+]
 wifi = ["wifi"]
 
 [project.scripts]
