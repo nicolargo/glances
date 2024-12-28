@@ -1,5 +1,5 @@
 name: glances
-version: '4.3.0.3+build01'  # Put the current stable version+buildXX
+version: '4.3.0.4+build01'  # Put the current stable version+buildXX
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
@@ -32,6 +32,7 @@ apps:
       - power-control
       - process-control
       - network-setup-observe
+      - multipass-support
     environment:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
