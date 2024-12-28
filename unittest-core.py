@@ -35,7 +35,7 @@ from glances.thresholds import (
 # =================
 
 # Init Glances core
-core = GlancesMain()
+core = GlancesMain(args_begin_at=2)
 test_config = core.get_config()
 test_args = core.get_args()
 

@@ -77,7 +77,7 @@ class PluginModel(GlancesPluginModel):
         self.nvidia = NvidiaGPU()
         self.amd = AmdGPU()
         # Just for test purpose (uncomment to test on computer without AMD GPU)
-        # self.amd = AmdGPU(drm_root_folder='./test-data/plugins/gpu/amd/sys/class/drm')
+        # self.amd = AmdGPU(drm_root_folder='./tests-data/plugins/gpu/amd/sys/class/drm')
 
         # We want to display the stat in the curse interface
         self.display_curse = True

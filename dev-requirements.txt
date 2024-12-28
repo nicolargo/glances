@@ -1,4 +1,5 @@
 codespell
+coverage
 fonttools>=4.43.0 # not directly required, pinned by Snyk to avoid a vulnerability
 gprof2dot
 matplotlib
@@ -8,7 +9,10 @@ pillow>=10.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
 pre-commit
 py-spy
 pyright
+pytest
 requirements-parser
 ruff
+selenium
 semgrep
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
+webdriver-manager

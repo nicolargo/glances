@@ -96,10 +96,68 @@ Examples of use:
 
 """
 
-    def __init__(self):
+    def __init__(self, args_begin_at=1):
         """Manage the command line arguments."""
-        # Read the command line arguments
-        self.args = self.parse_args()
+        self.init_glances(args_begin_at)
+
+    def init_glances(self, args_begin_at):
+        """Main method to init Glances."""
+        # Read the command line arguments or parse the one given in parameter (parser)
+        self.args = self.parse_args(args_begin_at)
+
+        # Load the configuration file, if it exists
+        # This function should be called after the parse_args
+        # because the configuration file path can be defined
+        self.config = Config(self.args.conf_file)
+
+        # Init Glances debug mode
+        self.init_debug(self.args)
+
+        # Plugins Glances refresh rate
+        self.init_refresh_rate(self.args)
+
+        # Manage Plugins disable/enable option
+        self.init_plugins(self.args)
+
+        # Init Glances client/server mode
+        self.init_client_server(self.args)
+
+        # Init UI mode
+        self.init_ui_mode(self.args)
+
+        # Init the generate_graph tag
+        # Should be set to True to generate graphs
+        self.args.generate_graph = False
+
+        # Export is only available in standalone or client mode (issue #614)
+        export_tag = self.args.export is not None and any(self.args.export)
+        if WINDOWS and export_tag:
+            # On Windows, export is possible but only in quiet mode
+            # See issue #1038
+            logger.info("On Windows OS, export disable the Web interface")
+            self.args.quiet = True
+            self.args.webserver = False
+        elif not (self.is_standalone() or self.is_client()) and export_tag:
+            logger.critical("Export is only available in standalone or client mode")
+            sys.exit(2)
+
+        # Filter is only available in standalone mode
+        if not self.args.process_filter and not self.is_standalone():
+            logger.debug("Process filter is only available in standalone mode")
+
+        # Cursor option is only available in standalone mode
+        if not self.args.disable_cursor and not self.is_standalone():
+            logger.debug("Cursor is only available in standalone mode")
+
+        # Let the plugins known the Glances mode
+        self.args.is_standalone = self.is_standalone()
+        self.args.is_client = self.is_client()
+        self.args.is_client_browser = self.is_client_browser()
+        self.args.is_server = self.is_server()
+        self.args.is_webserver = self.is_webserver()
+
+        # Check mode compatibility
+        self.check_mode_compatibility()
 
     def version_msg(self):
         """Return the version message."""
@@ -728,68 +786,11 @@ Examples of use:
         if args.disable_unicode:
             args.enable_separator = False
 
-    def parse_args(self):
-        """Parse command line arguments."""
-        args = self.init_args().parse_args()
-
-        # Load the configuration file, if it exists
-        # This function should be called after the parse_args
-        # because the configuration file path can be defined
-        self.config = Config(args.conf_file)
-
-        # Init Glances debug mode
-        self.init_debug(args)
-
-        # Plugins Glances refresh rate
-        self.init_refresh_rate(args)
-
-        # Manage Plugins disable/enable option
-        self.init_plugins(args)
-
-        # Init Glances client/server mode
-        self.init_client_server(args)
-
-        # Init UI mode
-        self.init_ui_mode(args)
-
-        # Init the generate_graph tag
-        # Should be set to True to generate graphs
-        args.generate_graph = False
-
-        # Control parameter and exit if it is not OK
-        self.args = args
-
-        # Export is only available in standalone or client mode (issue #614)
-        export_tag = self.args.export is not None and any(self.args.export)
-        if WINDOWS and export_tag:
-            # On Windows, export is possible but only in quiet mode
-            # See issue #1038
-            logger.info("On Windows OS, export disable the Web interface")
-            self.args.quiet = True
-            self.args.webserver = False
-        elif not (self.is_standalone() or self.is_client()) and export_tag:
-            logger.critical("Export is only available in standalone or client mode")
-            sys.exit(2)
-
-        # Filter is only available in standalone mode
-        if not args.process_filter and not self.is_standalone():
-            logger.debug("Process filter is only available in standalone mode")
-
-        # Cursor option is only available in standalone mode
-        if not args.disable_cursor and not self.is_standalone():
-            logger.debug("Cursor is only available in standalone mode")
-
-        # Let the plugins known the Glances mode
-        self.args.is_standalone = self.is_standalone()
-        self.args.is_client = self.is_client()
-        self.args.is_client_browser = self.is_client_browser()
-        self.args.is_server = self.is_server()
-        self.args.is_webserver = self.is_webserver()
-
-        # Check mode compatibility
-        self.check_mode_compatibility()
-
-        return args
+    def parse_args(self, args_begin_at):
+        """Parse command line arguments.
+        Glances args start at position args_begin_at.
+        """
+        return self.init_args().parse_args(sys.argv[args_begin_at:])
 
     def check_mode_compatibility(self):
         """Check mode compatibility"""
