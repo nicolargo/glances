@@ -3,6 +3,14 @@
 ==============================================================================
 
 ===============
+Version 4.3.0.4
+===============
+
+Continuous integration and documentation:
+
+* Pin Python version in Ubuntu image to 3.12
+
+===============
 Version 4.3.0.3
 ===============
 
