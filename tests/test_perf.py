@@ -14,7 +14,7 @@ from glances.timer import Timer
 
 def test_perf_update(glances_stats):
     """
-    Test Glances home page title.
+    Test Glances perf.
     """
     perf_timer = Timer(3)
     counter = 0

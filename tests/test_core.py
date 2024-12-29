@@ -712,47 +712,6 @@ class TestGlances(unittest.TestCase):
     #         # but not on my localLinux computer...
     #         # self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
 
-    # def test_800_memory_leak(self):
-    #     """Memory leak check"""
-    #     import tracemalloc
-
-    #     print('INFO: [TEST_800] Memory leak check')
-    #     tracemalloc.start()
-    #     # 3 iterations just to init the stats and fill the memory
-    #     for _ in range(3):
-    #         stats.update()
-
-    #     # Start the memory leak check
-    #     snapshot_begin = tracemalloc.take_snapshot()
-    #     for _ in range(3):
-    #         stats.update()
-    #     snapshot_end = tracemalloc.take_snapshot()
-    #     snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
-    #     memory_leak = sum([s.size_diff for s in snapshot_diff])
-    #     print(f'INFO: Memory leak: {memory_leak} bytes')
-
-    #     # snapshot_begin = tracemalloc.take_snapshot()
-    #     for _ in range(30):
-    #         stats.update()
-    #     snapshot_end = tracemalloc.take_snapshot()
-    #     snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
-    #     memory_leak = sum([s.size_diff for s in snapshot_diff])
-    #     print(f'INFO: Memory leak: {memory_leak} bytes')
-
-    #     # snapshot_begin = tracemalloc.take_snapshot()
-    #     for _ in range(300):
-    #         stats.update()
-    #     snapshot_end = tracemalloc.take_snapshot()
-    #     snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
-    #     memory_leak = sum([s.size_diff for s in snapshot_diff])
-    #     print(f'INFO: Memory leak: {memory_leak} bytes')
-    #     snapshot_top = snapshot_end.compare_to(snapshot_begin, 'traceback')
-    #     print("Memory consumption (top 5):")
-    #     for stat in snapshot_top[:5]:
-    #         print(stat)
-    #         for line in stat.traceback.format():
-    #             print(line)
-
     def test_999_the_end(self):
         """Free all the stats"""
         print('INFO: [TEST_999] Free the stats')

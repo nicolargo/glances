@@ -51,7 +51,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
           if [ -f dev-requirements.txt ]; then python -m pip install -r dev-requirements.txt; fi
           if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
 
@@ -64,33 +63,32 @@ jobs:
   # Installed c:\hostedtoolcache\windows\python\3.9.13\x64\lib\site-packages\exceptiongroup-1.2.1-py3.9.egg
   # error: h11 0.14.0 is installed but h11<0.13,>=0.11 is required by {'httpcore'}
   # Error: Process completed with exit code 1.
-  # test-windows:
+  test-windows:
 
-  #   # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
-  #   runs-on: windows-2022
-  #   strategy:
-  #     matrix:
-  #       python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
-  #   steps:
+    # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
 
-  #   - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v5
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-  #       cache: 'pip'
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
 
-  #   - name: Install dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       if (Test-Path -PathType Leaf "dev-requirements.txt") { python -m pip install -r dev-requirements.txt }
-  #       if (Test-Path -PathType Leaf "requirements.txt") { python -m pip install -r requirements.txt }
-  #       pip install .
+    - name: Install dependencies
+      run: |
+        if (Test-Path -PathType Leaf "dev-requirements.txt") { python -m pip install -r dev-requirements.txt }
+        if (Test-Path -PathType Leaf "requirements.txt") { python -m pip install -r requirements.txt }
+        pip install .
 
-  #   - name: Unitary tests
-  #     run: |
-  #       python -m pytest ./tests/test_core.py
+    - name: Unitary tests
+      run: |
+        python -m pytest ./tests/test_core.py
 
   test-macos:
 
@@ -114,7 +112,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
           if [ -f dev-requirements.txt ]; then python -m pip install -r dev-requirements.txt; fi
           if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
 
@@ -137,7 +134,7 @@ jobs:
   #       with:
   #         usesh: true
   #         prepare: |
-  #           pkg install -y python3 py-pip
+  #           pkg install -y python3
   #         run: |
   #           set -e -x
   #           python3 -m pip install pytest

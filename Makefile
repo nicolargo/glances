@@ -91,6 +91,9 @@ test: ## Run All unit tests
 test-core: ## Run Core unit tests
 	$(PYTEST) tests/test_core.py
 
+test-memoryleak: ## Run Memory-leak unit tests
+	$(PYTEST) tests/test_memoryleak.py
+
 test-perf: ## Run Perf unit tests
 	$(PYTEST) tests/test_perf.py
 
