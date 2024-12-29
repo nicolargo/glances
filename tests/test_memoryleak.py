@@ -32,4 +32,5 @@ def test_memoryleak(glances_stats_no_history, logger):
     snapshot_end = tracemalloc.take_snapshot()
     snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
     memory_leak = sum([s.size_diff for s in snapshot_diff]) // iteration
+    logger.info('Memory consume per iteration: {memory_leak} bytes')
     assert memory_leak < 1000, f'Memory leak: {memory_leak} bytes'

@@ -13,6 +13,6 @@ pytest
 requirements-parser
 ruff
 selenium
-semgrep
+semgrep; platform_system == 'Linux'
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
 webdriver-manager

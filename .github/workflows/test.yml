@@ -65,6 +65,7 @@ jobs:
   # Error: Process completed with exit code 1.
   test-windows:
 
+    needs: source-code-checks
     # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
     runs-on: windows-2022
     strategy:
