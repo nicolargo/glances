@@ -15,6 +15,7 @@ $ sudo apt install chromium-chromedriver
 The chromedriver command line should be in your path (/usr/bin)
 """
 
+import logging
 import os
 import shlex
 import subprocess
@@ -33,9 +34,26 @@ URL = f"http://localhost:{SERVER_PORT}"
 
 
 @pytest.fixture(scope="session")
+def logger():
+    return logging.getLogger(__name__)
+
+
+@pytest.fixture(scope="session")
 def glances_stats():
     core = GlancesMain(args_begin_at=2)
     stats = GlancesStats(config=core.get_config(), args=core.get_args())
+    yield stats
+    stats.end()
+
+
+@pytest.fixture(scope="session")
+def glances_stats_no_history():
+    core = GlancesMain(args_begin_at=2)
+    args = core.get_args()
+    args.time = 1
+    args.cached_time = 1
+    args.disable_history = True
+    stats = GlancesStats(config=core.get_config(), args=args)
     yield stats
     stats.end()
 

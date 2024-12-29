@@ -31,11 +31,11 @@ try:
 except OSError:
     nvidia_gpu_enable = False
     # NNVML_LIB lib not found (NVidia driver not installed)
-    logger.warning(f"NVML Shared Library ({NVML_LIB}) not Found, Nvidia GPU plugin is disabled")
+    logger.debug(f"NVML Shared Library ({NVML_LIB}) not Found, Nvidia GPU plugin is disabled")
 except Exception as e:
     nvidia_gpu_enable = False
     # Display warning message if import KeyError
-    logger.warning(f"Missing Python Lib ({e}), Nvidia GPU plugin is disabled")
+    logger.debug(f"Missing Python Lib ({e}), Nvidia GPU plugin is disabled")
 else:
     nvidia_gpu_enable = True
 
