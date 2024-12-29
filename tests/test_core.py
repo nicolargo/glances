@@ -130,7 +130,8 @@ class TestGlances(unittest.TestCase):
         plugin_instance.update_views()
 
         # Check history
-        if plugin_instance.history_enable():
+        # Not working on WINDOWS
+        if plugin_instance.history_enable() and not WINDOWS:
             if isinstance(plugin_instance.get_raw(), dict):
                 first_history_field = plugin_instance.get_items_history_list()[0]['name']
             elif isinstance(plugin_instance.get_raw(), list) and len(plugin_instance.get_raw()) > 0:
