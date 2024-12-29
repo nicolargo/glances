@@ -129,7 +129,7 @@ class TestGlances(unittest.TestCase):
         plugin_instance.update_stats_history()
         plugin_instance.update_views()
 
-        # Check history
+        # Check stats history
         # Not working on WINDOWS
         if plugin_instance.history_enable() and not WINDOWS:
             if isinstance(plugin_instance.get_raw(), dict):
@@ -160,16 +160,19 @@ class TestGlances(unittest.TestCase):
 
         # Check views
         self.assertIsInstance(plugin_instance.get_views(), dict)
-        if isinstance(plugin_instance.get_raw(), dict):
-            self.assertIsInstance(plugin_instance.get_views(first_history_field), dict)
-            self.assertTrue('decoration' in plugin_instance.get_views(first_history_field))
-        elif isinstance(plugin_instance.get_raw(), list) and len(plugin_instance.get_raw()) > 0:
-            first_history_field = plugin_instance.get_items_history_list()[0]['name']
-            first_item = plugin_instance.get_raw()[0][plugin_instance.get_key()]
-            self.assertIsInstance(plugin_instance.get_views(item=first_item, key=first_history_field), dict)
-            self.assertTrue('decoration' in plugin_instance.get_views(item=first_item, key=first_history_field))
         self.assertIsInstance(json.loads(plugin_instance.get_json_views()), dict)
         self.assertEqual(json.loads(plugin_instance.get_json_views()), plugin_instance.get_views())
+        # Check views history
+        # Not working on WINDOWS
+        if plugin_instance.history_enable() and not WINDOWS:
+            if isinstance(plugin_instance.get_raw(), dict):
+                self.assertIsInstance(plugin_instance.get_views(first_history_field), dict)
+                self.assertTrue('decoration' in plugin_instance.get_views(first_history_field))
+            elif isinstance(plugin_instance.get_raw(), list) and len(plugin_instance.get_raw()) > 0:
+                first_history_field = plugin_instance.get_items_history_list()[0]['name']
+                first_item = plugin_instance.get_raw()[0][plugin_instance.get_key()]
+                self.assertIsInstance(plugin_instance.get_views(item=first_item, key=first_history_field), dict)
+                self.assertTrue('decoration' in plugin_instance.get_views(item=first_item, key=first_history_field))
 
     def test_000_update(self):
         """Update stats (mandatory step for all the stats).
