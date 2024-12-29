@@ -46,7 +46,7 @@ def glances_stats():
     stats.end()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def glances_stats_no_history():
     core = GlancesMain(args_begin_at=2)
     args = core.get_args()

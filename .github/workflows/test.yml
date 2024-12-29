@@ -70,7 +70,8 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        # Windows-curses not available for Python 3.13 for the moment
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     steps:
 
     - uses: actions/checkout@v4
