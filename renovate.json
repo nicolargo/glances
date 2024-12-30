@@ -3,5 +3,6 @@
   "extends": [
     "config:recommended"
   ],
-  "prHourlyLimit": 3
+  "prHourlyLimit": 3,
+  "updateLockFiles": false
 }
