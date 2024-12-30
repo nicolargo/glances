@@ -12,7 +12,7 @@
 
 # Netifaces (and Netifaces-plus) are not compliant with GCC embeded in Alpine 3.21
 # See: https://github.com/tsukumijima/netifaces-plus/issues/9
-ARG IMAGE_VERSION=3.20
+ARG IMAGE_VERSION=3.21
 ARG PYTHON_VERSION=3.12
 
 ##############################################################################
