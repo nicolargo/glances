@@ -16,9 +16,9 @@ def test_perf_update(glances_stats):
     """
     Test Glances perf.
     """
-    perf_timer = Timer(3)
+    perf_timer = Timer(6)
     counter = 0
     while not perf_timer.finished():
         glances_stats.update()
         counter += 1
-    assert counter > 3
+    assert counter > 6
