@@ -112,7 +112,7 @@ Optional dependencies:
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
 - ``jinja2`` (for templating, used under the hood by FastAPI)
 - ``kafka-python`` (for the Kafka export module)
-- ``netifaces-plus`` (for the IP plugin)
+- ``netifaces2`` (for the IP plugin)
 - ``nvidia-ml-py`` (for the GPU plugin)
 - ``pycouchdb`` (for the CouchDB export module)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
