@@ -244,7 +244,7 @@ class GlancesAutoDiscoverClient:
         import netifaces
 
         # Interface of the default gateway
-        gateway_itf = netifaces.gateways()['default'][netifaces.AF_INET][1]
+        gateway_itf = netifaces.gateways()[netifaces.AF_INET][0][1]
         # IP address for the interface
         return netifaces.ifaddresses(gateway_itf)[netifaces.AF_INET][0]['addr']
 
