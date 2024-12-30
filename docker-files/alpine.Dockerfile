@@ -9,10 +9,7 @@
 # WARNING: the Alpine image version and Python version should be set.
 # Alpine 3.18 tag is a link to the latest 3.18.x version.
 # Be aware that if you change the Alpine version, you may have to change the Python version.
-
-# Netifaces (and Netifaces-plus) are not compliant with GCC embeded in Alpine 3.21
-# See: https://github.com/tsukumijima/netifaces-plus/issues/9
-ARG IMAGE_VERSION=3.20
+ARG IMAGE_VERSION=3.21
 ARG PYTHON_VERSION=3.12
 
 ##############################################################################
