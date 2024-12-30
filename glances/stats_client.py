@@ -8,6 +8,7 @@
 
 """The stats server manager."""
 
+import importlib
 import sys
 
 from glances.globals import sys_path
@@ -30,21 +31,21 @@ class GlancesStatsClient(GlancesStats):
 
     def set_plugins(self, input_plugins):
         """Set the plugin list according to the Glances server."""
-        header = "glances_"
+        header = "glances.plugins."
         for item in input_plugins:
             # Import the plugin
             try:
-                plugin = __import__(header + item)
-            except ImportError:
+                plugin = importlib.import_module(header + item)
+            except ImportError as e:
                 # Server plugin can not be imported from the client side
-                logger.error(f"Can not import {item} plugin. Please upgrade your Glances client/server version.")
+                logger.error(f"Can not import {item} plugin ({e}). Please upgrade your Glances client/server version.")
             else:
                 # Add the plugin to the dictionary
                 # The key is the plugin name
                 # for example, the file glances_xxx.py
                 # generate self._plugins_list["xxx"] = ...
                 logger.debug(f"Server uses {item} plugin")
-                self._plugins[item] = plugin.Plugin(args=self.args)
+                self._plugins[item] = plugin.PluginModel(args=self.args)
         # Restoring system path
         sys.path = sys_path
 
