@@ -88,7 +88,7 @@ class PluginModel(GlancesPluginModel):
     def get_private_ip(self, stats, stop=False):
         # Get the default gateway thanks to the netifaces lib
         try:
-            default_gw = netifaces.gateways()['default'][netifaces.AF_INET]
+            default_gw = netifaces.gateways()[netifaces.AF_INET][0]
         except (KeyError, AttributeError) as e:
             logger.debug(f"Cannot grab default gateway IP address ({e})")
             stop = True
@@ -99,7 +99,7 @@ class PluginModel(GlancesPluginModel):
 
     def get_first_ip(self, stats, stop=False):
         try:
-            default_gw = netifaces.gateways()['default'][netifaces.AF_INET]
+            default_gw = netifaces.gateways()[netifaces.AF_INET][0]
             address = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['addr']
             mask = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['netmask']
         except (KeyError, AttributeError) as e:
