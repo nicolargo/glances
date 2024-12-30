@@ -244,23 +244,22 @@ class PluginModel(GlancesPluginModel):
             if not i['value']:
                 continue
             # Alert processing
-            if i['type'] == SensorType.CPU_TEMP:
-                if self.is_limit('critical', stat_name=i["type"].value + '_' + i['label']):
+            stat_type = i['type'] if isinstance(i['type'], str) else i['type'].value
+            if stat_type == SensorType.CPU_TEMP:
+                if self.is_limit('critical', stat_name=stat_type + '_' + i['label']):
                     # Get thresholds for the specific sensor in the glances.conf file (see #2058)
-                    alert = self.get_alert(current=i['value'], header=i["type"].value + '_' + i['label'])
-                elif self.is_limit('critical', stat_name=i["type"].value):
+                    alert = self.get_alert(current=i['value'], header=stat_type + '_' + i['label'])
+                elif self.is_limit('critical', stat_name=stat_type):
                     # Get thresholds for the sensor type in the glances.conf file (see #3049)
-                    logger.info("Using sensor type thresholds")
-                    logger.info(self._limits)
-                    alert = self.get_alert(current=i['value'], header=i["type"].value)
+                    alert = self.get_alert(current=i['value'], header=stat_type)
                 else:
                     # Else use the system thresholds
                     alert = self.__get_system_thresholds(i)
-            elif i['type'] == SensorType.BATTERY:
+            if stat_type == SensorType.BATTERY:
                 # Battery is in %
-                alert = self.get_alert(current=100 - i['value'], header=i['type'].value)
+                alert = self.get_alert(current=100 - i['value'], header=stat_type)
             else:
-                alert = self.get_alert(current=i['value'], header=i['type'].value)
+                alert = self.get_alert(current=i['value'], header=stat_type)
             # Set the alert in the view
             self.views[i[self.get_key()]]['value']['decoration'] = alert
 
