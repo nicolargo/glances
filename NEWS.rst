@@ -1,9 +1,22 @@
 ==============================================================================
                                 Glances ChangeLog
-==============================================================================
+============================================================================
 
 ===============
-Version 4.3.0.4
+Version 4.3.0.6
+===============
+
+Bug corrected:
+
+*  Browser mode do not working with the sensors plugin #3069
+*  netifaces is deprecated, use netifaces-plus or netifaces2 #3055
+
+Continuous integration and documentation:
+
+* Update alpine Docker tag to v3.21 #3061
+
+===============
+Version 4.3.0.5
 ===============
 
 Bug corrected:
