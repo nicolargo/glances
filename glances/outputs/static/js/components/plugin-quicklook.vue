@@ -4,7 +4,7 @@
             <span class="text-start text-truncate">
                 {{ cpu_name }}
             </span>
-            <span class="text-end d-none d-xxl-block" v-if="cpu_hz_current">
+            <span class="text-end d-none d-xxl-block frequency" v-if="cpu_hz_current">
                 {{ cpu_hz_current }}/{{ cpu_hz }}Ghz
             </span>
         </div>
@@ -18,7 +18,7 @@
                             &nbsp;
                         </div>
                     </td>
-                    <td scope="col" class="text-end">{{ cpu }}%</td>
+                    <td scope="col" class="text-end"><span>{{ cpu }}%</span></td>
                 </tr>
                 <tr v-if="args.percpu" v-for="(percpu, percpuId) in percpus" :key="percpuId">
                     <td scope="col">CPU{{ percpu.number }}</td>
@@ -29,7 +29,7 @@
                             &nbsp;
                         </div>
                     </td>
-                    <td scope="col" class="text-end">{{ percpu.total }}%</td>
+                    <td scope="col" class="text-end"><span>{{ percpu.total }}%</span></td>
                 </tr>
                 <tr v-for="(key) in stats_list_after_cpu">
                     <td scope="col">{{ key.toUpperCase() }}</td>
@@ -40,7 +40,7 @@
                             &nbsp;
                         </div>
                     </td>
-                    <td scope="col" class="text-end">{{ stats[key] }}%</td>
+                    <td scope="col" class="text-end"><span>{{ stats[key] }}%</span></td>
                 </tr>
             </table>
         </div>

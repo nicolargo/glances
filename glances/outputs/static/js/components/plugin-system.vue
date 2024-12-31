@@ -2,7 +2,7 @@
     <section class="plugin" id="system">
         <span v-if="isDisconnected" class="critical">Disconnected from</span>
         <span class="title">{{ hostname }}</span>
-        <span>{{ humanReadableName }}</span>
+        <span class="text-truncate">{{ humanReadableName }}</span>
     </section>
 </template>
 
