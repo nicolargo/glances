@@ -1,64 +1,72 @@
+# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2024 <Your Name>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
+"""
+Tail plugin for Glances.
 
-"""Foo plugin (based on diskIO plugin)."""
+This plugin tails a file (given by the user), displaying:
+- last modification time
+- total line count
+- last N lines
+"""
 
-import psutil
+import os
+import time
+import datetime
 
-from glances.globals import nativestr
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.globals import bytes2human
 
-# Fields description
-# description: human readable description
-# short_name: shortname to use un UI
-# unit: unit type
-# rate: if True then compute and add *_gauge and *_rate_per_is fields
-# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# -----------------------------------------------------------------------------
+# Globals
+# -----------------------------------------------------------------------------
+
 fields_description = {
-    'disk_name': {'description': 'Disk name.'},
-    'read_count': {
-        'description': 'Number of reads.',
-        'rate': True,
-        'unit': 'number',
+    "filename": {
+        "description": "Name of the file",
     },
-    'write_count': {
-        'description': 'Number of writes.',
-        'rate': True,
-        'unit': 'number',
+    "file_size": {
+        "description": "File size in bytes",
+        "unit": "byte",
     },
-    'read_bytes': {
-        'description': 'Number of bytes read.',
-        'rate': True,
-        'unit': 'byte',
+    "last_modified": {
+        "description": "Last modification time of the file",
     },
-    'write_bytes': {
-        'description': 'Number of bytes written.',
-        'rate': True,
-        'unit': 'byte',
+    "line_count": {
+        "description": "Line count for the entire file",
+        "unit": "lines",
+    },
+    "last_lines": {
+        "description": "The last N lines of the file",
+        # No specific unit, it's textual
     },
 }
 
-# Define the history items list
+# If you need to store some metrics in the history, you can define them here:
 items_history_list = [
-    {'name': 'read_bytes_rate_per_sec', 'description': 'Bytes read per second', 'y_unit': 'B/s'},
-    {'name': 'write_bytes_rate_per_sec', 'description': 'Bytes write per second', 'y_unit': 'B/s'},
+    # Example: you could keep track of file size over time
+    # {"name": "file_size", "description": "Size of the tailed file", "y_unit": "byte"},
 ]
 
+# -----------------------------------------------------------------------------
+# Plugin class
+# -----------------------------------------------------------------------------
 
 class PluginModel(GlancesPluginModel):
-    """Foo plugin.
+    """Tail plugin main class.
 
-    stats is a list
+    Attributes:
+        self.stats (list): A list of dictionaries, each representing a file’s stats.
     """
 
     def __init__(self, args=None, config=None):
-        """Init the plugin."""
+        """Initialize the plugin."""
         super().__init__(
             args=args,
             config=config,
@@ -67,166 +75,171 @@ class PluginModel(GlancesPluginModel):
             fields_description=fields_description,
         )
 
-        # We want to display the stat in the curse interface
+        # We want to display the stat in the TUI
         self.display_curse = True
 
-        # Hide stats if it has never been != 0
-        if config is not None:
-            self.hide_zero = config.get_bool_value(self.plugin_name, 'hide_zero', default=False)
-        else:
-            self.hide_zero = False
-        self.hide_zero_fields = ['read_bytes_rate_per_sec', 'write_bytes_rate_per_sec']
+        # Optionally read from the config file [tail] section
+        # e.g.:
+        # [tail]
+        # filename=/var/log/syslog
+        # lines=10
+        self.default_filename = config.get_value(self.plugin_name, 'filename', default='/var/log/syslog')
+        self.default_lines = config.get_int_value(self.plugin_name, 'lines', default=10)
 
-        # Force a first update because we need two updates to have the first stat
+        # Force a first update
         self.update()
         self.refresh_timer.set(0)
 
     def get_key(self):
-        """Return the key of the list."""
-        return 'disk_name'
+        """Return the key used in each stats dictionary."""
+        # We'll use 'filename' as the key
+        return 'filename'
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
-        """Update disk I/O stats using the input method."""
-        # Update the stats
+        """Update the plugin stats.
+
+        Called automatically at each refresh. Must set self.stats.
+        """
         if self.input_method == 'local':
             stats = self.update_local()
         else:
             stats = self.get_init_value()
 
-        # Update the stats
         self.stats = stats
-
         return self.stats
 
-    @GlancesPluginModel._manage_rate
     def update_local(self):
+        """Collect and return stats for our plugin (tailing a file)."""
         stats = self.get_init_value()
 
-        try:
-            diskio = psutil.disk_io_counters(perdisk=True)
-        except Exception:
-            return stats
+        # In a real scenario, you might have the user pass these in
+        # or read from the config. For demonstration, we’ll use the defaults.
+        filename = self.default_filename
+        num_lines = self.default_lines
 
-        for disk_name, disk_stat in diskio.items():
-            # By default, RamFS is not displayed (issue #714)
-            if self.args is not None and not self.args.diskio_show_ramfs and disk_name.startswith('ram'):
-                continue
-
-            # Shall we display the stats ?
-            if not self.is_display(disk_name):
-                continue
-
-            # Filter stats to keep only the fields we want (define in fields_description)
-            # It will also convert psutil objects to a standard Python dict
-            stat = self.filter_stats(disk_stat)
-
-            # Add the key
-            stat['key'] = self.get_key()
-
-            # Add disk name
-            stat['disk_name'] = disk_name
-
-            # Add alias if exist (define in the configuration file)
-            if self.has_alias(disk_name) is not None:
-                stat['alias'] = self.has_alias(disk_name)
-
-            stats.append(stat)
+        # Build a dictionary representing the file stats
+        file_stat = self._build_file_stat(filename, num_lines)
+        stats.append(file_stat)
 
         return stats
 
+    def _build_file_stat(self, filename, num_lines):
+        """Return a dictionary of stats for the given filename."""
+        result = {
+            "key": self.get_key(),
+            "filename": filename,
+            "file_size": 0,
+            "last_modified": "",
+            "line_count": 0,
+            "last_lines": [],
+        }
+
+        if not os.path.isfile(filename):
+            logger.debug(f"File not found: {filename}")
+            return result
+
+        try:
+            # Last modification time
+            mod_time = os.path.getmtime(filename)
+            result["last_modified"] = datetime.datetime.fromtimestamp(mod_time).strftime('%Y-%m-%d %H:%M:%S')
+
+            # File size
+            result["file_size"] = os.path.getsize(filename)
+
+            # Count lines, read last N lines
+            line_count, last_lines = self._tail_file(filename, num_lines)
+            result["line_count"] = line_count
+            # Store the last lines as a single string or as a list.
+            # For display convenience, we might store them as a list of strings.
+            result["last_lines"] = last_lines
+
+        except Exception as e:
+            logger.debug(f"Error reading file {filename}: {e}")
+
+        return result
+
+    def _tail_file(self, filename, num_lines):
+        """Return (total_line_count, list_of_last_N_lines)."""
+        lines = []
+        with open(filename, 'rb') as f:
+            # If the file is huge, you might want a more efficient way to read
+            # the last N lines rather than reading the entire file.
+            # For simplicity, read all lines:
+            content = f.read().splitlines()
+            total_lines = len(content)
+            # Extract the last num_lines lines
+            last_lines = content[-num_lines:] if total_lines >= num_lines else content
+            # Decode to str (assuming UTF-8) for each line
+            last_lines_decoded = [line.decode('utf-8', errors='replace') for line in last_lines]
+
+        return total_lines, last_lines_decoded
+
     def update_views(self):
-        """Update stats views."""
-        # Call the father's method
+        """Update stats views (optional).
+
+        If you need to set decorations (alerts or color formatting),
+        you can do it here.
+        """
         super().update_views()
 
-        # Add specifics information
-        # Alert
-        for i in self.get_raw():
-            disk_real_name = i['disk_name']
-            self.views[i[self.get_key()]]['read_bytes']['decoration'] = self.get_alert(
-                i['read_bytes'], header=disk_real_name + '_rx'
-            )
-            self.views[i[self.get_key()]]['write_bytes']['decoration'] = self.get_alert(
-                i['write_bytes'], header=disk_real_name + '_tx'
-            )
+        # Example: if file_size is above a threshold, we could color it in TUI
+        for stat_dict in self.get_raw():
+            fsize = stat_dict.get("file_size", 0)
+            # Example: decorate if file > 1GB
+            if fsize > 1024 ** 3:
+                self.views[stat_dict[self.get_key()]]["file_size"]["decoration"] = self.get_alert(
+                    fsize, header='bigfile'
+                )
 
     def msg_curse(self, args=None, max_width=None):
-        """Return the dict to display in the curse interface."""
-        # Init the return message
+        """Return the dict (list of lines) to display in the TUI."""
         ret = []
 
-        # Only process if stats exist and display plugin enable...
+        # If no stats or disabled, return empty
         if not self.stats or self.is_disabled():
             return ret
 
-        # Max size for the interface name
         if max_width:
-            name_max_width = max_width - 13
+            name_max_width = max_width - 20
         else:
-            # No max_width defined, return an empty curse message
+            # No max_width defined
             logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Header
-        msg = '{:{width}}'.format('DISK I/O', width=name_max_width)
-        ret.append(self.curse_add_line(msg, "TITLE"))
-        if args.diskio_iops:
-            msg = '{:>8}'.format('IOR/s')
-            ret.append(self.curse_add_line(msg))
-            msg = '{:>7}'.format('IOW/s')
-            ret.append(self.curse_add_line(msg))
-        else:
-            msg = '{:>8}'.format('R/s')
-            ret.append(self.curse_add_line(msg))
-            msg = '{:>7}'.format('W/s')
-            ret.append(self.curse_add_line(msg))
-        # Disk list (sorted by name)
-        for i in self.sorted_stats():
-            # Hide stats if never be different from 0 (issue #1787)
-            if all(self.get_views(item=i[self.get_key()], key=f, option='hidden') for f in self.hide_zero_fields):
-                continue
-            # Is there an alias for the disk name ?
-            disk_name = i['alias'] if 'alias' in i else i['disk_name']
-            # New line
+        ret.append(self.curse_add_line("FILE TAIL PLUGIN", "TITLE"))
+
+        # Display the stats
+        for stat in self.stats:
+            filename = stat.get("filename", "N/A")
+            file_size = stat.get("file_size", 0)
+            line_count = stat.get("line_count", 0)
+            last_modified = stat.get("last_modified", "")
+            last_lines = stat.get("last_lines", [])
+
+            # New line for each file
             ret.append(self.curse_new_line())
-            if len(disk_name) > name_max_width:
-                # Cut disk name if it is too long
-                disk_name = disk_name[:name_max_width] + '_'
-            msg = '{:{width}}'.format(nativestr(disk_name), width=name_max_width + 1)
-            ret.append(self.curse_add_line(msg))
-            if args.diskio_iops:
-                # count
-                txps = self.auto_unit(i.get('read_count_rate_per_sec', None))
-                rxps = self.auto_unit(i.get('write_count_rate_per_sec', None))
-                msg = f'{txps:>7}'
-                ret.append(
-                    self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()], key='read_count', option='decoration')
-                    )
-                )
-                msg = f'{rxps:>7}'
-                ret.append(
-                    self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()], key='write_count', option='decoration')
-                    )
-                )
-            else:
-                # Bitrate
-                txps = self.auto_unit(i.get('read_bytes_rate_per_sec', None))
-                rxps = self.auto_unit(i.get('write_bytes_rate_per_sec', None))
-                msg = f'{txps:>7}'
-                ret.append(
-                    self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()], key='read_bytes', option='decoration')
-                    )
-                )
-                msg = f'{rxps:>7}'
-                ret.append(
-                    self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()], key='write_bytes', option='decoration')
-                    )
-                )
+
+            # 1) Filename
+            msg_filename = f"File: {filename}"
+            ret.append(self.curse_add_line(msg_filename[:name_max_width], "NORMAL"))
+
+            # 2) File size + last modified time
+            msg_meta = (f"Size: {bytes2human(file_size)}, "
+                        f"Last Modified: {last_modified}, "
+                        f"Total Lines: {line_count}")
+            ret.append(self.curse_new_line())
+            ret.append(self.curse_add_line(msg_meta, "NORMAL"))
+
+            # 3) Last N lines
+            ret.append(self.curse_new_line())
+            ret.append(self.curse_add_line("Last lines:", "NORMAL"))
+            for line in last_lines:
+                ret.append(self.curse_new_line())
+                ret.append(self.curse_add_line(f"  {line}", "NORMAL"))
+
+            ret.append(self.curse_new_line())
 
         return ret
