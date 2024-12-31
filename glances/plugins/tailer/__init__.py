@@ -7,7 +7,7 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 """
-Tail plugin for Glances.
+Tailer plugin for Glances.
 
 This plugin tails a file (given by the user), displaying:
 - last modification time
@@ -59,7 +59,7 @@ items_history_list = [
 # -----------------------------------------------------------------------------
 
 class PluginModel(GlancesPluginModel):
-    """Tail plugin main class.
+    """Tailer plugin main class.
 
     Attributes:
         self.stats (list): A list of dictionaries, each representing a file’s stats.
@@ -209,7 +209,7 @@ class PluginModel(GlancesPluginModel):
             return ret
 
         # Header
-        ret.append(self.curse_add_line("FILE TAIL PLUGIN", "TITLE"))
+        ret.append(self.curse_add_line("FILE TAILER PLUGIN", "TITLE"))
 
         # Display the stats
         for stat in self.stats:
