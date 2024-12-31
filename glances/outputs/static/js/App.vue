@@ -150,7 +150,8 @@ export default {
         GlancesPluginSystem,
         GlancesPluginUptime,
         GlancesPluginVms,
-        GlancesPluginWifi
+        GlancesPluginWifi,
+        GlancesPluginTailer
     },
     data() {
         return {
