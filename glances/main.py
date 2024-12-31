@@ -617,6 +617,14 @@ Examples of use:
             help='strftime format string for displaying current date in standalone mode',
         )
 
+        parser.add_argument(
+            '--disable-tailer',
+            action='store_true',
+            default=False,
+            dest='disable_tailer',
+            help='disable the Tailer plugin'
+        )
+
         return parser
 
     def init_debug(self, args):
