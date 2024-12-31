@@ -11,15 +11,17 @@
                 <tbody>
                     <tr>
                         <td scope="row">1 min:</td>
-                        <td class="text-end">{{ $filters.number(min1, 2) }}</td>
+                        <td class="text-end"><span>{{ $filters.number(min1, 2) }}</span></td>
                     </tr>
                     <tr>
                         <td scope="row">5 min:</td>
-                        <td class="text-end" :class="getDecoration('min5')">{{ $filters.number(min5, 2) }}</td>
+                        <td class="text-end" :class="getDecoration('min5')"><span>{{ $filters.number(min5, 2) }}</span>
+                        </td>
                     </tr>
                     <tr>
                         <td scope="row">15 min:</td>
-                        <td class="text-end" :class="getDecoration('min15')">{{ $filters.number(min15, 2) }}</td>
+                        <td class="text-end" :class="getDecoration('min15')"><span>{{ $filters.number(min15, 2)
+                                }}</span></td>
                     </tr>
                 </tbody>
             </table>

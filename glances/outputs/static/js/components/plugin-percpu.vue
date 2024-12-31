@@ -2,7 +2,7 @@
     <section id="percpu" class="plugin">
         <!-- d-none d-xl-block d-xxl-block -->
         <div class="table-responsive">
-            <table class="table table-sm table-borderless">
+            <table class="table-sm table-borderless">
                 <thead>
                     <tr>
                         <th scope="col" v-if="args.disable_quicklook">CPU</th>
@@ -21,7 +21,8 @@
                         <td scope="col" :class="getUserAlert(percpu)">{{ percpu.user }}%</td>
                         <td scope="col" :class="getSystemAlert(percpu)">{{ percpu.system }}%</td>
                         <td scope="col" v-show="percpu.idle != undefined">{{ percpu.idle }}%</td>
-                        <td scope="col" v-show="percpu.iowait != undefined" :class="getIOWaitAlert(percpu)">{{ percpu.iowait }}%</td>
+                        <td scope="col" v-show="percpu.iowait != undefined" :class="getIOWaitAlert(percpu)">{{
+                            percpu.iowait }}%</td>
                         <td scope="col" v-show="percpu.steal != undefined">{{ percpu.steal }}%</td>
                     </tr>
                 </tbody>

@@ -83,10 +83,16 @@ body {
 .container-fluid {
     margin-left: 0px;
     margin-right: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
 }
 
 .header {
     height: 30px;
+}
+
+.header-small {
+    height: 50px;
 }
 
 .top-min {
@@ -105,6 +111,10 @@ body {
 .sidebar-max {
     overflow-y: auto;
     height: calc(100vh - 30px - 180px);
+}
+
+.inline {
+    display: inline-block;
 }
 
 // Table
@@ -139,10 +149,9 @@ body {
 }
 
 .text-truncate {
-    // display: block;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 #browser .table-hover tbody tr:hover td {
@@ -179,6 +188,10 @@ body {
     }
 }
 
+.frequency {
+    display: inline-block;
+    width: 8em;
+}
 
 #ip {
     span {
@@ -203,6 +216,10 @@ body {
         width: 4em;
     }
     * > th:nth-last-child(1), td:nth-last-child(1) {
+        width: 4em;
+    }
+    * > td span {
+        display: inline-block;
         width: 4em;
     }
     .progress {
@@ -230,6 +247,41 @@ body {
         overflow: hidden;
         width: 100%;
         text-overflow: ellipsis;
+    }
+}
+
+#cpu {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#gpu {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#mem {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#memswap {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#load {
+    * > td span {
+        display: inline-block;
+        width: 3em;
     }
 }
 
