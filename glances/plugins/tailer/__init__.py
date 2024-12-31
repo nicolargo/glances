@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2024 <Your Name>
+# SPDX-FileCopyrightText: 2024 <benjimons>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
