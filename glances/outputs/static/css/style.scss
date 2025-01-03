@@ -95,6 +95,10 @@ body {
     height: 50px;
 }
 
+.header-small > div:nth-child(1) > section:nth-child(1) {
+    margin-bottom: 0em;
+}
+
 .top-min {
     height: 100px;
 }
@@ -326,6 +330,7 @@ body {
     .table {
         margin-bottom: 1em;
     }
+    // Default column size
     * > td:not(:last-child) {
         width: 5em;
     }
@@ -339,6 +344,7 @@ body {
         white-space: nowrap;
         overflow: hidden;
     }
+    // Status
     * > td:nth-child(4) {
         width: 6em;
     }
@@ -347,20 +353,13 @@ body {
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    * > td:nth-child(8) {
-        width: 10em;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    * > td:nth-child(9), td:nth-child(10) {
-        width: 8em;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+    // Some column are align to the right
     * > td:nth-child(7), td:nth-child(9), td:nth-child(11) {
         text-align: right;
     }
+    // Command
     * > td:nth-child(13) {
+        text-align: left;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
@@ -396,29 +395,35 @@ body {
 #processlist {
     overflow-y: auto;
     height: 600px;
+    .table {
+        margin-bottom: 1em;
+    }
+    // Default column size
     * > td:nth-child(-n+12) {
         width: 5em;
     }
+    // Some column are align to the right
     * > td:nth-child(5), td:nth-child(7), td:nth-child(9), td:nth-child(11) {
         text-align: right;
     }
+    // Process user
     * > td:nth-child(6) {
         text-overflow: ellipsis;
         white-space: nowrap;
-        width: 7em;
+        width: 6em;
     }
+    // Time
     * > td:nth-child(7) {
-        width: 7em;
+        width: 6em;
     }
-    * > td:nth-child(9),td:nth-child(10) {
+    // Nice and Status
+    * > td:nth-child(9), td:nth-child(10) {
         width: 2em;
     }
-    * > td:nth-child(13),* > td:nth-child(14) {
+    // Process name & Command line
+    * > td:nth-child(13), td:nth-child(14) {
         text-overflow: ellipsis;
         white-space: nowrap;
-    }
-    .table {
-        margin-bottom: 1em;
     }
 }
 
