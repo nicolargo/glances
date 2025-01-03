@@ -13,7 +13,7 @@ VENV_UPG      := $(VENV_TYPES:%=venv-%-upgrade)
 VENV_DEPS     := $(VENV_TYPES:%=venv-%)
 VENV_INST_UPG := $(VENV_DEPS) $(VENV_UPG)
 
-IMAGES_TYPES      := full minimal dev
+IMAGES_TYPES      := full minimal
 DISTROS           := alpine ubuntu
 alpine_images     := $(IMAGES_TYPES:%=docker-alpine-%)
 ubuntu_images     := $(IMAGES_TYPES:%=docker-ubuntu-%)
