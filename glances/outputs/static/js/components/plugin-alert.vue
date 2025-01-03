@@ -20,7 +20,7 @@
             <span v-show="!alert.ongoing"> {{ alert.state }} on </span>
             <span :class="alert.state.toLowerCase()">{{ alert.type }}</span>
             <span>({{ $filters.number(alert.max, 1) }})</span>
-            <span>: {{ alert.top }}</span>
+            <span>{{ alert.top }}</span>
           </td>
         </tr>
       </tbody>
@@ -53,7 +53,9 @@ export default {
         alert.min = alertStats.min;
         alert.avg = alertStats.avg;
         alert.max = alertStats.max;
-        alert.top = alertStats.top.join(', ');
+        if (alertStats.top.length > 0) {
+          alert.top = ': ' + alertStats.top.join(', ');
+        }
 
         if (!alert.ongoing) {
           const duration = alert.end - alert.begin;

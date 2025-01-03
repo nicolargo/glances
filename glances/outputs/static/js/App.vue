@@ -6,8 +6,9 @@
     <main v-else>
         <!-- Display minimal header on low screen size (smarthphone) -->
         <div class="d-sm-none">
-            <div class="header-small d-flex justify-content-center flex-row">
-                <div v-if="!args.disable_system"><glances-plugin-system :data="data"></glances-plugin-system></div>
+            <div class="header-small">
+                <div v-if="!args.disable_system"><glances-plugin-hostname :data="data"></glances-plugin-hostname></div>
+                <div v-if="!args.disable_uptime"><glances-plugin-uptime :data="data"></glances-plugin-uptime></div>
             </div>
         </div>
         <!-- Display standard header on others screen sizes -->
@@ -15,12 +16,12 @@
             <div class="header d-flex justify-content-between flex-row">
                 <div class="" v-if="!args.disable_system"><glances-plugin-system :data="data"></glances-plugin-system>
                 </div>
-                <div class="d-none d-md-block" v-if="!args.disable_ip"><glances-plugin-ip
+                <div class="d-none d-lg-block" v-if="!args.disable_ip"><glances-plugin-ip
                         :data="data"></glances-plugin-ip>
                 </div>
                 <div class="d-none d-xl-block" v-if="!args.disable_now"><glances-plugin-now
                         :data="data"></glances-plugin-now></div>
-                <div class="d-none d-lg-block" v-if="!args.disable_uptime"><glances-plugin-uptime
+                <div class="d-none d-md-block" v-if="!args.disable_uptime"><glances-plugin-uptime
                         :data="data"></glances-plugin-uptime></div>
             </div>
         </div>
@@ -30,7 +31,7 @@
             </div>
         </div>
         <!-- Display top menu with CPU, MEM, LOAD...-->
-        <div class="d-flex justify-content-between flex-row">
+        <div class="top d-flex justify-content-between flex-row">
             <!-- Quicklook -->
             <div class="d-none d-md-block" v-if="!args.disable_quicklook">
                 <glances-plugin-quicklook :data="data"></glances-plugin-quicklook>
@@ -67,7 +68,7 @@
             </div>
         </div>
         <!-- Display bottom of the screen with sidebar and processlist -->
-        <div class="container-fluid">
+        <div class="bottom container-fluid">
             <div class="row">
                 <div class="col-3 d-none d-lg-block"
                     :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }"
@@ -104,6 +105,7 @@ import GlancesPluginContainers from './components/plugin-containers.vue';
 import GlancesPluginFolders from './components/plugin-folders.vue';
 import GlancesPluginFs from './components/plugin-fs.vue';
 import GlancesPluginGpu from './components/plugin-gpu.vue';
+import GlancesPluginHostname from './components/plugin-hostname.vue';
 import GlancesPluginIp from './components/plugin-ip.vue';
 import GlancesPluginIrq from './components/plugin-irq.vue';
 import GlancesPluginLoad from './components/plugin-load.vue';
@@ -137,6 +139,7 @@ export default {
         GlancesPluginFolders,
         GlancesPluginFs,
         GlancesPluginGpu,
+        GlancesPluginHostname,
         GlancesPluginIp,
         GlancesPluginIrq,
         GlancesPluginLoad,
