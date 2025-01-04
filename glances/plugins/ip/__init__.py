@@ -24,6 +24,15 @@ except ImportError as e:
 else:
     import_error_tag = False
 
+try:
+    netifaces.default_gateway()
+except Exception:
+    import_error_tag = True
+    logger.warning("Netifaces2 should be installed in your Python environment, IP plugin is disabled")
+else:
+    import_error_tag = False
+
+
 # Fields description
 # description: human readable description
 # short_name: shortname to use un UI
