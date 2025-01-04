@@ -803,13 +803,21 @@ class _GlancesCurses:
         for p in self._right_sidebar():
             if (hasattr(self.args, 'enable_' + p) or hasattr(self.args, 'disable_' + p)) and p in stat_display:
                 self.new_line()
-                if p == 'processlist':
+                if p in ['processlist', 'programlist']:
+                    p_index = self._right_sidebar().index(p) + 1
                     self.display_plugin(
-                        stat_display['processlist'],
+                        stat_display[p],
                         display_optional=(self.term_window.getmaxyx()[1] > 102),
                         display_additional=(not MACOS),
                         max_y=(
-                            self.term_window.getmaxyx()[0] - self.get_stats_display_height(stat_display['alert']) - 2
+                            self.term_window.getmaxyx()[0]
+                            - sum(
+                                [
+                                    self.get_stats_display_height(stat_display[i])
+                                    for i in self._right_sidebar()[p_index:]
+                                ]
+                            )
+                            - 2
                         ),
                     )
                 else:
