@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -15,13 +14,12 @@ This plugin tails a file (given by the user), displaying:
 - last N lines
 """
 
-import os
-import time
 import datetime
+import os
+from typing import Optional
 
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.globals import bytes2human
 
 # -----------------------------------------------------------------------------
 # Globals
@@ -58,6 +56,7 @@ items_history_list = [
 # Plugin class
 # -----------------------------------------------------------------------------
 
+
 class PluginModel(GlancesPluginModel):
     """Tailer plugin main class.
 
@@ -78,9 +77,9 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the TUI
         self.display_curse = True
 
-        # Optionally read from the config file [tail] section
+        # Optionally read from the config file [tailer] section
         # e.g.:
-        # [tail]
+        # [tailer]
         # filename=/var/log/syslog
         # lines=10
         self.default_filename = config.get_value(self.plugin_name, 'filename', default='/var/log/syslog')
@@ -162,7 +161,6 @@ class PluginModel(GlancesPluginModel):
 
     def _tail_file(self, filename, num_lines):
         """Return (total_line_count, list_of_last_N_lines)."""
-        lines = []
         with open(filename, 'rb') as f:
             # If the file is huge, you might want a more efficient way to read
             # the last N lines rather than reading the entire file.
@@ -188,24 +186,17 @@ class PluginModel(GlancesPluginModel):
         for stat_dict in self.get_raw():
             fsize = stat_dict.get("file_size", 0)
             # Example: decorate if file > 1GB
-            if fsize > 1024 ** 3:
+            if fsize > 1024**3:
                 self.views[stat_dict[self.get_key()]]["file_size"]["decoration"] = self.get_alert(
                     fsize, header='bigfile'
                 )
 
-    def msg_curse(self, args=None, max_width=None):
+    def msg_curse(self, args=None, max_width: Optional[int] = None) -> list[str]:
         """Return the dict (list of lines) to display in the TUI."""
         ret = []
 
         # If no stats or disabled, return empty
         if not self.stats or self.is_disabled():
-            return ret
-
-        if max_width:
-            name_max_width = max_width - 20
-        else:
-            # No max_width defined
-            logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
         # Header
@@ -224,21 +215,21 @@ class PluginModel(GlancesPluginModel):
 
             # 1) Filename
             msg_filename = f"File: {filename}"
-            ret.append(self.curse_add_line(msg_filename[:name_max_width], "NORMAL"))
+            ret.append(self.curse_add_line(msg_filename))
 
             # 2) File size + last modified time
-            msg_meta = (f"Size: {bytes2human(file_size)}, "
-                        f"Last Modified: {last_modified}, "
-                        f"Total Lines: {line_count}")
+            msg_meta = (
+                f"Size: {self.auto_unit(file_size)}, " f"Last Modified: {last_modified}, " f"Total Lines: {line_count}"
+            )
             ret.append(self.curse_new_line())
-            ret.append(self.curse_add_line(msg_meta, "NORMAL"))
+            ret.append(self.curse_add_line(msg_meta))
 
             # 3) Last N lines
             ret.append(self.curse_new_line())
-            ret.append(self.curse_add_line("Last lines:", "NORMAL"))
+            ret.append(self.curse_add_line("Last lines:"))
             for line in last_lines:
                 ret.append(self.curse_new_line())
-                ret.append(self.curse_add_line(f"  {line}", "NORMAL"))
+                ret.append(self.curse_add_line(f"  {line}"))
 
             ret.append(self.curse_new_line())
 

@@ -84,6 +84,7 @@
                     <glances-plugin-containers v-if="!args.disable_containers" :data="data"></glances-plugin-containers>
                     <glances-plugin-process :data="data"></glances-plugin-process>
                     <glances-plugin-alert v-if="!args.disable_alert" :data="data"></glances-plugin-alert>
+                    <glances-plugin-tailer v-if="!args.disable_tailer" :data="data"></glances-plugin-tailer>
                 </div>
             </div>
         </div>
@@ -125,7 +126,7 @@ import GlancesPluginUptime from './components/plugin-uptime.vue';
 import GlancesPluginVms from './components/plugin-vms.vue';
 import GlancesPluginWifi from './components/plugin-wifi.vue';
 import GlancesPluginTailer from './components/plugin-tailer.vue';
-    
+
 import uiconfig from './uiconfig.json';
 
 export default {
