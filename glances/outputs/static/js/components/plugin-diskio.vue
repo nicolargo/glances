@@ -4,16 +4,16 @@
             <thead>
                 <tr>
                     <th scope="col">DISK I/O</th>
-                    <th scope="col" class="text-end w-25" v-show="!args.diskio_iops">R/s</th>
-                    <th scope="col" class="text-end w-25" v-show="!args.diskio_iops">W/s</th>
-                    <th scope="col" class="text-end w-25" v-show="args.diskio_iops">IOR/s</th>
-                    <th scope="col" class="text-end w-25" v-show="args.diskio_iops">IOW/s</th>
+                    <th scope="col" class="text-end w-25" v-show="!args.diskio_iops">Rps</th>
+                    <th scope="col" class="text-end w-25" v-show="!args.diskio_iops">Wps</th>
+                    <th scope="col" class="text-end w-25" v-show="args.diskio_iops">IORps</th>
+                    <th scope="col" class="text-end w-25" v-show="args.diskio_iops">IOWps</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(disk, diskId) in disks" :key="diskId">
-                    <td scope="row">
-                        {{ $filters.minSize(disk.alias ? disk.alias : disk.name, 32) }}
+                    <td scope="row" class="text-truncate">
+                        {{ $filters.minSize(disk.alias ? disk.alias : disk.name, 16) }}
                     </td>
                     <td class="text-end w-25" :class="getDecoration(disk.name, 'write_bytes_rate_per_sec')"
                         v-show="!args.diskio_iops">
@@ -76,9 +76,9 @@ export default {
                     }
                 };
             }).filter(disk => {
-              const readBytesRate = this.view[disk.name]['read_bytes_rate_per_sec'];
-              const writeBytesRate = this.view[disk.name]['write_bytes_rate_per_sec'];
-              return (!readBytesRate || readBytesRate.hidden === false) && (!writeBytesRate || writeBytesRate.hidden === false);
+                const readBytesRate = this.view[disk.name]['read_bytes_rate_per_sec'];
+                const writeBytesRate = this.view[disk.name]['write_bytes_rate_per_sec'];
+                return (!readBytesRate || readBytesRate.hidden === false) && (!writeBytesRate || writeBytesRate.hidden === false);
             });
             return orderBy(disks, ['name']);
         },

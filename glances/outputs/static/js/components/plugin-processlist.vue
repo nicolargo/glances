@@ -2,7 +2,7 @@
 
     <!-- Display processes -->
     <section class="plugin" id="processlist" v-if="!args.programs">
-        <div class="table-responsive d-md-none">
+        <div class="table-responsive d-lg-none">
             <table class="table table-sm table-borderless table-striped table-hover">
                 <thead>
                     <tr>
@@ -55,7 +55,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="table-responsive-md d-none d-md-block">
+        <div class="table-responsive-md d-none d-lg-block">
             <table class="table table-sm table-borderless table-striped table-hover">
                 <thead>
                     <tr>
@@ -99,13 +99,13 @@
                         <td scope="col" class="" :class="['sortable', sorter.column === 'io_counters' && 'sort']"
                             v-show="ioReadWritePresentProcesses && !getDisableStats().includes('io_counters')"
                             @click="$emit('update:sorter', 'io_counters')">
-                            IOR
+                            IORps
                         </td>
                         <td scope="col" class="text-start"
                             :class="['sortable', sorter.column === 'io_counters' && 'sort']"
                             v-show="ioReadWritePresentProcesses && !getDisableStats().includes('io_counters')"
                             @click="$emit('update:sorter', 'io_counters')">
-                            IOW
+                            IOWps
                         </td>
                         <td scope="col" :class="['sortable', sorter.column === 'name' && 'sort']"
                             @click="$emit('update:sorter', 'name')" v-show="!getDisableStats().includes('cmdline')">
@@ -175,7 +175,7 @@
 
     <!-- Display programs -->
     <section class="plugin" id="processlist" v-if="args.programs">
-        <div class="table-responsive d-md-none">
+        <div class="table-responsive d-lg-none">
             <table class="table table-sm table-borderless table-striped table-hover">
                 <thead>
                     <tr>
@@ -222,7 +222,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="table-responsive d-none d-md-block">
+        <div class="table-responsive d-none d-lg-block">
             <table class="table table-sm table-borderless table-striped table-hover">
                 <thead>
                     <tr>
@@ -266,13 +266,13 @@
                         <td scope="row" class="" :class="['sortable', sorter.column === 'io_counters' && 'sort']"
                             v-show="ioReadWritePresentPrograms && !getDisableStats().includes('io_counters')"
                             @click="$emit('update:sorter', 'io_counters')">
-                            IOR
+                            IORps
                         </td>
                         <td scope="row" class="text-start"
                             :class="['sortable', sorter.column === 'io_counters' && 'sort']"
                             v-show="ioReadWritePresentPrograms && !getDisableStats().includes('io_counters')"
                             @click="$emit('update:sorter', 'io_counters')">
-                            IOW
+                            IOWps
                         </td>
                         <td scope="row" :class="['sortable', sorter.column === 'name' && 'sort']"
                             @click="$emit('update:sorter', 'name')" v-show="!getDisableStats().includes('cmdline')">
