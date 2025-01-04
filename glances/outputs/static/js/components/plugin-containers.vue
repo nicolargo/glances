@@ -3,7 +3,7 @@
         <span class="title">CONTAINERS</span>
         <span v-show="containers.length > 1">{{ containers.length }} sorted by {{
             sorter.getColumnLabel(sorter.column)
-        }}</span>
+            }}</span>
         <div class="table-responsive d-md-none">
             <table class="table table-sm table-borderless table-striped table-hover">
                 <thead>
@@ -75,10 +75,10 @@
                             MEM
                         </td>
                         <td scope="col" v-show="!getDisableStats().includes('mem')">MAX</td>
-                        <td scope="col" v-show="!getDisableStats().includes('diskio')">IOR</td>
-                        <td scope="col" v-show="!getDisableStats().includes('diskio')">IOW</td>
-                        <td scope="col" v-show="!getDisableStats().includes('networkio')">RX</td>
-                        <td scope="col" v-show="!getDisableStats().includes('networkio')">TX</td>
+                        <td scope="col" v-show="!getDisableStats().includes('diskio')">IORps</td>
+                        <td scope="col" v-show="!getDisableStats().includes('diskio')">IOWps</td>
+                        <td scope="col" v-show="!getDisableStats().includes('networkio')">RXps</td>
+                        <td scope="col" v-show="!getDisableStats().includes('networkio')">TXps</td>
                         <td scope="col" v-show="!getDisableStats().includes('command')">Command</td>
                     </tr>
                 </thead>

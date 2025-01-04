@@ -70,7 +70,7 @@
         <!-- Display bottom of the screen with sidebar and processlist -->
         <div class="bottom container-fluid">
             <div class="row">
-                <div class="col-3 d-none d-lg-block"
+                <div class="col-3 d-none d-md-block"
                     :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }"
                     v-if="!args.disable_left_sidebar">
                     <template v-for="plugin in leftMenu">

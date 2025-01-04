@@ -16,8 +16,9 @@
             <tbody>
                 <tr v-for="(fs, fsId) in fileSystems" :key="fsId">
                     <td scope="row">
-                        {{ $filters.minSize(fs.alias ? fs.alias : fs.mountPoint, 26, begin=false) }}
-                        <span v-if="(fs.alias ? fs.alias : fs.mountPoint).length + fs.name.length <= 24" class="visible-lg-inline">
+                        {{ $filters.minSize(fs.alias ? fs.alias : fs.mountPoint, 16, begin = false) }}
+                        <span v-if="(fs.alias ? fs.alias : fs.mountPoint).length + fs.name.length <= 15"
+                            class="visible-lg-inline">
                             ({{ fs.name }})
                         </span>
                     </td>
