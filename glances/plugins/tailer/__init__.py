@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 # This file is part of Glances.
 #
@@ -55,7 +56,6 @@ items_history_list = [
 # -----------------------------------------------------------------------------
 # Plugin class
 # -----------------------------------------------------------------------------
-
 
 class PluginModel(GlancesPluginModel):
     """Tailer plugin main class.
@@ -137,6 +137,7 @@ class PluginModel(GlancesPluginModel):
 
         if not os.path.isfile(filename):
             logger.debug(f"File not found: {filename}")
+            result["last_lines"] = ["", "File Not Found"]
             return result
 
         try:
@@ -147,11 +148,9 @@ class PluginModel(GlancesPluginModel):
             # File size
             result["file_size"] = os.path.getsize(filename)
 
-            # Count lines, read last N lines
+            # Count lines, read last N lines (efficiently for large files)
             line_count, last_lines = self._tail_file(filename, num_lines)
             result["line_count"] = line_count
-            # Store the last lines as a single string or as a list.
-            # For display convenience, we might store them as a list of strings.
             result["last_lines"] = last_lines
 
         except Exception as e:
@@ -160,39 +159,79 @@ class PluginModel(GlancesPluginModel):
         return result
 
     def _tail_file(self, filename, num_lines):
-        """Return (total_line_count, list_of_last_N_lines)."""
-        with open(filename, 'rb') as f:
-            # If the file is huge, you might want a more efficient way to read
-            # the last N lines rather than reading the entire file.
-            # For simplicity, read all lines:
-            content = f.read().splitlines()
-            total_lines = len(content)
-            # Extract the last num_lines lines
-            last_lines = content[-num_lines:] if total_lines >= num_lines else content
-            # Decode to str (assuming UTF-8) for each line
-            last_lines_decoded = [line.decode('utf-8', errors='replace') for line in last_lines]
+        """
+        Return (total_line_count, list_of_last_N_lines) for a potentially huge file.
+        
+        1) Count total lines by reading the file in chunks (no huge memory usage).
+        2) Retrieve the last N lines by reading from the end in chunks.
+        """
 
-        return total_lines, last_lines_decoded
+        # 1) Count total lines in a streaming fashion
+        chunk_size = 8192
+        total_line_count = 0
+
+        with open(filename, 'rb') as f:
+            while True:
+                chunk = f.read(chunk_size)
+                if not chunk:
+                    break
+                total_line_count += chunk.count(b'\n')
+
+        # If file isn't empty and doesn't end with a newline, that last partial line counts
+        file_size = os.path.getsize(filename)
+        if file_size > 0:
+            with open(filename, 'rb') as f:
+                # Seek to last byte
+                f.seek(-1, os.SEEK_END)
+                if f.read(1) != b'\n':
+                    total_line_count += 1
+
+        # 2) Retrieve last N lines from the end
+        # We'll read backward in chunks until we find num_lines newlines
+        lines_reversed = []
+        newlines_found = 0
+
+        with open(filename, 'rb') as f:
+            # Start from end of file
+            f.seek(0, os.SEEK_END)
+            position = f.tell()
+
+            while position > 0 and newlines_found <= num_lines:
+                # Read chunk or what's left from start
+                read_size = min(chunk_size, position)
+                position -= read_size
+                f.seek(position)
+
+                chunk = f.read(read_size)
+                # Reverse the chunk (we’re scanning backwards)
+                reversed_chunk = chunk[::-1]
+
+                # For each byte in reversed_chunk
+                for b in reversed_chunk:
+                    # b'\n' is ASCII 10
+                    if b == 10:
+                        newlines_found += 1
+                        if newlines_found > num_lines:
+                            break
+                    lines_reversed.append(b)
+
+                if newlines_found > num_lines:
+                    break
+
+        # lines_reversed now includes the bytes for at least N lines in reverse order
+        lines_reversed.reverse()
+        last_data = bytes(lines_reversed).decode('utf-8', errors='replace')
+        all_last_lines = last_data.splitlines()
+        last_n_lines = all_last_lines[-num_lines:] if len(all_last_lines) > num_lines else all_last_lines
+
+        return total_line_count, last_n_lines
 
     def update_views(self):
-        """Update stats views (optional).
-
-        If you need to set decorations (alerts or color formatting),
-        you can do it here.
-        """
+        """Update stats views (optional)."""
         super().update_views()
 
-        # Example: if file_size is above a threshold, we could color it in TUI
-        for stat_dict in self.get_raw():
-            fsize = stat_dict.get("file_size", 0)
-            # Example: decorate if file > 1GB
-            if fsize > 1024**3:
-                self.views[stat_dict[self.get_key()]]["file_size"]["decoration"] = self.get_alert(
-                    fsize, header='bigfile'
-                )
-
     def msg_curse(self, args=None, max_width: Optional[int] = None) -> list[str]:
-        """Return the dict (list of lines) to display in the TUI."""
+        """Return the list of lines to display in the TUI."""
         ret = []
 
         # If no stats or disabled, return empty
@@ -210,27 +249,24 @@ class PluginModel(GlancesPluginModel):
             last_modified = stat.get("last_modified", "")
             last_lines = stat.get("last_lines", [])
 
-            # New line for each file
-            ret.append(self.curse_new_line())
-
-            # 1) Filename
-            msg_filename = f"File: {filename}"
-            ret.append(self.curse_add_line(msg_filename))
-
-            # 2) File size + last modified time
+            # (1) File info
             msg_meta = (
-                f"Size: {self.auto_unit(file_size)}, " f"Last Modified: {last_modified}, " f"Total Lines: {line_count}"
+                f"File: {filename}, "
+                f"Size: {self.auto_unit(file_size)}, "
+                f"Last Modified: {last_modified}, "
+                f"Total Lines: {line_count}"
             )
             ret.append(self.curse_new_line())
             ret.append(self.curse_add_line(msg_meta))
 
-            # 3) Last N lines
-            ret.append(self.curse_new_line())
-            ret.append(self.curse_add_line("Last lines:"))
+            # (2) Last N lines
+            first_nonblank = True
             for line in last_lines:
-                ret.append(self.curse_new_line())
+                # If it's the first non-blank line, add a leading blank line
+                if first_nonblank:
+                    ret.append(self.curse_new_line())
+                    first_nonblank = False
                 ret.append(self.curse_add_line(f"  {line}"))
-
-            ret.append(self.curse_new_line())
+                ret.append(self.curse_new_line())
 
         return ret
