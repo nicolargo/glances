@@ -3,6 +3,23 @@
 ============================================================================
 
 ===============
+Version 4.3.0.8
+===============
+
+Bug corrected:
+
+* IP plugin broken with Netifaces2 #3076
+* WebUI if is notresponsive on mobile #3059 (second run)
+
+===============
+Version 4.3.0.7
+===============
+
+Bug corrected:
+
+* WebUI if is notresponsive on mobile #3059
+
+===============
 Version 4.3.0.6
 ===============
 

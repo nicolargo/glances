@@ -24,6 +24,15 @@ except ImportError as e:
 else:
     import_error_tag = False
 
+try:
+    netifaces.default_gateway()
+except Exception:
+    import_error_tag = True
+    logger.warning("Netifaces2 should be installed in your Python environment, IP plugin is disabled")
+else:
+    import_error_tag = False
+
+
 # Fields description
 # description: human readable description
 # short_name: shortname to use un UI
@@ -85,34 +94,35 @@ class PluginModel(GlancesPluginModel):
             "public_refresh_interval", default=self._default_public_refresh_interval
         )
 
-    def get_private_ip(self, stats, stop=False):
+    def get_default_gateway(self):
         # Get the default gateway thanks to the netifaces lib
+        # Return a tupple with: ('192.168.1.1', 'wlp0s20f3')
         try:
-            default_gw = netifaces.gateways()[netifaces.AF_INET][0]
+            default_gw = netifaces.default_gateway()[netifaces.AF_INET]
         except (KeyError, AttributeError) as e:
             logger.debug(f"Cannot grab default gateway IP address ({e})")
-            stop = True
-        else:
-            stats['gateway'] = default_gw[0]
+            return None
+        return default_gw
 
-        return (stop, stats)
-
-    def get_first_ip(self, stats, stop=False):
+    def get_first_ip(self, stats):
+        default_gateway = self.get_default_gateway()
         try:
-            default_gw = netifaces.gateways()[netifaces.AF_INET][0]
-            address = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['addr']
-            mask = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['netmask']
+            if not default_gateway:
+                default_interface = netifaces.interfaces_by_index()[netifaces.AF_INET]
+            else:
+                default_interface = default_gateway[1]
+            address = netifaces.ifaddresses(default_interface)[netifaces.AF_INET][0]['addr']
+            mask = netifaces.ifaddresses(default_interface)[netifaces.AF_INET][0]['mask']
         except (KeyError, AttributeError) as e:
             logger.debug(f"Cannot grab private IP address ({e})")
-            stop = True
         else:
             stats['address'] = address
             stats['mask'] = mask
-            stats['mask_cidr'] = self.ip_to_cidr(stats['mask'])
+            stats['mask_cidr'] = self.ip_to_cidr(mask)
 
-        return (stop, stats)
+        return stats
 
-    def get_public_ip(self, stats, stop=True):
+    def get_public_ip(self, stats):
         time_since_update = getTimeSinceLastUpdate('public-ip')
         try:
             if not self.public_disabled and (
@@ -128,7 +138,7 @@ class PluginModel(GlancesPluginModel):
             )
             stats['public_info_human'] = self.public_info_for_human(self.public_info)
 
-        return (stop, stats)
+        return stats
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
@@ -153,15 +163,9 @@ class PluginModel(GlancesPluginModel):
         return self.stats
 
     def get_stats_for_local_input(self, stats):
-        # Private IP address
-        stop, stats = self.get_private_ip(stats)
-        # If multiple IP addresses are available, only the one with the default gateway is returned
-        if not stop:
-            stop, stats = self.get_first_ip(stats)
-        # Public IP address
-        if not stop:
-            stop, stats = self.get_public_ip(stats)
-
+        # Get Public and Private IP address
+        if self.get_first_ip(stats):
+            self.get_public_ip(stats)
         return stats
 
     def __hide_ip(self, ip):
@@ -182,9 +186,9 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg, optional=True))
 
         # Start with the private IP information
-        msg = 'IP '
-        ret.append(self.curse_add_line(msg, 'TITLE', optional=True))
         if 'address' in self.stats:
+            msg = 'IP '
+            ret.append(self.curse_add_line(msg, 'TITLE', optional=True))
             msg = '{}'.format(self.stats['address'])
             ret.append(self.curse_add_line(msg, optional=True))
         if 'mask_cidr' in self.stats:

@@ -10,19 +10,25 @@
                                 <tbody>
                                     <tr>
                                         <th scope="col">CPU</th>
-                                        <td scope="col" class="text-end" :class="getDecoration('total')">{{ total }}%</td>
+                                        <td scope="col" class="text-end" :class="getDecoration('total')"><span>{{
+                                            total }}%</span>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td scope="col">user:</td>
-                                        <td scope="col" class="text-end" :class="getDecoration('user')">{{ user }}%</td>
+                                        <td scope="col" class="text-end" :class="getDecoration('user')"><span>{{
+                                            user }}%</span></td>
                                     </tr>
                                     <tr>
                                         <td scope="col">system:</td>
-                                        <td scope="col" class="text-end" :class="getDecoration('system')">{{ system }}%</td>
+                                        <td scope="col" class="text-end" :class="getDecoration('system')"><span>{{
+                                            system }}%</span>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td scope="col" v-if="iowait != undefined">iowait:</td>
-                                        <td scope="col" class="text-end" v-if="iowait != undefined" :class="getDecoration('iowait')">{{ iowait }}%</td>
+                                        <td scope="col" class="text-end" v-if="iowait != undefined"
+                                            :class="getDecoration('iowait')"><span>{{ iowait }}%</span></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -33,21 +39,29 @@
                                     <tbody>
                                         <tr>
                                             <td scope="col" v-show="idle != undefined">idle:</td>
-                                            <td scope="col" class="text-end" v-show="idle != undefined">{{ idle }}%</td>
+                                            <td scope="col" class="text-end" v-show="idle != undefined"><span>{{ idle
+                                                    }}%</span></td>
                                         </tr>
                                         <tr>
                                             <td scope="col" v-show="irq != undefined">irq:</td>
-                                            <td scope="col" class="text-end" v-show="irq != undefined">{{ irq }}%</td>
+                                            <td scope="col" class="text-end" v-show="irq != undefined"><span>{{ irq
+                                                    }}%</span></td>
                                         </tr>
                                         <tr>
                                             <td scope="col" v-show="nice != undefined">nice:</td>
-                                            <td scope="col" class="text-end" v-show="nice != undefined">{{ nice }}%</td>
+                                            <td scope="col" class="text-end" v-show="nice != undefined"><span>{{ nice
+                                                    }}%</span></td>
                                         </tr>
                                         <tr>
                                             <td scope="col" v-if="iowait == undefined && dpc != undefined">dpc:</td>
-                                            <td scope="col" class="text-end" v-if="iowait == undefined && dpc != undefined" :class="getDecoration('dpc')">{{ dpc }}%</td>
+                                            <td scope="col" class="text-end"
+                                                v-if="iowait == undefined && dpc != undefined"
+                                                :class="getDecoration('dpc')"><span>{{ dpc
+                                                    }}%</span></td>
                                             <td scope="col" v-show="steal != undefined">steal:</td>
-                                            <td scope="col" class="text-end" v-show="steal != undefined" :class="getDecoration('steal')">{{ steal }}%</td>
+                                            <td scope="col" class="text-end" v-show="steal != undefined"
+                                                :class="getDecoration('steal')"><span>{{ steal
+                                                    }}%</span></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -58,23 +72,36 @@
                                 <table class="table table-sm table-borderless">
                                     <tbody>
                                         <tr>
-                                            <td scope="col" v-if="nice != undefined && ctx_switches != undefined">ctx_sw:</td>
-                                            <td scope="col"
-                                                class="text-end"
+                                            <td scope="col" v-if="nice != undefined && ctx_switches != undefined">
+                                                ctx_sw:</td>
+                                            <td scope="col" class="text-end"
                                                 v-if="nice != undefined && ctx_switches != undefined"
-                                                :class="getDecoration('ctx_switches')">{{ ctx_switches }}</td>
+                                                :class="getDecoration('ctx_switches')"><span>{{ ctx_switches
+                                                    }}</span>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td scope="col" v-show="interrupts != undefined">inter:</td>
-                                            <td scope="col" class="text-end" v-show="interrupts != undefined">{{ interrupts }}</td>
+                                            <td scope="col" class="text-end" v-show="interrupts != undefined"><span>{{
+                                                interrupts
+                                            }}</span></td>
                                         </tr>
                                         <tr>
-                                            <td scope="col" v-if="!isWindows && !isSunOS && soft_interrupts != undefined">sw_int:</td>
-                                            <td scope="col" class="text-end" v-if="!isWindows && !isSunOS && soft_interrupts != undefined">{{ soft_interrupts }}</td>
+                                            <td scope="col"
+                                                v-if="!isWindows && !isSunOS && soft_interrupts != undefined">sw_int:
+                                            </td>
+                                            <td scope="col" class="text-end"
+                                                v-if="!isWindows && !isSunOS && soft_interrupts != undefined"><span>{{
+                                                    soft_interrupts
+                                                }}</span></td>
                                         </tr>
                                         <tr>
                                             <td scope="col" v-if="isLinux && guest != undefined">guest:</td>
-                                            <td scope="col" class="text-end" v-if="isLinux && guest != undefined">{{ guest }}%</td>
+                                            <td scope="col" class="text-end" v-if="isLinux && guest != undefined">
+                                                <span>{{
+                                                    guest
+                                                    }}%</span>
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>

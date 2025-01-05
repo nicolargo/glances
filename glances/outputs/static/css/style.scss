@@ -83,10 +83,20 @@ body {
 .container-fluid {
     margin-left: 0px;
     margin-right: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
 }
 
 .header {
     height: 30px;
+}
+
+.header-small {
+    height: 50px;
+}
+
+.header-small > div:nth-child(1) > section:nth-child(1) {
+    margin-bottom: 0em;
 }
 
 .top-min {
@@ -105,6 +115,10 @@ body {
 .sidebar-max {
     overflow-y: auto;
     height: calc(100vh - 30px - 180px);
+}
+
+.inline {
+    display: inline-block;
 }
 
 // Table
@@ -139,10 +153,9 @@ body {
 }
 
 .text-truncate {
-    // display: block;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 #browser .table-hover tbody tr:hover td {
@@ -179,6 +192,10 @@ body {
     }
 }
 
+.frequency {
+    display: inline-block;
+    width: 8em;
+}
 
 #ip {
     span {
@@ -203,6 +220,10 @@ body {
         width: 4em;
     }
     * > th:nth-last-child(1), td:nth-last-child(1) {
+        width: 4em;
+    }
+    * > td span {
+        display: inline-block;
         width: 4em;
     }
     .progress {
@@ -230,6 +251,41 @@ body {
         overflow: hidden;
         width: 100%;
         text-overflow: ellipsis;
+    }
+}
+
+#cpu {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#gpu {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#mem {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#memswap {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#load {
+    * > td span {
+        display: inline-block;
+        width: 3em;
     }
 }
 
@@ -274,6 +330,7 @@ body {
     .table {
         margin-bottom: 1em;
     }
+    // Default column size
     * > td:not(:last-child) {
         width: 5em;
     }
@@ -287,6 +344,7 @@ body {
         white-space: nowrap;
         overflow: hidden;
     }
+    // Status
     * > td:nth-child(4) {
         width: 6em;
     }
@@ -295,20 +353,13 @@ body {
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    * > td:nth-child(8) {
-        width: 10em;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    * > td:nth-child(9), td:nth-child(10) {
-        width: 8em;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+    // Some column are align to the right
     * > td:nth-child(7), td:nth-child(9), td:nth-child(11) {
         text-align: right;
     }
+    // Command
     * > td:nth-child(13) {
+        text-align: left;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
@@ -344,29 +395,35 @@ body {
 #processlist {
     overflow-y: auto;
     height: 600px;
+    .table {
+        margin-bottom: 1em;
+    }
+    // Default column size
     * > td:nth-child(-n+12) {
         width: 5em;
     }
+    // Some column are align to the right
     * > td:nth-child(5), td:nth-child(7), td:nth-child(9), td:nth-child(11) {
         text-align: right;
     }
+    // Process user
     * > td:nth-child(6) {
         text-overflow: ellipsis;
         white-space: nowrap;
-        width: 7em;
+        width: 6em;
     }
+    // Time
     * > td:nth-child(7) {
-        width: 7em;
+        width: 6em;
     }
-    * > td:nth-child(9),td:nth-child(10) {
+    // Nice and Status
+    * > td:nth-child(9), td:nth-child(10) {
         width: 2em;
     }
-    * > td:nth-child(13),* > td:nth-child(14) {
+    // Process name & Command line
+    * > td:nth-child(13), td:nth-child(14) {
         text-overflow: ellipsis;
         white-space: nowrap;
-    }
-    .table {
-        margin-bottom: 1em;
     }
 }
 

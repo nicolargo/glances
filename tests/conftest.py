@@ -74,7 +74,7 @@ def glances_webserver():
 
 
 @pytest.fixture(scope="session")
-def firefox_browser():
+def web_browser():
     """Init Firefox browser."""
     opt = ChromeOptions()
     opt.add_argument("--headless")

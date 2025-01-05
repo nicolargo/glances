@@ -2,7 +2,6 @@
     <section class="plugin" id="system">
         <span class="critical" v-if="isDisconnected">Disconnected from</span>
         <span class="title">{{ hostname }}</span>
-        <span class="text-truncate">{{ humanReadableName }}</span>
     </section>
 </template>
 
@@ -26,9 +25,6 @@ export default {
         },
         hostname() {
             return this.stats['hostname'];
-        },
-        humanReadableName() {
-            return this.stats['hr_name'];
         },
         isDisconnected() {
             return this.store.status === 'FAILURE';
