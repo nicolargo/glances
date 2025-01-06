@@ -175,6 +175,7 @@ class PluginModel(GlancesPluginModel):
                 chunk = f.read(chunk_size)
                 if not chunk:
                     break
+                # Each \r\n sequence contains a \n, so counting b'\n' is OK
                 total_line_count += chunk.count(b'\n')
 
         # If file isn't empty and doesn't end with a newline, that last partial line counts
@@ -183,11 +184,10 @@ class PluginModel(GlancesPluginModel):
             with open(filename, 'rb') as f:
                 # Seek to last byte
                 f.seek(-1, os.SEEK_END)
-                if f.read(1) != b'\n':
+                if f.read(1) not in (b'\n', b'\r'):
                     total_line_count += 1
 
         # 2) Retrieve last N lines from the end
-        # We'll read backward in chunks until we find num_lines newlines
         lines_reversed = []
         newlines_found = 0
 
@@ -197,19 +197,15 @@ class PluginModel(GlancesPluginModel):
             position = f.tell()
 
             while position > 0 and newlines_found <= num_lines:
-                # Read chunk or what's left from start
                 read_size = min(chunk_size, position)
                 position -= read_size
                 f.seek(position)
 
                 chunk = f.read(read_size)
-                # Reverse the chunk (we’re scanning backwards)
                 reversed_chunk = chunk[::-1]
 
-                # For each byte in reversed_chunk
                 for b in reversed_chunk:
-                    # b'\n' is ASCII 10
-                    if b == 10:
+                    if b == 10:  # b'\n'
                         newlines_found += 1
                         if newlines_found > num_lines:
                             break
@@ -220,8 +216,11 @@ class PluginModel(GlancesPluginModel):
 
         # lines_reversed now includes the bytes for at least N lines in reverse order
         lines_reversed.reverse()
+
+        # Decode to text and split lines. splitlines() handles \r, \n, \r\n, etc.
         last_data = bytes(lines_reversed).decode('utf-8', errors='replace')
         all_last_lines = last_data.splitlines()
+
         last_n_lines = all_last_lines[-num_lines:] if len(all_last_lines) > num_lines else all_last_lines
 
         return total_line_count, last_n_lines
@@ -262,7 +261,6 @@ class PluginModel(GlancesPluginModel):
             # (2) Last N lines
             first_nonblank = True
             for line in last_lines:
-                # If it's the first non-blank line, add a leading blank line
                 if first_nonblank:
                     ret.append(self.curse_new_line())
                     first_nonblank = False
