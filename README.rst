@@ -82,7 +82,7 @@ Any and all contributions are greatly appreciated.
 Requirements
 ============
 
-Glances is developped in Python. A minimal Python version 3.9 or higher
+Glances is developed in Python. A minimal Python version 3.9 or higher
 should be installed on your system.
 
 *Note for Python 2 users*
@@ -218,7 +218,7 @@ The glances script will be installed in the ~/.local/bin folder.
 Docker: the cloudy way
 ----------------------
 
-Glances Docker images are availables. You can use it to monitor your
+Glances Docker images are available. You can use it to monitor your
 server and all your containers !
 
 Get the Glances container:
@@ -227,7 +227,7 @@ Get the Glances container:
 
     docker pull nicolargo/glances:latest-full
 
-The following tags are availables:
+The following tags are available:
 
 - *latest-full* for a full Alpine Glances image (latest release) with all dependencies
 - *latest* for a basic Alpine Glances (latest release) version with minimal dependencies (FastAPI and Docker)
