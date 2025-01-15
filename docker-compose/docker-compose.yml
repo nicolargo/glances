@@ -23,7 +23,7 @@ services:
 #             - driver: nvidia
 #               count: 1
 #               capabilities: [gpu]
-#     # Uncomment to protect Glances WebUI by a login/password
+#     # Uncomment to protect Glances WebUI by a login/password (add --password to GLANCES_OPT)
 #     secrets:
 #       - source: glances_password
 #         target: /root/.config/glances/<login>.pwd
