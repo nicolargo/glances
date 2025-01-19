@@ -13,6 +13,7 @@ import psutil
 from glances.cpu_percent import cpu_percent
 from glances.globals import LINUX, SUNOS, WINDOWS, iterkeys
 from glances.plugins.core import PluginModel as CorePluginModel
+from glances.plugins.cpu.data_class import Stats
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
@@ -162,7 +163,8 @@ class PluginModel(GlancesPluginModel):
         """Update CPU stats using the input method."""
         # Grab stats into self.stats
         if self.input_method == 'local':
-            stats = self.update_local()
+            # stats = self.update_local()
+            stats = Stats(**self.update_local())
         elif self.input_method == 'snmp':
             stats = self.update_snmp()
 
