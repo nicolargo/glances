@@ -670,11 +670,10 @@ class _GlancesCurses:
             self.new_column()
             self.display_plugin(stat_display["ip"], display_optional=(self.term_window.getmaxyx()[1] >= 100))
         self.new_column()
-        self.display_plugin(
-            stat_display["uptime"], add_space=-(self.get_stats_display_width(stat_display["cloud"]) != 0)
-        )
+        cloud_width = self.get_stats_display_width(stat_display.get("cloud", 0))
+        self.display_plugin(stat_display["uptime"], add_space=-(cloud_width != 0))
         self.init_column()
-        if self.get_stats_display_width(stat_display["cloud"]) != 0:
+        if cloud_width != 0:
             # Second line (optional)
             self.new_line()
             self.display_plugin(stat_display["cloud"])
