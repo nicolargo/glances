@@ -106,7 +106,7 @@ class GlancesExport:
                 pass
 
         logger.debug(f"Load {section} from the Glances configuration file")
-        logger.debug(f"{section} parameters: {({opt: getattr(self, opt) for opt in mandatories + options})}")
+        logger.debug(f"{section} parameters: { ({opt: getattr(self, opt) for opt in mandatories + options}) }")
 
         return True
 
