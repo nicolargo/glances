@@ -271,7 +271,8 @@ class PluginModel(GlancesPluginModel):
                 if alert == 'DEFAULT':
                     # Not found ? Get back to default CPU threshold value
                     alert = self.get_alert(i['cpu']['total'], header='cpu')
-                self.views[i[self.get_key()]]['cpu']['decoration'] = alert
+                if 'cpu' in self.views[i[self.get_key()]]:
+                    self.views[i[self.get_key()]]['cpu']['decoration'] = alert
             # MEM alert
             if 'memory' in i and 'usage' in i['memory']:
                 # Looking for specific MEM container threshold in the conf file
@@ -286,7 +287,8 @@ class PluginModel(GlancesPluginModel):
                     alert = self.get_alert(
                         self.memory_usage_no_cache(i['memory']), maximum=i['memory']['limit'], header='mem'
                     )
-                self.views[i[self.get_key()]]['mem']['decoration'] = alert
+                if 'mem' in self.views[i[self.get_key()]]:
+                    self.views[i[self.get_key()]]['mem']['decoration'] = alert
 
         # Display Engine and Pod name ?
         show_pod_name = False
