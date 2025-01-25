@@ -82,7 +82,7 @@ class GlancesClientBrowser:
         # Test if client and server are in the same major version
         if not client.login():
             self.screen.display_popup(
-                "Sorry, cannot connect to '{}'\n" "See '{}' for more details".format(server['name'], LOG_FILENAME)
+                "Sorry, cannot connect to '{}'\nSee '{}' for more details".format(server['name'], LOG_FILENAME)
             )
 
             # Set the ONLINE status for the selected server
