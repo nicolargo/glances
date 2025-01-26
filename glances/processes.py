@@ -11,7 +11,16 @@ import os
 import psutil
 
 from glances.filter import GlancesFilter, GlancesFilterList
-from glances.globals import BSD, LINUX, MACOS, WINDOWS, iterkeys, list_of_namedtuple_to_list_of_dict, namedtuple_to_dict
+from glances.globals import (
+    BSD,
+    LINUX,
+    MACOS,
+    WINDOWS,
+    dictlist_first_key_value,
+    iterkeys,
+    list_of_namedtuple_to_list_of_dict,
+    namedtuple_to_dict,
+)
 from glances.logger import logger
 from glances.programs import processes_to_programs
 from glances.timer import Timer, getTimeSinceLastUpdate
@@ -651,6 +660,10 @@ class GlancesProcesses:
     def get_export(self):
         """Return the processlist for export."""
         return self.processlist_export
+
+    def get_stats(self, pid):
+        """Get stats for the given pid."""
+        return dictlist_first_key_value(self.processlist, 'pid', pid)
 
     @property
     def sort_key(self):
