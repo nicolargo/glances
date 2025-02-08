@@ -312,8 +312,8 @@ class GlancesProcesses:
         for k in self._max_values_list:
             self._max_values[k] = 0.0
 
-    def get_extended_stats(self, proc):
-        """Get the extended stats for the given PID."""
+    def set_extended_stats(self, proc):
+        """Set the extended stats for the given PID."""
         # - cpu_affinity (Linux, Windows, FreeBSD)
         # - ionice (Linux and Windows > Vista)
         # - num_ctx_switches (not available on Illumos/Solaris)
@@ -358,6 +358,16 @@ class GlancesProcesses:
             self.extended_process = ret
             ret['extended_stats'] = True
         return namedtuple_to_dict(ret)
+
+    def get_extended_stats(self):
+        """Return the extended stats.
+
+        Return the process stat when extended_stats = True
+        """
+        for p in self.processlist:
+            if p.get('extended_stats'):
+                return p
+        return None
 
     def __get_min_max_mean(self, proc, prefix=['cpu', 'memory']):
         """Return the min/max/mean for the given process"""
@@ -587,7 +597,7 @@ class GlancesProcesses:
 
             # Grab extended stats only for the selected process (see issue #2225)
             if self.extended_process is not None and proc['pid'] == self.extended_process['pid']:
-                proc.update(self.get_extended_stats(self.extended_process))
+                proc.update(self.set_extended_stats(self.extended_process))
                 self.extended_process = namedtuple_to_dict(proc)
 
             # Meta data
