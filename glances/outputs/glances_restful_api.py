@@ -239,6 +239,7 @@ class GlancesRestfulApi:
             f'{base_path}/all/views': self._api_all_views,
             f'{base_path}/pluginslist': self._api_plugins,
             f'{base_path}/serverslist': self._api_servers_list,
+            f'{base_path}/processes/extended': self._api_get_extended_processes,
             f'{base_path}/processes/{{pid}}': self._api_get_processes,
             f'{plugin_path}': self._api,
             f'{plugin_path}/history': self._api_history,
@@ -922,6 +923,23 @@ class GlancesRestfulApi:
         glances_processes.extended_process = process_stats
 
         return GlancesJSONResponse(True)
+
+    def _api_get_extended_processes(self):
+        """Glances API RESTful implementation.
+
+        Get the extended process stats (if set before)
+        HTTP/200 if OK
+        HTTP/400 if PID is not found
+        HTTP/404 if others error
+        """
+        process_stats = glances_processes.get_extended_stats()
+
+        if not process_stats:
+            process_stats = {}
+
+        print("Call _api_get_extended_processes")
+
+        return GlancesJSONResponse(process_stats)
 
     def _api_get_processes(self, pid: str):
         """Glances API RESTful implementation.

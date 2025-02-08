@@ -2,6 +2,7 @@
 
     <!-- Display processes -->
     <section class="plugin" id="processlist" v-if="!args.programs">
+        <div>PIN PROCESS: {{ extended_stat }} - {{ getPinProcess() }}</div>
         <div class="table-responsive d-lg-none">
             <table class="table table-sm table-borderless table-striped table-hover">
                 <thead>
@@ -31,7 +32,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(process, processId) in processes" :key="processId">
+                    <tr v-for="(process, processId) in processes" :key="processId" @click="setPinProcess(process)"
+                        style="cursor: pointer">
                         <td scope="row" :class="getCpuPercentAlert(process)"
                             v-show="!getDisableStats().includes('cpu_percent')">
                             {{ process.cpu_percent == -1 ? '?' : $filters.number(process.cpu_percent, 1) }}
@@ -114,7 +116,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(process, processId) in processes" :key="processId">
+                    <tr v-for="(process, processId) in processes" :key="processId" @click="setPinProcess(process.pid)"
+                        style="cursor: pointer">
                         <td scope="row" :class="getCpuPercentAlert(process)"
                             v-show="!getDisableStats().includes('cpu_percent')">
                             {{ process.cpu_percent == -1 ? '?' : $filters.number(process.cpu_percent, 1) }}
@@ -354,8 +357,19 @@ export default {
     },
     data() {
         return {
-            store
+            store,
+            extended_stat: undefined,
+            intervalId: null
         };
+    },
+    mounted() {
+        // Refresh every second
+        this.intervalId = setInterval(() => {
+            this.getPinProcess()
+        }, 1000)
+    },
+    beforeUnmount() {
+        clearInterval(this.intervalId)
     },
     computed: {
         args() {
@@ -527,7 +541,7 @@ export default {
             return this.config.outputs !== undefined
                 ? this.config.outputs.max_processes_display
                 : undefined;
-        }
+        },
     },
     methods: {
         getCpuPercentAlert(process) {
@@ -538,6 +552,15 @@ export default {
         },
         getDisableStats() {
             return GlancesHelper.getLimit('processlist', 'processlist_disable_stats') || [];
+        },
+        setPinProcess(pid) {
+            fetch('api/4/processes/extended/' + pid.toString(), { method: 'POST' })
+                .then((response) => response.json());
+        },
+        getPinProcess() {
+            fetch('api/4/processes/extended', { method: 'GET' })
+                .then((response) => response.json())
+                .then((response) => (this.extended_stat = response));
         }
     }
 };
