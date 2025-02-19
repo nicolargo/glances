@@ -20,7 +20,7 @@
         "less-loader": "^11.1.4",
         "sass": "^1.62.1",
         "sass-loader": "^13.2.2",
-        "style-loader": "^3.3.2",
+        "style-loader": "^4.0.0",
         "url-loader": "^4.1.1",
         "vue-loader": "^17.1.1",
         "webpack": "^5.94.0",
