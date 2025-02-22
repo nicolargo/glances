@@ -398,6 +398,11 @@ body {
     .table {
         margin-bottom: 1em;
     }
+
+    .table-hover tbody tr:hover td {
+        background: $glances-link-hover-color;
+    }
+
     // Default column size
     * > td:nth-child(-n+12) {
         width: 5em;
@@ -426,6 +431,7 @@ body {
         white-space: nowrap;
     }
 }
+
 
 #alerts {
     span {
