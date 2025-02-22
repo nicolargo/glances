@@ -225,7 +225,30 @@ def print_all():
     print('Get all Glances stats::')
     print('')
     print(f'    # curl {API_URL}/all')
-    print('    Return a very big dictionary (avoid using this request, performances will be poor)...')
+    print('    Return a very big dictionary with all stats')
+    print('')
+    print('Note: Update is done automatically every time /all or /<plugin> is called.')
+    print('')
+
+
+def print_processes():
+    sub_title = 'GET stats of a specific process'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('')
+    print('Get stats for process with PID == 777::')
+    print('')
+    print(f'    # curl {API_URL}/processes/777')
+    print('    Return stats for process (dict)')
+    print('')
+    print('Enable extended stats for process with PID == 777 (only one process at a time can be enabled)::')
+    print('')
+    print(f'    # curl -X POST {API_URL}/processes/extended/777')
+    print(f'    # curl {API_URL}/all')
+    print(f'    # curl {API_URL}/processes/777')
+    print('    Return stats for process (dict)')
+    print('')
+    print('Note: Update *is not* done automatically when you call /processes/<pid>.')
     print('')
 
 
@@ -369,6 +392,9 @@ class GlancesStdoutApiDoc:
 
         # Get all stats
         print_all()
+
+        # Get process stats
+        print_processes()
 
         # Get top stats (only for plugins with a list of items)
         # Example for processlist plugin: get top 2 processes
