@@ -223,6 +223,9 @@ class GlancesRestfulApi:
         router.add_api_route(f'{base_path}/events/clear/warning', self._events_clear_warning, methods=['POST'])
         router.add_api_route(f'{base_path}/events/clear/all', self._events_clear_all, methods=['POST'])
         router.add_api_route(
+            f'{base_path}/processes/extended/disable', self._api_disable_extended_processes, methods=['POST']
+        )
+        router.add_api_route(
             f'{base_path}/processes/extended/{{pid}}', self._api_set_extended_processes, methods=['POST']
         )
 
@@ -924,6 +927,18 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(True)
 
+    def _api_disable_extended_processes(self):
+        """Glances API RESTful implementation.
+
+        Disable extended process stats
+        HTTP/200 if OK
+        HTTP/400 if PID is not found
+        HTTP/404 if others error
+        """
+        glances_processes.extended_process = None
+
+        return GlancesJSONResponse(True)
+
     def _api_get_extended_processes(self):
         """Glances API RESTful implementation.
 
@@ -936,8 +951,6 @@ class GlancesRestfulApi:
 
         if not process_stats:
             process_stats = {}
-
-        print("Call _api_get_extended_processes")
 
         return GlancesJSONResponse(process_stats)
 

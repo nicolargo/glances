@@ -168,7 +168,7 @@ body {
     margin-bottom: 1em;
 }
 
-.clear-button {
+.button {
     background-color: $glances-link-hover-color !important;
     color: white;
     border: none;
@@ -178,7 +178,7 @@ body {
     transition-duration: 0.4s;
 }
 
-.clear-button:hover {
+.button:hover {
     background-color: white;
     color: black;
 }
@@ -393,6 +393,7 @@ body {
 }
 
 #processlist {
+
     overflow-y: auto;
     height: 600px;
     .table {

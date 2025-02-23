@@ -105,7 +105,7 @@ export function nl2br(input) {
 
 export function number(value, options) {
     return new Intl.NumberFormat(
-        undefined,
+        "en-US",
         typeof options === 'number' ? { maximumFractionDigits: options } : options
     ).format(value);
 }
@@ -129,3 +129,8 @@ export function timedelta(value) {
         milliseconds: parseInt('' + d.getUTCMilliseconds() / 10)
     };
 }
+
+export function dictToString(dict) {
+    return Object.entries(dict).map(([key, value]) => `${key}: ${value}`).join(' / ');
+}
+
