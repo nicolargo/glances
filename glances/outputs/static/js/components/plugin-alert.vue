@@ -3,7 +3,7 @@
     <span class="title" v-if="hasAlerts">
       Warning or critical alerts (last {{ countAlerts }} entries)
       <span>
-        <button class="clear-button" v-on:click="clear()">Clear alerts</button>
+        <button class="button" v-on:click="clear()">Clear alerts</button>
       </span>
     </span>
     <span class="title" v-else>No warning or critical alert detected</span>
