@@ -392,8 +392,16 @@ body {
     }
 }
 
-#processlist {
+#processlist div.extendedstats {
+        margin-bottom: 1em;
+        margin-top: 1em;
+}
 
+#processlist div.extendedstats div span {
+        margin-right: 1em;
+}
+
+#processlist {
     overflow-y: auto;
     height: 600px;
     .table {
