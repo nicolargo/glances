@@ -168,28 +168,28 @@ body {
     margin-bottom: 1em;
 }
 
-.clear-button {
-    background-color: $glances-link-hover-color !important;
-    color: white;
-    border: none;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    transition-duration: 0.4s;
+.button {
+    color: #99CCFF; /* Bleu clair high-tech */
+    background: rgba(0, 0, 0, 0.4); /* Fond légèrement transparent */
+    border: 1px solid #99CCFF; /* Bordure discrète */
+    padding: 5px 10px;
+    border-radius: 5px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    overflow: hidden;
 }
 
-.clear-button:hover {
-    background-color: white;
-    color: black;
+.button:hover {
+    background: rgba(153, 204, 255, 0.15); /* Légère coloration au survol */
+    border-color: #B0D0FF;
+    color: #B0D0FF;
 }
 
-#system {
-    span {
-        padding-left: 10px;
-    }
-    span:nth-child(1) {
-        padding-left: 0px;
-    }
+.button:active {
+    transform: scale(0.95); /* Légère réduction pour effet de pression */
+    box-shadow: 0 0 8px rgba(153, 204, 255, 0.5); /* Flash léger */
 }
 
 .frequency {
@@ -392,12 +392,26 @@ body {
     }
 }
 
+#processlist div.extendedstats {
+        margin-bottom: 1em;
+        margin-top: 1em;
+}
+
+#processlist div.extendedstats div span:not(:last-child) {
+        margin-right: 1em;
+}
+
 #processlist {
     overflow-y: auto;
     height: 600px;
     .table {
         margin-bottom: 1em;
     }
+
+    .table-hover tbody tr:hover td {
+        background: $glances-link-hover-color;
+    }
+
     // Default column size
     * > td:nth-child(-n+12) {
         width: 5em;
@@ -426,6 +440,7 @@ body {
         white-space: nowrap;
     }
 }
+
 
 #alerts {
     span {

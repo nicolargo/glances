@@ -21,6 +21,7 @@ from glances.events_list import glances_events
 from glances.globals import json_dumps
 from glances.logger import logger
 from glances.password import GlancesPassword
+from glances.processes import glances_processes
 from glances.servers_list import GlancesServersList
 from glances.servers_list_dynamic import GlancesAutoDiscoverClient
 from glances.stats import GlancesStats
@@ -221,6 +222,12 @@ class GlancesRestfulApi:
         # POST
         router.add_api_route(f'{base_path}/events/clear/warning', self._events_clear_warning, methods=['POST'])
         router.add_api_route(f'{base_path}/events/clear/all', self._events_clear_all, methods=['POST'])
+        router.add_api_route(
+            f'{base_path}/processes/extended/disable', self._api_disable_extended_processes, methods=['POST']
+        )
+        router.add_api_route(
+            f'{base_path}/processes/extended/{{pid}}', self._api_set_extended_processes, methods=['POST']
+        )
 
         # GET
         route_mapping = {
@@ -235,6 +242,8 @@ class GlancesRestfulApi:
             f'{base_path}/all/views': self._api_all_views,
             f'{base_path}/pluginslist': self._api_plugins,
             f'{base_path}/serverslist': self._api_servers_list,
+            f'{base_path}/processes/extended': self._api_get_extended_processes,
+            f'{base_path}/processes/{{pid}}': self._api_get_processes,
             f'{plugin_path}': self._api,
             f'{plugin_path}/history': self._api_history,
             f'{plugin_path}/history/{{nb}}': self._api_history,
@@ -900,3 +909,62 @@ class GlancesRestfulApi:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get args item ({str(e)})")
 
         return GlancesJSONResponse(args_json)
+
+    def _api_set_extended_processes(self, pid: str):
+        """Glances API RESTful implementation.
+
+        Set the extended process stats for the given PID
+        HTTP/200 if OK
+        HTTP/400 if PID is not found
+        HTTP/404 if others error
+        """
+        process_stats = glances_processes.get_stats(int(pid))
+
+        if not process_stats:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown PID process {pid}")
+
+        glances_processes.extended_process = process_stats
+
+        return GlancesJSONResponse(True)
+
+    def _api_disable_extended_processes(self):
+        """Glances API RESTful implementation.
+
+        Disable extended process stats
+        HTTP/200 if OK
+        HTTP/400 if PID is not found
+        HTTP/404 if others error
+        """
+        glances_processes.extended_process = None
+
+        return GlancesJSONResponse(True)
+
+    def _api_get_extended_processes(self):
+        """Glances API RESTful implementation.
+
+        Get the extended process stats (if set before)
+        HTTP/200 if OK
+        HTTP/400 if PID is not found
+        HTTP/404 if others error
+        """
+        process_stats = glances_processes.get_extended_stats()
+
+        if not process_stats:
+            process_stats = {}
+
+        return GlancesJSONResponse(process_stats)
+
+    def _api_get_processes(self, pid: str):
+        """Glances API RESTful implementation.
+
+        Get the process stats for the given PID
+        HTTP/200 if OK
+        HTTP/400 if PID is not found
+        HTTP/404 if others error
+        """
+        process_stats = glances_processes.get_stats(int(pid))
+
+        if not process_stats:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown PID process {pid}")
+
+        return GlancesJSONResponse(process_stats)
