@@ -66,9 +66,9 @@ class GlancesColors:
             curses.init_pair(3, curses.COLOR_GREEN, -1)
             curses.init_pair(5, curses.COLOR_MAGENTA, -1)
         else:
-            curses.init_pair(2, -1, curses.COLOR_RED)
-            curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_GREEN)
-            curses.init_pair(5, -1, curses.COLOR_MAGENTA)
+            curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_RED)
+            curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
+            curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
         curses.init_pair(4, curses.COLOR_BLUE, -1)
         curses.init_pair(6, curses.COLOR_RED, -1)
         curses.init_pair(7, curses.COLOR_GREEN, -1)
@@ -77,7 +77,6 @@ class GlancesColors:
         # Colors text styles
         self.DEFAULT = curses.color_pair(1)
         self.OK_LOG = curses.color_pair(3) | self.A_BOLD
-        self.CPU_TIME = curses.color_pair(8)
         self.CAREFUL_LOG = curses.color_pair(4) | self.A_BOLD
         self.WARNING_LOG = curses.color_pair(5) | self.A_BOLD
         self.CRITICAL_LOG = curses.color_pair(2) | self.A_BOLD
@@ -86,6 +85,7 @@ class GlancesColors:
         self.WARNING = curses.color_pair(8) | self.A_BOLD
         self.CRITICAL = curses.color_pair(6) | self.A_BOLD
         self.INFO = curses.color_pair(4)
+        self.CPU_TIME = curses.color_pair(8)
         self.FILTER = self.A_BOLD
         self.SELECTED = self.A_BOLD
         self.SEPARATOR = curses.color_pair(1)
