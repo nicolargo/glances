@@ -53,7 +53,7 @@
                         </td>
                         <td scope="col" :class="['sortable', sorter.column === 'name' && 'sort']"
                             @click="$emit('update:sorter', 'name')" v-show="!getDisableStats().includes('cmdline')">
-                            Command
+                            Command (click to pin)
                         </td>
                     </tr>
                 </thead>
@@ -137,7 +137,7 @@
                         </td>
                         <td scope="col" :class="['sortable', sorter.column === 'name' && 'sort']"
                             @click="$emit('update:sorter', 'name')" v-show="!getDisableStats().includes('cmdline')">
-                            Command
+                            Command (click to pin)
                         </td>
                     </tr>
                 </thead>
@@ -223,7 +223,7 @@
                         </td>
                         <td scope="row" :class="['sortable', sorter.column === 'name' && 'sort']"
                             @click="$emit('update:sorter', 'name')" v-show="!getDisableStats().includes('cmdline')">
-                            Command
+                            Command (click to pin)
                         </td>
                     </tr>
                 </thead>
@@ -305,7 +305,7 @@
                         </td>
                         <td scope="row" :class="['sortable', sorter.column === 'name' && 'sort']"
                             @click="$emit('update:sorter', 'name')" v-show="!getDisableStats().includes('cmdline')">
-                            Command
+                            Command (click to pin)
                         </td>
                     </tr>
                 </thead>
@@ -385,9 +385,6 @@ export default {
         return {
             store
         };
-    },
-    beforeUnmount() {
-        clearInterval(this.intervalId)
     },
     computed: {
         args() {
@@ -578,10 +575,12 @@ export default {
         setExtendedStats(pid) {
             fetch('api/4/processes/extended/' + pid.toString(), { method: 'POST' })
                 .then((response) => response.json());
+            this.$forceUpdate()
         },
         disableExtendedStats() {
             fetch('api/4/processes/extended/disable', { method: 'POST' })
                 .then((response) => response.json());
+            this.$forceUpdate()
         }
     }
 };
