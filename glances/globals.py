@@ -29,7 +29,7 @@ from configparser import ConfigParser, NoOptionError, NoSectionError
 from datetime import datetime
 from operator import itemgetter, methodcaller
 from statistics import mean
-from typing import Any, Union
+from typing import Any, Optional, Union
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
@@ -393,11 +393,20 @@ def dictlist(data, item):
         return None
 
 
-def json_dumps_dictlist(data, item):
+def dictlist_json_dumps(data, item):
     dl = dictlist(data, item)
     if dl is None:
         return None
     return json_dumps(dl)
+
+
+def dictlist_first_key_value(data: list[dict], key, value) -> Optional[dict]:
+    """In a list of dict, return first item where key=value or none if not found."""
+    try:
+        ret = next(item for item in data if key in item and item[key] == value)
+    except StopIteration:
+        ret = None
+    return ret
 
 
 def string_value_to_float(s):

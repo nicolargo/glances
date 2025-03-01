@@ -17,7 +17,7 @@ import re
 
 from glances.actions import GlancesActions
 from glances.events_list import glances_events
-from glances.globals import dictlist, iterkeys, itervalues, json_dumps, json_dumps_dictlist, listkeys, mean, nativestr
+from glances.globals import dictlist, dictlist_json_dumps, iterkeys, itervalues, json_dumps, listkeys, mean, nativestr
 from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
@@ -244,7 +244,7 @@ class GlancesPluginModel:
         if item is None:
             return json_dumps(s)
 
-        return json_dumps_dictlist(s, item)
+        return dictlist_json_dumps(s, item)
 
     def get_trend(self, item, nb=30):
         """Get the trend regarding to the last nb values.
@@ -405,7 +405,7 @@ class GlancesPluginModel:
 
         Stats should be a list of dict (processlist, network...)
         """
-        return json_dumps_dictlist(self.get_raw(), item)
+        return dictlist_json_dumps(self.get_raw(), item)
 
     def get_raw_stats_value(self, item, value):
         """Return the stats object for a specific item=value.
