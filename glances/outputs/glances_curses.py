@@ -203,6 +203,8 @@ class _GlancesCurses:
             )
             # Set the left sidebar list
             self._left_sidebar = config.get_list_value('outputs', 'left_menu', default=self._left_sidebar)
+            # Background color
+            self.args.disable_bg = config.get_bool_value('outputs', 'disable_bg', default=self.args.disable_bg)
 
     def _right_sidebar(self):
         return [
