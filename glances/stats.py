@@ -256,8 +256,8 @@ class GlancesStats:
     def __update_plugin(self, p):
         """Update stats, history and views for the given plugin name p"""
         self._plugins[p].update()
-        self._plugins[p].update_stats_history()
         self._plugins[p].update_views()
+        self._plugins[p].update_stats_history()
 
     def update(self):
         """Wrapper method to update all stats.
