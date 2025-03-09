@@ -10,8 +10,7 @@
 
 import warnings
 from concurrent.futures import ThreadPoolExecutor
-from enum import Enum
-from typing import Any, Literal
+from typing import Any
 
 import psutil
 
@@ -23,19 +22,13 @@ from glances.plugins.sensors.sensor.glances_batpercent import PluginModel as Bat
 from glances.plugins.sensors.sensor.glances_hddtemp import PluginModel as HddTempPluginModel
 from glances.timer import Counter
 
-
-class SensorType(str, Enum):
-    # Switch to `enum.StrEnum` when we only support py311+
-    CPU_TEMP = 'temperature_core'
-    FAN_SPEED = 'fan_speed'
-    HDD_TEMP = 'temperature_hdd'
-    BATTERY = 'battery'
-
-
-CPU_TEMP_UNIT = 'C'
-FAN_SPEED_UNIT = 'R'
-HDD_TEMP_UNIT = 'C'
-BATTERY_UNIT = '%'
+# Define all kind of sensors available in Glances
+sensors_definition = {
+    'cpu_temp': {'type': 'temperature_core', 'unit': 'C'},
+    'fan_speed': {'type': 'fan_speed', 'unit': 'R'},
+    'hdd_temp': {'type': 'temperature_hdd', 'unit': 'C'},
+    'battery': {'type': 'battery', 'unit': '%'},
+}
 
 # Define the default refresh multiplicator
 # Default value is 3 * Glances refresh time
@@ -88,11 +81,11 @@ class PluginModel(GlancesPluginModel):
 
         # Init the sensor class
         start_duration.reset()
-        glances_grab_sensors_cpu_temp = GlancesGrabSensors(SensorType.CPU_TEMP)
+        glances_grab_sensors_cpu_temp = GlancesGrabSensors(sensors_definition.get('cpu_temp'))
         logger.debug(f"CPU Temp sensor plugin init duration: {start_duration.get()} seconds")
 
         start_duration.reset()
-        glances_grab_sensors_fan_speed = GlancesGrabSensors(SensorType.FAN_SPEED)
+        glances_grab_sensors_fan_speed = GlancesGrabSensors(sensors_definition.get('fan_speed'))
         logger.debug(f"Fan speed sensor plugin init duration: {start_duration.get()} seconds")
 
         # Instance for the HDDTemp Plugin in order to display the hard disks temperatures
@@ -105,27 +98,16 @@ class PluginModel(GlancesPluginModel):
         batpercent_plugin = BatPercentPluginModel(args=args, config=config)
         logger.debug(f"Battery sensor plugin init duration: {start_duration.get()} seconds")
 
-        self.sensors_grab_map: dict[SensorType, Any] = {}
+        self.sensors_grab_map = {}
 
         if glances_grab_sensors_cpu_temp.init:
-            self.sensors_grab_map[SensorType.CPU_TEMP] = glances_grab_sensors_cpu_temp
+            self.sensors_grab_map[sensors_definition.get('cpu_temp').get('type')] = glances_grab_sensors_cpu_temp
 
         if glances_grab_sensors_fan_speed.init:
-            self.sensors_grab_map[SensorType.FAN_SPEED] = glances_grab_sensors_fan_speed
+            self.sensors_grab_map[sensors_definition.get('fan_speed').get('type')] = glances_grab_sensors_fan_speed
 
-        self.sensors_grab_map[SensorType.HDD_TEMP] = hddtemp_plugin
-        self.sensors_grab_map[SensorType.BATTERY] = batpercent_plugin
-
-        self.sensors_grab_map: dict[SensorType, Any] = {}
-
-        if glances_grab_sensors_cpu_temp.init:
-            self.sensors_grab_map[SensorType.CPU_TEMP] = glances_grab_sensors_cpu_temp
-
-        if glances_grab_sensors_fan_speed.init:
-            self.sensors_grab_map[SensorType.FAN_SPEED] = glances_grab_sensors_fan_speed
-
-        self.sensors_grab_map[SensorType.HDD_TEMP] = hddtemp_plugin
-        self.sensors_grab_map[SensorType.BATTERY] = batpercent_plugin
+        self.sensors_grab_map[sensors_definition.get('hdd_temp').get('type')] = hddtemp_plugin
+        self.sensors_grab_map[sensors_definition.get('battery').get('type')] = batpercent_plugin
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -138,7 +120,7 @@ class PluginModel(GlancesPluginModel):
         """Return the key of the list."""
         return 'label'
 
-    def __get_sensor_data(self, sensor_type: SensorType) -> list[dict]:
+    def __get_sensor_data(self, sensor_type: str) -> list[dict]:
         try:
             data = self.sensors_grab_map[sensor_type].update()
             data = self.__set_type(data, sensor_type)
@@ -203,14 +185,10 @@ class PluginModel(GlancesPluginModel):
             return self.has_alias("{}_{}".format(stats["label"], stats["type"]).lower())
         return stats["label"]
 
-    def __set_type(self, stats: list[dict[str, Any]], sensor_type: SensorType) -> list[dict[str, Any]]:
+    def __set_type(self, stats: list[dict[str, Any]], sensor_type: str) -> list[dict[str, Any]]:
         """Set the plugin type.
 
-        4 types of stats is possible in the sensors plugin:
-        - Core temperature: SENSOR_TEMP_TYPE
-        - Fan speed: SENSOR_FAN_TYPE
-        - HDD temperature: 'temperature_hdd'
-        - Battery capacity: 'battery'
+        4 types of stats is possible in the sensors plugin, see sensors_definition variable
         """
         for i in stats:
             # Set the sensors type
@@ -221,7 +199,9 @@ class PluginModel(GlancesPluginModel):
         return stats
 
     def __get_system_thresholds(self, sensor):
-        """Return the alert level thanks to the system thresholds"""
+        """Return the alert level thanks to the system thresholds.
+        Note: Only Warning (aka High) and Critical thresholds are used.
+        """
         alert = 'OK'
         if sensor['critical'] is None:
             alert = 'DEFAULT'
@@ -244,22 +224,21 @@ class PluginModel(GlancesPluginModel):
             if not i['value']:
                 continue
             # Alert processing
-            stat_type = i['type'] if isinstance(i['type'], str) else i['type'].value
-            if stat_type == SensorType.CPU_TEMP:
-                if self.is_limit('critical', stat_name=stat_type + '_' + i['label']):
+            if i['type'] == sensors_definition.get('cpu_temp').get('type'):
+                if self.is_limit('critical', stat_name=i['type'] + '_' + i['label']):
                     # Get thresholds for the specific sensor in the glances.conf file (see #2058)
-                    alert = self.get_alert(current=i['value'], header=stat_type + '_' + i['label'])
-                elif self.is_limit('critical', stat_name=stat_type):
+                    alert = self.get_alert(current=i['value'], header=i['type'] + '_' + i['label'])
+                elif self.is_limit('critical', stat_name=i['type']):
                     # Get thresholds for the sensor type in the glances.conf file (see #3049)
-                    alert = self.get_alert(current=i['value'], header=stat_type)
+                    alert = self.get_alert(current=i['value'], header=i['type'])
                 else:
                     # Else use the system thresholds
                     alert = self.__get_system_thresholds(i)
-            if stat_type == SensorType.BATTERY:
+            elif i['type'] == sensors_definition.get('battery').get('type'):
                 # Battery is in %
-                alert = self.get_alert(current=100 - i['value'], header=stat_type)
+                alert = self.get_alert(current=100 - i['value'], header=i['type'])
             else:
-                alert = self.get_alert(current=i['value'], header=stat_type)
+                alert = self.get_alert(current=i['value'], header=i['type'])
             # Set the alert in the view
             self.views[i[self.get_key()]]['value']['decoration'] = alert
 
@@ -298,8 +277,9 @@ class PluginModel(GlancesPluginModel):
 
         # Stats
         for i in self.stats:
+            logger.info(i['type'])
             # Do not display anything if no battery are detected
-            if i['type'] == SensorType.BATTERY and i['value'] == []:
+            if i['type'] == sensors_definition.get('battery').get('type') and i['value'] == []:
                 continue
             # New line
             ret.append(self.curse_new_line())
@@ -311,7 +291,11 @@ class PluginModel(GlancesPluginModel):
                     self.curse_add_line(msg, self.get_views(item=i[self.get_key()], key='value', option='decoration'))
                 )
             else:
-                if args.fahrenheit and i['type'] != SensorType.BATTERY and i['type'] != SensorType.FAN_SPEED:
+                if (
+                    args.fahrenheit
+                    and i['type'] != sensors_definition.get('battery').get('type')
+                    and i['type'] != sensors_definition.get('fan_speed').get('type')
+                ):
                     trend = ''
                     value = to_fahrenheit(i['value'])
                     unit = 'F'
@@ -336,20 +320,20 @@ class PluginModel(GlancesPluginModel):
 class GlancesGrabSensors:
     """Get sensors stats."""
 
-    def __init__(self, sensor_type: Literal[SensorType.FAN_SPEED, SensorType.CPU_TEMP]):
+    def __init__(self, sensor_def: dict):
         """Init sensors stats."""
-        self.sensor_type = sensor_type
-        self.sensor_unit = CPU_TEMP_UNIT if self.sensor_type == SensorType.CPU_TEMP else FAN_SPEED_UNIT
+        self.sensor_type = sensor_def.get('type')
+        self.sensor_unit = sensor_def.get('unit')
 
         self.init = False
         try:
-            self.__fetch_psutil()
+            self.__fetch_data()
             self.init = True
         except AttributeError:
-            logger.debug(f"Cannot grab {sensor_type}. Platform not supported.")
+            logger.debug(f"Cannot grab {self.sensor_type}. Platform not supported.")
 
-    def __fetch_psutil(self) -> dict[str, list]:
-        if self.sensor_type == SensorType.CPU_TEMP:
+    def __fetch_data(self) -> dict[str, list]:
+        if self.sensor_type == sensors_definition.get('cpu_temp').get('type'):
             # Solve an issue #1203 concerning a RunTimeError warning message displayed
             # in the curses interface.
             warnings.filterwarnings("ignore")
@@ -357,11 +341,11 @@ class GlancesGrabSensors:
             # psutil>=5.1.0, Linux-only
             return psutil.sensors_temperatures()
 
-        if self.sensor_type == SensorType.FAN_SPEED:
+        if self.sensor_type == sensors_definition.get('fan_speed').get('type'):
             # psutil>=5.2.0, Linux-only
             return psutil.sensors_fans()
 
-        raise ValueError(f"Unsupported sensor_type: {self.sensor_type}")
+        raise ValueError(f"Unsupported sensor: {self.sensor_type}")
 
     def update(self) -> list[dict]:
         """Update the stats."""
@@ -370,7 +354,7 @@ class GlancesGrabSensors:
 
         # Temperatures sensors
         ret = []
-        data = self.__fetch_psutil()
+        data = self.__fetch_data()
         for chip_name, chip in data.items():
             label_index = 1
             for chip_name_index, feature in enumerate(chip):
