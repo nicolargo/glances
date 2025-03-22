@@ -2,6 +2,37 @@
                                 Glances ChangeLog
 ============================================================================
 
+=============
+Version 4.3.1
+=============
+
+Enhancements:
+
+* [WebUI] Top processes extended stats and processes filter in Web server mode #410
+* I'd like a feature to make the forground color for colored background white #3119
+* -disable-bg in ~/.config/glances.conf #3113
+* Entry point in the API to get extended process stats #3095
+* Replace netifaces by netifaces-plus dependencies #3053
+* Replace docker by containers in glances-grafana-flux.json #3118
+
+Bug corrected:
+
+* default_config_dir: Fix config path to include glances/ directory #3106
+* Cannot set warning/critical temperature for a specific sensor needs test #3102
+* Try to reduce latency between stat's update and view - #3086
+* Error on Cloud plugin initialisation make TUI crash #3085
+
+Continious integration:
+
+* Add Selenium to test WebUI #3044
+
+Thanks to all contributors and bug reporters !
+
+Special thanks to:
+- Alexander Kuznetsov
+- Jonathan Chemla
+- mizulike
+
 ===============
 Version 4.3.0.8
 ===============
