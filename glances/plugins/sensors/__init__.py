@@ -277,7 +277,6 @@ class PluginModel(GlancesPluginModel):
 
         # Stats
         for i in self.stats:
-            logger.info(i['type'])
             # Do not display anything if no battery are detected
             if i['type'] == sensors_definition.get('battery').get('type') and i['value'] == []:
                 continue
