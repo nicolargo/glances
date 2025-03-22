@@ -8,6 +8,7 @@
 
 """CPU percent stats shared between CPU and Quicklook plugins."""
 
+import platform
 from typing import Optional, TypedDict
 
 import psutil
@@ -95,17 +96,18 @@ class CpuPercent:
     def __get_cpu_name() -> str:
         # Get the CPU name once from the /proc/cpuinfo file
         # Read the first line with the "model name" ("Model" for Raspberry Pi)
+        ret = f'CPU {platform.processor()}'
         try:
             cpuinfo_lines = open('/proc/cpuinfo').readlines()
         except (FileNotFoundError, PermissionError):
             logger.debug("No permission to read '/proc/cpuinfo'")
-            return 'CPU'
+            return ret
 
         for line in cpuinfo_lines:
             if line.startswith('model name') or line.startswith('Model') or line.startswith('cpu model'):
                 return line.split(':')[1].strip()
 
-        return 'CPU'
+        return ret
 
     def get_cpu(self) -> float:
         """Update and/or return the CPU using the psutil library."""
