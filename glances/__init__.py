@@ -74,6 +74,53 @@ def end():
     sys.exit(0)
 
 
+def start_main_loop(args, start_duration):
+    logger.debug(f"Glances started in {start_duration.get()} seconds")
+    if args.stop_after:
+        logger.info(f'Glances will be stopped in ~{args.stop_after * args.time} seconds')
+
+
+def check_memleak(args, mode):
+    if args.memory_leak:
+        wait = args.stop_after * args.time * args.memory_leak * 2
+        print(f'Memory leak detection, please wait ~{wait} seconds...')
+        # First run without dump to fill the memory
+        mode.serve_n(args.stop_after)
+        # Then start the memory-leak loop
+        snapshot_begin = tracemalloc.take_snapshot()
+    else:
+        snapshot_begin = None
+
+    return snapshot_begin
+
+
+def setup_server_mode(args, mode):
+    if args.stdout_issue or args.stdout_apidoc:
+        # Serve once for issue/test mode
+        mode.serve_issue()
+    else:
+        # Serve forever
+        mode.serve_forever()
+
+
+def maybe_trace_memleak(args, snapshot_begin):
+    if args.memory_leak:
+        snapshot_end = tracemalloc.take_snapshot()
+        snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
+        memory_leak = sum([s.size_diff for s in snapshot_diff])
+        print(f"Memory consumption: {memory_leak / 1000:.1f}KB (see log for details)")
+        logger.info("Memory consumption (top 5):")
+        for stat in snapshot_diff[:5]:
+            logger.info(stat)
+    elif args.trace_malloc:
+        # See more options here: https://docs.python.org/3/library/tracemalloc.html
+        snapshot = tracemalloc.take_snapshot()
+        top_stats = snapshot.statistics("filename")
+        print("[ Trace malloc - Top 10 ]")
+        for stat in top_stats[:10]:
+            print(stat)
+
+
 def start(config, args):
     """Start Glances."""
 
@@ -101,40 +148,10 @@ def start(config, args):
     logger.info(f"Start {GlancesMode.__name__} mode")
     mode = GlancesMode(config=config, args=args)
 
-    # Start the main loop
-    logger.debug(f"Glances started in {start_duration.get()} seconds")
-    if args.stop_after:
-        logger.info(f'Glances will be stopped in ~{args.stop_after * args.time} seconds')
-
-    if args.memory_leak:
-        print(f'Memory leak detection, please wait ~{args.stop_after * args.time * args.memory_leak * 2} seconds...')
-        # First run without dump to fill the memory
-        mode.serve_n(args.stop_after)
-        # Then start the memory-leak loop
-        snapshot_begin = tracemalloc.take_snapshot()
-
-    if args.stdout_issue or args.stdout_apidoc:
-        # Serve once for issue/test mode
-        mode.serve_issue()
-    else:
-        # Serve forever
-        mode.serve_forever()
-
-    if args.memory_leak:
-        snapshot_end = tracemalloc.take_snapshot()
-        snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
-        memory_leak = sum([s.size_diff for s in snapshot_diff])
-        print(f"Memory consumption: {memory_leak / 1000:.1f}KB (see log for details)")
-        logger.info("Memory consumption (top 5):")
-        for stat in snapshot_diff[:5]:
-            logger.info(stat)
-    elif args.trace_malloc:
-        # See more options here: https://docs.python.org/3/library/tracemalloc.html
-        snapshot = tracemalloc.take_snapshot()
-        top_stats = snapshot.statistics("filename")
-        print("[ Trace malloc - Top 10 ]")
-        for stat in top_stats[:10]:
-            print(stat)
+    start_main_loop(args, start_duration)
+    snapshot_begin = check_memleak(args, mode)
+    setup_server_mode(args, mode)
+    maybe_trace_memleak(args, snapshot_begin)
 
     # Shutdown
     mode.end()
