@@ -169,6 +169,8 @@ class GlancesExport:
         for plugin in self.last_exported_list():
             if isinstance(all_stats[plugin], dict):
                 all_stats[plugin].update(all_limits[plugin])
+                # Remove the <plugin>_disable field
+                all_stats[plugin].pop(f'{plugin}_disable', None)
             elif isinstance(all_stats[plugin], list):
                 # TypeError: string indices must be integers (Network plugin) #1054
                 for i in all_stats[plugin]:
