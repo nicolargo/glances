@@ -55,6 +55,9 @@ class GlancesExport:
         # Save last export list
         self._last_exported_list = None
 
+        # Fields description
+        self._fields_description = None
+
     def _log_result_decorator(fct):
         """Log (DEBUG) the result of the function fct."""
 
@@ -149,6 +152,15 @@ class GlancesExport:
     def last_exported_list(self):
         """Return the list of plugins last exported."""
         return self._last_exported_list
+
+    def init(self, stats):
+        """Return fields description in order to init stats in a server."""
+        if not self.export_enable:
+            return False
+
+        self._last_exported_list = self.plugins_to_export(stats)
+        self._fields_description = stats.getAllFieldsDescriptionAsDict(plugin_list=self.last_exported_list())
+        return self._fields_description
 
     def update(self, stats):
         """Update stats to a server.
