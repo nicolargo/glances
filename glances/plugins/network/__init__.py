@@ -203,8 +203,10 @@ class PluginModel(GlancesPluginModel):
         # Add specifics information
         # Alert
         for i in self.get_raw():
+            if_real_name = i['interface_name'].split(':')[0]
+
             # Skip alert if no timespan to measure
-            if 'bytes_recv_rate_per_sec' not in i or 'bytes_sent_rate_per_sec' not in i:
+            if not i.get('bytes_recv_rate_per_sec') or not i.get('bytes_sent_rate_per_sec'):
                 continue
 
             # Convert rate to bps (to be able to compare to interface speed)
@@ -212,7 +214,6 @@ class PluginModel(GlancesPluginModel):
             bps_tx = int(i['bytes_sent_rate_per_sec'] * 8)
 
             # Decorate the bitrate with the configuration file thresholds
-            if_real_name = i['interface_name'].split(':')[0]
             alert_rx = self.get_alert(bps_rx, header=if_real_name + '_rx')
             alert_tx = self.get_alert(bps_tx, header=if_real_name + '_tx')
 

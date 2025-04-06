@@ -146,11 +146,13 @@ class PluginModel(GlancesPluginModel):
         # Add specifics information
         # Alert
         for i in self.get_raw():
+            disk_real_name = i['disk_name']
+
             # Skip alert if no timespan to measure
-            if 'read_bytes_rate_per_sec' not in i or 'write_bytes_rate_per_sec' not in i:
+            if not i.get('read_bytes_rate_per_sec') or not i.get('write_bytes_rate_per_sec'):
                 continue
 
-            disk_real_name = i['disk_name']
+            # Decorate the bitrate with the configuration file
             alert_rx = self.get_alert(i['read_bytes'], header=disk_real_name + '_rx')
             alert_tx = self.get_alert(i['write_bytes'], header=disk_real_name + '_tx')
             self.views[i[self.get_key()]]['read_bytes']['decoration'] = alert_rx

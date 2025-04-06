@@ -80,6 +80,8 @@ class Export(GlancesExport):
         # Loop over plugins to export
         for plugin in self.plugins_to_export(stats):
             export_names, export_values = self.build_export(all_stats[plugin])
+            # Add the plugin name in the field
+            export_names = [plugin + '.' + n for n in export_names]
             if self.first_line:
                 csv_header += export_names
             csv_data += export_values
