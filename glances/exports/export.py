@@ -8,7 +8,6 @@
 
 """
 I am your father...
-
 ...for all Glances exports IF.
 """
 
@@ -20,17 +19,12 @@ from glances.timer import Counter
 class GlancesExport:
     """Main class for Glances export IF."""
 
-    # List of non exportable plugins
-    # @TODO: remove this part and make all plugins exportable (see issue #1556)
-    # @TODO: also make this list configurable by the user (see issue #1443)
+    # List of non exportable internal plugins
     non_exportable_plugins = [
         'alert',
-        'amps',
         'help',
-        'now',
         'plugin',
         'psutilversion',
-        'quicklook',
         'version',
     ]
 
@@ -54,6 +48,9 @@ class GlancesExport:
 
         # Save last export list
         self._last_exported_list = None
+
+        # Fields description
+        self._fields_description = None
 
     def _log_result_decorator(fct):
         """Log (DEBUG) the result of the function fct."""
@@ -150,6 +147,15 @@ class GlancesExport:
         """Return the list of plugins last exported."""
         return self._last_exported_list
 
+    def init(self, stats):
+        """Return fields description in order to init stats in a server."""
+        if not self.export_enable:
+            return False
+
+        self._last_exported_list = self.plugins_to_export(stats)
+        self._fields_description = stats.getAllFieldsDescriptionAsDict(plugin_list=self.last_exported_list())
+        return self._fields_description
+
     def update(self, stats):
         """Update stats to a server.
 
@@ -169,6 +175,8 @@ class GlancesExport:
         for plugin in self.last_exported_list():
             if isinstance(all_stats[plugin], dict):
                 all_stats[plugin].update(all_limits[plugin])
+                # Remove the <plugin>_disable field
+                all_stats[plugin].pop(f'{plugin}_disable', None)
             elif isinstance(all_stats[plugin], list):
                 # TypeError: string indices must be integers (Network plugin) #1054
                 for i in all_stats[plugin]:
@@ -195,7 +203,7 @@ class GlancesExport:
             # Walk through the dict
             for key, value in sorted(iteritems(stats)):
                 if isinstance(value, bool):
-                    value = json_dumps(value)
+                    value = json_dumps(value).decode()
 
                 if isinstance(value, list):
                     value = ' '.join([str(v) for v in value])

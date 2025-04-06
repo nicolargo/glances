@@ -274,6 +274,13 @@ class GlancesStats:
         Each export module is ran in a dedicated thread.
         """
         if self.first_export:
+            # Init fields description
+            # Why ? Because some exports modules need to know what is exported (name, type...)
+            for e in self.getExportsList():
+                logger.debug(f"Init exported stats using the {e} module")
+                # @TODO: is it a good idea to thread this call ?
+                self._exports[e].init(input_stats)
+            # In this first loop, data are not exported because some information are missing (rate for example)
             logger.debug("Do not export stats during the first iteration because some information are missing")
             self.first_export = False
             return False
@@ -302,6 +309,17 @@ class GlancesStats:
             # All enabled plugins should be exported
             plugin_list = self.getPluginsList()
         return {p: self._plugins[p].get_raw() for p in plugin_list}
+
+    def getAllFieldsDescription(self):
+        """Return all fields description (as list)."""
+        return [self._plugins[p].fields_description for p in self.getPluginsList(enable=False)]
+
+    def getAllFieldsDescriptionAsDict(self, plugin_list=None):
+        """Return all fields description (as dict)."""
+        if plugin_list is None:
+            # All enabled plugins should be exported
+            plugin_list = self.getPluginsList()
+        return {p: self._plugins[p].fields_description for p in plugin_list}
 
     def getAllExports(self, plugin_list=None):
         """Return all the stats to be exported as a list.

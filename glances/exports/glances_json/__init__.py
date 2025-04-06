@@ -48,7 +48,10 @@ class Export(GlancesExport):
 
             # Export stats to JSON file
             with open(self.json_filename, "wb") as self.json_file:
-                self.json_file.write(json_dumps(self.buffer) + b'\n')
+                try:
+                    self.json_file.write(json_dumps(self.buffer) + b'\n')
+                except Exception as e:
+                    logger.error(f'Can not export data to JSON ({e})')
 
             # Reset buffer
             self.buffer = {}
