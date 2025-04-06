@@ -508,3 +508,12 @@ def replace_special_chars(input_string, by=' '):
     """Replace some special char by another in the input_string
     Return: the string with the chars replaced"""
     return input_string.replace('\r\n', by).replace('\n', by).replace('\t', by)
+
+
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+
+def natural_keys(text):
+    """Return a text in a natural/human readable format."""
+    return [atoi(c) for c in re.split(r'(\d+)', text)]

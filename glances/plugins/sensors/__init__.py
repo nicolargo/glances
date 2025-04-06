@@ -14,7 +14,7 @@ from typing import Any
 
 import psutil
 
-from glances.globals import to_fahrenheit
+from glances.globals import natural_keys, to_fahrenheit
 from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -144,7 +144,7 @@ class PluginModel(GlancesPluginModel):
         # Remove duplicates thanks to https://stackoverflow.com/a/9427216/1919431
         stats_transformed = [dict(t) for t in {tuple(d.items()) for d in stats_transformed}]
         # Sort by label
-        return sorted(stats_transformed, key=lambda d: d['label'])
+        return sorted(stats_transformed, key=lambda d: natural_keys(d['label']))
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
