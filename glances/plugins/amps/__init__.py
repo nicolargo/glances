@@ -68,7 +68,7 @@ class PluginModel(GlancesPluginModel):
                         'countmin': v.count_min(),
                         'countmax': v.count_max(),
                         'regex': v.regex() is not None,
-                    },
+                    }
                 )
         else:
             # Not available in SNMP mode

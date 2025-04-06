@@ -46,7 +46,7 @@ class GlancesStdoutJson:
             else:
                 continue
             # Display stats
-            printandflush(f'{plugin}: {stat}')
+            printandflush(f'{plugin}: {stat.decode()}')
 
         # Wait until next refresh
         if duration > 0:

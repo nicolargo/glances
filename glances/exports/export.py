@@ -8,7 +8,6 @@
 
 """
 I am your father...
-
 ...for all Glances exports IF.
 """
 
@@ -20,17 +19,12 @@ from glances.timer import Counter
 class GlancesExport:
     """Main class for Glances export IF."""
 
-    # List of non exportable plugins
-    # @TODO: remove this part and make all plugins exportable (see issue #1556)
-    # @TODO: also make this list configurable by the user (see issue #1443)
+    # List of non exportable internal plugins
     non_exportable_plugins = [
         'alert',
-        'amps',
         'help',
-        'now',
         'plugin',
         'psutilversion',
-        'quicklook',
         'version',
     ]
 
@@ -209,7 +203,7 @@ class GlancesExport:
             # Walk through the dict
             for key, value in sorted(iteritems(stats)):
                 if isinstance(value, bool):
-                    value = json_dumps(value)
+                    value = json_dumps(value).decode()
 
                 if isinstance(value, list):
                     value = ' '.join([str(v) for v in value])
