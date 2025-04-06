@@ -110,9 +110,17 @@ def get_mem(device_folder: str) -> Optional[int]:
     mem_info_vram_used = os.path.join(device_folder, GPU_MEM_USED)
     if os.path.isfile(mem_info_vram_total) and os.path.isfile(mem_info_vram_used):
         with open(mem_info_vram_total) as f:
-            mem_info_vram_total = int(f.read())
+            try:
+                mem_info_vram_total = int(f.read())
+            except PermissionError:
+                # Catch exception (see issue #3125)
+                return None
         with open(mem_info_vram_used) as f:
-            mem_info_vram_used = int(f.read())
+            try:
+                mem_info_vram_used = int(f.read())
+            except PermissionError:
+                # Catch exception (see issue #3125)
+                return None
         if mem_info_vram_total > 0:
             return round(mem_info_vram_used / mem_info_vram_total * 100)
     return None
@@ -123,7 +131,11 @@ def get_proc(device_folder: str) -> Optional[int]:
     gpu_busy_percent = os.path.join(device_folder, GPU_PROC_PERCENT)
     if os.path.isfile(gpu_busy_percent):
         with open(gpu_busy_percent) as f:
-            return int(f.read())
+            try:
+                return int(f.read())
+            except PermissionError:
+                # Catch exception (see issue #3125)
+                return None
     return None
 
 
@@ -137,7 +149,11 @@ def get_temperature(device_folder: str) -> Optional[int]:
                     for f in files:
                         if re.match(GPU_TEMPERATURE_REGEXP, f):
                             with open(os.path.join(root, d, f)) as f:
-                                temp_input.append(int(f.read()))
+                                try:
+                                    temp_input.append(int(f.read()))
+                                except PermissionError:
+                                    # Catch exception (see issue #3125)
+                                    return None
     if temp_input:
         return round(sum(temp_input) / len(temp_input) / 1000)
     return None
