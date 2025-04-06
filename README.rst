@@ -296,7 +296,10 @@ To install the binary package:
 
 .. code-block:: console
 
-    # pkg install py39-glances
+    # pkg install pyXY-glances
+
+Where X and Y are the major and minor value of your Python system.
+Example for Python 3.11.3 use py311-glances.
 
 To install Glances from ports:
 
