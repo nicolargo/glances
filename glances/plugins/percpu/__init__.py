@@ -144,15 +144,15 @@ class PluginModel(GlancesPluginModel):
         base = ['user', 'system']
 
         if LINUX:
-            extension = ['iowait', 'idle', 'irq', 'nice', 'steal', 'guest']
+            base += ['iowait', 'idle', 'irq', 'nice', 'steal', 'guest']
         elif MACOS:
-            extension = ['idle', 'nice']
+            base += ['idle', 'nice']
         elif BSD:
-            extension = ['idle', 'irq', 'nice']
+            base += ['idle', 'irq', 'nice']
         elif WINDOWS:
-            extension = ['dpc', 'interrupt']
+            base += ['dpc', 'interrupt']
 
-        return base + extension
+        return base
 
     def maybe_build_string_msg(self, header, return_):
         if self.is_disabled('quicklook'):

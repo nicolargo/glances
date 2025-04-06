@@ -985,11 +985,7 @@ class GlancesPluginModel:
             unit_type = 'float'
 
         # Is it a rate ? Yes, get the pre-computed rate value
-        if (
-            key in self.fields_description
-            and 'rate' in self.fields_description[key]
-            and self.fields_description[key]['rate'] is True
-        ):
+        if key in self.fields_description and self.fields_description[key].get('rate', False) is True:
             value = self.stats.get(key + '_rate_per_sec', None)
         else:
             value = self.stats.get(key, None)
@@ -1159,7 +1155,8 @@ class GlancesPluginModel:
             # 3) set the original field to the delta between the current and the previous value
             for field in self.fields_description:
                 # For all the field with the rate=True flag
-                if 'rate' in self.fields_description[field] and self.fields_description[field]['rate'] is True:
+                # if 'rate' in self.fields_description[field] and self.fields_description[field]['rate'] is True:
+                if self.fields_description[field].get('rate', False):
                     # Create a new metadata with the gauge
                     stat['time_since_update'] = self.time_since_last_update
                     stat[field + '_gauge'] = stat[field]
@@ -1170,10 +1167,12 @@ class GlancesPluginModel:
                         if self.time_since_last_update > 0:
                             stat[field + '_rate_per_sec'] = stat[field] // self.time_since_last_update
                         else:
-                            stat[field] = 0
+                            stat[field] = None
+                            stat[field + '_rate_per_sec'] = None
                     else:
                         # Avoid strange rate at the first run
-                        stat[field] = 0
+                        stat[field] = None
+                        stat[field + '_rate_per_sec'] = None
             return stat
 
         def compute_rate_on_list(self, stats, stats_previous):

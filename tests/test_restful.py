@@ -14,6 +14,7 @@ import os
 import shlex
 import subprocess
 import time
+import types
 import unittest
 
 import requests
@@ -136,7 +137,8 @@ class TestGlances(unittest.TestCase):
             self.assertTrue(req.ok)
             self.assertIsInstance(req.json(), dict)
             print(req.json()[i])
-            self.assertIsInstance(req.json()[i], numbers.Number)
+            # Value can be a number or None (for _rate in first loop)
+            self.assertIsInstance(req.json()[i], (numbers.Number, types.NoneType))
 
     def test_005_values(self):
         """Values."""
