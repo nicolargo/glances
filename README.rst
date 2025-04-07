@@ -330,7 +330,7 @@ Where X and Y are the Major and Minor Values of your Python System.
 **NOTE:** Check Glances Binary Package Version for your System Architecture.
 You must have the Correct Python Version Installed which corresponds to the Glances Binary Package. `Check`_
 
-.. _Check: https://github.com/kenrmayfield/glances#:~:text=Package%20Versions%20per-,System%20Architecture,-for%20FreeBSD%20as.Check
+.. _Check: https://github.com/kenrmayfield/glances#:~:text=Package%20Versions%20per-,System%20Architecture,-for%20FreeBSD%20as
 
 To install Glances from Ports:
 
