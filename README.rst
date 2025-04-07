@@ -292,7 +292,7 @@ higher, the path to the statics file is configurable (see ``issue2612``).
 FreeBSD
 -------
 
-Glances Binary Package Versions per System Architecture for FreeBSD as of: 08 Mar 2025 04:05:21
+Glances Binary Package Versions and Python Versions( pyXY-glances) per System Architecture for FreeBSD as of: 08 Mar 2025 04:05:21
 
 .. image:: https://i.postimg.cc/DzRrj8T1/glancespackageversionforfreebsd.png
 Identify the Python Version Installed:
