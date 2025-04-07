@@ -332,7 +332,7 @@ You must have the Correct Python Version Installed which corresponds to the Glan
 
 .. _Check: https://github.com/nicolargo/glances?tab=readme-ov-file#freebsd:~:text=see%20issue2612).-,FreeBSD,-To%20install%20the.Check
 
-To install Glances from ports:
+To install Glances from Ports:
 
 .. code-block:: console
 
