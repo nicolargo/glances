@@ -292,14 +292,45 @@ higher, the path to the statics file is configurable (see ``issue2612``).
 FreeBSD
 -------
 
-To install the binary package:
+Glances Binary Package Versions per System Architecture for FreeBSD as of: 08 Mar 2025 04:05:21
+
+.. image:: https://i.postimg.cc/DzRrj8T1/glancespackageversionforfreebsd.png
+Identify the Python Version Installed:
+
+.. code-block:: console
+
+     # Check for Python Version 2:
+
+     # python -V
+
+     # Alternative Command: python --version
+
+.. code-block:: console
+
+     # Check for Python Version 3:
+
+     # python3 -V
+
+     # Alternative Command: python3 --version
+
+
+
+To install the Glances Binary Package:
 
 .. code-block:: console
 
     # pkg install pyXY-glances
 
-Where X and Y are the major and minor value of your Python system.
-Example for Python 3.11.3 use py311-glances.
+Where X and Y are the Major and Minor Values of your Python System.
+
+.. code-block:: console
+
+    # Example for Python 3.11.3: pkg install py311-glances
+
+*NOTE:* Check Glances Binary Package Version for your System Architecture.
+You must have the Correct Python Version Installed which corresponds to the Glances Binary Package. `Check`_
+
+.. _Check: https://github.com/nicolargo/glances?tab=readme-ov-file#freebsd:~:text=see%20issue2612).-,FreeBSD,-To%20install%20the.Check
 
 To install Glances from ports:
 
