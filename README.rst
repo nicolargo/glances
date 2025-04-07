@@ -327,7 +327,7 @@ Where X and Y are the Major and Minor Values of your Python System.
 
     # Example for Python 3.11.3: pkg install py311-glances
 
-*NOTE:* Check Glances Binary Package Version for your System Architecture.
+**NOTE:** Check Glances Binary Package Version for your System Architecture.
 You must have the Correct Python Version Installed which corresponds to the Glances Binary Package. `Check`_
 
 .. _Check: https://github.com/nicolargo/glances?tab=readme-ov-file#freebsd:~:text=see%20issue2612).-,FreeBSD,-To%20install%20the.Check
