@@ -60,6 +60,7 @@ dev = [
   "pyright",
   "pytest",
   "requirements-parser",
+  "rstcheck",
   "ruff",
   "selenium",
   "semgrep",

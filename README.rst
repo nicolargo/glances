@@ -327,9 +327,7 @@ To install Glances from Ports:
 macOS
 -----
 
-If you do not want to use the glancesautoinstall script, follow this procedure.
-
-macOS users can install Glances using ``Homebrew`` or ``MacPorts``.
+MacOS users can install Glances using ``Homebrew`` or ``MacPorts``.
 
 Homebrew
 ````````
@@ -531,7 +529,6 @@ License
 Glances is distributed under the LGPL version 3 license. See ``COPYING`` for more details.
 
 .. _psutil: https://github.com/giampaolo/psutil
-.. _glancesautoinstall: https://github.com/nicolargo/glancesautoinstall
 .. _Python: https://www.python.org/getit/
 .. _Termux: https://play.google.com/store/apps/details?id=com.termux
 .. _readthedocs: https://glances.readthedocs.io/
@@ -540,7 +537,4 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _package: https://repology.org/project/glances/versions
 .. _sponsors: https://github.com/sponsors/nicolargo
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
-.. _issue2021: https://github.com/nicolargo/glances/issues/2021
-.. _issue2021comment: https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157
-.. _issue2612: https://github.com/nicolargo/glances/issues/2612
 .. _Docker: https://github.com/nicolargo/glances/blob/develop/docs/docker.rst
