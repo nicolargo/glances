@@ -293,30 +293,16 @@ higher, the path to the statics file is configurable (see ``issue2612``).
 FreeBSD
 -------
 
-Glances Binary Package Versions and Python Versions( pyXY-glances) per System Architecture for FreeBSD as of: 08 Mar 2025 04:05:21
+On FreeBSD, package name depends on the Python version.
 
-.. image:: https://i.postimg.cc/DzRrj8T1/glancespackageversionforfreebsd.png
-Identify the Python Version Installed:
-
-.. code-block:: console
-
-     # Check for Python Version 2:
-
-     # python -V
-
-     # Alternative Command: python --version
+Check for Python version:
 
 .. code-block:: console
 
-     # Check for Python Version 3:
-
-     # python3 -V
-
-     # Alternative Command: python3 --version
+     # python --version
 
 
-
-To install the Glances Binary Package:
+Install the Glances package:
 
 .. code-block:: console
 
