@@ -34,5 +34,19 @@ To upgrade Glances and all its dependencies to the latest versions:
 
 For additional installation methods, read the official `README`_ file.
 
+Shell tab completion
+====================
+
+Glances 4.3.2 and higher includes shell tab autocompletion thanks to the --print-completion option.
+
+For example, on a Linux operating system with Bash shell:
+
+.. code-block:: console
+
+    $ glances --print-completion bash | sudo tee -a /etc/bash_completion.d/glances
+    $ source /etc/bash_completion.d/glances
+
+Following shells are supported: bash, zsh and tcsh.
+
 .. _psutil: https://github.com/giampaolo/psutil
 .. _README: https://github.com/nicolargo/glances/blob/master/README.rst
