@@ -11,6 +11,7 @@ py-spy
 pyright
 pytest
 requirements-parser
+rstcheck
 ruff
 selenium
 semgrep; platform_system == 'Linux'
