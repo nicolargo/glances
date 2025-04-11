@@ -18,6 +18,10 @@ Command-Line Options
 
     enable debug mode
 
+.. option:: --print-completion
+
+    generate shell tab completion scripts for Glances CLI
+
 .. option:: -C CONF_FILE, --config CONF_FILE
 
     path to the configuration file
