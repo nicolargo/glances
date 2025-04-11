@@ -23,6 +23,7 @@ dependencies = [
   "packaging",
   "psutil>=5.6.7",
   "windows-curses; platform_system == 'Windows'",
+  "shtab; platform_system != 'Windows'",
 ]
 description = "A cross-platform curses-based monitoring tool"
 dynamic = ["version"]
