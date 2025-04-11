@@ -124,6 +124,9 @@ format: ## Format the code
 lint: ## Lint the code.
 	$(venv_full)/python -m ruff check . --fix
 
+lint-readme: ## Lint the main README.rst file
+	$(venv_full)/python -m rstcheck README.rst
+
 codespell: ## Run codespell to fix common misspellings in text files
 	$(venv_full)/codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics -w
 
