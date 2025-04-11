@@ -100,6 +100,7 @@ Dependencies:
 - ``defusedxml`` (in order to monkey patch xmlrpc)
 - ``packaging`` (for the version comparison)
 - ``windows-curses`` (Windows Curses implementation) [Windows-only]
+- ``shtab`` (Shell autocompletion) [All but Windows]
 
 Optional dependencies:
 
@@ -328,7 +329,7 @@ Where X and Y are the Major and Minor Values of your Python System.
     # Example for Python 3.11.3: pkg install py311-glances
 
 **NOTE:** Check Glances Binary Package Version for your System Architecture.
-You must have the Correct Python Version Installed which corresponds to the Glances Binary Package. 
+You must have the Correct Python Version Installed which corresponds to the Glances Binary Package.
 
 To install Glances from Ports:
 
@@ -419,6 +420,20 @@ Ansible
 -------
 
 A Glances ``Ansible`` role is available: https://galaxy.ansible.com/zaxos/glances-ansible-role/
+
+Shell tab completion
+====================
+
+Glances 4.3.2 and higher includes shell tab autocompletion thanks to the --print-completion option.
+
+For example, on a Linux operating system with Bash shell:
+
+.. code-block:: console
+
+    $ glances --print-completion bash | sudo tee -a /etc/bash_completion.d/glances
+    $ source /etc/bash_completion.d/glances
+
+Following shells are supported: bash, zsh and tcsh.
 
 Usage
 =====
