@@ -26,6 +26,7 @@ fields_description = {
     'device_name': {'description': 'Device name.'},
     'fs_type': {'description': 'File system type.'},
     'mnt_point': {'description': 'Mount point.'},
+    'options': {'description': 'Mount options.'},
     'size': {
         'description': 'Total size.',
         'unit': 'byte',
@@ -178,6 +179,7 @@ class PluginModel(GlancesPluginModel):
                 'fs_type': fs.fstype,
                 # Manage non breaking space (see issue #1065)
                 'mnt_point': u(fs.mountpoint).replace('\u00a0', ' '),
+                'options': fs.opts,
                 'size': fs_usage.total,
                 'used': fs_usage.used,
                 'free': fs_usage.free,
@@ -224,6 +226,7 @@ class PluginModel(GlancesPluginModel):
                 fs_current = {
                     'device_name': '',
                     'mnt_point': fs.partition(' ')[0],
+                    'options': '',
                     'size': size,
                     'used': used,
                     'percent': percent,
@@ -239,6 +242,7 @@ class PluginModel(GlancesPluginModel):
                 fs_current = {
                     'device_name': fs_stat[fs]['device_name'],
                     'mnt_point': fs,
+                    'options': '',
                     'size': int(fs_stat[fs]['size']) * 1024,
                     'used': int(fs_stat[fs]['used']) * 1024,
                     'percent': float(fs_stat[fs]['percent']),
@@ -258,7 +262,8 @@ class PluginModel(GlancesPluginModel):
 
         # Add specifics information
         # Alert
-        for i in self.stats:
+        # Do not display threshold for volume mounted in 'ro' (read-only) #3143
+        for i in [d for d in self.stats if 'ro' not in d.get('options', '').split(',')]:
             self.views[i[self.get_key()]]['used']['decoration'] = self.get_alert(
                 current=i['size'] - i['free'], maximum=i['size'], header=i['mnt_point']
             )
