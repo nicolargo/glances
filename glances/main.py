@@ -14,6 +14,8 @@ import tempfile
 from logging import DEBUG
 from warnings import simplefilter
 
+import shtab
+
 from glances import __apiversion__, __version__, psutil_version
 from glances.config import Config
 from glances.globals import WINDOWS, disable, enable
@@ -175,9 +177,12 @@ Examples of use:
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog=self.example_of_use,
         )
+        shtab.add_argument_to(parser, ["--print-completion"])
         parser.add_argument('-V', '--version', action='version', version=self.version_msg())
         parser.add_argument('-d', '--debug', action='store_true', default=False, dest='debug', help='enable debug mode')
-        parser.add_argument('-C', '--config', dest='conf_file', help='path to the configuration file')
+        parser.add_argument(
+            '-C', '--config', dest='conf_file', help='path to the configuration file'
+        ).complete = shtab.FILE
         parser.add_argument('-P', '--plugins', dest='plugin_dir', help='path to additional plugin directory')
         # Disable plugin
         parser.add_argument(
