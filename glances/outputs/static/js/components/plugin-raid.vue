@@ -1,5 +1,5 @@
 <template>
-    <section class="plugin" id="raid" v-if="hasDisks">
+    <section v-if="hasDisks" id="raid" class="plugin">
         <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
@@ -12,9 +12,9 @@
                 <tr v-for="(disk, diskId) in disks" :key="diskId">
                     <td scope="row">
                         {{ disk.type.toUpperCase() }} {{ disk.name }}
-                        <div class="warning" v-show="disk.degraded">└─ Degraded mode</div>
+                        <div v-show="disk.degraded" class="warning">└─ Degraded mode</div>
                         <div v-show="disk.degraded">&nbsp; &nbsp;└─ {{ disk.config }}</div>
-                        <div class="critical" v-show="disk.inactive">└─ Status {{ disk.status }}</div>
+                        <div v-show="disk.inactive" class="critical">└─ Status {{ disk.status }}</div>
                         <template v-if="disk.inactive">
                             <div v-for="(component, componentId) in disk.components" :key="componentId">
                                 &nbsp; &nbsp;{{
@@ -24,10 +24,10 @@
                             </div>
                         </template>
                     </td>
-                    <td scope="row" class="text-end" v-show="disk.status == 'active'" :class="getAlert(disk)">
+                    <td v-show="disk.status == 'active'" scope="row" class="text-end" :class="getAlert(disk)">
                         {{ disk.used }}
                     </td>
-                    <td scope="row" class="text-end" v-show="disk.status == 'active'" :class="getAlert(disk)">
+                    <td v-show="disk.status == 'active'" scope="row" class="text-end" :class="getAlert(disk)">
                         {{ disk.available }}
                     </td>
                 </tr>

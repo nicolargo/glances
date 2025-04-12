@@ -1,6 +1,6 @@
 <template>
-    <section class="plugin" id="system">
-        <span class="critical" v-if="isDisconnected">Disconnected from</span>
+    <section id="system" class="plugin">
+        <span v-if="isDisconnected" class="critical">Disconnected from</span>
         <span class="title">{{ hostname }}</span>
     </section>
 </template>
