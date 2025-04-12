@@ -4,7 +4,7 @@
             <span class="text-start text-truncate">
                 {{ cpu_name }}
             </span>
-            <span class="text-end d-none d-xxl-block frequency" v-if="cpu_hz_current">
+            <span v-if="cpu_hz_current" class="text-end d-none d-xxl-block frequency">
                 {{ cpu_hz_current }}/{{ cpu_hz }}Ghz
             </span>
         </div>
@@ -13,17 +13,19 @@
                 <tr v-if="!args.percpu">
                     <td scope="col">CPU</td>
                     <td scope="col" class="progress">
-                        <div :class="`progress-bar progress-bar-${getDecoration('cpu')}`" role="progressbar"
+                        <div
+:class="`progress-bar progress-bar-${getDecoration('cpu')}`" role="progressbar"
                             :aria-valuenow="cpu" aria-valuemin="0" aria-valuemax="100" :style="`width: ${cpu}%;`">
                             &nbsp;
                         </div>
                     </td>
                     <td scope="col" class="text-end"><span>{{ cpu }}%</span></td>
                 </tr>
-                <tr v-if="args.percpu" v-for="(percpu, percpuId) in percpus" :key="percpuId">
+                <tr v-for="(percpu, percpuId) in percpus" v-if="args.percpu" :key="percpuId">
                     <td scope="col">CPU{{ percpu.number }}</td>
                     <td scope="col" class="progress">
-                        <div :class="`progress-bar progress-bar-${getDecoration('cpu')}`" role="progressbar"
+                        <div
+:class="`progress-bar progress-bar-${getDecoration('cpu')}`" role="progressbar"
                             :aria-valuenow="percpu.total" aria-valuemin="0" aria-valuemax="100"
                             :style="`width: ${percpu.total}%;`">
                             &nbsp;
@@ -34,7 +36,8 @@
                 <tr v-for="(key) in stats_list_after_cpu">
                     <td scope="col">{{ key.toUpperCase() }}</td>
                     <td scope="col" class="progress">
-                        <div :class="`progress-bar progress-bar-${getDecoration(key)}`" role="progressbar"
+                        <div
+:class="`progress-bar progress-bar-${getDecoration(key)}`" role="progressbar"
                             :aria-valuenow="stats[key]" aria-valuemin="0" aria-valuemax="100"
                             :style="`width: ${stats[key]}%;`">
                             &nbsp;
@@ -87,11 +90,11 @@ export default {
             return (this.stats.cpu_hz / 1000000).toFixed(0);
         },
         percpus() {
-            var cpu_list = this.stats.percpu.map(({ cpu_number: number, total }) => ({ number, total }))
-            var max_cpu_display = parseInt(this.config.percpu.max_cpu_display)
+            const cpu_list = this.stats.percpu.map(({ cpu_number: number, total }) => ({ number, total }))
+            const max_cpu_display = parseInt(this.config.percpu.max_cpu_display)
             if (this.stats.percpu.length > max_cpu_display) {
                 var cpu_list_sorted = cpu_list.sort(function (a, b) { return b.total - a.total; })
-                var other_cpu = {
+                const other_cpu = {
                     number: "x",
                     total: Number((cpu_list_sorted.slice(max_cpu_display).reduce((n, { total }) => n + total, 0) / (this.stats.percpu.length - max_cpu_display)).toFixed(1))
                 }

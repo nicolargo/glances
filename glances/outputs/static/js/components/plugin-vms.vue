@@ -1,23 +1,26 @@
 <template>
-    <section class="plugin" id="vms" v-if="vms.length">
+    <section v-if="vms.length" id="vms" class="plugin">
         <span class="title">VMs</span>
         <span v-show="vms.length > 1">{{ vms.length }} sorted by {{ sorter.getColumnLabel(sorter.column) }}</span>
         <table class="table table-sm table-borderless table-striped table-hover">
             <thead>
                 <tr>
                     <td v-show="showEngine">Engine</td>
-                    <td :class="['sortable', sorter.column === 'name' && 'sort']"
+                    <td
+:class="['sortable', sorter.column === 'name' && 'sort']"
                         @click="args.sort_processes_key = 'name'">
                         Name
                     </td>
                     <td>Status</td>
                     <td>Core</td>
-                    <td :class="['sortable', sorter.column === 'memory_usage' && 'sort']"
+                    <td
+:class="['sortable', sorter.column === 'memory_usage' && 'sort']"
                         @click="args.sort_processes_key = 'memory_usage'">
                         MEM
                     </td>
                     <td>/ MAX</td>
-                    <td :class="['sortable', sorter.column === 'load_1min' && 'sort']"
+                    <td
+:class="['sortable', sorter.column === 'load_1min' && 'sort']"
                         @click="args.sort_processes_key = 'load_1min'">
                         LOAD 1/5/15min
                     </td>

@@ -1,5 +1,5 @@
 <template>
-    <section id="gpu" class="plugin" v-if="gpus != undefined">
+    <section v-if="gpus != undefined" id="gpu" class="plugin">
         <div class="title text-truncate">{{ name }}</div>
         <!-- single gpu -->
         <template v-if="gpus.length === 1">
@@ -9,23 +9,26 @@
                         <tbody>
                             <tr>
                                 <td class="col">proc:</td>
-                                <td class="col text-end" :class="getDecoration(gpu.gpu_id, 'proc')"
-                                    v-if="gpu.proc != null"><span>{{ $filters.number(gpu.proc, 0) }}%</span></td>
-                                <td class="col text-end" v-if="gpu.proc == null"><span>N/A</span></td>
+                                <td
+v-if="gpu.proc != null" class="col text-end"
+                                    :class="getDecoration(gpu.gpu_id, 'proc')"><span>{{ $filters.number(gpu.proc, 0) }}%</span></td>
+                                <td v-if="gpu.proc == null" class="col text-end"><span>N/A</span></td>
                             </tr>
                             <tr>
                                 <td class="col">mem:</td>
-                                <td class="col text-end" :class="getDecoration(gpu.gpu_id, 'mem')"
-                                    v-if="gpu.mem != null"><span>{{ $filters.number(gpu.mem, 0) }}%</span></td>
-                                <td class="col text-end" v-if="gpu.mem == null"><span>N/A</span></td>
+                                <td
+v-if="gpu.mem != null" class="col text-end"
+                                    :class="getDecoration(gpu.gpu_id, 'mem')"><span>{{ $filters.number(gpu.mem, 0) }}%</span></td>
+                                <td v-if="gpu.mem == null" class="col text-end"><span>N/A</span></td>
                             </tr>
                             <tr>
                                 <td class="col">temp:</td>
-                                <td class="col text-end" :class="getDecoration(gpu.gpu_id, 'temperature')"
-                                    v-if="gpu.temperature != null"><span>
+                                <td
+v-if="gpu.temperature != null" class="col text-end"
+                                    :class="getDecoration(gpu.gpu_id, 'temperature')"><span>
                                         {{ $filters.number(gpu.temperature, 0) }}
                                     </span></td>
-                                <td class="col text-end" v-if="gpu.temperature == null"><span>N/A</span></td>
+                                <td v-if="gpu.temperature == null" class="col text-end"><span>N/A</span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -39,16 +42,16 @@
                     <tbody>
                         <tr v-for="(gpu, gpuId) in gpus" :key="gpuId">
                             <td class="col">{{ gpu.gpu_id }}:</td>
-                            <td class="col" :class="getDecoration(gpu.gpu_id, 'proc')" v-if="gpu.proc != null"><span>{{
+                            <td v-if="gpu.proc != null" class="col" :class="getDecoration(gpu.gpu_id, 'proc')"><span>{{
                                 $filters.number(gpu.proc, 0) }}%</span></td>
-                            <td class="col" v-if="gpu.proc == null"><span>N/A</span></td>
+                            <td v-if="gpu.proc == null" class="col"><span>N/A</span></td>
                             <td class="col">mem:</td>
-                            <td class="col text-end" :class="getDecoration(gpu.gpu_id, 'mem')" v-if="gpu.mem != null">
+                            <td v-if="gpu.mem != null" class="col text-end" :class="getDecoration(gpu.gpu_id, 'mem')">
                                 <span>
                                     {{ $filters.number(gpu.mem, 0) }}%
                                 </span>
                             </td>
-                            <td class="col text-end" v-if="gpu.mem == null"><span>N/A</span></td>
+                            <td v-if="gpu.mem == null" class="col text-end"><span>N/A</span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -61,24 +64,24 @@
                     <tbody>
                         <tr>
                             <td class="col">proc mean:</td>
-                            <td class="col" :class="getMeanDecoration('proc')" v-if="mean.proc != null">
+                            <td v-if="mean.proc != null" class="col" :class="getMeanDecoration('proc')">
                                 <span>{{ $filters.number(mean.proc, 0) }}%</span>
                             </td>
-                            <td class="col" v-if="mean.proc == null"><span>N/A</span>></td>
+                            <td v-if="mean.proc == null" class="col"><span>N/A</span>></td>
                         </tr>
                         <tr>
                             <td class="col">mem mean:</td>
-                            <td class="col" :class="getMeanDecoration('mem')" v-if="mean.mem != null">
+                            <td v-if="mean.mem != null" class="col" :class="getMeanDecoration('mem')">
                                 <span>{{ $filters.number(mean.mem, 0) }}%</span>
                             </td>
-                            <td class="col" v-if="mean.mem == null"><span>N/A</span></td>
+                            <td v-if="mean.mem == null" class="col"><span>N/A</span></td>
                         </tr>
                         <tr>
                             <td class="col">temp mean:</td>
-                            <td class="col" :class="getMeanDecoration('temperature')" v-if="mean.temperature != null">
+                            <td v-if="mean.temperature != null" class="col" :class="getMeanDecoration('temperature')">
                                 <span>{{ $filters.number(mean.temperature, 0) }}°C</span>
                             </td>
-                            <td class="col" v-if="mean.temperature == null"><span>N/A</span></td>
+                            <td v-if="mean.temperature == null" class="col"><span>N/A</span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -135,7 +138,7 @@ export default {
             if (!stats.length) {
                 return mean;
             }
-            for (let gpu of stats) {
+            for (const gpu of stats) {
                 mean.proc += gpu.proc;
                 mean.mem += gpu.mem;
                 mean.temperature += gpu.temperature;

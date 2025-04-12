@@ -1,5 +1,5 @@
 <template>
-    <section id="load" class="plugin" v-if="cpucore != undefined">
+    <section v-if="cpucore != undefined" id="load" class="plugin">
         <div class="table-responsive">
             <table class="table table-sm table-borderless">
                 <thead>

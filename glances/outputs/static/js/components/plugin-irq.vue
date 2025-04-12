@@ -1,5 +1,5 @@
 <template>
-    <section class="plugin" id="irq">
+    <section id="irq" class="plugin">
         <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
