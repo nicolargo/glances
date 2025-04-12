@@ -473,7 +473,11 @@ class GlancesPluginModel:
                         value['hidden'] = False
                     elif key in self.views and field in self.views[key] and 'hidden' in self.views[key][field]:
                         value['hidden'] = self.views[key][field]['hidden']
-                        if field in self.hide_zero_fields and i[field] > self.hide_threshold_bytes:
+                        if (
+                            field in self.hide_zero_fields
+                            and i[field] is not None
+                            and i[field] > self.hide_threshold_bytes
+                        ):
                             value['hidden'] = False
                     else:
                         value['hidden'] = field in self.hide_zero_fields
