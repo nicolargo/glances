@@ -67,7 +67,7 @@ jobs:
 
     needs: source-code-checks
     # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
-    runs-on: windows-2022
+    runs-on: windows-2025
     strategy:
       matrix:
         # Windows-curses not available for Python 3.13 for the moment
