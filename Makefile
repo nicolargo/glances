@@ -223,6 +223,9 @@ webui-audit: ## Audit the Web UI
 webui-audit-fix: ## Fix audit the Web UI
 	cd $(DIR) && npm audit fix && npm ci && npm run build
 
+webui-update: ## Update JS dependencies
+	cd $(DIR) && npm update --save && npm ci && npm run build
+
 # ===================================================================
 # Packaging
 # ===================================================================

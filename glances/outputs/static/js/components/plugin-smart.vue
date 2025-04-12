@@ -1,5 +1,5 @@
 <template>
-    <section id="smart" class="plugin" v-if="hasDrives">
+    <section v-if="hasDrives" id="smart" class="plugin">
         <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>

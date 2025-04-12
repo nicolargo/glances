@@ -1,5 +1,5 @@
 <template>
-    <section id="amps" class="plugin" v-if="hasAmps">
+    <section v-if="hasAmps" id="amps" class="plugin">
         <table class="table table-sm table-borderless">
             <tbody>
                 <tr v-for="(process, processId) in processes" :key="processId">
