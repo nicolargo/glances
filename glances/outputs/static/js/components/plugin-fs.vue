@@ -1,5 +1,5 @@
 <template>
-    <section class="plugin" id="fs" v-if="hasFs">
+    <section v-if="hasFs" id="fs" class="plugin">
         <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
@@ -17,7 +17,8 @@
                 <tr v-for="(fs, fsId) in fileSystems" :key="fsId">
                     <td scope="row">
                         {{ $filters.minSize(fs.alias ? fs.alias : fs.mountPoint, 16, begin = false) }}
-                        <span v-if="(fs.alias ? fs.alias : fs.mountPoint).length + fs.name.length <= 15"
+                        <span
+v-if="(fs.alias ? fs.alias : fs.mountPoint).length + fs.name.length <= 15"
                             class="visible-lg-inline">
                             ({{ fs.name }})
                         </span>

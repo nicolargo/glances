@@ -1,5 +1,5 @@
 <template>
-    <section class="plugin" id="ports" v-if="hasPorts">
+    <section v-if="hasPorts" id="ports" class="plugin">
         <table class="table table-sm table-borderless margin-bottom">
             <tbody>
                 <tr v-for="(port, portId) in ports" :key="portId">

@@ -2,7 +2,7 @@
     <div v-if="args.disable_process">PROCESSES DISABLED (press 'z' to display)</div>
     <div v-else>
         <glances-plugin-processcount :sorter="sorter" :data="data"></glances-plugin-processcount>
-        <div class="row" v-if="!args.disable_amps">
+        <div v-if="!args.disable_amps" class="row">
             <div class="col-lg-18">
                 <glances-plugin-amps :data="data"></glances-plugin-amps>
             </div>

@@ -1,5 +1,5 @@
 <template>
-    <section class="plugin" id="folders" v-if="hasFolders">
+    <section v-if="hasFolders" id="folders" class="plugin">
         <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>

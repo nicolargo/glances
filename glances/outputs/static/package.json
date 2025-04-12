@@ -35,6 +35,7 @@
         "start": "webpack serve --mode=development",
         "watch": "webpack --progress --watch",
         "lint": "eslint ./ --ext .js,.vue",
+        "lint-fix": "eslint ./ --ext .js,.vue --fix",
         "clean": "rm -rf node_modules"
     }
 }

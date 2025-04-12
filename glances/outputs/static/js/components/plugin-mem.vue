@@ -35,34 +35,34 @@
                                 <table class="table table-sm table-borderless">
                                     <tbody>
                                         <tr>
-                                            <td scope="col" v-show="active != undefined">
+                                            <td v-show="active != undefined" scope="col">
                                                 active:
                                             </td>
-                                            <td scope="col" v-show="active != undefined">
+                                            <td v-show="active != undefined" scope="col">
                                                 <span>{{ $filters.bytes(active) }}</span>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td scope="col" v-show="inactive != undefined">
+                                            <td v-show="inactive != undefined" scope="col">
                                                 inactive:
                                             </td>
-                                            <td scope="col" v-show="inactive != undefined">
+                                            <td v-show="inactive != undefined" scope="col">
                                                 <span>{{ $filters.bytes(inactive) }}</span>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td scope="col" v-show="buffers != undefined">
+                                            <td v-show="buffers != undefined" scope="col">
                                                 buffers:
                                             </td>
-                                            <td scope="col" v-show="buffers != undefined">
+                                            <td v-show="buffers != undefined" scope="col">
                                                 <span>{{ $filters.bytes(buffers) }}</span>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td scope="col" v-show="cached != undefined">
+                                            <td v-show="cached != undefined" scope="col">
                                                 cached:
                                             </td>
-                                            <td scope="col" v-show="cached != undefined">
+                                            <td v-show="cached != undefined" scope="col">
                                                 <span>{{ $filters.bytes(cached) }}</span>
                                             </td>
                                         </tr>

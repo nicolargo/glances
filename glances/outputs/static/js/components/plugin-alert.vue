@@ -1,12 +1,12 @@
 <template>
-  <section class="plugin" id="alerts">
-    <span class="title" v-if="hasAlerts">
+  <section id="alerts" class="plugin">
+    <span v-if="hasAlerts" class="title">
       Warning or critical alerts (last {{ countAlerts }} entries)
       <span>
-        <button class="button" v-on:click="clear()">Clear alerts</button>
+        <button class="button" @click="clear()">Clear alerts</button>
       </span>
     </span>
-    <span class="title" v-else>No warning or critical alert detected</span>
+    <span v-else class="title">No warning or critical alert detected</span>
     <table class="table table-sm table-borderless">
       <tbody>
         <tr v-for="(alert, alertId) in alerts" :key="alertId">
