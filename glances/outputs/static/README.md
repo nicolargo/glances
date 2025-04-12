@@ -32,10 +32,25 @@ hash -r
 
 You must run the following command from the `glances/outputs/static/` directory.
 
+```bash
+cd glances/outputs/static/
+```
+
 ### Install dependencies
 
 ```bash
-$ npm ci
+npm ci
+```
+
+### Update dependencies
+
+To update all the dependencies to the latest version and package.json and package-lock.json,
+you can use the command "npm update --save":
+
+```bash
+npm update --save
+npx npm-check-updates -u
+npm install
 ```
 
 ### Build assets
@@ -43,13 +58,13 @@ $ npm ci
 Run the build command to build assets once :
 
 ```bash
-$ npm run build
+npm run build
 ```
 
 or use the watch command to rebuild only modified files :
 
 ```bash
-$ npm run watch
+npm run watch
 ```
 
 ## Anatomy
