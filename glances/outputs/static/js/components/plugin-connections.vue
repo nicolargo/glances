@@ -1,5 +1,5 @@
 <template>
-    <section class="plugin" id="connections">
+    <section id="connections" class="plugin">
         <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>

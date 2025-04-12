@@ -1,10 +1,10 @@
 <template>
-    <section class="plugin" id="ip" v-if="address">
+    <section v-if="address" id="ip" class="plugin">
         <span v-if="address" class="title">IP</span>
         <span v-if="address">{{ address }}/{{ maskCdir }}</span>
         <span v-if="publicAddress" class="title">Pub</span>
         <span v-if="publicAddress">{{ publicAddress }}</span>
-        <span class="text-truncate" v-if="publicInfo">{{ publicInfo }}</span>
+        <span v-if="publicInfo" class="text-truncate">{{ publicInfo }}</span>
     </section>
 </template>
 

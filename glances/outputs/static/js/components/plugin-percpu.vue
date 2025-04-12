@@ -5,8 +5,8 @@
             <table class="table-sm table-borderless">
                 <thead>
                     <tr>
-                        <th scope="col" v-if="args.disable_quicklook">CPU</th>
-                        <td scope="col" v-if="args.disable_quicklook">total</td>
+                        <th v-if="args.disable_quicklook" scope="col">CPU</th>
+                        <td v-if="args.disable_quicklook" scope="col">total</td>
                         <td scope="col">user</td>
                         <td scope="col">system</td>
                         <td scope="col">idle</td>
@@ -16,14 +16,14 @@
                 </thead>
                 <tbody>
                     <tr v-for="(percpu, percpuId) in percpuStats" :key="percpuId">
-                        <td scope="col" v-if="args.disable_quicklook">CPU{{ percpu.cpu_number }}</td>
-                        <td scope="col" v-if="args.disable_quicklook">{{ percpu.total }}%</td>
+                        <td v-if="args.disable_quicklook" scope="col">CPU{{ percpu.cpu_number }}</td>
+                        <td v-if="args.disable_quicklook" scope="col">{{ percpu.total }}%</td>
                         <td scope="col" :class="getUserAlert(percpu)">{{ percpu.user }}%</td>
                         <td scope="col" :class="getSystemAlert(percpu)">{{ percpu.system }}%</td>
-                        <td scope="col" v-show="percpu.idle != undefined">{{ percpu.idle }}%</td>
-                        <td scope="col" v-show="percpu.iowait != undefined" :class="getIOWaitAlert(percpu)">{{
+                        <td v-show="percpu.idle != undefined" scope="col">{{ percpu.idle }}%</td>
+                        <td v-show="percpu.iowait != undefined" scope="col" :class="getIOWaitAlert(percpu)">{{
                             percpu.iowait }}%</td>
-                        <td scope="col" v-show="percpu.steal != undefined">{{ percpu.steal }}%</td>
+                        <td v-show="percpu.steal != undefined" scope="col">{{ percpu.steal }}%</td>
                     </tr>
                 </tbody>
             </table>

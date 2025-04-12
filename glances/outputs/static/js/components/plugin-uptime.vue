@@ -1,5 +1,5 @@
 <template>
-    <section class="plugin" id="uptime">
+    <section id="uptime" class="plugin">
         <span>Uptime: {{ value }}</span>
     </section>
 </template>

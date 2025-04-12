@@ -1,13 +1,13 @@
 <template>
-    <section class="plugin" id="diskio" v-if="hasDisks">
+    <section v-if="hasDisks" id="diskio" class="plugin">
         <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
                     <th scope="col">DISK I/O</th>
-                    <th scope="col" class="text-end w-25" v-show="!args.diskio_iops">Rps</th>
-                    <th scope="col" class="text-end w-25" v-show="!args.diskio_iops">Wps</th>
-                    <th scope="col" class="text-end w-25" v-show="args.diskio_iops">IORps</th>
-                    <th scope="col" class="text-end w-25" v-show="args.diskio_iops">IOWps</th>
+                    <th v-show="!args.diskio_iops" scope="col" class="text-end w-25">Rps</th>
+                    <th v-show="!args.diskio_iops" scope="col" class="text-end w-25">Wps</th>
+                    <th v-show="args.diskio_iops" scope="col" class="text-end w-25">IORps</th>
+                    <th v-show="args.diskio_iops" scope="col" class="text-end w-25">IOWps</th>
                 </tr>
             </thead>
             <tbody>
@@ -15,18 +15,20 @@
                     <td scope="row" class="text-truncate">
                         {{ $filters.minSize(disk.alias ? disk.alias : disk.name, 16) }}
                     </td>
-                    <td class="text-end w-25" :class="getDecoration(disk.name, 'write_bytes_rate_per_sec')"
-                        v-show="!args.diskio_iops">
+                    <td
+v-show="!args.diskio_iops" class="text-end w-25"
+                        :class="getDecoration(disk.name, 'write_bytes_rate_per_sec')">
                         {{ disk.bitrate.txps }}
                     </td>
-                    <td class="text-end w-25" :class="getDecoration(disk.name, 'read_bytes_rate_per_sec')"
-                        v-show="!args.diskio_iops">
+                    <td
+v-show="!args.diskio_iops" class="text-end w-25"
+                        :class="getDecoration(disk.name, 'read_bytes_rate_per_sec')">
                         {{ disk.bitrate.rxps }}
                     </td>
-                    <td class="text-end w-25" v-show="args.diskio_iops">
+                    <td v-show="args.diskio_iops" class="text-end w-25">
                         {{ disk.count.txps }}
                     </td>
-                    <td class="text-end w-25" v-show="args.diskio_iops">
+                    <td v-show="args.diskio_iops" class="text-end w-25">
                         {{ disk.count.rxps }}
                     </td>
                 </tr>

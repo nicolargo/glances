@@ -1,5 +1,5 @@
 <template>
-    <div v-if="!serversListLoaded" class="container-fluid" id="loading-page">
+    <div v-if="!serversListLoaded" id="loading-page" class="container-fluid">
         <div class="loader">Glances Central Browser is loading...</div>
     </div>
     <main v-else>
@@ -9,23 +9,24 @@
             <p>Glances servers can be defined in the glances.conf file.</p>
             <p>Glances servers can be detected automaticaly on the same local area network.</p>
         </span>
-        <span class="title" v-show="servers.length == 1">One Glances server available</span>
-        <span class="title" v-show="servers.length > 1"> {{ servers.length }} Glances servers available</span>
-        <table class="table table-sm table-borderless margin-bottom table-hover" v-show="servers.length > 0">
+        <span v-show="servers.length == 1" class="title">One Glances server available</span>
+        <span v-show="servers.length > 1" class="title"> {{ servers.length }} Glances servers available</span>
+        <table v-show="servers.length > 0" class="table table-sm table-borderless margin-bottom table-hover">
             <thead>
                 <tr>
                     <th scope="col">NAME</th>
                     <th scope="col" class="">IP</th>
                     <th scope="col" class="">STATUS</th>
                     <th scope="col" class="">PROTOCOL</th>
-                    <th v-if="servers.length" v-for="(column, columnId) in servers[0].columns" :key="columnId">
+                    <th v-for="(column, columnId) in servers[0].columns" v-if="servers.length" :key="columnId">
                         {{ column.replace(/_/g, ' ').toUpperCase() }}
                     </th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(server, serverId) in servers" :key="serverId" @click="goToGlances(server)"
-                    style="cursor: pointer">
+                <tr
+v-for="(server, serverId) in servers" :key="serverId" style="cursor: pointer"
+                    @click="goToGlances(server)">
                     <td scope=" row">
                         {{ server.alias ? server.alias : server.name, 32 }}
                     </td>
@@ -38,7 +39,8 @@
                     <td class="">
                         {{ server.protocol }}
                     </td>
-                    <td v-if="servers.length" v-for="(column, columnId) in server.columns" :key="columnId"
+                    <td
+v-for="(column, columnId) in server.columns" v-if="servers.length" :key="columnId"
                         :class="getDecoration(server, column)">
                         {{ formatNumber(server[column]) }}
                     </td>
@@ -61,6 +63,11 @@ export default {
             servers: undefined,
         };
     },
+    computed: {
+        serversListLoaded() {
+            return this.servers !== undefined;
+        },
+    },
     created() {
         this.updateServersList();
     },
@@ -70,6 +77,9 @@ export default {
             ? parseInt(GLANCES['refresh-time'], 10)
             : undefined;
         this.interval = setInterval(this.updateServersList, refreshTime * 1000)
+    },
+    unmounted() {
+        clearInterval(this.interval)
     },
     methods: {
         updateServersList() {
@@ -96,14 +106,6 @@ export default {
             }
             return server[column + '_decoration'].replace('_LOG', '').toLowerCase();
         }
-    },
-    computed: {
-        serversListLoaded() {
-            return this.servers !== undefined;
-        },
-    },
-    destroyed() {
-        clearInterval(this.interval)
     }
 };
 </script>
