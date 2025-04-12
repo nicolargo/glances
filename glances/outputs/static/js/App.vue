@@ -1,5 +1,5 @@
 <template>
-    <div v-if="!dataLoaded" class="container-fluid" id="loading-page">
+    <div v-if="!dataLoaded" id="loading-page" class="container-fluid">
         <div class="loader">Glances is loading...</div>
     </div>
     <glances-help v-else-if="args.help_tag"></glances-help>
@@ -14,14 +14,14 @@
         <!-- Display standard header on others screen sizes -->
         <div class="d-none d-sm-block">
             <div class="header d-flex justify-content-between flex-row">
-                <div class="" v-if="!args.disable_system"><glances-plugin-system :data="data"></glances-plugin-system>
+                <div v-if="!args.disable_system" class=""><glances-plugin-system :data="data"></glances-plugin-system>
                 </div>
-                <div class="d-none d-lg-block" v-if="!args.disable_ip"><glances-plugin-ip
+                <div v-if="!args.disable_ip" class="d-none d-lg-block"><glances-plugin-ip
                         :data="data"></glances-plugin-ip>
                 </div>
-                <div class="d-none d-xl-block" v-if="!args.disable_now"><glances-plugin-now
+                <div v-if="!args.disable_now" class="d-none d-xl-block"><glances-plugin-now
                         :data="data"></glances-plugin-now></div>
-                <div class="d-none d-md-block" v-if="!args.disable_uptime"><glances-plugin-uptime
+                <div v-if="!args.disable_uptime" class="d-none d-md-block"><glances-plugin-uptime
                         :data="data"></glances-plugin-uptime></div>
             </div>
         </div>
@@ -33,11 +33,11 @@
         <!-- Display top menu with CPU, MEM, LOAD...-->
         <div class="top d-flex justify-content-between flex-row">
             <!-- Quicklook -->
-            <div class="d-none d-md-block" v-if="!args.disable_quicklook">
+            <div v-if="!args.disable_quicklook" class="d-none d-md-block">
                 <glances-plugin-quicklook :data="data"></glances-plugin-quicklook>
             </div>
             <!-- CPU -->
-            <div class="" v-if="!args.disable_cpu || !args.percpu">
+            <div v-if="!args.disable_cpu || !args.percpu" class="">
                 <glances-plugin-cpu :data="data"></glances-plugin-cpu>
             </div>
             <!-- TODO: percpu need to be refactor
@@ -51,30 +51,32 @@
                 </div> -->
 
             <!-- GPU -->
-            <div class="d-none d-xl-block" v-if="!args.disable_gpu && hasGpu">
+            <div v-if="!args.disable_gpu && hasGpu" class="d-none d-xl-block">
                 <glances-plugin-gpu :data="data"></glances-plugin-gpu>
             </div>
             <!-- MEM -->
-            <div class="" v-if="!args.disable_mem">
+            <div v-if="!args.disable_mem" class="">
                 <glances-plugin-mem :data="data"></glances-plugin-mem>
             </div>
             <!-- SWAP -->
-            <div class="d-none d-lg-block" v-if="!args.disable_memswap">
+            <div v-if="!args.disable_memswap" class="d-none d-lg-block">
                 <glances-plugin-memswap :data="data"></glances-plugin-memswap>
             </div>
             <!-- LOAD -->
-            <div class="d-none d-sm-block" v-if="!args.disable_load">
+            <div v-if="!args.disable_load" class="d-none d-sm-block">
                 <glances-plugin-load :data="data"></glances-plugin-load>
             </div>
         </div>
         <!-- Display bottom of the screen with sidebar and processlist -->
         <div class="bottom container-fluid">
             <div class="row">
-                <div class="col-3 d-none d-md-block"
-                    :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }"
-                    v-if="!args.disable_left_sidebar">
+                <div
+v-if="!args.disable_left_sidebar"
+                    class="col-3 d-none d-md-block"
+                    :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }">
                     <template v-for="plugin in leftMenu">
-                        <component v-if="!args[`disable_${plugin}`]" :is="`glances-plugin-${plugin}`" :id="`${plugin}`"
+                        <component
+:is="`glances-plugin-${plugin}`" v-if="!args[`disable_${plugin}`]" :id="`${plugin}`"
                             :data="data">
                         </component>
                     </template>
@@ -200,6 +202,17 @@ export default {
                 document.title = this.title;
             }
         }
+    },
+    mounted() {
+        const GLANCES = window.__GLANCES__ || {};
+        const refreshTime = isFinite(GLANCES['refresh-time'])
+            ? parseInt(GLANCES['refresh-time'], 10)
+            : undefined;
+        GlancesStats.init(refreshTime);
+        this.setupHotKeys();
+    },
+    beforeUnmount() {
+        hotkeys.unbind();
     },
     methods: {
         setupHotKeys() {
@@ -382,17 +395,6 @@ export default {
                 this.store.args.disable_wifi = !this.store.args.disable_wifi;
             });
         }
-    },
-    mounted() {
-        const GLANCES = window.__GLANCES__ || {};
-        const refreshTime = isFinite(GLANCES['refresh-time'])
-            ? parseInt(GLANCES['refresh-time'], 10)
-            : undefined;
-        GlancesStats.init(refreshTime);
-        this.setupHotKeys();
-    },
-    beforeUnmount() {
-        hotkeys.unbind();
     }
 };
 </script>

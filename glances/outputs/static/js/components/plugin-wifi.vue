@@ -1,5 +1,5 @@
 <template>
-    <section class="plugin" id="wifi" v-if="hasHotpots">
+    <section v-if="hasHotpots" id="wifi" class="plugin">
         <table class="table table-sm table-borderless margin-bottom">
             <thead>
                 <tr>
