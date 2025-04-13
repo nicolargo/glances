@@ -25,6 +25,7 @@ class GlancesExport:
         'help',
         'plugin',
         'psutilversion',
+        'quicklook',
         'version',
     ]
 
