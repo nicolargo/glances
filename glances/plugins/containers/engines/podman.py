@@ -371,6 +371,7 @@ class PodmanExtension:
             'memory_percent': None,
             'network_rx': None,
             'network_tx': None,
+            'ports': '',
             'uptime': None,
         }
 
@@ -402,5 +403,9 @@ class PodmanExtension:
 
         # Manage special chars in command (see issue#2733)
         stats['command'] = replace_special_chars(' '.join(stats['command']))
+
+        # Manage ports (see iisue#2054)
+        if hasattr(container, 'ports'):
+            stats['ports'] = ','.join([f'{container.ports[cp][0]["HostPort"]}->{cp}' for cp in container.ports])
 
         return stats
