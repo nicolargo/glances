@@ -147,7 +147,7 @@ class GlancesExport:
         """Return the list of plugins last exported."""
         return self._last_exported_list
 
-    def init(self, stats):
+    def init_fields(self, stats):
         """Return fields description in order to init stats in a server."""
         if not self.export_enable:
             return False
