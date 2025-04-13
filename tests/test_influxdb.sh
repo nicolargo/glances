@@ -6,7 +6,6 @@ set -e
 echo "Starting InfluxDB container..."
 docker run -d --name influxdb-for-glances \
     -p 8086:8086 \
-    -v influxdb_data:/var/lib/influxdb \
     influxdb:1.11
 
 # Wait for InfluxDB to be ready (retry for up to 30 seconds)
