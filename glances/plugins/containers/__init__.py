@@ -70,6 +70,9 @@ fields_description = {
         'description': 'Container network TX bitrate',
         'unit': 'bitpersecond',
     },
+    'ports': {
+        'description': 'Container ports',
+    },
     'uptime': {
         'description': 'Container uptime',
     },
@@ -375,6 +378,9 @@ class PluginModel(GlancesPluginModel):
         if 'networkio' not in self.disable_stats:
             msgs.extend(['{:>7}'.format('Rx/s'), ' {:<7}'.format('Tx/s')])
 
+        if 'ports' not in self.disable_stats:
+            msgs.extend('{:16}'.format('Ports'))
+
         if 'command' not in self.disable_stats:
             msgs.append(' {:8}'.format('Command'))
 
@@ -473,6 +479,15 @@ class PluginModel(GlancesPluginModel):
 
         return build_with_this_args
 
+    def build_ports(self, ret, container):
+        if container['ports'] is not None and container['ports'] != '':
+            msg = '{:16}'.format(container['ports'])
+        else:
+            msg = '{:16}'.format('_')
+        ret.append(self.curse_add_line(msg, splittable=True))
+
+        return ret
+
     def build_cmd_line(self, ret, container):
         if container['command'] is not None:
             msg = ' {}'.format(container['command'])
@@ -529,6 +544,8 @@ class PluginModel(GlancesPluginModel):
                 steps.append(self.build_io_line)
             if 'networkio' not in self.disable_stats:
                 steps.append(self.build_net_line(args))
+            if 'ports' not in self.disable_stats:
+                steps.append(self.build_ports)
             if 'command' not in self.disable_stats:
                 steps.append(self.build_cmd_line)
 
