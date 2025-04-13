@@ -279,7 +279,7 @@ class GlancesStats:
             for e in self.getExportsList():
                 logger.debug(f"Init exported stats using the {e} module")
                 # @TODO: is it a good idea to thread this call ?
-                self._exports[e].init(input_stats)
+                self._exports[e].init_fields(input_stats)
             # In this first loop, data are not exported because some information are missing (rate for example)
             logger.debug("Do not export stats during the first iteration because some information are missing")
             self.first_export = False
