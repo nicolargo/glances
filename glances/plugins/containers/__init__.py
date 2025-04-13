@@ -79,6 +79,9 @@ fields_description = {
         'description': 'Container network TX bitrate',
         'unit': 'bitpersecond',
     },
+    'ports': {
+        'description': 'Container ports',
+    },
     'uptime': {
         'description': 'Container uptime',
     },
@@ -392,6 +395,9 @@ class ContainersPlugin(GlancesPluginModel):
         if 'networkio' not in self.disable_stats:
             msgs.extend(['{:>7}'.format('Rx/s'), ' {:<7}'.format('Tx/s')])
 
+        if 'ports' not in self.disable_stats:
+            msgs.extend('{:16}'.format('Ports'))
+
         if 'command' not in self.disable_stats:
             msgs.append(' {:8}'.format('Command'))
 
@@ -490,6 +496,15 @@ class ContainersPlugin(GlancesPluginModel):
 
         return build_with_this_args
 
+    def build_ports(self, ret, container):
+        if container['ports'] is not None and container['ports'] != '':
+            msg = '{:16}'.format(container['ports'])
+        else:
+            msg = '{:16}'.format('_')
+        ret.append(self.curse_add_line(msg, splittable=True))
+
+        return ret
+
     def build_cmd_line(self, ret, container):
         if container['command'] is not None:
             msg = ' {}'.format(container['command'])
@@ -531,6 +546,7 @@ class ContainersPlugin(GlancesPluginModel):
     def build_container_data(self, name_max_width, args):
         def build_with_this_params(ret, container):
             steps = [self.maybe_add_engine_name_or_pod_name]
+<<<<<<< HEAD
             options = {
                 'name': self.build_container_name(name_max_width),
                 'status': self.build_status_name,
@@ -541,6 +557,26 @@ class ContainersPlugin(GlancesPluginModel):
                 'networkio': self.build_net_line(args),
                 'command': self.build_cmd_line,
             }
+=======
+            if 'name' not in self.disable_stats:
+                steps.append(self.build_container_name(name_max_width))
+            if 'status' not in self.disable_stats:
+                steps.append(self.build_status_name)
+            if 'uptime' not in self.disable_stats:
+                steps.append(self.build_uptime_line)
+            if 'cpu' not in self.disable_stats:
+                steps.append(self.build_cpu_line)
+            if 'mem' not in self.disable_stats:
+                steps.append(self.build_memory_line)
+            if 'diskio' not in self.disable_stats:
+                steps.append(self.build_io_line)
+            if 'networkio' not in self.disable_stats:
+                steps.append(self.build_net_line(args))
+            if 'ports' not in self.disable_stats:
+                steps.append(self.build_ports)
+            if 'command' not in self.disable_stats:
+                steps.append(self.build_cmd_line)
+>>>>>>> f7051938 (Show used port in container section - First try, ok for one port... #2054)
 
             steps.extend(v for k, v in options.items() if k not in self.disable_stats)
             return reduce(lambda ret, step: step(ret, container), steps, ret)
