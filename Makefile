@@ -114,8 +114,13 @@ test-min: ## Run core unit tests in minimal environment
 test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in minimal environment
 	$(venv_min)/python -m pytest tests/test_core.py
 
-test-influxdb: ## Run interface tests with InfluxDB
-	/bin/bash ./tests/test_influxdb.sh
+test-export-csv: ## Run interface tests with CSV
+	/bin/bash ./tests/test_export_csv.sh
+
+test-export-influxdb: ## Run interface tests with InfluxDB
+	/bin/bash ./tests/test_export_influxdb.sh
+
+test-export: test-export-csv test-export-influxdb ## Tests all exports
 
 # ===================================================================
 # Linters, profilers and cyber security

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Pre-requisites:
+# - docker
+# - jq
 
 # Exit on error
 set -e
