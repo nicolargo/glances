@@ -118,4 +118,4 @@ class GlancesPassword:
         """Load the hashed password from the Glances folder."""
         # Read the password file, if it exists
         with builtins.open(self.password_file) as file_pwd:
-            return file_pwd.read()
+            return file_pwd.read().strip()
