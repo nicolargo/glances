@@ -3,13 +3,13 @@
 F.A.Q
 =====
 
-*Any encoding issue ?*
+ # Any encoding issue ?
 
 Try to run Glances with the following command line:
 
     LANG=en_US.UTF-8 LC_ALL= glances
 
-*Container memory stats not displayed ?*
+# Container memory stats not displayed ?
 
 On ARM64, Docker needs to be configured to allow access to the memory stats.
 
