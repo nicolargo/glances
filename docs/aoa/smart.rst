@@ -23,22 +23,22 @@ How to read the information:
 .. warning::
     This plugin needs administrator rights. Please run Glances as root/admin.
 
-Also, you can hide sensors using regular expressions.
+Also, you can hide driver using regular expressions.
 
-To hide sensors you should use the hide option:
+To hide device you should use the hide option:
 
 .. code-block:: ini
 
     [smart]
-    hide=.*Hide_this_driver.*
+    hide=.*Hide_this_device.*
 
 It is also possible to configure a white list of devices to display.
-Example to only show .*Drive_Temperature.* sensors:
+Example to show only the specified drive:
 
 .. code-block:: ini
 
      [smart]
-     show=.*Drive_Temperature.*
+     show=.*Show_this_device.*
 
 Filtering is based on regular expression. Please be sure that your regular
 expression works as expected. You can use an online tool like `regex101`_ in
