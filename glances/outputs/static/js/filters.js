@@ -104,6 +104,11 @@ export function nl2br(input) {
 }
 
 export function number(value, options) {
+    // If value is undefined or not a number then return '-'
+    if ((typeof value === 'undefined') || isNaN(value)) {
+        return '-';
+    }
+    // Else
     return new Intl.NumberFormat(
         "en-US",
         typeof options === 'number' ? { maximumFractionDigits: options } : options
