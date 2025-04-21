@@ -15,17 +15,16 @@ from time import time
 last_update_times = {}
 
 
-def getTimeSinceLastUpdate(IOType):
+def getTimeSinceLastUpdate(key):
     """Return the elapsed time since last update."""
     global last_update_times
-    # assert(IOType in ['net', 'disk', 'process_disk'])
     current_time = time()
-    last_time = last_update_times.get(IOType)
+    last_time = last_update_times.get(key)
     if not last_time:
         time_since_update = 1
     else:
         time_since_update = current_time - last_time
-    last_update_times[IOType] = current_time
+    last_update_times[key] = current_time
     return time_since_update
 
 
