@@ -41,6 +41,7 @@ Legend:
    hddtemp
    ps
    containers
+   vms
    amps
    events
    actions
