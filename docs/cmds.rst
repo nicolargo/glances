@@ -352,7 +352,7 @@ The following commands (key pressed) are supported while in Glances:
     Show/hide RAID plugin
 
 ``s``
-    Show/hide sensors stats
+    Show/hide sensors plugin
 
 ``S``
     Enable/disable spark lines
@@ -368,6 +368,9 @@ The following commands (key pressed) are supported while in Glances:
 
 ``U``
     View cumulative network I/O
+
+``V``
+    Show/hide VMS plugin
 
 ``w``
     Delete finished warning log messages
