@@ -10,9 +10,11 @@
 
 import json
 import os
+from functools import cache
 from typing import Any
 
 from glances.globals import json_loads, nativestr
+from glances.plugins.vms.engines import VmsExtension
 from glances.secure import secure_popen
 
 # Check if multipass binary exist
@@ -20,10 +22,10 @@ from glances.secure import secure_popen
 MULTIPASS_PATH = '/snap/bin/multipass'
 MULTIPASS_VERSION_OPTIONS = 'version --format json'
 MULTIPASS_INFO_OPTIONS = 'info --format json'
-import_multipass_error_tag = not os.path.exists(MULTIPASS_PATH)
+import_multipass_error_tag = not os.path.exists(MULTIPASS_PATH) and os.access(MULTIPASS_PATH, os.X_OK)
 
 
-class VmExtension:
+class VmExtension(VmsExtension):
     """Glances' Vms Plugin's Vm Extension unit"""
 
     CONTAINER_ACTIVE_STATUS = ['running']
@@ -31,6 +33,7 @@ class VmExtension:
     def __init__(self):
         self.ext_name = "Multipass (Vm)"
 
+    @cache
     def update_version(self):
         # > multipass version --format json
         # {
@@ -41,46 +44,11 @@ class VmExtension:
         try:
             ret = json_loads(ret_cmd)
         except json.JSONDecodeError:
-            return {}
+            return ''
         else:
             return ret.get('multipass', None)
 
     def update_info(self):
-        # > multipass info  --format json
-        # {
-        #     "errors": [
-        #     ],
-        #     "info": {
-        #         "adapted-budgerigar": {
-        #             "cpu_count": "1",
-        #             "disks": {
-        #                 "sda1": {
-        #                     "total": "5116440064",
-        #                     "used": "2287162880"
-        #                 }
-        #             },
-        #             "image_hash": "182dc760bfca26c45fb4e4668049ecd4d0ecdd6171b3bae81d0135e8f1e9d93e",
-        #             "image_release": "24.04 LTS",
-        #             "ipv4": [
-        #                 "10.160.166.174"
-        #             ],
-        #             "load": [
-        #                 0,
-        #                 0.03,
-        #                 0
-        #             ],
-        #             "memory": {
-        #                 "total": 1002500096,
-        #                 "used": 432058368
-        #             },
-        #             "mounts": {
-        #             },
-        #             "release": "Ubuntu 24.04 LTS",
-        #             "snapshot_count": "0",
-        #             "state": "Running"
-        #         }
-        #     }
-        # }
         ret_cmd = secure_popen(f'{MULTIPASS_PATH} {MULTIPASS_INFO_OPTIONS}')
         try:
             ret = json_loads(ret_cmd)
@@ -89,11 +57,11 @@ class VmExtension:
         else:
             return ret.get('info', {})
 
-    def update(self, all_tag) -> tuple[dict, list[dict]]:
+    def update(self, all_tag) -> tuple[str, list[dict]]:
         """Update Vm stats using the input method."""
         # Can not run multipass on this system then...
         if import_multipass_error_tag:
-            return {}, []
+            return '', []
 
         # Get the stats from the system
         version_stats = self.update_version()
@@ -124,6 +92,7 @@ class VmExtension:
             'status': vm_stats.get('state').lower() if vm_stats.get('state') else None,
             'release': vm_stats.get('release') if vm_stats.get('release') else vm_stats.get('image_release'),
             'cpu_count': int(vm_stats.get('cpu_count', 1)) if vm_stats.get('cpu_count', 1) else None,
+            'cpu_time': None,  # Not available through the multipass CLI
             'memory_usage': vm_stats.get('memory').get('used') if vm_stats.get('memory') else None,
             'memory_total': vm_stats.get('memory').get('total') if vm_stats.get('memory') else None,
             'load_1min': vm_stats.get('load')[0] if vm_stats.get('load') else None,
