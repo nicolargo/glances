@@ -6,21 +6,22 @@
             <thead>
                 <tr>
                     <td v-show="showEngine">Engine</td>
-                    <td
-:class="['sortable', sorter.column === 'name' && 'sort']"
+                    <td :class="['sortable', sorter.column === 'name' && 'sort']"
                         @click="args.sort_processes_key = 'name'">
                         Name
                     </td>
                     <td>Status</td>
                     <td>Core</td>
-                    <td
-:class="['sortable', sorter.column === 'memory_usage' && 'sort']"
+                    <td :class="['sortable', sorter.column === 'cpu_time' && 'sort']"
+                        @click="args.sort_processes_key = 'cpu_time'">
+                        CPU%
+                    </td>
+                    <td :class="['sortable', sorter.column === 'memory_usage' && 'sort']"
                         @click="args.sort_processes_key = 'memory_usage'">
                         MEM
                     </td>
                     <td>/ MAX</td>
-                    <td
-:class="['sortable', sorter.column === 'load_1min' && 'sort']"
+                    <td :class="['sortable', sorter.column === 'load_1min' && 'sort']"
                         @click="args.sort_processes_key = 'load_1min'">
                         LOAD 1/5/15min
                     </td>
@@ -36,6 +37,9 @@
                     </td>
                     <td>
                         {{ $filters.number(vm.cpu_count, 1) }}
+                    </td>
+                    <td>
+                        {{ $filters.number(vm.cpu_time, 1) }}
                     </td>
                     <td>
                         {{ $filters.bytes(vm.memory_usage) }}
@@ -92,13 +96,15 @@ export default {
                     return {
                         'id': vmData.id,
                         'name': vmData.name,
-                        'status': vmData.status != undefined ? vmData.status : '?',
-                        'cpu_count': vmData.cpu_count != undefined ? vmData.cpu_count : '?',
-                        'memory_usage': vmData.memory_usage != undefined ? vmData.memory_usage : '?',
-                        'memory_total': vmData.memory_total != undefined ? vmData.memory_total : '?',
-                        'load_1min': vmData.load_1min != undefined ? vmData.load_1min : '?',
-                        'load_5min': vmData.load_5min != undefined ? vmData.load_5min : '?',
-                        'load_15min': vmData.load_15min != undefined ? vmData.load_15min : '?',
+                        'status': vmData.status != undefined ? vmData.status : '-',
+                        'cpu_count': vmData.cpu_count != undefined ? vmData.cpu_count : '-',
+                        'cpu_time': vmData.cpu_time != undefined ? vmData.cpu_time : '-',
+                        'cpu_time_rate_per_sec': vmData.cpu_time_rate_per_sec != undefined ? vmData.cpu_time_rate_per_sec : '?',
+                        'memory_usage': vmData.memory_usage != undefined ? vmData.memory_usage : '-',
+                        'memory_total': vmData.memory_total != undefined ? vmData.memory_total : '-',
+                        'load_1min': vmData.load_1min != undefined ? vmData.load_1min : '-',
+                        'load_5min': vmData.load_5min != undefined ? vmData.load_5min : '-',
+                        'load_15min': vmData.load_15min != undefined ? vmData.load_15min : '-',
                         'release': vmData.release,
                         'image': vmData.image,
                         'engine': vmData.engine,
@@ -125,13 +131,14 @@ export default {
         sortProcessesKey: {
             immediate: true,
             handler(sortProcessesKey) {
-                const sortable = ['load_1min', 'memory_usage', 'name'];
+                const sortable = ['load_1min', 'cpu_time', 'memory_usage', 'name'];
                 function isReverseColumn(column) {
                     return !['name'].includes(column);
                 }
                 function getColumnLabel(value) {
                     const labels = {
                         load_1min: 'load',
+                        cpu_time: 'CPU time',
                         memory_usage: 'memory consumption',
                         name: 'VM name',
                         None: 'None'
@@ -140,7 +147,7 @@ export default {
                 }
                 if (!sortProcessesKey || sortable.includes(sortProcessesKey)) {
                     this.sorter = {
-                        column: this.args.sort_processes_key || 'load_1min',
+                        column: this.args.sort_processes_key || 'cpu_time',
                         auto: !this.args.sort_processes_key,
                         isReverseColumn,
                         getColumnLabel

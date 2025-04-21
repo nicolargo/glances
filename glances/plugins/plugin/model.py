@@ -531,8 +531,10 @@ class GlancesPluginModel:
         else:
             item_views = self.views[item]
 
-        if key is None or key not in item_views:
+        if key is None:
             return item_views
+        if key not in item_views:
+            return 'DEFAULT'
         if option is None:
             return item_views[key]
         if option in item_views[key]:

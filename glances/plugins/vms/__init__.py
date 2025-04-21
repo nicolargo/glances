@@ -15,7 +15,8 @@ from glances.globals import iteritems
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.plugins.vms.engines import VmsExtension
-from glances.plugins.vms.engines.multipass import VmExtension
+from glances.plugins.vms.engines.multipass import VmExtension as MultipassVmExtension
+from glances.plugins.vms.engines.virsh import VmExtension as VirshVmExtension
 from glances.processes import glances_processes
 from glances.processes import sort_stats as sort_stats_processes
 
@@ -41,6 +42,11 @@ fields_description = {
     'cpu_count': {
         'description': 'Vm CPU count',
     },
+    'cpu_time': {
+        'description': 'Vm CPU time',
+        'rate': True,
+        'unit': 'percent',
+    },
     'memory_usage': {
         'description': 'Vm memory usage',
         'unit': 'byte',
@@ -62,7 +68,7 @@ fields_description = {
         'description': 'Vm IP v4 address',
     },
     'engine': {
-        'description': 'VM engine name (only Mutlipass is currently supported)',
+        'description': 'VM engine name',
     },
     'engine_version': {
         'description': 'VM engine version',
@@ -78,6 +84,7 @@ export_exclude_list = []
 # Sort dictionary for human
 sort_for_human = {
     'cpu_count': 'CPU count',
+    'cpu_time': 'CPU time',
     'memory_usage': 'memory consumption',
     'load_1min': 'load',
     'name': 'VM name',
@@ -88,7 +95,7 @@ sort_for_human = {
 class PluginModel(GlancesPluginModel):
     """Glances Vm plugin.
 
-    stats is a dict: {'version': {...}, 'vms': [{}, {}]}
+    stats is a dict: {'version': '', 'vms': [{}, {}]}
     """
 
     def __init__(self, args=None, config=None):
@@ -109,7 +116,10 @@ class PluginModel(GlancesPluginModel):
         self.watchers: dict[str, VmsExtension] = {}
 
         # Init the Multipass API
-        self.watchers['multipass'] = VmExtension()
+        self.watchers['multipass'] = MultipassVmExtension()
+
+        # Init the Virsh API
+        self.watchers['virsh'] = VirshVmExtension()
 
         # Sort key
         self.sort_key = None
@@ -158,6 +168,15 @@ class PluginModel(GlancesPluginModel):
             return self.get_init_value()
 
         # Update stats
+        stats = self.update_local()
+
+        # Sort and update the stats
+        self.sort_key, self.stats = sort_vm_stats(stats)
+        return self.stats
+
+    @GlancesPluginModel._manage_rate
+    def update_local(self):
+        """Update stats localy"""
         stats = []
         for engine, watcher in iteritems(self.watchers):
             version, vms = watcher.update(all_tag=self._all_tag())
@@ -165,11 +184,7 @@ class PluginModel(GlancesPluginModel):
                 vm["engine"] = engine
                 vm["engine_version"] = version
             stats.extend(vms)
-
-        # Sort and update the stats
-        # TODO: test
-        self.sort_key, self.stats = sort_vm_stats(stats)
-        return self.stats
+        return stats
 
     def update_views(self) -> bool:
         """Update stats views."""
@@ -207,11 +222,12 @@ class PluginModel(GlancesPluginModel):
             ret.append(self.curse_add_line(msg))
         if not self.views['show_engine_name']:
             msg = f' (served by {self.stats[0].get("engine", "")})'
-        ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
+
         # Header
         ret.append(self.curse_new_line())
-        # Get the maximum VMs name
+        # Get the maximum VMs name length
         # Max size is configurable. See feature request #1723.
         name_max_width = min(
             self.config.get_int_value('vms', 'max_name_size', default=20) if self.config is not None else 20,
@@ -219,7 +235,9 @@ class PluginModel(GlancesPluginModel):
         )
 
         if self.views['show_engine_name']:
-            msg = ' {:{width}}'.format('Engine', width=8)
+            # Get the maximum engine length
+            engine_max_width = max(len(max(self.stats, key=lambda x: len(x['engine']))['engine']), 8)
+            msg = ' {:{width}}'.format('Engine', width=engine_max_width)
             ret.append(self.curse_add_line(msg))
         msg = ' {:{width}}'.format('Name', width=name_max_width)
         ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'name' else 'DEFAULT'))
@@ -227,6 +245,8 @@ class PluginModel(GlancesPluginModel):
         ret.append(self.curse_add_line(msg))
         msg = '{:>6}'.format('Core')
         ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'cpu_count' else 'DEFAULT'))
+        msg = '{:>6}'.format('CPU%')
+        ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'cpu_time' else 'DEFAULT'))
         msg = '{:>7}'.format('MEM')
         ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'memory_usage' else 'DEFAULT'))
         msg = '/{:<7}'.format('MAX')
@@ -240,7 +260,7 @@ class PluginModel(GlancesPluginModel):
         for vm in self.stats:
             ret.append(self.curse_new_line())
             if self.views['show_engine_name']:
-                ret.append(self.curse_add_line(' {:{width}}'.format(vm["engine"], width=8)))
+                ret.append(self.curse_add_line(' {:{width}}'.format(vm["engine"], width=engine_max_width)))
             # Name
             ret.append(self.curse_add_line(' {:{width}}'.format(vm['name'][:name_max_width], width=name_max_width)))
             # Status
@@ -253,6 +273,16 @@ class PluginModel(GlancesPluginModel):
             except (KeyError, TypeError):
                 msg = '{:>6}'.format('-')
             ret.append(self.curse_add_line(msg, self.get_views(item=vm['name'], key='cpu_count', option='decoration')))
+            # CPU (time)
+            try:
+                msg = '{:>6}'.format(vm['cpu_time_rate_per_sec'])
+            except (KeyError, TypeError):
+                msg = '{:>6}'.format('-')
+            ret.append(
+                self.curse_add_line(
+                    msg, self.get_views(item=vm['name'], key='cpu_time_rate_per_sec', option='decoration')
+                )
+            )
             # MEM
             try:
                 msg = '{:>7}'.format(self.auto_unit(vm['memory_usage']))
@@ -297,13 +327,13 @@ def sort_vm_stats(stats: list[dict[str, Any]]) -> tuple[str, list[dict[str, Any]
     # Make VM sort related to process sort
     if glances_processes.sort_key == 'memory_percent':
         sort_by = 'memory_usage'
-        sort_by_secondary = 'load_1min'
+        sort_by_secondary = 'cpu_time'
     elif glances_processes.sort_key == 'name':
         sort_by = 'name'
         sort_by_secondary = 'load_1min'
     else:
-        sort_by = 'load_1min'
-        sort_by_secondary = 'memory_usage'
+        sort_by = 'cpu_time'
+        sort_by_secondary = 'load_1min'
 
     # Sort vm stats
     sort_stats_processes(
