@@ -22,7 +22,7 @@ from glances.secure import secure_popen
 MULTIPASS_PATH = '/snap/bin/multipass'
 MULTIPASS_VERSION_OPTIONS = 'version --format json'
 MULTIPASS_INFO_OPTIONS = 'info --format json'
-import_multipass_error_tag = not os.path.exists(MULTIPASS_PATH) and os.access(MULTIPASS_PATH, os.X_OK)
+import_multipass_error_tag = not os.path.exists(MULTIPASS_PATH) or not os.access(MULTIPASS_PATH, os.X_OK)
 
 
 class VmExtension(VmsExtension):
