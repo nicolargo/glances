@@ -119,96 +119,110 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+    def _update_for_local(self, stats):
+        # Update stats using the standard system lib
+        # Grab MEM using the psutil virtual_memory method
+        vm_stats = psutil.virtual_memory()
+
+        # Get all the memory stats (copy/paste of the psutil documentation)
+        # total: total physical memory available.
+        # available: the actual amount of available memory that can be given instantly
+        # to processes that request more memory in bytes; this is calculated by summing
+        # different memory values depending on the platform (e.g. free + buffers + cached on Linux)
+        # and it is supposed to be used to monitor actual memory usage in a cross platform fashion.
+        # percent: the percentage usage calculated as (total - available) / total * 100.
+        # used: memory used, calculated differently depending on the platform and designed for informational
+        # purposes only.
+        # free: memory not being used at all (zeroed) that is readily available; note that this doesn't
+        # reflect the actual memory available (use ‘available’ instead).
+        # Platform-specific fields:
+        # active: (UNIX): memory currently in use or very recently used, and so it is in RAM.
+        # inactive: (UNIX): memory that is marked as not used.
+        # buffers: (Linux, BSD): cache for things like file system metadata.
+        # cached: (Linux, BSD): cache for various things.
+        # wired: (BSD, macOS): memory that is marked to always stay in RAM. It is never moved to disk.
+        # shared: (BSD): memory that may be simultaneously accessed by multiple processes.
+        self.reset()
+        for mem in [
+            'total',
+            'available',
+            'percent',
+            'used',
+            'free',
+            'active',
+            'inactive',
+            'buffers',
+            'cached',
+            'wired',
+            'shared',
+        ]:
+            if hasattr(vm_stats, mem):
+                stats[mem] = getattr(vm_stats, mem)
+
+        # Use the 'free'/htop calculation
+        # free=available+buffer+cached
+        stats['free'] = stats['available']
+        if hasattr(stats, 'buffers'):
+            stats['free'] += stats['buffers']
+        if hasattr(stats, 'cached'):
+            stats['free'] += stats['cached']
+        # used=total-free
+        stats['used'] = stats['total'] - stats['free']
+
+        return stats
+
+    def _update_for_win_os_esxi(self, stats):
+        # Mem stats for Windows|Vmware Esxi are stored in the FS table
+        try:
+            fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name], bulk=True)
+        except KeyError:
+            self.reset()
+        else:
+            for fs in fs_stat:
+                # The Physical Memory (Windows) or Real Memory (VMware)
+                # gives statistics on RAM usage and availability.
+                if fs in ('Physical Memory', 'Real Memory'):
+                    stats['total'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
+                    stats['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
+                    stats['percent'] = float(stats['used'] * 100 / stats['total'])
+                    stats['free'] = stats['total'] - stats['used']
+                    break
+
+        return stats
+
+    def _update_for_other_oses(self, stats):
+        stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
+
+        if stats['total'] == '':
+            self.reset()
+            return 'reset'
+
+        for k in stats:
+            stats[k] = int(stats[k]) * 1024
+
+        # used=total-free
+        stats['used'] = stats['total'] - stats['free']
+
+        # percent: the percentage usage calculated as (total - available) / total * 100.
+        stats['percent'] = float((stats['total'] - stats['free']) / stats['total'] * 100)
+
+        return stats
+
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
         """Update RAM memory stats using the input method."""
-        # Init new stats
-        stats = self.get_init_value()
+        init = self.get_init_value()
 
         if self.input_method == 'local':
-            # Update stats using the standard system lib
-            # Grab MEM using the psutil virtual_memory method
-            vm_stats = psutil.virtual_memory()
-
-            # Get all the memory stats (copy/paste of the psutil documentation)
-            # total: total physical memory available.
-            # available: the actual amount of available memory that can be given instantly
-            # to processes that request more memory in bytes; this is calculated by summing
-            # different memory values depending on the platform (e.g. free + buffers + cached on Linux)
-            # and it is supposed to be used to monitor actual memory usage in a cross platform fashion.
-            # percent: the percentage usage calculated as (total - available) / total * 100.
-            # used: memory used, calculated differently depending on the platform and designed for informational
-            # purposes only.
-            # free: memory not being used at all (zeroed) that is readily available; note that this doesn't
-            # reflect the actual memory available (use ‘available’ instead).
-            # Platform-specific fields:
-            # active: (UNIX): memory currently in use or very recently used, and so it is in RAM.
-            # inactive: (UNIX): memory that is marked as not used.
-            # buffers: (Linux, BSD): cache for things like file system metadata.
-            # cached: (Linux, BSD): cache for various things.
-            # wired: (BSD, macOS): memory that is marked to always stay in RAM. It is never moved to disk.
-            # shared: (BSD): memory that may be simultaneously accessed by multiple processes.
-            self.reset()
-            for mem in [
-                'total',
-                'available',
-                'percent',
-                'used',
-                'free',
-                'active',
-                'inactive',
-                'buffers',
-                'cached',
-                'wired',
-                'shared',
-            ]:
-                if hasattr(vm_stats, mem):
-                    stats[mem] = getattr(vm_stats, mem)
-
-            # Use the 'free'/htop calculation
-            # free=available+buffer+cached
-            stats['free'] = stats['available']
-            if hasattr(stats, 'buffers'):
-                stats['free'] += stats['buffers']
-            if hasattr(stats, 'cached'):
-                stats['free'] += stats['cached']
-            # used=total-free
-            stats['used'] = stats['total'] - stats['free']
+            stats = self._update_for_local(init)
+        elif self.input_method == 'snmp' and self.short_system_name in ('windows', 'esxi'):
+            stats = self._update_for_win_os_esxi(init)
         elif self.input_method == 'snmp':
-            # Update stats using SNMP
-            if self.short_system_name in ('windows', 'esxi'):
-                # Mem stats for Windows|Vmware Esxi are stored in the FS table
-                try:
-                    fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name], bulk=True)
-                except KeyError:
-                    self.reset()
-                else:
-                    for fs in fs_stat:
-                        # The Physical Memory (Windows) or Real Memory (VMware)
-                        # gives statistics on RAM usage and availability.
-                        if fs in ('Physical Memory', 'Real Memory'):
-                            stats['total'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
-                            stats['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
-                            stats['percent'] = float(stats['used'] * 100 / stats['total'])
-                            stats['free'] = stats['total'] - stats['used']
-                            break
-            else:
-                # Default behavior for others OS
-                stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
+            stats = self._update_for_other_oses(init)
 
-                if stats['total'] == '':
-                    self.reset()
-                    return self.stats
-
-                for k in stats:
-                    stats[k] = int(stats[k]) * 1024
-
-                # used=total-free
-                stats['used'] = stats['total'] - stats['free']
-
-                # percent: the percentage usage calculated as (total - available) / total * 100.
-                stats['percent'] = float((stats['total'] - stats['free']) / stats['total'] * 100)
+        if stats in ['reset']:
+            return self.stats
 
         # Update the stats
         self.stats = stats
