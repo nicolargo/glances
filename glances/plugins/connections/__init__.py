@@ -102,6 +102,53 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+    def update_with_net_connections_method(self, stats):
+        # Grab network interface stat using the psutil net_connections method
+        try:
+            net_connections = psutil.net_connections(kind="tcp")
+        except Exception as e:
+            logger.warning(f'Can not get network connections stats ({e})')
+            logger.info('Disable connections stats')
+            stats['net_connections_enabled'] = False
+            self.stats = stats
+            return 'previous-stats'
+
+        for s in self.status_list:
+            stats[s] = len([c for c in net_connections if c.status == s])
+        initiated = 0
+        for s in self.initiated_states:
+            stats[s] = len([c for c in net_connections if c.status == s])
+            initiated += stats[s]
+        stats['initiated'] = initiated
+        terminated = 0
+        for s in self.initiated_states:
+            stats[s] = len([c for c in net_connections if c.status == s])
+            terminated += stats[s]
+        stats['terminated'] = terminated
+
+        return stats
+
+    def update_with_nf_conntrack_method(self, stats):
+        # Grab connections track directly from the /proc file
+        for i in self.conntrack:
+            try:
+                with open(self.conntrack[i]) as f:
+                    stats[i] = float(f.readline().rstrip("\n"))
+            except (OSError, FileNotFoundError) as e:
+                logger.warning(f'Can not get network connections track ({e})')
+                logger.info('Disable connections track')
+                stats['nf_conntrack_enabled'] = False
+                self.stats = stats
+                return 'previous-stats'
+        if 'nf_conntrack_max' in stats and 'nf_conntrack_count' in stats:
+            stats['nf_conntrack_percent'] = stats['nf_conntrack_count'] * 100 / stats['nf_conntrack_max']
+        else:
+            stats['nf_conntrack_enabled'] = False
+            self.stats = stats
+            return 'previous-stats'
+
+        return stats
+
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
@@ -109,58 +156,22 @@ class PluginModel(GlancesPluginModel):
 
         Stats is a dict
         """
-        # Init new stats
         stats = self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats using the PSUtils lib
 
-            # Grab network interface stat using the psutil net_connections method
             if stats['net_connections_enabled']:
-                try:
-                    net_connections = psutil.net_connections(kind="tcp")
-                except Exception as e:
-                    logger.warning(f'Can not get network connections stats ({e})')
-                    logger.info('Disable connections stats')
-                    stats['net_connections_enabled'] = False
-                    self.stats = stats
-                    return self.stats
-
-                for s in self.status_list:
-                    stats[s] = len([c for c in net_connections if c.status == s])
-                initiated = 0
-                for s in self.initiated_states:
-                    stats[s] = len([c for c in net_connections if c.status == s])
-                    initiated += stats[s]
-                stats['initiated'] = initiated
-                terminated = 0
-                for s in self.initiated_states:
-                    stats[s] = len([c for c in net_connections if c.status == s])
-                    terminated += stats[s]
-                stats['terminated'] = terminated
+                stats = self.update_with_net_connections_method(stats)
 
             if stats['nf_conntrack_enabled']:
-                # Grab connections track directly from the /proc file
-                for i in self.conntrack:
-                    try:
-                        with open(self.conntrack[i]) as f:
-                            stats[i] = float(f.readline().rstrip("\n"))
-                    except (OSError, FileNotFoundError) as e:
-                        logger.warning(f'Can not get network connections track ({e})')
-                        logger.info('Disable connections track')
-                        stats['nf_conntrack_enabled'] = False
-                        self.stats = stats
-                        return self.stats
-                if 'nf_conntrack_max' in stats and 'nf_conntrack_count' in stats:
-                    stats['nf_conntrack_percent'] = stats['nf_conntrack_count'] * 100 / stats['nf_conntrack_max']
-                else:
-                    stats['nf_conntrack_enabled'] = False
-                    self.stats = stats
-                    return self.stats
-
+                stats = self.update_with_nf_conntrack_method(stats)
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             pass
+
+        if stats == 'previous-stats':
+            return self.stats
 
         # Update the stats
         self.stats = stats
