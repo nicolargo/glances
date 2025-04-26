@@ -70,13 +70,10 @@
         <!-- Display bottom of the screen with sidebar and processlist -->
         <div class="bottom container-fluid">
             <div class="row">
-                <div
-v-if="!args.disable_left_sidebar"
-                    class="col-3 d-none d-md-block"
+                <div v-if="!args.disable_left_sidebar" class="col-3 d-none d-md-block"
                     :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }">
                     <template v-for="plugin in leftMenu">
-                        <component
-:is="`glances-plugin-${plugin}`" v-if="!args[`disable_${plugin}`]" :id="`${plugin}`"
+                        <component :is="`glances-plugin-${plugin}`" v-if="!args[`disable_${plugin}`]" :id="`${plugin}`"
                             :data="data">
                         </component>
                     </template>
@@ -393,6 +390,11 @@ export default {
             // 'W' > Enable/Disable Wifi plugin
             hotkeys('shift+W', () => {
                 this.store.args.disable_wifi = !this.store.args.disable_wifi;
+            });
+
+            // 0 => Enable/disable IRIX mode (see issue #3158)
+            hotkeys('0', () => {
+                this.store.args.disable_irix = !this.store.args.disable_irix;
             });
         }
     }
