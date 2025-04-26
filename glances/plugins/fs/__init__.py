@@ -163,8 +163,8 @@ class PluginModel(GlancesPluginModel):
         # Loop over fs
         for fs in fs_stat:
             # Hide the stats if the mount point is in the exclude list
-            # It avoids unnecessary call to PsUtil disk_usage
-            if (not self.is_display(fs.mountpoint)) and (not self.is_display(fs.device)):
+            # # It avoids unnecessary call to PsUtil disk_usage
+            if not self.is_display_any(fs.mountpoint, fs.device):
                 continue
 
             # Grab the disk usage
@@ -236,7 +236,7 @@ class PluginModel(GlancesPluginModel):
             # Default behavior
             for fs, fs_value in fs_stat.item():
                 # Do not take hidden file system into account
-                if (not self.is_display(fs)) or (not self.is_display(fs_value['device_name'])):
+                if not self.is_display_any(fs, fs_value['device_name']):
                     continue
 
                 fs_current = {

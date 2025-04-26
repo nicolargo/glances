@@ -861,6 +861,12 @@ class GlancesPluginModel:
             return self.is_show(value, header=header)
         return not self.is_hide(value, header=header)
 
+    def is_display_any(self, *values, header=""):
+        """Return True if any of the values should be displayed in the UI"""
+        if self.get_conf_value('show', header=header) != []:
+            return any(self.is_show(value, header=header) for value in values)
+        return not any(self.is_hide(value, header=header) for value in values)
+
     def read_alias(self):
         if self.plugin_name + '_' + 'alias' in self._limits:
             return {i.split(':')[0].lower(): i.split(':')[1] for i in self._limits[self.plugin_name + '_' + 'alias']}
