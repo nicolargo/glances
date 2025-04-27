@@ -840,9 +840,8 @@ class GlancesPluginModel:
         show=sda.*
         """
         # TODO: possible optimisation: create a re.compile list
-        return any(
-            j for j in [re.fullmatch(i.lower(), value.lower()) for i in self.get_conf_value('show', header=header)]
-        )
+        # nguuuquaaa: no need a compile list, the re module caches the compiling itself
+        return any(re.fullmatch(i, value, re.I) for i in self.get_conf_value('show', header=header))
 
     def is_hide(self, value, header=""):
         """Return True if the value is in the hide configuration list.
@@ -853,15 +852,20 @@ class GlancesPluginModel:
         hide=sda2,sda5,loop.*
         """
         # TODO: possible optimisation: create a re.compile list
-        return any(
-            j for j in [re.fullmatch(i.lower(), value.lower()) for i in self.get_conf_value('hide', header=header)]
-        )
+        # nguuuquaaa: no need a compile list, the re module caches the compiling itself
+        return any(re.fullmatch(i, value, re.I) for i in self.get_conf_value('hide', header=header))
 
     def is_display(self, value, header=""):
         """Return True if the value should be displayed in the UI"""
         if self.get_conf_value('show', header=header) != []:
             return self.is_show(value, header=header)
         return not self.is_hide(value, header=header)
+
+    def is_display_any(self, *values, header=""):
+        """Return True if any of the values should be displayed in the UI"""
+        if self.get_conf_value('show', header=header) != []:
+            return any(self.is_show(value, header=header) for value in values)
+        return not any(self.is_hide(value, header=header) for value in values)
 
     def read_alias(self):
         if self.plugin_name + '_' + 'alias' in self._limits:
