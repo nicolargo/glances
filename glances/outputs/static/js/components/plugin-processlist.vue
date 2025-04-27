@@ -11,7 +11,7 @@
             <div>
                 <span>CPU Min/Max/Mean: </span>
                 <span class="careful">{{ $filters.number(extended_stats.cpu_min, 1)
-                    }}% / {{
+                }}% / {{
                         $filters.number(extended_stats.cpu_max, 1) }}% / {{ $filters.number(extended_stats.cpu_mean, 1)
                     }}%</span>
                 <span>Affinity: </span>
@@ -64,7 +64,8 @@
                         @click="setExtendedStats(process)">
                         <td v-show="!getDisableStats().includes('cpu_percent')" scope="row"
                             :class="getCpuPercentAlert(process)">
-                            {{ process.cpu_percent == -1 ? '?' : $filters.number(process.cpu_percent, 1) }}
+                            {{ process.cpu_percent == -1 ? '?' : $filters.number(process.cpu_percent / process.irix, 1)
+                            }}
                         </td>
                         <td v-show="!getDisableStats().includes('memory_percent')" scope="row"
                             :class="getMemoryPercentAlert(process)">
@@ -150,7 +151,8 @@
                         @click="setExtendedStats(process.pid)">
                         <td v-show="!getDisableStats().includes('cpu_percent')" scope="row"
                             :class="getCpuPercentAlert(process)">
-                            {{ process.cpu_percent == -1 ? '?' : $filters.number(process.cpu_percent, 1) }}
+                            {{ process.cpu_percent == -1 ? '?' : $filters.number(process.cpu_percent / process.irix, 1)
+                            }}
                         </td>
                         <td v-show="!getDisableStats().includes('memory_percent')" scope="row"
                             :class="getMemoryPercentAlert(process)">
@@ -237,7 +239,8 @@
                     <tr v-for="(process, processId) in programs" :key="processId">
                         <td v-show="!getDisableStats().includes('cpu_percent')" scope="row"
                             :class="getCpuPercentAlert(process)">
-                            {{ process.cpu_percent == -1 ? '?' : $filters.number(process.cpu_percent, 1) }}
+                            {{ process.cpu_percent == -1 ? '?' : $filters.number(process.cpu_percent / process.irix, 1)
+                            }}
                         </td>
                         <td v-show="!getDisableStats().includes('memory_percent')" scope="row"
                             :class="getMemoryPercentAlert(process)">
@@ -321,7 +324,8 @@
                     <tr v-for="(process, processId) in programs" :key="processId">
                         <td v-show="!getDisableStats().includes('cpu_percent')" scope="row"
                             :class="getCpuPercentAlert(process)">
-                            {{ process.cpu_percent == -1 ? '?' : $filters.number(process.cpu_percent, 1) }}
+                            {{ process.cpu_percent == -1 ? '?' : $filters.number(process.cpu_percent / process.irix, 1)
+                            }}
                         </td>
                         <td v-show="!getDisableStats().includes('memory_percent')" scope="row"
                             :class="getMemoryPercentAlert(process)">
@@ -404,11 +408,11 @@ export default {
         stats_processlist() {
             return this.data.stats['processlist'];
         },
-        stats_load() {
-            return this.data.stats['load'];
+        stats_core() {
+            return this.data.stats['core'];
         },
         cpucore() {
-            return this.stats_load['cpucore'];
+            return (this.stats_core['log'] !== 0) ? this.stats_core['log'] : 1;
         },
         extended_stats() {
             return this.stats_processlist.find(item => item['extended_stats'] === true) || null;
@@ -543,11 +547,12 @@ export default {
                 process.num_threads = -1;
             }
 
+            process.irix = 1;
             if (process.cpu_percent === null) {
                 process.cpu_percent = -1;
             } else {
                 if (args.disable_irix) {
-                    process.cpu_percent = process.cpu_percent / cpucore;
+                    process.irix = cpucore
                 }
             }
 

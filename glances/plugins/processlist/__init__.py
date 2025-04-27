@@ -709,7 +709,7 @@ class PluginModel(GlancesPluginModel):
             if args.disable_irix and 0 < self.nb_log_core < 10:
                 msg = self.layout_header['cpu'].format('CPU%/' + str(self.nb_log_core))
             elif args.disable_irix and self.nb_log_core != 0:
-                msg = self.layout_header['cpu'].format('CPU%/C')
+                msg = self.layout_header['cpu'].format('CPUi')
             else:
                 msg = self.layout_header['cpu'].format('CPU%')
             ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))

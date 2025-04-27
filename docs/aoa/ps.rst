@@ -102,7 +102,8 @@ Columns display
 ``CPU%``                  % of CPU used by the process
 
                           If Irix/Solaris mode is off ('0' key), the value
-                          is divided by logical core number
+                          is divided by logical core number (the column
+                          name became CPUi)
 ``MEM%``                  % of MEM used by the process (RES divided by
                           the total RAM you have)
 ``VIRT``                  Virtual Memory Size
