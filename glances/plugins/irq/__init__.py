@@ -80,11 +80,6 @@ class IrqPlugin(GlancesPluginModel):
 
         return self.stats
 
-    def update_views(self):
-        """Update stats views."""
-        # Call the father's method
-        super().update_views()
-
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
