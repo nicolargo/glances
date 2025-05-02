@@ -43,20 +43,28 @@ note that this doesn\'t reflect the actual memory available (use \'available\' i
         'description': '*(UNIX)*: memory currently in use or very recently used, and so it is in RAM.',
         'unit': 'bytes',
         'min_symbol': 'K',
+        'optional': True,
     },
     'inactive': {
         'description': '*(UNIX)*: memory that is marked as not used.',
         'unit': 'bytes',
         'min_symbol': 'K',
         'short_name': 'inacti',
+        'optional': True,
     },
     'buffers': {
         'description': '*(Linux, BSD)*: cache for things like file system metadata.',
         'unit': 'bytes',
         'min_symbol': 'K',
         'short_name': 'buffer',
+        'optional': True,
     },
-    'cached': {'description': '*(Linux, BSD)*: cache for various things.', 'unit': 'bytes', 'min_symbol': 'K'},
+    'cached': {
+        'description': '*(Linux, BSD)*: cache for various things.',
+        'unit': 'bytes',
+        'min_symbol': 'K',
+        'optional': True,
+    },
     'wired': {
         'description': '*(BSD, macOS)*: memory that is marked to always stay in RAM. It is never moved to disk.',
         'unit': 'bytes',
@@ -237,10 +245,6 @@ class MemPlugin(GlancesPluginModel):
         # Add specifics information
         # Alert and log
         self.views['percent']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
-        # Optional
-        for key in ['active', 'inactive', 'buffers', 'cached']:
-            if key in self.stats:
-                self.views[key]['optional'] = True
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
