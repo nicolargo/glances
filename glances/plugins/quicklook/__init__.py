@@ -72,7 +72,7 @@ items_history_list = [
 ]
 
 
-class PluginModel(GlancesPluginModel):
+class QuicklookPlugin(GlancesPluginModel):
     """Glances quicklook plugin.
 
     'stats' is a dictionary.

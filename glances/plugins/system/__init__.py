@@ -108,7 +108,7 @@ def _linux_os_release():
     return pretty_name
 
 
-class PluginModel(GlancesPluginModel):
+class SystemPlugin(GlancesPluginModel):
     """Glances' host/system plugin.
 
     stats is a dict

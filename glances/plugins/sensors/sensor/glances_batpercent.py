@@ -34,7 +34,7 @@ except Exception as e:
     psutil_tag = False
 
 
-class PluginModel(GlancesPluginModel):
+class BatpercentPlugin(GlancesPluginModel):
     """Glances battery capacity plugin.
 
     stats is a list

@@ -30,7 +30,7 @@ else:
     import_error_tag = False
 
 
-class PluginModel(GlancesPluginModel):
+class CloudPlugin(GlancesPluginModel):
     """Glances' cloud plugin.
 
     The goal of this plugin is to retrieve additional information

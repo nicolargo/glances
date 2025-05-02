@@ -121,7 +121,7 @@ sort_for_human = {
 }
 
 
-class PluginModel(GlancesPluginModel):
+class ContainersPlugin(GlancesPluginModel):
     """Glances Docker plugin.
 
     stats is a dict: {'version': {...}, 'containers': [{}, {}]}

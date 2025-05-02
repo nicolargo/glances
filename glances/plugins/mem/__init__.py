@@ -104,7 +104,7 @@ snmp_oid = {
 items_history_list = [{'name': 'percent', 'description': 'RAM memory usage', 'y_unit': '%'}]
 
 
-class PluginModel(GlancesPluginModel):
+class MemPlugin(GlancesPluginModel):
     """Glances' memory plugin.
 
     stats is a dict

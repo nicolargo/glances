@@ -10,7 +10,7 @@
 
 import copy
 
-from glances.plugins.processlist import PluginModel as GlancesProcessListPluginModel
+from glances.plugins.processlist import ProcesslistPlugin
 from glances.processes import glances_processes
 
 # Fields description
@@ -75,7 +75,7 @@ fields_description = {
 }
 
 
-class PluginModel(GlancesProcessListPluginModel):
+class ProgramlistPlugin(ProcesslistPlugin):
     """Glances' processes plugin.
 
     stats is a list
