@@ -6,7 +6,7 @@ This is the Glances plugins folder.
 
 A Glances plugin is a Python module hosted in a folder.
 
-It should implement a Class named PluginModel (inherited from GlancesPluginModel).
+It should implement a Class named <plugin name>Plugin inherited from GlancesPluginModel (example for foo plugin: FooPlugin).
 
 This class should be based on the MVC model.
 - model: where the stats are updated (update method)

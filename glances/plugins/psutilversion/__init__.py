@@ -13,7 +13,7 @@ from glances import psutil_version_info
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
-class PluginModel(GlancesPluginModel):
+class PsutilversionPlugin(GlancesPluginModel):
     """Get the Psutil version.
 
     stats is a string

@@ -25,7 +25,7 @@ fields_description = {
 }
 
 
-class PluginModel(GlancesPluginModel):
+class NowPlugin(GlancesPluginModel):
     """Plugin to get the current date/time.
 
     stats is a dict:

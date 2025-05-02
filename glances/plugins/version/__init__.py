@@ -14,7 +14,7 @@ from glances import __version__ as glances_version
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
-class PluginModel(GlancesPluginModel):
+class VersionPlugin(GlancesPluginModel):
     """Get the Glances versions.
 
     stats is a string

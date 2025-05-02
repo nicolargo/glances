@@ -58,7 +58,7 @@ items_history_list = [
 ]
 
 
-class PluginModel(GlancesPluginModel):
+class GpuPlugin(GlancesPluginModel):
     """Glances GPU plugin.
 
     stats is a list of dictionaries with one entry per GPU
