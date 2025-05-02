@@ -45,6 +45,7 @@ fields_description = {
     'quality_level': {
         'description': 'Signal strong level.',
         'unit': 'dBm',
+        'alert': True,
     },
 }
 
