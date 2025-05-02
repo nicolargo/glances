@@ -33,7 +33,7 @@ fields_description = {
 }
 
 
-class PluginModel(GlancesPluginModel):
+class IrqPlugin(GlancesPluginModel):
     """Glances IRQ plugin.
 
     stats is a list

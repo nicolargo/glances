@@ -48,7 +48,7 @@ fields_description = {
 }
 
 
-class PluginModel(GlancesPluginModel):
+class FoldersPlugin(GlancesPluginModel):
     """Glances folder plugin."""
 
     def __init__(self, args=None, config=None):

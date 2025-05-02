@@ -99,7 +99,19 @@ class GlancesStats:
             # Import the plugin
             plugin = import_module('glances.plugins.' + plugin_path)
             # Init and add the plugin to the dictionary
-            self._plugins[plugin_path] = plugin.PluginModel(args=args, config=config)
+            if hasattr(plugin, 'PluginModel'):
+                # Old fashion way to load the plugin (before Glances 5.0)
+                # Should be removed in Glances 5.0 - see #3170
+                self._plugins[plugin_path] = getattr(plugin, 'PluginModel')(args=args, config=config)
+                logger.warning(
+                    f'The {plugin_path} plugin class name is "PluginModel" and it is deprecated, \
+please rename it to "{plugin_path.capitalize()}Plugin"'
+                )
+            elif hasattr(plugin, plugin_path.capitalize() + 'Plugin'):
+                # New fashion way to load the plugin (after Glances 5.0)
+                self._plugins[plugin_path] = getattr(plugin, plugin_path.capitalize() + 'Plugin')(
+                    args=args, config=config
+                )
         except Exception as e:
             # If a plugin can not be loaded, display a critical message
             # on the console but do not crash
@@ -145,7 +157,8 @@ class GlancesStats:
                     for fil in pathlib.Path(path).glob('*.py'):
                         if fil.is_file():
                             with open(fil) as fd:
-                                if 'PluginModel' in fd.read():
+                                # The first test should be removed in Glances 5.x - see #3170
+                                if 'PluginModel' in fd.read() or plugin.capitalize() + 'Plugin' in fd.read():
                                     _plugin_list.append(plugin)
                                     break
 

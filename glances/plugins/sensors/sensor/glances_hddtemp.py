@@ -16,7 +16,7 @@ from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
-class PluginModel(GlancesPluginModel):
+class HddtempPlugin(GlancesPluginModel):
     """Glances HDD temperature sensors plugin.
 
     stats is a list

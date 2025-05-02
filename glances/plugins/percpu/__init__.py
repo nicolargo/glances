@@ -94,7 +94,7 @@ items_history_list = [
 ]
 
 
-class PluginModel(GlancesPluginModel):
+class PercpuPlugin(GlancesPluginModel):
     """Glances per-CPU plugin.
 
     'stats' is a list of dictionaries that contain the utilization percentages

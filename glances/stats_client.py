@@ -45,7 +45,14 @@ class GlancesStatsClient(GlancesStats):
                 # for example, the file glances_xxx.py
                 # generate self._plugins_list["xxx"] = ...
                 logger.debug(f"Server uses {item} plugin")
-                self._plugins[item] = plugin.PluginModel(args=self.args)
+                if hasattr(plugin, 'PluginModel'):
+                    # Old fashion way to load the plugin (before Glances 5.0)
+                    # Should be removed in Glances 5.0 - see #3170
+                    self._plugins[item] = getattr(plugin, 'PluginModel')(args=self.args)
+                elif hasattr(plugin, item.capitalize() + 'Plugin'):
+                    # New fashion way to load the plugin (after Glances 5.0)
+                    self._plugins[item] = getattr(plugin, item.capitalize() + 'Plugin')(args=self.args)
+
         # Restoring system path
         sys.path = sys_path
 

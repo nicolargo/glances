@@ -18,7 +18,7 @@ from glances.plugins.plugin.model import GlancesPluginModel
 snmp_oid = {'_uptime': '1.3.6.1.2.1.1.3.0'}
 
 
-class PluginModel(GlancesPluginModel):
+class UptimePlugin(GlancesPluginModel):
     """Glances uptime plugin.
 
     stats is date (string)
