@@ -19,7 +19,7 @@ from glances.globals import iteritems
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
-class PluginModel(GlancesPluginModel):
+class HelpPlugin(GlancesPluginModel):
     """Glances help plugin."""
 
     def __init__(self, args=None, config=None):
