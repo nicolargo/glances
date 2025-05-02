@@ -12,7 +12,7 @@ import psutil
 
 from glances.cpu_percent import cpu_percent
 from glances.globals import LINUX, SUNOS, WINDOWS, iterkeys
-from glances.plugins.core import PluginModel as CorePluginModel
+from glances.plugins.core import CorePlugin
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
@@ -134,7 +134,7 @@ items_history_list = [
 ]
 
 
-class PluginModel(GlancesPluginModel):
+class CpuPlugin(GlancesPluginModel):
     """Glances CPU plugin.
 
     'stats' is a dictionary that contains the system-wide CPU utilization as a
@@ -150,9 +150,9 @@ class PluginModel(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Call CorePluginModel in order to display the core number
+        # Call CorePlugin in order to display the core number
         try:
-            self.nb_log_core = CorePluginModel(args=self.args).update()["log"]
+            self.nb_log_core = CorePlugin(args=self.args).update()["log"]
         except Exception:
             self.nb_log_core = 1
 

@@ -92,7 +92,7 @@ sort_for_human = {
 }
 
 
-class PluginModel(GlancesPluginModel):
+class VmsPlugin(GlancesPluginModel):
     """Glances Vm plugin.
 
     stats is a dict: {'version': '', 'vms': [{}, {}]}

@@ -62,7 +62,7 @@ fields_description = {
 }
 
 
-class PluginModel(GlancesPluginModel):
+class IpPlugin(GlancesPluginModel):
     """Glances IP Plugin.
 
     stats is a dict

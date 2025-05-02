@@ -118,7 +118,7 @@ def get_smart_data():
     return stats
 
 
-class PluginModel(GlancesPluginModel):
+class SmartPlugin(GlancesPluginModel):
     """Glances' HDD SMART plugin."""
 
     def __init__(self, args=None, config=None, stats_init_value=[]):

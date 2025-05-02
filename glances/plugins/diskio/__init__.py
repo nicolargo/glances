@@ -51,7 +51,7 @@ items_history_list = [
 ]
 
 
-class PluginModel(GlancesPluginModel):
+class DiskioPlugin(GlancesPluginModel):
     """Glances disks I/O plugin.
 
     stats is a list

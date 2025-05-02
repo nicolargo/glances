@@ -22,7 +22,7 @@ else:
     import_error_tag = False
 
 
-class PluginModel(GlancesPluginModel):
+class RaidPlugin(GlancesPluginModel):
     """Glances RAID plugin.
 
     stats is a dict (see pymdstat documentation)

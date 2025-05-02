@@ -67,7 +67,7 @@ fields_description = {
 }
 
 
-class PluginModel(GlancesPluginModel):
+class PortsPlugin(GlancesPluginModel):
     """Glances ports scanner plugin."""
 
     def __init__(self, args=None, config=None):

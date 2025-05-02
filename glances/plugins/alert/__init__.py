@@ -93,7 +93,7 @@ fields_description = {
 }
 
 
-class PluginModel(GlancesPluginModel):
+class AlertPlugin(GlancesPluginModel):
     """Glances alert plugin.
 
     Only for display.

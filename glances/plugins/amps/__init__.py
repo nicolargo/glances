@@ -29,7 +29,7 @@ fields_description = {
 }
 
 
-class PluginModel(GlancesPluginModel):
+class AmpsPlugin(GlancesPluginModel):
     """Glances AMPs plugin."""
 
     def __init__(self, args=None, config=None):

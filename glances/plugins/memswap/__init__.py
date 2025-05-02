@@ -51,7 +51,7 @@ snmp_oid = {
 items_history_list = [{'name': 'percent', 'description': 'Swap memory usage', 'y_unit': '%'}]
 
 
-class PluginModel(GlancesPluginModel):
+class MemswapPlugin(GlancesPluginModel):
     """Glances swap memory plugin.
 
     stats is a dict

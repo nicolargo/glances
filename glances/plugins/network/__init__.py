@@ -62,7 +62,7 @@ items_history_list = [
 ]
 
 
-class PluginModel(GlancesPluginModel):
+class NetworkPlugin(GlancesPluginModel):
     """Glances network plugin.
 
     stats is a list
