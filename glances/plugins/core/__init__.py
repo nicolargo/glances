@@ -23,7 +23,7 @@ physical cores multiplied by the number of threads that can run on each core.',
 }
 
 
-class PluginModel(GlancesPluginModel):
+class CorePlugin(GlancesPluginModel):
     """Glances CPU core plugin.
 
     Get stats about CPU core number.

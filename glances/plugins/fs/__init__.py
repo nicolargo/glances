@@ -88,7 +88,7 @@ snmp_oid['esxi'] = snmp_oid['windows']
 items_history_list = [{'name': 'percent', 'description': 'File system usage in percent', 'y_unit': '%'}]
 
 
-class PluginModel(GlancesPluginModel):
+class FsPlugin(GlancesPluginModel):
     """Glances file system plugin.
 
     stats is a list

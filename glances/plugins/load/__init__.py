@@ -14,7 +14,7 @@ import psutil
 
 from glances.globals import iteritems
 from glances.logger import logger
-from glances.plugins.core import PluginModel as CorePluginModel
+from glances.plugins.core import CorePlugin
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
@@ -63,7 +63,7 @@ items_history_list = [
 nb_log_core = 1
 nb_phys_core = 1
 try:
-    core = CorePluginModel().update()
+    core = CorePlugin().update()
 except Exception as e:
     logger.warning(f'Error: Can not retrieve the CPU core number (set it to 1) ({e})')
 else:
@@ -73,7 +73,7 @@ else:
         nb_phys_core = core['phys']
 
 
-class PluginModel(GlancesPluginModel):
+class LoadPlugin(GlancesPluginModel):
     """Glances load plugin.
 
     stats is a dict

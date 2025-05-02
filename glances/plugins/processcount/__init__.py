@@ -49,7 +49,7 @@ items_history_list = [
 ]
 
 
-class PluginModel(GlancesPluginModel):
+class ProcesscountPlugin(GlancesPluginModel):
     """Glances process count plugin.
 
     stats is a list

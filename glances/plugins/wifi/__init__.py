@@ -49,7 +49,7 @@ fields_description = {
 }
 
 
-class PluginModel(GlancesPluginModel):
+class WifiPlugin(GlancesPluginModel):
     """Glances Wifi plugin.
 
     Get stats of the current Wifi hotspots.

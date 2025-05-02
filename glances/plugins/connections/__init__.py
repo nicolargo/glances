@@ -68,7 +68,7 @@ fields_description = {
 #                        'y_unit': 'bit/s'}]
 
 
-class PluginModel(GlancesPluginModel):
+class ConnectionsPlugin(GlancesPluginModel):
     """Glances connections plugin.
 
     stats is a dict
