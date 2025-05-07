@@ -721,10 +721,11 @@ class GlancesPluginModel:
 
     def filter_stats(self, stats):
         """Filter the stats to keep only the fields we want (the one defined in fields_description)."""
+        # Iter through the self.fields_description to keep the fields in the order define in the dict
         if hasattr(stats, '_asdict'):
-            return {k: v for k, v in stats._asdict().items() if k in self.fields_description}
+            return {k: stats._asdict()[k] for k in self.fields_description.keys() if k in stats._asdict()}
         if isinstance(stats, dict):
-            return {k: v for k, v in stats.items() if k in self.fields_description}
+            return {k: stats[k] for k in self.fields_description.keys() if k in stats}
         if isinstance(stats, list):
             return [self.filter_stats(s) for s in stats]
         return stats

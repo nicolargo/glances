@@ -630,6 +630,14 @@ Examples of use:
             default='',
             help='strftime format string for displaying current date in standalone mode',
         )
+        # Experimental option to enable Textual UI
+        parser.add_argument(
+            '--textual',
+            action='store_true',
+            default=False,
+            dest='textual',
+            help='enable Textual UI (experimental)',
+        )
 
         return parser
 

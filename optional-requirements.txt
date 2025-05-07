@@ -35,5 +35,6 @@ requests
 six
 sparklines
 statsd
+textual
 uvicorn
 zeroconf

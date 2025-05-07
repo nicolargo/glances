@@ -20,6 +20,7 @@ from glances.outputs.glances_stdout_apidoc import GlancesStdoutApiDoc
 from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
 from glances.outputs.glances_stdout_issue import GlancesStdoutIssue
 from glances.outputs.glances_stdout_json import GlancesStdoutJson
+from glances.outputs.glances_textual import GlancesTextualStandalone
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.timer import Counter
@@ -102,14 +103,26 @@ class GlancesStandalone:
             # Init screen
             self.screen = GlancesStdoutCsv(config=config, args=args)
         else:
-            # Default number of processes to displayed is set to 50
-            glances_processes.max_processes = 50
+            if args.textual:
+                logger.info("Experimental Textual UI")
+                # Default number of processes to displayed is set to 50
+                glances_processes.max_processes = 50
 
-            # Init screen
-            self.screen = GlancesCursesStandalone(config=config, args=args)
+                # Init screen
+                self.screen = GlancesTextualStandalone(stats=self.stats, config=config, args=args)
 
-            # If an error occur during the screen init, continue if export option is set
-            # It is done in the screen.init function
+                # If an error occur during the screen init, continue if export option is set
+                # It is done in the screen.init function
+                self._quiet = args.quiet
+            else:
+                # Default number of processes to displayed is set to 50
+                glances_processes.max_processes = 50
+
+                # Init screen
+                self.screen = GlancesCursesStandalone(config=config, args=args)
+
+                # If an error occur during the screen init, continue if export option is set
+                # It is done in the screen.init function
             self._quiet = args.quiet
 
         # Check the latest Glances version
@@ -183,8 +196,13 @@ class GlancesStandalone:
         if self.args.stop_after:
             self.serve_n(n=self.args.stop_after)
         else:
-            while self.__serve_once():
-                pass
+            if self.args.textual:
+                # Run the Textual app
+                self.screen.start()
+            else:
+                # Run the curses app
+                while self.__serve_once():
+                    pass
         # self.end()
 
     def end(self):
@@ -195,7 +213,11 @@ class GlancesStandalone:
         # Exit from export modules
         self.stats.end()
 
-        # Check Glances version versus PyPI one
+        # Check if a new version is availbale
+        self.check_new_version()
+
+    def check_new_version(self):
+        """Check Glances version versus PyPI one"""
         if self.outdated.is_outdated() and 'unknown' not in self.outdated.installed_version():
             latest_version = self.outdated.latest_version()
             installed_version = self.outdated.installed_version()

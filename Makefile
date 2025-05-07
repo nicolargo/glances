@@ -281,11 +281,17 @@ docker-ubuntu-dev: ## Generate local docker image (Ubuntu dev)
 run: ## Start Glances in console mode (also called standalone)
 	$(PYTHON) -m glances -C $(CONF)
 
+run-textual: ## Start Glances in textual mode (also called standalone)
+	$(PYTHON) -m glances -C $(CONF) --textual
+
 run-debug: ## Start Glances in debug console mode (also called standalone)
 	$(PYTHON) -m glances -C $(CONF) -d
 
 run-local-conf: ## Start Glances in console mode with the system conf file
 	$(PYTHON) -m glances
+
+run-textual-local-conf: ## Start Glances in textual mode with the system conf file
+	$(PYTHON) -m glances --textual
 
 run-local-conf-hide-public: ## Start Glances in console mode with the system conf file and hide public information
 	$(PYTHON) -m glances --hide-public-info

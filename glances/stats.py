@@ -16,7 +16,7 @@ import threading
 import traceback
 from importlib import import_module
 
-from glances.globals import exports_path, plugins_path, sys_path
+from glances.globals import exports_path, plugins_path, sys_path, weak_lru_cache
 from glances.logger import logger
 from glances.timer import Counter
 
@@ -327,6 +327,7 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         """Return all fields description (as list)."""
         return [self._plugins[p].fields_description for p in self.getPluginsList(enable=False)]
 
+    @weak_lru_cache(maxsize=32)
     def getAllFieldsDescriptionAsDict(self, plugin_list=None):
         """Return all fields description (as dict)."""
         if plugin_list is None:

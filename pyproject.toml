@@ -22,6 +22,7 @@ dependencies = [
   "defusedxml",
   "packaging",
   "psutil>=5.6.7",
+  "textual",
   "windows-curses; platform_system == 'Windows'",
   "shtab; platform_system != 'Windows'",
 ]
@@ -37,7 +38,7 @@ urls.Homepage = "https://github.com/nicolargo/glances"
 [project.optional-dependencies]
 action = ["chevron"]
 # all but not dev
-all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,raid,sensors,smart,snmp,sparklines,web,wifi]"]
+all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,raid,sensors,smart,snmp,sparklines,textual,web,wifi]"]
 browser = ["zeroconf"]
 cloud = ["requests"]
 containers = [
@@ -92,6 +93,7 @@ sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART.smartx"]
 snmp = ["pysnmp-lextudio<6.2.0"]
 sparklines = ["sparklines"]
+textual = ["textual"]
 web = [
   "fastapi>=0.82.0",
   "jinja2",

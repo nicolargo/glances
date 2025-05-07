@@ -1,0 +1,132 @@
+# Glances classes
+# ###############
+
+Placeholder.remove {
+    # self.styles.display = "block" to display the placeholder from Python code
+    display: none;
+}
+
+* > .sparkline--min-color {
+    color: $success;
+}
+
+* > .sparkline--max-color {
+    color: $error;
+}
+
+.title {
+    text-style: bold;
+}
+
+.name {
+}
+
+.value {
+    text-align: right;
+}
+
+.unit {
+    text-align: right;
+    padding-right: 1;
+}
+
+.default {
+}
+
+.ok {
+    color: lime;
+}
+
+.careful {
+    color: cornflowerblue;
+}
+
+.warning {
+    color: orangered;
+    background: $background;
+}
+
+.critical {
+    color: red;
+}
+
+# Glances layout
+# ##############
+
+#data {
+    layout: vertical;
+    height: auto;
+}
+
+#header {
+    grid-size: 3 1;
+    height: 2;
+}
+
+#top {
+    grid-size: 5 1;
+    height: 5;
+}
+
+#middle {
+    grid-size: 4 1;
+}
+
+#sidebar {
+    column-span: 1;
+    grid-size: 1 5;
+}
+
+#process {
+    column-span: 3;
+}
+
+#bottom {
+    grid-size: 4 1;
+    height: 1;
+}
+
+
+# Glances plugins
+# ###############
+
+#cpu {
+    grid-size: 9 4;
+    grid-columns: 7 5 2;
+    width: 100%;
+}
+
+#cpu > Label {
+    width: 100%;
+}
+
+#network {
+    # self.styles.height = 10  # Explicit cell height can be an int
+    height: 5;
+}
+
+#diskio {
+    height: 10;
+}
+
+#vms {
+}
+
+#containers{
+}
+
+#processcount {
+    height: 1;
+}
+
+#processlist {
+}
+
+#now {
+    column-span: 1;
+}
+
+#alert {
+    column-span: 3;
+}
+
