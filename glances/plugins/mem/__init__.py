@@ -14,66 +14,65 @@ from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
 fields_description = {
-    'total': {'description': 'Total physical memory available.', 'unit': 'bytes', 'min_symbol': 'K'},
+    'percent': {
+        'description': 'The percentage usage calculated as (total - available) / total * 100.',
+        'unit': 'percent',
+        'short_name': 'MEM',
+    },
+    'active': {
+        'description': '*(UNIX)*: memory currently in use or very recently used, and so it is in RAM.',
+        'unit': 'bytes',
+        'optional': True,
+    },
+    'total': {
+        'description': 'Total physical memory available.',
+        'unit': 'bytes',
+    },
+    'inactive': {
+        'description': '*(UNIX)*: memory that is marked as not used.',
+        'unit': 'bytes',
+        'short_name': 'inacti',
+        'optional': True,
+    },
+    'used': {
+        'description': 'Memory used, calculated differently depending on the platform and \
+designed for informational purposes only.',
+        'unit': 'bytes',
+    },
+    'buffers': {
+        'description': '*(Linux, BSD)*: cache for things like file system metadata.',
+        'unit': 'bytes',
+        'short_name': 'buffer',
+        'optional': True,
+    },
+    'free': {
+        'description': 'Memory not being used at all (zeroed) that is readily available; \
+note that this doesn\'t reflect the actual memory available (use \'available\' instead).',
+        'unit': 'bytes',
+    },
+    'cached': {
+        'description': '*(Linux, BSD)*: cache for various things.',
+        'unit': 'bytes',
+        'optional': True,
+    },
     'available': {
         'description': 'The actual amount of available memory that can be given instantly \
 to processes that request more memory in bytes; this is calculated by summing \
 different memory values depending on the platform (e.g. free + buffers + cached on Linux) \
 and it is supposed to be used to monitor actual memory usage in a cross platform fashion.',
         'unit': 'bytes',
-        'min_symbol': 'K',
-    },
-    'percent': {
-        'description': 'The percentage usage calculated as (total - available) / total * 100.',
-        'unit': 'percent',
-    },
-    'used': {
-        'description': 'Memory used, calculated differently depending on the platform and \
-designed for informational purposes only.',
-        'unit': 'bytes',
-        'min_symbol': 'K',
-    },
-    'free': {
-        'description': 'Memory not being used at all (zeroed) that is readily available; \
-note that this doesn\'t reflect the actual memory available (use \'available\' instead).',
-        'unit': 'bytes',
-        'min_symbol': 'K',
-    },
-    'active': {
-        'description': '*(UNIX)*: memory currently in use or very recently used, and so it is in RAM.',
-        'unit': 'bytes',
-        'min_symbol': 'K',
-        'optional': True,
-    },
-    'inactive': {
-        'description': '*(UNIX)*: memory that is marked as not used.',
-        'unit': 'bytes',
-        'min_symbol': 'K',
-        'short_name': 'inacti',
-        'optional': True,
-    },
-    'buffers': {
-        'description': '*(Linux, BSD)*: cache for things like file system metadata.',
-        'unit': 'bytes',
-        'min_symbol': 'K',
-        'short_name': 'buffer',
-        'optional': True,
-    },
-    'cached': {
-        'description': '*(Linux, BSD)*: cache for various things.',
-        'unit': 'bytes',
-        'min_symbol': 'K',
-        'optional': True,
+        'short_name': 'availa',
+        'display': False,
     },
     'wired': {
         'description': '*(BSD, macOS)*: memory that is marked to always stay in RAM. It is never moved to disk.',
         'unit': 'bytes',
-        'min_symbol': 'K',
+        'display': False,
     },
     'shared': {
         'description': '*(BSD)*: memory that may be simultaneously accessed by multiple processes.',
         'unit': 'bytes',
-        'min_symbol': 'K',
+        'display': False,
     },
 }
 

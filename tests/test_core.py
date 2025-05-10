@@ -18,7 +18,7 @@ from datetime import datetime
 from glances import __version__
 from glances.events_list import GlancesEventsList
 from glances.filter import GlancesFilter, GlancesFilterList
-from glances.globals import LINUX, WINDOWS, pretty_date, string_value_to_float, subsample
+from glances.globals import LINUX, WINDOWS, auto_number, pretty_date, string_value_to_float, subsample
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -504,6 +504,32 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(pretty_date(datetime(2023, 6, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '7 months')
         self.assertEqual(pretty_date(datetime(2023, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), 'an year')
         self.assertEqual(pretty_date(datetime(2020, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '4 years')
+
+    def test_022_auto_number(self):
+        """Test auto_number"""
+        print('INFO: [TEST_022] auto_number')
+        self.assertEqual(auto_number(None), '-')
+        self.assertEqual(auto_number(0), '0')
+        self.assertEqual(auto_number(25), '25')
+        self.assertEqual(auto_number(25.0), '25')
+        self.assertEqual(auto_number(25.3), '25.3')
+        self.assertEqual(auto_number(100), '100')
+        self.assertEqual(auto_number(100.0), '100')
+        self.assertEqual(auto_number(1025.0), '1K')
+        self.assertEqual(auto_number(613421788), '585M')
+        self.assertEqual(auto_number(613421788, low_precision=True), '585M')
+        self.assertEqual(auto_number(5307033647), '4.94G')
+        self.assertEqual(auto_number(5307033647, low_precision=True), '4.9G')
+        self.assertEqual(auto_number(44968414685), '41.9G')
+        self.assertEqual(auto_number(44968414685, low_precision=True), '41.9G')
+        self.assertEqual(auto_number(838471403472), '781G')
+        self.assertEqual(auto_number(838471403472, low_precision=True), '781G')
+        self.assertEqual(auto_number(9683209690677), '8.81T')
+        self.assertEqual(auto_number(9683209690677, low_precision=True), '8.8T')
+        self.assertEqual(auto_number(1073741824), '1024M')
+        self.assertEqual(auto_number(1073741824, low_precision=True), '1024M')
+        self.assertEqual(auto_number(1181116006), '1.10G')
+        self.assertEqual(auto_number(1181116006, low_precision=True), '1.1G')
 
     def test_094_thresholds(self):
         """Test thresholds classes"""

@@ -18,18 +18,69 @@ from glances.plugins.plugin.model import GlancesPluginModel
 # Fields description
 # https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
-    'total': {'description': 'Sum of all CPU percentages (except idle).', 'unit': 'percent', 'log': True},
-    'system': {
-        'description': 'Percent time spent in kernel space. System CPU time is the \
-time spent running code in the Operating System kernel.',
+    'total': {
+        'description': 'Sum of all CPU percentages (except idle).',
         'unit': 'percent',
         'log': True,
+        'short_name': 'CPU',
+    },
+    'idle': {
+        'description': 'percent of CPU used by any program. Every program or task \
+that runs on a computer system occupies a certain amount of processing \
+time on the CPU. If the CPU has completed all tasks it is idle.',
+        'unit': 'percent',
+        'optional': True,
+    },
+    'ctx_switches': {
+        'description': 'number of context switches (voluntary + involuntary) per \
+second. A context switch is a procedure that a computer\'s CPU (central \
+processing unit) follows to change from one task (or process) to \
+another while ensuring that the tasks do not conflict.',
+        'unit': 'number',
+        'rate': True,
+        'short_name': 'ctx_sw',
+        'optional': True,
     },
     'user': {
         'description': 'CPU percent time spent in user space. \
 User CPU time is the time spent on the processor running your program\'s code (or code in libraries).',
         'unit': 'percent',
         'log': True,
+    },
+    'irq': {
+        'description': '*(Linux and BSD)*: percent time spent servicing/handling \
+hardware/software interrupts. Time servicing interrupts (hardware + \
+software).',
+        'unit': 'percent',
+        'optional': True,
+    },
+    'interrupts': {
+        'description': 'number of interrupts per second.',
+        'unit': 'number',
+        'rate': True,
+        'short_name': 'inter',
+        'optional': True,
+    },
+    'system': {
+        'description': 'Percent time spent in kernel space. System CPU time is the \
+time spent running code in the Operating System kernel.',
+        'unit': 'percent',
+        'log': True,
+    },
+    'nice': {
+        'description': '*(Unix)*: percent time occupied by user level processes with \
+a positive nice value. The time the CPU has spent running users\' \
+processes that have been *niced*.',
+        'unit': 'percent',
+        'optional': True,
+    },
+    'soft_interrupts': {
+        'description': 'number of software interrupts per second. Always set to \
+0 on Windows and SunOS.',
+        'unit': 'number',
+        'rate': True,
+        'short_name': 'sw_int',
+        'optional': True,
     },
     'iowait': {
         'description': '*(Linux)*: percent time spent by the CPU waiting for I/O \
@@ -41,27 +92,6 @@ operations to complete.',
         'description': '*(Windows)*: time spent servicing deferred procedure calls (DPCs)',
         'unit': 'percent',
         'log': True,
-    },
-    'idle': {
-        'description': 'percent of CPU used by any program. Every program or task \
-that runs on a computer system occupies a certain amount of processing \
-time on the CPU. If the CPU has completed all tasks it is idle.',
-        'unit': 'percent',
-        'optional': True,
-    },
-    'irq': {
-        'description': '*(Linux and BSD)*: percent time spent servicing/handling \
-hardware/software interrupts. Time servicing interrupts (hardware + \
-software).',
-        'unit': 'percent',
-        'optional': True,
-    },
-    'nice': {
-        'description': '*(Unix)*: percent time occupied by user level processes with \
-a positive nice value. The time the CPU has spent running users\' \
-processes that have been *niced*.',
-        'unit': 'percent',
-        'optional': True,
     },
     'steal': {
         'description': '*(Linux)*: percentage of time a virtual CPU waits for a real \
@@ -76,44 +106,23 @@ systems under the control of the Linux kernel.',
         'unit': 'percent',
         'optional': True,
     },
-    'ctx_switches': {
-        'description': 'number of context switches (voluntary + involuntary) per \
-second. A context switch is a procedure that a computer\'s CPU (central \
-processing unit) follows to change from one task (or process) to \
-another while ensuring that the tasks do not conflict.',
-        'unit': 'number',
-        'rate': True,
-        'min_symbol': 'K',
-        'short_name': 'ctx_sw',
-        'optional': True,
-    },
-    'interrupts': {
-        'description': 'number of interrupts per second.',
-        'unit': 'number',
-        'rate': True,
-        'min_symbol': 'K',
-        'short_name': 'inter',
-        'optional': True,
-    },
-    'soft_interrupts': {
-        'description': 'number of software interrupts per second. Always set to \
-0 on Windows and SunOS.',
-        'unit': 'number',
-        'rate': True,
-        'min_symbol': 'K',
-        'short_name': 'sw_int',
-        'optional': True,
-    },
     'syscalls': {
         'description': 'number of system calls per second. Always 0 on Linux OS.',
         'unit': 'number',
         'rate': True,
-        'min_symbol': 'K',
         'short_name': 'sys_call',
         'optional': True,
     },
-    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
-    'time_since_update': {'description': 'Number of seconds since last update.', 'unit': 'seconds'},
+    'cpucore': {
+        'description': 'Total number of CPU core.',
+        'unit': 'number',
+        'display': False,
+    },
+    'time_since_update': {
+        'description': 'Number of seconds since last update.',
+        'unit': 'seconds',
+        'display': False,
+    },
 }
 
 # SNMP OID

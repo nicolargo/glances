@@ -16,6 +16,7 @@ from textual.containers import Container, Grid, VerticalScroll
 from textual.reactive import reactive
 from textual.widgets import Footer, Label, Placeholder
 
+from glances.globals import auto_number
 from glances.plugins.plugin.model import fields_unit_short
 
 
@@ -40,8 +41,13 @@ class GlancesTuiApp(App):
         self.stats = stats
 
         # Init plugins
+        self.plugins_description = self.stats.getAllFieldsDescriptionAsDict()
+        # TODO: to be replaced by a loop
         self.plugins = {}
         self.plugins["cpu"] = GlancesPlugin("cpu", stats=stats, config=config, args=args)
+        self.plugins["mem"] = GlancesPlugin("mem", stats=stats, config=config, args=args)
+        self.plugins["memswap"] = GlancesPlugin("memswap", stats=stats, config=config, args=args)
+        self.plugins["load"] = GlancesPlugin("load", stats=stats, config=config, args=args)
 
     def compose(self) -> ComposeResult:
         # yield Header(id="header", show_clock=True)
@@ -56,9 +62,9 @@ class GlancesTuiApp(App):
                 Placeholder(id="quicklook"),
                 self.plugins["cpu"],
                 Placeholder(id="gpu", classes="remove"),
-                Placeholder(id="mem"),
-                Placeholder(id="memswap"),
-                Placeholder(id="load"),
+                self.plugins["mem"],
+                self.plugins["memswap"],
+                self.plugins["load"],
                 id="top",
             ),
             Grid(
@@ -99,12 +105,32 @@ class GlancesTuiApp(App):
         """Called when the time attribute changes."""
         # Start by updating Glances stats
         self.stats.update()
+        # logger.info(self.stats.getAllAsDict()['cpu'])
 
-        # Solution 1: make the update in the GlancesTuiApp class
-        self.query_one("#cpu").query_one("#total").update(str(self.stats.getAllAsDict()["cpu"]["total"]))
-        self.query_one("#cpu").query_one("#system").update(str(self.stats.getAllAsDict()["cpu"]["system"]))
-        # Solution 2: implement the update method in the CpuTextualPlugin class
-        # ... (TODO)
+        # Get stats views
+        views = self.stats.getAllViewsAsDict()
+        # logger.info(views['cpu'])
+
+        # Update the stats using Textual query
+        for plugin in self.plugins.keys():
+            stats = self.stats.getAllAsDict()[plugin]
+            for field in self.query_one(f"#{plugin}").query('.value'):
+                # Ignore field not available in the stats
+                if field.id not in self.stats.getAllAsDict()[plugin]:
+                    continue
+                # Update value
+                if (
+                    field.id in self.plugins_description[plugin]
+                    and 'rate' in self.plugins_description[plugin][field.id]
+                    and self.plugins_description[plugin][field.id]['rate']
+                ):
+                    field_stat = field.id + "_rate_per_sec"
+                else:
+                    field_stat = field.id
+                field.update(auto_number(stats.get(field_stat, None)))
+                # Update style
+                style = views[plugin][field.id].get('decoration', 'DEFAULT')
+                field.classes = f"value {style.lower()}"
 
 
 class GlancesPlugin(Container):
@@ -138,20 +164,24 @@ class GlancesPlugin(Container):
             # Will generate a NoMatches exception when stats are updated
             # TODO: catch it in the main update loop
             yield Label(f'{self.plugin.upper()} stats not available', id=f"{self.plugin}-not-available")
+            return
 
         with Grid(id=f"{self.plugin}"):
-            for field in self.stats.getAllAsDict()[f"{self.plugin}"].keys():
+            for field in self.plugin_description.keys():
+                # Ignore field if the display=False option is defined in the description
+                if not self.plugin_description[field].get('display', True):
+                    continue
                 # Get the field short name
-                if field in self.plugin_description and 'short_name' in self.plugin_description[field]:
+                if 'short_name' in self.plugin_description[field]:
                     field_name = self.plugin_description[field]['short_name']
                 else:
                     field_name = field
                 yield Label(field_name, classes="name")
-                # Display value
-                yield Label('', id=field, classes="value ok")
+                # Display value (with decoration classes)
+                yield Label('', id=field, classes="value default")
                 # Display unit
                 if field in self.plugin_description and 'unit' in self.plugin_description[field]:
                     field_unit = fields_unit_short.get(self.plugin_description[field]['unit'], '')
                 else:
                     field_unit = ''
-                yield Label(field_unit, classes="unit ok")
+                yield Label(field_unit, classes="unit")

@@ -28,6 +28,7 @@ Placeholder.remove {
 .unit {
     text-align: right;
     padding-right: 1;
+    color: grey;
 }
 
 .default {
@@ -37,17 +38,37 @@ Placeholder.remove {
     color: lime;
 }
 
+.ok_log {
+    color: black;
+    background: lime;
+}
+
 .careful {
     color: cornflowerblue;
 }
 
+.careful_log {
+    color: black;
+    background: cornflowerblue;
+}
+
 .warning {
-    color: orangered;
+    color: purple;
     background: $background;
+}
+
+.warning_log {
+    color: $foreground;
+    background: purple;
 }
 
 .critical {
     color: red;
+}
+
+.critical_log {
+    color: white;
+    background: red;
 }
 
 # Glances layout
@@ -90,14 +111,36 @@ Placeholder.remove {
 # Glances plugins
 # ###############
 
-#cpu {
-    grid-size: 9 4;
-    grid-columns: 7 5 2;
+* > Label {
     width: 100%;
 }
 
-#cpu > Label {
+#cpu {
+    grid-size: 9 4;
+    grid-columns: 6 6 2;
     width: 100%;
+    align: center top;
+}
+
+#mem {
+    grid-size: 6 4;
+    grid-columns: 7 7 2;
+    width: 100%;
+    align: center top;
+}
+
+#memswap {
+    grid-size: 3 4;
+    grid-columns: 6 7 2;
+    width: 100%;
+    align: center top;
+}
+
+#load {
+    grid-size: 3 4;
+    grid-columns: 5 7 2;
+    width: 100%;
+    align: right top;
 }
 
 #network {

@@ -19,6 +19,7 @@ from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
 fields_description = {
+    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'core', 'short_name': 'LOAD'},
     'min1': {
         'description': 'Average sum of the number of processes \
 waiting in the run-queue plus the number currently executing \
@@ -37,7 +38,6 @@ waiting in the run-queue plus the number currently executing \
 over 15 minutes.',
         'unit': 'float',
     },
-    'cpucore': {'description': 'Total number of CPU core.', 'unit': 'number'},
 }
 
 # SNMP OID
@@ -204,4 +204,8 @@ def get_load_average(percent: bool = False):
 
     if load_average and percent:
         return tuple([round(i / get_nb_log_core() * 100, 1) for i in load_average])
+    if load_average:
+        return tuple(float(f"{x:.2f}") for x in load_average)
+
+    # Return None if load average is not available
     return load_average

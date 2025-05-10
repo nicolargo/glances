@@ -16,21 +16,25 @@ from glances.timer import getTimeSinceLastUpdate
 
 # Fields description
 fields_description = {
-    'total': {'description': 'Total swap memory.', 'unit': 'bytes', 'min_symbol': 'K'},
-    'used': {'description': 'Used swap memory.', 'unit': 'bytes', 'min_symbol': 'K'},
-    'free': {'description': 'Free swap memory.', 'unit': 'bytes', 'min_symbol': 'K'},
-    'percent': {'description': 'Used swap memory in percentage.', 'unit': 'percent'},
+    'percent': {'description': 'Used swap memory in percentage.', 'unit': 'percent', 'short_name': 'SWAP'},
+    'total': {'description': 'Total swap memory.', 'unit': 'bytes'},
+    'used': {'description': 'Used swap memory.', 'unit': 'bytes'},
+    'free': {'description': 'Free swap memory.', 'unit': 'bytes'},
     'sin': {
         'description': 'The number of bytes the system has swapped in from disk (cumulative).',
         'unit': 'bytes',
-        'min_symbol': 'K',
+        'display': False,
     },
     'sout': {
         'description': 'The number of bytes the system has swapped out from disk (cumulative).',
         'unit': 'bytes',
-        'min_symbol': 'K',
+        'display': False,
     },
-    'time_since_update': {'description': 'Number of seconds since last update.', 'unit': 'seconds'},
+    'time_since_update': {
+        'description': 'Number of seconds since last update.',
+        'unit': 'seconds',
+        'display': False,
+    },
 }
 
 # SNMP OID
