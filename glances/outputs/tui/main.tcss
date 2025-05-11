@@ -1,6 +1,11 @@
 # Glances classes
 # ###############
 
+Container {
+    overflow: hidden hidden;
+    height: auto;
+}
+
 Placeholder.remove {
     # self.styles.display = "block" to display the placeholder from Python code
     display: none;
@@ -19,6 +24,7 @@ Placeholder.remove {
 }
 
 .name {
+    text-align: left;
 }
 
 .value {
@@ -114,6 +120,25 @@ Placeholder.remove {
 * > Label {
     width: 100%;
 }
+
+#quicklook > Grid {
+    grid-size: 2 3;
+    grid-columns: 5 auto;
+}
+
+#quicklook > Label {
+    text-align: left;
+    text-style: bold;
+}
+
+# * > .bar--bar  {
+#     color: green;
+# }
+
+# #quicklook > PercentageStatus {
+#     text-style: reverse;
+#     color: $secondary;
+# }
 
 #cpu {
     grid-size: 9 4;

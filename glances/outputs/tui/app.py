@@ -14,10 +14,12 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Grid, VerticalScroll
 from textual.reactive import reactive
-from textual.widgets import Footer, Label, Placeholder
+from textual.widgets import Footer, Placeholder
 
 from glances.globals import auto_number
-from glances.plugins.plugin.model import fields_unit_short
+
+# from glances.logger import logger
+from glances.outputs.tui.components import GlancesTuiTableComponent, QuicklookTuiPlugin
 
 
 class GlancesTuiApp(App):
@@ -44,10 +46,11 @@ class GlancesTuiApp(App):
         self.plugins_description = self.stats.getAllFieldsDescriptionAsDict()
         # TODO: to be replaced by a loop
         self.plugins = {}
-        self.plugins["cpu"] = GlancesPlugin("cpu", stats=stats, config=config, args=args)
-        self.plugins["mem"] = GlancesPlugin("mem", stats=stats, config=config, args=args)
-        self.plugins["memswap"] = GlancesPlugin("memswap", stats=stats, config=config, args=args)
-        self.plugins["load"] = GlancesPlugin("load", stats=stats, config=config, args=args)
+        self.plugins["quicklook"] = QuicklookTuiPlugin("quicklook", stats=stats, config=config, args=args)
+        self.plugins["cpu"] = GlancesTuiTableComponent("cpu", stats=stats, config=config, args=args)
+        self.plugins["mem"] = GlancesTuiTableComponent("mem", stats=stats, config=config, args=args)
+        self.plugins["memswap"] = GlancesTuiTableComponent("memswap", stats=stats, config=config, args=args)
+        self.plugins["load"] = GlancesTuiTableComponent("load", stats=stats, config=config, args=args)
 
     def compose(self) -> ComposeResult:
         # yield Header(id="header", show_clock=True)
@@ -59,7 +62,7 @@ class GlancesTuiApp(App):
                 id="header",
             ),
             Grid(
-                Placeholder(id="quicklook"),
+                self.plugins["quicklook"],
                 self.plugins["cpu"],
                 Placeholder(id="gpu", classes="remove"),
                 self.plugins["mem"],
@@ -113,75 +116,40 @@ class GlancesTuiApp(App):
 
         # Update the stats using Textual query
         for plugin in self.plugins.keys():
+            # Get the stats
             stats = self.stats.getAllAsDict()[plugin]
-            for field in self.query_one(f"#{plugin}").query('.value'):
+
+            # Iter through the fields value to update as a Label
+            for textual_field in self.query_one(f"#{plugin}").query('.value').exclude(".progressbar"):
+                # Remove the plugin name from the field id
+                field = '_'.join(textual_field.id.split('_', maxsplit=1)[1:])
                 # Ignore field not available in the stats
-                if field.id not in self.stats.getAllAsDict()[plugin]:
+                if field not in stats:
                     continue
                 # Update value
                 if (
-                    field.id in self.plugins_description[plugin]
-                    and 'rate' in self.plugins_description[plugin][field.id]
-                    and self.plugins_description[plugin][field.id]['rate']
+                    field in self.plugins_description[plugin]
+                    and 'rate' in self.plugins_description[plugin][field]
+                    and self.plugins_description[plugin][field]['rate']
                 ):
-                    field_stat = field.id + "_rate_per_sec"
+                    field_stat = field + "_rate_per_sec"
                 else:
-                    field_stat = field.id
-                field.update(auto_number(stats.get(field_stat, None)))
+                    field_stat = field
+                textual_field.update(auto_number(stats.get(field_stat, None)))
                 # Update style
-                style = views[plugin][field.id].get('decoration', 'DEFAULT')
-                field.classes = f"value {style.lower()}"
+                style = views[plugin][field].get('decoration', 'DEFAULT')
+                textual_field.classes = f"value {style.lower()}"
 
-
-class GlancesPlugin(Container):
-    """Plugin to display Glances stats for most of Glances plugins.
-    It's a simple table with the field name and the value.
-    Display order: from left to right, top to bottom.
-    """
-
-    def __init__(self, plugin, stats=None, config=None, args=None):
-        super().__init__()
-
-        # Init config
-        self.config = config
-
-        # Init args
-        self.args = args
-
-        # Init stats
-        self.stats = stats
-
-        # Init plugin name (convert by default to lowercase)
-        self.plugin = plugin.lower()
-        self.plugin_description = (
-            self.stats.getAllFieldsDescriptionAsDict()[self.plugin]
-            if self.plugin in self.stats.getAllFieldsDescriptionAsDict()
-            else {}
-        )
-
-    def compose(self) -> ComposeResult:
-        if self.plugin not in self.stats.getAllAsDict():
-            # Will generate a NoMatches exception when stats are updated
-            # TODO: catch it in the main update loop
-            yield Label(f'{self.plugin.upper()} stats not available', id=f"{self.plugin}-not-available")
-            return
-
-        with Grid(id=f"{self.plugin}"):
-            for field in self.plugin_description.keys():
-                # Ignore field if the display=False option is defined in the description
-                if not self.plugin_description[field].get('display', True):
+            # Iter through the fields value to update as a ProgressBar
+            for textual_field in self.query_one(f"#{plugin}").query('.value').filter(".progressbar"):
+                # Remove the plugin name from the field id
+                field = '_'.join(textual_field.id.split('_', maxsplit=1)[1:])
+                # Ignore field not available in the stats
+                if field not in stats:
                     continue
-                # Get the field short name
-                if 'short_name' in self.plugin_description[field]:
-                    field_name = self.plugin_description[field]['short_name']
-                else:
-                    field_name = field
-                yield Label(field_name, classes="name")
-                # Display value (with decoration classes)
-                yield Label('', id=field, classes="value default")
-                # Display unit
-                if field in self.plugin_description and 'unit' in self.plugin_description[field]:
-                    field_unit = fields_unit_short.get(self.plugin_description[field]['unit'], '')
-                else:
-                    field_unit = ''
-                yield Label(field_unit, classes="unit")
+                # Update value
+                textual_field.update(progress=stats.get(field, None))
+                # TODO: Update style
+                # Do not work for preogress bar...
+                # style = views[plugin][field].get('decoration', 'DEFAULT')
+                # textual_field.classes = f"value progressbar {style.lower()}"

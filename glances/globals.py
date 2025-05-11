@@ -432,6 +432,10 @@ def auto_number(number, low_precision=False, min_symbol='K', none_symbol='-', st
     if number == 0.0:
         return '0'
 
+    # If the number is already a string, then return it as it
+    if isinstance(number, str):
+        return number
+
     prefix = {
         'Y': 1208925819614629174706176,
         'Z': 1180591620717411303424,
