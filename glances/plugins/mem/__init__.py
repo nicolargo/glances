@@ -13,6 +13,7 @@ import psutil
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
     'percent': {
         'description': 'The percentage usage calculated as (total - available) / total * 100.',

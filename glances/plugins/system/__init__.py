@@ -17,38 +17,30 @@ from glances.globals import iteritems
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
-# {
-#   "os_name": "Linux",
-#   "hostname": "XPS13-9333",
-#   "platform": "64bit",
-#   "linux_distro": "Ubuntu 22.04",
-#   "os_version": "5.15.0-88-generic",
-#   "hr_name": "Ubuntu 22.04 64bit"
-# }
 # Fields description
-# description: human readable description
-# short_name: shortname to use un UI
-# unit: unit type
-# rate: is it a rate ? If yes, // by time_since_update when displayed,
-# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
-    'os_name': {
-        'description': 'Operating system name',
-    },
     'hostname': {
         'description': 'Hostname',
     },
+    'hr_name': {
+        'description': 'Human readable operating system name',
+    },
+    'os_name': {
+        'description': 'Operating system name',
+        'display': False,
+    },
     'platform': {
         'description': 'Platform (32 or 64 bits)',
+        'display': False,
     },
     'linux_distro': {
         'description': 'Linux distribution',
+        'display': False,
     },
     'os_version': {
         'description': 'Operating system version',
-    },
-    'hr_name': {
-        'description': 'Human readable operating system name',
+        'display': False,
     },
 }
 

@@ -34,30 +34,32 @@ else:
 
 
 # Fields description
-# description: human readable description
-# short_name: shortname to use un UI
-# unit: unit type
-# rate: is it a rate ? If yes, // by time_since_update when displayed,
-# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
     'address': {
         'description': 'Private IP address',
-    },
-    'mask': {
-        'description': 'Private IP mask',
+        'short_name': 'IP',
     },
     'mask_cidr': {
         'description': 'Private IP mask in CIDR format',
         'unit': 'number',
-    },
-    'gateway': {
-        'description': 'Private IP gateway',
+        'short_name': '/',
     },
     'public_address': {
         'description': 'Public IP address',
+        'short_name': 'Pub',
     },
     'public_info_human': {
         'description': 'Public IP information',
+        'short_name': '',
+    },
+    'mask': {
+        'description': 'Private IP mask',
+        'display': False,
+    },
+    'gateway': {
+        'description': 'Private IP gateway',
+        'display': False,
     },
 }
 

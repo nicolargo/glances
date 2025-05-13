@@ -15,6 +15,7 @@ from glances.plugins.plugin.model import GlancesPluginModel
 from glances.timer import getTimeSinceLastUpdate
 
 # Fields description
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
     'percent': {'description': 'Used swap memory in percentage.', 'unit': 'percent', 'short_name': 'SWAP'},
     'total': {'description': 'Total swap memory.', 'unit': 'bytes'},

@@ -14,11 +14,7 @@ from time import strftime, tzname
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
-# description: human readable description
-# short_name: shortname to use un UI
-# unit: unit type
-# rate: if True then compute and add *_gauge and *_rate_per_is fields
-# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
     'custom': {'description': 'Current date in custom format.'},
     'iso': {'description': 'Current date in ISO 8601 format.'},

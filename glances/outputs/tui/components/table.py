@@ -21,7 +21,9 @@ class GlancesTuiTableComponent(Container):
     Display order: from left to right, top to bottom.
     """
 
-    def __init__(self, plugin, stats=None, config=None, args=None):
+    def __init__(
+        self, plugin, stats=None, config=None, args=None, display_name=True, display_unit=True, first_field_title=True
+    ):
         super().__init__()
 
         # Init config
@@ -32,6 +34,11 @@ class GlancesTuiTableComponent(Container):
 
         # Init stats
         self.stats = stats
+
+        # What to display
+        self.display_name = display_name
+        self.display_unit = display_unit
+        self.first_field_title = first_field_title
 
         # Init plugin name (convert by default to lowercase)
         self.plugin = plugin.lower()
@@ -49,21 +56,25 @@ class GlancesTuiTableComponent(Container):
             return
 
         with Grid(id=f"{self.plugin}"):
+            first_field = True
             for field in self.plugin_description.keys():
                 # Ignore field if the display=False option is defined in the description
                 if not self.plugin_description[field].get('display', True):
                     continue
-                # Get the field short name
-                if 'short_name' in self.plugin_description[field]:
-                    field_name = self.plugin_description[field]['short_name']
-                else:
-                    field_name = field
-                yield Label(field_name, classes="name")
+                if self.display_name:
+                    # Get the field short name
+                    if 'short_name' in self.plugin_description[field]:
+                        field_name = self.plugin_description[field]['short_name']
+                    else:
+                        field_name = field
+                    yield Label(field_name, classes="name title" if self.first_field_title and first_field else "name")
+                    first_field = False
                 # Display value (with decoration classes)
                 yield Label('', id=f"{self.plugin}_{field}", classes="value default")
                 # Display unit
-                if field in self.plugin_description and 'unit' in self.plugin_description[field]:
-                    field_unit = fields_unit_short.get(self.plugin_description[field]['unit'], '')
-                else:
-                    field_unit = ''
-                yield Label(field_unit, classes="unit")
+                if self.display_unit:
+                    if field in self.plugin_description and 'unit' in self.plugin_description[field]:
+                        field_unit = fields_unit_short.get(self.plugin_description[field]['unit'], '')
+                    else:
+                        field_unit = ''
+                    yield Label(field_unit, classes="unit")

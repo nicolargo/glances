@@ -11,6 +11,13 @@ Placeholder.remove {
     display: none;
 }
 
+* > Label {
+    width: 100%;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+}
+
+
 * > .sparkline--min-color {
     color: $success;
 }
@@ -18,6 +25,11 @@ Placeholder.remove {
 * > .sparkline--max-color {
     color: $error;
 }
+
+* > .bar--bar  {
+    background: grey 20%;
+}
+
 
 .title {
     text-style: bold;
@@ -87,16 +99,20 @@ Placeholder.remove {
 
 #header {
     grid-size: 3 1;
+    grid-gutter: 1 0;
     height: 2;
 }
 
 #top {
     grid-size: 5 1;
+    grid-columns: 3fr 2fr 2fr 1fr 1fr;
+    grid-gutter: 1 0;
     height: 5;
 }
 
 #middle {
     grid-size: 4 1;
+    grid-gutter: 1 0;
 }
 
 #sidebar {
@@ -110,6 +126,7 @@ Placeholder.remove {
 
 #bottom {
     grid-size: 4 1;
+    grid-gutter: 1 0;
     height: 1;
 }
 
@@ -117,28 +134,30 @@ Placeholder.remove {
 # Glances plugins
 # ###############
 
-* > Label {
-    width: 100%;
+#system {
+    text-align: left;
+    padding-right: 3;
+}
+
+#ip {
+    text-align: left;
+    padding-right: 3;
+}
+
+#uptime {
+    text-align: right;
+    padding-left: 3;
 }
 
 #quicklook > Grid {
     grid-size: 2 3;
-    grid-columns: 5 auto;
+    grid-columns: 5 1fr;
 }
 
 #quicklook > Label {
     text-align: left;
     text-style: bold;
 }
-
-# * > .bar--bar  {
-#     color: green;
-# }
-
-# #quicklook > PercentageStatus {
-#     text-style: reverse;
-#     color: $secondary;
-# }
 
 #cpu {
     grid-size: 9 4;

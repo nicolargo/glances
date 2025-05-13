@@ -18,6 +18,7 @@ from glances.plugins.core import CorePlugin
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
     'cpucore': {'description': 'Total number of CPU core.', 'unit': 'core', 'short_name': 'LOAD'},
     'min1': {
