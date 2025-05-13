@@ -18,9 +18,21 @@ from glances.timer import getTimeSinceLastUpdate
 # https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
     'percent': {'description': 'Used swap memory in percentage.', 'unit': 'percent', 'short_name': 'SWAP'},
-    'total': {'description': 'Total swap memory.', 'unit': 'bytes'},
-    'used': {'description': 'Used swap memory.', 'unit': 'bytes'},
-    'free': {'description': 'Free swap memory.', 'unit': 'bytes'},
+    'total': {
+        'description': 'Total swap memory.',
+        'unit': 'bytes',
+        'min_symbol': 'K',
+    },
+    'used': {
+        'description': 'Used swap memory.',
+        'unit': 'bytes',
+        'min_symbol': 'K',
+    },
+    'free': {
+        'description': 'Free swap memory.',
+        'unit': 'bytes',
+        'min_symbol': 'K',
+    },
     'sin': {
         'description': 'The number of bytes the system has swapped in from disk (cumulative).',
         'unit': 'bytes',
