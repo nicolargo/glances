@@ -14,34 +14,37 @@ from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
-# description: human readable description
-# short_name: shortname to use un UI
-# unit: unit type
-# rate: if True then compute and add *_gauge and *_rate_per_is fields
-# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
-    'interface_name': {'description': 'Interface name.'},
-    'alias': {'description': 'Interface alias name (optional).'},
+    'interface_name': {
+        'description': 'Interface name.',
+        'short_name': 'NETWORK',
+    },
+    'alias': {'description': 'Interface alias name (optional).', 'display': False},
     'bytes_recv': {
         'description': 'Number of bytes received.',
         'rate': True,
         'unit': 'byte',
+        'short_name': 'Rx/s',
     },
     'bytes_sent': {
         'description': 'Number of bytes sent.',
         'rate': True,
         'unit': 'byte',
+        'short_name': 'Tx/s',
     },
     'bytes_all': {
         'description': 'Number of bytes received and sent.',
         'rate': True,
         'unit': 'byte',
+        'display': False,
     },
     'speed': {
         'description': 'Maximum interface speed (in bit per second). Can return 0 on some operating-system.',
         'unit': 'bitpersecond',
+        'display': False,
     },
-    'is_up': {'description': 'Is the interface up ?', 'unit': 'bool'},
+    'is_up': {'description': 'Is the interface up ?', 'unit': 'bool', 'display': False},
 }
 
 # SNMP OID

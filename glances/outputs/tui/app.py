@@ -10,16 +10,22 @@
 
 from time import monotonic
 
+from rich.text import Text
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Grid, VerticalScroll
 from textual.reactive import reactive
 from textual.widgets import Placeholder
 
-from glances.globals import auto_number
+from glances.globals import auto_number, dictlist_first_key_value
 
 # from glances.logger import logger
-from glances.outputs.tui.components import GlancesTuiOneLineComponent, GlancesTuiTableComponent, QuicklookTuiPlugin
+from glances.outputs.tui.components import (
+    GlancesTuiListComponent,
+    GlancesTuiOneLineComponent,
+    GlancesTuiTableComponent,
+    QuicklookTuiPlugin,
+)
 
 
 class GlancesTuiApp(App):
@@ -67,6 +73,7 @@ class GlancesTuiApp(App):
             config=config,
             args=args,
         )
+
         self.plugins["quicklook"] = QuicklookTuiPlugin(plugin="quicklook", stats=stats, config=config, args=args)
         self.plugins["cpu"] = GlancesTuiTableComponent(plugin="cpu", stats=stats, config=config, args=args)
         self.plugins["mem"] = GlancesTuiTableComponent(plugin="mem", stats=stats, config=config, args=args)
@@ -79,6 +86,10 @@ class GlancesTuiApp(App):
             config=config,
             args=args,
         )
+
+        self.plugins["network"] = GlancesTuiListComponent(plugin="network", stats=stats, config=config, args=args)
+        self.plugins["diskio"] = GlancesTuiListComponent(plugin="diskio", stats=stats, config=config, args=args)
+        self.plugins["fs"] = GlancesTuiListComponent(plugin="fs", stats=stats, config=config, args=args)
 
     def _header(self) -> Grid:
         return Grid(
@@ -101,9 +112,9 @@ class GlancesTuiApp(App):
 
     def _sidebar(self) -> VerticalScroll:
         return VerticalScroll(
-            Placeholder(id="network"),
-            Placeholder(id="diskio"),
-            Placeholder(id="fs"),
+            self.plugins["network"],
+            self.plugins["diskio"],
+            self.plugins["fs"],
             Placeholder(id="sensors"),
             id="sidebar",
         )
@@ -161,6 +172,40 @@ class GlancesTuiApp(App):
         for plugin in self.plugins.keys():
             # Get the stats
             stats = self.stats.getAllAsDict()[plugin]
+
+            # TODO: Perhaps it will be cleaner to update per plugin...
+
+            # Update network plugin
+            if plugin in ["network", "diskio", "fs"]:
+                key = stats[0].get('key')
+                for row_key, row_value in self.plugins[plugin].rows.items():
+                    new_values = dictlist_first_key_value(stats, key, row_key)
+                    first_column = True
+                    for column_key, column_value in self.plugins[plugin].columns.items():
+                        # Update value
+                        field = column_key
+                        if (
+                            field in self.plugins_description[plugin]
+                            and 'rate' in self.plugins_description[plugin][field]
+                            and self.plugins_description[plugin][field]['rate']
+                        ):
+                            field_stat = field + "_rate_per_sec"
+                        else:
+                            field_stat = field
+                        # With style
+                        # WARNING: https://rich.readthedocs.io/en/stable/text.html?highlight=Text#rich-text
+                        styled_value = Text(
+                            auto_number(new_values.get(field_stat, None)), justify="left" if first_column else "right"
+                        )
+                        self.query_one(f"#{plugin}").update_cell(row_value, column_value, styled_value)
+                        first_column = False
+
+                        # from glances.logger import logger
+                        # logger.info(f"Update {plugin} {field} {field_stat} {new_values.get(field_stat, None)}")
+
+                # Set the height of the list (+ one for the header and one for the bottom padding)
+                self.query_one(f"#{plugin}").styles.height = len(stats) + 2
+                continue
 
             # Iter through the fields value to update as a Label
             for textual_field in self.query_one(f"#{plugin}").query('.value').exclude(".progressbar"):

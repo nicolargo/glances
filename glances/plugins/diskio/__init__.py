@@ -15,32 +15,32 @@ from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
-# description: human readable description
-# short_name: shortname to use un UI
-# unit: unit type
-# rate: if True then compute and add *_gauge and *_rate_per_is fields
-# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
-    'disk_name': {'description': 'Disk name.'},
+    'disk_name': {'description': 'Disk name.', 'short_name': 'DISK I/O'},
     'read_count': {
         'description': 'Number of reads.',
         'rate': True,
         'unit': 'number',
+        'display': False,
     },
     'write_count': {
         'description': 'Number of writes.',
         'rate': True,
         'unit': 'number',
+        'display': False,
     },
     'read_bytes': {
         'description': 'Number of bytes read.',
         'rate': True,
         'unit': 'byte',
+        'short_name': 'R/s',
     },
     'write_bytes': {
         'description': 'Number of bytes written.',
         'rate': True,
         'unit': 'byte',
+        'short_name': 'W/s',
     },
 }
 

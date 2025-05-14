@@ -188,12 +188,15 @@ Placeholder.remove {
 }
 
 #network {
-    # self.styles.height = 10  # Explicit cell height can be an int
-    height: 5;
+    padding-bottom: 1;
 }
 
 #diskio {
-    height: 10;
+    padding-bottom: 1;
+}
+
+#fs {
+    padding-bottom: 1;
 }
 
 #vms {

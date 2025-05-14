@@ -17,31 +17,35 @@ from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
-# description: human readable description
-# short_name: shortname to use un UI
-# unit: unit type
-# rate: is it a rate ? If yes, // by time_since_update when displayed,
-# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
-    'device_name': {'description': 'Device name.'},
-    'fs_type': {'description': 'File system type.'},
-    'mnt_point': {'description': 'Mount point.'},
-    'options': {'description': 'Mount options.'},
-    'size': {
-        'description': 'Total size.',
-        'unit': 'byte',
+    'mnt_point': {'description': 'Mount point.', 'short_name': 'FS'},
+    'device_name': {
+        'description': 'Device name.',
+        'display': False,
+    },
+    'fs_type': {
+        'description': 'File system type.',
+        'display': False,
+    },
+    'options': {
+        'description': 'Mount options.',
+        'display': False,
     },
     'used': {
         'description': 'Used size.',
         'unit': 'byte',
     },
+    'size': {'description': 'Total size.', 'unit': 'byte'},
     'free': {
         'description': 'Free size.',
         'unit': 'byte',
+        'display': False,
     },
     'percent': {
         'description': 'File system usage in percent.',
         'unit': 'percent',
+        'display': False,
     },
 }
 
