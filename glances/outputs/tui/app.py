@@ -13,7 +13,7 @@ from time import monotonic
 from rich.text import Text
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Grid, VerticalScroll
+from textual.containers import Container, Grid, Horizontal, VerticalScroll
 from textual.reactive import reactive
 from textual.widgets import Placeholder
 
@@ -49,47 +49,75 @@ class GlancesTuiApp(App):
         self.stats = stats
 
         # Init plugins
+        self.init_plugins()
+
+    def init_plugins(self) -> None:
+        """Init the plugins."""
         self.plugins_description = self.stats.getAllFieldsDescriptionAsDict()
+
         # TODO: to be replaced by a loops (when it is possible)
         self.plugins = {}
         self.plugins["system"] = GlancesTuiOneLineComponent(
             plugin="system",
             template="{hostname} {hr_name}",
-            stats=stats,
-            config=config,
-            args=args,
+            stats=self.stats,
+            config=self.config,
+            args=self.args,
         )
         self.plugins["ip"] = GlancesTuiOneLineComponent(
             plugin="ip",
             template="IP {address}/{mask_cidr} {public_info_human} {public_address}",
-            stats=stats,
-            config=config,
-            args=args,
+            stats=self.stats,
+            config=self.config,
+            args=self.args,
         )
         self.plugins["uptime"] = GlancesTuiOneLineComponent(
             plugin="uptime",
             template="Uptime: {human}",
-            stats=stats,
-            config=config,
-            args=args,
+            stats=self.stats,
+            config=self.config,
+            args=self.args,
         )
 
-        self.plugins["quicklook"] = QuicklookTuiPlugin(plugin="quicklook", stats=stats, config=config, args=args)
-        self.plugins["cpu"] = GlancesTuiTableComponent(plugin="cpu", stats=stats, config=config, args=args)
-        self.plugins["mem"] = GlancesTuiTableComponent(plugin="mem", stats=stats, config=config, args=args)
-        self.plugins["memswap"] = GlancesTuiTableComponent(plugin="memswap", stats=stats, config=config, args=args)
-        self.plugins["load"] = GlancesTuiTableComponent(plugin="load", stats=stats, config=config, args=args)
+        self.plugins["quicklook"] = QuicklookTuiPlugin(
+            plugin="quicklook", stats=self.stats, config=self.config, args=self.args
+        )
+        self.plugins["cpu"] = GlancesTuiTableComponent(
+            plugin="cpu", stats=self.stats, config=self.config, args=self.args
+        )
+        self.plugins["mem"] = GlancesTuiTableComponent(
+            plugin="mem", stats=self.stats, config=self.config, args=self.args
+        )
+        self.plugins["memswap"] = GlancesTuiTableComponent(
+            plugin="memswap", stats=self.stats, config=self.config, args=self.args
+        )
+        self.plugins["load"] = GlancesTuiTableComponent(
+            plugin="load", stats=self.stats, config=self.config, args=self.args
+        )
+
+        self.plugins["network"] = GlancesTuiListComponent(
+            plugin="network", stats=self.stats, config=self.config, args=self.args, columns_width=[16, 8, 8]
+        )
+        self.plugins["diskio"] = GlancesTuiListComponent(
+            plugin="diskio", stats=self.stats, config=self.config, args=self.args, columns_width=[16, 8, 8]
+        )
+        self.plugins["fs"] = GlancesTuiListComponent(
+            plugin="fs", stats=self.stats, config=self.config, args=self.args, columns_width=[16, 8, 8]
+        )
+        self.plugins["sensors"] = GlancesTuiListComponent(
+            plugin="sensors", stats=self.stats, config=self.config, args=self.args, columns_width=[16, 15, 1]
+        )
+
         self.plugins["now"] = GlancesTuiOneLineComponent(
             plugin="now",
             template="{custom}",
-            stats=stats,
-            config=config,
-            args=args,
+            stats=self.stats,
+            config=self.config,
+            args=self.args,
         )
-
-        self.plugins["network"] = GlancesTuiListComponent(plugin="network", stats=stats, config=config, args=args)
-        self.plugins["diskio"] = GlancesTuiListComponent(plugin="diskio", stats=stats, config=config, args=args)
-        self.plugins["fs"] = GlancesTuiListComponent(plugin="fs", stats=stats, config=config, args=args)
+        self.plugins["alert"] = GlancesTuiListComponent(
+            plugin="alert", stats=self.stats, config=self.config, args=self.args, columns_width=[16, 15, 1]
+        )
 
     def _header(self) -> Grid:
         return Grid(
@@ -115,7 +143,7 @@ class GlancesTuiApp(App):
             self.plugins["network"],
             self.plugins["diskio"],
             self.plugins["fs"],
-            Placeholder(id="sensors"),
+            self.plugins["sensors"],
             id="sidebar",
         )
 
@@ -128,10 +156,17 @@ class GlancesTuiApp(App):
             id="process",
         )
 
-    def _bottom(self) -> Grid:
-        return Grid(
+    def _middle(self) -> Horizontal:
+        return Horizontal(
+            self._sidebar(),
+            self._process(),
+            id="middle",
+        )
+
+    def _bottom(self) -> Horizontal:
+        return Horizontal(
             self.plugins["now"],
-            Placeholder(id="alert"),
+            self.plugins["alert"],
             id="bottom",
         )
 
@@ -140,11 +175,7 @@ class GlancesTuiApp(App):
         yield Container(
             self._header(),
             self._top(),
-            Grid(
-                self._sidebar(),
-                self._process(),
-                id="middle",
-            ),
+            self._middle(),
             self._bottom(),
             id="data",
         )
@@ -162,11 +193,17 @@ class GlancesTuiApp(App):
         """Called when the time attribute changes."""
         # Start by updating Glances stats
         self.stats.update()
-        # logger.info(self.stats.getAllAsDict()['cpu'])
 
         # Get stats views
         views = self.stats.getAllViewsAsDict()
+
+        # TO BE REMOVED
+        # from glances.logger import logger
+
         # logger.info(views['cpu'])
+        # logger.info(self.stats.getAllAsDict()['sensors'])
+        # logger.info(f"{dir(self.query_one('#sidebar').styles)}")
+        # /TO BE REMOVED
 
         # Update the stats using Textual query
         for plugin in self.plugins.keys():
@@ -176,7 +213,8 @@ class GlancesTuiApp(App):
             # TODO: Perhaps it will be cleaner to update per plugin...
 
             # Update network plugin
-            if plugin in ["network", "diskio", "fs"]:
+            if plugin in ["network", "diskio", "fs", "sensors", "alert"]:
+                # TODO: manage add and remove of rows
                 key = stats[0].get('key')
                 for row_key, row_value in self.plugins[plugin].rows.items():
                     new_values = dictlist_first_key_value(stats, key, row_key)
@@ -195,16 +233,17 @@ class GlancesTuiApp(App):
                         # With style
                         # WARNING: https://rich.readthedocs.io/en/stable/text.html?highlight=Text#rich-text
                         styled_value = Text(
-                            auto_number(new_values.get(field_stat, None)), justify="left" if first_column else "right"
+                            auto_number(new_values.get(field_stat, None)),
+                            justify="left" if first_column else "right",
                         )
-                        self.query_one(f"#{plugin}").update_cell(row_value, column_value, styled_value)
+                        self.query_one(f"#{plugin}").update_cell(
+                            row_value, column_value, styled_value, update_width=True
+                        )
                         first_column = False
 
-                        # from glances.logger import logger
-                        # logger.info(f"Update {plugin} {field} {field_stat} {new_values.get(field_stat, None)}")
+                # Set the height of the list (+ one for the header)
+                self.query_one(f"#{plugin}").styles.height = len(stats) + 1
 
-                # Set the height of the list (+ one for the header and one for the bottom padding)
-                self.query_one(f"#{plugin}").styles.height = len(stats) + 2
                 continue
 
             # Iter through the fields value to update as a Label

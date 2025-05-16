@@ -18,7 +18,6 @@ from glances.plugins.plugin.model import GlancesPluginModel
 fields_description = {
     'interface_name': {
         'description': 'Interface name.',
-        'short_name': 'NETWORK',
     },
     'alias': {'description': 'Interface alias name (optional).', 'display': False},
     'bytes_recv': {

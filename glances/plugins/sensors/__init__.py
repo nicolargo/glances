@@ -36,32 +36,33 @@ sensors_definition = {
 DEFAULT_REFRESH = 3
 
 # Fields description
-# description: human readable description
-# short_name: shortname to use un UI
-# unit: unit type
-# rate: is it a rate ? If yes, // by time_since_update when displayed,
-# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
     'label': {
         'description': 'Sensor label',
     },
-    'unit': {
-        'description': 'Sensor unit',
-    },
     'value': {
         'description': 'Sensor value',
+        'short_name': '',
         'unit': 'number',
+    },
+    'unit': {
+        'description': 'Sensor unit',
+        'short_name': '',
     },
     'warning': {
         'description': 'Warning threshold',
         'unit': 'number',
+        'display': False,
     },
     'critical': {
         'description': 'Critical threshold',
         'unit': 'number',
+        'display': False,
     },
     'type': {
         'description': 'Sensor type (one of battery, temperature_core, fan_speed)',
+        'display': False,
     },
 }
 

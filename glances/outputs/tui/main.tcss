@@ -17,6 +17,13 @@ Placeholder.remove {
     text-overflow: ellipsis;
 }
 
+* > DataTable {
+    background: $background;
+}
+
+* > .datatable--header {
+    background: $background;
+}
 
 * > .sparkline--min-color {
     color: $success;
@@ -111,22 +118,19 @@ Placeholder.remove {
 }
 
 #middle {
-    grid-size: 4 1;
-    grid-gutter: 1 0;
+    background: $background;
 }
 
 #sidebar {
-    column-span: 1;
     grid-size: 1 5;
+    width: 40;
 }
 
 #process {
-    column-span: 3;
 }
 
 #bottom {
-    grid-size: 4 1;
-    grid-gutter: 1 0;
+    background: $background;
     height: 1;
 }
 
@@ -188,15 +192,19 @@ Placeholder.remove {
 }
 
 #network {
-    padding-bottom: 1;
+    margin-bottom: 1;
 }
 
 #diskio {
-    padding-bottom: 1;
+    margin-bottom: 1;
 }
 
 #fs {
-    padding-bottom: 1;
+    margin-bottom: 1;
+}
+
+#sensors {
+    margin-bottom: 1;
 }
 
 #vms {
@@ -213,10 +221,10 @@ Placeholder.remove {
 }
 
 #now {
-    column-span: 1;
+    width: 40;
 }
 
 #alert {
-    column-span: 3;
+    width: auto;
 }
 

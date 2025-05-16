@@ -31,12 +31,9 @@ from glances.plugins.plugin.model import GlancesPluginModel
 #     "sort": "top sort key"
 #     "global": "global alert message"
 # }
+
 # Fields description
-# description: human readable description
-# short_name: shortname to use un UI
-# unit: unit type
-# rate: is it a rate ? If yes, // by time_since_update when displayed,
-# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
     'begin': {
         'description': 'Begin timestamp of the event',
@@ -85,10 +82,12 @@ fields_description = {
     'sort': {
         'description': 'Sort key of the top processes',
         'unit': 'string',
+        'display': False,
     },
     'global_msg': {
         'description': 'Global alert message',
         'unit': 'string',
+        'display': False,
     },
 }
 
