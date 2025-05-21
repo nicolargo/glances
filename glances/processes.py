@@ -725,6 +725,10 @@ def weighted(value):
     return -float('inf') if value is None else value
 
 
+def sort_by_these_keys(first, second):
+    return lambda process: (weighted(process[first]), weighted(process[second]))
+
+
 def _sort_io_counters(process, sorted_by='io_counters', sorted_by_secondary='memory_percent'):
     """Specific case for io_counters
 
@@ -746,12 +750,7 @@ def _sort_cpu_times(process, sorted_by='cpu_times', sorted_by_secondary='memory_
 
 def _sort_lambda(sorted_by='cpu_percent', sorted_by_secondary='memory_percent'):
     """Return a sort lambda function for the sorted_by key"""
-    ret = None
-    if sorted_by == 'io_counters':
-        ret = _sort_io_counters
-    elif sorted_by == 'cpu_times':
-        ret = _sort_cpu_times
-    return ret
+    return {'io_counters': _sort_io_counters, 'cpu_times': _sort_cpu_times}.get(sorted_by, None)
 
 
 def sort_stats(stats, sorted_by='cpu_percent', sorted_by_secondary='memory_percent', reverse=True):
@@ -770,20 +769,14 @@ def sort_stats(stats, sorted_by='cpu_percent', sorted_by_secondary='memory_perce
     if sort_lambda is not None:
         # Specific sort
         try:
-            stats.sort(key=sort_lambda, reverse=reverse)
+            stats = sorted(stats, key=sort_lambda, reverse=reverse)
         except Exception:
             # If an error is detected, fallback to cpu_percent
-            stats.sort(
-                key=lambda process: (weighted(process['cpu_percent']), weighted(process[sorted_by_secondary])),
-                reverse=reverse,
-            )
+            stats = sorted(stats, key=sort_by_these_keys('cpu_percent', sorted_by_secondary), reverse=reverse)
     else:
         # Standard sort
         try:
-            stats.sort(
-                key=lambda process: (weighted(process[sorted_by]), weighted(process[sorted_by_secondary])),
-                reverse=reverse,
-            )
+            stats = sorted(stats, key=sort_by_these_keys(sorted_by, sorted_by_secondary), reverse=reverse)
         except (KeyError, TypeError):
             # Fallback to name
             stats.sort(key=lambda process: process['name'] if process['name'] is not None else '~', reverse=False)
