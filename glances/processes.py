@@ -726,7 +726,7 @@ def weighted(value):
 
 
 def sort_by_these_keys(first, second):
-    return lambda process: (weighted(process[first]), weighted(process[second]))
+    return lambda process: (weighted(process.get(first)), weighted(process.get(second)))
 
 
 def _sort_io_counters(process, sorted_by='io_counters', sorted_by_secondary='memory_percent'):
