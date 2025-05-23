@@ -552,18 +552,13 @@ class ContainersPlugin(GlancesPluginModel):
 
 def sort_docker_stats(stats: list[dict[str, Any]]) -> tuple[str, list[dict[str, Any]]]:
     # Make VM sort related to process sort
-    if glances_processes.sort_key == 'memory_percent':
-        sort_by = 'memory_usage'
-        sort_by_secondary = 'cpu_percent'
-    elif glances_processes.sort_key == 'name':
-        sort_by = 'name'
-        sort_by_secondary = 'cpu_percent'
-    else:
-        sort_by = 'cpu_percent'
-        sort_by_secondary = 'memory_usage'
+    sort_by, sort_by_secondary = {
+        'memory_percent': ('memory_usage', 'cpu_percent'),
+        'name': ('name', 'cpu_percent'),
+    }.get(glances_processes.sort_key, ('cpu_percent', 'memory_usage'))
 
     # Sort docker stats
-    sort_stats_processes(
+    stats = sort_stats_processes(
         stats,
         sorted_by=sort_by,
         sorted_by_secondary=sort_by_secondary,
