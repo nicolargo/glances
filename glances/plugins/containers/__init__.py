@@ -515,23 +515,18 @@ class ContainersPlugin(GlancesPluginModel):
     def build_container_data(self, name_max_width, args):
         def build_with_this_params(ret, container):
             steps = [self.maybe_add_engine_name_or_pod_name]
-            if 'name' not in self.disable_stats:
-                steps.append(self.build_container_name(name_max_width))
-            if 'status' not in self.disable_stats:
-                steps.append(self.build_status_name)
-            if 'uptime' not in self.disable_stats:
-                steps.append(self.build_uptime_line)
-            if 'cpu' not in self.disable_stats:
-                steps.append(self.build_cpu_line)
-            if 'mem' not in self.disable_stats:
-                steps.append(self.build_memory_line)
-            if 'diskio' not in self.disable_stats:
-                steps.append(self.build_io_line)
-            if 'networkio' not in self.disable_stats:
-                steps.append(self.build_net_line(args))
-            if 'command' not in self.disable_stats:
-                steps.append(self.build_cmd_line)
+            options = {
+                'name': self.build_container_name(name_max_width),
+                'status': self.build_status_name,
+                'uptime': self.build_uptime_line,
+                'cpu': self.build_cpu_line,
+                'mem': self.build_memory_line,
+                'diskio': self.build_io_line,
+                'networkio': self.build_net_line(args),
+                'command': self.build_cmd_line,
+            }
 
+            steps.extend(v for k, v in options.items() if k not in self.disable_stats)
             return reduce(lambda ret, step: step(ret, container), steps, ret)
 
         return build_with_this_params
