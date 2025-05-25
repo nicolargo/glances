@@ -10,9 +10,10 @@
 
 from copy import deepcopy
 from functools import partial, reduce
+from itertools import chain
 from typing import Any, Optional
 
-from glances.globals import iteritems, itervalues, nativestr
+from glances.globals import nativestr
 from glances.logger import logger
 from glances.plugins.containers.engines import ContainersExtension
 from glances.plugins.containers.engines.docker import DockerExtension, disable_plugin_docker
@@ -174,7 +175,7 @@ class ContainersPlugin(GlancesPluginModel):
 
     def exit(self) -> None:
         """Overwrite the exit method to close threads."""
-        for watcher in itervalues(self.watchers):
+        for watcher in self.watchers.values():
             watcher.stop()
 
         # Call the father class
@@ -226,19 +227,30 @@ class ContainersPlugin(GlancesPluginModel):
         if self.input_method != 'local':
             return self.get_init_value()
 
-        # Update stats
-        stats = []
-        for engine, watcher in iteritems(self.watchers):
+        def is_key_in_container_and_not_hidden(container):
+            return (key := container.get('key')) in container and not self.is_hide(nativestr(container.get(key)))
+
+        def is_key_absent_in_container(container):
+            return 'key' not in container or container.get('key') not in container
+
+        def add_engine_into_container(engine, container):
+            return container | {"engine": engine}
+
+        def get_containers_from_updated_watcher(watcher):
             _, containers = watcher.update(all_tag=self._all_tag())
-            containers_filtered = []
-            for container in containers:
-                container["engine"] = engine
-                if 'key' in container and container['key'] in container:
-                    if not self.is_hide(nativestr(container[container['key']])):
-                        containers_filtered.append(container)
-                else:
-                    containers_filtered.append(container)
-            stats.extend(containers_filtered)
+            return containers
+
+        # Update stats
+        stats = list(
+            chain.from_iterable(
+                (
+                    add_engine_into_container(engine, container)
+                    for container in get_containers_from_updated_watcher(watcher)
+                    if is_key_in_container_and_not_hidden(container) or is_key_absent_in_container(container)
+                )
+                for engine, watcher in self.watchers.items()
+            )
+        )
 
         # Sort and update the stats
         # @TODO: Have a look because sort did not work for the moment (need memory stats ?)
@@ -488,8 +500,7 @@ class ContainersPlugin(GlancesPluginModel):
         init = []
 
         # Only process if stats exist (and non null) and display plugin enable...
-        conditions = [not self.stats, len(self.stats) == 0, self.is_disabled()]
-        if any(conditions):
+        if any([not self.stats, len(self.stats) == 0, self.is_disabled()]):
             return init
 
         # Build the string message
@@ -515,23 +526,18 @@ class ContainersPlugin(GlancesPluginModel):
     def build_container_data(self, name_max_width, args):
         def build_with_this_params(ret, container):
             steps = [self.maybe_add_engine_name_or_pod_name]
-            if 'name' not in self.disable_stats:
-                steps.append(self.build_container_name(name_max_width))
-            if 'status' not in self.disable_stats:
-                steps.append(self.build_status_name)
-            if 'uptime' not in self.disable_stats:
-                steps.append(self.build_uptime_line)
-            if 'cpu' not in self.disable_stats:
-                steps.append(self.build_cpu_line)
-            if 'mem' not in self.disable_stats:
-                steps.append(self.build_memory_line)
-            if 'diskio' not in self.disable_stats:
-                steps.append(self.build_io_line)
-            if 'networkio' not in self.disable_stats:
-                steps.append(self.build_net_line(args))
-            if 'command' not in self.disable_stats:
-                steps.append(self.build_cmd_line)
+            options = {
+                'name': self.build_container_name(name_max_width),
+                'status': self.build_status_name,
+                'uptime': self.build_uptime_line,
+                'cpu': self.build_cpu_line,
+                'mem': self.build_memory_line,
+                'diskio': self.build_io_line,
+                'networkio': self.build_net_line(args),
+                'command': self.build_cmd_line,
+            }
 
+            steps.extend(v for k, v in options.items() if k not in self.disable_stats)
             return reduce(lambda ret, step: step(ret, container), steps, ret)
 
         return build_with_this_params
