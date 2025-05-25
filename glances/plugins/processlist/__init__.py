@@ -195,6 +195,15 @@ class ProcesslistPlugin(GlancesPluginModel):
         # Load the config file
         self.load(args, config)
 
+        # For #2995. Load the username of a process to decorate with waning colours as from the config file.
+        if config is not None:
+            self.username_warning = config.get_value(self.plugin_name, 'username_warning')
+            self.cpu_critical = config.get_float_value(self.plugin_name, 'cpu_critical')
+            self.cpu_warning = config.get_float_value(self.plugin_name, 'cpu_warning')
+            self.cpu_careful = config.get_float_value(self.plugin_name, 'cpu_careful')
+        else:
+            self.username_warning = ""
+
         # The default sort key could also be overwrite by command line (see #1903)
         if args and args.sort_processes_key is not None:
             glances_processes.set_sort_key(args.sort_processes_key, False)
@@ -265,7 +274,19 @@ class ProcesslistPlugin(GlancesPluginModel):
 
         return 'DEFAULT'
 
+    def get_cpu_decoration(self, value):
+        """Return the level of decoration needed for the CPU percentage based on the config file"""
+        if value >= self.cpu_critical:
+            return 'CRITICAL'
+        elif value >= self.cpu_warning:
+            return 'WARNING'
+        elif value >= self.cpu_careful:
+            return 'CAREFUL'
+        else:
+            return 'DEFAULT'
+
     def _get_process_curses_cpu_percent(self, p, selected, args):
+
         """Return process CPU curses"""
         if key_exist_value_not_none_not_v('cpu_percent', p, ''):
             cpu_layout = self.layout_stat['cpu'] if p['cpu_percent'] < 100 else self.layout_stat['cpu_no_digit']
@@ -273,13 +294,7 @@ class ProcesslistPlugin(GlancesPluginModel):
                 msg = cpu_layout.format(p['cpu_percent'] / float(self.nb_log_core))
             else:
                 msg = cpu_layout.format(p['cpu_percent'])
-            alert = self.get_alert(
-                p['cpu_percent'],
-                highlight_zero=False,
-                is_max=(p['cpu_percent'] == self.max_values['cpu_percent']),
-                header="cpu",
-            )
-            ret = self.curse_add_line(msg, alert)
+            ret = self.curse_add_line(msg, self.get_cpu_decoration(p['cpu_percent']))
         else:
             msg = self.layout_header['cpu'].format('?')
             ret = self.curse_add_line(msg)
@@ -339,9 +354,18 @@ class ProcesslistPlugin(GlancesPluginModel):
             # docker internal users are displayed as ints only, therefore str()
             # Correct issue #886 on Windows OS
             msg = self.layout_stat['user'].format(str(p['username'])[:9])
+
+            # feature for #2995 adding the test to see if a user is root level
+            if (not (self.username_warning == "") and p['username'] == self.username_warning):
+                # Set the decoration colour to be critical if the user is root
+                ret = self.curse_add_line(msg, decoration='CRITICAL')
+            else:
+                # Set the decoration colour to be the default for all other users
+                ret = self.curse_add_line(msg, decoration='DEFAULT')
+            return ret
         else:
             msg = self.layout_header['user'].format('?')
-        return self.curse_add_line(msg)
+            return self.curse_add_line(msg)
 
     def _get_process_curses_cpu_times(self, p, selected, args):
         """Return process time curses"""
