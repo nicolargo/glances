@@ -262,8 +262,24 @@ class ProcesslistPlugin(GlancesPluginModel):
             return 'WARNING'
         if self.get_limit('nice_careful') and value in self.get_limit('nice_careful'):
             return 'CAREFUL'
+        if self.get_limit('nice_ok') and value in self.get_limit('nice_ok'):
+            return 'OK'
 
         return 'DEFAULT'
+
+    def get_status_alert(self, value):
+        """Return the alert relative to the Status configuration list"""
+        value = str(value)
+        if self.get_limit('status_critical') and value in self.get_limit('status_critical'):
+            return 'CRITICAL'
+        if self.get_limit('status_warning') and value in self.get_limit('status_warning'):
+            return 'WARNING'
+        if self.get_limit('status_careful') and value in self.get_limit('status_careful'):
+            return 'CAREFUL'
+        if self.get_limit('status_ok') and value in self.get_limit('status_ok'):
+            return 'OK'
+
+        return 'OK' if value == 'R' else 'DEFAULT'
 
     def _get_process_curses_cpu_percent(self, p, selected, args):
         """Return process CPU curses"""
@@ -403,10 +419,11 @@ class ProcesslistPlugin(GlancesPluginModel):
         if 'status' in p:
             status = p['status']
             msg = self.layout_stat['status'].format(status)
-            if status == 'R':
-                ret = self.curse_add_line(msg, decoration='STATUS')
-            else:
-                ret = self.curse_add_line(msg)
+            ret = self.curse_add_line(msg, decoration=self.get_status_alert(status))
+            # if status == 'R':
+            #     ret = self.curse_add_line(msg, decoration='STATUS')
+            # else:
+            #     ret = self.curse_add_line(msg)
         else:
             msg = self.layout_header['status'].format('?')
             ret = self.curse_add_line(msg)
