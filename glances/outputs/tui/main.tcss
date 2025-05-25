@@ -105,9 +105,11 @@ Placeholder.remove {
 }
 
 #header {
-    grid-size: 3 1;
-    grid-gutter: 1 0;
-    height: 2;
+    grid-size: 4 1;
+    grid-columns: 3fr 3fr 2fr 2fr;
+    grid-gutter: 2 1;
+    height: 1;
+    margin-bottom: 1;
 }
 
 #top {
@@ -151,6 +153,11 @@ Placeholder.remove {
 #uptime {
     text-align: right;
     padding-left: 3;
+}
+
+#now {
+    text-align: right;
+    padding-left: 1;
 }
 
 #quicklook > Grid {
@@ -211,20 +218,16 @@ Placeholder.remove {
 }
 
 #containers{
+    margin-bottom: 1;
 }
 
 #processcount {
-    height: 1;
+    margin-bottom: 1;
 }
 
 #processlist {
 }
 
-#now {
-    width: 40;
-}
-
 #alert {
     width: auto;
 }
-

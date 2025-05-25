@@ -337,10 +337,12 @@ class DockerExtension:
         stats.update(activity_stats)
 
         # Additional fields
-        stats['cpu_percent'] = stats['cpu']['total']
+        stats['cpu_percent'] = round(stats['cpu']['total'], 1)
         stats['memory_usage'] = stats['memory'].get('usage')
         if stats['memory'].get('cache') is not None:
             stats['memory_usage'] -= stats['memory']['cache']
+        stats['memory_usage'] = round(stats['memory_usage'], 1) if stats['memory_usage'] else stats['memory_usage']
+        stats['memory_limit'] = stats['memory'].get('limit')
 
         if all(k in stats['io'] for k in ('ior', 'iow', 'time_since_update')):
             stats['io_rx'] = stats['io']['ior'] // stats['io']['time_since_update']

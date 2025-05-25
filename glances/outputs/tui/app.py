@@ -10,14 +10,11 @@
 
 from time import monotonic
 
-from rich.text import Text
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Grid, Horizontal, VerticalScroll
 from textual.reactive import reactive
 from textual.widgets import Placeholder
-
-from glances.globals import auto_number, dictlist_first_key_value
 
 # from glances.logger import logger
 from glances.outputs.tui.components import (
@@ -78,6 +75,13 @@ class GlancesTuiApp(App):
             config=self.config,
             args=self.args,
         )
+        self.plugins["now"] = GlancesTuiOneLineComponent(
+            plugin="now",
+            template="{custom}",
+            stats=self.stats,
+            config=self.config,
+            args=self.args,
+        )
 
         self.plugins["quicklook"] = QuicklookTuiPlugin(
             plugin="quicklook", stats=self.stats, config=self.config, args=self.args
@@ -108,12 +112,21 @@ class GlancesTuiApp(App):
             plugin="sensors", stats=self.stats, config=self.config, args=self.args, columns_width=[16, 15, 1]
         )
 
-        self.plugins["now"] = GlancesTuiOneLineComponent(
-            plugin="now",
-            template="{custom}",
+        self.plugins["vms"] = GlancesTuiListComponent(
+            plugin="vms", stats=self.stats, config=self.config, args=self.args, columns_width=[16, 15, 1]
+        )
+        self.plugins["containers"] = GlancesTuiListComponent(
+            plugin="containers", stats=self.stats, config=self.config, args=self.args, columns_width=[16, 15, 1]
+        )
+        self.plugins["processcount"] = GlancesTuiOneLineComponent(
+            plugin="processcount",
+            template="TASKS {total} ({thread} thr), {running} run, {sleeping} slp, {other} oth",
             stats=self.stats,
             config=self.config,
             args=self.args,
+        )
+        self.plugins["processlist"] = GlancesTuiListComponent(
+            plugin="processlist", stats=self.stats, config=self.config, args=self.args, columns_width=[16, 15, 1]
         )
         self.plugins["alert"] = GlancesTuiListComponent(
             plugin="alert", stats=self.stats, config=self.config, args=self.args, columns_width=[16, 15, 1]
@@ -124,6 +137,7 @@ class GlancesTuiApp(App):
             self.plugins["system"],
             self.plugins["ip"],
             self.plugins["uptime"],
+            self.plugins["now"],
             id="header",
         )
 
@@ -149,10 +163,11 @@ class GlancesTuiApp(App):
 
     def _process(self) -> VerticalScroll:
         return VerticalScroll(
-            Placeholder(id="vms"),
-            Placeholder(id="containers"),
-            Placeholder(id="processcount"),
-            Placeholder(id="processlist"),
+            self.plugins["vms"],
+            self.plugins["containers"],
+            self.plugins["processcount"],
+            self.plugins["processlist"],
+            self.plugins["alert"],
             id="process",
         )
 
@@ -163,27 +178,20 @@ class GlancesTuiApp(App):
             id="middle",
         )
 
-    def _bottom(self) -> Horizontal:
-        return Horizontal(
-            self.plugins["now"],
-            self.plugins["alert"],
-            id="bottom",
-        )
-
     def compose(self) -> ComposeResult:
         # yield Header(id="header", show_clock=True)
         yield Container(
             self._header(),
             self._top(),
             self._middle(),
-            self._bottom(),
             id="data",
         )
         # yield Footer(id="footer")
 
     def on_mount(self) -> None:
         """Event handler called when widget is added to the app."""
-        self.set_interval(1, self.update_time)
+        # TODO: set interval to the Glances refresh rate
+        self.set_interval(3, self.update_time)
 
     def update_time(self) -> None:
         """Method to update the time to the current time."""
@@ -194,89 +202,6 @@ class GlancesTuiApp(App):
         # Start by updating Glances stats
         self.stats.update()
 
-        # Get stats views
-        views = self.stats.getAllViewsAsDict()
-
-        # TO BE REMOVED
-        # from glances.logger import logger
-
-        # logger.info(views['cpu'])
-        # logger.info(self.stats.getAllAsDict()['sensors'])
-        # logger.info(f"{dir(self.query_one('#sidebar').styles)}")
-        # /TO BE REMOVED
-
-        # Update the stats using Textual query
+        # Update the stat in the TUI
         for plugin in self.plugins.keys():
-            # Get the stats
-            stats = self.stats.getAllAsDict()[plugin]
-
-            # TODO: Perhaps it will be cleaner to update per plugin...
-
-            # Update network plugin
-            if plugin in ["network", "diskio", "fs", "sensors", "alert"]:
-                # TODO: manage add and remove of rows
-                key = stats[0].get('key')
-                for row_key, row_value in self.plugins[plugin].rows.items():
-                    new_values = dictlist_first_key_value(stats, key, row_key)
-                    first_column = True
-                    for column_key, column_value in self.plugins[plugin].columns.items():
-                        # Update value
-                        field = column_key
-                        if (
-                            field in self.plugins_description[plugin]
-                            and 'rate' in self.plugins_description[plugin][field]
-                            and self.plugins_description[plugin][field]['rate']
-                        ):
-                            field_stat = field + "_rate_per_sec"
-                        else:
-                            field_stat = field
-                        # With style
-                        # WARNING: https://rich.readthedocs.io/en/stable/text.html?highlight=Text#rich-text
-                        styled_value = Text(
-                            auto_number(new_values.get(field_stat, None)),
-                            justify="left" if first_column else "right",
-                        )
-                        self.query_one(f"#{plugin}").update_cell(
-                            row_value, column_value, styled_value, update_width=True
-                        )
-                        first_column = False
-
-                # Set the height of the list (+ one for the header)
-                self.query_one(f"#{plugin}").styles.height = len(stats) + 1
-
-                continue
-
-            # Iter through the fields value to update as a Label
-            for textual_field in self.query_one(f"#{plugin}").query('.value').exclude(".progressbar"):
-                # Remove the plugin name from the field id
-                field = '_'.join(textual_field.id.split('_', maxsplit=1)[1:])
-                # Ignore field not available in the stats
-                if field not in stats:
-                    continue
-                # Update value
-                if (
-                    field in self.plugins_description[plugin]
-                    and 'rate' in self.plugins_description[plugin][field]
-                    and self.plugins_description[plugin][field]['rate']
-                ):
-                    field_stat = field + "_rate_per_sec"
-                else:
-                    field_stat = field
-                textual_field.update(auto_number(stats.get(field_stat, None)))
-                # Update style
-                style = views[plugin][field].get('decoration', 'DEFAULT')
-                textual_field.classes = f"value {style.lower()}"
-
-            # Iter through the fields value to update as a ProgressBar
-            for textual_field in self.query_one(f"#{plugin}").query('.value').filter(".progressbar"):
-                # Remove the plugin name from the field id
-                field = '_'.join(textual_field.id.split('_', maxsplit=1)[1:])
-                # Ignore field not available in the stats
-                if field not in stats:
-                    continue
-                # Update value
-                textual_field.update(progress=stats.get(field, None))
-                # TODO: Update style
-                # Do not work for preogress bar...
-                # style = views[plugin][field].get('decoration', 'DEFAULT')
-                # textual_field.classes = f"value progressbar {style.lower()}"
+            self.plugins[plugin].update()

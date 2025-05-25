@@ -11,7 +11,9 @@
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Container
-from textual.widgets import DataTable, Label
+from textual.widgets import DataTable
+
+from glances.globals import auto_number, dictlist_first_key_value
 
 
 class GlancesTuiListComponent(Container):
@@ -27,6 +29,7 @@ class GlancesTuiListComponent(Container):
         display_unit=True,
         first_field_title=True,
         columns_width=[],
+        max_rows=20,
     ):
         super().__init__()
 
@@ -44,6 +47,7 @@ class GlancesTuiListComponent(Container):
         self.display_unit = display_unit
         self.first_field_title = first_field_title
         self.columns_width = columns_width
+        self.max_rows = max_rows
 
         # Init plugin name (convert by default to lowercase)
         self.plugin = plugin.lower()
@@ -57,30 +61,14 @@ class GlancesTuiListComponent(Container):
         self.rows = {}
 
     def compose(self) -> ComposeResult:
-        if self.plugin not in self.stats.getAllAsDict():
-            # Will generate a NoMatches exception when stats are updated
-            # TODO: catch it in the main update loop
-            # WARNING: Not GOOD, because if it you are here then the on_mount will fail...
-            yield Label(f'{self.plugin.upper()} stats not available', id=f"{self.plugin}_not_available")
-            return
-
         yield DataTable(id=f"{self.plugin}", show_cursor=False, cell_padding=1)
 
     def on_mount(self) -> None:
-        dt = self.query_one(DataTable)
+        if self.plugin not in self.stats.getAllAsDict():
+            self.disabled = True
+            return
 
-        # self.columns = dict(
-        #     zip(
-        #         self.header,
-        #         dt.add_columns(
-        #             *[
-        #                 v.get('short_name', None) if 'short_name' in v else k
-        #                 for k, v in self.plugin_description.items()
-        #                 if v.get("display", True)
-        #             ]
-        #         ),
-        #     )
-        # )
+        dt = self.query_one(DataTable)
 
         # Init columns
         column_number = 0
@@ -99,5 +87,43 @@ class GlancesTuiListComponent(Container):
             column_number += 1
 
         # Init rows
-        for item in self.stats.getAllAsDict()[self.plugin]:
+        for item in self.stats.getAllAsDict()[self.plugin][: self.max_rows]:
             self.rows[item[item['key']]] = dt.add_row(*[None for _ in self.header])
+
+    def update(self):
+        """Update the stats."""
+        # Get the stats
+        if self.plugin not in self.stats.getAllAsDict():
+            return False
+
+        stats = self.stats.getAllAsDict()[self.plugin]
+
+        # TODO: manage add and remove of rows
+        key = stats[0].get('key')
+        for row_key, row_value in self.rows.items():
+            new_values = dictlist_first_key_value(stats, key, row_key)
+            first_column = True
+            for column_key, column_value in self.columns.items():
+                # Update value
+                field = column_key
+                if (
+                    field in self.plugin_description
+                    and 'rate' in self.plugin_description[field]
+                    and self.plugin_description[field]['rate']
+                ):
+                    field_stat = field + "_rate_per_sec"
+                else:
+                    field_stat = field
+                # With style
+                # WARNING: https://rich.readthedocs.io/en/stable/text.html?highlight=Text#rich-text
+                styled_value = Text(
+                    auto_number(new_values.get(field_stat, None)),
+                    justify="left" if first_column else "right",
+                )
+                self.query_one(f"#{self.plugin}").update_cell(row_value, column_value, styled_value, update_width=True)
+                first_column = False
+
+        # Set the height of the list (+ one for the header)
+        self.query_one(f"#{self.plugin}").styles.height = min(len(stats), self.max_rows) + 1
+
+        return True

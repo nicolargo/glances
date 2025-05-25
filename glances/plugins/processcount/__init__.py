@@ -12,14 +12,14 @@ from glances.plugins.plugin.model import GlancesPluginModel
 from glances.processes import glances_processes, sort_for_human
 
 # Fields description
-# description: human readable description
-# short_name: shortname to use un UI
-# unit: unit type
-# rate: if True then compute and add *_gauge and *_rate_per_is fields
-# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
     'total': {
         'description': 'Total number of processes',
+        'unit': 'number',
+    },
+    'thread': {
+        'description': 'Total number of threads',
         'unit': 'number',
     },
     'running': {
@@ -30,8 +30,8 @@ fields_description = {
         'description': 'Total number of sleeping processes',
         'unit': 'number',
     },
-    'thread': {
-        'description': 'Total number of threads',
+    'other': {
+        'description': 'Total number of non running/sleeping processes',
         'unit': 'number',
     },
     'pid_max': {

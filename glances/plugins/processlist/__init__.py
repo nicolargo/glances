@@ -26,57 +26,64 @@ from glances.processes import glances_processes, sort_stats
 # rate: if True then compute and add *_gauge and *_rate_per_is fields
 # min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
 fields_description = {
+    'cpu_percent': {
+        'description': 'Process CPU consumption',
+        'unit': 'percent',
+        'short_name': 'CPU%',
+    },
+    'memory_percent': {
+        'description': 'Process memory consumption',
+        'unit': 'percent',
+        'short_name': 'MEM%',
+    },
+    'memory_info': {
+        'description': 'Process memory information (dict with rss, vms, shared, text, lib, data, dirty keys)',
+        'unit': 'byte',
+        'display': False,
+    },
     'pid': {
         'description': 'Process identifier (ID)',
         'unit': 'number',
-    },
-    'name': {
-        'description': 'Process name',
-        'unit': 'string',
-    },
-    'cmdline': {
-        'description': 'Command line with arguments',
-        'unit': 'list',
     },
     'username': {
         'description': 'Process owner',
         'unit': 'string',
     },
+    'cpu_times': {
+        'description': 'Process CPU times (dict with user, system, iowait keys)',
+        'unit': 'second',
+        'display': False,
+    },
     'num_threads': {
         'description': 'Number of threads',
         'unit': 'number',
-    },
-    'cpu_percent': {
-        'description': 'Process CPU consumption',
-        'unit': 'percent',
-    },
-    'memory_percent': {
-        'description': 'Process memory consumption',
-        'unit': 'percent',
-    },
-    'memory_info': {
-        'description': 'Process memory information (dict with rss, vms, shared, text, lib, data, dirty keys)',
-        'unit': 'byte',
-    },
-    'status': {
-        'description': 'Process status',
-        'unit': 'string',
     },
     'nice': {
         'description': 'Process nice value',
         'unit': 'number',
     },
-    'cpu_times': {
-        'description': 'Process CPU times (dict with user, system, iowait keys)',
-        'unit': 'second',
-    },
-    'gids': {
-        'description': 'Process group IDs (dict with real, effective, saved keys)',
-        'unit': 'number',
+    'status': {
+        'description': 'Process status',
+        'unit': 'string',
     },
     'io_counters': {
         'description': 'Process IO counters (list with read_count, write_count, read_bytes, write_bytes, io_tag keys)',
         'unit': 'byte',
+        'display': False,
+    },
+    'cmdline': {
+        'description': 'Command line with arguments',
+        'unit': 'list',
+        'display': False,
+    },
+    'name': {
+        'description': 'Process name',
+        'unit': 'string',
+    },
+    'gids': {
+        'description': 'Process group IDs (dict with real, effective, saved keys)',
+        'unit': 'number',
+        'display': False,
     },
 }
 

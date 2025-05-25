@@ -12,6 +12,8 @@ from textual.app import ComposeResult
 from textual.containers import Container
 from textual.widgets import Label
 
+from glances.globals import auto_number
+
 
 class GlancesTuiOneLineComponent(Container):
     """Plugin to display Glances stats in one line from a template."""
@@ -47,3 +49,37 @@ class GlancesTuiOneLineComponent(Container):
             return
 
         yield Label(self.template.format(**self.stats.getAllAsDict()[self.plugin]), id=self.plugin)
+
+    def update(self):
+        """Update the stats."""
+        if self.plugin not in self.stats.getAllAsDict():
+            return False
+
+        # Get the stats
+        stats = self.stats.getAllAsDict()[self.plugin]
+
+        # Get stats views
+        views = self.stats.getAllViewsAsDict()[self.plugin]
+
+        # Iter through the fields value to update as a Label
+        for textual_field in self.query('.value'):
+            # Remove the plugin name from the field id
+            field = '_'.join(textual_field.id.split('_', maxsplit=1)[1:])
+            # Ignore field not available in the stats
+            if field not in stats:
+                continue
+            # Update value
+            if (
+                field in self.plugin_description
+                and 'rate' in self.plugin_description[field]
+                and self.plugin_description[field]['rate']
+            ):
+                field_stat = field + "_rate_per_sec"
+            else:
+                field_stat = field
+            textual_field.update(auto_number(stats.get(field_stat, None)))
+            # Update style
+            style = views[field].get('decoration', 'DEFAULT')
+            textual_field.classes = f"value {style.lower()}"
+
+        return True

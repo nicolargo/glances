@@ -22,65 +22,78 @@ from glances.processes import glances_processes
 from glances.processes import sort_stats as sort_stats_processes
 
 # Fields description
-# description: human readable description
-# short_name: shortname to use un UI
-# unit: unit type
-# rate: is it a rate ? If yes, // by time_since_update when displayed,
-# min_symbol: Auto unit should be used if value > than 1 'X' (K, M, G)...
+# https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
     'name': {
         'description': 'Container name',
     },
     'id': {
         'description': 'Container ID',
+        'display': False,
     },
     'image': {
         'description': 'Container image',
+        'display': False,
     },
     'status': {
         'description': 'Container status',
     },
     'created': {
         'description': 'Container creation date',
-    },
-    'command': {
-        'description': 'Container command',
-    },
-    'cpu_percent': {
-        'description': 'Container CPU consumption',
-        'unit': 'percent',
-    },
-    'memory_usage': {
-        'description': 'Container memory usage',
-        'unit': 'byte',
-    },
-    'io_rx': {
-        'description': 'Container IO bytes read rate',
-        'unit': 'bytepersecond',
-    },
-    'io_wx': {
-        'description': 'Container IO bytes write rate',
-        'unit': 'bytepersecond',
-    },
-    'network_rx': {
-        'description': 'Container network RX bitrate',
-        'unit': 'bitpersecond',
-    },
-    'network_tx': {
-        'description': 'Container network TX bitrate',
-        'unit': 'bitpersecond',
+        'display': False,
     },
     'uptime': {
         'description': 'Container uptime',
     },
+    'cpu_percent': {
+        'description': 'Container CPU consumption',
+        'unit': 'percent',
+        'short_name': 'CPU%',
+    },
+    'memory_usage': {
+        'description': 'Container memory usage',
+        'unit': 'byte',
+        'short_name': 'MEM',
+    },
+    'memory_limit': {
+        'description': 'Container memory limit',
+        'unit': 'byte',
+        'short_name': 'MAX',
+    },
+    'io_rx': {
+        'description': 'Container IO bytes read rate',
+        'unit': 'bytepersecond',
+        'short_name': 'IOR/s',
+    },
+    'io_wx': {
+        'description': 'Container IO bytes write rate',
+        'unit': 'bytepersecond',
+        'short_name': 'IOW/s',
+    },
+    'network_rx': {
+        'description': 'Container network RX bitrate',
+        'unit': 'bitpersecond',
+        'short_name': 'Rx/s',
+    },
+    'network_tx': {
+        'description': 'Container network TX bitrate',
+        'unit': 'bitpersecond',
+        'short_name': 'Tx/s',
+    },
+    'command': {
+        'description': 'Container command',
+    },
     'engine': {
         'description': 'Container engine (Docker and Podman are currently supported)',
+        'display': False,
     },
     'pod_name': {
         'description': 'Pod name (only with Podman)',
+        'display': False,
     },
     'pod_id': {
         'description': 'Pod ID (only with Podman)',
+        'display': False,
     },
 }
 

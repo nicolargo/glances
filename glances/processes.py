@@ -166,6 +166,10 @@ class GlancesProcesses:
             self.processcount['thread'] = None
         # Compute total
         self.processcount['total'] = len(plist)
+        # Compute other
+        self.processcount['other'] = (
+            self.processcount['total'] - self.processcount['running'] - self.processcount['sleeping']
+        )
 
     def enable(self):
         """Enable process stats."""
