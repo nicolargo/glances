@@ -11,7 +11,7 @@
 import time
 from typing import Any, Optional
 
-from glances.globals import iterkeys, itervalues, nativestr, pretty_date, replace_special_chars
+from glances.globals import nativestr, pretty_date, replace_special_chars
 from glances.logger import logger
 from glances.stats_streamer import ThreadedIterableStreamer
 
@@ -242,7 +242,7 @@ class DockerExtension:
 
     def stop(self) -> None:
         # Stop all streaming threads
-        for t in itervalues(self.stats_fetchers):
+        for t in self.stats_fetchers.values():
             t.stop()
 
     def update(self, all_tag) -> tuple[dict, list[dict]]:
@@ -276,7 +276,7 @@ class DockerExtension:
                 self.stats_fetchers[container.id] = DockerStatsFetcher(container)
 
         # Stop threads for non-existing containers
-        absent_containers = set(iterkeys(self.stats_fetchers)) - {c.id for c in containers}
+        absent_containers = set(self.stats_fetchers.keys()) - {c.id for c in containers}
         for container_id in absent_containers:
             # Stop the StatsFetcher
             logger.debug(f"{self.ext_name} plugin - Stop thread for old container {container_id[:12]}")
