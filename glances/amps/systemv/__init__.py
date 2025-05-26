@@ -34,7 +34,6 @@ service_cmd=/usr/bin/service --status-all
 """
 
 from glances.amps.amp import GlancesAmp
-from glances.globals import iteritems
 from glances.logger import logger
 from glances.secure import secure_popen
 
@@ -77,7 +76,7 @@ class Amp(GlancesAmp):
                     status['upstart'] += 1
             # Build the output (string) message
             output = 'Services\n'
-            for k, v in iteritems(status):
+            for k, v in status.items():
                 output += f'{k}: {v}\n'
             self.set_result(output, separator=' ')
 

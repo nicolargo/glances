@@ -37,7 +37,7 @@ systemctl_cmd=/usr/bin/systemctl --plain
 from subprocess import CalledProcessError, check_output
 
 from glances.amps.amp import GlancesAmp
-from glances.globals import iteritems, to_ascii
+from glances.globals import to_ascii
 from glances.logger import logger
 
 
@@ -45,7 +45,7 @@ class Amp(GlancesAmp):
     """Glances' Systemd AMP."""
 
     NAME = 'Systemd'
-    VERSION = '1.0'
+    VERSION = '1.1'
     DESCRIPTION = 'Get services list from systemctl (systemd)'
     AUTHOR = 'Nicolargo'
     EMAIL = 'contact@nicolargo.com'
@@ -77,7 +77,7 @@ class Amp(GlancesAmp):
                             status[column[c]] = 1
             # Build the output (string) message
             output = 'Services\n'
-            for k, v in iteritems(status):
+            for k, v in status.items():
                 output += f'{k}: {v}\n'
             self.set_result(output, separator=' ')
 
