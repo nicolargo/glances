@@ -11,7 +11,7 @@ import time
 from datetime import datetime
 from typing import Any, Optional
 
-from glances.globals import iterkeys, itervalues, nativestr, pretty_date, replace_special_chars, string_value_to_float
+from glances.globals import nativestr, pretty_date, replace_special_chars, string_value_to_float
 from glances.logger import logger
 from glances.stats_streamer import ThreadedIterableStreamer
 
@@ -281,7 +281,7 @@ class PodmanExtension:
 
     def stop(self) -> None:
         # Stop all streaming threads
-        for t in itervalues(self.container_stats_fetchers):
+        for t in self.container_stats_fetchers.values():
             t.stop()
 
         if self.pods_stats_fetcher:
@@ -320,7 +320,7 @@ class PodmanExtension:
                 self.container_stats_fetchers[container.id] = PodmanContainerStatsFetcher(container)
 
         # Stop threads for non-existing containers
-        absent_containers = set(iterkeys(self.container_stats_fetchers)) - {c.id for c in containers}
+        absent_containers = set(self.container_stats_fetchers.keys()) - {c.id for c in containers}
         for container_id in absent_containers:
             # Stop the StatsFetcher
             logger.debug(f"{self.ext_name} plugin - Stop thread for old container {container_id[:12]}")
