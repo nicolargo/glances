@@ -42,7 +42,7 @@ class Amp(GlancesAmp):
     """Glances' Systemd AMP."""
 
     NAME = 'SystemV'
-    VERSION = '1.0'
+    VERSION = '1.1'
     DESCRIPTION = 'Get services list from service (initd)'
     AUTHOR = 'Nicolargo'
     EMAIL = 'contact@nicolargo.com'
