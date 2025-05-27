@@ -11,7 +11,13 @@ I am your father...
 ...for all Glances exports IF.
 """
 
-from glances.globals import NoOptionError, NoSectionError, iteritems, iterkeys, json_dumps
+from glances.globals import (
+    NoOptionError,
+    NoSectionError,
+    iteritems,
+    iterkeys,
+    json_dumps,
+)
 from glances.logger import logger
 from glances.timer import Counter
 
@@ -21,12 +27,12 @@ class GlancesExport:
 
     # List of non exportable internal plugins
     non_exportable_plugins = [
-        'alert',
-        'help',
-        'plugin',
-        'psutilversion',
-        'quicklook',
-        'version',
+        "alert",
+        "help",
+        "plugin",
+        "psutilversion",
+        "quicklook",
+        "version",
     ]
 
     def __init__(self, config=None, args=None):
@@ -71,7 +77,7 @@ class GlancesExport:
         """Close the export module."""
         logger.debug(f"Finalise export interface {self.export_name}")
 
-    def load_conf(self, section, mandatories=['host', 'port'], options=None):
+    def load_conf(self, section, mandatories=["host", "port"], options=None):
         """Load the export <section> configuration in the Glances configuration file.
 
         :param section: name of the export section to load
@@ -112,7 +118,7 @@ class GlancesExport:
         """Return the value of the item 'key'."""
         ret = None
         try:
-            ret = item[item['key']]
+            ret = item[item["key"]]
         except KeyError:
             logger.error(f"No 'key' available in {item}")
         if isinstance(ret, list):
@@ -128,13 +134,76 @@ class GlancesExport:
         d_tags = {}
         if tags:
             try:
-                d_tags = dict([x.split(':') for x in tags.split(',')])
+                d_tags = dict([x.split(":") for x in tags.split(",")])
             except ValueError:
                 # one of the 'key:value' pairs was missing
-                logger.info('Invalid tags passed: %s', tags)
+                logger.info("Invalid tags passed: %s", tags)
                 d_tags = {}
 
         return d_tags
+
+    def normalize_for_influxdb(self, name, columns, points):
+        """Normalize data for the InfluxDB's data model.
+
+        :return: a list of measurements.
+        """
+        FIELD_TO_TAG = ["name", "cmdline", "type"]
+        ret = []
+
+        # Build initial dict by crossing columns and point
+        data_dict = dict(zip(columns, points))
+
+        # issue1871 - Check if a key exist. If a key exist, the value of
+        # the key should be used as a tag to identify the measurement.
+        keys_list = [k.split(".")[0] for k in columns if k.endswith(".key")]
+        if not keys_list:
+            keys_list = [None]
+
+        for measurement in keys_list:
+            # Manage field
+            if measurement is not None:
+                fields = {
+                    k.replace(f"{measurement}.", ""): data_dict[k] for k in data_dict if k.startswith(f"{measurement}.")
+                }
+            else:
+                fields = data_dict
+            # Transform to InfluxDB data model
+            # https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_reference/
+            for k in fields:
+                #  Do not export empty (None) value
+                if fields[k] is None:
+                    continue
+                # Convert numerical to float
+                try:
+                    fields[k] = float(fields[k])
+                except (TypeError, ValueError):
+                    # Convert others to string
+                    try:
+                        fields[k] = str(fields[k])
+                    except (TypeError, ValueError):
+                        pass
+            # Manage tags
+            tags = self.parse_tags(self.tags)
+            # Add the hostname as a tag
+            tags["hostname"] = self.hostname
+            if "hostname" in fields:
+                fields.pop("hostname")
+            # Others tags...
+            if "key" in fields and fields["key"] in fields:
+                # Create a tag from the key
+                # Tag should be an string (see InfluxDB data model)
+                tags[fields["key"]] = str(fields[fields["key"]])
+                # Remove it from the field list (can not be a field and a tag)
+                fields.pop(fields["key"])
+            # Add name as a tag (example for the process list)
+            for k in FIELD_TO_TAG:
+                if k in fields:
+                    tags[k] = str(fields[k])
+                    # Remove it from the field list (can not be a field and a tag)
+                    fields.pop(k)
+            # Add the measurement to the list
+            ret.append({"measurement": name, "tags": tags, "fields": fields})
+        return ret
 
     def plugins_to_export(self, stats):
         """Return the list of plugins to export.
@@ -177,7 +246,7 @@ class GlancesExport:
             if isinstance(all_stats[plugin], dict):
                 all_stats[plugin].update(all_limits[plugin])
                 # Remove the <plugin>_disable field
-                all_stats[plugin].pop(f'{plugin}_disable', None)
+                all_stats[plugin].pop(f"{plugin}_disable", None)
             elif isinstance(all_stats[plugin], list):
                 # TypeError: string indices must be integers (Network plugin) #1054
                 for i in all_stats[plugin]:
@@ -197,17 +266,17 @@ class GlancesExport:
         if isinstance(stats, dict):
             # Stats is a dict
             # Is there a key ?
-            if 'key' in iterkeys(stats) and stats['key'] in iterkeys(stats):
-                pre_key = '{}.'.format(stats[stats['key']])
+            if "key" in iterkeys(stats) and stats["key"] in iterkeys(stats):
+                pre_key = "{}.".format(stats[stats["key"]])
             else:
-                pre_key = ''
+                pre_key = ""
             # Walk through the dict
             for key, value in sorted(iteritems(stats)):
                 if isinstance(value, bool):
                     value = json_dumps(value).decode()
 
                 if isinstance(value, list):
-                    value = ' '.join([str(v) for v in value])
+                    value = " ".join([str(v) for v in value])
 
                 if isinstance(value, dict):
                     item_names, item_values = self.build_export(value)
