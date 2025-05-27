@@ -117,10 +117,13 @@ test-min-with-upgrade: venv-min-upgrade ## Upgrade deps and run unit tests in mi
 test-export-csv: ## Run interface tests with CSV
 	/bin/bash ./tests/test_export_csv.sh
 
-test-export-influxdb: ## Run interface tests with InfluxDB
-	/bin/bash ./tests/test_export_influxdb.sh
+test-export-influxdb-v1: ## Run interface tests with InfluxDB version 1 (Legacy)
+	/bin/bash ./tests/test_export_influxdb_v1.sh
 
-test-export: test-export-csv test-export-influxdb ## Tests all exports
+test-export-influxdb-v3: ## Run interface tests with InfluxDB version 3 (Core)
+	/bin/bash ./tests/test_export_influxdb_v3.sh
+
+test-export: test-export-csv test-export-influxdb-v1 test-export-influxdb-v3 ## Tests all exports
 
 # ===================================================================
 # Linters, profilers and cyber security
