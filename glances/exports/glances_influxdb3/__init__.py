@@ -1,18 +1,17 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2025 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""InfluxDB (up to InfluxDB 1.7.x) interface class."""
+"""InfluxDB (for InfluxDB 3.x) interface class."""
 
 import sys
 from platform import node
 
-from influxdb import InfluxDBClient
-from influxdb.client import InfluxDBClientError
+from influxdb_client_3 import InfluxDBClient3
 
 from glances.exports.export import GlancesExport
 from glances.logger import logger
@@ -26,24 +25,25 @@ class Export(GlancesExport):
         super().__init__(config=config, args=args)
 
         # Mandatory configuration keys (additional to host and port)
-        self.user = None
-        self.password = None
-        self.db = None
+        self.host = None
+        self.port = None
+        self.org = None
+        self.database = None
+        self.token = None
 
         # Optional configuration keys
-        self.protocol = "http"
         self.prefix = None
         self.tags = None
         self.hostname = None
 
         # Load the InfluxDB configuration file
         self.export_enable = self.load_conf(
-            "influxdb",
-            mandatories=["host", "port", "user", "password", "db"],
-            options=["protocol", "prefix", "tags"],
+            "influxdb3",
+            mandatories=["host", "port", "org", "database", "token"],
+            options=["prefix", "tags"],
         )
         if not self.export_enable:
-            exit("Missing influxdb config")
+            exit("Missing influxdb3 config")
 
         # The hostname is always add as a tag
         self.hostname = node().split(".")[0]
@@ -56,31 +56,23 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
 
-        # Correct issue #1530
-        if self.protocol is not None and (self.protocol.lower() == "https"):
-            ssl = True
-        else:
-            ssl = False
-
         try:
-            db = InfluxDBClient(
+            db = InfluxDBClient3(
                 host=self.host,
-                port=self.port,
-                ssl=ssl,
-                verify_ssl=False,
-                username=self.user,
-                password=self.password,
-                database=self.db,
+                org=self.org,
+                database=self.database,
+                token=self.token,
             )
-            get_all_db = [i["name"] for i in db.get_list_database()]
-        except InfluxDBClientError as e:
-            logger.critical(f"Cannot connect to InfluxDB database '{self.db}' ({e})")
+        except Exception as e:
+            logger.critical(f"Cannot connect to InfluxDB database '{self.database}' ({e})")
             sys.exit(2)
 
-        if self.db in get_all_db:
-            logger.info(f"Stats will be exported to InfluxDB server: {db._baseurl}")
+        if self.database == db._database:
+            logger.info(
+                f"Stats will be exported to InfluxDB server {self.host}:{self.port} in {self.database} database"
+            )
         else:
-            logger.critical(f"InfluxDB database '{self.db}' did not exist. Please create it")
+            logger.critical(f"InfluxDB database '{self.database}' did not exist. Please create it")
             sys.exit(2)
 
         return db
@@ -95,8 +87,8 @@ class Export(GlancesExport):
             logger.debug(f"Cannot export empty {name} stats to InfluxDB")
         else:
             try:
-                self.client.write_points(
-                    self.normalize_for_influxdb(name, columns, points),
+                self.client.write(
+                    record=self.normalize_for_influxdb(name, columns, points),
                     time_precision="s",
                 )
             except Exception as e:
