@@ -75,6 +75,7 @@ export = [
   "ibmcloudant",
   "influxdb-client",
   "influxdb>=1.0.0",
+  "influxdb3-python",
   "kafka-python",
   "paho-mqtt",
   "pika",
