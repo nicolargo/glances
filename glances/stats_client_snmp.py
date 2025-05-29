@@ -10,7 +10,6 @@
 
 import re
 
-from glances.globals import iteritems
 from glances.logger import logger
 from glances.stats import GlancesStats
 
@@ -81,7 +80,7 @@ class GlancesStatsClientSNMP(GlancesStats):
             return short_system_name
 
         # Find the short name in the oid_to_short_os_name dict
-        for r, v in iteritems(oid_to_short_system_name):
+        for r, v in oid_to_short_system_name.items():
             if re.search(r, oid_system_name):
                 short_system_name = v
                 break
