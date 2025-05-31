@@ -538,3 +538,11 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _sponsors: https://github.com/sponsors/nicolargo
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
 .. _Docker: https://github.com/nicolargo/glances/blob/develop/docs/docker.rst
+
+More stars !
+============
+
+Please give us a star on `GitHub`_ if you like this project.
+
+.. |stars| image:: https://api.star-history.com/svg?repos=nicolargo/glances&type=Date
+    :target: https://www.star-history.com/#nicolargo/glances&Date
