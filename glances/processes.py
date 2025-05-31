@@ -17,7 +17,6 @@ from glances.globals import (
     MACOS,
     WINDOWS,
     dictlist_first_key_value,
-    iterkeys,
     list_of_namedtuple_to_list_of_dict,
     namedtuple_to_dict,
 )
@@ -157,7 +156,7 @@ class GlancesProcesses:
         self.processcount['pid_max'] = self.pid_max
         # For each key in the processcount dict
         # count the number of processes with the same status
-        for k in iterkeys(self.processcount):
+        for k in list(self.processcount.keys()):
             self.processcount[k] = len(list(filter(lambda v: v.get('status', '?') is k, plist)))
         # Compute thread
         try:
