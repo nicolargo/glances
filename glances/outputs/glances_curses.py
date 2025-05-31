@@ -8,6 +8,7 @@
 
 """Curses interface class."""
 
+import functools
 import getpass
 import sys
 
@@ -257,22 +258,16 @@ class _GlancesCurses:
             action()
 
     def catch_other_actions_maybe_return_to_browser(self, return_to_browser):
-        if self.pressedkey == ord('e') and not self.args.programs:
-            self._handle_process_extended()
-        elif self.pressedkey == ord('k') and not self.args.disable_cursor:
-            self._handle_kill_process()
-        elif self.pressedkey == curses.KEY_LEFT:
-            self._handle_sort_left()
-        elif self.pressedkey == curses.KEY_RIGHT:
-            self._handle_sort_right()
-        elif self.pressedkey == curses.KEY_UP or self.pressedkey == 65 and not self.args.disable_cursor:
-            self._handle_cursor_up()
-        elif self.pressedkey == curses.KEY_DOWN or self.pressedkey == 66 and not self.args.disable_cursor:
-            self._handle_cursor_down()
-        elif self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
-            self._handle_quit(return_to_browser)
-        elif self.pressedkey == curses.KEY_F5 or self.pressedkey == 18:
-            self._handle_refresh()
+        {
+            self.pressedkey in {ord('e')} and not self.args.programs: self._handle_process_extended,
+            self.pressedkey in {ord('k')} and not self.args.disable_cursor: self._handle_kill_process,
+            self.pressedkey in {curses.KEY_LEFT}: self._handle_sort_left,
+            self.pressedkey in {curses.KEY_RIGHT}: self._handle_sort_right,
+            self.pressedkey in {curses.KEY_UP, 65} and not self.args.disable_cursor: self._handle_cursor_up,
+            self.pressedkey in {curses.KEY_DOWN, 66} and not self.args.disable_cursor: self._handle_cursor_down,
+            self.pressedkey in {curses.KEY_F5, 18}: self._handle_refresh,
+            self.pressedkey in {ord('\x1b'), ord('q')}: functools.partial(self._handle_quit, return_to_browser),
+        }.get(True, lambda: None)()
 
     def __catch_key(self, return_to_browser=False):
         # Catch the pressed key
