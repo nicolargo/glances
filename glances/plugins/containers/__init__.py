@@ -227,11 +227,8 @@ class ContainersPlugin(GlancesPluginModel):
         if self.input_method != 'local':
             return self.get_init_value()
 
-        def is_key_in_container_and_not_hidden(container):
-            return (key := container.get('key')) in container and not self.is_hide(nativestr(container.get(key)))
-
-        def is_key_absent_in_container(container):
-            return 'key' not in container or container.get('key') not in container
+        def is_key_in_container_and_hidden(container):
+            return (key := container.get('key')) in container and self.is_hide(nativestr(container.get(key)))
 
         def add_engine_into_container(engine, container):
             return container | {"engine": engine}
@@ -246,7 +243,7 @@ class ContainersPlugin(GlancesPluginModel):
                 (
                     add_engine_into_container(engine, container)
                     for container in get_containers_from_updated_watcher(watcher)
-                    if is_key_in_container_and_not_hidden(container) or is_key_absent_in_container(container)
+                    if not is_key_in_container_and_hidden(container)
                 )
                 for engine, watcher in self.watchers.items()
             )
