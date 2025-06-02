@@ -9,7 +9,6 @@
 """Monitor plugin."""
 
 from glances.amps_list import AmpsList as glancesAmpsList
-from glances.globals import iteritems
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
@@ -56,7 +55,7 @@ class AmpsPlugin(GlancesPluginModel):
         stats = self.get_init_value()
 
         if self.input_method == 'local':
-            for k, v in iteritems(self.glances_amps.update()):
+            for v in self.glances_amps.update().values():
                 stats.append(
                     {
                         'key': self.get_key(),
