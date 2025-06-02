@@ -125,18 +125,14 @@ class AmpsList:
 
         Search application monitored processes by a regular expression
         """
-        ret = []
         try:
             # Search in both cmdline and name (for kernel thread, see #1261)
-            for p in processlist:
-                if (re.search(amp_value.regex(), p['name']) is not None) or (
-                    p['cmdline'] is not None
-                    and p['cmdline'] != []
-                    and re.search(amp_value.regex(), ' '.join(p['cmdline'])) is not None
-                ):
-                    ret.append(
-                        {'pid': p['pid'], 'cpu_percent': p['cpu_percent'], 'memory_percent': p['memory_percent']}
-                    )
+            ret = [
+                {'pid': p['pid'], 'cpu_percent': p['cpu_percent'], 'memory_percent': p['memory_percent']}
+                for p in processlist
+                if re.search(amp_value.regex(), p['name'])
+                or ((cmdline := p.get('cmdline')) and re.search(amp_value.regex(), ' '.join(cmdline)))
+            ]
 
         except (TypeError, KeyError) as e:
             logger.debug(f"Can not build AMPS list ({e})")
