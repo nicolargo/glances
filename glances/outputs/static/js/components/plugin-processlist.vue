@@ -4,9 +4,9 @@
     <section v-if="!args.programs" id="processlist" class="plugin">
         <div v-if="extended_stats !== null" class="extendedstats">
             <div>
-                <span class="title">Pinned thread: </span>
+                <span class="title">Pinned task: </span>
                 <span>{{ $filters.limitTo(extended_stats.cmdline, 80) }}</span>
-                <span><button class="button" @click="disableExtendedStats()">Upin</button></span>
+                <span><button class="button" @click="disableExtendedStats()">Unpin</button></span>
             </div>
             <div>
                 <span>CPU Min/Max/Mean: </span>
