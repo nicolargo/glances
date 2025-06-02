@@ -12,7 +12,7 @@ import os
 import re
 import threading
 
-from glances.globals import amps_path, iteritems, listkeys
+from glances.globals import amps_path, listkeys
 from glances.logger import logger
 from glances.processes import glances_processes
 
@@ -90,7 +90,7 @@ class AmpsList:
         processlist = glances_processes.get_list()
 
         # Iter upon the AMPs dict
-        for k, v in iteritems(self.get()):
+        for k, v in self.get().items():
             if not v.enable():
                 # Do not update if the enable tag is set
                 continue
