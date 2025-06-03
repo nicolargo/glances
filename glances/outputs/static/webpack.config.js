@@ -5,7 +5,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TerserWebpackPlugin = require('terser-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
-const PORT = process.env.PORT || 61209;
+const PORT = process.env.PORT || 61210;
 
 module.exports = (_, env) => {
     const isProd = env.mode === 'production';
@@ -18,7 +18,7 @@ module.exports = (_, env) => {
         },
         output: {
             path: path.join(__dirname, "public"),
-            filename: "[name].js",
+            filename: "static/[name].js",
             publicPath: '/',
             clean: true
         },
@@ -52,7 +52,8 @@ module.exports = (_, env) => {
         plugins: [
             new webpack.DefinePlugin({
                 __VUE_OPTIONS_API__: true,
-                __VUE_PROD_DEVTOOLS__: false
+                __VUE_PROD_DEVTOOLS__: false,
+                __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false
             }),
             new CopyWebpackPlugin({
                 patterns: [
@@ -67,14 +68,18 @@ module.exports = (_, env) => {
             new VueLoaderPlugin()
         ].filter(Boolean),
         devServer: {
+            client: {
+                overlay: false
+            },
             host: '0.0.0.0',
             port: PORT,
             hot: true,
-            proxy: {
-                '/api': {
+            proxy: [
+                {
+                    context: ['/api'],
                     target: 'http://0.0.0.0:61208'
                 }
-            }
+            ]
         }
 
     };
