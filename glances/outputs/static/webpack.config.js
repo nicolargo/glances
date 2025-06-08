@@ -1,11 +1,11 @@
- 
+
 const webpack = require('webpack');
 const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TerserWebpackPlugin = require('terser-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
-const PORT = process.env.PORT || 61210;
+const PORT = process.env.PORT || 61209;
 
 module.exports = (_, env) => {
     const isProd = env.mode === 'production';
@@ -18,7 +18,7 @@ module.exports = (_, env) => {
         },
         output: {
             path: path.join(__dirname, "public"),
-            filename: "static/[name].js",
+            filename: "[name].js",
             publicPath: '/',
             clean: true
         },
