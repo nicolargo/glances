@@ -12,7 +12,7 @@ import os
 import re
 import threading
 
-from glances.globals import amps_path, iteritems, listkeys
+from glances.globals import amps_path, listkeys
 from glances.logger import logger
 from glances.processes import glances_processes
 
@@ -90,7 +90,7 @@ class AmpsList:
         processlist = glances_processes.get_list()
 
         # Iter upon the AMPs dict
-        for k, v in iteritems(self.get()):
+        for k, v in self.get().items():
             if not v.enable():
                 # Do not update if the enable tag is set
                 continue
@@ -125,18 +125,14 @@ class AmpsList:
 
         Search application monitored processes by a regular expression
         """
-        ret = []
         try:
             # Search in both cmdline and name (for kernel thread, see #1261)
-            for p in processlist:
-                if (re.search(amp_value.regex(), p['name']) is not None) or (
-                    p['cmdline'] is not None
-                    and p['cmdline'] != []
-                    and re.search(amp_value.regex(), ' '.join(p['cmdline'])) is not None
-                ):
-                    ret.append(
-                        {'pid': p['pid'], 'cpu_percent': p['cpu_percent'], 'memory_percent': p['memory_percent']}
-                    )
+            ret = [
+                {'pid': p['pid'], 'cpu_percent': p['cpu_percent'], 'memory_percent': p['memory_percent']}
+                for p in processlist
+                if re.search(amp_value.regex(), p['name'])
+                or ((cmdline := p.get('cmdline')) and re.search(amp_value.regex(), ' '.join(cmdline)))
+            ]
 
         except (TypeError, KeyError) as e:
             logger.debug(f"Can not build AMPS list ({e})")
