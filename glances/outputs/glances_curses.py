@@ -13,7 +13,7 @@ import getpass
 import sys
 
 from glances.events_list import glances_events
-from glances.globals import MACOS, WINDOWS, disable, enable, itervalues, nativestr, u
+from glances.globals import MACOS, WINDOWS, disable, enable, nativestr, u
 from glances.logger import logger
 from glances.outputs.glances_colors import GlancesColors
 from glances.outputs.glances_unicode import unicode_message
@@ -694,7 +694,7 @@ class _GlancesCurses:
             )
 
         # Width of all plugins
-        stats_width = sum(itervalues(plugin_widths))
+        stats_width = sum(plugin_widths.values())
 
         # Number of plugin but quicklook
         stats_number = sum(
@@ -720,7 +720,7 @@ class _GlancesCurses:
                 logger.debug(f"Quicklook plugin not available ({e})")
             else:
                 plugin_widths['quicklook'] = self.get_stats_display_width(stat_display["quicklook"])
-                stats_width = sum(itervalues(plugin_widths)) + 1
+                stats_width = sum(plugin_widths.values()) + 1
             self.space_between_column = 1
             self.display_plugin(stat_display["quicklook"])
             self.new_column()
@@ -741,7 +741,7 @@ class _GlancesCurses:
                         if hasattr(self.args, 'disable_' + p)
                         else 0
                     )
-                    stats_width = sum(itervalues(plugin_widths)) + 1
+                    stats_width = sum(plugin_widths.values()) + 1
                     self.space_between_column = max(
                         1, int((self.term_window.getmaxyx()[1] - stats_width) / (stats_number - 1))
                     )
