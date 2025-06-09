@@ -17,7 +17,7 @@ import pygal.style
 from pygal import DateTimeLine
 
 from glances.exports.export import GlancesExport
-from glances.globals import iteritems, time_series_subsample
+from glances.globals import time_series_subsample
 from glances.logger import logger
 from glances.timer import Timer
 
@@ -120,7 +120,7 @@ class Export(GlancesExport):
             x_label_rotation=20,
             x_value_formatter=lambda dt: dt.strftime('%Y/%m/%d %H:%M:%S'),
         )
-        for k, v in iteritems(time_series_subsample(data, self.width)):
+        for k, v in time_series_subsample(data, self.width).items():
             chart.add(k, v)
         chart.render_to_file(os.path.join(self.path, title + '.svg'))
         return True

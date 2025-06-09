@@ -105,7 +105,7 @@ class Export(GlancesExport):
         logger.debug(f"Export {name} stats to Cassandra")
 
         # Remove non number stats and convert all to float (for Boolean)
-        data = {k: float(v) for (k, v) in dict(zip(columns, points)).iteritems() if isinstance(v, Number)}
+        data = {k: float(v) for k, v in zip(columns, points) if isinstance(v, Number)}
 
         # Write input to the Cassandra table
         try:
