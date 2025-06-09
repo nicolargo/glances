@@ -14,7 +14,7 @@ from numbers import Number
 from prometheus_client import Gauge, start_http_server
 
 from glances.exports.export import GlancesExport
-from glances.globals import iteritems, listkeys
+from glances.globals import listkeys
 from glances.logger import logger
 
 
@@ -61,10 +61,10 @@ class Export(GlancesExport):
         logger.debug(f"Export {name} stats to Prometheus exporter")
 
         # Remove non number stats and convert all to float (for Boolean)
-        data = {k: float(v) for (k, v) in iteritems(dict(zip(columns, points))) if isinstance(v, Number)}
+        data = {k: float(v) for k, v in zip(columns, points) if isinstance(v, Number)}
 
         # Write metrics to the Prometheus exporter
-        for k, v in iteritems(data):
+        for k, v in data.items():
             # Prometheus metric name: prefix_<glances stats name>
             metric_name = self.prefix + self.METRIC_SEPARATOR + str(name) + self.METRIC_SEPARATOR + str(k)
             # Prometheus is very sensible to the metric name
