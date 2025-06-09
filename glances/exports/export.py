@@ -14,8 +14,6 @@ I am your father...
 from glances.globals import (
     NoOptionError,
     NoSectionError,
-    iteritems,
-    iterkeys,
     json_dumps,
 )
 from glances.logger import logger
@@ -266,12 +264,12 @@ class GlancesExport:
         if isinstance(stats, dict):
             # Stats is a dict
             # Is there a key ?
-            if "key" in iterkeys(stats) and stats["key"] in iterkeys(stats):
+            if "key" in stats.keys() and stats["key"] in stats.key():
                 pre_key = "{}.".format(stats[stats["key"]])
             else:
                 pre_key = ""
             # Walk through the dict
-            for key, value in sorted(iteritems(stats)):
+            for key, value in sorted(stats.items()):
                 if isinstance(value, bool):
                     value = json_dumps(value).decode()
 
