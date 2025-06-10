@@ -11,11 +11,7 @@ I am your father...
 ...for all Glances exports IF.
 """
 
-from glances.globals import (
-    NoOptionError,
-    NoSectionError,
-    json_dumps,
-)
+from glances.globals import NoOptionError, NoSectionError, json_dumps
 from glances.logger import logger
 from glances.timer import Counter
 
@@ -264,7 +260,7 @@ class GlancesExport:
         if isinstance(stats, dict):
             # Stats is a dict
             # Is there a key ?
-            if "key" in stats.keys() and stats["key"] in stats.key():
+            if "key" in stats.keys() and stats["key"] in stats.keys():
                 pre_key = "{}.".format(stats[stats["key"]])
             else:
                 pre_key = ""
