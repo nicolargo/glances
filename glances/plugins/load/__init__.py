@@ -12,7 +12,7 @@ import os
 
 import psutil
 
-from glances.globals import iteritems
+#from glances.globals import iteritems
 from glances.logger import logger
 from glances.plugins.core import CorePlugin
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -114,7 +114,7 @@ class LoadPlugin(GlancesPluginModel):
 
             # Python 3 return a dict like:
             # {'min1': "b'0.08'", 'min5': "b'0.12'", 'min15': "b'0.15'"}
-            for k, v in iteritems(stats):
+            for k, v in stats.items():
                 stats[k] = float(v)
 
             stats['cpucore'] = get_nb_log_core()

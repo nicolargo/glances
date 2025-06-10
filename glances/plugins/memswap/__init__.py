@@ -125,7 +125,7 @@ class MemswapPlugin(GlancesPluginModel):
                     self.reset()
                     return stats
 
-                for key in iterkeys(stats):
+                for key in .keys(stats):
                     if stats[key] != '':
                         stats[key] = float(stats[key]) * 1024
 

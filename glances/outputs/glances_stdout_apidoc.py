@@ -13,7 +13,7 @@ import time
 from pprint import pformat
 
 from glances import __apiversion__
-from glances.globals import iteritems
+#from glances.globals import iteritems
 from glances.logger import logger
 
 API_URL = f"http://localhost:61208/api/{__apiversion__}"
@@ -136,7 +136,7 @@ def print_plugin_description(plugin, stat):
         print('Fields descriptions:')
         print('')
         time_since_update = False
-        for field, description in iteritems(stat.fields_description):
+        for field, description in stat.fields_description ():
             print(
                 '* **{}**: {} (unit is *{}*)'.format(
                     field,

@@ -271,7 +271,7 @@ class CpuPlugin(GlancesPluginModel):
                 return self.stats
 
             # Convert SNMP stats to float
-            for key in iterkeys(stats):
+            for key in .keys(stats):
                 stats[key] = float(stats[key])
             stats['total'] = 100 - stats['idle']
 

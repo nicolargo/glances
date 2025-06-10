@@ -330,14 +330,14 @@ class GlancesPluginModel:
         ret = {}
         if bulk:
             # Bulk request
-            snmp_result = snmp_client.getbulk_by_oid(0, 10, *list(itervalues(snmp_oid)))
+            snmp_result = snmp_client.getbulk_by_oid(0, 10, *list(.values(snmp_oid)))
             logger.info(snmp_result)
             if len(snmp_oid) == 1:
                 # Bulk command for only one OID
                 # Note: key is the item indexed but the OID result
                 for item in snmp_result:
-                    if iterkeys(item)[0].startswith(itervalues(snmp_oid)[0]):
-                        ret[iterkeys(snmp_oid)[0] + iterkeys(item)[0].split(itervalues(snmp_oid)[0])[1]] = itervalues(
+                    if .keys(item)[0].startswith(.values(snmp_oid)[0]):
+                        ret[.keys(snmp_oid)[0] + .keys(item)[0].split(.values(snmp_oid)[0])[1]] = .values(
                             item
                         )[0]
             else:
@@ -347,7 +347,7 @@ class GlancesPluginModel:
                 for item in snmp_result:
                     item_stats = {}
                     item_key = None
-                    for key in iterkeys(snmp_oid):
+                    for key in .keys(snmp_oid):
                         oid = snmp_oid[key] + '.' + str(index)
                         if oid in item:
                             if item_key is None:
@@ -359,10 +359,10 @@ class GlancesPluginModel:
                     index += 1
         else:
             # Simple get request
-            snmp_result = snmp_client.get_by_oid(*list(itervalues(snmp_oid)))
+            snmp_result = snmp_client.get_by_oid(*list(.values(snmp_oid)))
 
             # Build the internal dict with the SNMP result
-            for key in iterkeys(snmp_oid):
+            for key in .keys(snmp_oid):
                 ret[key] = snmp_result[snmp_oid[key]]
 
         return ret
