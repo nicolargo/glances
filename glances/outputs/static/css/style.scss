@@ -197,6 +197,15 @@ body {
     width: 8em;
 }
 
+#system {
+    span {
+        padding-left: 10px;
+    }
+    span:nth-child(1) {
+        padding-left: 0px;
+    }
+}
+
 #ip {
     span {
         padding-left: 10px;
