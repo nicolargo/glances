@@ -18,7 +18,7 @@ from urllib.parse import urljoin
 
 from glances import __apiversion__, __version__
 from glances.events_list import glances_events
-from glances.globals import json_dumps
+from glances.globals import json_dumps, weak_lru_cache
 from glances.logger import logger
 from glances.password import GlancesPassword
 from glances.processes import glances_processes
@@ -141,6 +141,12 @@ class GlancesRestfulApi:
         self.TEMPLATE_PATH = os.path.join(webui_root_path, 'static/templates')
         self._templates = Jinja2Templates(directory=self.TEMPLATE_PATH)
 
+        # FastAPI Enable GZIP compression
+        # https://fastapi.tiangolo.com/advanced/middleware/
+        # Should be done before other middlewares to avoid
+        # LocalProtocolError("Too much data for declared Content-Length")
+        self._app.add_middleware(GZipMiddleware, minimum_size=1000)
+
         # FastAPI Enable CORS
         # https://fastapi.tiangolo.com/tutorial/cors/
         self._app.add_middleware(
@@ -151,10 +157,6 @@ class GlancesRestfulApi:
             allow_methods=config.get_list_value('outputs', 'cors_methods', default=["*"]),
             allow_headers=config.get_list_value('outputs', 'cors_headers', default=["*"]),
         )
-
-        # FastAPI Enable GZIP compression
-        # https://fastapi.tiangolo.com/advanced/middleware/
-        self._app.add_middleware(GZipMiddleware, minimum_size=1000)
 
         # FastAPI Define routes
         self._app.include_router(self._router())
@@ -196,7 +198,7 @@ class GlancesRestfulApi:
     def authentication(self, creds: Annotated[HTTPBasicCredentials, Depends(security)]):
         """Check if a username/password combination is valid."""
         if creds.username == self.args.username:
-            # check_password and get_hash are (lru) cached to optimize the requests
+            # check_password
             if self._password.check_password(self.args.password, self._password.get_hash(creds.password)):
                 return creds.username
 
@@ -453,6 +455,7 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(self.servers_list.get_servers_list() if self.servers_list else [])
 
+    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_all(self):
         """Glances API RESTful implementation.
 
@@ -480,6 +483,7 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(statval)
 
+    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_all_limits(self):
         """Glances API RESTful implementation.
 
@@ -496,6 +500,7 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(limits)
 
+    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_all_views(self):
         """Glances API RESTful implementation.
 
@@ -512,6 +517,7 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(limits)
 
+    @weak_lru_cache(maxsize=1, ttl=1)
     def _api(self, plugin: str):
         """Glances API RESTful implementation.
 
@@ -541,6 +547,7 @@ class GlancesRestfulApi:
             status.HTTP_400_BAD_REQUEST, f"Unknown plugin {plugin} (available plugins: {self.plugins_list})"
         )
 
+    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_top(self, plugin: str, nb: int = 0):
         """Glances API RESTful implementation.
 
@@ -569,6 +576,7 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(statval)
 
+    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_history(self, plugin: str, nb: int = 0):
         """Glances API RESTful implementation.
 
@@ -591,6 +599,7 @@ class GlancesRestfulApi:
 
         return statval
 
+    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_limits(self, plugin: str):
         """Glances API RESTful implementation.
 
@@ -609,6 +618,7 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(ret)
 
+    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_views(self, plugin: str):
         """Glances API RESTful implementation.
 
