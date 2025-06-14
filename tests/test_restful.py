@@ -22,6 +22,7 @@ import requests
 from glances import __version__
 from glances.globals import text_type
 from glances.outputs.glances_restful_api import GlancesRestfulApi
+from glances.timer import Counter
 
 SERVER_PORT = 61234
 API_VERSION = GlancesRestfulApi.API_VERSION
@@ -71,10 +72,29 @@ class TestGlances(unittest.TestCase):
         method = "all"
         print('INFO: [TEST_001] Get all stats')
         print(f"HTTP RESTful request: {URL}/{method}")
-        req = self.http_get(f"{URL}/{method}")
-
-        self.assertTrue(req.ok)
-        self.assertTrue(req.json(), dict)
+        # First call is not cached
+        counter_first_call = Counter()
+        first_req = self.http_get(f"{URL}/{method}")
+        self.assertTrue(first_req.ok)
+        self.assertTrue(first_req.json(), dict)
+        counter_first_call_result = counter_first_call.get()
+        # Second call (if it is in the same second) is cached
+        counter_second_call = Counter()
+        second_req = self.http_get(f"{URL}/{method}")
+        self.assertTrue(second_req.ok)
+        self.assertTrue(second_req.json(), dict)
+        counter_second_call_result = counter_second_call.get()
+        # Check if result of first call is equal to second call
+        self.assertEqual(first_req.json(), second_req.json(), "The result of the first and second call should be equal")
+        # Check cache result
+        print(
+            f"First API call took {counter_first_call_result:.2f} seconds"
+            f" and second API call (cached) took {counter_second_call_result:.2f} seconds"
+        )
+        self.assertTrue(
+            counter_second_call_result < counter_first_call_result,
+            "The second call should be cached (faster than the first one)",
+        )
 
     def test_002_pluginslist(self):
         """Plugins list."""
