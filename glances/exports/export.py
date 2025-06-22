@@ -225,7 +225,7 @@ class GlancesExport:
 
         The method builds two lists: names and values and calls the export method to export the stats.
 
-        Note: this class can be overwritten (for example in CSV and Graph).
+        Note: if needed this class can be overwritten.
         """
         if not self.export_enable:
             return False
@@ -245,6 +245,8 @@ class GlancesExport:
                 # TypeError: string indices must be integers (Network plugin) #1054
                 for i in all_stats[plugin]:
                     i.update(all_limits[plugin])
+                    # Remove the <plugin>_disable field
+                    i.pop(f"{plugin}_disable", None)
             else:
                 continue
             export_names, export_values = self.build_export(all_stats[plugin])
@@ -253,7 +255,11 @@ class GlancesExport:
         return True
 
     def build_export(self, stats):
-        """Build the export lists."""
+        """Build the export lists.
+        This method builds two lists: names and values.
+        """
+
+        # Initialize export lists
         export_names = []
         export_values = []
 
@@ -278,6 +284,7 @@ class GlancesExport:
                     export_names += item_names
                     export_values += item_values
                 else:
+                    # We are on a simple value
                     export_names.append(pre_key + key.lower())
                     export_values.append(value)
         elif isinstance(stats, list):

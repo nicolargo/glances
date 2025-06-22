@@ -25,4 +25,5 @@ to providing stats to multiple services (see list below).
    restful
    riemann
    statsd
+   timescaledb
    zeromq
