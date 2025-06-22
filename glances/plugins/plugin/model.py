@@ -189,15 +189,16 @@ class GlancesPluginModel:
     def update_stats_history(self):
         """Update stats history."""
         # Build the history
-        if not (self.get_export() and self.history_enable()):
+        _get_export = self.get_export()
+        if not (_get_export and self.history_enable()):
             return
         # Itern through items history
         item_name = '' if self.get_key() is None else self.get_key()
         for i in self.get_items_history_list():
-            if isinstance(self.get_export(), list):
+            if isinstance(_get_export, list):
                 # Stats is a list of data
                 # Iter through stats (for example, iter through network interface)
-                for l_export in self.get_export():
+                for l_export in _get_export:
                     if i['name'] in l_export:
                         self.stats_history.add(
                             nativestr(l_export[item_name]) + '_' + nativestr(i['name']),
@@ -210,7 +211,7 @@ class GlancesPluginModel:
                 # Add the item to the history directly
                 self.stats_history.add(
                     nativestr(i['name']),
-                    self.get_export()[i['name']],
+                    _get_export[i['name']],
                     description=i['description'],
                     history_max_size=self._limits['history_size'],
                 )
