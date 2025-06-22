@@ -51,6 +51,14 @@ fields_description = {
         'description': 'Container CPU consumption',
         'unit': 'percent',
     },
+    'memory_inactive_file': {
+        'description': 'Container memory inactive file',
+        'unit': 'byte',
+    },
+    'memory_limit': {
+        'description': 'Container memory limit',
+        'unit': 'byte',
+    },
     'memory_usage': {
         'description': 'Container memory usage',
         'unit': 'byte',
