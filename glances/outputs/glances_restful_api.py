@@ -477,6 +477,7 @@ class GlancesRestfulApi:
 
         try:
             # Get the RAW value of the stat ID
+            # TODO in #3211: use getAllExportsAsDict instead but break UI for uptime, processlist, others ?
             statval = self.stats.getAllAsDict()
         except Exception as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get stats ({str(e)})")
@@ -565,11 +566,10 @@ class GlancesRestfulApi:
 
         try:
             # Get the RAW value of the stat ID
+            # TODO in #3211: use get_export instead but break API
             statval = self.stats.get_plugin(plugin).get_raw()
         except Exception as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get plugin {plugin} ({str(e)})")
-
-        print(statval)
 
         if isinstance(statval, list):
             statval = statval[:nb]
@@ -612,7 +612,7 @@ class GlancesRestfulApi:
 
         try:
             # Get the RAW value of the stat limits
-            ret = self.stats.get_plugin(plugin).limits
+            ret = self.stats.get_plugin(plugin).get_limits()
         except Exception as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get limits for plugin {plugin} ({str(e)})")
 
@@ -655,6 +655,7 @@ class GlancesRestfulApi:
 
         try:
             # Get the RAW value of the stat views
+            # TODO in #3211: use a non existing (to be created) get_export_item instead but break API
             ret = self.stats.get_plugin(plugin).get_raw_stats_item(item)
         except Exception as e:
             raise HTTPException(
@@ -679,6 +680,7 @@ class GlancesRestfulApi:
 
         try:
             # Get the RAW value of the stat views
+            # TODO in #3211: use a non existing (to be created) get_export_key instead but break API
             ret = self.stats.get_plugin(plugin).get_raw_stats_key(item, key)
         except Exception as e:
             raise HTTPException(
@@ -811,6 +813,7 @@ class GlancesRestfulApi:
 
         try:
             # Get the RAW value
+            # TODO in #3211: use a non existing (to be created) get_export_item_value instead but break API
             ret = self.stats.get_plugin(plugin).get_raw_stats_value(item, value)
         except Exception as e:
             raise HTTPException(
