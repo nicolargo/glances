@@ -81,6 +81,7 @@ export = [
   "pika",
   "potsdb",
   "prometheus_client",
+  "psycopg[binary]",
   "pymongo",
   "pyzmq",
   "statsd",
