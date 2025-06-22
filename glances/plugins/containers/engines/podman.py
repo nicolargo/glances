@@ -379,6 +379,8 @@ class PodmanExtension:
         stats['memory_usage'] = stats['memory'].get('usage')
         if stats['memory'].get('cache') is not None:
             stats['memory_usage'] -= stats['memory']['cache']
+        stats['memory_inactive_file'] = stats['memory'].get('inactive_file')
+        stats['memory_limit'] = stats['memory'].get('limit')
 
         if all(k in stats['io'] for k in ('ior', 'iow', 'time_since_update')):
             stats['io_rx'] = stats['io']['ior'] // stats['io']['time_since_update']
