@@ -57,7 +57,7 @@ class Export(GlancesExport):
         return db
 
     def export(self, name, columns, points):
-        """Export the stats to the Statsd server."""
+        """Export the stats to the OpenTSDB server."""
         for i in range(len(columns)):
             if not isinstance(points[i], Number):
                 continue

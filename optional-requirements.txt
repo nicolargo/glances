@@ -16,6 +16,7 @@ influxdb3-python # For InfluxDB 3.x
 jinja2
 kafka-python
 netifaces2
+numpy>=1.22.2 # not directly required, pinned by Snyk to avoid a vulnerability
 nvidia-ml-py
 orjson
 paho-mqtt
@@ -23,6 +24,8 @@ pika
 podman
 potsdb
 prometheus_client
+psycopg[binary]
+pyarrow>=14.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
 pycouchdb
 pydantic
 pygal
@@ -33,12 +36,10 @@ pysnmp-lextudio<6.3.1 # Pinned witing implementation of #2874
 python-dateutil
 pyzmq
 requests
+setuptools>=78.1.1 # not directly required, pinned by Snyk to avoid a vulnerability
 six
 sparklines
 statsd
+urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
 uvicorn
 zeroconf
-numpy>=1.22.2 # not directly required, pinned by Snyk to avoid a vulnerability
-pyarrow>=14.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
-setuptools>=78.1.1 # not directly required, pinned by Snyk to avoid a vulnerability
-urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
