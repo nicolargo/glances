@@ -9,29 +9,20 @@
                 <thead>
                     <tr>
                         <td v-show="showPod" scope="col">Pod</td>
-                        <td
-                            v-show="!getDisableStats().includes('name')"
-                            scope="col"
+                        <td v-show="!getDisableStats().includes('name')" scope="col"
                             :class="['sortable', sorter.column === 'name' && 'sort']"
-                            @click="args.sort_processes_key = 'name'"
-                        >
+                            @click="args.sort_processes_key = 'name'">
                             Name
                         </td>
                         <td v-show="!getDisableStats().includes('status')" scope="col">Status</td>
-                        <td
-                            v-show="!getDisableStats().includes('cpu')"
-                            scope="col"
+                        <td v-show="!getDisableStats().includes('cpu')" scope="col"
                             :class="['sortable', sorter.column === 'cpu_percent' && 'sort']"
-                            @click="args.sort_processes_key = 'cpu_percent'"
-                        >
+                            @click="args.sort_processes_key = 'cpu_percent'">
                             CPU%
                         </td>
-                        <td
-                            v-show="!getDisableStats().includes('mem')"
-                            scope="col"
+                        <td v-show="!getDisableStats().includes('mem')" scope="col"
                             :class="['sortable', sorter.column === 'memory_percent' && 'sort']"
-                            @click="args.sort_processes_key = 'memory_percent'"
-                        >
+                            @click="args.sort_processes_key = 'memory_percent'">
                             MEM
                         </td>
                         <td v-show="!getDisableStats().includes('mem')" scope="col">MAX</td>
@@ -44,15 +35,11 @@
                         <td v-show="!getDisableStats().includes('name')" scope="row">
                             {{ container.name }}
                         </td>
-                        <td
-                            v-show="!getDisableStats().includes('status')"
-                            scope="row"
-                            :class="[
-                                container.status === 'Paused' && 'careful',
-                                container.status === 'exited' && 'warning',
-                                !['Paused', 'exited'].includes(container.status) && 'ok'
-                            ]"
-                        >
+                        <td v-show="!getDisableStats().includes('status')" scope="row" :class="[
+                            container.status === 'Paused' && 'careful',
+                            container.status === 'exited' && 'warning',
+                            !['Paused', 'exited'].includes(container.status) && 'ok'
+                        ]">
                             {{ container.status }}
                         </td>
                         <td v-show="!getDisableStats().includes('cpu')" scope="row">
@@ -72,11 +59,7 @@
                                     : $filters.bytes(container.limit)
                             }}
                         </td>
-                        <td
-                            v-show="!getDisableStats().includes('command')"
-                            scope="row"
-                            class="text-truncate"
-                        >
+                        <td v-show="!getDisableStats().includes('command')" scope="row" class="text-truncate">
                             {{ container.command }}
                         </td>
                     </tr>
@@ -89,30 +72,21 @@
                     <tr>
                         <td v-show="showEngine" scope="col">Engine</td>
                         <td v-show="showPod" scope="col">Pod</td>
-                        <td
-                            v-show="!getDisableStats().includes('name')"
-                            scope="col"
+                        <td v-show="!getDisableStats().includes('name')" scope="col"
                             :class="['sortable', sorter.column === 'name' && 'sort']"
-                            @click="args.sort_processes_key = 'name'"
-                        >
+                            @click="args.sort_processes_key = 'name'">
                             Name
                         </td>
                         <td v-show="!getDisableStats().includes('status')" scope="col">Status</td>
                         <td v-show="!getDisableStats().includes('uptime')" scope="col">Uptime</td>
-                        <td
-                            v-show="!getDisableStats().includes('cpu')"
-                            scope="col"
+                        <td v-show="!getDisableStats().includes('cpu')" scope="col"
                             :class="['sortable', sorter.column === 'cpu_percent' && 'sort']"
-                            @click="args.sort_processes_key = 'cpu_percent'"
-                        >
+                            @click="args.sort_processes_key = 'cpu_percent'">
                             CPU%
                         </td>
-                        <td
-                            v-show="!getDisableStats().includes('mem')"
-                            scope="col"
+                        <td v-show="!getDisableStats().includes('mem')" scope="col"
                             :class="['sortable', sorter.column === 'memory_percent' && 'sort']"
-                            @click="args.sort_processes_key = 'memory_percent'"
-                        >
+                            @click="args.sort_processes_key = 'memory_percent'">
                             MEM
                         </td>
                         <td v-show="!getDisableStats().includes('mem')" scope="col">MAX</td>
@@ -130,15 +104,11 @@
                         <td v-show="!getDisableStats().includes('name')" scope="row">
                             {{ container.name }}
                         </td>
-                        <td
-                            v-show="!getDisableStats().includes('status')"
-                            scope="row"
-                            :class="[
-                                container.status === 'Paused' && 'careful',
-                                container.status === 'exited' && 'warning',
-                                !['Paused', 'exited'].includes(container.status) && 'ok'
-                            ]"
-                        >
+                        <td v-show="!getDisableStats().includes('status')" scope="row" :class="[
+                            container.status === 'Paused' && 'careful',
+                            container.status === 'exited' && 'warning',
+                            !['Paused', 'exited'].includes(container.status) && 'ok'
+                        ]">
                             {{ container.status }}
                         </td>
                         <td v-show="!getDisableStats().includes('uptime')" scope="row">
@@ -189,11 +159,7 @@
                                     : $filters.bits(container.network_tx)
                             }}
                         </td>
-                        <td
-                            v-show="!getDisableStats().includes('command')"
-                            scope="row"
-                            class="text-truncate"
-                        >
+                        <td v-show="!getDisableStats().includes('command')" scope="row" class="text-truncate">
                             {{ container.command }}
                         </td>
                     </tr>
@@ -237,13 +203,17 @@ export default {
             const { sorter } = this;
             const containers = (this.stats || []) //
                 .map((containerData) => {
+                    // Memory usage no cache is reflected the algorithm used in Docker top
                     let memory_usage_no_cache;
-                    if (containerData.memory.usage != undefined) {
-                        memory_usage_no_cache = containerData.memory.usage;
-                        if (containerData.memory.inactive_file != undefined) {
+
+                    if (containerData.memory_usage != undefined) {
+                        memory_usage_no_cache = containerData.memory_usage;
+                        if (containerData.memory_inactive_file != undefined) {
                             memory_usage_no_cache =
-                                memory_usage_no_cache - containerData.memory.inactive_file;
+                                memory_usage_no_cache - containerData.memory_inactive_file;
                         }
+                    } else {
+                        memory_usage_no_cache = undefined;
                     }
 
                     return {
