@@ -24,8 +24,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr
-v-for="(server, serverId) in servers" :key="serverId" style="cursor: pointer"
+                <tr v-for="(server, serverId) in servers" :key="serverId" style="cursor: pointer"
                     @click="goToGlances(server)">
                     <td scope=" row">
                         {{ server.alias ? server.alias : server.name, 32 }}
@@ -39,8 +38,7 @@ v-for="(server, serverId) in servers" :key="serverId" style="cursor: pointer"
                     <td class="">
                         {{ server.protocol }}
                     </td>
-                    <td
-v-for="(column, columnId) in server.columns" v-if="servers.length" :key="columnId"
+                    <td v-for="(column, columnId) in server.columns" v-if="servers.length" :key="columnId"
                         :class="getDecoration(server, column)">
                         {{ formatNumber(server[column]) }}
                     </td>
@@ -95,7 +93,7 @@ export default {
         },
         goToGlances(server) {
             if (server.protocol === 'rpc') {
-                alert("You just click on a Glances RPC server.\nPlease open a terminal and enter the following command line:\n\nglances -c ${server.ip}:${server.port}")
+                alert("You just click on a Glances RPC server.\nPlease open a terminal and enter the following command line:\n\nglances -c " + String(server.ip) + " -p " + String(server.port))
             } else {
                 window.location.href = server.uri;
             }
