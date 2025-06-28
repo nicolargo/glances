@@ -59,6 +59,7 @@ class GlancesStdout:
                 stat = stats.get_plugin(plugin).get_export()
             else:
                 continue
+
             # Display stats
             if attribute is not None:
                 # With attribute

@@ -114,10 +114,15 @@ class NetworkPlugin(GlancesPluginModel):
         """
         if self.input_method == 'local':
             stats = self.update_local()
+
+            # Update the stats
+            for stat in stats:
+                if stat.get('bytes_recv') is None:
+                    print(f"def update: bytes_recv is None for {stat['interface_name']}")
+
         else:
             stats = self.get_init_value()
 
-        # Update the stats
         self.stats = stats
 
         return self.stats

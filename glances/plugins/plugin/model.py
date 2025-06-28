@@ -1187,12 +1187,12 @@ class GlancesPluginModel:
                         if self.time_since_last_update > 0:
                             stat[field + '_rate_per_sec'] = stat[field] // self.time_since_last_update
                         else:
-                            stat[field] = None
-                            stat[field + '_rate_per_sec'] = None
+                            stat[field] = 0
+                            stat[field + '_rate_per_sec'] = 0
                     else:
                         # Avoid strange rate at the first run
-                        stat[field] = None
-                        stat[field + '_rate_per_sec'] = None
+                        stat[field] = 0
+                        stat[field + '_rate_per_sec'] = 0
             return stat
 
         def compute_rate_on_list(self, stats, stats_previous):
