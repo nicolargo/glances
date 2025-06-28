@@ -125,9 +125,9 @@ class GlancesServersList:
                 clear_password = self.password.get_password(server['name'])
                 if clear_password is not None:
                     server['password'] = self.password.get_hash(clear_password)
-            uri = 'http://{}:{}@{}:{}'.format(server['username'], server['password'], server['ip'], server['port'])
+            uri = 'http://{}:{}@{}:{}'.format(server['username'], server['password'], server['name'], server['port'])
         else:
-            uri = 'http://{}:{}'.format(server['ip'], server['port'])
+            uri = 'http://{}:{}'.format(server['name'], server['port'])
         return uri
 
     def set_in_selected(self, selected, key, value):
