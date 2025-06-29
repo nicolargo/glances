@@ -118,7 +118,7 @@ EXPOSE 61209 61208
 
 # Define default command.
 WORKDIR /app
-CMD /venv/bin/python3 -m glances $GLANCES_OPT
+CMD ["/bin/sh", "-c", "/venv/bin/python3 -m glances ${GLANCES_OPT}"]
 
 ################################################################################
 # RELEASE: minimal
@@ -144,4 +144,4 @@ COPY ./docker-files/docker-logger.json /app
 ENV LOG_CFG=/app/docker-logger.json
 
 WORKDIR /app
-CMD /venv/bin/python3 -m glances $GLANCES_OPT
+CMD ["/bin/sh", "-c", "/venv/bin/python3 -m glances ${GLANCES_OPT}"]
