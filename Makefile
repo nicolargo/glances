@@ -208,6 +208,7 @@ trivy: ## Run Trivy to find vulnerabilities in container images
 # ===================================================================
 
 docs: ## Create the documentation
+	$(PYTHON) ./generate_openapi.py
 	$(PYTHON) -m glances -C $(CONF) --api-doc > ./docs/api.rst
 	cd docs && ./build.sh && cd ..
 
