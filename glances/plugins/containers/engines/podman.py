@@ -49,9 +49,10 @@ class PodmanContainerStatsFetcher:
 
     def get_streamed_stats(self) -> dict[str, Any]:
         stats = self._streamer.stats
-        if stats["Error"]:
+        if stats is None or stats.get("Error", False):
             logger.error(f"containers (Podman) Container({self._container.id}): Stats fetching failed")
             logger.debug(f"containers (Podman) Container({self._container.id}): ", stats)
+            return None
 
         return stats["Stats"][0]
 
@@ -69,6 +70,12 @@ class PodmanContainerStatsFetcher:
     def _compute_activity_stats(self) -> dict[str, dict[str, Any]]:
         stats = {"cpu": {}, "memory": {}, "io": {}, "network": {}}
         api_stats = self.get_streamed_stats()
+
+        # Glances breaks if Podman container is started while it is running See #3199
+        if api_stats is None:
+            # If stats fetching failed, return empty stats
+            logger.error(f"containers (Podman) Container({self._container.id}): Failed to fetch stats")
+            return stats
 
         if any(field not in api_stats for field in self.MANDATORY_FIELDS) or (
             "Network" not in api_stats and any(k not in api_stats for k in ['NetInput', 'NetOutput'])
