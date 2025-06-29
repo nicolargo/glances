@@ -13,7 +13,7 @@ ARG PYTHON_VERSION=3.12
 
 ##############################################################################
 # Base layer to be used for building dependencies and the release images
-FROM ubuntu:${IMAGE_VERSION} as base
+FROM ubuntu:${IMAGE_VERSION} AS base
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
@@ -32,7 +32,7 @@ RUN apt-get update \
 # BUILD Stages
 ##############################################################################
 # BUILD: Base image shared by all build images
-FROM base as build
+FROM base AS build
 ARG PYTHON_VERSION
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -59,7 +59,7 @@ COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-re
 
 ##############################################################################
 # BUILD: Install the minimal image deps
-FROM build as buildMinimal
+FROM build AS buildminimal
 ARG PYTHON_VERSION
 
 RUN python3 -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
@@ -69,7 +69,7 @@ RUN python3 -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-pack
 
 ##############################################################################
 # BUILD: Install all the deps
-FROM build as buildFull
+FROM build AS buildfull
 ARG PYTHON_VERSION
 
 RUN python3 -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
@@ -80,7 +80,7 @@ RUN python3 -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-pack
 # RELEASE Stages
 ##############################################################################
 # Base image shared by all releases
-FROM base as release
+FROM base AS release
 ARG PYTHON_VERSION
 
 # Copy Glances source code and config file
@@ -106,14 +106,14 @@ CMD /venv/bin/python3 -m glances $GLANCES_OPT
 
 ################################################################################
 # RELEASE: minimal
-FROM release as minimal
+FROM release AS minimal
 ARG PYTHON_VERSION
 
 COPY --from=buildMinimal /venv /venv
 
 ################################################################################
 # RELEASE: full
-FROM release as full
+FROM release AS full
 ARG PYTHON_VERSION
 
 RUN apt-get update \
@@ -121,11 +121,11 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --from=buildFull /venv /venv
+COPY --from=buildfull /venv /venv
 
 ################################################################################
 # RELEASE: dev - to be compatible with CI
-FROM full as dev
+FROM full AS dev
 ARG PYTHON_VERSION
 
 # Add the specific logger configuration file for Docker dev
