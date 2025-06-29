@@ -26,8 +26,8 @@ API (Restfull/JSON) documentation
 
 This documentation describes the Glances API version {__apiversion__} (Restfull/JSON) interface.
 
-For Glances version 3, please have a look on:
-``https://github.com/nicolargo/glances/blob/support/glancesv3/docs/api.rst``
+An OpenAPI specification file is available at:
+``https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docs/openapi.json``
 
 Run the Glances API server
 --------------------------
