@@ -219,7 +219,7 @@ class GlancesRestfulApi:
         # ==========================
 
         # HEAD
-        router.add_api_route(f'{base_path}/status', self._api_status, methods=['HEAD', 'GET'])
+        router.add_api_route(f'{base_path}/status', self._api_status, methods=['HEAD'])
 
         # POST
         router.add_api_route(f'{base_path}/events/clear/warning', self._events_clear_warning, methods=['POST'])
@@ -232,6 +232,7 @@ class GlancesRestfulApi:
         )
 
         # GET
+        router.add_api_route(f'{base_path}/status', self._api_status, methods=['GET'])
         route_mapping = {
             f'{base_path}/config': self._api_config,
             f'{base_path}/config/{{section}}': self._api_config_section,
@@ -266,7 +267,7 @@ class GlancesRestfulApi:
             router.add_api_route(path, endpoint)
 
         # Browser WEBUI
-        if self.args.browser:
+        if hasattr(self.args, 'browser') and self.args.browser:
             # Template for the root browser.html file
             router.add_api_route('/browser', self._browser, response_class=HTMLResponse)
 
