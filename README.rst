@@ -504,6 +504,7 @@ Gateway to other services
 =========================
 
 Glances can export stats to:
+
 - ``CSV`` file
 - ``JSON`` file
 - ``InfluxDB`` server
