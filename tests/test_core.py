@@ -13,7 +13,15 @@
 import json
 import time
 import unittest
-from datetime import UTC, datetime
+from datetime import datetime
+
+# Ugly hack waiting for Python 3.10 deprecation
+try:
+    from datetime import UTC
+except ImportError:
+    from datetime import timezone
+
+    UTC = timezone.utc
 
 from glances import __version__
 from glances.events_list import GlancesEventsList
