@@ -71,71 +71,106 @@ Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can
 add new plugins or exports modules.
 
-Project sponsorship
-===================
+Usage
+=====
 
-You can help me to achieve my goals of improving this open-source project
-or just say "thank you" by:
+For the standalone mode, just run:
 
-- sponsor me using one-time or monthly tier Github sponsors_ page
-- send me some pieces of bitcoin: 185KN9FCix3svJYp7JQM7hRMfSKyeaJR4X
-- buy me a gift on my wishlist_ page
+.. code-block:: console
 
-Any and all contributions are greatly appreciated.
+    $ glances
 
-Requirements
-============
+For the Web server mode, run:
 
-Glances is developed in Python. A minimal Python version 3.9 or higher
-should be installed on your system.
+.. code-block:: console
 
-*Note for Python 2 users*
+    $ glances -w
 
-Glances version 4 or higher do not support Python 2 (and Python 3 < 3.9).
-Please uses Glances version 3.4.x if you need Python 2 support.
+and enter the URL ``http://<ip>:61208`` in your favorite web browser.
 
-Dependencies:
+For the client/server mode, run:
 
-- ``psutil`` (better with latest version)
-- ``defusedxml`` (in order to monkey patch xmlrpc)
-- ``packaging`` (for the version comparison)
-- ``windows-curses`` (Windows Curses implementation) [Windows-only]
-- ``shtab`` (Shell autocompletion) [All but Windows]
+.. code-block:: console
 
-Optional dependencies:
+    $ glances -s
 
-- ``batinfo`` (for battery monitoring)
-- ``bernhard`` (for the Riemann export module)
-- ``cassandra-driver`` (for the Cassandra export module)
-- ``chevron`` (for the action script feature)
-- ``docker`` (for the Containers Docker monitoring support)
-- ``elasticsearch`` (for the Elastic Search export module)
-- ``FastAPI`` and ``Uvicorn`` (for Web server mode)
-- ``graphitesender`` (For the Graphite export module)
-- ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
-- ``influxdb`` (for the InfluxDB version 1 export module)
-- ``influxdb-client``  (for the InfluxDB version 2 export module)
-- ``jinja2`` (for templating, used under the hood by FastAPI)
-- ``kafka-python`` (for the Kafka export module)
-- ``netifaces2`` (for the IP plugin)
-- ``nvidia-ml-py`` (for the GPU plugin)
-- ``pycouchdb`` (for the CouchDB export module)
-- ``pika`` (for the RabbitMQ/ActiveMQ export module)
-- ``podman`` (for the Containers Podman monitoring support)
-- ``potsdb`` (for the OpenTSDB export module)
-- ``prometheus_client`` (for the Prometheus export module)
-- ``psycopg[binary]`` (for the PostgreSQL/TimeScale export module)
-- ``pygal`` (for the graph export module)
-- ``pymdstat`` (for RAID support) [Linux-only]
-- ``pymongo`` (for the MongoDB export module)
-- ``pysnmp-lextudio`` (for SNMP support)
-- ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
-- ``pyzmq`` (for the ZeroMQ export module)
-- ``requests`` (for the Ports, Cloud plugins and RESTful export module)
-- ``sparklines`` (for the Quick Plugin sparklines option)
-- ``statsd`` (for the StatsD export module)
-- ``wifi`` (for the wifi plugin) [Linux-only]
-- ``zeroconf`` (for the autodiscover mode)
+on the server side and run:
+
+.. code-block:: console
+
+    $ glances -c <ip>
+
+on the client one.
+
+You can also detect and display all Glances servers available on your
+network or defined in the configuration file:
+
+.. code-block:: console
+
+    $ glances --browser
+
+You can also display raw stats on stdout:
+
+.. code-block:: console
+
+    $ glances --stdout cpu.user,mem.used,load
+    cpu.user: 30.7
+    mem.used: 3278204928
+    load: {'cpucore': 4, 'min1': 0.21, 'min5': 0.4, 'min15': 0.27}
+    cpu.user: 3.4
+    mem.used: 3275251712
+    load: {'cpucore': 4, 'min1': 0.19, 'min5': 0.39, 'min15': 0.27}
+    ...
+
+or in a CSV format thanks to the stdout-csv option:
+
+.. code-block:: console
+
+    $ glances --stdout-csv now,cpu.user,mem.used,load
+    now,cpu.user,mem.used,load.cpucore,load.min1,load.min5,load.min15
+    2018-12-08 22:04:20 CEST,7.3,5948149760,4,1.04,0.99,1.04
+    2018-12-08 22:04:23 CEST,5.4,5949136896,4,1.04,0.99,1.04
+    ...
+
+or in a JSON format thanks to the stdout-json option (attribute not supported in this mode in order to have a real JSON object in output):
+
+.. code-block:: console
+
+    $ glances --stdout-json cpu,mem
+    cpu: {"total": 29.0, "user": 24.7, "nice": 0.0, "system": 3.8, "idle": 71.4, "iowait": 0.0, "irq": 0.0, "softirq": 0.0, "steal": 0.0, "guest": 0.0, "guest_nice": 0.0, "time_since_update": 1, "cpucore": 4, "ctx_switches": 0, "interrupts": 0, "soft_interrupts": 0, "syscalls": 0}
+    mem: {"total": 7837949952, "available": 2919079936, "percent": 62.8, "used": 4918870016, "free": 2919079936, "active": 2841214976, "inactive": 3340550144, "buffers": 546799616, "cached": 3068141568, "shared": 788156416}
+    ...
+
+and RTFM, always.
+
+Documentation
+=============
+
+For complete documentation have a look at the readthedocs_ website.
+
+If you have any question (after RTFM!), please post it on the official Q&A `forum`_.
+
+Gateway to other services
+=========================
+
+Glances can export stats to:
+
+- ``CSV`` file
+- ``JSON`` file
+- ``InfluxDB`` server
+- ``Cassandra`` server
+- ``CouchDB`` server
+- ``OpenTSDB`` server
+- ``Prometheus`` server
+- ``StatsD`` server
+- ``ElasticSearch`` server
+- ``PostgreSQL/TimeScale`` server
+- ``RabbitMQ/ActiveMQ`` broker
+- ``ZeroMQ`` broker
+- ``Kafka`` broker
+- ``Riemann`` server
+- ``Graphite`` server
+- ``RESTful`` endpoint
 
 Installation
 ============
@@ -421,106 +456,59 @@ For example, on a Linux operating system with bash shell:
 
 Following shells are supported: bash, zsh and tcsh.
 
-Usage
-=====
+Requirements
+============
 
-For the standalone mode, just run:
+Glances is developed in Python. A minimal Python version 3.9 or higher
+should be installed on your system.
 
-.. code-block:: console
+*Note for Python 2 users*
 
-    $ glances
+Glances version 4 or higher do not support Python 2 (and Python 3 < 3.9).
+Please uses Glances version 3.4.x if you need Python 2 support.
 
-For the Web server mode, run:
+Dependencies:
 
-.. code-block:: console
+- ``psutil`` (better with latest version)
+- ``defusedxml`` (in order to monkey patch xmlrpc)
+- ``packaging`` (for the version comparison)
+- ``windows-curses`` (Windows Curses implementation) [Windows-only]
+- ``shtab`` (Shell autocompletion) [All but Windows]
 
-    $ glances -w
+Optional dependencies:
 
-and enter the URL ``http://<ip>:61208`` in your favorite web browser.
-
-For the client/server mode, run:
-
-.. code-block:: console
-
-    $ glances -s
-
-on the server side and run:
-
-.. code-block:: console
-
-    $ glances -c <ip>
-
-on the client one.
-
-You can also detect and display all Glances servers available on your
-network or defined in the configuration file:
-
-.. code-block:: console
-
-    $ glances --browser
-
-You can also display raw stats on stdout:
-
-.. code-block:: console
-
-    $ glances --stdout cpu.user,mem.used,load
-    cpu.user: 30.7
-    mem.used: 3278204928
-    load: {'cpucore': 4, 'min1': 0.21, 'min5': 0.4, 'min15': 0.27}
-    cpu.user: 3.4
-    mem.used: 3275251712
-    load: {'cpucore': 4, 'min1': 0.19, 'min5': 0.39, 'min15': 0.27}
-    ...
-
-or in a CSV format thanks to the stdout-csv option:
-
-.. code-block:: console
-
-    $ glances --stdout-csv now,cpu.user,mem.used,load
-    now,cpu.user,mem.used,load.cpucore,load.min1,load.min5,load.min15
-    2018-12-08 22:04:20 CEST,7.3,5948149760,4,1.04,0.99,1.04
-    2018-12-08 22:04:23 CEST,5.4,5949136896,4,1.04,0.99,1.04
-    ...
-
-or in a JSON format thanks to the stdout-json option (attribute not supported in this mode in order to have a real JSON object in output):
-
-.. code-block:: console
-
-    $ glances --stdout-json cpu,mem
-    cpu: {"total": 29.0, "user": 24.7, "nice": 0.0, "system": 3.8, "idle": 71.4, "iowait": 0.0, "irq": 0.0, "softirq": 0.0, "steal": 0.0, "guest": 0.0, "guest_nice": 0.0, "time_since_update": 1, "cpucore": 4, "ctx_switches": 0, "interrupts": 0, "soft_interrupts": 0, "syscalls": 0}
-    mem: {"total": 7837949952, "available": 2919079936, "percent": 62.8, "used": 4918870016, "free": 2919079936, "active": 2841214976, "inactive": 3340550144, "buffers": 546799616, "cached": 3068141568, "shared": 788156416}
-    ...
-
-and RTFM, always.
-
-Documentation
-=============
-
-For complete documentation have a look at the readthedocs_ website.
-
-If you have any question (after RTFM!), please post it on the official Q&A `forum`_.
-
-Gateway to other services
-=========================
-
-Glances can export stats to:
-
-- ``CSV`` file
-- ``JSON`` file
-- ``InfluxDB`` server
-- ``Cassandra`` server
-- ``CouchDB`` server
-- ``OpenTSDB`` server
-- ``Prometheus`` server
-- ``StatsD`` server
-- ``ElasticSearch`` server
-- ``PostgreSQL/TimeScale`` server
-- ``RabbitMQ/ActiveMQ`` broker
-- ``ZeroMQ`` broker
-- ``Kafka`` broker
-- ``Riemann`` server
-- ``Graphite`` server
-- ``RESTful`` endpoint
+- ``batinfo`` (for battery monitoring)
+- ``bernhard`` (for the Riemann export module)
+- ``cassandra-driver`` (for the Cassandra export module)
+- ``chevron`` (for the action script feature)
+- ``docker`` (for the Containers Docker monitoring support)
+- ``elasticsearch`` (for the Elastic Search export module)
+- ``FastAPI`` and ``Uvicorn`` (for Web server mode)
+- ``graphitesender`` (For the Graphite export module)
+- ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
+- ``influxdb`` (for the InfluxDB version 1 export module)
+- ``influxdb-client``  (for the InfluxDB version 2 export module)
+- ``jinja2`` (for templating, used under the hood by FastAPI)
+- ``kafka-python`` (for the Kafka export module)
+- ``netifaces2`` (for the IP plugin)
+- ``nvidia-ml-py`` (for the GPU plugin)
+- ``pycouchdb`` (for the CouchDB export module)
+- ``pika`` (for the RabbitMQ/ActiveMQ export module)
+- ``podman`` (for the Containers Podman monitoring support)
+- ``potsdb`` (for the OpenTSDB export module)
+- ``prometheus_client`` (for the Prometheus export module)
+- ``psycopg[binary]`` (for the PostgreSQL/TimeScale export module)
+- ``pygal`` (for the graph export module)
+- ``pymdstat`` (for RAID support) [Linux-only]
+- ``pymongo`` (for the MongoDB export module)
+- ``pysnmp-lextudio`` (for SNMP support)
+- ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
+- ``pyzmq`` (for the ZeroMQ export module)
+- ``requests`` (for the Ports, Cloud plugins and RESTful export module)
+- ``sparklines`` (for the Quick Plugin sparklines option)
+- ``statsd`` (for the StatsD export module)
+- ``wifi`` (for the wifi plugin) [Linux-only]
+- ``zeroconf`` (for the autodiscover mode)
 
 How to contribute ?
 ===================
@@ -531,6 +519,18 @@ There is also a chat dedicated to the Glances developers:
 
 .. image:: https://badges.gitter.im/Join%20Chat.svg
         :target: https://gitter.im/nicolargo/glances?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
+Project sponsorship
+===================
+
+You can help me to achieve my goals of improving this open-source project
+or just say "thank you" by:
+
+- sponsor me using one-time or monthly tier Github sponsors_ page
+- send me some pieces of bitcoin: 185KN9FCix3svJYp7JQM7hRMfSKyeaJR4X
+- buy me a gift on my wishlist_ page
+
+Any and all contributions are greatly appreciated.
 
 Author
 ======
