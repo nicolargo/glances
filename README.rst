@@ -103,13 +103,19 @@ on the server side and run:
 on the client one.
 
 You can also detect and display all Glances servers available on your
-network or defined in the configuration file:
+network (or defined in the configuration file) in TUI:
 
 .. code-block:: console
 
     $ glances --browser
 
-You can also display raw stats on stdout:
+or WebUI:
+
+.. code-block:: console
+
+    $ glances -w --browser
+
+It possible to display raw stats on stdout:
 
 .. code-block:: console
 
