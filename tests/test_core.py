@@ -13,7 +13,7 @@
 import json
 import time
 import unittest
-from datetime import datetime
+from datetime import UTC, datetime
 
 from glances import __version__
 from glances.events_list import GlancesEventsList
@@ -146,6 +146,11 @@ class TestGlances(unittest.TestCase):
                 self.assertGreater(
                     plugin_instance.get_raw_history(first_history_field)[1][0],
                     plugin_instance.get_raw_history(first_history_field)[0][0],
+                )
+                # Check time
+                self.assertEqual(
+                    plugin_instance.get_raw_history(first_history_field)[1][0].tzinfo,
+                    UTC,
                 )
 
             # Update stats (add third element)
