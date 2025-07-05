@@ -3,6 +3,51 @@
 ============================================================================
 
 =============
+Version 4.3.3
+=============
+
+Enhancements:
+
+* Add stats about running VMS (qemu/libvirt/kvm support through virsh) #1531
+* Add support for InfluxDB 3 Core #3182
+* (postgre)SQL export support / TimeScaleDB #2814
+* CSV column name now include the plugin name - Related to #2394
+* Make all results from amps plugins exportable #2394
+* Make --stdout (csv and json) compliant with client/server mode #3235
+* API history endpoints shows times without timezone #3218
+* FR: Sort Sensors my name in proper number order #3132
+* In the FS module, do not display threshold for volume mounted in 'ro' (read-only) #3143
+* Add a new field in the process list to identifie Zombie process #3178
+* Update plugin containers display and order #3186
+* Implement a basic memory cache with TTL for API call (set to ~1 second) #3202
+* Add container inactive_file & limit to InfluxDB2 export #3206
+
+Bug corrected:
+
+* [GPU] AMD Plugin: Operation not permitted #3125
+* Container memory stats not displayed #3142
+* [WEBUI] Irix mode (per core instead of per CPU percentage) not togglable #3158
+* Related to iteritems, itervalues, and iterkeys are not more needed in Python 3 #3181
+* Glances Central Browser should use name instead of IP adress for redirection #3103
+* Glances breaks if Podman container is started while it is running #3199
+
+Continious integration and documentation:
+
+* Add a new option --print-completion to generate shell tab completion - #3111
+* Improve Restful API documentation embeded in FastAPI #2632
+* Upgrade JS libs #3147
+* Improve unittest for CSV export #3150
+* Improve unittest for InfluxDB plugin #3149
+* Code refactoring - Rename plugin class to <Plugin name>Plugin instead of PluginModel #3169
+* Refactor code to limit the complexity of update_views method in plugins #3171
+
+Thanks to all contributors and bug reporters !
+
+Special thanks to:
+- Ariel Otilibili
+- kenrmayfield
+
+=============
 Version 4.3.1
 =============
 
