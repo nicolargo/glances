@@ -102,9 +102,6 @@ class GlancesStandalone:
             # Init screen
             self.screen = GlancesStdoutCsv(config=config, args=args)
         else:
-            # Default number of processes to displayed is set to 50
-            glances_processes.max_processes = 50
-
             # Init screen
             self.screen = GlancesCursesStandalone(config=config, args=args)
 
