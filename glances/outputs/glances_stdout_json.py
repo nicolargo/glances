@@ -34,19 +34,25 @@ class GlancesStdoutJson:
     def end(self):
         pass
 
-    def update(self, stats, duration=3):
+    def update(self, stats, duration=3, cs_status=None, return_to_browser=False):
         """Display stats in JSON format to stdout.
 
         Refresh every duration second.
         """
+        all_in_json = '{'
+        plugins_list_json = []
         for plugin in self.plugins_list:
             # Check if the plugin exist and is enable
             if plugin in stats.getPluginsList() and stats.get_plugin(plugin).is_enabled():
-                stat = stats.get_plugin(plugin).get_json()
+                plugins_list_json.append(f'"{plugin}": {stats.get_plugin(plugin).get_json().decode("utf-8")}')
             else:
                 continue
-            # Display stats
-            printandflush(f'{plugin}: {stat.decode()}')
+        # Join all plugins in a single JSON object
+        all_in_json += ', '.join(plugins_list_json)
+        all_in_json += '}'
+
+        # Display stats
+        printandflush(all_in_json)
 
         # Wait until next refresh
         if duration > 0:
