@@ -8,7 +8,7 @@
 
 """Attribute class."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 
 class GlancesAttribute:
@@ -73,7 +73,7 @@ class GlancesAttribute:
 
         Value is a tuple: (<timestamp>, <new_value>)
         """
-        self._value = (datetime.now(), new_value)
+        self._value = (datetime.now(UTC), new_value)
         self.history_add(self._value)
 
     """
