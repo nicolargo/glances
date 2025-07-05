@@ -87,7 +87,7 @@ class GlancesStdoutCsv:
 
         return line
 
-    def update(self, stats, duration=3):
+    def update(self, stats, duration=3, cs_status=None, return_to_browser=False):
         """Display stats to stdout.
 
         Refresh every duration second.
