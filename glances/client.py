@@ -76,7 +76,7 @@ class GlancesClient:
     def log_and_exit(self, msg=''):
         """Log and exit."""
         if not self.return_to_browser:
-            logger.critical(msg)
+            logger.critical(f"Error when connecting to Glances server: {msg}")
             sys.exit(2)
         else:
             logger.error(msg)
@@ -252,6 +252,7 @@ class GlancesClient:
             return self.client_mode
 
         exit_key = False
+
         try:
             while True and not exit_key:
                 # Update the stats
@@ -280,7 +281,7 @@ class GlancesClient:
                     # In quiet mode, we only wait adapated_refresh seconds
                     time.sleep(adapted_refresh)
         except Exception as e:
-            logger.critical(e)
+            logger.critical(f"Critical error in client serve_forever loop: {e}")
             self.end()
 
         return self.client_mode

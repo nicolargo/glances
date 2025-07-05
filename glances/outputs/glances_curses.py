@@ -161,8 +161,8 @@ class _GlancesCurses:
         # Load configuration file
         self.load_config(config)
 
-        # Init cursor
-        self._init_cursor()
+        # Init Curses cursor
+        self._init_curses_cursor()
 
         # Init the colors
         self.colors_list = GlancesColors(args).get()
@@ -183,8 +183,10 @@ class _GlancesCurses:
         # Init the process min/max reset
         self.args.reset_minmax_tag = False
 
-        # Init cursor
+        # Init Glances cursor
         self.args.cursor_position = 0
+        # For the moment cursor only available in standalone mode
+        self.args.disable_cursor = not self.args.is_standalone
 
         # Catch key pressed with non blocking mode
         self.term_window.keypad(1)
@@ -222,7 +224,7 @@ class _GlancesCurses:
 
         self.reset_history_tag = False
 
-    def _init_cursor(self):
+    def _init_curses_cursor(self):
         """Init cursors."""
 
         if hasattr(curses, 'noecho'):
@@ -1204,9 +1206,16 @@ class _GlancesCurses:
 class GlancesCursesStandalone(_GlancesCurses):
     """Class for the Glances curse standalone."""
 
+    # Default number of processes to displayed is set to 50
+    glances_processes.max_processes = 50
+
 
 class GlancesCursesClient(_GlancesCurses):
     """Class for the Glances curse client."""
+
+    # Default number of processes to displayed is set to 50
+    # For the moment, cursor in client/server mode is not supported see #3221
+    glances_processes.max_processes = 50
 
 
 class GlancesTextbox(Textbox):
