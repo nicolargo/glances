@@ -17,7 +17,17 @@ import re
 
 from glances.actions import GlancesActions
 from glances.events_list import glances_events
-from glances.globals import dictlist, dictlist_json_dumps, iterkeys, itervalues, json_dumps, listkeys, mean, nativestr
+from glances.globals import (
+    dictlist,
+    dictlist_json_dumps,
+    iterkeys,
+    itervalues,
+    json_dumps,
+    list_to_dict,
+    listkeys,
+    mean,
+    nativestr,
+)
 from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
@@ -128,13 +138,43 @@ class GlancesPluginModel:
         self.stats_previous = None
         self.reset()
 
-    def __repr__(self):
-        """Return the raw stats."""
-        return str(self.stats)
-
     def __str__(self):
         """Return the human-readable stats."""
         return str(self.stats)
+
+    def __repr__(self):
+        """Return the raw stats."""
+        if isinstance(self.stats, list):
+            return str(list_to_dict(self.stats))
+        return str(self.stats)
+
+    def __getitem__(self, item):
+        """Return the stats item."""
+        if self.stats is not None:
+            # Stats is a dict try, to return the item
+            if isinstance(self.stats, dict) and item in self.stats:
+                return self.stats[item]
+            if isinstance(self.stats, list):
+                ltd = list_to_dict(self.stats)
+                if item in ltd:
+                    return ltd[item]
+
+        raise KeyError(f"'{self.__class__.__name__}' object has no key '{item}'")
+
+    def keys(self):
+        """Return the keys of the stats."""
+        if isinstance(self.stats, dict):
+            return listkeys(self.stats)
+        if isinstance(self.stats, list):
+            return listkeys(list_to_dict(self.stats))
+        return []
+
+    def get(self, item, default=None):
+        """Return the stats item or default if not found."""
+        try:
+            return self[item]
+        except KeyError:
+            return default
 
     def get_init_value(self):
         """Return a copy of the init value."""
