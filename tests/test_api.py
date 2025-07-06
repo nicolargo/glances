@@ -53,3 +53,22 @@ def test_glances_api_plugin_network():
     assert len(keys) > 0
     # Check that the first item is a dictionary
     assert isinstance(gl.network[keys[0]], dict)
+
+
+def test_glances_api_plugin_process():
+    gl.processcount.update()
+    # Get list of keys (processes)
+    keys = gl.processcount.keys()
+    # Check that the keys are not empty
+    assert len(keys) > 0
+    # Check that processcount total is > 0
+    assert gl.processcount['total'] > 0
+
+    # Note should be done after processcount update
+    gl.processlist.update()
+    # Get list of keys (processes)
+    keys = gl.processlist.keys()
+    # Check that first key is an integer (PID)
+    assert isinstance(keys[0], int)
+    # Check that the first item is a dictionary
+    assert isinstance(gl.processlist[keys[0]], dict)
