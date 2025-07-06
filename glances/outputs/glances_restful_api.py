@@ -141,6 +141,12 @@ class GlancesRestfulApi:
         self.TEMPLATE_PATH = os.path.join(webui_root_path, 'static/templates')
         self._templates = Jinja2Templates(directory=self.TEMPLATE_PATH)
 
+        # FastAPI Enable GZIP compression
+        # https://fastapi.tiangolo.com/advanced/middleware/
+        # Should be done before other middlewares to avoid
+        # LocalProtocolError("Too much data for declared Content-Length")
+        self._app.add_middleware(GZipMiddleware, minimum_size=1000)
+
         # FastAPI Enable CORS
         # https://fastapi.tiangolo.com/tutorial/cors/
         self._app.add_middleware(
@@ -151,15 +157,6 @@ class GlancesRestfulApi:
             allow_methods=config.get_list_value('outputs', 'cors_methods', default=["*"]),
             allow_headers=config.get_list_value('outputs', 'cors_headers', default=["*"]),
         )
-
-        # FastAPI Enable GZIP compression
-        # https://fastapi.tiangolo.com/advanced/middleware/
-        # Should be done before other middlewares to avoid
-        # LocalProtocolError("Too much data for declared Content-Length")
-        # but...
-        # it introduce a regression in Home Assistant plugin (#3238)
-        # so came back to the initital implementation
-        self._app.add_middleware(GZipMiddleware, minimum_size=1000)
 
         # FastAPI Define routes
         self._app.include_router(self._router())
