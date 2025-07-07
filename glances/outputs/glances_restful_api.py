@@ -456,7 +456,8 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(self.servers_list.get_servers_list() if self.servers_list else [])
 
-    @weak_lru_cache(maxsize=1, ttl=1)
+    # Comment this solve an issue on Home Assistant See #3238
+    # @weak_lru_cache(maxsize=1, ttl=1)
     def _api_all(self):
         """Glances API RESTful implementation.
 
