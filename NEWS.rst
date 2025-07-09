@@ -1,9 +1,19 @@
 ==============================================================================
                                 Glances ChangeLog
-============================================================================
+==============================================================================
 
 =============
 Version 4.3.3
+=============
+
+Bug corrected:
+
+* Something in 4.3.2 broke the home assistant add-on for Glances #3238
+
+Thanks to the FastAPI and Home Assistant community for the support.
+
+=============
+Version 4.3.2
 =============
 
 Enhancements:
