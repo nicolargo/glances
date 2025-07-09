@@ -16,7 +16,7 @@ import threading
 import traceback
 from importlib import import_module
 
-from glances.globals import exports_path, plugins_path, sys_path
+from glances.globals import exports_path, plugins_path, sys_path, weak_lru_cache
 from glances.logger import logger
 from glances.timer import Counter
 
@@ -266,6 +266,7 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         for p in self.getPluginsList(enable=False):
             self._plugins[p].load_limits(config)
 
+    @weak_lru_cache(maxsize=1, ttl=1)
     def __update_plugin(self, p):
         """Update stats, history and views for the given plugin name p"""
         self._plugins[p].update()
