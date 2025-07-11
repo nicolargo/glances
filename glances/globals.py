@@ -127,17 +127,6 @@ def listvalues(d):
     return list(d.values())
 
 
-def iteritems(d):
-    return iter(d.items())
-
-
-def iterkeys(d):
-    return iter(d.keys())
-
-
-def itervalues(d):
-    return iter(d.values())
-
 
 def u(s, errors='replace'):
     if isinstance(s, text_type):

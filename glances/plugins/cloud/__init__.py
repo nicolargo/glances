@@ -15,7 +15,7 @@ Supported Cloud API:
 
 import threading
 
-from glances.globals import iteritems, to_ascii
+#from glances.globals import iteritems, to_ascii
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -159,7 +159,7 @@ class ThreadOpenStack(threading.Thread):
             self.stop()
             return False
 
-        for k, v in iteritems(self.OPENSTACK_API_METADATA):
+        for k, v in self.OPENSTACK_API_METADATA():
             r_url = f'{self.OPENSTACK_API_URL}/{v}'
             try:
                 # Local request, a timeout of 3 seconds is OK

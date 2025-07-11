@@ -15,7 +15,7 @@ Just a stupid plugin to display the help screen.
 from itertools import chain
 
 from glances import __version__, psutil_version
-from glances.globals import iteritems
+#from glances.globals import iteritems
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
@@ -172,7 +172,7 @@ class HelpPlugin(GlancesPluginModel):
         #
         shortcuts = []
         collecting = False
-        for k, v in iteritems(self.view_data):
+        for k, v in self.view_data():
             if collecting:
                 pass
             elif k == 'header_sort':
