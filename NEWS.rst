@@ -424,7 +424,7 @@ See release note in Wiki format: https://github.com/nicolargo/glances/wiki/Glanc
 **BREAKING CHANGES:**
 
 * The minimal Python version is 3.8
-* The Glances API version 3 is replaced by the version 4. So Restfull API URL is now /api/4/ #2610
+* The Glances API version 3 is replaced by the version 4. So Restful API URL is now /api/4/ #2610
 * Alias definition change in the configuration file #1735
 
 Glances version 3.x and lower:
@@ -449,9 +449,9 @@ Minimal requirements for Glances version 4 are:
 * packaging
 * ujson
 * pydantic
-* fastapi (for WebUI / RestFull API)
-* uvicorn (for WebUI / RestFull API)
-* jinja2 (for WebUI / RestFull API)
+* fastapi (for WebUI / RestFul API)
+* uvicorn (for WebUI / RestFul API)
+* jinja2 (for WebUI / RestFul API)
 
 Majors changes between Glances version 3 and version 4:
 
@@ -511,7 +511,7 @@ Bug corrected:
 CI and documentation:
 
 * New logo for Glances version 4.0 #2713
-* Update api.rst documentation #2496
+* Update api-restful.rst documentation #2496
 * Change Renovate config #2729
 * Docker compose password unrecognized arguments when applying docs #2698
 * Docker includes OS Release Volume mount info #2473
@@ -889,7 +889,7 @@ Bugs corrected:
 * Threading.Event.isSet is deprecated in Python 3.10 #2017
 * Fix code scanning alert - Clear-text logging of sensitive information security #2006
 * The gpu temperature unit are displayed incorrectly in web ui bug #2002
-* Doc for 'alert' Restfull/JSON API response documentation #1994
+* Doc for 'alert' Restful/JSON API response documentation #1994
 * Show the spinning state of a disk documentation #1993
 * Web server status check endpoint enhancement #1988
 * --time parameter being ignored for client/server mode bug #1978
@@ -984,7 +984,7 @@ Bugs corrected:
 * [3.2.0/3.2.1] keybinding not working anymore #1904
 * InfluxDB/InfluxDB2 Export object has no attribute hostname #1899
 
-Documentation: The "make docs" generate RestFull/API documentation file.
+Documentation: The "make docs" generate RestFul/API documentation file.
 
 ===============
 Version 3.2.1
@@ -2011,7 +2011,7 @@ Version 2.1
 * Add Glances log message (in the /tmp/glances.log file)
       The default log level is INFO, you can switch to the DEBUG mode using the -d option on the command line.
 * Add RESTful API to the Web server mode
-      RESTful API doc: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
+      RESTful API doc: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFUL-JSON-API
 * Improve SNMP fallback mode for Cisco IOS, VMware ESXi
 * Add --theme-white feature to optimize display for white background
 * Experimental history feature (--enable-history option on the command line)

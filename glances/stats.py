@@ -266,8 +266,10 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         for p in self.getPluginsList(enable=False):
             self._plugins[p].load_limits(config)
 
+    # It's a weak cache to avoid updating the same plugin too often
+    # Note: the function always return None
     @weak_lru_cache(maxsize=1, ttl=1)
-    def __update_plugin(self, p):
+    def update_plugin(self, p):
         """Update stats, history and views for the given plugin name p"""
         self._plugins[p].update()
         self._plugins[p].update_views()
@@ -280,7 +282,7 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         """
         # Start update of all enable plugins
         for p in self.getPluginsList(enable=True):
-            self.__update_plugin(p)
+            self.update_plugin(p)
 
     def export(self, input_stats=None):
         """Export all the stats.

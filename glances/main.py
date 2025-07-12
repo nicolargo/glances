@@ -550,7 +550,18 @@ Examples of use:
             help='test memory leak (python 3.4 or higher needed)',
         )
         parser.add_argument(
-            '--api-doc', default=None, action='store_true', dest='stdout_apidoc', help='display fields descriptions'
+            '--api-doc',
+            default=None,
+            action='store_true',
+            dest='stdout_api_doc',
+            help='display Python API documentation',
+        )
+        parser.add_argument(
+            '--api-restful-doc',
+            default=None,
+            action='store_true',
+            dest='stdout_api_restful_doc',
+            help='display Restful API documentation',
         )
         if not WINDOWS:
             parser.add_argument(

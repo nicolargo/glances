@@ -16,7 +16,8 @@ from glances.logger import logger
 from glances.outdated import Outdated
 from glances.outputs.glances_curses import GlancesCursesStandalone
 from glances.outputs.glances_stdout import GlancesStdout
-from glances.outputs.glances_stdout_apidoc import GlancesStdoutApiDoc
+from glances.outputs.glances_stdout_api_doc import GlancesStdoutApiDoc
+from glances.outputs.glances_stdout_api_restful_doc import GlancesStdoutApiRestfulDoc
 from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
 from glances.outputs.glances_stdout_issue import GlancesStdoutIssue
 from glances.outputs.glances_stdout_json import GlancesStdoutJson
@@ -85,10 +86,14 @@ class GlancesStandalone:
             logger.info("Issue mode is ON")
             # Init screen
             self.screen = GlancesStdoutIssue(config=config, args=args)
-        elif args.stdout_apidoc:
-            logger.info("Fields descriptions mode is ON")
+        elif args.stdout_api_doc:
+            logger.info("Restful Python documentation mode is ON")
             # Init screen
             self.screen = GlancesStdoutApiDoc(config=config, args=args)
+        elif args.stdout_api_restful_doc:
+            logger.info("Restful API documentation mode is ON")
+            # Init screen
+            self.screen = GlancesStdoutApiRestfulDoc(config=config, args=args)
         elif args.stdout:
             logger.info(f"Stdout mode is ON, following stats will be displayed: {args.stdout}")
             # Init screen

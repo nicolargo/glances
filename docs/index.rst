@@ -30,7 +30,8 @@ Table of Contents
    config
    aoa/index
    gw/index
-   api
+   api/python
+   api/restful
    docker
    faq
    support

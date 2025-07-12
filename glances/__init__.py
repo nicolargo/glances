@@ -95,8 +95,8 @@ def check_memleak(args, mode):
 
 
 def setup_server_mode(args, mode):
-    if args.stdout_issue or args.stdout_apidoc:
-        # Serve once for issue/test mode
+    if args.stdout_issue or args.stdout_api_restful_doc or args.stdout_api_doc:
+        # Serve once for issue and API documentation modes
         mode.serve_issue()
     else:
         # Serve forever
