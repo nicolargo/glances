@@ -375,6 +375,13 @@ def json_loads(data: Union[str, bytes, bytearray]) -> Union[dict, list]:
     return json.loads(data)
 
 
+def list_to_dict(data):
+    """Convert a list of dict (with key in 'key') to a dict with key as key and value as value."""
+    if not isinstance(data, list):
+        return None
+    return {item[item['key']]: item for item in data if 'key' in item}
+
+
 def dictlist(data, item):
     if isinstance(data, dict):
         try:
