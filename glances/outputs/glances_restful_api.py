@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""RestFull API interface class."""
+"""RestFul API interface class."""
 
 import os
 import socket
