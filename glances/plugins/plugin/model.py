@@ -150,14 +150,13 @@ class GlancesPluginModel:
 
     def __getitem__(self, item):
         """Return the stats item."""
-        if self.stats is not None:
-            # Stats is a dict try, to return the item
-            if isinstance(self.stats, dict) and item in self.stats:
-                return self.stats[item]
-            if isinstance(self.stats, list):
-                ltd = list_to_dict(self.stats)
-                if item in ltd:
-                    return ltd[item]
+        if isinstance(self.stats, dict) and item in self.stats:
+            return self.stats[item]
+
+        if isinstance(self.stats, list):
+            ltd = list_to_dict(self.stats)
+            if item in ltd:
+                return ltd[item]
 
         raise KeyError(f"'{self.__class__.__name__}' object has no key '{item}'")
 

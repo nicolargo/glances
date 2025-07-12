@@ -14,7 +14,7 @@ test_args = core.get_args()
 
 app = GlancesRestfulApi(config=test_config, args=test_args)._app
 
-with open('./docs/openapi.json', 'w') as f:
+with open('./docs/api/openapi.json', 'w') as f:
     json.dump(
         get_openapi(
             title=app.title,

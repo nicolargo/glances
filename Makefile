@@ -211,8 +211,9 @@ trivy: ## Run Trivy to find vulnerabilities in container images
 # ===================================================================
 
 docs: ## Create the documentation
+	$(PYTHON) -m glances -C $(CONF) --api-doc > ./docs/api/python.rst
 	$(PYTHON) ./generate_openapi.py
-	$(PYTHON) -m glances -C $(CONF) --api-doc > ./docs/api.rst
+	$(PYTHON) -m glances -C $(CONF) --api-restful-doc > ./docs/api/restful.rst
 	cd docs && ./build.sh && cd ..
 
 docs-server: docs ## Start a Web server to serve the documentation
