@@ -11,7 +11,6 @@
 from copy import deepcopy
 from typing import Any, Optional
 
-from glances.globals import iteritems
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.plugins.vms.engines import VmsExtension
@@ -178,7 +177,7 @@ class VmsPlugin(GlancesPluginModel):
     def update_local(self):
         """Update stats localy"""
         stats = []
-        for engine, watcher in iteritems(self.watchers):
+        for engine, watcher in self.watchers.items():
             version, vms = watcher.update(all_tag=self._all_tag())
             for vm in vms:
                 vm["engine"] = engine

@@ -10,7 +10,6 @@
 
 import psutil
 
-from glances.globals import iterkeys
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.timer import getTimeSinceLastUpdate
 
@@ -125,7 +124,7 @@ class MemswapPlugin(GlancesPluginModel):
                     self.reset()
                     return stats
 
-                for key in iterkeys(stats):
+                for key in stats:
                     if stats[key] != '':
                         stats[key] = float(stats[key]) * 1024
 
