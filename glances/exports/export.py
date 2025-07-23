@@ -266,7 +266,7 @@ class GlancesExport:
         if isinstance(stats, dict):
             # Stats is a dict
             # Is there a key ?
-            if "key" in stats.keys() and stats["key"] in stats.keys():
+            if "key" in stats and stats["key"] in stats:
                 pre_key = "{}.".format(stats[stats["key"]])
             else:
                 pre_key = ""

@@ -404,7 +404,7 @@ class TestGlances(unittest.TestCase):
             assert len(stats_grab) == 0
         else:
             print(stats_grab)
-            self.assertTrue(stat in stats_grab[0].keys(), msg=f'Cannot find key: {stat}')
+            self.assertTrue(stat in stats_grab[0], msg=f'Cannot find key: {stat}')
 
         print(f'INFO: SMART stats: {stats_grab}')
 

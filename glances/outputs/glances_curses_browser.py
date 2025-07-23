@@ -87,7 +87,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             counts[color] = counts.get(color, 0) + 1
 
         result = ''
-        for key in counts.keys():
+        for key in counts:
             result += key + ': ' + str(counts[key]) + ' '
 
         return result
