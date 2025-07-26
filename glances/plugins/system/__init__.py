@@ -13,7 +13,6 @@ import os
 import platform
 import re
 
-from glances.globals import iteritems
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -139,7 +138,7 @@ class SystemPlugin(GlancesPluginModel):
 
         # Windows OS tips
         if self.short_system_name == 'windows':
-            for key, value in iteritems(snmp_to_human['windows']):
+            for key, value in snmp_to_human['windows'].items():
                 if re.search(key, stats['system_name']):
                     stats['os_name'] = value
                     break

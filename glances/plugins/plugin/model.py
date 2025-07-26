@@ -20,8 +20,6 @@ from glances.events_list import glances_events
 from glances.globals import (
     dictlist,
     dictlist_json_dumps,
-    iterkeys,
-    itervalues,
     json_dumps,
     list_to_dict,
     listkeys,
@@ -370,16 +368,14 @@ class GlancesPluginModel:
         ret = {}
         if bulk:
             # Bulk request
-            snmp_result = snmp_client.getbulk_by_oid(0, 10, *list(itervalues(snmp_oid)))
+            snmp_result = snmp_client.getbulk_by_oid(0, 10, *list(snmp_oid.values()))
             logger.info(snmp_result)
             if len(snmp_oid) == 1:
                 # Bulk command for only one OID
                 # Note: key is the item indexed but the OID result
                 for item in snmp_result:
-                    if iterkeys(item)[0].startswith(itervalues(snmp_oid)[0]):
-                        ret[iterkeys(snmp_oid)[0] + iterkeys(item)[0].split(itervalues(snmp_oid)[0])[1]] = itervalues(
-                            item
-                        )[0]
+                    if item.keys()[0].startswith(snmp_oid.values()[0]):
+                        ret[snmp_oid.keys()[0] + item.keys()[0].split(snmp_oid.values()[0])[1]] = item.values()[0]
             else:
                 # Build the internal dict with the SNMP result
                 # Note: key is the first item in the snmp_oid
@@ -387,7 +383,7 @@ class GlancesPluginModel:
                 for item in snmp_result:
                     item_stats = {}
                     item_key = None
-                    for key in iterkeys(snmp_oid):
+                    for key in snmp_oid:
                         oid = snmp_oid[key] + '.' + str(index)
                         if oid in item:
                             if item_key is None:
@@ -399,10 +395,10 @@ class GlancesPluginModel:
                     index += 1
         else:
             # Simple get request
-            snmp_result = snmp_client.get_by_oid(*list(itervalues(snmp_oid)))
+            snmp_result = snmp_client.get_by_oid(*list(snmp_oid.values()))
 
             # Build the internal dict with the SNMP result
-            for key in iterkeys(snmp_oid):
+            for key in snmp_oid:
                 ret[key] = snmp_result[snmp_oid[key]]
 
         return ret
