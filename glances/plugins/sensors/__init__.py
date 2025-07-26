@@ -156,7 +156,7 @@ class SensorsPlugin(GlancesPluginModel):
         if self.input_method == 'local':
             with ThreadPoolExecutor(max_workers=len(self.sensors_grab_map)) as executor:
                 logger.debug(f"Sensors enabled sub plugins: {list(self.sensors_grab_map.keys())}")
-                futures = {t: executor.submit(self.__get_sensor_data, t) for t in self.sensors_grab_map.keys()}
+                futures = {t: executor.submit(self.__get_sensor_data, t) for t in self.sensors_grab_map}
 
             # Merge the results
             for sensor_type, future in futures.items():
