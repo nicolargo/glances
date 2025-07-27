@@ -15,7 +15,18 @@ try:
 
     netifaces_tag = True
 except ImportError:
+    logger.warning("Ports plugin - Netifaces2 lib not found, port_default_gateway feature is disabled")
     netifaces_tag = False
+
+try:
+    netifaces.gateways()
+except Exception:
+    import_error_tag = True
+else:
+    logger.warning(
+        "Ports plugin - Netifaces2 do not support gateways() method, port_default_gateway feature is disabled"
+    )
+    import_error_tag = False
 
 
 class GlancesPortsList:
