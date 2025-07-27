@@ -21,12 +21,12 @@ except ImportError:
 try:
     netifaces.gateways()
 except Exception:
-    import_error_tag = True
+    netifaces_tag = True
 else:
     logger.warning(
         "Ports plugin - Netifaces2 do not support gateways() method, port_default_gateway feature is disabled"
     )
-    import_error_tag = False
+    netifaces_tag = False
 
 
 class GlancesPortsList:
