@@ -18,3 +18,13 @@ On ARM64, Docker needs to be configured to allow access to the memory stats.
 Edit the /boot/firmware/cmdline.txt and add the following configuration key:
 
     cgroup_enable=memory
+
+
+Netifaces issue ?
+-----------------
+
+Previously, Glances uses Netifaces to get network interfaces information.
+
+Now, Glances uses Netifaces2.
+
+Please uninstall Netifaces and install Netifaces2 instead.
