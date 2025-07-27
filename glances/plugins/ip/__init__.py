@@ -19,18 +19,18 @@ from glances.timer import Timer, getTimeSinceLastUpdate
 try:
     import netifaces
 except ImportError as e:
-    import_error_tag = True
+    netifaces_tag = True
     logger.warning(f"Missing Python Lib ({e}), IP plugin is disabled")
 else:
-    import_error_tag = False
+    netifaces_tag = False
 
 try:
     netifaces.default_gateway()
 except Exception:
-    import_error_tag = True
+    netifaces_tag = True
     logger.warning("Netifaces2 should be installed in your Python environment, IP plugin is disabled")
 else:
-    import_error_tag = False
+    netifaces_tag = False
 
 
 # Fields description
@@ -150,7 +150,7 @@ class IpPlugin(GlancesPluginModel):
         # Init new stats
         stats = self.get_init_value()
 
-        if self.input_method == 'local' and not import_error_tag:
+        if self.input_method == 'local' and not netifaces_tag:
             stats = self.get_stats_for_local_input(stats)
 
         elif self.input_method == 'snmp':
@@ -178,7 +178,7 @@ class IpPlugin(GlancesPluginModel):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or self.is_disabled() or import_error_tag:
+        if not self.stats or self.is_disabled() or netifaces_tag:
             return ret
 
         # Build the string message
