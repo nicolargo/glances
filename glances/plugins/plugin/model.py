@@ -17,15 +17,7 @@ import re
 
 from glances.actions import GlancesActions
 from glances.events_list import glances_events
-from glances.globals import (
-    dictlist,
-    dictlist_json_dumps,
-    json_dumps,
-    list_to_dict,
-    listkeys,
-    mean,
-    nativestr,
-)
+from glances.globals import dictlist, dictlist_json_dumps, json_dumps, list_to_dict, listkeys, mean, nativestr
 from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
