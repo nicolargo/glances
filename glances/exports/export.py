@@ -11,6 +11,8 @@ I am your father...
 ...for all Glances exports IF.
 """
 
+import re
+
 from glances.globals import NoOptionError, NoSectionError, json_dumps
 from glances.logger import logger
 from glances.timer import Counter
@@ -53,6 +55,10 @@ class GlancesExport:
         # Fields description
         self._fields_description = None
 
+        # Load the default common export configuration
+        if self.config is not None:
+            self.load_common_conf()
+
     def _log_result_decorator(fct):
         """Log (DEBUG) the result of the function fct."""
 
@@ -70,6 +76,24 @@ class GlancesExport:
     def exit(self):
         """Close the export module."""
         logger.debug(f"Finalise export interface {self.export_name}")
+
+    def load_common_conf(self):
+        """Load the common export configuration in the Glances configuration file.
+
+        :returns: Boolean -- True if section is found
+        """
+        # Read the common [export] section
+        section = "export"
+
+        opt = "exclude_fields"
+        try:
+            setattr(self, opt, self.config.get_list_value(section, opt))
+        except NoOptionError:
+            logger.debug(f"{opt} option not found in the {section} configuration section")
+
+        logger.debug(f"Load common {section} from the Glances configuration file")
+
+        return True
 
     def load_conf(self, section, mandatories=["host", "port"], options=None):
         """Load the export <section> configuration in the Glances configuration file.
@@ -101,7 +125,7 @@ class GlancesExport:
             try:
                 setattr(self, opt, self.config.get_value(section, opt))
             except NoOptionError:
-                pass
+                logger.debug(f"{opt} option not found in the {section} configuration section")
 
         logger.debug(f"Load {section} from the Glances configuration file")
         logger.debug(f"{section} parameters: { ({opt: getattr(self, opt) for opt in mandatories + options}) }")
@@ -199,6 +223,10 @@ class GlancesExport:
             ret.append({"measurement": name, "tags": tags, "fields": fields})
         return ret
 
+    def is_excluded(self, field):
+        """Return true if the field is excluded."""
+        return hasattr(self, 'exclude_fields') and any(re.fullmatch(i, field, re.I) for i in self.exclude_fields)
+
     def plugins_to_export(self, stats):
         """Return the list of plugins to export.
 
@@ -285,6 +313,8 @@ class GlancesExport:
                     export_values += item_values
                 else:
                     # We are on a simple value
+                    if self.is_excluded(pre_key + key.lower()):
+                        continue
                     export_names.append(pre_key + key.lower())
                     export_values.append(value)
         elif isinstance(stats, list):
