@@ -327,10 +327,15 @@ class GlancesCursesBrowser(_GlancesCurses):
         y += 1
         # Second line (for item/key)
         for k, v in column_def.items():
+            if xc >= screen_x or y >= screen_y or v is None:
+                continue
             k_split = k.split('_')
-            if xc < screen_x and y < screen_y and v is not None:
-                self.term_window.addnstr(y, xc, ' '.join(k_split[1:]).upper(), screen_x - x, self.colors_list['BOLD'])
-                xc += v + self.space_between_column
+            if len(k_split) == 1:
+                header_str = k_split[0]
+            else:
+                header_str = ' '.join(k_split[1:])
+            self.term_window.addnstr(y, xc, header_str.upper(), screen_x - x, self.colors_list['BOLD'])
+            xc += v + self.space_between_column
         y += 1
 
         # If a servers has been deleted from the list...
