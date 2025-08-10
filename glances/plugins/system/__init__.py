@@ -252,7 +252,7 @@ class SystemPlugin(GlancesPluginModel):
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         # System info
-        msg = ' ' + self.stats['hr_name']
+        msg = ' ' + self.stats['hr_name'] + ' '
         ret.append(self.curse_add_line(msg, optional=True))
 
         # Return the message with decoration

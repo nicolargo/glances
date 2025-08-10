@@ -700,7 +700,10 @@ Examples of use:
         args.network_cumul = False
 
         # Processlist is updated in processcount
-        if getattr(args, 'enable_processlist', False) or getattr(args, 'enable_programlist', False):
+        if getattr(args, 'disable_processcount', False):
+            logger.warning('Processcount is disable, so processlist (updated by processcount) is also disable')
+            disable(args, 'processlist')
+        elif getattr(args, 'enable_processlist', False) or getattr(args, 'enable_programlist', False):
             enable(args, 'processcount')
 
         # Set a default export_process_filter (with all process) when using the stdout mode

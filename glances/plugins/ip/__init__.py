@@ -181,10 +181,6 @@ class IpPlugin(GlancesPluginModel):
         if not self.stats or self.is_disabled() or netifaces_tag:
             return ret
 
-        # Build the string message
-        msg = ' - '
-        ret.append(self.curse_add_line(msg, optional=True))
-
         # Start with the private IP information
         if 'address' in self.stats:
             msg = 'IP '
