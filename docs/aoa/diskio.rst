@@ -5,17 +5,12 @@ Disk I/O
 
 .. image:: ../_static/diskio.png
 
-Glances displays the disk I/O throughput. The unit is adapted
-dynamically.
-
-You can display:
-
+Glances displays the disk I/O throughput, count and mean latency:
 - bytes per second (default behavior / Bytes/s, KBytes/s, MBytes/s, etc)
 - requests per second (using --diskio-iops option or *B* hotkey)
+- mean latency (using --diskio-latency option or *L* hotkey)
 
-There is no alert on this information.
-
-It's possible to define:
+It's also possible to define:
 
 - a list of disk to show (white list)
 - a list of disks to hide
@@ -42,13 +37,20 @@ Filtering is based on regular expression. Please be sure that your regular
 expression works as expected. You can use an online tool like `regex101`_ in
 order to test your regular expression.
 
-It is also possible to define thesholds for bytes read and write per second:
+It is also possible to define thesholds for latency and bytes read and write per second:
 
 .. code-block:: ini
 
     [diskio]
     # Alias for sda1 and sdb1
     #alias=sda1:SystemDisk,sdb1:DataDisk
+    # Default latency thresholds (in ms) (rx = read / tx = write)
+    rx_latency_careful=10
+    rx_latency_warning=20
+    rx_latency_critical=50
+    tx_latency_careful=10
+    tx_latency_warning=20
+    tx_latency_critical=50
     # Set thresholds (in bytes per second) for a given disk name (rx = read / tx = write)
     dm-0_rx_careful=4000000000
     dm-0_rx_warning=5000000000

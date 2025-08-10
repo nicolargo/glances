@@ -316,6 +316,17 @@ export default {
             // 'B' => Switch between bit/s and IO/s for Disk IO
             hotkeys('shift+B', () => {
                 this.store.args.diskio_iops = !this.store.args.diskio_iops;
+                if (this.store.args.diskio_iops) {
+                    this.store.args.diskio_latency = false;
+                }
+            });
+
+            // 'L' => Switch to latency for Disk IO
+            hotkeys('shift+L', () => {
+                this.store.args.diskio_latency = !this.store.args.diskio_latency;
+                if (this.store.args.diskio_latency) {
+                    this.store.args.diskio_iops = false;
+                }
             });
 
             // l => Show/hide alert logs
