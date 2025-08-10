@@ -594,6 +594,13 @@ Examples of use:
             help='show IO per second in the DiskIO plugin',
         )
         parser.add_argument(
+            '--diskio-latency',
+            action='store_true',
+            default=False,
+            dest='diskio_latency',
+            help='show IO latency in the DiskIO plugin',
+        )
+        parser.add_argument(
             '--fahrenheit',
             action='store_true',
             default=False,
