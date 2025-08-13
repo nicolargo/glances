@@ -4,8 +4,10 @@
             <thead>
                 <tr>
                     <th scope="col">DISK I/O</th>
-                    <th v-show="!args.diskio_iops" scope="col" class="text-end w-25">Rps</th>
-                    <th v-show="!args.diskio_iops" scope="col" class="text-end w-25">Wps</th>
+                    <th v-show="!args.diskio_iops && !args.diskio_latency" scope="col" class="text-end w-25">Rps</th>
+                    <th v-show="!args.diskio_iops && !args.diskio_latency" scope="col" class="text-end w-25">Wps</th>
+                    <th v-show="args.diskio_latency" scope="col" class="text-end w-25">ms/opR</th>
+                    <th v-show="args.diskio_latency" scope="col" class="text-end w-25">ms/opW</th>
                     <th v-show="args.diskio_iops" scope="col" class="text-end w-25">IORps</th>
                     <th v-show="args.diskio_iops" scope="col" class="text-end w-25">IOWps</th>
                 </tr>
@@ -15,15 +17,21 @@
                     <td scope="row" class="text-truncate">
                         {{ $filters.minSize(disk.alias ? disk.alias : disk.name, 16) }}
                     </td>
-                    <td
-v-show="!args.diskio_iops" class="text-end w-25"
+                    <td v-show="!args.diskio_iops && !args.diskio_latency" class="text-end w-25"
                         :class="getDecoration(disk.name, 'write_bytes_rate_per_sec')">
                         {{ disk.bitrate.txps }}
                     </td>
-                    <td
-v-show="!args.diskio_iops" class="text-end w-25"
+                    <td v-show="!args.diskio_iops && !args.diskio_latency" class="text-end w-25"
                         :class="getDecoration(disk.name, 'read_bytes_rate_per_sec')">
                         {{ disk.bitrate.rxps }}
+                    </td>
+                    <td v-show="args.diskio_latency" class="text-end w-25"
+                        :class="getDecoration(disk.name, 'write_latency')">
+                        {{ disk.latency.txps }}
+                    </td>
+                    <td v-show="args.diskio_latency" class="text-end w-25"
+                        :class="getDecoration(disk.name, 'read_latency')">
+                        {{ disk.latency.rxps }}
                     </td>
                     <td v-show="args.diskio_iops" class="text-end w-25">
                         {{ disk.count.txps }}
@@ -75,6 +83,10 @@ export default {
                     count: {
                         txps: bytes(diskioData['read_count_rate_per_sec']),
                         rxps: bytes(diskioData['write_count_rate_per_sec'])
+                    },
+                    latency: {
+                        txps: bytes(diskioData['read_latency']),
+                        rxps: bytes(diskioData['write_latency'])
                     }
                 };
             }).filter(disk => {
@@ -91,7 +103,11 @@ export default {
     methods: {
         getDecoration(diskName, field) {
             if (this.view[diskName][field] == undefined) {
-                return;
+                if (this.view[field] == undefined) {
+                    return;
+                } else {
+                    return this.view[field].decoration.toLowerCase();
+                }
             }
             return this.view[diskName][field].decoration.toLowerCase();
         }
