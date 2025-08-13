@@ -51,7 +51,7 @@ class _GlancesCurses:
         'a': {'sort_key': 'auto'},
         'A': {'switch': 'disable_amps'},
         'b': {'switch': 'byte'},
-        'B': {'switch': 'diskio_iops'},
+        'B': {'handler': '_handle_diskio_iops'},
         'c': {'sort_key': 'cpu_percent'},
         'C': {'switch': 'disable_cloud'},
         'd': {'switch': 'disable_diskio'},
@@ -69,6 +69,7 @@ class _GlancesCurses:
         # 'k' > Kill selected process
         'K': {'switch': 'disable_connections'},
         'l': {'switch': 'disable_alert'},
+        'L': {'handler': '_handle_diskio_latency'},
         'm': {'sort_key': 'memory_percent'},
         'M': {'switch': 'reset_minmax_tag'},
         'n': {'switch': 'disable_network'},
@@ -362,6 +363,18 @@ class _GlancesCurses:
             glances_processes.disable()
         else:
             glances_processes.enable()
+
+    def _handle_diskio_iops(self):
+        """Switch between bytes/s and IOPS for Disk IO."""
+        self.args.diskio_iops = not self.args.diskio_iops
+        if self.args.diskio_iops:
+            self.args.diskio_latency = False
+
+    def _handle_diskio_latency(self):
+        """Switch between bytes/s and latency for Disk IO."""
+        self.args.diskio_latency = not self.args.diskio_latency
+        if self.args.diskio_latency:
+            self.args.diskio_iops = False
 
     def _handle_sort_left(self):
         next_sort = (self.loop_position() - 1) % len(self._sort_loop)
