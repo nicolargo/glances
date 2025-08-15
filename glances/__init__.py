@@ -52,10 +52,10 @@ if psutil_version_info < psutil_min_version:
 
 
 # Trac malloc is only available on Python 3.4 or higher
-
-
-def __signal_handler(signal, frame):
-    logger.debug(f"Signal {signal} caught")
+def __signal_handler(sig, frame):
+    logger.debug(f"Signal {sig} caught")
+    # Avoid Glances hang when killing process with muliple CTRL-C See #3264
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
     end()
 
 
@@ -187,4 +187,13 @@ def main():
     core = GlancesMain()
 
     # Glances can be ran in standalone, client or server mode
+    start(config=core.get_config(), args=core.get_args())
+    start(config=core.get_config(), args=core.get_args())
+    start(config=core.get_config(), args=core.get_args())
+    start(config=core.get_config(), args=core.get_args())
+    start(config=core.get_config(), args=core.get_args())
+    start(config=core.get_config(), args=core.get_args())
+    start(config=core.get_config(), args=core.get_args())
+    start(config=core.get_config(), args=core.get_args())
+    start(config=core.get_config(), args=core.get_args())
     start(config=core.get_config(), args=core.get_args())
