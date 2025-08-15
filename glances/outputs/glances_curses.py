@@ -397,6 +397,10 @@ class _GlancesCurses:
             logger.info("Stop Glances client and return to the browser")
         else:
             logger.info(f"Stop Glances (keypressed: {self.pressedkey})")
+            # End the curses window
+            self.end()
+            # Exit the program
+            sys.exit(0)
 
     def _handle_refresh(self):
         glances_processes.reset_internal_cache()
