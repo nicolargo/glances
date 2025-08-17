@@ -63,7 +63,7 @@ jobs:
         tag: ${{ fromJson(needs.create_docker_images_list.outputs.tags) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Retrieve Repository Docker metadata
         id: docker_meta
