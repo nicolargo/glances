@@ -534,8 +534,8 @@ or just say "thank you" by:
 
 Any and all contributions are greatly appreciated.
 
-Author 👨‍💻
-=========
+Authors and Contributors 🔥
+===========================
 
 Nicolas Hennion (@nicolargo) <nicolas@nicolargo.com>
 
