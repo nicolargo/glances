@@ -3,7 +3,7 @@ Glances - An Eye on your System
 ===============================
 
 |  |pypi| |test| |contributors| |quality|
-|  |starts| |docker| |pypistat| |ossrank|
+|  |starts| |docker| |pypistat|
 |  |sponsors| |twitter|
 
 .. |pypi| image:: https://img.shields.io/pypi/v/glances.svg
@@ -20,10 +20,6 @@ Glances - An Eye on your System
 .. |pypistat| image:: https://pepy.tech/badge/glances/month
     :target: https://pepy.tech/project/glances
     :alt: Pypi downloads
-
-.. |ossrank| image:: https://shields.io/endpoint?url=https://ossrank.com/shield/3689
-    :target: https://ossrank.com/p/3689
-    :alt: OSSRank
 
 .. |test| image:: https://github.com/nicolargo/glances/actions/workflows/ci.yml/badge.svg?branch=develop
     :target: https://github.com/nicolargo/glances/actions
@@ -45,8 +41,8 @@ Glances - An Eye on your System
     :target: https://twitter.com/nicolargo
     :alt: @nicolargo
 
-Summary
-=======
+Summary 🌟
+==========
 
 **Glances** is an open-source system cross-platform monitoring tool.
 It allows real-time monitoring of various aspects of your system such as
@@ -71,8 +67,8 @@ Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can
 add new plugins or exports modules.
 
-Usage
-=====
+Usage 👋
+========
 
 For the standalone mode, just run:
 
@@ -149,15 +145,15 @@ or in a JSON format thanks to the stdout-json option (attribute not supported in
 
 and RTFM, always.
 
-Documentation
-=============
+Documentation 📜
+================
 
 For complete documentation have a look at the readthedocs_ website.
 
 If you have any question (after RTFM!), please post it on the official Q&A `forum`_.
 
-Gateway to other services
-=========================
+Gateway to other services 🌐
+============================
 
 Glances can export stats to:
 
@@ -178,8 +174,8 @@ Glances can export stats to:
 - ``Graphite`` server
 - ``RESTful`` endpoint
 
-Installation
-============
+Installation 🚀
+===============
 
 There are several methods to test/install Glances on your system. Choose your weapon!
 
@@ -447,8 +443,8 @@ Ansible
 
 A Glances ``Ansible`` role is available: https://galaxy.ansible.com/zaxos/glances-ansible-role/
 
-Shell tab completion
-====================
+Shell tab completion 🔍
+=======================
 
 Glances 4.3.2 and higher includes shell tab autocompletion thanks to the --print-completion option.
 
@@ -462,8 +458,8 @@ For example, on a Linux operating system with bash shell:
 
 Following shells are supported: bash, zsh and tcsh.
 
-Requirements
-============
+Requirements 🧩
+===============
 
 Glances is developed in Python. A minimal Python version 3.9 or higher
 should be installed on your system.
@@ -516,8 +512,8 @@ Optional dependencies:
 - ``wifi`` (for the wifi plugin) [Linux-only]
 - ``zeroconf`` (for the autodiscover mode)
 
-How to contribute ?
-===================
+How to contribute ? 🤝
+======================
 
 If you want to contribute to the Glances project, read this `wiki`_ page.
 
@@ -526,8 +522,8 @@ There is also a chat dedicated to the Glances developers:
 .. image:: https://badges.gitter.im/Join%20Chat.svg
         :target: https://gitter.im/nicolargo/glances?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-Project sponsorship
-===================
+Project sponsorship 🙌
+======================
 
 You can help me to achieve my goals of improving this open-source project
 or just say "thank you" by:
@@ -538,21 +534,21 @@ or just say "thank you" by:
 
 Any and all contributions are greatly appreciated.
 
-Author
-======
+Author 👨‍💻
+=========
 
 Nicolas Hennion (@nicolargo) <nicolas@nicolargo.com>
 
 .. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
     :target: https://twitter.com/nicolargo
 
-License
-=======
+License 📜
+==========
 
 Glances is distributed under the LGPL version 3 license. See ``COPYING`` for more details.
 
-More stars !
-============
+More stars ! 🌟
+===============
 
 Please give us a star on `GitHub`_ if you like this project.
 
