@@ -54,6 +54,7 @@ def print_tldr(gl):
     print('')
     print('.. code-block:: python')
     print('')
+    printtab('>>> gl.network.keys()')
     printtab(f'{gl.network.keys()}')
     printtab(f'>>> gl.network["{gl.network.keys()[0]}"]')
     printtab(f'{pformat(gl.network[gl.network.keys()[0]])}')
@@ -85,7 +86,6 @@ def print_plugins_list(gl):
     print('')
     printtab('>>> gl.plugins()')
     printtab(f'{gl.plugins()}')
-    print('```')
     print('')
 
 
@@ -102,8 +102,8 @@ def print_plugin(gl, plugin):
     print('')
     print('.. code-block:: python')
     print('')
-    printtab(f'>>> gl.{plugin}')
-    printtab(f'Return a {type(stats_obj)} object')
+    printtab(f'>>> type(gl.{plugin})')
+    printtab(f'{type(stats_obj)}')
     if len(stats_obj.keys()) > 0 and isinstance(stats_obj[stats_obj.keys()[0]], dict):
         printtab(f'>>> gl.{plugin}')
         printtab(f'Return a dict of dict with key=<{stats_obj[stats_obj.keys()[0]]["key"]}>')
@@ -139,7 +139,7 @@ def print_plugin(gl, plugin):
 
 def print_plugins(gl):
     """Print the details of all plugins."""
-    for plugin in gl.plugins():
+    for plugin in [p for p in gl.plugins() if p not in ['programlist']]:
         print_plugin(gl, plugin)
 
 
@@ -155,7 +155,6 @@ class GlancesStdoutApiDoc:
 
     def update(self, stats, duration=1):
         """Display issue"""
-
         # Display header
         print(APIDOC_HEADER)
 
