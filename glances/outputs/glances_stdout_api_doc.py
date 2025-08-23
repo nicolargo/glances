@@ -139,7 +139,7 @@ def print_plugin(gl, plugin):
 
 def print_plugins(gl):
     """Print the details of all plugins."""
-    for plugin in [p for p in gl.plugins() if p not in ['programlist']]:
+    for plugin in [p for p in gl.plugins() if p not in ['help', 'programlist']]:
         print_plugin(gl, plugin)
 
 
