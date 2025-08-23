@@ -604,7 +604,9 @@ class ProcesslistPlugin(GlancesPluginModel):
     def add_cpu_line(self, ret, prog):
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(' CPU Min/Max/Mean: '))
-        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(prog['cpu_min'], prog['cpu_max'], prog['cpu_mean'])
+        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(
+            prog.get('cpu_min', 0), prog.get('cpu_max', 0), prog.get('cpu_mean', 0)
+        )
         ret.append(self.curse_add_line(msg, decoration='INFO'))
 
         return ret
@@ -612,7 +614,7 @@ class ProcesslistPlugin(GlancesPluginModel):
     def maybe_add_cpu_affinity_line(self, ret, prog):
         if 'cpu_affinity' in prog and prog['cpu_affinity'] is not None:
             ret.append(self.curse_add_line(' Affinity: '))
-            ret.append(self.curse_add_line(str(len(prog['cpu_affinity'])), decoration='INFO'))
+            ret.append(self.curse_add_line(str(len(prog.get('cpu_affinity', []))), decoration='INFO'))
             ret.append(self.curse_add_line(' cores', decoration='INFO'))
 
         return ret
