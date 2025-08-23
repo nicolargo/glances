@@ -903,7 +903,7 @@ class ProcesslistPlugin(GlancesPluginModel):
                 continue
             if sub_key is None:
                 ret += p[key]
-            else:
+            elif sub_key in p[key]:
                 ret += p[key][sub_key]
 
         # Manage Min/Max/Mean
