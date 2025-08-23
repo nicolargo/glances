@@ -54,6 +54,7 @@ jobs:
         with:
           skip-existing: true
           attestations: false
+          print-hash: true
 
   pypi_test:
     name: Publish Python 🐍 distribution 📦 to TestPyPI
