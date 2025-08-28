@@ -596,7 +596,7 @@ class ProcesslistPlugin(GlancesPluginModel):
 
     def add_title_line(self, ret, prog):
         ret.append(self.curse_add_line("Pinned thread ", "TITLE"))
-        ret.append(self.curse_add_line(prog['name'], "UNDERLINE"))
+        ret.append(self.curse_add_line(prog.get('name', ''), "UNDERLINE"))
         ret.append(self.curse_add_line(" ('e' to unpin)"))
 
         return ret
@@ -657,7 +657,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         if 'memory_swap' in prog and prog['memory_swap'] is not None:
             ret.append(
                 self.curse_add_line(
-                    self.auto_unit(prog['memory_swap'], low_precision=False), decoration='INFO', splittable=True
+                    self.auto_unit(prog.get('memory_swap', 0), low_precision=False), decoration='INFO', splittable=True
                 )
             )
             ret.append(self.curse_add_line(' swap ', splittable=True))
@@ -680,7 +680,9 @@ class ProcesslistPlugin(GlancesPluginModel):
     def add_memory_line(self, ret, prog):
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(' MEM Min/Max/Mean: '))
-        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(prog['memory_min'], prog['memory_max'], prog['memory_mean'])
+        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(
+            prog.get('memory_min', 0), prog.get('memory_max', 0), prog.get('memory_mean', 0)
+        )
         ret.append(self.curse_add_line(msg, decoration='INFO'))
         if 'memory_info' in prog and prog['memory_info'] is not None:
             ret.append(self.curse_add_line(' Memory info: '))
@@ -694,7 +696,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         ret.append(self.curse_add_line(' Open: '))
         for stat_prefix in ['num_threads', 'num_fds', 'num_handles', 'tcp', 'udp']:
             if stat_prefix in prog and prog[stat_prefix] is not None:
-                ret.append(self.curse_add_line(str(prog[stat_prefix]), decoration='INFO'))
+                ret.append(self.curse_add_line(str(prog.get(stat_prefix, 0)), decoration='INFO'))
                 ret.append(self.curse_add_line(' {} '.format(stat_prefix.replace('num_', ''))))
         return ret
 
