@@ -70,6 +70,7 @@ dev = [
 export = [
   "bernhard",
   "cassandra-driver",
+  "duckdb",
   "elasticsearch",
   "graphitesender",
   "ibmcloudant",
@@ -245,5 +246,5 @@ requires = ["setuptools>=68"]
 # Set to true to display live message during tests
 log_cli = false
 log_level = "INFO"
-#log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
-#log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+#log_cli_format = "%(asctime)s [%(levelname)8s]%(message)s(%(filename)s:%(lineno)s)"
+#log_cli_date_format = "%Y-%m-%d%H:%M:%S"
