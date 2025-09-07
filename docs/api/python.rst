@@ -22,21 +22,21 @@ use the following code:
     >>> gl = api.GlancesAPI()
     >>> gl.cpu
     {'cpucore': 16,
-     'ctx_switches': 130724170,
+     'ctx_switches': 93050094,
      'guest': 0.0,
-     'idle': 86.9,
-     'interrupts': 107406067,
-     'iowait': 0.2,
+     'idle': 91.8,
+     'interrupts': 65054123,
+     'iowait': 0.3,
      'irq': 0.0,
      'nice': 0.0,
-     'soft_interrupts': 45147193,
+     'soft_interrupts': 31553682,
      'steal': 0.0,
      'syscalls': 0,
-     'system': 6.0,
-     'total': 10.6,
-     'user': 6.9}
+     'system': 5.1,
+     'total': 4.6,
+     'user': 2.7}
     >>> gl.cpu["total"]
-    10.6
+    4.6
 
 If the stats return a list of items (like network interfaces or processes), you can
 access them by their name:
@@ -47,19 +47,19 @@ access them by their name:
     ['wlp0s20f3']
     >>> gl.network["wlp0s20f3"]
     {'alias': None,
-     'bytes_all': 44734,
-     'bytes_all_gauge': 1934094759,
-     'bytes_all_rate_per_sec': 426648.0,
-     'bytes_recv': 2244,
-     'bytes_recv_gauge': 1781571064,
-     'bytes_recv_rate_per_sec': 21402.0,
-     'bytes_sent': 42490,
-     'bytes_sent_gauge': 152523695,
-     'bytes_sent_rate_per_sec': 405246.0,
+     'bytes_all': 0,
+     'bytes_all_gauge': 1610572387,
+     'bytes_all_rate_per_sec': 0.0,
+     'bytes_recv': 0,
+     'bytes_recv_gauge': 1458704597,
+     'bytes_recv_rate_per_sec': 0.0,
+     'bytes_sent': 0,
+     'bytes_sent_gauge': 151867790,
+     'bytes_sent_rate_per_sec': 0.0,
      'interface_name': 'wlp0s20f3',
      'key': 'interface_name',
      'speed': 0,
-     'time_since_update': 0.10484981536865234}
+     'time_since_update': 0.2066793441772461}
 
 Init Glances Python API
 -----------------------
@@ -166,14 +166,14 @@ Diskio stats:
     >>> gl.diskio["nvme0n1"]
     {'disk_name': 'nvme0n1',
      'key': 'disk_name',
-     'read_bytes': 10276049408,
-     'read_count': 347806,
+     'read_bytes': 6592916992,
+     'read_count': 263802,
      'read_latency': 0,
-     'read_time': 67145,
-     'write_bytes': 16687789056,
-     'write_count': 784025,
+     'read_time': 48023,
+     'write_bytes': 7635338240,
+     'write_count': 442590,
      'write_latency': 0,
-     'write_time': 1157773}
+     'write_time': 732491}
 
 Diskio fields description:
 
@@ -256,11 +256,11 @@ Processcount stats:
     >>> type(gl.processcount)
     <class 'glances.plugins.processcount.ProcesscountPlugin'>
     >>> gl.processcount
-    {'pid_max': 0, 'running': 2, 'sleeping': 417, 'thread': 2146, 'total': 550}
+    {'pid_max': 0, 'running': 2, 'sleeping': 410, 'thread': 2267, 'total': 540}
     >>> gl.processcount.keys()
     ['total', 'running', 'sleeping', 'thread', 'pid_max']
     >>> gl.processcount["total"]
-    550
+    540
 
 Processcount fields description:
 
@@ -333,16 +333,16 @@ Percpu stats:
      'dpc': None,
      'guest': 0.0,
      'guest_nice': 0.0,
-     'idle': 24.0,
+     'idle': 59.0,
      'interrupt': None,
      'iowait': 0.0,
      'irq': 0.0,
      'key': 'cpu_number',
      'nice': 0.0,
-     'softirq': 0.0,
+     'softirq': 1.0,
      'steal': 0.0,
-     'system': 9.0,
-     'total': 76.0,
+     'system': 8.0,
+     'total': 41.0,
      'user': 0.0}
 
 Percpu fields description:
@@ -391,10 +391,10 @@ System stats:
     <class 'glances.plugins.system.SystemPlugin'>
     >>> gl.system
     {'hostname': 'nicolargo-xps15',
-     'hr_name': 'Ubuntu 24.04 64bit / Linux 6.14.0-24-generic',
+     'hr_name': 'Ubuntu 24.04 64bit / Linux 6.14.0-27-generic',
      'linux_distro': 'Ubuntu 24.04',
      'os_name': 'Linux',
-     'os_version': '6.14.0-24-generic',
+     'os_version': '6.14.0-27-generic',
      'platform': '64bit'}
     >>> gl.system.keys()
     ['os_name', 'hostname', 'platform', 'os_version', 'linux_distro', 'hr_name']
@@ -433,18 +433,18 @@ Network stats:
     >>> gl.network["wlp0s20f3"]
     {'alias': None,
      'bytes_all': 0,
-     'bytes_all_gauge': 1934094759,
+     'bytes_all_gauge': 1610572387,
      'bytes_all_rate_per_sec': 0.0,
      'bytes_recv': 0,
-     'bytes_recv_gauge': 1781571064,
+     'bytes_recv_gauge': 1458704597,
      'bytes_recv_rate_per_sec': 0.0,
      'bytes_sent': 0,
-     'bytes_sent_gauge': 152523695,
+     'bytes_sent_gauge': 151867790,
      'bytes_sent_rate_per_sec': 0.0,
      'interface_name': 'wlp0s20f3',
      'key': 'interface_name',
      'speed': 0,
-     'time_since_update': 0.0017256736755371094}
+     'time_since_update': 0.002409219741821289}
 
 Network fields description:
 
@@ -485,23 +485,23 @@ Cpu stats:
     <class 'glances.plugins.cpu.CpuPlugin'>
     >>> gl.cpu
     {'cpucore': 16,
-     'ctx_switches': 130724170,
+     'ctx_switches': 93050094,
      'guest': 0.0,
-     'idle': 86.9,
-     'interrupts': 107406067,
-     'iowait': 0.2,
+     'idle': 91.8,
+     'interrupts': 65054123,
+     'iowait': 0.3,
      'irq': 0.0,
      'nice': 0.0,
-     'soft_interrupts': 45147193,
+     'soft_interrupts': 31553682,
      'steal': 0.0,
      'syscalls': 0,
-     'system': 6.0,
-     'total': 10.6,
-     'user': 6.9}
+     'system': 5.1,
+     'total': 4.6,
+     'user': 2.7}
     >>> gl.cpu.keys()
     ['total', 'user', 'nice', 'system', 'idle', 'iowait', 'irq', 'steal', 'guest', 'ctx_switches', 'interrupts', 'soft_interrupts', 'syscalls', 'cpucore']
     >>> gl.cpu["total"]
-    10.6
+    4.6
 
 Cpu fields description:
 
@@ -573,7 +573,7 @@ Amps stats:
      'refresh': 3.0,
      'regex': True,
      'result': None,
-     'timer': 0.16528964042663574}
+     'timer': 0.3220999240875244}
 
 Amps fields description:
 
@@ -604,69 +604,56 @@ Processlist stats:
     >>> gl.processlist
     Return a dict of dict with key=<pid>
     >>> gl.processlist.keys()
-    [259901, 259888, 25440, 128, 5325, 26358, 7064, 7329, 8157, 25356, 70768, 8145, 9147, 219843, 8147, 6769, 144938, 7366, 26173, 2856, 25244, 25450, 25567, 26736, 79046, 5966, 198381, 7338, 25566, 198494, 25390, 25451, 25796, 25526, 5580, 6269, 5469, 25582, 26414, 27424, 3680, 25536, 25806, 6310, 256800, 6281, 257516, 258649, 259729, 25325, 224253, 257355, 7967, 5775, 26008, 2871, 26021, 11269, 26023, 5914, 7315, 25247, 2498, 25246, 5719, 7310, 8592, 26166, 5822, 5617, 5938, 5476, 5985, 732, 6219, 2859, 7410, 5497, 5041, 6304, 5507, 5456, 5484, 3671, 5550, 2601, 5282, 5494, 5040, 2511, 5180, 5036, 2483, 1, 2521, 5961, 5726, 2513, 5014, 2919, 2491, 3654, 2347, 5488, 5478, 5527, 5597, 3683, 2700, 4959, 3656, 2839, 5509, 2602, 5043, 6147, 2819, 9457, 5546, 74467, 8741, 199883, 3655, 9442, 5877, 3726, 199844, 5738, 2504, 5541, 5764, 5490, 787, 2706, 5268, 5592, 2479, 2350, 5755, 2487, 2507, 2345, 5102, 5054, 5837, 5324, 2500, 5437, 5625, 5616, 5250, 5107, 5279, 5519, 5781, 5747, 33191, 5718, 5479, 2502, 9461, 5164, 2478, 5525, 5464, 2495, 5037, 26174, 25951, 198939, 223780, 242663, 5254, 24027, 5339, 25791, 7152, 2477, 5020, 25265, 3813, 6351, 9464, 2501, 259884, 3693, 3710, 3073, 5114, 242813, 251520, 259900, 259887, 2849, 2597, 2852, 3074, 3759, 2, 3, 4, 5, 6, 7, 8, 10, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 47, 48, 49, 50, 51, 53, 54, 55, 56, 57, 59, 60, 61, 62, 63, 65, 66, 67, 68, 69, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 83, 84, 85, 86, 87, 89, 90, 91, 92, 93, 95, 96, 97, 98, 99, 101, 102, 103, 104, 105, 107, 108, 109, 110, 111, 113, 114, 115, 116, 117, 118, 121, 122, 123, 124, 125, 126, 127, 132, 134, 135, 136, 137, 138, 139, 141, 142, 143, 144, 145, 146, 147, 149, 150, 151, 152, 153, 161, 177, 188, 189, 216, 218, 252, 268, 269, 270, 271, 272, 273, 274, 275, 277, 279, 350, 351, 354, 355, 356, 357, 359, 437, 438, 601, 606, 607, 608, 616, 674, 675, 802, 989, 996, 997, 1011, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1040, 1041, 1042, 1043, 1044, 1047, 1048, 1049, 1223, 1235, 1236, 1237, 1238, 1239, 1240, 1298, 1307, 1392, 1403, 1822, 1823, 1824, 1825, 1826, 1827, 1828, 1829, 1830, 1831, 1832, 1833, 1834, 1835, 1864, 1865, 1866, 1867, 1869, 1870, 1871, 1872, 1873, 1904, 1905, 1906, 1907, 1908, 1909, 1910, 1911, 1912, 1913, 1914, 1915, 1916, 1917, 1918, 1919, 1920, 1921, 1922, 1923, 1924, 1925, 1926, 1927, 1930, 1931, 1932, 1933, 1934, 1935, 1936, 1937, 1938, 1939, 1940, 1941, 1942, 1943, 1944, 1945, 1946, 1947, 1948, 1949, 1950, 1951, 1952, 1953, 1954, 1955, 1956, 1968, 1969, 1970, 1975, 1976, 1977, 1978, 1979, 1980, 1981, 1982, 1983, 1984, 1985, 1986, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1996, 1998, 1999, 2001, 2002, 2743, 2744, 2745, 3662, 4095, 9454, 129572, 177956, 182121, 198839, 198840, 224561, 230881, 231507, 236052, 236462, 236488, 241828, 242442, 242742, 242863, 244766, 246147, 246935, 246968, 247091, 247880, 248326, 248846, 250360, 250486, 251821, 252072, 252075, 252078, 252080, 252307, 252612, 252647, 252789, 254514, 254728, 254882, 254945, 255025, 255105, 255260, 255582, 255902, 255931, 256947, 257249, 257271, 257663, 257750, 258274, 258370, 258416, 258444, 258588, 258860]
-    >>> gl.processlist["259901"]
-    {'cmdline': ['/home/nicolargo/dev/glances/venv/bin/python',
+    [131054, 130, 5026, 17554, 37116, 5156, 6276, 7362, 3465, 6513, 18, 37994, 6791, 37006, 7354, 7360, 5421, 6529, 39091, 7579, 70330, 47898, 48864, 73329, 71993, 76900, 36887, 7946, 37126, 27508, 49422, 5588, 49809, 2842, 37127, 5972, 64993, 6539, 65479, 37045, 6011, 37849, 37360, 38043, 37441, 5984, 36958, 129675, 130252, 130588, 5219, 5134, 122186, 7176, 43964, 5446, 5582, 36890, 36889, 2858, 37486, 11247, 2494, 21045, 5353, 6508, 7838, 5895, 5483, 5364, 5612, 5153, 5654, 6583, 5169, 2846, 6006, 4726, 725, 5173, 5118, 5159, 5210, 3458, 2589, 5167, 4973, 2513, 4725, 4864, 4721, 1, 2477, 5390, 2520, 5574, 2519, 4702, 2914, 3343, 2485, 5163, 3470, 2354, 2697, 5195, 5818, 5188, 5293, 3440, 2828, 4680, 2590, 33352, 2809, 5206, 4728, 14976, 90225, 5400, 3514, 36508, 3344, 5552, 14961, 36497, 2510, 5204, 760, 4959, 5451, 5255, 5165, 2701, 2500, 2355, 2481, 2511, 5012, 4791, 4740, 5518, 2352, 5434, 5107, 2473, 5419, 38459, 5362, 4970, 5370, 2504, 5420, 5158, 4939, 5190, 5463, 5192, 4851, 15002, 4795, 2472, 2488, 5137, 4722, 17564, 37386, 37625, 2611, 42874, 4944, 66875, 5025, 37359, 2471, 6369, 4709, 6014, 36908, 3600, 2502, 131050, 15005, 3481, 3473, 3051, 4802, 111763, 109405, 131053, 2837, 2585, 2840, 3052, 3348, 2, 3, 4, 5, 6, 7, 8, 10, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 47, 48, 49, 50, 51, 53, 54, 55, 56, 57, 59, 60, 61, 62, 63, 65, 66, 67, 68, 69, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 83, 84, 85, 86, 87, 89, 90, 91, 92, 93, 95, 96, 97, 98, 99, 101, 102, 103, 104, 105, 107, 108, 109, 110, 111, 113, 114, 115, 116, 117, 119, 121, 122, 123, 124, 125, 126, 127, 135, 136, 137, 138, 139, 140, 141, 143, 146, 147, 148, 149, 150, 151, 154, 155, 156, 157, 158, 165, 175, 185, 186, 216, 236, 260, 267, 268, 269, 270, 272, 273, 274, 275, 276, 288, 347, 348, 351, 352, 353, 354, 358, 438, 439, 602, 607, 608, 609, 615, 665, 666, 788, 974, 986, 987, 988, 989, 990, 991, 992, 993, 994, 995, 996, 997, 998, 999, 1000, 1001, 1052, 1053, 1133, 1202, 1285, 1333, 1337, 1338, 1339, 1340, 1400, 1402, 1480, 1487, 1814, 1815, 1816, 1817, 1818, 1819, 1820, 1821, 1822, 1823, 1824, 1825, 1826, 1827, 1856, 1858, 1859, 1860, 1861, 1862, 1865, 1866, 1868, 1869, 1871, 1872, 1900, 1901, 1902, 1903, 1904, 1905, 1906, 1907, 1908, 1909, 1910, 1911, 1912, 1913, 1914, 1915, 1916, 1917, 1918, 1919, 1920, 1921, 1922, 1923, 1926, 1927, 1928, 1929, 1930, 1931, 1932, 1933, 1934, 1935, 1936, 1937, 1938, 1939, 1940, 1941, 1942, 1943, 1944, 1945, 1946, 1947, 1948, 1949, 1950, 1951, 1952, 1953, 1954, 1966, 1967, 1972, 1973, 1974, 1975, 1976, 1977, 1978, 1979, 1980, 1981, 1983, 1985, 1986, 1987, 1988, 1989, 1991, 1993, 1994, 3405, 3406, 3797, 14973, 22689, 34401, 54672, 66514, 66774, 77905, 96445, 101598, 104058, 105603, 109347, 110447, 115085, 116506, 117852, 117948, 119251, 119766, 120120, 120178, 120660, 121848, 121849, 121852, 121898, 121962, 122053, 122098, 122137, 122565, 122650, 123482, 123620, 123954, 124102, 124125, 124697, 124754, 125682, 125941, 126176, 126370, 127611, 127761, 127811, 127849, 128146, 128390, 128827, 128914, 129141, 130657]
+    >>> gl.processlist["131054"]
+    {'cmdline': ['venv/bin/python',
                  '-m',
-                 'rstcheck._cli',
-                 '/home/nicolargo/dev/glances/docs/api/python.rst'],
-     'cpu_percent': 103.7,
-     'cpu_times': {'children_system': 0.0,
+                 'glances',
+                 '-C',
+                 'conf/glances.conf',
+                 '--api-doc'],
+     'cpu_percent': 79.2,
+     'cpu_times': {'children_system': 0.02,
                    'children_user': 0.0,
                    'iowait': 0.0,
-                   'system': 0.05,
-                   'user': 0.43},
+                   'system': 0.57,
+                   'user': 0.65},
      'gids': {'effective': 1000, 'real': 1000, 'saved': 1000},
      'io_counters': [0,
                      4096,
                      0,
+                     4096,
+                     1,
+                     85098496,
+                     29450240,
+                     85098496,
+                     29450240,
+                     1,
+                     1585152,
+                     0,
+                     1585152,
                      0,
                      1,
+                     3198976,
                      0,
-                     20480,
-                     0,
-                     20480,
-                     1,
-                     64045056,
-                     70017024,
-                     64045056,
-                     70017024,
-                     1,
-                     0,
-                     8192,
-                     0,
-                     8192,
-                     1,
-                     2465792,
-                     0,
-                     2465792,
-                     0,
-                     1,
-                     741376,
-                     0,
-                     741376,
-                     0,
-                     1,
-                     3235840,
-                     0,
-                     3235840,
+                     3198976,
                      0,
                      1],
      'key': 'pid',
-     'memory_info': {'data': 63213568,
+     'memory_info': {'data': 97865728,
                      'dirty': 0,
                      'lib': 0,
-                     'rss': 78741504,
-                     'shared': 16969728,
+                     'rss': 61194240,
+                     'shared': 16060416,
                      'text': 3026944,
-                     'vms': 91906048},
-     'memory_percent': 0.47946211653194054,
+                     'vms': 529788928},
+     'memory_percent': 0.3726155968808034,
      'name': 'python',
      'nice': 0,
-     'num_threads': 1,
-     'pid': 259901,
+     'num_threads': 5,
+     'pid': 131054,
      'status': 'R',
-     'time_since_update': 0.29739928245544434,
+     'time_since_update': 0.6007616519927979,
      'username': 'nicolargo'}
 
 Processlist fields description:
@@ -751,13 +738,13 @@ Load stats:
     <class 'glances.plugins.load.LoadPlugin'>
     >>> gl.load
     {'cpucore': 16,
-     'min1': 1.3310546875,
-     'min15': 0.34033203125,
-     'min5': 0.6142578125}
+     'min1': 0.84326171875,
+     'min15': 0.9970703125,
+     'min5': 1.2060546875}
     >>> gl.load.keys()
     ['min1', 'min5', 'min15', 'cpucore']
     >>> gl.load["min1"]
-    1.3310546875
+    0.84326171875
 
 Load fields description:
 
@@ -796,7 +783,7 @@ Sensors stats:
      'label': 'Ambient',
      'type': 'temperature_core',
      'unit': 'C',
-     'value': 40,
+     'value': 38,
      'warning': 0}
 
 Sensors fields description:
@@ -834,7 +821,7 @@ Uptime stats:
     >>> type(gl.uptime)
     <class 'glances.plugins.uptime.UptimePlugin'>
     >>> gl.uptime
-    '2 days, 0:13:08'
+    '3 days, 17:56:29'
 
 Uptime limits:
 
@@ -853,11 +840,11 @@ Now stats:
     >>> type(gl.now)
     <class 'glances.plugins.now.NowPlugin'>
     >>> gl.now
-    {'custom': '2025-08-17 18:33:57 CEST', 'iso': '2025-08-17T18:33:57+02:00'}
+    {'custom': '2025-09-07 11:56:16 CEST', 'iso': '2025-09-07T11:56:16+02:00'}
     >>> gl.now.keys()
     ['iso', 'custom']
     >>> gl.now["iso"]
-    '2025-08-17T18:33:57+02:00'
+    '2025-09-07T11:56:16+02:00'
 
 Now fields description:
 
@@ -886,14 +873,14 @@ Fs stats:
     ['/', '/zsfpool']
     >>> gl.fs["/"]
     {'device_name': '/dev/mapper/ubuntu--vg-ubuntu--lv',
-     'free': 720872308736,
+     'free': 719850975232,
      'fs_type': 'ext4',
      'key': 'mnt_point',
      'mnt_point': '/',
      'options': 'rw,relatime',
-     'percent': 24.3,
+     'percent': 24.4,
      'size': 1003736440832,
-     'used': 231801626624}
+     'used': 232822960128}
 
 Fs fields description:
 
@@ -933,8 +920,8 @@ Wifi stats:
     ['wlp0s20f3']
     >>> gl.wifi["wlp0s20f3"]
     {'key': 'ssid',
-     'quality_level': -74.0,
-     'quality_link': 36.0,
+     'quality_level': -63.0,
+     'quality_link': 47.0,
      'ssid': 'wlp0s20f3'}
 
 Wifi limits:
@@ -958,7 +945,7 @@ Ip stats:
     >>> type(gl.ip)
     <class 'glances.plugins.ip.IpPlugin'>
     >>> gl.ip
-    {'address': '192.168.0.28',
+    {'address': '192.168.1.31',
      'mask': '255.255.255.0',
      'mask_cidr': 24,
      'public_address': '',
@@ -966,7 +953,7 @@ Ip stats:
     >>> gl.ip.keys()
     ['address', 'mask', 'mask_cidr', 'public_address', 'public_info_human']
     >>> gl.ip["address"]
-    '192.168.0.28'
+    '192.168.1.31'
 
 Ip fields description:
 
@@ -990,25 +977,6 @@ Ip limits:
      'ip_public_refresh_interval': 300.0,
      'ip_public_template': ['{continent_name}/{country_name}/{city_name}']}
 
-Glances help
-------------
-
-Help stats:
-
-.. code-block:: python
-
-    >>> type(gl.help)
-    <class 'glances.plugins.help.HelpPlugin'>
-    >>> gl.help
-    None
-
-Help limits:
-
-.. code-block:: python
-
-    >>> gl.help.limits
-    {'history_size': 1200.0}
-
 Glances version
 ---------------
 
@@ -1019,7 +987,7 @@ Version stats:
     >>> type(gl.version)
     <class 'glances.plugins.version.VersionPlugin'>
     >>> gl.version
-    '4.4.0_dev1'
+    '4.4.0_dev4'
 
 Version limits:
 
@@ -1085,20 +1053,20 @@ Mem stats:
     >>> type(gl.mem)
     <class 'glances.plugins.mem.MemPlugin'>
     >>> gl.mem
-    {'active': 4825649152,
-     'available': 5969608704,
-     'buffers': 329052160,
-     'cached': 4741099520,
-     'free': 5969608704,
-     'inactive': 8804777984,
-     'percent': 63.7,
-     'shared': 921595904,
-     'total': 16422883328,
-     'used': 10453274624}
+    {'active': 3194753024,
+     'available': 7033892864,
+     'buffers': 372871168,
+     'cached': 4654788608,
+     'free': 7033892864,
+     'inactive': 9166532608,
+     'percent': 57.2,
+     'shared': 1040850944,
+     'total': 16422887424,
+     'used': 9388994560}
     >>> gl.mem.keys()
     ['total', 'available', 'percent', 'used', 'free', 'active', 'inactive', 'buffers', 'cached', 'shared']
     >>> gl.mem["total"]
-    16422883328
+    16422887424
 
 Mem fields description:
 
@@ -1164,34 +1132,34 @@ Quicklook stats:
     >>> type(gl.quicklook)
     <class 'glances.plugins.quicklook.QuicklookPlugin'>
     >>> gl.quicklook
-    {'cpu': 10.6,
+    {'cpu': 4.6,
      'cpu_hz': 4475000000.0,
-     'cpu_hz_current': 1438531937.5000002,
+     'cpu_hz_current': 892993812.4999999,
      'cpu_log_core': 16,
      'cpu_name': '13th Gen Intel(R) Core(TM) i7-13620H',
      'cpu_phys_core': 10,
-     'load': 2.1,
-     'mem': 63.7,
+     'load': 6.2,
+     'mem': 57.2,
      'percpu': [{'cpu_number': 0,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 24.0,
+                 'idle': 59.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
                  'key': 'cpu_number',
                  'nice': 0.0,
-                 'softirq': 0.0,
+                 'softirq': 1.0,
                  'steal': 0.0,
-                 'system': 9.0,
-                 'total': 76.0,
+                 'system': 8.0,
+                 'total': 41.0,
                  'user': 0.0},
                 {'cpu_number': 1,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 32.0,
+                 'idle': 71.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1200,13 +1168,13 @@ Quicklook stats:
                  'softirq': 0.0,
                  'steal': 0.0,
                  'system': 0.0,
-                 'total': 68.0,
+                 'total': 29.0,
                  'user': 0.0},
                 {'cpu_number': 2,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 32.0,
+                 'idle': 69.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1214,14 +1182,14 @@ Quicklook stats:
                  'nice': 0.0,
                  'softirq': 0.0,
                  'steal': 0.0,
-                 'system': 0.0,
-                 'total': 68.0,
+                 'system': 1.0,
+                 'total': 31.0,
                  'user': 0.0},
                 {'cpu_number': 3,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 32.0,
+                 'idle': 71.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1230,13 +1198,43 @@ Quicklook stats:
                  'softirq': 0.0,
                  'steal': 0.0,
                  'system': 0.0,
-                 'total': 68.0,
+                 'total': 29.0,
                  'user': 0.0},
                 {'cpu_number': 4,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 20.0,
+                 'idle': 55.0,
+                 'interrupt': None,
+                 'iowait': 2.0,
+                 'irq': 0.0,
+                 'key': 'cpu_number',
+                 'nice': 0.0,
+                 'softirq': 0.0,
+                 'steal': 0.0,
+                 'system': 12.0,
+                 'total': 45.0,
+                 'user': 2.0},
+                {'cpu_number': 5,
+                 'dpc': None,
+                 'guest': 0.0,
+                 'guest_nice': 0.0,
+                 'idle': 71.0,
+                 'interrupt': None,
+                 'iowait': 0.0,
+                 'irq': 0.0,
+                 'key': 'cpu_number',
+                 'nice': 0.0,
+                 'softirq': 0.0,
+                 'steal': 0.0,
+                 'system': 0.0,
+                 'total': 29.0,
+                 'user': 0.0},
+                {'cpu_number': 6,
+                 'dpc': None,
+                 'guest': 0.0,
+                 'guest_nice': 0.0,
+                 'idle': 57.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1245,43 +1243,13 @@ Quicklook stats:
                  'softirq': 0.0,
                  'steal': 0.0,
                  'system': 8.0,
-                 'total': 80.0,
-                 'user': 2.0},
-                {'cpu_number': 5,
-                 'dpc': None,
-                 'guest': 0.0,
-                 'guest_nice': 0.0,
-                 'idle': 25.0,
-                 'interrupt': None,
-                 'iowait': 0.0,
-                 'irq': 0.0,
-                 'key': 'cpu_number',
-                 'nice': 0.0,
-                 'softirq': 0.0,
-                 'steal': 0.0,
-                 'system': 2.0,
-                 'total': 75.0,
-                 'user': 5.0},
-                {'cpu_number': 6,
-                 'dpc': None,
-                 'guest': 0.0,
-                 'guest_nice': 0.0,
-                 'idle': 15.0,
-                 'interrupt': None,
-                 'iowait': 1.0,
-                 'irq': 0.0,
-                 'key': 'cpu_number',
-                 'nice': 0.0,
-                 'softirq': 0.0,
-                 'steal': 0.0,
-                 'system': 3.0,
-                 'total': 85.0,
-                 'user': 10.0},
+                 'total': 43.0,
+                 'user': 3.0},
                 {'cpu_number': 7,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 22.0,
+                 'idle': 59.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1289,14 +1257,14 @@ Quicklook stats:
                  'nice': 0.0,
                  'softirq': 0.0,
                  'steal': 0.0,
-                 'system': 1.0,
-                 'total': 78.0,
+                 'system': 4.0,
+                 'total': 41.0,
                  'user': 9.0},
                 {'cpu_number': 8,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 31.0,
+                 'idle': 69.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1305,13 +1273,13 @@ Quicklook stats:
                  'softirq': 0.0,
                  'steal': 0.0,
                  'system': 1.0,
-                 'total': 69.0,
+                 'total': 31.0,
                  'user': 1.0},
                 {'cpu_number': 9,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 32.0,
+                 'idle': 72.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1320,13 +1288,13 @@ Quicklook stats:
                  'softirq': 0.0,
                  'steal': 0.0,
                  'system': 0.0,
-                 'total': 68.0,
+                 'total': 28.0,
                  'user': 0.0},
                 {'cpu_number': 10,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 31.0,
+                 'idle': 71.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1335,13 +1303,13 @@ Quicklook stats:
                  'softirq': 0.0,
                  'steal': 0.0,
                  'system': 0.0,
-                 'total': 69.0,
+                 'total': 29.0,
                  'user': 0.0},
                 {'cpu_number': 11,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 32.0,
+                 'idle': 71.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1350,13 +1318,13 @@ Quicklook stats:
                  'softirq': 0.0,
                  'steal': 0.0,
                  'system': 0.0,
-                 'total': 68.0,
+                 'total': 29.0,
                  'user': 0.0},
                 {'cpu_number': 12,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 32.0,
+                 'idle': 71.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1365,13 +1333,13 @@ Quicklook stats:
                  'softirq': 0.0,
                  'steal': 0.0,
                  'system': 0.0,
-                 'total': 68.0,
-                 'user': 1.0},
+                 'total': 29.0,
+                 'user': 0.0},
                 {'cpu_number': 13,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 31.0,
+                 'idle': 70.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1380,13 +1348,13 @@ Quicklook stats:
                  'softirq': 0.0,
                  'steal': 0.0,
                  'system': 0.0,
-                 'total': 69.0,
-                 'user': 0.0},
+                 'total': 30.0,
+                 'user': 1.0},
                 {'cpu_number': 14,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 29.0,
+                 'idle': 71.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1394,14 +1362,14 @@ Quicklook stats:
                  'nice': 0.0,
                  'softirq': 0.0,
                  'steal': 0.0,
-                 'system': 2.0,
-                 'total': 71.0,
+                 'system': 0.0,
+                 'total': 29.0,
                  'user': 1.0},
                 {'cpu_number': 15,
                  'dpc': None,
                  'guest': 0.0,
                  'guest_nice': 0.0,
-                 'idle': 32.0,
+                 'idle': 71.0,
                  'interrupt': None,
                  'iowait': 0.0,
                  'irq': 0.0,
@@ -1410,9 +1378,9 @@ Quicklook stats:
                  'softirq': 0.0,
                  'steal': 0.0,
                  'system': 0.0,
-                 'total': 68.0,
+                 'total': 29.0,
                  'user': 0.0}],
-     'swap': 3.9}
+     'swap': 0.0}
     >>> gl.quicklook.keys()
     ['cpu_name', 'cpu_hz_current', 'cpu_hz', 'cpu', 'percpu', 'mem', 'swap', 'cpu_log_core', 'cpu_phys_core', 'load']
     >>> gl.quicklook["cpu_name"]
@@ -1462,13 +1430,13 @@ Memswap stats:
     >>> type(gl.memswap)
     <class 'glances.plugins.memswap.MemswapPlugin'>
     >>> gl.memswap
-    {'free': 4128976896,
-     'percent': 3.9,
-     'sin': 1683456,
-     'sout': 158633984,
-     'time_since_update': 0.28161168098449707,
+    {'free': 4292874240,
+     'percent': 0.0,
+     'sin': 0,
+     'sout': 651264,
+     'time_since_update': 0.5564005374908447,
      'total': 4294963200,
-     'used': 165986304}
+     'used': 2088960}
     >>> gl.memswap.keys()
     ['total', 'used', 'free', 'percent', 'sin', 'sout', 'time_since_update']
     >>> gl.memswap["total"]

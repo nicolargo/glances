@@ -76,6 +76,9 @@ class Export(GlancesExport):
         return db
 
     def normalize(self, value):
+        # Nothing to do...
+        if isinstance(value, list) and len(value) == 1 and value[0] in ['True', 'False']:
+            return bool(value[0])
         return value
 
     def update(self, stats):
@@ -91,6 +94,7 @@ class Export(GlancesExport):
 
         # Loop over plugins to export
         for plugin in self.last_exported_list():
+            # Remove some fields
             if isinstance(all_stats[plugin], dict):
                 all_stats[plugin].update(all_limits[plugin])
                 # Remove the <plugin>_disable field
@@ -111,25 +115,26 @@ class Export(GlancesExport):
                 creation_list.append('time TIMETZ')
                 creation_list.append('hostname_id VARCHAR')
                 for key, value in plugin_stats.items():
-                    creation_list.append(f"{key} {convert_types[type(value).__name__]}")
+                    creation_list.append(f"{key} {convert_types[type(self.normalize(value)).__name__]}")
                 # Create the list of values to insert
-                values_list.append(self.normalize(datetime.now().replace(microsecond=0)))
-                values_list.append(f"{self.hostname}")
-                values_list.extend([self.normalize(value) for value in plugin_stats.values()])
-                values_list = [values_list]
+                item_list = []
+                item_list.append(self.normalize(datetime.now().replace(microsecond=0)))
+                item_list.append(self.normalize(f"{self.hostname}"))
+                item_list.extend([self.normalize(value) for value in plugin_stats.values()])
+                values_list = [item_list]
             elif isinstance(plugin_stats, list) and len(plugin_stats) > 0 and 'key' in plugin_stats[0]:
                 # Create the list to create the table
                 creation_list.append('time TIMETZ')
                 creation_list.append('hostname_id VARCHAR')
                 creation_list.append('key_id VARCHAR')
                 for key, value in plugin_stats[0].items():
-                    creation_list.append(f"{key} {convert_types[type(value).__name__]}")
+                    creation_list.append(f"{key} {convert_types[type(self.normalize(value)).__name__]}")
                 # Create the list of values to insert
                 for plugin_item in plugin_stats:
                     item_list = []
                     item_list.append(self.normalize(datetime.now().replace(microsecond=0)))
-                    item_list.append(f"{self.hostname}")
-                    item_list.append(f"{plugin_item.get('key')}")
+                    item_list.append(self.normalize(f"{self.hostname}"))
+                    item_list.append(self.normalize(f"{plugin_item.get('key')}"))
                     item_list.extend([self.normalize(value) for value in plugin_item.values()])
                     values_list.append(item_list)
             else:
