@@ -108,7 +108,7 @@ class _GlancesCurses:
     # Define left sidebar
     # This variable is used in the make webui task in order to generate the
     # glances/outputs/static/js/uiconfig.json file for the web interface
-    # This lidt can also be overwritten by the configuration file ([outputs] left_menu option)
+    # This list can also be overwritten by the configuration file ([outputs] left_menu option)
     _left_sidebar = [
         'network',
         'ports',
