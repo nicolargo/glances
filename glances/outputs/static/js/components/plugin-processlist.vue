@@ -495,7 +495,7 @@ export default {
                     process.cmdline = process.cmdline.join(' ').replace(/\n/g, ' ');
                 }
 
-                if (process.cmdline === null || process.cmdline.length === 0) {
+                if (typeof process.cmdline !== "string" || process.cmdline.length === 0) {
                     process.cmdline = process.name;
                 }
 
@@ -581,7 +581,7 @@ export default {
                 process.cmdline = process.cmdline.join(' ').replace(/\n/g, ' ');
             }
 
-            if (process.cmdline === null || process.cmdline.length === 0) {
+            if (typeof process.cmdline !== "string" || process.cmdline.length === 0) {
                 process.cmdline = process.name;
             }
             return process
