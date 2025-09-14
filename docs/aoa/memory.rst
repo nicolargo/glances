@@ -27,7 +27,7 @@ Stats description:
   is in RAM.
 - **inactive**: (UNIX): memory that is marked as not used.
 - **buffers**: (Linux, BSD): cache for things like file system metadata.
-- **cached**: (Linux, BSD): cache for various things.
+- **cached**: (Linux, BSD): cache for various things (including ZFS cache).
 
 Additional stats available in through the API:
 
