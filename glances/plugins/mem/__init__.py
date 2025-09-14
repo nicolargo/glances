@@ -1,7 +1,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2025 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -10,6 +10,7 @@
 
 import psutil
 
+from glances.plugins.fs.zfs import zfs_enable, zfs_stats
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
@@ -124,6 +125,9 @@ class MemPlugin(GlancesPluginModel):
             args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
         )
 
+        # ZFS
+        self.zfs_enabled = zfs_enable()
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -166,6 +170,26 @@ class MemPlugin(GlancesPluginModel):
         ]:
             if hasattr(vm_stats, mem):
                 stats[mem] = getattr(vm_stats, mem)
+
+        # Manage ZFS cache (see #3979 for details)
+        if self.zfs_enabled:
+            zfs_shrink = 0
+            zfs_cache_stats = zfs_stats()
+            # Uncomment the following line to use the test data
+            # zfs_cache_stats = zfs_stats(['./tests-data/plugins/fs/zfs/arcstats'])
+            if 'arcstats.size' in zfs_cache_stats:
+                zfs_size = zfs_cache_stats['arcstats.size']
+                if 'arcstats.c_min' in zfs_cache_stats:
+                    zfs_cmin = zfs_cache_stats['arcstats.c_min']
+                else:
+                    zfs_cmin = 0
+                if zfs_size > zfs_cmin:
+                    zfs_shrink = zfs_size - zfs_cmin
+            # Add the ZFS cache to the 'cached' memory
+            if 'cached' in stats:
+                stats['cached'] += zfs_shrink
+            else:
+                stats['cached'] = zfs_shrink
 
         # Use the 'free'/htop calculation
         # free=available+buffer+cached
