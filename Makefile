@@ -235,17 +235,19 @@ install: ## Open a Web Browser to the installation procedure
 
 webui webui%: DIR = glances/outputs/static/
 
-webui: ## Build the Web UI
+webui-gen-config: ## Generate the Web UI config file
 	$(PYTHON) -c 'import json; from glances.outputs.glances_curses import _GlancesCurses; print(json.dumps({ "leftMenu": [p for p in _GlancesCurses._left_sidebar if p != "now"]}, indent=4))' > ./glances/outputs/static/js/uiconfig.json
+
+webui: webui-gen-config ## Build the Web UI
 	cd $(DIR) && npm ci && npm run build
 
 webui-audit: ## Audit the Web UI
 	cd $(DIR) && npm audit
 
-webui-audit-fix: ## Fix audit the Web UI
+webui-audit-fix: webui-gen-config ## Fix audit the Web UI
 	cd $(DIR) && npm audit fix && npm ci && npm run build
 
-webui-update: ## Update JS dependencies
+webui-update: webui-gen-config ## Update JS dependencies
 	cd $(DIR) && npm update --save && npm ci && npm run build
 
 # ===================================================================
