@@ -61,7 +61,7 @@ note that this doesn\'t reflect the actual memory available (use \'available\' i
         'optional': True,
     },
     'cached': {
-        'description': '*(Linux, BSD)*: cache for various things.',
+        'description': '*(Linux, BSD)*: cache for various things (including ZFS cache).',
         'unit': 'bytes',
         'min_symbol': 'K',
         'optional': True,
