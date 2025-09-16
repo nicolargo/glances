@@ -187,6 +187,11 @@ export default {
             const title = (data.stats && data.stats.system && data.stats.system.hostname) || '';
             return title ? `${title} - Glances` : 'Glances';
         },
+        topMenu() {
+            return this.config.outputs !== undefined && this.config.outputs.top_menu !== undefined
+                ? this.config.outputs.top_menu.split(',')
+                : uiconfig.topMenu;
+        },
         leftMenu() {
             return this.config.outputs !== undefined && this.config.outputs.left_menu !== undefined
                 ? this.config.outputs.left_menu.split(',')
