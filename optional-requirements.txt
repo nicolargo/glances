@@ -13,7 +13,6 @@ hddtemp
 influxdb>=1.0.0 # For InfluxDB < 1.8
 influxdb-client # For InfluxDB >= 1.8 and < 3.x
 influxdb3-python # For InfluxDB 3.x
-jinja2
 kafka-python
 netifaces2
 numpy>=1.22.2 # not directly required, pinned by Snyk to avoid a vulnerability

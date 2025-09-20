@@ -29,8 +29,8 @@ class Bar:
         size,
         bar_char='|',
         empty_char=' ',
-        pre_char='[',
-        post_char=']',
+        pre_char='',
+        post_char='',
         unit_char='%',
         display_value=True,
         min_value=0,
@@ -42,8 +42,8 @@ class Bar:
             size (_type_): Bar size
             bar_char (str, optional): Bar character. Defaults to '|'.
             empty_char (str, optional): Empty character. Defaults to ' '.
-            pre_char (str, optional): Display this char before the bar. Defaults to '['.
-            post_char (str, optional): Display this char after the bar. Defaults to ']'.
+            pre_char (str, optional): Display this char before the bar. Defaults to ''.
+            post_char (str, optional): Display this char after the bar. Defaults to ''.
             unit_char (str, optional): Unit char to be displayed. Defaults to '%'.
             display_value (bool, optional): Do i need to display the value. Defaults to True.
             min_value (int, optional): Minimum value. Defaults to 0.
@@ -68,12 +68,10 @@ class Bar:
 
     @property
     def size(self, with_decoration=False):
-        # Return the bar size, with or without decoration
-        if with_decoration:
-            return self.__size
+        # Return the bar size
         if self.__display_value:
             return self.__size - 6
-        return None
+        return self.__size
 
     @property
     def percent(self):
@@ -104,6 +102,9 @@ class Bar:
             ret += self.__curses_bars[int(frac * 8)]
             whole += 1
         ret += self.__empty_char * int(self.size - whole)
+
+        # Add the post and pre chars
+        ret = f'{self.__pre_char}{ret}{self.__post_char}'
 
         # Add the value
         if self.__display_value:

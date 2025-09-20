@@ -294,9 +294,9 @@ class QuicklookPlugin(GlancesPluginModel):
         """Create a new line to the Quick view."""
         return [
             self.curse_add_line(msg),
-            self.curse_add_line(data.pre_char, decoration='BOLD'),
+            self.curse_add_line('[', decoration='BOLD'),
             self.curse_add_line(data.get(), self.get_views(key=key, option='decoration')),
-            self.curse_add_line(data.post_char, decoration='BOLD'),
+            self.curse_add_line(']', decoration='BOLD'),
             self.curse_add_line('  '),
         ]
 
@@ -306,4 +306,5 @@ class QuicklookPlugin(GlancesPluginModel):
 
     def _mhz_to_hz(self, hz):
         """Convert Mhz to Hz."""
+        return hz * 1000000.0
         return hz * 1000000.0
