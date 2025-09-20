@@ -476,6 +476,7 @@ Dependencies:
 - ``packaging`` (for the version comparison)
 - ``windows-curses`` (Windows Curses implementation) [Windows-only]
 - ``shtab`` (Shell autocompletion) [All but Windows]
+- ``jinja2`` (for fetch mode and templating)
 
 Optional dependencies:
 
@@ -490,7 +491,6 @@ Optional dependencies:
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB version 1 export module)
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
-- ``jinja2`` (for templating, used under the hood by FastAPI)
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces2`` (for the IP plugin)
 - ``nvidia-ml-py`` (for the GPU plugin)

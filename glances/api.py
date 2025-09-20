@@ -7,8 +7,10 @@
 #
 
 from glances import __version__ as glances_version
-from glances.globals import weak_lru_cache
+from glances.globals import auto_unit, weak_lru_cache
 from glances.main import GlancesMain
+from glances.outputs.glances_bars import Bar
+from glances.processes import sort_stats
 from glances.stats import GlancesStats
 
 plugin_dependencies_tree = {
@@ -49,3 +51,22 @@ class GlancesAPI:
     def plugins(self):
         """Return the list of available plugins."""
         return self._stats.getPluginsList()
+
+    def auto_unit(self, number, low_precision=False, min_symbol='K', none_symbol='-'):
+        """Return a nice human-readable string out of number."""
+        return auto_unit(number, low_precision, min_symbol, none_symbol)
+
+    def bar(self, value, size=18, bar_char='■', empty_char='□', pre_char='', post_char=''):
+        """Return a bar (progress bar like) representation of the given value."""
+        b = Bar(
+            size, bar_char=bar_char, empty_char=empty_char, pre_char=pre_char, post_char=post_char, display_value=False
+        )
+        b.percent = value
+        return b.get()
+
+    def top_process(self, limit=3, sorted_by='cpu_percent', sorted_by_secondary='memory_percent'):
+        """Return the top process list sorted by the given sort_key."""
+        # Exclude glances process from the top list
+        # because in fetch mode, Glances generate a CPU load
+        all_but_glances = [p for p in self._stats.get_plugin('processlist').get_raw() if 'glances' not in p['cmdline']]
+        return sort_stats(all_but_glances, sorted_by=sorted_by, sorted_by_secondary=sorted_by_secondary)[:limit]

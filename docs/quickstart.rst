@@ -140,6 +140,22 @@ Open the URL (/browser) and click on the server to display stats.
 
     Use ``--disable-autodiscover`` to disable the auto-discovery mode.
 
+Fetch mode
+^^^^^^^^^^
+
+It is also possible to get and share a quick look of a machine using the
+``fetch`` mode. In this mode, current stats are display on the console in
+a fancy way.
+
+.. code-block:: console
+
+    $ glances --fetch
+
+Results look like this:
+
+.. image:: _static/screenshot-fetch.png
+
+
 SNMP
 ^^^^
 
