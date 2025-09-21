@@ -4,11 +4,12 @@ Quickstart
 ==========
 
 This page gives a good introduction to how to get started with Glances.
-Glances offers three modes:
+Glances offers multiple modes:
 
 - Standalone
 - Client/Server
 - Web server
+- Fetch
 
 Standalone Mode
 ---------------
@@ -140,22 +141,6 @@ Open the URL (/browser) and click on the server to display stats.
 
     Use ``--disable-autodiscover`` to disable the auto-discovery mode.
 
-Fetch mode
-^^^^^^^^^^
-
-It is also possible to get and share a quick look of a machine using the
-``fetch`` mode. In this mode, current stats are display on the console in
-a fancy way.
-
-.. code-block:: console
-
-    $ glances --fetch
-
-Results look like this:
-
-.. image:: _static/screenshot-fetch.png
-
-
 SNMP
 ^^^^
 
@@ -212,7 +197,7 @@ Here's a screenshot from Chrome on Android:
 .. image:: _static/screenshot-web2.png
 
 How do you protect your server (or Web server) with a login/password ?
-------------------------------------------------------------------
+----------------------------------------------------------------------
 
 You can set a password to access the server using the ``--password``.
 By default, the login is ``glances`` but you can change it with
@@ -238,3 +223,22 @@ file:
     # Additionally (and optionally) a default password could be defined
     localhost=mylocalhostpassword
     default=mydefaultpassword
+
+Fetch mode
+----------
+
+It is also possible to get and share a quick look of a machine using the
+``fetch`` mode. In this mode, current stats are display on the console in
+a fancy way.
+
+.. code-block:: console
+
+    $ glances --fetch
+
+Results look like this:
+
+.. image:: _static/screenshot-fetch.png
+
+It is also possible to use a custom template with the ``--fetch-template </path/to/template.jinja>`` option.
+
+Have a look to the :ref:`fetch documentation page<fetch>` to learn how to create your own template.
