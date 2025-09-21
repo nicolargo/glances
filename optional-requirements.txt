@@ -6,7 +6,6 @@ bernhard
 cassandra-driver
 chevron
 docker>=6.1.1
-duckdb
 elasticsearch
 fastapi>=0.82.0
 graphitesender
