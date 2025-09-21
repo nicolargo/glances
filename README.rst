@@ -54,14 +54,14 @@ and can also be used for remote monitoring of systems via a web interface or com
 line interface. It is easy to install and use and can be customized to show only
 the information that you are interested in.
 
-.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-summary.png
+.. image:: ./docs/_static/glances-summary.png
 
 In client/server mode, remote monitoring could be done via terminal,
 Web interface or API (XML-RPC and RESTful).
 Stats can also be exported to files or external time/value databases, CSV or direct
 output to STDOUT.
 
-.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-responsive-webdesign.png
+.. image:: ./docs/_static/glances-responsive-webdesign.png
 
 Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can

@@ -1216,6 +1216,3 @@ class GlancesPluginModel:
     _check_decorator = staticmethod(_check_decorator)
     _log_result_decorator = staticmethod(_log_result_decorator)
     _manage_rate = staticmethod(_manage_rate)
-    _manage_rate = staticmethod(_manage_rate)
-    _manage_rate = staticmethod(_manage_rate)
-    _manage_rate = staticmethod(_manage_rate)
