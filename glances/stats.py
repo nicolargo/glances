@@ -419,3 +419,4 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         # Close plugins
         for p in self._plugins:
             self._plugins[p].exit()
+            self._plugins[p].exit()

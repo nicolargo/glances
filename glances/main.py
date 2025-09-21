@@ -648,6 +648,22 @@ Examples of use:
             default='',
             help='strftime format string for displaying current date in standalone mode',
         )
+        # Fetch
+        parser.add_argument(
+            '--fetch',
+            '--stdout-fetch',
+            action='store_true',
+            default=False,
+            dest='stdout_fetch',
+            help='display a (neo)fetch like summary and exit',
+        )
+        parser.add_argument(
+            '--fetch-template',
+            '--stdout-fetch-template',
+            dest='fetch_template',
+            default='',
+            help='overwrite default fetch template file',
+        )
 
         return parser
 

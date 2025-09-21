@@ -17,7 +17,16 @@ import re
 
 from glances.actions import GlancesActions
 from glances.events_list import glances_events
-from glances.globals import dictlist, dictlist_json_dumps, json_dumps, list_to_dict, listkeys, mean, nativestr
+from glances.globals import (
+    auto_unit,
+    dictlist,
+    dictlist_json_dumps,
+    json_dumps,
+    list_to_dict,
+    listkeys,
+    mean,
+    nativestr,
+)
 from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
@@ -1085,59 +1094,8 @@ class GlancesPluginModel:
         self._align = value
 
     def auto_unit(self, number, low_precision=False, min_symbol='K', none_symbol='-'):
-        """Make a nice human-readable string out of number.
-
-        Number of decimal places increases as quantity approaches 1.
-        CASE: 613421788        RESULT:       585M low_precision:       585M
-        CASE: 5307033647       RESULT:      4.94G low_precision:       4.9G
-        CASE: 44968414685      RESULT:      41.9G low_precision:      41.9G
-        CASE: 838471403472     RESULT:       781G low_precision:       781G
-        CASE: 9683209690677    RESULT:      8.81T low_precision:       8.8T
-        CASE: 1073741824       RESULT:      1024M low_precision:      1024M
-        CASE: 1181116006       RESULT:      1.10G low_precision:       1.1G
-
-        :low_precision: returns less decimal places potentially (default is False)
-                        sacrificing precision for more readability.
-        :min_symbol: Do not approach if number < min_symbol (default is K)
-        :decimal_count: if set, force the number of decimal number (default is None)
-        """
-        if number is None:
-            return none_symbol
-        symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
-        if min_symbol in symbols:
-            symbols = symbols[symbols.index(min_symbol) :]
-        prefix = {
-            'Y': 1208925819614629174706176,
-            'Z': 1180591620717411303424,
-            'E': 1152921504606846976,
-            'P': 1125899906842624,
-            'T': 1099511627776,
-            'G': 1073741824,
-            'M': 1048576,
-            'K': 1024,
-        }
-
-        if number == 0:
-            # Avoid 0.0
-            return '0'
-
-        for symbol in reversed(symbols):
-            value = float(number) / prefix[symbol]
-            if value > 1:
-                decimal_precision = 0
-                if value < 10:
-                    decimal_precision = 2
-                elif value < 100:
-                    decimal_precision = 1
-                if low_precision:
-                    if symbol in 'MK':
-                        decimal_precision = 0
-                    else:
-                        decimal_precision = min(1, decimal_precision)
-                elif symbol in 'K':
-                    decimal_precision = 0
-                return '{:.{decimal}f}{symbol}'.format(value, decimal=decimal_precision, symbol=symbol)
-        return f'{number!s}'
+        """Return a nice human-readable string out of number."""
+        return auto_unit(number, low_precision=low_precision, min_symbol=min_symbol, none_symbol=none_symbol)
 
     def trend_msg(self, trend, significant=1):
         """Return the trend message.
@@ -1257,4 +1215,7 @@ class GlancesPluginModel:
     # Mandatory to call the decorator in child classes
     _check_decorator = staticmethod(_check_decorator)
     _log_result_decorator = staticmethod(_log_result_decorator)
+    _manage_rate = staticmethod(_manage_rate)
+    _manage_rate = staticmethod(_manage_rate)
+    _manage_rate = staticmethod(_manage_rate)
     _manage_rate = staticmethod(_manage_rate)
