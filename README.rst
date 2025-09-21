@@ -151,7 +151,7 @@ Last but not least, you can use the fetch mode to get a quick look of a machine:
 
 Results look like this:
 
-.. image:: _static/screenshot-fetch.png
+.. image:: ./docs/_static/screenshot-fetch.png
 
 and RTFM, always.
 
