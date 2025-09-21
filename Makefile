@@ -318,6 +318,9 @@ run-min-local-conf: ## Start minimal Glances in console mode with the system con
 run-like-htop: ## Start Glances with the same features than Htop
 	$(venv_min)/python -m glances --disable-plugin network,ports,wifi,connections,diskio,fs,irq,folders,raid,smart,sensors,vms,containers,ip,amps --disable-left-sidebar
 
+run-fetch: ## Start Glances in fetch mode
+	$(PYTHON) -m glances --fetch
+
 $(DOCKER_RUNTIMES): run-docker-%:
 	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-$*
 
