@@ -143,6 +143,16 @@ or in a JSON format thanks to the stdout-json option (attribute not supported in
     mem: {"total": 7837949952, "available": 2919079936, "percent": 62.8, "used": 4918870016, "free": 2919079936, "active": 2841214976, "inactive": 3340550144, "buffers": 546799616, "cached": 3068141568, "shared": 788156416}
     ...
 
+Last but not least, you can use the fetch mode to get a quick look of a machine:
+
+.. code-block:: console
+
+    $ glances --fetch
+
+Results look like this:
+
+.. image:: _static/screenshot-fetch.png
+
 and RTFM, always.
 
 Documentation 📜
@@ -476,6 +486,7 @@ Dependencies:
 - ``packaging`` (for the version comparison)
 - ``windows-curses`` (Windows Curses implementation) [Windows-only]
 - ``shtab`` (Shell autocompletion) [All but Windows]
+- ``jinja2`` (for fetch mode and templating)
 
 Optional dependencies:
 
@@ -490,7 +501,6 @@ Optional dependencies:
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB version 1 export module)
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
-- ``jinja2`` (for templating, used under the hood by FastAPI)
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces2`` (for the IP plugin)
 - ``nvidia-ml-py`` (for the GPU plugin)

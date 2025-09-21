@@ -11,12 +11,11 @@ information depending on the terminal size.
 It can also work in client/server mode. Remote monitoring can be
 done via terminal, Web interface, or API (XMLRPC and RESTful).
 
-Glances is written in Python and uses the `psutil`_ library to get
-information from your system.
+Stats can also be exported to :ref:`files or external databases<gw>`.
 
-Stats can also be exported to external time/value databases.
-
-.. _psutil: https://github.com/giampaolo/psutil
+It is also possible to use it in your own Python scripts thanks to
+the :ref:`Glances API<api>` or in any other application through
+the :ref:`RESTful API<api_restful>`.
 
 Table of Contents
 =================
@@ -35,3 +34,6 @@ Table of Contents
    docker
    faq
    support
+
+.. _psutil: https://github.com/giampaolo/psutil
+

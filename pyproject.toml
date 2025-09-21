@@ -24,6 +24,7 @@ dependencies = [
   "psutil>=5.6.7",
   "windows-curses; platform_system == 'Windows'",
   "shtab; platform_system != 'Windows'",
+  "jinja2",
 ]
 description = "A cross-platform curses-based monitoring tool"
 dynamic = ["version"]
@@ -96,7 +97,6 @@ snmp = ["pysnmp-lextudio<6.3.1"]
 sparklines = ["sparklines"]
 web = [
   "fastapi>=0.82.0",
-  "jinja2",
   "requests",
   "uvicorn",
 ]
