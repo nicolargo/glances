@@ -143,6 +143,16 @@ or in a JSON format thanks to the stdout-json option (attribute not supported in
     mem: {"total": 7837949952, "available": 2919079936, "percent": 62.8, "used": 4918870016, "free": 2919079936, "active": 2841214976, "inactive": 3340550144, "buffers": 546799616, "cached": 3068141568, "shared": 788156416}
     ...
 
+Last but not least, you can use the fetch mode to get a quick look of a machine:
+
+.. code-block:: console
+
+    $ glances --fetch
+
+Results look like this:
+
+.. image:: _static/screenshot-fetch.png
+
 and RTFM, always.
 
 Documentation 📜
