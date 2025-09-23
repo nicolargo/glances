@@ -48,6 +48,7 @@ class Export(GlancesExport):
 
         self.plugin_to_object_label = {
             "amps": "app",
+            "containers": "container",
             "diskio": "device",
             "fs": "mount_point",
             "gpu": "name",
