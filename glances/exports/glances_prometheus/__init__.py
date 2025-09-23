@@ -46,6 +46,15 @@ class Export(GlancesExport):
         # Init the Prometheus Exporter
         self.init()
 
+        self.plugin_to_object_label = {
+            "amps": "app",
+            "diskio": "device",
+            "fs": "mount_point",
+            "gpu": "name",
+            "network": "interface",
+            "percpu": "core",
+        }
+
     def init(self):
         """Init the Prometheus Exporter"""
         try:
@@ -64,21 +73,32 @@ class Export(GlancesExport):
         data = {k: float(v) for k, v in zip(columns, points) if isinstance(v, Number)}
 
         # Write metrics to the Prometheus exporter
-        for k, v in data.items():
-            # Prometheus metric name: prefix_<glances stats name>
-            metric_name = self.prefix + self.METRIC_SEPARATOR + str(name) + self.METRIC_SEPARATOR + str(k)
+        for metric, value in data.items():
+            metric = str(metric)
+            try:
+                obj, stat = metric.split('.')
+                metric_name = self.prefix + self.METRIC_SEPARATOR + str(name) + self.METRIC_SEPARATOR + stat
+            except ValueError:
+                obj = ''
+                metric_name = self.prefix + self.METRIC_SEPARATOR + str(metric)
+
             # Prometheus is very sensible to the metric name
             # See: https://prometheus.io/docs/practices/naming/
             for c in ' .-/:[]':
                 metric_name = metric_name.replace(c, self.METRIC_SEPARATOR)
+
+            labels = self.labels
+            if obj:
+                labels += f",{self.plugin_to_object_label[name]}:{obj}"
+
             # Get the labels
-            labels = self.parse_tags(self.labels)
+            labels = self.parse_tags(labels)
             # Manage an internal dict between metric name and Gauge
             if metric_name not in self._metric_dict:
-                self._metric_dict[metric_name] = Gauge(metric_name, k, labelnames=listkeys(labels))
+                self._metric_dict[metric_name] = Gauge(metric_name, "", labelnames=listkeys(labels))
             # Write the value
             if hasattr(self._metric_dict[metric_name], 'labels'):
                 # Add the labels (see issue #1255)
-                self._metric_dict[metric_name].labels(**labels).set(v)
+                self._metric_dict[metric_name].labels(**labels).set(value)
             else:
-                self._metric_dict[metric_name].set(v)
+                self._metric_dict[metric_name].set(value)
