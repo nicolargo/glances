@@ -152,7 +152,7 @@ class GlancesExport:
         d_tags = {}
         if tags:
             try:
-                d_tags = dict([x.split(":") for x in tags.split(",")])
+                d_tags = dict(x.split(":", 1) for x in tags.split(","))
             except ValueError:
                 # one of the 'key:value' pairs was missing
                 logger.info("Invalid tags passed: %s", tags)
