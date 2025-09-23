@@ -53,6 +53,8 @@ class Export(GlancesExport):
             "gpu": "name",
             "network": "interface",
             "percpu": "core",
+            "sensors": "object",
+            "wifi": "interface",
         }
 
     def init(self):
