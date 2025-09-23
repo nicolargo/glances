@@ -73,17 +73,17 @@ class Export(GlancesExport):
         logger.debug(f"Export {name} stats to Prometheus exporter")
 
         # Remove non number stats and convert all to float (for Boolean)
-        data = {k: float(v) for k, v in zip(columns, points) if isinstance(v, Number)}
+        data = {str(k): float(v) for k, v in zip(columns, points) if isinstance(v, Number)}
 
         # Write metrics to the Prometheus exporter
         for metric, value in data.items():
-            metric = str(metric)
+            metric_name = self.prefix + self.METRIC_SEPARATOR + name + self.METRIC_SEPARATOR
             try:
                 obj, stat = metric.split('.')
-                metric_name = self.prefix + self.METRIC_SEPARATOR + str(name) + self.METRIC_SEPARATOR + stat
+                metric_name += stat
             except ValueError:
                 obj = ''
-                metric_name = self.prefix + self.METRIC_SEPARATOR + str(metric)
+                metric_name += metric
 
             # Prometheus is very sensible to the metric name
             # See: https://prometheus.io/docs/practices/naming/
