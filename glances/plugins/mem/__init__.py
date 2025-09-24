@@ -173,6 +173,7 @@ class MemPlugin(GlancesPluginModel):
 
         # Manage ZFS cache (see #3979 for details)
         if self.zfs_enabled:
+            zfs_size = 0
             zfs_shrink = 0
             zfs_cache_stats = zfs_stats()
             # Uncomment the following line to use the test data
@@ -183,23 +184,27 @@ class MemPlugin(GlancesPluginModel):
                     zfs_cmin = zfs_cache_stats['arcstats.c_min']
                 else:
                     zfs_cmin = 0
-                if zfs_size > zfs_cmin:
-                    zfs_shrink = zfs_size - zfs_cmin
+
+                zfs_shrink = zfs_size - zfs_cmin
             # Add the ZFS cache to the 'cached' memory
             if 'cached' in stats:
-                stats['cached'] += zfs_shrink
+                stats['cached'] += zfs_size
             else:
-                stats['cached'] = zfs_shrink
+                stats['cached'] = zfs_size
 
-        # Use the 'free'/htop calculation
-        # free=available+buffer+cached
-        stats['free'] = stats['available']
-        if hasattr(stats, 'buffers'):
-            stats['free'] += stats['buffers']
-        if hasattr(stats, 'cached'):
-            stats['free'] += stats['cached']
-        # used=total-free
-        stats['used'] = stats['total'] - stats['free']
+            # Add the amount ZFS cache can shrink to 'available' memory
+            if 'available' in stats:
+                stats['available'] += zfs_shrink
+            else:
+                stats['available'] = zfs_shrink
+
+            # Subtract the amount ZFS cache can shrink from 'used' memory
+            stats['used'] -= zfs_shrink
+
+            # Update percent to reflect new 'available' value
+            stats['percent'] = float((stats['total'] - stats['available']) / stats['total'] * 100)
+
+        stats['used'] = stats['total'] - stats['available']
 
         return stats
 
