@@ -2,6 +2,7 @@ codespell
 coverage
 fonttools>=4.43.0 # not directly required, pinned by Snyk to avoid a vulnerability
 gprof2dot
+h11>=0.16.0 # not directly required, pinned by Snyk to avoid a vulnerability
 matplotlib
 memory-profiler
 numpy>=1.22.2 # not directly required, pinned by Snyk to avoid a vulnerability
@@ -17,4 +18,3 @@ selenium
 semgrep; platform_system == 'Linux'
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
 webdriver-manager
-h11>=0.16.0 # not directly required, pinned by Snyk to avoid a vulnerability
