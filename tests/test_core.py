@@ -29,6 +29,7 @@ from glances.filter import GlancesFilter, GlancesFilterList
 from glances.globals import LINUX, WINDOWS, pretty_date, string_value_to_float, subsample
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
+from glances.plugins.fs.zfs import zfs_enable, zfs_stats
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.stats import GlancesStats
 from glances.thresholds import (
@@ -670,6 +671,17 @@ class TestGlances(unittest.TestCase):
         """Test fs plugin methods"""
         print('INFO: [TEST_107] Test fs plugin methods')
         self._common_plugin_tests('fs')
+
+    def test_108_fs_zfs_(self):
+        """Test zfs functions"""
+        print('INFO: [TEST_108] Test zfs functions')
+        self.assertTrue(zfs_enable('./tests-data/plugins/fs/zfs'))
+        stats = zfs_stats(['./tests-data/plugins/fs/zfs/arcstats'])
+        self.assertTrue(isinstance(stats, dict))
+        self.assertTrue('arcstats.c_min' in stats)
+        self.assertEqual(stats['arcstats.c_min'], 2637352832)
+        self.assertTrue('arcstats.size' in stats)
+        self.assertEqual(stats['arcstats.size'], 41321273080)
 
     def test_200_views_hidden(self):
         """Test hide feature"""
