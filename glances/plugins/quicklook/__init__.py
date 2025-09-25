@@ -132,9 +132,11 @@ class QuicklookPlugin(GlancesPluginModel):
             mem_available = vm_stats.available
             if self.zfs_enabled:
                 zfs_cache_stats = zfs_stats()
-                mem_available = mem_available + zfs_cache_stats.get('arcstats.size', 0) - zfs_cache_stats.get('arcstats.c_min', 0)
+                mem_available = (
+                    mem_available + zfs_cache_stats.get('arcstats.size', 0) - zfs_cache_stats.get('arcstats.c_min', 0)
+                )
 
-            stats['mem'] = float((mem_total - mem_available) / mem_total * 100 )
+            stats['mem'] = float((mem_total - mem_available) / mem_total * 100)
             try:
                 stats['swap'] = psutil.swap_memory().percent
             except RuntimeError:
