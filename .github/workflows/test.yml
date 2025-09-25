@@ -96,7 +96,7 @@ jobs:
 
     needs: source-code-checks
     # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       matrix:
         # Only test the latest stable version
