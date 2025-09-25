@@ -109,5 +109,7 @@ class GlancesAPI:
         """
         # Exclude glances process from the top list
         # because in fetch mode, Glances generate a CPU load
-        all_but_glances = [p for p in self._stats.get_plugin('processlist').get_raw() if 'glances' not in p['cmdline']]
+        all_but_glances = [
+            p for p in self._stats.get_plugin('processlist').get_raw() if p['cmdline'] and 'glances' not in p['cmdline']
+        ]
         return sort_stats(all_but_glances, sorted_by=sorted_by, sorted_by_secondary=sorted_by_secondary)[:limit]
