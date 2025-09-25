@@ -41,6 +41,10 @@ Additional stats available in through the API:
 - **shared**: (BSD): memory that may be simultaneously accessed by multiple
   processes.
 
+It is possible to display the available memory instead of the used memory
+by setting the ``available`` option to ``True`` in the configuration file
+under the ``[mem]`` section.
+
 A character is also displayed just after the MEM header and shows the
 trend value:
 
