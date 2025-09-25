@@ -23,6 +23,7 @@ different memory values depending on the platform (e.g. free + buffers + cached 
 and it is supposed to be used to monitor actual memory usage in a cross platform fashion.',
         'unit': 'bytes',
         'min_symbol': 'K',
+        'short_name': 'avail',
     },
     'percent': {
         'description': 'The percentage usage calculated as (total - available) / total * 100.',
@@ -124,6 +125,9 @@ class MemPlugin(GlancesPluginModel):
         super().__init__(
             args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
         )
+
+        # Should we display available memory instead of used memory ?
+        self.available = self.get_conf_value('available', default=['False'])[0].lower() == 'true'
 
         # ZFS
         self.zfs_enabled = zfs_enable()
@@ -308,7 +312,10 @@ class MemPlugin(GlancesPluginModel):
         # used + buffers
         ret.append(self.curse_new_line())
         # Used memory usage
-        ret.extend(self.curse_add_stat('used', width=15))
+        if self.available:
+            ret.extend(self.curse_add_stat('available', width=15))
+        else:
+            ret.extend(self.curse_add_stat('used', width=15))
         # Buffers memory usage
         ret.extend(self.curse_add_stat('buffers', width=16, header='  '))
 
