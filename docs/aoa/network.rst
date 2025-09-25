@@ -72,7 +72,7 @@ can also be used to set a threshold higher than zero.
 
 .. code-block:: ini
 
-    [diskio]
+    [network]
     hide_zero=True
     hide_threshold_bytes=0
 
