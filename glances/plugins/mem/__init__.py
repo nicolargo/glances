@@ -1,7 +1,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2025 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -10,6 +10,7 @@
 
 import psutil
 
+from glances.plugins.fs.zfs import zfs_enable, zfs_stats
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
@@ -60,7 +61,7 @@ note that this doesn\'t reflect the actual memory available (use \'available\' i
         'optional': True,
     },
     'cached': {
-        'description': '*(Linux, BSD)*: cache for various things.',
+        'description': '*(Linux, BSD)*: cache for various things (including ZFS cache).',
         'unit': 'bytes',
         'min_symbol': 'K',
         'optional': True,
@@ -124,6 +125,9 @@ class MemPlugin(GlancesPluginModel):
             args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
         )
 
+        # ZFS
+        self.zfs_enabled = zfs_enable()
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -167,15 +171,40 @@ class MemPlugin(GlancesPluginModel):
             if hasattr(vm_stats, mem):
                 stats[mem] = getattr(vm_stats, mem)
 
-        # Use the 'free'/htop calculation
-        # free=available+buffer+cached
-        stats['free'] = stats['available']
-        if hasattr(stats, 'buffers'):
-            stats['free'] += stats['buffers']
-        if hasattr(stats, 'cached'):
-            stats['free'] += stats['cached']
-        # used=total-free
-        stats['used'] = stats['total'] - stats['free']
+        # Manage ZFS cache (see #3979 for details)
+        if self.zfs_enabled:
+            zfs_size = 0
+            zfs_shrink = 0
+            zfs_cache_stats = zfs_stats()
+            # Uncomment the following line to use the test data
+            # zfs_cache_stats = zfs_stats(['./tests-data/plugins/fs/zfs/arcstats'])
+            if 'arcstats.size' in zfs_cache_stats:
+                zfs_size = zfs_cache_stats['arcstats.size']
+                if 'arcstats.c_min' in zfs_cache_stats:
+                    zfs_cmin = zfs_cache_stats['arcstats.c_min']
+                else:
+                    zfs_cmin = 0
+
+                zfs_shrink = zfs_size - zfs_cmin
+            # Add the ZFS cache to the 'cached' memory
+            if 'cached' in stats:
+                stats['cached'] += zfs_size
+            else:
+                stats['cached'] = zfs_size
+
+            # Add the amount ZFS cache can shrink to 'available' memory
+            if 'available' in stats:
+                stats['available'] += zfs_shrink
+            else:
+                stats['available'] = zfs_shrink
+
+            # Subtract the amount ZFS cache can shrink from 'used' memory
+            stats['used'] -= zfs_shrink
+
+            # Update percent to reflect new 'available' value
+            stats['percent'] = float((stats['total'] - stats['available']) / stats['total'] * 100)
+
+        stats['used'] = stats['total'] - stats['available']
 
         return stats
 
