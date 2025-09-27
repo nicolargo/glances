@@ -126,6 +126,15 @@ class FsPlugin(GlancesPluginModel):
 
         return self.stats
 
+    @GlancesPluginModel._exit_after(3)
+    def get_all_stats_partitions(self):
+        """Return all partitions."""
+        try:
+            return psutil.disk_partitions(all=True)
+        except (UnicodeDecodeError, PermissionError):
+            logger.debug("Plugin - fs: PsUtil fetch failed")
+            return []
+
     def update_local(self):
         """Update the FS stats using the input method."""
         # Init new stats
@@ -146,19 +155,15 @@ class FsPlugin(GlancesPluginModel):
         allowed_fs_types = self.get_conf_value('allow')
         if allowed_fs_types:
             # Avoid Psutil call unless mounts need to be allowed
-            try:
-                all_mounted_fs = psutil.disk_partitions(all=True)
-            except (UnicodeDecodeError, PermissionError):
-                logger.debug("Plugin - fs: PsUtil extended fetch failed")
-            else:
-                # Discard duplicates (#2299) and add entries matching allowed fs types
-                tracked_mnt_points = {f.mountpoint for f in fs_stat}
-                for f in all_mounted_fs:
-                    if (
-                        any(f.fstype.find(fs_type) >= 0 for fs_type in allowed_fs_types)
-                        and f.mountpoint not in tracked_mnt_points
-                    ):
-                        fs_stat.append(f)
+            all_mounted_fs = self.get_all_stats_partitions()
+            # Discard duplicates (#2299) and add entries matching allowed fs types
+            tracked_mnt_points = {f.mountpoint for f in fs_stat}
+            for f in all_mounted_fs:
+                if (
+                    any(f.fstype.find(fs_type) >= 0 for fs_type in allowed_fs_types)
+                    and f.mountpoint not in tracked_mnt_points
+                ):
+                    fs_stat.append(f)
 
         # Loop over fs
         for fs in fs_stat:
