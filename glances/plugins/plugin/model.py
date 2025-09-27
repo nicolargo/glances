@@ -14,6 +14,12 @@ I am your father...
 
 import copy
 import re
+import threading
+
+try:
+    import thread
+except ImportError:
+    import _thread as thread
 
 from glances.actions import GlancesActions
 from glances.events_list import glances_events
@@ -1212,7 +1218,25 @@ class GlancesPluginModel:
 
         return wrapper
 
+    def _exit_after(second):
+        """Exit the function if it takes more than 'second' seconds to complete."""
+
+        def outer(fn):
+            def inner(*args, **kwargs):
+                timer = threading.Timer(second, thread.interrupt_main, args=[fn.__name__])
+                timer.start()
+                try:
+                    result = fn(*args, **kwargs)
+                finally:
+                    timer.cancel()
+                return result
+
+            return inner
+
+        return outer
+
     # Mandatory to call the decorator in child classes
     _check_decorator = staticmethod(_check_decorator)
     _log_result_decorator = staticmethod(_log_result_decorator)
     _manage_rate = staticmethod(_manage_rate)
+    _exit_after = staticmethod(_exit_after)

@@ -136,6 +136,15 @@ class FsPlugin(GlancesPluginModel):
 
         return self.stats
 
+    @GlancesPluginModel._exit_after(3)
+    def get_all_stats_partitions(self):
+        """Return all partitions."""
+        try:
+            return psutil.disk_partitions(all=True)
+        except (UnicodeDecodeError, PermissionError):
+            logger.debug("Plugin - fs: PsUtil fetch failed")
+            return []
+
     def update_local(self):
         """Update the FS stats using the input method."""
         # Init new stats
