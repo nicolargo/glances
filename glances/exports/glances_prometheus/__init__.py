@@ -13,10 +13,10 @@ from numbers import Number
 
 from prometheus_client import Gauge, start_http_server
 
+from glances.api import GlancesStats
 from glances.exports.export import GlancesExport
 from glances.globals import listkeys
 from glances.logger import logger
-
 
 class Export(GlancesExport):
     """This class manages the Prometheus export module."""
@@ -43,20 +43,10 @@ class Export(GlancesExport):
         # Perhaps a better method is possible...
         self._metric_dict = {}
 
+        self._stats = GlancesStats()
+
         # Init the Prometheus Exporter
         self.init()
-
-        self.plugin_to_object_label = {
-            "amps": "app",
-            "containers": "container",
-            "diskio": "device",
-            "fs": "mount_point",
-            "gpu": "name",
-            "network": "interface",
-            "percpu": "core",
-            "sensors": "object",
-            "wifi": "interface",
-        }
 
     def init(self):
         """Init the Prometheus Exporter"""
@@ -75,24 +65,23 @@ class Export(GlancesExport):
         # Remove non number stats and convert all to float (for Boolean)
         data = {str(k): float(v) for k, v in zip(columns, points) if isinstance(v, Number)}
 
+        key_name = self._stats.get_plugin(name).get_key()
+
         # Write metrics to the Prometheus exporter
         for metric, value in data.items():
+            labels = self.labels
             metric_name = self.prefix + self.METRIC_SEPARATOR + name + self.METRIC_SEPARATOR
             try:
                 obj, stat = metric.split('.')
                 metric_name += stat
+                labels += f",{key_name}:{obj}"
             except ValueError:
-                obj = ''
                 metric_name += metric
 
             # Prometheus is very sensible to the metric name
             # See: https://prometheus.io/docs/practices/naming/
             for c in ' .-/:[]':
                 metric_name = metric_name.replace(c, self.METRIC_SEPARATOR)
-
-            labels = self.labels
-            if obj:
-                labels += f",{self.plugin_to_object_label[name]}:{obj}"
 
             # Get the labels
             labels = self.parse_tags(labels)
