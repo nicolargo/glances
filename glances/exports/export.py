@@ -152,7 +152,7 @@ class GlancesExport:
         d_tags = {}
         if tags:
             try:
-                d_tags = dict([x.split(":") for x in tags.split(",")])
+                d_tags = dict(x.split(":", 1) for x in tags.split(","))
             except ValueError:
                 # one of the 'key:value' pairs was missing
                 logger.info("Invalid tags passed: %s", tags)
@@ -225,7 +225,7 @@ class GlancesExport:
 
     def is_excluded(self, field):
         """Return true if the field is excluded."""
-        return hasattr(self, 'exclude_fields') and any(re.fullmatch(i, field, re.I) for i in self.exclude_fields)
+        return any(re.fullmatch(i, field, re.I) for i in (getattr(self, 'exclude_fields') or ()))
 
     def plugins_to_export(self, stats):
         """Return the list of plugins to export.
