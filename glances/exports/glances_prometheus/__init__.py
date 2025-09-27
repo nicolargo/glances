@@ -18,6 +18,7 @@ from glances.exports.export import GlancesExport
 from glances.globals import listkeys
 from glances.logger import logger
 
+
 class Export(GlancesExport):
     """This class manages the Prometheus export module."""
 
