@@ -12,7 +12,7 @@ import operator
 
 import psutil
 
-from glances.globals import PermissionError, nativestr, u
+from glances.globals import PermissionError, exit_after, nativestr, u
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -88,6 +88,16 @@ snmp_oid['esxi'] = snmp_oid['windows']
 items_history_list = [{'name': 'percent', 'description': 'File system usage in percent', 'y_unit': '%'}]
 
 
+@exit_after(1, default=None)
+def get_disk_usage(fs):
+    """Return all partitions."""
+    try:
+        return psutil.disk_usage(fs.mountpoint)
+    except OSError:
+        logger.debug("Plugin - fs: PsUtil fetch failed")
+        return None
+
+
 class FsPlugin(GlancesPluginModel):
     """Glances file system plugin.
 
@@ -126,15 +136,6 @@ class FsPlugin(GlancesPluginModel):
 
         return self.stats
 
-    @GlancesPluginModel._exit_after(3)
-    def get_all_stats_partitions(self):
-        """Return all partitions."""
-        try:
-            return psutil.disk_partitions(all=True)
-        except (UnicodeDecodeError, PermissionError):
-            logger.debug("Plugin - fs: PsUtil fetch failed")
-            return []
-
     def update_local(self):
         """Update the FS stats using the input method."""
         # Init new stats
@@ -155,29 +156,30 @@ class FsPlugin(GlancesPluginModel):
         allowed_fs_types = self.get_conf_value('allow')
         if allowed_fs_types:
             # Avoid Psutil call unless mounts need to be allowed
-            all_mounted_fs = self.get_all_stats_partitions()
-            # Discard duplicates (#2299) and add entries matching allowed fs types
-            tracked_mnt_points = {f.mountpoint for f in fs_stat}
-            for f in all_mounted_fs:
-                if (
-                    any(f.fstype.find(fs_type) >= 0 for fs_type in allowed_fs_types)
-                    and f.mountpoint not in tracked_mnt_points
-                ):
-                    fs_stat.append(f)
+            try:
+                all_mounted_fs = psutil.disk_partitions(all=True)
+            except (UnicodeDecodeError, PermissionError):
+                logger.debug("Plugin - fs: PsUtil fetch failed")
+            else:
+                # Discard duplicates (#2299) and add entries matching allowed fs types
+                tracked_mnt_points = {f.mountpoint for f in fs_stat}
+                for f in all_mounted_fs:
+                    if (
+                        any(f.fstype.find(fs_type) >= 0 for fs_type in allowed_fs_types)
+                        and f.mountpoint not in tracked_mnt_points
+                    ):
+                        fs_stat.append(f)
 
         # Loop over fs
         for fs in fs_stat:
             # Hide the stats if the mount point is in the exclude list
-            # # It avoids unnecessary call to PsUtil disk_usage
+            # It avoids unnecessary call to PsUtil disk_usage
             if not self.is_display_any(fs.mountpoint, fs.device):
                 continue
 
             # Grab the disk usage
-            try:
-                fs_usage = psutil.disk_usage(fs.mountpoint)
-            except OSError:
-                # Correct issue #346
-                # Disk is ejected during the command
+            fs_usage = get_disk_usage(fs)
+            if fs_usage is None:
                 continue
             fs_current = {
                 'device_name': fs.device,

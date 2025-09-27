@@ -27,6 +27,7 @@ import weakref
 from collections import OrderedDict
 from configparser import ConfigParser, NoOptionError, NoSectionError
 from datetime import datetime
+from multiprocessing import Process, Queue
 from operator import itemgetter, methodcaller
 from statistics import mean
 from typing import Any, Optional, Union
@@ -584,3 +585,27 @@ def atoi(text):
 def natural_keys(text):
     """Return a text in a natural/human readable format."""
     return [atoi(c) for c in re.split(r'(\d+)', text)]
+
+
+def exit_after(seconds, default=None):
+    """Exit the function if it takes more than 'seconds' seconds to complete.
+    In this case, return the value of 'default' (default: None)."""
+
+    def handler(q, func, args, kwargs):
+        q.put(func(*args, **kwargs))
+
+    def decorator(func):
+        def wraps(*args, **kwargs):
+            q = Queue()
+            p = Process(target=handler, args=(q, func, args, kwargs))
+            p.start()
+            p.join(timeout=seconds)
+            if p.is_alive():
+                p.terminate()
+                p.join()
+                return default
+            return q.get()
+
+        return wraps
+
+    return decorator
