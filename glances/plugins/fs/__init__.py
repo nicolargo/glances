@@ -88,7 +88,7 @@ snmp_oid['esxi'] = snmp_oid['windows']
 items_history_list = [{'name': 'percent', 'description': 'File system usage in percent', 'y_unit': '%'}]
 
 
-@exit_after(1, default=None)
+@exit_after(3, default=None)
 def get_disk_usage(fs):
     """Return all partitions."""
     try:
@@ -137,22 +137,13 @@ class FsPlugin(GlancesPluginModel):
 
         return self.stats
 
-    @GlancesPluginModel._exit_after(3)
-    def get_all_stats_partitions(self):
-        """Return all partitions."""
-        try:
-            return psutil.disk_partitions(all=True)
-        except (UnicodeDecodeError, PermissionError):
-            logger.debug("Plugin - fs: PsUtil fetch failed")
-            return []
-
-    @GlancesPluginModel._exit_after(3)
     def get_disk_partitions(self, *, fetch_all: bool = False):
         """Return all partitions."""
         try:
             # Grab the stats using the psutil disk_partitions
             # If fetch_all is False, then returns physical devices only (e.g. hard disks, cd-rom drives, USB keys)
             # and ignore all others (e.g. memory partitions such as /dev/shm)
+            # Else return all mount points (including logical mount points like NFS, tmpfs, shm, ...)
             return psutil.disk_partitions(all=fetch_all)
         except (UnicodeDecodeError, PermissionError):
             logger.debug("Plugin - fs: PsUtil fetch failed")
