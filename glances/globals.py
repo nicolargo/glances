@@ -595,6 +595,9 @@ def exit_after(seconds, default=None):
         q.put(func(*args, **kwargs))
 
     def decorator(func):
+        if not LINUX:
+            return func
+
         def wraps(*args, **kwargs):
             q = Queue()
             p = Process(target=handler, args=(q, func, args, kwargs))
