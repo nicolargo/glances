@@ -26,7 +26,7 @@ except ImportError:
 from glances import __version__
 from glances.events_list import GlancesEventsList
 from glances.filter import GlancesFilter, GlancesFilterList
-from glances.globals import LINUX, WINDOWS, pretty_date, string_value_to_float, subsample
+from glances.globals import LINUX, WINDOWS, auto_unit, pretty_date, string_value_to_float, subsample
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
 from glances.plugins.fs.zfs import zfs_enable, zfs_stats
@@ -518,6 +518,27 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(pretty_date(datetime(2023, 6, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '7 months')
         self.assertEqual(pretty_date(datetime(2023, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), 'an year')
         self.assertEqual(pretty_date(datetime(2020, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '4 years')
+
+    def test_093_auto_unit(self):
+        """Test auto_unit classe"""
+        print('INFO: [TEST_093] Auto unit')
+        self.assertEqual(auto_unit(1.1234), '1.12')
+        self.assertEqual(auto_unit(1024), '1024')
+        self.assertEqual(auto_unit(1025), '1K')
+        self.assertEqual(auto_unit(613421788), '585M')
+        self.assertEqual(auto_unit(613421788, low_precision=True), '585M')
+        self.assertEqual(auto_unit(5307033647), '4.94G')
+        self.assertEqual(auto_unit(5307033647, low_precision=True), '4.9G')
+        self.assertEqual(auto_unit(44968414685), '41.9G')
+        self.assertEqual(auto_unit(44968414685, low_precision=True), '41.9G')
+        self.assertEqual(auto_unit(838471403472), '781G')
+        self.assertEqual(auto_unit(838471403472, low_precision=True), '781G')
+        self.assertEqual(auto_unit(9683209690677), '8.81T')
+        self.assertEqual(auto_unit(9683209690677, low_precision=True), '8.8T')
+        self.assertEqual(auto_unit(1073741824), '1024M')
+        self.assertEqual(auto_unit(1073741824, low_precision=True), '1024M')
+        self.assertEqual(auto_unit(1181116006), '1.10G')
+        self.assertEqual(auto_unit(1181116006, low_precision=True), '1.1G')
 
     def test_094_thresholds(self):
         """Test thresholds classes"""

@@ -442,7 +442,8 @@ def auto_unit(number, low_precision=False, min_symbol='K', none_symbol='-'):
         # Avoid 0.0
         return '0'
 
-    decimal_precision = 2
+    # If a value is a float, decimal_precision is 2 else 0
+    decimal_precision = 2 if isinstance(number, float) else 0
     for symbol in reversed(symbols):
         value = float(number) / prefix[symbol]
         if value > 1:
