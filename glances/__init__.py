@@ -188,4 +188,3 @@ def main():
 
     # Glances can be ran in standalone, client or server mode
     start(config=core.get_config(), args=core.get_args())
-    start(config=core.get_config(), args=core.get_args())

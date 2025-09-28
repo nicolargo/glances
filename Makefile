@@ -138,6 +138,9 @@ test-export: test-export-csv test-export-json test-export-influxdb-v1 test-expor
 # Linters, profilers and cyber security
 # ===================================================================
 
+find-duplicate-lines:
+	sh ./tests-data/tools/find-duplicate-lines.sh
+
 format: ## Format the code
 	$(venv_full)/python -m ruff format .
 
