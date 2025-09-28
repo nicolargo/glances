@@ -206,7 +206,7 @@ class MemPlugin(GlancesPluginModel):
             stats['used'] -= zfs_shrink
 
             # Update percent to reflect new 'available' value
-            stats['percent'] = float((stats['total'] - stats['available']) / stats['total'] * 100)
+            stats['percent'] = round(float((stats['total'] - stats['available']) / stats['total'] * 100), 1)
 
         stats['used'] = stats['total'] - stats['available']
 
