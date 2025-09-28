@@ -365,4 +365,3 @@ class Config:
             return self.parser.getboolean(section, option)
         except (NoOptionError, NoSectionError):
             return bool(default)
-            return bool(default)
