@@ -88,7 +88,7 @@ snmp_oid['esxi'] = snmp_oid['windows']
 items_history_list = [{'name': 'percent', 'description': 'File system usage in percent', 'y_unit': '%'}]
 
 
-@exit_after(3, default=None)
+@exit_after(2, default=None)
 def get_disk_usage(fs):
     """Return all partitions."""
     try:
