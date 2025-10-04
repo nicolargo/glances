@@ -13,7 +13,6 @@ from numbers import Number
 
 from prometheus_client import Gauge, start_http_server
 
-from glances.api import GlancesStats
 from glances.exports.export import GlancesExport
 from glances.globals import listkeys
 from glances.logger import logger
@@ -44,7 +43,8 @@ class Export(GlancesExport):
         # Perhaps a better method is possible...
         self._metric_dict = {}
 
-        self._stats = GlancesStats()
+        # Keys name (compute in update() method)
+        self.keys_name = {}
 
         # Init the Prometheus Exporter
         self.init()
@@ -59,14 +59,16 @@ class Export(GlancesExport):
         else:
             logger.info(f"Start Prometheus exporter on {self.host}:{self.port}")
 
+    def update(self, stats):
+        self.keys_name = {k: stats.get_plugin(k).get_key() for k in stats.getPluginsList()}
+        super().update(stats)
+
     def export(self, name, columns, points):
         """Write the points to the Prometheus exporter using Gauge."""
         logger.debug(f"Export {name} stats to Prometheus exporter")
 
         # Remove non number stats and convert all to float (for Boolean)
         data = {str(k): float(v) for k, v in zip(columns, points) if isinstance(v, Number)}
-
-        key_name = self._stats.get_plugin(name).get_key()
 
         # Write metrics to the Prometheus exporter
         for metric, value in data.items():
@@ -75,7 +77,7 @@ class Export(GlancesExport):
             try:
                 obj, stat = metric.split('.')
                 metric_name += stat
-                labels += f",{key_name}:{obj}"
+                labels += f",{self.keys_name.get(name)}:{obj}"
             except ValueError:
                 metric_name += metric
 
