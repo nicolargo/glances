@@ -824,6 +824,10 @@ Examples of use:
             disable(args, 'memswap')
             disable(args, 'load')
 
+        # Unicode => No separator
+        if args.disable_unicode:
+            args.enable_separator = False
+
         # Memory leak
         if getattr(args, 'memory_leak', False):
             logger.info('Memory leak detection enabled')
@@ -833,9 +837,14 @@ Examples of use:
             args.time = 1
             args.disable_history = True
 
-        # Unicode => No separator
-        if args.disable_unicode:
-            args.enable_separator = False
+        # Disable history if history_size is 0
+        if self.config.has_section('global'):
+            if self.config.get_int_value('global', 'history_size', default=1200) == 0:
+                args.disable_history = True
+
+        # Display an information message if history is disabled
+        if args.disable_history:
+            logger.info("Stats history is disabled")
 
     def parse_args(self, args_begin_at):
         """Parse command line arguments.
