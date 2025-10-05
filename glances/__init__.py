@@ -104,18 +104,18 @@ def setup_server_mode(args, mode):
 
 
 def maybe_trace_memleak(args, snapshot_begin):
-    if args.memory_leak:
+    if args.trace_malloc or args.memory_leak:
         snapshot_end = tracemalloc.take_snapshot()
+    if args.memory_leak:
         snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
         memory_leak = sum([s.size_diff for s in snapshot_diff])
         print(f"Memory consumption: {memory_leak / 1000:.1f}KB (see log for details)")
         logger.info("Memory consumption (top 5):")
         for stat in snapshot_diff[:5]:
             logger.info(stat)
-    elif args.trace_malloc:
+    if args.trace_malloc:
         # See more options here: https://docs.python.org/3/library/tracemalloc.html
-        snapshot = tracemalloc.take_snapshot()
-        top_stats = snapshot.statistics("filename")
+        top_stats = snapshot_end.statistics("filename")
         print("[ Trace malloc - Top 10 ]")
         for stat in top_stats[:10]:
             print(stat)
