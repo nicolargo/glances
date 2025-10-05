@@ -226,6 +226,9 @@ class GlancesPluginModel:
 
     def update_stats_history(self):
         """Update stats history."""
+        # Exit if no history
+        if not self.history_enable():
+            return
         # Build the history
         _get_export = self.get_export()
         if not (_get_export and self.history_enable()):
