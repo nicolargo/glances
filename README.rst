@@ -84,6 +84,8 @@ For the Web server mode, run:
 
 and enter the URL ``http://<ip>:61208`` in your favorite web browser.
 
+.. image:: ./docs/_static/screenshot-web.png
+
 For the client/server mode, run:
 
 .. code-block:: console
