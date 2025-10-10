@@ -162,7 +162,7 @@ Documentation 📜
 
 For complete documentation have a look at the readthedocs_ website.
 
-If you have any question (after RTFM!), please post it on the official Q&A `forum`_.
+If you have any question (after RTFM!), please post it on the official Reddit `forum`_.
 
 Gateway to other services 🌐
 ============================
@@ -582,7 +582,7 @@ Please give us a star on `GitHub`_ if you like this project.
 .. _Python: https://www.python.org/getit/
 .. _Termux: https://play.google.com/store/apps/details?id=com.termux
 .. _readthedocs: https://glances.readthedocs.io/
-.. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
+.. _forum: https://www.reddit.com/r/glances/
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
 .. _package: https://repology.org/project/glances/versions
 .. _sponsors: https://github.com/sponsors/nicolargo
