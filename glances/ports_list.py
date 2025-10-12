@@ -62,7 +62,7 @@ class GlancesPortsList:
                 new_port = {}
                 try:
                     new_port['host'] = netifaces.gateways()[netifaces.AF_INET][0][0]
-                except KeyError:
+                except (KeyError, NameError):
                     new_port['host'] = None
                 # ICMP
                 new_port['port'] = 0
