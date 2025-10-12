@@ -125,7 +125,7 @@ psycopg-binary==3.2.10 ; implementation_name != 'pypy'
     # via psycopg
 pyarrow==21.0.0
     # via influxdb3-python
-pyasn1==0.6.0
+pyasn1==0.6.1
     # via pysnmp-lextudio
 pycparser==2.23 ; (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (implementation_name == 'pypy' and platform_python_implementation == 'PyPy')
     # via cffi
