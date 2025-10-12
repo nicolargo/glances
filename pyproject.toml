@@ -25,6 +25,7 @@ dependencies = [
   "windows-curses; platform_system == 'Windows'",
   "shtab; platform_system != 'Windows'",
   "jinja2",
+  "pyinstrument>=5.1.1",
 ]
 description = "A cross-platform curses-based monitoring tool"
 dynamic = ["version"]
@@ -35,19 +36,7 @@ readme = "README.rst"
 requires-python = ">=3.9"
 urls.Homepage = "https://github.com/nicolargo/glances"
 
-[project.optional-dependencies]
-action = ["chevron"]
-# all but not dev
-all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,raid,sensors,smart,snmp,sparklines,web,wifi]"]
-browser = ["zeroconf"]
-cloud = ["requests"]
-containers = [
-  "docker>=6.1.1",
-  "packaging",
-  "podman",
-  "python-dateutil",
-  "six",
-]
+[dependency-groups]
 dev = [
   "codespell",
   "fonttools>=4.43.0",
@@ -61,12 +50,29 @@ dev = [
   "pyright",
   "pytest",
   "requirements-parser",
+  "reuse",
   "rstcheck",
   "ruff",
   "selenium",
   "semgrep",
   "setuptools>=65.5.1",
+  "sphinx",
+  "sphinx_rtd_theme",
   "webdriver-manager",
+]
+
+[project.optional-dependencies]
+action = ["chevron"]
+# all but not dev
+all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,raid,sensors,smart,snmp,sparklines,web,wifi]"]
+browser = ["zeroconf"]
+cloud = ["requests"]
+containers = [
+  "docker>=6.1.1",
+  "packaging",
+  "podman",
+  "python-dateutil",
+  "six",
 ]
 export = [
   "bernhard",
@@ -250,3 +256,8 @@ log_level = "INFO"
 
 [tool.flake8]
 max-line-length = 120
+
+[tool.uv.workspace]
+members = [
+  "venv-min",
+]
