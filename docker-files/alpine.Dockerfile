@@ -66,7 +66,7 @@ RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --upgrade pip
 
 RUN python${PYTHON_VERSION} -m venv --without-pip venv
 
-COPY docker-requirements.txt all-requirements.txt ./
+COPY pyproject.toml docker-requirements.txt all-requirements.txt ./
 
 ##############################################################################
 # BUILD: Install the minimal image deps
