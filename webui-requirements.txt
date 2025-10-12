@@ -1,7 +1,0 @@
-# install with base requirements file
--r requirements.txt
-
-fastapi>=0.82.0; # ReST API Framework
-jinja2 # Template engine
-orjson # JSON Serialization speedup
-uvicorn # Webserver

@@ -499,7 +499,7 @@ Dependencies:
 - ``shtab`` (Shell autocompletion) [All but Windows]
 - ``jinja2`` (for fetch mode and templating)
 
-Optional dependencies:
+Extra dependencies:
 
 - ``batinfo`` (for battery monitoring)
 - ``bernhard`` (for the Riemann export module)

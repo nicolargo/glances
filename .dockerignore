@@ -8,10 +8,8 @@
 !/glances/outputs/static
 
 # Include Requirements files
-!/requirements.txt
+!/all-requirements.txt
 !/docker-requirements.txt
-!/webui-requirements.txt
-!/optional-requirements.txt
 
 # Include Config file
 !/docker-compose/glances.conf

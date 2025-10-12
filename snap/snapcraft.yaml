@@ -1,5 +1,5 @@
 name: glances
-version: '4.3.3+build01'  # Put the current stable version+buildXX
+version: '4.4.0+build00'  # Put the current stable version+buildXX (00 for beta/develop)
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
@@ -54,7 +54,4 @@ parts:
     source: https://github.com/nicolargo/glances.git
     source-branch: master  # develop
     python-requirements:
-      - requirements.txt
-      - webui-requirements.txt
       - docker-requirements.txt
-
