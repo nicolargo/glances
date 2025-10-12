@@ -17,3 +17,6 @@
 
 # Include Binary file
 !/docker-bin.sh
+
+# Include TOML file
+!/pyproject.toml

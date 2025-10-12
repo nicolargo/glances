@@ -55,7 +55,7 @@ RUN apt-get clean \
 
 RUN python3 -m venv --without-pip venv
 
-COPY docker-requirements.txt all-requirements.txt ./
+COPY pyproject.toml docker-requirements.txt all-requirements.txt ./
 
 ##############################################################################
 # BUILD: Install the minimal image deps
