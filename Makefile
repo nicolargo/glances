@@ -65,6 +65,26 @@ venv-dev:
 	uv run pre-commit install --hook-type pre-commit
 
 # ===================================================================
+# Requirements
+# ===================================================================
+
+requirements-min: ## Generate the requirements.txt files (minimal dependencies)
+	uv export --no-group dev --output-file requirements.txt
+
+requirements-all: ## Generate the all-requirements.txt files (all dependencies)
+	uv export --all-extras --no-group dev --output-file all-requirements.txt
+
+requirements-docker: ## Generate the docker-requirements.txt files (Docker specific dependencies)
+	uv export --no-group dev --extra containers --extra web --output-file docker-requirements.txt
+
+requirements-dev: ## Generate the dev-requirements.txt files (dev dependencies)
+	uv export --only-dev --output-file dev-requirements.txt
+
+requirements: requirements-min requirements-all requirements-dev requirements-docker  ## Generate all the requirements files
+
+requirements-upgrade: venv-upgrade requirements  ## Upgrade the virtualenv and regenerate all the requirements files
+
+# ===================================================================
 # Tests
 # ===================================================================
 
