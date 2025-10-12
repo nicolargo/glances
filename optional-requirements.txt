@@ -39,6 +39,7 @@ setuptools>=78.1.1 # not directly required, pinned by Snyk to avoid a vulnerabil
 six
 sparklines
 statsd
-urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
+urllib3>=2.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
 uvicorn
 zeroconf
+protobuf>=4.25.8 # not directly required, pinned by Snyk to avoid a vulnerability
