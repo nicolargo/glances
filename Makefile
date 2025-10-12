@@ -66,19 +66,22 @@ venv-dev:
 
 # ===================================================================
 # Requirements
+#
+# Note: the --no-hashes option should be used because pip (in CI) has
+# issues with hashes.
 # ===================================================================
 
 requirements-min: ## Generate the requirements.txt files (minimal dependencies)
-	uv export --no-group dev --output-file requirements.txt
+	uv export --no-hashes --no-group dev --output-file requirements.txt
 
 requirements-all: ## Generate the all-requirements.txt files (all dependencies)
-	uv export --all-extras --no-group dev --output-file all-requirements.txt
+	uv export --no-hashes --all-extras --no-group dev --output-file all-requirements.txt
 
 requirements-docker: ## Generate the docker-requirements.txt files (Docker specific dependencies)
-	uv export --no-group dev --extra containers --extra web --output-file docker-requirements.txt
+	uv export --no-hashes --no-group dev --extra containers --extra web --output-file docker-requirements.txt
 
 requirements-dev: ## Generate the dev-requirements.txt files (dev dependencies)
-	uv export --only-dev --output-file dev-requirements.txt
+	uv export --no-hashes --only-dev --output-file dev-requirements.txt
 
 requirements: requirements-min requirements-all requirements-dev requirements-docker  ## Generate all the requirements files
 
