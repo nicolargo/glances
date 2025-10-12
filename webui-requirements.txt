@@ -5,3 +5,4 @@ fastapi>=0.82.0; # ReST API Framework
 jinja2 # Template engine
 orjson # JSON Serialization speedup
 uvicorn # Webserver
+h11>=0.16.0 # not directly required, pinned by Snyk to avoid a vulnerability
