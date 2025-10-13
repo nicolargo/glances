@@ -202,6 +202,7 @@ class Config:
         # CPU
         if not self.parser.has_section('cpu'):
             self.parser.add_section('cpu')
+        self.set_default_cwc('cpu', 'total', log=True)
         self.set_default_cwc('cpu', 'user')
         self.set_default_cwc('cpu', 'system')
         self.set_default_cwc('cpu', 'steal')
@@ -215,6 +216,7 @@ class Config:
                 str(iowait_bottleneck - (iowait_bottleneck * 0.10)),
                 str(iowait_bottleneck),
             ],
+            log=True
         )
         # Context switches bottleneck identification #1212
         ctx_switches_bottleneck = (500000 * 0.10) * multiprocessing.cpu_count()
@@ -298,7 +300,7 @@ class Config:
         """Return info about the existence of a section."""
         return self.parser.has_section(section)
 
-    def set_default_cwc(self, section, option_header=None, cwc=['50', '70', '90']):
+    def set_default_cwc(self, section, option_header=None, cwc=['50', '70', '90'], log=False):
         """Set default values for careful, warning and critical."""
         if option_header is None:
             header = ''
@@ -307,6 +309,10 @@ class Config:
         self.set_default(section, header + 'careful', cwc[0])
         self.set_default(section, header + 'warning', cwc[1])
         self.set_default(section, header + 'critical', cwc[2])
+        if log:
+            self.set_default(section, header + 'log', 'True')
+        else:
+            self.set_default(section, header + 'log', 'False')
 
     def set_default(self, section, option, default):
         """If the option did not exist, create a default value."""

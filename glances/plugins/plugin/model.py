@@ -743,7 +743,7 @@ class GlancesPluginModel:
 
         # Manage log
         log_str = ""
-        if self.get_limit_log(stat_name=stat_name, default_action=log):
+        if self.get_limit_log(stat_name=stat_name, default_action=log) and ret != 'DEFAULT':
             # Add _LOG to the return string
             # So stats will be highlighted with a specific color
             log_str = "_LOG"
