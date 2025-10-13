@@ -155,7 +155,7 @@ class Outdated:
 
         try:
             res = urlopen(PYPI_API_URL, timeout=3).read()
-        except (HTTPError, URLError, CertificateError) as e:
+        except Exception as e:
             logger.debug(f"Cannot get Glances version from the PyPI RESTful API ({e})")
         else:
             self.data['latest_version'] = json.loads(nativestr(res))['info']['version']
