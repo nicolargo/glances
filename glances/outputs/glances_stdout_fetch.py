@@ -16,12 +16,12 @@ from glances.logger import logger
 DEFAULT_FETCH_TEMPLATE = """
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✨ {{ gl.system['hostname'] }}{{ ' - ' + gl.ip['address'] if gl.ip['address'] else '' }}
-⚙️  {{ gl.system['hr_name'] }} | Uptime: {{ gl.uptime }}
+✨ {{ gl.system['hostname'] }}{{ ' | ' + gl.ip['address'] if gl.ip['address'] else '' }} | Uptime: {{ gl.uptime }}
+⚙️  {{ gl.system['hr_name'] }}
 
-💡 LOAD     {{ '%0.2f'| format(gl.load['min1']) }} |\
- {{ '%0.2f'| format(gl.load['min5']) }} |\
- {{ '%0.2f'| format(gl.load['min15']) }}
+💡 LOAD     {{ '%0.2f'| format(gl.load['min1']) }}/min1 |\
+ {{ '%0.2f'| format(gl.load['min5']) }}/min5 |\
+ {{ '%0.2f'| format(gl.load['min15']) }}/min15
 ⚡ CPU      {{ gl.bar(gl.cpu['total']) }} {{ gl.cpu['total'] }}% of {{ gl.core['log'] }} cores
 🧠 MEM      {{ gl.bar(gl.mem['percent']) }} {{ gl.mem['percent'] }}% ({{ gl.auto_unit(gl.mem['used']) }} /\
  {{ gl.auto_unit(gl.mem['total']) }})
