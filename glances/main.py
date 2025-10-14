@@ -379,7 +379,7 @@ Examples of use:
             default=None,
             type=str,
             dest='export_process_filter',
-            help='set the export process filter (comman separated list of regular expression)',
+            help='set the export process filter (comma-separated list of regular expression)',
         )
         # Client/Server option
         parser.add_argument(
