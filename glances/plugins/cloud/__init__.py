@@ -51,18 +51,21 @@ class CloudPlugin(GlancesPluginModel):
         # Init the stats
         self.reset()
 
-        # Init thread to grab OpenStack stats asynchronously
-        self.OPENSTACK = ThreadOpenStack()
-        self.OPENSTACKEC2 = ThreadOpenStackEC2()
+        # Enable threads only if the plugin is enabled
+        if self.is_enabled():
+            # Init thread to grab OpenStack stats asynchronously
+            self.OPENSTACK = ThreadOpenStack()
+            self.OPENSTACKEC2 = ThreadOpenStackEC2()
 
-        # Run the thread
-        self.OPENSTACK.start()
-        self.OPENSTACKEC2.start()
+            # Run the thread
+            self.OPENSTACK.start()
+            self.OPENSTACKEC2.start()
 
     def exit(self):
         """Overwrite the exit method to close threads."""
-        self.OPENSTACK.stop()
-        self.OPENSTACKEC2.stop()
+        if self.is_enabled():
+            self.OPENSTACK.stop()
+            self.OPENSTACKEC2.stop()
         # Call the father class
         super().exit()
 
