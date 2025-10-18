@@ -6,7 +6,7 @@ set -e
 # Run glances with export to Prometheus, stopping after 10 writes
 # This will run synchronously now since we're using --stop-after
 echo "Glances to export system stats to Prometheus"
-./venv/bin/python -m glances --config ./conf/glances.conf --export prometheus --stop-after 10 --quiet &
+.venv/bin/python -m glances --config ./conf/glances.conf --export prometheus --stop-after 10 --quiet &
 # Get the PID of the last background command
 GLANCES_PID=$!
 
