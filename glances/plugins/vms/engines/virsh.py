@@ -22,7 +22,7 @@ from glances.secure import secure_popen
 VIRSH_PATH = '/usr/bin/virsh'
 VIRSH_VERSION_OPTIONS = 'version'
 VIRSH_INFO_OPTIONS = 'list --all'
-VIRSH_DOMAIN_STATS_OPTIONS = 'domstats'
+VIRSH_DOMAIN_STATS_OPTIONS = 'domstats --nowait'
 VIRSH_DOMAIN_TITLE_OPTIONS = 'desc --title'
 import_virsh_error_tag = not os.path.exists(VIRSH_PATH) or not os.access(VIRSH_PATH, os.X_OK)
 
