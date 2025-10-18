@@ -17,6 +17,7 @@ import base64
 import errno
 import functools
 import importlib
+import multiprocessing
 import os
 import platform
 import queue
@@ -27,7 +28,6 @@ import weakref
 from collections import OrderedDict
 from configparser import ConfigParser, NoOptionError, NoSectionError
 from datetime import datetime
-from multiprocessing import Process, Queue
 from operator import itemgetter, methodcaller
 from statistics import mean
 from typing import Any, Optional, Union
@@ -97,6 +97,11 @@ viewkeys = methodcaller('keys')
 viewvalues = methodcaller('values')
 viewitems = methodcaller('items')
 
+# Multiprocessing start method (on POSIX system)
+if LINUX or BSD or SUNOS or MACOS:
+    ctx_mp_fork = multiprocessing.get_context('fork')
+else:
+    ctx_mp_fork = multiprocessing.get_context()
 
 ###################
 # GLOBALS FUNCTIONS
@@ -600,8 +605,8 @@ def exit_after(seconds, default=None):
             return func
 
         def wraps(*args, **kwargs):
-            q = Queue()
-            p = Process(target=handler, args=(q, func, args, kwargs))
+            q = ctx_mp_fork.Queue()
+            p = ctx_mp_fork.Process(target=handler, args=(q, func, args, kwargs))
             p.start()
             p.join(timeout=seconds)
             if not p.is_alive():
