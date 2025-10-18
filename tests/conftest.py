@@ -60,8 +60,8 @@ def glances_stats_no_history():
 
 @pytest.fixture(scope="session")
 def glances_webserver():
-    if os.path.isfile('./venv/bin/python'):
-        cmdline = "./venv/bin/python"
+    if os.path.isfile('.venv/bin/python'):
+        cmdline = ".venv/bin/python"
     else:
         cmdline = "python"
     cmdline += f" -m glances -B 0.0.0.0 -w --browser -p {SERVER_PORT} -C ./conf/glances.conf"
