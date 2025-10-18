@@ -860,7 +860,7 @@ class GlancesPluginModel:
             return self._limits[self.plugin_name + '_log'][0].lower() == 'true'
         return default_action
 
-    def get_conf_value(self, value, header="", plugin_name=None, default=[]):
+    def get_conf_value(self, value, header="", plugin_name=None, convert_bool=False, default=[]):
         """Return the configuration (header_) value for the current plugin.
 
         ...or the one given by the plugin_name var.
@@ -874,7 +874,8 @@ class GlancesPluginModel:
             plugin_name = plugin_name + '_' + header
 
         try:
-            return self._limits[plugin_name + '_' + value]
+            ret = self._limits[plugin_name + '_' + value]
+            return bool(ret[0]) if convert_bool else ret
         except KeyError:
             return default
 

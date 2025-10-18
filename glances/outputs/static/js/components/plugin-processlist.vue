@@ -11,7 +11,7 @@
             <div>
                 <span>CPU Min/Max/Mean: </span>
                 <span class="careful">{{ $filters.number(extended_stats.cpu_min, 1)
-                }}% / {{
+                    }}% / {{
                         $filters.number(extended_stats.cpu_max, 1) }}% / {{ $filters.number(extended_stats.cpu_mean, 1)
                     }}%</span>
                 <span>Affinity: </span>
@@ -101,7 +101,7 @@
                             @click="$emit('update:sorter', 'memory_percent')">
                             MEM%
                         </td>
-                        <td v-show="!getDisableStats().includes('memory_info')" scope="col">
+                        <td v-show="!getDisableStats().includes('memory_info') && !getDisableVms()" scope="col">
                             VIRT
                         </td>
                         <td v-show="!getDisableStats().includes('memory_info')" scope="col">
@@ -158,7 +158,7 @@
                             :class="getMemoryPercentAlert(process)">
                             {{ process.memory_percent == -1 ? '?' : $filters.number(process.memory_percent, 1) }}
                         </td>
-                        <td v-show="!getDisableStats().includes('memory_info')" scope="row">
+                        <td v-show="!getDisableStats().includes('memory_info') && !getDisableVms()" scope="row">
                             {{ $filters.bytes(process.memvirt) }}
                         </td>
                         <td v-show="!getDisableStats().includes('memory_info')" scope="row">
@@ -331,7 +331,7 @@
                             :class="getMemoryPercentAlert(process)">
                             {{ process.memory_percent == -1 ? '?' : $filters.number(process.memory_percent, 1) }}
                         </td>
-                        <td v-show="!getDisableStats().includes('memory_info')" scope="row">
+                        <td v-show="!getDisableStats().includes('memory_info') && !getDisableVms()" scope="row">
                             {{ $filters.bytes(process.memvirt) }}
                         </td>
                         <td v-show="!getDisableStats().includes('memory_info')" scope="row">
@@ -594,6 +594,10 @@ export default {
         },
         getDisableStats() {
             return GlancesHelper.getLimit('processlist', 'processlist_disable_stats') || [];
+        },
+        getDisableVms() {
+            const ret = GlancesHelper.getLimit('processlist', 'processlist_disable_virtual_memory') || ['False'];
+            return (ret[0].toLowerCase() === 'true') ? true : false;
         },
         setExtendedStats(pid) {
             fetch('api/4/processes/extended/' + pid.toString(), { method: 'POST' })

@@ -338,10 +338,11 @@ class ProcesslistPlugin(GlancesPluginModel):
         return ret
 
     def _get_process_curses_memory_info(self, p, selected, args):
-        return [
-            self._get_process_curses_vms(p, selected, args),
-            self._get_process_curses_rss(p, selected, args),
-        ]
+        ret = []
+        if not self.get_conf_value('disable_virtual_memory', convert_bool=True, default=False):
+            ret.append(self._get_process_curses_vms(p, selected, args))
+        ret.append(self._get_process_curses_rss(p, selected, args))
+        return ret
 
     def _get_process_curses_pid(self, p, selected, args):
         """Return process PID curses"""
@@ -739,8 +740,9 @@ class ProcesslistPlugin(GlancesPluginModel):
             msg = self.layout_header['mem'].format('MEM%')
             ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
         if 'memory_info' in display_stats:
-            msg = self.layout_header['virt'].format('VIRT')
-            ret.append(self.curse_add_line(msg, optional=True))
+            if not self.get_conf_value('disable_virtual_memory', convert_bool=True, default=False):
+                msg = self.layout_header['virt'].format('VIRT')
+                ret.append(self.curse_add_line(msg, optional=True))
             msg = self.layout_header['res'].format('RES')
             ret.append(self.curse_add_line(msg, optional=True))
         if 'pid' in display_stats:
@@ -951,4 +953,5 @@ class ProcesslistPlugin(GlancesPluginModel):
             return len(str(self.pid_max))
 
         # By default return 5 (corresponding to 99999 PID number)
+        return 5
         return 5
