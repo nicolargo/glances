@@ -38,29 +38,32 @@ help: ## List all make commands available
 # Virtualenv
 # ===================================================================
 
-install-uv:
+install-uv: ## Instructions to install the UV tool
 	@echo "Install the UV tool (https://astral.sh/uv/)"
 	@echo "Please install the UV tool manually"
 	@echo "For example with: curl -LsSf https://astral.sh/uv/install.sh | sh"
 	@echo "Or via a package manager of your distribution"
 	@echo "For example for Snap: snap install astral-uv"
 
-venv:
+upgrade-uv: ## Upgrade the UV tool
+	uv self update
+
+venv: ## Create the virtualenv with all dependencies
 	uv sync --all-extras --no-group dev
 
-venv-upgrade venv-switch-to-full:
+venv-upgrade venv-switch-to-full: ## Upgrade the virtualenv with all dependencies
 	uv sync --upgrade --all-extras
 
-venv-min:
+venv-min: ## Create the virtualenv with minimal dependencies
 	uv sync
 
-venv-upgrade-min venv-switch-to-min:
+venv-upgrade-min venv-switch-to-min: ## Upgrade the virtualenv with minimal dependencies
 	uv sync --upgrade
 
-venv-clean:
+venv-clean: ## Remove the virtualenv
 	rm -rf .venv
 
-venv-dev:
+venv-dev: ## Create the virtualenv with dev dependencies
 	uv sync --dev --all-extras
 	uv run pre-commit install --hook-type pre-commit
 
