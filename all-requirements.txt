@@ -20,7 +20,7 @@ cffi==2.0.0 ; implementation_name == 'pypy' or platform_python_implementation !=
     # via
     #   cryptography
     #   pyzmq
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
 chevron==0.14.0
     # via glances
@@ -32,9 +32,11 @@ colorama==0.4.6 ; sys_platform == 'win32'
     # via
     #   click
     #   pytest
-coverage==7.10.7
+coverage==7.10.7 ; python_full_version < '3.10'
     # via pytest-cov
-cryptography==46.0.2
+coverage==7.11.0 ; python_full_version >= '3.10'
+    # via pytest-cov
+cryptography==46.0.3
     # via pysnmpcrypto
 defusedxml==0.7.1
     # via glances
@@ -44,7 +46,9 @@ dnspython==2.8.0 ; python_full_version >= '3.10'
     # via pymongo
 docker==7.1.0
     # via glances
-elastic-transport==9.1.0
+elastic-transport==9.1.0 ; python_full_version < '3.10'
+    # via elasticsearch
+elastic-transport==9.2.0 ; python_full_version >= '3.10'
     # via elasticsearch
 elasticsearch==9.1.1
     # via glances
@@ -70,7 +74,9 @@ idna==3.11
     #   requests
 ifaddr==0.2.0
     # via zeroconf
-importlib-metadata==8.7.0
+importlib-metadata==7.1.0 ; python_full_version < '3.10'
+    # via pygal
+importlib-metadata==8.7.0 ; python_full_version >= '3.10'
     # via pygal
 influxdb==5.3.2
     # via glances
@@ -114,7 +120,9 @@ potsdb==1.0.3
     # via glances
 prometheus-client==0.23.1
     # via glances
-protobuf==6.32.1
+protobuf==4.25.8 ; python_full_version < '3.10'
+    # via bernhard
+protobuf==6.33.0 ; python_full_version >= '3.10'
     # via bernhard
 psutil==7.1.0
     # via glances
@@ -128,16 +136,14 @@ pyasn1==0.6.0
     # via pysnmp-lextudio
 pycparser==2.23 ; (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (implementation_name == 'pypy' and platform_python_implementation == 'PyPy')
     # via cffi
-pydantic==2.12.0
+pydantic==2.12.3
     # via fastapi
-pydantic-core==2.41.1
+pydantic-core==2.41.4
     # via pydantic
 pygal==3.0.5
     # via glances
 pygments==2.19.2
     # via pytest
-pyinstrument==5.1.1
-    # via glances
 pyjwt==2.10.1
     # via
     #   ibm-cloud-sdk-core
@@ -199,7 +205,9 @@ six==1.17.0
     #   influxdb
     #   python-dateutil
 sniffio==1.3.1
-    # via anyio
+    # via
+    #   anyio
+    #   elastic-transport
 sparklines==0.7.0
     # via glances
 starlette==0.48.0

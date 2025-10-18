@@ -48,7 +48,7 @@ cfgv==3.4.0
     # via pre-commit
 chardet==5.2.0 ; python_full_version < '3.10'
     # via binaryornot
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via
     #   python-debian
     #   requests
@@ -78,6 +78,10 @@ cycler==0.12.1
     # via matplotlib
 defusedxml==0.7.1
     # via semgrep
+deprecated==1.2.18 ; python_full_version < '3.10'
+    # via
+    #   opentelemetry-api
+    #   opentelemetry-exporter-otlp-proto-http
 distlib==0.4.0
     # via virtualenv
 docutils==0.21.2
@@ -102,7 +106,7 @@ fonttools==4.60.1
     # via matplotlib
 glom==22.1.0
     # via semgrep
-googleapis-common-protos==1.70.0 ; python_full_version >= '3.10'
+googleapis-common-protos==1.70.0
     # via opentelemetry-exporter-otlp-proto-http
 gprof2dot==2025.4.14
 h11==0.16.0
@@ -126,10 +130,12 @@ idna==3.11
     #   trio
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==8.7.0
+importlib-metadata==7.1.0 ; python_full_version < '3.10'
     # via
     #   opentelemetry-api
     #   sphinx
+importlib-metadata==8.7.0 ; python_full_version >= '3.10'
+    # via opentelemetry-api
 importlib-resources==6.5.2 ; python_full_version < '3.10'
     # via matplotlib
 iniconfig==2.1.0
@@ -138,7 +144,7 @@ jinja2==3.1.6
     # via
     #   reuse
     #   sphinx
-jsonschema==4.20.0
+jsonschema==4.25.1
     # via
     #   mcp
     #   semgrep
@@ -158,7 +164,7 @@ markupsafe==3.0.3
     # via jinja2
 matplotlib==3.9.4 ; python_full_version < '3.10'
 matplotlib==3.10.7 ; python_full_version >= '3.10'
-mcp==1.12.2 ; python_full_version >= '3.10'
+mcp==1.16.0 ; python_full_version >= '3.10'
     # via semgrep
 mdurl==0.1.2
     # via markdown-it-py
@@ -175,10 +181,18 @@ numpy==2.2.6 ; python_full_version == '3.10.*'
     # via
     #   contourpy
     #   matplotlib
-numpy==2.3.3 ; python_full_version >= '3.11'
+numpy==2.3.4 ; python_full_version >= '3.11'
     # via
     #   contourpy
     #   matplotlib
+opentelemetry-api==1.25.0 ; python_full_version < '3.10'
+    # via
+    #   opentelemetry-exporter-otlp-proto-http
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-requests
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+    #   semgrep
 opentelemetry-api==1.37.0 ; python_full_version >= '3.10'
     # via
     #   opentelemetry-exporter-otlp-proto-http
@@ -187,27 +201,49 @@ opentelemetry-api==1.37.0 ; python_full_version >= '3.10'
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
     #   semgrep
+opentelemetry-exporter-otlp-proto-common==1.25.0 ; python_full_version < '3.10'
+    # via opentelemetry-exporter-otlp-proto-http
 opentelemetry-exporter-otlp-proto-common==1.37.0 ; python_full_version >= '3.10'
     # via opentelemetry-exporter-otlp-proto-http
+opentelemetry-exporter-otlp-proto-http==1.25.0 ; python_full_version < '3.10'
+    # via semgrep
 opentelemetry-exporter-otlp-proto-http==1.37.0 ; python_full_version >= '3.10'
     # via semgrep
+opentelemetry-instrumentation==0.46b0 ; python_full_version < '3.10'
+    # via opentelemetry-instrumentation-requests
 opentelemetry-instrumentation==0.58b0 ; python_full_version >= '3.10'
     # via opentelemetry-instrumentation-requests
+opentelemetry-instrumentation-requests==0.46b0 ; python_full_version < '3.10'
+    # via semgrep
 opentelemetry-instrumentation-requests==0.58b0 ; python_full_version >= '3.10'
     # via semgrep
+opentelemetry-proto==1.25.0 ; python_full_version < '3.10'
+    # via
+    #   opentelemetry-exporter-otlp-proto-common
+    #   opentelemetry-exporter-otlp-proto-http
 opentelemetry-proto==1.37.0 ; python_full_version >= '3.10'
     # via
     #   opentelemetry-exporter-otlp-proto-common
     #   opentelemetry-exporter-otlp-proto-http
+opentelemetry-sdk==1.25.0 ; python_full_version < '3.10'
+    # via
+    #   opentelemetry-exporter-otlp-proto-http
+    #   semgrep
 opentelemetry-sdk==1.37.0 ; python_full_version >= '3.10'
     # via
     #   opentelemetry-exporter-otlp-proto-http
     #   semgrep
+opentelemetry-semantic-conventions==0.46b0 ; python_full_version < '3.10'
+    # via
+    #   opentelemetry-instrumentation-requests
+    #   opentelemetry-sdk
 opentelemetry-semantic-conventions==0.58b0 ; python_full_version >= '3.10'
     # via
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-requests
     #   opentelemetry-sdk
+opentelemetry-util-http==0.46b0 ; python_full_version < '3.10'
+    # via opentelemetry-instrumentation-requests
 opentelemetry-util-http==0.58b0 ; python_full_version >= '3.10'
     # via opentelemetry-instrumentation-requests
 outcome==1.3.0.post0
@@ -225,7 +261,9 @@ packaging==25.0
     #   webdriver-manager
 peewee==3.18.2
     # via semgrep
-pillow==11.3.0
+pillow==11.3.0 ; python_full_version < '3.10'
+    # via matplotlib
+pillow==12.0.0 ; python_full_version >= '3.10'
     # via matplotlib
 platformdirs==4.4.0 ; python_full_version < '3.10'
     # via virtualenv
@@ -234,7 +272,11 @@ platformdirs==4.5.0 ; python_full_version >= '3.10'
 pluggy==1.6.0
     # via pytest
 pre-commit==4.3.0
-protobuf==6.32.1 ; python_full_version >= '3.10'
+    # via
+    #   googleapis-common-protos
+    #   opentelemetry-proto
+protobuf==6.33.0 ; python_full_version >= '3.10'
+protobuf==4.25.8 ; python_full_version < '3.10'
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
@@ -243,12 +285,12 @@ psutil==7.1.0
 py-spy==0.4.1
 pycparser==2.23 ; implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt'
     # via cffi
-pydantic==2.12.0
+pydantic==2.12.3
     # via
     #   mcp
     #   pydantic-settings
     #   rstcheck-core
-pydantic-core==2.41.1
+pydantic-core==2.41.4
     # via pydantic
 pydantic-settings==2.11.0 ; python_full_version >= '3.10'
     # via mcp
@@ -257,6 +299,7 @@ pygments==2.19.2
     #   pytest
     #   rich
     #   sphinx
+pyinstrument==5.1.1
 pyparsing==3.2.5
     # via matplotlib
 pyright==1.1.406
@@ -281,7 +324,11 @@ pywin32==311 ; python_full_version >= '3.10' and sys_platform == 'win32'
     #   semgrep
 pyyaml==6.0.3
     # via pre-commit
-referencing==0.36.2
+referencing==0.36.2 ; python_full_version < '3.10'
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
+referencing==0.37.0 ; python_full_version >= '3.10'
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -307,19 +354,19 @@ rpds-py==0.27.1
 rstcheck==6.2.5
 rstcheck-core==1.2.2
     # via rstcheck
-ruamel-yaml==0.17.40 ; python_full_version < '3.10'
+ruamel-yaml==0.18.15
     # via semgrep
-ruamel-yaml==0.18.15 ; python_full_version >= '3.10'
-    # via semgrep
-ruamel-yaml-clib==0.2.12 ; python_full_version >= '3.10' or platform_python_implementation == 'CPython'
+ruamel-yaml-clib==0.2.14 ; python_full_version >= '3.10' or platform_python_implementation == 'CPython'
     # via
     #   ruamel-yaml
     #   semgrep
-ruff==0.14.0
-selenium==4.36.0
-semgrep==1.79.0 ; python_full_version < '3.10'
-semgrep==1.139.0 ; python_full_version >= '3.10'
+ruff==0.14.1
+selenium==4.36.0 ; python_full_version < '3.10'
+selenium==4.37.0 ; python_full_version >= '3.10'
+semgrep==1.136.0 ; python_full_version < '3.10'
+semgrep==1.140.0 ; python_full_version >= '3.10'
 setuptools==80.9.0
+    # via opentelemetry-instrumentation
 shellingham==1.5.4
     # via typer
 six==1.17.0
@@ -414,8 +461,10 @@ wcmatch==8.5.2
 webdriver-manager==4.0.2
 websocket-client==1.9.0
     # via selenium
-wrapt==1.17.3 ; python_full_version >= '3.10'
-    # via opentelemetry-instrumentation
+wrapt==1.17.3
+    # via
+    #   deprecated
+    #   opentelemetry-instrumentation
 wsproto==1.2.0
     # via trio-websocket
 zipp==3.23.0

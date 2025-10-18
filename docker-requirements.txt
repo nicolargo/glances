@@ -6,7 +6,7 @@ anyio==4.11.0
     # via starlette
 certifi==2025.10.5
     # via requests
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
 click==8.1.8
     # via uvicorn
@@ -36,12 +36,10 @@ podman==5.6.0
     # via glances
 psutil==7.1.0
     # via glances
-pydantic==2.12.0
+pydantic==2.12.3
     # via fastapi
-pydantic-core==2.41.1
+pydantic-core==2.41.4
     # via pydantic
-pyinstrument==5.1.1
-    # via glances
 python-dateutil==2.9.0.post0
     # via glances
 pywin32==311 ; sys_platform == 'win32'
