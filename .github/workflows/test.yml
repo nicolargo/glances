@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
 
@@ -70,8 +70,8 @@ jobs:
     runs-on: windows-2025
     strategy:
       matrix:
-        # Windows-curses not available for Python 3.13 for the moment
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        # Windows-curses not available for Python 3.14 for the moment
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
 
     - uses: actions/checkout@v5
