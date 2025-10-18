@@ -60,9 +60,6 @@ dev = [
   "sphinx_rtd_theme",
   "webdriver-manager",
 ]
-ip = [
-    "netifaces2>=0.0.22",
-]
 
 [project.optional-dependencies]
 action = ["chevron"]
@@ -98,7 +95,9 @@ export = [
 ]
 gpu = ["nvidia-ml-py"]
 graph = ["pygal"]
-ip = ["netifaces2"]
+ip = [
+  "netifaces2",
+]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART.smartx"]
