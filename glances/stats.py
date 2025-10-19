@@ -275,13 +275,15 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         self._plugins[p].update_views()
         self._plugins[p].update_stats_history()
 
-    def update(self):
-        """Wrapper method to update all stats.
-
-        Only called by standalone and server modes
+    def update(self, plugins_list_to_update=None):
+        """Wrapper method to update stats.
+        If plugins_list_to_update is provided (list), only update the given plugins.
         """
+        if plugins_list_to_update is None:
+            plugins_list_to_update = self.getPluginsList(enable=True)
+
         # Start update of all enable plugins
-        for p in self.getPluginsList(enable=True):
+        for p in plugins_list_to_update:
             self.update_plugin(p)
 
     def export(self, input_stats=None):
@@ -418,4 +420,5 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
             self._exports[e].exit()
         # Close plugins
         for p in self._plugins:
+            self._plugins[p].exit()
             self._plugins[p].exit()
