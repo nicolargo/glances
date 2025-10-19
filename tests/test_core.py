@@ -30,6 +30,7 @@ from glances.globals import LINUX, WINDOWS, auto_unit, pretty_date, string_value
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
 from glances.plugins.fs.zfs import zfs_enable, zfs_stats
+from glances.plugins.plugin.dag import get_plugin_dependencies
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.stats import GlancesStats
 from glances.thresholds import (
@@ -518,6 +519,17 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(pretty_date(datetime(2023, 6, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '7 months')
         self.assertEqual(pretty_date(datetime(2023, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), 'an year')
         self.assertEqual(pretty_date(datetime(2020, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '4 years')
+
+    def test_022_plugin_dag(self):
+        """Test Plugin DAG"""
+        print('INFO: [TEST_022] Plugins DAG')
+        self.assertEqual(get_plugin_dependencies('amps'), ['amps', 'alert'])
+        self.assertEqual(get_plugin_dependencies('cpu'), ['cpu', 'core', 'alert'])
+        self.assertEqual(get_plugin_dependencies('load'), ['load', 'core', 'alert'])
+        self.assertEqual(get_plugin_dependencies('processlist'), ['processlist', 'core', 'processcount', 'alert'])
+        self.assertEqual(get_plugin_dependencies('programlist'), ['programlist', 'processcount', 'alert'])
+        self.assertEqual(get_plugin_dependencies('quicklook'), ['quicklook', 'fs', 'core', 'load', 'alert'])
+        self.assertEqual(get_plugin_dependencies('vms'), ['vms', 'processcount', 'alert'])
 
     def test_093_auto_unit(self):
         """Test auto_unit classe"""
