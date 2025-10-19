@@ -25,6 +25,7 @@ import pytest
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 
 from glances.main import GlancesMain
 from glances.stats import GlancesStats
@@ -79,7 +80,7 @@ def web_browser():
     opt = ChromeOptions()
     opt.add_argument("--headless")
     opt.add_argument("--start-maximized")
-    srv = ChromeService()
+    srv = ChromeService(ChromeDriverManager().install())
     driver = webdriver.Chrome(options=opt, service=srv)
 
     # Yield the WebDriver instance
