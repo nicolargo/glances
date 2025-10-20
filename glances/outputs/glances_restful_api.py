@@ -186,7 +186,7 @@ class GlancesRestfulApi:
 
     def __update_stats(self, plugins_list_to_update=None):
         # Never update more than 1 time per cached_time
-        if self.timer.finished():
+        if self.timer.finished() or plugins_list_to_update:
             self.stats.update(plugins_list_to_update=plugins_list_to_update)
             self.timer = Timer(self.args.cached_time)
 
