@@ -93,8 +93,10 @@ class _GlancesCurses:
         'z': {'handler': '_handle_disable_process'},
         '+': {'handler': '_handle_increase_nice'},
         '-': {'handler': '_handle_decrease_nice'},
-        # "<" (left arrow) navigation through process sort
-        # ">" (right arrow) navigation through process sort
+        # "<" (shift + left arrow) navigation through process sort
+        # ">" (shift + right arrow) navigation through process sort
+        # "<" (left arrow) scroll through process name
+        # ">" (right arrow) scroll through process name
         # 'UP' > Up in the server list
         # 'DOWN' > Down in the server list
     }
@@ -186,6 +188,8 @@ class _GlancesCurses:
 
         # Init Glances cursor
         self.args.cursor_position = 0
+        self.args.cursor_process_name_position = 0
+
         # For the moment cursor only available in standalone mode
         self.args.disable_cursor = not self.args.is_standalone
 
@@ -248,7 +252,6 @@ class _GlancesCurses:
                 pass
 
     def get_key(self, window):
-        # TODO: Check issue #163
         return window.getch()
 
     def catch_actions_from_hotkey(self, hotkey):
@@ -264,8 +267,10 @@ class _GlancesCurses:
         {
             self.pressedkey in {ord('e')} and not self.args.programs: self._handle_process_extended,
             self.pressedkey in {ord('k')} and not self.args.disable_cursor: self._handle_kill_process,
-            self.pressedkey in {curses.KEY_LEFT}: self._handle_sort_left,
-            self.pressedkey in {curses.KEY_RIGHT}: self._handle_sort_right,
+            self.pressedkey in {curses.KEY_SLEFT}: self._handle_sort_left,
+            self.pressedkey in {curses.KEY_SRIGHT}: self._handle_sort_right,
+            self.pressedkey in {curses.KEY_LEFT}: self._handle_process_name_left,
+            self.pressedkey in {curses.KEY_RIGHT}: self._handle_process_name_right,
             self.pressedkey in {curses.KEY_UP, 65} and not self.args.disable_cursor: self._handle_cursor_up,
             self.pressedkey in {curses.KEY_DOWN, 66} and not self.args.disable_cursor: self._handle_cursor_down,
             self.pressedkey in {curses.KEY_F5, 18}: self._handle_refresh,
@@ -350,6 +355,13 @@ class _GlancesCurses:
 
     def _handle_kill_process(self):
         self.kill_process = not self.kill_process
+
+    def _handle_process_name_left(self):
+        if self.args.cursor_process_name_position > 0:
+            self.args.cursor_process_name_position -= 1
+
+    def _handle_process_name_right(self):
+        self.args.cursor_process_name_position += 1
 
     def _handle_clean_logs(self):
         glances_events.clean()
@@ -1152,7 +1164,7 @@ class _GlancesCurses:
                 self.clear()
                 return isexitkey
 
-            if pressedkey in (curses.KEY_UP, 65, curses.KEY_DOWN, 66):
+            if pressedkey in (curses.KEY_UP, 65, curses.KEY_DOWN, 66, curses.KEY_LEFT, 68, curses.KEY_RIGHT, 67):
                 # Up of won key pressed, reset the countdown
                 # Better for user experience
                 countdown.reset()
