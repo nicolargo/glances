@@ -186,6 +186,8 @@ class GlancesRestfulApi:
 
     def __update_stats(self, plugins_list_to_update=None):
         # Never update more than 1 time per cached_time
+        # Also update if specific plugins are requested
+        # In  this case, lru_cache will handle the stat's update frequency
         if self.timer.finished() or plugins_list_to_update:
             self.stats.update(plugins_list_to_update=plugins_list_to_update)
             self.timer = Timer(self.args.cached_time)
@@ -976,5 +978,6 @@ class GlancesRestfulApi:
         if not process_stats:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown PID process {pid}")
 
+        return GlancesJSONResponse(process_stats)
         return GlancesJSONResponse(process_stats)
         return GlancesJSONResponse(process_stats)
