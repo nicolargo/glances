@@ -13,19 +13,10 @@ from glances.logger import logger
 try:
     import netifaces
 
+    netifaces.default_gateway()
     netifaces_tag = True
-except ImportError:
-    logger.warning("Ports plugin - Netifaces2 lib not found, port_default_gateway feature is disabled")
-    netifaces_tag = False
-
-try:
-    netifaces.gateways()
-except Exception:
-    netifaces_tag = True
-else:
-    logger.warning(
-        "Ports plugin - Netifaces2 do not support gateways() method, port_default_gateway feature is disabled"
-    )
+except (ImportError, NameError):
+    logger.warning("Ports plugin - Can not init Netifaces2 lib, port_default_gateway feature is disabled")
     netifaces_tag = False
 
 
@@ -61,7 +52,7 @@ class GlancesPortsList:
             if default_gateway.lower().startswith('true') and netifaces_tag:
                 new_port = {}
                 try:
-                    new_port['host'] = netifaces.gateways()[netifaces.AF_INET][0][0]
+                    new_port['host'] = netifaces.default_gateway()[netifaces.AF_INET][0]
                 except (KeyError, NameError):
                     new_port['host'] = None
                 # ICMP
@@ -126,4 +117,5 @@ class GlancesPortsList:
 
     def set_server(self, pos, key, value):
         """Set the key to the value for the pos (position in the list)."""
+        self._ports_list[pos][key] = value
         self._ports_list[pos][key] = value
