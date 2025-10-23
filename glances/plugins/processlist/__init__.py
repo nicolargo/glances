@@ -475,7 +475,8 @@ class ProcesslistPlugin(GlancesPluginModel):
                     msg = self.layout_stat['command'].format(cmd)
                     ret.append(self.curse_add_line(msg, decoration=process_decoration, splittable=True))
                 if arguments:
-                    msg = ' ' + self.layout_stat['command'].format(arguments)
+                    msg = ' ' if args.cursor_process_name_position == 0 else unicode_message('THREE_DOTS')
+                    msg += self.layout_stat['command'].format(arguments[args.cursor_process_name_position :])
                     ret.append(self.curse_add_line(msg, splittable=True))
             else:
                 msg = self.layout_stat['name'].format(bare_process_name)
@@ -953,5 +954,6 @@ class ProcesslistPlugin(GlancesPluginModel):
             return len(str(self.pid_max))
 
         # By default return 5 (corresponding to 99999 PID number)
+        return 5
         return 5
         return 5
