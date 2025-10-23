@@ -268,7 +268,7 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
 
     # It's a weak cache to avoid updating the same plugin too often
     # Note: the function always return None
-    @weak_lru_cache(maxsize=1, ttl=1)
+    @weak_lru_cache(maxsize=128, ttl=1)
     def update_plugin(self, p):
         """Update stats, history and views for the given plugin name p"""
         self._plugins[p].update()
@@ -420,5 +420,6 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
             self._exports[e].exit()
         # Close plugins
         for p in self._plugins:
+            self._plugins[p].exit()
             self._plugins[p].exit()
             self._plugins[p].exit()
