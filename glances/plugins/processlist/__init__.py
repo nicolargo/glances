@@ -291,7 +291,7 @@ class ProcesslistPlugin(GlancesPluginModel):
                 msg = cpu_layout.format(p['cpu_percent'])
             alert = self.get_alert(
                 p['cpu_percent'],
-                highlight_zero=False,
+                highlight_zero=True,
                 is_max=(p['cpu_percent'] == self.max_values['cpu_percent']),
                 header="cpu",
             )
@@ -307,7 +307,7 @@ class ProcesslistPlugin(GlancesPluginModel):
             msg = self.layout_stat['mem'].format(p['memory_percent'])
             alert = self.get_alert(
                 p['memory_percent'],
-                highlight_zero=False,
+                highlight_zero=True,
                 is_max=(p['memory_percent'] == self.max_values['memory_percent']),
                 header="mem",
             )
@@ -954,6 +954,7 @@ class ProcesslistPlugin(GlancesPluginModel):
             return len(str(self.pid_max))
 
         # By default return 5 (corresponding to 99999 PID number)
+        return 5
         return 5
         return 5
         return 5
