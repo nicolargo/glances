@@ -1157,6 +1157,11 @@ class _GlancesCurses:
         while not countdown.finished() and not isexitkey:
             # Getkey
             pressedkey = self.__catch_key(return_to_browser=return_to_browser)
+
+            if pressedkey == -1:
+                self.wait()
+                continue
+
             isexitkey = pressedkey == ord('\x1b') or pressedkey == ord('q')
 
             if pressedkey == curses.KEY_F5 or self.pressedkey == 18:
