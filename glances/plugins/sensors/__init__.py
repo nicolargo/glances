@@ -31,9 +31,9 @@ sensors_definition = {
 }
 
 # Define the default refresh multiplicator
-# Default value is 3 * Glances refresh time
+# Default value is 5 * Glances refresh time
 # Can be overwritten by the refresh option in the sensors section of the glances.conf file
-DEFAULT_REFRESH = 3
+DEFAULT_REFRESH = 5
 
 # Fields description
 # description: human readable description
