@@ -110,7 +110,7 @@ export default {
             return this.data.views['mem'];
         },
         percent() {
-            return this.stats['percent'].toFixed(2);
+            return this.stats['percent'].toFixed(1);
         },
         total() {
             return this.stats['total'];

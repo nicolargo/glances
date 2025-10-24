@@ -136,7 +136,7 @@ class QuicklookPlugin(GlancesPluginModel):
                     mem_available + zfs_cache_stats.get('arcstats.size', 0) - zfs_cache_stats.get('arcstats.c_min', 0)
                 )
 
-            stats['mem'] = float((mem_total - mem_available) / mem_total * 100)
+            stats['mem'] = round(float((mem_total - mem_available) / mem_total * 100), 1)
             try:
                 stats['swap'] = psutil.swap_memory().percent
             except RuntimeError:
@@ -319,4 +319,5 @@ class QuicklookPlugin(GlancesPluginModel):
 
     def _mhz_to_hz(self, hz):
         """Convert Mhz to Hz."""
+        return hz * 1000000.0
         return hz * 1000000.0
