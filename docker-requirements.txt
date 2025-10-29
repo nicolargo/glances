@@ -57,7 +57,7 @@ six==1.17.0
     #   python-dateutil
 sniffio==1.3.1
     # via anyio
-starlette==0.48.0
+starlette==0.49.1
     # via fastapi
 tomli==2.0.2 ; python_full_version < '3.11'
     # via podman

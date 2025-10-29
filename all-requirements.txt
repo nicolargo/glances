@@ -210,7 +210,7 @@ sniffio==1.3.1
     #   elastic-transport
 sparklines==0.7.0
     # via glances
-starlette==0.48.0
+starlette==0.49.1
     # via fastapi
 statsd==4.0.1
     # via glances
