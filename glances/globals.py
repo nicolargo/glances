@@ -605,19 +605,27 @@ def exit_after(seconds, default=None):
             return func
 
         def wraps(*args, **kwargs):
-            q = ctx_mp_fork.Queue()
-            p = ctx_mp_fork.Process(target=handler, args=(q, func, args, kwargs))
-            p.start()
-            p.join(timeout=seconds)
-            if not p.is_alive():
-                return q.get()
-
-            p.terminate()
-            p.join(timeout=0.1)
-            if p.is_alive():
-                # Kill in case processes doesn't terminate
-                # Happens with cases like broken NFS connections
-                p.kill()
+            try:
+                q = ctx_mp_fork.Queue()
+            except PermissionError:
+                # Manage an exception in Snap packages on Linux
+                # The strict mode prevent the use of multiprocessing.Queue()
+                # There is a "dirty" hack:
+                # https://forum.snapcraft.io/t/python-multiprocessing-permission-denied-in-strictly-confined-snap/15518/2
+                # But i prefer to just disable the timeout feature in this case
+                func(*args, **kwargs)
+            else:
+                p = ctx_mp_fork.Process(target=handler, args=(q, func, args, kwargs))
+                p.start()
+                p.join(timeout=seconds)
+                if not p.is_alive():
+                    return q.get()
+                p.terminate()
+                p.join(timeout=0.1)
+                if p.is_alive():
+                    # Kill in case processes doesn't terminate
+                    # Happens with cases like broken NFS connections
+                    p.kill()
             return default
 
         return wraps
