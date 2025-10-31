@@ -47,7 +47,8 @@ fields_description = {
         'unit': 'number',
     },
     'cpu_percent': {
-        'description': 'Process CPU consumption',
+        'description': 'Process CPU consumption \
+(returned value can be > 100.0 in case of a process running multiple threads on different CPU cores)',
         'unit': 'percent',
     },
     'memory_percent': {
@@ -954,6 +955,7 @@ class ProcesslistPlugin(GlancesPluginModel):
             return len(str(self.pid_max))
 
         # By default return 5 (corresponding to 99999 PID number)
+        return 5
         return 5
         return 5
         return 5
