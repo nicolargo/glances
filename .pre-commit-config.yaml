@@ -24,3 +24,14 @@ repos:
     # Run the formatter.
     - id: ruff-format
       types_or: [ python, pyi ]
+
+  - repo: local
+    hooks:
+      # test duplicate line at the end of file with a custom script
+      # /bin/bash tests-data/tools/find-duplicate-lines.sh
+      - id: find-duplicate-lines
+        name: find duplicate lines at the end of file
+        entry: bash tests-data/tools/find-duplicate-lines.sh
+        language: system
+        types: [python]
+        pass_filenames: false
