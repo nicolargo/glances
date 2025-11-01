@@ -361,6 +361,11 @@ class DockerExtension:
 
         # Manage ports (see issue#2054)
         if hasattr(container, 'ports'):
-            stats['ports'] = ','.join([f'{container.ports[cp][0]["HostPort"]}->{cp}' for cp in container.ports])
+            stats['ports'] = ','.join(
+                [
+                    f'{container.ports[cp][0]["HostPort"]}->{cp}' if container.ports[cp] else f'{cp}'
+                    for cp in container.ports
+                ]
+            )
 
         return stats
