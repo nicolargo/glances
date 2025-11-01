@@ -32,8 +32,8 @@ under the ``[containers]`` section:
     # Define the maximum containers size name (default is 20 chars)
     max_name_size=20
     # List of stats to disable (not display)
-    # Following stats can be disabled: name,status,uptime,cpu,mem,diskio,networkio,command
-    disable_stats=diskio,networkio
+    # Following stats can be disabled: name,status,uptime,cpu,mem,diskio,networkio,ports,command
+    disable_stats=command
     # Global containers' thresholds for CPU and MEM (in %)
     cpu_careful=50
     cpu_warning=70

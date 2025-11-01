@@ -79,6 +79,9 @@ fields_description = {
         'description': 'Container network TX bitrate',
         'unit': 'bitpersecond',
     },
+    'ports': {
+        'description': 'Container ports',
+    },
     'uptime': {
         'description': 'Container uptime',
     },
@@ -392,6 +395,9 @@ class ContainersPlugin(GlancesPluginModel):
         if 'networkio' not in self.disable_stats:
             msgs.extend(['{:>7}'.format('Rx/s'), ' {:<7}'.format('Tx/s')])
 
+        if 'ports' not in self.disable_stats:
+            msgs.extend('{:16}'.format('Ports'))
+
         if 'command' not in self.disable_stats:
             msgs.append(' {:8}'.format('Command'))
 
@@ -490,6 +496,15 @@ class ContainersPlugin(GlancesPluginModel):
 
         return build_with_this_args
 
+    def build_ports(self, ret, container):
+        if container.get('ports', '') != '':
+            msg = '{:16}'.format(container['ports'])
+        else:
+            msg = '{:16}'.format('_')
+        ret.append(self.curse_add_line(msg, splittable=True))
+
+        return ret
+
     def build_cmd_line(self, ret, container):
         if container['command'] is not None:
             msg = ' {}'.format(container['command'])
@@ -539,9 +554,9 @@ class ContainersPlugin(GlancesPluginModel):
                 'mem': self.build_memory_line,
                 'diskio': self.build_io_line,
                 'networkio': self.build_net_line(args),
+                'ports': self.build_ports,
                 'command': self.build_cmd_line,
             }
-
             steps.extend(v for k, v in options.items() if k not in self.disable_stats)
             return reduce(lambda ret, step: step(ret, container), steps, ret)
 
@@ -577,5 +592,7 @@ def sort_docker_stats(stats: list[dict[str, Any]]) -> tuple[str, list[dict[str, 
         reverse=glances_processes.sort_key != 'name',
     )
 
+    # Return the main sort key and the sorted stats
+    return sort_by, stats
     # Return the main sort key and the sorted stats
     return sort_by, stats
