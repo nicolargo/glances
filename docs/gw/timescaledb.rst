@@ -40,7 +40,7 @@ be added as a column in the table (named key_id) and added to the timescaledb.se
 Current limitations
 -------------------
 
-Sensors and Fs plugins are not supported by the TimescaleDB exporter.
+Sensors, Fs and DiskIO plugins are not supported by the TimescaleDB exporter.
 
 In the cpu plugin, the user field is exported as user_cpu (user_percpu in the percpu plugin)
 because user is a reserved keyword in PostgreSQL.
