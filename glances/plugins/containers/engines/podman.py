@@ -404,8 +404,9 @@ class PodmanExtension:
         # Manage special chars in command (see issue#2733)
         stats['command'] = replace_special_chars(' '.join(stats['command']))
 
-        # Manage ports (see iisue#2054)
+        # Manage ports (see issue#2054)
         if hasattr(container, 'ports'):
             stats['ports'] = ','.join([f'{container.ports[cp][0]["HostPort"]}->{cp}' for cp in container.ports])
 
+        return stats
         return stats

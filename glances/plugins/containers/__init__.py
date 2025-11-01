@@ -497,7 +497,7 @@ class ContainersPlugin(GlancesPluginModel):
         return build_with_this_args
 
     def build_ports(self, ret, container):
-        if container['ports'] is not None and container['ports'] != '':
+        if container.get('ports', '') != '':
             msg = '{:16}'.format(container['ports'])
         else:
             msg = '{:16}'.format('_')
@@ -554,6 +554,7 @@ class ContainersPlugin(GlancesPluginModel):
                 'mem': self.build_memory_line,
                 'diskio': self.build_io_line,
                 'networkio': self.build_net_line(args),
+                'ports': self.build_ports,
                 'command': self.build_cmd_line,
             }
             steps.extend(v for k, v in options.items() if k not in self.disable_stats)
@@ -591,5 +592,7 @@ def sort_docker_stats(stats: list[dict[str, Any]]) -> tuple[str, list[dict[str, 
         reverse=glances_processes.sort_key != 'name',
     )
 
+    # Return the main sort key and the sorted stats
+    return sort_by, stats
     # Return the main sort key and the sorted stats
     return sort_by, stats
