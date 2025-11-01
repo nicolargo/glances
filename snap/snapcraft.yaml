@@ -17,12 +17,12 @@ confinement: strict
 compression: lzo
 
 # i386 is not compliant with core20 or higher
-architectures:
-  - build-on: amd64
-  - build-on: arm64
-  - build-on: armhf
-  - build-on: ppc64el
-  - build-on: s390x
+platforms:
+  - amd64
+  - arm64
+  - armhf
+  - ppc64el
+  - s390x
 
 apps:
   glances:
