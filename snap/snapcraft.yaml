@@ -16,13 +16,13 @@ grade: stable
 confinement: strict
 compression: lzo
 
-# i386 is not compliant with core20 or higher
-platforms:
-  - amd64
-  - arm64
-  - armhf
-  - ppc64el
-  - s390x
+# # i386 is not compliant with core20 or higher
+# platforms:
+#   - amd64
+#   - arm64
+#   - armhf
+#   - ppc64el
+#   - s390x
 
 apps:
   glances:
