@@ -19,22 +19,23 @@ apps:
   glances:
     command: bin/glances
     plugs:  # https://snapcraft.io/docs/supported-interfaces
-      - network
-      - system-observe  # This one should give read access to all the system
-      - mount-observe
+      - docker
       - hardware-observe
-      - log-observe
-      - network-observe
-      - physical-memory-observe
-      - upower-observe
       - home
+      - log-observe
+      - mount-observe
+      - network
       - network-bind
-      - uio
-      - raw-volume
-      - removable-media
+      - network-observe
+      - network-setup-observe
+      - physical-memory-observe
       - power-control
       - process-control
-      - network-setup-observe
+      - raw-volume
+      - removable-media
+      - system-observe
+      - uio
+      - upower-observe
     environment:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
