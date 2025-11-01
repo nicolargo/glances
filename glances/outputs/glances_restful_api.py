@@ -979,5 +979,3 @@ class GlancesRestfulApi:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown PID process {pid}")
 
         return GlancesJSONResponse(process_stats)
-        return GlancesJSONResponse(process_stats)
-        return GlancesJSONResponse(process_stats)

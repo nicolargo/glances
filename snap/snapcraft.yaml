@@ -14,12 +14,20 @@ description: |
 base: core24
 grade: stable
 confinement: strict
+compression: lzo
+
+# i386 is not compliant with core20 or higher
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+  - build-on: armhf
+  - build-on: ppc64el
+  - build-on: s390x
 
 apps:
   glances:
     command: bin/glances
     plugs:  # https://snapcraft.io/docs/supported-interfaces
-      - docker
       - hardware-observe
       - home
       - log-observe
@@ -36,11 +44,18 @@ apps:
       - system-observe
       - uio
       - upower-observe
+      # Others
+      - docker
+      - home-glances-config
+      - etc-glances-config
+      - proc-sys
     environment:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
 
 plugs:
+  docker:
+    interface: docker
   home-glances-config:
     interface: personal-files
     read:

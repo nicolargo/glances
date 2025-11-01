@@ -19,7 +19,8 @@ import tracemalloc
 # Global name
 # Version should start and end with a numerical char
 # See https://packaging.python.org/specifications/core-metadata/#version
-__version__ = "4.4.0_dev7"
+# Examples: 1.0.0, 1.0.0rc1, 1.1.0_dev1
+__version__ = "4.4.0rc1"
 __apiversion__ = '4'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'

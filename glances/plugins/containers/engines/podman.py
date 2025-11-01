@@ -409,4 +409,3 @@ class PodmanExtension:
             stats['ports'] = ','.join([f'{container.ports[cp][0]["HostPort"]}->{cp}' for cp in container.ports])
 
         return stats
-        return stats

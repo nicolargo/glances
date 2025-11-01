@@ -118,4 +118,3 @@ class GlancesPortsList:
     def set_server(self, pos, key, value):
         """Set the key to the value for the pos (position in the list)."""
         self._ports_list[pos][key] = value
-        self._ports_list[pos][key] = value
