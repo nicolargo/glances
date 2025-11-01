@@ -320,4 +320,3 @@ class QuicklookPlugin(GlancesPluginModel):
     def _mhz_to_hz(self, hz):
         """Convert Mhz to Hz."""
         return hz * 1000000.0
-        return hz * 1000000.0
