@@ -198,6 +198,9 @@ class _GlancesCurses:
         self.term_window.nodelay(1)
         self.pressedkey = -1
 
+        # Is this the end ?
+        self.is_end = False
+
         # History tag
         self._init_history()
 
@@ -459,6 +462,7 @@ class _GlancesCurses:
             curses.endwin()
         except Exception:
             pass
+        self.is_end = True
 
     def init_line_column(self):
         """Init the line and column position for the curses interface."""

@@ -11,6 +11,7 @@
 """Glances unitary tests suite."""
 
 import json
+import multiprocessing
 import time
 import unittest
 from datetime import datetime
@@ -26,7 +27,7 @@ except ImportError:
 from glances import __version__
 from glances.events_list import GlancesEventsList
 from glances.filter import GlancesFilter, GlancesFilterList
-from glances.globals import LINUX, WINDOWS, auto_unit, pretty_date, string_value_to_float, subsample
+from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS, auto_unit, pretty_date, string_value_to_float, subsample
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
 from glances.plugins.fs.zfs import zfs_enable, zfs_stats
@@ -40,6 +41,12 @@ from glances.thresholds import (
     GlancesThresholds,
     GlancesThresholdWarning,
 )
+
+# Multiprocessing start method (on POSIX system)
+if LINUX or BSD or SUNOS or MACOS:
+    ctx_mp_fork = multiprocessing.get_context('fork')
+else:
+    ctx_mp_fork = multiprocessing.get_context()
 
 # Global variables
 # =================

@@ -3,6 +3,87 @@
 ==============================================================================
 
 =============
+Version 4.4.0
+=============
+
+Breaking changes:
+
+* A new Python API is now available to use Glances as a Python lib in your hown development #3237
+* In the process list, the long command line is now truncated by default. Use the arrow keys to show the full command line. SHIFT + arrow keys are used to switch between column sorts (TUI).
+* Prometheus export format is now more user friendly (see detail in #3283)
+
+Enhancements:
+
+* Make a Glances API in order to use Glances as a Python lib #3237
+* Add a new --fetch (neofetch like) option to display a snapshot of the current system status #3281
+* Show used port in container section #2054
+* Show long command line with arrow key #1553
+* Sensors plugin refresh by default every 10 seconds
+* Do not call update if a call is done to a specific plugin through the API #3033
+* [UI] Process virtual memory display can be disable by configuration #3299
+* Choose between used or available in the mem plugin #3288
+* [Experimental] Add export to DuckDB database #3205
+* Add Disk I/O Latency stats #1070
+* Filter fields to export #3258
+* Remove .keys() from loops over dicts #3253
+* Remove iterator helpers #3252
+
+Bug corrected:
+
+* [MACOS] Glances not showing Processes on MacOS #3100
+* Last dev build broke Homepage API calls ? only 1 widget still working #3322
+* Cloud plugin always generate communication with 169.254.169.254, even if the plugin is disabled #3316
+* API response delay (3+ minutes) when VMs are running #3317
+* [WINDOWS] Glances do not display CPU stat correctly #3155
+* Glances hangs if network device (NFS) is no available #3290
+* Fix prometheus export format #3283
+* Issue #3279 zfs cache and memory math issues #3289
+* [MACOS]  Glances crashes when I try to filter #3266
+* Glances hang when killing process with muliple CTRL-C #3264
+* Issues after disabling system and processcount plugins #3248
+* Headers missing from predefined fields in TUI browser machine list #3250
+* Add another check for the famous Netifaces issue - Related to #3219
+* Key error 'type' in server_list_static.py (load_server_list) #3247
+
+Continious integration and documentation:
+
+* Glances now use uv for the dev environment #3025
+* Glances is compatible with Python 3.14 #3319
+* Glances provides requirements files with specific versions for each release
+* Requirements files are now generated dynamically with the make requirements or requirements-upgrade target
+* Add duplicate line check in pre-commit (strange behavor with some VScode extension)
+* Solve issue with multiprocessing exception with Snap package
+* Add a test script for identify CPU consumption of sensor plugin
+* Refactor port to take into account netifaces2
+* Correct issue with Chrome driver in WebUI unit test
+* Upgrade export test with InfluxDB 1.12
+* Fix typo of --export-process-filter help message #3314
+* In the outdated feature, catch error message if Pypi server not reachable
+* Add unit test for auto_unit
+* Label error in docs #3286
+* Put WebUI conf generator in a dedicated script
+* Refactor the Makefile to generate WebUI config file for all webui targets
+* Update sensors documentation #3275
+* Update docker compose env quote #3273
+* Update docker-compose.yml #3249
+* Update API doc generation
+* Update README with nice icons #3236
+* Add documentation for WebUI test
+
+Thanks to all contributors and bug reporters !
+
+Special thanks to:
+- Adi
+- Bennett Kanuka
+- Tim Potter
+- Ariel Otilibili
+-	Boris Okassa
+-	Lawrence
+-	Shohei YOSHIDA
+-	jmwallach
+-	korn3r
+
+=============
 Version 4.3.3
 =============
 
