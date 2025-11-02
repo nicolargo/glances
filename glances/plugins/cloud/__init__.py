@@ -15,7 +15,7 @@ Supported Cloud API:
 
 import threading
 
-from glances.globals import iteritems, to_ascii
+from glances.globals import to_ascii
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -51,18 +51,24 @@ class CloudPlugin(GlancesPluginModel):
         # Init the stats
         self.reset()
 
-        # Init thread to grab OpenStack stats asynchronously
-        self.OPENSTACK = ThreadOpenStack()
-        self.OPENSTACKEC2 = ThreadOpenStackEC2()
+        # Enable threads only if the plugin is enabled
+        self.OPENSTACK = None
+        self.OPENSTACKEC2 = None
+        if self.is_enabled():
+            # Init thread to grab OpenStack stats asynchronously
+            self.OPENSTACK = ThreadOpenStack()
+            self.OPENSTACKEC2 = ThreadOpenStackEC2()
 
-        # Run the thread
-        self.OPENSTACK.start()
-        self.OPENSTACKEC2.start()
+            # Run the thread
+            self.OPENSTACK.start()
+            self.OPENSTACKEC2.start()
 
     def exit(self):
         """Overwrite the exit method to close threads."""
-        self.OPENSTACK.stop()
-        self.OPENSTACKEC2.stop()
+        if self.OPENSTACK:
+            self.OPENSTACK.stop()
+        if self.OPENSTACKEC2:
+            self.OPENSTACKEC2.stop()
         # Call the father class
         super().exit()
 
@@ -81,7 +87,7 @@ class CloudPlugin(GlancesPluginModel):
             return stats
 
         # Update the stats
-        if self.input_method == 'local':
+        if self.input_method == 'local' and (self.OPENSTACK or self.OPENSTACKEC2):
             stats = self.OPENSTACK.stats
             if not stats:
                 stats = self.OPENSTACKEC2.stats
@@ -159,7 +165,7 @@ class ThreadOpenStack(threading.Thread):
             self.stop()
             return False
 
-        for k, v in iteritems(self.OPENSTACK_API_METADATA):
+        for k, v in self.OPENSTACK_API_METADATA.items():
             r_url = f'{self.OPENSTACK_API_URL}/{v}'
             try:
                 # Local request, a timeout of 3 seconds is OK

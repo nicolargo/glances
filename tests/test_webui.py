@@ -7,7 +7,21 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Glances unitary tests suite for the WebUI."""
+"""Glances unitary tests suite for the WebUI.
+
+This test uses Selenium to test the Glances WebUI.
+Under the wood, it uses the ChromeDriver.
+
+Check your Chrome version with:
+    /usr/bin/google-chrome --version
+Check your ChromeDriver version with:
+    /usr/bin/chromedriver --version
+
+The (major) version should match.
+
+If not, download and install the correct version of ChromeDriver.
+https://googlechromelabs.github.io/chrome-for-testing/#stable
+"""
 
 import os
 import tempfile

@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-ast
       - id: check-docstring-first
@@ -15,8 +15,23 @@ repos:
       - id: requirements-txt-fixer
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.5
+    rev: v0.14.1
     hooks:
-      - id: ruff-format
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+    # Run the linter.
+    - id: ruff-check
+      types_or: [ python, pyi ]
+      args: [ --fix, --exit-non-zero-on-fix ]
+    # Run the formatter.
+    - id: ruff-format
+      types_or: [ python, pyi ]
+
+  - repo: local
+    hooks:
+      # test duplicate line at the end of file with a custom script
+      # /bin/bash tests-data/tools/find-duplicate-lines.sh
+      - id: find-duplicate-lines
+        name: find duplicate lines at the end of file
+        entry: bash tests-data/tools/find-duplicate-lines.sh
+        language: system
+        types: [python]
+        pass_filenames: false

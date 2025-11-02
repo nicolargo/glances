@@ -33,6 +33,7 @@ thresholds (default behavor).
     #temperature_core_careful=45
     #temperature_core_warning=65
     #temperature_core_critical=80
+    #alias=temp1:Motherboard 0,core 0:CPU Core 0
 
 .. note 1::
     The support for multiple batteries is only available if

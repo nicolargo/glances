@@ -55,12 +55,12 @@ class GlancesStdoutCsv:
             line += f'{plugin}.{attribute}{self.separator}'
         else:
             if isinstance(stat, dict):
-                for k in stat.keys():
+                for k in stat:
                     line += f'{plugin}.{str(k)}{self.separator}'
             elif isinstance(stat, list):
                 for i in stat:
                     if isinstance(i, dict) and 'key' in i:
-                        for k in i.keys():
+                        for k in i:
                             line += '{}.{}.{}{}'.format(plugin, str(i[i['key']]), str(k), self.separator)
             else:
                 line += f'{plugin}{self.separator}'

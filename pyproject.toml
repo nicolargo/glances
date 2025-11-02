@@ -16,6 +16,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: System :: Monitoring",
 ]
 dependencies = [
@@ -24,6 +25,7 @@ dependencies = [
   "psutil>=5.6.7",
   "windows-curses; platform_system == 'Windows'",
   "shtab; platform_system != 'Windows'",
+  "jinja2",
 ]
 description = "A cross-platform curses-based monitoring tool"
 dynamic = ["version"]
@@ -33,6 +35,32 @@ name = "Glances"
 readme = "README.rst"
 requires-python = ">=3.9"
 urls.Homepage = "https://github.com/nicolargo/glances"
+
+[dependency-groups]
+dev = [
+  "codespell",
+  "fonttools>=4.43.0",
+  "gprof2dot",
+  "matplotlib",
+  "memory-profiler",
+  "numpy>=1.22.2",
+  "pillow>=10.0.1",
+  "pre-commit",
+  "py-spy",
+  "pyinstrument>=5.1.1",
+  "pyright",
+  "pytest",
+  "requirements-parser",
+  "reuse",
+  "rstcheck",
+  "ruff",
+  "selenium",
+  "semgrep",
+  "setuptools>=65.5.1",
+  "sphinx",
+  "sphinx_rtd_theme",
+  "webdriver-manager",
+]
 
 [project.optional-dependencies]
 action = ["chevron"]
@@ -46,26 +74,6 @@ containers = [
   "podman",
   "python-dateutil",
   "six",
-]
-dev = [
-  "codespell",
-  "fonttools>=4.43.0",
-  "gprof2dot",
-  "matplotlib",
-  "memory-profiler",
-  "numpy>=1.22.2",
-  "pillow>=10.0.1",
-  "pre-commit",
-  "py-spy",
-  "pyright",
-  "pytest",
-  "requirements-parser",
-  "rstcheck",
-  "ruff",
-  "selenium",
-  "semgrep",
-  "setuptools>=65.5.1",
-  "webdriver-manager",
 ]
 export = [
   "bernhard",
@@ -88,7 +96,9 @@ export = [
 ]
 gpu = ["nvidia-ml-py"]
 graph = ["pygal"]
-ip = ["netifaces2"]
+ip = [
+  "netifaces2",
+]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART.smartx"]
@@ -96,7 +106,6 @@ snmp = ["pysnmp-lextudio<6.3.1"]
 sparklines = ["sparklines"]
 web = [
   "fastapi>=0.82.0",
-  "jinja2",
   "requests",
   "uvicorn",
 ]
@@ -247,3 +256,11 @@ log_cli = false
 log_level = "INFO"
 #log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
 #log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+[tool.flake8]
+max-line-length = 120
+
+[tool.uv.workspace]
+members = [
+  "venv-min",
+]

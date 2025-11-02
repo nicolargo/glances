@@ -379,7 +379,7 @@ Examples of use:
             default=None,
             type=str,
             dest='export_process_filter',
-            help='set the export process filter (comman separated list of regular expression)',
+            help='set the export process filter (comma-separated list of regular expression)',
         )
         # Client/Server option
         parser.add_argument(
@@ -550,7 +550,18 @@ Examples of use:
             help='test memory leak (python 3.4 or higher needed)',
         )
         parser.add_argument(
-            '--api-doc', default=None, action='store_true', dest='stdout_apidoc', help='display fields descriptions'
+            '--api-doc',
+            default=None,
+            action='store_true',
+            dest='stdout_api_doc',
+            help='display Python API documentation',
+        )
+        parser.add_argument(
+            '--api-restful-doc',
+            default=None,
+            action='store_true',
+            dest='stdout_api_restful_doc',
+            help='display Restful API documentation',
         )
         if not WINDOWS:
             parser.add_argument(
@@ -581,6 +592,13 @@ Examples of use:
             default=False,
             dest='diskio_iops',
             help='show IO per second in the DiskIO plugin',
+        )
+        parser.add_argument(
+            '--diskio-latency',
+            action='store_true',
+            default=False,
+            dest='diskio_latency',
+            help='show IO latency in the DiskIO plugin',
         )
         parser.add_argument(
             '--fahrenheit',
@@ -629,6 +647,22 @@ Examples of use:
             dest='strftime_format',
             default='',
             help='strftime format string for displaying current date in standalone mode',
+        )
+        # Fetch
+        parser.add_argument(
+            '--fetch',
+            '--stdout-fetch',
+            action='store_true',
+            default=False,
+            dest='stdout_fetch',
+            help='display a (neo)fetch like summary and exit',
+        )
+        parser.add_argument(
+            '--fetch-template',
+            '--stdout-fetch-template',
+            dest='fetch_template',
+            default='',
+            help='overwrite default fetch template file',
         )
 
         return parser
@@ -689,7 +723,10 @@ Examples of use:
         args.network_cumul = False
 
         # Processlist is updated in processcount
-        if getattr(args, 'enable_processlist', False) or getattr(args, 'enable_programlist', False):
+        if getattr(args, 'disable_processcount', False):
+            logger.warning('Processcount is disable, so processlist (updated by processcount) is also disable')
+            disable(args, 'processlist')
+        elif getattr(args, 'enable_processlist', False) or getattr(args, 'enable_programlist', False):
             enable(args, 'processcount')
 
         # Set a default export_process_filter (with all process) when using the stdout mode
@@ -787,6 +824,10 @@ Examples of use:
             disable(args, 'memswap')
             disable(args, 'load')
 
+        # Unicode => No separator
+        if args.disable_unicode:
+            args.enable_separator = False
+
         # Memory leak
         if getattr(args, 'memory_leak', False):
             logger.info('Memory leak detection enabled')
@@ -796,9 +837,14 @@ Examples of use:
             args.time = 1
             args.disable_history = True
 
-        # Unicode => No separator
-        if args.disable_unicode:
-            args.enable_separator = False
+        # Disable history if history_size is 0
+        if self.config.has_section('global'):
+            if self.config.get_int_value('global', 'history_size', default=1200) == 0:
+                args.disable_history = True
+
+        # Display an information message if history is disabled
+        if args.disable_history:
+            logger.info("Stats history is disabled")
 
     def parse_args(self, args_begin_at):
         """Parse command line arguments.

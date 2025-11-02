@@ -9,7 +9,7 @@ set -e
 echo "Starting InfluxDB version 1 container..."
 docker run -d --name influxdb-v1-for-glances \
     -p 8086:8086 \
-    influxdb:1.11
+    influxdb:1.12
 
 # Wait for InfluxDB to be ready (retry for up to 30 seconds)
 echo "Waiting for InfluxDB to start..."
@@ -38,7 +38,7 @@ docker exec influxdb-v1-for-glances influx -execute 'CREATE DATABASE glances'
 # Run glances with export to InfluxDB, stopping after 10 writes
 # This will run synchronously now since we're using --stop-after
 echo "Glances to export system stats to InfluxDB (duration: ~ 20 seconds)"
-./venv/bin/python -m glances --export influxdb --stop-after 10 --quiet
+.venv/bin/python -m glances --export influxdb --stop-after 10 --quiet
 
 echo "Checking if Glances data was successfully exported to InfluxDB..."
 # Query to check if data exists in the glances database

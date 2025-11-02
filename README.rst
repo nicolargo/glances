@@ -3,7 +3,7 @@ Glances - An Eye on your System
 ===============================
 
 |  |pypi| |test| |contributors| |quality|
-|  |starts| |docker| |pypistat| |ossrank|
+|  |starts| |docker| |pypistat|
 |  |sponsors| |twitter|
 
 .. |pypi| image:: https://img.shields.io/pypi/v/glances.svg
@@ -20,10 +20,6 @@ Glances - An Eye on your System
 .. |pypistat| image:: https://pepy.tech/badge/glances/month
     :target: https://pepy.tech/project/glances
     :alt: Pypi downloads
-
-.. |ossrank| image:: https://shields.io/endpoint?url=https://ossrank.com/shield/3689
-    :target: https://ossrank.com/p/3689
-    :alt: OSSRank
 
 .. |test| image:: https://github.com/nicolargo/glances/actions/workflows/ci.yml/badge.svg?branch=develop
     :target: https://github.com/nicolargo/glances/actions
@@ -45,8 +41,8 @@ Glances - An Eye on your System
     :target: https://twitter.com/nicolargo
     :alt: @nicolargo
 
-Summary
-=======
+Summary 🌟
+==========
 
 **Glances** is an open-source system cross-platform monitoring tool.
 It allows real-time monitoring of various aspects of your system such as
@@ -58,27 +54,27 @@ and can also be used for remote monitoring of systems via a web interface or com
 line interface. It is easy to install and use and can be customized to show only
 the information that you are interested in.
 
-.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-summary.png
-
 In client/server mode, remote monitoring could be done via terminal,
 Web interface or API (XML-RPC and RESTful).
 Stats can also be exported to files or external time/value databases, CSV or direct
 output to STDOUT.
 
-.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-responsive-webdesign.png
+.. image:: ./docs/_static/glances-responsive-webdesign.png
 
 Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can
 add new plugins or exports modules.
 
-Usage
-=====
+Usage 👋
+========
 
 For the standalone mode, just run:
 
 .. code-block:: console
 
     $ glances
+
+.. image:: ./docs/_static/glances-summary.png
 
 For the Web server mode, run:
 
@@ -88,19 +84,21 @@ For the Web server mode, run:
 
 and enter the URL ``http://<ip>:61208`` in your favorite web browser.
 
-For the client/server mode, run:
+In this mode, a HTTP/Restful API is exposed, see document `RestfulApi`_ for more details.
+
+.. image:: ./docs/_static/screenshot-web.png
+
+For the client/server mode (remote monitoring through XML-RPC), run the following command on the server:
 
 .. code-block:: console
 
     $ glances -s
 
-on the server side and run:
+and this one on the client:
 
 .. code-block:: console
 
     $ glances -c <ip>
-
-on the client one.
 
 You can also detect and display all Glances servers available on your
 network (or defined in the configuration file) in TUI:
@@ -147,17 +145,86 @@ or in a JSON format thanks to the stdout-json option (attribute not supported in
     mem: {"total": 7837949952, "available": 2919079936, "percent": 62.8, "used": 4918870016, "free": 2919079936, "active": 2841214976, "inactive": 3340550144, "buffers": 546799616, "cached": 3068141568, "shared": 788156416}
     ...
 
+Last but not least, you can use the fetch mode to get a quick look of a machine:
+
+.. code-block:: console
+
+    $ glances --fetch
+
+Results look like this:
+
+.. image:: ./docs/_static/screenshot-fetch.png
+
 and RTFM, always.
 
-Documentation
-=============
+Use Glances as a Python library 📚
+==================================
+
+You can access the Glances API by importing the `glances.api` module and creating an
+instance of the `GlancesAPI` class. This instance provides access to all Glances plugins
+and their fields. For example, to access the CPU plugin and its total field, you can
+use the following code:
+
+.. code-block:: python
+
+    >>> from glances import api
+    >>> gl = api.GlancesAPI()
+    >>> gl.cpu
+    {'cpucore': 16,
+     'ctx_switches': 1214157811,
+     'guest': 0.0,
+     'idle': 91.4,
+     'interrupts': 991768733,
+     'iowait': 0.3,
+     'irq': 0.0,
+     'nice': 0.0,
+     'soft_interrupts': 423297898,
+     'steal': 0.0,
+     'syscalls': 0,
+     'system': 5.4,
+     'total': 7.3,
+     'user': 3.0}
+    >>> gl.cpu["total"]
+    7.3
+    >>> gl.mem["used"]
+    12498582144
+    >>> gl.auto_unit(gl.mem["used"])
+    11.6G
+
+If the stats return a list of items (like network interfaces or processes), you can
+access them by their name:
+
+.. code-block:: python
+
+    >>> gl.network.keys()
+    ['wlp0s20f3', 'veth33b370c', 'veth19c7711']
+    >>> gl.network["wlp0s20f3"]
+    {'alias': None,
+     'bytes_all': 362,
+     'bytes_all_gauge': 9242285709,
+     'bytes_all_rate_per_sec': 1032.0,
+     'bytes_recv': 210,
+     'bytes_recv_gauge': 7420522678,
+     'bytes_recv_rate_per_sec': 599.0,
+     'bytes_sent': 152,
+     'bytes_sent_gauge': 1821763031,
+     'bytes_sent_rate_per_sec': 433.0,
+     'interface_name': 'wlp0s20f3',
+     'key': 'interface_name',
+     'speed': 0,
+     'time_since_update': 0.3504955768585205}
+
+For a complete example of how to use Glances as a library, have a look to the `PythonApi`_.
+
+Documentation 📜
+================
 
 For complete documentation have a look at the readthedocs_ website.
 
-If you have any question (after RTFM!), please post it on the official Q&A `forum`_.
+If you have any question (after RTFM!), please post it on the official Reddit `forum`_.
 
-Gateway to other services
-=========================
+Gateway to other services 🌐
+============================
 
 Glances can export stats to:
 
@@ -178,8 +245,8 @@ Glances can export stats to:
 - ``Graphite`` server
 - ``RESTful`` endpoint
 
-Installation
-============
+Installation 🚀
+===============
 
 There are several methods to test/install Glances on your system. Choose your weapon!
 
@@ -261,6 +328,15 @@ Install Glances (with all features):
     pipx install 'glances[all]'
 
 The glances script will be installed in the ~/.local/bin folder.
+
+Brew: The missing package manager
+---------------------------------
+
+For Linux and Mac OS, it is also possible to install Glances with `Brew`_:
+
+.. code-block:: console
+
+    brew install glances
 
 Docker: the cloudy way
 ----------------------
@@ -447,8 +523,8 @@ Ansible
 
 A Glances ``Ansible`` role is available: https://galaxy.ansible.com/zaxos/glances-ansible-role/
 
-Shell tab completion
-====================
+Shell tab completion 🔍
+=======================
 
 Glances 4.3.2 and higher includes shell tab autocompletion thanks to the --print-completion option.
 
@@ -462,8 +538,8 @@ For example, on a Linux operating system with bash shell:
 
 Following shells are supported: bash, zsh and tcsh.
 
-Requirements
-============
+Requirements 🧩
+===============
 
 Glances is developed in Python. A minimal Python version 3.9 or higher
 should be installed on your system.
@@ -480,8 +556,9 @@ Dependencies:
 - ``packaging`` (for the version comparison)
 - ``windows-curses`` (Windows Curses implementation) [Windows-only]
 - ``shtab`` (Shell autocompletion) [All but Windows]
+- ``jinja2`` (for fetch mode and templating)
 
-Optional dependencies:
+Extra dependencies:
 
 - ``batinfo`` (for battery monitoring)
 - ``bernhard`` (for the Riemann export module)
@@ -494,7 +571,6 @@ Optional dependencies:
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB version 1 export module)
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
-- ``jinja2`` (for templating, used under the hood by FastAPI)
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces2`` (for the IP plugin)
 - ``nvidia-ml-py`` (for the GPU plugin)
@@ -516,8 +592,8 @@ Optional dependencies:
 - ``wifi`` (for the wifi plugin) [Linux-only]
 - ``zeroconf`` (for the autodiscover mode)
 
-How to contribute ?
-===================
+How to contribute ? 🤝
+======================
 
 If you want to contribute to the Glances project, read this `wiki`_ page.
 
@@ -526,8 +602,8 @@ There is also a chat dedicated to the Glances developers:
 .. image:: https://badges.gitter.im/Join%20Chat.svg
         :target: https://gitter.im/nicolargo/glances?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-Project sponsorship
-===================
+Project sponsorship 🙌
+======================
 
 You can help me to achieve my goals of improving this open-source project
 or just say "thank you" by:
@@ -538,21 +614,21 @@ or just say "thank you" by:
 
 Any and all contributions are greatly appreciated.
 
-Author
-======
+Authors and Contributors 🔥
+===========================
 
 Nicolas Hennion (@nicolargo) <nicolas@nicolargo.com>
 
 .. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
     :target: https://twitter.com/nicolargo
 
-License
-=======
+License 📜
+==========
 
 Glances is distributed under the LGPL version 3 license. See ``COPYING`` for more details.
 
-More stars !
-============
+More stars ! 🌟
+===============
 
 Please give us a star on `GitHub`_ if you like this project.
 
@@ -561,13 +637,17 @@ Please give us a star on `GitHub`_ if you like this project.
     :alt: Star history
 
 .. _psutil: https://github.com/giampaolo/psutil
+.. _Brew: https://formulae.brew.sh/formula/glances
 .. _Python: https://www.python.org/getit/
 .. _Termux: https://play.google.com/store/apps/details?id=com.termux
 .. _readthedocs: https://glances.readthedocs.io/
-.. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
+.. _forum: https://www.reddit.com/r/glances/
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
 .. _package: https://repology.org/project/glances/versions
 .. _sponsors: https://github.com/sponsors/nicolargo
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
 .. _Docker: https://github.com/nicolargo/glances/blob/develop/docs/docker.rst
 .. _GitHub: https://github.com/nicolargo/glances
+.. _PythonApi: https://glances.readthedocs.io/en/develop/api/python.html
+.. _RestfulApi: https://glances.readthedocs.io/en/develop/api/restful.html
+

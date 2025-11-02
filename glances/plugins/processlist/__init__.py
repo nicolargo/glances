@@ -47,7 +47,8 @@ fields_description = {
         'unit': 'number',
     },
     'cpu_percent': {
-        'description': 'Process CPU consumption',
+        'description': 'Process CPU consumption \
+(returned value can be > 100.0 in case of a process running multiple threads on different CPU cores)',
         'unit': 'percent',
     },
     'memory_percent': {
@@ -291,7 +292,7 @@ class ProcesslistPlugin(GlancesPluginModel):
                 msg = cpu_layout.format(p['cpu_percent'])
             alert = self.get_alert(
                 p['cpu_percent'],
-                highlight_zero=False,
+                highlight_zero=True,
                 is_max=(p['cpu_percent'] == self.max_values['cpu_percent']),
                 header="cpu",
             )
@@ -307,7 +308,7 @@ class ProcesslistPlugin(GlancesPluginModel):
             msg = self.layout_stat['mem'].format(p['memory_percent'])
             alert = self.get_alert(
                 p['memory_percent'],
-                highlight_zero=False,
+                highlight_zero=True,
                 is_max=(p['memory_percent'] == self.max_values['memory_percent']),
                 header="mem",
             )
@@ -338,10 +339,11 @@ class ProcesslistPlugin(GlancesPluginModel):
         return ret
 
     def _get_process_curses_memory_info(self, p, selected, args):
-        return [
-            self._get_process_curses_vms(p, selected, args),
-            self._get_process_curses_rss(p, selected, args),
-        ]
+        ret = []
+        if not self.get_conf_value('disable_virtual_memory', convert_bool=True, default=False):
+            ret.append(self._get_process_curses_vms(p, selected, args))
+        ret.append(self._get_process_curses_rss(p, selected, args))
+        return ret
 
     def _get_process_curses_pid(self, p, selected, args):
         """Return process PID curses"""
@@ -474,7 +476,8 @@ class ProcesslistPlugin(GlancesPluginModel):
                     msg = self.layout_stat['command'].format(cmd)
                     ret.append(self.curse_add_line(msg, decoration=process_decoration, splittable=True))
                 if arguments:
-                    msg = ' ' + self.layout_stat['command'].format(arguments)
+                    msg = ' ' if args.cursor_process_name_position == 0 else unicode_message('THREE_DOTS')
+                    msg += self.layout_stat['command'].format(arguments[args.cursor_process_name_position :])
                     ret.append(self.curse_add_line(msg, splittable=True))
             else:
                 msg = self.layout_stat['name'].format(bare_process_name)
@@ -596,7 +599,7 @@ class ProcesslistPlugin(GlancesPluginModel):
 
     def add_title_line(self, ret, prog):
         ret.append(self.curse_add_line("Pinned thread ", "TITLE"))
-        ret.append(self.curse_add_line(prog['name'], "UNDERLINE"))
+        ret.append(self.curse_add_line(prog.get('name', ''), "UNDERLINE"))
         ret.append(self.curse_add_line(" ('e' to unpin)"))
 
         return ret
@@ -604,7 +607,9 @@ class ProcesslistPlugin(GlancesPluginModel):
     def add_cpu_line(self, ret, prog):
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(' CPU Min/Max/Mean: '))
-        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(prog['cpu_min'], prog['cpu_max'], prog['cpu_mean'])
+        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(
+            prog.get('cpu_min', 0), prog.get('cpu_max', 0), prog.get('cpu_mean', 0)
+        )
         ret.append(self.curse_add_line(msg, decoration='INFO'))
 
         return ret
@@ -612,7 +617,7 @@ class ProcesslistPlugin(GlancesPluginModel):
     def maybe_add_cpu_affinity_line(self, ret, prog):
         if 'cpu_affinity' in prog and prog['cpu_affinity'] is not None:
             ret.append(self.curse_add_line(' Affinity: '))
-            ret.append(self.curse_add_line(str(len(prog['cpu_affinity'])), decoration='INFO'))
+            ret.append(self.curse_add_line(str(len(prog.get('cpu_affinity', []))), decoration='INFO'))
             ret.append(self.curse_add_line(' cores', decoration='INFO'))
 
         return ret
@@ -655,7 +660,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         if 'memory_swap' in prog and prog['memory_swap'] is not None:
             ret.append(
                 self.curse_add_line(
-                    self.auto_unit(prog['memory_swap'], low_precision=False), decoration='INFO', splittable=True
+                    self.auto_unit(prog.get('memory_swap', 0), low_precision=False), decoration='INFO', splittable=True
                 )
             )
             ret.append(self.curse_add_line(' swap ', splittable=True))
@@ -678,7 +683,9 @@ class ProcesslistPlugin(GlancesPluginModel):
     def add_memory_line(self, ret, prog):
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(' MEM Min/Max/Mean: '))
-        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(prog['memory_min'], prog['memory_max'], prog['memory_mean'])
+        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(
+            prog.get('memory_min', 0), prog.get('memory_max', 0), prog.get('memory_mean', 0)
+        )
         ret.append(self.curse_add_line(msg, decoration='INFO'))
         if 'memory_info' in prog and prog['memory_info'] is not None:
             ret.append(self.curse_add_line(' Memory info: '))
@@ -692,7 +699,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         ret.append(self.curse_add_line(' Open: '))
         for stat_prefix in ['num_threads', 'num_fds', 'num_handles', 'tcp', 'udp']:
             if stat_prefix in prog and prog[stat_prefix] is not None:
-                ret.append(self.curse_add_line(str(prog[stat_prefix]), decoration='INFO'))
+                ret.append(self.curse_add_line(str(prog.get(stat_prefix, 0)), decoration='INFO'))
                 ret.append(self.curse_add_line(' {} '.format(stat_prefix.replace('num_', ''))))
         return ret
 
@@ -735,8 +742,9 @@ class ProcesslistPlugin(GlancesPluginModel):
             msg = self.layout_header['mem'].format('MEM%')
             ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
         if 'memory_info' in display_stats:
-            msg = self.layout_header['virt'].format('VIRT')
-            ret.append(self.curse_add_line(msg, optional=True))
+            if not self.get_conf_value('disable_virtual_memory', convert_bool=True, default=False):
+                msg = self.layout_header['virt'].format('VIRT')
+                ret.append(self.curse_add_line(msg, optional=True))
             msg = self.layout_header['res'].format('RES')
             ret.append(self.curse_add_line(msg, optional=True))
         if 'pid' in display_stats:
@@ -903,7 +911,7 @@ class ProcesslistPlugin(GlancesPluginModel):
                 continue
             if sub_key is None:
                 ret += p[key]
-            else:
+            elif sub_key in p[key]:
                 ret += p[key][sub_key]
 
         # Manage Min/Max/Mean

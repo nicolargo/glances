@@ -63,7 +63,9 @@ bower_components/
 /*_source.tar.bz2
 
 # Virtual env
-/venv*/
+.venv/
+uv.lock
+.python-version
 
 # Test
 .coverage

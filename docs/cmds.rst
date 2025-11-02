@@ -416,11 +416,17 @@ The following commands (key pressed) are supported while in Glances:
 ``F5`` or ``CTRL-R``
     Refresh user interface
 
-``LEFT``
+``SHIFT-LEFT``
     Navigation left through the process sort
 
-``RIGHT``
+``SHIFT-RIGHT``
     Navigation right through the process sort
+
+``LEFT``
+    Navigation left through the process name
+
+``RIGHT``
+    Navigation right through the process name
 
 ``UP``
     Up in the processes list

@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""RestFull API interface class."""
+"""RestFul API interface class."""
 
 import os
 import socket
@@ -21,6 +21,7 @@ from glances.events_list import glances_events
 from glances.globals import json_dumps
 from glances.logger import logger
 from glances.password import GlancesPassword
+from glances.plugins.plugin.dag import get_plugin_dependencies
 from glances.processes import glances_processes
 from glances.servers_list import GlancesServersList
 from glances.servers_list_dynamic import GlancesAutoDiscoverClient
@@ -183,10 +184,12 @@ class GlancesRestfulApi:
                 self.url_prefix = self.url_prefix.rstrip('/')
             logger.debug(f'URL prefix: {self.url_prefix}')
 
-    def __update_stats(self):
+    def __update_stats(self, plugins_list_to_update=None):
         # Never update more than 1 time per cached_time
-        if self.timer.finished():
-            self.stats.update()
+        # Also update if specific plugins are requested
+        # In  this case, lru_cache will handle the stat's update frequency
+        if self.timer.finished() or plugins_list_to_update:
+            self.stats.update(plugins_list_to_update=plugins_list_to_update)
             self.timer = Timer(self.args.cached_time)
 
     def __update_servers_list(self):
@@ -436,7 +439,8 @@ class GlancesRestfulApi:
             HTTP/1.1 404 Not Found
         """
         # Update the stat
-        self.__update_stats()
+        # TODO: Why ??? Try to comment it
+        # self.__update_stats()
 
         try:
             plist = self.plugins_list
@@ -528,7 +532,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat ID
@@ -559,7 +563,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat ID
@@ -585,7 +589,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat ID
@@ -645,7 +649,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat views
@@ -670,7 +674,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat views
@@ -695,7 +699,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat views
@@ -719,7 +723,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat views
@@ -744,7 +748,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat history
@@ -803,7 +807,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value

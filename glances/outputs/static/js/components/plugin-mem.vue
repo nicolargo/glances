@@ -17,10 +17,15 @@
                                         <td scope="row">total:</td>
                                         <td class="text-end"><span>{{ $filters.bytes(total) }}</span></td>
                                     </tr>
-                                    <tr>
+                                    <tr v-if="!available_args">
                                         <td scope="row">used:</td>
                                         <td class="text-end" :class="getDecoration('used')"><span>{{
                                             $filters.bytes(used, 2) }}</span></td>
+                                    </tr>
+                                    <tr v-if="available_args">
+                                        <td scope="row">avail:</td>
+                                        <td class="text-end" :class="getDecoration('available')"><span>{{
+                                            $filters.bytes(available, 2) }}</span></td>
                                     </tr>
                                     <tr>
                                         <td scope="row">free:</td>
@@ -78,13 +83,26 @@
 </template>
 
 <script>
+import { store } from '../store.js';
+
 export default {
     props: {
         data: {
             type: Object
         }
     },
+    data() {
+        return {
+            store
+        };
+    },
     computed: {
+        config() {
+            return this.store.config || {};
+        },
+        available_args() {
+            return this.config.mem.available || false;
+        },
         stats() {
             return this.data.stats['mem'];
         },
@@ -92,13 +110,16 @@ export default {
             return this.data.views['mem'];
         },
         percent() {
-            return this.stats['percent'];
+            return this.stats['percent'].toFixed(1);
         },
         total() {
             return this.stats['total'];
         },
         used() {
             return this.stats['used'];
+        },
+        available() {
+            return this.stats['available'];
         },
         free() {
             return this.stats['free'];
