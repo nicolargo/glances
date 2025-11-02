@@ -6,33 +6,32 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Fields description interface class."""
+"""Generate Glances Restful API documentation."""
 
 import json
 import time
 from pprint import pformat
 
 from glances import __apiversion__
-from glances.globals import iteritems
 from glances.logger import logger
 
 API_URL = f"http://localhost:61208/api/{__apiversion__}"
 
 APIDOC_HEADER = f"""\
-.. _api:
+.. _api_restful:
 
-API (Restfull/JSON) documentation
-=================================
+Restful/JSON API documentation
+==============================
 
-This documentation describes the Glances API version {__apiversion__} (Restfull/JSON) interface.
+This documentation describes the Glances API version {__apiversion__} (Restful/JSON) interface.
 
 An OpenAPI specification file is available at:
-``https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docs/openapi.json``
+``https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docs/api/openapi.json``
 
 Run the Glances API server
 --------------------------
 
-The Glances Restfull/API server could be ran using the following command line:
+The Glances Restful/API server could be ran using the following command line:
 
 .. code-block:: bash
 
@@ -136,7 +135,7 @@ def print_plugin_description(plugin, stat):
         print('Fields descriptions:')
         print('')
         time_since_update = False
-        for field, description in iteritems(stat.fields_description):
+        for field, description in stat.fields_description.items():
             print(
                 '* **{}**: {} (unit is *{}*)'.format(
                     field,
@@ -354,7 +353,7 @@ def print_plugin_post_events():
     print('')
 
 
-class GlancesStdoutApiDoc:
+class GlancesStdoutApiRestfulDoc:
     """This class manages the fields description display."""
 
     def __init__(self, config=None, args=None):

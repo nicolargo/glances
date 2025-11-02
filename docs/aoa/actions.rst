@@ -63,7 +63,7 @@ Within ``/etc/glances/actions.d/fs-critical.py``:
 .. note::
 
     You can use all the stats for the current plugin. See
-    https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
+    https://github.com/nicolargo/glances/wiki/The-Glances-RESTFUL-JSON-API
     for the stats list.
 
 It is also possible to repeat action until the end of the alert.

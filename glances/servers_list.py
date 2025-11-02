@@ -232,7 +232,9 @@ class GlancesServersList:
         return server
 
     def __get_key(self, column):
-        server_key = column.get('plugin') + '_' + column.get('field')
+        server_key = column.get('plugin')
+        if 'field' in column:
+            server_key += '_' + column.get('field')
         if 'key' in column:
             server_key += '_' + column.get('key')
         return server_key

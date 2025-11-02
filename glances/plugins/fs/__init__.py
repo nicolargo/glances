@@ -12,7 +12,7 @@ import operator
 
 import psutil
 
-from glances.globals import PermissionError, nativestr, u
+from glances.globals import PermissionError, exit_after, nativestr, u
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -88,6 +88,17 @@ snmp_oid['esxi'] = snmp_oid['windows']
 items_history_list = [{'name': 'percent', 'description': 'File system usage in percent', 'y_unit': '%'}]
 
 
+@exit_after(2, default=None)
+def get_disk_usage(fs):
+    """Return all partitions."""
+    try:
+        return psutil.disk_usage(fs.mountpoint)
+    except OSError:
+        # Disk is ejected during the command
+        logger.debug("Plugin - fs: PsUtil fetch failed")
+        return None
+
+
 class FsPlugin(GlancesPluginModel):
     """Glances file system plugin.
 
@@ -126,53 +137,50 @@ class FsPlugin(GlancesPluginModel):
 
         return self.stats
 
+    def get_disk_partitions(self, *, fetch_all: bool = False):
+        """Return all partitions."""
+        try:
+            # Grab the stats using the psutil disk_partitions
+            # If fetch_all is False, then returns physical devices only (e.g. hard disks, cd-rom drives, USB keys)
+            # and ignore all others (e.g. memory partitions such as /dev/shm)
+            # Else return all mount points (including logical mount points like NFS, tmpfs, shm, ...)
+            return psutil.disk_partitions(all=fetch_all)
+        except (UnicodeDecodeError, PermissionError):
+            logger.debug("Plugin - fs: PsUtil fetch failed")
+            return []
+
     def update_local(self):
         """Update the FS stats using the input method."""
         # Init new stats
         stats = self.get_init_value()
 
         # Update stats using the standard system lib
-
-        # Grab the stats using the psutil disk_partitions
-        # If 'all'=False return physical devices only (e.g. hard disks, cd-rom drives, USB keys)
-        # and ignore all others (e.g. memory partitions such as /dev/shm)
-        try:
-            fs_stat = psutil.disk_partitions(all=False)
-        except (UnicodeDecodeError, PermissionError):
-            logger.debug("Plugin - fs: PsUtil fetch failed")
-            return stats
+        fs_stat = self.get_disk_partitions()
 
         # Optional hack to allow logical mounts points (issue #448)
         allowed_fs_types = self.get_conf_value('allow')
         if allowed_fs_types:
             # Avoid Psutil call unless mounts need to be allowed
-            try:
-                all_mounted_fs = psutil.disk_partitions(all=True)
-            except (UnicodeDecodeError, PermissionError):
-                logger.debug("Plugin - fs: PsUtil extended fetch failed")
-            else:
-                # Discard duplicates (#2299) and add entries matching allowed fs types
-                tracked_mnt_points = {f.mountpoint for f in fs_stat}
-                for f in all_mounted_fs:
-                    if (
-                        any(f.fstype.find(fs_type) >= 0 for fs_type in allowed_fs_types)
-                        and f.mountpoint not in tracked_mnt_points
-                    ):
-                        fs_stat.append(f)
+            all_mounted_fs = self.get_disk_partitions(fetch_all=True)
+            # Discard duplicates (#2299) and add entries matching allowed fs types
+            tracked_mnt_points = {f.mountpoint for f in fs_stat}
+            for f in all_mounted_fs:
+                if (
+                    any(f.fstype.find(fs_type) >= 0 for fs_type in allowed_fs_types)
+                    and f.mountpoint not in tracked_mnt_points
+                ):
+                    fs_stat.append(f)
 
         # Loop over fs
         for fs in fs_stat:
             # Hide the stats if the mount point is in the exclude list
-            # # It avoids unnecessary call to PsUtil disk_usage
+            # It avoids unnecessary call to PsUtil disk_usage
             if not self.is_display_any(fs.mountpoint, fs.device):
                 continue
 
             # Grab the disk usage
-            try:
-                fs_usage = psutil.disk_usage(fs.mountpoint)
-            except OSError:
-                # Correct issue #346
-                # Disk is ejected during the command
+            fs_usage = get_disk_usage(fs)
+            if fs_usage is None:
                 continue
             fs_current = {
                 'device_name': fs.device,

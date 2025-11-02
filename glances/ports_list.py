@@ -13,8 +13,10 @@ from glances.logger import logger
 try:
     import netifaces
 
+    netifaces.default_gateway()
     netifaces_tag = True
-except ImportError:
+except (ImportError, NameError):
+    logger.warning("Ports plugin - Can not init Netifaces2 lib, port_default_gateway feature is disabled")
     netifaces_tag = False
 
 
@@ -50,8 +52,8 @@ class GlancesPortsList:
             if default_gateway.lower().startswith('true') and netifaces_tag:
                 new_port = {}
                 try:
-                    new_port['host'] = netifaces.gateways()[netifaces.AF_INET][0][0]
-                except KeyError:
+                    new_port['host'] = netifaces.default_gateway()[netifaces.AF_INET][0]
+                except (KeyError, NameError):
                     new_port['host'] = None
                 # ICMP
                 new_port['port'] = 0

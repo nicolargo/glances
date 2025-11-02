@@ -19,7 +19,8 @@ import tracemalloc
 # Global name
 # Version should start and end with a numerical char
 # See https://packaging.python.org/specifications/core-metadata/#version
-__version__ = "4.3.3"
+# Examples: 1.0.0, 1.0.0rc1, 1.1.0_dev1
+__version__ = "4.4.0rc1"
 __apiversion__ = '4'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
@@ -52,10 +53,10 @@ if psutil_version_info < psutil_min_version:
 
 
 # Trac malloc is only available on Python 3.4 or higher
-
-
-def __signal_handler(signal, frame):
-    logger.debug(f"Signal {signal} caught")
+def __signal_handler(sig, frame):
+    logger.debug(f"Signal {sig} caught")
+    # Avoid Glances hang when killing process with muliple CTRL-C See #3264
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
     end()
 
 
@@ -95,8 +96,8 @@ def check_memleak(args, mode):
 
 
 def setup_server_mode(args, mode):
-    if args.stdout_issue or args.stdout_apidoc:
-        # Serve once for issue/test mode
+    if args.stdout_issue or args.stdout_api_restful_doc or args.stdout_api_doc:
+        # Serve once for issue and API documentation modes
         mode.serve_issue()
     else:
         # Serve forever
@@ -104,18 +105,18 @@ def setup_server_mode(args, mode):
 
 
 def maybe_trace_memleak(args, snapshot_begin):
-    if args.memory_leak:
+    if args.trace_malloc or args.memory_leak:
         snapshot_end = tracemalloc.take_snapshot()
+    if args.memory_leak:
         snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
         memory_leak = sum([s.size_diff for s in snapshot_diff])
         print(f"Memory consumption: {memory_leak / 1000:.1f}KB (see log for details)")
         logger.info("Memory consumption (top 5):")
         for stat in snapshot_diff[:5]:
             logger.info(stat)
-    elif args.trace_malloc:
+    if args.trace_malloc:
         # See more options here: https://docs.python.org/3/library/tracemalloc.html
-        snapshot = tracemalloc.take_snapshot()
-        top_stats = snapshot.statistics("filename")
+        top_stats = snapshot_end.statistics("filename")
         print("[ Trace malloc - Top 10 ]")
         for stat in top_stats[:10]:
             print(stat)

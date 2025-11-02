@@ -6,6 +6,7 @@ include README.rst
 include SECURITY.md
 include conf/glances.conf
 include requirements.txt
+include all-requirements.txt
 recursive-include docs *
 recursive-include glances *.py
 recursive-include glances/outputs/static *

@@ -11,6 +11,7 @@
 """Glances unitary tests suite."""
 
 import json
+import multiprocessing
 import time
 import unittest
 from datetime import datetime
@@ -26,9 +27,11 @@ except ImportError:
 from glances import __version__
 from glances.events_list import GlancesEventsList
 from glances.filter import GlancesFilter, GlancesFilterList
-from glances.globals import LINUX, WINDOWS, pretty_date, string_value_to_float, subsample
+from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS, auto_unit, pretty_date, string_value_to_float, subsample
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
+from glances.plugins.fs.zfs import zfs_enable, zfs_stats
+from glances.plugins.plugin.dag import get_plugin_dependencies
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.stats import GlancesStats
 from glances.thresholds import (
@@ -38,6 +41,12 @@ from glances.thresholds import (
     GlancesThresholds,
     GlancesThresholdWarning,
 )
+
+# Multiprocessing start method (on POSIX system)
+if LINUX or BSD or SUNOS or MACOS:
+    ctx_mp_fork = multiprocessing.get_context('fork')
+else:
+    ctx_mp_fork = multiprocessing.get_context()
 
 # Global variables
 # =================
@@ -404,7 +413,7 @@ class TestGlances(unittest.TestCase):
             assert len(stats_grab) == 0
         else:
             print(stats_grab)
-            self.assertTrue(stat in stats_grab[0].keys(), msg=f'Cannot find key: {stat}')
+            self.assertTrue(stat in stats_grab[0], msg=f'Cannot find key: {stat}')
 
         print(f'INFO: SMART stats: {stats_grab}')
 
@@ -517,6 +526,38 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(pretty_date(datetime(2023, 6, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '7 months')
         self.assertEqual(pretty_date(datetime(2023, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), 'an year')
         self.assertEqual(pretty_date(datetime(2020, 1, 1, 0, 0), datetime(2024, 1, 1, 12, 0)), '4 years')
+
+    def test_022_plugin_dag(self):
+        """Test Plugin DAG"""
+        print('INFO: [TEST_022] Plugins DAG')
+        self.assertEqual(get_plugin_dependencies('amps'), ['amps', 'alert'])
+        self.assertEqual(get_plugin_dependencies('cpu'), ['cpu', 'core', 'alert'])
+        self.assertEqual(get_plugin_dependencies('load'), ['load', 'core', 'alert'])
+        self.assertEqual(get_plugin_dependencies('processlist'), ['processlist', 'core', 'processcount', 'alert'])
+        self.assertEqual(get_plugin_dependencies('programlist'), ['programlist', 'processcount', 'alert'])
+        self.assertEqual(get_plugin_dependencies('quicklook'), ['quicklook', 'fs', 'core', 'load', 'alert'])
+        self.assertEqual(get_plugin_dependencies('vms'), ['vms', 'processcount', 'alert'])
+
+    def test_093_auto_unit(self):
+        """Test auto_unit classe"""
+        print('INFO: [TEST_093] Auto unit')
+        self.assertEqual(auto_unit(1.1234), '1.12')
+        self.assertEqual(auto_unit(1024), '1024')
+        self.assertEqual(auto_unit(1025), '1K')
+        self.assertEqual(auto_unit(613421788), '585M')
+        self.assertEqual(auto_unit(613421788, low_precision=True), '585M')
+        self.assertEqual(auto_unit(5307033647), '4.94G')
+        self.assertEqual(auto_unit(5307033647, low_precision=True), '4.9G')
+        self.assertEqual(auto_unit(44968414685), '41.9G')
+        self.assertEqual(auto_unit(44968414685, low_precision=True), '41.9G')
+        self.assertEqual(auto_unit(838471403472), '781G')
+        self.assertEqual(auto_unit(838471403472, low_precision=True), '781G')
+        self.assertEqual(auto_unit(9683209690677), '8.81T')
+        self.assertEqual(auto_unit(9683209690677, low_precision=True), '8.8T')
+        self.assertEqual(auto_unit(1073741824), '1024M')
+        self.assertEqual(auto_unit(1073741824, low_precision=True), '1024M')
+        self.assertEqual(auto_unit(1181116006), '1.10G')
+        self.assertEqual(auto_unit(1181116006, low_precision=True), '1.1G')
 
     def test_094_thresholds(self):
         """Test thresholds classes"""
@@ -670,6 +711,17 @@ class TestGlances(unittest.TestCase):
         """Test fs plugin methods"""
         print('INFO: [TEST_107] Test fs plugin methods')
         self._common_plugin_tests('fs')
+
+    def test_108_fs_zfs_(self):
+        """Test zfs functions"""
+        print('INFO: [TEST_108] Test zfs functions')
+        self.assertTrue(zfs_enable('./tests-data/plugins/fs/zfs'))
+        stats = zfs_stats(['./tests-data/plugins/fs/zfs/arcstats'])
+        self.assertTrue(isinstance(stats, dict))
+        self.assertTrue('arcstats.c_min' in stats)
+        self.assertEqual(stats['arcstats.c_min'], 2637352832)
+        self.assertTrue('arcstats.size' in stats)
+        self.assertEqual(stats['arcstats.size'], 41321273080)
 
     def test_200_views_hidden(self):
         """Test hide feature"""

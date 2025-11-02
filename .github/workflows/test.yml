@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Check formatting with Ruff
         uses: chartboost/ruff-action@v1
@@ -37,14 +37,14 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -70,14 +70,14 @@ jobs:
     runs-on: windows-2025
     strategy:
       matrix:
-        # Windows-curses not available for Python 3.13 for the moment
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        # Windows-curses not available for Python 3.14 for the moment
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
@@ -96,7 +96,7 @@ jobs:
 
     needs: source-code-checks
     # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       matrix:
         # Only test the latest stable version
@@ -104,10 +104,10 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'

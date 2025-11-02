@@ -35,6 +35,11 @@ system:
     [fs]
     allow=shm
 
+With the above configuration key, it is also possible to monitor NFS
+mount points (allow=nfs). Be aware that this can slow down the
+performance of the plugin if the NFS server is not reachable. In this
+case, the plugin will wait for a 2 seconds timeout.
+
 Also, you can hide mount points using regular expressions.
 
 To hide all mount points starting with /boot and /snap:

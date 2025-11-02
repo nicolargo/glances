@@ -59,6 +59,9 @@
                                     : $filters.bytes(container.limit)
                             }}
                         </td>
+                        <td v-show="!getDisableStats().includes('ports')" scope="row" class="text-truncate">
+                            {{ container.ports }}
+                        </td>
                         <td v-show="!getDisableStats().includes('command')" scope="row" class="text-truncate">
                             {{ container.command }}
                         </td>
@@ -94,6 +97,7 @@
                         <td v-show="!getDisableStats().includes('diskio')" scope="col">IOWps</td>
                         <td v-show="!getDisableStats().includes('networkio')" scope="col">RXps</td>
                         <td v-show="!getDisableStats().includes('networkio')" scope="col">TXps</td>
+                        <td v-show="!getDisableStats().includes('ports')" scope="col">Ports</td>
                         <td v-show="!getDisableStats().includes('command')" scope="col">Command</td>
                     </tr>
                 </thead>
@@ -158,6 +162,9 @@
                                     ? '-'
                                     : $filters.bits(container.network_tx)
                             }}
+                        </td>
+                        <td v-show="!getDisableStats().includes('ports')" scope="row">
+                            {{ container.ports }}
                         </td>
                         <td v-show="!getDisableStats().includes('command')" scope="row" class="text-truncate">
                             {{ container.command }}
@@ -228,6 +235,7 @@ export default {
                         io_wx: containerData.io_wx,
                         network_rx: containerData.network_rx,
                         network_tx: containerData.network_tx,
+                        ports: containerData.ports,
                         command: containerData.command,
                         image: containerData.image,
                         engine: containerData.engine,

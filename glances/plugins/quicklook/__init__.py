@@ -14,6 +14,7 @@ from glances.cpu_percent import cpu_percent
 from glances.logger import logger
 from glances.outputs.glances_bars import Bar
 from glances.outputs.glances_sparklines import Sparkline
+from glances.plugins.fs.zfs import zfs_enable, zfs_stats
 from glances.plugins.load import get_load_average, get_nb_log_core, get_nb_phys_core
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -88,6 +89,9 @@ class QuicklookPlugin(GlancesPluginModel):
             args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
         )
 
+        # ZFS
+        self.zfs_enabled = zfs_enable()
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -123,7 +127,16 @@ class QuicklookPlugin(GlancesPluginModel):
             stats['percpu'] = cpu_percent.get_percpu()
 
             # Get the virtual and swap memory
-            stats['mem'] = psutil.virtual_memory().percent
+            vm_stats = psutil.virtual_memory()
+            mem_total = vm_stats.total
+            mem_available = vm_stats.available
+            if self.zfs_enabled:
+                zfs_cache_stats = zfs_stats()
+                mem_available = (
+                    mem_available + zfs_cache_stats.get('arcstats.size', 0) - zfs_cache_stats.get('arcstats.c_min', 0)
+                )
+
+            stats['mem'] = round(float((mem_total - mem_available) / mem_total * 100), 1)
             try:
                 stats['swap'] = psutil.swap_memory().percent
             except RuntimeError:
@@ -294,9 +307,9 @@ class QuicklookPlugin(GlancesPluginModel):
         """Create a new line to the Quick view."""
         return [
             self.curse_add_line(msg),
-            self.curse_add_line(data.pre_char, decoration='BOLD'),
+            self.curse_add_line('[', decoration='BOLD'),
             self.curse_add_line(data.get(), self.get_views(key=key, option='decoration')),
-            self.curse_add_line(data.post_char, decoration='BOLD'),
+            self.curse_add_line(']', decoration='BOLD'),
             self.curse_add_line('  '),
         ]
 

@@ -31,9 +31,9 @@ sensors_definition = {
 }
 
 # Define the default refresh multiplicator
-# Default value is 3 * Glances refresh time
+# Default value is 5 * Glances refresh time
 # Can be overwritten by the refresh option in the sensors section of the glances.conf file
-DEFAULT_REFRESH = 3
+DEFAULT_REFRESH = 5
 
 # Fields description
 # description: human readable description
@@ -156,7 +156,7 @@ class SensorsPlugin(GlancesPluginModel):
         if self.input_method == 'local':
             with ThreadPoolExecutor(max_workers=len(self.sensors_grab_map)) as executor:
                 logger.debug(f"Sensors enabled sub plugins: {list(self.sensors_grab_map.keys())}")
-                futures = {t: executor.submit(self.__get_sensor_data, t) for t in self.sensors_grab_map.keys()}
+                futures = {t: executor.submit(self.__get_sensor_data, t) for t in self.sensors_grab_map}
 
             # Merge the results
             for sensor_type, future in futures.items():

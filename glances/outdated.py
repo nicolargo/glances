@@ -13,11 +13,10 @@ import os
 import pickle
 import threading
 from datetime import datetime, timedelta
-from ssl import CertificateError
 
 from glances import __version__
 from glances.config import user_cache_dir
-from glances.globals import HTTPError, URLError, nativestr, safe_makedirs, urlopen
+from glances.globals import nativestr, safe_makedirs, urlopen
 from glances.logger import logger
 
 try:
@@ -155,7 +154,7 @@ class Outdated:
 
         try:
             res = urlopen(PYPI_API_URL, timeout=3).read()
-        except (HTTPError, URLError, CertificateError) as e:
+        except Exception as e:
             logger.debug(f"Cannot get Glances version from the PyPI RESTful API ({e})")
         else:
             self.data['latest_version'] = json.loads(nativestr(res))['info']['version']

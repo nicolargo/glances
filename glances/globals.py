@@ -17,6 +17,7 @@ import base64
 import errno
 import functools
 import importlib
+import multiprocessing
 import os
 import platform
 import queue
@@ -96,6 +97,11 @@ viewkeys = methodcaller('keys')
 viewvalues = methodcaller('values')
 viewitems = methodcaller('items')
 
+# Multiprocessing start method (on POSIX system)
+if LINUX or BSD or SUNOS or MACOS:
+    ctx_mp_fork = multiprocessing.get_context('fork')
+else:
+    ctx_mp_fork = multiprocessing.get_context()
 
 ###################
 # GLOBALS FUNCTIONS
@@ -125,18 +131,6 @@ def listkeys(d):
 
 def listvalues(d):
     return list(d.values())
-
-
-def iteritems(d):
-    return iter(d.items())
-
-
-def iterkeys(d):
-    return iter(d.keys())
-
-
-def itervalues(d):
-    return iter(d.values())
 
 
 def u(s, errors='replace'):
@@ -375,6 +369,13 @@ def json_loads(data: Union[str, bytes, bytearray]) -> Union[dict, list]:
     return json.loads(data)
 
 
+def list_to_dict(data):
+    """Convert a list of dict (with key in 'key') to a dict with key as key and value as value."""
+    if not isinstance(data, list):
+        return None
+    return {item[item['key']]: item for item in data if 'key' in item}
+
+
 def dictlist(data, item):
     if isinstance(data, dict):
         try:
@@ -407,6 +408,65 @@ def dictlist_first_key_value(data: list[dict], key, value) -> Optional[dict]:
     except StopIteration:
         ret = None
     return ret
+
+
+def auto_unit(number, low_precision=False, min_symbol='K', none_symbol='-'):
+    """Make a nice human-readable string out of number.
+
+    Number of decimal places increases as quantity approaches 1.
+    CASE: 613421788        RESULT:       585M low_precision:       585M
+    CASE: 5307033647       RESULT:      4.94G low_precision:       4.9G
+    CASE: 44968414685      RESULT:      41.9G low_precision:      41.9G
+    CASE: 838471403472     RESULT:       781G low_precision:       781G
+    CASE: 9683209690677    RESULT:      8.81T low_precision:       8.8T
+    CASE: 1073741824       RESULT:      1024M low_precision:      1024M
+    CASE: 1181116006       RESULT:      1.10G low_precision:       1.1G
+
+    :low_precision: returns less decimal places potentially (default is False)
+                    sacrificing precision for more readability.
+    :min_symbol: Do not approach if number < min_symbol (default is K)
+    :decimal_count: if set, force the number of decimal number (default is None)
+    """
+    if number is None:
+        return none_symbol
+    symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
+    if min_symbol in symbols:
+        symbols = symbols[symbols.index(min_symbol) :]
+    prefix = {
+        'Y': 1208925819614629174706176,
+        'Z': 1180591620717411303424,
+        'E': 1152921504606846976,
+        'P': 1125899906842624,
+        'T': 1099511627776,
+        'G': 1073741824,
+        'M': 1048576,
+        'K': 1024,
+    }
+
+    if number == 0:
+        # Avoid 0.0
+        return '0'
+
+    # If a value is a float, decimal_precision is 2 else 0
+    decimal_precision = 2 if isinstance(number, float) else 0
+    for symbol in reversed(symbols):
+        value = float(number) / prefix[symbol]
+        if value > 1:
+            decimal_precision = 0
+            if value < 10:
+                decimal_precision = 2
+            elif value < 100:
+                decimal_precision = 1
+            if low_precision:
+                if symbol in 'MK':
+                    decimal_precision = 0
+                else:
+                    decimal_precision = min(1, decimal_precision)
+            elif symbol in 'K':
+                decimal_precision = 0
+            return '{:.{decimal}f}{symbol}'.format(value, decimal=decimal_precision, symbol=symbol)
+
+    return f'{number:.{decimal_precision}f}'
 
 
 def string_value_to_float(s):
@@ -531,3 +591,43 @@ def atoi(text):
 def natural_keys(text):
     """Return a text in a natural/human readable format."""
     return [atoi(c) for c in re.split(r'(\d+)', text)]
+
+
+def exit_after(seconds, default=None):
+    """Exit the function if it takes more than 'seconds' seconds to complete.
+    In this case, return the value of 'default' (default: None)."""
+
+    def handler(q, func, args, kwargs):
+        q.put(func(*args, **kwargs))
+
+    def decorator(func):
+        if not LINUX:
+            return func
+
+        def wraps(*args, **kwargs):
+            try:
+                q = ctx_mp_fork.Queue()
+            except PermissionError:
+                # Manage an exception in Snap packages on Linux
+                # The strict mode prevent the use of multiprocessing.Queue()
+                # There is a "dirty" hack:
+                # https://forum.snapcraft.io/t/python-multiprocessing-permission-denied-in-strictly-confined-snap/15518/2
+                # But i prefer to just disable the timeout feature in this case
+                func(*args, **kwargs)
+            else:
+                p = ctx_mp_fork.Process(target=handler, args=(q, func, args, kwargs))
+                p.start()
+                p.join(timeout=seconds)
+                if not p.is_alive():
+                    return q.get()
+                p.terminate()
+                p.join(timeout=0.1)
+                if p.is_alive():
+                    # Kill in case processes doesn't terminate
+                    # Happens with cases like broken NFS connections
+                    p.kill()
+            return default
+
+        return wraps
+
+    return decorator

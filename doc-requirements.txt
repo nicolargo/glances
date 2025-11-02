@@ -1,7 +1,0 @@
-psutil
-defusedxml
-orjson
-reuse
-setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
-sphinx
-sphinx_rtd_theme

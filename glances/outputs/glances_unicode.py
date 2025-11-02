@@ -17,6 +17,7 @@ _unicode_message = {
     'PROCESS_SELECTOR': ['>', '>'],
     'MEDIUM_LINE': ['\u2500', '─'],
     'LOW_LINE': ['\u2581', '_'],
+    'THREE_DOTS': ['\u2026', '...'],
 }
 
 

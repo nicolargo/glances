@@ -43,6 +43,9 @@ class Export(GlancesExport):
         # Perhaps a better method is possible...
         self._metric_dict = {}
 
+        # Keys name (compute in update() method)
+        self.keys_name = {}
+
         # Init the Prometheus Exporter
         self.init()
 
@@ -56,29 +59,41 @@ class Export(GlancesExport):
         else:
             logger.info(f"Start Prometheus exporter on {self.host}:{self.port}")
 
+    def update(self, stats):
+        self.keys_name = {k: stats.get_plugin(k).get_key() for k in stats.getPluginsList()}
+        super().update(stats)
+
     def export(self, name, columns, points):
         """Write the points to the Prometheus exporter using Gauge."""
         logger.debug(f"Export {name} stats to Prometheus exporter")
 
         # Remove non number stats and convert all to float (for Boolean)
-        data = {k: float(v) for k, v in zip(columns, points) if isinstance(v, Number)}
+        data = {str(k): float(v) for k, v in zip(columns, points) if isinstance(v, Number)}
 
         # Write metrics to the Prometheus exporter
-        for k, v in data.items():
-            # Prometheus metric name: prefix_<glances stats name>
-            metric_name = self.prefix + self.METRIC_SEPARATOR + str(name) + self.METRIC_SEPARATOR + str(k)
+        for metric, value in data.items():
+            labels = self.labels
+            metric_name = self.prefix + self.METRIC_SEPARATOR + name + self.METRIC_SEPARATOR
+            try:
+                obj, stat = metric.split('.')
+                metric_name += stat
+                labels += f",{self.keys_name.get(name)}:{obj}"
+            except ValueError:
+                metric_name += metric
+
             # Prometheus is very sensible to the metric name
             # See: https://prometheus.io/docs/practices/naming/
             for c in ' .-/:[]':
                 metric_name = metric_name.replace(c, self.METRIC_SEPARATOR)
+
             # Get the labels
-            labels = self.parse_tags(self.labels)
+            labels = self.parse_tags(labels)
             # Manage an internal dict between metric name and Gauge
             if metric_name not in self._metric_dict:
-                self._metric_dict[metric_name] = Gauge(metric_name, k, labelnames=listkeys(labels))
+                self._metric_dict[metric_name] = Gauge(metric_name, "", labelnames=listkeys(labels))
             # Write the value
             if hasattr(self._metric_dict[metric_name], 'labels'):
                 # Add the labels (see issue #1255)
-                self._metric_dict[metric_name].labels(**labels).set(v)
+                self._metric_dict[metric_name].labels(**labels).set(value)
             else:
-                self._metric_dict[metric_name].set(v)
+                self._metric_dict[metric_name].set(value)

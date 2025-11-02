@@ -280,8 +280,8 @@ class GlancesClient:
                 else:
                     # In quiet mode, we only wait adapated_refresh seconds
                     time.sleep(adapted_refresh)
-        except Exception as e:
-            logger.critical(f"Critical error in client serve_forever loop: {e}")
+        except Exception:
+            logger.critical("Critical error in client serve_forever loop")
             self.end()
 
         return self.client_mode

@@ -149,6 +149,18 @@ Columns display
                           pressing on the ``'/'`` key
 ========================= ==============================================
 
+Disable display of virtual memory
+---------------------------------
+
+It's possible to disable the display of the VIRT column (virtual memory) by adding the
+``disable_virtual_memory=True`` option in the ``[processlist]`` section of the configuration
+file (glances.conf):
+
+.. code-block:: ini
+
+    [processlist]
+    disable_virtual_memory=True
+
 Process filtering
 -----------------
 

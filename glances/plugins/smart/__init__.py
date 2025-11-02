@@ -185,10 +185,10 @@ class SmartPlugin(GlancesPluginModel):
             msg = '{:{width}}'.format(device_stat['DeviceName'][:max_width], width=max_width)
             ret.append(self.curse_add_line(msg))
             try:
-                device_stat_sorted = sorted([i for i in device_stat.keys() if i != 'DeviceName'], key=int)
+                device_stat_sorted = sorted([i for i in device_stat if i != 'DeviceName'], key=int)
             except ValueError:
                 # Catch ValueError, see #2904
-                device_stat_sorted = [i for i in device_stat.keys() if i != 'DeviceName']
+                device_stat_sorted = [i for i in device_stat if i != 'DeviceName']
             for smart_stat in device_stat_sorted:
                 ret.append(self.curse_new_line())
                 msg = ' {:{width}}'.format(

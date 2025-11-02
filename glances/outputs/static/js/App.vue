@@ -187,6 +187,11 @@ export default {
             const title = (data.stats && data.stats.system && data.stats.system.hostname) || '';
             return title ? `${title} - Glances` : 'Glances';
         },
+        topMenu() {
+            return this.config.outputs !== undefined && this.config.outputs.top_menu !== undefined
+                ? this.config.outputs.top_menu.split(',')
+                : uiconfig.topMenu;
+        },
         leftMenu() {
             return this.config.outputs !== undefined && this.config.outputs.left_menu !== undefined
                 ? this.config.outputs.left_menu.split(',')
@@ -316,6 +321,17 @@ export default {
             // 'B' => Switch between bit/s and IO/s for Disk IO
             hotkeys('shift+B', () => {
                 this.store.args.diskio_iops = !this.store.args.diskio_iops;
+                if (this.store.args.diskio_iops) {
+                    this.store.args.diskio_latency = false;
+                }
+            });
+
+            // 'L' => Switch to latency for Disk IO
+            hotkeys('shift+L', () => {
+                this.store.args.diskio_latency = !this.store.args.diskio_latency;
+                if (this.store.args.diskio_latency) {
+                    this.store.args.diskio_iops = false;
+                }
             });
 
             // l => Show/hide alert logs

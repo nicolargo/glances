@@ -187,7 +187,7 @@ and make it visible to your container by adding it to ``docker-compose.yml`` as 
         image: nicolargo/glances:latest
         restart: always
         environment:
-          - GLANCES_OPT="-w --password"
+          - "GLANCES_OPT=-w --password"
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock:ro
           # Uncomment the below line if you want glances to display host OS detail instead of container's
