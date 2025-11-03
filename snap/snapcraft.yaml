@@ -2,7 +2,9 @@ name: glances
 # Version sementic:
 # version+buildXX (00 for beta, 01..99 for stable releases)
 # Do not forget to set the source-branch option to master for release (see end of file)
-version: '4.4.1+build00'
+# build00 => glances source-branch should be set to develop
+# buildXX => glances source-branch should be set to master
+version: '4.4.1+build01'
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
@@ -73,6 +75,6 @@ parts:
     source: https://github.com/nicolargo/glances.git
     # For releases, set to master
     # For beta/dev, set to develop
-    source-branch: develop
+    source-branch: master
     python-requirements:
       - docker-requirements.txt
