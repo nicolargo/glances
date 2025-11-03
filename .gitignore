@@ -69,3 +69,4 @@ uv.lock
 
 # Test
 .coverage
+tests-data/issues/*/config/

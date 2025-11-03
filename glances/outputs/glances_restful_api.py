@@ -11,7 +11,6 @@
 import os
 import socket
 import sys
-import tempfile
 import webbrowser
 from typing import Annotated, Any, Union
 from urllib.parse import urljoin
@@ -47,7 +46,6 @@ try:
 except ImportError:
     logger.critical('Uvicorn import error. Glances cannot start in web server mode.')
     sys.exit(2)
-import builtins
 import contextlib
 import threading
 import time
@@ -469,13 +467,6 @@ class GlancesRestfulApi:
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        if self.args.debug:
-            fname = os.path.join(tempfile.gettempdir(), 'glances-debug.json')
-            try:
-                with builtins.open(fname) as f:
-                    return f.read()
-            except OSError:
-                logger.debug(f"Debug file ({fname}) not found")
 
         # Update the stat
         self.__update_stats()
