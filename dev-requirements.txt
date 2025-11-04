@@ -282,7 +282,7 @@ protobuf==4.25.8 ; python_full_version < '3.10'
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
-psutil==7.1.2
+psutil==7.1.3
     # via memory-profiler
 py-spy==0.4.1
 pycparser==2.23 ; implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt'
@@ -414,7 +414,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 sse-starlette==3.0.3 ; python_full_version >= '3.10'
     # via mcp
-starlette==0.49.2 ; python_full_version >= '3.10'
+starlette==0.49.3 ; python_full_version >= '3.10'
     # via mcp
 tomli==2.0.2
     # via
