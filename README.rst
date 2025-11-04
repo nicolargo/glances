@@ -2,9 +2,12 @@
 Glances - An Eye on your System
 ===============================
 
+.. class:: center
+
 |  |pypi| |test| |contributors| |quality|
 |  |starts| |docker| |pypistat|
-|  |sponsors| |twitter|
+|  |sponsors| 
+|  |twitter| |reddit|
 
 .. |pypi| image:: https://img.shields.io/pypi/v/glances.svg
     :target: https://pypi.python.org/pypi/Glances
@@ -40,6 +43,10 @@ Glances - An Eye on your System
 .. |twitter| image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
     :target: https://twitter.com/nicolargo
     :alt: @nicolargo
+
+.. | reddit | image:: https://img.shields.io/badge/Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white
+    :target: https://www.reddit.com/r/glances/
+    :alt: @reddit
 
 Summary 🌟
 ==========
