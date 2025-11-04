@@ -3,8 +3,7 @@ Glances - An Eye on your System
 ===============================
 
 |  |pypi| |test| |contributors| |quality|
-|  |starts| |docker| |pypistat|
-|  |sponsors| 
+|  |starts| |docker| |pypistat| |sponsors| 
 |  |twitter| |reddit|
 
 .. |pypi| image:: https://img.shields.io/pypi/v/glances.svg
