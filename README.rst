@@ -1,3 +1,9 @@
+.. raw:: html
+
+   <div align="center">
+
+.. image:: ./docs/_static/Glances%20Logo.svg
+
 ===============================
 Glances - An Eye on your System
 ===============================
@@ -44,6 +50,10 @@ Glances - An Eye on your System
 .. |reddit| image:: https://img.shields.io/badge/Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white
     :target: https://www.reddit.com/r/glances/
     :alt: @reddit
+
+.. raw:: html
+
+   </div>
 
 Summary 🌟
 ==========
