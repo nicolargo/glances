@@ -38,7 +38,7 @@ Glances - An Eye on your System
     :target: https://github.com/sponsors/nicolargo
     :alt: Sponsors
 
-.. |twitter| image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
+.. |twitter| https://img.shields.io/badge/X-000000?style=for-the-badge&logo=x&logoColor=white
     :target: https://twitter.com/nicolargo
     :alt: @nicolargo
 
