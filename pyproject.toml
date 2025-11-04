@@ -26,6 +26,7 @@ dependencies = [
   "windows-curses; platform_system == 'Windows'",
   "shtab; platform_system != 'Windows'",
   "jinja2",
+  "dynaconf[ini]>=3.2.12",
 ]
 description = "A cross-platform curses-based monitoring tool"
 dynamic = ["version"]
