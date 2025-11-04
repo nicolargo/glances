@@ -2,11 +2,13 @@
 
    <div align="center">
 
-.. image:: ./docs/_static/Glances%20Logo.svg
+.. image:: ./docs/_static/glances-responsive-webdesign.png
 
-===============================
-Glances - An Eye on your System
-===============================
+.. raw:: html
+
+   <h1>Glances</h1>
+
+An Eye on your System
 
 |  |pypi| |test| |contributors| |quality|
 |  |starts| |docker| |pypistat| |sponsors| 
@@ -72,8 +74,6 @@ In client/server mode, remote monitoring could be done via terminal,
 Web interface or API (XML-RPC and RESTful).
 Stats can also be exported to files or external time/value databases, CSV or direct
 output to STDOUT.
-
-.. image:: ./docs/_static/glances-responsive-webdesign.png
 
 Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can
