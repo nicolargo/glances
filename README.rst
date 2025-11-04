@@ -2,8 +2,6 @@
 Glances - An Eye on your System
 ===============================
 
-.. class:: center
-
 |  |pypi| |test| |contributors| |quality|
 |  |starts| |docker| |pypistat|
 |  |sponsors| 
@@ -44,7 +42,7 @@ Glances - An Eye on your System
     :target: https://twitter.com/nicolargo
     :alt: @nicolargo
 
-.. | reddit | image:: https://img.shields.io/badge/Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white
+.. |reddit| image:: https://img.shields.io/badge/Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white
     :target: https://www.reddit.com/r/glances/
     :alt: @reddit
 
