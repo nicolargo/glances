@@ -12,7 +12,7 @@ An Eye on your System
 
 |  |pypi| |test| |contributors| |quality|
 |  |starts| |docker| |pypistat| |sponsors| 
-|  |twitter| |reddit|
+|  |reddit|
 
 .. |pypi| image:: https://img.shields.io/pypi/v/glances.svg
     :target: https://pypi.python.org/pypi/Glances
