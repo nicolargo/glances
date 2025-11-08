@@ -669,9 +669,9 @@ class GlancesPluginModel:
     def get_stat_name(self, header=None, action_key=None):
         """Return the stat name with an optional header and action_key"""
         ret = self.plugin_name
-        if header is not None:
+        if header is not None and header != '':
             ret += '_' + header
-        if action_key is not None:
+        if action_key is not None and action_key != '':
             ret += '_' + action_key
         return ret
 
