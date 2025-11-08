@@ -11,7 +11,7 @@
 An Eye on your System
 
 |  |pypi| |test| |contributors| |quality|
-|  |starts| |docker| |pypistat| |sponsors| 
+|  |starts| |docker| |pypistat| |sponsors|
 |  |reddit|
 
 .. |pypi| image:: https://img.shields.io/pypi/v/glances.svg
@@ -169,8 +169,6 @@ Results look like this:
 
 .. image:: ./docs/_static/screenshot-fetch.png
 
-and RTFM, always.
-
 Use Glances as a Python library 📚
 ==================================
 
@@ -235,7 +233,7 @@ Documentation 📜
 
 For complete documentation have a look at the readthedocs_ website.
 
-If you have any question (after RTFM!), please post it on the official Reddit `forum`_.
+If you have any question (after RTFM! and the `FAQ`_), please post it on the official Reddit `forum`_ or in GitHub `Discussions`_.
 
 Gateway to other services 🌐
 ============================
@@ -267,8 +265,7 @@ There are several methods to test/install Glances on your system. Choose your we
 PyPI: Pip, the standard way
 ---------------------------
 
-Glances is on ``PyPI``. By using PyPI, you will be using the latest
-stable version.
+Glances is on ``PyPI``. By using PyPI, you will be using the latest stable version.
 
 To install Glances, simply use the ``pip`` command line.
 
@@ -660,8 +657,9 @@ Please give us a star on `GitHub`_ if you like this project.
 .. _package: https://repology.org/project/glances/versions
 .. _sponsors: https://github.com/sponsors/nicolargo
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
-.. _Docker: https://github.com/nicolargo/glances/blob/develop/docs/docker.rst
+.. _Docker: https://github.com/nicolargo/glances/blob/master/docs/docker.rst
 .. _GitHub: https://github.com/nicolargo/glances
 .. _PythonApi: https://glances.readthedocs.io/en/develop/api/python.html
 .. _RestfulApi: https://glances.readthedocs.io/en/develop/api/restful.html
-
+.. _FAQ: https://github.com/nicolargo/glances/blob/develop/docs/faq.rst
+.. _Discussions: https://github.com/nicolargo/glances/discussions
