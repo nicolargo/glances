@@ -152,6 +152,7 @@ lint: ## Lint the code.
 
 lint-readme: ## Lint the main README.rst file
 	uv run rstcheck README.rst
+	uv run rstcheck README-pypi.rst
 
 codespell: ## Run codespell to fix common misspellings in text files
 	uv run codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics -w
