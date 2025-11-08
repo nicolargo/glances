@@ -14,6 +14,7 @@ I am your father...
 
 import copy
 import re
+from datetime import datetime
 
 from glances.actions import GlancesActions
 from glances.events_list import glances_events
@@ -665,11 +666,13 @@ class GlancesPluginModel:
         """
         return self.stats
 
-    def get_stat_name(self, header=""):
-        """Return the stat name with an optional header"""
+    def get_stat_name(self, header=None, action_key=None):
+        """Return the stat name with an optional header and action_key"""
         ret = self.plugin_name
-        if header != '':
+        if header is not None:
             ret += '_' + header
+        if action_key is not None:
+            ret += '_' + action_key
         return ret
 
     def get_alert(
@@ -679,7 +682,7 @@ class GlancesPluginModel:
         maximum=100,
         highlight_zero=True,
         is_max=False,
-        header="",
+        header=None,
         action_key=None,
         log=False,
     ):
@@ -717,7 +720,7 @@ class GlancesPluginModel:
             return 'DEFAULT'
 
         # Build the stat_name
-        stat_name = self.get_stat_name(header=header).lower()
+        stat_name = self.get_stat_name(header=header, action_key=action_key).lower()
 
         # Manage limits
         # If is_max is set then default style is set to MAX else default is set to OK
@@ -788,17 +791,24 @@ class GlancesPluginModel:
 
             # A command line is available for the current alert
             # 1) Build the {{mustache}} dictionary
-            if isinstance(self.get_stats_action(), list):
+            stats_action = copy.deepcopy(self.get_stats_action())
+            if isinstance(stats_action, list):
                 # If the stats are stored in a list of dict (fs plugin for example)
                 # Return the dict for the current header
                 mustache_dict = {}
-                for item in self.get_stats_action():
+                for item in stats_action:
+                    # Add the limit to the mustache dict
+                    item['critical'] = self.get_limit('critical', stat_name=stat_name)
+                    item['warning'] = self.get_limit('warning', stat_name=stat_name)
+                    item['careful'] = self.get_limit('careful', stat_name=stat_name)
+                    # Add the current time (now)
+                    item['time'] = datetime.now().isoformat()
                     if item[self.get_key()] == action_key:
                         mustache_dict = item
                         break
             else:
                 # Use the stats dict
-                mustache_dict = self.get_stats_action()
+                mustache_dict = stats_action
             # 2) Run the action
             self.actions.run(stat_name, trigger, command, repeat, mustache_dict=mustache_dict)
 
