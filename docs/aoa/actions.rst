@@ -3,7 +3,7 @@
 Actions
 =======
 
-Glances can trigger actions on events.
+Glances can trigger actions on events for warning and critical thresholds.
 
 By ``action``, we mean all shell command line. For example, if you want
 to execute the ``foo.py`` script if the last 5 minutes load are critical
@@ -33,7 +33,7 @@ reached:
 
     [fs]
     warning=70
-    warning_action=echo {{mnt_point}} {{used}}/{{size}} > /tmp/fs.alert
+    warning_action=echo "{{time}} {{mnt_point}} {{used}}/{{size}}" > /tmp/fs.alert
 
 A last example would be to create a log file containing the total user disk
 space usage for a device and notify by email each time a space trigger
@@ -43,12 +43,10 @@ critical is reached:
 
     [fs]
     critical=90
-    critical_action_repeat=echo {{device_name}} {{percent}} > /tmp/fs.alert && python /etc/glances/actions.d/fs-critical.py
-
+    critical_action_repeat=echo "{{time}} {{device_name}} {{percent}}" > /tmp/fs.alert && python /etc/glances/actions.d/fs-critical.py
 
 .. note::
     Use && as separator for multiple commands
-
 
 Within ``/etc/glances/actions.d/fs-critical.py``:
 
