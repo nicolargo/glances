@@ -63,6 +63,7 @@ bower_components/
 /*_source.tar.bz2
 
 # Virtual env
+.venv-uv/
 .venv/
 uv.lock
 .python-version
