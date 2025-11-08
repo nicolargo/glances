@@ -808,6 +808,12 @@ class GlancesPluginModel:
                         break
             else:
                 # Use the stats dict
+                # Add the limit to the mustache dict
+                stats_action['critical'] = self.get_limit('critical', stat_name=stat_name)
+                stats_action['warning'] = self.get_limit('warning', stat_name=stat_name)
+                stats_action['careful'] = self.get_limit('careful', stat_name=stat_name)
+                # Add the current time (now)
+                stats_action['time'] = datetime.now().isoformat()
                 mustache_dict = stats_action
             # 2) Run the action
             self.actions.run(stat_name, trigger, command, repeat, mustache_dict=mustache_dict)
