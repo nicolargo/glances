@@ -3,6 +3,7 @@ include CONTRIBUTING.md
 include COPYING
 include NEWS.rst
 include README.rst
+include README-pypi.rst
 include SECURITY.md
 include conf/glances.conf
 include requirements.txt

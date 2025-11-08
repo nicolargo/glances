@@ -32,7 +32,7 @@ dynamic = ["version"]
 keywords = ["cli", "curses", "monitoring", "system"]
 license = {text = "LGPLv3"}
 name = "Glances"
-readme = "README.rst"
+readme = "README-pypi.rst"
 requires-python = ">=3.9"
 urls.Homepage = "https://github.com/nicolargo/glances"
 
@@ -120,6 +120,7 @@ glances = "glances:main"
   "COPYING",
   "NEWS.rst",
   "README.rst",
+  "README-pypi.rst",
   "SECURITY.md",
   "CONTRIBUTING.md",
   "conf/glances.conf",
