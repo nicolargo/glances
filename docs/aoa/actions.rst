@@ -5,6 +5,9 @@ Actions
 
 Glances can trigger actions on events.
 
+For the moment, action can only triggered on plugins that have the _log feature (CPU, MEM, SWAP, LOAD).
+An issue (https://github.com/nicolargo/glances/issues/3324) is opened to extend this feature to all plugins.
+
 By ``action``, we mean all shell command line. For example, if you want
 to execute the ``foo.py`` script if the last 5 minutes load are critical
 then add the ``_action`` line to the Glances configuration file:
