@@ -28,3 +28,10 @@ Previously, Glances uses Netifaces to get network interfaces information.
 Now, Glances uses Netifaces2.
 
 Please uninstall Netifaces and install Netifaces2 instead.
+
+On Debian/Ubuntu Operating Systems, Webserver display a blank screen ?
+----------------------------------------------------------------------
+
+For some reason, the Glances Debian/Ubuntu packages do not include the Web UI static files.
+
+Please read: https://github.com/nicolargo/glances/issues/2021 for workaround and more information.
