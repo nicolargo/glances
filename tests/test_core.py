@@ -538,6 +538,14 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(get_plugin_dependencies('quicklook'), ['quicklook', 'fs', 'core', 'load', 'alert'])
         self.assertEqual(get_plugin_dependencies('vms'), ['vms', 'processcount', 'alert'])
 
+    def test_023_get_alert(self):
+        """Test get_alert function"""
+        print('INFO: [TEST_023] get_alert')
+        self.assertEqual(stats.get_plugin('cpu').get_alert(10, minimum=0, maximum=100, header='total'), 'OK_LOG')
+        self.assertEqual(stats.get_plugin('cpu').get_alert(65, minimum=0, maximum=100, header='total'), 'CAREFUL_LOG')
+        self.assertEqual(stats.get_plugin('cpu').get_alert(75, minimum=0, maximum=100, header='total'), 'WARNING_LOG')
+        self.assertEqual(stats.get_plugin('cpu').get_alert(85, minimum=0, maximum=100, header='total'), 'CRITICAL_LOG')
+
     def test_093_auto_unit(self):
         """Test auto_unit classe"""
         print('INFO: [TEST_093] Auto unit')

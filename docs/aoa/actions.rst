@@ -3,10 +3,7 @@
 Actions
 =======
 
-Glances can trigger actions on events.
-
-For the moment, action can only triggered on plugins that have the _log feature (CPU, MEM, SWAP, LOAD).
-An issue (https://github.com/nicolargo/glances/issues/3324) is opened to extend this feature to all plugins.
+Glances can trigger actions on events for warning and critical thresholds.
 
 By ``action``, we mean all shell command line. For example, if you want
 to execute the ``foo.py`` script if the last 5 minutes load are critical
@@ -21,6 +18,13 @@ then add the ``_action`` line to the Glances configuration file:
 All the stats are available in the command line through the use of the
 `Mustache`_ syntax. `Chevron`_ is required to render the mustache's template syntax.
 
+Additionaly to the stats of the current plugin, the following variables are
+also available:
+- ``{{time}}``: current time in ISO format
+- ``{{critical}}``: critical threshold value
+- ``{{warning}}``: warning threshold value
+- ``{{careful}}``: careful threshold value
+
 Another example would be to create a log file
 containing used vs total disk space if a space trigger warning is
 reached:
@@ -29,7 +33,7 @@ reached:
 
     [fs]
     warning=70
-    warning_action=echo {{mnt_point}} {{used}}/{{size}} > /tmp/fs.alert
+    warning_action=echo "{{time}} {{mnt_point}} {{used}}/{{size}}" > /tmp/fs.alert
 
 A last example would be to create a log file containing the total user disk
 space usage for a device and notify by email each time a space trigger
@@ -39,12 +43,10 @@ critical is reached:
 
     [fs]
     critical=90
-    critical_action_repeat=echo {{device_name}} {{percent}} > /tmp/fs.alert && python /etc/glances/actions.d/fs-critical.py
-
+    critical_action_repeat=echo "{{time}} {{device_name}} {{percent}}" > /tmp/fs.alert && python /etc/glances/actions.d/fs-critical.py
 
 .. note::
     Use && as separator for multiple commands
-
 
 Within ``/etc/glances/actions.d/fs-critical.py``:
 
