@@ -226,8 +226,8 @@ class SensorsPlugin(GlancesPluginModel):
             # Alert processing
             if i['type'] == sensors_definition.get('cpu_temp').get('type'):
                 if self.is_limit('critical', stat_name=i['type'] + '_' + i['label']):
-                    # Get thresholds for the specific sensor in the glances.conf file (see #2058)
-                    alert = self.get_alert(current=i['value'], header=i['type'] + '_' + i['label'])
+                    # Get thresholds for the specific sensor in the glances.conf file (see #2058)abel']}")
+                    alert = self.get_alert(current=i['value'], header=i['type'], action_key=i['label'])
                 elif self.is_limit('critical', stat_name=i['type']):
                     # Get thresholds for the sensor type in the glances.conf file (see #3049)
                     alert = self.get_alert(current=i['value'], header=i['type'])

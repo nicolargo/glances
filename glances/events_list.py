@@ -271,6 +271,7 @@ class GlancesEventsList:
                 event_time, event_index, event_state, event_type, event_value, proc_list, proc_desc, global_message
             )
 
+        # logger.info(self.events_list)
         return self.len()
 
     def _create_event(self, event_time, event_state, event_type, event_value, proc_desc, global_message):

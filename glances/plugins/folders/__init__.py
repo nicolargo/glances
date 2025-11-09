@@ -154,6 +154,6 @@ class FoldersPlugin(GlancesPluginModel):
                 msg = '?{:>8}'.format(self.auto_unit(i['size']))
             else:
                 msg = '{:>9}'.format(self.auto_unit(i['size']))
-            ret.append(self.curse_add_line(msg, self.get_alert(i, header='folder_' + i['indice'])))
+            ret.append(self.curse_add_line(msg, self.get_alert(i, header='folder', action_key=i['indice'])))
 
         return ret
