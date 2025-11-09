@@ -667,12 +667,12 @@ class GlancesPluginModel:
         return self.stats
 
     def get_stat_name(self, header=None, action_key=None):
-        """Return the stat name with an optional header and action_key"""
+        """Return the stat name with an optional action_key and header"""
         ret = self.plugin_name
-        if header is not None and header != '':
-            ret += '_' + header
         if action_key is not None and action_key != '':
             ret += '_' + action_key
+        if header is not None and header != '':
+            ret += '_' + header
         return ret
 
     def get_alert(
@@ -794,7 +794,6 @@ class GlancesPluginModel:
             stats_action = copy.deepcopy(self.get_stats_action())
             if isinstance(stats_action, list):
                 # If the stats are stored in a list of dict (fs plugin for example)
-                # Return the dict for the current header
                 mustache_dict = {}
                 for item in stats_action:
                     # Add the limit to the mustache dict
