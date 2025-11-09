@@ -287,7 +287,7 @@ class ContainersPlugin(GlancesPluginModel):
             # CPU alert
             if 'cpu' in i and 'total' in i['cpu']:
                 # Looking for specific CPU container threshold in the conf file
-                alert = self.get_alert(i['cpu']['total'], header=i['name'] + '_cpu', action_key=i['name'])
+                alert = self.get_alert(i['cpu']['total'], header='cpu', action_key=i['name'])
                 if alert == 'DEFAULT':
                     # Not found ? Get back to default CPU threshold value
                     alert = self.get_alert(i['cpu']['total'], header='cpu')
@@ -299,7 +299,7 @@ class ContainersPlugin(GlancesPluginModel):
                 alert = self.get_alert(
                     self.memory_usage_no_cache(i['memory']),
                     maximum=i['memory']['limit'],
-                    header=i['name'] + '_mem',
+                    header='mem',
                     action_key=i['name'],
                 )
                 if alert == 'DEFAULT':
@@ -592,6 +592,8 @@ def sort_docker_stats(stats: list[dict[str, Any]]) -> tuple[str, list[dict[str, 
         reverse=glances_processes.sort_key != 'name',
     )
 
+    # Return the main sort key and the sorted stats
+    return sort_by, stats
     # Return the main sort key and the sorted stats
     return sort_by, stats
     # Return the main sort key and the sorted stats
