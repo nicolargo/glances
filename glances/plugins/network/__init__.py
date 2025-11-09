@@ -219,8 +219,6 @@ class NetworkPlugin(GlancesPluginModel):
             bps_tx = int(i['bytes_sent_rate_per_sec'] * 8)
 
             # Decorate the bitrate with the configuration file thresholds
-            # alert_rx = self.get_alert(bps_rx, header=if_real_name + '_rx')
-            # alert_tx = self.get_alert(bps_tx, header=if_real_name + '_tx')
             alert_rx = self.get_alert(bps_rx, header='rx', action_key=if_real_name)
             alert_tx = self.get_alert(bps_tx, header='tx', action_key=if_real_name)
 
