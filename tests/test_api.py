@@ -9,6 +9,8 @@
 
 """Glances API unitary tests suite."""
 
+from unittest.mock import patch
+
 from glances import __version__, api
 
 # Global variables
@@ -17,7 +19,10 @@ from glances import __version__, api
 # Init Glances API
 # test_config = core.get_config()
 # test_args = core.get_args()
-gl = api.GlancesAPI(args_begin_at=2)
+
+testargs = ["glances", "-C", "./conf/glances.conf"]
+with patch('sys.argv', testargs):
+    gl = api.GlancesAPI()
 
 
 # Pytest functions to test the Glances API version
@@ -81,4 +86,5 @@ def test_glances_api_plugin_process():
 
 
 def test_glances_api_limits():
+    assert isinstance(gl.cpu.limits, dict)
     assert isinstance(gl.cpu.limits, dict)
