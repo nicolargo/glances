@@ -38,7 +38,7 @@ colorama==0.4.6 ; sys_platform == 'win32'
     #   pytest
 coverage==7.10.7 ; python_full_version < '3.10'
     # via pytest-cov
-coverage==7.11.0 ; python_full_version >= '3.10'
+coverage==7.11.1 ; python_full_version >= '3.10'
     # via pytest-cov
 cryptography==46.0.3
     # via pysnmpcrypto
@@ -72,7 +72,9 @@ h11==0.16.0
     # via uvicorn
 ibm-cloud-sdk-core==3.24.2
     # via ibmcloudant
-ibmcloudant==0.11.0
+ibmcloudant==0.11.0 ; python_full_version < '3.10'
+    # via glances
+ibmcloudant==0.11.1 ; python_full_version >= '3.10'
     # via glances
 idna==3.11
     # via
@@ -146,9 +148,9 @@ pyasn1==0.6.0
     # via pysnmp-lextudio
 pycparser==2.23 ; (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (implementation_name == 'pypy' and platform_python_implementation == 'PyPy')
     # via cffi
-pydantic==2.12.3
+pydantic==2.12.4
     # via fastapi
-pydantic-core==2.41.4
+pydantic-core==2.41.5
     # via pydantic
 pygal==3.0.5
     # via glances
@@ -189,7 +191,7 @@ pywin32==311 ; sys_platform == 'win32'
     # via docker
 pyzmq==27.1.0
     # via glances
-reactivex==4.0.4
+reactivex==4.1.0
     # via
     #   influxdb-client
     #   influxdb3-python

@@ -6,6 +6,7 @@ include README.rst
 include README-pypi.rst
 include SECURITY.md
 include conf/glances.conf
+include conf/fetch-templates/*.jinja
 include requirements.txt
 include all-requirements.txt
 recursive-include docs *

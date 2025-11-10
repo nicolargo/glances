@@ -124,6 +124,7 @@ glances = "glances:main"
   "SECURITY.md",
   "CONTRIBUTING.md",
   "conf/glances.conf",
+  "conf/fetch-templates/*.jinja",
 ]
 "share/man/man1" = ["docs/man/glances.1"]
 
