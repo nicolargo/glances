@@ -273,7 +273,8 @@ platformdirs==4.5.0 ; python_full_version >= '3.10'
     # via virtualenv
 pluggy==1.6.0
     # via pytest
-pre-commit==4.3.0
+pre-commit==4.3.0 ; python_full_version < '3.10'
+pre-commit==4.4.0 ; python_full_version >= '3.10'
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
@@ -307,7 +308,8 @@ pyparsing==3.2.5
 pyright==1.1.407
 pysocks==1.7.1
     # via urllib3
-pytest==8.4.2
+pytest==8.4.2 ; python_full_version < '3.10'
+pytest==9.0.0 ; python_full_version >= '3.10'
 python-dateutil==2.9.0.post0
     # via matplotlib
 python-debian==1.0.1

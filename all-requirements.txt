@@ -38,7 +38,7 @@ colorama==0.4.6 ; sys_platform == 'win32'
     #   pytest
 coverage==7.10.7 ; python_full_version < '3.10'
     # via pytest-cov
-coverage==7.11.1 ; python_full_version >= '3.10'
+coverage==7.11.3 ; python_full_version >= '3.10'
     # via pytest-cov
 cryptography==46.0.3
     # via pysnmpcrypto
@@ -62,7 +62,7 @@ exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via
     #   anyio
     #   pytest
-fastapi==0.121.0
+fastapi==0.121.1
     # via glances
 geomet==1.1.0
     # via cassandra-driver
@@ -172,7 +172,9 @@ pysnmp-lextudio==6.3.0
     # via glances
 pysnmpcrypto==0.0.4
     # via pysnmp-lextudio
-pytest==8.4.2
+pytest==8.4.2 ; python_full_version < '3.10'
+    # via pytest-cov
+pytest==9.0.0 ; python_full_version >= '3.10'
     # via pytest-cov
 pytest-cov==4.1.0
     # via pysnmp-lextudio
