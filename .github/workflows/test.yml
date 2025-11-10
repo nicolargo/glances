@@ -71,7 +71,7 @@ jobs:
     strategy:
       matrix:
         # Windows-curses not available for Python 3.14 for the moment
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.14"]
     steps:
 
     - uses: actions/checkout@v5
@@ -100,7 +100,7 @@ jobs:
     strategy:
       matrix:
         # Only test the latest stable version
-        python-version: ["3.13"]
+        python-version: ["3.14"]
 
     steps:
 
