@@ -20,7 +20,7 @@ docker==7.1.0
     # via glances
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.121.0
+fastapi==0.121.1
     # via glances
 h11==0.16.0
     # via uvicorn
