@@ -56,6 +56,8 @@ core = GlancesMain(args_begin_at=2)
 test_config = core.get_config()
 test_args = core.get_args()
 
+test_args.conf_file = './conf/glances.conf'
+
 # Init Glances stats
 stats = GlancesStats(config=test_config, args=test_args)
 
@@ -74,6 +76,9 @@ class TestGlances(unittest.TestCase):
     def _common_plugin_tests(self, plugin):
         """Common method to test a Glances plugin
         This method is called multiple time by test 100 to 1xx"""
+
+        assert stats.args.conf_file == './conf/glances.conf', 'Configuration file not correctly set in stats'
+        # But not take into account
 
         # Reset all the stats, history and views
         plugin_instance = stats.get_plugin(plugin)
