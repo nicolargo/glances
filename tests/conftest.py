@@ -20,6 +20,7 @@ import os
 import shlex
 import subprocess
 import time
+from unittest.mock import patch
 
 import pytest
 from selenium import webdriver
@@ -41,7 +42,9 @@ def logger():
 
 @pytest.fixture(scope="session")
 def glances_stats():
-    core = GlancesMain(args_begin_at=2)
+    testargs = ["glances", "-C", "./conf/glances.conf"]
+    with patch('sys.argv', testargs):
+        core = GlancesMain()
     stats = GlancesStats(config=core.get_config(), args=core.get_args())
     yield stats
     stats.end()
@@ -49,7 +52,9 @@ def glances_stats():
 
 @pytest.fixture(scope="module")
 def glances_stats_no_history():
-    core = GlancesMain(args_begin_at=2)
+    testargs = ["glances", "-C", "./conf/glances.conf"]
+    with patch('sys.argv', testargs):
+        core = GlancesMain()
     args = core.get_args()
     args.time = 1
     args.cached_time = 1

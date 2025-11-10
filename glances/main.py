@@ -103,14 +103,14 @@ Examples of use:
 
 """
 
-    def __init__(self, args_begin_at=1):
+    def __init__(self):
         """Manage the command line arguments."""
-        self.init_glances(args_begin_at)
+        self.init_glances()
 
-    def init_glances(self, args_begin_at):
+    def init_glances(self):
         """Main method to init Glances."""
         # Read the command line arguments or parse the one given in parameter (parser)
-        self.args = self.parse_args(args_begin_at)
+        self.args = self.parse_args()
 
         # Load the configuration file, if it exists
         # This function should be called after the parse_args
@@ -846,11 +846,9 @@ Examples of use:
         if args.disable_history:
             logger.info("Stats history is disabled")
 
-    def parse_args(self, args_begin_at):
-        """Parse command line arguments.
-        Glances args start at position args_begin_at.
-        """
-        return self.init_args().parse_args(sys.argv[args_begin_at:])
+    def parse_args(self):
+        """Parse command line arguments."""
+        return self.init_args().parse_args(sys.argv[1:])
 
     def check_mode_compatibility(self):
         """Check mode compatibility"""
