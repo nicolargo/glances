@@ -215,6 +215,11 @@ class ProcesslistPlugin(GlancesPluginModel):
             glances_processes.export_process_filter = config.as_dict()['processlist']['export']
             if args.export:
                 logger.info("Export process filter is set to: {}".format(config.as_dict()['processlist']['export']))
+        if 'focus' in config.as_dict()['processlist']:
+            glances_processes.process_focus = config.as_dict()['processlist']['focus']
+            logger.info(
+                "Focus process filter (in glances.conf) is set to: {}".format(config.as_dict()['processlist']['focus'])
+            )
         if 'disable_stats' in config.as_dict()['processlist']:
             logger.info(
                 'Followings processes stats wil not be displayed: {}'.format(
@@ -726,6 +731,11 @@ class ProcesslistPlugin(GlancesPluginModel):
     def _msg_curse_header(self, ret, process_sort_key, args=None):
         """Build the header and add it to the ret dict."""
         sort_style = 'SORT'
+
+        if glances_processes.process_focus and glances_processes.process_focus != []:
+            msg = 'Focus on following processes: ' + ', '.join([i.filter for i in glances_processes.process_focus])
+            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_new_line())
 
         display_stats = [i for i in self.enable_stats if i not in glances_processes.disable_stats]
 

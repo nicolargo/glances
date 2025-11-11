@@ -152,6 +152,10 @@ Examples of use:
         if not self.args.process_filter and not self.is_standalone():
             logger.debug("Process filter is only available in standalone mode")
 
+        # Focus filter is only available in standalone mode
+        if not self.args.process_focus and not self.is_standalone():
+            logger.debug("Process focus is only available in standalone mode")
+
         # Cursor option is only available in standalone mode
         if not self.args.disable_cursor and not self.is_standalone():
             logger.debug("Cursor is only available in standalone mode")
@@ -495,6 +499,14 @@ Examples of use:
             type=str,
             dest='process_filter',
             help='set the process filter pattern (regular expression)',
+        )
+        # Process will focus on some process (comma-separated list of Glances filter)
+        parser.add_argument(
+            '--process-focus',
+            default=None,
+            type=str,
+            dest='process_focus',
+            help='set a process list to focus on (comma-separated list of Glances filter)',
         )
         parser.add_argument(
             '--process-short-name',

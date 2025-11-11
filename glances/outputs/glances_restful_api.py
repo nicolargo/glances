@@ -208,6 +208,16 @@ class GlancesRestfulApi:
             status.HTTP_401_UNAUTHORIZED, "Incorrect username or password", {"WWW-Authenticate": "Basic"}
         )
 
+    def _logo(self):
+        return rf"""
+  _____ _
+ / ____| |
+| |  __| | __ _ _ __   ___ ___  ___
+| | |_ | |/ _` | '_ \ / __/ _ \/ __|
+| |__| | | (_| | | | | (_|  __/\__
+ \_____|_|\__,_|_| |_|\___\___||___/ {__version__}
+        """
+
     def _router(self) -> APIRouter:
         """Define a custom router for Glances path."""
         base_path = f'/api/{self.API_VERSION}'
@@ -266,6 +276,9 @@ class GlancesRestfulApi:
         }
         for path, endpoint in route_mapping.items():
             router.add_api_route(path, endpoint)
+
+        # Logo
+        print(self._logo())
 
         # Browser WEBUI
         if hasattr(self.args, 'browser') and self.args.browser:
