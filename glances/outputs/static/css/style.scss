@@ -169,10 +169,10 @@ body {
 }
 
 .button {
-    color: #99CCFF; /* Bleu clair high-tech */
-    background: rgba(0, 0, 0, 0.4); /* Fond légèrement transparent */
-    border: 1px solid #99CCFF; /* Bordure discrète */
-    padding: 5px 10px;
+    color: #99CCFF;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid #99CCFF;
+    padding: 1px 5px;
     border-radius: 5px;
     letter-spacing: 1px;
     cursor: pointer;
@@ -182,14 +182,14 @@ body {
 }
 
 .button:hover {
-    background: rgba(153, 204, 255, 0.15); /* Légère coloration au survol */
+    background: rgba(183, 214, 255, 0.30);
     border-color: #B0D0FF;
     color: #B0D0FF;
 }
 
 .button:active {
-    transform: scale(0.95); /* Légère réduction pour effet de pression */
-    box-shadow: 0 0 8px rgba(153, 204, 255, 0.5); /* Flash léger */
+    transform: scale(0.95);
+    box-shadow: 0 0 8px rgba(153, 204, 255, 0.5);
 }
 
 .frequency {
@@ -413,6 +413,8 @@ body {
 #processlist {
     overflow-y: auto;
     height: 600px;
+    margin-top: 1em;
+
     .table {
         margin-bottom: 1em;
     }

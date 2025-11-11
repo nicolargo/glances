@@ -19,10 +19,10 @@
                 <div v-if="!args.disable_ip" class="d-none d-lg-block"><glances-plugin-ip
                         :data="data"></glances-plugin-ip>
                 </div>
-                <div v-if="!args.disable_now" class="d-none d-xl-block"><glances-plugin-now
-                        :data="data"></glances-plugin-now></div>
                 <div v-if="!args.disable_uptime" class="d-none d-md-block"><glances-plugin-uptime
                         :data="data"></glances-plugin-uptime></div>
+                <div v-if="!args.disable_now" class="d-none d-xl-block"><glances-plugin-now
+                        :data="data"></glances-plugin-now></div>
             </div>
         </div>
         <div class="d-flex d-none d-sm-block">
