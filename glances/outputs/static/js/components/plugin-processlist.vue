@@ -11,7 +11,7 @@
             <div>
                 <span>CPU Min/Max/Mean: </span>
                 <span class="careful">{{ $filters.number(extended_stats.cpu_min, 1)
-                    }}% / {{
+                }}% / {{
                         $filters.number(extended_stats.cpu_max, 1) }}% / {{ $filters.number(extended_stats.cpu_mean, 1)
                     }}%</span>
                 <span>Affinity: </span>
@@ -29,7 +29,8 @@
                 </span>
             </div>
         </div>
-        <div class="table-responsive d-lg-none">
+        <div v-show="is_focus">Focus on following processes: {{ focus.join(', ') }}</div>
+        <div class="table-responsive d-lg-none" id="processlist-table">
             <table class="table table-sm table-borderless table-striped table-hover">
                 <thead>
                     <tr>
@@ -520,6 +521,16 @@ export default {
             return this.config.outputs !== undefined
                 ? this.config.outputs.max_processes_display
                 : undefined;
+        },
+        focus() {
+            return this.args !== undefined && this.args.process_focus !== undefined && this.args.process_focus !== null
+                ? this.args.process_focus.split(',')
+                : this.config.processlist !== undefined && this.config.processlist.focus !== undefined && this.config.processlist.focus !== null
+                    ? this.config.processlist.focus.split(',')
+                    : [];
+        },
+        is_focus() {
+            return this.focus.length > 0;
         }
     },
     methods: {
