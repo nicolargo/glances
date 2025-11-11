@@ -101,7 +101,9 @@ export default {
             return this.store.config || {};
         },
         available_args() {
-            return this.config.mem.available || false;
+            return this.config !== undefined && this.config.mem !== undefined && this.config.available !== undefined
+                ? this.config.mem.available || false
+                : false
         },
         stats() {
             return this.data.stats['mem'];

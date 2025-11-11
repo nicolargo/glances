@@ -75,6 +75,9 @@ class GlancesProcesses:
         # Cache is a dict with key=pid and value = dict of cached value
         self.processlist_cache = {}
 
+        # List of processes to focus on
+        self._filter_focus = GlancesFilterList()
+
         # List of processes stats to export
         # Only process matching one of the filter will be exported
         self._filter_export = GlancesFilterList()
@@ -137,6 +140,10 @@ class GlancesProcesses:
     def set_args(self, args):
         """Set args."""
         self.args = args
+
+        if self.args.process_focus is not None:
+            logger.info(f"Focus process filter (--process-focus option) is set to: {self.args.process_focus}")
+            self.process_focus = self.args.process_focus
 
     def reset_internal_cache(self):
         """Reset the internal cache."""
@@ -267,7 +274,21 @@ class GlancesProcesses:
         """Get the process regular expression compiled."""
         return self._filter.filter_re
 
+    # Process focus filter
+    # List of Glances filter
+
+    @property
+    def process_focus(self):
+        """Get the focus process filter."""
+        return self._filter_focus.filter
+
+    @process_focus.setter
+    def process_focus(self, value):
+        """Set the focus process filter list."""
+        self._filter_focus.filter = value
+
     # Export filter
+    # List of Glances filter
 
     @property
     def export_process_filter(self):
@@ -642,6 +663,9 @@ class GlancesProcesses:
 
     def update_list(self, processlist):
         """Return the process list after filtering and transformation (namedtuple to dict)."""
+        if self._filter_focus.filter is not None and self._filter_focus.filter != []:
+            ret = list(filter(lambda p: self._filter_focus.is_filtered(p), processlist))
+            return list_of_namedtuple_to_list_of_dict(ret)
         if self._filter.filter is None:
             return list_of_namedtuple_to_list_of_dict(processlist)
         ret = list(filter(lambda p: self._filter.is_filtered(p), processlist))
