@@ -119,7 +119,7 @@ class GlancesRestfulApi:
         self.load_config(config)
 
         # Set the bind URL
-        self.bind_url = urljoin(f'http://{self.args.bind_address}:{self.args.port}/', self.url_prefix)
+        self.bind_url = urljoin(f'{self.protocol}://{self.args.bind_address}:{self.args.port}/', self.url_prefix)
 
         # FastAPI Init
         if self.args.password:
@@ -181,6 +181,16 @@ class GlancesRestfulApi:
             if self.url_prefix != '':
                 self.url_prefix = self.url_prefix.rstrip('/')
             logger.debug(f'URL prefix: {self.url_prefix}')
+            # SSL
+            self.ssl_keyfile = config.get_value('outputs', 'ssl_keyfile', default=None)
+            self.ssl_keyfile_password = config.get_value('outputs', 'ssl_keyfile_password', default=None)
+            self.ssl_certfile = config.get_value('outputs', 'ssl_certfile', default=None)
+            self.protocol = 'https' if self.is_ssl() else 'http'
+            logger.debug(f"Protocol for Resful API and WebUI: {self.protocol}")
+
+    def is_ssl(self):
+        """Return true if the Glances server use SSL."""
+        return self.ssl_keyfile is not None and self.ssl_certfile is not None
 
     def __update_stats(self, plugins_list_to_update=None):
         # Never update more than 1 time per cached_time
@@ -336,7 +346,12 @@ class GlancesRestfulApi:
     def _start_uvicorn(self):
         # Run the Uvicorn Web server
         uvicorn_config = uvicorn.Config(
-            self._app, host=self.args.bind_address, port=self.args.port, access_log=self.args.debug
+            self._app,
+            host=self.args.bind_address,
+            port=self.args.port,
+            access_log=self.args.debug,
+            ssl_keyfile=self.ssl_keyfile,
+            ssl_certfile=self.ssl_certfile,
         )
         try:
             self.uvicorn_server = GlancesUvicornServer(config=uvicorn_config)
