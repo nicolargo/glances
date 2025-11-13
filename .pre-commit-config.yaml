@@ -1,4 +1,15 @@
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.1
+    hooks:
+    # Run the linter.
+    - id: ruff-check
+      types_or: [ python, pyi ]
+      args: [ --fix, --exit-non-zero-on-fix ]
+    # Run the formatter.
+    - id: ruff-format
+      types_or: [ python, pyi ]
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -13,17 +24,6 @@ repos:
       - id: detect-private-key
       - id: mixed-line-ending
       - id: requirements-txt-fixer
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.1
-    hooks:
-    # Run the linter.
-    - id: ruff-check
-      types_or: [ python, pyi ]
-      args: [ --fix, --exit-non-zero-on-fix ]
-    # Run the formatter.
-    - id: ruff-format
-      types_or: [ python, pyi ]
 
   - repo: local
     hooks:
