@@ -552,6 +552,30 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(stats.get_plugin('cpu').get_alert(75, minimum=0, maximum=100, header='total'), 'WARNING_LOG')
         self.assertEqual(stats.get_plugin('cpu').get_alert(85, minimum=0, maximum=100, header='total'), 'CRITICAL_LOG')
 
+    def test_024_split_esc(self):
+        """Test split_esc function"""
+        print('INFO: [TEST_024] split_esc')
+        self.assertEqual(split_esc(r''), [])
+        self.assertEqual(split_esc('\\'), [])
+        self.assertEqual(split_esc(r'abcd'), [r'abcd'])
+        self.assertEqual(split_esc(r'abcd efg'), [r'abcd', r'efg'])
+        self.assertEqual(split_esc('abcd      \n\t\f efg'), [r'abcd', r'efg'])
+        self.assertEqual(split_esc(r'abcd\ efg'), [r'abcd efg'])
+        self.assertEqual(split_esc(r'', ':'), [''])
+        self.assertEqual(split_esc(r'abcd', ':'), [r'abcd'])
+        self.assertEqual(split_esc(r'abcd:efg', ':'), [r'abcd', r'efg'])
+        self.assertEqual(split_esc(r'abcd\:efg', ':'), [r'abcd:efg'])
+        self.assertEqual(split_esc(r'abcd:efg:hijk', ':'), [r'abcd', r'efg', r'hijk'])
+        self.assertEqual(split_esc(r'abcd\:efg:hijk', ':'), [r'abcd:efg', r'hijk'])
+        self.assertEqual(split_esc(r'abcd\:efg:hijk\:lmnop:qrs', ':', maxsplit=0), [r'abcd\:efg:hijk\:lmnop:qrs'])
+        self.assertEqual(split_esc(r'abcd\:efg:hijk\:lmnop:qrs', ':', maxsplit=1), [r'abcd:efg', r'hijk\:lmnop:qrs'])
+        self.assertEqual(
+            split_esc(r'abcd\:efg:hijk\:lmnop:qrs', ':', maxsplit=10), [r'abcd:efg', r'hijk:lmnop', r'qrs']
+        )
+        self.assertEqual(split_esc(r'ahellobhelloc', r'hello'), [r'a', r'b', r'c'])
+        self.assertEqual(split_esc(r'a\hellobhelloc', r'hello'), [r'ahellob', r'c'])
+        self.assertEqual(split_esc(r'ahe\llobhelloc', r'hello'), [r'ahellob', r'c'])
+
     def test_093_auto_unit(self):
         """Test auto_unit classe"""
         print('INFO: [TEST_093] Auto unit')
