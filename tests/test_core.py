@@ -28,7 +28,18 @@ except ImportError:
 from glances import __version__
 from glances.events_list import GlancesEventsList
 from glances.filter import GlancesFilter, GlancesFilterList
-from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS, auto_unit, pretty_date, string_value_to_float, subsample
+from glances.globals import (
+    BSD,
+    LINUX,
+    MACOS,
+    SUNOS,
+    WINDOWS,
+    auto_unit,
+    pretty_date,
+    string_value_to_float,
+    subsample,
+    split_esc,
+)
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
 from glances.plugins.fs.zfs import zfs_enable, zfs_stats
