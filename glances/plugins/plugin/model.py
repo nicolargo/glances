@@ -27,6 +27,7 @@ from glances.globals import (
     listkeys,
     mean,
     nativestr,
+    split_esc,
 )
 from glances.history import GlancesHistory
 from glances.logger import logger
@@ -934,7 +935,7 @@ class GlancesPluginModel:
 
     def read_alias(self):
         if self.plugin_name + '_' + 'alias' in self._limits:
-            return {i.split(':')[0].lower(): i.split(':')[1] for i in self._limits[self.plugin_name + '_' + 'alias']}
+            return {split_esc(i, ':')[0].lower(): split_esc(i, ':')[1] for i in self._limits[self.plugin_name + '_' + 'alias']}
         return {}
 
     def has_alias(self, header):
