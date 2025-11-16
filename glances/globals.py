@@ -631,3 +631,84 @@ def exit_after(seconds, default=None):
         return wraps
 
     return decorator
+
+
+def split_esc(string, /, sep=None, maxsplit=-1, esc='\\'):
+    """
+    Return a list of the substrings in the string, using sep as the separator string
+    and esc as the escape character.
+
+    sep
+        The separator used to split the string.
+
+        When set to None (the default value), will split on any whitespace
+        character (including \n \r \t \f and spaces) unless the character is escaped
+        and will discard empty strings from the result.
+    maxsplit
+        Maximum number of splits.
+        -1 (the default value) means no limit.
+    esc
+        The character used to escape the separator.
+
+        When set to None, this behaves equivalently to `str.split`.
+        Defaults to '\\\\' i.e. backslash.
+
+    Splitting starts at the front of the string and works to the end.
+
+    Note: escape characters in the substrings returned are removed. However, if
+    maxsplit is reached, escape characters in the remaining, unprocessed substring
+    are not removed, which allows split_esc to be called on it again.
+    """
+    # Input validation
+    if not isinstance(string, str):
+        raise TypeError(f'must be str, not {string.__class__.__name__}')
+    str.split('', sep=sep, maxsplit=maxsplit)  # Use str.split to validate sep and maxsplit
+    if esc is None:
+        return string.split(
+            sep=sep, maxsplit=maxsplit
+        )  # Short circuit to default implementation if the escape character is None
+    elif not isinstance(esc, str):
+        raise TypeError(f'must be str or None, not {esc.__class__.__name__}')
+    elif len(esc) == 0:
+        raise ValueError('empty escape character')
+    elif len(esc) > 1:
+        raise ValueError('escape must be a single character')
+
+    # Set up a simple state machine keeping track of whether we have seen an escape character
+    ret, esc_seen, i = [''], False, 0
+    while i < len(string) and len(ret) - 1 != maxsplit:
+        if not esc_seen:
+            if string[i] == esc:
+                # Consume the escape character and transition state
+                esc_seen = True
+                i += 1
+            elif sep is None and string[i].isspace():
+                # Consume as much whitespace as possible
+                n = 1
+                while i + n + 1 < len(string) and string[i + n : i + n + 1].isspace():
+                    n += 1
+                ret.append('')
+                i += n
+            elif sep is not None and string[i : i + len(sep)] == sep:
+                # Consume the separator
+                ret.append('')
+                i += len(sep)
+            else:
+                # Otherwise just add the current char
+                ret[-1] += string[i]
+                i += 1
+        else:
+            # Add the current char and transition state back
+            ret[-1] += string[i]
+            esc_seen = False
+            i += 1
+
+    # Append any remaining string if we broke early because of maxsplit
+    if i < len(string):
+        ret[-1] += string[i:]
+
+    # If splitting on whitespace, discard empty strings from result
+    if sep is None:
+        ret = [sub for sub in ret if len(sub) > 0]
+
+    return ret
