@@ -14,7 +14,7 @@ It's also possible to define:
 
 - a list of disk to show (white list)
 - a list of disks to hide
-- aliases for disk name
+- aliases for disk name  (use \ to espace special characters)
 
 under the ``[diskio]`` section in the configuration file.
 
