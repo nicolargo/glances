@@ -580,7 +580,6 @@ class GlancesPluginModel:
             item_views = self.views
         else:
             item_views = self.views[item]
-
         if key is None:
             return item_views
         if key not in item_views:
