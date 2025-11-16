@@ -136,7 +136,7 @@ class WifiPlugin(GlancesPluginModel):
                 wifi_stats = f.readline()
         return ret
 
-    def get_alert(self, value):
+    def get_alert(self, value, header=None, action_key=None, log=False):
         """Overwrite the default get_alert method.
 
         Alert is on signal quality where lower is better...
