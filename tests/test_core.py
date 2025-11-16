@@ -36,9 +36,9 @@ from glances.globals import (
     WINDOWS,
     auto_unit,
     pretty_date,
+    split_esc,
     string_value_to_float,
     subsample,
-    split_esc,
 )
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar

@@ -245,7 +245,7 @@ class DiskioPlugin(GlancesPluginModel):
         # Disk list (sorted by name)
         for i in self.sorted_stats():
             # Hide stats if never be different from 0 (issue #1787)
-            if self.hide_zero and all(i.get(f) == 0 for f in self.hide_zero_fields):
+            if all(self.get_views(item=i[self.get_key()], key=f, option='hidden') for f in self.hide_zero_fields):
                 continue
             # Is there an alias for the disk name ?
             disk_name = i['alias'] if 'alias' in i else i['disk_name']
