@@ -336,7 +336,7 @@ run-docker-ubuntu-minimal: ## Start Glances Ubuntu Docker minimal in console mod
 run-docker-ubuntu-full: ## Start Glances Ubuntu Docker full in console mode
 run-docker-ubuntu-dev: ## Start Glances Ubuntu Docker dev in console mode
 
-generate-ssl: ## Generate local and sel signed SSL certificates for dev (nned mkcert)
+generate-ssl: ## Generate local and sel signed SSL certificates for dev (need mkcert)
 	mkcert glances.local localhost 120.0.0.1 0.0.0.0
 
 run-webserver: ## Start Glances in Web server mode
