@@ -36,9 +36,9 @@ colorama==0.4.6 ; sys_platform == 'win32'
     # via
     #   click
     #   pytest
-coverage==7.10.7 ; python_full_version < '3.10'
+coverage==7.12.0 ; python_full_version < '3.10'
     # via pytest-cov
-coverage==7.11.3 ; python_full_version >= '3.10'
+coverage==7.12.0 ; python_full_version >= '3.10'
     # via pytest-cov
 cryptography==46.0.3
     # via pysnmpcrypto
