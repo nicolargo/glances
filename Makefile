@@ -228,6 +228,9 @@ docs-server: docs ## Start a Web server to serve the documentation
 	(sleep 2 && sensible-browser "http://localhost:$(PORT)") &
 	cd docs/_build/html/ && .venv-uv/bin/uvrun python -m http.server $(PORT)
 
+docs-jupyter:  ## Start Jupyter Notebook
+	$(UV_RUN) run --with jupyter jupyter lab
+
 release-note: ## Generate release note
 	git --no-pager log $(LASTTAG)..HEAD --first-parent --pretty=format:"* %s"
 	@echo "\n"
