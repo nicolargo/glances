@@ -196,11 +196,11 @@ use the following code:
      'system': 5.4,
      'total': 7.3,
      'user': 3.0}
-    >>> gl.cpu["total"]
+    >>> gl.cpu.get("total")
     7.3
-    >>> gl.mem["used"]
+    >>> gl.mem.get("used")
     12498582144
-    >>> gl.auto_unit(gl.mem["used"])
+    >>> gl.auto_unit(gl.mem.get("used"))
     11.6G
 
 If the stats return a list of items (like network interfaces or processes), you can
@@ -210,7 +210,7 @@ access them by their name:
 
     >>> gl.network.keys()
     ['wlp0s20f3', 'veth33b370c', 'veth19c7711']
-    >>> gl.network["wlp0s20f3"]
+    >>> gl.network.get("wlp0s20f3")
     {'alias': None,
      'bytes_all': 362,
      'bytes_all_gauge': 9242285709,
