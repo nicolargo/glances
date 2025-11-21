@@ -507,8 +507,8 @@ class GlancesPluginModel:
             return self.fields_description[field].get('optional', False)
         return False
 
-    def _build_view_for_field(self, field):
-        value = {
+    def _build_view_for_field(self, key=None, field=None):
+        view = {
             'decoration': self._build_field_decoration(field),
             'optional': self._build_field_optional(field),
             'additional': False,
@@ -520,15 +520,19 @@ class GlancesPluginModel:
         # Allow to automatically hide fields when values is never different than 0
         # Refactoring done for #2929
         if not self.hide_zero:
-            value['hidden'] = False
-        elif field in self.views and 'hidden' in self.views[field]:
-            value['hidden'] = self.views[field]['hidden']
-            if field in self.hide_zero_fields and self.get_raw()[field] >= self.hide_threshold_bytes:
-                value['hidden'] = False
+            view['hidden'] = False
+        elif key and key in self.views and field in self.views[key] and 'hidden' in self.views[key][field]:
+            view['hidden'] = self.views[key][field]['hidden']
+            if (
+                field in self.hide_zero_fields
+                and self.get_raw_stats_key(item=field, key=key).get(field) >= self.hide_threshold_bytes
+            ):
+                view['hidden'] = False
+            # logger.info(f'{key=} {field=} {view["hidden"]=}')
         else:
-            value['hidden'] = field in self.hide_zero_fields
+            view['hidden'] = field in self.hide_zero_fields
 
-        return value
+        return view
 
     def update_views(self):
         """Update the stats views.
@@ -550,11 +554,11 @@ class GlancesPluginModel:
                 key = i[self.get_key()]
                 ret[key] = {}
                 for field in listkeys(i):
-                    ret[key][field] = self._build_view_for_field(field)
+                    ret[key][field] = self._build_view_for_field(key=key, field=field)
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for field in listkeys(self.get_raw()):
-                ret[field] = self._build_view_for_field(field)
+                ret[field] = self._build_view_for_field(key=None, field=field)
 
         self.views = ret
 
