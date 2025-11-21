@@ -46,12 +46,12 @@ def print_tldr(gl):
     printtab('>>> gl = api.GlancesAPI()')
     printtab('>>> gl.cpu')
     printtab(f'{pformat(gl.cpu.stats)}')
-    printtab('>>> gl.cpu["total"]')
-    printtab(f'{gl.cpu["total"]}')
-    printtab('>>> gl.mem["used"]')
-    printtab(f'{gl.mem["used"]}')
-    printtab('>>> gl.auto_unit(gl.mem["used"])')
-    printtab(f'{gl.auto_unit(gl.mem["used"])}')
+    printtab('>>> gl.cpu.get("total")')
+    printtab(f'{gl.cpu.get("total")}')
+    printtab('>>> gl.mem.get("used")')
+    printtab(f'{gl.mem.get("used")}')
+    printtab('>>> gl.auto_unit(gl.mem.get("used"))')
+    printtab(f'{gl.auto_unit(gl.mem.get("used"))}')
     print('')
     print('If the stats return a list of items (like network interfaces or processes), you can')
     print('access them by their name:')
@@ -113,7 +113,7 @@ def print_plugin(gl, plugin):
         printtab(f'Return a dict of dict with key=<{stats_obj[stats_obj.keys()[0]]["key"]}>')
         printtab(f'>>> gl.{plugin}.keys()')
         printtab(f'{stats_obj.keys()}')
-        printtab(f'>>> gl.{plugin}["{stats_obj.keys()[0]}"]')
+        printtab(f'>>> gl.{plugin}.get("{stats_obj.keys()[0]}")')
         printtab(f'{pformat(stats_obj[stats_obj.keys()[0]])}')
     else:
         printtab(f'>>> gl.{plugin}')
@@ -121,7 +121,7 @@ def print_plugin(gl, plugin):
         if len(stats_obj.keys()) > 0:
             printtab(f'>>> gl.{plugin}.keys()')
             printtab(f'{stats_obj.keys()}')
-            printtab(f'>>> gl.{plugin}["{stats_obj.keys()[0]}"]')
+            printtab(f'>>> gl.{plugin}.get("{stats_obj.keys()[0]}")')
             printtab(f'{pformat(stats_obj[stats_obj.keys()[0]])}')
     print('')
 
@@ -156,11 +156,11 @@ def print_auto_unit(gl):
     print('')
     print('.. code-block:: python')
     print('')
-    printtab('>>> gl.mem["used"]')
-    printtab(f'{gl.mem["used"]}')
+    printtab('>>> gl.mem.get("used")')
+    printtab(f'{gl.mem.get("used")}')
     print('')
-    printtab('>>> gl.auto_unit(gl.mem["used"])')
-    printtab(f'{gl.auto_unit(gl.mem["used"])}')
+    printtab('>>> gl.auto_unit(gl.mem.get("used"))')
+    printtab(f'{gl.auto_unit(gl.mem.get("used"))}')
     print('')
     print("""
 Args:
@@ -190,7 +190,7 @@ def print_bar(gl):
     print('.. code-block:: python')
     print('')
     printtab('>>> gl.bar(gl.mem["percent"])')
-    printtab(f'{gl.bar(gl.mem["percent"])}')
+    printtab(f'{gl.bar(gl.mem.get("percent"))}')
     print('')
     print("""
 Args:
