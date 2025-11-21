@@ -23,6 +23,7 @@ local.properties
 .classpath
 .settings/
 .loadpath
+.ipynb_checkpoints/
 
 # External tool builders
 .externalToolBuilders/
