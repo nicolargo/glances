@@ -677,6 +677,14 @@ Examples of use:
             help='overwrite default fetch template file',
         )
 
+        parser.add_argument(
+            '--disable-tailer',
+            action='store_true',
+            default=False,
+            dest='disable_tailer',
+            help='disable the Tailer plugin'
+        )
+
         return parser
 
     def init_debug(self, args):

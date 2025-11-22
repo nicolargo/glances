@@ -225,6 +225,7 @@ class _GlancesCurses:
             'amps',
             'programlist' if self.args.programs else 'processlist',
             'alert',
+            'tailer',
         ]
 
     def _init_history(self):
