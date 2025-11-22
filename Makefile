@@ -212,8 +212,11 @@ memory-profiling: ## Profile memory usage
 	rm -f $(PROFILE)
 
 # Trivy installation: https://aquasecurity.github.io/trivy/latest/getting-started/installation/
-trivy: ## Run Trivy to find vulnerabilities in container images
+trivy: ## Run Trivy to find vulnerabilities
 	$(UV_RUN) run trivy fs ./glances/
+
+bandit: ## Run Bandit to find vulnerabilities
+	$(UV_RUN) run bandit glances -r
 
 # ===================================================================
 # Docs
