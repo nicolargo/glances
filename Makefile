@@ -20,14 +20,12 @@ UV_RUN		   	  := .venv-uv/bin/uv
 # if the command is only `make`, the default tasks will be the printing of the help.
 .DEFAULT_GOAL := help
 
-.PHONY: help test docs docs-server venv
+.PHONY: help test docs docs-server venv requirements profiling docker all clean
 
 help: ## List all make commands available
 	@grep -E '^[\.a-zA-Z_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	awk -F ":" '{print $1}' | \
-	grep -v % | \
-	sed 's/\\//g' | \
-	sort | \
+	grep -v % | sed 's/\\//g' | sort | \
 	awk 'BEGIN {FS = ":[^:]*?##"}; {printf "\033[1;34mmake %-50s\033[0m %s\n", $$1, $$2}'
 
 # ===================================================================
@@ -142,7 +140,10 @@ test-exports: test-export-csv test-export-json test-export-influxdb-v1 test-expo
 # Linters, profilers and cyber security
 # ===================================================================
 
-find-duplicate-lines:
+pre-commit: ## Run pre-commit hooks
+	$(UV_RUN) run pre-commit run --all-files
+
+find-duplicate-lines: ## Search for duplicate lines in files
 	/bin/bash tests-data/tools/find-duplicate-lines.sh
 
 format: ## Format the code

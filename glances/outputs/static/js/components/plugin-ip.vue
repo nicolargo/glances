@@ -10,30 +10,30 @@
 
 <script>
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    computed: {
-        ipStats() {
-            return this.data.stats['ip'];
-        },
-        address() {
-            return this.ipStats.address;
-        },
-        gateway() {
-            return this.ipStats.gateway;
-        },
-        maskCdir() {
-            return this.ipStats.mask_cidr;
-        },
-        publicAddress() {
-            return this.ipStats.public_address;
-        },
-        publicInfo() {
-            return this.ipStats.public_info_human;
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	computed: {
+		ipStats() {
+			return this.data.stats["ip"];
+		},
+		address() {
+			return this.ipStats.address;
+		},
+		gateway() {
+			return this.ipStats.gateway;
+		},
+		maskCdir() {
+			return this.ipStats.mask_cidr;
+		},
+		publicAddress() {
+			return this.ipStats.public_address;
+		},
+		publicInfo() {
+			return this.ipStats.public_info_human;
+		},
+	},
 };
 </script>

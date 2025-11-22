@@ -19,7 +19,7 @@ for i in {1..30}; do
         break
     fi
 
-    if [ $i -eq 30 ]; then
+    if [ "$i" -eq 30 ]; then
         echo "Error: Timed out waiting for InfluxDB to start"
         docker stop influxdb-v1-for-glances
         docker rm influxdb-v1-for-glances

@@ -91,74 +91,74 @@ v-if="gpu.temperature != null" class="col text-end"
 </template>
 
 <script>
-import { store } from '../store.js';
+import { store } from "../store.js";
 
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    data() {
-        return {
-            store
-        };
-    },
-    computed: {
-        args() {
-            return this.store.args || {};
-        },
-        stats() {
-            return this.data.stats['gpu'];
-        },
-        view() {
-            return this.data.views['gpu'];
-        },
-        gpus() {
-            return this.stats;
-        },
-        name() {
-            let name = 'GPU';
-            const sameName = true;
-            const { stats } = this;
-            if (stats.length === 1) {
-                name = stats[0].name;
-            } else if (stats.length && sameName) {
-                name = `${stats.length} GPU ${stats[0].name}`;
-            }
-            return name;
-        },
-        mean() {
-            const mean = {
-                proc: null,
-                mem: null,
-                temperature: null
-            };
-            const { stats } = this;
-            if (!stats.length) {
-                return mean;
-            }
-            for (const gpu of stats) {
-                mean.proc += gpu.proc;
-                mean.mem += gpu.mem;
-                mean.temperature += gpu.temperature;
-            }
-            mean.proc = mean.proc / stats.length;
-            mean.mem = mean.mem / stats.length;
-            mean.temperature = mean.temperature / stats.length;
-            return mean;
-        }
-    },
-    methods: {
-        getDecoration(gpuId, value) {
-            if (this.view[gpuId][value] === undefined) {
-                return;
-            }
-            return this.view[gpuId][value].decoration.toLowerCase();
-        },
-        getMeanDecoration(value) {
-            return 'DEFAULT';
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	data() {
+		return {
+			store,
+		};
+	},
+	computed: {
+		args() {
+			return this.store.args || {};
+		},
+		stats() {
+			return this.data.stats["gpu"];
+		},
+		view() {
+			return this.data.views["gpu"];
+		},
+		gpus() {
+			return this.stats;
+		},
+		name() {
+			let name = "GPU";
+			const sameName = true;
+			const { stats } = this;
+			if (stats.length === 1) {
+				name = stats[0].name;
+			} else if (stats.length && sameName) {
+				name = `${stats.length} GPU ${stats[0].name}`;
+			}
+			return name;
+		},
+		mean() {
+			const mean = {
+				proc: null,
+				mem: null,
+				temperature: null,
+			};
+			const { stats } = this;
+			if (!stats.length) {
+				return mean;
+			}
+			for (const gpu of stats) {
+				mean.proc += gpu.proc;
+				mean.mem += gpu.mem;
+				mean.temperature += gpu.temperature;
+			}
+			mean.proc = mean.proc / stats.length;
+			mean.mem = mean.mem / stats.length;
+			mean.temperature = mean.temperature / stats.length;
+			return mean;
+		},
+	},
+	methods: {
+		getDecoration(gpuId, value) {
+			if (this.view[gpuId][value] === undefined) {
+				return;
+			}
+			return this.view[gpuId][value].decoration.toLowerCase();
+		},
+		getMeanDecoration(value) {
+			return "DEFAULT";
+		},
+	},
 };
 </script>
