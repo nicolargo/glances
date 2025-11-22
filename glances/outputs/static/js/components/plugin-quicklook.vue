@@ -51,73 +51,82 @@
 </template>
 
 <script>
-import { store } from '../store.js';
+import { store } from "../store.js";
 
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    data() {
-        return {
-            store
-        };
-    },
-    computed: {
-        args() {
-            return this.store.args || {};
-        },
-        config() {
-            return this.store.config || {};
-        },
-        stats() {
-            return this.data.stats['quicklook'];
-        },
-        view() {
-            return this.data.views['quicklook'];
-        },
-        cpu() {
-            return this.stats.cpu;
-        },
-        cpu_name() {
-            return this.stats.cpu_name;
-        },
-        cpu_hz_current() {
-            return (this.stats.cpu_hz_current / 1000000).toFixed(0);
-        },
-        cpu_hz() {
-            return (this.stats.cpu_hz / 1000000).toFixed(0);
-        },
-        percpus() {
-            const cpu_list = this.stats.percpu.map(({ cpu_number: number, total }) => ({ number, total }))
-            const max_cpu_display = parseInt(this.config.percpu.max_cpu_display)
-            if (this.stats.percpu.length > max_cpu_display) {
-                var cpu_list_sorted = cpu_list.sort(function (a, b) { return b.total - a.total; })
-                const other_cpu = {
-                    number: "x",
-                    total: Number((cpu_list_sorted.slice(max_cpu_display).reduce((n, { total }) => n + total, 0) / (this.stats.percpu.length - max_cpu_display)).toFixed(1))
-                }
-                // Add the top n this
-                // and the mean of others CPU
-                cpu_list_sorted = cpu_list_sorted.slice(0, max_cpu_display)
-                cpu_list_sorted.push(other_cpu)
-            }
-            return this.stats.percpu.length <= max_cpu_display
-                ? cpu_list
-                : cpu_list_sorted
-        },
-        stats_list_after_cpu() {
-            return this.view.list.filter((key) => !key.includes('cpu'));
-        },
-    },
-    methods: {
-        getDecoration(value) {
-            if (this.view[value] === undefined) {
-                return;
-            }
-            return this.view[value].decoration.toLowerCase();
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	data() {
+		return {
+			store,
+		};
+	},
+	computed: {
+		args() {
+			return this.store.args || {};
+		},
+		config() {
+			return this.store.config || {};
+		},
+		stats() {
+			return this.data.stats["quicklook"];
+		},
+		view() {
+			return this.data.views["quicklook"];
+		},
+		cpu() {
+			return this.stats.cpu;
+		},
+		cpu_name() {
+			return this.stats.cpu_name;
+		},
+		cpu_hz_current() {
+			return (this.stats.cpu_hz_current / 1000000).toFixed(0);
+		},
+		cpu_hz() {
+			return (this.stats.cpu_hz / 1000000).toFixed(0);
+		},
+		percpus() {
+			const cpu_list = this.stats.percpu.map(
+				({ cpu_number: number, total }) => ({ number, total }),
+			);
+			const max_cpu_display = parseInt(this.config.percpu.max_cpu_display);
+			if (this.stats.percpu.length > max_cpu_display) {
+				var cpu_list_sorted = cpu_list.sort((a, b) => b.total - a.total);
+				const other_cpu = {
+					number: "x",
+					total: Number(
+						(
+							cpu_list_sorted
+								.slice(max_cpu_display)
+								.reduce((n, { total }) => n + total, 0) /
+							(this.stats.percpu.length - max_cpu_display)
+						).toFixed(1),
+					),
+				};
+				// Add the top n this
+				// and the mean of others CPU
+				cpu_list_sorted = cpu_list_sorted.slice(0, max_cpu_display);
+				cpu_list_sorted.push(other_cpu);
+			}
+			return this.stats.percpu.length <= max_cpu_display
+				? cpu_list
+				: cpu_list_sorted;
+		},
+		stats_list_after_cpu() {
+			return this.view.list.filter((key) => !key.includes("cpu"));
+		},
+	},
+	methods: {
+		getDecoration(value) {
+			if (this.view[value] === undefined) {
+				return;
+			}
+			return this.view[value].decoration.toLowerCase();
+		},
+	},
 };
 </script>

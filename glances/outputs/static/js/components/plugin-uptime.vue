@@ -6,15 +6,15 @@
 
 <script>
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    computed: {
-        value() {
-            return this.data.stats['uptime'];
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	computed: {
+		value() {
+			return this.data.stats["uptime"];
+		},
+	},
 };
 </script>

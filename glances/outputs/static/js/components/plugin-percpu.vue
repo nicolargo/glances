@@ -32,42 +32,42 @@
 </template>
 
 <script>
-import { store } from '../store.js';
-import { GlancesHelper } from '../services.js';
-import { chunk } from 'lodash';
+import { chunk } from "lodash";
+import { GlancesHelper } from "../services.js";
+import { store } from "../store.js";
 
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    data() {
-        return {
-            store
-        };
-    },
-    computed: {
-        args() {
-            return this.store.args || {};
-        },
-        config() {
-            return this.store.config || {};
-        },
-        percpuStats() {
-            return this.data.stats['percpu'];
-        }
-    },
-    methods: {
-        getUserAlert(cpu) {
-            return GlancesHelper.getAlert('percpu', 'percpu_user_', cpu.user);
-        },
-        getSystemAlert(cpu) {
-            return GlancesHelper.getAlert('percpu', 'percpu_system_', cpu.system);
-        },
-        getIOWaitAlert(cpu) {
-            return GlancesHelper.getAlert('percpu', 'percpu_iowait_', cpu.system);
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	data() {
+		return {
+			store,
+		};
+	},
+	computed: {
+		args() {
+			return this.store.args || {};
+		},
+		config() {
+			return this.store.config || {};
+		},
+		percpuStats() {
+			return this.data.stats["percpu"];
+		},
+	},
+	methods: {
+		getUserAlert(cpu) {
+			return GlancesHelper.getAlert("percpu", "percpu_user_", cpu.user);
+		},
+		getSystemAlert(cpu) {
+			return GlancesHelper.getAlert("percpu", "percpu_system_", cpu.system);
+		},
+		getIOWaitAlert(cpu) {
+			return GlancesHelper.getAlert("percpu", "percpu_iowait_", cpu.system);
+		},
+	},
 };
 </script>

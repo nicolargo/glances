@@ -20,46 +20,46 @@
 </template>
 
 <script>
-import { orderBy } from 'lodash';
+import { orderBy } from "lodash";
 
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    computed: {
-        stats() {
-            return this.data.stats['wifi'];
-        },
-        view() {
-            return this.data.views['wifi'];
-        },
-        hotspots() {
-            const hotspots = this.stats
-                .map((hotspotData) => {
-                    if (hotspotData['ssid'] === '') {
-                        return;
-                    }
-                    return {
-                        ssid: hotspotData['ssid'],
-                        quality_level: hotspotData['quality_level']
-                    };
-                })
-                .filter(Boolean);
-            return orderBy(hotspots, ['ssid']);
-        },
-        hasHotpots() {
-            return this.hotspots.length > 0;
-        }
-    },
-    methods: {
-        getDecoration(hotpost, field) {
-            if (this.view[hotpost.ssid][field] === undefined) {
-                return;
-            }
-            return this.view[hotpost.ssid][field].decoration.toLowerCase();
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	computed: {
+		stats() {
+			return this.data.stats["wifi"];
+		},
+		view() {
+			return this.data.views["wifi"];
+		},
+		hotspots() {
+			const hotspots = this.stats
+				.map((hotspotData) => {
+					if (hotspotData["ssid"] === "") {
+						return;
+					}
+					return {
+						ssid: hotspotData["ssid"],
+						quality_level: hotspotData["quality_level"],
+					};
+				})
+				.filter(Boolean);
+			return orderBy(hotspots, ["ssid"]);
+		},
+		hasHotpots() {
+			return this.hotspots.length > 0;
+		},
+	},
+	methods: {
+		getDecoration(hotpost, field) {
+			if (this.view[hotpost.ssid][field] === undefined) {
+				return;
+			}
+			return this.view[hotpost.ssid][field].decoration.toLowerCase();
+		},
+	},
 };
 </script>
