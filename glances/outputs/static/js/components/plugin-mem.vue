@@ -83,69 +83,71 @@
 </template>
 
 <script>
-import { store } from '../store.js';
+import { store } from "../store.js";
 
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    data() {
-        return {
-            store
-        };
-    },
-    computed: {
-        config() {
-            return this.store.config || {};
-        },
-        available_args() {
-            return this.config !== undefined && this.config.mem !== undefined && this.config.available !== undefined
-                ? this.config.mem.available || false
-                : false
-        },
-        stats() {
-            return this.data.stats['mem'];
-        },
-        view() {
-            return this.data.views['mem'];
-        },
-        percent() {
-            return this.stats['percent'].toFixed(1);
-        },
-        total() {
-            return this.stats['total'];
-        },
-        used() {
-            return this.stats['used'];
-        },
-        available() {
-            return this.stats['available'];
-        },
-        free() {
-            return this.stats['free'];
-        },
-        active() {
-            return this.stats['active'];
-        },
-        inactive() {
-            return this.stats['inactive'];
-        },
-        buffers() {
-            return this.stats['buffers'];
-        },
-        cached() {
-            return this.stats['cached'];
-        }
-    },
-    methods: {
-        getDecoration(value) {
-            if (this.view[value] === undefined) {
-                return;
-            }
-            return this.view[value].decoration.toLowerCase();
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	data() {
+		return {
+			store,
+		};
+	},
+	computed: {
+		config() {
+			return this.store.config || {};
+		},
+		available_args() {
+			return this.config !== undefined &&
+				this.config.mem !== undefined &&
+				this.config.available !== undefined
+				? this.config.mem.available || false
+				: false;
+		},
+		stats() {
+			return this.data.stats["mem"];
+		},
+		view() {
+			return this.data.views["mem"];
+		},
+		percent() {
+			return this.stats["percent"].toFixed(1);
+		},
+		total() {
+			return this.stats["total"];
+		},
+		used() {
+			return this.stats["used"];
+		},
+		available() {
+			return this.stats["available"];
+		},
+		free() {
+			return this.stats["free"];
+		},
+		active() {
+			return this.stats["active"];
+		},
+		inactive() {
+			return this.stats["inactive"];
+		},
+		buffers() {
+			return this.stats["buffers"];
+		},
+		cached() {
+			return this.stats["cached"];
+		},
+	},
+	methods: {
+		getDecoration(value) {
+			if (this.view[value] === undefined) {
+				return;
+			}
+			return this.view[value].decoration.toLowerCase();
+		},
+	},
 };
 </script>
