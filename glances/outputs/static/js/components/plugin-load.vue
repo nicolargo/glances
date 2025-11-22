@@ -31,38 +31,38 @@
 
 <script>
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    computed: {
-        stats() {
-            return this.data.stats['load'];
-        },
-        view() {
-            return this.data.views['load'];
-        },
-        cpucore() {
-            return this.stats['cpucore'];
-        },
-        min1() {
-            return this.stats['min1'];
-        },
-        min5() {
-            return this.stats['min5'];
-        },
-        min15() {
-            return this.stats['min15'];
-        }
-    },
-    methods: {
-        getDecoration(value) {
-            if (this.view[value] === undefined) {
-                return;
-            }
-            return this.view[value].decoration.toLowerCase();
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	computed: {
+		stats() {
+			return this.data.stats["load"];
+		},
+		view() {
+			return this.data.views["load"];
+		},
+		cpucore() {
+			return this.stats["cpucore"];
+		},
+		min1() {
+			return this.stats["min1"];
+		},
+		min5() {
+			return this.stats["min5"];
+		},
+		min15() {
+			return this.stats["min15"];
+		},
+	},
+	methods: {
+		getDecoration(value) {
+			if (this.view[value] === undefined) {
+				return;
+			}
+			return this.view[value].decoration.toLowerCase();
+		},
+	},
 };
 </script>

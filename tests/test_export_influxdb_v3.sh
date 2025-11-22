@@ -18,7 +18,7 @@ sleep 5
 # Create the token
 echo "Creating InfluxDB token..."
 TOKEN_RETURN=$(docker exec influxdb-v3-for-glances influxdb3 create token --admin)
-TOKEN=$(echo -n $TOKEN_RETURN | awk '{ print $6 }')
+TOKEN=$(echo -n "$TOKEN_RETURN" | awk '{ print $6 }')
 echo "Token: $TOKEN"
 
 # Create a new configuration for the test

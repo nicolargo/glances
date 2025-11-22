@@ -1,24 +1,16 @@
 {
-    "topMenu": [
-        "quicklook",
-        "cpu",
-        "percpu",
-        "gpu",
-        "mem",
-        "memswap",
-        "load"
-    ],
-    "leftMenu": [
-        "network",
-        "ports",
-        "wifi",
-        "connections",
-        "diskio",
-        "fs",
-        "irq",
-        "folders",
-        "raid",
-        "smart",
-        "sensors"
-    ]
+	"topMenu": ["quicklook", "cpu", "percpu", "gpu", "mem", "memswap", "load"],
+	"leftMenu": [
+		"network",
+		"ports",
+		"wifi",
+		"connections",
+		"diskio",
+		"fs",
+		"irq",
+		"folders",
+		"raid",
+		"smart",
+		"sensors"
+	]
 }
