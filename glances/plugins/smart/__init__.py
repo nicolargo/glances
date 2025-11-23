@@ -217,7 +217,8 @@ class SmartPlugin(GlancesPluginModel):
                     device_stat[smart_stat]['name'][: name_max_width - 1].replace('_', ' '), width=name_max_width - 1
                 )
                 ret.append(self.curse_add_line(msg))
-                msg = '{:>8}'.format(device_stat[smart_stat]['raw'])
+                raw = device_stat[smart_stat]['raw']
+                msg = '{:>8}'.format("" if raw is None else str(raw))
                 ret.append(self.curse_add_line(msg))
 
         return ret
