@@ -164,7 +164,8 @@ pymdstat==0.4.3
     # via glances
 pymongo==4.15.3
     # via glances
-pysmart-smartx==0.3.10
+#pysmart-smartx==0.3.10
+pySMART==1.4.2
     # via glances
 pysmi-lextudio==1.4.3
     # via pysnmp-lextudio
