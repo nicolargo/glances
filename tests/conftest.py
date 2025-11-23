@@ -20,11 +20,13 @@ import os
 import shlex
 import subprocess
 import time
+from unittest.mock import patch
 
 import pytest
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 
 from glances.main import GlancesMain
 from glances.stats import GlancesStats
@@ -40,7 +42,9 @@ def logger():
 
 @pytest.fixture(scope="session")
 def glances_stats():
-    core = GlancesMain(args_begin_at=2)
+    testargs = ["glances", "-C", "./conf/glances.conf"]
+    with patch('sys.argv', testargs):
+        core = GlancesMain()
     stats = GlancesStats(config=core.get_config(), args=core.get_args())
     yield stats
     stats.end()
@@ -48,7 +52,9 @@ def glances_stats():
 
 @pytest.fixture(scope="module")
 def glances_stats_no_history():
-    core = GlancesMain(args_begin_at=2)
+    testargs = ["glances", "-C", "./conf/glances.conf"]
+    with patch('sys.argv', testargs):
+        core = GlancesMain()
     args = core.get_args()
     args.time = 1
     args.cached_time = 1
@@ -60,8 +66,8 @@ def glances_stats_no_history():
 
 @pytest.fixture(scope="session")
 def glances_webserver():
-    if os.path.isfile('./venv/bin/python'):
-        cmdline = "./venv/bin/python"
+    if os.path.isfile('.venv/bin/python'):
+        cmdline = ".venv/bin/python"
     else:
         cmdline = "python"
     cmdline += f" -m glances -B 0.0.0.0 -w --browser -p {SERVER_PORT} -C ./conf/glances.conf"
@@ -79,7 +85,7 @@ def web_browser():
     opt = ChromeOptions()
     opt.add_argument("--headless")
     opt.add_argument("--start-maximized")
-    srv = ChromeService()
+    srv = ChromeService(ChromeDriverManager().install())
     driver = webdriver.Chrome(options=opt, service=srv)
 
     # Yield the WebDriver instance

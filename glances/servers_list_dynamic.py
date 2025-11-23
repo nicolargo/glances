@@ -15,6 +15,23 @@ from glances.globals import BSD
 from glances.logger import logger
 
 try:
+    import netifaces
+
+    netifaces_tag = True
+except ImportError:
+    logger.warning("Servers list - Netifaces2 lib not found, active IP address not possible")
+    netifaces_tag = False
+
+try:
+    netifaces.gateways()
+except Exception:
+    netifaces_tag = True
+else:
+    logger.warning("Servers list - Netifaces2 do not support gateways() method, active IP address not possible")
+    netifaces_tag = False
+
+
+try:
     from zeroconf import ServiceBrowser, ServiceInfo, Zeroconf
     from zeroconf import __version__ as __zeroconf_version
 
@@ -192,10 +209,11 @@ class GlancesAutoDiscoverClient:
             if not BSD:
                 try:
                     # -B @ overwrite the dynamic IPv4 choice
-                    if zeroconf_bind_address == '0.0.0.0':
+                    if netifaces_tag and zeroconf_bind_address == '0.0.0.0':
                         zeroconf_bind_address = self.find_active_ip_address()
-                except KeyError:
+                except Exception:
                     # Issue #528 (no network interface available)
+                    # Issue #3219 (no implementation for gateway())
                     pass
 
             # Ensure zeroconf_bind_address is an IP address not an host
@@ -241,8 +259,6 @@ class GlancesAutoDiscoverClient:
     @staticmethod
     def find_active_ip_address():
         """Try to find the active IP addresses."""
-        import netifaces
-
         # Interface of the default gateway
         gateway_itf = netifaces.gateways()[netifaces.AF_INET][0][1]
         # IP address for the interface

@@ -20,7 +20,7 @@ Additionally, you can define:
 - automatically hide interfaces not up
 - automatically hide interfaces without IP address
 - per-interface limit values
-- aliases for interface name
+- aliases for interface name (use \ to espace special characters)
 
 The configuration should be done in the ``[network]`` section of the
 Glances configuration file.
@@ -72,7 +72,7 @@ can also be used to set a threshold higher than zero.
 
 .. code-block:: ini
 
-    [diskio]
+    [network]
     hide_zero=True
     hide_threshold_bytes=0
 

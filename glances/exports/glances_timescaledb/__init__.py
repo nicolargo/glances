@@ -83,6 +83,9 @@ class Export(GlancesExport):
         if isinstance(value, bool):
             return str(value).upper()
         if isinstance(value, (list, tuple)):
+            # Special case for list of one boolean
+            if len(value) == 1 and isinstance(value[0], bool):
+                return str(value[0]).upper()
             return ', '.join([f"'{v}'" for v in value])
         if isinstance(value, str):
             return f"'{value}'"
@@ -95,8 +98,8 @@ class Export(GlancesExport):
             return False
 
         # Get all the stats & limits
-        # Current limitation with sensors and fs plugins because fields list is not the same
-        self._last_exported_list = [p for p in self.plugins_to_export(stats) if p not in ['sensors', 'fs']]
+        # @TODO: Current limitation with sensors, fs and diskio plugins because fields list is not the same
+        self._last_exported_list = [p for p in self.plugins_to_export(stats) if p not in ['sensors', 'fs', 'diskio']]
         all_stats = stats.getAllExportsAsDict(plugin_list=self.last_exported_list())
         all_limits = stats.getAllLimitsAsDict(plugin_list=self.last_exported_list())
 
@@ -159,6 +162,9 @@ class Export(GlancesExport):
                 continue
 
             # Export stats to TimescaleDB
+            # logger.info(plugin)
+            # logger.info(f"Segmented by: {segmented_by}")
+            # logger.info(list(zip(creation_list, values_list[0])))
             self.export(plugin, creation_list, segmented_by, values_list)
 
         return True

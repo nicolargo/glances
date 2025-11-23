@@ -12,7 +12,7 @@
 # How to test ?
 #
 # 1) docker run -d -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=admin -p 5984:5984 --name my-couchdb couchdb
-# 2) ./venv/bin/python -m glances -C ./conf/glances.conf --export couchdb --quiet
+# 2) .venv/bin/python -m glances -C ./conf/glances.conf --export couchdb --quiet
 # 3) Result can be seen at: http://127.0.0.1:5984/_utils
 #
 

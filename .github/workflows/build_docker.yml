@@ -4,7 +4,7 @@ name: build_docker
 
 env:
   DEFAULT_DOCKER_IMAGE: nicolargo/glances
-  PUSH_BRANCH: ${{ 'refs/heads/develop' == github.ref || 'refs/heads/master' == github.ref || startsWith(github.ref, 'refs/tags/v') }}
+  PUSH_BRANCH: ${{ 'refs/heads/develop' == github.ref || startsWith(github.ref, 'refs/tags/v') }}
   # Alpine image platform: https://hub.docker.com/_/alpine
   # linux/arm/v6,linux/arm/v7 do not work (timeout during the build)
   DOCKER_PLATFORMS: linux/amd64,linux/arm64/v8
@@ -36,15 +36,11 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
             TAG_ARRAY="[{ \"target\": \"minimal\", \"tag\": \"${VERSION}\" },"
-            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"${VERSION}-full\" }]"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"minimal\", \"tag\": \"latest\" },"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"${VERSION}-full\" },"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"latest-full\" }]"
           elif [[ $GITHUB_REF == refs/heads/develop ]]; then
             TAG_ARRAY="[{ \"target\": \"dev\", \"tag\": \"dev\" }]"
-          elif [[ $GITHUB_REF == refs/heads/master ]]; then
-            TAG_ARRAY="[{ \"target\": \"minimal\", \"tag\": \"latest\" },"
-            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"latest-full\" }]"
-          elif [[ $GITHUB_REF == refs/heads/main ]]; then
-            TAG_ARRAY="[{ \"target\": \"minimal\", \"tag\": \"latest\" },"
-            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"latest-full\" }]"
           else
             TAG_ARRAY="[]"
           fi
@@ -63,7 +59,7 @@ jobs:
         tag: ${{ fromJson(needs.create_docker_images_list.outputs.tags) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Retrieve Repository Docker metadata
         id: docker_meta

@@ -7,7 +7,7 @@ set -e
 # This will run synchronously now since we're using --stop-after
 echo "Glances starts to export system stats to JSON file /tmp/glances.json (duration: ~ 10 seconds)"
 rm -f /tmp/glances.json
-./venv/bin/python -m glances --export json --export-json-file /tmp/glances.json --stop-after 3 --quiet
+.venv/bin/python -m glances --export json --export-json-file /tmp/glances.json --stop-after 3 --quiet
 
 echo "Checking JSON file..."
 jq . /tmp/glances.json

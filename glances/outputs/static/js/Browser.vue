@@ -56,54 +56,59 @@
 // import { store } from './store.js';
 
 export default {
-    data() {
-        return {
-            servers: undefined,
-        };
-    },
-    computed: {
-        serversListLoaded() {
-            return this.servers !== undefined;
-        },
-    },
-    created() {
-        this.updateServersList();
-    },
-    mounted() {
-        const GLANCES = window.__GLANCES__ || {};
-        const refreshTime = isFinite(GLANCES['refresh-time'])
-            ? parseInt(GLANCES['refresh-time'], 10)
-            : undefined;
-        this.interval = setInterval(this.updateServersList, refreshTime * 1000)
-    },
-    unmounted() {
-        clearInterval(this.interval)
-    },
-    methods: {
-        updateServersList() {
-            fetch('api/4/serverslist', { method: 'GET' })
-                .then((response) => response.json())
-                .then((response) => (this.servers = response));
-        },
-        formatNumber(value) {
-            if (typeof value === "number" && !isNaN(value)) {
-                return value.toFixed(1);
-            }
-            return value;
-        },
-        goToGlances(server) {
-            if (server.protocol === 'rpc') {
-                alert("You just click on a Glances RPC server.\nPlease open a terminal and enter the following command line:\n\nglances -c " + String(server.ip) + " -p " + String(server.port))
-            } else {
-                window.location.href = server.uri;
-            }
-        },
-        getDecoration(server, column) {
-            if (server[column + '_decoration'] === undefined) {
-                return;
-            }
-            return server[column + '_decoration'].replace('_LOG', '').toLowerCase();
-        }
-    }
+	data() {
+		return {
+			servers: undefined,
+		};
+	},
+	computed: {
+		serversListLoaded() {
+			return this.servers !== undefined;
+		},
+	},
+	created() {
+		this.updateServersList();
+	},
+	mounted() {
+		const GLANCES = window.__GLANCES__ || {};
+		const refreshTime = isFinite(GLANCES["refresh-time"])
+			? parseInt(GLANCES["refresh-time"], 10)
+			: undefined;
+		this.interval = setInterval(this.updateServersList, refreshTime * 1000);
+	},
+	unmounted() {
+		clearInterval(this.interval);
+	},
+	methods: {
+		updateServersList() {
+			fetch("api/4/serverslist", { method: "GET" })
+				.then((response) => response.json())
+				.then((response) => (this.servers = response));
+		},
+		formatNumber(value) {
+			if (typeof value === "number" && !isNaN(value)) {
+				return value.toFixed(1);
+			}
+			return value;
+		},
+		goToGlances(server) {
+			if (server.protocol === "rpc") {
+				alert(
+					"You just click on a Glances RPC server.\nPlease open a terminal and enter the following command line:\n\nglances -c " +
+						String(server.ip) +
+						" -p " +
+						String(server.port),
+				);
+			} else {
+				window.location.href = server.uri;
+			}
+		},
+		getDecoration(server, column) {
+			if (server[column + "_decoration"] === undefined) {
+				return;
+			}
+			return server[column + "_decoration"].replace("_LOG", "").toLowerCase();
+		},
+	},
 };
 </script>

@@ -54,8 +54,8 @@ class TestGlances(unittest.TestCase):
         global pid
 
         print('INFO: [TEST_000] Start the Glances Web Server API')
-        if os.path.isfile('./venv/bin/python'):
-            cmdline = "./venv/bin/python"
+        if os.path.isfile('.venv/bin/python'):
+            cmdline = ".venv/bin/python"
         else:
             cmdline = "python"
         cmdline += f" -m glances -B 0.0.0.0 -w --browser -p {SERVER_PORT} --disable-webui -C ./conf/glances.conf"

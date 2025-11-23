@@ -53,8 +53,8 @@ class TestGlances(unittest.TestCase):
         global pid
 
         print('INFO: [TEST_000] Start the Glances Web Server')
-        if os.path.isfile('./venv/bin/python'):
-            cmdline = "./venv/bin/python"
+        if os.path.isfile('.venv/bin/python'):
+            cmdline = ".venv/bin/python"
         else:
             cmdline = "python"
         cmdline += f" -m glances -B localhost -s -p {SERVER_PORT}"

@@ -1,5 +1,10 @@
 name: glances
-version: '4.3.1+build01'  # Put the current stable version+buildXX
+# Version sementic:
+# version+buildXX (00 for beta, 01..99 for stable releases)
+# Do not forget to set the source-branch option to master for release (see end of file)
+# build00 => glances source-branch should be set to develop
+# buildXX => glances source-branch should be set to master
+version: '4.4.2+build00'
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
@@ -9,34 +14,50 @@ description: |
   depending on the user interface size.
 
 base: core24
-grade: stable  # devel
+grade: stable
 confinement: strict
+compression: lzo
+
+# # i386 is not compliant with core20 or higher
+# platforms:
+#   - amd64
+#   - arm64
+#   - armhf
+#   - ppc64el
+#   - s390x
 
 apps:
   glances:
     command: bin/glances
     plugs:  # https://snapcraft.io/docs/supported-interfaces
-      - network
-      - system-observe  # This one should give read access to all the system
-      - mount-observe
       - hardware-observe
-      - log-observe
-      - network-observe
-      - physical-memory-observe
-      - upower-observe
       - home
+      - log-observe
+      - mount-observe
+      - network
       - network-bind
-      - uio
-      - raw-volume
-      - removable-media
+      - network-observe
+      - network-setup-observe
+      - physical-memory-observe
       - power-control
       - process-control
-      - network-setup-observe
+      - raw-volume
+      - removable-media
+      - system-observe
+      - uio
+      - upower-observe
+      # Others
+      - docker
+      - home-glances-config
+      - etc-glances-config
+      - proc-sys
     environment:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
 
 plugs:
+  docker:
+    interface: docker
   home-glances-config:
     interface: personal-files
     read:
@@ -52,9 +73,8 @@ parts:
   glances:
     plugin: python
     source: https://github.com/nicolargo/glances.git
-    source-branch: master  # develop
+    # For releases, set to master
+    # For beta/dev, set to develop
+    source-branch: develop
     python-requirements:
-      - requirements.txt
-      - webui-requirements.txt
       - docker-requirements.txt
-

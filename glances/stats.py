@@ -16,7 +16,7 @@ import threading
 import traceback
 from importlib import import_module
 
-from glances.globals import exports_path, plugins_path, sys_path
+from glances.globals import exports_path, plugins_path, sys_path, weak_lru_cache
 from glances.logger import logger
 from glances.timer import Counter
 
@@ -266,20 +266,25 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         for p in self.getPluginsList(enable=False):
             self._plugins[p].load_limits(config)
 
-    def __update_plugin(self, p):
+    # It's a weak cache to avoid updating the same plugin too often
+    # Note: the function always return None
+    @weak_lru_cache(ttl=1)
+    def update_plugin(self, p):
         """Update stats, history and views for the given plugin name p"""
         self._plugins[p].update()
         self._plugins[p].update_views()
         self._plugins[p].update_stats_history()
 
-    def update(self):
-        """Wrapper method to update all stats.
-
-        Only called by standalone and server modes
+    def update(self, plugins_list_to_update=None):
+        """Wrapper method to update stats.
+        If plugins_list_to_update is provided (list), only update the given plugins.
         """
+        if plugins_list_to_update is None:
+            plugins_list_to_update = self.getPluginsList(enable=True)
+
         # Start update of all enable plugins
-        for p in self.getPluginsList(enable=True):
-            self.__update_plugin(p)
+        for p in plugins_list_to_update:
+            self.update_plugin(p)
 
     def export(self, input_stats=None):
         """Export all the stats.

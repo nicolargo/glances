@@ -61,100 +61,103 @@
 </template>
 
 <script>
-import { orderBy } from 'lodash';
-import { store } from '../store.js';
+import { orderBy } from "lodash";
+import { store } from "../store.js";
 
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    data() {
-        return {
-            store,
-            sorter: undefined
-        };
-    },
-    computed: {
-        args() {
-            return this.store.args || {};
-        },
-        sortProcessesKey() {
-            return this.args.sort_processes_key;
-        },
-        stats() {
-            return this.data.stats['vms'];
-        },
-        views() {
-            return this.data.views['vms'];
-        },
-        vms() {
-            const { sorter } = this;
-            const vms = (this.stats || []).map(
-                (vmData) => {
-                    return {
-                        'id': vmData.id,
-                        'name': vmData.name,
-                        'status': vmData.status != undefined ? vmData.status : '-',
-                        'cpu_count': vmData.cpu_count != undefined ? vmData.cpu_count : '-',
-                        'cpu_time': vmData.cpu_time != undefined ? vmData.cpu_time : '-',
-                        'cpu_time_rate_per_sec': vmData.cpu_time_rate_per_sec != undefined ? vmData.cpu_time_rate_per_sec : '?',
-                        'memory_usage': vmData.memory_usage != undefined ? vmData.memory_usage : '-',
-                        'memory_total': vmData.memory_total != undefined ? vmData.memory_total : '-',
-                        'load_1min': vmData.load_1min != undefined ? vmData.load_1min : '-',
-                        'load_5min': vmData.load_5min != undefined ? vmData.load_5min : '-',
-                        'load_15min': vmData.load_15min != undefined ? vmData.load_15min : '-',
-                        'release': vmData.release,
-                        'image': vmData.image,
-                        'engine': vmData.engine,
-                        'engine_version': vmData.engine_version,
-                    };
-                }
-            );
-            return orderBy(
-                vms,
-                [sorter.column].reduce((retval, col) => {
-                    if (col === 'memory_usage') {
-                        col = ['memory_usage'];
-                    }
-                    return retval.concat(col);
-                }, []),
-                [sorter.isReverseColumn(sorter.column) ? 'desc' : 'asc']
-            );
-        },
-        showEngine() {
-            return this.views.show_engine_name;
-        },
-    },
-    watch: {
-        sortProcessesKey: {
-            immediate: true,
-            handler(sortProcessesKey) {
-                const sortable = ['load_1min', 'cpu_time', 'memory_usage', 'name'];
-                function isReverseColumn(column) {
-                    return !['name'].includes(column);
-                }
-                function getColumnLabel(value) {
-                    const labels = {
-                        load_1min: 'load',
-                        cpu_time: 'CPU time',
-                        memory_usage: 'memory consumption',
-                        name: 'VM name',
-                        None: 'None'
-                    };
-                    return labels[value] || value;
-                }
-                if (!sortProcessesKey || sortable.includes(sortProcessesKey)) {
-                    this.sorter = {
-                        column: this.args.sort_processes_key || 'cpu_time',
-                        auto: !this.args.sort_processes_key,
-                        isReverseColumn,
-                        getColumnLabel
-                    };
-                }
-            }
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	data() {
+		return {
+			store,
+			sorter: undefined,
+		};
+	},
+	computed: {
+		args() {
+			return this.store.args || {};
+		},
+		sortProcessesKey() {
+			return this.args.sort_processes_key;
+		},
+		stats() {
+			return this.data.stats["vms"];
+		},
+		views() {
+			return this.data.views["vms"];
+		},
+		vms() {
+			const { sorter } = this;
+			const vms = (this.stats || []).map((vmData) => {
+				return {
+					id: vmData.id,
+					name: vmData.name,
+					status: vmData.status != undefined ? vmData.status : "-",
+					cpu_count: vmData.cpu_count != undefined ? vmData.cpu_count : "-",
+					cpu_time: vmData.cpu_time != undefined ? vmData.cpu_time : "-",
+					cpu_time_rate_per_sec:
+						vmData.cpu_time_rate_per_sec != undefined
+							? vmData.cpu_time_rate_per_sec
+							: "?",
+					memory_usage:
+						vmData.memory_usage != undefined ? vmData.memory_usage : "-",
+					memory_total:
+						vmData.memory_total != undefined ? vmData.memory_total : "-",
+					load_1min: vmData.load_1min != undefined ? vmData.load_1min : "-",
+					load_5min: vmData.load_5min != undefined ? vmData.load_5min : "-",
+					load_15min: vmData.load_15min != undefined ? vmData.load_15min : "-",
+					release: vmData.release,
+					image: vmData.image,
+					engine: vmData.engine,
+					engine_version: vmData.engine_version,
+				};
+			});
+			return orderBy(
+				vms,
+				[sorter.column].reduce((retval, col) => {
+					if (col === "memory_usage") {
+						col = ["memory_usage"];
+					}
+					return retval.concat(col);
+				}, []),
+				[sorter.isReverseColumn(sorter.column) ? "desc" : "asc"],
+			);
+		},
+		showEngine() {
+			return this.views.show_engine_name;
+		},
+	},
+	watch: {
+		sortProcessesKey: {
+			immediate: true,
+			handler(sortProcessesKey) {
+				const sortable = ["load_1min", "cpu_time", "memory_usage", "name"];
+				function isReverseColumn(column) {
+					return !["name"].includes(column);
+				}
+				function getColumnLabel(value) {
+					const labels = {
+						load_1min: "load",
+						cpu_time: "CPU time",
+						memory_usage: "memory consumption",
+						name: "VM name",
+						None: "None",
+					};
+					return labels[value] || value;
+				}
+				if (!sortProcessesKey || sortable.includes(sortProcessesKey)) {
+					this.sorter = {
+						column: this.args.sort_processes_key || "cpu_time",
+						auto: !this.args.sort_processes_key,
+						isReverseColumn,
+						getColumnLabel,
+					};
+				}
+			},
+		},
+	},
 };
 </script>

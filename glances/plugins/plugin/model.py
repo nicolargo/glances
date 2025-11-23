@@ -14,10 +14,21 @@ I am your father...
 
 import copy
 import re
+from datetime import datetime
 
 from glances.actions import GlancesActions
 from glances.events_list import glances_events
-from glances.globals import dictlist, dictlist_json_dumps, iterkeys, itervalues, json_dumps, listkeys, mean, nativestr
+from glances.globals import (
+    auto_unit,
+    dictlist,
+    dictlist_json_dumps,
+    json_dumps,
+    list_to_dict,
+    listkeys,
+    mean,
+    nativestr,
+    split_esc,
+)
 from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
@@ -128,13 +139,42 @@ class GlancesPluginModel:
         self.stats_previous = None
         self.reset()
 
-    def __repr__(self):
-        """Return the raw stats."""
-        return str(self.stats)
-
     def __str__(self):
         """Return the human-readable stats."""
         return str(self.stats)
+
+    def __repr__(self):
+        """Return the raw stats."""
+        if isinstance(self.stats, list):
+            return str(list_to_dict(self.stats))
+        return str(self.stats)
+
+    def __getitem__(self, item):
+        """Return the stats item."""
+        if isinstance(self.stats, dict) and item in self.stats:
+            return self.stats[item]
+
+        if isinstance(self.stats, list):
+            ltd = list_to_dict(self.stats)
+            if item in ltd:
+                return ltd[item]
+
+        raise KeyError(f"'{self.__class__.__name__}' object has no key '{item}'")
+
+    def keys(self):
+        """Return the keys of the stats."""
+        if isinstance(self.stats, dict):
+            return listkeys(self.stats)
+        if isinstance(self.stats, list):
+            return listkeys(list_to_dict(self.stats))
+        return []
+
+    def get(self, item, default=None):
+        """Return the stats item or default if not found."""
+        try:
+            return self[item]
+        except KeyError:
+            return default
 
     def get_init_value(self):
         """Return a copy of the init value."""
@@ -188,6 +228,9 @@ class GlancesPluginModel:
 
     def update_stats_history(self):
         """Update stats history."""
+        # Exit if no history
+        if not self.history_enable():
+            return
         # Build the history
         _get_export = self.get_export()
         if not (_get_export and self.history_enable()):
@@ -331,16 +374,14 @@ class GlancesPluginModel:
         ret = {}
         if bulk:
             # Bulk request
-            snmp_result = snmp_client.getbulk_by_oid(0, 10, *list(itervalues(snmp_oid)))
+            snmp_result = snmp_client.getbulk_by_oid(0, 10, *list(snmp_oid.values()))
             logger.info(snmp_result)
             if len(snmp_oid) == 1:
                 # Bulk command for only one OID
                 # Note: key is the item indexed but the OID result
                 for item in snmp_result:
-                    if iterkeys(item)[0].startswith(itervalues(snmp_oid)[0]):
-                        ret[iterkeys(snmp_oid)[0] + iterkeys(item)[0].split(itervalues(snmp_oid)[0])[1]] = itervalues(
-                            item
-                        )[0]
+                    if item.keys()[0].startswith(snmp_oid.values()[0]):
+                        ret[snmp_oid.keys()[0] + item.keys()[0].split(snmp_oid.values()[0])[1]] = item.values()[0]
             else:
                 # Build the internal dict with the SNMP result
                 # Note: key is the first item in the snmp_oid
@@ -348,7 +389,7 @@ class GlancesPluginModel:
                 for item in snmp_result:
                     item_stats = {}
                     item_key = None
-                    for key in iterkeys(snmp_oid):
+                    for key in snmp_oid:
                         oid = snmp_oid[key] + '.' + str(index)
                         if oid in item:
                             if item_key is None:
@@ -360,10 +401,10 @@ class GlancesPluginModel:
                     index += 1
         else:
             # Simple get request
-            snmp_result = snmp_client.get_by_oid(*list(itervalues(snmp_oid)))
+            snmp_result = snmp_client.get_by_oid(*list(snmp_oid.values()))
 
             # Build the internal dict with the SNMP result
-            for key in iterkeys(snmp_oid):
+            for key in snmp_oid:
                 ret[key] = snmp_result[snmp_oid[key]]
 
         return ret
@@ -466,8 +507,8 @@ class GlancesPluginModel:
             return self.fields_description[field].get('optional', False)
         return False
 
-    def _build_view_for_field(self, field):
-        value = {
+    def _build_view_for_field(self, key=None, field=None):
+        view = {
             'decoration': self._build_field_decoration(field),
             'optional': self._build_field_optional(field),
             'additional': False,
@@ -479,15 +520,19 @@ class GlancesPluginModel:
         # Allow to automatically hide fields when values is never different than 0
         # Refactoring done for #2929
         if not self.hide_zero:
-            value['hidden'] = False
-        elif field in self.views and 'hidden' in self.views[field]:
-            value['hidden'] = self.views[field]['hidden']
-            if field in self.hide_zero_fields and self.get_raw()[field] >= self.hide_threshold_bytes:
-                value['hidden'] = False
+            view['hidden'] = False
+        elif key and key in self.views and field in self.views[key] and 'hidden' in self.views[key][field]:
+            view['hidden'] = self.views[key][field]['hidden']
+            if (
+                field in self.hide_zero_fields
+                and self.get_raw_stats_key(item=field, key=key).get(field) >= self.hide_threshold_bytes
+            ):
+                view['hidden'] = False
+            # logger.info(f'{key=} {field=} {view["hidden"]=}')
         else:
-            value['hidden'] = field in self.hide_zero_fields
+            view['hidden'] = field in self.hide_zero_fields
 
-        return value
+        return view
 
     def update_views(self):
         """Update the stats views.
@@ -509,11 +554,11 @@ class GlancesPluginModel:
                 key = i[self.get_key()]
                 ret[key] = {}
                 for field in listkeys(i):
-                    ret[key][field] = self._build_view_for_field(field)
+                    ret[key][field] = self._build_view_for_field(key=key, field=field)
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for field in listkeys(self.get_raw()):
-                ret[field] = self._build_view_for_field(field)
+                ret[field] = self._build_view_for_field(key=None, field=field)
 
         self.views = ret
 
@@ -540,7 +585,6 @@ class GlancesPluginModel:
             item_views = self.views
         else:
             item_views = self.views[item]
-
         if key is None:
             return item_views
         if key not in item_views:
@@ -626,10 +670,12 @@ class GlancesPluginModel:
         """
         return self.stats
 
-    def get_stat_name(self, header=""):
-        """Return the stat name with an optional header"""
+    def get_stat_name(self, header=None, action_key=None):
+        """Return the stat name with an optional action_key and header"""
         ret = self.plugin_name
-        if header != '':
+        if action_key is not None and action_key != '':
+            ret += '_' + action_key
+        if header is not None and header != '':
             ret += '_' + header
         return ret
 
@@ -640,7 +686,7 @@ class GlancesPluginModel:
         maximum=100,
         highlight_zero=True,
         is_max=False,
-        header="",
+        header=None,
         action_key=None,
         log=False,
     ):
@@ -678,7 +724,7 @@ class GlancesPluginModel:
             return 'DEFAULT'
 
         # Build the stat_name
-        stat_name = self.get_stat_name(header=header).lower()
+        stat_name = self.get_stat_name(header=header, action_key=action_key).lower()
 
         # Manage limits
         # If is_max is set then default style is set to MAX else default is set to OK
@@ -704,7 +750,7 @@ class GlancesPluginModel:
 
         # Manage log
         log_str = ""
-        if self.get_limit_log(stat_name=stat_name, default_action=log):
+        if self.get_limit_log(stat_name=stat_name, default_action=log) and ret != 'DEFAULT':
             # Add _LOG to the return string
             # So stats will be highlighted with a specific color
             log_str = "_LOG"
@@ -749,17 +795,29 @@ class GlancesPluginModel:
 
             # A command line is available for the current alert
             # 1) Build the {{mustache}} dictionary
-            if isinstance(self.get_stats_action(), list):
+            stats_action = copy.deepcopy(self.get_stats_action())
+            if isinstance(stats_action, list):
                 # If the stats are stored in a list of dict (fs plugin for example)
-                # Return the dict for the current header
                 mustache_dict = {}
-                for item in self.get_stats_action():
+                for item in stats_action:
+                    # Add the limit to the mustache dict
+                    item['critical'] = self.get_limit('critical', stat_name=stat_name)
+                    item['warning'] = self.get_limit('warning', stat_name=stat_name)
+                    item['careful'] = self.get_limit('careful', stat_name=stat_name)
+                    # Add the current time (now)
+                    item['time'] = datetime.now().isoformat()
                     if item[self.get_key()] == action_key:
                         mustache_dict = item
                         break
             else:
                 # Use the stats dict
-                mustache_dict = self.get_stats_action()
+                # Add the limit to the mustache dict
+                stats_action['critical'] = self.get_limit('critical', stat_name=stat_name)
+                stats_action['warning'] = self.get_limit('warning', stat_name=stat_name)
+                stats_action['careful'] = self.get_limit('careful', stat_name=stat_name)
+                # Add the current time (now)
+                stats_action['time'] = datetime.now().isoformat()
+                mustache_dict = stats_action
             # 2) Run the action
             self.actions.run(stat_name, trigger, command, repeat, mustache_dict=mustache_dict)
 
@@ -821,7 +879,7 @@ class GlancesPluginModel:
             return self._limits[self.plugin_name + '_log'][0].lower() == 'true'
         return default_action
 
-    def get_conf_value(self, value, header="", plugin_name=None, default=[]):
+    def get_conf_value(self, value, header="", plugin_name=None, convert_bool=False, default=[]):
         """Return the configuration (header_) value for the current plugin.
 
         ...or the one given by the plugin_name var.
@@ -835,7 +893,8 @@ class GlancesPluginModel:
             plugin_name = plugin_name + '_' + header
 
         try:
-            return self._limits[plugin_name + '_' + value]
+            ret = self._limits[plugin_name + '_' + value]
+            return bool(ret[0]) if convert_bool else ret
         except KeyError:
             return default
 
@@ -879,7 +938,10 @@ class GlancesPluginModel:
 
     def read_alias(self):
         if self.plugin_name + '_' + 'alias' in self._limits:
-            return {i.split(':')[0].lower(): i.split(':')[1] for i in self._limits[self.plugin_name + '_' + 'alias']}
+            return {
+                split_esc(i, ':')[0].lower(): split_esc(i, ':')[1]
+                for i in self._limits[self.plugin_name + '_' + 'alias']
+            }
         return {}
 
     def has_alias(self, header):
@@ -1058,59 +1120,8 @@ class GlancesPluginModel:
         self._align = value
 
     def auto_unit(self, number, low_precision=False, min_symbol='K', none_symbol='-'):
-        """Make a nice human-readable string out of number.
-
-        Number of decimal places increases as quantity approaches 1.
-        CASE: 613421788        RESULT:       585M low_precision:       585M
-        CASE: 5307033647       RESULT:      4.94G low_precision:       4.9G
-        CASE: 44968414685      RESULT:      41.9G low_precision:      41.9G
-        CASE: 838471403472     RESULT:       781G low_precision:       781G
-        CASE: 9683209690677    RESULT:      8.81T low_precision:       8.8T
-        CASE: 1073741824       RESULT:      1024M low_precision:      1024M
-        CASE: 1181116006       RESULT:      1.10G low_precision:       1.1G
-
-        :low_precision: returns less decimal places potentially (default is False)
-                        sacrificing precision for more readability.
-        :min_symbol: Do not approach if number < min_symbol (default is K)
-        :decimal_count: if set, force the number of decimal number (default is None)
-        """
-        if number is None:
-            return none_symbol
-        symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
-        if min_symbol in symbols:
-            symbols = symbols[symbols.index(min_symbol) :]
-        prefix = {
-            'Y': 1208925819614629174706176,
-            'Z': 1180591620717411303424,
-            'E': 1152921504606846976,
-            'P': 1125899906842624,
-            'T': 1099511627776,
-            'G': 1073741824,
-            'M': 1048576,
-            'K': 1024,
-        }
-
-        if number == 0:
-            # Avoid 0.0
-            return '0'
-
-        for symbol in reversed(symbols):
-            value = float(number) / prefix[symbol]
-            if value > 1:
-                decimal_precision = 0
-                if value < 10:
-                    decimal_precision = 2
-                elif value < 100:
-                    decimal_precision = 1
-                if low_precision:
-                    if symbol in 'MK':
-                        decimal_precision = 0
-                    else:
-                        decimal_precision = min(1, decimal_precision)
-                elif symbol in 'K':
-                    decimal_precision = 0
-                return '{:.{decimal}f}{symbol}'.format(value, decimal=decimal_precision, symbol=symbol)
-        return f'{number!s}'
+        """Return a nice human-readable string out of number."""
+        return auto_unit(number, low_precision=low_precision, min_symbol=min_symbol, none_symbol=none_symbol)
 
     def trend_msg(self, trend, significant=1):
         """Return the trend message.

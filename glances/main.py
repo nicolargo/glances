@@ -103,14 +103,14 @@ Examples of use:
 
 """
 
-    def __init__(self, args_begin_at=1):
+    def __init__(self):
         """Manage the command line arguments."""
-        self.init_glances(args_begin_at)
+        self.init_glances()
 
-    def init_glances(self, args_begin_at):
+    def init_glances(self):
         """Main method to init Glances."""
         # Read the command line arguments or parse the one given in parameter (parser)
-        self.args = self.parse_args(args_begin_at)
+        self.args = self.parse_args()
 
         # Load the configuration file, if it exists
         # This function should be called after the parse_args
@@ -151,6 +151,10 @@ Examples of use:
         # Filter is only available in standalone mode
         if not self.args.process_filter and not self.is_standalone():
             logger.debug("Process filter is only available in standalone mode")
+
+        # Focus filter is only available in standalone mode
+        if not self.args.process_focus and not self.is_standalone():
+            logger.debug("Process focus is only available in standalone mode")
 
         # Cursor option is only available in standalone mode
         if not self.args.disable_cursor and not self.is_standalone():
@@ -379,7 +383,7 @@ Examples of use:
             default=None,
             type=str,
             dest='export_process_filter',
-            help='set the export process filter (comman separated list of regular expression)',
+            help='set the export process filter (comma-separated list of regular expression)',
         )
         # Client/Server option
         parser.add_argument(
@@ -496,6 +500,14 @@ Examples of use:
             dest='process_filter',
             help='set the process filter pattern (regular expression)',
         )
+        # Process will focus on some process (comma-separated list of Glances filter)
+        parser.add_argument(
+            '--process-focus',
+            default=None,
+            type=str,
+            dest='process_focus',
+            help='set a process list to focus on (comma-separated list of Glances filter)',
+        )
         parser.add_argument(
             '--process-short-name',
             action='store_true',
@@ -550,7 +562,18 @@ Examples of use:
             help='test memory leak (python 3.4 or higher needed)',
         )
         parser.add_argument(
-            '--api-doc', default=None, action='store_true', dest='stdout_apidoc', help='display fields descriptions'
+            '--api-doc',
+            default=None,
+            action='store_true',
+            dest='stdout_api_doc',
+            help='display Python API documentation',
+        )
+        parser.add_argument(
+            '--api-restful-doc',
+            default=None,
+            action='store_true',
+            dest='stdout_api_restful_doc',
+            help='display Restful API documentation',
         )
         if not WINDOWS:
             parser.add_argument(
@@ -581,6 +604,13 @@ Examples of use:
             default=False,
             dest='diskio_iops',
             help='show IO per second in the DiskIO plugin',
+        )
+        parser.add_argument(
+            '--diskio-latency',
+            action='store_true',
+            default=False,
+            dest='diskio_latency',
+            help='show IO latency in the DiskIO plugin',
         )
         parser.add_argument(
             '--fahrenheit',
@@ -629,6 +659,22 @@ Examples of use:
             dest='strftime_format',
             default='',
             help='strftime format string for displaying current date in standalone mode',
+        )
+        # Fetch
+        parser.add_argument(
+            '--fetch',
+            '--stdout-fetch',
+            action='store_true',
+            default=False,
+            dest='stdout_fetch',
+            help='display a (neo)fetch like summary and exit',
+        )
+        parser.add_argument(
+            '--fetch-template',
+            '--stdout-fetch-template',
+            dest='fetch_template',
+            default='',
+            help='overwrite default fetch template file',
         )
 
         return parser
@@ -689,7 +735,10 @@ Examples of use:
         args.network_cumul = False
 
         # Processlist is updated in processcount
-        if getattr(args, 'enable_processlist', False) or getattr(args, 'enable_programlist', False):
+        if getattr(args, 'disable_processcount', False):
+            logger.warning('Processcount is disable, so processlist (updated by processcount) is also disable')
+            disable(args, 'processlist')
+        elif getattr(args, 'enable_processlist', False) or getattr(args, 'enable_programlist', False):
             enable(args, 'processcount')
 
         # Set a default export_process_filter (with all process) when using the stdout mode
@@ -787,6 +836,10 @@ Examples of use:
             disable(args, 'memswap')
             disable(args, 'load')
 
+        # Unicode => No separator
+        if args.disable_unicode:
+            args.enable_separator = False
+
         # Memory leak
         if getattr(args, 'memory_leak', False):
             logger.info('Memory leak detection enabled')
@@ -796,15 +849,18 @@ Examples of use:
             args.time = 1
             args.disable_history = True
 
-        # Unicode => No separator
-        if args.disable_unicode:
-            args.enable_separator = False
+        # Disable history if history_size is 0
+        if self.config.has_section('global'):
+            if self.config.get_int_value('global', 'history_size', default=1200) == 0:
+                args.disable_history = True
 
-    def parse_args(self, args_begin_at):
-        """Parse command line arguments.
-        Glances args start at position args_begin_at.
-        """
-        return self.init_args().parse_args(sys.argv[args_begin_at:])
+        # Display an information message if history is disabled
+        if args.disable_history:
+            logger.info("Stats history is disabled")
+
+    def parse_args(self):
+        """Parse command line arguments."""
+        return self.init_args().parse_args(sys.argv[1:])
 
     def check_mode_compatibility(self):
         """Check mode compatibility"""

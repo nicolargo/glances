@@ -80,7 +80,7 @@ than a second one concerning the user interface:
     # You can download it in a specific folder
     # thanks to https://github.com/nicolargo/glances/issues/2021
     # then configure this folder with the webui_root_path key
-    # Default is folder where glances_restfull_api.py is hosted
+    # Default is folder where glances_restful_api.py is hosted
     #webui_root_path=
     # CORS options
     # Comma separated list of origins that should be permitted to make cross-origin requests.
@@ -95,6 +95,10 @@ than a second one concerning the user interface:
     # Comma separated list of HTTP request headers that should be supported for cross-origin requests.
     # Default is *
     #cors_headers=*
+    # Define SSL files (keyfile_password is optional)
+    #ssl_keyfile=./glances.local+3-key.pem
+    #ssl_keyfile_password=kfp
+    #ssl_certfile=./glances.local+3.pem
 
 Each plugin, export module, and application monitoring process (AMP) can
 have a section. Below is an example for the CPU plugin:

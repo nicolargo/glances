@@ -98,7 +98,7 @@ class GlancesStdoutIssue:
                 stat = stats.get_plugin(plugin).get_export()
                 # Hide private information
                 if plugin == 'ip':
-                    for key in stat.keys():
+                    for key in stat:
                         stat[key] = '***'
             except Exception as e:
                 stat_error = e

@@ -13,6 +13,9 @@ PGP Public key:  gpg --keyserver pgp.mit.edu --recv-keys 0xba43c11f2c8b4347
 RazCrimson (maintainer of the Glances project)
 https://github.com/RazCrimson
 
+Ariel Otibili (aka) ariel-anieli (for the huge work on code quality)
+https://github.com/ariel-anieli
+
 Alessio Sergi (aka) Al3hex (thanks you for the great job on this project)
 https://twitter.com/al3hex
 https://github.com/asergi

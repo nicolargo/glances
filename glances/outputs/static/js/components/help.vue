@@ -163,15 +163,15 @@
 
 <script>
 export default {
-    data() {
-        return {
-            help: undefined
-        };
-    },
-    mounted() {
-        fetch('api/4/help', { method: 'GET' })
-            .then((response) => response.json())
-            .then((response) => (this.help = response));
-    }
+	data() {
+		return {
+			help: undefined,
+		};
+	},
+	mounted() {
+		fetch("api/4/help", { method: "GET" })
+			.then((response) => response.json())
+			.then((response) => (this.help = response));
+	},
 };
 </script>

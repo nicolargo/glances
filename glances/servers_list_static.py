@@ -54,7 +54,7 @@ class GlancesStaticServer:
 
                 # Default port
                 if new_server['port'] is None:
-                    new_server['port'] = '61209' if new_server['type'] == 'rpc' else '61208'
+                    new_server['port'] = '61209' if new_server['protocol'] == 'rpc' else '61208'
 
                 # By default, try empty (aka no) password
                 new_server['username'] = 'glances'

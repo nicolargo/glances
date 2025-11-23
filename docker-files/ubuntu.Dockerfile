@@ -55,7 +55,7 @@ RUN apt-get clean \
 
 RUN python3 -m venv --without-pip venv
 
-COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-requirements.txt ./
+COPY pyproject.toml docker-requirements.txt all-requirements.txt ./
 
 ##############################################################################
 # BUILD: Install the minimal image deps
@@ -63,9 +63,7 @@ FROM build AS buildminimal
 ARG PYTHON_VERSION
 
 RUN python3 -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
-    -r requirements.txt \
-    -r docker-requirements.txt \
-    -r webui-requirements.txt
+    -r docker-requirements.txt
 
 ##############################################################################
 # BUILD: Install all the deps
@@ -73,8 +71,7 @@ FROM build AS buildfull
 ARG PYTHON_VERSION
 
 RUN python3 -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
-    -r requirements.txt \
-    -r optional-requirements.txt
+    -r all-requirements.txt
 
 ##############################################################################
 # RELEASE Stages

@@ -10,6 +10,7 @@
 
 import curses
 import math
+import sys
 
 from glances.logger import logger
 from glances.outputs.glances_curses import _GlancesCurses
@@ -49,7 +50,6 @@ class GlancesCursesBrowser(_GlancesCurses):
         self._page_max = 0
         self._page_max_lines = 0
 
-        self.is_end = False
         self._revesed_sorting = False
         self._stats_list = None
 
@@ -87,7 +87,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             counts[color] = counts.get(color, 0) + 1
 
         result = ''
-        for key in counts.keys():
+        for key in counts:
             result += key + ': ' + str(counts[key]) + ' '
 
         return result
@@ -157,8 +157,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             # 'ESC'|'q' > Quit
             self.end()
             logger.info("Stop Glances client browser")
-            # sys.exit(0)
-            self.is_end = True
+            sys.exit(0)
         elif self.pressedkey == 10:
             # 'ENTER' > Run Glances on the selected server
             self.active_server = self._current_page * self._page_max_lines + self.cursor_position
@@ -327,10 +326,15 @@ class GlancesCursesBrowser(_GlancesCurses):
         y += 1
         # Second line (for item/key)
         for k, v in column_def.items():
+            if xc >= screen_x or y >= screen_y or v is None:
+                continue
             k_split = k.split('_')
-            if xc < screen_x and y < screen_y and v is not None:
-                self.term_window.addnstr(y, xc, ' '.join(k_split[1:]).upper(), screen_x - x, self.colors_list['BOLD'])
-                xc += v + self.space_between_column
+            if len(k_split) == 1:
+                header_str = k_split[0]
+            else:
+                header_str = ' '.join(k_split[1:])
+            self.term_window.addnstr(y, xc, header_str.upper(), screen_x - x, self.colors_list['BOLD'])
+            xc += v + self.space_between_column
         y += 1
 
         # If a servers has been deleted from the list...

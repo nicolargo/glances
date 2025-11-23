@@ -137,6 +137,10 @@ class ProgramlistPlugin(ProcesslistPlugin):
         """Init the plugin."""
         super().__init__(args=args, config=config)
 
+    def load(self, args, config):
+        """Load already done in processlist"""
+        pass
+
     def get_key(self):
         """Return the key of the list."""
         return 'name'
