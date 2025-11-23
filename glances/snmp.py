@@ -13,8 +13,9 @@ from glances.logger import logger
 # Import mandatory PySNMP lib
 try:
     from pysnmp.entity.rfc3413.oneliner import cmdgen
-except ImportError:
-    logger.critical("PySNMP library not found. To install it: pip install pysnmp")
+except ImportError as e:
+    logger.debug(f"Can not import pysnmp-lextudio lib: {e}")
+    logger.critical("PySNMP library not found. To install it: pip install 'pysnmp-lextudio<6.2.0'")
     sys.exit(2)
 
 
