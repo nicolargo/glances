@@ -10,6 +10,14 @@
 
 from datetime import datetime
 
+# Ugly hack waiting for Python 3.10 deprecation
+try:
+    from datetime import UTC
+except ImportError:
+    from datetime import timezone
+
+    UTC = timezone.utc
+
 
 class GlancesAttribute:
     def __init__(self, name, description='', history_max_size=None):
@@ -73,7 +81,7 @@ class GlancesAttribute:
 
         Value is a tuple: (<timestamp>, <new_value>)
         """
-        self._value = (datetime.now(), new_value)
+        self._value = (datetime.now(UTC), new_value)
         self.history_add(self._value)
 
     """

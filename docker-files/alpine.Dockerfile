@@ -66,7 +66,7 @@ RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --upgrade pip
 
 RUN python${PYTHON_VERSION} -m venv --without-pip venv
 
-COPY requirements.txt docker-requirements.txt webui-requirements.txt optional-requirements.txt ./
+COPY pyproject.toml docker-requirements.txt all-requirements.txt ./
 
 ##############################################################################
 # BUILD: Install the minimal image deps
@@ -74,9 +74,7 @@ FROM build AS buildminimal
 ARG PYTHON_VERSION
 
 RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
-    -r requirements.txt \
-    -r docker-requirements.txt \
-    -r webui-requirements.txt
+    -r docker-requirements.txt
 
 ##############################################################################
 # BUILD: Install all the deps
@@ -89,8 +87,7 @@ ARG CASS_DRIVER_NO_CYTHON=1
 ARG CARGO_NET_GIT_FETCH_WITH_CLI=true
 
 RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --target="/venv/lib/python${PYTHON_VERSION}/site-packages" \
-    -r requirements.txt \
-    -r optional-requirements.txt
+    -r all-requirements.txt
 
 ##############################################################################
 # RELEASE Stages

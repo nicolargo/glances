@@ -8,7 +8,6 @@
 
 """RAID plugin."""
 
-from glances.globals import iterkeys
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -91,7 +90,7 @@ class RaidPlugin(GlancesPluginModel):
         msg = '{:>7}'.format('Avail')
         ret.append(self.curse_add_line(msg))
         # Data
-        arrays = sorted(iterkeys(self.stats))
+        arrays = sorted(self.stats.keys())
         for array in arrays:
             array_stats = self.stats[array]
 
@@ -128,7 +127,7 @@ class RaidPlugin(GlancesPluginModel):
                 ret.append(self.curse_new_line())
                 msg = '└─ Status {}'.format(array_stats['status'])
                 ret.append(self.curse_add_line(msg, status))
-                components = sorted(iterkeys(array_stats['components']))
+                components = sorted(array_stats['components'].keys())
                 for i, component in enumerate(components):
                     if i == len(components) - 1:
                         tree_char = '└─'

@@ -18,7 +18,7 @@ sleep 5
 # Create the token
 echo "Creating InfluxDB token..."
 TOKEN_RETURN=$(docker exec influxdb-v3-for-glances influxdb3 create token --admin)
-TOKEN=$(echo -n $TOKEN_RETURN | awk '{ print $6 }')
+TOKEN=$(echo -n "$TOKEN_RETURN" | awk '{ print $6 }')
 echo "Token: $TOKEN"
 
 # Create a new configuration for the test
@@ -37,7 +37,7 @@ TABLES_INIT_COUNT=$(echo "$TABLES_INIT" | jq length)
 # Run glances with export to InfluxDB, stopping after 10 writes
 # This will run synchronously now since we're using --stop-after
 echo "Glances to export system stats to InfluxDB (duration: ~ 20 seconds)"
-./venv/bin/python -m glances --config /tmp/glances.conf --export influxdb3 --stop-after 10 --quiet
+.venv/bin/python -m glances --config /tmp/glances.conf --export influxdb3 --stop-after 10 --quiet
 
 echo "Checking if Glances data was successfully exported to InfluxDB..."
 # Query to check if data exists in the glances database

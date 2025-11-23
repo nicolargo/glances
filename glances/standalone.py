@@ -16,8 +16,10 @@ from glances.logger import logger
 from glances.outdated import Outdated
 from glances.outputs.glances_curses import GlancesCursesStandalone
 from glances.outputs.glances_stdout import GlancesStdout
-from glances.outputs.glances_stdout_apidoc import GlancesStdoutApiDoc
+from glances.outputs.glances_stdout_api_doc import GlancesStdoutApiDoc
+from glances.outputs.glances_stdout_api_restful_doc import GlancesStdoutApiRestfulDoc
 from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
+from glances.outputs.glances_stdout_fetch import GlancesStdoutFetch
 from glances.outputs.glances_stdout_issue import GlancesStdoutIssue
 from glances.outputs.glances_stdout_json import GlancesStdoutJson
 from glances.processes import glances_processes
@@ -83,29 +85,27 @@ class GlancesStandalone:
             glances_processes.max_processes = 0
         elif args.stdout_issue:
             logger.info("Issue mode is ON")
-            # Init screen
             self.screen = GlancesStdoutIssue(config=config, args=args)
-        elif args.stdout_apidoc:
-            logger.info("Fields descriptions mode is ON")
-            # Init screen
+        elif args.stdout_api_doc:
+            logger.info("Restful Python documentation mode is ON")
             self.screen = GlancesStdoutApiDoc(config=config, args=args)
+        elif args.stdout_api_restful_doc:
+            logger.info("Restful API documentation mode is ON")
+            self.screen = GlancesStdoutApiRestfulDoc(config=config, args=args)
         elif args.stdout:
             logger.info(f"Stdout mode is ON, following stats will be displayed: {args.stdout}")
-            # Init screen
             self.screen = GlancesStdout(config=config, args=args)
         elif args.stdout_json:
             logger.info(f"Stdout JSON mode is ON, following stats will be displayed: {args.stdout_json}")
-            # Init screen
             self.screen = GlancesStdoutJson(config=config, args=args)
         elif args.stdout_csv:
             logger.info(f"Stdout CSV mode is ON, following stats will be displayed: {args.stdout_csv}")
-            # Init screen
             self.screen = GlancesStdoutCsv(config=config, args=args)
+        elif args.stdout_fetch:
+            logger.info("Fetch mode is ON")
+            self.screen = GlancesStdoutFetch(config=config, args=args)
         else:
-            # Default number of processes to displayed is set to 50
-            glances_processes.max_processes = 50
-
-            # Init screen
+            # Init screen in default mode (curses) aka TUI mode
             self.screen = GlancesCursesStandalone(config=config, args=args)
 
             # If an error occur during the screen init, continue if export option is set

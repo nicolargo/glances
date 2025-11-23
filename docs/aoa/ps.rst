@@ -149,12 +149,24 @@ Columns display
                           pressing on the ``'/'`` key
 ========================= ==============================================
 
+Disable display of virtual memory
+---------------------------------
+
+It's possible to disable the display of the VIRT column (virtual memory) by adding the
+``disable_virtual_memory=True`` option in the ``[processlist]`` section of the configuration
+file (glances.conf):
+
+.. code-block:: ini
+
+    [processlist]
+    disable_virtual_memory=True
+
 Process filtering
 -----------------
 
 It's possible to filter the processes list using the ``ENTER`` key.
 
-Filter syntax is the following (examples):
+Glances filter syntax is the following (examples):
 
 - ``python``: Filter processes name or command line starting with
   *python* (regexp)
@@ -162,6 +174,25 @@ Filter syntax is the following (examples):
   *python* (regexp)
 - ``username:nicolargo``: Processes of nicolargo user (key:regexp)
 - ``cmdline:\/usr\/bin.*``: Processes starting by */usr/bin*
+
+Process focus
+-------------
+
+It's also possible to select a processes list to focus on.
+
+A list of Glances filters (see upper) can be define from the command line:
+
+.. code-block:: bash
+
+    glances --process-focus .*python.*,.*firefox.*
+
+
+or the glances.conf file:
+
+.. code-block:: ini
+
+    [processlist]
+    focus=.*python.*,.*firefox.*
 
 Extended info
 -------------

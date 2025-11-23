@@ -27,7 +27,7 @@ Stats description:
   is in RAM.
 - **inactive**: (UNIX): memory that is marked as not used.
 - **buffers**: (Linux, BSD): cache for things like file system metadata.
-- **cached**: (Linux, BSD): cache for various things.
+- **cached**: (Linux, BSD): cache for various things (including ZFS cache).
 
 Additional stats available in through the API:
 
@@ -40,6 +40,10 @@ Additional stats available in through the API:
   never moved to disk.
 - **shared**: (BSD): memory that may be simultaneously accessed by multiple
   processes.
+
+It is possible to display the available memory instead of the used memory
+by setting the ``available`` option to ``True`` in the configuration file
+under the ``[mem]`` section.
 
 A character is also displayed just after the MEM header and shows the
 trend value:

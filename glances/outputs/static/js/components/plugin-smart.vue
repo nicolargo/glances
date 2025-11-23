@@ -25,28 +25,30 @@
 
 <script>
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    computed: {
-        stats() {
-            return this.data.stats['smart'];
-        },
-        drives() {
-            return (Array.isArray(this.stats) ? this.stats : []).map((data) => {
-                const name = data.DeviceName;
-                const details = Object.entries(data)
-                    .filter(([key]) => key !== 'DeviceName')
-                    .sort(([, a], [, b]) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
-                    .map(([prop, value]) => value);
-                return { name, details };
-            });
-        },
-        hasDrives() {
-            return this.drives.length > 0;
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	computed: {
+		stats() {
+			return this.data.stats["smart"];
+		},
+		drives() {
+			return (Array.isArray(this.stats) ? this.stats : []).map((data) => {
+				const name = data.DeviceName;
+				const details = Object.entries(data)
+					.filter(([key]) => key !== "DeviceName")
+					.sort(([, a], [, b]) =>
+						a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
+					)
+					.map(([prop, value]) => value);
+				return { name, details };
+			});
+		},
+		hasDrives() {
+			return this.drives.length > 0;
+		},
+	},
 };
 </script>

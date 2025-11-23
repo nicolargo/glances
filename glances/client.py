@@ -17,6 +17,10 @@ from glances import __version__
 from glances.globals import json_loads
 from glances.logger import logger
 from glances.outputs.glances_curses import GlancesCursesClient
+from glances.outputs.glances_stdout import GlancesStdout
+from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
+from glances.outputs.glances_stdout_fetch import GlancesStdoutFetch
+from glances.outputs.glances_stdout_json import GlancesStdoutJson
 from glances.stats_client import GlancesStatsClient
 from glances.timer import Counter
 
@@ -73,7 +77,7 @@ class GlancesClient:
     def log_and_exit(self, msg=''):
         """Log and exit."""
         if not self.return_to_browser:
-            logger.critical(msg)
+            logger.critical(f"Error when connecting to Glances server: {msg}")
             sys.exit(2)
         else:
             logger.error(msg)
@@ -172,6 +176,21 @@ class GlancesClient:
         if self.quiet:
             # In quiet mode, nothing is displayed
             logger.info("Quiet mode is ON: Nothing will be displayed")
+        elif self.args.stdout:
+            logger.info(f"Stdout mode is ON, following stats will be displayed: {self.args.stdout}")
+            # Init screen
+            self.screen = GlancesStdout(config=self.config, args=self.args)
+        elif self.args.stdout_json:
+            logger.info(f"Stdout JSON mode is ON, following stats will be displayed: {self.args.stdout_json}")
+            # Init screen
+            self.screen = GlancesStdoutJson(config=self.config, args=self.args)
+        elif self.args.stdout_csv:
+            logger.info(f"Stdout CSV mode is ON, following stats will be displayed: {self.args.stdout_csv}")
+            # Init screen
+            self.screen = GlancesStdoutCsv(config=self.config, args=self.args)
+        elif self.args.stdout_fetch:
+            logger.info("Fetch mode is ON")
+            self.screen = GlancesStdoutFetch(config=self.config, args=self.args)
         else:
             self.screen = GlancesCursesClient(config=self.config, args=self.args)
 
@@ -237,6 +256,7 @@ class GlancesClient:
             return self.client_mode
 
         exit_key = False
+
         try:
             while True and not exit_key:
                 # Update the stats
@@ -264,8 +284,8 @@ class GlancesClient:
                 else:
                     # In quiet mode, we only wait adapated_refresh seconds
                     time.sleep(adapted_refresh)
-        except Exception as e:
-            logger.critical(e)
+        except Exception:
+            logger.critical("Critical error in client serve_forever loop")
             self.end()
 
         return self.client_mode

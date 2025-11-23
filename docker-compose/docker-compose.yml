@@ -12,6 +12,9 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "/run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro"
       - "./glances.conf:/glances/conf/glances.conf"
+#     # Uncomment for proper distro information in upper panel. 
+#     # Works only for distros that do have this file (most of distros do).
+#      - "/etc/os-release:/etc/os-release:ro"
     environment:
       - TZ=${TZ}
       - GLANCES_OPT=-C /glances/conf/glances.conf -w

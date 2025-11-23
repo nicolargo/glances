@@ -74,7 +74,7 @@ def main():
     success = check_csv(args.input, args.lines, args.columns)
 
     if success:
-        print("All checks passed successfully!")
+        print("CSV - All checks passed successfully!")
         sys.exit(0)
     else:
         print("CSV validation failed.")

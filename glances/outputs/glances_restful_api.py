@@ -6,21 +6,21 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""RestFull API interface class."""
+"""RestFul API interface class."""
 
 import os
 import socket
 import sys
-import tempfile
 import webbrowser
 from typing import Annotated, Any, Union
 from urllib.parse import urljoin
 
 from glances import __apiversion__, __version__
 from glances.events_list import glances_events
-from glances.globals import json_dumps, weak_lru_cache
+from glances.globals import json_dumps
 from glances.logger import logger
 from glances.password import GlancesPassword
+from glances.plugins.plugin.dag import get_plugin_dependencies
 from glances.processes import glances_processes
 from glances.servers_list import GlancesServersList
 from glances.servers_list_dynamic import GlancesAutoDiscoverClient
@@ -46,7 +46,6 @@ try:
 except ImportError:
     logger.critical('Uvicorn import error. Glances cannot start in web server mode.')
     sys.exit(2)
-import builtins
 import contextlib
 import threading
 import time
@@ -120,7 +119,7 @@ class GlancesRestfulApi:
         self.load_config(config)
 
         # Set the bind URL
-        self.bind_url = urljoin(f'http://{self.args.bind_address}:{self.args.port}/', self.url_prefix)
+        self.bind_url = urljoin(f'{self.protocol}://{self.args.bind_address}:{self.args.port}/', self.url_prefix)
 
         # FastAPI Init
         if self.args.password:
@@ -182,11 +181,23 @@ class GlancesRestfulApi:
             if self.url_prefix != '':
                 self.url_prefix = self.url_prefix.rstrip('/')
             logger.debug(f'URL prefix: {self.url_prefix}')
+            # SSL
+            self.ssl_keyfile = config.get_value('outputs', 'ssl_keyfile', default=None)
+            self.ssl_keyfile_password = config.get_value('outputs', 'ssl_keyfile_password', default=None)
+            self.ssl_certfile = config.get_value('outputs', 'ssl_certfile', default=None)
+            self.protocol = 'https' if self.is_ssl() else 'http'
+            logger.debug(f"Protocol for Resful API and WebUI: {self.protocol}")
 
-    def __update_stats(self):
+    def is_ssl(self):
+        """Return true if the Glances server use SSL."""
+        return self.ssl_keyfile is not None and self.ssl_certfile is not None
+
+    def __update_stats(self, plugins_list_to_update=None):
         # Never update more than 1 time per cached_time
-        if self.timer.finished():
-            self.stats.update()
+        # Also update if specific plugins are requested
+        # In  this case, lru_cache will handle the stat's update frequency
+        if self.timer.finished() or plugins_list_to_update:
+            self.stats.update(plugins_list_to_update=plugins_list_to_update)
             self.timer = Timer(self.args.cached_time)
 
     def __update_servers_list(self):
@@ -206,6 +217,16 @@ class GlancesRestfulApi:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED, "Incorrect username or password", {"WWW-Authenticate": "Basic"}
         )
+
+    def _logo(self):
+        return rf"""
+  _____ _
+ / ____| |
+| |  __| | __ _ _ __   ___ ___  ___
+| | |_ | |/ _` | '_ \ / __/ _ \/ __|
+| |__| | | (_| | | | | (_|  __/\__
+ \_____|_|\__,_|_| |_|\___\___||___/ {__version__}
+        """
 
     def _router(self) -> APIRouter:
         """Define a custom router for Glances path."""
@@ -266,6 +287,9 @@ class GlancesRestfulApi:
         for path, endpoint in route_mapping.items():
             router.add_api_route(path, endpoint)
 
+        # Logo
+        print(self._logo())
+
         # Browser WEBUI
         if hasattr(self.args, 'browser') and self.args.browser:
             # Template for the root browser.html file
@@ -322,7 +346,12 @@ class GlancesRestfulApi:
     def _start_uvicorn(self):
         # Run the Uvicorn Web server
         uvicorn_config = uvicorn.Config(
-            self._app, host=self.args.bind_address, port=self.args.port, access_log=self.args.debug
+            self._app,
+            host=self.args.bind_address,
+            port=self.args.port,
+            access_log=self.args.debug,
+            ssl_keyfile=self.ssl_keyfile,
+            ssl_certfile=self.ssl_certfile,
         )
         try:
             self.uvicorn_server = GlancesUvicornServer(config=uvicorn_config)
@@ -436,7 +465,8 @@ class GlancesRestfulApi:
             HTTP/1.1 404 Not Found
         """
         # Update the stat
-        self.__update_stats()
+        # TODO: Why ??? Try to comment it
+        # self.__update_stats()
 
         try:
             plist = self.plugins_list
@@ -456,7 +486,7 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(self.servers_list.get_servers_list() if self.servers_list else [])
 
-    @weak_lru_cache(maxsize=1, ttl=1)
+    # Comment this solve an issue on Home Assistant See #3238
     def _api_all(self):
         """Glances API RESTful implementation.
 
@@ -465,13 +495,6 @@ class GlancesRestfulApi:
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        if self.args.debug:
-            fname = os.path.join(tempfile.gettempdir(), 'glances-debug.json')
-            try:
-                with builtins.open(fname) as f:
-                    return f.read()
-            except OSError:
-                logger.debug(f"Debug file ({fname}) not found")
 
         # Update the stat
         self.__update_stats()
@@ -485,7 +508,6 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(statval)
 
-    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_all_limits(self):
         """Glances API RESTful implementation.
 
@@ -502,7 +524,6 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(limits)
 
-    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_all_views(self):
         """Glances API RESTful implementation.
 
@@ -519,7 +540,6 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(limits)
 
-    @weak_lru_cache(maxsize=1, ttl=1)
     def _api(self, plugin: str):
         """Glances API RESTful implementation.
 
@@ -531,7 +551,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat ID
@@ -549,7 +569,6 @@ class GlancesRestfulApi:
             status.HTTP_400_BAD_REQUEST, f"Unknown plugin {plugin} (available plugins: {self.plugins_list})"
         )
 
-    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_top(self, plugin: str, nb: int = 0):
         """Glances API RESTful implementation.
 
@@ -563,7 +582,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat ID
@@ -577,7 +596,6 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(statval)
 
-    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_history(self, plugin: str, nb: int = 0):
         """Glances API RESTful implementation.
 
@@ -590,7 +608,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat ID
@@ -600,7 +618,6 @@ class GlancesRestfulApi:
 
         return statval
 
-    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_limits(self, plugin: str):
         """Glances API RESTful implementation.
 
@@ -619,7 +636,6 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(ret)
 
-    @weak_lru_cache(maxsize=1, ttl=1)
     def _api_views(self, plugin: str):
         """Glances API RESTful implementation.
 
@@ -652,7 +668,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat views
@@ -677,7 +693,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat views
@@ -702,7 +718,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat views
@@ -726,7 +742,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat views
@@ -751,7 +767,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value of the stat history
@@ -810,7 +826,7 @@ class GlancesRestfulApi:
         self._check_if_plugin_available(plugin)
 
         # Update the stat
-        self.__update_stats()
+        self.__update_stats(get_plugin_dependencies(plugin))
 
         try:
             # Get the RAW value

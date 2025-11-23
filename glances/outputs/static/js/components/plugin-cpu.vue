@@ -122,85 +122,89 @@ v-if="!isWindows && !isSunOS && soft_interrupts != undefined" scope="col"
 
 <script>
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    computed: {
-        stats() {
-            return this.data.stats['cpu'];
-        },
-        view() {
-            return this.data.views['cpu'];
-        },
-        isLinux() {
-            return this.data.isLinux;
-        },
-        isSunOS() {
-            return this.data.isSunOS;
-        },
-        isWindows() {
-            return this.data.isWindows;
-        },
-        total() {
-            return this.stats.total;
-        },
-        user() {
-            return this.stats.user;
-        },
-        system() {
-            return this.stats.system;
-        },
-        idle() {
-            return this.stats.idle;
-        },
-        nice() {
-            return this.stats.nice;
-        },
-        irq() {
-            return this.stats.irq;
-        },
-        iowait() {
-            return this.stats.iowait;
-        },
-        dpc() {
-            return this.stats.dpc;
-        },
-        steal() {
-            return this.stats.steal;
-        },
-        guest() {
-            return this.stats.guest;
-        },
-        ctx_switches() {
-            const { stats } = this;
-            return stats.ctx_switches
-                ? Math.floor(stats.ctx_switches / stats.time_since_update)
-                : null;
-        },
-        interrupts() {
-            const { stats } = this;
-            return stats.interrupts ? Math.floor(stats.interrupts / stats.time_since_update) : null;
-        },
-        soft_interrupts() {
-            const { stats } = this;
-            return stats.soft_interrupts
-                ? Math.floor(stats.soft_interrupts / stats.time_since_update)
-                : null;
-        },
-        syscalls() {
-            const { stats } = this;
-            return stats.syscalls ? Math.floor(stats.syscalls / stats.time_since_update) : null;
-        }
-    },
-    methods: {
-        getDecoration(value) {
-            if (this.view[value] === undefined) {
-                return;
-            }
-            return this.view[value].decoration.toLowerCase();
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	computed: {
+		stats() {
+			return this.data.stats["cpu"];
+		},
+		view() {
+			return this.data.views["cpu"];
+		},
+		isLinux() {
+			return this.data.isLinux;
+		},
+		isSunOS() {
+			return this.data.isSunOS;
+		},
+		isWindows() {
+			return this.data.isWindows;
+		},
+		total() {
+			return this.stats.total;
+		},
+		user() {
+			return this.stats.user;
+		},
+		system() {
+			return this.stats.system;
+		},
+		idle() {
+			return this.stats.idle;
+		},
+		nice() {
+			return this.stats.nice;
+		},
+		irq() {
+			return this.stats.irq;
+		},
+		iowait() {
+			return this.stats.iowait;
+		},
+		dpc() {
+			return this.stats.dpc;
+		},
+		steal() {
+			return this.stats.steal;
+		},
+		guest() {
+			return this.stats.guest;
+		},
+		ctx_switches() {
+			const { stats } = this;
+			return stats.ctx_switches
+				? Math.floor(stats.ctx_switches / stats.time_since_update)
+				: null;
+		},
+		interrupts() {
+			const { stats } = this;
+			return stats.interrupts
+				? Math.floor(stats.interrupts / stats.time_since_update)
+				: null;
+		},
+		soft_interrupts() {
+			const { stats } = this;
+			return stats.soft_interrupts
+				? Math.floor(stats.soft_interrupts / stats.time_since_update)
+				: null;
+		},
+		syscalls() {
+			const { stats } = this;
+			return stats.syscalls
+				? Math.floor(stats.syscalls / stats.time_since_update)
+				: null;
+		},
+	},
+	methods: {
+		getDecoration(value) {
+			if (this.view[value] === undefined) {
+				return;
+			}
+			return this.view[value].decoration.toLowerCase();
+		},
+	},
 };
 </script>

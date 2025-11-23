@@ -1,8 +1,8 @@
-import { reactive } from 'vue';
+import { reactive } from "vue";
 
 export const store = reactive({
-    args: undefined,
-    config: undefined,
-    data: undefined,
-    status: 'IDLE'
+	args: undefined,
+	config: undefined,
+	data: undefined,
+	status: "IDLE",
 });
