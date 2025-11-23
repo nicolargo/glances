@@ -41,6 +41,7 @@ from glances.plugins.plugin.model import GlancesPluginModel
 # Import plugin specific dependency
 try:
     from pySMART import DeviceList
+    from pySMART.interface.nvme import NvmeAttributes
 except ImportError as e:
     import_error_tag = True
     logger.warning(f"Missing Python Lib ({e}), HDD Smart plugin is disabled")
@@ -62,6 +63,18 @@ def convert_attribute_to_dict(attr):
         'when_failed': attr.when_failed,
     }
 
+def convert_nvme_attribute_to_dict(key,value):
+    return {
+        'name': key,
+        'value': value,
+        'flags': None,
+        'raw': value,
+        'worst': None,
+        'threshold': None,
+        'type': None,
+        'updated': None,
+        'when_failed': None
+    }
 
 def get_smart_data():
     """
@@ -115,6 +128,15 @@ def get_smart_data():
                     continue
 
                 stats[-1][num] = attrib_dict
+
+        if isinstance(dev.if_attributes, NvmeAttributes):
+          idx = 0
+          for attr in dev.if_attributes.__dict__.keys():
+              attrib_dict = convert_nvme_attribute_to_dict(attr,  dev.if_attributes.__dict__[attr])
+              idx +=1
+
+              stats[-1][idx] = attrib_dict
+
     return stats
 
 
