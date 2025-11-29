@@ -101,7 +101,7 @@ ip = [
 ]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
-smart = ["pySMART.smartx"]
+smart = ["pySMART"]
 snmp = ["pysnmp-lextudio<6.2.0"]
 sparklines = ["sparklines"]
 web = [
