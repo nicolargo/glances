@@ -273,7 +273,7 @@ pillow==12.0.0 ; python_full_version >= '3.10'
     # via matplotlib
 platformdirs==4.4.0 ; python_full_version < '3.10'
     # via virtualenv
-platformdirs==4.5.0 ; python_full_version >= '3.10'
+platformdirs==4.5.1 ; python_full_version >= '3.10'
     # via virtualenv
 pluggy==1.6.0
     # via pytest
@@ -282,7 +282,7 @@ pre-commit==4.5.0 ; python_full_version >= '3.10'
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
-protobuf==6.33.1 ; python_full_version >= '3.10'
+protobuf==6.33.2 ; python_full_version >= '3.10'
 protobuf==4.25.8 ; python_full_version < '3.10'
     # via
     #   googleapis-common-protos
@@ -359,7 +359,7 @@ rpds-py==0.27.1 ; python_full_version < '3.10'
     # via
     #   jsonschema
     #   referencing
-rpds-py==0.29.0 ; python_full_version >= '3.10'
+rpds-py==0.30.0 ; python_full_version >= '3.10'
     # via
     #   jsonschema
     #   referencing
@@ -372,11 +372,11 @@ ruamel-yaml-clib==0.2.14 ; python_full_version >= '3.10' or platform_python_impl
     # via
     #   ruamel-yaml
     #   semgrep
-ruff==0.14.7
+ruff==0.14.8
 selenium==4.36.0 ; python_full_version < '3.10'
 selenium==4.38.0 ; python_full_version >= '3.10'
 semgrep==1.136.0 ; python_full_version < '3.10'
-semgrep==1.144.0 ; python_full_version >= '3.10'
+semgrep==1.145.0 ; python_full_version >= '3.10'
 setuptools==80.9.0
     # via opentelemetry-instrumentation
 shellingham==1.5.4
@@ -461,7 +461,7 @@ typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   requests
     #   selenium
