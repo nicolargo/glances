@@ -234,7 +234,7 @@ typing-inspection==0.4.2
     # via pydantic
 tzdata==2025.2 ; sys_platform == 'win32'
     # via psycopg
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   docker
     #   elastic-transport

@@ -461,7 +461,7 @@ typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   requests
     #   selenium
