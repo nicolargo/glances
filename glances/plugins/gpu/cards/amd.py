@@ -11,7 +11,6 @@
 The class grabs the stats from the /sys/class/drm/ directory.
 
 See: https://wiki.archlinux.org/title/AMDGPU#Manually
-amdgpu.ids source: https://cgit.freedesktop.org/drm/libdrm/tree/data/amdgpu.ids
 """
 
 # Example
@@ -45,7 +44,7 @@ import functools
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 CARD_REGEX: str = r"^card\d$"
 DEVICE_FOLDER: str = 'device'
-AMDGPU_IDS: str = '/usr/share/libdrm/amdgpu.ids'
+AMDGPU_IDS_FILE: str = '/usr/share/libdrm/amdgpu.ids'
 PCI_DEVICE_ID: str = 'device'
 PCI_REVISION_ID: str = 'revision'
 GPU_PROC_PERCENT: str = 'gpu_busy_percent'
@@ -123,18 +122,19 @@ def read_file(*path_segments: str) -> Optional[str]:
 def get_device_name(device_folder: str) -> str:
     """Return the GPU name."""
 
+    # Table source: https://cgit.freedesktop.org/drm/libdrm/tree/data/amdgpu.ids
     device_id = read_file(device_folder, PCI_DEVICE_ID)
     revision_id = read_file(device_folder, PCI_REVISION_ID)
-    amdgpu_ids = read_file(AMDGPU_IDS)
+    amdgpu_ids = read_file(AMDGPU_IDS_FILE)
     if device_id and revision_id and amdgpu_ids:
         # Strip leading "0x" and convert to uppercase hexadecimal
         device_id = device_id[2:].upper()
         revision_id = revision_id[2:].upper()
         # Syntax:
         # device_id,	revision_id,	product_name        <-- single tab after comma
-        pattern = re.compile(f'^{device_id},\\s{revision_id},\\s(.+)$', re.MULTILINE)
+        pattern = re.compile(f'^{device_id},\\s{revision_id},\\s(?P<product_name>.+)$', re.MULTILINE)
         if match := pattern.search(amdgpu_ids):
-            return match.group(1)
+            return match.group('product_name').removeprefix('AMD ').removesuffix(' Graphics')
 
     return 'AMD GPU'
 
