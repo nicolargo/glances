@@ -36,10 +36,10 @@ See: https://wiki.archlinux.org/title/AMDGPU#Manually
 #                 └── 0
 #                     └── amdgpu_pm_info
 
+import functools
 import os
 import re
 from typing import Optional
-import functools
 
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 CARD_REGEX: str = r"^card\d$"
