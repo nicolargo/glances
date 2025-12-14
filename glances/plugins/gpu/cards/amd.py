@@ -24,7 +24,10 @@ See: https://wiki.archlinux.org/title/AMDGPU#Manually
 #     │               ├── gpu_busy_percent
 #     │               ├── hwmon
 #     │               │   └── hwmon0
+#     │               │       ├── in1_input
 #     │               │       └── temp1_input
+#     │               ├── mem_info_gtt_total
+#     │               ├── mem_info_gtt_used
 #     │               ├── mem_info_vram_total
 #     │               ├── mem_info_vram_used
 #     │               ├── pp_dpm_mclk
@@ -37,6 +40,7 @@ See: https://wiki.archlinux.org/title/AMDGPU#Manually
 #                     └── amdgpu_pm_info
 
 import functools
+import glob
 import os
 import re
 from typing import Optional
@@ -50,8 +54,10 @@ PCI_REVISION_ID: str = 'revision'
 GPU_PROC_PERCENT: str = 'gpu_busy_percent'
 GPU_MEM_TOTAL: str = 'mem_info_vram_total'
 GPU_MEM_USED: str = 'mem_info_vram_used'
-HWMON_REGEXP: str = r"^hwmon\d$"
-GPU_TEMPERATURE_REGEXP: str = r"^temp\d_input"
+GTT_MEM_TOTAL: str = 'mem_info_gtt_total'
+GTT_MEM_USED: str = 'mem_info_gtt_used'
+HWMON_NORTHBRIDGE_VOLTAGE_PATTERN: str = 'hwmon/hwmon[0-9]/in1_input'
+HWMON_TEMPERATURE_PATTERN = 'hwmon/hwmon[0-9]/temp[0-9]_input'
 
 
 class AmdGPU:
@@ -141,13 +147,22 @@ def get_device_name(device_folder: str) -> str:
 
 def get_mem(device_folder: str) -> Optional[int]:
     """Return the memory consumption in %."""
-    mem_info_vram_total = read_file(device_folder, GPU_MEM_TOTAL)
-    mem_info_vram_used = read_file(device_folder, GPU_MEM_USED)
-    if mem_info_vram_total and mem_info_vram_used:
-        mem_info_vram_total = int(mem_info_vram_total)
-        mem_info_vram_used = int(mem_info_vram_used)
-        if mem_info_vram_total > 0:
-            return round(mem_info_vram_used / mem_info_vram_total * 100)
+    mem_info_total = read_file(device_folder, GPU_MEM_TOTAL)
+    mem_info_used = read_file(device_folder, GPU_MEM_USED)
+    if mem_info_total and mem_info_used:
+        mem_info_total = int(mem_info_total)
+        mem_info_used = int(mem_info_used)
+        # Detect integrated GPU by looking for APU-only Northbridge voltage.
+        # See https://docs.kernel.org/gpu/amdgpu/thermal.html
+        if glob.glob(HWMON_NORTHBRIDGE_VOLTAGE_PATTERN, root_dir=device_folder):
+            mem_info_gtt_total = read_file(device_folder, GTT_MEM_TOTAL)
+            mem_info_gtt_used = read_file(device_folder, GTT_MEM_USED)
+            if mem_info_gtt_total and mem_info_gtt_used:
+                # Integrated GPU allocates static VRAM and dynamic GTT from the same system memory.
+                mem_info_total += int(mem_info_gtt_total)
+                mem_info_used += int(mem_info_gtt_used)
+        if mem_info_total > 0:
+            return round(mem_info_used / mem_info_total * 100)
     return None
 
 
@@ -161,16 +176,11 @@ def get_proc(device_folder: str) -> Optional[int]:
 def get_temperature(device_folder: str) -> Optional[int]:
     """Return the processor temperature in °C (mean of all HWMON)"""
     temp_input = []
-    for root, dirs, _ in os.walk(device_folder):
-        for d in dirs:
-            if re.match(HWMON_REGEXP, d):
-                for _, _, files in os.walk(os.path.join(root, d)):
-                    for f in files:
-                        if re.match(GPU_TEMPERATURE_REGEXP, f):
-                            if a_temp_input := read_file(root, d, f):
-                                temp_input.append(int(a_temp_input))
-                            else:
-                                return None
+    for temp_file in glob.glob(HWMON_TEMPERATURE_PATTERN, root_dir=device_folder):
+        if a_temp_input := read_file(device_folder, temp_file):
+            temp_input.append(int(a_temp_input))
+        else:
+            return None
     if temp_input:
         return round(sum(temp_input) / len(temp_input) / 1000)
     return None
