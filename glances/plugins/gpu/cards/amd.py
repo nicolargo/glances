@@ -43,11 +43,10 @@ import functools
 import glob
 import os
 import re
-from typing import Optional
+from typing import List, Optional
 
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
-CARD_REGEX: str = r"^card\d$"
-DEVICE_FOLDER: str = 'device'
+DEVICE_FOLDER_PATTERN: str = 'card[0-9]/device'
 AMDGPU_IDS_FILE: str = '/usr/share/libdrm/amdgpu.ids'
 PCI_DEVICE_ID: str = 'device'
 PCI_REVISION_ID: str = 'revision'
@@ -96,18 +95,13 @@ class AmdGPU:
         return stats
 
 
-def get_device_list(drm_root_folder: str) -> list:
+def get_device_list(drm_root_folder: str) -> List[str]:
     """Return a list of path to the device stats."""
     ret = []
-    for root, dirs, _ in os.walk(drm_root_folder):
-        for d in dirs:
-            if (
-                re.match(CARD_REGEX, d)
-                and DEVICE_FOLDER in os.listdir(os.path.join(root, d))
-                and os.path.isfile(os.path.join(root, d, DEVICE_FOLDER, GPU_PROC_PERCENT))
-            ):
-                # If the GPU busy file is present then take the card into account
-                ret.append(os.path.join(root, d, DEVICE_FOLDER))
+    for device_folder in glob.glob(DEVICE_FOLDER_PATTERN, root_dir=drm_root_folder):
+        if os.path.isfile(os.path.join(drm_root_folder, device_folder, GPU_PROC_PERCENT)):
+            # If the GPU busy file is present then take the card into account
+            ret.append(os.path.join(drm_root_folder, device_folder))
     return ret
 
 
