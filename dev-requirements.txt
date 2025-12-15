@@ -170,7 +170,7 @@ markupsafe==3.0.3
     # via jinja2
 matplotlib==3.9.4 ; python_full_version < '3.10'
 matplotlib==3.10.7 ; python_full_version >= '3.10'
-mcp==1.16.0 ; python_full_version >= '3.10'
+mcp==1.23.0 ; python_full_version >= '3.10'
     # via semgrep
 mdurl==0.1.2
     # via markdown-it-py
