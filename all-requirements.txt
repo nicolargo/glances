@@ -68,7 +68,7 @@ humanfriendly==10.0
     # via pysmart
 ibm-cloud-sdk-core==3.24.2
     # via ibmcloudant
-ibmcloudant==0.11.0 ; python_full_version < '3.10'
+ibmcloudant==0.11.2 ; python_full_version < '3.10'
     # via glances
 ibmcloudant==0.11.2 ; python_full_version >= '3.10'
     # via glances
