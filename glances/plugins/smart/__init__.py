@@ -132,7 +132,13 @@ def get_smart_data():
         if isinstance(dev.if_attributes, NvmeAttributes):
           idx = 0
           for attr in dev.if_attributes.__dict__.keys():
-              attrib_dict = convert_nvme_attribute_to_dict(attr,  dev.if_attributes.__dict__[attr])
+              try:
+                  attrib_dict = convert_nvme_attribute_to_dict(attr,  dev.if_attributes.__dict__[attr])
+                  if dev.if_attributes.__dict__[attr] is not None:
+                     serialized = str(dev.if_attributes.__dict__[attr])
+              except Exception as e:
+                    logger.debug(f'Unable to serialize attribute {attr} from NVME')
+
               idx +=1
 
               stats[-1][idx] = attrib_dict
@@ -217,8 +223,13 @@ class SmartPlugin(GlancesPluginModel):
                     device_stat[smart_stat]['name'][: name_max_width - 1].replace('_', ' '), width=name_max_width - 1
                 )
                 ret.append(self.curse_add_line(msg))
-                raw = device_stat[smart_stat]['raw']
-                msg = '{:>8}'.format("" if raw is None else str(raw))
-                ret.append(self.curse_add_line(msg))
+                try:
+                    raw = device_stat[smart_stat]['raw']
+                    msg = '{:>8}'.format("" if raw is None else str(raw))
+                    ret.append(self.curse_add_line(msg))
+                except Exception as e:
+                    logger.debug(f"Failed to serialize {smart_stat}")
+                    meg = ""
+                    ret.append(self.curse_add_line(msg))
 
         return ret
