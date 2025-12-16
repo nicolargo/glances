@@ -84,7 +84,7 @@ class CpuPercent:
                     self.cpu_info['cpu_hz_current'] = cpu_freq.current
                 else:
                     self.cpu_info['cpu_hz_current'] = None
-                if hasattr(cpu_freq, 'max'):
+                if hasattr(cpu_freq, 'max') and cpu_freq.max != 0.0:
                     self.cpu_info['cpu_hz'] = cpu_freq.max
                 else:
                     self.cpu_info['cpu_hz'] = None
