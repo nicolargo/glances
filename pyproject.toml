@@ -8,7 +8,7 @@ classifiers = [
   "Intended Audience :: Developers",
   "Intended Audience :: End Users/Desktop",
   "Intended Audience :: System Administrators",
-  "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+  "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPL-3.0-only)",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.9",
@@ -30,7 +30,7 @@ dependencies = [
 description = "A cross-platform curses-based monitoring tool"
 dynamic = ["version"]
 keywords = ["cli", "curses", "monitoring", "system"]
-license = {text = "LGPLv3"}
+license = "LGPL-3.0-only"
 name = "Glances"
 readme = "README-pypi.rst"
 requires-python = ">=3.9"
