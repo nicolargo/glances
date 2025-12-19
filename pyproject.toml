@@ -8,7 +8,6 @@ classifiers = [
   "Intended Audience :: Developers",
   "Intended Audience :: End Users/Desktop",
   "Intended Audience :: System Administrators",
-  "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPL-3.0-only)",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.9",
