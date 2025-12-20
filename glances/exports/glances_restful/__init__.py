@@ -54,7 +54,7 @@ class Export(GlancesExport):
             # One complete loop have been done
             logger.debug(f"Export stats ({listkeys(self.buffer)}) to RESTful endpoint ({self.client})")
             # Export stats
-            post(self.client, json=self.buffer, allow_redirects=True)
+            post(self.client, json=self.buffer, allow_redirects=True, timeout=15)
             # Reset buffer
             self.buffer = {}
 

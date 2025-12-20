@@ -78,7 +78,7 @@ class GlancesStdoutFetch:
                 fetch_template = f.read()
 
         # Create a Jinja2 environment
-        jinja_env = jinja2.Environment(loader=jinja2.BaseLoader())
+        jinja_env = jinja2.Environment(loader=jinja2.BaseLoader(), autoescape=True)
         template = jinja_env.from_string(fetch_template)
         output = template.render(gl=self.gl)
         print(output)
