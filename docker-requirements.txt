@@ -20,7 +20,7 @@ docker==7.1.0
     # via glances
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.124.0
+fastapi==0.125.0
     # via glances
 h11==0.16.0
     # via uvicorn
@@ -74,7 +74,7 @@ typing-extensions==4.15.0
     #   uvicorn
 typing-inspection==0.4.2
     # via pydantic
-urllib3==2.6.0
+urllib3==2.6.2
     # via
     #   docker
     #   podman

@@ -42,8 +42,10 @@ certifi==2025.11.12
     #   httpx
     #   requests
     #   selenium
-cffi==2.0.0 ; implementation_name != 'pypy' and os_name == 'nt'
-    # via trio
+cffi==2.0.0 ; (python_full_version >= '3.10' and implementation_name == 'pypy' and platform_python_implementation != 'PyPy') or (python_full_version >= '3.10' and os_name != 'nt' and platform_python_implementation != 'PyPy') or (implementation_name != 'pypy' and os_name == 'nt')
+    # via
+    #   cryptography
+    #   trio
 cfgv==3.4.0 ; python_full_version < '3.10'
     # via pre-commit
 cfgv==3.5.0 ; python_full_version >= '3.10'
@@ -76,6 +78,8 @@ contourpy==1.3.2 ; python_full_version == '3.10.*'
     # via matplotlib
 contourpy==1.3.3 ; python_full_version >= '3.11'
     # via matplotlib
+cryptography==46.0.3 ; python_full_version >= '3.10'
+    # via pyjwt
 cycler==0.12.1
     # via matplotlib
 defusedxml==0.7.1 ; python_full_version < '3.10'
@@ -102,11 +106,11 @@ face==24.0.0
     # via glom
 filelock==3.19.1 ; python_full_version < '3.10'
     # via virtualenv
-filelock==3.20.0 ; python_full_version >= '3.10'
+filelock==3.20.1 ; python_full_version >= '3.10'
     # via virtualenv
-fonttools==4.60.1 ; python_full_version < '3.10'
+fonttools==4.60.2 ; python_full_version < '3.10'
     # via matplotlib
-fonttools==4.61.0 ; python_full_version >= '3.10'
+fonttools==4.61.1 ; python_full_version >= '3.10'
     # via matplotlib
 glom==22.1.0
     # via semgrep
@@ -169,8 +173,8 @@ markdown-it-py==4.0.0 ; python_full_version >= '3.10'
 markupsafe==3.0.3
     # via jinja2
 matplotlib==3.9.4 ; python_full_version < '3.10'
-matplotlib==3.10.7 ; python_full_version >= '3.10'
-mcp==1.16.0 ; python_full_version >= '3.10'
+matplotlib==3.10.8 ; python_full_version >= '3.10'
+mcp==1.23.3 ; python_full_version >= '3.10'
     # via semgrep
 mdurl==0.1.2
     # via markdown-it-py
@@ -278,7 +282,7 @@ platformdirs==4.5.1 ; python_full_version >= '3.10'
 pluggy==1.6.0
     # via pytest
 pre-commit==4.3.0 ; python_full_version < '3.10'
-pre-commit==4.5.0 ; python_full_version >= '3.10'
+pre-commit==4.5.1 ; python_full_version >= '3.10'
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
@@ -290,7 +294,7 @@ protobuf==4.25.8 ; python_full_version < '3.10'
 psutil==7.1.3
     # via memory-profiler
 py-spy==0.4.1
-pycparser==2.23 ; implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt'
+pycparser==2.23 ; (python_full_version >= '3.10' and implementation_name != 'PyPy' and os_name != 'nt' and platform_python_implementation != 'PyPy') or (python_full_version >= '3.10' and implementation_name == 'pypy' and os_name == 'nt' and platform_python_implementation != 'PyPy') or (implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt')
     # via cffi
 pydantic==2.12.5
     # via
@@ -307,13 +311,15 @@ pygments==2.19.2
     #   rich
     #   sphinx
 pyinstrument==5.1.1
+pyjwt==2.10.1 ; python_full_version >= '3.10'
+    # via mcp
 pyparsing==3.2.5
     # via matplotlib
 pyright==1.1.407
 pysocks==1.7.1
     # via urllib3
 pytest==8.4.2 ; python_full_version < '3.10'
-pytest==9.0.1 ; python_full_version >= '3.10'
+pytest==9.0.2 ; python_full_version >= '3.10'
 python-dateutil==2.9.0.post0
     # via matplotlib
 python-debian==1.0.1
@@ -324,7 +330,7 @@ python-dotenv==1.2.1
     #   webdriver-manager
 python-magic==0.4.27 ; python_full_version >= '3.10'
     # via reuse
-python-multipart==0.0.20 ; python_full_version >= '3.10'
+python-multipart==0.0.21 ; python_full_version >= '3.10'
     # via mcp
 pywin32==311 ; python_full_version >= '3.10' and sys_platform == 'win32'
     # via
@@ -353,7 +359,9 @@ rich==13.5.3
     # via
     #   semgrep
     #   typer
-roman-numerals-py==3.1.0 ; python_full_version >= '3.11'
+roman-numerals==4.1.0 ; python_full_version >= '3.11'
+    # via roman-numerals-py
+roman-numerals-py==4.1.0 ; python_full_version >= '3.11'
     # via sphinx
 rpds-py==0.27.1 ; python_full_version < '3.10'
     # via
@@ -372,11 +380,11 @@ ruamel-yaml-clib==0.2.14 ; python_full_version >= '3.10' or platform_python_impl
     # via
     #   ruamel-yaml
     #   semgrep
-ruff==0.14.8
+ruff==0.14.10
 selenium==4.36.0 ; python_full_version < '3.10'
-selenium==4.38.0 ; python_full_version >= '3.10'
+selenium==4.39.0 ; python_full_version >= '3.10'
 semgrep==1.136.0 ; python_full_version < '3.10'
-semgrep==1.145.0 ; python_full_version >= '3.10'
+semgrep==1.146.0 ; python_full_version >= '3.10'
 setuptools==80.9.0
     # via opentelemetry-instrumentation
 shellingham==1.5.4
@@ -416,10 +424,12 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-sse-starlette==3.0.3 ; python_full_version >= '3.10'
+sse-starlette==3.0.4 ; python_full_version >= '3.10'
     # via mcp
 starlette==0.50.0 ; python_full_version >= '3.10'
-    # via mcp
+    # via
+    #   mcp
+    #   sse-starlette
 tomli==2.0.2
     # via
     #   pytest
@@ -437,11 +447,13 @@ trio==0.32.0 ; python_full_version >= '3.10'
     #   trio-websocket
 trio-websocket==0.12.2
     # via selenium
-typer==0.20.0
+typer==0.20.1
     # via rstcheck
 typing-extensions==4.15.0
     # via
     #   anyio
+    #   cryptography
+    #   mcp
     #   opentelemetry-api
     #   opentelemetry-exporter-otlp-proto-http
     #   opentelemetry-sdk
@@ -459,9 +471,10 @@ typing-extensions==4.15.0
     #   virtualenv
 typing-inspection==0.4.2
     # via
+    #   mcp
     #   pydantic
     #   pydantic-settings
-urllib3==2.6.0
+urllib3==2.6.2
     # via
     #   requests
     #   selenium
