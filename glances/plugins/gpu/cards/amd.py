@@ -43,7 +43,7 @@ import functools
 import glob
 import os
 import re
-from typing import Optional, list
+from typing import Optional
 
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 DEVICE_FOLDER_PATTERN: str = 'card[0-9]/device'
