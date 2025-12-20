@@ -365,7 +365,11 @@ class TestGlances(unittest.TestCase):
     def test_014_gpu(self):
         """Check GPU plugin."""
         print('INFO: [TEST_014] Check GPU stats')
-        stats_grab = stats.get_plugin('gpu').get_raw()
+        gpu_plugin = stats.get_plugin('gpu')
+        if not gpu_plugin:
+            print('INFO: GPU plugin is disabled, skipping test')
+            return
+        stats_grab = gpu_plugin.get_raw()
         self.assertTrue(isinstance(stats_grab, list), msg='GPU stats is not a list')
         print(f'INFO: GPU stats: {stats_grab}')
 
