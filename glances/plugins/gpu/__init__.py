@@ -3,6 +3,7 @@
 #
 # Copyright (C) 2020 Kirby Banman <kirby.banman@gmail.com>
 # Copyright (C) 2024 Nicolas Hennion <nicolashennion@gmail.com>
+# Intel GPU support added (poorly) 2025 by <computerdork@verion.net>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -12,11 +13,13 @@
 Currently supported:
 - NVIDIA GPU (need pynvml lib)
 - AMD GPU (no lib needed)
+- Intel GPU (need xpumcli, requires root/sudo right for utilization)
 """
 
 from glances.globals import to_fahrenheit
 from glances.logger import logger
 from glances.plugins.gpu.cards.amd import AmdGPU
+from glances.plugins.gpu.cards.intel import IntelGPU
 from glances.plugins.gpu.cards.nvidia import NvidiaGPU
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -90,13 +93,24 @@ class GpuPlugin(GlancesPluginModel):
             logger.debug(f'AMD GPU initialization error: {e}')
             self.amd = None
 
+        # Init the Intel GPU API
+        try:
+            self.intel = IntelGPU(config=config)
+        except Exception as e:
+            logger.debug(f'Intel GPU initialization error: {e}')
+            self.intel = None
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
     def exit(self):
         """Overwrite the exit method to close the GPU API."""
-        self.nvidia.exit()
-        self.amd.exit()
+        if self.nvidia:
+            self.nvidia.exit()
+        if self.amd:
+            self.amd.exit()
+        if self.intel:
+            self.intel.exit()
 
         # Call the father exit method
         super().exit()
@@ -117,6 +131,8 @@ class GpuPlugin(GlancesPluginModel):
             stats.extend(self.nvidia.get_device_stats())
         if self.amd:
             stats.extend(self.amd.get_device_stats())
+        if self.intel:
+            stats.extend(self.intel.get_device_stats())
 
         # !!!
         # Uncomment to test on computer without Nvidia GPU
