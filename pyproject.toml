@@ -10,7 +10,6 @@ classifiers = [
   "Intended Audience :: System Administrators",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -32,7 +31,7 @@ keywords = ["cli", "curses", "monitoring", "system"]
 license = "LGPL-3.0-only"
 name = "Glances"
 readme = "README-pypi.rst"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 urls.Homepage = "https://github.com/nicolargo/glances"
 
 [dependency-groups]
