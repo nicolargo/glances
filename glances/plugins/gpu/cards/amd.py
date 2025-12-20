@@ -43,7 +43,7 @@ import functools
 import glob
 import os
 import re
-from typing import List, Optional
+from typing import Optional, list
 
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 DEVICE_FOLDER_PATTERN: str = 'card[0-9]/device'
@@ -95,7 +95,7 @@ class AmdGPU:
         return stats
 
 
-def get_device_list(drm_root_folder: str) -> List[str]:
+def get_device_list(drm_root_folder: str) -> list[str]:
     """Return a list of path to the device stats."""
     ret = []
     for device_folder in glob.glob(DEVICE_FOLDER_PATTERN, root_dir=drm_root_folder):
