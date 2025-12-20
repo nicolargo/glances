@@ -98,11 +98,11 @@ class LoadPlugin(GlancesPluginModel):
             # Update stats using the standard system lib
 
             # Get the load using the os standard lib
-            load = get_load_average()
+            load = load_average()
             if load is None:
                 stats = self.get_init_value()
             else:
-                stats = {'min1': load[0], 'min5': load[1], 'min15': load[2], 'cpucore': get_nb_log_core()}
+                stats = {'min1': load[0], 'min5': load[1], 'min15': load[2], 'cpucore': log_core()}
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -116,7 +116,7 @@ class LoadPlugin(GlancesPluginModel):
             for k, v in stats.items():
                 stats[k] = float(v)
 
-            stats['cpucore'] = get_nb_log_core()
+            stats['cpucore'] = log_core()
 
         # Update the stats
         self.stats = stats
@@ -164,9 +164,9 @@ class LoadPlugin(GlancesPluginModel):
             ret.append(self.curse_new_line())
             msg = '{:7}'.format(f'{load_time} min')
             ret.append(self.curse_add_line(msg))
-            if args.disable_irix and get_nb_log_core() != 0:
+            if args.disable_irix and log_core() != 0:
                 # Enable Irix mode for load (see issue #1554)
-                load_stat = self.stats[f'min{load_time}'] / get_nb_log_core() * 100
+                load_stat = self.stats[f'min{load_time}'] / log_core() * 100
                 msg = f'{load_stat:>5.1f}%'
             else:
                 # Default mode for load
@@ -177,30 +177,30 @@ class LoadPlugin(GlancesPluginModel):
         return ret
 
 
-def get_nb_log_core():
+def log_core():
     """Get the number of logical CPU core."""
     return nb_log_core
 
 
-def get_nb_phys_core():
+def phys_core():
     """Get the number of physical CPU core."""
     return nb_phys_core
 
 
-def get_load_average(percent: bool = False):
+def load_average(percent: bool = False):
     """Get load average. On both Linux and Windows thanks to PsUtil
 
     if percent is True, return the load average in percent
     Ex: if you only have one CPU core and the load average is 1.0, then return 100%"""
-    load_average = None
+    ret = None
     try:
-        load_average = psutil.getloadavg()
+        ret = psutil.getloadavg()
     except (AttributeError, OSError):
         try:
-            load_average = os.getloadavg()
+            ret = os.getloadavg()
         except (AttributeError, OSError):
             pass
 
-    if load_average and percent:
-        return tuple([round(i / get_nb_log_core() * 100, 1) for i in load_average])
-    return load_average
+    if ret and percent:
+        return tuple([round(i / log_core() * 100, 1) for i in ret])
+    return ret
