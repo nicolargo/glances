@@ -9,7 +9,7 @@
 """Vms plugin."""
 
 from copy import deepcopy
-from typing import Any, Optional
+from typing import Any
 
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -201,7 +201,7 @@ class VmsPlugin(GlancesPluginModel):
 
         return True
 
-    def msg_curse(self, args=None, max_width: Optional[int] = None) -> list[str]:
+    def msg_curse(self, args=None, max_width: int | None = None) -> list[str]:
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
@@ -345,3 +345,6 @@ def sort_vm_stats(stats: list[dict[str, Any]]) -> tuple[str, list[dict[str, Any]
 
     # Return the main sort key and the sorted stats
     return sort_by, stats
+
+
+# End of file

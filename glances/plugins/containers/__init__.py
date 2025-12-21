@@ -11,7 +11,7 @@
 from copy import deepcopy
 from functools import partial, reduce
 from itertools import chain
-from typing import Any, Optional
+from typing import Any
 
 from glances.globals import nativestr
 from glances.logger import logger
@@ -514,7 +514,7 @@ class ContainersPlugin(GlancesPluginModel):
 
         return ret
 
-    def msg_curse(self, args=None, max_width: Optional[int] = None) -> list[str]:
+    def msg_curse(self, args=None, max_width: int | None = None) -> list[str]:
         """Return the dict to display in the curse interface."""
         # Init the return message
         init = []
@@ -594,7 +594,6 @@ def sort_docker_stats(stats: list[dict[str, Any]]) -> tuple[str, list[dict[str, 
 
     # Return the main sort key and the sorted stats
     return sort_by, stats
-    # Return the main sort key and the sorted stats
-    return sort_by, stats
-    # Return the main sort key and the sorted stats
-    return sort_by, stats
+
+
+# End of file

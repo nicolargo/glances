@@ -9,7 +9,7 @@
 """CPU percent stats shared between CPU and Quicklook plugins."""
 
 import platform
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 import psutil
 
@@ -21,8 +21,8 @@ __all__ = ["cpu_percent"]
 
 class CpuInfo(TypedDict):
     cpu_name: str
-    cpu_hz: Optional[float]
-    cpu_hz_current: Optional[float]
+    cpu_hz: float | None
+    cpu_hz_current: float | None
 
 
 class PerCpuPercentInfo(TypedDict):
@@ -32,15 +32,15 @@ class PerCpuPercentInfo(TypedDict):
     user: float
     system: float
     idle: float
-    nice: Optional[float]
-    iowait: Optional[float]
-    irq: Optional[float]
-    softirq: Optional[float]
-    steal: Optional[float]
-    guest: Optional[float]
-    guest_nice: Optional[float]
-    dpc: Optional[float]
-    interrupt: Optional[float]
+    nice: float | None
+    iowait: float | None
+    irq: float | None
+    softirq: float | None
+    steal: float | None
+    guest: float | None
+    guest_nice: float | None
+    dpc: float | None
+    interrupt: float | None
 
 
 class CpuPercent:
