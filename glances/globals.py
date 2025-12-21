@@ -364,7 +364,7 @@ def json_dumps(data) -> bytes:
     return b(res)
 
 
-def json_loads(data: Union[str, bytes, bytearray]) -> Union[dict, list]:
+def json_loads(data: str | bytes | bytearray) -> dict | list:
     """Load a JSON buffer into memory as a Python object"""
     return json.loads(data)
 
@@ -401,7 +401,7 @@ def dictlist_json_dumps(data, item):
     return json_dumps(dl)
 
 
-def dictlist_first_key_value(data: list[dict], key, value) -> Optional[dict]:
+def dictlist_first_key_value(data: list[dict], key, value) -> dict | None:
     """In a list of dict, return first item where key=value or none if not found."""
     try:
         ret = next(item for item in data if key in item and item[key] == value)

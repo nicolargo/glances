@@ -43,7 +43,6 @@ import functools
 import glob
 import os
 import re
-from typing import Optional
 
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 DEVICE_FOLDER_PATTERN: str = 'card[0-9]/device'
@@ -105,7 +104,7 @@ def get_device_list(drm_root_folder: str) -> list[str]:
     return ret
 
 
-def read_file(*path_segments: str) -> Optional[str]:
+def read_file(*path_segments: str) -> str | None:
     """Return content of file."""
     path = os.path.join(*path_segments)
     if os.path.isfile(path):
@@ -139,7 +138,7 @@ def get_device_name(device_folder: str) -> str:
     return 'AMD GPU'
 
 
-def get_mem(device_folder: str) -> Optional[int]:
+def get_mem(device_folder: str) -> int | None:
     """Return the memory consumption in %."""
     mem_info_total = read_file(device_folder, GPU_MEM_TOTAL)
     mem_info_used = read_file(device_folder, GPU_MEM_USED)
@@ -160,14 +159,14 @@ def get_mem(device_folder: str) -> Optional[int]:
     return None
 
 
-def get_proc(device_folder: str) -> Optional[int]:
+def get_proc(device_folder: str) -> int | None:
     """Return the processor consumption in %."""
     if gpu_busy_percent := read_file(device_folder, GPU_PROC_PERCENT):
         return int(gpu_busy_percent)
     return None
 
 
-def get_temperature(device_folder: str) -> Optional[int]:
+def get_temperature(device_folder: str) -> int | None:
     """Return the processor temperature in °C (mean of all HWMON)"""
     temp_input = []
     for temp_file in glob.glob(HWMON_TEMPERATURE_PATTERN, root_dir=device_folder):
@@ -180,6 +179,6 @@ def get_temperature(device_folder: str) -> Optional[int]:
     return None
 
 
-def get_fan_speed(device_folder: str) -> Optional[int]:
+def get_fan_speed(device_folder: str) -> int | None:
     """Return the fan speed in %."""
     return None
