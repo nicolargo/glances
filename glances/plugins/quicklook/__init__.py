@@ -15,7 +15,7 @@ from glances.logger import logger
 from glances.outputs.glances_bars import Bar
 from glances.outputs.glances_sparklines import Sparkline
 from glances.plugins.fs.zfs import zfs_enable, zfs_stats
-from glances.plugins.load import get_load_average, get_nb_log_core, get_nb_phys_core
+from glances.plugins.load import load_average, log_core, phys_core
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
@@ -144,12 +144,12 @@ class QuicklookPlugin(GlancesPluginModel):
                 stats['swap'] = None
 
             # Get load
-            stats['cpu_log_core'] = get_nb_log_core()
-            stats['cpu_phys_core'] = get_nb_phys_core()
+            stats['cpu_log_core'] = log_core()
+            stats['cpu_phys_core'] = phys_core()
             try:
                 # Load average is a tuple (1 min, 5 min, 15 min)
                 # Process only the 15 min value (index 2)
-                stats['load'] = get_load_average(percent=True)[2]
+                stats['load'] = load_average(percent=True)[2]
             except (TypeError, IndexError):
                 stats['load'] = None
 
@@ -202,15 +202,13 @@ class QuicklookPlugin(GlancesPluginModel):
         ##########################
 
         # System information
-        if (
-            'cpu_hz_current' in self.stats
-            and self.stats['cpu_hz_current'] is not None
-            and 'cpu_hz' in self.stats
-            and self.stats['cpu_hz'] is not None
-        ):
-            msg_freq = ' {:.2f}/{:.2f}GHz'.format(
-                self._hz_to_ghz(self.stats['cpu_hz_current']), self._hz_to_ghz(self.stats['cpu_hz'])
-            )
+        if 'cpu_hz_current' in self.stats and self.stats['cpu_hz_current'] is not None:
+            if 'cpu_hz' in self.stats and self.stats['cpu_hz'] is not None:
+                msg_freq = ' {:.2f}/{:.2f}GHz'.format(
+                    self._hz_to_ghz(self.stats['cpu_hz_current']), self._hz_to_ghz(self.stats['cpu_hz'])
+                )
+            else:
+                msg_freq = ' {:.2f}GHz'.format(self._hz_to_ghz(self.stats['cpu_hz_current']))
         else:
             msg_freq = ''
 
@@ -320,3 +318,6 @@ class QuicklookPlugin(GlancesPluginModel):
     def _mhz_to_hz(self, hz):
         """Convert Mhz to Hz."""
         return hz * 1000000.0
+
+
+# End of file

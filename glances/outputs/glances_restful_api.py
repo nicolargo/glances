@@ -12,7 +12,7 @@ import os
 import socket
 import sys
 import webbrowser
-from typing import Annotated, Any, Union
+from typing import Annotated, Any
 from urllib.parse import urljoin
 
 from glances import __apiversion__, __version__
@@ -815,7 +815,7 @@ class GlancesRestfulApi:
         else:
             return GlancesJSONResponse(ret)
 
-    def _api_value(self, plugin: str, item: str, value: Union[str, int, float]):
+    def _api_value(self, plugin: str, item: str, value: str | int | float):
         """Glances API RESTful implementation.
 
         Return the process stats (dict) for the given item=value

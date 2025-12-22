@@ -37,7 +37,9 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        # Python EOL version are note tested
+        # Multiple Python version only tested for Linux
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
 
