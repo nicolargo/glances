@@ -105,7 +105,7 @@ def convert_nvme_attribute_to_dict(key,value):
         'when_failed': None
     }
 
-def get_smart_data():
+def get_smart_data(hide_attributes):
     """
     Get SMART attribute data
     :return: list of multi leveled dictionaries
@@ -144,6 +144,8 @@ def get_smart_data():
         for attribute in dev.attributes:
             if attribute is None:
                 pass
+            elif attribute.name in hide_attributes:
+                pass
             else:
                 attrib_dict = convert_attribute_to_dict(attribute)
 
@@ -162,16 +164,20 @@ def get_smart_data():
             idx = 0
             for attr in dev.if_attributes.__dict__.keys():
                 idx +=1
+
                 attrib_dict = convert_nvme_attribute_to_dict(attr,  dev.if_attributes.__dict__[attr])
-                try:
-                    if dev.if_attributes.__dict__[attr] is not None:
-                        serialized = str(dev.if_attributes.__dict__[attr])
-                except Exception as e:
-                    logger.debug(f'Unable to serialize attribute {attr} from NVME')
-                    attrib_dict['value'] = None
-                    attrib_dict['raw'] = None
-                finally:
-                    stats[-1][idx] = attrib_dict
+                if attrib_dict['name'] in hide_attributes:
+                    pass
+                else:
+                    try:
+                        if dev.if_attributes.__dict__[attr] is not None: # make sure the value is serializable to prevent errors in rendering
+                            serialized = str(dev.if_attributes.__dict__[attr])
+                    except Exception as e:
+                        logger.debug(f'Unable to serialize attribute {attr} from NVME')
+                        attrib_dict['value'] = None
+                        attrib_dict['raw'] = None
+                    finally:
+                        stats[-1][idx] = attrib_dict
 
     return stats
 
@@ -191,6 +197,26 @@ class SmartPlugin(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+        if 'hide_attributes' in config.as_dict()['smart']:
+            logger.info(
+                'Followings SMART attributes wil not be displayed: {}'.format(
+                    config.as_dict()['smart']['hide_attributes']
+                )
+            )
+            self.hide_attributes = config.as_dict()['smart']['hide_attributes'].split(',')
+        else:
+            self.hide_attributes = []
+
+    @property
+    def hide_attributes(self):
+        """Set hide_attributes list"""
+        return self._hide_attributes
+
+    @hide_attributes.setter
+    def hide_attributes(self, attr_list):
+        """Set hide_attributes list"""
+        self._hide_attributes = [i for i in attr_list]
+
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
@@ -203,7 +229,7 @@ class SmartPlugin(GlancesPluginModel):
 
         if self.input_method == 'local':
             # Update stats and hide some sensors(#2996)
-            stats = [s for s in get_smart_data() if self.is_display(s[self.get_key()])]
+            stats = [s for s in get_smart_data(self.hide_attributes) if self.is_display(s[self.get_key()])]
         elif self.input_method == 'snmp':
             pass
 
