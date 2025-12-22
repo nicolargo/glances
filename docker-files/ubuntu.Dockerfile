@@ -89,17 +89,21 @@ COPY docker-bin.sh /usr/local/bin/glances
 RUN chmod a+x /usr/local/bin/glances
 ENV PATH="/venv/bin:$PATH"
 
-# Copy binary and update PATH
-COPY docker-bin.sh /usr/local/bin/glances
-RUN chmod a+x /usr/local/bin/glances
-ENV PATH="/venv/bin:$PATH"
-
 # EXPOSE PORT (XMLRPC / WebUI)
 EXPOSE 61209 61208
 
+# Add glances user
+# NOTE: If used, the Glances Docker plugin do not work...
+# UID and GUID 1000 are already configured for the ubuntu user
+# Create anew one with UID and GUID 1001
+# RUN groupadd -g 1001 glances && \
+#     useradd -u 1001 -g glances glances && \
+#     chown -R glances:glances /app
+
 # Define default command.
 WORKDIR /app
-CMD ["/bin/sh", "-c", "/venv/bin/python3 -m glances ${GLANCES_OPT}"]
+ENV PYTHON_VERSION=${PYTHON_VERSION}
+CMD ["/bin/sh", "-c", "/venv/bin/python${PYTHON_VERSION} -m glances ${GLANCES_OPT}"]
 
 ################################################################################
 # RELEASE: minimal
@@ -107,6 +111,8 @@ FROM release AS minimal
 ARG PYTHON_VERSION
 
 COPY --from=buildMinimal /venv /venv
+
+# USER glances
 
 ################################################################################
 # RELEASE: full
@@ -120,6 +126,8 @@ RUN apt-get update \
 
 COPY --from=buildfull /venv /venv
 
+# USER glances
+
 ################################################################################
 # RELEASE: dev - to be compatible with CI
 FROM full AS dev
@@ -130,5 +138,8 @@ ARG PYTHON_VERSION
 COPY ./docker-files/docker-logger.json /app
 ENV LOG_CFG=/app/docker-logger.json
 
+# USER glances
+
 WORKDIR /app
-CMD ["/bin/sh", "-c", "/venv/bin/python3 -m glances ${GLANCES_OPT}"]
+ENV PYTHON_VERSION=${PYTHON_VERSION}
+CMD ["/bin/sh", "-c", "/venv/bin/python${PYTHON_VERSION} -m glances ${GLANCES_OPT}"]
