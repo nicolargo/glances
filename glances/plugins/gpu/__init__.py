@@ -15,6 +15,7 @@ Currently supported:
 """
 
 from glances.globals import to_fahrenheit
+from glances.logger import logger
 from glances.plugins.gpu.cards.amd import AmdGPU
 from glances.plugins.gpu.cards.nvidia import NvidiaGPU
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -73,11 +74,21 @@ class GpuPlugin(GlancesPluginModel):
             stats_init_value=[],
             fields_description=fields_description,
         )
-        # Init the GPU API
-        self.nvidia = NvidiaGPU()
-        self.amd = AmdGPU()
+        # Init the Nvidia GPU API
+        try:
+            self.nvidia = NvidiaGPU()
+        except Exception as e:
+            logger.debug(f'Nvidia GPU initialization error: {e}')
+            self.nvidia = None
+
+        # Init the AMD GPU API
         # Just for test purpose (uncomment to test on computer without AMD GPU)
         # self.amd = AmdGPU(drm_root_folder='./tests-data/plugins/gpu/amd/sys/class/drm')
+        try:
+            self.amd = AmdGPU()
+        except Exception as e:
+            logger.debug(f'AMD GPU initialization error: {e}')
+            self.amd = None
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -102,11 +113,13 @@ class GpuPlugin(GlancesPluginModel):
         stats = self.get_init_value()
 
         # Get the stats
-        stats.extend(self.nvidia.get_device_stats())
-        stats.extend(self.amd.get_device_stats())
+        if self.nvidia:
+            stats.extend(self.nvidia.get_device_stats())
+        if self.amd:
+            stats.extend(self.amd.get_device_stats())
 
         # !!!
-        # Uncomment to test on computer without GPU
+        # Uncomment to test on computer without Nvidia GPU
         # One GPU sample:
         # stats = [
         #     {
