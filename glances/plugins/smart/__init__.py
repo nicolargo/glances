@@ -130,18 +130,19 @@ def get_smart_data():
                 stats[-1][num] = attrib_dict
 
         if isinstance(dev.if_attributes, NvmeAttributes):
-          idx = 0
-          for attr in dev.if_attributes.__dict__.keys():
-              try:
-                  attrib_dict = convert_nvme_attribute_to_dict(attr,  dev.if_attributes.__dict__[attr])
-                  if dev.if_attributes.__dict__[attr] is not None:
-                     serialized = str(dev.if_attributes.__dict__[attr])
-              except Exception as e:
+            idx = 0
+            for attr in dev.if_attributes.__dict__.keys():
+                idx +=1
+                attrib_dict = convert_nvme_attribute_to_dict(attr,  dev.if_attributes.__dict__[attr])
+                try:
+                    if dev.if_attributes.__dict__[attr] is not None:
+                        serialized = str(dev.if_attributes.__dict__[attr])
+                except Exception as e:
                     logger.debug(f'Unable to serialize attribute {attr} from NVME')
-
-              idx +=1
-
-              stats[-1][idx] = attrib_dict
+                    attrib_dict['value'] = None
+                    attrib_dict['raw'] = None
+                finally:
+                    stats[-1][idx] = attrib_dict
 
     return stats
 
