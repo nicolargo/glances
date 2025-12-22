@@ -63,7 +63,7 @@ dev = [
 [project.optional-dependencies]
 action = ["chevron"]
 # all but not dev
-all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,raid,sensors,smart,snmp,sparklines,web,wifi]"]
+all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,mcp,raid,sensors,smart,snmp,sparklines,web,wifi]"]
 browser = ["zeroconf"]
 cloud = ["requests"]
 containers = [
@@ -94,9 +94,8 @@ export = [
 ]
 gpu = ["nvidia-ml-py"]
 graph = ["pygal"]
-ip = [
-  "netifaces2",
-]
+ip = ["netifaces2"]
+mcp = ["fastmcp>=2.14.1"]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART"]
