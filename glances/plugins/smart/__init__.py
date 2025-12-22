@@ -63,9 +63,38 @@ def convert_attribute_to_dict(attr):
         'when_failed': attr.when_failed,
     }
 
+
+NVME_ATTRIBUTE_LABELS = {
+    "criticalWarning": "Number of critical warnings",
+    "_temperature": "Temperature (°C)",
+    "availableSpare": "Available spare (%)",
+    "availableSpareThreshold": "Available spare threshold (%)",
+    "percentageUsed": "Percentage used (%)",
+    "dataUnitsRead": "Data units read",
+    "bytesRead": "Bytes read",
+    "dataUnitsWritten": "Data units written",
+    "bytesWritten": "Bytes written",
+    "hostReadCommands": "Host read commands",
+    "hostWriteCommands": "Host write commands",
+    "controllerBusyTime": "Controller busy time (min)",
+    "powerCycles": "Power cycles",
+    "powerOnHours": "Power-on hours",
+    "unsafeShutdowns": "Unsafe shutdowns",
+    "integrityErrors": "Integrity errors",
+    "errorEntries": "Error log entries",
+    "warningTemperatureTime": "Warning temperature time (min)",
+    "criticalTemperatureTime": "Critical temperature time (min)",
+    "_logical_sector_size": "Logical sector size",
+    "_physical_sector_size": "Physical sector size",
+    "errors": "Errors",
+    "tests": "Self-tests",
+}
+
 def convert_nvme_attribute_to_dict(key,value):
+    label = NVME_ATTRIBUTE_LABELS.get(key, key)
+
     return {
-        'name': key,
+        'name': label,
         'value': value,
         'flags': None,
         'raw': value,
