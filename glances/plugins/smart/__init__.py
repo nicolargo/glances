@@ -52,6 +52,7 @@ else:
 def convert_attribute_to_dict(attr):
     return {
         'name': attr.name,
+        'key': attr.name,
         'num': attr.num,
         'flags': attr.flags,
         'raw': attr.raw,
@@ -95,6 +96,7 @@ def convert_nvme_attribute_to_dict(key,value):
 
     return {
         'name': label,
+        'key': key,
         'value': value,
         'flags': None,
         'raw': value,
@@ -281,7 +283,10 @@ class SmartPlugin(GlancesPluginModel):
                 ret.append(self.curse_add_line(msg))
                 try:
                     raw = device_stat[smart_stat]['raw']
-                    msg = '{:>8}'.format("" if raw is None else str(raw))
+                    if device_stat[smart_stat]['key'] in ["bytesWritten", "bytesRead", "dataUnitsRead", "dataUnitsWritten", "hostReadCommands", "hostWriteCommands" ]:
+                        msg = '{:>8}'.format("" if raw is None else self.auto_unit(raw))
+                    else:    
+                        msg = '{:>8}'.format("" if raw is None else str(raw))
                     ret.append(self.curse_add_line(msg))
                 except Exception as e:
                     logger.debug(f"Failed to serialize {smart_stat}")
