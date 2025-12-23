@@ -81,6 +81,11 @@ class PluginModel(GlancesPluginModel):
 
         return self.views
 
+    def reset(self):
+        """Reset stats."""
+        self.stats = []
+        self._counts.clear()
+
     def update(self):
         """Update stats."""
         # Reset stats
