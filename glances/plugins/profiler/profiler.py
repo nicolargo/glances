@@ -84,7 +84,10 @@ class PluginModel(GlancesPluginModel):
     def reset(self):
         """Reset stats."""
         self.stats = []
-        self._counts.clear()
+        if hasattr(self, '_counts'):
+            self._counts.clear()
+        else:
+            self._counts = Counter()
 
     def update(self):
         """Update stats."""
