@@ -1,4 +1,3 @@
-
 """Profiler plugin."""
 
 import sys
@@ -10,6 +9,7 @@ from glances.logger import logger
 TOOL_ID = 2  # ID 0 is reserved, 1 was used in test, 2 should be safe
 # We will use PY_START to count function entries
 EVENT_ID = getattr(sys.monitoring.events, 'PY_START', None) if hasattr(sys, 'monitoring') else None
+
 
 class PluginModel(GlancesPluginModel):
     """Glances' Profiler Plugin.
@@ -41,10 +41,10 @@ class PluginModel(GlancesPluginModel):
 
             # Register callback
             sys.monitoring.register_callback(TOOL_ID, EVENT_ID, self._callback)
-            
+
             # Enable events
             sys.monitoring.set_events(TOOL_ID, EVENT_ID)
-            
+
         except ValueError as e:
             logger.error(f"Failed to register sys.monitoring tool: {e}")
             self.actions.disable()
@@ -89,31 +89,28 @@ class PluginModel(GlancesPluginModel):
             return self.stats
 
         # Get the top 10 most frequent functions
-        # We take the counter snapshot and reset it maybe? 
+        # We take the counter snapshot and reset it maybe?
         # Or just show cumulative? Let's show rate (per second/update) if possible.
         # For now, let's just show top N in the current interval.
-        
+
         # NOTE: To show rate, we would need to diff with previous.
         # But for simplicity V1, let's just show the accumulated counts since start (or allow reset).
         # Actually, showing "Hot functions right now" implying per-update interval is better.
-        
+
         # Snapshot and reset internal counter for the next interval?
         # WARNING: _callback runs in another thread/context potentially?
         # In simple Python (GIL), it is safe-ish, but let's be careful.
         # sys.monitoring callback runs synchronously.
-        
+
         # Let's copy the current state
         current_counts = self._counts.copy()
         # self._counts.clear() # If we want per-interval stats, we should clear.
-        
+
         # Sort by count desc
         top_n = current_counts.most_common(10)
-        
+
         for func_name, count in top_n:
-            stat = {
-                'function': func_name,
-                'count': count
-            }
+            stat = {'function': func_name, 'count': count}
             self.stats.append(stat)
-            
+
         return self.stats
