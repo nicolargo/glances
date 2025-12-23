@@ -2,8 +2,9 @@
 
 import sys
 from collections import Counter
-from glances.plugins.plugin.model import GlancesPluginModel
+
 from glances.logger import logger
+from glances.plugins.plugin.model import GlancesPluginModel
 
 # Constants for sys.monitoring
 TOOL_ID = 2  # ID 0 is reserved, 1 was used in test, 2 should be safe
@@ -19,7 +20,7 @@ class PluginModel(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(PluginModel, self).__init__(args=args, config=config)
+        super().__init__(args=args, config=config)
 
         # We want to display the stats in the UI
         self.args = args
@@ -55,7 +56,7 @@ class PluginModel(GlancesPluginModel):
         if self._monitoring_active and hasattr(sys, 'monitoring'):
             sys.monitoring.set_events(TOOL_ID, 0)
             sys.monitoring.free_tool_id(TOOL_ID)
-        super(PluginModel, self).exit()
+        super().exit()
 
     def _callback(self, code, instruction_offset):
         """Callback for sys.monitoring."""
