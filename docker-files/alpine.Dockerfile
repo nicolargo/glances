@@ -9,16 +9,12 @@
 # WARNING: the Alpine image version and Python version should be set.
 # Alpine 3.18 tag is a link to the latest 3.18.x version.
 # Be aware that if you change the Alpine version, you may have to change the Python version.
-ARG IMAGE_VERSION=3.22
+ARG IMAGE_VERSION=3.23
 ARG PYTHON_VERSION=3.12
 
 ##############################################################################
 # Base layer to be used for building dependencies and the release images
-# Base layer uses the Alpine Hardened image
-# https://hub.docker.com/orgs/nicolargo/hardened-images/catalog/dhi/alpine-base/guides
-# Please note that the -dev tag should be used to install via apk
-##############################################################################
-FROM dhi.io/alpine-base:${IMAGE_VERSION}-dev AS base
+FROM alpine:${IMAGE_VERSION} AS base
 
 # Upgrade the system
 RUN apk update \
