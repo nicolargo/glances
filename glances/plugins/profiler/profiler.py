@@ -38,7 +38,7 @@ class PluginModel(GlancesPluginModel):
             sys.monitoring.use_tool_id(TOOL_ID, "glances_profiler")
             logger.info(f"sys.monitoring tool ID {TOOL_ID} registered.")
             self._monitoring_active = True
-            
+
             # Register callback
             sys.monitoring.register_callback(TOOL_ID, EVENT_ID, self._callback)
             
@@ -86,7 +86,7 @@ class PluginModel(GlancesPluginModel):
         self.reset()
 
         if not self._monitoring_active:
-             return self.stats
+            return self.stats
 
         # Get the top 10 most frequent functions
         # We take the counter snapshot and reset it maybe? 
@@ -98,7 +98,7 @@ class PluginModel(GlancesPluginModel):
         # Actually, showing "Hot functions right now" implying per-update interval is better.
         
         # Snapshot and reset internal counter for the next interval?
-        # WARNING: _callback runs in another thread/context potentially? 
+        # WARNING: _callback runs in another thread/context potentially?
         # In simple Python (GIL), it is safe-ish, but let's be careful.
         # sys.monitoring callback runs synchronously.
         
