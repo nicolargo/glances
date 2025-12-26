@@ -482,7 +482,7 @@ class ProcesslistPlugin(GlancesPluginModel):
                     ret.append(self.curse_add_line(msg, decoration=process_decoration, splittable=True))
                 if arguments:
                     msg = ' ' if args.cursor_process_name_position == 0 else unicode_message('THREE_DOTS')
-                    msg += self.layout_stat['command'].format(arguments[args.cursor_process_name_position :])
+                    msg += self.layout_stat['command'].format(arguments[args.cursor_process_name_position:])
                     ret.append(self.curse_add_line(msg, splittable=True))
             else:
                 msg = self.layout_stat['name'].format(bare_process_name)
