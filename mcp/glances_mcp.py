@@ -1,348 +1,203 @@
 """
-MCP Server for Glances API
-Enables system monitoring integration with AI workflows via Glances
+Glances MCP Server using requests library with HTTP transport
 """
-
 from typing import Any
 
-import httpx
+import requests
 from mcp.server.fastmcp import FastMCP
 
 # Initialize MCP server
 mcp = FastMCP("Glances Monitor")
 
-# Glances base URL configuration
-# Can be modified via environment variable
-GLANCES_BASE_URL = "http://localhost:61208"
+# Configuration
+GLANCES_URL = "http://localhost:61208"  # Default Glances API URL
 
-
-# ===== Basic Tools =====
-
-
-@mcp.tool()
-async def check_glances_status() -> dict[str, Any]:
-    """
-    Check the Glances API status.
-    Returns a 200 status code if the API is operational.
-
-    Returns:
-        dict: API status
-    """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/status")
+def make_request(endpoint: str) -> dict[str, Any]:
+    """Make a GET request to the Glances API"""
+    url = f"{GLANCES_URL}{endpoint}"
+    try:
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
-        return {"status": "healthy", "status_code": response.status_code}
 
+        # Handle empty responses (204 No Content, etc.)
+        if response.status_code == 204 or not response.content:
+            return {"status": "success", "message": "No content"}
 
-@mcp.tool()
-async def get_plugins_list() -> list[str]:
-    """
-    Retrieve the list of all available plugins in Glances.
-    Plugins represent different types of available system data
-    (cpu, memory, disk, network, processes, etc.).
-
-    Returns:
-        list[str]: List of available plugin names
-    """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/pluginslist")
-        response.raise_for_status()
         return response.json()
-
-
-@mcp.tool()
-async def get_all_system_stats() -> dict[str, Any]:
-    """
-    Retrieve all system statistics from all plugins.
-    Warning: may return a large amount of data.
-
-    Returns:
-        dict: Dictionary containing all stats from all plugins
-    """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/all")
-        response.raise_for_status()
-        return response.json()
-
-
-# ===== Plugin Tools =====
-
+    except requests.exceptions.JSONDecodeError as e:
+        return {"error": f"JSON decode error: {str(e)}", "content": response.text[:200]}
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}
 
 @mcp.tool()
-async def get_plugin_data(plugin_name: str) -> dict[str, Any]:
+def get_status() -> dict[str, Any]:
+    """Check Glances API health status"""
+    return make_request("/api/4/status")
+
+@mcp.tool()
+def get_all_stats() -> dict[str, Any]:
+    """Get all system statistics from all plugins"""
+    return make_request("/api/4/all")
+
+@mcp.tool()
+def get_plugins_list() -> list[str]:
+    """Get list of available Glances plugins"""
+    result = make_request("/api/4/pluginslist")
+    if isinstance(result, list):
+        return result
+    return []
+
+@mcp.tool()
+def get_plugin_data(plugin: str) -> dict[str, Any]:
     """
-    Retrieve data from a specific plugin.
+    Get data from a specific plugin
 
     Args:
-        plugin_name: Plugin name (e.g., 'cpu', 'mem', 'disk', 'network', 'sensors')
-
-    Returns:
-        dict: Requested plugin data
-
-    Examples:
-        - plugin_name='cpu' : CPU statistics
-        - plugin_name='mem' : memory usage
-        - plugin_name='disk' : disk usage
-        - plugin_name='network' : network statistics
+        plugin: Name of the plugin (e.g., cpu, mem, disk, network)
     """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/{plugin_name}")
-        response.raise_for_status()
-        return response.json()
-
+    return make_request(f"/api/4/{plugin}")
 
 @mcp.tool()
-async def get_plugin_history(plugin_name: str, nb_items: int = 10) -> dict[str, Any]:
+def get_plugin_history(plugin: str, nb: int = 10) -> dict[str, Any]:
     """
-    Retrieve the history of data from a plugin.
+    Get historical data for a plugin
 
     Args:
-        plugin_name: Plugin name
-        nb_items: Number of historical items to retrieve (0 = all)
-
-    Returns:
-        dict: Plugin data history
+        plugin: Name of the plugin
+        nb: Number of historical items to retrieve (0 for all)
     """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/{plugin_name}/history/{nb_items}")
-        response.raise_for_status()
-        return response.json()
-
+    return make_request(f"/api/4/{plugin}/history/{nb}")
 
 @mcp.tool()
-async def get_plugin_limits(plugin_name: str) -> dict[str, Any]:
+def get_plugin_limits(plugin: str) -> dict[str, Any]:
     """
-    Retrieve the configured limits for a plugin.
-    Limits define alert thresholds (warning, critical).
+    Get limits configured for a plugin
 
     Args:
-        plugin_name: Plugin name
-
-    Returns:
-        dict: Configured limits for the plugin
+        plugin: Name of the plugin
     """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/{plugin_name}/limits")
-        response.raise_for_status()
-        return response.json()
-
+    return make_request(f"/api/4/{plugin}/limits")
 
 @mcp.tool()
-async def get_plugin_item(plugin_name: str, item_name: str) -> Any:
+def get_cpu_stats() -> dict[str, Any]:
+    """Get CPU statistics"""
+    return make_request("/api/4/cpu")
+
+@mcp.tool()
+def get_memory_stats() -> dict[str, Any]:
+    """Get memory statistics"""
+    return make_request("/api/4/mem")
+
+@mcp.tool()
+def get_disk_stats() -> dict[str, Any]:
+    """Get disk I/O statistics"""
+    return make_request("/api/4/diskio")
+
+@mcp.tool()
+def get_network_stats() -> dict[str, Any]:
+    """Get network statistics"""
+    return make_request("/api/4/network")
+
+@mcp.tool()
+def get_processes(top: int | None = None) -> dict[str, Any]:
     """
-    Retrieve a specific value from a plugin.
+    Get process list
 
     Args:
-        plugin_name: Plugin name
-        item_name: Item name to retrieve
-
-    Returns:
-        Any: Value of the requested item
-
-    Examples:
-        - plugin_name='cpu', item_name='total' : total CPU usage
-        - plugin_name='mem', item_name='percent' : memory usage percentage
+        top: Limit to top N processes by resource usage
     """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/{plugin_name}/{item_name}")
-        response.raise_for_status()
-        return response.json()
-
-
-# ===== Process Tools =====
-
+    if top:
+        return make_request(f"/api/4/processlist/top/{top}")
+    return make_request("/api/4/processlist")
 
 @mcp.tool()
-async def get_process_info(pid: int) -> dict[str, Any]:
+def get_process_by_pid(pid: str) -> dict[str, Any]:
     """
-    Retrieve detailed information about a specific process.
+    Get process information by PID
 
     Args:
-        pid: Process ID (PID)
-
-    Returns:
-        dict: Detailed information about the process
+        pid: Process ID
     """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/processes/{pid}")
-        response.raise_for_status()
-        return response.json()
-
+    return make_request(f"/api/4/processes/{pid}")
 
 @mcp.tool()
-async def get_top_processes(nb_processes: int = 10) -> list[dict[str, Any]]:
-    """
-    Retrieve the N most resource-intensive processes.
-
-    Args:
-        nb_processes: Number of processes to retrieve
-
-    Returns:
-        list[dict]: List of the most active processes
-    """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/processlist/top/{nb_processes}")
-        response.raise_for_status()
-        return response.json()
-
+def get_system_info() -> dict[str, Any]:
+    """Get system information"""
+    return make_request("/api/4/system")
 
 @mcp.tool()
-async def get_extended_processes() -> dict[str, Any]:
-    """
-    Retrieve extended process statistics (if configured).
-
-    Returns:
-        dict: Extended process statistics
-    """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/processes/extended")
-        response.raise_for_status()
-        return response.json()
-
-
-# ===== Configuration Tools =====
-
+def get_sensors() -> dict[str, Any]:
+    """Get sensor readings (temperature, fans)"""
+    return make_request("/api/4/sensors")
 
 @mcp.tool()
-async def get_glances_config() -> dict[str, Any]:
-    """
-    Retrieve the complete Glances configuration.
-
-    Returns:
-        dict: Glances configuration
-    """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/config")
-        response.raise_for_status()
-        return response.json()
-
+def get_docker_stats() -> dict[str, Any]:
+    """Get Docker container statistics"""
+    return make_request("/api/4/docker")
 
 @mcp.tool()
-async def get_config_section(section_name: str) -> dict[str, Any]:
-    """
-    Retrieve a specific configuration section.
+def get_config() -> dict[str, Any]:
+    """Get Glances configuration"""
+    return make_request("/api/4/config")
 
-    Args:
-        section_name: Configuration section name
+@mcp.resource("glances://stats")
+def get_system_stats() -> str:
+    """Get a formatted summary of system statistics"""
+    stats = make_request("/api/4/all")
 
-    Returns:
-        dict: Content of the requested section
-    """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/config/{section_name}")
-        response.raise_for_status()
-        return response.json()
+    if "error" in stats:
+        return f"Error fetching stats: {stats['error']}"
 
+    summary = "=== Glances System Statistics ===\n\n"
 
-@mcp.tool()
-async def get_command_args() -> dict[str, Any]:
-    """
-    Retrieve Glances command-line arguments.
+    # CPU
+    if "cpu" in stats:
+        cpu = stats["cpu"]
+        summary += f"CPU: {cpu.get('total', 0):.1f}% \
+            (User: {cpu.get('user', 0):.1f}%, System: {cpu.get('system', 0):.1f}%)\n"
 
-    Returns:
-        dict: Command-line arguments used
-    """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{GLANCES_BASE_URL}/api/4/args")
-        response.raise_for_status()
-        return response.json()
+    # Memory
+    if "mem" in stats:
+        mem = stats["mem"]
+        total_gb = mem.get("total", 0) / (1024**3)
+        used_gb = mem.get("used", 0) / (1024**3)
+        summary += f"Memory: {mem.get('percent', 0):.1f}% ({used_gb:.1f}GB / {total_gb:.1f}GB)\n"
 
+    # Load
+    if "load" in stats:
+        load = stats["load"]
+        summary += f"Load Average: {load.get('min1', 0):.2f}, {load.get('min5', 0):.2f}, {load.get('min15', 0):.2f}\n"
 
-# ===== Administration Tools =====
+    return summary
 
+@mcp.prompt()
+def analyze_system_performance() -> str:
+    """Generate a prompt to analyze system performance"""
+    return """Please analyze the current system performance by:
+1. Checking CPU usage and identifying any bottlenecks
+2. Reviewing memory utilization
+3. Examining disk I/O statistics
+4. Looking at network traffic
+5. Identifying top resource-consuming processes
+6. Providing recommendations for optimization if needed"""
 
-@mcp.tool()
-async def clear_warning_events() -> dict[str, str]:
-    """
-    Clear all warning-type events.
-
-    Returns:
-        dict: Operation confirmation
-    """
-    async with httpx.AsyncClient() as client:
-        response = await client.post(f"{GLANCES_BASE_URL}/api/4/events/clear/warning")
-        response.raise_for_status()
-        return {"status": "success", "message": "Warning events cleared"}
-
-
-@mcp.tool()
-async def clear_all_events() -> dict[str, str]:
-    """
-    Clear all events.
-
-    Returns:
-        dict: Operation confirmation
-    """
-    async with httpx.AsyncClient() as client:
-        response = await client.post(f"{GLANCES_BASE_URL}/api/4/events/clear/all")
-        response.raise_for_status()
-        return {"status": "success", "message": "All events cleared"}
-
-
-# ===== Specific Tools for Common Metrics =====
-
-
-@mcp.tool()
-async def get_cpu_usage() -> dict[str, Any]:
-    """
-    Shortcut to get CPU usage.
-
-    Returns:
-        dict: Detailed CPU statistics
-    """
-    return await get_plugin_data("cpu")
-
-
-@mcp.tool()
-async def get_memory_usage() -> dict[str, Any]:
-    """
-    Shortcut to get memory usage.
-
-    Returns:
-        dict: Detailed memory statistics
-    """
-    return await get_plugin_data("mem")
-
-
-@mcp.tool()
-async def get_disk_usage() -> dict[str, Any]:
-    """
-    Shortcut to get disk usage.
-
-    Returns:
-        dict: Detailed disk statistics
-    """
-    return await get_plugin_data("fs")
-
-
-@mcp.tool()
-async def get_network_stats() -> dict[str, Any]:
-    """
-    Shortcut to get network statistics.
-
-    Returns:
-        dict: Detailed network statistics
-    """
-    return await get_plugin_data("network")
-
-
-@mcp.tool()
-async def get_system_sensors() -> dict[str, Any]:
-    """
-    Retrieve system sensor data (temperature, fans).
-
-    Returns:
-        dict: System sensor data
-    """
-    return await get_plugin_data("sensors")
-
-
-# ===== Entry Point =====
+# For HTTP transport - create the ASGI app
+# Note: The MCP endpoint will be at /mcp by default
+app = mcp.streamable_http_app()
 
 if __name__ == "__main__":
-    # The MCP server can be started with:
-    # python glances_mcp.py
-    # or configured in claude_desktop_config.json
-    mcp.run()
+    # Run with stdio transport by default
+    # For HTTP, run with: uvicorn glances_mcp:app --host 0.0.0.0 --port 8000
+    # Then connect MCP clients to: http://localhost:8000/mcp
+    # Or use: python glances_mcp.py --http
+    import sys
+    if "--http" in sys.argv:
+        import uvicorn
+        print("Starting Glances MCP Server on http://0.0.0.0:8000")
+        print("MCP endpoint available at: http://0.0.0.0:8000/mcp")
+        uvicorn.run(app, host="0.0.0.0", port=8000)
+    else:
+        mcp.run()
 
-# End of mcp/glances_mcp.py
+# End of glances_mcp.py
+# End of glances_mcp.py
