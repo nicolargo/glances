@@ -12,7 +12,7 @@ TOOL_ID = 2  # ID 0 is reserved, 1 was used in test, 2 should be safe
 EVENT_ID = getattr(sys.monitoring.events, 'PY_START', None) if hasattr(sys, 'monitoring') else None
 
 
-class PluginModel(GlancesPluginModel):
+class ProfilerPlugin(GlancesPluginModel):
     """Glances' Profiler Plugin.
 
     stats is a list of dict (function name, count)
@@ -37,8 +37,6 @@ class PluginModel(GlancesPluginModel):
 
         try:
             sys.monitoring.use_tool_id(TOOL_ID, "glances_profiler")
-            logger.info(f"sys.monitoring tool ID {TOOL_ID} registered.")
-            self._monitoring_active = True
 
             # Register callback
             sys.monitoring.register_callback(TOOL_ID, EVENT_ID, self._callback)
@@ -46,9 +44,12 @@ class PluginModel(GlancesPluginModel):
             # Enable events
             sys.monitoring.set_events(TOOL_ID, EVENT_ID)
 
+            logger.info(f"sys.monitoring tool ID {TOOL_ID} registered.")
+            self._monitoring_active = True
         except ValueError as e:
-            logger.error(f"Failed to register sys.monitoring tool: {e}")
             self.actions.disable()
+
+            logger.error(f"Failed to register sys.monitoring tool: {e}")
             self._monitoring_active = False
 
     def exit(self):
