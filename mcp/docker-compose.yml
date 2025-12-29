@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Ollama - Local LLM Runtime
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    # Uncomment below for Intel GPU support (requires Intel GPU drivers on host)
+    # devices:
+    #   - /dev/dri:/dev/dri
+    # environment:
+    #   - OLLAMA_GPU_DRIVER=intel
+
+  # Open WebUI - Web Interface for Ollama
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    ports:
+      - "3000:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=your-secret-key-change-this
+    volumes:
+      - open_webui_data:/app/backend/data
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Glances - System Monitoring (with API enabled)
+  glances:
+    image: nicolargo/glances:latest
+    container_name: glances
+    ports:
+      - "61208:61208"
+    environment:
+      - GLANCES_OPT=-w
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/os-release:/etc/os-release:ro
+    pid: host
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  open_webui_data:
