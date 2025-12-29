@@ -10,7 +10,6 @@ classifiers = [
   "Intended Audience :: System Administrators",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -24,6 +23,9 @@ dependencies = [
   "windows-curses; platform_system == 'Windows'",
   "shtab; platform_system != 'Windows'",
   "jinja2",
+  "mcpo>=0.0.19",
+  "mcp>=1.25.0",
+  "fastmcp>=2.14.1",
 ]
 description = "A cross-platform curses-based monitoring tool"
 dynamic = ["version"]
@@ -31,7 +33,7 @@ keywords = ["cli", "curses", "monitoring", "system"]
 license = "LGPL-3.0-only"
 name = "Glances"
 readme = "README-pypi.rst"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 urls.Homepage = "https://github.com/nicolargo/glances"
 
 [dependency-groups]

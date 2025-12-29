@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "glances": {
+      "command": "python3",
+      "args": ["glances_mcp.py"],
+      "env": {
+        "GLANCES_API_URL": "http://localhost:61208/api/4"
+      }
+    }
+  }
+}

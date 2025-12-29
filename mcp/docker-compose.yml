@@ -11,10 +11,10 @@ services:
       - ollama_data:/root/.ollama
     restart: unless-stopped
     # Uncomment below for Intel GPU support (requires Intel GPU drivers on host)
-    # devices:
-    #   - /dev/dri:/dev/dri
-    # environment:
-    #   - OLLAMA_GPU_DRIVER=intel
+    devices:
+      - /dev/dri:/dev/dri
+    environment:
+      - OLLAMA_GPU_DRIVER=intel
 
   # Open WebUI - Web Interface for Ollama
   open-webui:

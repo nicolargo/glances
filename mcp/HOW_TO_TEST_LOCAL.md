@@ -14,7 +14,7 @@ sudo usermod -aG docker $USER
 
 ### 1. Start the Services
 
-Warning: you should use docker-compose v2. If you have v1 installed, please uninstall it first.
+Warning: you should use docker compose v2. If you have v1 installed, please uninstall it first.
 
 ```bash
 # Save the docker-compose.yml file and run:
@@ -65,25 +65,92 @@ curl http://localhost:61208/api/4/all
 
 ### 5. Configure MCP Server Connection
 
-In Open WebUI, you'll need to configure the MCP server. Here's how to test if your Glances MCP server can access the API:
+Install mcpo:
 
-**Example MCP Configuration** (adjust based on your MCP implementation):
+```bash
+uv add mcpo
+```
 
-```json
+Create MCPO configuration file:
+
+```bash
+cd /home/nicolargo/dev/glances/mcp
+
+# Create configuration
+cat > mcp_config.json << 'EOF'
 {
   "mcpServers": {
     "glances": {
-      "command": "node",
-      "args": ["/path/to/your/glances-mcp-server/index.js"],
+      "command": "python3",
+      "args": ["glances_mcp.py"],
       "env": {
-        "GLANCES_API_URL": "http://host.docker.internal:61208/api/4"
+        "GLANCES_API_URL": "http://localhost:61208/api/4"
       }
     }
   }
 }
+EOF
 ```
 
-**Note**: Use `host.docker.internal` to access services on your host machine from within Docker containers.
+Run MCPO proxy:
+
+```bash
+../.venv-uv/bin/uv run mcpo --port 8000 --config mcp_config.json
+Starting MCP OpenAPI Proxy with config file: mcp_config.json
+2025-12-29 09:38:29,310 - INFO - Starting MCPO Server...
+2025-12-29 09:38:29,310 - INFO -   Name: MCP OpenAPI Proxy
+2025-12-29 09:38:29,310 - INFO -   Version: 1.0
+2025-12-29 09:38:29,310 - INFO -   Description: Automatically generated API from MCP Tool Schemas
+2025-12-29 09:38:29,310 - INFO -   Hostname: nicolargo-xps15
+2025-12-29 09:38:29,310 - INFO -   Port: 8000
+2025-12-29 09:38:29,310 - INFO -   API Key: Not Provided
+2025-12-29 09:38:29,310 - INFO -   CORS Allowed Origins: ['*']
+2025-12-29 09:38:29,310 - INFO -   Path Prefix: /
+2025-12-29 09:38:29,310 - INFO -   Root Path:
+2025-12-29 09:38:29,311 - INFO - Loading MCP server configurations from: mcp_config.json
+2025-12-29 09:38:29,311 - INFO - Configuring MCP Servers:
+2025-12-29 09:38:29,311 - INFO - Uvicorn server starting...
+INFO:     Started server process [167852]
+INFO:     Waiting for application startup.
+2025-12-29 09:38:29,324 - INFO - Initiating connection for server: 'glances'...
+2025-12-29 09:38:29,800 - INFO - Successfully connected to 'glances'.
+2025-12-29 09:38:29,800 - INFO - --------------------------
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+```
+
+Check:
+
+```bash
+curl http://localhost:8000/glances/openapi.json
+```
+
+And configure Open WebUI to use MCP server at `http://host.docker.internal:8000/glances`.
+
+Open Open WebUI: Go to `http://localhost:3000`
+Open Settings:
+
+Click your profile icon (top right)
+Select "Settings"
+
+Add Tool Server:
+
+Navigate to "Tools" section in the left sidebar
+Click the "+" button to add a new tool server
+
+Configure the Connection:
+
+    Server URL: `http://172.17.0.1:8000/glances`
+    API Key: Leave blank (unless you configured one)
+
+Enable the Tool:
+
+The Glances tools should now appear in your tools list
+
+In the conversation interface, click the "Tools" button (usually represented by a toolbox icon) and enable the Glances tool.
+
+Test a prompt like: "What is the current CPU usage on my system ?"
 
 ## Intel GPU Acceleration (Optional)
 
@@ -114,8 +181,8 @@ environment:
 Then restart:
 
 ```bash
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 ```
 
 ## Testing Your MCP Server
@@ -143,18 +210,18 @@ curl http://localhost:61208/api/4/cpu
 
 ```bash
 # View logs
-docker-compose logs -f ollama
-docker-compose logs -f open-webui
-docker-compose logs -f glances
+docker compose logs -f ollama
+docker compose logs -f open-webui
+docker compose logs -f glances
 
 # Restart services
-docker-compose restart
+docker compose restart
 
 # Stop all services
-docker-compose down
+docker compose down
 
 # Stop and remove volumes (clean start)
-docker-compose down -v
+docker compose down -v
 
 # Check Ollama models
 docker exec -it ollama ollama list
@@ -167,7 +234,7 @@ docker stats
 
 ### Ollama not responding
 ```bash
-docker-compose restart ollama
+docker compose restart ollama
 docker exec -it ollama ollama list
 ```
 
@@ -177,7 +244,7 @@ docker exec -it ollama ollama list
 curl http://localhost:61208/api/4/status
 
 # View Glances logs
-docker-compose logs glances
+docker compose logs glances
 ```
 
 ### Low memory issues
@@ -186,11 +253,11 @@ docker-compose logs glances
 docker exec -it ollama ollama pull llama3.2:1b
 
 # Or configure Ollama to use less memory
-docker-compose down
+docker compose down
 # Add to ollama service environment:
 # - OLLAMA_MAX_LOADED_MODELS=1
 # - OLLAMA_NUM_PARALLEL=1
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Recommended Models for Your Hardware
