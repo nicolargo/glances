@@ -36,6 +36,7 @@ This section describes the available exporters and how to configure them:
    kafka
    mqtt
    mongodb
+   nats
    opentsdb
    prometheus
    rabbitmq

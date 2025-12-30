@@ -38,6 +38,6 @@ docker exec timescaledb-for-glances psql -d "postgres://postgres:password@localh
 
 # Stop and remove the TimescaleDB container
 echo "Stopping and removing TimescaleDB container..."
-# docker stop timescaledb-for-glances && docker rm timescaledb-for-glances
+docker stop timescaledb-for-glances && docker rm timescaledb-for-glances
 
 echo "Script completed successfully!"
