@@ -83,6 +83,7 @@ export = [
   "influxdb>=1.0.0",
   "influxdb3-python",
   "kafka-python",
+  "nats-py",
   "paho-mqtt",
   "pika",
   "potsdb",
