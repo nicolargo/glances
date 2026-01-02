@@ -4,6 +4,9 @@ import nats
 
 
 async def main():
+    duration = 30
+    subject = "glances.*"
+
     nc = nats.NATS()
 
     await nc.connect(servers=["nats://localhost:4222"])
@@ -11,15 +14,16 @@ async def main():
     future = asyncio.Future()
 
     async def cb(msg):
-        nonlocal future
-        future.set_result(msg)
+        subject = msg.subject
+        reply = msg.reply
+        data = msg.data.decode()
+        print(f"Received a message on '{subject} {reply}': {data}")
 
-    await nc.subscribe("glances.*", cb=cb)
+    print(f"Receiving message from {subject} during {duration} seconds...")
+    await nc.subscribe(subject, cb=cb)
+    await asyncio.wait_for(future, duration)
 
-    # Wait for message to come in
-    print("Waiting (max 30s) for a message on 'glances' subject...")
-    msg = await asyncio.wait_for(future, 30)
-    print(msg.subject, msg.data)
+    await nc.close()
 
 if __name__ == '__main__':
     asyncio.run(main())

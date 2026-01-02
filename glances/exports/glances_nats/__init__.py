@@ -1,4 +1,13 @@
+#
+# This file is part of Glances.
+#
+# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+#
+
 """NATS interface class."""
+
 import asyncio
 import threading
 import time
@@ -29,9 +38,8 @@ class Export(GlancesExport):
             exit('Missing NATS config')
 
         self.prefix = self.prefix or 'glances'
+        # Host is a comma-separated list of NATS servers
         self.hosts = self.host
-
-        logger.info(f"Initializing NATS export with prefix '{self.prefix}' to {self.hosts}")
 
         # Create a persistent event loop in a background thread
         self.loop = None
@@ -61,7 +69,7 @@ class Export(GlancesExport):
             future.result(timeout=10)
             logger.info("NATS export initialized successfully")
         except Exception as e:
-            logger.warning(f"Initial NATS connection failed: {e}. Will retry in background.")
+            logger.warning(f"NATS Initial connection failed: {e}. Will retry in background.")
 
     def _run_event_loop(self):
         """Run event loop in background thread."""
@@ -69,21 +77,18 @@ class Export(GlancesExport):
             self.loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.loop)
             self._loop_ready.set()
-            logger.info("NATS event loop started")
             self.loop.run_forever()
         except Exception as e:
             self._loop_exception = e
             self._loop_ready.set()
-            logger.error(f"Event loop thread error: {e}")
+            logger.error(f"NATS Export Event loop thread error: {e}")
         finally:
-            # Clean up any pending tasks
             pending = asyncio.all_tasks(self.loop)
             for task in pending:
                 task.cancel()
             if pending:
                 self.loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
             self.loop.close()
-            logger.info("NATS event loop stopped")
 
     async def _connect(self):
         """Connect to NATS with error handling."""
@@ -92,11 +97,11 @@ class Export(GlancesExport):
                 try:
                     await self.client.close()
                 except Exception as e:
-                    logger.debug(f"Error closing existing NATS client: {e}")
+                    logger.debug(f"NATS Error closing existing client: {e}")
 
             self.client = NATS()
 
-            logger.info(f"Connecting to NATS servers: {self.hosts}")
+            logger.debug(f"NATS Connecting to servers: {self.hosts}")
 
             # Configure with reconnection callbacks
             await self.client.connect(
@@ -109,7 +114,7 @@ class Export(GlancesExport):
             )
 
             self._connected = True
-            logger.info(f"Successfully connected to NATS: {self.hosts}")
+            logger.debug(f"NATS Successfully connected to servers: {self.hosts}")
         except Exception as e:
             self._connected = False
             logger.error(f"NATS connection error: {e}")
@@ -122,12 +127,12 @@ class Export(GlancesExport):
     async def _disconnected_callback(self):
         """Called when disconnected from NATS."""
         self._connected = False
-        logger.warning("NATS disconnected callback")
+        logger.debug("NATS disconnected callback")
 
     async def _reconnected_callback(self):
         """Called when reconnected to NATS."""
         self._connected = True
-        logger.info("NATS reconnected callback")
+        logger.debug("NATS reconnected callback")
 
     def exit(self):
         """Close the NATS connection."""
@@ -140,13 +145,13 @@ class Export(GlancesExport):
             try:
                 future.result(timeout=5)
             except Exception as e:
-                logger.error(f"Error disconnecting from NATS: {e}")
+                logger.error(f"NATS Error disconnecting from server: {e}")
 
         if self.loop:
             self.loop.call_soon_threadsafe(self.loop.stop)
             time.sleep(0.5)
 
-        logger.info(f"NATS export shutdown complete. Total messages published: {self._publish_count}")
+        logger.debug(f"NATS export shutdown complete. Total messages published: {self._publish_count}")
 
     async def _disconnect(self):
         """Disconnect from NATS."""
@@ -155,16 +160,14 @@ class Export(GlancesExport):
                 await self.client.drain()
                 await self.client.close()
                 self._connected = False
-                logger.info("NATS disconnected cleanly")
+                logger.debug("NATS disconnected cleanly")
         except Exception as e:
-            logger.error(f"Error in disconnect: {e}")
+            logger.error(f"NATS Error in disconnect: {e}")
 
     def export(self, name, columns, points):
         """Write the points in NATS."""
-        logger.info(f"Export called: name={name}, columns={columns}, connected={self._connected}")
-
         if self._shutdown:
-            logger.warning("Export called during shutdown, skipping")
+            logger.debug("NATS Export called during shutdown, skipping")
             return
 
         if not self.loop or not self.loop.is_running():
@@ -178,8 +181,6 @@ class Export(GlancesExport):
         subject_name = f"{self.prefix}.{name}"
         subject_data = dict(zip(columns, points))
 
-        logger.info(f"Publishing to subject: {subject_name}")
-
         # Submit the publish operation to the background event loop
         try:
             future = asyncio.run_coroutine_threadsafe(
@@ -189,7 +190,6 @@ class Export(GlancesExport):
             # Don't block forever - use a short timeout
             future.result(timeout=1)
             self._publish_count += 1
-            logger.info(f"Successfully published message #{self._publish_count} to {subject_name}")
         except asyncio.TimeoutError:
             logger.warning(f"NATS publish timeout for {subject_name}")
         except Exception as e:
@@ -198,24 +198,16 @@ class Export(GlancesExport):
     async def _publish(self, subject, data):
         """Publish data to NATS."""
         try:
-            logger.info(f"_publish called: subject={subject}, data_length={len(data)}")
-
             if not self._connected:
-                raise ConnectionClosedError("Not connected to NATS")
-
-            logger.info(f"Calling client.publish for {subject}")
+                raise ConnectionClosedError("NATS Not connected to server")
             await self.client.publish(subject, data)
-
-            logger.info(f"Calling client.flush for {subject}")
             await asyncio.wait_for(self.client.flush(), timeout=2.0)
-
-            logger.info(f"Successfully published and flushed to '{subject}'")
         except (ConnectionClosedError, NatsTimeoutError) as e:
             self._connected = False
             logger.error(f"NATS publish failed: {e}")
             raise
         except Exception as e:
-            logger.error(f"Unexpected error in _publish: {e}", exc_info=True)
+            logger.error(f"NATS Unexpected error in _publish: {e}", exc_info=True)
             raise
 
 # End of glances/exports/glances_nats/__init__.py
