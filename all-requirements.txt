@@ -40,23 +40,17 @@ cryptography==46.0.3
     # via pysnmpcrypto
 defusedxml==0.7.1
     # via glances
-dnspython==2.7.0 ; python_full_version < '3.10'
-    # via pymongo
-dnspython==2.8.0 ; python_full_version >= '3.10'
+dnspython==2.8.0
     # via pymongo
 docker==7.1.0
     # via glances
-elastic-transport==9.1.0 ; python_full_version < '3.10'
+elastic-transport==9.2.1
     # via elasticsearch
-elastic-transport==9.2.0 ; python_full_version >= '3.10'
-    # via elasticsearch
-elasticsearch==9.1.2 ; python_full_version < '3.10'
-    # via glances
-elasticsearch==9.2.0 ; python_full_version >= '3.10'
+elasticsearch==9.2.1
     # via glances
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.125.0
+fastapi==0.128.0
     # via glances
 geomet==1.1.0
     # via cassandra-driver
@@ -68,9 +62,7 @@ humanfriendly==10.0
     # via pysmart
 ibm-cloud-sdk-core==3.24.2
     # via ibmcloudant
-ibmcloudant==0.11.0 ; python_full_version < '3.10'
-    # via glances
-ibmcloudant==0.11.2 ; python_full_version >= '3.10'
+ibmcloudant==0.11.2
     # via glances
 idna==3.11
     # via
@@ -78,9 +70,7 @@ idna==3.11
     #   requests
 ifaddr==0.2.0
     # via zeroconf
-importlib-metadata==7.1.0 ; python_full_version < '3.10'
-    # via pygal
-importlib-metadata==8.7.0 ; python_full_version >= '3.10'
+importlib-metadata==8.7.1
     # via pygal
 influxdb==5.3.2
     # via glances
@@ -98,6 +88,8 @@ markupsafe==3.0.3
     # via jinja2
 msgpack==1.1.2
     # via influxdb
+nats-py==2.12.0
+    # via glances
 netifaces2==0.0.22
     # via glances
 nvidia-ml-py==13.590.44
@@ -118,23 +110,15 @@ potsdb==1.0.3
     # via glances
 prometheus-client==0.23.1
     # via glances
-protobuf==4.25.8 ; python_full_version < '3.10'
+protobuf==6.33.2
     # via bernhard
-protobuf==6.33.2 ; python_full_version >= '3.10'
-    # via bernhard
-psutil==7.1.3
+psutil==7.2.1
     # via glances
-psycopg==3.2.13 ; python_full_version < '3.10'
+psycopg==3.3.2
     # via glances
-psycopg==3.3.2 ; python_full_version >= '3.10'
-    # via glances
-psycopg-binary==3.2.13 ; python_full_version < '3.10' and implementation_name != 'pypy'
+psycopg-binary==3.3.2 ; implementation_name != 'pypy'
     # via psycopg
-psycopg-binary==3.3.2 ; python_full_version >= '3.10' and implementation_name != 'pypy'
-    # via psycopg
-pyarrow==21.0.0 ; python_full_version < '3.10'
-    # via influxdb3-python
-pyarrow==22.0.0 ; python_full_version >= '3.10'
+pyarrow==22.0.0
     # via influxdb3-python
 pyasn1==0.6.1
     # via pysnmp-lextudio
@@ -203,21 +187,17 @@ six==1.17.0
     #   glances
     #   influxdb
     #   python-dateutil
-sniffio==1.3.1 ; python_full_version >= '3.10'
+sniffio==1.3.1
     # via
     #   elastic-transport
     #   elasticsearch
 sparklines==0.7.0
     # via glances
-starlette==0.49.3 ; python_full_version < '3.10'
-    # via fastapi
-starlette==0.50.0 ; python_full_version >= '3.10'
+starlette==0.50.0
     # via fastapi
 statsd==4.0.1
     # via glances
-termcolor==3.1.0 ; python_full_version < '3.10'
-    # via sparklines
-termcolor==3.2.0 ; python_full_version >= '3.10'
+termcolor==3.3.0
     # via sparklines
 tomli==2.0.2 ; python_full_version < '3.11'
     # via podman
@@ -247,7 +227,7 @@ urllib3==2.6.2
     #   influxdb3-python
     #   podman
     #   requests
-uvicorn==0.38.0
+uvicorn==0.40.0
     # via glances
 wifi==0.3.8
     # via glances
