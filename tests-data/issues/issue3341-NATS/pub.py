@@ -11,6 +11,7 @@ async def main():
     await nc.publish("glances.test", b'A test')
     await nc.flush()
 
+
 if __name__ == '__main__':
     asyncio.run(main())
 

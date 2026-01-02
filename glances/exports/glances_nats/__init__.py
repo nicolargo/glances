@@ -130,4 +130,5 @@ class Export(GlancesExportAsyncio):
             logger.error(f"NATS Unexpected error publishing {subject_name}: {e}", exc_info=True)
             raise
 
+
 # End of glances/exports/glances_nats/__init__.py
