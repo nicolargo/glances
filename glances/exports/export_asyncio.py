@@ -156,10 +156,7 @@ class GlancesExportAsyncio(GlancesExport):
 
         # Submit the export operation to the background event loop
         try:
-            future = asyncio.run_coroutine_threadsafe(
-                self._async_export(name, columns, points),
-                self.loop
-            )
+            future = asyncio.run_coroutine_threadsafe(self._async_export(name, columns, points), self.loop)
             # Don't block forever - use a short timeout
             future.result(timeout=1)
         except asyncio.TimeoutError:
