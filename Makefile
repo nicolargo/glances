@@ -134,7 +134,10 @@ test-export-influxdb-v3: ## Run interface tests with InfluxDB version 3 (Core)
 test-export-timescaledb: ## Run interface tests with TimescaleDB
 	/bin/bash ./tests/test_export_timescaledb.sh
 
-test-exports: test-export-csv test-export-json test-export-influxdb-v1 test-export-influxdb-v3 test-export-timescaledb ## Tests all exports
+test-export-nats: ## Run interface tests with NATS
+	/bin/bash ./tests/test_export_nats.sh
+
+test-exports: test-export-csv test-export-json test-export-influxdb-v1 test-export-influxdb-v3 test-export-timescaledb test-export-nats ## Tests all exports
 
 # ===================================================================
 # Linters, profilers and cyber security

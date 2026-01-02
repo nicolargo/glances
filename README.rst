@@ -242,7 +242,7 @@ Glances can export stats to:
 
 - files: ``CSV`` and ``JSON``
 - databases:  ``InfluxDB``, ``ElasticSearch``, ``PostgreSQL/TimeScale``, ``Cassandra``, ``CouchDB``, ``OpenTSDB``, ``Prometheus``, ``StatsD``, ``Riemann`` and ``Graphite``
-- brokers: ``RabbitMQ/ActiveMQ``, ``ZeroMQ`` and ``Kafka``
+- brokers: ``RabbitMQ/ActiveMQ``, ``NATS``, ``ZeroMQ`` and ``Kafka``
 - others: ``RESTful`` endpoint
 
 Installation 🚀
@@ -574,6 +574,7 @@ Extra dependencies:
 - ``influxdb`` (for the InfluxDB version 1 export module)
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
 - ``kafka-python`` (for the Kafka export module)
+- ``nats-py`` (for the NATS export module)
 - ``netifaces2`` (for the IP plugin)
 - ``nvidia-ml-py`` (for the GPU plugin)
 - ``pycouchdb`` (for the CouchDB export module)
