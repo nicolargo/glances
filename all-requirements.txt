@@ -90,8 +90,6 @@ msgpack==1.1.2
     # via influxdb
 nats-py==2.12.0
     # via glances
-netifaces2==0.0.22
-    # via glances
 nvidia-ml-py==13.590.44
     # via glances
 packaging==25.0
