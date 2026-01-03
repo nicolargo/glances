@@ -10,10 +10,9 @@
 
 import threading
 
-from glances.globals import get_ip_address, json_loads, queue, urlopen_auth
+from glances.globals import get_ip_address, json_loads, urlopen_auth
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
-from glances.timer import Timer, getTimeSinceLastUpdate
 
 # Fields description
 # description: human readable description
@@ -76,6 +75,17 @@ class IpPlugin(GlancesPluginModel):
             "public_refresh_interval", default=self._default_public_refresh_interval
         )
 
+        # Init thread to grab public IP address asynchronously
+        self.public_ip_thread = None
+        if not self.public_disabled:
+            self.public_ip_thread = ThreadPublicIpAddress(
+                url=self.public_api,
+                username=self.public_username,
+                password=self.public_password,
+                refresh_interval=self.public_address_refresh_interval,
+            )
+            self.public_ip_thread.start()
+
     def get_first_ip(self, stats):
         stats['address'], stats['mask'] = get_ip_address()
         stats['mask_cidr'] = self.ip_to_cidr(stats['mask'])
@@ -83,16 +93,19 @@ class IpPlugin(GlancesPluginModel):
         return stats
 
     def get_public_ip(self, stats):
-        time_since_update = getTimeSinceLastUpdate('public-ip')
+        """Get public IP information from the background thread (non-blocking)."""
+        if self.public_ip_thread is None:
+            return stats
+
         try:
-            if not self.public_disabled and (
-                self.public_address == "" or time_since_update > self.public_address_refresh_interval
-            ):
-                self.public_info = PublicIpInfo(self.public_api, self.public_username, self.public_password).get()
-                self.public_address = self.public_info['ip']
+            # Read public IP info from the background thread (non-blocking)
+            self.public_info = self.public_ip_thread.public_info
+            if self.public_info:
+                self.public_address = self.public_info.get('ip', '')
         except (KeyError, AttributeError, TypeError) as e:
             logger.debug(f"Cannot grab public IP information ({e})")
-        else:
+
+        if self.public_address:
             stats['public_address'] = (
                 self.public_address if not self.args.hide_public_info else self.__hide_ip(self.public_address)
             )
@@ -127,6 +140,13 @@ class IpPlugin(GlancesPluginModel):
         if self.get_first_ip(stats):
             self.get_public_ip(stats)
         return stats
+
+    def exit(self):
+        """Overwrite the exit method to close the thread."""
+        if self.public_ip_thread is not None:
+            self.public_ip_thread.stop()
+        # Call the parent class
+        super().exit()
 
     def __hide_ip(self, ip):
         """Hide last to digit of the given IP address"""
@@ -190,42 +210,71 @@ class IpPlugin(GlancesPluginModel):
         return sum(bin(int(x)).count('1') for x in ip.split('.'))
 
 
-class PublicIpInfo:
-    """Get public IP information from online service."""
+class ThreadPublicIpAddress(threading.Thread):
+    """Thread class to fetch public IP address asynchronously.
 
-    def __init__(self, url, username, password, timeout=2):
-        """Init the class."""
+    This prevents blocking the main Glances startup and update cycle.
+    """
+
+    def __init__(self, url, username, password, refresh_interval, timeout=2):
+        """Init the thread.
+
+        :param url: URL of the public IP API
+        :param username: Optional username for API authentication
+        :param password: Optional password for API authentication
+        :param refresh_interval: Time in seconds between refreshes
+        :param timeout: Timeout for the API request
+        """
+        logger.debug("IP plugin - Create thread for public IP address")
+        super().__init__()
+        self.daemon = True
+        self._stopper = threading.Event()
+
         self.url = url
         self.username = username
         self.password = password
+        self.refresh_interval = refresh_interval
         self.timeout = timeout
 
-    def get(self):
-        """Return the public IP information returned by one of the online service."""
-        q = queue.Queue()
+        # Public IP information (shared with main thread)
+        self._public_info = {}
+        self._public_info_lock = threading.Lock()
 
-        t = threading.Thread(target=self._get_ip_public_info, args=(q, self.url, self.username, self.password))
-        t.daemon = True
-        t.start()
+    def run(self):
+        """Grab public IP information in a loop.
 
-        timer = Timer(self.timeout)
-        info = None
-        while not timer.finished() and info is None:
-            if q.qsize() > 0:
-                info = q.get()
+        Runs until stop() is called, refreshing at the configured interval.
+        """
+        while not self._stopper.is_set():
+            # Fetch public IP information
+            info = self._fetch_public_ip_info()
+            if info is not None:
+                with self._public_info_lock:
+                    self._public_info = info
 
-        return info
+            # Wait for the refresh interval or until stopped
+            self._stopper.wait(self.refresh_interval)
 
-    def _get_ip_public_info(self, queue_target, url, username, password):
-        """Request the url service and put the result in the queue_target."""
+    def _fetch_public_ip_info(self):
+        """Fetch public IP information from the configured API."""
         try:
-            response = urlopen_auth(url, username, password).read()
+            response = urlopen_auth(self.url, self.username, self.password, self.timeout).read()
+            return json_loads(response)
         except Exception as e:
-            logger.debug(f"IP plugin - Cannot get public IP information from {url} ({e})")
-            queue_target.put(None)
-        else:
-            try:
-                queue_target.put(json_loads(response))
-            except (ValueError, KeyError) as e:
-                logger.debug(f"IP plugin - Cannot load public IP information from {url} ({e})")
-                queue_target.put(None)
+            logger.debug(f"IP plugin - Cannot get public IP information from {self.url} ({e})")
+            return None
+
+    @property
+    def public_info(self):
+        """Return the current public IP information (thread-safe)."""
+        with self._public_info_lock:
+            return self._public_info.copy()
+
+    def stop(self, timeout=None):
+        """Stop the thread."""
+        logger.debug("IP plugin - Close thread for public IP address")
+        self._stopper.set()
+
+    def stopped(self):
+        """Return True if the thread is stopped."""
+        return self._stopper.is_set()
