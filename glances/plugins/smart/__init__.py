@@ -2,6 +2,7 @@
 # This file is part of Glances.
 #
 # Copyright (C) 2018 Tim Nibert <docz2a@gmail.com>
+# Copyright (C) 2026 Github@Drake7707
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -91,7 +92,8 @@ NVME_ATTRIBUTE_LABELS = {
     "tests": "Self-tests",
 }
 
-def convert_nvme_attribute_to_dict(key,value):
+
+def convert_nvme_attribute_to_dict(key, value):
     label = NVME_ATTRIBUTE_LABELS.get(key, key)
 
     return {
@@ -104,8 +106,9 @@ def convert_nvme_attribute_to_dict(key,value):
         'threshold': None,
         'type': None,
         'updated': None,
-        'when_failed': None
+        'when_failed': None,
     }
+
 
 def get_smart_data(hide_attributes):
     """
@@ -165,16 +168,18 @@ def get_smart_data(hide_attributes):
         if isinstance(dev.if_attributes, NvmeAttributes):
             idx = 0
             for attr in dev.if_attributes.__dict__.keys():
-                idx +=1
+                idx += 1
 
-                attrib_dict = convert_nvme_attribute_to_dict(attr,  dev.if_attributes.__dict__[attr])
+                attrib_dict = convert_nvme_attribute_to_dict(attr, dev.if_attributes.__dict__[attr])
                 if attrib_dict['name'] in hide_attributes:
                     pass
                 else:
                     try:
-                        if dev.if_attributes.__dict__[attr] is not None: # make sure the value is serializable to prevent errors in rendering
-                            serialized = str(dev.if_attributes.__dict__[attr])
-                    except Exception as e:
+                        if (
+                            dev.if_attributes.__dict__[attr] is not None
+                        ):  # make sure the value is serializable to prevent errors in rendering
+                            str(dev.if_attributes.__dict__[attr])
+                    except Exception:
                         logger.debug(f'Unable to serialize attribute {attr} from NVME')
                         attrib_dict['value'] = None
                         attrib_dict['raw'] = None
@@ -217,7 +222,7 @@ class SmartPlugin(GlancesPluginModel):
     @hide_attributes.setter
     def hide_attributes(self, attr_list):
         """Set hide_attributes list"""
-        self._hide_attributes = [i for i in attr_list]
+        self._hide_attributes = list(attr_list)
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
@@ -283,14 +288,20 @@ class SmartPlugin(GlancesPluginModel):
                 ret.append(self.curse_add_line(msg))
                 try:
                     raw = device_stat[smart_stat]['raw']
-                    if device_stat[smart_stat]['key'] in ["bytesWritten", "bytesRead", "dataUnitsRead", "dataUnitsWritten", "hostReadCommands", "hostWriteCommands" ]:
+                    if device_stat[smart_stat]['key'] in [
+                        "bytesWritten",
+                        "bytesRead",
+                        "dataUnitsRead",
+                        "dataUnitsWritten",
+                        "hostReadCommands",
+                        "hostWriteCommands",
+                    ]:
                         msg = '{:>8}'.format("" if raw is None else self.auto_unit(raw))
-                    else:    
+                    else:
                         msg = '{:>8}'.format("" if raw is None else str(raw))
                     ret.append(self.curse_add_line(msg))
-                except Exception as e:
+                except Exception:
                     logger.debug(f"Failed to serialize {smart_stat}")
-                    meg = ""
-                    ret.append(self.curse_add_line(msg))
+                    ret.append(self.curse_add_line(""))
 
         return ret
