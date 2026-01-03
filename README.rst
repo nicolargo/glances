@@ -575,7 +575,6 @@ Extra dependencies:
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
 - ``kafka-python`` (for the Kafka export module)
 - ``nats-py`` (for the NATS export module)
-- ``netifaces2`` (for the IP plugin)
 - ``nvidia-ml-py`` (for the GPU plugin)
 - ``pycouchdb`` (for the CouchDB export module)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
