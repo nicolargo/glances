@@ -270,14 +270,14 @@ class _GlancesCurses:
         {
             self.pressedkey in {ord('e')} and not self.args.programs: self._handle_process_extended,
             self.pressedkey in {ord('k')} and not self.args.disable_cursor: self._handle_kill_process,
-            self.pressedkey in {curses.KEY_LEFT if self.args.arrow_keys_sort else curses.KEY_SLEFT}:
-                self._handle_sort_left,
-            self.pressedkey in {curses.KEY_RIGHT if self.args.arrow_keys_sort else curses.KEY_SRIGHT}:
-                self._handle_sort_right,
-            self.pressedkey in {curses.KEY_SLEFT if self.args.arrow_keys_sort else curses.KEY_LEFT}:
-                self._handle_process_name_left,
-            self.pressedkey in {curses.KEY_SRIGHT if self.args.arrow_keys_sort else curses.KEY_RIGHT}:
-                self._handle_process_name_right,
+            self.pressedkey
+            in {curses.KEY_LEFT if self.args.arrow_keys_sort else curses.KEY_SLEFT}: self._handle_sort_left,
+            self.pressedkey
+            in {curses.KEY_RIGHT if self.args.arrow_keys_sort else curses.KEY_SRIGHT}: self._handle_sort_right,
+            self.pressedkey
+            in {curses.KEY_SLEFT if self.args.arrow_keys_sort else curses.KEY_LEFT}: self._handle_process_name_left,
+            self.pressedkey
+            in {curses.KEY_SRIGHT if self.args.arrow_keys_sort else curses.KEY_RIGHT}: self._handle_process_name_right,
             self.pressedkey in {curses.KEY_UP, 65} and not self.args.disable_cursor: self._handle_cursor_up,
             self.pressedkey in {curses.KEY_DOWN, 66} and not self.args.disable_cursor: self._handle_cursor_down,
             self.pressedkey in {curses.KEY_F5, 18}: self._handle_refresh,
