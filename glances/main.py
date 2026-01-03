@@ -341,6 +341,12 @@ Examples of use:
             dest='disable_cursor',
             help='disable cursor (process selection) in the UI',
         )
+        parser.add_argument(
+            '--arrow-keys-sort',  # See issue #3385
+            action='store_true',
+            default=False,
+            help='Use arrow keys to sort the process list instead of the SHIFT+key combinations',
+        )
         # Sort processes list
         parser.add_argument(
             '--sort-processes',
