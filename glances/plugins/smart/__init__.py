@@ -67,14 +67,16 @@ def convert_attribute_to_dict(attr):
 
 
 # Keys for attributes that should be formatted with auto_unit (large byte values)
-LARGE_VALUE_KEYS = frozenset([
-    "bytesWritten",
-    "bytesRead",
-    "dataUnitsRead",
-    "dataUnitsWritten",
-    "hostReadCommands",
-    "hostWriteCommands",
-])
+LARGE_VALUE_KEYS = frozenset(
+    [
+        "bytesWritten",
+        "bytesRead",
+        "dataUnitsRead",
+        "dataUnitsWritten",
+        "hostReadCommands",
+        "hostWriteCommands",
+    ]
+)
 
 NVME_ATTRIBUTE_LABELS = {
     "criticalWarning": "Number of critical warnings",
