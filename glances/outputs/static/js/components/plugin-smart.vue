@@ -15,7 +15,7 @@
                     </tr>
                     <tr v-for="(metric, metricId) in drive.details" :key="metricId">
                         <td scope="row">{{ metric.name }}</td>
-                        <td scope="row" class="text-end text-truncate">{{ metric.raw }}</td>
+                        <td scope="row" class="text-end text-truncate">{{ formatted(metric) }}</td>
                     </tr>
                 </template>
             </tbody>
@@ -48,7 +48,23 @@ export default {
 		},
 		hasDrives() {
 			return this.drives.length > 0;
-		},
+		}
 	},
+	methods: {
+		formatted(metric) {
+			if(typeof metric.key === 'undefined')
+				return metric.raw;
+			
+			if (this.requiresFormatting(metric.key)) {
+				return this.$filters.bytes(metric.raw);
+			}
+			return metric.raw;
+		},
+		requiresFormatting(key) {
+			const keysToFormat = ["bytesWritten", "bytesRead", "dataUnitsRead", "dataUnitsWritten", "hostReadCommands", "hostWriteCommands" ];
+			return keysToFormat.includes(key);
+		}
+	}
+
 };
 </script>
