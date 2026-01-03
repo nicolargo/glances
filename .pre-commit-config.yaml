@@ -11,10 +11,7 @@ repos:
     - id: ruff-check
       name: "🐍 python · Linter with Ruff"
       types_or: [ python, pyi ]
-      args: [ --fix, --exit-non-zero-on-fix ]
-    - id: ruff-format
-      name: "🐍 python · Format with Ruff"
-      types_or: [ python, pyi ]
+      args: [ --fix, --exit-non-zero-on-fix, --config, './pyproject.toml' ]
 
   # - repo: https://github.com/RobertCraigie/pyright-python
   #   rev: v1.1.391
@@ -48,11 +45,11 @@ repos:
         name: "🐚 shell · Check shell script code style"
         entry: bashate --error . --ignore=E006
 
-  - repo: https://github.com/mrtazz/checkmake.git
-    rev: 0.2.2
-    hooks:
-      - id: checkmake
-        name: "🐮 Makefile · Lint Makefile"
+  # - repo: https://github.com/mrtazz/checkmake.git
+  #   rev: 0.2.2
+  #   hooks:
+  #     - id: checkmake
+  #       name: "🐮 Makefile · Lint Makefile"
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

@@ -478,10 +478,7 @@ class GlancesProcesses:
         # Only get the info key
         # PsUtil 6+ no longer check PID reused #2755 so use is_running in the loop
         # Note: not sure it is realy needed but CPU consumption look the same with or without it
-        processlist = [p.info for p in processlist if p.is_running()]
-
-        # Sort the processes list by the current sort_key
-        return sort_stats(processlist, sorted_by=self.sort_key, reverse=True)
+        return [p.info for p in processlist if p.is_running()]
 
     def get_sorted_attrs(self):
         defaults = ['cpu_percent', 'cpu_times', 'memory_percent', 'name', 'status', 'num_threads']
@@ -599,6 +596,8 @@ class GlancesProcesses:
 
         # Remove attributes set by the user in the config file (see #1524)
         sorted_attrs = [i for i in sorted_attrs if i not in self.disable_stats]
+
+        # Buid and sort the process list
         processlist = self.build_process_list(sorted_attrs)
 
         # Update the processcount
@@ -757,6 +756,7 @@ def _sort_io_counters(process, sorted_by='io_counters', sorted_by_secondary='mem
 
     :return: Sum of io_r + io_w
     """
+    logger.info(f'*** Sort by cpu_times called {type(process[sorted_by])} {process[sorted_by]}')
     return process[sorted_by][0] - process[sorted_by][2] + process[sorted_by][1] - process[sorted_by][3]
 
 
@@ -768,7 +768,7 @@ def _sort_cpu_times(process, sorted_by='cpu_times', sorted_by_secondary='memory_
     see (https://github.com/giampaolo/psutil/issues/1339)
     The following implementation takes user and system time into account
     """
-    return process[sorted_by][0] + process[sorted_by][1]
+    return process[sorted_by]['user'] + process[sorted_by]['system']
 
 
 def _sort_lambda(sorted_by='cpu_percent', sorted_by_secondary='memory_percent'):
@@ -793,18 +793,22 @@ def sort_stats(stats, sorted_by='cpu_percent', sorted_by_secondary='memory_perce
         # Specific sort
         try:
             stats = sorted(stats, key=sort_lambda, reverse=reverse)
-        except Exception:
+        except Exception as e:
             # If an error is detected, fallback to cpu_percent
+            logger.debug(f'Error while sorting by {sorted_by}, fallback to cpu_percent ({e})')
             stats = sorted(stats, key=sort_by_these_keys('cpu_percent', sorted_by_secondary), reverse=reverse)
     else:
         # Standard sort
         try:
             stats = sorted(stats, key=sort_by_these_keys(sorted_by, sorted_by_secondary), reverse=reverse)
-        except (KeyError, TypeError):
+        except (KeyError, TypeError) as e:
             # Fallback to name
+            logger.debug(f'Error while sorting by {sorted_by}, fallback to name ({e})')
             stats.sort(key=lambda process: process['name'] if process['name'] is not None else '~', reverse=False)
 
     return stats
 
 
 glances_processes = GlancesProcesses()
+
+# End of file processes.py

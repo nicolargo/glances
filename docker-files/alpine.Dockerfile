@@ -9,7 +9,7 @@
 # WARNING: the Alpine image version and Python version should be set.
 # Alpine 3.18 tag is a link to the latest 3.18.x version.
 # Be aware that if you change the Alpine version, you may have to change the Python version.
-ARG IMAGE_VERSION=3.22
+ARG IMAGE_VERSION=3.23
 ARG PYTHON_VERSION=3.12
 
 ##############################################################################
@@ -61,9 +61,6 @@ RUN apk add --no-cache \
 RUN python${PYTHON_VERSION} -m venv venv-build
 RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --upgrade pip
 
-RUN python${PYTHON_VERSION} -m venv venv-build
-RUN /venv-build/bin/python${PYTHON_VERSION} -m pip install --upgrade pip
-
 RUN python${PYTHON_VERSION} -m venv --without-pip venv
 
 COPY pyproject.toml docker-requirements.txt all-requirements.txt ./
@@ -105,23 +102,26 @@ COPY docker-bin.sh /usr/local/bin/glances
 RUN chmod a+x /usr/local/bin/glances
 ENV PATH="/venv/bin:$PATH"
 
-# Copy binary and update PATH
-COPY docker-bin.sh /usr/local/bin/glances
-RUN chmod a+x /usr/local/bin/glances
-ENV PATH="/venv/bin:$PATH"
-
 # EXPOSE PORT (XMLRPC / WebUI)
 EXPOSE 61209 61208
 
+# Add glances user
+# RUN addgroup -g 1000 glances && \
+#     adduser -D -u 1000 -G glances glances && \
+#     chown -R glances:glances /app
+
 # Define default command.
 WORKDIR /app
-CMD ["/bin/sh", "-c", "/venv/bin/python3 -m glances ${GLANCES_OPT}"]
+ENV PYTHON_VERSION=${PYTHON_VERSION}
+CMD ["/bin/sh", "-c", "/venv/bin/python${PYTHON_VERSION} -m glances ${GLANCES_OPT}"]
 
 ################################################################################
 # RELEASE: minimal
 FROM release AS minimal
 
 COPY --from=buildminimal /venv /venv
+
+# USER glances
 
 ################################################################################
 # RELEASE: full
@@ -130,6 +130,8 @@ FROM release AS full
 RUN apk add --no-cache libzmq
 
 COPY --from=buildfull /venv /venv
+
+# USER glances
 
 ################################################################################
 # RELEASE: dev - to be compatible with CI
@@ -140,5 +142,8 @@ FROM full AS dev
 COPY ./docker-files/docker-logger.json /app
 ENV LOG_CFG=/app/docker-logger.json
 
+# USER glances
+
 WORKDIR /app
-CMD ["/bin/sh", "-c", "/venv/bin/python3 -m glances ${GLANCES_OPT}"]
+ENV PYTHON_VERSION=${PYTHON_VERSION}
+CMD ["/bin/sh", "-c", "/venv/bin/python${PYTHON_VERSION} -m glances ${GLANCES_OPT}"]

@@ -242,7 +242,7 @@ Glances can export stats to:
 
 - files: ``CSV`` and ``JSON``
 - databases:  ``InfluxDB``, ``ElasticSearch``, ``PostgreSQL/TimeScale``, ``Cassandra``, ``CouchDB``, ``OpenTSDB``, ``Prometheus``, ``StatsD``, ``Riemann`` and ``Graphite``
-- brokers: ``RabbitMQ/ActiveMQ``, ``ZeroMQ`` and ``Kafka``
+- brokers: ``RabbitMQ/ActiveMQ``, ``NATS``, ``ZeroMQ`` and ``Kafka``
 - others: ``RESTful`` endpoint
 
 Installation 🚀
@@ -255,14 +255,14 @@ PyPI: Pip, the standard way
 
 Glances is on ``PyPI``. By using PyPI, you will be using the latest stable version.
 
-To install Glances, simply use the ``pip`` command line.
-
-Warning: on modern Linux operating systems, you may have an externally-managed-environment
-error message when you try to use ``pip``. In this case, go to the the PipX section below.
+To install Glances, simply use the ``pip`` command line in an virtual environment.
 
 .. code-block:: console
 
-    pip install --user glances
+    cd ~
+    python3 -m venv ~/.venv
+    source ~/.venv/bin/activate
+    pip install glances
 
 *Note*: Python headers are required to install `psutil`_, a Glances
 dependency. For example, on Debian/Ubuntu **the simplest** is
@@ -271,17 +271,18 @@ the *python-dev* package and gcc (*python-devel* on Fedora/CentOS/RHEL).
 For Windows, just install psutil from the binary installation file.
 
 By default, Glances is installed **without** the Web interface dependencies.
+
 To install it, use the following command:
 
 .. code-block:: console
 
-    pip install --user 'glances[web]'
+    pip install 'glances[web]'
 
 For a full installation (with all features, see features list bellow):
 
 .. code-block:: console
 
-    pip install --user 'glances[all]'
+    pip install 'glances[all]'
 
 Features list:
 
@@ -306,21 +307,18 @@ To upgrade Glances to the latest version:
 
 .. code-block:: console
 
-    pip install --user --upgrade glances
-
-The current develop branch is published to the test.pypi.org package index.
-If you want to test the develop version (could be instable), enter:
-
-.. code-block:: console
-
-    pip install --user -i https://test.pypi.org/simple/ Glances
+    pip install --upgrade glances
 
 PyPI: PipX, the alternative way
 -------------------------------
 
-Install PipX on your system (apt install pipx on Ubuntu).
+Install PipX on your system. For example on Ubuntu/Debian:
 
-Install Glances (with all features):
+.. code-block:: console
+
+    sudo apt install pipx
+
+Then install Glances (with all features):
 
 .. code-block:: console
 
@@ -328,26 +326,17 @@ Install Glances (with all features):
 
 The glances script will be installed in the ~/.local/bin folder.
 
-Brew: The missing package manager
----------------------------------
-
-For Linux and Mac OS, it is also possible to install Glances with `Brew`_:
+To upgrade Glances to the latest version:
 
 .. code-block:: console
 
-    brew install glances
+    pipx upgrade glances
 
 Docker: the cloudy way
 ----------------------
 
 Glances Docker images are available. You can use it to monitor your
 server and all your containers !
-
-Get the Glances container:
-
-.. code-block:: console
-
-    docker pull nicolargo/glances:latest-full
 
 The following tags are available:
 
@@ -393,13 +382,32 @@ Run the container in *Web server mode*:
 
 For a full list of options, see the Glances `Docker`_ documentation page.
 
+It is also possible to use a simple Docker compose file (see in ./docker-compose/docker-compose.yml):
+
+.. code-block:: console
+
+    cd ./docker-compose
+    docker-compose up
+
+It will start a Glances server with WebUI.
+
+Brew: The missing package manager
+---------------------------------
+
+For Linux and Mac OS, it is also possible to install Glances with `Brew`_:
+
+.. code-block:: console
+
+    brew install glances
+
 GNU/Linux package
 -----------------
 
 `Glances` is available on many Linux distributions, so you should be
-able to install it using your favorite package manager. Be aware that
-when you use this method the operating system `package`_ for `Glances`
-may not be the latest version and only basics plugins are enabled.
+able to install it using your favorite package manager. Nevetheless,
+i do not recommend it. Be aware that when you use this method the operating
+system `package`_ for `Glances`may not be the latest version and only basics
+plugins are enabled.
 
 Note: The Debian package (and all other Debian-based distributions) do
 not include anymore the JS statics files used by the Web interface
@@ -417,7 +425,6 @@ Check for Python version:
 .. code-block:: console
 
      # python --version
-
 
 Install the Glances package:
 
@@ -464,11 +471,7 @@ Windows
 -------
 
 Install `Python`_ for Windows (Python 3.4+ ship with pip) and
-then run the following command:
-
-.. code-block:: console
-
-    $ pip install glances
+follow the Glances Pip install procedure.
 
 Android
 -------
@@ -571,6 +574,7 @@ Extra dependencies:
 - ``influxdb`` (for the InfluxDB version 1 export module)
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
 - ``kafka-python`` (for the Kafka export module)
+- ``nats-py`` (for the NATS export module)
 - ``netifaces2`` (for the IP plugin)
 - ``nvidia-ml-py`` (for the GPU plugin)
 - ``pycouchdb`` (for the CouchDB export module)
