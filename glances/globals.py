@@ -22,6 +22,7 @@ import os
 import platform
 import queue
 import re
+import socket
 import subprocess
 import sys
 import weakref
@@ -34,6 +35,8 @@ from typing import Any, Optional, Union
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
+
+import psutil
 
 # Prefer faster libs for JSON (de)serialization
 # Preference Order: orjson > ujson > json (builtin)
@@ -712,3 +715,60 @@ def split_esc(input_string, sep=None, maxsplit=-1, esc='\\'):
         ret = [sub for sub in ret if len(sub) > 0]
 
     return ret
+
+
+def get_ip_address(ipv6=False):
+    """Get current IP address and netmask as a tuple."""
+    family = socket.AF_INET6 if ipv6 else socket.AF_INET
+
+    # Get IP address
+    stats = psutil.net_if_stats()
+    addrs = psutil.net_if_addrs()
+
+    ip_address = None
+    ip_netmask = None
+    for interface, stat in stats.items():
+        if stat.isup and interface != 'lo':
+            if interface in addrs:
+                for addr in addrs[interface]:
+                    if addr.family == family:
+                        ip_address = addr.address
+                        ip_netmask = addr.netmask
+                        break
+
+    return ip_address, ip_netmask
+
+
+def get_default_gateway(ipv6=False):
+    """Get the default gateway IP address."""
+
+    def convert_ipv4(gateway_hex):
+        """Convert IPv4 hex (little-endian) to dotted notation."""
+        return '.'.join(str(int(gateway_hex[i : i + 2], 16)) for i in range(6, -1, -2))
+
+    def convert_ipv6(gateway_hex):
+        """Convert IPv6 hex to colon notation."""
+        return ':'.join(gateway_hex[i : i + 4] for i in range(0, 32, 4))
+
+    if ipv6:
+        route_file = '/proc/net/ipv6_route'
+        default_dest = '00000000000000000000000000000000'
+        dest_field = 0
+        gateway_field = 4
+        converter = convert_ipv6
+    else:
+        route_file = '/proc/net/route'
+        default_dest = '00000000'
+        dest_field = 1
+        gateway_field = 2
+        converter = convert_ipv4
+
+    try:
+        with open(route_file) as f:
+            for line in f:
+                fields = line.strip().split()
+                if fields[dest_field] == default_dest:
+                    return converter(fields[gateway_field])
+    except (FileNotFoundError, IndexError, ValueError):
+        return None
+    return None
