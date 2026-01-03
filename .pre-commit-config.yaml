@@ -6,8 +6,12 @@ repos:
         name: "🔒 security · Detect hardcoded secrets"
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.1
+    rev: v0.14.10
     hooks:
+    - id: ruff-format
+      name: "🐍 python · Formatter with Ruff"
+      types_or: [ python, pyi ]
+      args: [ --config, './pyproject.toml' ]
     - id: ruff-check
       name: "🐍 python · Linter with Ruff"
       types_or: [ python, pyi ]
