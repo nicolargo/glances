@@ -20,7 +20,7 @@ UV_RUN		   	  := .venv-uv/bin/uv
 # if the command is only `make`, the default tasks will be the printing of the help.
 .DEFAULT_GOAL := help
 
-.PHONY: help test docs docs-server venv requirements profiling docker all clean
+.PHONY: help test docs docs-server venv requirements profiling docker all clean all test
 
 help: ## List all make commands available
 	@grep -E '^[\.a-zA-Z_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -134,7 +134,10 @@ test-export-influxdb-v3: ## Run interface tests with InfluxDB version 3 (Core)
 test-export-timescaledb: ## Run interface tests with TimescaleDB
 	/bin/bash ./tests/test_export_timescaledb.sh
 
-test-exports: test-export-csv test-export-json test-export-influxdb-v1 test-export-influxdb-v3 test-export-timescaledb ## Tests all exports
+test-export-nats: ## Run interface tests with NATS
+	/bin/bash ./tests/test_export_nats.sh
+
+test-exports: test-export-csv test-export-json test-export-influxdb-v1 test-export-influxdb-v3 test-export-timescaledb test-export-nats ## Tests all exports
 
 # ===================================================================
 # Linters, profilers and cyber security

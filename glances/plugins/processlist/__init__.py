@@ -966,3 +966,6 @@ class ProcesslistPlugin(GlancesPluginModel):
 
         # By default return 5 (corresponding to 99999 PID number)
         return 5
+
+
+# End of file
