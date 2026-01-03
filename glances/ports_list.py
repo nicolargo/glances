@@ -8,16 +8,8 @@
 
 """Manage the Glances ports list (Ports plugin)."""
 
+from glances.globals import get_default_gateway
 from glances.logger import logger
-
-try:
-    import netifaces
-
-    netifaces.default_gateway()
-    netifaces_tag = True
-except (ImportError, NameError):
-    logger.warning("Ports plugin - Can not init Netifaces2 lib, port_default_gateway feature is disabled")
-    netifaces_tag = False
 
 
 class GlancesPortsList:
@@ -49,13 +41,10 @@ class GlancesPortsList:
 
             # Add default gateway on top of the ports_list lists
             default_gateway = config.get_value(self._section, 'port_default_gateway', default='False')
-            if default_gateway.lower().startswith('true') and netifaces_tag:
+            if default_gateway.lower().startswith('true'):
                 new_port = {}
-                try:
-                    new_port['host'] = netifaces.default_gateway()[netifaces.AF_INET][0]
-                except (KeyError, NameError):
-                    new_port['host'] = None
                 # ICMP
+                new_port['host'] = get_default_gateway()
                 new_port['port'] = 0
                 new_port['description'] = 'DefaultGateway'
                 new_port['refresh'] = refresh

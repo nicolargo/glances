@@ -10,28 +10,10 @@
 
 import threading
 
-from glances.globals import json_loads, queue, urlopen_auth
+from glances.globals import get_ip_address, json_loads, queue, urlopen_auth
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.timer import Timer, getTimeSinceLastUpdate
-
-# Import plugin specific dependency
-try:
-    import netifaces
-except ImportError as e:
-    netifaces_tag = True
-    logger.warning(f"Missing Python Lib ({e}), IP plugin is disabled")
-else:
-    netifaces_tag = False
-
-try:
-    netifaces.default_gateway()
-except Exception:
-    netifaces_tag = True
-    logger.warning("Netifaces2 should be installed in your Python environment, IP plugin is disabled")
-else:
-    netifaces_tag = False
-
 
 # Fields description
 # description: human readable description
@@ -94,31 +76,9 @@ class IpPlugin(GlancesPluginModel):
             "public_refresh_interval", default=self._default_public_refresh_interval
         )
 
-    def get_default_gateway(self):
-        # Get the default gateway thanks to the netifaces lib
-        # Return a tupple with: ('192.168.1.1', 'wlp0s20f3')
-        try:
-            default_gw = netifaces.default_gateway()[netifaces.AF_INET]
-        except (KeyError, AttributeError) as e:
-            logger.debug(f"Cannot grab default gateway IP address ({e})")
-            return None
-        return default_gw
-
     def get_first_ip(self, stats):
-        default_gateway = self.get_default_gateway()
-        try:
-            if not default_gateway:
-                default_interface = netifaces.interfaces_by_index()[netifaces.AF_INET]
-            else:
-                default_interface = default_gateway[1]
-            address = netifaces.ifaddresses(default_interface)[netifaces.AF_INET][0]['addr']
-            mask = netifaces.ifaddresses(default_interface)[netifaces.AF_INET][0]['mask']
-        except (KeyError, AttributeError) as e:
-            logger.debug(f"Cannot grab private IP address ({e})")
-        else:
-            stats['address'] = address
-            stats['mask'] = mask
-            stats['mask_cidr'] = self.ip_to_cidr(mask)
+        stats['address'], stats['mask'] = get_ip_address()
+        stats['mask_cidr'] = self.ip_to_cidr(stats['mask'])
 
         return stats
 
@@ -150,7 +110,7 @@ class IpPlugin(GlancesPluginModel):
         # Init new stats
         stats = self.get_init_value()
 
-        if self.input_method == 'local' and not netifaces_tag:
+        if self.input_method == 'local':
             stats = self.get_stats_for_local_input(stats)
 
         elif self.input_method == 'snmp':
@@ -178,7 +138,7 @@ class IpPlugin(GlancesPluginModel):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or self.is_disabled() or netifaces_tag:
+        if not self.stats or self.is_disabled():
             return ret
 
         # Start with the private IP information
