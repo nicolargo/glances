@@ -11,25 +11,8 @@
 import socket
 import sys
 
-from glances.globals import BSD
+from glances.globals import get_ip_address
 from glances.logger import logger
-
-try:
-    import netifaces
-
-    netifaces_tag = True
-except ImportError:
-    logger.warning("Servers list - Netifaces2 lib not found, active IP address not possible")
-    netifaces_tag = False
-
-try:
-    netifaces.gateways()
-except Exception:
-    netifaces_tag = True
-else:
-    logger.warning("Servers list - Netifaces2 do not support gateways() method, active IP address not possible")
-    netifaces_tag = False
-
 
 try:
     from zeroconf import ServiceBrowser, ServiceInfo, Zeroconf
@@ -204,17 +187,8 @@ class GlancesAutoDiscoverClient:
             except OSError as e:
                 logger.error(f"Cannot start zeroconf: {e}")
 
-            # XXX *BSDs: Segmentation fault (core dumped)
-            # -- https://bitbucket.org/al45tair/netifaces/issues/15
-            if not BSD:
-                try:
-                    # -B @ overwrite the dynamic IPv4 choice
-                    if netifaces_tag and zeroconf_bind_address == '0.0.0.0':
-                        zeroconf_bind_address = self.find_active_ip_address()
-                except Exception:
-                    # Issue #528 (no network interface available)
-                    # Issue #3219 (no implementation for gateway())
-                    pass
+            if zeroconf_bind_address == '0.0.0.0':
+                zeroconf_bind_address = get_ip_address()[0]
 
             # Ensure zeroconf_bind_address is an IP address not an host
             zeroconf_bind_address = socket.gethostbyname(zeroconf_bind_address)
@@ -255,14 +229,6 @@ class GlancesAutoDiscoverClient:
                 print(f"Announce the Glances server on the LAN (using {zeroconf_bind_address} IP address)")
         else:
             logger.error("Cannot announce Glances server on the network: zeroconf library not found.")
-
-    @staticmethod
-    def find_active_ip_address():
-        """Try to find the active IP addresses."""
-        # Interface of the default gateway
-        gateway_itf = netifaces.gateways()[netifaces.AF_INET][0][1]
-        # IP address for the interface
-        return netifaces.ifaddresses(gateway_itf)[netifaces.AF_INET][0]['addr']
 
     def close(self):
         if zeroconf_tag:

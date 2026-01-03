@@ -28,6 +28,8 @@ Now, Glances uses Netifaces2.
 
 Please uninstall Netifaces and install Netifaces2 instead.
 
+Extra note: Glances 4.5 or higher do not use Netifaces/Netifaces2 anymore.
+
 On Debian/Ubuntu Operating Systems, Webserver display a blank screen ?
 ----------------------------------------------------------------------
 
