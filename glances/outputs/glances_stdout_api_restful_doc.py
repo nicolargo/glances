@@ -60,6 +60,7 @@ Note: The url_prefix should always end with a slash (``/``).
 For example:
 
 .. code-block:: ini
+
     [outputs]
     url_prefix = /glances/
 
@@ -71,6 +72,97 @@ API documentation URL
 
 The API documentation is embeded in the server and available at the following URL:
 ``http://localhost:61208/docs#/``.
+
+Authentication
+--------------
+
+Glances API supports both HTTP Basic authentication and JWT (JSON Web Token) Bearer authentication.
+
+To enable authentication, start Glances with the ``--password`` option.
+
+To generate a new login/password pair, use the following command:
+
+.. code-block:: bash
+
+    glances -w --username
+    > Enter new username: foo
+    > Enter new password: ********
+    > Confirm new password: ********
+    > User 'username' created/updated successfully.
+
+To reuse an existing login/password pair, start Glances with the ``-u <user>`` option:
+
+.. code-block:: bash
+
+    glances -w -u foo
+
+JWT Token Authentication
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+JWT authentication requires the ``python-jose`` library to be installed.
+
+**Step 1: Get a JWT Token**
+
+Request a token by sending your credentials to the token endpoint:
+
+.. code-block:: bash
+
+    curl -X POST http://localhost:61208/api/{__apiversion__}/token \\
+      -H "Content-Type: application/json" \\
+      -d '{{"username": "your_username", "password": "your_password"}}'
+
+This will return a response like:
+
+.. code-block:: json
+
+    {{
+      "access_token": "...",
+      "token_type": "bearer",
+      "expires_in": 3600
+    }}
+
+**Step 2: Use the Token**
+
+Use the token in the Authorization header with Bearer authentication:
+
+.. code-block:: bash
+
+    # Store the token in a variable
+    TOKEN="your_access_token_here"
+
+    # Access a protected endpoint
+    curl -H "Authorization: Bearer $TOKEN" \\
+      http://localhost:61208/api/{__apiversion__}/cpu
+
+**Complete Example:**
+
+.. code-block:: bash
+
+    # Get token and extract access_token
+    TOKEN=$(curl -s -X POST http://localhost:61208/api/{__apiversion__}/token \\
+      -H "Content-Type: application/json" \\
+      -d '{{"username": "glances", "password": "mypassword"}}' \\
+      | grep -o '"access_token":"[^"]*"' \\
+      | cut -d'"' -f4)
+
+    # Use the token to get CPU stats
+    curl -H "Authorization: Bearer $TOKEN" \\
+      http://localhost:61208/api/{__apiversion__}/cpu
+
+**Configuration:**
+
+You can configure JWT settings in the Glances configuration file:
+
+.. code-block:: ini
+
+    [outputs]
+    # JWT secret key (if not set, a random key will be generated)
+    jwt_secret_key = your-secret-key-here
+    # JWT token expiration in minutes (default: 60)
+    jwt_expire_minutes = 60
+
+**Note:** The token endpoint (``/api/{__apiversion__}/token``) does not require authentication.
+Protected endpoints support both Bearer token and Basic Auth authentication methods.
 
 WebUI refresh
 -------------

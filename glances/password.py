@@ -85,7 +85,7 @@ class GlancesPassword:
             password_hashed = self.hash_password(password_hash)
             if confirm:
                 # password_confirm is the clear password (only used to compare)
-                password_confirm = self.get_hash(getpass.getpass('Password (confirm): '))
+                password_confirm = self.get_hash(getpass.getpass('Confirm new password: '))
 
                 if not self.check_password(password_hashed, password_confirm):
                     logger.critical("Sorry, passwords do not match. Exit.")
@@ -99,7 +99,7 @@ class GlancesPassword:
 
             # Save the hashed password to the password file
             if not clear:
-                save_input = input('Do you want to save the password? [Yes/No]: ')
+                save_input = input(f'Do you want to save the password in {self.password_file} ? [Yes/No]: ')
                 if save_input and save_input[0].upper() == 'Y':
                     self.save_password(password_hashed)
 
