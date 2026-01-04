@@ -427,12 +427,13 @@ Examples of use:
             dest='bind_address',
             help='bind server to the given IPv4/IPv6 address or hostname',
         )
+        parser.add_argument('-u', dest='username_used', help='use or define the given username')
         parser.add_argument(
             '--username',
             action='store_true',
             default=False,
             dest='username_prompt',
-            help='define a client/server username',
+            help='define or use an username',
         )
         parser.add_argument(
             '--password',
@@ -441,7 +442,6 @@ Examples of use:
             dest='password_prompt',
             help='define a client/server password',
         )
-        parser.add_argument('-u', dest='username_used', help='use the given client/server username')
         parser.add_argument('--snmp-community', default='public', dest='snmp_community', help='SNMP community')
         parser.add_argument('--snmp-port', default=161, type=int, dest='snmp_port', help='SNMP port')
         parser.add_argument('--snmp-version', default='2c', dest='snmp_version', help='SNMP version (1, 2c or 3)')
@@ -775,12 +775,10 @@ Examples of use:
             # Every username needs a password
             args.password_prompt = True
             # Prompt username
-            if args.server:
-                args.username = self.__get_username(description='Define the Glances server username: ')
-            elif args.webserver:
-                args.username = self.__get_username(description='Define the Glances webserver username: ')
+            if args.server or args.webserver:
+                args.username = self.__get_username(description='Enter new username: ')
             elif args.client:
-                args.username = self.__get_username(description='Enter the Glances server username: ')
+                args.username = self.__get_username(description='Enter username: ')
         else:
             if args.username_used:
                 # A username has been set using the -u option ?
@@ -791,21 +789,15 @@ Examples of use:
 
         if args.password_prompt or args.username_used:
             # Interactive or file password
-            if args.server:
+            if args.server or args.webserver:
                 args.password = self.__get_password(
-                    description=f'Define the Glances server password ({args.username} username): ',
-                    confirm=True,
-                    username=args.username,
-                )
-            elif args.webserver:
-                args.password = self.__get_password(
-                    description=f'Define the Glances webserver password ({args.username} username): ',
+                    description='Enter new password: ',
                     confirm=True,
                     username=args.username,
                 )
             elif args.client:
                 args.password = self.__get_password(
-                    description=f'Enter the Glances server password ({args.username} username): ',
+                    description='Enter password: ',
                     clear=True,
                     username=args.username,
                 )
