@@ -20,6 +20,15 @@ from glances.events_list import glances_events
 from glances.globals import json_dumps
 from glances.logger import logger
 from glances.password import GlancesPassword
+
+# JWT import with fallback
+try:
+    from glances.jwt_utils import JWTHandler
+
+    JWT_AVAILABLE = True
+except ImportError:
+    JWT_AVAILABLE = False
+    JWTHandler = None
 from glances.plugins.plugin.dag import get_plugin_dependencies
 from glances.processes import glances_processes
 from glances.servers_list import GlancesServersList
@@ -33,7 +42,7 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.middleware.gzip import GZipMiddleware
     from fastapi.responses import HTMLResponse, JSONResponse
-    from fastapi.security import HTTPBasic, HTTPBasicCredentials
+    from fastapi.security import HTTPAuthorizationCredentials, HTTPBasic, HTTPBasicCredentials, HTTPBearer
     from fastapi.staticfiles import StaticFiles
     from fastapi.templating import Jinja2Templates
 except ImportError as e:
@@ -50,7 +59,8 @@ import contextlib
 import threading
 import time
 
-security = HTTPBasic()
+security = HTTPBasic(auto_error=False)
+bearer_security = HTTPBearer(auto_error=False)
 
 
 class GlancesJSONResponse(JSONResponse):
@@ -122,13 +132,23 @@ class GlancesRestfulApi:
         self.bind_url = urljoin(f'{self.protocol}://{self.args.bind_address}:{self.args.port}/', self.url_prefix)
 
         # FastAPI Init
+        # Note: Authentication is now applied at router level, not app level,
+        # to allow the token endpoint to be unauthenticated
+        self._app = FastAPI(default_response_class=GlancesJSONResponse)
         if self.args.password:
-            self._app = FastAPI(default_response_class=GlancesJSONResponse, dependencies=[Depends(self.authentication)])
             self._password = GlancesPassword(username=args.username, config=config)
-
+            # Initialize JWT handler
+            if JWT_AVAILABLE:
+                jwt_secret = config.get_value('outputs', 'jwt_secret_key', default=None)
+                jwt_expire = config.get_int_value('outputs', 'jwt_expire_minutes', default=60)
+                self._jwt_handler = JWTHandler(secret_key=jwt_secret, expire_minutes=jwt_expire)
+                logger.info(f"JWT authentication enabled (token expiration: {jwt_expire} minutes)")
+            else:
+                self._jwt_handler = None
+                logger.info("JWT authentication not available (python-jose not installed)")
         else:
-            self._app = FastAPI(default_response_class=GlancesJSONResponse)
             self._password = None
+            self._jwt_handler = None
 
         # Set path for WebUI
         webui_root_path = config.get_value(
@@ -158,6 +178,9 @@ class GlancesRestfulApi:
         )
 
         # FastAPI Define routes
+        # Token endpoint router (no authentication required) - must be added first
+        if self.args.password and self._jwt_handler is not None:
+            self._app.include_router(self._token_router())
         self._app.include_router(self._router())
 
         # Enable auto discovering of the service
@@ -206,16 +229,36 @@ class GlancesRestfulApi:
             self.servers_list.update_servers_stats()
             self.timer = Timer(self.args.cached_time)
 
-    def authentication(self, creds: Annotated[HTTPBasicCredentials, Depends(security)]):
-        """Check if a username/password combination is valid."""
-        if creds.username == self.args.username:
-            # check_password
-            if self._password.check_password(self.args.password, self._password.get_hash(creds.password)):
-                return creds.username
+    def authentication(
+        self,
+        basic_creds: Annotated[HTTPBasicCredentials | None, Depends(security)] = None,
+        bearer_creds: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_security)] = None,
+    ):
+        """Check if a username/password combination or JWT token is valid.
 
-        # If the username/password combination is invalid, return an HTTP 401
+        Supports both HTTP Basic Auth and Bearer Token (JWT) authentication.
+        """
+        # Try JWT Bearer token first
+        if bearer_creds is not None and self._jwt_handler is not None:
+            username = self._jwt_handler.verify_token(bearer_creds.credentials)
+            if username is not None:
+                # Verify the username matches the configured username
+                if username == self.args.username:
+                    return username
+                logger.warning(f"JWT token contains unknown username: {username}")
+
+        # Fall back to Basic Auth
+        if basic_creds is not None:
+            if basic_creds.username == self.args.username:
+                if self._password.check_password(self.args.password, self._password.get_hash(basic_creds.password)):
+                    return basic_creds.username
+
+        # If no valid authentication provided, return HTTP 401
+        www_authenticate = "Bearer, Basic" if self._jwt_handler and self._jwt_handler.is_available else "Basic"
         raise HTTPException(
-            status.HTTP_401_UNAUTHORIZED, "Incorrect username or password", {"WWW-Authenticate": "Basic"}
+            status.HTTP_401_UNAUTHORIZED,
+            "Incorrect authentication",
+            {"WWW-Authenticate": www_authenticate},
         )
 
     def _logo(self):
@@ -228,13 +271,24 @@ class GlancesRestfulApi:
  \_____|_|\__,_|_| |_|\___\___||___/ {__version__}
         """
 
+    def _token_router(self) -> APIRouter:
+        """Define a router for the token endpoint (no authentication required)."""
+        base_path = f'/api/{self.API_VERSION}'
+        router = APIRouter(prefix=self.url_prefix)
+        # Override global dependencies with empty list to disable authentication for this route
+        router.add_api_route(f'{base_path}/token', self._api_token, methods=['POST'], dependencies=[])
+        return router
+
     def _router(self) -> APIRouter:
         """Define a custom router for Glances path."""
         base_path = f'/api/{self.API_VERSION}'
         plugin_path = f"{base_path}/{{plugin}}"
 
-        # Create the main router
-        router = APIRouter(prefix=self.url_prefix)
+        # Create the main router with authentication if password is set
+        if self.args.password:
+            router = APIRouter(prefix=self.url_prefix, dependencies=[Depends(self.authentication)])
+        else:
+            router = APIRouter(prefix=self.url_prefix)
 
         # REST API route definition
         # ==========================
@@ -425,6 +479,80 @@ class GlancesRestfulApi:
         """
         glances_events.clean(critical=True)
         return GlancesJSONResponse({})
+
+    async def _api_token(self, request: Request):
+        """Glances API RESTful implementation.
+
+        Generate a JWT access token for authenticated users.
+
+        Expected JSON body:
+        {
+            "username": "string",
+            "password": "string"
+        }
+
+        Returns:
+        {
+            "access_token": "string",
+            "token_type": "bearer",
+            "expires_in": int (seconds)
+        }
+        """
+        # Check if JWT is available
+        if self._jwt_handler is None or not self._jwt_handler.is_available:
+            raise HTTPException(
+                status.HTTP_501_NOT_IMPLEMENTED,
+                "JWT authentication is not available. Install python-jose or check configuration.",
+            )
+
+        # Check if password authentication is enabled
+        if self._password is None:
+            raise HTTPException(
+                status.HTTP_501_NOT_IMPLEMENTED,
+                "Password authentication is not enabled. Start Glances with --password option.",
+            )
+
+        # Parse request body
+        try:
+            body = await request.json()
+        except Exception:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid JSON body")
+
+        username = body.get('username')
+        password = body.get('password')
+
+        if not username or not password:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "Missing username or password in request body",
+            )
+
+        # Validate credentials
+        if username != self.args.username:
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED,
+                "Incorrect authentication",
+                {"WWW-Authenticate": "Bearer"},
+            )
+
+        # Check password
+        if not self._password.check_password(self.args.password, self._password.get_hash(password)):
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED,
+                "Incorrect authentication",
+                {"WWW-Authenticate": "Bearer"},
+            )
+
+        # Generate token
+        access_token = self._jwt_handler.create_access_token(username)
+
+        return GlancesJSONResponse(
+            {
+                "access_token": access_token,
+                "token_type": "bearer",
+                "expires_in": self._jwt_handler.expire_minutes * 60,
+            }
+        )
 
     def _api_help(self):
         """Glances API RESTful implementation.
