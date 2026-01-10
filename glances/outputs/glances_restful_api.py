@@ -555,7 +555,7 @@ class GlancesRestfulApi:
 
         try:
             # Get the RAW value of the stat ID
-            statval = self.stats.get_plugin(plugin).get_raw()
+            statval = self.stats.get_plugin(plugin).get_api()
         except Exception as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get plugin {plugin} ({str(e)})")
 
@@ -586,8 +586,7 @@ class GlancesRestfulApi:
 
         try:
             # Get the RAW value of the stat ID
-            # TODO in #3211: use get_export instead but break API
-            statval = self.stats.get_plugin(plugin).get_raw()
+            statval = self.stats.get_plugin(plugin).get_api()
         except Exception as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get plugin {plugin} ({str(e)})")
 
@@ -998,3 +997,6 @@ class GlancesRestfulApi:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown PID process {pid}")
 
         return GlancesJSONResponse(process_stats)
+
+
+# End of GlancesRestfulApi class
