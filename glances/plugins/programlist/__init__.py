@@ -165,6 +165,10 @@ class ProgramlistPlugin(ProcesslistPlugin):
 
         return self.stats
 
+    def get_api(self):
+        """Return the sorted processes list for the API."""
+        return glances_processes.get_list(sorted=True, as_programs=True)
+
     def _get_process_curses_nprocs(self, p, selected, args):
         """Return process NPROCS curses"""
         # Display the number of children processes
