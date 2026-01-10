@@ -681,10 +681,12 @@ class GlancesProcesses:
         """Get the number of processes."""
         return self.processcount
 
-    def get_list(self, sorted_by=None, as_programs=False):
-        """Get the processlist.
+    def get_list(self, sorted=False, as_programs=False):
+        """Get the processlist (sorted or not).
         By default, return the list of threads.
         If as_programs is True, return the list of programs."""
+        if sorted:
+            self.processlist = sort_stats(self.processlist, sorted_by=self.sort_key, reverse=self.sort_reverse)
         if as_programs:
             return processes_to_programs(self.processlist)
         return self.processlist
