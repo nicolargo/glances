@@ -252,6 +252,10 @@ class ProcesslistPlugin(GlancesPluginModel):
 
         return self.stats
 
+    def get_api(self):
+        """Return the sorted processes list for the API."""
+        return glances_processes.get_list(sorted=True)
+
     def get_export(self):
         """Return the processes list to export.
         Not all the processeses are exported.
@@ -538,9 +542,10 @@ class ProcesslistPlugin(GlancesPluginModel):
         if not self.stats or args.disable_process:
             return ret
 
-        # Compute the sort key
-        process_sort_key = glances_processes.sort_key
-        processes_list_sorted = self._sort_stats(process_sort_key)
+        # Sort the processes list
+        processes_list_sorted = sort_stats(
+            self.stats, glances_processes.sort_key, reverse=glances_processes.sort_reverse
+        )
 
         # Display extended stats for selected process
         #############################################
@@ -552,7 +557,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         ###############################
 
         # Header
-        self._msg_curse_header(ret, process_sort_key, args)
+        self._msg_curse_header(ret, glances_processes.sort_key, args)
 
         # Process list
         # Loop over processes (sorted by the sort key previously compute)
@@ -954,10 +959,6 @@ class ProcesslistPlugin(GlancesPluginModel):
         if sub_key is not None:
             ret += str(sub_key)
         return ret
-
-    def _sort_stats(self, sorted_by=None):
-        """Return the stats (dict) sorted by (sorted_by)."""
-        return sort_stats(self.stats, sorted_by, reverse=glances_processes.sort_reverse)
 
     def _max_pid_size(self):
         """Return the maximum PID size in number of char."""

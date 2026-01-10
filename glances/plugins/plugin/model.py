@@ -413,6 +413,11 @@ class GlancesPluginModel:
         """Return the stats object."""
         return self.stats
 
+    def get_api(self):
+        """Return the stats object for the API.
+        By default, return the raw stats."""
+        return self.get_raw()
+
     def get_export(self):
         """Return the stats object to export.
         By default, return the raw stats.
