@@ -1,18 +1,15 @@
 <template>
-    <div v-if="args.disable_process">PROCESSES DISABLED (press 'z' to display)</div>
-    <div v-else>
-        <glances-plugin-processcount :sorter="sorter" :data="data"></glances-plugin-processcount>
-        <div v-if="!args.disable_amps" class="row">
-            <div class="col-lg-18">
-                <glances-plugin-amps :data="data"></glances-plugin-amps>
-            </div>
-        </div>
-        <glances-plugin-processlist
-            :sorter="sorter"
-            :data="data"
-            @update:sorter="args.sort_processes_key = $event"
-        ></glances-plugin-processlist>
-    </div>
+	<div v-if="args.disable_process">PROCESSES DISABLED (press 'z' to display)</div>
+	<div v-else>
+		<glances-plugin-processcount :sorter="sorter" :data="data"></glances-plugin-processcount>
+		<div v-if="!args.disable_amps" class="row">
+			<div class="col-lg-18">
+				<glances-plugin-amps :data="data"></glances-plugin-amps>
+			</div>
+		</div>
+		<glances-plugin-processlist :sorter="sorter" :data="data"
+			@update:sorter="args.sort_processes_key = $event"></glances-plugin-processlist>
+	</div>
 </template>
 
 <script>
@@ -60,7 +57,7 @@ export default {
 					"name",
 				];
 				function isReverseColumn(column) {
-					return !["username", "name"].includes(column);
+					return !["username", "name", "timemillis"].includes(column);
 				}
 				function getColumnLabel(value) {
 					const labels = {
