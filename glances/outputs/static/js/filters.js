@@ -127,7 +127,7 @@ export function timedelta(value) {
 	var sum = timemillis(value);
 	var d = new Date(sum);
 	var doy = Math.floor(
-		(d - new Date(d.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24,
+		(d - new Date(d.getUTCFullYear(), 0, 0)) / 1000 / 60 / 60 / 24,
 	);
 	return {
 		hours: d.getUTCHours() + (doy - 1) * 24,
