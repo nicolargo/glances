@@ -143,8 +143,8 @@ jobs:
           usesh: true
           run: |
             pkg install -y python3 gcc
-            if [ -f dev-requirements.txt ]; then python -m pip install -r dev-requirements.txt; fi
-            if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+            if [ -f dev-requirements.txt ]; then python3 -m pip install -r dev-requirements.txt; fi
+            if [ -f requirements.txt ]; then python3 -m pip install -r requirements.txt; fi
 
       - name: Unitary tests
         uses: vmactions/freebsd-vm@v1
