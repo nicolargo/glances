@@ -1,53 +1,50 @@
 <template>
-    <section id="quicklook" class="plugin">
-        <div class="d-flex justify-content-between">
-            <span class="text-start text-truncate">
-                {{ cpu_name }}
-            </span>
-            <span v-if="cpu_hz_current" class="text-end d-none d-xxl-block frequency">
-                {{ cpu_hz_current }}/{{ cpu_hz }}Ghz
-            </span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-sm table-borderless">
-                <tr v-if="!args.percpu">
-                    <td scope="col">CPU</td>
-                    <td scope="col" class="progress">
-                        <div
-:class="`progress-bar progress-bar-${getDecoration('cpu')}`" role="progressbar"
-                            :aria-valuenow="cpu" aria-valuemin="0" aria-valuemax="100" :style="`width: ${cpu}%;`">
-                            &nbsp;
-                        </div>
-                    </td>
-                    <td scope="col" class="text-end"><span>{{ cpu }}%</span></td>
-                </tr>
-                <tr v-for="(percpu, percpuId) in percpus" v-if="args.percpu" :key="percpuId">
-                    <td scope="col">CPU{{ percpu.number }}</td>
-                    <td scope="col" class="progress">
-                        <div
-:class="`progress-bar progress-bar-${getDecoration('cpu')}`" role="progressbar"
-                            :aria-valuenow="percpu.total" aria-valuemin="0" aria-valuemax="100"
-                            :style="`width: ${percpu.total}%;`">
-                            &nbsp;
-                        </div>
-                    </td>
-                    <td scope="col" class="text-end"><span>{{ percpu.total }}%</span></td>
-                </tr>
-                <tr v-for="(key) in stats_list_after_cpu">
-                    <td scope="col">{{ key.toUpperCase() }}</td>
-                    <td scope="col" class="progress">
-                        <div
-:class="`progress-bar progress-bar-${getDecoration(key)}`" role="progressbar"
-                            :aria-valuenow="stats[key]" aria-valuemin="0" aria-valuemax="100"
-                            :style="`width: ${stats[key]}%;`">
-                            &nbsp;
-                        </div>
-                    </td>
-                    <td scope="col" class="text-end"><span>{{ stats[key] }}%</span></td>
-                </tr>
-            </table>
-        </div>
-    </section>
+	<section id="quicklook" class="plugin">
+		<div class="d-flex justify-content-between">
+			<span class="text-start text-truncate">
+				{{ cpu_name }}
+			</span>
+			<span v-if="cpu_hz_current" class="text-end d-none d-xxl-block frequency">
+				{{ cpu_hz_current }}/{{ cpu_hz }}Ghz
+			</span>
+		</div>
+		<div class="table-responsive">
+			<table class="table table-sm table-borderless">
+				<tr v-if="!args.percpu">
+					<td scope="col">CPU</td>
+					<td scope="col" class="progress">
+						<div :class="`progress-bar progress-bar-${getDecoration('cpu')}`" role="progressbar"
+							:aria-valuenow="cpu" aria-valuemin="0" aria-valuemax="100" :style="`width: ${cpu}%;`">
+							&nbsp;
+						</div>
+					</td>
+					<td scope="col" class="text-end"><span>{{ cpu }}%</span></td>
+				</tr>
+				<tr v-for="(percpu, percpuId) in percpus" v-if="args.percpu" :key="percpuId">
+					<td scope="col">CPU{{ percpu.number }}</td>
+					<td scope="col" class="progress">
+						<div :class="`progress-bar progress-bar-${getDecoration('cpu')}`" role="progressbar"
+							:aria-valuenow="percpu.total" aria-valuemin="0" aria-valuemax="100"
+							:style="`width: ${percpu.total}%;`">
+							&nbsp;
+						</div>
+					</td>
+					<td scope="col" class="text-end"><span>{{ percpu.total }}%</span></td>
+				</tr>
+				<tr v-for="(key) in stats_list_after_cpu">
+					<td scope="col">{{ key.toUpperCase() }}</td>
+					<td scope="col" class="progress">
+						<div :class="`progress-bar progress-bar-${getDecoration(key)}`" role="progressbar"
+							:aria-valuenow="stats[key]" aria-valuemin="0" aria-valuemax="100"
+							:style="`width: ${stats[key]}%;`">
+							&nbsp;
+						</div>
+					</td>
+					<td scope="col" class="text-end"><span>{{ stats[key] }}%</span></td>
+				</tr>
+			</table>
+		</div>
+	</section>
 </template>
 
 <script>
@@ -84,10 +81,10 @@ export default {
 			return this.stats.cpu_name;
 		},
 		cpu_hz_current() {
-			return (this.stats.cpu_hz_current / 1000000).toFixed(0);
+			return (this.stats.cpu_hz_current / 1000000000).toFixed(2);
 		},
 		cpu_hz() {
-			return (this.stats.cpu_hz / 1000000).toFixed(0);
+			return (this.stats.cpu_hz / 1000000000).toFixed(2);
 		},
 		percpus() {
 			const cpu_list = this.stats.percpu.map(
