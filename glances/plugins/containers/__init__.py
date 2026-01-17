@@ -567,12 +567,14 @@ class ContainersPlugin(GlancesPluginModel):
         """Analyse the container status.
         One of created, restarting, running, removing, paused, exited, or dead
         """
-        if status == 'running':
+        if status in ('running', 'healthy'):
             return 'OK'
-        if status == 'dead':
+        if status in ('dead', 'unhealthy'):
             return 'ERROR'
-        if status in ['created', 'restarting', 'exited']:
+        if status in ['created', 'exited']:
             return 'WARNING'
+        if status in ['paused', 'restarting']:
+            return 'CAREFUL'
         return 'INFO'
 
 

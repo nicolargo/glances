@@ -295,11 +295,13 @@ class DockerExtension:
 
     def generate_stats(self, container) -> dict[str, Any]:
         # Init the stats for the current container
+        # Manage healthy status (see issue #3402)
+        status = container.attrs['State'].get('Health', container.attrs['State']).get('Status', '')
         stats = {
             'key': self.key,
             'name': nativestr(container.name),
             'id': container.id,
-            'status': container.attrs['State']['Status'],
+            'status': status,
             'created': container.attrs['Created'],
             'command': [],
             'io': {},
