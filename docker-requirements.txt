@@ -4,9 +4,9 @@ annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.7.0
     # via pydantic
-anyio==4.12.0
+anyio==4.12.1
     # via starlette
-certifi==2025.11.12
+certifi==2026.1.4
     # via requests
 charset-normalizer==3.4.4
     # via requests
@@ -72,7 +72,7 @@ typing-extensions==4.15.0
     #   uvicorn
 typing-inspection==0.4.2
     # via pydantic
-urllib3==2.6.2
+urllib3==2.6.3
     # via
     #   docker
     #   podman

@@ -4,7 +4,7 @@ annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.7.0
     # via pydantic
-anyio==4.12.0
+anyio==4.12.1
     # via
     #   elasticsearch
     #   starlette
@@ -14,7 +14,7 @@ bernhard==0.2.6
     # via glances
 cassandra-driver==3.29.3
     # via glances
-certifi==2025.11.12
+certifi==2026.1.4
     # via
     #   elastic-transport
     #   influxdb-client
@@ -62,7 +62,7 @@ humanfriendly==10.0
     # via pysmart
 ibm-cloud-sdk-core==3.24.2
     # via ibmcloudant
-ibmcloudant==0.11.2
+ibmcloudant==0.11.3
     # via glances
 idna==3.11
     # via
@@ -76,7 +76,7 @@ influxdb==5.3.2
     # via glances
 influxdb-client==1.49.0
     # via glances
-influxdb3-python==0.16.0
+influxdb3-python==0.17.0
     # via glances
 jinja2==3.1.6
     # via
@@ -106,9 +106,9 @@ podman==5.6.0
     # via glances
 potsdb==1.0.3
     # via glances
-prometheus-client==0.23.1
+prometheus-client==0.24.1
     # via glances
-protobuf==6.33.2
+protobuf==6.33.4
     # via bernhard
 psutil==7.2.1
     # via glances
@@ -118,7 +118,7 @@ psycopg-binary==3.3.2 ; implementation_name != 'pypy'
     # via psycopg
 pyarrow==22.0.0
     # via influxdb3-python
-pyasn1==0.6.1
+pyasn1==0.6.2
     # via pysnmp-lextudio
 pycparser==2.23 ; (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (implementation_name == 'pypy' and platform_python_implementation == 'PyPy')
     # via cffi
@@ -134,7 +134,7 @@ pyjwt==2.10.1
     #   ibmcloudant
 pymdstat==0.4.3
     # via glances
-pymongo==4.15.5
+pymongo==4.16.0
     # via glances
 pyreadline3==3.5.4 ; sys_platform == 'win32'
     # via humanfriendly
@@ -216,7 +216,7 @@ typing-inspection==0.4.2
     # via pydantic
 tzdata==2025.3 ; sys_platform == 'win32'
     # via psycopg
-urllib3==2.6.2
+urllib3==2.6.3
     # via
     #   docker
     #   elastic-transport
