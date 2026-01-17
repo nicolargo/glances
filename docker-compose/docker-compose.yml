@@ -4,6 +4,13 @@ services:
     image: nicolargo/glances:latest-full
     restart: always
 
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:61208/api/4/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
     pid: "host"
     network_mode: "host"
 

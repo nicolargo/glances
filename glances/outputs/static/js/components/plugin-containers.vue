@@ -35,11 +35,7 @@
                         <td v-show="!getDisableStats().includes('name')" scope="row">
                             {{ container.name }}
                         </td>
-                        <td v-show="!getDisableStats().includes('status')" scope="row" :class="[
-                            container.status === 'Paused' && 'careful',
-                            container.status === 'exited' && 'warning',
-                            !['Paused', 'exited'].includes(container.status) && 'ok'
-                        ]">
+                        <td v-show="!getDisableStats().includes('status')" scope="row" :class="getStatusClass(container.status)">
                             {{ container.status }}
                         </td>
                         <td v-show="!getDisableStats().includes('cpu')" scope="row">
@@ -108,11 +104,7 @@
                         <td v-show="!getDisableStats().includes('name')" scope="row">
                             {{ container.name }}
                         </td>
-                        <td v-show="!getDisableStats().includes('status')" scope="row" :class="[
-                            container.status === 'Paused' && 'careful',
-                            container.status === 'exited' && 'warning',
-                            !['Paused', 'exited'].includes(container.status) && 'ok'
-                        ]">
+                        <td v-show="!getDisableStats().includes('status')" scope="row" :class="getStatusClass(container.status)">
                             {{ container.status }}
                         </td>
                         <td v-show="!getDisableStats().includes('uptime')" scope="row">
@@ -294,6 +286,22 @@ export default {
 			return (
 				GlancesHelper.getLimit("containers", "containers_disable_stats") || []
 			);
+		},
+		getStatusClass(status) {
+			const lowerStatus = status.toLowerCase();
+			if (['running', 'healthy'].includes(lowerStatus)) {
+				return 'ok';
+			}
+			if (['dead', 'unhealthy'].includes(lowerStatus)) {
+				return 'error';
+			}
+			if (['created', 'exited'].includes(lowerStatus)) {
+				return 'warning';
+			}
+			if (['paused', 'restarting'].includes(lowerStatus)) {
+				return 'careful';
+			}
+			return 'info';
 		},
 	},
 };
