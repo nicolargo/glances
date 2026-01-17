@@ -733,6 +733,32 @@ class ProcesslistPlugin(GlancesPluginModel):
 
         functools.reduce(lambda ret, step: step(ret, prog), steps, ret)
 
+    def _msg_curse_header_cpu(self, ret, process_sort_key, display_stats, sort_style='SORT', args=None):
+        """Build the header and add it to the ret dict."""
+        if 'cpu_percent' in display_stats:
+            if args.disable_irix and 0 < self.nb_log_core < 10:
+                msg = self.layout_header['cpu'].format('CPU%/' + str(self.nb_log_core))
+            elif args.disable_irix and self.nb_log_core != 0:
+                msg = self.layout_header['cpu'].format('CPUi')
+            else:
+                msg = self.layout_header['cpu'].format('CPU%')
+            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
+
+    def msg_curse_header_common(
+        self,
+        ret,
+        process_sort_key,
+        field_stat,
+        display_stats,
+        layout_field,
+        layout_value,
+        layout_width=None,
+        sort_style='SORT',
+    ):
+        if field_stat in display_stats:
+            msg = self.layout_header[layout_field].format(layout_value, width=layout_width)
+            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == field_stat else 'DEFAULT'))
+
     def _msg_curse_header(self, ret, process_sort_key, args=None):
         """Build the header and add it to the ret dict."""
         sort_style = 'SORT'
@@ -743,45 +769,41 @@ class ProcesslistPlugin(GlancesPluginModel):
             ret.append(self.curse_new_line())
 
         display_stats = [i for i in self.enable_stats if i not in glances_processes.disable_stats]
-
-        if 'cpu_percent' in display_stats:
-            if args.disable_irix and 0 < self.nb_log_core < 10:
-                msg = self.layout_header['cpu'].format('CPU%/' + str(self.nb_log_core))
-            elif args.disable_irix and self.nb_log_core != 0:
-                msg = self.layout_header['cpu'].format('CPUi')
-            else:
-                msg = self.layout_header['cpu'].format('CPU%')
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
-
-        if 'memory_percent' in display_stats:
-            msg = self.layout_header['mem'].format('MEM%')
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
+        self._msg_curse_header_cpu(ret, process_sort_key, display_stats, args=args, sort_style=sort_style)
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'memory_percent', display_stats, 'mem', 'MEM%', sort_style=sort_style
+        )
         if 'memory_info' in display_stats:
             if not self.get_conf_value('disable_virtual_memory', convert_bool=True, default=False):
                 msg = self.layout_header['virt'].format('VIRT')
                 ret.append(self.curse_add_line(msg, optional=True))
             msg = self.layout_header['res'].format('RES')
             ret.append(self.curse_add_line(msg, optional=True))
-        if 'pid' in display_stats:
-            msg = self.layout_header['pid'].format('PID', width=self._max_pid_size())
-            ret.append(self.curse_add_line(msg))
-        if 'username' in display_stats:
-            msg = self.layout_header['user'].format('USER')
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
+        self.msg_curse_header_common(
+            ret,
+            process_sort_key,
+            'pid',
+            display_stats,
+            'pid',
+            'PID',
+            layout_width=self._max_pid_size(),
+            sort_style=sort_style,
+        )
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'username', display_stats, 'user', 'USER', sort_style=sort_style
+        )
         if 'cpu_times' in display_stats:
             msg = self.layout_header['time'].format('TIME+')
             ret.append(
                 self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_times' else 'DEFAULT', optional=True)
             )
-        if 'num_threads' in display_stats:
-            msg = self.layout_header['thread'].format('THR')
-            ret.append(self.curse_add_line(msg))
-        if 'nice' in display_stats:
-            msg = self.layout_header['nice'].format('NI')
-            ret.append(self.curse_add_line(msg))
-        if 'status' in display_stats:
-            msg = self.layout_header['status'].format('S')
-            ret.append(self.curse_add_line(msg))
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'num_threads', display_stats, 'thread', 'THR', sort_style=sort_style
+        )
+        self.msg_curse_header_common(ret, process_sort_key, 'nice', display_stats, 'nice', 'NI', sort_style=sort_style)
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'status', display_stats, 'status', 'S', sort_style=sort_style
+        )
         if 'io_counters' in display_stats:
             msg = self.layout_header['ior'].format('R/s')
             ret.append(
