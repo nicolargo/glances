@@ -143,7 +143,7 @@ jobs:
           usesh: true
           run: |
             pkg install -y python3 gcc
-            python --version
+            python3 --version
             if [ -f dev-requirements.txt ]; then python3 -m pip install -r dev-requirements.txt; fi
             if [ -f requirements.txt ]; then python3 -m pip install -r requirements.txt; fi
 
