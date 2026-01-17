@@ -119,25 +119,35 @@ jobs:
         run: |
           python -m pytest ./tests/test_core.py
 
-  # Error when trying to implement #2749
-  # pkg: No packages available to install matching 'py-pip' have been found in the repositories
-  # test-freebsd:
+  test-freebsd:
 
-  #   runs-on: ubuntu-22.04
+    needs: source-code-checks
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Only test the latest stable version
+        python-version: ["3.14"]
+    steps:
 
-  #   steps:
+      - uses: actions/checkout@v5
 
-  #     - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
-  #     - name: Run tests
-  #       uses: vmactions/freebsd-vm@v1
-  #       with:
-  #         usesh: true
-  #         prepare: |
-  #           pkg install -y python3
-  #         run: |
-  #           set -e -x
-  #           python3 -m pip install pytest
-  #           python3 -m pip install --user -r dev-requirements.txt
-  #           python3 -m pip install --user -r requirements.txt
-  #           python3 -m pytest ./tests/test_core.py
+      - name: Install dependencies
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          run: |
+            if [ -f dev-requirements.txt ]; then python -m pip install -r dev-requirements.txt; fi
+            if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+
+      - name: Unitary tests
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          run: |
+            python -m pytest ./tests/test_core.py
