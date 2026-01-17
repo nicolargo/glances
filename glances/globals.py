@@ -299,49 +299,56 @@ def pretty_date(ref, now=None):
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
     'just now', etc
     Source: https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
-
-    Refactoring done in commit https://github.com/nicolargo/glances/commit/f6279baacd4cf0b27ca10df6dc01f091ea86a40a
-    break the function. Get back to the old fashion way.
     """
-    if not now:
-        now = datetime.now()
+    now = now or datetime.now()
     if isinstance(ref, int):
         diff = now - datetime.fromtimestamp(ref)
     elif isinstance(ref, datetime):
         diff = now - ref
     elif not ref:
         diff = 0
+
     second_diff = diff.seconds
     day_diff = diff.days
 
     if day_diff < 0:
         return ''
 
+    # Thresholds for day_diff == 0: (max_seconds, divisor, singular, plural)
+    second_thresholds = [
+        (10, 1, "just now", None),
+        (60, 1, None, " secs"),
+        (120, 1, "a min", None),
+        (3600, 60, None, " mins"),
+        (7200, 1, "an hour", None),
+        (86400, 3600, None, " hours"),
+    ]
+
+    # Thresholds for day_diff > 0: (max_days, divisor, singular, plural)
+    day_thresholds = [
+        (2, 1, "yesterday", None),
+        (7, 1, "a day", " days"),
+        (31, 7, "a week", " weeks"),
+        (365, 30, "a month", " months"),
+        (float('inf'), 365, "an year", " years"),
+    ]
+
     if day_diff == 0:
-        if second_diff < 10:
-            return "just now"
-        if second_diff < 60:
-            return str(second_diff) + " secs"
-        if second_diff < 120:
-            return "a min"
-        if second_diff < 3600:
-            return str(second_diff // 60) + " mins"
-        if second_diff < 7200:
-            return "an hour"
-        if second_diff < 86400:
-            return str(second_diff // 3600) + " hours"
-    if day_diff == 1:
-        return "yesterday"
-    if day_diff < 7:
-        return str(day_diff) + " days" if day_diff > 1 else "a day"
-    if day_diff < 31:
-        week = day_diff // 7
-        return str(week) + " weeks" if week > 1 else "a week"
-    if day_diff < 365:
-        month = day_diff // 30
-        return str(month) + " months" if month > 1 else "a month"
-    year = day_diff // 365
-    return str(year) + " years" if year > 1 else "an year"
+        for max_val, divisor, singular, plural in second_thresholds:
+            if second_diff < max_val:
+                if singular and not plural:
+                    return singular
+                value = second_diff // divisor
+                return str(value) + plural
+
+    for max_val, divisor, singular, plural in day_thresholds:
+        if day_diff < max_val:
+            value = day_diff // divisor
+            if singular and (value <= 1 or not plural):
+                return singular
+            return str(value) + plural
+
+    return ''
 
 
 def urlopen_auth(url, username, password):
