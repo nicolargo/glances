@@ -142,7 +142,7 @@ jobs:
         with:
           usesh: true
           run: |
-            sudo pkg install -y python3 gcc
+            pkg install -y python3 gcc
             if [ -f dev-requirements.txt ]; then python -m pip install -r dev-requirements.txt; fi
             if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
 
