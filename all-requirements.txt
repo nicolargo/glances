@@ -126,7 +126,7 @@ pyarrow==22.0.0
 pyasn1==0.6.2
     # via pysnmp-lextudio
 =======
-pyasn1==0.6.1
+pyasn1==0.6.2
     # via
     #   pysnmp-lextudio
     #   python-jose
