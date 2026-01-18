@@ -277,7 +277,8 @@ class MemPlugin(GlancesPluginModel):
 
         # Add specifics information
         # Alert and log
-        self.views['percent']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
+        if 'used' in self.stats and 'total' in self.stats:
+            self.views['percent']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
