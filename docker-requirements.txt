@@ -44,7 +44,7 @@ podman==5.6.0
     # via glances
 psutil==7.2.1
     # via glances
-pyasn1==0.6.1
+pyasn1==0.6.2
     # via
     #   python-jose
     #   rsa
