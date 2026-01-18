@@ -37,13 +37,17 @@ click==8.1.8
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
 cryptography==46.0.3
-    # via pysnmpcrypto
+    # via
+    #   pysnmpcrypto
+    #   python-jose
 defusedxml==0.7.1
     # via glances
 dnspython==2.8.0
     # via pymongo
 docker==7.1.0
     # via glances
+ecdsa==0.19.1
+    # via python-jose
 elastic-transport==9.2.1
     # via elasticsearch
 elasticsearch==9.2.1
@@ -118,8 +122,16 @@ psycopg-binary==3.3.2 ; implementation_name != 'pypy'
     # via psycopg
 pyarrow==22.0.0
     # via influxdb3-python
+<<<<<<< HEAD
 pyasn1==0.6.2
     # via pysnmp-lextudio
+=======
+pyasn1==0.6.1
+    # via
+    #   pysnmp-lextudio
+    #   python-jose
+    #   rsa
+>>>>>>> 4181585e (Implementation of a JWT token thanks to Jose lib)
 pycparser==2.23 ; (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (implementation_name == 'pypy' and platform_python_implementation == 'PyPy')
     # via cffi
 pydantic==2.12.5
@@ -155,6 +167,8 @@ python-dateutil==2.9.0.post0
     #   influxdb
     #   influxdb-client
     #   influxdb3-python
+python-jose==3.5.0
+    # via glances
 pytz==2025.2
     # via influxdb
 pywin32==311 ; sys_platform == 'win32'
@@ -174,6 +188,8 @@ requests==2.32.5
     #   influxdb
     #   podman
     #   pysmi-lextudio
+rsa==4.9.1
+    # via python-jose
 setuptools==80.9.0
     # via
     #   influxdb-client
@@ -182,6 +198,7 @@ shtab==1.8.0 ; sys_platform != 'win32'
     # via glances
 six==1.17.0
     # via
+    #   ecdsa
     #   glances
     #   influxdb
     #   python-dateutil
