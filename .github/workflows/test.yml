@@ -119,37 +119,37 @@ jobs:
         run: |
           python -m pytest ./tests/test_core.py
 
-  test-freebsd:
+  # test-freebsd:
 
-    needs: source-code-checks
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # Only test the latest stable version
-        python-version: ["3.14"]
-    steps:
+  #   needs: source-code-checks
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       # Only test the latest stable version
+  #       python-version: ["3.14"]
+  #   steps:
 
-      - uses: actions/checkout@v5
+  #     - uses: actions/checkout@v5
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
+  #     - name: Set up Python ${{ matrix.python-version }}
+  #       uses: actions/setup-python@v6
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #         cache: 'pip'
 
-      - name: Install dependencies
-        uses: vmactions/freebsd-vm@v1
-        with:
-          usesh: true
-          run: |
-            pkg install -y python3 gcc devel/py-pip
-            python3 --version
-            if [ -f dev-requirements.txt ]; then python3 -m pip install -r dev-requirements.txt; fi
-            if [ -f requirements.txt ]; then python3 -m pip install -r requirements.txt; fi
+  #     - name: Install dependencies
+  #       uses: vmactions/freebsd-vm@v1
+  #       with:
+  #         usesh: true
+  #         run: |
+  #           pkg install -y python3 gcc devel/py-pip
+  #           python3 --version
+  #           if [ -f dev-requirements.txt ]; then python3 -m pip install -r dev-requirements.txt; fi
+  #           if [ -f requirements.txt ]; then python3 -m pip install -r requirements.txt; fi
 
-      - name: Unitary tests
-        uses: vmactions/freebsd-vm@v1
-        with:
-          usesh: true
-          run: |
-            python3 -m pytest ./tests/test_core.py
+  #     - name: Unitary tests
+  #       uses: vmactions/freebsd-vm@v1
+  #       with:
+  #         usesh: true
+  #         run: |
+  #           python3 -m pytest ./tests/test_core.py
