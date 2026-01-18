@@ -122,16 +122,11 @@ psycopg-binary==3.3.2 ; implementation_name != 'pypy'
     # via psycopg
 pyarrow==22.0.0
     # via influxdb3-python
-<<<<<<< HEAD
 pyasn1==0.6.2
-    # via pysnmp-lextudio
-=======
-pyasn1==0.6.1
     # via
     #   pysnmp-lextudio
     #   python-jose
     #   rsa
->>>>>>> 4181585e (Implementation of a JWT token thanks to Jose lib)
 pycparser==2.23 ; (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (implementation_name == 'pypy' and platform_python_implementation == 'PyPy')
     # via cffi
 pydantic==2.12.5
