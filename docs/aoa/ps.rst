@@ -143,6 +143,20 @@ Columns display
 
 ``R/s``                   Per process I/O read rate in B/s
 ``W/s``                   Per process I/O write rate in B/s
+``CPU``                   CPU core number where the process is currently running
+
+                          Displays the 0-based CPU core number (0, 1, 2, etc.)
+                          where the process is executing. The value updates
+                          dynamically as processes migrate between CPU cores.
+
+                          Shows ``-`` when information is unavailable.
+
+                          Available on Linux, FreeBSD, and SunOS only.
+                          Automatically disabled on Windows and macOS.
+
+                          Can be disabled via configuration with:
+                          ``disable_stats=cpu_num`` in the ``[processlist]``
+                          section of glances.conf
 ``COMMAND``               Process command line or command name
 
                           User can switch to the process name by

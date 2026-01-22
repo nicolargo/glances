@@ -711,6 +711,7 @@ Processlist fields description:
 * cpu_times: Process CPU times (dict with user, system, iowait keys)
 * gids: Process group IDs (dict with real, effective, saved keys)
 * io_counters: Process IO counters (list with read_count, write_count, read_bytes, write_bytes, io_tag keys)
+* cpu_num: CPU core number (0-based) where the process is currently running (Linux, FreeBSD, SunOS only; returns None on other platforms or when unavailable)
 
 Processlist limits:
 
