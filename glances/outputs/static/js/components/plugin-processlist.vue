@@ -140,7 +140,9 @@
                             @click="$emit('update:sorter', 'io_counters')">
                             IOWps
                         </td>
-                        <td v-show="!getDisableStats().includes('cpu_num')" scope="col">
+                        <td v-show="!getDisableStats().includes('cpu_num')" scope="col"
+                            :class="['sortable', sorter.column === 'cpu_num' && 'sort']"
+                            @click="$emit('update:sorter', 'cpu_num')">
                             CPU
                         </td>
                         <td v-show="!getDisableStats().includes('cmdline')" scope="col"
@@ -320,7 +322,9 @@
                             @click="$emit('update:sorter', 'io_counters')">
                             IOWps
                         </td>
-                        <td v-show="!getDisableStats().includes('cpu_num')" scope="col">
+                        <td v-show="!getDisableStats().includes('cpu_num')" scope="col"
+                            :class="['sortable', sorter.column === 'cpu_num' && 'sort']"
+                            @click="$emit('update:sorter', 'cpu_num')">
                             CPU
                         </td>
                         <td v-show="!getDisableStats().includes('cmdline')" scope="row"

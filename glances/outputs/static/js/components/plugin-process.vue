@@ -55,9 +55,10 @@ export default {
 					"num_threads",
 					"io_counters",
 					"name",
+					"cpu_num",
 				];
 				function isReverseColumn(column) {
-					return !["username", "name", "timemillis"].includes(column);
+					return !["username", "name", "timemillis", "cpu_num"].includes(column);
 				}
 				function getColumnLabel(value) {
 					const labels = {
@@ -68,6 +69,7 @@ export default {
 						cpu_times: "process time",
 						io_counters: "disk IO",
 						name: "process name",
+						cpu_num: "CPU core number",
 						None: "None",
 					};
 					return labels[value] || value;

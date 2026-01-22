@@ -74,6 +74,7 @@ class _GlancesCurses:
         'M': {'switch': 'reset_minmax_tag'},
         'n': {'switch': 'disable_network'},
         'N': {'switch': 'disable_now'},
+        'o': {'sort_key': 'cpu_num'},
         'p': {'sort_key': 'name'},
         'P': {'switch': 'disable_ports'},
         # 'q' or ESCAPE > Quit
