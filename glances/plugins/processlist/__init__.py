@@ -79,6 +79,10 @@ fields_description = {
         'description': 'Process IO counters (list with read_count, write_count, read_bytes, write_bytes, io_tag keys)',
         'unit': 'byte',
     },
+    'cpu_num': {
+        'description': 'CPU core number where the process is currently executing (0-based indexing)',
+        'unit': 'number',
+    },
 }
 
 
@@ -131,6 +135,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         'nice',
         'status',
         'io_counters',  # ior and iow
+        'cpu_num',  # current CPU core
         'cmdline',
     ]
 
@@ -148,6 +153,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         'status': '{:>1} ',
         'ior': '{:>4} ',
         'iow': '{:<4} ',
+        'processor': '{:>3} ',
         'command': '{} {}',
     }
 
@@ -166,6 +172,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         'status': '{:>1} ',
         'ior': '{:>4} ',
         'iow': '{:<4} ',
+        'processor': '{:>3} ',
         'command': '{}',
         'name': '[{}]',
     }
@@ -464,6 +471,19 @@ class ProcesslistPlugin(GlancesPluginModel):
             self._get_process_curses_io_read_write(p, selected, args, rorw='ior'),
             self._get_process_curses_io_read_write(p, selected, args, rorw='iow'),
         ]
+
+    def _get_process_curses_cpu_num(self, p, selected, args):
+        """Return process CPU core number curses"""
+        if 'cpu_num' in p and p['cpu_num'] is not None and p['cpu_num'] >= 0:
+            # Valid CPU core number (0-based)
+            cpu_num = p['cpu_num']
+            msg = self.layout_stat['processor'].format(cpu_num)
+            ret = self.curse_add_line(msg, optional=True)
+        else:
+            # Information unavailable
+            msg = self.layout_header['processor'].format('-')
+            ret = self.curse_add_line(msg, optional=True)
+        return ret
 
     def _get_process_curses_cmdline(self, p, selected, args):
         """Return process cmdline curses"""
@@ -817,6 +837,9 @@ class ProcesslistPlugin(GlancesPluginModel):
                     msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
                 )
             )
+        if 'cpu_num' in display_stats:
+            msg = self.layout_header['processor'].format('CPU')
+            ret.append(self.curse_add_line(msg, optional=True))
         if args.is_standalone and not args.disable_cursor:
             shortkey = "('e' to pin | 'k' to kill)"
         else:
