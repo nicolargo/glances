@@ -177,15 +177,63 @@ class NpuPlugin(GlancesPluginModel):
 
         return True
 
+    def _format_value(self, value, unit='%'):
+        """Format a value with unit, or return N/A if value is None."""
+        if value is None:
+            return '{:>5}'.format('N/A')
+        return f'{value:>4.0f}{unit}'
+
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         ret = []
 
-        # Only process if stats exist, not empty (issue #871) and plugin not disabled
+        # Only process if stats exist, not empty and plugin not disabled
         if not self.stats or self.is_disabled():
             return ret
 
-        # Header
-        # Build the string message
+        # First name is NPU name (limited to 15 characters)
+        ret.append(self.curse_add_line(self.stats[0]['name'][:17], 'TITLE'))
+
+        # Second line is load (or frequency) percent and frequency limit
+        ret.append(self.curse_new_line())
+        if self.stats[0]['load'] is not None:
+            msg = '{:<3.0%}'.format(self.stats[0]['load'] / 100)
+            ret.append(
+                self.curse_add_line(
+                    msg, self.get_views(key='load', item=self.stats[0][self.get_key()], option='decoration')
+                )
+            )
+        else:
+            msg = '{:<3.0%}'.format(self.stats[0]['freq'] / 100)
+            ret.append(
+                self.curse_add_line(
+                    msg, self.get_views(key='freq', item=self.stats[0][self.get_key()], option='decoration')
+                )
+            )
+        freq = '{}/{}Hz'.format(
+            self.auto_unit(self.stats[0]['freq_current']), self.auto_unit(self.stats[0]['freq_max'])
+        )
+        msg = f'{freq:>14}'
+        ret.append(self.curse_add_line(msg, 'DEFAULT'))
+
+        # Third line is memory
+        # Note: for the moment not available
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line('{:<12}'.format('mem:')))
+        msg = self._format_value(self.stats[0]['mem'], unit='%')
+        ret.append(
+            self.curse_add_line(msg, self.get_views(key='mem', item=self.stats[0][self.get_key()], option='mem'))
+        )
+
+        # Fourth line is temperature
+        # Note: for the moment only available for INTEL NPU
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line('{:<12}'.format('temperature:')))
+        msg = self._format_value(self.stats[0]['temperature'], unit='C')
+        ret.append(
+            self.curse_add_line(
+                msg, self.get_views(key='temperature', item=self.stats[0][self.get_key()], option='decoration')
+            )
+        )
 
         return ret
