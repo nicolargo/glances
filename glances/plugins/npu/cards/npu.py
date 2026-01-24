@@ -19,6 +19,8 @@ class NPUStats:
         self.name: str = "unknown"
         self.load: int | None = None
         self.freq: int | None = None
+        self.freq_current: int | None = None
+        self.freq_max: int | None = None
         self.mem: int | None = None
         self.memory_used: int | None = None
         self.memory_total: int | None = None

@@ -17,8 +17,8 @@
     │   ├── npu_max_frequency_mhz    # Ex: "1400"
     │   └── hwmon/
     │       └── hwmon2/
-    │           ├── temp1_input       # Ex: "45000" (45°C en milli-Celsius)
-    │           └── power1_input      # Ex: "2500000" (2.5W en micro-Watts)
+    │           ├── temp1_input       # Ex: "45000" (45°C in milli-Celsius)
+    │           └── power1_input      # Ex: "2500000" (2.5W in micro-Watts)
     └── dev                           # "261:0"
 
 Current limitation:
@@ -60,12 +60,14 @@ class IntelNPU:
 
         stats = NPUStats()
 
-        stats.npu_id = 1
-        stats.proc = int(
-            self._read_file(os.path.join(self.device_folder, 'npu_current_frequency_mhz'), as_int=True)
-            / self._read_file(os.path.join(self.device_folder, 'npu_max_frequency_mhz'), as_int=True)
-            * 100
-        )
+        stats.npu_id = 'intel_1'
+        stats.freq_current = (
+            self._read_file(os.path.join(self.device_folder, 'npu_current_frequency_mhz'), as_int=True) * 1000000
+        )  # Convert MHz to Hz
+        stats.freq_max = (
+            self._read_file(os.path.join(self.device_folder, 'npu_max_frequency_mhz'), as_int=True) * 1000000
+        )  # Convert MHz to Hz
+        stats.freq = int(stats.freq_current / stats.freq_max * 100)
         stats.name = self._get_device_name(self._read_file(os.path.join(self.device_folder, 'device')))
 
         # Temperature

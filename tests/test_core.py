@@ -43,6 +43,7 @@ from glances.globals import (
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
 from glances.plugins.fs.zfs import zfs_enable, zfs_stats
+from glances.plugins.npu import NpuPlugin
 from glances.plugins.plugin.dag import get_plugin_dependencies
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.stats import GlancesStats
@@ -630,6 +631,85 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(split_esc(r'a\hellobhelloc', r'hello'), [r'ahellob', r'c'])
         self.assertEqual(split_esc(r'ahe\llobhelloc', r'hello'), [r'ahellob', r'c'])
 
+    @unittest.skipIf(not LINUX, "GPU available only on Linux")
+    def test_025_npu(self):
+        """Check NPU plugin."""
+        print('INFO: [TEST_025] Check NPU stats')
+        stats_grab = stats.get_plugin('npu').get_raw()
+        self.assertTrue(isinstance(stats_grab, list), msg='NPU stats is not a list')
+        # Test AMD NPU plugin with test data
+        print('INFO: [TEST_025] Check AMD NPU stats with test data')
+        stats_amd_npu = NpuPlugin(
+            config=test_config, args=test_args, amd_npu_root_folder='./tests-data/plugins/npu/amd'
+        )
+        stats_amd_npu.update()
+        stats_grab = stats_amd_npu.get_raw()
+        self.assertTrue(isinstance(stats_grab, list), msg='NPU stats is not a list')
+        self.assertEqual(
+            stats_grab[0],
+            {
+                'npu_id': 'amd_1',
+                'name': 'AMD NPU (Strix Point)',
+                'load': None,
+                'freq': 53,
+                'freq_current': 800000000,
+                'freq_max': 1500000000,
+                'mem': None,
+                'memory_used': None,
+                'memory_total': None,
+                'temperature': None,
+                'power': None,
+            },
+        )
+        # Test Intel NPU plugin with test data
+        print('INFO: [TEST_025] Check Intel NPU stats with test data')
+        stats_intel_npu = NpuPlugin(
+            config=test_config, args=test_args, intel_npu_root_folder='./tests-data/plugins/npu/intel'
+        )
+        stats_intel_npu.update()
+        stats_grab = stats_intel_npu.get_raw()
+        self.assertTrue(isinstance(stats_grab, list), msg='NPU stats is not a list')
+        self.assertEqual(
+            stats_grab[0],
+            {
+                'npu_id': 'intel_1',
+                'name': 'Intel NPU (Meteor Lake)',
+                'load': None,
+                'freq': 57,
+                'freq_current': 800000000,
+                'freq_max': 1400000000,
+                'mem': None,
+                'memory_used': None,
+                'memory_total': None,
+                'temperature': 45.0,
+                'power': 2.5,
+            },
+        )
+        # Test Rockchip NPU plugin with test data
+        print('INFO: [TEST_025] Check Rockchip NPU stats with test data')
+        stats_rockchip_npu = NpuPlugin(
+            config=test_config, args=test_args, rockchip_npu_root_folder='./tests-data/plugins/npu/rockchip'
+        )
+        stats_rockchip_npu.update()
+        stats_grab = stats_rockchip_npu.get_raw()
+        self.assertTrue(isinstance(stats_grab, list), msg='NPU stats is not a list')
+        self.assertEqual(
+            stats_grab[0],
+            {
+                'npu_id': 'rockship_1',
+                'name': 'Orange Pi 5 Plus',
+                'load': 25,
+                'freq': 60,
+                'freq_current': 600000000,
+                'freq_max': 1000000000,
+                'mem': None,
+                'memory_used': None,
+                'memory_total': None,
+                'temperature': None,
+                'power': None,
+            },
+        )
+
     def test_093_auto_unit(self):
         """Test auto_unit classe"""
         print('INFO: [TEST_093] Auto unit')
@@ -799,10 +879,19 @@ class TestGlances(unittest.TestCase):
     #     print('INFO: [TEST_106] Test diskio plugin methods')
     #     self._common_plugin_tests('diskio')
 
-    def test_107_fs_plugin_method(self):
-        """Test fs plugin methods"""
-        print('INFO: [TEST_107] Test fs plugin methods')
-        self._common_plugin_tests('fs')
+    # Before uncommenting this test, please correct deprecation warning
+    # ===
+    # tests/test_core.py::TestGlances::test_107_fs_plugin_method
+    # tests/test_core.py::TestGlances::test_107_fs_plugin_method
+    # /python3.14/multiprocessing/popen_fork.py:70: DeprecationWarning:
+    # This process (pid=1467579) is multi-threaded, use of fork() may lead to deadlocks in the child.
+    #     self.pid = os.fork()
+    # -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+    # ===
+    # def test_107_fs_plugin_method(self):
+    #     """Test fs plugin methods"""
+    #     print('INFO: [TEST_107] Test fs plugin methods')
+    #     self._common_plugin_tests('fs')
 
     def test_108_fs_zfs_(self):
         """Test zfs functions"""

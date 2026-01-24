@@ -19,9 +19,9 @@
 
 /sys/class/devfreq/
 └── *xdna*/                   # or *npu* or /sys/devices/platform/*.npu/devfreq/*
-    ├── cur_freq              # Ex: "800000000" (800 MHz en Hz)
-    ├── max_freq              # Ex: "1500000000" (1.5 GHz en Hz)
-    ├── min_freq              # Ex: "400000000" (400 MHz en Hz)
+    ├── cur_freq              # Ex: "800000000" (800 MHz in Hz)
+    ├── max_freq              # Ex: "1500000000" (1.5 GHz in Hz)
+    ├── min_freq              # Ex: "400000000" (400 MHz in Hz)
     └── available_frequencies
 
 Current limitation:
@@ -66,12 +66,10 @@ class AmdNPU:
 
         stats = NPUStats()
 
-        stats.npu_id = 1
-        stats.proc = int(
-            self._read_file(os.path.join(self.freq_folder, 'cur_freq'), as_int=True)
-            / self._read_file(os.path.join(self.freq_folder, 'max_freq'), as_int=True)
-            * 100
-        )
+        stats.npu_id = 'amd_1'
+        stats.freq_current = self._read_file(os.path.join(self.freq_folder, 'cur_freq'), as_int=True)
+        stats.freq_max = self._read_file(os.path.join(self.freq_folder, 'max_freq'), as_int=True)
+        stats.freq = int(stats.freq_current / stats.freq_max * 100)
         stats.name = self._get_device_name(self._read_file(os.path.join(self.device_folder, '../../device')))
 
         # Return stats as a dictionary
