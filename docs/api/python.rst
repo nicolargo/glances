@@ -417,10 +417,7 @@ Npu limits:
      'npu_freq_warning': 70.0,
      'npu_load_careful': 50.0,
      'npu_load_critical': 90.0,
-     'npu_load_warning': 70.0,
-     'npu_mem_careful': 50.0,
-     'npu_mem_critical': 90.0,
-     'npu_mem_warning': 70.0}
+     'npu_load_warning': 70.0}
 
 Glances percpu
 --------------
