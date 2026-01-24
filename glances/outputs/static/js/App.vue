@@ -245,6 +245,11 @@ export default {
 				this.store.args.sort_processes_key = "name";
 			});
 
+			// o => Sort processes/containers by CPU core number
+			hotkeys("o", () => {
+				this.store.args.sort_processes_key = "cpu_num";
+			});
+
 			// i => Sort processes/containers by I/O rate
 			hotkeys("i", () => {
 				this.store.args.sort_processes_key = "io_counters";

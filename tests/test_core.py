@@ -338,6 +338,49 @@ class TestGlances(unittest.TestCase):
         # Check if number of processes in the list equal counter
         # self.assertEqual(total, len(stats_grab))
 
+    def test_010a_processes_cpu_num(self):
+        """Check Process cpu_num (processor) field."""
+        print('INFO: [TEST_010a] Check PROCESS cpu_num field')
+
+        # Test 1: Capability detection
+        from glances.processes import glances_processes
+
+        self.assertTrue(hasattr(glances_processes, 'disable_cpu_num'))
+        print(f'INFO: cpu_num capability - disable_cpu_num={glances_processes.disable_cpu_num}')
+
+        # Test 2: Field in displayed attributes when not disabled
+        displayed_attr = glances_processes.get_displayed_attr()
+        if glances_processes.disable_cpu_num:
+            self.assertNotIn('cpu_num', displayed_attr)
+        else:
+            self.assertIn('cpu_num', displayed_attr)
+        print(f'INFO: cpu_num in displayed_attr: {not glances_processes.disable_cpu_num}')
+
+        # Test 3: Display formatting
+        from unittest.mock import Mock
+
+        from glances.plugins.processlist import ProcesslistPlugin
+
+        plugin = ProcesslistPlugin()
+        args = Mock()
+        args.disable_irix = False
+        args.disable_cursor = False
+
+        # Test valid cpu_num value
+        result_valid = plugin._get_process_curses_cpu_num({'cpu_num': 5}, False, args)
+        self.assertEqual(result_valid.get('msg'), '  5 ')
+        self.assertEqual(len(result_valid.get('msg')), 4)
+
+        # Test None value
+        result_none = plugin._get_process_curses_cpu_num({'cpu_num': None}, False, args)
+        self.assertEqual(result_none.get('msg'), '  - ')
+
+        # Test missing key
+        result_missing = plugin._get_process_curses_cpu_num({}, False, args)
+        self.assertEqual(result_missing.get('msg'), '  - ')
+
+        print('INFO: cpu_num display formatting tests passed')
+
     def test_011_folders(self):
         """Check File System plugin."""
         # stats_to_check = [ ]

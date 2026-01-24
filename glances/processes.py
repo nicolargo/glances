@@ -30,7 +30,7 @@ psutil_version_info = tuple([int(num) for num in psutil.__version__.split('.')])
 mandatory_processes_stats_list = ['pid', 'name']
 
 # This constant defines the list of available processes sort key
-sort_processes_stats_list = ['cpu_percent', 'memory_percent', 'username', 'cpu_times', 'io_counters', 'name']
+sort_processes_stats_list = ['cpu_percent', 'memory_percent', 'username', 'cpu_times', 'io_counters', 'name', 'cpu_num']
 
 # Sort dictionary for human
 sort_for_human = {
@@ -40,6 +40,7 @@ sort_for_human = {
     'cpu_times': 'process time',
     'username': 'user name',
     'name': 'processs name',
+    'cpu_num': 'CPU core number',
     None: 'None',
 }
 
@@ -136,6 +137,17 @@ class GlancesProcesses:
         else:
             logger.debug('PsUtil can grab processes gids')
             self.disable_gids = False
+
+        # Test if the system can grab cpu_num
+        try:
+            p = psutil.Process()
+            p.cpu_num()
+        except (AttributeError, Exception) as e:
+            logger.warning(f'PsUtil can not grab process cpu_num ({e})')
+            self.disable_cpu_num = True
+        else:
+            logger.debug('PsUtil can grab process cpu_num')
+            self.disable_cpu_num = False
 
     def set_args(self, args):
         """Set args."""
@@ -309,7 +321,7 @@ class GlancesProcesses:
     @property
     def sort_reverse(self):
         """Return True to sort processes in reverse 'key' order, False instead."""
-        if self.sort_key == 'name' or self.sort_key == 'username':
+        if self.sort_key == 'name' or self.sort_key == 'username' or self.sort_key == 'cpu_num':
             return False
 
         return True
@@ -488,7 +500,11 @@ class GlancesProcesses:
 
     def get_displayed_attr(self):
         defaults = ['memory_info', 'nice', 'pid']
-        optional = ['gids'] if not self.disable_gids else []
+        optional = []
+        if not self.disable_gids:
+            optional.append('gids')
+        if not self.disable_cpu_num:
+            optional.append('cpu_num')
 
         return defaults + optional
 

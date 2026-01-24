@@ -41,6 +41,12 @@
                     <td>{{ help.misc_help }}</td>
                 </tr>
                 <tr>
+                    <td>{{ help.sort_cpu_num }}</td>
+                    <td>{{ help.show_hide_top_extended_stats }}</td>
+                    <td>{{ help.toggle_bar_sparkline }}</td>
+                    <td>{{ help.misc_accumulate_processes_by_program }}</td>
+                </tr>
+                <tr>
                     <td>{{ help.sort_mem }}</td>
                     <td>{{ help.show_hide_top_extended_stats }}</td>
                     <td>{{ help.toggle_bar_sparkline }}</td>
