@@ -140,6 +140,11 @@
                             @click="$emit('update:sorter', 'io_counters')">
                             IOWps
                         </td>
+                        <td v-show="!getDisableStats().includes('cpu_num')" scope="col"
+                            :class="['sortable', sorter.column === 'cpu_num' && 'sort']"
+                            @click="$emit('update:sorter', 'cpu_num')">
+                            CPU
+                        </td>
                         <td v-show="!getDisableStats().includes('cmdline')" scope="col"
                             :class="['sortable', sorter.column === 'name' && 'sort']"
                             @click="$emit('update:sorter', 'name')">
@@ -193,6 +198,9 @@
                         <td v-show="ioReadWritePresentProcesses && !getDisableStats().includes('io_counters')"
                             scope="row" class="text-start">
                             {{ $filters.bytes(process.io_write) }}
+                        </td>
+                        <td v-show="!getDisableStats().includes('cpu_num')" scope="row">
+                            {{ process.cpu_num == null || process.cpu_num < 0 ? '-' : process.cpu_num }}
                         </td>
                         <td v-show="args.process_short_name && !getDisableStats().includes('cmdline')" scope="row"
                             class="text-truncate">
@@ -314,6 +322,11 @@
                             @click="$emit('update:sorter', 'io_counters')">
                             IOWps
                         </td>
+                        <td v-show="!getDisableStats().includes('cpu_num')" scope="col"
+                            :class="['sortable', sorter.column === 'cpu_num' && 'sort']"
+                            @click="$emit('update:sorter', 'cpu_num')">
+                            CPU
+                        </td>
                         <td v-show="!getDisableStats().includes('cmdline')" scope="row"
                             :class="['sortable', sorter.column === 'name' && 'sort']"
                             @click="$emit('update:sorter', 'name')">
@@ -364,6 +377,9 @@
                         <td v-show="ioReadWritePresentPrograms && !getDisableStats().includes('io_counters')"
                             scope="row" class="text-start">
                             {{ $filters.bytes(process.io_write) }}
+                        </td>
+                        <td v-show="!getDisableStats().includes('cpu_num')" scope="row">
+                            {{ process.cpu_num == null || process.cpu_num < 0 ? '-' : process.cpu_num }}
                         </td>
                         <td v-show="args.process_short_name && !getDisableStats().includes('cmdline')" scope="row"
                             class="text-truncate">
