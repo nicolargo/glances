@@ -32,13 +32,21 @@ fields_description = {
     'name': {
         'description': 'NPU name',
     },
+    'load': {
+        'description': 'NPU load',
+        'unit': 'percent',
+    },
     'freq': {
         'description': 'NPU frequency',
         'unit': 'percent',
     },
-    'load': {
-        'description': 'NPU load',
-        'unit': 'percent',
+    'freq_current': {
+        'description': 'NPU current frequency',
+        'unit': 'hertz',
+    },
+    'freq_max': {
+        'description': 'NPU maximum frequency',
+        'unit': 'hertz',
     },
     'mem': {
         'description': 'Memory consumption',
@@ -65,7 +73,8 @@ fields_description = {
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
 items_history_list = [
-    {'name': 'proc', 'description': 'NPU processor', 'y_unit': '%'},
+    {'name': 'freq', 'description': 'NPU processor frequency', 'y_unit': '%'},
+    {'name': 'load', 'description': 'NPU processor load', 'y_unit': '%'},
     {'name': 'mem', 'description': 'Memory consumption', 'y_unit': '%'},
 ]
 
@@ -76,7 +85,14 @@ class NpuPlugin(GlancesPluginModel):
     stats is a list of dictionaries with one entry per NPU
     """
 
-    def __init__(self, args=None, config=None):
+    def __init__(
+        self,
+        args=None,
+        config=None,
+        amd_npu_root_folder: str = '/',
+        intel_npu_root_folder: str = '/',
+        rockchip_npu_root_folder: str = '/',
+    ):
         """Init the plugin."""
         super().__init__(
             args=args,
@@ -88,18 +104,18 @@ class NpuPlugin(GlancesPluginModel):
 
         # Init the AMD NPU
         # Just for test purpose (uncomment to test on computer without AMD NPU)
-        # self.amd = AmdNPU(npu_root_folder='./tests-data/plugins/npu/amd')
-        self.amd = AmdNPU()
+        # amd_npu_root_folder = './tests-data/plugins/npu/amd'
+        self.amd = AmdNPU(npu_root_folder=amd_npu_root_folder)
 
         # Init the Intel NPU
         # Just for test purpose (uncomment to test on computer without Intel NPU)
-        # self.intel = IntelNPU(npu_root_folder='./tests-data/plugins/npu/intel')
-        self.intel = IntelNPU()
+        # intel_npu_root_folder = './tests-data/plugins/npu/intel'
+        self.intel = IntelNPU(npu_root_folder=intel_npu_root_folder)
 
         # Init the Rockchip NPU
         # Just for test purpose (uncomment to test on computer without Rockchip NPU)
-        # self.rockchip = RockchipNPU(npu_root_folder='./tests-data/plugins/npu/rockchip')
-        self.rockchip = RockchipNPU()
+        # rockchip_npu_root_folder = './tests-data/plugins/npu/rockchip'
+        self.rockchip = RockchipNPU(npu_root_folder=rockchip_npu_root_folder)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -140,6 +156,24 @@ class NpuPlugin(GlancesPluginModel):
         """Update stats views."""
         # Call the father's method
         super().update_views()
+
+        # Add specifics information
+        # Alert
+        for i in self.stats:
+            # Init the views for the current GPU
+            self.views[i[self.get_key()]] = {'load': {}, 'freq': {}, 'mem': {}}
+            # Load alert
+            if 'load' in i:
+                alert = self.get_alert(i['load'], header='load')
+                self.views[i[self.get_key()]]['load']['decoration'] = alert
+            # Frequency alert
+            if 'freq' in i:
+                alert = self.get_alert(i['freq'], header='freq')
+                self.views[i[self.get_key()]]['freq']['decoration'] = alert
+            # Memory alert
+            if 'mem' in i:
+                alert = self.get_alert(i['mem'], header='mem')
+                self.views[i[self.get_key()]]['mem']['decoration'] = alert
 
         return True
 

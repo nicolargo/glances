@@ -16,7 +16,7 @@ WARNING: access to /sys/kernel/debug/ requires root privileges or specific permi
 
 /sys/class/devfreq/
 └── fdab0000.npu/
-    ├── cur_freq    # Ex: "1000000000" (1 GHz en Hz)
+    ├── cur_freq    # Ex: "1000000000" (1 GHz in Hz)
     ├── max_freq    # Ex: "1000000000"
     └── min_freq    # Ex: "300000000"
 
@@ -71,14 +71,12 @@ class RockchipNPU:
 
         stats = NPUStats()
 
-        stats.npu_id = 1
+        stats.npu_id = 'rockship_1'
         model = self._read_file(os.path.join(self.device_folder, 'model'))
         stats.name = model if model else "Rockchip NPU"
-        stats.freq = int(
-            self._read_file(os.path.join(self.freq_folder, 'cur_freq'), as_int=True)
-            / self._read_file(os.path.join(self.freq_folder, 'max_freq'), as_int=True)
-            * 100
-        )
+        stats.freq_current = self._read_file(os.path.join(self.freq_folder, 'cur_freq'), as_int=True)
+        stats.freq_max = self._read_file(os.path.join(self.freq_folder, 'max_freq'), as_int=True)
+        stats.freq = int(stats.freq_current / stats.freq_max * 100)
         stats.load = self.parse_rknpu_load(self._read_file(os.path.join(self.debug_folder, 'load')))
 
         # Return stats as a dictionary
