@@ -20,7 +20,8 @@ classifiers = [
 dependencies = [
   "defusedxml",
   "packaging",
-  "psutil>=5.6.7",
+  "psutil>=5.6.7; platform_system != 'Darwin' or platform_version >= '11.'",
+  "psutil>=5.6.7,<=7.1.1; platform_system == 'Darwin' and platform_version < '11.'", # See https://github.com/nicolargo/glances/issues/3364
   "windows-curses; platform_system == 'Windows'",
   "shtab; platform_system != 'Windows'",
   "jinja2",
