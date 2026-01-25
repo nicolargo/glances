@@ -42,7 +42,9 @@ packaging==25.0
     # via glances
 podman==5.6.0
     # via glances
-psutil==7.2.1
+psutil==7.1.1 ; platform_version < '11.' and sys_platform == 'darwin'
+    # via glances
+psutil==7.2.1 ; platform_version >= '11.' or sys_platform != 'darwin'
     # via glances
 pyasn1==0.6.2
     # via

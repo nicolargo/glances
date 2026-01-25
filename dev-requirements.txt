@@ -36,7 +36,7 @@ certifi==2026.1.4
     #   httpx
     #   requests
     #   selenium
-cffi==2.0.0 ; (implementation_name != 'pypy' and os_name == 'nt') or platform_python_implementation != 'PyPy'
+cffi==2.0.0 ; (implementation_name != 'pypy' and os_name == 'nt' and platform_version >= '11.') or (implementation_name != 'pypy' and os_name == 'nt' and sys_platform != 'darwin') or platform_python_implementation != 'PyPy'
     # via
     #   cryptography
     #   trio
@@ -223,10 +223,12 @@ protobuf==6.33.4
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
-psutil==7.2.1
+psutil==7.1.1 ; platform_version < '11.' and sys_platform == 'darwin'
+    # via memory-profiler
+psutil==7.2.1 ; platform_version >= '11.' or sys_platform != 'darwin'
     # via memory-profiler
 py-spy==0.4.1
-pycparser==2.23 ; (implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt') or (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy')
+pycparser==2.23 ; (implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt' and platform_version >= '11.') or (implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt' and sys_platform != 'darwin') or (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy')
     # via cffi
 pydantic==2.12.5
     # via
