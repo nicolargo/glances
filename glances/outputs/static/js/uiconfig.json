@@ -3,6 +3,7 @@
         "quicklook",
         "cpu",
         "percpu",
+        "npu",
         "gpu",
         "mem",
         "memswap",
