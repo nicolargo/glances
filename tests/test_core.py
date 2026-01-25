@@ -34,6 +34,7 @@ from glances.globals import (
     MACOS,
     SUNOS,
     WINDOWS,
+    WSL,
     auto_unit,
     pretty_date,
     split_esc,
@@ -631,7 +632,9 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(split_esc(r'a\hellobhelloc', r'hello'), [r'ahellob', r'c'])
         self.assertEqual(split_esc(r'ahe\llobhelloc', r'hello'), [r'ahellob', r'c'])
 
-    @unittest.skipIf(not LINUX, "GPU available only on Linux")
+    @unittest.skipIf(not LINUX, "NPU available only on Linux")
+    @unittest.skipIf(WINDOWS, "NPU available only on Linux")
+    @unittest.skipIf(WSL, "NPU available only on Linux")
     def test_025_npu(self):
         """Check NPU plugin."""
         print('INFO: [TEST_025] Check NPU stats')
