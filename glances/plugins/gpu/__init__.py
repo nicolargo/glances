@@ -82,13 +82,13 @@ class GpuPlugin(GlancesPluginModel):
             self.nvidia = None
 
         # Init the AMD GPU API
-        # Just for test purpose (uncomment to test on computer without AMD GPU)
-        # self.amd = AmdGPU(drm_root_folder='./tests-data/plugins/gpu/amd/sys/class/drm')
         try:
             self.amd = AmdGPU()
         except Exception as e:
             logger.debug(f'AMD GPU initialization error: {e}')
             self.amd = None
+        # Just for test purpose (uncomment to test on computer without AMD GPU)
+        # self.amd = AmdGPU(drm_root_folder='./tests-data/plugins/gpu/amd/sys/class/drm')
 
         # We want to display the stat in the curse interface
         self.display_curse = True
