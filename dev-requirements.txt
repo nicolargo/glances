@@ -263,7 +263,7 @@ python-dotenv==1.2.1
     #   webdriver-manager
 python-magic==0.4.27
     # via reuse
-python-multipart==0.0.21
+python-multipart==0.0.22
     # via mcp
 pywin32==311 ; sys_platform == 'win32'
     # via
