@@ -10,6 +10,8 @@ anyio==4.12.1
     #   mcp
     #   sse-starlette
     #   starlette
+async-generator==1.10
+    # via trio-typing
 attrs==25.4.0
     # via
     #   glom
@@ -66,7 +68,7 @@ contourpy==1.3.2 ; python_full_version < '3.11'
     # via matplotlib
 contourpy==1.3.3 ; python_full_version >= '3.11'
     # via matplotlib
-cryptography==46.0.3
+cryptography==46.0.4
     # via pyjwt
 cycler==0.12.1
     # via matplotlib
@@ -122,7 +124,9 @@ idna==3.11
 imagesize==1.4.1
     # via sphinx
 importlib-metadata==8.7.1
-    # via opentelemetry-api
+    # via
+    #   opentelemetry-api
+    #   trio-typing
 iniconfig==2.3.0
     # via pytest
 jinja2==3.1.6
@@ -149,6 +153,8 @@ mcp==1.23.3
 mdurl==0.1.2
     # via markdown-it-py
 memory-profiler==0.61.0
+mypy-extensions==1.1.0
+    # via trio-typing
 nodeenv==1.10.0
     # via
     #   pre-commit
@@ -201,7 +207,7 @@ outcome==1.3.0.post0
     # via
     #   trio
     #   trio-websocket
-packaging==25.0
+packaging==26.0
     # via
     #   matplotlib
     #   opentelemetry-instrumentation
@@ -209,6 +215,7 @@ packaging==25.0
     #   requirements-parser
     #   semgrep
     #   sphinx
+    #   trio-typing
     #   webdriver-manager
 peewee==3.19.0
     # via semgrep
@@ -223,12 +230,10 @@ protobuf==6.33.4
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
-psutil==7.1.1 ; platform_version < '11.' and sys_platform == 'darwin'
-    # via memory-profiler
-psutil==7.2.1 ; platform_version >= '11.' or sys_platform != 'darwin'
+psutil==7.1.1
     # via memory-profiler
 py-spy==0.4.1
-pycparser==2.23 ; (implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt' and platform_version >= '11.') or (implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt' and sys_platform != 'darwin') or (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy')
+pycparser==3.0 ; (implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt' and platform_version >= '11.') or (implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt' and sys_platform != 'darwin') or (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy')
     # via cffi
 pydantic==2.12.5
     # via
@@ -247,7 +252,7 @@ pygments==2.19.2
 pyinstrument==5.1.2
 pyjwt==2.10.1
     # via mcp
-pyparsing==3.3.1
+pyparsing==3.3.2
     # via matplotlib
 pyright==1.1.408
 pysocks==1.7.1
@@ -263,7 +268,7 @@ python-dotenv==1.2.1
     #   webdriver-manager
 python-magic==0.4.27
     # via reuse
-python-multipart==0.0.21
+python-multipart==0.0.22
     # via mcp
 pywin32==311 ; sys_platform == 'win32'
     # via
@@ -300,10 +305,10 @@ ruamel-yaml==0.19.1
     # via semgrep
 ruamel-yaml-clib==0.2.14
     # via semgrep
-ruff==0.14.13
-selenium==4.39.0
-semgrep==1.148.0
-setuptools==80.9.0
+ruff==0.14.14
+selenium==4.40.0
+semgrep==1.149.0
+setuptools==80.10.2
 shellingham==1.5.4
     # via typer
 six==1.17.0
@@ -357,11 +362,18 @@ tomlkit==0.14.0
 trio==0.32.0
     # via
     #   selenium
+    #   trio-typing
     #   trio-websocket
+trio-typing==0.10.0
+    # via selenium
 trio-websocket==0.12.2
     # via selenium
 typer==0.21.1
     # via rstcheck
+types-certifi==2021.10.8.3
+    # via selenium
+types-urllib3==1.26.25.14
+    # via selenium
 typing-extensions==4.15.0
     # via
     #   anyio
@@ -378,6 +390,7 @@ typing-extensions==4.15.0
     #   selenium
     #   semgrep
     #   starlette
+    #   trio-typing
     #   typer
     #   typing-inspection
     #   uvicorn

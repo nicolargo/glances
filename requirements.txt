@@ -6,11 +6,9 @@ jinja2==3.1.6
     # via glances
 markupsafe==3.0.3
     # via jinja2
-packaging==25.0
+packaging==26.0
     # via glances
-psutil==7.1.1 ; platform_version < '11.' and sys_platform == 'darwin'
-    # via glances
-psutil==7.2.1 ; platform_version >= '11.' or sys_platform != 'darwin'
+psutil==7.1.1
     # via glances
 shtab==1.8.0 ; sys_platform != 'win32'
     # via glances

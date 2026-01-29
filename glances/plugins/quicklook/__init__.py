@@ -189,15 +189,6 @@ class QuicklookPlugin(GlancesPluginModel):
             logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
-        # Define the data: Bar (default behavior) or Sparkline
-        data = {}
-        for key in self.stats_list:
-            if self.args.sparkline and self.history_enable() and not self.args.client:
-                data[key] = Sparkline(max_width)
-            else:
-                # Fallback to bar if Sparkline module is not installed
-                data[key] = Bar(max_width, bar_char=self.get_conf_value('bar_char', default=['|'])[0])
-
         # Build the string message
         ##########################
 
@@ -222,6 +213,16 @@ class QuicklookPlugin(GlancesPluginModel):
         ret.append(self.curse_new_line())
 
         # Loop over CPU, MEM and LOAD
+        # Define the data: Bar (default behavior) or Sparkline
+        data = {}
+        for key in self.stats_list:
+            bar_size = max(len(msg_name) + len(msg_freq) - 7, max_width)
+            if self.args.sparkline and self.history_enable() and not self.args.client:
+                data[key] = Sparkline(bar_size)
+            else:
+                # Fallback to bar if Sparkline module is not installed
+                data[key] = Bar(bar_size, bar_char=self.get_conf_value('bar_char', default=['|'])[0])
+
         for key in self.stats_list:
             if key == 'cpu' and args.percpu:
                 ret.extend(self._msg_per_cpu(data, key, max_width))
