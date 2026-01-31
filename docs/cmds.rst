@@ -98,10 +98,6 @@ Command-Line Options
 
     start Glances in mean GPU mode
 
-.. option:: --enable-history
-
-    enable the history mode
-
 .. option:: --disable-bold
 
     disable bold mode in the terminal
