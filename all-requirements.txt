@@ -112,7 +112,7 @@ potsdb==1.0.3
     # via glances
 prometheus-client==0.24.1
     # via glances
-protobuf==6.33.4
+protobuf==6.33.5
     # via bernhard
 psutil==7.1.1
     # via glances
