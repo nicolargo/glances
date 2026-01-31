@@ -226,7 +226,7 @@ platformdirs==4.5.1
 pluggy==1.6.0
     # via pytest
 pre-commit==4.5.1
-protobuf==6.33.4
+protobuf==6.33.5
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
@@ -250,8 +250,10 @@ pygments==2.19.2
     #   rich
     #   sphinx
 pyinstrument==5.1.2
-pyjwt==2.10.1
-    # via mcp
+pyjwt==2.11.0
+    # via
+    #   mcp
+    #   semgrep
 pyparsing==3.3.2
     # via matplotlib
 pyright==1.1.408
@@ -307,7 +309,9 @@ ruamel-yaml-clib==0.2.14
     # via semgrep
 ruff==0.14.14
 selenium==4.40.0
-semgrep==1.149.0
+semantic-version==2.10.0
+    # via semgrep
+semgrep==1.150.0
 setuptools==80.10.2
 shellingham==1.5.4
     # via typer
