@@ -68,7 +68,8 @@ class GlancesClient:
         try:
             self.client = xmlrpc.xmlrpc_client.ServerProxy(self.uri, transport=transport)
         except Exception as e:
-            self.log_and_exit(f"Client couldn't create socket {self.uri}: {e}")
+            # Do not log self.uri here because it may contain credentials
+            self.log_and_exit(f"Client couldn't create socket to http://{args.client}:{args.port}: {e}")
 
     @property
     def quiet(self):
