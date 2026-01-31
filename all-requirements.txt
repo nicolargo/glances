@@ -112,7 +112,7 @@ potsdb==1.0.3
     # via glances
 prometheus-client==0.24.1
     # via glances
-protobuf==6.33.4
+protobuf==6.33.5
     # via bernhard
 psutil==7.1.1
     # via glances
@@ -135,7 +135,7 @@ pydantic-core==2.41.5
     # via pydantic
 pygal==3.1.0
     # via glances
-pyjwt==2.10.1
+pyjwt==2.11.0
     # via
     #   ibm-cloud-sdk-core
     #   ibmcloudant
