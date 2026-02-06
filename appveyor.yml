@@ -1,10 +1,10 @@
+image: Visual Studio 2022
+
 environment:
   matrix:
-    - PYTHON: "C:\\Python38"
-    - PYTHON: "C:\\Python39"
-    - PYTHON: "C:\\Python310"
-    - PYTHON: "C:\\Python311"
-    - PYTHON: "C:\\Python312"
+    - PYTHON: "C:\\Python310-x64"
+    - PYTHON: "C:\\Python311-x64"
+    - PYTHON: "C:\\Python312-x64"
 
 install:
   - "%PYTHON%\\python.exe -m pip install --upgrade pip"
