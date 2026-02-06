@@ -10,7 +10,7 @@ install:
   - "%PYTHON%\\python.exe -m pip install --upgrade pip"
   - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
   - "%PYTHON%\\python.exe -m pip install -r dev-requirements.txt"
-  - "%PYTHON%\\python.exe -m pip install ."
+  - "%PYTHON%\\python.exe -m pip install \".[web]\""
 
 build: off
 
