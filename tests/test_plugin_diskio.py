@@ -321,7 +321,7 @@ class TestDiskioPluginAlerts:
         diskio_plugin.update_views()
         views = diskio_plugin.get_views()
         stats = diskio_plugin.get_raw()
-        
+
         for disk in stats:
             disk_name = disk['disk_name']
             if disk_name in views and 'read_bytes' in views[disk_name]:

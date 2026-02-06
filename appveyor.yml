@@ -1,0 +1,18 @@
+environment:
+  matrix:
+    - PYTHON: "C:\\Python38"
+    - PYTHON: "C:\\Python39"
+    - PYTHON: "C:\\Python310"
+    - PYTHON: "C:\\Python311"
+    - PYTHON: "C:\\Python312"
+
+install:
+  - "%PYTHON%\\python.exe -m pip install --upgrade pip"
+  - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
+  - "%PYTHON%\\python.exe -m pip install -r dev-requirements.txt"
+  - "%PYTHON%\\python.exe -m pip install ."
+
+build: off
+
+test_script:
+  - "%PYTHON%\\python.exe -m pytest tests/"
