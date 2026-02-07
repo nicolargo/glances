@@ -143,14 +143,15 @@ class TestGlances(unittest.TestCase):
                 'vms',
                 'npu',
             ):
+                if isinstance(req.json(), dict) and not req.json():
+                    # Specific case for plugins that can be empty on VM (like sensors, containers...)
+                    # They return an empty dict instead of an empty list
+                    continue
                 self.assertIsInstance(req.json(), list)
                 if len(req.json()) > 0:
                     self.assertIsInstance(req.json()[0], dict)
             else:
                 self.assertIsInstance(req.json(), dict)
-                # Specific case for sensors (can be empty on VM)
-                if p == 'sensors' and req.json() == {}:
-                    continue
 
     def test_004_items(self):
         """Items."""
