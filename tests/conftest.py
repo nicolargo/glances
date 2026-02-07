@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # Glances - An eye on your system
 #
@@ -7,12 +6,14 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Glances unitary tests suite for the WebUI.
+"""Glances unitary tests suite fixtures.
 
-Need chromedriver command line (example on Ubuntu system):
-$ sudo apt install chromium-chromedriver
+This module provides pytest fixtures for testing Glances plugins and components.
 
-The chromedriver command line should be in your path (/usr/bin)
+For WebUI tests, the following are required:
+- chromedriver command line (example on Ubuntu system):
+  $ sudo apt install chromium-chromedriver
+- The chromedriver command line should be in your path (/usr/bin)
 """
 
 import logging
@@ -23,13 +24,20 @@ import time
 from unittest.mock import patch
 
 import pytest
-from selenium import webdriver
-from selenium.webdriver import ChromeOptions
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
 
 from glances.main import GlancesMain
 from glances.stats import GlancesStats
+
+# Optional imports for WebUI testing
+try:
+    from selenium import webdriver
+    from selenium.webdriver import ChromeOptions
+    from selenium.webdriver.chrome.service import Service as ChromeService
+    from webdriver_manager.chrome import ChromeDriverManager
+
+    SELENIUM_AVAILABLE = True
+except ImportError:
+    SELENIUM_AVAILABLE = False
 
 SERVER_PORT = 61234
 URL = f"http://localhost:{SERVER_PORT}"
@@ -81,7 +89,13 @@ def glances_webserver():
 
 @pytest.fixture(scope="session")
 def web_browser():
-    """Init Firefox browser."""
+    """Init Chrome browser for WebUI testing.
+
+    Requires selenium and webdriver-manager packages.
+    """
+    if not SELENIUM_AVAILABLE:
+        pytest.skip("selenium not installed - skipping WebUI tests")
+
     opt = ChromeOptions()
     opt.add_argument("--headless")
     opt.add_argument("--start-maximized")
