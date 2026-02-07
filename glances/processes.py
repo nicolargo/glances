@@ -321,10 +321,7 @@ class GlancesProcesses:
     @property
     def sort_reverse(self):
         """Return True to sort processes in reverse 'key' order, False instead."""
-        if self.sort_key == 'name' or self.sort_key == 'username' or self.sort_key == 'cpu_num':
-            return False
-
-        return True
+        return self.sort_key not in ['name', 'username', 'cpu_num']
 
     def max_values(self):
         """Return the max values dict."""
