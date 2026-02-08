@@ -9,7 +9,7 @@
 """Docker Extension unit for Glances' Containers plugin."""
 
 import time
-from typing import Any, Optional
+from typing import Any
 
 from glances.globals import nativestr, pretty_date, replace_special_chars
 from glances.logger import logger
@@ -83,7 +83,7 @@ class DockerStatsFetcher:
         # In case no update, default to 1
         return max(1, self._streamer.last_update_time - self._last_stats_computed_time)
 
-    def _get_cpu_stats(self) -> Optional[dict[str, float]]:
+    def _get_cpu_stats(self) -> dict[str, float] | None:
         """Return the container CPU usage.
 
         Output: a dict {'total': 1.49}
@@ -117,7 +117,7 @@ class DockerStatsFetcher:
         # Return the stats
         return stats
 
-    def _get_memory_stats(self) -> Optional[dict[str, float]]:
+    def _get_memory_stats(self) -> dict[str, float] | None:
         """Return the container MEMORY.
 
         Output: a dict {'usage': ..., 'limit': ..., 'inactive_file': ...}
@@ -140,7 +140,7 @@ class DockerStatsFetcher:
         # Return the stats
         return stats
 
-    def _get_network_stats(self) -> Optional[dict[str, float]]:
+    def _get_network_stats(self) -> dict[str, float] | None:
         """Return the container network usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}.
@@ -169,7 +169,7 @@ class DockerStatsFetcher:
         # Return the stats
         return stats
 
-    def _get_io_stats(self) -> Optional[dict[str, float]]:
+    def _get_io_stats(self) -> dict[str, float] | None:
         """Return the container IO usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'ior': 10, 'iow': 65}.
@@ -295,11 +295,13 @@ class DockerExtension:
 
     def generate_stats(self, container) -> dict[str, Any]:
         # Init the stats for the current container
+        # Manage healthy status (see issue #3402)
+        status = container.attrs['State'].get('Health', container.attrs['State']).get('Status', '')
         stats = {
             'key': self.key,
             'name': nativestr(container.name),
             'id': container.id,
-            'status': container.attrs['State']['Status'],
+            'status': status,
             'created': container.attrs['Created'],
             'command': [],
             'io': {},

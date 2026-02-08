@@ -8,10 +8,8 @@ classifiers = [
   "Intended Audience :: Developers",
   "Intended Audience :: End Users/Desktop",
   "Intended Audience :: System Administrators",
-  "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -22,7 +20,8 @@ classifiers = [
 dependencies = [
   "defusedxml",
   "packaging",
-  "psutil>=5.6.7",
+  "psutil>=5.6.7; platform_system != 'Darwin' or platform_version >= '11.'",
+  "psutil>=5.6.7,<=7.1.1; platform_system == 'Darwin' and platform_version < '11.'", # See https://github.com/nicolargo/glances/issues/3364
   "windows-curses; platform_system == 'Windows'",
   "shtab; platform_system != 'Windows'",
   "jinja2",
@@ -30,10 +29,10 @@ dependencies = [
 description = "A cross-platform curses-based monitoring tool"
 dynamic = ["version"]
 keywords = ["cli", "curses", "monitoring", "system"]
-license = {text = "LGPLv3"}
+license = "LGPL-3.0-only"
 name = "Glances"
-readme = "README.rst"
-requires-python = ">=3.9"
+readme = "README-pypi.rst"
+requires-python = ">=3.10"
 urls.Homepage = "https://github.com/nicolargo/glances"
 
 [dependency-groups]
@@ -85,6 +84,7 @@ export = [
   "influxdb>=1.0.0",
   "influxdb3-python",
   "kafka-python",
+  "nats-py",
   "paho-mqtt",
   "pika",
   "potsdb",
@@ -96,16 +96,14 @@ export = [
 ]
 gpu = ["nvidia-ml-py"]
 graph = ["pygal"]
-ip = [
-  "netifaces2",
-]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
-smart = ["pySMART.smartx"]
-snmp = ["pysnmp-lextudio<6.3.1"]
+smart = ["pySMART"]
+snmp = ["pysnmp-lextudio<6.2.0"]
 sparklines = ["sparklines"]
 web = [
   "fastapi>=0.82.0",
+  "python-jose[cryptography]>=3.3.0",
   "requests",
   "uvicorn",
 ]
@@ -120,9 +118,11 @@ glances = "glances:main"
   "COPYING",
   "NEWS.rst",
   "README.rst",
+  "README-pypi.rst",
   "SECURITY.md",
   "CONTRIBUTING.md",
   "conf/glances.conf",
+  "conf/fetch-templates/*.jinja",
 ]
 "share/man/man1" = ["docs/man/glances.1"]
 
@@ -134,7 +134,7 @@ include = ["glances*"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.format]
 quote-style = "preserve"

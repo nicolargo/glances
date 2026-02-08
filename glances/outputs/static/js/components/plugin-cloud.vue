@@ -6,24 +6,24 @@
 
 <script>
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    computed: {
-        stats() {
-            return this.data.stats['cloud'];
-        },
-        provider() {
-            return this.stats['id'] !== undefined ? `${stats['platform']}` : null;
-        },
-        instance() {
-            const { stats } = this;
-            return this.stats['id'] !== undefined
-                ? `${stats['type']} instance ${stats['name']} (${stats['region']})`
-                : null;
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	computed: {
+		stats() {
+			return this.data.stats["cloud"];
+		},
+		provider() {
+			return this.stats["id"] !== undefined ? `${stats["platform"]}` : null;
+		},
+		instance() {
+			const { stats } = this;
+			return this.stats["id"] !== undefined
+				? `${stats["type"]} instance ${stats["name"]} (${stats["region"]})`
+				: null;
+		},
+	},
 };
 </script>

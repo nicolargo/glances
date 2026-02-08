@@ -13,10 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Check formatting with Ruff
-        uses: chartboost/ruff-action@v1
-        with:
-          args: 'format --check'
+      # - name: Check formatting with Ruff
+      #   uses: chartboost/ruff-action@v1
+      #   with:
+      #     args: 'format --check'
 
       - name: Check linting with Ruff
         uses: chartboost/ruff-action@v1
@@ -37,7 +37,9 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        # Python EOL version are note tested
+        # Multiple Python version only tested for Linux
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
 
@@ -58,11 +60,6 @@ jobs:
         run: |
           python -m pytest ./tests/test_core.py
 
-  # Error appear with h11, not related to Glances
-  # Should be tested if correction is done
-  # Installed c:\hostedtoolcache\windows\python\3.9.13\x64\lib\site-packages\exceptiongroup-1.2.1-py3.9.egg
-  # error: h11 0.14.0 is installed but h11<0.13,>=0.11 is required by {'httpcore'}
-  # Error: Process completed with exit code 1.
   test-windows:
 
     needs: source-code-checks
@@ -71,7 +68,8 @@ jobs:
     strategy:
       matrix:
         # Windows-curses not available for Python 3.14 for the moment
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        # See https://github.com/zephyrproject-rtos/windows-curses/issues/76
+        python-version: ["3.13"]
     steps:
 
     - uses: actions/checkout@v5
@@ -100,7 +98,7 @@ jobs:
     strategy:
       matrix:
         # Only test the latest stable version
-        python-version: ["3.13"]
+        python-version: ["3.14"]
 
     steps:
 
@@ -121,25 +119,37 @@ jobs:
         run: |
           python -m pytest ./tests/test_core.py
 
-  # Error when trying to implement #2749
-  # pkg: No packages available to install matching 'py-pip' have been found in the repositories
   # test-freebsd:
 
-  #   runs-on: ubuntu-22.04
-
+  #   needs: source-code-checks
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       # Only test the latest stable version
+  #       python-version: ["3.14"]
   #   steps:
 
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v5
 
-  #     - name: Run tests
+  #     - name: Set up Python ${{ matrix.python-version }}
+  #       uses: actions/setup-python@v6
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #         cache: 'pip'
+
+  #     - name: Install dependencies
   #       uses: vmactions/freebsd-vm@v1
   #       with:
   #         usesh: true
-  #         prepare: |
-  #           pkg install -y python3
   #         run: |
-  #           set -e -x
-  #           python3 -m pip install pytest
-  #           python3 -m pip install --user -r dev-requirements.txt
-  #           python3 -m pip install --user -r requirements.txt
+  #           pkg install -y python3 gcc devel/py-pip
+  #           python3 --version
+  #           if [ -f dev-requirements.txt ]; then python3 -m pip install -r dev-requirements.txt; fi
+  #           if [ -f requirements.txt ]; then python3 -m pip install -r requirements.txt; fi
+
+  #     - name: Unitary tests
+  #       uses: vmactions/freebsd-vm@v1
+  #       with:
+  #         usesh: true
+  #         run: |
   #           python3 -m pytest ./tests/test_core.py

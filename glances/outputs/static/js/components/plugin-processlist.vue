@@ -11,7 +11,7 @@
             <div>
                 <span>CPU Min/Max/Mean: </span>
                 <span class="careful">{{ $filters.number(extended_stats.cpu_min, 1)
-                    }}% / {{
+                }}% / {{
                         $filters.number(extended_stats.cpu_max, 1) }}% / {{ $filters.number(extended_stats.cpu_mean, 1)
                     }}%</span>
                 <span>Affinity: </span>
@@ -29,7 +29,8 @@
                 </span>
             </div>
         </div>
-        <div class="table-responsive d-lg-none">
+        <div v-show="is_focus">Focus on following processes: {{ focus.join(', ') }}</div>
+        <div class="table-responsive d-lg-none" id="processlist-table">
             <table class="table table-sm table-borderless table-striped table-hover">
                 <thead>
                     <tr>
@@ -139,6 +140,11 @@
                             @click="$emit('update:sorter', 'io_counters')">
                             IOWps
                         </td>
+                        <td v-show="!getDisableStats().includes('cpu_num')" scope="col"
+                            :class="['sortable', sorter.column === 'cpu_num' && 'sort']"
+                            @click="$emit('update:sorter', 'cpu_num')">
+                            CPU
+                        </td>
                         <td v-show="!getDisableStats().includes('cmdline')" scope="col"
                             :class="['sortable', sorter.column === 'name' && 'sort']"
                             @click="$emit('update:sorter', 'name')">
@@ -192,6 +198,9 @@
                         <td v-show="ioReadWritePresentProcesses && !getDisableStats().includes('io_counters')"
                             scope="row" class="text-start">
                             {{ $filters.bytes(process.io_write) }}
+                        </td>
+                        <td v-show="!getDisableStats().includes('cpu_num')" scope="row">
+                            {{ process.cpu_num == null || process.cpu_num < 0 ? '-' : process.cpu_num }}
                         </td>
                         <td v-show="args.process_short_name && !getDisableStats().includes('cmdline')" scope="row"
                             class="text-truncate">
@@ -313,6 +322,11 @@
                             @click="$emit('update:sorter', 'io_counters')">
                             IOWps
                         </td>
+                        <td v-show="!getDisableStats().includes('cpu_num')" scope="col"
+                            :class="['sortable', sorter.column === 'cpu_num' && 'sort']"
+                            @click="$emit('update:sorter', 'cpu_num')">
+                            CPU
+                        </td>
                         <td v-show="!getDisableStats().includes('cmdline')" scope="row"
                             :class="['sortable', sorter.column === 'name' && 'sort']"
                             @click="$emit('update:sorter', 'name')">
@@ -364,6 +378,9 @@
                             scope="row" class="text-start">
                             {{ $filters.bytes(process.io_write) }}
                         </td>
+                        <td v-show="!getDisableStats().includes('cpu_num')" scope="row">
+                            {{ process.cpu_num == null || process.cpu_num < 0 ? '-' : process.cpu_num }}
+                        </td>
                         <td v-show="args.process_short_name && !getDisableStats().includes('cmdline')" scope="row"
                             class="text-truncate">
                             {{ process.name }}
@@ -379,236 +396,304 @@
 </template>
 
 <script>
-import { orderBy, last } from 'lodash';
-import { timemillis, timedelta, limitTo, number, dictToString } from '../filters.js';
-import { GlancesHelper } from '../services.js';
-import { store } from '../store.js';
+import { last, orderBy } from "lodash";
+import {
+	dictToString,
+	limitTo,
+	number,
+	timedelta,
+	timemillis,
+} from "../filters.js";
+import { GlancesHelper } from "../services.js";
+import { store } from "../store.js";
 
 export default {
-    props: {
-        data: {
-            type: Object
-        },
-        sorter: {
-            type: Object
-        }
-    },
-    data() {
-        return {
-            store
-        };
-    },
-    computed: {
-        args() {
-            return this.store.args || {};
-        },
-        config() {
-            return this.store.config || {};
-        },
-        stats_processlist() {
-            return this.data.stats['processlist'];
-        },
-        stats_core() {
-            return this.data.stats['core'];
-        },
-        cpucore() {
-            return (this.stats_core['log'] !== 0) ? this.stats_core['log'] : 1;
-        },
-        extended_stats() {
-            return this.stats_processlist.find(item => item['extended_stats'] === true) || null;
-        },
-        processes() {
-            const { sorter } = this;
-            const processes = (this.stats_processlist || []).map((process) => {
-                return this.updateProcess(process, this.data.stats['isWindows'], this.args, this.cpucore);
-            });
+	props: {
+		data: {
+			type: Object,
+		},
+		sorter: {
+			type: Object,
+		},
+	},
+	data() {
+		return {
+			store,
+		};
+	},
+	computed: {
+		args() {
+			return this.store.args || {};
+		},
+		config() {
+			return this.store.config || {};
+		},
+		stats_processlist() {
+			return this.data.stats["processlist"];
+		},
+		stats_core() {
+			return this.data.stats["core"];
+		},
+		cpucore() {
+			return this.stats_core["log"] !== 0 ? this.stats_core["log"] : 1;
+		},
+		extended_stats() {
+			return (
+				this.stats_processlist.find(
+					(item) => item["extended_stats"] === true,
+				) || null
+			);
+		},
+		processes() {
+			const { sorter } = this;
+			const processes = (this.stats_processlist || []).map((process) => {
+				return this.updateProcess(
+					process,
+					this.data.stats["isWindows"],
+					this.args,
+					this.cpucore,
+				);
+			});
 
-            return orderBy(
-                processes,
-                [sorter.column].reduce((retval, col) => {
-                    if (col === 'io_counters') {
-                        col = ['io_read', 'io_write']
-                    }
-                    return retval.concat(col);
-                }, []),
-                [sorter.isReverseColumn(sorter.column) ? 'desc' : 'asc']
-            ).slice(0, this.limit);
-        },
-        ioReadWritePresentProcesses() {
-            return (this.stats_processlist || []).some(({ io_counters }) => io_counters);
-        },
-        stats_programlist() {
-            return this.data.stats['programlist'];
-        },
-        programs() {
-            const { sorter } = this;
-            const isWindows = this.data.stats['isWindows'];
-            const programs = (this.stats_programlist || []).map((process) => {
-                process.memvirt = '?';
-                process.memres = '?';
-                if (process.memory_info) {
-                    process.memvirt = process.memory_info.vms;
-                    process.memres = process.memory_info.rss;
-                }
+			return orderBy(
+				processes,
+				[sorter.column].reduce((retval, col) => {
+					if (col === "io_counters") {
+						col = ["io_read", "io_write"];
+					}
+					return retval.concat(col);
+				}, []),
+				[sorter.isReverseColumn(sorter.column) ? "desc" : "asc"],
+			).slice(0, this.limit);
+		},
+		ioReadWritePresentProcesses() {
+			return (this.stats_processlist || []).some(
+				({ io_counters }) => io_counters,
+			);
+		},
+		stats_programlist() {
+			return this.data.stats["programlist"];
+		},
+		programs() {
+			const { sorter } = this;
+			const isWindows = this.data.stats["isWindows"];
+			const programs = (this.stats_programlist || []).map((process) => {
+				process.memvirt = "?";
+				process.memres = "?";
+				if (process.memory_info) {
+					process.memvirt = process.memory_info.vms;
+					process.memres = process.memory_info.rss;
+				}
 
-                if (isWindows && process.username !== null) {
-                    process.username = last(process.username.split('\\'));
-                }
+				if (isWindows && process.username !== null) {
+					process.username = last(process.username.split("\\"));
+				}
 
-                process.timeforhuman = '?';
-                if (process.cpu_times) {
-                    process.timeplus = timedelta([process.cpu_times['user'], process.cpu_times['system']]);
-                    process.timeforhuman = process.timeplus.hours.toString().padStart(2, '0') + ':' +
-                        process.timeplus.minutes.toString().padStart(2, '0') + ':' +
-                        process.timeplus.seconds.toString().padStart(2, '0')
-                }
+				process.timeforhuman = "?";
+				if (process.cpu_times) {
+					process.timeplus = timedelta([
+						process.cpu_times["user"],
+						process.cpu_times["system"],
+					]);
+					process.timeforhuman =
+						process.timeplus.hours.toString().padStart(2, "0") +
+						":" +
+						process.timeplus.minutes.toString().padStart(2, "0") +
+						":" +
+						process.timeplus.seconds.toString().padStart(2, "0");
+				}
 
-                if (process.num_threads === null) {
-                    process.num_threads = -1;
-                }
+				if (process.num_threads === null) {
+					process.num_threads = -1;
+				}
 
-                if (process.cpu_percent === null) {
-                    process.cpu_percent = -1;
-                }
+				if (process.cpu_percent === null) {
+					process.cpu_percent = -1;
+				}
 
-                if (process.memory_percent === null) {
-                    process.memory_percent = -1;
-                }
+				if (process.memory_percent === null) {
+					process.memory_percent = -1;
+				}
 
-                process.io_read = null;
-                process.io_write = null;
+				process.io_read = null;
+				process.io_write = null;
 
-                if (process.io_counters) {
-                    process.io_read =
-                        (process.io_counters[0] - process.io_counters[2]) /
-                        process.time_since_update;
-                    process.io_write =
-                        (process.io_counters[1] - process.io_counters[3]) /
-                        process.time_since_update;
-                }
+				if (process.io_counters) {
+					process.io_read =
+						(process.io_counters[0] - process.io_counters[2]) /
+						process.time_since_update;
+					process.io_write =
+						(process.io_counters[1] - process.io_counters[3]) /
+						process.time_since_update;
+				}
 
-                process.isNice =
-                    process.nice !== undefined &&
-                    ((isWindows && process.nice != 32) || (!isWindows && process.nice != 0));
+				process.isNice =
+					process.nice !== undefined &&
+					((isWindows && process.nice != 32) ||
+						(!isWindows && process.nice != 0));
 
-                if (Array.isArray(process.cmdline)) {
-                    process.cmdline = process.cmdline.join(' ').replace(/\n/g, ' ');
-                }
+				if (Array.isArray(process.cmdline)) {
+					process.cmdline = process.cmdline.join(" ").replace(/\n/g, " ");
+				}
 
-                if (typeof process.cmdline !== "string" || process.cmdline.length === 0) {
-                    process.cmdline = process.name;
-                }
+				if (
+					typeof process.cmdline !== "string" ||
+					process.cmdline.length === 0
+				) {
+					process.cmdline = process.name;
+				}
 
-                return process;
-            });
+				return process;
+			});
 
-            return orderBy(
-                programs,
-                [sorter.column].reduce((retval, col) => {
-                    if (col === 'io_counters') {
-                        col = ['io_read', 'io_write']
-                    }
-                    return retval.concat(col);
-                }, []),
-                [sorter.isReverseColumn(sorter.column) ? 'desc' : 'asc']
-            ).slice(0, this.limit);
-        },
-        ioReadWritePresentPrograms() {
-            return (this.stats_programlist || []).some(({ io_counters }) => io_counters);
-        },
-        limit() {
-            return this.config.outputs !== undefined
-                ? this.config.outputs.max_processes_display
-                : undefined;
-        }
-    },
-    methods: {
-        updateProcess(process, isWindows, args, cpucore) {
-            process.memvirt = '?';
-            process.memres = '?';
-            if (process.memory_info) {
-                process.memvirt = process.memory_info.vms;
-                process.memres = process.memory_info.rss;
-            }
+			return orderBy(
+				programs,
+				[sorter.column].reduce((retval, col) => {
+					if (col === "io_counters") {
+						col = ["io_read", "io_write"];
+					}
+					return retval.concat(col);
+				}, []),
+				[sorter.isReverseColumn(sorter.column) ? "desc" : "asc"],
+			).slice(0, this.limit);
+		},
+		ioReadWritePresentPrograms() {
+			return (this.stats_programlist || []).some(
+				({ io_counters }) => io_counters,
+			);
+		},
+		limit() {
+			return this.config.outputs !== undefined
+				? this.config.outputs.max_processes_display
+				: undefined;
+		},
+		focus() {
+			return this.args !== undefined &&
+				this.args.process_focus !== undefined &&
+				this.args.process_focus !== null
+				? this.args.process_focus.split(",")
+				: this.config.processlist !== undefined &&
+						this.config.processlist.focus !== undefined &&
+						this.config.processlist.focus !== null
+					? this.config.processlist.focus.split(",")
+					: [];
+		},
+		is_focus() {
+			return this.focus.length > 0;
+		},
+	},
+	methods: {
+		updateProcess(process, isWindows, args, cpucore) {
+			process.memvirt = "?";
+			process.memres = "?";
+			if (process.memory_info) {
+				process.memvirt = process.memory_info.vms;
+				process.memres = process.memory_info.rss;
+			}
 
-            if (isWindows && process.username !== null) {
-                process.username = last(process.username.split('\\'));
-            }
+			if (isWindows && process.username !== null) {
+				process.username = last(process.username.split("\\"));
+			}
 
-            process.timeforhuman = '?';
-            if (process.cpu_times) {
-                process.timeplus = timedelta([process.cpu_times['user'], process.cpu_times['system']]);
-                process.timeforhuman = process.timeplus.hours.toString().padStart(2, '0') + ':' +
-                    process.timeplus.minutes.toString().padStart(2, '0') + ':' +
-                    process.timeplus.seconds.toString().padStart(2, '0')
-            }
+			process.timeforhuman = "?";
+			if (process.cpu_times) {
+				process.timeplus = timedelta([
+					process.cpu_times["user"],
+					process.cpu_times["system"],
+				]);
+				process.timeforhuman =
+					process.timeplus.hours.toString().padStart(2, "0") +
+					":" +
+					process.timeplus.minutes.toString().padStart(2, "0") +
+					":" +
+					process.timeplus.seconds.toString().padStart(2, "0");
+			}
 
-            if (process.num_threads === null) {
-                process.num_threads = -1;
-            }
+			if (process.num_threads === null) {
+				process.num_threads = -1;
+			}
 
-            process.irix = 1;
-            if (process.cpu_percent === null) {
-                process.cpu_percent = -1;
-            } else {
-                if (args.disable_irix) {
-                    process.irix = cpucore
-                }
-            }
+			process.irix = 1;
+			if (process.cpu_percent === null) {
+				process.cpu_percent = -1;
+			} else {
+				if (args.disable_irix) {
+					process.irix = cpucore;
+				}
+			}
 
-            if (process.memory_percent === null) {
-                process.memory_percent = -1;
-            }
+			if (process.memory_percent === null) {
+				process.memory_percent = -1;
+			}
 
-            process.io_read = null;
-            process.io_write = null;
+			process.io_read = null;
+			process.io_write = null;
 
-            if (process.io_counters) {
-                process.io_read =
-                    (process.io_counters[0] - process.io_counters[2]) /
-                    process.time_since_update;
-                process.io_write =
-                    (process.io_counters[1] - process.io_counters[3]) /
-                    process.time_since_update;
-            }
+			if (process.io_counters) {
+				process.io_read =
+					(process.io_counters[0] - process.io_counters[2]) /
+					process.time_since_update;
+				process.io_write =
+					(process.io_counters[1] - process.io_counters[3]) /
+					process.time_since_update;
+			}
 
-            process.isNice =
-                process.nice !== undefined &&
-                ((isWindows && process.nice != 32) || (!isWindows && process.nice != 0));
+			process.isNice =
+				process.nice !== undefined &&
+				((isWindows && process.nice != 32) ||
+					(!isWindows && process.nice != 0));
 
-            if (Array.isArray(process.cmdline)) {
-                process.name = process.name + ' ' + process.cmdline.slice(1).join(' ').replace(/\n/g, ' ');
-                process.cmdline = process.cmdline.join(' ').replace(/\n/g, ' ');
-            }
+			if (Array.isArray(process.cmdline)) {
+				process.name =
+					process.name +
+					" " +
+					process.cmdline.slice(1).join(" ").replace(/\n/g, " ");
+				process.cmdline = process.cmdline.join(" ").replace(/\n/g, " ");
+			}
 
-            if (typeof process.cmdline !== "string" || process.cmdline.length === 0) {
-                process.cmdline = process.name;
-            }
-            return process
-        },
-        getCpuPercentAlert(process) {
-            return GlancesHelper.getAlert('processlist', 'processlist_cpu_', process.cpu_percent);
-        },
-        getMemoryPercentAlert(process) {
-            return GlancesHelper.getAlert('processlist', 'processlist_mem_', process.cpu_percent);
-        },
-        getDisableStats() {
-            return GlancesHelper.getLimit('processlist', 'processlist_disable_stats') || [];
-        },
-        getDisableVms() {
-            const ret = GlancesHelper.getLimit('processlist', 'processlist_disable_virtual_memory') || ['False'];
-            return (ret[0].toLowerCase() === 'true') ? true : false;
-        },
-        setExtendedStats(pid) {
-            fetch('api/4/processes/extended/' + pid.toString(), { method: 'POST' })
-                .then((response) => response.json());
-            this.$forceUpdate()
-        },
-        disableExtendedStats() {
-            fetch('api/4/processes/extended/disable', { method: 'POST' })
-                .then((response) => response.json());
-            this.$forceUpdate()
-        }
-    }
+			if (typeof process.cmdline !== "string" || process.cmdline.length === 0) {
+				process.cmdline = process.name;
+			}
+			return process;
+		},
+		getCpuPercentAlert(process) {
+			return GlancesHelper.getAlert(
+				"processlist",
+				"processlist_cpu_",
+				process.cpu_percent,
+			);
+		},
+		getMemoryPercentAlert(process) {
+			return GlancesHelper.getAlert(
+				"processlist",
+				"processlist_mem_",
+				process.cpu_percent,
+			);
+		},
+		getDisableStats() {
+			return (
+				GlancesHelper.getLimit("processlist", "processlist_disable_stats") || []
+			);
+		},
+		getDisableVms() {
+			const ret = GlancesHelper.getLimit(
+				"processlist",
+				"processlist_disable_virtual_memory",
+			) || ["False"];
+			return ret[0].toLowerCase() === "true" ? true : false;
+		},
+		setExtendedStats(pid) {
+			fetch("api/4/processes/extended/" + pid.toString(), {
+				method: "POST",
+			}).then((response) => response.json());
+			this.$forceUpdate();
+		},
+		disableExtendedStats() {
+			fetch("api/4/processes/extended/disable", { method: "POST" }).then(
+				(response) => response.json(),
+			);
+			this.$forceUpdate();
+		},
+	},
 };
 </script>

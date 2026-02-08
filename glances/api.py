@@ -21,10 +21,10 @@ plugin_dependencies_tree = {
 class GlancesAPI:
     ttl = 2.0  # Default cache TTL in seconds
 
-    def __init__(self, config=None, args=None, args_begin_at=1):
+    def __init__(self, config=None, args=None):
         self.__version__ = glances_version.split('.')[0]  # Get the major version
 
-        core = GlancesMain(args_begin_at)
+        core = GlancesMain()
         self.args = args if args is not None else core.get_args()
         self.config = config if config is not None else core.get_config()
         self._stats = GlancesStats(config=self.config, args=self.args)

@@ -1,0 +1,18 @@
+image: Visual Studio 2022
+
+environment:
+  matrix:
+    - PYTHON: "C:\\Python310-x64"
+    - PYTHON: "C:\\Python311-x64"
+    - PYTHON: "C:\\Python312-x64"
+
+install:
+  - "%PYTHON%\\python.exe -m pip install --upgrade pip"
+  - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
+  - "%PYTHON%\\python.exe -m pip install -r dev-requirements.txt"
+  - "%PYTHON%\\python.exe -m pip install \".[web]\""
+
+build: off
+
+test_script:
+  - "%PYTHON%\\python.exe -m pytest tests/"

@@ -143,6 +143,20 @@ Columns display
 
 ``R/s``                   Per process I/O read rate in B/s
 ``W/s``                   Per process I/O write rate in B/s
+``CPU``                   CPU core number where the process is currently running
+
+                          Displays the 0-based CPU core number (0, 1, 2, etc.)
+                          where the process is executing. The value updates
+                          dynamically as processes migrate between CPU cores.
+
+                          Shows ``-`` when information is unavailable.
+
+                          Available on Linux, FreeBSD, and SunOS only.
+                          Automatically disabled on Windows and macOS.
+
+                          Can be disabled via configuration with:
+                          ``disable_stats=cpu_num`` in the ``[processlist]``
+                          section of glances.conf
 ``COMMAND``               Process command line or command name
 
                           User can switch to the process name by
@@ -166,7 +180,7 @@ Process filtering
 
 It's possible to filter the processes list using the ``ENTER`` key.
 
-Filter syntax is the following (examples):
+Glances filter syntax is the following (examples):
 
 - ``python``: Filter processes name or command line starting with
   *python* (regexp)
@@ -174,6 +188,25 @@ Filter syntax is the following (examples):
   *python* (regexp)
 - ``username:nicolargo``: Processes of nicolargo user (key:regexp)
 - ``cmdline:\/usr\/bin.*``: Processes starting by */usr/bin*
+
+Process focus
+-------------
+
+It's also possible to select a processes list to focus on.
+
+A list of Glances filters (see upper) can be define from the command line:
+
+.. code-block:: bash
+
+    glances --process-focus .*python.*,.*firefox.*
+
+
+or the glances.conf file:
+
+.. code-block:: ini
+
+    [processlist]
+    focus=.*python.*,.*firefox.*
 
 Extended info
 -------------

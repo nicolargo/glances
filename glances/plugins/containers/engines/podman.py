@@ -9,7 +9,7 @@
 
 import time
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from glances.globals import nativestr, pretty_date, replace_special_chars, string_value_to_float
 from glances.logger import logger
@@ -164,7 +164,7 @@ class PodmanPodStatsFetcher:
 
         return result_stats
 
-    def _get_cpu_stats(self, stats: dict) -> Optional[dict]:
+    def _get_cpu_stats(self, stats: dict) -> dict | None:
         """Return the container CPU usage.
 
         Output: a dict {'total': 1.49}
@@ -176,7 +176,7 @@ class PodmanPodStatsFetcher:
         cpu_usage = string_value_to_float(stats["CPU"].rstrip("%"))
         return {"total": cpu_usage}
 
-    def _get_memory_stats(self, stats) -> Optional[dict]:
+    def _get_memory_stats(self, stats) -> dict | None:
         """Return the container MEMORY.
 
         Output: a dict {'usage': ..., 'limit': ...}
@@ -197,7 +197,7 @@ class PodmanPodStatsFetcher:
 
         return {'usage': usage, 'limit': limit, 'inactive_file': 0}
 
-    def _get_network_stats(self, stats) -> Optional[dict]:
+    def _get_network_stats(self, stats) -> dict | None:
         """Return the container network usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}.
@@ -223,7 +223,7 @@ class PodmanPodStatsFetcher:
         # Hardcode `time_since_update` to 1 as podman docs don't specify the rate calculation procedure
         return {"rx": rx, "tx": tx, "time_since_update": 1}
 
-    def _get_io_stats(self, stats) -> Optional[dict]:
+    def _get_io_stats(self, stats) -> dict | None:
         """Return the container IO usage using the Docker API (v1.0 or higher).
 
         Output: a dict {'time_since_update': 3000, 'ior': 10, 'iow': 65}.

@@ -14,6 +14,7 @@ I am your father...
 
 import copy
 import re
+from datetime import datetime
 
 from glances.actions import GlancesActions
 from glances.events_list import glances_events
@@ -26,6 +27,7 @@ from glances.globals import (
     listkeys,
     mean,
     nativestr,
+    split_esc,
 )
 from glances.history import GlancesHistory
 from glances.logger import logger
@@ -411,6 +413,11 @@ class GlancesPluginModel:
         """Return the stats object."""
         return self.stats
 
+    def get_api(self):
+        """Return the stats object for the API.
+        By default, return the raw stats."""
+        return self.get_raw()
+
     def get_export(self):
         """Return the stats object to export.
         By default, return the raw stats.
@@ -505,8 +512,8 @@ class GlancesPluginModel:
             return self.fields_description[field].get('optional', False)
         return False
 
-    def _build_view_for_field(self, field):
-        value = {
+    def _build_view_for_field(self, key=None, field=None):
+        view = {
             'decoration': self._build_field_decoration(field),
             'optional': self._build_field_optional(field),
             'additional': False,
@@ -518,15 +525,19 @@ class GlancesPluginModel:
         # Allow to automatically hide fields when values is never different than 0
         # Refactoring done for #2929
         if not self.hide_zero:
-            value['hidden'] = False
-        elif field in self.views and 'hidden' in self.views[field]:
-            value['hidden'] = self.views[field]['hidden']
-            if field in self.hide_zero_fields and self.get_raw()[field] >= self.hide_threshold_bytes:
-                value['hidden'] = False
+            view['hidden'] = False
+        elif key and key in self.views and field in self.views[key] and 'hidden' in self.views[key][field]:
+            view['hidden'] = self.views[key][field]['hidden']
+            if (
+                field in self.hide_zero_fields
+                and self.get_raw_stats_key(item=field, key=key).get(field) >= self.hide_threshold_bytes
+            ):
+                view['hidden'] = False
+            # logger.info(f'{key=} {field=} {view["hidden"]=}')
         else:
-            value['hidden'] = field in self.hide_zero_fields
+            view['hidden'] = field in self.hide_zero_fields
 
-        return value
+        return view
 
     def update_views(self):
         """Update the stats views.
@@ -548,11 +559,11 @@ class GlancesPluginModel:
                 key = i[self.get_key()]
                 ret[key] = {}
                 for field in listkeys(i):
-                    ret[key][field] = self._build_view_for_field(field)
+                    ret[key][field] = self._build_view_for_field(key=key, field=field)
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for field in listkeys(self.get_raw()):
-                ret[field] = self._build_view_for_field(field)
+                ret[field] = self._build_view_for_field(key=None, field=field)
 
         self.views = ret
 
@@ -579,7 +590,6 @@ class GlancesPluginModel:
             item_views = self.views
         else:
             item_views = self.views[item]
-
         if key is None:
             return item_views
         if key not in item_views:
@@ -665,10 +675,12 @@ class GlancesPluginModel:
         """
         return self.stats
 
-    def get_stat_name(self, header=""):
-        """Return the stat name with an optional header"""
+    def get_stat_name(self, header=None, action_key=None):
+        """Return the stat name with an optional action_key and header"""
         ret = self.plugin_name
-        if header != '':
+        if action_key is not None and action_key != '':
+            ret += '_' + action_key
+        if header is not None and header != '':
             ret += '_' + header
         return ret
 
@@ -679,7 +691,7 @@ class GlancesPluginModel:
         maximum=100,
         highlight_zero=True,
         is_max=False,
-        header="",
+        header=None,
         action_key=None,
         log=False,
     ):
@@ -717,7 +729,7 @@ class GlancesPluginModel:
             return 'DEFAULT'
 
         # Build the stat_name
-        stat_name = self.get_stat_name(header=header).lower()
+        stat_name = self.get_stat_name(header=header, action_key=action_key).lower()
 
         # Manage limits
         # If is_max is set then default style is set to MAX else default is set to OK
@@ -788,17 +800,29 @@ class GlancesPluginModel:
 
             # A command line is available for the current alert
             # 1) Build the {{mustache}} dictionary
-            if isinstance(self.get_stats_action(), list):
+            stats_action = copy.deepcopy(self.get_stats_action())
+            if isinstance(stats_action, list):
                 # If the stats are stored in a list of dict (fs plugin for example)
-                # Return the dict for the current header
                 mustache_dict = {}
-                for item in self.get_stats_action():
+                for item in stats_action:
+                    # Add the limit to the mustache dict
+                    item['critical'] = self.get_limit('critical', stat_name=stat_name)
+                    item['warning'] = self.get_limit('warning', stat_name=stat_name)
+                    item['careful'] = self.get_limit('careful', stat_name=stat_name)
+                    # Add the current time (now)
+                    item['time'] = datetime.now().isoformat()
                     if item[self.get_key()] == action_key:
                         mustache_dict = item
                         break
             else:
                 # Use the stats dict
-                mustache_dict = self.get_stats_action()
+                # Add the limit to the mustache dict
+                stats_action['critical'] = self.get_limit('critical', stat_name=stat_name)
+                stats_action['warning'] = self.get_limit('warning', stat_name=stat_name)
+                stats_action['careful'] = self.get_limit('careful', stat_name=stat_name)
+                # Add the current time (now)
+                stats_action['time'] = datetime.now().isoformat()
+                mustache_dict = stats_action
             # 2) Run the action
             self.actions.run(stat_name, trigger, command, repeat, mustache_dict=mustache_dict)
 
@@ -919,7 +943,10 @@ class GlancesPluginModel:
 
     def read_alias(self):
         if self.plugin_name + '_' + 'alias' in self._limits:
-            return {i.split(':')[0].lower(): i.split(':')[1] for i in self._limits[self.plugin_name + '_' + 'alias']}
+            return {
+                split_esc(i, ':')[0].lower(): split_esc(i, ':')[1]
+                for i in self._limits[self.plugin_name + '_' + 'alias']
+            }
         return {}
 
     def has_alias(self, header):

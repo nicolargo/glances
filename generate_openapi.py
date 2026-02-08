@@ -1,4 +1,5 @@
 import json
+from unittest.mock import patch
 
 from fastapi.openapi.utils import get_openapi
 
@@ -8,7 +9,9 @@ from glances.main import GlancesMain
 from glances.outputs.glances_restful_api import GlancesRestfulApi
 
 # Init Glances core
-core = GlancesMain(args_begin_at=2)
+testargs = ["glances", "-C", "./conf/glances.conf"]
+with patch('sys.argv', testargs):
+    core = GlancesMain()
 test_config = core.get_config()
 test_args = core.get_args()
 

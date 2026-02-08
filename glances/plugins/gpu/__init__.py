@@ -15,6 +15,7 @@ Currently supported:
 """
 
 from glances.globals import to_fahrenheit
+from glances.logger import logger
 from glances.plugins.gpu.cards.amd import AmdGPU
 from glances.plugins.gpu.cards.nvidia import NvidiaGPU
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -73,9 +74,19 @@ class GpuPlugin(GlancesPluginModel):
             stats_init_value=[],
             fields_description=fields_description,
         )
-        # Init the GPU API
-        self.nvidia = NvidiaGPU()
-        self.amd = AmdGPU()
+        # Init the Nvidia GPU API
+        try:
+            self.nvidia = NvidiaGPU()
+        except Exception as e:
+            logger.debug(f'Nvidia GPU initialization error: {e}')
+            self.nvidia = None
+
+        # Init the AMD GPU API
+        try:
+            self.amd = AmdGPU()
+        except Exception as e:
+            logger.debug(f'AMD GPU initialization error: {e}')
+            self.amd = None
         # Just for test purpose (uncomment to test on computer without AMD GPU)
         # self.amd = AmdGPU(drm_root_folder='./tests-data/plugins/gpu/amd/sys/class/drm')
 
@@ -102,11 +113,13 @@ class GpuPlugin(GlancesPluginModel):
         stats = self.get_init_value()
 
         # Get the stats
-        stats.extend(self.nvidia.get_device_stats())
-        stats.extend(self.amd.get_device_stats())
+        if self.nvidia:
+            stats.extend(self.nvidia.get_device_stats())
+        if self.amd:
+            stats.extend(self.amd.get_device_stats())
 
         # !!!
-        # Uncomment to test on computer without GPU
+        # Uncomment to test on computer without Nvidia GPU
         # One GPU sample:
         # stats = [
         #     {
@@ -171,118 +184,108 @@ class GpuPlugin(GlancesPluginModel):
 
         return True
 
+    def _get_mean(self, key):
+        """Calculate mean value for a given key across all GPU stats.
+
+        Returns None if calculation fails (e.g., missing data).
+        """
+        try:
+            return sum(s[key] for s in self.stats if s is not None) / len(self.stats)
+        except (TypeError, ZeroDivisionError):
+            return None
+
+    def _format_value(self, value, unit='%'):
+        """Format a value with unit, or return N/A if value is None."""
+        if value is None:
+            return '{:>4}'.format('N/A')
+        return f'{value:>3.0f}{unit}'
+
+    def _build_header(self):
+        """Build the header string based on GPU count and names."""
+        same_name = all(s['name'] == self.stats[0]['name'] for s in self.stats)
+        gpu_name = self.stats[0]['name']
+        gpu_count = len(self.stats)
+
+        if gpu_count > 1:
+            if same_name:
+                header = f'{gpu_count} {gpu_name}'
+            else:
+                header = f'{gpu_count} GPUs'
+        elif same_name:
+            header = gpu_name
+        else:
+            header = 'GPU'
+        return header[:17]
+
+    def _add_metric_line(self, ret, key, label, label_mean, unit='%'):
+        """Add a metric line (label + value) to the curse output.
+
+        Args:
+            ret: The return list to append to
+            key: The metric key (e.g., 'proc', 'mem', 'temperature')
+            label: Label for single GPU mode
+            label_mean: Label for multi-GPU mean mode
+            unit: Unit suffix for the value (default: '%')
+        """
+        gpu_stats = self.stats[0]
+        is_multi = len(self.stats) > 1
+
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line(f'{label_mean if is_multi else label:13}'))
+        mean_value = self._get_mean(key)
+        ret.append(
+            self.curse_add_line(
+                self._format_value(mean_value, unit),
+                self.get_views(item=gpu_stats[self.get_key()], key=key, option='decoration'),
+            )
+        )
+
+    def _msg_curse_summary(self, ret, args):
+        """Build curse output for summary view (single GPU or mean mode)."""
+        self._add_metric_line(ret, 'proc', 'proc:', 'proc mean:')
+        self._add_metric_line(ret, 'mem', 'mem:', 'mem mean:')
+
+        # Temperature needs special handling for Fahrenheit conversion
+        gpu_stats = self.stats[0]
+        is_multi = len(self.stats) > 1
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line('{:13}'.format('temp mean:' if is_multi else 'temperature:')))
+        mean_temp = self._get_mean('temperature')
+        if mean_temp is not None and args.fahrenheit:
+            mean_temp = to_fahrenheit(mean_temp)
+        unit = 'F' if args.fahrenheit else 'C'
+        ret.append(
+            self.curse_add_line(
+                self._format_value(mean_temp, unit),
+                self.get_views(item=gpu_stats[self.get_key()], key='temperature', option='decoration'),
+            )
+        )
+
+    def _msg_curse_multi(self, ret):
+        """Build curse output for multi-GPU detailed view."""
+        for gpu_stats in self.stats:
+            ret.append(self.curse_new_line())
+            id_msg = '{:>7}'.format(gpu_stats['gpu_id'])
+            proc_msg = self._format_value(gpu_stats.get('proc'))
+            mem_msg = self._format_value(gpu_stats.get('mem'))
+            msg = f'{id_msg} {proc_msg} mem {mem_msg}'
+            ret.append(self.curse_add_line(msg))
+
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
-        # Init the return message
         ret = []
 
         # Only process if stats exist, not empty (issue #871) and plugin not disabled
-        if not self.stats or (self.stats == []) or self.is_disabled():
+        if not self.stats or self.is_disabled():
             return ret
 
-        # Check if all GPU have the same name
-        same_name = all(s['name'] == self.stats[0]['name'] for s in self.stats)
-
-        # gpu_stats contain the first GPU in the list
-        gpu_stats = self.stats[0]
-
         # Header
-        header = ''
-        if len(self.stats) > 1:
-            header += f'{len(self.stats)}'
-            if same_name:
-                header += ' {}'.format(gpu_stats['name'])
-            else:
-                header += ' GPUs'
-        elif same_name:
-            header += '{}'.format(gpu_stats['name'])
-        else:
-            header += 'GPU'
-        msg = header[:17]
-        ret.append(self.curse_add_line(msg, "TITLE"))
+        ret.append(self.curse_add_line(self._build_header(), "TITLE"))
 
         # Build the string message
         if len(self.stats) == 1 or args.meangpu:
-            # GPU stat summary or mono GPU
-            # New line
-            ret.append(self.curse_new_line())
-            # GPU PROC
-            try:
-                mean_proc = sum(s['proc'] for s in self.stats if s is not None) / len(self.stats)
-            except TypeError:
-                mean_proc_msg = '{:>4}'.format('N/A')
-            else:
-                mean_proc_msg = f'{mean_proc:>3.0f}%'
-            if len(self.stats) > 1:
-                msg = '{:13}'.format('proc mean:')
-            else:
-                msg = '{:13}'.format('proc:')
-            ret.append(self.curse_add_line(msg))
-            ret.append(
-                self.curse_add_line(
-                    mean_proc_msg, self.get_views(item=gpu_stats[self.get_key()], key='proc', option='decoration')
-                )
-            )
-            # New line
-            ret.append(self.curse_new_line())
-            # GPU MEM
-            try:
-                mean_mem = sum(s['mem'] for s in self.stats if s is not None) / len(self.stats)
-            except TypeError:
-                mean_mem_msg = '{:>4}'.format('N/A')
-            else:
-                mean_mem_msg = f'{mean_mem:>3.0f}%'
-            if len(self.stats) > 1:
-                msg = '{:13}'.format('mem mean:')
-            else:
-                msg = '{:13}'.format('mem:')
-            ret.append(self.curse_add_line(msg))
-            ret.append(
-                self.curse_add_line(
-                    mean_mem_msg, self.get_views(item=gpu_stats[self.get_key()], key='mem', option='decoration')
-                )
-            )
-            # New line
-            ret.append(self.curse_new_line())
-            # GPU TEMPERATURE
-            try:
-                mean_temperature = sum(s['temperature'] for s in self.stats if s is not None) / len(self.stats)
-            except TypeError:
-                mean_temperature_msg = '{:>4}'.format('N/A')
-            else:
-                unit = 'C'
-                if args.fahrenheit:
-                    mean_temperature = to_fahrenheit(mean_temperature)
-                    unit = 'F'
-                mean_temperature_msg = f'{mean_temperature:>3.0f}{unit}'
-            if len(self.stats) > 1:
-                msg = '{:13}'.format('temp mean:')
-            else:
-                msg = '{:13}'.format('temperature:')
-            ret.append(self.curse_add_line(msg))
-            ret.append(
-                self.curse_add_line(
-                    mean_temperature_msg,
-                    self.get_views(item=gpu_stats[self.get_key()], key='temperature', option='decoration'),
-                )
-            )
+            self._msg_curse_summary(ret, args)
         else:
-            # Multi GPU
-            # Temperature is not displayed in this mode...
-            for gpu_stats in self.stats:
-                # New line
-                ret.append(self.curse_new_line())
-                # GPU ID + PROC + MEM + TEMPERATURE
-                id_msg = '{:>7}'.format(gpu_stats['gpu_id'])
-                try:
-                    proc_msg = '{:>3.0f}%'.format(gpu_stats['proc'])
-                except (ValueError, TypeError):
-                    proc_msg = '{:>4}'.format('N/A')
-                try:
-                    mem_msg = '{:>3.0f}%'.format(gpu_stats['mem'])
-                except (ValueError, TypeError):
-                    mem_msg = '{:>4}'.format('N/A')
-                msg = f'{id_msg} {proc_msg} mem {mem_msg}'
-                ret.append(self.curse_add_line(msg))
+            self._msg_curse_multi(ret)
 
         return ret

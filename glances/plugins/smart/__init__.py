@@ -2,6 +2,7 @@
 # This file is part of Glances.
 #
 # Copyright (C) 2018 Tim Nibert <docz2a@gmail.com>
+# Copyright (C) 2026 Github@Drake7707
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -41,6 +42,7 @@ from glances.plugins.plugin.model import GlancesPluginModel
 # Import plugin specific dependency
 try:
     from pySMART import DeviceList
+    from pySMART.interface.nvme import NvmeAttributes
 except ImportError as e:
     import_error_tag = True
     logger.warning(f"Missing Python Lib ({e}), HDD Smart plugin is disabled")
@@ -51,6 +53,7 @@ else:
 def convert_attribute_to_dict(attr):
     return {
         'name': attr.name,
+        'key': attr.name,
         'num': attr.num,
         'flags': attr.flags,
         'raw': attr.raw,
@@ -63,58 +66,121 @@ def convert_attribute_to_dict(attr):
     }
 
 
-def get_smart_data():
-    """
-    Get SMART attribute data
-    :return: list of multi leveled dictionaries
-             each dict has a key "DeviceName" with the identification of the device in smartctl
-             also has keys of the SMART attribute id, with value of another dict of the attributes
-             [
-                {
-                    "DeviceName": "/dev/sda blahblah",
-                    "1":
-                    {
-                        "flags": "..",
-                        "raw": "..",
-                        etc,
-                    }
-                    ...
-                }
-             ]
+# Keys for attributes that should be formatted with auto_unit (large byte values)
+LARGE_VALUE_KEYS = frozenset(
+    [
+        "bytesWritten",
+        "bytesRead",
+        "dataUnitsRead",
+        "dataUnitsWritten",
+        "hostReadCommands",
+        "hostWriteCommands",
+    ]
+)
+
+NVME_ATTRIBUTE_LABELS = {
+    "criticalWarning": "Number of critical warnings",
+    "_temperature": "Temperature (°C)",
+    "availableSpare": "Available spare (%)",
+    "availableSpareThreshold": "Available spare threshold (%)",
+    "percentageUsed": "Percentage used (%)",
+    "dataUnitsRead": "Data units read",
+    "bytesRead": "Bytes read",
+    "dataUnitsWritten": "Data units written",
+    "bytesWritten": "Bytes written",
+    "hostReadCommands": "Host read commands",
+    "hostWriteCommands": "Host write commands",
+    "controllerBusyTime": "Controller busy time (min)",
+    "powerCycles": "Power cycles",
+    "powerOnHours": "Power-on hours",
+    "unsafeShutdowns": "Unsafe shutdowns",
+    "integrityErrors": "Integrity errors",
+    "errorEntries": "Error log entries",
+    "warningTemperatureTime": "Warning temperature time (min)",
+    "criticalTemperatureTime": "Critical temperature time (min)",
+    "_logical_sector_size": "Logical sector size",
+    "_physical_sector_size": "Physical sector size",
+    "errors": "Errors",
+    "tests": "Self-tests",
+}
+
+
+def convert_nvme_attribute_to_dict(key, value):
+    label = NVME_ATTRIBUTE_LABELS.get(key, key)
+
+    return {
+        'name': label,
+        'key': key,
+        'value': value,
+        'flags': None,
+        'raw': value,
+        'worst': None,
+        'threshold': None,
+        'type': None,
+        'updated': None,
+        'when_failed': None,
+    }
+
+
+def _process_standard_attributes(device_stats, attributes, hide_attributes):
+    """Process standard SMART attributes and add them to device_stats."""
+    for attribute in attributes:
+        if attribute is None or attribute.name in hide_attributes:
+            continue
+
+        attrib_dict = convert_attribute_to_dict(attribute)
+        num = attrib_dict.pop('num', None)
+        if num is None:
+            logger.debug(f'Smart plugin error - Skip attribute with no num: {attribute}')
+            continue
+
+        device_stats[num] = attrib_dict
+
+
+def _process_nvme_attributes(device_stats, if_attributes, hide_attributes):
+    """Process NVMe-specific attributes and add them to device_stats."""
+    if not isinstance(if_attributes, NvmeAttributes):
+        return
+
+    for idx, (attr, value) in enumerate(vars(if_attributes).items(), start=1):
+        attrib_dict = convert_nvme_attribute_to_dict(attr, value)
+        if attrib_dict['name'] in hide_attributes:
+            continue
+
+        # Verify the value is serializable to prevent rendering errors
+        if value is not None:
+            try:
+                str(value)
+            except Exception:
+                logger.debug(f'Unable to serialize attribute {attr} from NVME')
+                attrib_dict['value'] = None
+                attrib_dict['raw'] = None
+
+        device_stats[idx] = attrib_dict
+
+
+def get_smart_data(hide_attributes):
+    """Get SMART attribute data.
+
+    Returns a list of dictionaries, each containing:
+    - 'DeviceName': Device identification string
+    - Numeric keys: SMART attribute dictionaries with flags, raw values, etc.
     """
     stats = []
-    # get all devices
     try:
         devlist = DeviceList()
     except TypeError as e:
-        # Catch error  (see #1806)
         logger.debug(f'Smart plugin error - Can not grab device list ({e})')
         global import_error_tag
         import_error_tag = True
         return stats
 
     for dev in devlist.devices:
-        stats.append(
-            {
-                'DeviceName': f'{dev.name} {dev.model}',
-            }
-        )
-        for attribute in dev.attributes:
-            if attribute is None:
-                pass
-            else:
-                attrib_dict = convert_attribute_to_dict(attribute)
+        device_stats = {'DeviceName': f'{dev.name} {dev.model}'}
+        _process_standard_attributes(device_stats, dev.attributes, hide_attributes)
+        _process_nvme_attributes(device_stats, dev.if_attributes, hide_attributes)
+        stats.append(device_stats)
 
-                # we will use the attribute number as the key
-                num = attrib_dict.pop('num', None)
-                try:
-                    assert num is not None
-                except Exception as e:
-                    # we should never get here, but if we do, continue to next iteration and skip this attribute
-                    logger.debug(f'Smart plugin error - Skip the attribute {attribute} ({e})')
-                    continue
-
-                stats[-1][num] = attrib_dict
     return stats
 
 
@@ -123,15 +189,33 @@ class SmartPlugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None, stats_init_value=[]):
         """Init the plugin."""
-        # check if user is admin
         if not is_admin() and args:
             disable(args, "smart")
             logger.debug("Current user is not admin, HDD SMART plugin disabled.")
 
         super().__init__(args=args, config=config)
 
-        # We want to display the stat in the curse interface
         self.display_curse = True
+        self.hide_attributes = self._parse_hide_attributes(config)
+
+    def _parse_hide_attributes(self, config):
+        """Parse and return the list of attributes to hide from config."""
+        smart_config = config.as_dict().get('smart', {})
+        hide_attr_str = smart_config.get('hide_attributes', '')
+        if hide_attr_str:
+            logger.info(f'Following SMART attributes will not be displayed: {hide_attr_str}')
+            return hide_attr_str.split(',')
+        return []
+
+    @property
+    def hide_attributes(self):
+        """Set hide_attributes list"""
+        return self._hide_attributes
+
+    @hide_attributes.setter
+    def hide_attributes(self, attr_list):
+        """Set hide_attributes list"""
+        self._hide_attributes = list(attr_list)
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
@@ -145,7 +229,7 @@ class SmartPlugin(GlancesPluginModel):
 
         if self.input_method == 'local':
             # Update stats and hide some sensors(#2996)
-            stats = [s for s in get_smart_data() if self.is_display(s[self.get_key()])]
+            stats = [s for s in get_smart_data(self.hide_attributes) if self.is_display(s[self.get_key()])]
         elif self.input_method == 'snmp':
             pass
 
@@ -158,44 +242,63 @@ class SmartPlugin(GlancesPluginModel):
         """Return the key of the list."""
         return 'DeviceName'
 
+    def _format_raw_value(self, stat):
+        """Format a raw SMART attribute value for display."""
+        raw = stat['raw']
+        if raw is None:
+            return ""
+        if stat['key'] in LARGE_VALUE_KEYS:
+            return self.auto_unit(raw)
+        return str(raw)
+
+    def _get_sorted_stat_keys(self, device_stat):
+        """Get sorted attribute keys from device stats, excluding DeviceName."""
+        keys = [k for k in device_stat if k != 'DeviceName']
+        try:
+            return sorted(keys, key=int)
+        except ValueError:
+            # Some keys may not be numeric (see #2904)
+            return keys
+
+    def _add_device_stats(self, ret, device_stat, max_width, name_max_width):
+        """Add a device's SMART stats to the curse output."""
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line(f'{device_stat["DeviceName"][:max_width]:{max_width}}'))
+
+        for key in self._get_sorted_stat_keys(device_stat):
+            stat = device_stat[key]
+            ret.append(self.curse_new_line())
+
+            # Attribute name
+            name = stat['name'][: name_max_width - 1].replace('_', ' ')
+            ret.append(self.curse_add_line(f' {name:{name_max_width - 1}}'))
+
+            # Attribute value
+            try:
+                value_str = self._format_raw_value(stat)
+                ret.append(self.curse_add_line(f'{value_str:>8}'))
+            except Exception:
+                logger.debug(f"Failed to serialize {key}")
+                ret.append(self.curse_add_line(""))
+
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
-        # Init the return message
         ret = []
 
-        # Only process if stats exist...
         if import_error_tag or not self.stats or self.is_disabled():
             return ret
 
-        # Max size for the interface name
-        if max_width:
-            name_max_width = max_width - 6
-        else:
-            # No max_width defined, return an empty curse message
+        if not max_width:
             logger.debug(f"No max_width defined for the {self.plugin_name} plugin, it will not be displayed.")
             return ret
 
+        name_max_width = max_width - 6
+
         # Header
-        msg = '{:{width}}'.format('SMART disks', width=name_max_width)
-        ret.append(self.curse_add_line(msg, "TITLE"))
-        # Data
+        ret.append(self.curse_add_line(f'{"SMART disks":{name_max_width}}', "TITLE"))
+
+        # Device data
         for device_stat in self.stats:
-            # New line
-            ret.append(self.curse_new_line())
-            msg = '{:{width}}'.format(device_stat['DeviceName'][:max_width], width=max_width)
-            ret.append(self.curse_add_line(msg))
-            try:
-                device_stat_sorted = sorted([i for i in device_stat if i != 'DeviceName'], key=int)
-            except ValueError:
-                # Catch ValueError, see #2904
-                device_stat_sorted = [i for i in device_stat if i != 'DeviceName']
-            for smart_stat in device_stat_sorted:
-                ret.append(self.curse_new_line())
-                msg = ' {:{width}}'.format(
-                    device_stat[smart_stat]['name'][: name_max_width - 1].replace('_', ' '), width=name_max_width - 1
-                )
-                ret.append(self.curse_add_line(msg))
-                msg = '{:>8}'.format(device_stat[smart_stat]['raw'])
-                ret.append(self.curse_add_line(msg))
+            self._add_device_stats(ret, device_stat, max_width, name_max_width)
 
         return ret

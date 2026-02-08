@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
-if [ $(id -u) -ne 0 ]; then
-    echo -e "* ERROR: User $(whoami) is not root, and does not have sudo privileges"
+if [ "$(id -u)" != "0" ]; then
+    echo "* ERROR: User $(whoami) is not root, and does not have sudo privileges"
     exit 1
 fi
 
@@ -14,9 +14,9 @@ fi
 
 python setup.py install --record install.record
 
-for i in $(cat install.record); do
-    rm  $i
-done
+while IFS= read -r i; do
+    rm "$i"
+done < install.record
 
 echo -e "\n\n* SUCCESS: Uninstall complete."
 rm install.record

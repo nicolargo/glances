@@ -23,6 +23,7 @@ local.properties
 .classpath
 .settings/
 .loadpath
+.ipynb_checkpoints/
 
 # External tool builders
 .externalToolBuilders/
@@ -71,3 +72,6 @@ uv.lock
 # Test
 .coverage
 tests-data/issues/*/config/
+
+# Local SSL certificates
+glances.local*.pem

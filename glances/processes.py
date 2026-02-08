@@ -30,7 +30,8 @@ psutil_version_info = tuple([int(num) for num in psutil.__version__.split('.')])
 mandatory_processes_stats_list = ['pid', 'name']
 
 # This constant defines the list of available processes sort key
-sort_processes_stats_list = ['cpu_percent', 'memory_percent', 'username', 'cpu_times', 'io_counters', 'name']
+sort_processes_stats_list = ['cpu_percent', 'memory_percent', 'username']
+sort_processes_stats_list += ['cpu_times', 'io_counters', 'name', 'cpu_num']
 
 # Sort dictionary for human
 sort_for_human = {
@@ -40,6 +41,7 @@ sort_for_human = {
     'cpu_times': 'process time',
     'username': 'user name',
     'name': 'processs name',
+    'cpu_num': 'CPU core number',
     None: 'None',
 }
 
@@ -74,6 +76,9 @@ class GlancesProcesses:
 
         # Cache is a dict with key=pid and value = dict of cached value
         self.processlist_cache = {}
+
+        # List of processes to focus on
+        self._filter_focus = GlancesFilterList()
 
         # List of processes stats to export
         # Only process matching one of the filter will be exported
@@ -134,9 +139,24 @@ class GlancesProcesses:
             logger.debug('PsUtil can grab processes gids')
             self.disable_gids = False
 
+        # Test if the system can grab cpu_num
+        try:
+            p = psutil.Process()
+            p.cpu_num()
+        except (AttributeError, Exception) as e:
+            logger.warning(f'PsUtil can not grab process cpu_num ({e})')
+            self.disable_cpu_num = True
+        else:
+            logger.debug('PsUtil can grab process cpu_num')
+            self.disable_cpu_num = False
+
     def set_args(self, args):
         """Set args."""
         self.args = args
+
+        if self.args.process_focus is not None:
+            logger.info(f"Focus process filter (--process-focus option) is set to: {self.args.process_focus}")
+            self.process_focus = self.args.process_focus
 
     def reset_internal_cache(self):
         """Reset the internal cache."""
@@ -267,7 +287,21 @@ class GlancesProcesses:
         """Get the process regular expression compiled."""
         return self._filter.filter_re
 
+    # Process focus filter
+    # List of Glances filter
+
+    @property
+    def process_focus(self):
+        """Get the focus process filter."""
+        return self._filter_focus.filter
+
+    @process_focus.setter
+    def process_focus(self, value):
+        """Set the focus process filter list."""
+        self._filter_focus.filter = value
+
     # Export filter
+    # List of Glances filter
 
     @property
     def export_process_filter(self):
@@ -288,10 +322,7 @@ class GlancesProcesses:
     @property
     def sort_reverse(self):
         """Return True to sort processes in reverse 'key' order, False instead."""
-        if self.sort_key == 'name' or self.sort_key == 'username':
-            return False
-
-        return True
+        return self.sort_key not in ['name', 'username', 'cpu_num']
 
     def max_values(self):
         """Return the max values dict."""
@@ -446,10 +477,12 @@ class GlancesProcesses:
         # Build the processes stats list (it is why we need psutil>=5.3.0) (see issue #2755)
         processlist = list(
             filter(
-                lambda p: not (BSD and p.info['name'] == 'idle')
-                and not (WINDOWS and p.info['name'] == 'System Idle Process')
-                and not (MACOS and p.info['name'] == 'kernel_task')
-                and not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0),
+                lambda p: (
+                    not (BSD and p.info['name'] == 'idle')
+                    and not (WINDOWS and p.info['name'] == 'System Idle Process')
+                    and not (MACOS and p.info['name'] == 'kernel_task')
+                    and not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0)
+                ),
                 psutil.process_iter(attrs=sorted_attrs, ad_value=None),
             )
         )
@@ -457,10 +490,7 @@ class GlancesProcesses:
         # Only get the info key
         # PsUtil 6+ no longer check PID reused #2755 so use is_running in the loop
         # Note: not sure it is realy needed but CPU consumption look the same with or without it
-        processlist = [p.info for p in processlist if p.is_running()]
-
-        # Sort the processes list by the current sort_key
-        return sort_stats(processlist, sorted_by=self.sort_key, reverse=True)
+        return [p.info for p in processlist if p.is_running()]
 
     def get_sorted_attrs(self):
         defaults = ['cpu_percent', 'cpu_times', 'memory_percent', 'name', 'status', 'num_threads']
@@ -470,7 +500,11 @@ class GlancesProcesses:
 
     def get_displayed_attr(self):
         defaults = ['memory_info', 'nice', 'pid']
-        optional = ['gids'] if not self.disable_gids else []
+        optional = []
+        if not self.disable_gids:
+            optional.append('gids')
+        if not self.disable_cpu_num:
+            optional.append('cpu_num')
 
         return defaults + optional
 
@@ -578,6 +612,8 @@ class GlancesProcesses:
 
         # Remove attributes set by the user in the config file (see #1524)
         sorted_attrs = [i for i in sorted_attrs if i not in self.disable_stats]
+
+        # Buid and sort the process list
         processlist = self.build_process_list(sorted_attrs)
 
         # Update the processcount
@@ -642,6 +678,9 @@ class GlancesProcesses:
 
     def update_list(self, processlist):
         """Return the process list after filtering and transformation (namedtuple to dict)."""
+        if self._filter_focus.filter is not None and self._filter_focus.filter != []:
+            ret = list(filter(lambda p: self._filter_focus.is_filtered(p), processlist))
+            return list_of_namedtuple_to_list_of_dict(ret)
         if self._filter.filter is None:
             return list_of_namedtuple_to_list_of_dict(processlist)
         ret = list(filter(lambda p: self._filter.is_filtered(p), processlist))
@@ -658,10 +697,12 @@ class GlancesProcesses:
         """Get the number of processes."""
         return self.processcount
 
-    def get_list(self, sorted_by=None, as_programs=False):
-        """Get the processlist.
+    def get_list(self, sorted=False, as_programs=False):
+        """Get the processlist (sorted or not).
         By default, return the list of threads.
         If as_programs is True, return the list of programs."""
+        if sorted:
+            self.processlist = sort_stats(self.processlist, sorted_by=self.sort_key, reverse=self.sort_reverse)
         if as_programs:
             return processes_to_programs(self.processlist)
         return self.processlist
@@ -733,6 +774,7 @@ def _sort_io_counters(process, sorted_by='io_counters', sorted_by_secondary='mem
 
     :return: Sum of io_r + io_w
     """
+    logger.info(f'*** Sort by cpu_times called {type(process[sorted_by])} {process[sorted_by]}')
     return process[sorted_by][0] - process[sorted_by][2] + process[sorted_by][1] - process[sorted_by][3]
 
 
@@ -744,7 +786,7 @@ def _sort_cpu_times(process, sorted_by='cpu_times', sorted_by_secondary='memory_
     see (https://github.com/giampaolo/psutil/issues/1339)
     The following implementation takes user and system time into account
     """
-    return process[sorted_by][0] + process[sorted_by][1]
+    return process[sorted_by]['user'] + process[sorted_by]['system']
 
 
 def _sort_lambda(sorted_by='cpu_percent', sorted_by_secondary='memory_percent'):
@@ -769,18 +811,22 @@ def sort_stats(stats, sorted_by='cpu_percent', sorted_by_secondary='memory_perce
         # Specific sort
         try:
             stats = sorted(stats, key=sort_lambda, reverse=reverse)
-        except Exception:
+        except Exception as e:
             # If an error is detected, fallback to cpu_percent
+            logger.debug(f'Error while sorting by {sorted_by}, fallback to cpu_percent ({e})')
             stats = sorted(stats, key=sort_by_these_keys('cpu_percent', sorted_by_secondary), reverse=reverse)
     else:
         # Standard sort
         try:
             stats = sorted(stats, key=sort_by_these_keys(sorted_by, sorted_by_secondary), reverse=reverse)
-        except (KeyError, TypeError):
+        except (KeyError, TypeError) as e:
             # Fallback to name
+            logger.debug(f'Error while sorting by {sorted_by}, fallback to name ({e})')
             stats.sort(key=lambda process: process['name'] if process['name'] is not None else '~', reverse=False)
 
     return stats
 
 
 glances_processes = GlancesProcesses()
+
+# End of file processes.py

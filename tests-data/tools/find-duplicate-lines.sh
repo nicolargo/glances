@@ -1,3 +1,5 @@
+#!/bin/sh
+
 find ./glances/ -type f -name "*.py" -exec sh -c '
     duplicate_found=0
     for file; do

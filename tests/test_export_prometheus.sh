@@ -20,7 +20,7 @@ curl http://localhost:9091/metrics
 
 # Kill the glances process if it's still running
 if ps -p $GLANCES_PID > /dev/null; then
-   kill $GLANCES_PID
+    kill $GLANCES_PID
 fi
 
 echo "Script completed successfully!"

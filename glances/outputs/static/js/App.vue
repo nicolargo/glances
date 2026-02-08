@@ -1,46 +1,46 @@
 <template>
-    <div v-if="!dataLoaded" id="loading-page" class="container-fluid">
-        <div class="loader">Glances is loading...</div>
-    </div>
-    <glances-help v-else-if="args.help_tag"></glances-help>
-    <main v-else>
-        <!-- Display minimal header on low screen size (smarthphone) -->
-        <div class="d-sm-none">
-            <div class="header-small">
-                <div v-if="!args.disable_system"><glances-plugin-hostname :data="data"></glances-plugin-hostname></div>
-                <div v-if="!args.disable_uptime"><glances-plugin-uptime :data="data"></glances-plugin-uptime></div>
-            </div>
-        </div>
-        <!-- Display standard header on others screen sizes -->
-        <div class="d-none d-sm-block">
-            <div class="header d-flex justify-content-between flex-row">
-                <div v-if="!args.disable_system" class=""><glances-plugin-system :data="data"></glances-plugin-system>
-                </div>
-                <div v-if="!args.disable_ip" class="d-none d-lg-block"><glances-plugin-ip
-                        :data="data"></glances-plugin-ip>
-                </div>
-                <div v-if="!args.disable_now" class="d-none d-xl-block"><glances-plugin-now
-                        :data="data"></glances-plugin-now></div>
-                <div v-if="!args.disable_uptime" class="d-none d-md-block"><glances-plugin-uptime
-                        :data="data"></glances-plugin-uptime></div>
-            </div>
-        </div>
-        <div class="d-flex d-none d-sm-block">
-            <div v-if="!args.disable_cloud">
-                <glances-plugin-cloud :data="data"></glances-plugin-cloud>
-            </div>
-        </div>
-        <!-- Display top menu with CPU, MEM, LOAD...-->
-        <div class="top d-flex justify-content-between flex-row">
-            <!-- Quicklook -->
-            <div v-if="!args.disable_quicklook" class="d-none d-md-block">
-                <glances-plugin-quicklook :data="data"></glances-plugin-quicklook>
-            </div>
-            <!-- CPU -->
-            <div v-if="!args.disable_cpu || !args.percpu" class="">
-                <glances-plugin-cpu :data="data"></glances-plugin-cpu>
-            </div>
-            <!-- TODO: percpu need to be refactor
+	<div v-if="!dataLoaded" id="loading-page" class="container-fluid">
+		<div class="loader">Glances is loading...</div>
+	</div>
+	<glances-help v-else-if="args.help_tag"></glances-help>
+	<main v-else>
+		<!-- Display minimal header on low screen size (smarthphone) -->
+		<div class="d-sm-none">
+			<div class="header-small">
+				<div v-if="!args.disable_system"><glances-plugin-hostname :data="data"></glances-plugin-hostname></div>
+				<div v-if="!args.disable_uptime"><glances-plugin-uptime :data="data"></glances-plugin-uptime></div>
+			</div>
+		</div>
+		<!-- Display standard header on others screen sizes -->
+		<div class="d-none d-sm-block">
+			<div class="header d-flex justify-content-between flex-row">
+				<div v-if="!args.disable_system" class=""><glances-plugin-system :data="data"></glances-plugin-system>
+				</div>
+				<div v-if="!args.disable_ip" class="d-none d-lg-block"><glances-plugin-ip
+						:data="data"></glances-plugin-ip>
+				</div>
+				<div v-if="!args.disable_uptime" class="d-none d-md-block"><glances-plugin-uptime
+						:data="data"></glances-plugin-uptime></div>
+				<div v-if="!args.disable_now" class="d-none d-xl-block"><glances-plugin-now
+						:data="data"></glances-plugin-now></div>
+			</div>
+		</div>
+		<div class="d-flex d-none d-sm-block">
+			<div v-if="!args.disable_cloud">
+				<glances-plugin-cloud :data="data"></glances-plugin-cloud>
+			</div>
+		</div>
+		<!-- Display top menu with CPU, MEM, LOAD...-->
+		<div class="top d-flex justify-content-between flex-row">
+			<!-- Quicklook -->
+			<div v-if="!args.disable_quicklook" class="d-none d-md-block">
+				<glances-plugin-quicklook :data="data"></glances-plugin-quicklook>
+			</div>
+			<!-- CPU -->
+			<div v-if="!args.disable_cpu || !args.percpu" class="">
+				<glances-plugin-cpu :data="data"></glances-plugin-cpu>
+			</div>
+			<!-- TODO: percpu need to be refactor
                 <div class="col"
                         v-if="!args.disable_cpu && !args.percpu">
                     <glances-plugin-cpu :data="data"></glances-plugin-cpu>
@@ -50,369 +50,395 @@
                     <glances-plugin-percpu :data="data"></glances-plugin-percpu>
                 </div> -->
 
-            <!-- GPU -->
-            <div v-if="!args.disable_gpu && hasGpu" class="d-none d-xl-block">
-                <glances-plugin-gpu :data="data"></glances-plugin-gpu>
-            </div>
-            <!-- MEM -->
-            <div v-if="!args.disable_mem" class="">
-                <glances-plugin-mem :data="data"></glances-plugin-mem>
-            </div>
-            <!-- SWAP -->
-            <div v-if="!args.disable_memswap" class="d-none d-lg-block">
-                <glances-plugin-memswap :data="data"></glances-plugin-memswap>
-            </div>
-            <!-- LOAD -->
-            <div v-if="!args.disable_load" class="d-none d-sm-block">
-                <glances-plugin-load :data="data"></glances-plugin-load>
-            </div>
-        </div>
-        <!-- Display bottom of the screen with sidebar and processlist -->
-        <div class="bottom container-fluid">
-            <div class="row">
-                <div v-if="!args.disable_left_sidebar" class="col-3 d-none d-md-block"
-                    :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }">
-                    <template v-for="plugin in leftMenu">
-                        <component :is="`glances-plugin-${plugin}`" v-if="!args[`disable_${plugin}`]" :id="`${plugin}`"
-                            :data="data">
-                        </component>
-                    </template>
-                </div>
-                <div class="col" :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }">
-                    <glances-plugin-vms v-if="!args.disable_vms" :data="data"></glances-plugin-vms>
-                    <glances-plugin-containers v-if="!args.disable_containers" :data="data"></glances-plugin-containers>
-                    <glances-plugin-process :data="data"></glances-plugin-process>
-                    <glances-plugin-alert v-if="!args.disable_alert" :data="data"></glances-plugin-alert>
-                </div>
-            </div>
-        </div>
-    </main>
+			<!-- NPU -->
+			<div v-if="!args.disable_npu && hasNpu" class="d-none d-xl-block">
+				<glances-plugin-npu :data="data"></glances-plugin-npu>
+			</div>
+			<!-- GPU -->
+			<div v-if="!args.disable_gpu && hasGpu" class="d-none d-xl-block">
+				<glances-plugin-gpu :data="data"></glances-plugin-gpu>
+			</div>
+			<!-- MEM -->
+			<div v-if="!args.disable_mem" class="">
+				<glances-plugin-mem :data="data"></glances-plugin-mem>
+			</div>
+			<!-- SWAP -->
+			<div v-if="!args.disable_memswap" class="d-none d-lg-block">
+				<glances-plugin-memswap :data="data"></glances-plugin-memswap>
+			</div>
+			<!-- LOAD -->
+			<div v-if="!args.disable_load" class="d-none d-sm-block">
+				<glances-plugin-load :data="data"></glances-plugin-load>
+			</div>
+		</div>
+		<!-- Display bottom of the screen with sidebar and processlist -->
+		<div class="bottom container-fluid">
+			<div class="row">
+				<div v-if="!args.disable_left_sidebar" class="col-3 d-none d-md-block"
+					:class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }">
+					<template v-for="plugin in leftMenu">
+						<component :is="`glances-plugin-${plugin}`" v-if="!args[`disable_${plugin}`]" :id="`${plugin}`"
+							:data="data">
+						</component>
+					</template>
+				</div>
+				<div class="col" :class="{ 'sidebar-min': !args.percpu, 'sidebar-max': args.percpu }">
+					<glances-plugin-vms v-if="!args.disable_vms" :data="data"></glances-plugin-vms>
+					<glances-plugin-containers v-if="!args.disable_containers" :data="data"></glances-plugin-containers>
+					<glances-plugin-process :data="data"></glances-plugin-process>
+					<glances-plugin-alert v-if="!args.disable_alert" :data="data"></glances-plugin-alert>
+				</div>
+			</div>
+		</div>
+	</main>
 </template>
 
 <script>
-import hotkeys from 'hotkeys-js';
-import { GlancesStats } from './services.js';
-import { store } from './store.js';
+import hotkeys from "hotkeys-js";
+import GlancesHelp from "./components/help.vue";
+import GlancesPluginAlert from "./components/plugin-alert.vue";
+import GlancesPluginCloud from "./components/plugin-cloud.vue";
+import GlancesPluginConnections from "./components/plugin-connections.vue";
+import GlancesPluginContainers from "./components/plugin-containers.vue";
+import GlancesPluginCpu from "./components/plugin-cpu.vue";
+import GlancesPluginDiskio from "./components/plugin-diskio.vue";
+import GlancesPluginFolders from "./components/plugin-folders.vue";
+import GlancesPluginFs from "./components/plugin-fs.vue";
+import GlancesPluginNpu from "./components/plugin-npu.vue";
+import GlancesPluginGpu from "./components/plugin-gpu.vue";
+import GlancesPluginHostname from "./components/plugin-hostname.vue";
+import GlancesPluginIp from "./components/plugin-ip.vue";
+import GlancesPluginIrq from "./components/plugin-irq.vue";
+import GlancesPluginLoad from "./components/plugin-load.vue";
+import GlancesPluginMem from "./components/plugin-mem.vue";
+import GlancesPluginMemswap from "./components/plugin-memswap.vue";
+import GlancesPluginNetwork from "./components/plugin-network.vue";
+import GlancesPluginNow from "./components/plugin-now.vue";
+import GlancesPluginPercpu from "./components/plugin-percpu.vue";
+import GlancesPluginPorts from "./components/plugin-ports.vue";
+import GlancesPluginProcess from "./components/plugin-process.vue";
+import GlancesPluginQuicklook from "./components/plugin-quicklook.vue";
+import GlancesPluginRaid from "./components/plugin-raid.vue";
+import GlancesPluginSensors from "./components/plugin-sensors.vue";
+import GlancesPluginSmart from "./components/plugin-smart.vue";
+import GlancesPluginSystem from "./components/plugin-system.vue";
+import GlancesPluginUptime from "./components/plugin-uptime.vue";
+import GlancesPluginVms from "./components/plugin-vms.vue";
+import GlancesPluginWifi from "./components/plugin-wifi.vue";
+import { GlancesStats } from "./services.js";
+import { store } from "./store.js";
 
-import GlancesHelp from './components/help.vue';
-import GlancesPluginAlert from './components/plugin-alert.vue';
-import GlancesPluginCloud from './components/plugin-cloud.vue';
-import GlancesPluginConnections from './components/plugin-connections.vue';
-import GlancesPluginCpu from './components/plugin-cpu.vue';
-import GlancesPluginDiskio from './components/plugin-diskio.vue';
-import GlancesPluginContainers from './components/plugin-containers.vue';
-import GlancesPluginFolders from './components/plugin-folders.vue';
-import GlancesPluginFs from './components/plugin-fs.vue';
-import GlancesPluginGpu from './components/plugin-gpu.vue';
-import GlancesPluginHostname from './components/plugin-hostname.vue';
-import GlancesPluginIp from './components/plugin-ip.vue';
-import GlancesPluginIrq from './components/plugin-irq.vue';
-import GlancesPluginLoad from './components/plugin-load.vue';
-import GlancesPluginMem from './components/plugin-mem.vue';
-import GlancesPluginMemswap from './components/plugin-memswap.vue';
-import GlancesPluginNetwork from './components/plugin-network.vue';
-import GlancesPluginNow from './components/plugin-now.vue';
-import GlancesPluginPercpu from './components/plugin-percpu.vue';
-import GlancesPluginPorts from './components/plugin-ports.vue';
-import GlancesPluginProcess from './components/plugin-process.vue';
-import GlancesPluginQuicklook from './components/plugin-quicklook.vue';
-import GlancesPluginRaid from './components/plugin-raid.vue';
-import GlancesPluginSmart from './components/plugin-smart.vue';
-import GlancesPluginSensors from './components/plugin-sensors.vue';
-import GlancesPluginSystem from './components/plugin-system.vue';
-import GlancesPluginUptime from './components/plugin-uptime.vue';
-import GlancesPluginVms from './components/plugin-vms.vue';
-import GlancesPluginWifi from './components/plugin-wifi.vue';
-
-import uiconfig from './uiconfig.json';
+import uiconfig from "./uiconfig.json";
 
 export default {
-    components: {
-        GlancesHelp,
-        GlancesPluginAlert,
-        GlancesPluginCloud,
-        GlancesPluginConnections,
-        GlancesPluginCpu,
-        GlancesPluginDiskio,
-        GlancesPluginContainers,
-        GlancesPluginFolders,
-        GlancesPluginFs,
-        GlancesPluginGpu,
-        GlancesPluginHostname,
-        GlancesPluginIp,
-        GlancesPluginIrq,
-        GlancesPluginLoad,
-        GlancesPluginMem,
-        GlancesPluginMemswap,
-        GlancesPluginNetwork,
-        GlancesPluginNow,
-        GlancesPluginPercpu,
-        GlancesPluginPorts,
-        GlancesPluginProcess,
-        GlancesPluginQuicklook,
-        GlancesPluginRaid,
-        GlancesPluginSensors,
-        GlancesPluginSmart,
-        GlancesPluginSystem,
-        GlancesPluginUptime,
-        GlancesPluginVms,
-        GlancesPluginWifi
-    },
-    data() {
-        return {
-            store
-        };
-    },
-    computed: {
-        args() {
-            return this.store.args || {};
-        },
-        config() {
-            return this.store.config || {};
-        },
-        data() {
-            return this.store.data || {};
-        },
-        dataLoaded() {
-            return this.store.data !== undefined;
-        },
-        hasGpu() {
-            return this.store.data.stats.gpu.length > 0;
-        },
-        isLinux() {
-            return this.store.data.isLinux;
-        },
-        title() {
-            const { data } = this;
-            const title = (data.stats && data.stats.system && data.stats.system.hostname) || '';
-            return title ? `${title} - Glances` : 'Glances';
-        },
-        topMenu() {
-            return this.config.outputs !== undefined && this.config.outputs.top_menu !== undefined
-                ? this.config.outputs.top_menu.split(',')
-                : uiconfig.topMenu;
-        },
-        leftMenu() {
-            return this.config.outputs !== undefined && this.config.outputs.left_menu !== undefined
-                ? this.config.outputs.left_menu.split(',')
-                : uiconfig.leftMenu;
-        }
-    },
-    watch: {
-        title() {
-            if (document) {
-                document.title = this.title;
-            }
-        }
-    },
-    mounted() {
-        const GLANCES = window.__GLANCES__ || {};
-        const refreshTime = isFinite(GLANCES['refresh-time'])
-            ? parseInt(GLANCES['refresh-time'], 10)
-            : undefined;
-        GlancesStats.init(refreshTime);
-        this.setupHotKeys();
-    },
-    beforeUnmount() {
-        hotkeys.unbind();
-    },
-    methods: {
-        setupHotKeys() {
-            // a => Sort processes/containers automatically
-            hotkeys('a', () => {
-                this.store.args.sort_processes_key = null;
-            });
+	components: {
+		GlancesHelp,
+		GlancesPluginAlert,
+		GlancesPluginCloud,
+		GlancesPluginConnections,
+		GlancesPluginCpu,
+		GlancesPluginDiskio,
+		GlancesPluginContainers,
+		GlancesPluginFolders,
+		GlancesPluginFs,
+		GlancesPluginNpu,
+		GlancesPluginGpu,
+		GlancesPluginHostname,
+		GlancesPluginIp,
+		GlancesPluginIrq,
+		GlancesPluginLoad,
+		GlancesPluginMem,
+		GlancesPluginMemswap,
+		GlancesPluginNetwork,
+		GlancesPluginNow,
+		GlancesPluginPercpu,
+		GlancesPluginPorts,
+		GlancesPluginProcess,
+		GlancesPluginQuicklook,
+		GlancesPluginRaid,
+		GlancesPluginSensors,
+		GlancesPluginSmart,
+		GlancesPluginSystem,
+		GlancesPluginUptime,
+		GlancesPluginVms,
+		GlancesPluginWifi,
+	},
+	data() {
+		return {
+			store,
+		};
+	},
+	computed: {
+		args() {
+			return this.store.args || {};
+		},
+		config() {
+			return this.store.config || {};
+		},
+		data() {
+			return this.store.data || {};
+		},
+		dataLoaded() {
+			return this.store.data !== undefined;
+		},
+		hasNpu() {
+			return this.store.data.stats.npu.length > 0;
+		},
+		hasGpu() {
+			return this.store.data.stats.gpu.length > 0;
+		},
+		isLinux() {
+			return this.store.data.isLinux;
+		},
+		title() {
+			const { data } = this;
+			const title =
+				(data.stats && data.stats.system && data.stats.system.hostname) || "";
+			return title ? `${title} - Glances` : "Glances";
+		},
+		topMenu() {
+			return this.config.outputs !== undefined &&
+				this.config.outputs.top_menu !== undefined
+				? this.config.outputs.top_menu.split(",")
+				: uiconfig.topMenu;
+		},
+		leftMenu() {
+			return this.config.outputs !== undefined &&
+				this.config.outputs.left_menu !== undefined
+				? this.config.outputs.left_menu.split(",")
+				: uiconfig.leftMenu;
+		},
+	},
+	watch: {
+		title() {
+			if (document) {
+				document.title = this.title;
+			}
+		},
+	},
+	mounted() {
+		const GLANCES = window.__GLANCES__ || {};
+		const refreshTime = isFinite(GLANCES["refresh-time"])
+			? parseInt(GLANCES["refresh-time"], 10)
+			: undefined;
+		GlancesStats.init(refreshTime);
+		this.setupHotKeys();
+	},
+	beforeUnmount() {
+		hotkeys.unbind();
+	},
+	methods: {
+		setupHotKeys() {
+			// a => Sort processes/containers automatically
+			hotkeys("a", () => {
+				this.store.args.sort_processes_key = null;
+			});
 
-            // c => Sort processes/containers by CPU%
-            hotkeys('c', () => {
-                this.store.args.sort_processes_key = 'cpu_percent';
-            });
+			// c => Sort processes/containers by CPU%
+			hotkeys("c", () => {
+				this.store.args.sort_processes_key = "cpu_percent";
+			});
 
-            // m => Sort processes/containers by MEM%
-            hotkeys('m', () => {
-                this.store.args.sort_processes_key = 'memory_percent';
-            });
+			// m => Sort processes/containers by MEM%
+			hotkeys("m", () => {
+				this.store.args.sort_processes_key = "memory_percent";
+			});
 
-            // u => Sort processes/containers by user
-            hotkeys('u', () => {
-                this.store.args.sort_processes_key = 'username';
-            });
+			// u => Sort processes/containers by user
+			hotkeys("u", () => {
+				this.store.args.sort_processes_key = "username";
+			});
 
-            // p => Sort processes/containers by name
-            hotkeys('p', () => {
-                this.store.args.sort_processes_key = 'name';
-            });
+			// p => Sort processes/containers by name
+			hotkeys("p", () => {
+				this.store.args.sort_processes_key = "name";
+			});
 
-            // i => Sort processes/containers by I/O rate
-            hotkeys('i', () => {
-                this.store.args.sort_processes_key = 'io_counters';
-            });
+			// o => Sort processes/containers by CPU core number
+			hotkeys("o", () => {
+				this.store.args.sort_processes_key = "cpu_num";
+			});
 
-            // t => Sort processes/containers by time
-            hotkeys('t', () => {
-                this.store.args.sort_processes_key = 'timemillis';
-            });
+			// i => Sort processes/containers by I/O rate
+			hotkeys("i", () => {
+				this.store.args.sort_processes_key = "io_counters";
+			});
 
-            // A => Enable/disable AMPs
-            hotkeys('shift+A', () => {
-                this.store.args.disable_amps = !this.store.args.disable_amps;
-            });
+			// t => Sort processes/containers by time
+			hotkeys("t", () => {
+				this.store.args.sort_processes_key = "timemillis";
+			});
 
-            // d => Show/hide disk I/O stats
-            hotkeys('d', () => {
-                this.store.args.disable_diskio = !this.store.args.disable_diskio;
-            });
+			// A => Enable/disable AMPs
+			hotkeys("shift+A", () => {
+				this.store.args.disable_amps = !this.store.args.disable_amps;
+			});
 
-            // Q => Show/hide IRQ
-            hotkeys('shift+Q', () => {
-                this.store.args.enable_irq = !this.store.args.enable_irq;
-            });
+			// d => Show/hide disk I/O stats
+			hotkeys("d", () => {
+				this.store.args.disable_diskio = !this.store.args.disable_diskio;
+			});
 
-            // f => Show/hide filesystem stats
-            hotkeys('f', () => {
-                this.store.args.disable_fs = !this.store.args.disable_fs;
-            });
+			// Q => Show/hide IRQ
+			hotkeys("shift+Q", () => {
+				this.store.args.enable_irq = !this.store.args.enable_irq;
+			});
 
-            // j => Accumulate processes by program
-            hotkeys('j', () => {
-                this.store.args.programs = !this.store.args.programs;
-            });
+			// f => Show/hide filesystem stats
+			hotkeys("f", () => {
+				this.store.args.disable_fs = !this.store.args.disable_fs;
+			});
 
-            // k => Show/hide connections stats
-            hotkeys('k', () => {
-                this.store.args.disable_connections = !this.store.args.disable_connections;
-            });
+			// j => Accumulate processes by program
+			hotkeys("j", () => {
+				this.store.args.programs = !this.store.args.programs;
+			});
 
-            // n => Show/hide network stats
-            hotkeys('n', () => {
-                this.store.args.disable_network = !this.store.args.disable_network;
-            });
+			// k => Show/hide connections stats
+			hotkeys("k", () => {
+				this.store.args.disable_connections =
+					!this.store.args.disable_connections;
+			});
 
-            // s => Show/hide sensors stats
-            hotkeys('s', () => {
-                this.store.args.disable_sensors = !this.store.args.disable_sensors;
-            });
+			// n => Show/hide network stats
+			hotkeys("n", () => {
+				this.store.args.disable_network = !this.store.args.disable_network;
+			});
 
-            // 2 => Show/hide left sidebar
-            hotkeys('2', () => {
-                this.store.args.disable_left_sidebar = !this.store.args.disable_left_sidebar;
-            });
+			// s => Show/hide sensors stats
+			hotkeys("s", () => {
+				this.store.args.disable_sensors = !this.store.args.disable_sensors;
+			});
 
-            // z => Enable/disable processes stats
-            hotkeys('z', () => {
-                this.store.args.disable_process = !this.store.args.disable_process;
-            });
+			// 2 => Show/hide left sidebar
+			hotkeys("2", () => {
+				this.store.args.disable_left_sidebar =
+					!this.store.args.disable_left_sidebar;
+			});
 
-            // S => Enable/disable short processes name
-            hotkeys('shift+S', () => {
-                this.store.args.process_short_name = !this.store.args.process_short_name;
-            });
+			// z => Enable/disable processes stats
+			hotkeys("z", () => {
+				this.store.args.disable_process = !this.store.args.disable_process;
+			});
 
-            // D => Enable/disable containers stats
-            hotkeys('shift+D', () => {
-                this.store.args.disable_containers = !this.store.args.disable_containers;
-            });
+			// S => Enable/disable short processes name
+			hotkeys("shift+S", () => {
+				this.store.args.process_short_name =
+					!this.store.args.process_short_name;
+			});
 
-            // b => Bytes or bits for network I/O
-            hotkeys('b', () => {
-                this.store.args.byte = !this.store.args.byte;
-            });
+			// D => Enable/disable containers stats
+			hotkeys("shift+D", () => {
+				this.store.args.disable_containers =
+					!this.store.args.disable_containers;
+			});
 
-            // 'B' => Switch between bit/s and IO/s for Disk IO
-            hotkeys('shift+B', () => {
-                this.store.args.diskio_iops = !this.store.args.diskio_iops;
-                if (this.store.args.diskio_iops) {
-                    this.store.args.diskio_latency = false;
-                }
-            });
+			// b => Bytes or bits for network I/O
+			hotkeys("b", () => {
+				this.store.args.byte = !this.store.args.byte;
+			});
 
-            // 'L' => Switch to latency for Disk IO
-            hotkeys('shift+L', () => {
-                this.store.args.diskio_latency = !this.store.args.diskio_latency;
-                if (this.store.args.diskio_latency) {
-                    this.store.args.diskio_iops = false;
-                }
-            });
+			// 'B' => Switch between bit/s and IO/s for Disk IO
+			hotkeys("shift+B", () => {
+				this.store.args.diskio_iops = !this.store.args.diskio_iops;
+				if (this.store.args.diskio_iops) {
+					this.store.args.diskio_latency = false;
+				}
+			});
 
-            // l => Show/hide alert logs
-            hotkeys('l', () => {
-                this.store.args.disable_alert = !this.store.args.disable_alert;
-            });
+			// 'L' => Switch to latency for Disk IO
+			hotkeys("shift+L", () => {
+				this.store.args.diskio_latency = !this.store.args.diskio_latency;
+				if (this.store.args.diskio_latency) {
+					this.store.args.diskio_iops = false;
+				}
+			});
 
-            // 1 => Global CPU or per-CPU stats
-            hotkeys('1', () => {
-                this.store.args.percpu = !this.store.args.percpu;
-            });
+			// l => Show/hide alert logs
+			hotkeys("l", () => {
+				this.store.args.disable_alert = !this.store.args.disable_alert;
+			});
 
-            // h => Show/hide this help screen
-            hotkeys('h', () => {
-                this.store.args.help_tag = !this.store.args.help_tag;
-            });
+			// 1 => Global CPU or per-CPU stats
+			hotkeys("1", () => {
+				this.store.args.percpu = !this.store.args.percpu;
+			});
 
-            // T => View network I/O as combination
-            hotkeys('shift+T', () => {
-                this.store.args.network_sum = !this.store.args.network_sum;
-            });
+			// h => Show/hide this help screen
+			hotkeys("h", () => {
+				this.store.args.help_tag = !this.store.args.help_tag;
+			});
 
-            // U => View cumulative network I/O
-            hotkeys('shift+U', () => {
-                this.store.args.network_cumul = !this.store.args.network_cumul;
-            });
+			// T => View network I/O as combination
+			hotkeys("shift+T", () => {
+				this.store.args.network_sum = !this.store.args.network_sum;
+			});
 
-            // F => Show filesystem free space
-            hotkeys('shift+F', () => {
-                this.store.args.fs_free_space = !this.store.args.fs_free_space;
-            });
+			// U => View cumulative network I/O
+			hotkeys("shift+U", () => {
+				this.store.args.network_cumul = !this.store.args.network_cumul;
+			});
 
-            // 3 => Enable/disable quick look plugin
-            hotkeys('3', () => {
-                this.store.args.disable_quicklook = !this.store.args.disable_quicklook;
-            });
+			// F => Show filesystem free space
+			hotkeys("shift+F", () => {
+				this.store.args.fs_free_space = !this.store.args.fs_free_space;
+			});
 
-            // 6 => Enable/disable mean gpu
-            hotkeys('6', () => {
-                this.store.args.meangpu = !this.store.args.meangpu;
-            });
+			// 3 => Enable/disable quick look plugin
+			hotkeys("3", () => {
+				this.store.args.disable_quicklook = !this.store.args.disable_quicklook;
+			});
 
-            // G => Enable/disable gpu
-            hotkeys('shift+G', () => {
-                this.store.args.disable_gpu = !this.store.args.disable_gpu;
-            });
+			// 6 => Enable/disable mean gpu
+			hotkeys("6", () => {
+				this.store.args.meangpu = !this.store.args.meangpu;
+			});
 
-            hotkeys('5', () => {
-                this.store.args.disable_quicklook = !this.store.args.disable_quicklook;
-                this.store.args.disable_cpu = !this.store.args.disable_cpu;
-                this.store.args.disable_mem = !this.store.args.disable_mem;
-                this.store.args.disable_memswap = !this.store.args.disable_memswap;
-                this.store.args.disable_load = !this.store.args.disable_load;
-                this.store.args.disable_gpu = !this.store.args.disable_gpu;
-            });
+			// 7 => Enable/disable mean gpu
+			hotkeys("7", () => {
+				this.store.args.disable_npu = !this.store.args.disable_npu;
+			});
 
-            // I => Show/hide IP module
-            hotkeys('shift+I', () => {
-                this.store.args.disable_ip = !this.store.args.disable_ip;
-            });
+			// G => Enable/disable gpu
+			hotkeys("shift+G", () => {
+				this.store.args.disable_gpu = !this.store.args.disable_gpu;
+			});
 
-            // P => Enable/disable ports module
-            hotkeys('shift+P', () => {
-                this.store.args.disable_ports = !this.store.args.disable_ports;
-            });
+			hotkeys("5", () => {
+				this.store.args.disable_quicklook = !this.store.args.disable_quicklook;
+				this.store.args.disable_cpu = !this.store.args.disable_cpu;
+				this.store.args.disable_mem = !this.store.args.disable_mem;
+				this.store.args.disable_memswap = !this.store.args.disable_memswap;
+				this.store.args.disable_load = !this.store.args.disable_load;
+				this.store.args.disable_gpu = !this.store.args.disable_gpu;
+				this.store.args.disable_npu = !this.store.args.disable_npu;
+			});
 
-            // V => Enable/disable VMs stats
-            hotkeys('shift+V', () => {
-                this.store.args.disable_vms = !this.store.args.disable_vms;
-            });
+			// I => Show/hide IP module
+			hotkeys("shift+I", () => {
+				this.store.args.disable_ip = !this.store.args.disable_ip;
+			});
 
-            // 'W' > Enable/Disable Wifi plugin
-            hotkeys('shift+W', () => {
-                this.store.args.disable_wifi = !this.store.args.disable_wifi;
-            });
+			// P => Enable/disable ports module
+			hotkeys("shift+P", () => {
+				this.store.args.disable_ports = !this.store.args.disable_ports;
+			});
 
-            // 0 => Enable/disable IRIX mode (see issue #3158)
-            hotkeys('0', () => {
-                this.store.args.disable_irix = !this.store.args.disable_irix;
-            });
-        }
-    }
+			// V => Enable/disable VMs stats
+			hotkeys("shift+V", () => {
+				this.store.args.disable_vms = !this.store.args.disable_vms;
+			});
+
+			// 'W' > Enable/Disable Wifi plugin
+			hotkeys("shift+W", () => {
+				this.store.args.disable_wifi = !this.store.args.disable_wifi;
+			});
+
+			// 0 => Enable/disable IRIX mode (see issue #3158)
+			hotkeys("0", () => {
+				this.store.args.disable_irix = !this.store.args.disable_irix;
+			});
+		},
+	},
 };
 </script>
