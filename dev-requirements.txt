@@ -21,7 +21,7 @@ attrs==25.4.0
     #   reuse
     #   semgrep
     #   trio
-babel==2.17.0
+babel==2.18.0
     # via sphinx
 boltons==21.0.0
     # via
@@ -97,7 +97,7 @@ filelock==3.20.3
     # via virtualenv
 fonttools==4.61.1
     # via matplotlib
-glom==22.1.0
+glom==25.12.0
     # via semgrep
 googleapis-common-protos==1.72.0
     # via opentelemetry-exporter-otlp-proto-http
@@ -163,7 +163,7 @@ numpy==2.2.6 ; python_full_version < '3.11'
     # via
     #   contourpy
     #   matplotlib
-numpy==2.4.1 ; python_full_version >= '3.11'
+numpy==2.4.2 ; python_full_version >= '3.11'
     # via
     #   contourpy
     #   matplotlib
@@ -307,12 +307,12 @@ ruamel-yaml==0.19.1
     # via semgrep
 ruamel-yaml-clib==0.2.14
     # via semgrep
-ruff==0.14.14
+ruff==0.15.0
 selenium==4.40.0
 semantic-version==2.10.0
     # via semgrep
-semgrep==1.150.0
-setuptools==80.10.2
+semgrep==1.151.0
+setuptools==81.0.0
 shellingham==1.5.4
     # via typer
 six==1.17.0
@@ -352,7 +352,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 sse-starlette==3.2.0
     # via mcp
-starlette==0.50.0
+starlette==0.52.1
     # via
     #   mcp
     #   sse-starlette

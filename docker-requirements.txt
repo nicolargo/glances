@@ -26,7 +26,7 @@ ecdsa==0.19.1
     # via python-jose
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.128.0
+fastapi==0.128.4
     # via glances
 h11==0.16.0
     # via uvicorn
@@ -74,7 +74,7 @@ six==1.17.0
     #   ecdsa
     #   glances
     #   python-dateutil
-starlette==0.50.0
+starlette==0.52.1
     # via fastapi
 tomli==2.0.2 ; python_full_version < '3.11'
     # via podman
@@ -89,7 +89,9 @@ typing-extensions==4.15.0
     #   typing-inspection
     #   uvicorn
 typing-inspection==0.4.2
-    # via pydantic
+    # via
+    #   fastapi
+    #   pydantic
 urllib3==2.6.3
     # via
     #   docker

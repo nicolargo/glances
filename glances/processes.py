@@ -477,10 +477,12 @@ class GlancesProcesses:
         # Build the processes stats list (it is why we need psutil>=5.3.0) (see issue #2755)
         processlist = list(
             filter(
-                lambda p: not (BSD and p.info['name'] == 'idle')
-                and not (WINDOWS and p.info['name'] == 'System Idle Process')
-                and not (MACOS and p.info['name'] == 'kernel_task')
-                and not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0),
+                lambda p: (
+                    not (BSD and p.info['name'] == 'idle')
+                    and not (WINDOWS and p.info['name'] == 'System Idle Process')
+                    and not (MACOS and p.info['name'] == 'kernel_task')
+                    and not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0)
+                ),
                 psutil.process_iter(attrs=sorted_attrs, ad_value=None),
             )
         )
