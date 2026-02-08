@@ -1,7 +1,7 @@
 #
 # This file is part of Glances.
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
@@ -165,8 +165,17 @@ class GlancesExport:
 
         :return: a list of measurements.
         """
-        FIELD_TO_TAG = ["name", "cmdline", "type"]
         ret = []
+
+        # Some fields should be converted to tags in order to avoid type mismatch in InfluxDB
+        # and to be able to use them as filters in queries.
+        FIELD_TO_TAG = ["name", "cmdline", "type"]
+        # Some fields should be converted to string in order to avoid type mismatch in InfluxDB
+        # Example: the 'result' field of the AMP plugin can be a string or a number depending on the AMP implementation.
+        # In this case, we convert it to a string and create another field with the same name but with a suffix (_float)
+        # to keep the original value.
+        # See #3419 for more details.
+        FIELD_TO_STRING = ["result"]
 
         # Build initial dict by crossing columns and point
         data_dict = dict(zip(columns, points))
@@ -200,6 +209,9 @@ class GlancesExport:
                         fields[k] = str(fields[k])
                     except (TypeError, ValueError):
                         pass
+                # Convert some fields to string to avoid type mismatch in InfluxDB
+                if k in FIELD_TO_STRING:
+                    fields[k] = str(fields[k])
             # Manage tags
             tags = self.parse_tags(self.tags)
             # Add the hostname as a tag

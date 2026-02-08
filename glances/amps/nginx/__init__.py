@@ -66,7 +66,7 @@ class Amp(GlancesAmp):
         """Update the AMP"""
         # Get the Nginx status
         logger.debug('{}: Update stats using status URL {}'.format(self.NAME, self.get('status_url')))
-        res = requests.get(self.get('status_url'))
+        res = requests.get(self.get('status_url'), timeout=15)
         if res.ok:
             # u'Active connections: 1 \nserver accepts handled requests\n 1 1 1 \nReading: 0 Writing: 1 Waiting: 0 \n'
             self.set_result(res.text.rstrip())

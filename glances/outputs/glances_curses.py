@@ -47,6 +47,7 @@ class _GlancesCurses:
         '4': {'handler': '_handle_quicklook'},
         '5': {'handler': '_handle_top_menu'},
         '6': {'switch': 'meangpu'},
+        '7': {'switch': 'disable_npu'},
         '/': {'switch': 'process_short_name'},
         'a': {'sort_key': 'auto'},
         'A': {'switch': 'disable_amps'},
@@ -74,6 +75,7 @@ class _GlancesCurses:
         'M': {'switch': 'reset_minmax_tag'},
         'n': {'switch': 'disable_network'},
         'N': {'switch': 'disable_now'},
+        'o': {'sort_key': 'cpu_num'},
         'p': {'sort_key': 'name'},
         'P': {'switch': 'disable_ports'},
         # 'q' or ESCAPE > Quit
@@ -104,7 +106,7 @@ class _GlancesCurses:
     _sort_loop = sort_processes_stats_list
 
     # Define top menu
-    _top = ['quicklook', 'cpu', 'percpu', 'gpu', 'mem', 'memswap', 'load']
+    _top = ['quicklook', 'cpu', 'percpu', 'npu', 'gpu', 'mem', 'memswap', 'load']
     _quicklook_max_width = 58
 
     # Define left sidebar
@@ -270,10 +272,14 @@ class _GlancesCurses:
         {
             self.pressedkey in {ord('e')} and not self.args.programs: self._handle_process_extended,
             self.pressedkey in {ord('k')} and not self.args.disable_cursor: self._handle_kill_process,
-            self.pressedkey in {curses.KEY_SLEFT}: self._handle_sort_left,
-            self.pressedkey in {curses.KEY_SRIGHT}: self._handle_sort_right,
-            self.pressedkey in {curses.KEY_LEFT}: self._handle_process_name_left,
-            self.pressedkey in {curses.KEY_RIGHT}: self._handle_process_name_right,
+            self.pressedkey
+            in {curses.KEY_LEFT if self.args.arrow_keys_sort else curses.KEY_SLEFT}: self._handle_sort_left,
+            self.pressedkey
+            in {curses.KEY_RIGHT if self.args.arrow_keys_sort else curses.KEY_SRIGHT}: self._handle_sort_right,
+            self.pressedkey
+            in {curses.KEY_SLEFT if self.args.arrow_keys_sort else curses.KEY_LEFT}: self._handle_process_name_left,
+            self.pressedkey
+            in {curses.KEY_SRIGHT if self.args.arrow_keys_sort else curses.KEY_RIGHT}: self._handle_process_name_right,
             self.pressedkey in {curses.KEY_UP, 65} and not self.args.disable_cursor: self._handle_cursor_up,
             self.pressedkey in {curses.KEY_DOWN, 66} and not self.args.disable_cursor: self._handle_cursor_down,
             self.pressedkey in {curses.KEY_F5, 18}: self._handle_refresh,
@@ -429,23 +435,23 @@ class _GlancesCurses:
 
     def disable_top(self):
         """Disable the top panel"""
-        for p in ['quicklook', 'cpu', 'gpu', 'mem', 'memswap', 'load']:
+        for p in self._top:
             setattr(self.args, 'disable_' + p, True)
 
     def enable_top(self):
         """Enable the top panel"""
-        for p in ['quicklook', 'cpu', 'gpu', 'mem', 'memswap', 'load']:
+        for p in self._top:
             setattr(self.args, 'disable_' + p, False)
 
     def disable_fullquicklook(self):
         """Disable the full quicklook mode"""
-        for p in ['quicklook', 'cpu', 'gpu', 'mem', 'memswap']:
+        for p in ['quicklook', 'cpu', 'npu', 'gpu', 'mem', 'memswap']:
             setattr(self.args, 'disable_' + p, False)
 
     def enable_fullquicklook(self):
         """Disable the full quicklook mode"""
         self.args.disable_quicklook = False
-        for p in ['cpu', 'gpu', 'mem', 'memswap']:
+        for p in ['cpu', 'npu', 'gpu', 'mem', 'memswap']:
             setattr(self.args, 'disable_' + p, True)
 
     def end(self):
@@ -579,16 +585,16 @@ class _GlancesCurses:
         self.__display_header(__stat_display)
         self.separator_line()
 
-        # ==============================================================
-        # Display second line (<SUMMARY>+CPU|PERCPU+<GPU>+LOAD+MEM+SWAP)
-        # ==============================================================
+        # ====================================================================
+        # Display second line (<SUMMARY>+CPU|PERCPU+<NPU>+<GPU>+LOAD+MEM+SWAP)
+        # ====================================================================
         self.__display_top(__stat_display, stats)
         self.init_column()
         self.separator_line()
 
-        # ==================================================================
+        # ===================================================================
         # Display left sidebar (NETWORK+PORTS+DISKIO+FS+SENSORS+Current time)
-        # ==================================================================
+        # ===================================================================
         self.__display_left(__stat_display)
 
         # ====================================
@@ -713,7 +719,7 @@ class _GlancesCurses:
     def __display_top(self, stat_display, stats):
         """Display the second line in the Curses interface.
 
-        <QUICKLOOK> + CPU|PERCPU + <GPU> + MEM + SWAP + LOAD
+        <QUICKLOOK> + CPU|PERCPU + <NPU> + <GPU> + MEM + SWAP + LOAD
         """
         self.init_column()
         self.new_line()

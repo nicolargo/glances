@@ -45,3 +45,10 @@ expression works as expected. You can use an online tool like `regex101`_ in
 order to test your regular expression.
 
 .. _regex101: https://regex101.com/
+
+You can also hide attributes, for example Self-tests, Errors, etc. Use a comma separated list.
+
+.. code-block:: ini
+
+    [smart]
+    hide_attributes=attribute_name1,attribute_name2

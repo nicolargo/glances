@@ -12,8 +12,6 @@ from datetime import datetime
 from functools import reduce
 
 from glances.events_list import glances_events
-
-# from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # {

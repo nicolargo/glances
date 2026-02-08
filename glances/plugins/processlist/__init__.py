@@ -79,6 +79,10 @@ fields_description = {
         'description': 'Process IO counters (list with read_count, write_count, read_bytes, write_bytes, io_tag keys)',
         'unit': 'byte',
     },
+    'cpu_num': {
+        'description': 'CPU core number where the process is currently executing (0-based indexing)',
+        'unit': 'number',
+    },
 }
 
 
@@ -131,6 +135,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         'nice',
         'status',
         'io_counters',  # ior and iow
+        'cpu_num',  # current CPU core
         'cmdline',
     ]
 
@@ -148,6 +153,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         'status': '{:>1} ',
         'ior': '{:>4} ',
         'iow': '{:<4} ',
+        'processor': '{:>3} ',
         'command': '{} {}',
     }
 
@@ -166,6 +172,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         'status': '{:>1} ',
         'ior': '{:>4} ',
         'iow': '{:<4} ',
+        'processor': '{:>3} ',
         'command': '{}',
         'name': '[{}]',
     }
@@ -215,6 +222,11 @@ class ProcesslistPlugin(GlancesPluginModel):
             glances_processes.export_process_filter = config.as_dict()['processlist']['export']
             if args.export:
                 logger.info("Export process filter is set to: {}".format(config.as_dict()['processlist']['export']))
+        if 'focus' in config.as_dict()['processlist']:
+            glances_processes.process_focus = config.as_dict()['processlist']['focus']
+            logger.info(
+                "Focus process filter (in glances.conf) is set to: {}".format(config.as_dict()['processlist']['focus'])
+            )
         if 'disable_stats' in config.as_dict()['processlist']:
             logger.info(
                 'Followings processes stats wil not be displayed: {}'.format(
@@ -246,6 +258,10 @@ class ProcesslistPlugin(GlancesPluginModel):
         self.stats = stats
 
         return self.stats
+
+    def get_api(self):
+        """Return the sorted processes list for the API."""
+        return glances_processes.get_list(sorted=True)
 
     def get_export(self):
         """Return the processes list to export.
@@ -456,6 +472,19 @@ class ProcesslistPlugin(GlancesPluginModel):
             self._get_process_curses_io_read_write(p, selected, args, rorw='iow'),
         ]
 
+    def _get_process_curses_cpu_num(self, p, selected, args):
+        """Return process CPU core number curses"""
+        if 'cpu_num' in p and p['cpu_num'] is not None and p['cpu_num'] >= 0:
+            # Valid CPU core number (0-based)
+            cpu_num = p['cpu_num']
+            msg = self.layout_stat['processor'].format(cpu_num)
+            ret = self.curse_add_line(msg, optional=True)
+        else:
+            # Information unavailable
+            msg = self.layout_header['processor'].format('-')
+            ret = self.curse_add_line(msg, optional=True)
+        return ret
+
     def _get_process_curses_cmdline(self, p, selected, args):
         """Return process cmdline curses"""
         ret = []
@@ -533,9 +562,10 @@ class ProcesslistPlugin(GlancesPluginModel):
         if not self.stats or args.disable_process:
             return ret
 
-        # Compute the sort key
-        process_sort_key = glances_processes.sort_key
-        processes_list_sorted = self._sort_stats(process_sort_key)
+        # Sort the processes list
+        processes_list_sorted = sort_stats(
+            self.stats, glances_processes.sort_key, reverse=glances_processes.sort_reverse
+        )
 
         # Display extended stats for selected process
         #############################################
@@ -547,7 +577,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         ###############################
 
         # Header
-        self._msg_curse_header(ret, process_sort_key, args)
+        self._msg_curse_header(ret, glances_processes.sort_key, args)
 
         # Process list
         # Loop over processes (sorted by the sort key previously compute)
@@ -723,12 +753,8 @@ class ProcesslistPlugin(GlancesPluginModel):
 
         functools.reduce(lambda ret, step: step(ret, prog), steps, ret)
 
-    def _msg_curse_header(self, ret, process_sort_key, args=None):
+    def _msg_curse_header_cpu(self, ret, process_sort_key, display_stats, sort_style='SORT', args=None):
         """Build the header and add it to the ret dict."""
-        sort_style = 'SORT'
-
-        display_stats = [i for i in self.enable_stats if i not in glances_processes.disable_stats]
-
         if 'cpu_percent' in display_stats:
             if args.disable_irix and 0 < self.nb_log_core < 10:
                 msg = self.layout_header['cpu'].format('CPU%/' + str(self.nb_log_core))
@@ -738,35 +764,66 @@ class ProcesslistPlugin(GlancesPluginModel):
                 msg = self.layout_header['cpu'].format('CPU%')
             ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
 
-        if 'memory_percent' in display_stats:
-            msg = self.layout_header['mem'].format('MEM%')
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
+    def msg_curse_header_common(
+        self,
+        ret,
+        process_sort_key,
+        field_stat,
+        display_stats,
+        layout_field,
+        layout_value,
+        layout_width=None,
+        sort_style='SORT',
+    ):
+        if field_stat in display_stats:
+            msg = self.layout_header[layout_field].format(layout_value, width=layout_width)
+            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == field_stat else 'DEFAULT'))
+
+    def _msg_curse_header(self, ret, process_sort_key, args=None):
+        """Build the header and add it to the ret dict."""
+        sort_style = 'SORT'
+
+        if glances_processes.process_focus and glances_processes.process_focus != []:
+            msg = 'Focus on following processes: ' + ', '.join([i.filter for i in glances_processes.process_focus])
+            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_new_line())
+
+        display_stats = [i for i in self.enable_stats if i not in glances_processes.disable_stats]
+        self._msg_curse_header_cpu(ret, process_sort_key, display_stats, args=args, sort_style=sort_style)
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'memory_percent', display_stats, 'mem', 'MEM%', sort_style=sort_style
+        )
         if 'memory_info' in display_stats:
             if not self.get_conf_value('disable_virtual_memory', convert_bool=True, default=False):
                 msg = self.layout_header['virt'].format('VIRT')
                 ret.append(self.curse_add_line(msg, optional=True))
             msg = self.layout_header['res'].format('RES')
             ret.append(self.curse_add_line(msg, optional=True))
-        if 'pid' in display_stats:
-            msg = self.layout_header['pid'].format('PID', width=self._max_pid_size())
-            ret.append(self.curse_add_line(msg))
-        if 'username' in display_stats:
-            msg = self.layout_header['user'].format('USER')
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
+        self.msg_curse_header_common(
+            ret,
+            process_sort_key,
+            'pid',
+            display_stats,
+            'pid',
+            'PID',
+            layout_width=self._max_pid_size(),
+            sort_style=sort_style,
+        )
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'username', display_stats, 'user', 'USER', sort_style=sort_style
+        )
         if 'cpu_times' in display_stats:
             msg = self.layout_header['time'].format('TIME+')
             ret.append(
                 self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_times' else 'DEFAULT', optional=True)
             )
-        if 'num_threads' in display_stats:
-            msg = self.layout_header['thread'].format('THR')
-            ret.append(self.curse_add_line(msg))
-        if 'nice' in display_stats:
-            msg = self.layout_header['nice'].format('NI')
-            ret.append(self.curse_add_line(msg))
-        if 'status' in display_stats:
-            msg = self.layout_header['status'].format('S')
-            ret.append(self.curse_add_line(msg))
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'num_threads', display_stats, 'thread', 'THR', sort_style=sort_style
+        )
+        self.msg_curse_header_common(ret, process_sort_key, 'nice', display_stats, 'nice', 'NI', sort_style=sort_style)
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'status', display_stats, 'status', 'S', sort_style=sort_style
+        )
         if 'io_counters' in display_stats:
             msg = self.layout_header['ior'].format('R/s')
             ret.append(
@@ -780,6 +837,9 @@ class ProcesslistPlugin(GlancesPluginModel):
                     msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
                 )
             )
+        if 'cpu_num' in display_stats:
+            msg = self.layout_header['processor'].format('CPU')
+            ret.append(self.curse_add_line(msg, optional=True))
         if args.is_standalone and not args.disable_cursor:
             shortkey = "('e' to pin | 'k' to kill)"
         else:
@@ -945,10 +1005,6 @@ class ProcesslistPlugin(GlancesPluginModel):
             ret += str(sub_key)
         return ret
 
-    def _sort_stats(self, sorted_by=None):
-        """Return the stats (dict) sorted by (sorted_by)."""
-        return sort_stats(self.stats, sorted_by, reverse=glances_processes.sort_reverse)
-
     def _max_pid_size(self):
         """Return the maximum PID size in number of char."""
         if self.pid_max is not None:
@@ -956,3 +1012,6 @@ class ProcesslistPlugin(GlancesPluginModel):
 
         # By default return 5 (corresponding to 99999 PID number)
         return 5
+
+
+# End of file

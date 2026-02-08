@@ -20,7 +20,7 @@ Additionally, you can define:
 - automatically hide interfaces not up
 - automatically hide interfaces without IP address
 - per-interface limit values
-- aliases for interface name
+- aliases for interface name (use \ to espace special characters)
 
 The configuration should be done in the ``[network]`` section of the
 Glances configuration file.

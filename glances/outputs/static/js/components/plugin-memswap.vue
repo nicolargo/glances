@@ -31,38 +31,38 @@
 
 <script>
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    computed: {
-        stats() {
-            return this.data.stats['memswap'];
-        },
-        view() {
-            return this.data.views['memswap'];
-        },
-        percent() {
-            return this.stats['percent'];
-        },
-        total() {
-            return this.stats['total'];
-        },
-        used() {
-            return this.stats['used'];
-        },
-        free() {
-            return this.stats['free'];
-        }
-    },
-    methods: {
-        getDecoration(value) {
-            if (this.view[value] === undefined) {
-                return;
-            }
-            return this.view[value].decoration.toLowerCase();
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	computed: {
+		stats() {
+			return this.data.stats["memswap"];
+		},
+		view() {
+			return this.data.views["memswap"];
+		},
+		percent() {
+			return this.stats["percent"];
+		},
+		total() {
+			return this.stats["total"];
+		},
+		used() {
+			return this.stats["used"];
+		},
+		free() {
+			return this.stats["free"];
+		},
+	},
+	methods: {
+		getDecoration(value) {
+			if (this.view[value] === undefined) {
+				return;
+			}
+			return this.view[value].decoration.toLowerCase();
+		},
+	},
 };
 </script>

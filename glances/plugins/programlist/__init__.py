@@ -137,6 +137,10 @@ class ProgramlistPlugin(ProcesslistPlugin):
         """Init the plugin."""
         super().__init__(args=args, config=config)
 
+    def load(self, args, config):
+        """Load already done in processlist"""
+        pass
+
     def get_key(self):
         """Return the key of the list."""
         return 'name'
@@ -160,6 +164,10 @@ class ProgramlistPlugin(ProcesslistPlugin):
         self.stats = stats
 
         return self.stats
+
+    def get_api(self):
+        """Return the sorted processes list for the API."""
+        return glances_processes.get_list(sorted=True, as_programs=True)
 
     def _get_process_curses_nprocs(self, p, selected, args):
         """Return process NPROCS curses"""

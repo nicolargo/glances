@@ -11,7 +11,7 @@
 from copy import deepcopy
 from functools import partial, reduce
 from itertools import chain
-from typing import Any, Optional
+from typing import Any
 
 from glances.globals import nativestr
 from glances.logger import logger
@@ -287,7 +287,7 @@ class ContainersPlugin(GlancesPluginModel):
             # CPU alert
             if 'cpu' in i and 'total' in i['cpu']:
                 # Looking for specific CPU container threshold in the conf file
-                alert = self.get_alert(i['cpu']['total'], header=i['name'] + '_cpu', action_key=i['name'])
+                alert = self.get_alert(i['cpu']['total'], header='cpu', action_key=i['name'])
                 if alert == 'DEFAULT':
                     # Not found ? Get back to default CPU threshold value
                     alert = self.get_alert(i['cpu']['total'], header='cpu')
@@ -299,7 +299,7 @@ class ContainersPlugin(GlancesPluginModel):
                 alert = self.get_alert(
                     self.memory_usage_no_cache(i['memory']),
                     maximum=i['memory']['limit'],
-                    header=i['name'] + '_mem',
+                    header='mem',
                     action_key=i['name'],
                 )
                 if alert == 'DEFAULT':
@@ -514,7 +514,7 @@ class ContainersPlugin(GlancesPluginModel):
 
         return ret
 
-    def msg_curse(self, args=None, max_width: Optional[int] = None) -> list[str]:
+    def msg_curse(self, args=None, max_width: int | None = None) -> list[str]:
         """Return the dict to display in the curse interface."""
         # Init the return message
         init = []
@@ -567,12 +567,14 @@ class ContainersPlugin(GlancesPluginModel):
         """Analyse the container status.
         One of created, restarting, running, removing, paused, exited, or dead
         """
-        if status == 'running':
+        if status in ('running', 'healthy'):
             return 'OK'
-        if status == 'dead':
+        if status in ('dead', 'unhealthy'):
             return 'ERROR'
-        if status in ['created', 'restarting', 'exited']:
+        if status in ['created', 'exited']:
             return 'WARNING'
+        if status in ['paused', 'restarting']:
+            return 'CAREFUL'
         return 'INFO'
 
 
@@ -594,5 +596,6 @@ def sort_docker_stats(stats: list[dict[str, Any]]) -> tuple[str, list[dict[str, 
 
     # Return the main sort key and the sorted stats
     return sort_by, stats
-    # Return the main sort key and the sorted stats
-    return sort_by, stats
+
+
+# End of file

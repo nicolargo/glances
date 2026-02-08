@@ -103,14 +103,14 @@ Examples of use:
 
 """
 
-    def __init__(self, args_begin_at=1):
+    def __init__(self):
         """Manage the command line arguments."""
-        self.init_glances(args_begin_at)
+        self.init_glances()
 
-    def init_glances(self, args_begin_at):
+    def init_glances(self):
         """Main method to init Glances."""
         # Read the command line arguments or parse the one given in parameter (parser)
-        self.args = self.parse_args(args_begin_at)
+        self.args = self.parse_args()
 
         # Load the configuration file, if it exists
         # This function should be called after the parse_args
@@ -151,6 +151,10 @@ Examples of use:
         # Filter is only available in standalone mode
         if not self.args.process_filter and not self.is_standalone():
             logger.debug("Process filter is only available in standalone mode")
+
+        # Focus filter is only available in standalone mode
+        if not self.args.process_focus and not self.is_standalone():
+            logger.debug("Process focus is only available in standalone mode")
 
         # Cursor option is only available in standalone mode
         if not self.args.disable_cursor and not self.is_standalone():
@@ -337,6 +341,12 @@ Examples of use:
             dest='disable_cursor',
             help='disable cursor (process selection) in the UI',
         )
+        parser.add_argument(
+            '--arrow-keys-sort',  # See issue #3385
+            action='store_true',
+            default=False,
+            help='Use arrow keys to sort the process list instead of the SHIFT+key combinations',
+        )
         # Sort processes list
         parser.add_argument(
             '--sort-processes',
@@ -417,12 +427,13 @@ Examples of use:
             dest='bind_address',
             help='bind server to the given IPv4/IPv6 address or hostname',
         )
+        parser.add_argument('-u', dest='username_used', help='use or define the given username')
         parser.add_argument(
             '--username',
             action='store_true',
             default=False,
             dest='username_prompt',
-            help='define a client/server username',
+            help='define or use an username',
         )
         parser.add_argument(
             '--password',
@@ -431,7 +442,6 @@ Examples of use:
             dest='password_prompt',
             help='define a client/server password',
         )
-        parser.add_argument('-u', dest='username_used', help='use the given client/server username')
         parser.add_argument('--snmp-community', default='public', dest='snmp_community', help='SNMP community')
         parser.add_argument('--snmp-port', default=161, type=int, dest='snmp_port', help='SNMP port')
         parser.add_argument('--snmp-version', default='2c', dest='snmp_version', help='SNMP version (1, 2c or 3)')
@@ -495,6 +505,14 @@ Examples of use:
             type=str,
             dest='process_filter',
             help='set the process filter pattern (regular expression)',
+        )
+        # Process will focus on some process (comma-separated list of Glances filter)
+        parser.add_argument(
+            '--process-focus',
+            default=None,
+            type=str,
+            dest='process_focus',
+            help='set a process list to focus on (comma-separated list of Glances filter)',
         )
         parser.add_argument(
             '--process-short-name',
@@ -757,12 +775,10 @@ Examples of use:
             # Every username needs a password
             args.password_prompt = True
             # Prompt username
-            if args.server:
-                args.username = self.__get_username(description='Define the Glances server username: ')
-            elif args.webserver:
-                args.username = self.__get_username(description='Define the Glances webserver username: ')
+            if args.server or args.webserver:
+                args.username = self.__get_username(description='Enter new username: ')
             elif args.client:
-                args.username = self.__get_username(description='Enter the Glances server username: ')
+                args.username = self.__get_username(description='Enter username: ')
         else:
             if args.username_used:
                 # A username has been set using the -u option ?
@@ -773,21 +789,15 @@ Examples of use:
 
         if args.password_prompt or args.username_used:
             # Interactive or file password
-            if args.server:
+            if args.server or args.webserver:
                 args.password = self.__get_password(
-                    description=f'Define the Glances server password ({args.username} username): ',
-                    confirm=True,
-                    username=args.username,
-                )
-            elif args.webserver:
-                args.password = self.__get_password(
-                    description=f'Define the Glances webserver password ({args.username} username): ',
+                    description='Enter new password: ',
                     confirm=True,
                     username=args.username,
                 )
             elif args.client:
                 args.password = self.__get_password(
-                    description=f'Enter the Glances server password ({args.username} username): ',
+                    description='Enter password: ',
                     clear=True,
                     username=args.username,
                 )
@@ -846,11 +856,9 @@ Examples of use:
         if args.disable_history:
             logger.info("Stats history is disabled")
 
-    def parse_args(self, args_begin_at):
-        """Parse command line arguments.
-        Glances args start at position args_begin_at.
-        """
-        return self.init_args().parse_args(sys.argv[args_begin_at:])
+    def parse_args(self):
+        """Parse command line arguments."""
+        return self.init_args().parse_args(sys.argv[1:])
 
     def check_mode_compatibility(self):
         """Check mode compatibility"""

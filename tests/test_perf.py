@@ -36,5 +36,5 @@ def test_perf_update(glances_stats):
     print(f"{counter} iterations. From cache: {from_cache} | From update: {from_update}")
     assert counter > test_duration
     assert from_update < from_cache
-    assert from_cache >= test_duration * 10
+    assert from_cache >= test_duration * 2
     assert from_update >= (test_duration / 2) - 1

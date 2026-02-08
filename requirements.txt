@@ -6,11 +6,11 @@ jinja2==3.1.6
     # via glances
 markupsafe==3.0.3
     # via jinja2
-packaging==25.0
+packaging==26.0
     # via glances
-psutil==7.1.2
+psutil==7.1.1
     # via glances
-shtab==1.7.2 ; sys_platform != 'win32'
+shtab==1.8.0 ; sys_platform != 'win32'
     # via glances
 windows-curses==2.4.1 ; sys_platform == 'win32'
     # via glances

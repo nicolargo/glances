@@ -15,7 +15,7 @@
                     </tr>
                     <tr v-for="(metric, metricId) in drive.details" :key="metricId">
                         <td scope="row">{{ metric.name }}</td>
-                        <td scope="row" class="text-end text-truncate">{{ metric.raw }}</td>
+                        <td scope="row" class="text-end text-truncate">{{ formatted(metric) }}</td>
                     </tr>
                 </template>
             </tbody>
@@ -25,28 +25,46 @@
 
 <script>
 export default {
-    props: {
-        data: {
-            type: Object
-        }
-    },
-    computed: {
-        stats() {
-            return this.data.stats['smart'];
-        },
-        drives() {
-            return (Array.isArray(this.stats) ? this.stats : []).map((data) => {
-                const name = data.DeviceName;
-                const details = Object.entries(data)
-                    .filter(([key]) => key !== 'DeviceName')
-                    .sort(([, a], [, b]) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
-                    .map(([prop, value]) => value);
-                return { name, details };
-            });
-        },
-        hasDrives() {
-            return this.drives.length > 0;
-        }
-    }
+	props: {
+		data: {
+			type: Object,
+		},
+	},
+	computed: {
+		stats() {
+			return this.data.stats["smart"];
+		},
+		drives() {
+			return (Array.isArray(this.stats) ? this.stats : []).map((data) => {
+				const name = data.DeviceName;
+				const details = Object.entries(data)
+					.filter(([key]) => key !== "DeviceName")
+					.sort(([, a], [, b]) =>
+						a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
+					)
+					.map(([prop, value]) => value);
+				return { name, details };
+			});
+		},
+		hasDrives() {
+			return this.drives.length > 0;
+		}
+	},
+	methods: {
+		formatted(metric) {
+			if(typeof metric.key === 'undefined')
+				return metric.raw;
+			
+			if (this.requiresFormatting(metric.key)) {
+				return this.$filters.bytes(metric.raw);
+			}
+			return metric.raw;
+		},
+		requiresFormatting(key) {
+			const keysToFormat = ["bytesWritten", "bytesRead", "dataUnitsRead", "dataUnitsWritten", "hostReadCommands", "hostWriteCommands" ];
+			return keysToFormat.includes(key);
+		}
+	}
+
 };
 </script>

@@ -22,6 +22,7 @@ import os
 import platform
 import queue
 import re
+import socket
 import subprocess
 import sys
 import weakref
@@ -34,6 +35,8 @@ from typing import Any, Optional, Union
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
+
+import psutil
 
 # Prefer faster libs for JSON (de)serialization
 # Preference Order: orjson > ujson > json (builtin)
@@ -296,49 +299,56 @@ def pretty_date(ref, now=None):
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
     'just now', etc
     Source: https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
-
-    Refactoring done in commit https://github.com/nicolargo/glances/commit/f6279baacd4cf0b27ca10df6dc01f091ea86a40a
-    break the function. Get back to the old fashion way.
     """
-    if not now:
-        now = datetime.now()
+    now = now or datetime.now()
     if isinstance(ref, int):
         diff = now - datetime.fromtimestamp(ref)
     elif isinstance(ref, datetime):
         diff = now - ref
     elif not ref:
         diff = 0
+
     second_diff = diff.seconds
     day_diff = diff.days
 
     if day_diff < 0:
         return ''
 
+    # Thresholds for day_diff == 0: (max_seconds, divisor, singular, plural)
+    second_thresholds = [
+        (10, 1, "just now", None),
+        (60, 1, None, " secs"),
+        (120, 1, "a min", None),
+        (3600, 60, None, " mins"),
+        (7200, 1, "an hour", None),
+        (86400, 3600, None, " hours"),
+    ]
+
+    # Thresholds for day_diff > 0: (max_days, divisor, singular, plural)
+    day_thresholds = [
+        (2, 1, "yesterday", None),
+        (7, 1, "a day", " days"),
+        (31, 7, "a week", " weeks"),
+        (365, 30, "a month", " months"),
+        (float('inf'), 365, "an year", " years"),
+    ]
+
     if day_diff == 0:
-        if second_diff < 10:
-            return "just now"
-        if second_diff < 60:
-            return str(second_diff) + " secs"
-        if second_diff < 120:
-            return "a min"
-        if second_diff < 3600:
-            return str(second_diff // 60) + " mins"
-        if second_diff < 7200:
-            return "an hour"
-        if second_diff < 86400:
-            return str(second_diff // 3600) + " hours"
-    if day_diff == 1:
-        return "yesterday"
-    if day_diff < 7:
-        return str(day_diff) + " days" if day_diff > 1 else "a day"
-    if day_diff < 31:
-        week = day_diff // 7
-        return str(week) + " weeks" if week > 1 else "a week"
-    if day_diff < 365:
-        month = day_diff // 30
-        return str(month) + " months" if month > 1 else "a month"
-    year = day_diff // 365
-    return str(year) + " years" if year > 1 else "an year"
+        for max_val, divisor, singular, plural in second_thresholds:
+            if second_diff < max_val:
+                if singular and not plural:
+                    return singular
+                value = second_diff // divisor
+                return str(value) + plural
+
+    for max_val, divisor, singular, plural in day_thresholds:
+        if day_diff < max_val:
+            value = day_diff // divisor
+            if singular and (value <= 1 or not plural):
+                return singular
+            return str(value) + plural
+
+    return ''
 
 
 def urlopen_auth(url, username, password):
@@ -364,7 +374,7 @@ def json_dumps(data) -> bytes:
     return b(res)
 
 
-def json_loads(data: Union[str, bytes, bytearray]) -> Union[dict, list]:
+def json_loads(data: str | bytes | bytearray) -> dict | list:
     """Load a JSON buffer into memory as a Python object"""
     return json.loads(data)
 
@@ -401,7 +411,7 @@ def dictlist_json_dumps(data, item):
     return json_dumps(dl)
 
 
-def dictlist_first_key_value(data: list[dict], key, value) -> Optional[dict]:
+def dictlist_first_key_value(data: list[dict], key, value) -> dict | None:
     """In a list of dict, return first item where key=value or none if not found."""
     try:
         ret = next(item for item in data if key in item and item[key] == value)
@@ -631,3 +641,141 @@ def exit_after(seconds, default=None):
         return wraps
 
     return decorator
+
+
+def split_esc(input_string, sep=None, maxsplit=-1, esc='\\'):
+    """
+    Return a list of the substrings in the input_string, using sep as the separator char
+    and esc as the escape character.
+
+    sep
+        The separator used to split the input_string.
+
+        When set to None (the default value), will split on any whitespace
+        character (including \n \r \t \f and spaces) unless the character is escaped
+        and will discard empty strings from the result.
+    maxsplit
+        Maximum number of splits.
+        -1 (the default value) means no limit.
+    esc
+        The character used to escape the separator.
+
+        When set to None, this behaves equivalently to `str.split`.
+        Defaults to '\\\\' i.e. backslash.
+
+    Splitting starts at the front of the input_string and works to the end.
+
+    Note: escape characters in the substrings returned are removed. However, if
+    maxsplit is reached, escape characters in the remaining, unprocessed substring
+    are not removed, which allows split_esc to be called on it again.
+    """
+    # Input validation
+    if not isinstance(input_string, str):
+        raise TypeError(f'must be str, not {input_string.__class__.__name__}')
+    str.split('', sep=sep, maxsplit=maxsplit)  # Use str.split to validate sep and maxsplit
+    if esc is None:
+        return input_string.split(
+            sep=sep, maxsplit=maxsplit
+        )  # Short circuit to default implementation if the escape character is None
+    if not isinstance(esc, str):
+        raise TypeError(f'must be str or None, not {esc.__class__.__name__}')
+    if len(esc) == 0:
+        raise ValueError('empty escape character')
+    if len(esc) > 1:
+        raise ValueError('escape must be a single character')
+
+    # Set up a simple state machine keeping track of whether we have seen an escape character
+    ret, esc_seen, i = [''], False, 0
+    while i < len(input_string) and len(ret) - 1 != maxsplit:
+        if not esc_seen:
+            if input_string[i] == esc:
+                # Consume the escape character and transition state
+                esc_seen = True
+                i += 1
+            elif sep is None and input_string[i].isspace():
+                # Consume as much whitespace as possible
+                n = 1
+                while i + n + 1 < len(input_string) and input_string[i + n : i + n + 1].isspace():
+                    n += 1
+                ret.append('')
+                i += n
+            elif sep is not None and input_string[i : i + len(sep)] == sep:
+                # Consume the separator
+                ret.append('')
+                i += len(sep)
+            else:
+                # Otherwise just add the current char
+                ret[-1] += input_string[i]
+                i += 1
+        else:
+            # Add the current char and transition state back
+            ret[-1] += input_string[i]
+            esc_seen = False
+            i += 1
+
+    # Append any remaining string if we broke early because of maxsplit
+    if i < len(input_string):
+        ret[-1] += input_string[i:]
+
+    # If splitting on whitespace, discard empty strings from result
+    if sep is None:
+        ret = [sub for sub in ret if len(sub) > 0]
+
+    return ret
+
+
+def get_ip_address(ipv6=False):
+    """Get current IP address and netmask as a tuple."""
+    family = socket.AF_INET6 if ipv6 else socket.AF_INET
+
+    # Get IP address
+    stats = psutil.net_if_stats()
+    addrs = psutil.net_if_addrs()
+
+    ip_address = None
+    ip_netmask = None
+    for interface, stat in stats.items():
+        if stat.isup and interface != 'lo':
+            if interface in addrs:
+                for addr in addrs[interface]:
+                    if addr.family == family:
+                        ip_address = addr.address
+                        ip_netmask = addr.netmask
+                        break
+
+    return ip_address, ip_netmask
+
+
+def get_default_gateway(ipv6=False):
+    """Get the default gateway IP address."""
+
+    def convert_ipv4(gateway_hex):
+        """Convert IPv4 hex (little-endian) to dotted notation."""
+        return '.'.join(str(int(gateway_hex[i : i + 2], 16)) for i in range(6, -1, -2))
+
+    def convert_ipv6(gateway_hex):
+        """Convert IPv6 hex to colon notation."""
+        return ':'.join(gateway_hex[i : i + 4] for i in range(0, 32, 4))
+
+    if ipv6:
+        route_file = '/proc/net/ipv6_route'
+        default_dest = '00000000000000000000000000000000'
+        dest_field = 0
+        gateway_field = 4
+        converter = convert_ipv6
+    else:
+        route_file = '/proc/net/route'
+        default_dest = '00000000'
+        dest_field = 1
+        gateway_field = 2
+        converter = convert_ipv4
+
+    try:
+        with open(route_file) as f:
+            for line in f:
+                fields = line.strip().split()
+                if fields[dest_field] == default_dest:
+                    return converter(fields[gateway_field])
+    except (FileNotFoundError, IndexError, ValueError):
+        return None
+    return None

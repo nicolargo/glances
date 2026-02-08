@@ -190,15 +190,15 @@ class DiskioPlugin(GlancesPluginModel):
             #     continue
 
             # Decorate the bitrate with the configuration file
-            alert_rx = self.get_alert(i['read_bytes'], header=disk_real_name + '_rx')
-            alert_tx = self.get_alert(i['write_bytes'], header=disk_real_name + '_tx')
+            alert_rx = self.get_alert(i['read_bytes'], header='rx', action_key=disk_real_name)
+            alert_tx = self.get_alert(i['write_bytes'], header='tx', action_key=disk_real_name)
             self.views[i[self.get_key()]]['read_bytes']['decoration'] = alert_rx
             self.views[i[self.get_key()]]['write_bytes']['decoration'] = alert_tx
 
             # Decorate the latency with the configuration file
             # Try to get the read/write latency for the current disk
-            alert_latency_rx = self.get_alert(i['read_latency'], header=disk_real_name + '_rx_latency')
-            alert_latency_tx = self.get_alert(i['write_latency'], header=disk_real_name + '_tx_latency')
+            alert_latency_rx = self.get_alert(i['read_latency'], header='rx_latency', action_key=disk_real_name)
+            alert_latency_tx = self.get_alert(i['write_latency'], header='tx_latency', action_key=disk_real_name)
             # If the alert is not defined, use the default one
             if alert_latency_rx == 'DEFAULT':
                 alert_latency_rx = self.get_alert(i['read_latency'], header='rx_latency')

@@ -19,6 +19,7 @@ from glances.logger import logger
 from glances.outputs.glances_curses import GlancesCursesClient
 from glances.outputs.glances_stdout import GlancesStdout
 from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
+from glances.outputs.glances_stdout_fetch import GlancesStdoutFetch
 from glances.outputs.glances_stdout_json import GlancesStdoutJson
 from glances.stats_client import GlancesStatsClient
 from glances.timer import Counter
@@ -67,7 +68,8 @@ class GlancesClient:
         try:
             self.client = xmlrpc.xmlrpc_client.ServerProxy(self.uri, transport=transport)
         except Exception as e:
-            self.log_and_exit(f"Client couldn't create socket {self.uri}: {e}")
+            # Do not log self.uri here because it may contain credentials
+            self.log_and_exit(f"Client couldn't create socket to http://{args.client}:{args.port}: {e}")
 
     @property
     def quiet(self):
@@ -187,6 +189,9 @@ class GlancesClient:
             logger.info(f"Stdout CSV mode is ON, following stats will be displayed: {self.args.stdout_csv}")
             # Init screen
             self.screen = GlancesStdoutCsv(config=self.config, args=self.args)
+        elif self.args.stdout_fetch:
+            logger.info("Fetch mode is ON")
+            self.screen = GlancesStdoutFetch(config=self.config, args=self.args)
         else:
             self.screen = GlancesCursesClient(config=self.config, args=self.args)
 

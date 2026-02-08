@@ -95,6 +95,10 @@ than a second one concerning the user interface:
     # Comma separated list of HTTP request headers that should be supported for cross-origin requests.
     # Default is *
     #cors_headers=*
+    # Define SSL files (keyfile_password is optional)
+    #ssl_keyfile=./glances.local+3-key.pem
+    #ssl_keyfile_password=kfp
+    #ssl_certfile=./glances.local+3.pem
 
 Each plugin, export module, and application monitoring process (AMP) can
 have a section. Below is an example for the CPU plugin:

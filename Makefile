@@ -15,57 +15,56 @@ PODMAN_SOCK       ?= /run/user/$(shell id -u)/podman/podman.sock
 DOCKER_SOCK       ?= /var/run/docker.sock
 DOCKER_SOCKS      := -v $(PODMAN_SOCK):$(PODMAN_SOCK):ro -v $(DOCKER_SOCK):$(DOCKER_SOCK):ro
 DOCKER_OPTS       := --rm -e TZ="${TZ}" -e GLANCES_OPT="" --pid host --network host
-
-# User-friendly check for uv
-ifeq ($(shell which uv >/dev/null 2>&1; echo $$?), 1)
-$(error The 'uv' command was not found. Make sure you have Astral Uv installed, then set the UV environment variable to point to the full path of the 'uv' executable. Alternatively more information with make install-uv)
-endif
+UV_RUN		   	  := .venv-uv/bin/uv
 
 # if the command is only `make`, the default tasks will be the printing of the help.
 .DEFAULT_GOAL := help
 
-.PHONY: help test docs docs-server venv
+.PHONY: help test docs docs-server venv requirements profiling docker all clean all test
 
 help: ## List all make commands available
 	@grep -E '^[\.a-zA-Z_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	awk -F ":" '{print $1}' | \
-	grep -v % | \
-	sed 's/\\//g' | \
-	sort | \
+	grep -v % | sed 's/\\//g' | sort | \
 	awk 'BEGIN {FS = ":[^:]*?##"}; {printf "\033[1;34mmake %-50s\033[0m %s\n", $$1, $$2}'
 
 # ===================================================================
 # Virtualenv
 # ===================================================================
 
-install-uv: ## Instructions to install the UV tool
-	@echo "Install the UV tool (https://astral.sh/uv/)"
-	@echo "Please install the UV tool manually"
-	@echo "For example with: curl -LsSf https://astral.sh/uv/install.sh | sh"
-	@echo "Or via a package manager of your distribution"
-	@echo "For example for Snap: snap install astral-uv"
+# install-uv: ## Instructions to install the UV tool
+# 	@echo "Install the UV tool (https://astral.sh/uv/)"
+# 	@echo "Please install the UV tool manually"
+# 	@echo "For example with: curl -LsSf https://astral.sh/uv/install.sh | sh"
+# 	@echo "Or via a package manager of your distribution"
+# 	@echo "For example for Snap: snap install astral-uv"
+
+install-uv: ## Install UV tool in a specific virtualenv
+	python3 -m venv .venv-uv
+	.venv-uv/bin/pip install uv
 
 upgrade-uv: ## Upgrade the UV tool
-	uv self update
+	.venv-uv/bin/pip install --upgrade pip
+	.venv-uv/bin/pip install --upgrade uv
 
 venv: ## Create the virtualenv with all dependencies
-	uv sync --all-extras --no-group dev
+	$(UV_RUN) sync --all-extras --no-group dev
 
 venv-upgrade venv-switch-to-full: ## Upgrade the virtualenv with all dependencies
-	uv sync --upgrade --all-extras
+	$(UV_RUN) sync --upgrade --all-extras
 
 venv-min: ## Create the virtualenv with minimal dependencies
-	uv sync
+	$(UV_RUN) sync
 
 venv-upgrade-min venv-switch-to-min: ## Upgrade the virtualenv with minimal dependencies
-	uv sync --upgrade
+	$(UV_RUN) sync --upgrade
 
 venv-clean: ## Remove the virtualenv
 	rm -rf .venv
 
 venv-dev: ## Create the virtualenv with dev dependencies
-	uv sync --dev --all-extras
-	uv run pre-commit install --hook-type pre-commit
+	$(UV_RUN) sync --dev --all-extras
+	$(UV_RUN) run pre-commit install --hook-type pre-commit
 
 # ===================================================================
 # Requirements
@@ -75,16 +74,16 @@ venv-dev: ## Create the virtualenv with dev dependencies
 # ===================================================================
 
 requirements-min: ## Generate the requirements.txt files (minimal dependencies)
-	uv export --no-emit-workspace --no-hashes --no-group dev --output-file requirements.txt
+	$(UV_RUN) export --no-emit-workspace --no-hashes --no-group dev --output-file requirements.txt
 
 requirements-all: ## Generate the all-requirements.txt files (all dependencies)
-	uv export --no-emit-workspace --no-hashes --all-extras --no-group dev --output-file all-requirements.txt
+	$(UV_RUN) export --no-emit-workspace --no-hashes --all-extras --no-group dev --output-file all-requirements.txt
 
 requirements-docker: ## Generate the docker-requirements.txt files (Docker specific dependencies)
-	uv export --no-emit-workspace --no-hashes --no-group dev --extra containers --extra web --output-file docker-requirements.txt
+	$(UV_RUN) export --no-emit-workspace --no-hashes --no-group dev --extra containers --extra web --output-file docker-requirements.txt
 
 requirements-dev: ## Generate the dev-requirements.txt files (dev dependencies)
-	uv export --no-hashes --only-dev --output-file dev-requirements.txt
+	$(UV_RUN) export --no-hashes --only-dev --output-file dev-requirements.txt
 
 requirements: requirements-min requirements-all requirements-dev requirements-docker  ## Generate all the requirements files
 
@@ -95,28 +94,31 @@ requirements-upgrade: venv-upgrade requirements  ## Upgrade the virtualenv and r
 # ===================================================================
 
 test: ## Run All unit tests
-	uv run pytest
+	$(UV_RUN) run pytest
 
 test-core: ## Run Core unit tests
-	uv run pytest tests/test_core.py
+	$(UV_RUN) run pytest tests/test_core.py
+
+test-plugins: ## Run Plugins unit tests
+	$(UV_RUN) run pytest tests/test_plugin_*.py
 
 test-api: ## Run API unit tests
-	uv run pytest tests/test_api.py
+	$(UV_RUN) run pytest tests/test_api.py
 
 test-memoryleak: ## Run Memory-leak unit tests
-	uv run pytest tests/test_memoryleak.py
+	$(UV_RUN) run pytest tests/test_memoryleak.py
 
 test-perf: ## Run Perf unit tests
-	uv run pytest tests/test_perf.py
+	$(UV_RUN) run pytest tests/test_perf.py
 
 test-restful: ## Run Restful API unit tests
-	uv run pytest tests/test_restful.py
+	$(UV_RUN) run pytest tests/test_restful.py
 
 test-webui: ## Run WebUI unit tests
-	uv run pytest tests/test_webui.py
+	$(UV_RUN) run pytest tests/test_webui.py
 
 test-xmlrpc: ## Run XMLRPC API unit tests
-	uv run pytest tests/test_xmlrpc.py
+	$(UV_RUN) run pytest tests/test_xmlrpc.py
 
 test-with-upgrade: venv-upgrade test ## Upgrade deps and run unit tests
 
@@ -135,29 +137,36 @@ test-export-influxdb-v3: ## Run interface tests with InfluxDB version 3 (Core)
 test-export-timescaledb: ## Run interface tests with TimescaleDB
 	/bin/bash ./tests/test_export_timescaledb.sh
 
-test-exports: test-export-csv test-export-json test-export-influxdb-v1 test-export-influxdb-v3 test-export-timescaledb ## Tests all exports
+test-export-nats: ## Run interface tests with NATS
+	/bin/bash ./tests/test_export_nats.sh
+
+test-exports: test-export-csv test-export-json test-export-influxdb-v1 test-export-influxdb-v3 test-export-timescaledb test-export-nats ## Tests all exports
 
 # ===================================================================
 # Linters, profilers and cyber security
 # ===================================================================
 
-find-duplicate-lines:
+pre-commit: ## Run pre-commit hooks
+	$(UV_RUN) run pre-commit run --all-files
+
+find-duplicate-lines: ## Search for duplicate lines in files
 	/bin/bash tests-data/tools/find-duplicate-lines.sh
 
 format: ## Format the code
-	uv run ruff format .
+	$(UV_RUN) run ruff format .
 
 lint: ## Lint the code.
-	uv run ruff check . --fix
+	$(UV_RUN) run ruff check . --fix
 
 lint-readme: ## Lint the main README.rst file
-	uv run rstcheck README.rst
+	$(UV_RUN) run rstcheck README.rst
+	$(UV_RUN) run rstcheck README-pypi.rst
 
 codespell: ## Run codespell to fix common misspellings in text files
-	uv run codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics -w
+	$(UV_RUN) run codespell -S .git,./docs/_build,./Glances.egg-info,./venv*,./glances/outputs,*.svg -L hart,bu,te,statics -w
 
 semgrep: ## Run semgrep to find bugs and enforce code standards
-	uv run semgrep scan --config=auto
+	$(UV_RUN) run semgrep scan --config=auto
 
 profiling-%: SLEEP = 3
 profiling-%: TIMES = 30
@@ -171,27 +180,27 @@ endef
 profiling-gprof: CPROF = glances.cprof
 profiling-gprof: ## Callgraph profiling (need "apt install graphviz")
 	$(DISPLAY-BANNER)
-	uv run python -m cProfile -o $(CPROF) run-venv.py -C $(CONF) --stop-after $(TIMES)
-	uv run gprof2dot -f pstats $(CPROF) | dot -Tsvg -o $(OUT_DIR)/glances-cgraph.svg
+	$(UV_RUN) run python -m cProfile -o $(CPROF) run-venv.py -C $(CONF) --stop-after $(TIMES)
+	$(UV_RUN) run gprof2dot -f pstats $(CPROF) | dot -Tsvg -o $(OUT_DIR)/glances-cgraph.svg
 	rm -f $(CPROF)
 
 profiling-pyinstrument: ## PyInstrument profiling
 	$(DISPLAY-BANNER)
-	uv add pyinstrument
-	uv run pyinstrument -r html -o $(OUT_DIR)/glances-pyinstrument.html -m glances -C $(CONF) --stop-after $(TIMES)
+	$(UV_RUN) add pyinstrument
+	$(UV_RUN) run pyinstrument -r html -o $(OUT_DIR)/glances-pyinstrument.html -m glances -C $(CONF) --stop-after $(TIMES)
 
 profiling-pyspy: ## Flame profiling
 	$(DISPLAY-BANNER)
-	uv run py-spy record -o $(OUT_DIR)/glances-flame.svg -d 60 -s -- uv run python run-venv.py -C $(CONF) --stop-after $(TIMES)
+	$(UV_RUN) run py-spy record -o $(OUT_DIR)/glances-flame.svg -d 60 -s -- .venv-uv/bin/uvrun python run-venv.py -C $(CONF) --stop-after $(TIMES)
 
 profiling: profiling-gprof profiling-pyinstrument profiling-pyspy ## Profiling of the Glances software
 
 trace-malloc: ## Trace the malloc() calls
 	@echo "Malloc test is running, please wait ~30 secondes..."
-	uv run python -m glances -C $(CONF) --trace-malloc --stop-after 15 --quiet
+	$(UV_RUN) run python -m glances -C $(CONF) --trace-malloc --stop-after 15 --quiet
 
 memory-leak: ## Profile memory leaks
-	uv run python -m glances -C $(CONF) --memory-leak
+	$(UV_RUN) run python -m glances -C $(CONF) --memory-leak
 
 memory-profiling: TIMES = 2400
 memory-profiling: PROFILE = mprofile_*.dat
@@ -200,31 +209,37 @@ memory-profiling: ## Profile memory usage
 	@echo "It's a very long test (~4 hours)..."
 	rm -f $(PROFILE)
 	@echo "1/2 - Start memory profiling with the history option enable"
-	uv run mprof run -T 1 -C run-venv.py -C $(CONF) --stop-after $(TIMES) --quiet
-	uv run mprof plot --output $(OUT_DIR)/glances-memory-profiling-with-history.png
+	$(UV_RUN) run mprof run -T 1 -C run-venv.py -C $(CONF) --stop-after $(TIMES) --quiet
+	$(UV_RUN) run mprof plot --output $(OUT_DIR)/glances-memory-profiling-with-history.png
 	rm -f $(PROFILE)
 	@echo "2/2 - Start memory profiling with the history option disable"
-	uv run mprof run -T 1 -C run-venv.py -C $(CONF) --disable-history --stop-after $(TIMES) --quiet
-	uv run mprof plot --output $(OUT_DIR)/glances-memory-profiling-without-history.png
+	$(UV_RUN) run mprof run -T 1 -C run-venv.py -C $(CONF) --disable-history --stop-after $(TIMES) --quiet
+	$(UV_RUN) run mprof plot --output $(OUT_DIR)/glances-memory-profiling-without-history.png
 	rm -f $(PROFILE)
 
 # Trivy installation: https://aquasecurity.github.io/trivy/latest/getting-started/installation/
-trivy: ## Run Trivy to find vulnerabilities in container images
-	uv run trivy fs .
+trivy: ## Run Trivy to find vulnerabilities
+	$(UV_RUN) run trivy fs ./glances/
+
+bandit: ## Run Bandit to find vulnerabilities
+	$(UV_RUN) run bandit glances -r
 
 # ===================================================================
 # Docs
 # ===================================================================
 
 docs: ## Create the documentation
-	uv run python -m glances -C $(CONF) --api-doc > ./docs/api/python.rst
-	uv run python ./generate_openapi.py
-	uv run python -m glances -C $(CONF) --api-restful-doc > ./docs/api/restful.rst
+	$(UV_RUN) run python -m glances -C $(CONF) --api-doc > ./docs/api/python.rst
+	$(UV_RUN) run python ./generate_openapi.py
+	$(UV_RUN) run python -m glances -C $(CONF) --api-restful-doc > ./docs/api/restful.rst
 	cd docs && ./build.sh && cd ..
 
 docs-server: docs ## Start a Web server to serve the documentation
 	(sleep 2 && sensible-browser "http://localhost:$(PORT)") &
-	cd docs/_build/html/ && uv run python -m http.server $(PORT)
+	cd docs/_build/html/ && .venv-uv/bin/uvrun python -m http.server $(PORT)
+
+docs-jupyter:  ## Start Jupyter Notebook
+	$(UV_RUN) run --with jupyter jupyter lab
 
 release-note: ## Generate release note
 	git --no-pager log $(LASTTAG)..HEAD --first-parent --pretty=format:"* %s"
@@ -242,7 +257,7 @@ install: ## Open a Web Browser to the installation procedure
 webui webui%: DIR = glances/outputs/static/
 
 webui-gen-config: ## Generate the Web UI config file
-	uv run python ./generate_webui_conf.py > ./glances/outputs/static/js/uiconfig.json
+	$(UV_RUN) run python ./generate_webui_conf.py > ./glances/outputs/static/js/uiconfig.json
 
 webui: webui-gen-config ## Build the Web UI
 	cd $(DIR) && npm ci && npm run build
@@ -262,7 +277,7 @@ webui-update: webui-gen-config ## Update JS dependencies
 
 flatpak: venv-upgrade ## Generate FlatPack JSON file
 	git clone https://github.com/flatpak/flatpak-builder-tools.git
-	uv run python ./flatpak-builder-tools/pip/flatpak-pip-generator glances
+	$(UV_RUN) run python ./flatpak-builder-tools/pip/flatpak-pip-generator glances
 	rm -rf ./flatpak-builder-tools
 	@echo "Now follow: https://github.com/flathub/flathub/wiki/App-Submission"
 
@@ -296,27 +311,33 @@ docker-ubuntu-full: ## Generate local docker image (Ubuntu full)
 docker-ubuntu-minimal: ## Generate local docker image (Ubuntu minimal)
 docker-ubuntu-dev: ## Generate local docker image (Ubuntu dev)
 
+trivy-docker: ## Run Trivy to find vulnerabilities in Docker images
+	$(UV_RUN) run trivy image glances:local-alpine-full
+	$(UV_RUN) run trivy image glances:local-alpine-minimal
+	$(UV_RUN) run trivy image glances:local-ubuntu-full
+	$(UV_RUN) run trivy image glances:local-ubuntu-minimal
+
 # ===================================================================
 # Run
 # ===================================================================
 
 run: ## Start Glances in console mode (also called standalone)
-	uv run python -m glances -C $(CONF)
+	$(UV_RUN) run python -m glances -C $(CONF)
 
 run-debug: ## Start Glances in debug console mode (also called standalone)
-	uv run python -m glances -C $(CONF) -d
+	$(UV_RUN) run python -m glances -C $(CONF) -d
 
 run-local-conf: ## Start Glances in console mode with the system conf file
-	uv run python -m glances
+	$(UV_RUN) run python -m glances
 
 run-local-conf-hide-public: ## Start Glances in console mode with the system conf file and hide public information
-	uv run python -m glances --hide-public-info
+	$(UV_RUN) run python -m glances --hide-public-info
 
 run-like-htop: ## Start Glances with the same features than Htop
-	uv run python -m glances --disable-plugin network,ports,wifi,connections,diskio,fs,irq,folders,raid,smart,sensors,vms,containers,ip,amps --disable-left-sidebar
+	$(UV_RUN) run python -m glances --disable-plugin network,ports,wifi,connections,diskio,fs,irq,folders,raid,smart,sensors,vms,containers,ip,amps --disable-left-sidebar
 
 run-fetch: ## Start Glances in fetch mode
-	uv run python -m glances --fetch
+	$(UV_RUN) run python -m glances --fetch
 
 $(DOCKER_RUNTIMES): run-docker-%:
 	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-$*
@@ -328,32 +349,37 @@ run-docker-ubuntu-minimal: ## Start Glances Ubuntu Docker minimal in console mod
 run-docker-ubuntu-full: ## Start Glances Ubuntu Docker full in console mode
 run-docker-ubuntu-dev: ## Start Glances Ubuntu Docker dev in console mode
 
+generate-ssl: ## Generate local and sel signed SSL certificates for dev (need mkcert)
+	mkcert glances.local localhost 120.0.0.1 0.0.0.0
+
 run-webserver: ## Start Glances in Web server mode
-	uv run python -m glances -C $(CONF) -w
+	$(UV_RUN) run python -m glances -C $(CONF) -w
 
 run-webserver-local-conf: ## Start Glances in Web server mode with the system conf file
-	uv run python -m glances -w
+	$(UV_RUN) run python -m glances -w
 
 run-webserver-local-conf-hide-public: ## Start Glances in Web server mode with the system conf file and hide public info
-	uv run python -m glances -w --hide-public-info
+	$(UV_RUN) run python -m glances -w --hide-public-info
+
+run-webui: un-webserver  ## Start Glances in Web server mode
 
 run-restapiserver: ## Start Glances in REST API server mode
-	uv run python -m glances -C $(CONF) -w --disable-webui
+	$(UV_RUN) run python -m glances -C $(CONF) -w --disable-webui
 
 run-server: ## Start Glances in server mode (RPC)
-	uv run python -m glances -C $(CONF) -s
+	$(UV_RUN) run python -m glances -C $(CONF) -s
 
 run-client: ## Start Glances in client mode (RPC)
-	uv run python -m glances -C $(CONF) -c localhost
+	$(UV_RUN) run python -m glances -C $(CONF) -c localhost
 
 run-browser: ## Start Glances in browser mode (RPC)
-	uv run python -m glances -C $(CONF) --browser
+	$(UV_RUN) run python -m glances -C $(CONF) --browser
 
 run-web-browser: ## Start Web Central Browser
-	uv run python -m glances -C $(CONF) -w --browser
+	$(UV_RUN) run python -m glances -C $(CONF) -w --browser
 
 run-issue: ## Start Glances in issue mode
-	uv run python -m glances -C $(CONF) --issue
+	$(UV_RUN) run python -m glances -C $(CONF) --issue
 
 run-multipass: ## Install and start Glances in a VM (only available on Ubuntu with multipass already installed)
 	multipass launch -n glances-on-lts lts
@@ -363,4 +389,4 @@ run-multipass: ## Install and start Glances in a VM (only available on Ubuntu wi
 	multipass delete glances-on-lts
 
 show-version: ## Show Glances version number
-	uv run python -m glances -C $(CONF) -V
+	$(UV_RUN) run python -m glances -C $(CONF) -V

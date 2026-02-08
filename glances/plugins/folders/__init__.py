@@ -8,6 +8,7 @@
 
 """Folder plugin."""
 
+from glances.events_list import glances_events
 from glances.folder_list import FolderList as glancesFolderList
 from glances.globals import nativestr
 from glances.logger import logger
@@ -94,7 +95,7 @@ class FoldersPlugin(GlancesPluginModel):
 
         return self.stats
 
-    def get_alert(self, stat, header=""):
+    def get_alert(self, stat, header=None, action_key=None, log=False):
         """Manage limits of the folder list."""
         if stat['errno'] != 0:
             ret = 'ERROR'
@@ -109,15 +110,24 @@ class FoldersPlugin(GlancesPluginModel):
                 ret = 'CAREFUL'
 
         # Get stat name
-        stat_name = self.get_stat_name(header=header)
+        stat_name = self.get_stat_name(header=header, action_key=action_key)
+
+        # Manage log
+        log_str = ""
+        if self.get_limit_log(stat_name=stat_name, default_action=log) and ret != 'DEFAULT':
+            # Add _LOG to the return string
+            # So stats will be highlighted with a specific color
+            log_str = "_LOG"
+            # Add the log to the events list
+            glances_events.add(ret, stat_name.upper(), stat['size'])
 
         # Manage threshold
         self.manage_threshold(stat_name, ret)
 
         # Manage action
-        self.manage_action(stat_name, ret.lower(), header, stat[self.get_key()])
+        self.manage_action(stat_name, ret.lower(), header, action_key)
 
-        return ret
+        return ret + log_str
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -154,6 +164,6 @@ class FoldersPlugin(GlancesPluginModel):
                 msg = '?{:>8}'.format(self.auto_unit(i['size']))
             else:
                 msg = '{:>9}'.format(self.auto_unit(i['size']))
-            ret.append(self.curse_add_line(msg, self.get_alert(i, header='folder_' + i['indice'])))
+            ret.append(self.curse_add_line(msg, self.get_alert(i, header='folder', action_key=i['indice'])))
 
         return ret
