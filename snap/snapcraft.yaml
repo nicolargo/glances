@@ -4,7 +4,7 @@ name: glances
 # Do not forget to set the source-branch option to master for release (see end of file)
 # build00 => glances source-branch should be set to develop
 # buildXX => glances source-branch should be set to master
-version: '4.4.2+build00'
+version: '4.5.0+build01'
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
