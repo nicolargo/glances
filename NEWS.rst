@@ -2,6 +2,14 @@
                                 Glances ChangeLog
 ==============================================================================
 
+===============
+Version 4.5.0.1
+===============
+
+Bugs corrected:
+
+* Docker image for Glances release 4.5.0 failed to start if no [putputs] section in the glances.conf file #3424
+
 =============
 Version 4.5.0
 =============
