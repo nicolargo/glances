@@ -25,6 +25,7 @@ RUN apt-get update \
     smartmontools \
     net-tools \
     tzdata \
+    libvirt-clients \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 

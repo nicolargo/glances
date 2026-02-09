@@ -28,7 +28,8 @@ RUN apk add --no-cache \
   wireless-tools \
   smartmontools \
   iputils \
-  tzdata
+  tzdata \
+  libvirt-client
 
 ##############################################################################
 # BUILD Stages
