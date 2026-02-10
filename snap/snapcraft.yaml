@@ -4,7 +4,7 @@ name: glances
 # Do not forget to set the source-branch option to master for release (see end of file)
 # build00 => glances source-branch should be set to develop
 # buildXX => glances source-branch should be set to master
-version: '4.5.0.4+build01'
+version: '4.5.1+build00'
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
@@ -75,6 +75,6 @@ parts:
     source: https://github.com/nicolargo/glances.git
     # For releases, set to master
     # For beta/dev, set to develop
-    source-branch: master
+    source-branch: develop
     python-requirements:
       - docker-requirements.txt
