@@ -12,8 +12,6 @@ batinfo==0.4.2 ; sys_platform == 'linux'
     # via glances
 bernhard==0.2.6
     # via glances
-cassandra-driver==3.29.3
-    # via glances
 certifi==2026.1.4
     # via
     #   elastic-transport
@@ -31,9 +29,7 @@ charset-normalizer==3.4.4
 chevron==0.14.0
     # via glances
 click==8.1.8
-    # via
-    #   geomet
-    #   uvicorn
+    # via uvicorn
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
 cryptography==46.0.5
@@ -56,8 +52,6 @@ exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
 fastapi==0.128.7
     # via glances
-geomet==1.1.0
-    # via cassandra-driver
 graphitesender==0.11.2
     # via glances
 h11==0.16.0
