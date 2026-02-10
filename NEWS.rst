@@ -3,6 +3,14 @@
 ==============================================================================
 
 ===============
+Version 4.5.0.3
+==============
+
+Continious integration:
+
+* Remove cassandra-driver dependency because it breaks build on Docker Alpine image
+
+===============
 Version 4.5.0.2
 ===============
 
