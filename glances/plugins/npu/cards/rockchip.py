@@ -60,6 +60,12 @@ class RockchipNPU:
         """Check if ROCKCHIP NPU is available."""
         return self.debug_folder is not None and self.device_folder is not None and self.freq_folder is not None
 
+    def disable(self):
+        """Disable ROCKCHIP GPU class."""
+        self.debug_folder = None
+        self.device_folder = None
+        self.freq_folder = None
+
     def exit(self):
         """Close ROCKCHIP GPU class."""
         pass
