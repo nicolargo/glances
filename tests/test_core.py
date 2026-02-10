@@ -638,6 +638,10 @@ class TestGlances(unittest.TestCase):
     def test_025_npu(self):
         """Check NPU plugin."""
         print('INFO: [TEST_025] Check NPU stats')
+        if stats.get_plugin('npu').is_disabled():
+            # Disable test if stats is disable in configuration file
+            # Related to #3425
+            return
         stats_grab = stats.get_plugin('npu').get_raw()
         self.assertTrue(isinstance(stats_grab, list), msg='NPU stats is not a list')
         # Test AMD NPU plugin with test data

@@ -14,6 +14,7 @@ Currently supported:
 - Rockchip NPU (RK3588, RK3576)
 """
 
+from glances.logger import logger
 from glances.plugins.npu.cards.amd import AmdNPU
 from glances.plugins.npu.cards.intel import IntelNPU
 from glances.plugins.npu.cards.rockchip import RockchipNPU
@@ -142,11 +143,24 @@ class NpuPlugin(GlancesPluginModel):
 
         # Get the stats
         if self.amd.is_available():
-            stats.append(self.amd.get_device_stats())
+            try:
+                stats.append(self.amd.get_device_stats())
+            except Exception as e:
+                logger.debug(f"Error getting AMD NPU stats, disable AMD NPU: {e}")
+                self.amd.disable()
         if self.intel.is_available():
-            stats.append(self.intel.get_device_stats())
+            try:
+                stats.append(self.intel.get_device_stats())
+            except Exception as e:
+                logger.debug(f"Error getting Intel NPU stats, disable Intel NPU: {e}")
+                self.intel.disable()
         if self.rockchip.is_available():
-            stats.append(self.rockchip.get_device_stats())
+            try:
+                stats.append(self.rockchip.get_device_stats())
+            except Exception as e:
+                logger.debug(f"Error getting Rockchip NPU stats, disable Rockchip NPU: {e}")
+                self.rockchip.disable()
+
         # Update the stats
         self.stats = stats
 

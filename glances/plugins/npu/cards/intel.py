@@ -49,6 +49,10 @@ class IntelNPU:
         """Check if Intel NPU is available."""
         return self.device_folder is not None
 
+    def disable(self):
+        """Disable Intel GPU class."""
+        self.device_folder = None
+
     def exit(self):
         """Close Intel GPU class."""
         pass
