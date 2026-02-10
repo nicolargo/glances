@@ -77,7 +77,7 @@ containers = [
 ]
 export = [
   "bernhard",
-  "cassandra-driver",
+  #"cassandra-driver",
   "elasticsearch",
   "graphitesender",
   "ibmcloudant",
