@@ -16,7 +16,7 @@ click==8.1.8
     # via uvicorn
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
-cryptography==46.0.4
+cryptography==46.0.5
     # via python-jose
 defusedxml==0.7.1
     # via glances
@@ -26,7 +26,7 @@ ecdsa==0.19.1
     # via python-jose
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.128.4
+fastapi==0.128.7
     # via glances
 h11==0.16.0
     # via uvicorn
@@ -54,6 +54,8 @@ pydantic==2.12.5
     # via fastapi
 pydantic-core==2.41.5
     # via pydantic
+pyinstrument==5.1.2
+    # via glances
 python-dateutil==2.9.0.post0
     # via glances
 python-jose==3.5.0
