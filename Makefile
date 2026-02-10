@@ -117,6 +117,9 @@ test-webui: ## Run WebUI unit tests
 test-xmlrpc: ## Run XMLRPC API unit tests
 	$(UV_RUN) run pytest tests/test_xmlrpc.py
 
+test-plugin: ## Run Plugin unit tests
+	$(UV_RUN) run pytest tests/test_plugin_*.py
+
 test-with-upgrade: venv-upgrade test ## Upgrade deps and run unit tests
 
 test-export-csv: ## Run interface tests with CSV
