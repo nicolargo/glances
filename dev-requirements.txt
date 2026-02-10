@@ -2,6 +2,8 @@
 #    uv export --no-hashes --only-dev --output-file dev-requirements.txt
 alabaster==1.0.0
     # via sphinx
+annotated-doc==0.0.4
+    # via typer
 annotated-types==0.7.0
     # via pydantic
 anyio==4.12.1
@@ -68,7 +70,7 @@ contourpy==1.3.2 ; python_full_version < '3.11'
     # via matplotlib
 contourpy==1.3.3 ; python_full_version >= '3.11'
     # via matplotlib
-cryptography==46.0.4
+cryptography==46.0.5
     # via pyjwt
 cycler==0.12.1
     # via matplotlib
@@ -262,7 +264,7 @@ pysocks==1.7.1
 pytest==9.0.2
 python-dateutil==2.9.0.post0
     # via matplotlib
-python-debian==1.0.1
+python-debian==1.1.0
     # via reuse
 python-dotenv==1.2.1
     # via
@@ -312,7 +314,7 @@ selenium==4.40.0
 semantic-version==2.10.0
     # via semgrep
 semgrep==1.151.0
-setuptools==81.0.0
+setuptools==82.0.0
 shellingham==1.5.4
     # via typer
 six==1.17.0
@@ -372,7 +374,7 @@ trio-typing==0.10.0
     # via selenium
 trio-websocket==0.12.2
     # via selenium
-typer==0.21.1
+typer==0.21.2
     # via rstcheck
 types-certifi==2021.10.8.3
     # via selenium
@@ -395,7 +397,6 @@ typing-extensions==4.15.0
     #   semgrep
     #   starlette
     #   trio-typing
-    #   typer
     #   typing-inspection
     #   uvicorn
     #   virtualenv
