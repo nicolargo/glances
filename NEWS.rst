@@ -3,12 +3,21 @@
 ==============================================================================
 
 ===============
+Version 4.5.0.2
+===============
+
+Bugs corrected:
+
+* NPU plugin makes Glances 4.5.0.1 crashing on start #3425
+* Glances 4.5.0.1 not reporting docker container details #3426
+
+===============
 Version 4.5.0.1
 ===============
 
 Bugs corrected:
 
-* Docker image for Glances release 4.5.0 failed to start if no [putputs] section in the glances.conf file #3424
+* Docker image for Glances release 4.5.0 failed to start if no [outputs] section in the glances.conf file #3424
 
 =============
 Version 4.5.0
