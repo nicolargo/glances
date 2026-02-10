@@ -210,7 +210,7 @@ class DockerStatsFetcher:
 class DockerExtension:
     """Glances' Containers Plugin's Docker Extension unit"""
 
-    CONTAINER_ACTIVE_STATUS = ['running', 'paused']
+    CONTAINER_ACTIVE_STATUS = ['running', 'healthy', 'paused']
 
     def __init__(self):
         self.disable = disable_plugin_docker
