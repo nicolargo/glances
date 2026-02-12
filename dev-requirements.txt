@@ -161,7 +161,7 @@ nodeenv==1.10.0
     # via
     #   pre-commit
     #   pyright
-numpy==2.2.6 ; python_full_version < '3.11'
+numpy==2.4.2 ; python_full_version < '3.11'
     # via
     #   contourpy
     #   matplotlib
