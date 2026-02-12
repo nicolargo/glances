@@ -150,7 +150,7 @@ markdown-it-py==4.0.0
 markupsafe==3.0.3
     # via jinja2
 matplotlib==3.10.8
-mcp==1.23.3
+mcp==1.26.0
     # via semgrep
 mdurl==0.1.2
     # via markdown-it-py
