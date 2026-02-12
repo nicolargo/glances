@@ -307,7 +307,7 @@ rstcheck-core==1.2.2
     # via rstcheck
 ruamel-yaml==0.19.1
     # via semgrep
-ruamel-yaml-clib==0.2.14
+ruamel-yaml-clib==0.2.15
     # via semgrep
 ruff==0.15.0
 selenium==4.40.0
