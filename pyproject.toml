@@ -100,7 +100,7 @@ graph = ["pygal"]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART"]
-snmp = ["pysnmp-lextudio<6.2.0"]
+snmp = ["pysnmp-lextudio<6.3.1"]
 sparklines = ["sparklines"]
 web = [
   "fastapi>=0.82.0",

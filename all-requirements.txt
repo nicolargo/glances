@@ -145,7 +145,7 @@ pysmart==1.4.2
     # via glances
 pysmi-lextudio==1.4.3
     # via pysnmp-lextudio
-pysnmp-lextudio==6.1.2
+pysnmp-lextudio==6.3.0
     # via glances
 pysnmpcrypto==0.0.4
     # via pysnmp-lextudio
