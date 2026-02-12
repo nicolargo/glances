@@ -76,7 +76,7 @@ cycler==0.12.1
     # via matplotlib
 distlib==0.4.0
     # via virtualenv
-docutils==0.21.2 ; python_full_version < '3.11'
+docutils==0.22.4 ; python_full_version < '3.11'
     # via
     #   rstcheck-core
     #   sphinx
