@@ -50,7 +50,7 @@ charset-normalizer==3.4.4
     # via
     #   python-debian
     #   requests
-click==8.1.8
+click==8.3.1
     # via
     #   click-option-group
     #   reuse
