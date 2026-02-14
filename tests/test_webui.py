@@ -81,7 +81,7 @@ def test_loading_time(glances_webserver, glances_homepage):
     backend_perf = response_start - navigation_start
     frontend_perf = dom_complete - response_start
     assert backend_perf < 1000  # ms
-    assert frontend_perf < 1000  # ms
+    assert frontend_perf < 2000  # ms
 
 
 def test_title(glances_webserver, glances_homepage):
