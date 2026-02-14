@@ -74,29 +74,35 @@ def test_loading_time(glances_webserver, glances_homepage):
     """
     Test Glances home page loading time.
     """
-    assert glances_webserver is not None
+    if glances_webserver is None:
+        raise AssertionError("glances_webserver is None")
     navigation_start = glances_homepage.execute_script("return window.performance.timing.navigationStart")
     response_start = glances_homepage.execute_script("return window.performance.timing.responseStart")
     dom_complete = glances_homepage.execute_script("return window.performance.timing.domComplete")
     backend_perf = response_start - navigation_start
     frontend_perf = dom_complete - response_start
-    assert backend_perf < 1000  # ms
-    assert frontend_perf < 2000  # ms
+    if not (backend_perf < 1000):
+        raise AssertionError(f"backend_perf: {backend_perf} < 1000")
+    if not (frontend_perf < 2000):
+        raise AssertionError(f"frontend_perf: {frontend_perf} < 2000")
 
 
 def test_title(glances_webserver, glances_homepage):
     """
     Test Glances home page title.
     """
-    assert glances_webserver is not None
-    assert "Glances" in glances_homepage.title
+    if glances_webserver is None:
+        raise AssertionError("glances_webserver is None")
+    if "Glances" not in glances_homepage.title:
+        raise AssertionError(f"Glances not in {glances_homepage.title}")
 
 
 def test_plugins(glances_webserver, glances_homepage):
     """
     Test Glances defaults plugins.
     """
-    assert glances_webserver is not None
+    if glances_webserver is None:
+        raise AssertionError("glances_webserver is None")
     for plugin in [
         "system",
         "now",
@@ -113,4 +119,5 @@ def test_plugins(glances_webserver, glances_homepage):
         "processcount",
         "processlist",
     ]:
-        assert glances_homepage.find_element(By.ID, plugin) is not None
+        if glances_homepage.find_element(By.ID, plugin) is None:
+            raise AssertionError(f"Plugin {plugin} element not found")
