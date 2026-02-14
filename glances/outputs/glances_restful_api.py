@@ -437,9 +437,6 @@ class GlancesRestfulApi:
         """
         refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
 
-        # Update the stat
-        self.__update_stats()
-
         # Display
         return self._templates.TemplateResponse("index.html", {"request": request, "refresh_time": refresh_time})
 
