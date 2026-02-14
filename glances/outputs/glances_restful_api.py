@@ -195,6 +195,10 @@ class GlancesRestfulApi:
         """Load the outputs section of the configuration file."""
         # Limit the number of processes to display in the WebUI
         self.url_prefix = ''
+        self.protocol = 'http'
+        self.ssl_keyfile = None
+        self.ssl_keyfile_password = None
+        self.ssl_certfile = None
         if config is not None and config.has_section('outputs'):
             # Max process to display in the WebUI
             n = config.get_value('outputs', 'max_processes_display', default=None)
@@ -209,7 +213,7 @@ class GlancesRestfulApi:
             self.ssl_keyfile_password = config.get_value('outputs', 'ssl_keyfile_password', default=None)
             self.ssl_certfile = config.get_value('outputs', 'ssl_certfile', default=None)
             self.protocol = 'https' if self.is_ssl() else 'http'
-            logger.debug(f"Protocol for Resful API and WebUI: {self.protocol}")
+        logger.debug(f"Protocol for Resful API and WebUI: {self.protocol}")
 
     def is_ssl(self):
         """Return true if the Glances server use SSL."""
@@ -1123,5 +1127,7 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(process_stats)
 
+
+# End of GlancesRestfulApi class
 
 # End of GlancesRestfulApi class

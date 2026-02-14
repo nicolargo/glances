@@ -279,9 +279,9 @@ class TestGlancesGrabSensors:
             sensor = GlancesGrabSensors(sensor_def)
             # init may be True or False depending on hardware
             assert hasattr(sensor, 'init')
-        except Exception:
+        except Exception as e:
             # May fail on systems without temperature sensors
-            pass
+            print(f"Sensor init failed: {e}")
 
     def test_fan_speed_sensor_init(self):
         """Test fan speed sensor initialization."""
@@ -289,9 +289,9 @@ class TestGlancesGrabSensors:
         try:
             sensor = GlancesGrabSensors(sensor_def)
             assert hasattr(sensor, 'init')
-        except Exception:
+        except Exception as e:
             # May fail on systems without fan sensors
-            pass
+            print(f"Sensor init failed: {e}")
 
     def test_sensor_update_returns_list(self):
         """Test that sensor update returns a list."""
@@ -301,9 +301,9 @@ class TestGlancesGrabSensors:
             if sensor.init:
                 result = sensor.update()
                 assert isinstance(result, list)
-        except Exception:
+        except Exception as e:
             # May fail on systems without sensors
-            pass
+            print(f"Sensor init failed: {e}")
 
 
 class TestSensorsPluginAlerts:
@@ -315,7 +315,7 @@ class TestSensorsPluginAlerts:
         sensors_plugin.update_views()
         views = sensors_plugin.get_views()
         stats = sensors_plugin.get_raw()
-        
+
         for sensor in stats:
             label = sensor['label']
             if label in views and 'value' in views[label]:

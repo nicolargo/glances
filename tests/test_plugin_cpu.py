@@ -217,9 +217,18 @@ class TestCpuPluginAlerts:
         """Test that get_alert returns a valid status."""
         cpu_plugin.update()
         alert = cpu_plugin.get_alert(50, minimum=0, maximum=100, header='total')
-        valid_statuses = ['OK', 'OK_LOG', 'CAREFUL', 'CAREFUL_LOG', 
-                         'WARNING', 'WARNING_LOG', 'CRITICAL', 'CRITICAL_LOG', 
-                         'DEFAULT', 'MAX']
+        valid_statuses = [
+            'OK',
+            'OK_LOG',
+            'CAREFUL',
+            'CAREFUL_LOG',
+            'WARNING',
+            'WARNING_LOG',
+            'CRITICAL',
+            'CRITICAL_LOG',
+            'DEFAULT',
+            'MAX',
+        ]
         assert any(alert.startswith(status) for status in valid_statuses)
 
     def test_alert_levels(self, cpu_plugin):
