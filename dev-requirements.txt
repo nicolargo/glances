@@ -221,7 +221,7 @@ packaging==26.0
     #   webdriver-manager
 peewee==3.19.0
     # via semgrep
-pillow==12.1.0
+pillow==12.1.1
     # via matplotlib
 platformdirs==4.5.1
     # via virtualenv
