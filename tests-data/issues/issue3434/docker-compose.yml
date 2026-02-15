@@ -1,7 +1,7 @@
 services:
   glances:
     container_name: glances
-    image: nicolargo/glances:latest
+    image: glances:local-alpine-minimal
     restart: always
     ports:
       - "61208:61208"

@@ -42,7 +42,7 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.middleware.gzip import GZipMiddleware
     from fastapi.responses import HTMLResponse, JSONResponse
-    from fastapi.security import HTTPAuthorizationCredentials, HTTPBasic, HTTPBasicCredentials, HTTPBearer
+    from fastapi.security import HTTPBasic, HTTPBasicCredentials
     from fastapi.staticfiles import StaticFiles
     from fastapi.templating import Jinja2Templates
 except ImportError as e:
@@ -60,7 +60,6 @@ import threading
 import time
 
 security = HTTPBasic(auto_error=False)
-bearer_security = HTTPBearer(auto_error=False)
 
 
 class GlancesJSONResponse(JSONResponse):
@@ -235,34 +234,50 @@ class GlancesRestfulApi:
 
     def authentication(
         self,
+        request: Request,
         basic_creds: Annotated[HTTPBasicCredentials | None, Depends(security)] = None,
-        bearer_creds: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_security)] = None,
     ):
         """Check if a username/password combination or JWT token is valid.
 
         Supports both HTTP Basic Auth and Bearer Token (JWT) authentication.
+        JWT Bearer tokens are checked first (manually from header) to avoid
+        HTTPBasic(auto_error=True) rejecting Bearer Authorization headers.
+        If no Bearer token is found, HTTPBasic handles the browser auth dialog.
         """
-        # Try JWT Bearer token first
-        if bearer_creds is not None and self._jwt_handler is not None:
-            username = self._jwt_handler.verify_token(bearer_creds.credentials)
-            if username is not None:
-                # Verify the username matches the configured username
-                if username == self.args.username:
+        # Try JWT Bearer token first (manually from request header)
+        if self._jwt_handler is not None and self._jwt_handler.is_available:
+            auth_header = request.headers.get("Authorization", "")
+            if auth_header.lower().startswith("bearer "):
+                token = auth_header.split(" ", 1)[1]
+                username = self._jwt_handler.verify_token(token)
+                if username is not None and username == self.args.username:
                     return username
-                logger.warning(f"JWT token contains unknown username: {username}")
+                # Invalid Bearer token - reject immediately
+                raise HTTPException(
+                    status.HTTP_401_UNAUTHORIZED,
+                    "Incorrect authentication",
+                    {"WWW-Authenticate": "Bearer"},
+                )
 
         # Fall back to Basic Auth
-        if basic_creds is not None:
-            if basic_creds.username == self.args.username:
-                if self._password.check_password(self.args.password, self._password.get_hash(basic_creds.password)):
-                    return basic_creds.username
+        # If no credentials provided (basic_creds is None), trigger browser dialog
+        if basic_creds is None:
+            # Force HTTPBasic auto_error behavior to trigger browser auth dialog
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED,
+                "Not authenticated",
+                {"WWW-Authenticate": "Basic"},
+            )
 
-        # If no valid authentication provided, return HTTP 401
-        www_authenticate = "Bearer, Basic" if self._jwt_handler and self._jwt_handler.is_available else "Basic"
+        if basic_creds.username == self.args.username:
+            if self._password.check_password(self.args.password, self._password.get_hash(basic_creds.password)):
+                return basic_creds.username
+
+        # Invalid credentials
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
             "Incorrect authentication",
-            {"WWW-Authenticate": www_authenticate},
+            {"WWW-Authenticate": "Basic"},
         )
 
     def _logo(self):
@@ -1130,6 +1145,8 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(process_stats)
 
+
+# End of GlancesRestfulApi class
 
 # End of GlancesRestfulApi class
 
