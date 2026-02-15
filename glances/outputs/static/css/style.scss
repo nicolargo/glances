@@ -165,7 +165,14 @@ body {
 // Plugins
 
 .plugin {
-    margin-bottom: 1em;
+    background-color: #282c34;
+    border-radius: 4px;
+    padding: 4px;
+    margin: 4px 2px 4px 2px;
+}
+
+.header .plugin {
+    background-color: transparent;
 }
 
 .button {
