@@ -351,13 +351,14 @@ def pretty_date(ref, now=None):
     return ''
 
 
-def urlopen_auth(url, username, password):
+def urlopen_auth(url, username, password, timeout=3):
     """Open a url with basic auth"""
     return urlopen(
         Request(
             url,
             headers={'Authorization': 'Basic ' + base64.b64encode(f'{username}:{password}'.encode()).decode()},
-        )
+        ),
+        timeout=timeout,
     )
 
 
