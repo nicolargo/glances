@@ -99,6 +99,9 @@ test: ## Run All unit tests
 test-core: ## Run Core unit tests
 	$(UV_RUN) run pytest tests/test_core.py
 
+test-plugins: ## Run Plugins unit tests
+	$(UV_RUN) run pytest tests/test_plugin_*.py
+
 test-api: ## Run API unit tests
 	$(UV_RUN) run pytest tests/test_api.py
 

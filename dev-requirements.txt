@@ -2,6 +2,8 @@
 #    uv export --no-hashes --only-dev --output-file dev-requirements.txt
 alabaster==1.0.0
     # via sphinx
+annotated-doc==0.0.4
+    # via typer
 annotated-types==0.7.0
     # via pydantic
 anyio==4.12.1
@@ -21,7 +23,7 @@ attrs==25.4.0
     #   reuse
     #   semgrep
     #   trio
-babel==2.17.0
+babel==2.18.0
     # via sphinx
 boltons==21.0.0
     # via
@@ -68,7 +70,7 @@ contourpy==1.3.2 ; python_full_version < '3.11'
     # via matplotlib
 contourpy==1.3.3 ; python_full_version >= '3.11'
     # via matplotlib
-cryptography==46.0.4
+cryptography==46.0.5
     # via pyjwt
 cycler==0.12.1
     # via matplotlib
@@ -97,7 +99,7 @@ filelock==3.20.3
     # via virtualenv
 fonttools==4.61.1
     # via matplotlib
-glom==22.1.0
+glom==25.12.0
     # via semgrep
 googleapis-common-protos==1.72.0
     # via opentelemetry-exporter-otlp-proto-http
@@ -163,7 +165,7 @@ numpy==2.2.6 ; python_full_version < '3.11'
     # via
     #   contourpy
     #   matplotlib
-numpy==2.4.1 ; python_full_version >= '3.11'
+numpy==2.4.2 ; python_full_version >= '3.11'
     # via
     #   contourpy
     #   matplotlib
@@ -262,7 +264,7 @@ pysocks==1.7.1
 pytest==9.0.2
 python-dateutil==2.9.0.post0
     # via matplotlib
-python-debian==1.0.1
+python-debian==1.1.0
     # via reuse
 python-dotenv==1.2.1
     # via
@@ -307,12 +309,12 @@ ruamel-yaml==0.19.1
     # via semgrep
 ruamel-yaml-clib==0.2.14
     # via semgrep
-ruff==0.14.14
+ruff==0.15.0
 selenium==4.40.0
 semantic-version==2.10.0
     # via semgrep
-semgrep==1.150.0
-setuptools==80.10.2
+semgrep==1.151.0
+setuptools==82.0.0
 shellingham==1.5.4
     # via typer
 six==1.17.0
@@ -352,7 +354,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 sse-starlette==3.2.0
     # via mcp
-starlette==0.50.0
+starlette==0.52.1
     # via
     #   mcp
     #   sse-starlette
@@ -372,7 +374,7 @@ trio-typing==0.10.0
     # via selenium
 trio-websocket==0.12.2
     # via selenium
-typer==0.21.1
+typer==0.21.2
     # via rstcheck
 types-certifi==2021.10.8.3
     # via selenium
@@ -395,7 +397,6 @@ typing-extensions==4.15.0
     #   semgrep
     #   starlette
     #   trio-typing
-    #   typer
     #   typing-inspection
     #   uvicorn
     #   virtualenv
