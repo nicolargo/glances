@@ -117,6 +117,9 @@ test-webui: ## Run WebUI unit tests
 test-xmlrpc: ## Run XMLRPC API unit tests
 	$(UV_RUN) run pytest tests/test_xmlrpc.py
 
+test-plugins: ## Run all plugin unit tests
+	$(UV_RUN) run pytest tests/test_plugin_*.py
+
 test-with-upgrade: venv-upgrade test ## Upgrade deps and run unit tests
 
 test-export-csv: ## Run interface tests with CSV
@@ -137,7 +140,8 @@ test-export-timescaledb: ## Run interface tests with TimescaleDB
 test-export-nats: ## Run interface tests with NATS
 	/bin/bash ./tests/test_export_nats.sh
 
-test-exports: test-export-csv test-export-json test-export-influxdb-v1 test-export-influxdb-v3 test-export-timescaledb test-export-nats ## Tests all exports
+test-exports: ## Tests all exports
+	@for f in ./tests/test_export_*.sh; do /bin/bash "$$f"; done
 
 # ===================================================================
 # Linters, profilers and cyber security
