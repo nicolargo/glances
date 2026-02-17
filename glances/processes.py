@@ -613,8 +613,12 @@ class GlancesProcesses:
         # Remove attributes set by the user in the config file (see #1524)
         sorted_attrs = [i for i in sorted_attrs if i not in self.disable_stats]
 
-        # Buid and sort the process list
+        # Build the process list
         processlist = self.build_process_list(sorted_attrs)
+
+        # Sort the processes list by the current sort_key
+        # This is needed so that cursor_position matches the displayed order (see issue #3400)
+        processlist = sort_stats(processlist, sorted_by=self.sort_key, reverse=self.sort_reverse)
 
         # Update the processcount
         self.update_processcount(processlist)
@@ -774,7 +778,6 @@ def _sort_io_counters(process, sorted_by='io_counters', sorted_by_secondary='mem
 
     :return: Sum of io_r + io_w
     """
-    logger.info(f'*** Sort by cpu_times called {type(process[sorted_by])} {process[sorted_by]}')
     return process[sorted_by][0] - process[sorted_by][2] + process[sorted_by][1] - process[sorted_by][3]
 
 
