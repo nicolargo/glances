@@ -193,6 +193,7 @@ class GlancesRestfulApi:
     def load_config(self, config):
         """Load the outputs section of the configuration file."""
         # Limit the number of processes to display in the WebUI
+        # Default values
         self.url_prefix = ''
         self.protocol = 'http'
         self.ssl_keyfile = None
@@ -451,9 +452,6 @@ class GlancesRestfulApi:
         Note: This function is only called the first time the page is loaded.
         """
         refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
-
-        # Update the stat
-        self.__update_stats()
 
         # Display
         return self._templates.TemplateResponse("index.html", {"request": request, "refresh_time": refresh_time})
