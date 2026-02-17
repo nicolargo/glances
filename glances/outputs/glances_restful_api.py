@@ -194,7 +194,12 @@ class GlancesRestfulApi:
     def load_config(self, config):
         """Load the outputs section of the configuration file."""
         # Limit the number of processes to display in the WebUI
+        # Default values
         self.url_prefix = ''
+        self.ssl_keyfile = None
+        self.ssl_certfile = None
+        self.protocol = 'http'
+
         if config is not None and config.has_section('outputs'):
             # Max process to display in the WebUI
             n = config.get_value('outputs', 'max_processes_display', default=None)
@@ -209,7 +214,7 @@ class GlancesRestfulApi:
             self.ssl_keyfile_password = config.get_value('outputs', 'ssl_keyfile_password', default=None)
             self.ssl_certfile = config.get_value('outputs', 'ssl_certfile', default=None)
             self.protocol = 'https' if self.is_ssl() else 'http'
-            logger.debug(f"Protocol for Resful API and WebUI: {self.protocol}")
+        logger.debug(f"Protocol for Resful API and WebUI: {self.protocol}")
 
     def is_ssl(self):
         """Return true if the Glances server use SSL."""
@@ -432,9 +437,6 @@ class GlancesRestfulApi:
         Note: This function is only called the first time the page is loaded.
         """
         refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
-
-        # Update the stat
-        self.__update_stats()
 
         # Display
         return self._templates.TemplateResponse("index.html", {"request": request, "refresh_time": refresh_time})
