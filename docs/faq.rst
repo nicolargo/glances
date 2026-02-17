@@ -48,6 +48,8 @@ to improve performance. More information can be found here: https://linuxatemyra
 If you want to display the "available" memory instead of the "free" memory, you can uses the
 the following configuration key in the Glances configuration file:
 
+.. code-block:: ini
+
     [mem]
     # Display available memory instead of used memory
     available=True
