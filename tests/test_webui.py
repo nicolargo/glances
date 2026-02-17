@@ -62,7 +62,8 @@ def test_screenshot(glances_webserver, glances_homepage):
     """
     Test Glances home page screenshot.
     """
-    glances_webserver is not None
+    if glances_webserver is None:
+        raise AssertionError("Glances webserver is not running")
     for resolution in SCREENSHOT_RESOLUTIONS:
         glances_homepage.set_window_size(*resolution)
         glances_homepage.save_screenshot(
@@ -74,29 +75,35 @@ def test_loading_time(glances_webserver, glances_homepage):
     """
     Test Glances home page loading time.
     """
-    assert glances_webserver is not None
+    if glances_webserver is None:
+        raise AssertionError("Glances webserver is not running")
     navigation_start = glances_homepage.execute_script("return window.performance.timing.navigationStart")
     response_start = glances_homepage.execute_script("return window.performance.timing.responseStart")
     dom_complete = glances_homepage.execute_script("return window.performance.timing.domComplete")
     backend_perf = response_start - navigation_start
     frontend_perf = dom_complete - response_start
-    assert backend_perf < 2000  # ms
-    assert frontend_perf < 2000  # ms
+    if backend_perf >= 2000:
+        raise AssertionError(f"Backend performance is too slow: {backend_perf}ms (limit is 2000ms)")
+    if frontend_perf >= 2000:
+        raise AssertionError(f"Frontend performance is too slow: {frontend_perf}ms (limit is 2000ms)")
 
 
 def test_title(glances_webserver, glances_homepage):
     """
     Test Glances home page title.
     """
-    assert glances_webserver is not None
-    assert "Glances" in glances_homepage.title
+    if glances_webserver is None:
+        raise AssertionError("Glances webserver is not running")
+    if "Glances" not in glances_homepage.title:
+        raise AssertionError(f"Expected 'Glances' in title, but got '{glances_homepage.title}'")
 
 
 def test_plugins(glances_webserver, glances_homepage):
     """
     Test Glances defaults plugins.
     """
-    assert glances_webserver is not None
+    if glances_webserver is None:
+        raise AssertionError("Glances webserver is not running")
     for plugin in [
         "system",
         "now",
@@ -113,4 +120,5 @@ def test_plugins(glances_webserver, glances_homepage):
         "processcount",
         "processlist",
     ]:
-        assert glances_homepage.find_element(By.ID, plugin) is not None
+        if glances_homepage.find_element(By.ID, plugin) is None:
+            raise AssertionError(f"Plugin element '{plugin}' not found in the DOM")
