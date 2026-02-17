@@ -3,6 +3,16 @@
 ==============================================================================
 
 ===============
+Version 4.5.0.5
+===============
+
+Bugs corrected:
+
+* Regression in the process selection with Glances 4.5.0 #3444
+* [Docker image] Basic Auth no longer works in browser after adding Bearer token support #3434
+* Error fetching ip with urlopen_auth() - extra function argument #3438
+
+===============
 Version 4.5.0.4
 ===============
 
