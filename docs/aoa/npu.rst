@@ -3,6 +3,8 @@
 NPU
 ===
 
+Note: this plugin is disable by default in glances.conf file.
+
 For the moment, only following NPU are supported on modern Linux Kernel:
 - AMD: frequency
 - INTEL: frequency, temperature

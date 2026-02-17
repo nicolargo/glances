@@ -226,9 +226,18 @@ class TestMemPluginAlerts:
         stats = mem_plugin.get_raw()
         if 'used' in stats and 'total' in stats:
             alert = mem_plugin.get_alert_log(stats['used'], maximum=stats['total'])
-            valid_statuses = ['OK', 'OK_LOG', 'CAREFUL', 'CAREFUL_LOG', 
-                             'WARNING', 'WARNING_LOG', 'CRITICAL', 'CRITICAL_LOG', 
-                             'DEFAULT', 'MAX']
+            valid_statuses = [
+                'OK',
+                'OK_LOG',
+                'CAREFUL',
+                'CAREFUL_LOG',
+                'WARNING',
+                'WARNING_LOG',
+                'CRITICAL',
+                'CRITICAL_LOG',
+                'DEFAULT',
+                'MAX',
+            ]
             assert any(alert.startswith(status) for status in valid_statuses)
 
 

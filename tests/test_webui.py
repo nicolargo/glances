@@ -28,6 +28,7 @@ import tempfile
 import time
 
 import pytest
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 
 SCREENSHOT_RESOLUTIONS = [
@@ -120,5 +121,11 @@ def test_plugins(glances_webserver, glances_homepage):
         "processcount",
         "processlist",
     ]:
-        if glances_homepage.find_element(By.ID, plugin) is None:
-            raise AssertionError(f"Plugin element '{plugin}' not found in the DOM")
+        if plugin == 'sensors':
+            try:
+                assert glances_homepage.find_element(By.ID, plugin) is not None
+            except NoSuchElementException:
+                # Sensors can be hidden on VM
+                pass
+        else:
+            assert glances_homepage.find_element(By.ID, plugin) is not None

@@ -317,7 +317,7 @@ class TestNetworkPluginAlerts:
         network_plugin.update_views()
         views = network_plugin.get_views()
         stats = network_plugin.get_raw()
-        
+
         for iface in stats:
             iface_name = iface['interface_name']
             if iface_name in views and 'bytes_recv' in views[iface_name]:

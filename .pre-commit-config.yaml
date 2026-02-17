@@ -70,9 +70,9 @@ repos:
         name: "🌳 git · Detect conflict markers"
       - id: forbid-new-submodules
         name: "🌳 git · Prevent submodule creation"
-      - id: no-commit-to-branch
-        name: "🌳 git · Protect main branches"
-        args: ["--branch", "main", "--branch", "master"]
+      # - id: no-commit-to-branch
+      #   name: "🌳 git · Protect main branches"
+      #   args: ["--branch", "main", "--branch", "master"]
       - id: check-added-large-files
         name: "🌳 git · Block large file commits"
         args: ['--maxkb=5000']

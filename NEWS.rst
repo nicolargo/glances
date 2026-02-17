@@ -2,6 +2,77 @@
                                 Glances ChangeLog
 ==============================================================================
 
+===============
+Version 4.5.0.4
+===============
+
+Continious integration:
+
+* Remove cassandra-driver dependency because it breaks build on Docker Alpine image
+
+===============
+Version 4.5.0.2
+===============
+
+Bugs corrected:
+
+* NPU plugin makes Glances 4.5.0.1 crashing on start #3425
+* Glances 4.5.0.1 not reporting docker container details #3426
+
+===============
+Version 4.5.0.1
+===============
+
+Bugs corrected:
+
+* Docker image for Glances release 4.5.0 failed to start if no [outputs] section in the glances.conf file #3424
+
+=============
+Version 4.5.0
+=============
+
+Enhancements:
+
+* NPU Monitoring #2694
+* Implement API Token for the ResfulAPI server #1995
+* ZFS Monitoring #873
+* NVME support #3355
+* Add export to DuckDB database #3205
+* Add CPU core number field to processlist #3411
+* Add support for escape ':' in alias name #3345
+
+Bugs corrected:
+
+* CPU Speed / Max Speed wrong in WebUI #3134
+* TIME+ in Web UI Shows Incorrect Large Values #3401
+* ERROR: Exception in ASGI application KeyErro used #3409
+* InfluxDB Exports for AMPs can mismatch types for result field #3419
+* Fix quicklook in case psutil.cpu_freq().max=0.0 #3379
+* Get amdgpu name from amdgpu.id #3376
+* Fetch option is not compliant with client/server mode #3352
+* Glances won't start when using snmp discovery with parameter -c #3354
+* Avoid empty space when Quicklook plugin is displayed #3413
+
+Continious integration and documentation:
+
+* Reduce code complexity #2801
+* Docker GPU not showing up #3393
+* Potential fix for code scanning alert no. 47: Clear-text logging of sensitive information #3418
+* Test: Add comprehensive unit tests for core plugins #3422
+* README: Syntax fix (missing space) #3420
+* fix(security): resolve B701 (Jinja2) and B113 (timeout) vulnerabilities #3383
+* Update license specification to SPDX format #3381
+* Make a simple Jupyter notebook for the Glances API #3350
+* Improve Docker build pipeline #3336
+
+Thanks to all contributors and bug reporters !
+
+Special thanks to:
+
+- ffleischer
+- drake7707
+- Ambika-Patidar
+
 =============
 Version 4.4.1
 =============

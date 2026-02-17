@@ -271,10 +271,7 @@ class TestLoadPluginAlerts:
         stats = load_plugin.get_raw()
         if 'cpucore' in stats and 'min15' in stats:
             # Maximum is 100 * cpucore
-            alert = load_plugin.get_alert_log(
-                stats['min15'], 
-                maximum=100 * stats['cpucore']
-            )
+            alert = load_plugin.get_alert_log(stats['min15'], maximum=100 * stats['cpucore'])
             assert alert is not None
 
 

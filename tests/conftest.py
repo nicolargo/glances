@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # Glances - An eye on your system
 #
@@ -35,6 +34,7 @@ try:
     from selenium.webdriver import ChromeOptions
     from selenium.webdriver.chrome.service import Service as ChromeService
     from webdriver_manager.chrome import ChromeDriverManager
+
     SELENIUM_AVAILABLE = True
 except ImportError:
     SELENIUM_AVAILABLE = False
@@ -90,12 +90,12 @@ def glances_webserver():
 @pytest.fixture(scope="session")
 def web_browser():
     """Init Chrome browser for WebUI testing.
-    
+
     Requires selenium and webdriver-manager packages.
     """
     if not SELENIUM_AVAILABLE:
         pytest.skip("selenium not installed - skipping WebUI tests")
-    
+
     opt = ChromeOptions()
     opt.add_argument("--headless")
     opt.add_argument("--start-maximized")

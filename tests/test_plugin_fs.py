@@ -314,8 +314,8 @@ class TestFsPluginDiskPartitions:
 
     def test_physical_partitions_subset_of_all(self, fs_plugin):
         """Test that physical partitions are a subset of all partitions."""
-        physical = set(p.mountpoint for p in fs_plugin.get_disk_partitions(fetch_all=False))
-        all_partitions = set(p.mountpoint for p in fs_plugin.get_disk_partitions(fetch_all=True))
+        physical = {p.mountpoint for p in fs_plugin.get_disk_partitions(fetch_all=False)}
+        all_partitions = {p.mountpoint for p in fs_plugin.get_disk_partitions(fetch_all=True)}
         assert physical.issubset(all_partitions)
 
 
@@ -327,8 +327,8 @@ class TestFsPluginReadOnlyHandling:
         fs_plugin.update()
         fs_plugin.update_views()
         stats = fs_plugin.get_raw()
-        views = fs_plugin.get_views()
-        
+        fs_plugin.get_views()
+
         # Read-only mounts should still have views, but decoration handling differs
         for fs in stats:
             if 'ro' in fs.get('options', '').split(','):
