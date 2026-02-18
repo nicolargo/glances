@@ -25,7 +25,6 @@ RUN apt-get update \
     smartmontools \
     net-tools \
     tzdata \
-    libvirt-clients \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -121,7 +120,9 @@ FROM release AS full
 ARG PYTHON_VERSION
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends libzmq5 \
+  && apt-get install -y --no-install-recommends \ 
+    libzmq5 \
+    libvirt-clients \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
