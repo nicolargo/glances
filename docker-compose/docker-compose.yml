@@ -28,6 +28,10 @@ services:
     volumes:
       - "/:/rootfs:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      # Uncomment for qemu/libvirt/kvm support with modular libvirt daemons
+      # - "/var/run/libvirt/virtqemud-sock:/var/run/libvirt/libvirt-sock:ro"
+      # OR monolithic libvirt daemon
+      # - "/var/run/libvirt/libvirt-sock:/var/run/libvirt/libvirt-sock:ro"
       - "/run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro"
       - "./glances.conf:/glances/conf/glances.conf"
       # Uncomment for proper distro information in upper panel.
