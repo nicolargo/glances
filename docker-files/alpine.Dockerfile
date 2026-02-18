@@ -28,8 +28,7 @@ RUN apk add --no-cache \
   wireless-tools \
   smartmontools \
   iputils \
-  tzdata \
-  libvirt-client
+  tzdata
 
 ##############################################################################
 # BUILD Stages
@@ -128,7 +127,9 @@ COPY --from=buildminimal /venv /venv
 # RELEASE: full
 FROM release AS full
 
-RUN apk add --no-cache libzmq
+RUN apk add --no-cache \
+  libzmq \
+  libvirt-client
 
 COPY --from=buildfull /venv /venv
 
