@@ -12,11 +12,13 @@
 Currently supported:
 - NVIDIA GPU (need pynvml lib)
 - AMD GPU (no lib needed)
+- Intel GPU (no lib needed)
 """
 
 from glances.globals import to_fahrenheit
 from glances.logger import logger
 from glances.plugins.gpu.cards.amd import AmdGPU
+from glances.plugins.gpu.cards.intel import IntelGPU
 from glances.plugins.gpu.cards.nvidia import NvidiaGPU
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -90,6 +92,15 @@ class GpuPlugin(GlancesPluginModel):
         # Just for test purpose (uncomment to test on computer without AMD GPU)
         # self.amd = AmdGPU(drm_root_folder='./tests-data/plugins/gpu/amd/sys/class/drm')
 
+        # Init the Intel GPU API
+        try:
+            self.intel = IntelGPU()
+        except Exception as e:
+            logger.debug(f'Intel GPU initialization error: {e}')
+            self.intel = None
+        # Just for test purpose (uncomment to test on computer without Intel GPU)
+        # self.intel = IntelGPU(drm_root_folder='./tests-data/plugins/gpu/intel/sys/class/drm')
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -97,7 +108,7 @@ class GpuPlugin(GlancesPluginModel):
         """Overwrite the exit method to close the GPU API."""
         self.nvidia.exit()
         self.amd.exit()
-
+        self.intel.exit()
         # Call the father exit method
         super().exit()
 
@@ -117,6 +128,8 @@ class GpuPlugin(GlancesPluginModel):
             stats.extend(self.nvidia.get_device_stats())
         if self.amd:
             stats.extend(self.amd.get_device_stats())
+        if self.intel:
+            stats.extend(self.intel.get_device_stats())
 
         # !!!
         # Uncomment to test on computer without Nvidia GPU
@@ -265,7 +278,7 @@ class GpuPlugin(GlancesPluginModel):
         """Build curse output for multi-GPU detailed view."""
         for gpu_stats in self.stats:
             ret.append(self.curse_new_line())
-            id_msg = '{:>7}'.format(gpu_stats['gpu_id'])
+            id_msg = '{:7}'.format(gpu_stats['gpu_id'])
             proc_msg = self._format_value(gpu_stats.get('proc'))
             mem_msg = self._format_value(gpu_stats.get('mem'))
             msg = f'{id_msg} {proc_msg} mem {mem_msg}'

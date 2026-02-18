@@ -3,14 +3,15 @@
 GPU
 ===
 
-For the moment, only following GPU are supported:
+For the moment, following GPU are supported:
 - NVidia (thanks to the `nvidia-ml-py`_ library)
 - AMD (only on Linux Operating system with kernel 5.14 or higher)
+- Intel (only on Linux Operating system)
 
 The GPU stats are shown as a percentage of value and for the configured
 refresh time. It displays:
 
-- total GPU usage
+- GPU usage or frequency
 - memory consumption
 - temperature
 
