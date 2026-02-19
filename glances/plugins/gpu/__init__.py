@@ -278,11 +278,28 @@ class GpuPlugin(GlancesPluginModel):
         """Build curse output for multi-GPU detailed view."""
         for gpu_stats in self.stats:
             ret.append(self.curse_new_line())
-            id_msg = '{:7}'.format(gpu_stats['gpu_id'])
-            proc_msg = self._format_value(gpu_stats.get('proc'))
-            mem_msg = self._format_value(gpu_stats.get('mem'))
-            msg = f'{id_msg} {proc_msg} mem {mem_msg}'
+            # id_msg = '{:7}'.format(gpu_stats['gpu_id'])
+            id_msg = '{:7}'.format(gpu_stats['name'][0:9])
+            msg = f'{id_msg}'
             ret.append(self.curse_add_line(msg))
+            if gpu_stats.get('proc') is not None:
+                proc_msg = self._format_value(gpu_stats.get('proc'))
+                msg = f' {proc_msg}'
+                ret.append(
+                    self.curse_add_line(
+                        msg,
+                        self.get_views(item=gpu_stats[self.get_key()], key='proc', option='decoration'),
+                    )
+                )
+            if gpu_stats.get('mem') is not None:
+                mem_msg = self._format_value(gpu_stats.get('mem'))
+                msg += f' mem {mem_msg}'
+                ret.append(
+                    self.curse_add_line(
+                        msg,
+                        self.get_views(item=gpu_stats[self.get_key()], key='mem', option='decoration'),
+                    )
+                )
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
