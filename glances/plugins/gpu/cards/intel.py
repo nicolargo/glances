@@ -100,18 +100,20 @@ def read_file(*path_segments: str) -> str | None:
 @functools.cache
 def get_device_name(device_folder: str) -> str:
     """Return the GPU name."""
-
-    # device_vendor = read_file(device_folder, PCI_DEVICE_VENDOR)
+    device_vendor = read_file(device_folder, PCI_DEVICE_VENDOR)
     device_id = read_file(device_folder, PCI_DEVICE_ID)
     intelgpu_ids = read_file(INTELGPU_IDS_FILE)
-    if device_id and intelgpu_ids:
-        # Strip leading "0x" and convert to lower case hexadecimal
-        device_id = device_id[2:].lower()
-        # Syntax:
-        # device_id,	revision_id,	product_name        <-- single tab after comma
-        pattern = re.compile(f'^{device_id}\\s(?P<product_name>.+)$', re.MULTILINE)
-        if match := pattern.search(intelgpu_ids):
-            return match.group('product_name').removeprefix('Intel ').removesuffix(' Graphics')
+
+    if device_vendor and device_id and intelgpu_ids:
+        device_vendor = device_vendor.strip()[2:].lower()
+        device_id = device_id.strip()[2:].lower()
+
+        pattern = rf'^{device_vendor}[ \t]+.+\n(?:(?![0-9a-f]{{4}}).+\n)*?\t{device_id}[ \t]+(.+)$'
+        match = re.search(pattern, intelgpu_ids, re.MULTILINE)
+        if match:
+            name = match.group(1)
+            bracket_match = re.search(r'\[(.+)\]', name)
+            return bracket_match.group(1) if bracket_match else name
 
     return 'Intel GPU'
 
