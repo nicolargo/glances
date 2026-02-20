@@ -311,7 +311,8 @@ class GlancesExport:
             else:
                 pre_key = ""
             # Walk through the dict
-            for key, value in sorted(stats.items()):
+            # Priviously, we sort the dict but it breaks export for some plugins (see #3449)
+            for key, value in stats.items():
                 if isinstance(value, bool):
                     value = json_dumps(value).decode()
 
