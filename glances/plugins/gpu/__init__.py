@@ -13,6 +13,10 @@ Currently supported:
 - NVIDIA GPU (need pynvml lib)
 - AMD GPU (no lib needed)
 - Intel GPU (no lib needed)
+
+Quick test:
+- Start Glances
+- In a terminal: vblank_mode=0 glxgears
 """
 
 from glances.globals import to_fahrenheit
