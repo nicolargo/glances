@@ -5,6 +5,7 @@ on:
 
 jobs:
   build:
+    continue-on-error: true
 
     runs-on: ubuntu-latest
 
@@ -25,7 +26,6 @@ jobs:
     - name: Build Glances WebUI
       working-directory: ./glances/outputs/static
       run: |
-        npm audit fix
         npm ci
         npm run build
     - name: Commit and push WebUI

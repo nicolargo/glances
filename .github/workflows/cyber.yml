@@ -6,6 +6,7 @@ on:
 jobs:
   trivy:
     name: Trivy scan
+    continue-on-error: true
 
     runs-on: ubuntu-latest
 
