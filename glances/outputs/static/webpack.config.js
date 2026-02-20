@@ -22,6 +22,9 @@ module.exports = (_, env) => {
 			clean: true,
 		},
 		devtool: isProd ? false : "eval-source-map",
+		performance: {
+			hints: false,
+		},
 		module: {
 			rules: [
 				{
