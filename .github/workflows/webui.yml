@@ -10,8 +10,9 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        # Use LTS version only
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [24.x]
 
     steps:
     - uses: actions/checkout@v5
@@ -23,9 +24,8 @@ jobs:
         cache-dependency-path: ./glances/outputs/static/package-lock.json
     - name: Build Glances WebUI
       working-directory: ./glances/outputs/static
-      # TODO: add the following line when https://github.com/nicolargo/glances/issues/2914 will be solved
-      #  npm audit fix
       run: |
+        npm audit fix
         npm ci
         npm run build
     - name: Commit and push WebUI
@@ -34,7 +34,7 @@ jobs:
         CI_COMMIT_AUTHOR: Continuous Integration
       run: |
         git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
-        git config --global user.email "username@users.noreply.github.com"
+        git config --global user.email "glances@nicolargo.com"
         git add glances/outputs/static
         /bin/bash -c "git commit -m '${{ env.CI_COMMIT_MESSAGE }}' || true"
         git push
