@@ -30,6 +30,14 @@
 		"webpack-cli": "^6.0.1",
 		"webpack-dev-server": "^5.2.3"
 	},
+	"overrides": {
+		"eslint": {
+			"ajv": "8.18.0"
+		},
+		"@typescript-eslint/typescript-estree": {
+			"minimatch": "10.2.2"
+		}
+	},
 	"scripts": {
 		"build": "webpack --progress --mode=production",
 		"start": "webpack serve --mode=development",
