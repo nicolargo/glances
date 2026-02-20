@@ -910,24 +910,30 @@ class GlancesPluginModel:
 
         The show configuration list is defined in the glances.conf file.
         It is a comma-separated list of regexp.
+
         Example for diskio:
         show=sda.*
         """
-        # TODO: possible optimisation: create a re.compile list
-        # nguuuquaaa: no need a compile list, the re module caches the compiling itself
-        return any(re.fullmatch(i, value, re.I) for i in self.get_conf_value('show', header=header))
+        return any(
+            re.fullmatch(i, value, re.I)
+            or (self.has_alias(value) is not None and re.fullmatch(i, self.has_alias(value), re.I))
+            for i in self.get_conf_value('show', header=header)
+        )
 
     def is_hide(self, value, header=""):
         """Return True if the value is in the hide configuration list.
 
         The hide configuration list is defined in the glances.conf file.
         It is a comma-separated list of regexp.
+
         Example for diskio:
         hide=sda2,sda5,loop.*
         """
-        # TODO: possible optimisation: create a re.compile list
-        # nguuuquaaa: no need a compile list, the re module caches the compiling itself
-        return any(re.fullmatch(i, value, re.I) for i in self.get_conf_value('hide', header=header))
+        return any(
+            re.fullmatch(i, value, re.I)
+            or (self.has_alias(value) is not None and re.fullmatch(i, self.has_alias(value), re.I))
+            for i in self.get_conf_value('hide', header=header)
+        )
 
     def is_display(self, value, header=""):
         """Return True if the value should be displayed in the UI"""
