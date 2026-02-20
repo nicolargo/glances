@@ -25,3 +25,11 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
       needs: [quality, test]
+    cyber:
+      if: github.ref == 'refs/heads/develop'
+      uses: ./.github/workflows/cyber.yml
+      needs: [quality, test]
+    webui:
+      if: github.ref == 'refs/heads/develop'
+      uses: ./.github/workflows/webui.yml
+      needs: [quality, test]

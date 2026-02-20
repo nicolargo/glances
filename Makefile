@@ -267,7 +267,7 @@ webui-audit: ## Audit the Web UI
 	cd $(DIR) && npm audit
 
 webui-audit-fix: webui-gen-config ## Fix audit the Web UI
-	cd $(DIR) && npm audit fix && npm ci && npm run build
+	cd $(DIR) && npm ci && npm audit fix && npm run build
 
 webui-update: webui-gen-config ## Update JS dependencies
 	cd $(DIR) && npm update --save && npm ci && npm run build
