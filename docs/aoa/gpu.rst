@@ -11,9 +11,9 @@ For the moment, following GPU are supported:
 The GPU stats are shown as a percentage of value and for the configured
 refresh time. It displays:
 
-- GPU usage or frequency
-- memory consumption
-- temperature
+- GPU usage (NVidia and AMD) or frequency (Intel)
+- memory consumption (NVidia and AMD)
+- temperature (if available)
 
 .. image:: ../_static/gpu.png
 
