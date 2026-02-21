@@ -17,6 +17,9 @@ It is also possible to use it in your own Python scripts thanks to
 the :ref:`Glances API<api>` or in any other application through
 the :ref:`RESTful API<api_restful>`.
 
+AI assistants (Claude, Cursor, …) can query Glances directly through the
+:ref:`MCP (Model Context Protocol) server<api_mcp>`.
+
 Table of Contents
 =================
 
@@ -31,6 +34,7 @@ Table of Contents
    gw/index
    api/python
    api/restful
+   api/mcp
    docker
    faq
    support
