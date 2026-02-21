@@ -24,9 +24,8 @@ from glances import __version__
 from glances.outputs.glances_restful_api import GlancesMcpAuthMiddleware
 
 try:
-    from mcp.client.sse import sse_client
-
     from mcp import ClientSession
+    from mcp.client.sse import sse_client
 
     MCP_AVAILABLE = True
 except ImportError:
