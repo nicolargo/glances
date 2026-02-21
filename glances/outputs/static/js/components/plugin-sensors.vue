@@ -1,24 +1,24 @@
 <template>
-    <section v-if="hasSensors" id="sensors" class="plugin">
-        <table class="table table-sm table-borderless">
-            <thead>
-                <tr>
-                    <th scope="col">SENSORS</th>
-                    <th scope="col" class="text-end"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="(sensor, sensorId) in sensors" :key="sensorId">
-                    <td scope="row">
-                        {{ sensor.label }}
-                    </td>
-                    <td class="text-end" :class="getDecoration(sensor.label)">
-                        {{ sensor.value }}{{ sensor.unit }}
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
+	<section v-if="hasSensors" id="sensors" class="plugin">
+		<table class="table table-sm table-borderless">
+			<thead>
+				<tr>
+					<th scope="col">SENSORS</th>
+					<th scope="col" class="text-end"></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for="(sensor, sensorId) in sensors" :key="sensorId">
+					<td scope="row">
+						{{ sensor.label }}
+					</td>
+					<td class="text-end" :class="getDecoration(sensor.label)">
+						{{ sensor.value }}{{ sensor.unit }}
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
 </template>
 
 <script>
@@ -60,9 +60,12 @@ export default {
 							sensor.type != "battery" &&
 							sensor.type != "fan_speed"
 						) {
-							// prettier-ignore
-							sensor.value = parseFloat(sensor.value * 1.8 + 32).toFixed(1);
-							sensor.unit = "F";
+							return {
+								...sensor,
+								// prettier-ignore
+								value: parseFloat(sensor.value * 1.8 + 32).toFixed(1),
+								unit: "F",
+							};
 						}
 						return sensor;
 					})
