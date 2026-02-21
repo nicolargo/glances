@@ -65,7 +65,7 @@ dev = [
 [project.optional-dependencies]
 action = ["chevron"]
 # all but not dev
-all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,raid,sensors,smart,snmp,sparklines,web,wifi]"]
+all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,mcp,raid,sensors,smart,snmp,sparklines,web,wifi]"]
 browser = ["zeroconf"]
 cloud = ["requests"]
 containers = [
@@ -108,6 +108,7 @@ web = [
   "requests",
   "uvicorn",
 ]
+mcp = ["mcp>=1.0.0"]
 wifi = ["wifi"]
 
 [project.scripts]

@@ -29,6 +29,15 @@ try:
 except ImportError:
     JWT_AVAILABLE = False
     JWTHandler = None
+# MCP import with fallback
+try:
+    from glances.outputs.glances_mcp import GlancesMcpServer
+
+    MCP_AVAILABLE = True
+except ImportError:
+    MCP_AVAILABLE = False
+    GlancesMcpServer = None
+
 from glances.plugins.plugin.dag import get_plugin_dependencies
 from glances.processes import glances_processes
 from glances.servers_list import GlancesServersList
@@ -60,6 +69,102 @@ import threading
 import time
 
 security = HTTPBasic(auto_error=False)
+
+
+class GlancesMcpAuthMiddleware:
+    """Pure ASGI middleware that applies Basic/JWT authentication to the MCP endpoint.
+
+    Unlike BaseHTTPMiddleware, this implementation does not buffer response bodies
+    and is therefore safe to use with Server-Sent Events (SSE) streaming connections.
+
+    It reuses the password and JWT handler already configured on the REST API instance,
+    so there is no separate credential store to maintain.
+    """
+
+    def __init__(self, app, api_instance, mcp_path: str = "/mcp") -> None:
+        self._app = app
+        self._api = api_instance
+        # Normalise: no trailing slash, so prefix matching is unambiguous.
+        self._mcp_path = mcp_path.rstrip("/")
+
+    async def __call__(self, scope, receive, send) -> None:
+        # Lifespan and non-HTTP scopes are forwarded unchanged.
+        if scope["type"] not in ("http", "websocket"):
+            await self._app(scope, receive, send)
+            return
+
+        path = scope.get("path", "")
+        on_mcp_path = path == self._mcp_path or path.startswith(self._mcp_path + "/")
+        if not on_mcp_path:
+            await self._app(scope, receive, send)
+            return
+
+        # If no password is configured, the MCP endpoint is open (same as REST API).
+        if not self._api._password:
+            await self._app(scope, receive, send)
+            return
+
+        # CORS preflight requests must pass through so that the CORS middleware
+        # can respond with the appropriate headers.
+        if scope.get("method") == "OPTIONS":
+            await self._app(scope, receive, send)
+            return
+
+        if self._is_authenticated(scope):
+            await self._app(scope, receive, send)
+        else:
+            await self._send_401(scope, receive, send)
+
+    def _get_auth_header(self, scope) -> str:
+        """Extract the raw Authorization header value from the ASGI scope."""
+        for name, value in scope.get("headers", []):
+            if name.lower() == b"authorization":
+                return value.decode("utf-8", errors="replace")
+        return ""
+
+    def _is_authenticated(self, scope) -> bool:
+        """Return True if the request carries valid Basic or Bearer credentials."""
+        import base64
+
+        auth = self._get_auth_header(scope)
+
+        # JWT Bearer token (checked first, as in the REST API handler).
+        if self._api._jwt_handler is not None and auth.lower().startswith("bearer "):
+            token = auth.split(" ", 1)[1]
+            username = self._api._jwt_handler.verify_token(token)
+            return username == self._api.args.username
+
+        # HTTP Basic Auth.
+        if auth.lower().startswith("basic "):
+            try:
+                decoded = base64.b64decode(auth[6:]).decode("utf-8")
+                username, _, password = decoded.partition(":")
+                if username == self._api.args.username:
+                    return self._api._password.check_password(
+                        self._api.args.password,
+                        self._api._password.get_hash(password),
+                    )
+            except Exception:
+                pass
+
+        return False
+
+    @staticmethod
+    async def _send_401(scope, receive, send) -> None:
+        """Send an HTTP 401 response directly through the ASGI interface."""
+        body = b"Not authenticated"
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 401,
+                "headers": [
+                    (b"www-authenticate", b"Basic"),
+                    (b"content-type", b"text/plain; charset=utf-8"),
+                    (b"content-length", str(len(body)).encode()),
+                ],
+            }
+        )
+        await send({"type": "http.response.body", "body": body})
 
 
 class GlancesJSONResponse(JSONResponse):
@@ -182,6 +287,40 @@ class GlancesRestfulApi:
             self._app.include_router(self._token_router())
         self._app.include_router(self._router())
 
+        # MCP server (optional).
+        # Activated when either glances.conf [outputs] enable_mcp = true
+        # or the --enable-mcp CLI flag is passed.
+        # The CLI --mcp-path overrides the config file value when provided.
+        if getattr(self.args, 'enable_mcp', False):
+            self.mcp_enabled = True
+        if getattr(self.args, 'mcp_path', None):
+            self.mcp_path = self.args.mcp_path
+            if not self.mcp_path.startswith('/'):
+                self.mcp_path = '/' + self.mcp_path
+        self._mcp_server = None
+        if MCP_AVAILABLE and self.mcp_enabled:
+            self._mcp_server = GlancesMcpServer(stats=None, args=self.args, config=self.config)
+            full_mcp_path = self.url_prefix + self.mcp_path
+            # Auth middleware must be outermost (added last) so it intercepts requests
+            # before they reach the MCP sub-application.  It is a pure ASGI middleware
+            # so it does not buffer the response body and is safe with SSE streams.
+            if self.args.password:
+                self._app.add_middleware(
+                    GlancesMcpAuthMiddleware,
+                    api_instance=self,
+                    mcp_path=full_mcp_path,
+                )
+            self._app.mount(
+                full_mcp_path,
+                self._mcp_server.get_asgi_app(mount_path=full_mcp_path),
+            )
+            bindmsg = f'Glances MCP server started on {self.protocol}://{self.args.bind_address}:{self.args.port}{full_mcp_path}'
+            logger.info(bindmsg)
+            print(bindmsg)
+        elif self.mcp_enabled and not MCP_AVAILABLE:
+            logger.warning("MCP server is enabled in config but the 'mcp' package is not installed.")
+            logger.warning("Install it with: pip install 'glances[mcp]'")
+
         # Enable auto discovering of the service
         self.autodiscover_client = None
         if not self.args.disable_autodiscover:
@@ -199,6 +338,8 @@ class GlancesRestfulApi:
         self.ssl_keyfile = None
         self.ssl_keyfile_password = None
         self.ssl_certfile = None
+        self.mcp_enabled = False
+        self.mcp_path = '/mcp'
         if config is not None and config.has_section('outputs'):
             # Max process to display in the WebUI
             n = config.get_value('outputs', 'max_processes_display', default=None)
@@ -213,7 +354,13 @@ class GlancesRestfulApi:
             self.ssl_keyfile_password = config.get_value('outputs', 'ssl_keyfile_password', default=None)
             self.ssl_certfile = config.get_value('outputs', 'ssl_certfile', default=None)
             self.protocol = 'https' if self.is_ssl() else 'http'
+            # MCP server
+            self.mcp_enabled = config.get_bool_value('outputs', 'enable_mcp', default=False)
+            self.mcp_path = config.get_value('outputs', 'mcp_path', default='/mcp')
+            if not self.mcp_path.startswith('/'):
+                self.mcp_path = '/' + self.mcp_path
         logger.debug(f"Protocol for Resful API and WebUI: {self.protocol}")
+        logger.debug(f"MCP server enabled: {self.mcp_enabled} (path: {self.url_prefix + self.mcp_path})")
 
     def is_ssl(self):
         """Return true if the Glances server use SSL."""
@@ -403,6 +550,10 @@ class GlancesRestfulApi:
         """Start the bottle."""
         # Init stats
         self.stats = stats
+
+        # Propagate stats to the MCP server (was None at construction time)
+        if self._mcp_server is not None:
+            self._mcp_server.set_stats(self.stats)
 
         # Init plugin list
         self.plugins_list = self.stats.getPluginsList()
