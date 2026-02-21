@@ -117,7 +117,83 @@ async def demo():
 asyncio.run(demo())
 ```
 
-### 4. Connect Claude Desktop
+### 4. Connect Claude CLI (Linux)
+
+Add the Glances MCP server with:
+
+```bash
+claude mcp add --transport sse glances http://localhost:61208/mcp/sse
+```
+
+Then verify that the server is recognised:
+
+```bash
+claude mcp list
+# glances: http://localhost:61208/mcp/sse
+```
+
+Once configured, start a Claude CLI session and try:
+
+- *"Is my system healthy ?"
+
+It will return:
+
+```markdown
+Here's your system health summary:
+
+  CPU — Good
+
+  - 6% total usage, load average 0.88 (on 16 cores) — very light
+
+  Memory — Warning
+
+  - RAM: 76.8% used (12.6 GB / 16.4 GB)
+  - Swap: 95.9% used (3.9 GB / 4.0 GB) — critical, nearly exhausted
+
+  Disk — Good
+
+  - Root (/): 40.2% used, 530 GB free
+
+  Temperatures — Good
+
+  ┌────────────┬──────┐
+  │   Sensor   │ Temp │
+  ├────────────┼──────┤
+  │ CPU        │ 54°C │
+  ├────────────┼──────┤
+  │ HDD        │ 40°C │
+  ├────────────┼──────┤
+  │ NVMe       │ 36°C │
+  ├────────────┼──────┤
+  │ RAM        │ 41°C │
+  ├────────────┼──────┤
+  │ GPU (i915) │ 49°C │
+  └────────────┴──────┘
+
+  - CPU Fan: 2992 RPM, Video Fan: 2822 RPM — both spinning normally
+
+  Battery — Good
+
+  - 96%, currently charging
+
+  Alerts — None active
+
+  ---
+  Verdict: mostly healthy, but swap is nearly full. Your system is swapping heavily (12.7 GB
+  swapped out), which suggests RAM pressure. You may want to check for memory-hungry processes
+   and consider killing or restarting any you don't need.
+```
+
+- *"What is the current CPU usage on my machine ?"*
+- *"Are there any active alerts ?"*
+- *"Show me the top 5 processes by CPU."*
+- *"How is my disk space looking ?"*
+
+> If Glances requires authentication, add a Bearer token or Basic Auth header
+> via the `headers` key in `settings.json` (see the authentication section
+> below).
+
+### 5. Connect Claude Desktop
 
 Add to `claude_desktop_config.json`
 (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS,
