@@ -356,8 +356,14 @@ generate-ssl: ## Generate local and sel signed SSL certificates for dev (need mk
 run-webserver: ## Start Glances in Web server mode
 	$(UV_RUN) run python -m glances -C $(CONF) -w
 
+run-webserver-mcp: ## Start Glances in Web server mode with MCP
+	$(UV_RUN) run python -m glances -C $(CONF) -w --enable-mcp
+	
 run-webserver-local-conf: ## Start Glances in Web server mode with the system conf file
 	$(UV_RUN) run python -m glances -w
+
+run-webserver-mcp-local-conf: ## Start Glances in Web server mode with MCP and the system conf file
+	$(UV_RUN) run python -m glances -w --enable-mcp
 
 run-webserver-local-conf-hide-public: ## Start Glances in Web server mode with the system conf file and hide public info
 	$(UV_RUN) run python -m glances -w --hide-public-info
