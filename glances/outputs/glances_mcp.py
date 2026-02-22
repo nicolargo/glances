@@ -61,14 +61,14 @@ class GlancesMcpServer:
             args:  Parsed command-line arguments (argparse.Namespace).
             config: Glances configuration object (GlancesConfig).
         """
+        self._stats = stats
+        self._args = args
+        self._config = config
+
         if not MCP_AVAILABLE:
             raise RuntimeError(
                 "The 'mcp' package is required for MCP support. Install it with: pip install 'glances[mcp]'"
             )
-
-        self._stats = stats
-        self._args = args
-        self._config = config
 
         self._mcp = FastMCP(
             "Glances",

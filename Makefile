@@ -80,7 +80,7 @@ requirements-all: ## Generate the all-requirements.txt files (all dependencies)
 	$(UV_RUN) export --no-emit-workspace --no-hashes --all-extras --no-group dev --output-file all-requirements.txt
 
 requirements-docker: ## Generate the docker-requirements.txt files (Docker specific dependencies)
-	$(UV_RUN) export --no-emit-workspace --no-hashes --no-group dev --extra containers --extra web --output-file docker-requirements.txt
+	$(UV_RUN) export --no-emit-workspace --no-hashes --no-group dev --extra containers --extra web --extra mcp --output-file docker-requirements.txt
 
 requirements-dev: ## Generate the dev-requirements.txt files (dev dependencies)
 	$(UV_RUN) export --no-hashes --only-dev --output-file dev-requirements.txt
@@ -358,7 +358,7 @@ run-webserver: ## Start Glances in Web server mode
 
 run-webserver-mcp: ## Start Glances in Web server mode with MCP
 	$(UV_RUN) run python -m glances -C $(CONF) -w --enable-mcp
-	
+
 run-webserver-local-conf: ## Start Glances in Web server mode with the system conf file
 	$(UV_RUN) run python -m glances -w
 
