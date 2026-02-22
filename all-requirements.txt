@@ -31,7 +31,7 @@ cffi==2.0.0 ; implementation_name == 'pypy' or platform_python_implementation !=
     # via
     #   cryptography
     #   pyzmq
-chardet==6.0.0
+chardet==6.0.0.post1
     # via pysmart
 charset-normalizer==3.4.4
     # via requests
