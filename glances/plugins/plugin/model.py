@@ -1196,6 +1196,9 @@ class GlancesPluginModel:
             # 2) compute the _rate_per_sec
             # 3) set the original field to the delta between the current and the previous value
             for field in self.fields_description:
+                # Check if the field exist (avoid error on some OS where some fields are not available)
+                if field not in stat:
+                    continue
                 # For all the field with the rate=True flag
                 # if 'rate' in self.fields_description[field] and self.fields_description[field]['rate'] is True:
                 if self.fields_description[field].get('rate', False):

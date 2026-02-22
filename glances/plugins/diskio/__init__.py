@@ -128,12 +128,12 @@ class DiskioPlugin(GlancesPluginModel):
         # Compute read/write latency if we have the rate stats
         for stat in stats:
             # Compute read/write latency if we have the rate stats
-            if stat.get("read_count_rate_per_sec", 0) > 0:
+            if 'read_time_rate_per_sec' in stat and stat.get("read_count_rate_per_sec", 0) > 0:
                 stat["read_latency"] = int(stat["read_time_rate_per_sec"] / stat["read_count_rate_per_sec"])
             else:
                 stat["read_latency"] = 0
 
-            if stat.get("write_count_rate_per_sec", 0) > 0:
+            if 'write_time_rate_per_sec' in stat and stat.get("write_count_rate_per_sec", 0) > 0:
                 stat["write_latency"] = int(stat["write_time_rate_per_sec"] / stat["write_count_rate_per_sec"])
             else:
                 stat["write_latency"] = 0
