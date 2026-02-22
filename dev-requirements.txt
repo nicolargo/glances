@@ -12,8 +12,6 @@ anyio==4.12.1
     #   mcp
     #   sse-starlette
     #   starlette
-async-generator==1.10
-    # via trio-typing
 attrs==25.4.0
     # via
     #   glom
@@ -93,9 +91,9 @@ exceptiongroup==1.2.2
     #   semgrep
     #   trio
     #   trio-websocket
-face==24.0.0
+face==26.0.0
     # via glom
-filelock==3.20.3
+filelock==3.24.3
     # via virtualenv
 fonttools==4.61.1
     # via matplotlib
@@ -126,9 +124,7 @@ idna==3.11
 imagesize==1.4.1
     # via sphinx
 importlib-metadata==8.7.1
-    # via
-    #   opentelemetry-api
-    #   trio-typing
+    # via opentelemetry-api
 iniconfig==2.3.0
     # via pytest
 jinja2==3.1.6
@@ -155,8 +151,6 @@ mcp==1.23.3
 mdurl==0.1.2
     # via markdown-it-py
 memory-profiler==0.61.0
-mypy-extensions==1.1.0
-    # via trio-typing
 nodeenv==1.10.0
     # via
     #   pre-commit
@@ -217,13 +211,12 @@ packaging==26.0
     #   requirements-parser
     #   semgrep
     #   sphinx
-    #   trio-typing
     #   webdriver-manager
 peewee==3.19.0
     # via semgrep
-pillow==12.1.0
+pillow==12.1.1
     # via matplotlib
-platformdirs==4.5.1
+platformdirs==4.9.2
     # via virtualenv
 pluggy==1.6.0
     # via pytest
@@ -244,7 +237,7 @@ pydantic==2.12.5
     #   rstcheck-core
 pydantic-core==2.41.5
     # via pydantic
-pydantic-settings==2.12.0
+pydantic-settings==2.13.1
     # via mcp
 pygments==2.19.2
     # via
@@ -309,11 +302,11 @@ ruamel-yaml==0.19.1
     # via semgrep
 ruamel-yaml-clib==0.2.14
     # via semgrep
-ruff==0.15.0
-selenium==4.40.0
+ruff==0.15.2
+selenium==4.41.0
 semantic-version==2.10.0
     # via semgrep
-semgrep==1.151.0
+semgrep==1.152.0
 setuptools==82.0.0
 shellingham==1.5.4
     # via typer
@@ -365,21 +358,14 @@ tomli==2.0.2
     #   sphinx
 tomlkit==0.14.0
     # via reuse
-trio==0.32.0
+trio==0.33.0
     # via
     #   selenium
-    #   trio-typing
     #   trio-websocket
-trio-typing==0.10.0
-    # via selenium
 trio-websocket==0.12.2
     # via selenium
-typer==0.21.2
+typer==0.23.1
     # via rstcheck
-types-certifi==2021.10.8.3
-    # via selenium
-types-urllib3==1.26.25.14
-    # via selenium
 typing-extensions==4.15.0
     # via
     #   anyio
@@ -396,7 +382,6 @@ typing-extensions==4.15.0
     #   selenium
     #   semgrep
     #   starlette
-    #   trio-typing
     #   typing-inspection
     #   uvicorn
     #   virtualenv
@@ -410,9 +395,9 @@ urllib3==2.6.3
     #   requests
     #   selenium
     #   semgrep
-uvicorn==0.40.0 ; sys_platform != 'emscripten'
+uvicorn==0.41.0 ; sys_platform != 'emscripten'
     # via mcp
-virtualenv==20.36.1
+virtualenv==20.38.0
     # via pre-commit
 wcmatch==8.5.2
     # via semgrep

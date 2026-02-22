@@ -42,9 +42,9 @@ services:
       - /tmp
 
     environment:
+      - GLANCES_OPT=-C /glances/conf/glances.conf -w --enable-mcp --enable-plugin smart
       # Please set to your local timezone (or use local ${TZ} environment variable if set on your host)
       - TZ=Europe/Paris
-      - GLANCES_OPT=-C /glances/conf/glances.conf -w --enable-plugin smart
       - PYTHONPYCACHEPREFIX=/tmp/py_caches
 
 #     # Uncomment for GPU compatibility (Nvidia) inside the container
