@@ -184,7 +184,9 @@ class GlancesUvicornServer(uvicorn.Server):
 
     @contextlib.contextmanager
     def run_in_thread(self, timeout=3):
-        thread = threading.Thread(target=self.run)
+        # daemon=True: if the main thread exits the process won't be kept alive
+        # by a uvicorn thread blocked on a persistent connection (e.g. MCP/SSE).
+        thread = threading.Thread(target=self.run, daemon=True)
         thread.start()
         try:
             chrono = Timer(timeout)
@@ -199,7 +201,22 @@ class GlancesUvicornServer(uvicorn.Server):
             yield
         finally:
             self.should_exit = True
-            thread.join()
+            # Give uvicorn a brief window for graceful shutdown.
+            # Extra CTRL+C signals pressed during shutdown are absorbed so that
+            # force_exit is always reached when there are lingering connections
+            # (e.g. a MCP client holding an SSE connection open).
+            # daemon=True above guarantees the process exits even if the thread
+            # hasn't fully stopped by the time we leave this block.
+            try:
+                thread.join(timeout=3)
+            except KeyboardInterrupt:
+                pass
+            if thread.is_alive():
+                self.force_exit = True
+                try:
+                    thread.join(timeout=2)
+                except KeyboardInterrupt:
+                    pass
 
 
 class GlancesRestfulApi:
@@ -1294,9 +1311,5 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(process_stats)
 
-
-# End of GlancesRestfulApi class
-
-# End of GlancesRestfulApi class
 
 # End of GlancesRestfulApi class
