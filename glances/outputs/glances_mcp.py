@@ -9,6 +9,7 @@
 """MCP (Model Context Protocol) server interface class."""
 
 import json
+import logging
 
 from glances.globals import json_dumps
 from glances.logger import logger
@@ -17,6 +18,7 @@ try:
     from mcp.server.fastmcp import FastMCP
 
     MCP_AVAILABLE = True
+    logging.getLogger("mcp").setLevel(logging.WARNING)
 except ImportError:
     MCP_AVAILABLE = False
     FastMCP = None
@@ -112,7 +114,7 @@ class GlancesMcpServer:
         Returns:
             A Starlette ASGI application.
         """
-        logger.info(f"MCP server (SSE transport) mounted at {mount_path}")
+        logger.debug(f"MCP server (SSE transport) mounted at {mount_path}")
         # Call sse_app() without mount_path so FastMCP keeps its default '/'.
         # Starlette will prepend scope['root_path'] (= mount_path) at runtime,
         # producing the correct absolute endpoint URL for clients.
