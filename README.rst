@@ -75,8 +75,8 @@ Web interface or API (XML-RPC and RESTful).
 Stats can also be exported to files or external time/value databases, CSV or direct
 output to STDOUT.
 
-AI assistants (Claude, Cursor, …) can query Glances directly through the built-in
-`MCP (Model Context Protocol)`_ server.
+AI assistants (Claude, Cursor, …) can query Glances directly through the built-in 
+MCP server (available in Glances 4.5.1 and higher).
 
 Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can
