@@ -471,7 +471,7 @@ class ContainersPlugin(GlancesPluginModel):
 
     def build_net_line(self, args):
         def build_with_this_args(ret, container):
-            if args.byte:
+            if args and args.byte:
                 # Bytes per second (for dummy)
                 to_bit = 1
                 unit = ''

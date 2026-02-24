@@ -262,18 +262,21 @@ class TestDiskioPluginMsgCurse:
     def test_msg_curse_returns_list(self, diskio_plugin):
         """Test that msg_curse returns a list."""
         diskio_plugin.update()
+        diskio_plugin.update_views()
         msg = diskio_plugin.msg_curse(max_width=80)
         assert isinstance(msg, list)
 
     def test_msg_curse_empty_without_max_width(self, diskio_plugin):
         """Test that msg_curse returns empty without max_width."""
         diskio_plugin.update()
+        diskio_plugin.update_views()
         msg = diskio_plugin.msg_curse()
         assert isinstance(msg, list)
 
     def test_msg_curse_with_max_width(self, diskio_plugin):
         """Test that msg_curse works with max_width."""
         diskio_plugin.update()
+        diskio_plugin.update_views()
         msg = diskio_plugin.msg_curse(max_width=80)
         assert isinstance(msg, list)
 
@@ -284,12 +287,14 @@ class TestDiskioPluginSorting:
     def test_sorted_stats_returns_list(self, diskio_plugin):
         """Test that sorted_stats returns a list."""
         diskio_plugin.update()
+        diskio_plugin.update_views()
         sorted_stats = diskio_plugin.sorted_stats()
         assert isinstance(sorted_stats, list)
 
     def test_sorted_stats_preserves_count(self, diskio_plugin):
         """Test that sorted_stats preserves disk count."""
         diskio_plugin.update()
+        diskio_plugin.update_views()
         raw_count = len(diskio_plugin.get_raw())
         sorted_count = len(diskio_plugin.sorted_stats())
         assert raw_count == sorted_count
@@ -301,12 +306,14 @@ class TestDiskioPluginExport:
     def test_get_export_returns_list(self, diskio_plugin):
         """Test that get_export returns a list."""
         diskio_plugin.update()
+        diskio_plugin.update_views()
         export = diskio_plugin.get_export()
         assert isinstance(export, list)
 
     def test_export_equals_raw(self, diskio_plugin):
         """Test that export equals raw stats by default."""
         diskio_plugin.update()
+        diskio_plugin.update_views()
         assert diskio_plugin.get_export() == diskio_plugin.get_raw()
 
 
@@ -316,6 +323,7 @@ class TestDiskioPluginAlerts:
     def test_views_have_decoration(self, diskio_plugin):
         """Test that disk views have decoration after update."""
         diskio_plugin.update()
+        diskio_plugin.update_views()
         time.sleep(0.1)
         diskio_plugin.update()
         diskio_plugin.update_views()
@@ -334,6 +342,7 @@ class TestDiskioPluginAlias:
     def test_alias_field_may_be_present(self, diskio_plugin):
         """Test that alias field may be present for disks."""
         diskio_plugin.update()
+        diskio_plugin.update_views()
         stats = diskio_plugin.get_raw()
         # Alias is optional, so just verify the field handling works
         for disk in stats:
