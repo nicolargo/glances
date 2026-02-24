@@ -100,7 +100,7 @@ class ProcesscountPlugin(GlancesPluginModel):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if args.disable_process:
+        if args and args.disable_process:
             msg = "PROCESSES DISABLED (press 'z' to display)"
             ret.append(self.curse_add_line(msg))
             return ret
