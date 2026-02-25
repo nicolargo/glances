@@ -227,12 +227,12 @@ class DiskioPlugin(GlancesPluginModel):
         # Header
         msg = '{:{width}}'.format('DISK I/O', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        if args.diskio_iops:
+        if args and args.diskio_iops:
             msg = '{:>8}'.format('IOR/s')
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format('IOW/s')
             ret.append(self.curse_add_line(msg))
-        elif args.diskio_latency:
+        elif args and args.diskio_latency:
             msg = '{:>8}'.format('ms/opR')
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format('ms/opW')
@@ -256,7 +256,7 @@ class DiskioPlugin(GlancesPluginModel):
                 disk_name = disk_name[:name_max_width] + '_'
             msg = '{:{width}}'.format(nativestr(disk_name), width=name_max_width + 1)
             ret.append(self.curse_add_line(msg))
-            if args.diskio_iops:
+            if args and args.diskio_iops:
                 # count
                 txps = self.auto_unit(i.get('read_count_rate_per_sec', None))
                 rxps = self.auto_unit(i.get('write_count_rate_per_sec', None))
@@ -272,7 +272,7 @@ class DiskioPlugin(GlancesPluginModel):
                         msg, self.get_views(item=i[self.get_key()], key='write_count', option='decoration')
                     )
                 )
-            elif args.diskio_latency:
+            elif args and args.diskio_latency:
                 # latency (mean time spent reading/writing per operation)
                 txps = self.auto_unit(i.get('read_latency', None), low_precision=True)
                 rxps = self.auto_unit(i.get('write_latency', None), low_precision=True)

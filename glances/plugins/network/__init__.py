@@ -255,9 +255,9 @@ class NetworkPlugin(GlancesPluginModel):
         # Header
         msg = '{:{width}}'.format('NETWORK', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        if args.network_cumul:
+        if args and args.network_cumul:
             # Cumulative stats
-            if args.network_sum:
+            if args and args.network_sum:
                 # Sum stats
                 msg = '{:>14}'.format('Rx+Tx')
                 ret.append(self.curse_add_line(msg))
@@ -269,7 +269,7 @@ class NetworkPlugin(GlancesPluginModel):
                 ret.append(self.curse_add_line(msg))
         else:
             # Bitrate stats
-            if args.network_sum:
+            if args and args.network_sum:
                 # Sum stats
                 msg = '{:>14}'.format('Rx+Tx/s')
                 ret.append(self.curse_add_line(msg))
@@ -296,7 +296,7 @@ class NetworkPlugin(GlancesPluginModel):
                 # Cut interface name if it is too long
                 if_name = '_' + if_name[-name_max_width + 1 :]
 
-            if args.byte:
+            if args and args.byte:
                 # Bytes per second (for dummy)
                 to_bit = 1
                 unit = ''
@@ -305,7 +305,7 @@ class NetworkPlugin(GlancesPluginModel):
                 to_bit = 8
                 unit = 'b'
 
-            if args.network_cumul and i.get('bytes_recv') is not None and i.get('bytes_sent') is not None:
+            if args and args.network_cumul and i.get('bytes_recv') is not None and i.get('bytes_sent') is not None:
                 rx = self.auto_unit(int(i['bytes_recv'] * to_bit)) + unit
                 tx = self.auto_unit(int(i['bytes_sent'] * to_bit)) + unit
                 ax = self.auto_unit(int(i['bytes_all'] * to_bit)) + unit
@@ -322,7 +322,7 @@ class NetworkPlugin(GlancesPluginModel):
             ret.append(self.curse_new_line())
             msg = '{:{width}}'.format(if_name, width=name_max_width)
             ret.append(self.curse_add_line(msg))
-            if args.network_sum:
+            if args and args.network_sum:
                 msg = f'{ax:>14}'
                 ret.append(self.curse_add_line(msg))
             else:

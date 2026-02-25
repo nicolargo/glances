@@ -268,9 +268,9 @@ class GpuPlugin(GlancesPluginModel):
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line('{:13}'.format('temp mean:' if is_multi else 'temperature:')))
         mean_temp = self._get_mean('temperature')
-        if mean_temp is not None and args.fahrenheit:
+        if mean_temp is not None and args and args.fahrenheit:
             mean_temp = to_fahrenheit(mean_temp)
-        unit = 'F' if args.fahrenheit else 'C'
+        unit = 'F' if args and args.fahrenheit else 'C'
         ret.append(
             self.curse_add_line(
                 self._format_value(mean_temp, unit),

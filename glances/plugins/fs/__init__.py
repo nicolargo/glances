@@ -294,7 +294,7 @@ class FsPlugin(GlancesPluginModel):
         # Header
         msg = '{:{width}}'.format('FILE SYS', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        if args.fs_free_space:
+        if args and args.fs_free_space:
             msg = '{:>8}'.format('Free')
         else:
             msg = '{:>8}'.format('Used')
@@ -314,7 +314,7 @@ class FsPlugin(GlancesPluginModel):
                 mnt_point = mnt_point[:name_max_width] + '_'
             msg = '{:{width}}'.format(nativestr(mnt_point), width=name_max_width + 1)
             ret.append(self.curse_add_line(msg))
-            if args.fs_free_space:
+            if args and args.fs_free_space:
                 msg = '{:>7}'.format(self.auto_unit(i['free']))
             else:
                 msg = '{:>7}'.format(self.auto_unit(i['used']))
