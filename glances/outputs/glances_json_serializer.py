@@ -9,7 +9,7 @@
 """JSON serialization utilities for Glances output layer."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from glances.globals import json_dumps, json_loads
 from glances.logger import logger
@@ -22,7 +22,7 @@ class PluginSerializationError:
         self.plugin_name = plugin_name
         self.error_message = error_message
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "error": True,
             "plugin": self.plugin_name,
@@ -69,9 +69,7 @@ class GlancesJSONSerializer:
 
         return str(value)
 
-    def serialize_plugin_data(
-        self, plugin_name: str, raw_data: Any
-    ) -> Optional[Union[Dict[str, Any], List[Any], str]]:
+    def serialize_plugin_data(self, plugin_name: str, raw_data: Any) -> dict[str, Any] | list[Any] | str | None:
         """
         Serialize plugin data to a JSON-compatible format.
 
@@ -101,9 +99,7 @@ class GlancesJSONSerializer:
                 return PluginSerializationError(plugin_name, str(e)).to_dict()
             return None
 
-    def serialize_plugins(
-        self, stats: Any, plugin_list: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+    def serialize_plugins(self, stats: Any, plugin_list: list[str] | None = None) -> dict[str, Any]:
         """
         Serialize data from multiple plugins into a single JSON object.
 
@@ -114,8 +110,8 @@ class GlancesJSONSerializer:
         Returns:
             Dictionary containing all plugin data.
         """
-        result: Dict[str, Any] = {}
-        errors: List[Dict[str, Any]] = []
+        result: dict[str, Any] = {}
+        errors: list[dict[str, Any]] = []
 
         if plugin_list is None:
             plugin_list = stats.getPluginsList()
@@ -169,9 +165,7 @@ class GlancesJSONSerializer:
             logger.error(f"Error converting to JSON string: {e}")
             return '{"error": "Failed to serialize data"}'
 
-    def serialize_to_string(
-        self, stats: Any, plugin_list: Optional[List[str]] = None
-    ) -> str:
+    def serialize_to_string(self, stats: Any, plugin_list: list[str] | None = None) -> str:
         """
         Serialize plugins to a JSON string.
 

@@ -9,7 +9,7 @@
 """Stdout JSON interface class."""
 
 import time
-from typing import Any, List, Optional
+from typing import Any
 
 from glances.globals import printandflush
 from glances.logger import logger
@@ -22,11 +22,11 @@ class GlancesStdoutJson:
     DEFAULT_DURATION: int = 3
     FALLBACK_ERROR_JSON: str = '{"error": "Failed to serialize stats"}'
 
-    def __init__(self, config: Optional[Any] = None, args: Optional[Any] = None):
+    def __init__(self, config: Any | None = None, args: Any | None = None):
         self.config = config
         self.args = args
-        self._serializer: Optional[GlancesJSONSerializer] = None
-        self._plugins_list: List[str] = []
+        self._serializer: GlancesJSONSerializer | None = None
+        self._plugins_list: list[str] = []
 
         self._init_plugins_list()
         self._init_serializer()
@@ -42,25 +42,22 @@ class GlancesStdoutJson:
     def _init_serializer(self) -> None:
         """Initialize the JSON serializer with error handling."""
         try:
-            self._serializer = GlancesJSONSerializer(
-                include_errors=True,
-                include_metadata=False
-            )
+            self._serializer = GlancesJSONSerializer(include_errors=True, include_metadata=False)
         except Exception as e:
             logger.error(f"Failed to initialize JSON serializer: {e}")
             self._serializer = None
 
     @property
-    def plugins_list(self) -> List[str]:
+    def plugins_list(self) -> list[str]:
         """Return the list of plugins to display."""
         return self._plugins_list
 
     @property
-    def serializer(self) -> Optional[GlancesJSONSerializer]:
+    def serializer(self) -> GlancesJSONSerializer | None:
         """Return the JSON serializer instance."""
         return self._serializer
 
-    def build_list(self) -> List[str]:
+    def build_list(self) -> list[str]:
         """Return a list of plugin names from self.args.stdout_json.
 
         Returns:
@@ -76,8 +73,9 @@ class GlancesStdoutJson:
             return []
 
         if not isinstance(stdout_json_arg, str):
-            logger.warning(f"stdout_json is not a string (got {type(stdout_json_arg).__name__}), "
-                          "attempting string conversion")
+            logger.warning(
+                f"stdout_json is not a string (got {type(stdout_json_arg).__name__}), attempting string conversion"
+            )
             try:
                 stdout_json_arg = str(stdout_json_arg)
             except Exception as e:
@@ -97,11 +95,7 @@ class GlancesStdoutJson:
         pass
 
     def update(
-        self,
-        stats: Any,
-        duration: int = 3,
-        cs_status: Optional[Any] = None,
-        return_to_browser: bool = False
+        self, stats: Any, duration: int = 3, cs_status: Any | None = None, return_to_browser: bool = False
     ) -> bool:
         """Display stats in JSON format to stdout.
 
@@ -159,7 +153,7 @@ class GlancesStdoutJson:
         try:
             printandflush(json_output)
             return True
-        except (IOError, OSError) as e:
+        except OSError as e:
             logger.error(f"Failed to write JSON to stdout: {e}")
             return False
         except Exception as e:
