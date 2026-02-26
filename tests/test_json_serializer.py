@@ -39,9 +39,7 @@ def setup_mock_modules():
     if 'glances.globals' not in sys.modules:
         glances_globals = types.ModuleType('glances.globals')
         glances_globals.json_dumps = lambda data: json.dumps(data, default=str).encode('utf-8')
-        glances_globals.json_loads = lambda data: json.loads(
-            data.decode('utf-8') if isinstance(data, bytes) else data
-        )
+        glances_globals.json_loads = lambda data: json.loads(data.decode('utf-8') if isinstance(data, bytes) else data)
         sys.modules['glances.globals'] = glances_globals
 
     # Create mock logger
@@ -67,10 +65,8 @@ setup_mock_modules()
 
 # Now we can import our serializer
 # Direct exec to avoid import conflicts
-serializer_path = os.path.join(
-    os.path.dirname(__file__), '..', 'glances', 'outputs', 'glances_json_serializer.py'
-)
-with open(serializer_path, 'r') as f:
+serializer_path = os.path.join(os.path.dirname(__file__), '..', 'glances', 'outputs', 'glances_json_serializer.py')
+with open(serializer_path) as f:
     code = f.read()
     exec(compile(code, serializer_path, 'exec'), sys.modules['glances.outputs'].__dict__)
 
