@@ -6,16 +6,16 @@ repos:
         name: "🔒 security · Detect hardcoded secrets"
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.10
+    rev: v0.15.4
     hooks:
     - id: ruff-format
       name: "🐍 python · Formatter with Ruff"
       types_or: [ python, pyi ]
-      args: [ --config, './pyproject.toml' ]
+      args: [ --exit-non-zero-on-format, --target-version, py310, --config, './pyproject.toml' ]
     - id: ruff-check
       name: "🐍 python · Linter with Ruff"
       types_or: [ python, pyi ]
-      args: [ --fix, --exit-non-zero-on-fix, --config, './pyproject.toml' ]
+      args: [ --fix, --exit-non-zero-on-fix, --target-version, py310, --config, './pyproject.toml' ]
 
   # - repo: https://github.com/RobertCraigie/pyright-python
   #   rev: v1.1.391
