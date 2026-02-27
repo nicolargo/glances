@@ -105,15 +105,16 @@ def get_device_list(drm_root_folder: str) -> list[str]:
 
 
 def read_file(*path_segments: str) -> str | None:
-    """Return content of file."""
+    """Return content of file or None if not accessible."""
     path = os.path.join(*path_segments)
     if os.path.isfile(path):
-        with open(path) as f:
-            try:
+        try:
+            with open(path) as f:
                 return f.read().strip()
-            except PermissionError:
-                # Catch exception (see issue #3125)
-                return None
+        except (PermissionError, OSError):
+            # File exists but is not readable (e.g. Snap strict confinement)
+            # Graceful degradation: caller will use a default value instead
+            return None
     return None
 
 
