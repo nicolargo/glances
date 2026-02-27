@@ -51,6 +51,7 @@ apps:
       - home-glances-config
       - etc-glances-config
       - proc-sys
+      - opengl
     environment:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
