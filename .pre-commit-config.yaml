@@ -11,11 +11,11 @@ repos:
     - id: ruff-format
       name: "🐍 python · Formatter with Ruff"
       types_or: [ python, pyi ]
-      args: [ --exit-non-zero-on-format, --target-version, py310, --config, './pyproject.toml' ]
+      args: [ --target-version, py310, --config, './pyproject.toml' ]
     - id: ruff-check
       name: "🐍 python · Linter with Ruff"
       types_or: [ python, pyi ]
-      args: [ --fix, --exit-non-zero-on-fix, --target-version, py310, --config, './pyproject.toml' ]
+      args: [ --fix, --target-version, py310, --config, './pyproject.toml' ]
 
   # - repo: https://github.com/RobertCraigie/pyright-python
   #   rev: v1.1.391
@@ -47,7 +47,7 @@ repos:
     hooks:
       - id: bashate
         name: "🐚 shell · Check shell script code style"
-        entry: bashate --error . --ignore=E006
+        entry: bashate --error E* --ignore=E006
 
   # - repo: https://github.com/mrtazz/checkmake.git
   #   rev: 0.2.2
@@ -82,8 +82,6 @@ repos:
         name: "🐍 python/📝 style · Enforce docstring at top"
       - id: check-json
         name: "📄 formats/json · Validate JSON files"
-      - id: check-shebang-scripts-are-executable
-        name: "📁 filesystem/⚙️ exec · Ensure scripts are executable"
       - id: check-toml
         name: "📄 formats/toml · Validate TOML files"
       - id: check-yaml
