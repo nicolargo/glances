@@ -644,6 +644,30 @@ def exit_after(seconds, default=None):
     return decorator
 
 
+def _validate_split_esc_params(input_string, sep, maxsplit, esc):
+    """Validate split_esc parameters and return early result if possible."""
+    if not isinstance(input_string, str):
+        raise TypeError(f'must be str, not {input_string.__class__.__name__}')
+    str.split('', sep=sep, maxsplit=maxsplit)  # Use str.split to validate sep and maxsplit
+    if esc is None:
+        return input_string.split(sep=sep, maxsplit=maxsplit)
+    if not isinstance(esc, str):
+        raise TypeError(f'must be str or None, not {esc.__class__.__name__}')
+    if len(esc) == 0:
+        raise ValueError('empty escape character')
+    if len(esc) > 1:
+        raise ValueError('escape must be a single character')
+    return None
+
+
+def _skip_whitespace(input_string, i):
+    """Return the number of whitespace characters to skip starting at position i."""
+    n = 1
+    while i + n + 1 < len(input_string) and input_string[i + n : i + n + 1].isspace():
+        n += 1
+    return n
+
+
 def split_esc(input_string, sep=None, maxsplit=-1, esc='\\'):
     """
     Return a list of the substrings in the input_string, using sep as the separator char
@@ -671,19 +695,9 @@ def split_esc(input_string, sep=None, maxsplit=-1, esc='\\'):
     are not removed, which allows split_esc to be called on it again.
     """
     # Input validation
-    if not isinstance(input_string, str):
-        raise TypeError(f'must be str, not {input_string.__class__.__name__}')
-    str.split('', sep=sep, maxsplit=maxsplit)  # Use str.split to validate sep and maxsplit
-    if esc is None:
-        return input_string.split(
-            sep=sep, maxsplit=maxsplit
-        )  # Short circuit to default implementation if the escape character is None
-    if not isinstance(esc, str):
-        raise TypeError(f'must be str or None, not {esc.__class__.__name__}')
-    if len(esc) == 0:
-        raise ValueError('empty escape character')
-    if len(esc) > 1:
-        raise ValueError('escape must be a single character')
+    early_result = _validate_split_esc_params(input_string, sep, maxsplit, esc)
+    if early_result is not None:
+        return early_result
 
     # Set up a simple state machine keeping track of whether we have seen an escape character
     ret, esc_seen, i = [''], False, 0
@@ -695,9 +709,7 @@ def split_esc(input_string, sep=None, maxsplit=-1, esc='\\'):
                 i += 1
             elif sep is None and input_string[i].isspace():
                 # Consume as much whitespace as possible
-                n = 1
-                while i + n + 1 < len(input_string) and input_string[i + n : i + n + 1].isspace():
-                    n += 1
+                n = _skip_whitespace(input_string, i)
                 ret.append('')
                 i += n
             elif sep is not None and input_string[i : i + len(sep)] == sep:
