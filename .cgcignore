@@ -1,0 +1,9 @@
+/.git/
+/.venv/
+/.venv-uv/
+/docker-compose/
+/docker-files/
+/docs/
+/snap/
+/tests/
+/tests-data/
