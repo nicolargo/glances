@@ -35,7 +35,7 @@
 			"ajv": "8.18.0"
 		},
 		"@typescript-eslint/typescript-estree": {
-			"minimatch": "10.2.2"
+			"minimatch": "10.2.3"
 		}
 	},
 	"scripts": {
