@@ -29,6 +29,14 @@ and it is supposed to be used to monitor actual memory usage in a cross platform
         'description': 'The percentage usage calculated as (total - available) / total * 100.',
         'unit': 'percent',
     },
+    'min_percent': {
+        'description': 'Minimum memory usage percentage observed since Glances startup.',
+        'unit': 'percent',
+    },
+    'max_percent': {
+        'description': 'Maximum memory usage percentage observed since Glances startup.',
+        'unit': 'percent',
+    },
     'used': {
         'description': 'Memory used, calculated differently depending on the platform and \
 designed for informational purposes only.',
@@ -131,6 +139,10 @@ class MemPlugin(GlancesPluginModel):
 
         # ZFS
         self.zfs_enabled = zfs_enable()
+
+        # Runtime min/max memory usage percentage tracking (since Glances startup)
+        self._min_percent = None
+        self._max_percent = None
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -249,6 +261,32 @@ class MemPlugin(GlancesPluginModel):
 
         return stats
 
+    def _track_min_max_percent(self, stats):
+        """Track runtime min/max memory usage percentage since Glances startup.
+
+        The min/max values are stored as private attributes so they survive
+        the stats dict rebuild on every update. They are then exposed in the
+        stats dict (and thus via the /api/4/mem endpoint) as 'min_percent'
+        and 'max_percent'.
+        """
+        current_percent = stats.get('percent')
+        if current_percent is None:
+            # Cannot track without a percent value; keep previous values if any
+            if self._min_percent is not None:
+                stats['min_percent'] = self._min_percent
+            if self._max_percent is not None:
+                stats['max_percent'] = self._max_percent
+            return
+
+        # Initialize on first run, otherwise update the running min/max
+        if self._min_percent is None or current_percent < self._min_percent:
+            self._min_percent = current_percent
+        if self._max_percent is None or current_percent > self._max_percent:
+            self._max_percent = current_percent
+
+        stats['min_percent'] = self._min_percent
+        stats['max_percent'] = self._max_percent
+
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
     def update(self):
@@ -264,6 +302,9 @@ class MemPlugin(GlancesPluginModel):
 
         if stats in ['reset']:
             return self.stats
+
+        # Track runtime min/max memory usage percentage since Glances startup
+        self._track_min_max_percent(stats)
 
         # Update the stats
         self.stats = stats

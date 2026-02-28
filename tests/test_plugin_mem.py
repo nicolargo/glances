@@ -303,3 +303,169 @@ class TestMemPluginExport:
         export = mem_plugin.get_export()
         if export:  # If there are stats
             assert 'total' in export
+
+
+class TestMemPluginMinMaxPercent:
+    """Test Memory plugin runtime min/max percent tracking."""
+
+    @staticmethod
+    def _force_update(plugin):
+        """Force a real update() by expiring the refresh timer.
+
+        The session-scoped glances_stats fixture means the plugin instance is
+        shared across tests and, because update() is throttled by a refresh
+        timer (default 2s), back-to-back calls can be no-ops. Expiring the
+        timer ensures update() really runs so the min/max trackers are fed.
+        """
+        from glances.timer import Timer
+
+        plugin.refresh_timer = Timer(0)
+        plugin.update()
+
+    def test_min_max_percent_attributes_exist(self, mem_plugin):
+        """Test that min/max percent tracking attributes are initialized."""
+        assert hasattr(mem_plugin, '_min_percent')
+        assert hasattr(mem_plugin, '_max_percent')
+
+    def test_min_max_percent_in_fields_description(self, mem_plugin):
+        """Test that min_percent and max_percent are described."""
+        assert 'min_percent' in mem_plugin.fields_description
+        assert 'max_percent' in mem_plugin.fields_description
+        assert mem_plugin.fields_description['min_percent']['unit'] == 'percent'
+        assert mem_plugin.fields_description['max_percent']['unit'] == 'percent'
+        assert 'description' in mem_plugin.fields_description['min_percent']
+        assert 'description' in mem_plugin.fields_description['max_percent']
+
+    def test_min_max_percent_present_after_update(self, mem_plugin):
+        """Test that min_percent and max_percent are present after an update."""
+        self._force_update(mem_plugin)
+        stats = mem_plugin.get_raw()
+        assert 'min_percent' in stats, "min_percent missing from stats"
+        assert 'max_percent' in stats, "max_percent missing from stats"
+
+    def test_min_max_percent_values_are_numeric(self, mem_plugin):
+        """Test that min_percent and max_percent are numeric values."""
+        self._force_update(mem_plugin)
+        stats = mem_plugin.get_raw()
+        assert isinstance(stats['min_percent'], int | float)
+        assert isinstance(stats['max_percent'], int | float)
+
+    def test_min_max_percent_in_valid_range(self, mem_plugin):
+        """Test that min_percent and max_percent are within 0-100."""
+        self._force_update(mem_plugin)
+        stats = mem_plugin.get_raw()
+        assert 0 <= stats['min_percent'] <= 100
+        assert 0 <= stats['max_percent'] <= 100
+
+    def test_min_less_than_or_equal_max(self, mem_plugin):
+        """Test that min_percent is always <= max_percent."""
+        self._force_update(mem_plugin)
+        stats = mem_plugin.get_raw()
+        assert stats['min_percent'] <= stats['max_percent']
+
+    def test_current_percent_within_min_max_bounds(self, mem_plugin):
+        """Test that current percent falls between min_percent and max_percent."""
+        self._force_update(mem_plugin)
+        stats = mem_plugin.get_raw()
+        assert stats['min_percent'] <= stats['percent'] <= stats['max_percent']
+
+    def test_min_max_percent_in_api_output(self, mem_plugin):
+        """Test that min_percent and max_percent are exposed via get_api() (used by /api/4/mem)."""
+        self._force_update(mem_plugin)
+        api_data = mem_plugin.get_api()
+        assert 'min_percent' in api_data
+        assert 'max_percent' in api_data
+
+    def test_min_max_percent_in_json_output(self, mem_plugin):
+        """Test that min_percent and max_percent are in JSON output."""
+        self._force_update(mem_plugin)
+        stats_json = mem_plugin.get_stats()
+        parsed = json.loads(stats_json)
+        assert 'min_percent' in parsed
+        assert 'max_percent' in parsed
+
+    def test_min_max_percent_in_export_output(self, mem_plugin):
+        """Test that min_percent and max_percent are in export output."""
+        self._force_update(mem_plugin)
+        export = mem_plugin.get_export()
+        assert 'min_percent' in export
+        assert 'max_percent' in export
+
+    def test_min_max_percent_survive_reset(self, mem_plugin):
+        """Test that min/max tracking survives a stats reset (since startup semantic)."""
+        self._force_update(mem_plugin)
+        prev_min = mem_plugin._min_percent
+        prev_max = mem_plugin._max_percent
+        # reset() only clears the stats dict, not the since-startup trackers
+        mem_plugin.reset()
+        assert mem_plugin._min_percent == prev_min
+        assert mem_plugin._max_percent == prev_max
+
+    def test_track_min_max_percent_initialization(self, mem_plugin):
+        """Test _track_min_max_percent initializes trackers on first call."""
+        # Simulate a fresh startup state
+        mem_plugin._min_percent = None
+        mem_plugin._max_percent = None
+        fake_stats = {'percent': 42.5}
+        mem_plugin._track_min_max_percent(fake_stats)
+        assert mem_plugin._min_percent == 42.5
+        assert mem_plugin._max_percent == 42.5
+        assert fake_stats['min_percent'] == 42.5
+        assert fake_stats['max_percent'] == 42.5
+
+    def test_track_min_max_percent_updates_correctly(self, mem_plugin):
+        """Test _track_min_max_percent correctly updates min/max over multiple calls."""
+        # Simulate a fresh startup state
+        mem_plugin._min_percent = None
+        mem_plugin._max_percent = None
+        sequence = [45.0, 30.0, 60.5, 25.0, 70.2, 50.0]
+        for p in sequence:
+            fake_stats = {'percent': p}
+            mem_plugin._track_min_max_percent(fake_stats)
+        # min should be the smallest value seen, max the largest
+        assert mem_plugin._min_percent == 25.0
+        assert mem_plugin._max_percent == 70.2
+        assert fake_stats['min_percent'] == 25.0
+        assert fake_stats['max_percent'] == 70.2
+
+    def test_track_min_max_percent_missing_percent_key(self, mem_plugin):
+        """Test _track_min_max_percent keeps previous values when percent is missing."""
+        mem_plugin._min_percent = None
+        mem_plugin._max_percent = None
+        # Seed with a value
+        mem_plugin._track_min_max_percent({'percent': 33.3})
+        # Now call with a stats dict that has no percent key
+        fake_stats = {'total': 1000}
+        mem_plugin._track_min_max_percent(fake_stats)
+        # Previous min/max should still be exposed
+        assert fake_stats.get('min_percent') == 33.3
+        assert fake_stats.get('max_percent') == 33.3
+        # And internal trackers should be unchanged
+        assert mem_plugin._min_percent == 33.3
+        assert mem_plugin._max_percent == 33.3
+
+    def test_track_min_max_percent_never_initialized_no_percent(self, mem_plugin):
+        """Test _track_min_max_percent does not set min/max if never initialized and no percent."""
+        mem_plugin._min_percent = None
+        mem_plugin._max_percent = None
+        fake_stats = {'total': 1000}
+        mem_plugin._track_min_max_percent(fake_stats)
+        assert 'min_percent' not in fake_stats
+        assert 'max_percent' not in fake_stats
+        assert mem_plugin._min_percent is None
+        assert mem_plugin._max_percent is None
+
+    def test_track_min_max_percent_monotonic(self, mem_plugin):
+        """Test min only decreases (or stays) and max only increases (or stays)."""
+        mem_plugin._min_percent = None
+        mem_plugin._max_percent = None
+        prev_min = None
+        prev_max = None
+        for p in [50.0, 40.0, 60.0, 55.0, 35.0, 45.0]:
+            fake_stats = {'percent': p}
+            mem_plugin._track_min_max_percent(fake_stats)
+            if prev_min is not None:
+                assert fake_stats['min_percent'] <= prev_min
+                assert fake_stats['max_percent'] >= prev_max
+            prev_min = fake_stats['min_percent']
+            prev_max = fake_stats['max_percent']
