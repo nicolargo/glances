@@ -81,7 +81,7 @@ class Export(GlancesExport):
         return f"{value}"
 
     def _prepare_stats(self, plugin, plugin_stats, plugin_limits):
-        """Clean and normalize plugin data. Return a list regardless of whether the original data is a dictionary or a list."""
+        """Clean and normalize plugin data. Return a list regardless of whether the original data is a dictionary or a list"""
         # Normalize to a list for unified processing
         raw_items = [plugin_stats] if isinstance(plugin_stats, dict) else plugin_stats
 
