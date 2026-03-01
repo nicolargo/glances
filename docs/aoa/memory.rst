@@ -40,9 +40,11 @@ Additional stats available in through the API:
   never moved to disk.
 - **shared**: (BSD): memory that may be simultaneously accessed by multiple
   processes.
-- **min_percent**: the minimum memory usage percentage observed since
+- **percent_min**: the minimum memory usage percentage observed since
   Glances startup.
-- **max_percent**: the maximum memory usage percentage observed since
+- **percent_max**: the maximum memory usage percentage observed since
+  Glances startup.
+- **percent_mean**: the mean memory usage percentage observed since
   Glances startup.
 
 It is possible to display the available memory instead of the used memory
