@@ -148,12 +148,15 @@ class Export(GlancesExport):
                 values_list.append(row[:-1] if is_list_type else row)
 
             # 4. Execute export
-            self.export(plugin, creation_list, segmented_by, values_list)
+            self.export(plugin, creation_list, values_list, segmented_by=segmented_by)
 
         return True
 
-    def export(self, plugin, creation_list, segmented_by, values_list):
+    def export(self, plugin, creation_list, values_list, segmented_by=None):
         """Export the stats to the TimescaleDB server."""
+        if segmented_by is None:
+            segmented_by = []
+
         try:
             with self.client.cursor() as cur:
                 # Check whether the table exists
