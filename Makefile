@@ -368,7 +368,7 @@ run-webserver-mcp-local-conf: ## Start Glances in Web server mode with MCP and t
 run-webserver-local-conf-hide-public: ## Start Glances in Web server mode with the system conf file and hide public info
 	$(UV_RUN) run python -m glances -w --hide-public-info
 
-run-webui: un-webserver  ## Start Glances in Web server mode
+run-webui: run-webserver  ## Start Glances in Web server mode
 
 run-restapiserver: ## Start Glances in REST API server mode
 	$(UV_RUN) run python -m glances -C $(CONF) -w --disable-webui
