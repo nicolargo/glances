@@ -298,90 +298,80 @@ class GlancesCursesBrowser(_GlancesCurses):
                     column_def[k.split('_decoration')[0]] = 6
         return column_def
 
+    def __display_table_header(self, column_def, x, y, screen_x, screen_y):
+        """Display the two-row table header (plugin name row + key row).
+
+        :return: y position after the header
+        """
+        xc = x + 2
+        # First line: plugin name (only for compound keys like 'cpu_percent')
+        for k, v in column_def.items():
+            k_split = k.split('_')
+            if len(k_split) > 1 and xc < screen_x and y < screen_y and v is not None:
+                self.term_window.addnstr(y, xc, k_split[0].upper(), screen_x - x, self.colors_list['BOLD'])
+            xc += v + self.space_between_column
+        y += 1
+
+        # Second line: column key / sub-key
+        xc = x + 2
+        for k, v in column_def.items():
+            if xc >= screen_x or y >= screen_y or v is None:
+                xc += v + self.space_between_column
+                continue
+            k_split = k.split('_')
+            header_str = k_split[0] if len(k_split) == 1 else ' '.join(k_split[1:])
+            self.term_window.addnstr(y, xc, header_str.upper(), screen_x - x, self.colors_list['BOLD'])
+            xc += v + self.space_between_column
+        return y + 1
+
+    def __get_cell_decoration(self, server_stat, k):
+        """Return the curses color attribute for a given server stat cell."""
+        if k == 'status':
+            return self.colors_list[server_stat['status']]
+        decoration_key = k + '_decoration'
+        if decoration_key in server_stat:
+            color_name = server_stat[decoration_key].replace('_LOG', '')
+            return self.colors_list.get(color_name, self.colors_list['DEFAULT'])
+        return self.colors_list.get(self.colors_list[server_stat['status']], self.colors_list['DEFAULT'])
+
+    def __display_server_row(self, server_stat, column_def, x, y, screen_x, screen_y, line):
+        """Display one server row; draw the cursor indicator if the line is selected."""
+        xc = x
+        if line == self.cursor:
+            self.term_window.addnstr(y, xc, ">", screen_x - xc, self.colors_list['BOLD'])
+        xc += 2
+        for k, v in column_def.items():
+            if xc >= screen_x or y >= screen_y:
+                xc += v + self.space_between_column
+                continue
+            value = server_stat.get(k, '?')
+            if isinstance(value, float):
+                value = round(value, 1)
+            if k == 'name' and server_stat.get('alias') is not None:
+                value = server_stat['alias']
+            decoration = self.__get_cell_decoration(server_stat, k)
+            self.term_window.addnstr(y, xc, format(value), v, decoration)
+            xc += v + self.space_between_column
+
     def __display_server_list(self, stats, x, y, screen_x, screen_y):
         if not stats:
-            # No server to display
             return False
 
         stats_list = self._get_stats(stats)
         start_line = self._page_max_lines * self._current_page
-        end_line = start_line + self.get_pagelines(stats_list)
-        current_page = stats_list[start_line:end_line]
+        current_page = stats_list[start_line : start_line + self.get_pagelines(stats_list)]
         column_def = self.__build_column_def(current_page)
 
-        # Display table header
+        y = self.__display_table_header(column_def, x, 2, screen_x, screen_y)
+
+        # Clamp cursor to valid range after a server is removed
+        self.cursor = min(self.cursor, len(stats) - 1)
+
         stats_max = screen_y - 3
-        y = 2
-        xc = x + 2
-        # First line (plugin name)
-        for k, v in column_def.items():
-            k_split = k.split('_')
-            if len(k_split) == 1:
-                xc += v + self.space_between_column
-                continue
-            if xc < screen_x and y < screen_y and v is not None:
-                self.term_window.addnstr(y, xc, k_split[0].upper(), screen_x - x, self.colors_list['BOLD'])
-                xc += v + self.space_between_column
-        xc = x + 2
-        y += 1
-        # Second line (for item/key)
-        for k, v in column_def.items():
-            if xc >= screen_x or y >= screen_y or v is None:
-                continue
-            k_split = k.split('_')
-            if len(k_split) == 1:
-                header_str = k_split[0]
-            else:
-                header_str = ' '.join(k_split[1:])
-            self.term_window.addnstr(y, xc, header_str.upper(), screen_x - x, self.colors_list['BOLD'])
-            xc += v + self.space_between_column
-        y += 1
-
-        # If a servers has been deleted from the list...
-        # ... and if the cursor is in the latest position
-        if self.cursor > len(stats) - 1:
-            # Set the cursor position to the latest item
-            self.cursor = len(stats) - 1
-
-        # Display table
-        line = 0
-        for server_stat in current_page:
-            # Limit the number of displayed server (see issue #1256)
+        for line, server_stat in enumerate(current_page):
             if line >= stats_max:
-                continue
-
-            # Display line for server stats
-            cpt = 0
-            xc = x
-
-            # Is the line selected ?
-            if line == self.cursor:
-                # Display cursor
-                self.term_window.addnstr(y, xc, ">", screen_x - xc, self.colors_list['BOLD'])
-
-            # Display the line
-            xc += 2
-            for k, v in column_def.items():
-                if xc < screen_x and y < screen_y:
-                    # Display server stats
-                    value = server_stat.get(k, '?')
-                    if isinstance(value, float):
-                        value = round(value, 1)
-                    if k == 'name' and 'alias' in server_stat and server_stat['alias'] is not None:
-                        value = server_stat['alias']
-                    decoration = self.colors_list.get(
-                        server_stat[k + '_decoration'].replace('_LOG', '')
-                        if k + '_decoration' in server_stat
-                        else self.colors_list[server_stat['status']],
-                        self.colors_list['DEFAULT'],
-                    )
-                    if k == 'status':
-                        decoration = self.colors_list[server_stat['status']]
-                    self.term_window.addnstr(y, xc, format(value), v, decoration)
-                    xc += v + self.space_between_column
-                cpt += 1
-            # Next line, next server...
+                break
+            self.__display_server_row(server_stat, column_def, x, y, screen_x, screen_y, line)
             y += 1
-            line += 1
 
         return True
