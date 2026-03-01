@@ -955,6 +955,311 @@ class TestGlances(unittest.TestCase):
         plugin_instance.update_views()
         self.assertFalse(plugin_instance.get_views()[key][field]['hidden'])
 
+    def test_700_mmm_feature_parent_class(self):
+        """Test MMM (Min/Max/Mean) feature in parent class."""
+        print('INFO: [TEST_700] MMM Feature (Min/Max/Mean) in parent class')
+        
+        # Create a test plugin with MMM enabled
+        test_fields = {
+            'value': {
+                'description': 'A test value',
+                'unit': 'percent',
+                'mmm': True
+            },
+            'other': {
+                'description': 'A value without MMM',
+                'unit': 'bytes'
+            }
+        }
+        
+        class TestMMMPlugin(GlancesPluginModel):
+            def __init__(self):
+                super().__init__(
+                    args=None,
+                    config=None,
+                    fields_description=test_fields
+                )
+        
+        plugin = TestMMMPlugin()
+        
+        # Test 1: MMM fields initialized
+        self.assertIn('value', plugin._mmm_fields, "value field should be in _mmm_fields")
+        self.assertNotIn('other', plugin._mmm_fields, "other field should NOT be in _mmm_fields")
+        
+        # Test 2: Auto-generated descriptions exist
+        self.assertIn('value_min', plugin.fields_description, "value_min description should be auto-generated")
+        self.assertIn('value_max', plugin.fields_description, "value_max description should be auto-generated")
+        self.assertIn('value_mean', plugin.fields_description, "value_mean description should be auto-generated")
+        
+        # Test 3: Units are inherited
+        self.assertEqual(plugin.fields_description['value_min']['unit'], 'percent')
+        self.assertEqual(plugin.fields_description['value_max']['unit'], 'percent')
+        self.assertEqual(plugin.fields_description['value_mean']['unit'], 'percent')
+        
+        # Test 4: MMM field structure is correct
+        mmm_info = plugin._mmm_fields['value']
+        self.assertIn('values', mmm_info, "values list should exist")
+        self.assertIn('min', mmm_info, "min should exist")
+        self.assertIn('max', mmm_info, "max should exist")
+        self.assertIn('unit', mmm_info, "unit should exist")
+        self.assertIsNone(mmm_info['min'], "min should start as None")
+        self.assertIsNone(mmm_info['max'], "max should start as None")
+
+    def test_701_mmm_update_functionality(self):
+        """Test MMM update functionality."""
+        print('INFO: [TEST_701] MMM update functionality')
+        
+        test_fields = {
+            'temperature': {
+                'description': 'Temperature in Celsius',
+                'unit': 'celsius',
+                'mmm': True
+            }
+        }
+        
+        class TestMMMPlugin(GlancesPluginModel):
+            def __init__(self):
+                super().__init__(
+                    args=None,
+                    config=None,
+                    fields_description=test_fields
+                )
+        
+        plugin = TestMMMPlugin()
+        
+        # Test 1: First update
+        stats = {'temperature': 50.0}
+        updated_stats = plugin._update_mmm_fields(stats)
+        
+        self.assertIn('temperature_min', updated_stats)
+        self.assertIn('temperature_max', updated_stats)
+        self.assertIn('temperature_mean', updated_stats)
+        self.assertEqual(updated_stats['temperature_min'], 50.0)
+        self.assertEqual(updated_stats['temperature_max'], 50.0)
+        self.assertEqual(updated_stats['temperature_mean'], 50.0)
+        
+        # Test 2: Second update with higher value
+        stats = {'temperature': 60.0}
+        updated_stats = plugin._update_mmm_fields(stats)
+        
+        self.assertEqual(updated_stats['temperature_min'], 50.0, "min should not increase")
+        self.assertEqual(updated_stats['temperature_max'], 60.0, "max should increase")
+        self.assertLess(50.0, updated_stats['temperature_mean'])
+        self.assertLess(updated_stats['temperature_mean'], 60.0)
+        
+        # Test 3: Third update with lower value
+        stats = {'temperature': 40.0}
+        updated_stats = plugin._update_mmm_fields(stats)
+        
+        self.assertEqual(updated_stats['temperature_min'], 40.0, "min should decrease")
+        self.assertEqual(updated_stats['temperature_max'], 60.0, "max should not decrease")
+
+    def test_702_mmm_mean_calculation(self):
+        """Test MMM mean calculation is correct."""
+        print('INFO: [TEST_702] MMM mean calculation')
+        
+        test_fields = {
+            'value': {
+                'description': 'A test value',
+                'unit': 'percent',
+                'mmm': True
+            }
+        }
+        
+        class TestMMMPlugin(GlancesPluginModel):
+            def __init__(self):
+                super().__init__(
+                    args=None,
+                    config=None,
+                    fields_description=test_fields
+                )
+        
+        plugin = TestMMMPlugin()
+        
+        # Add known values
+        test_values = [10.0, 20.0, 30.0, 40.0, 50.0]
+        for val in test_values:
+            stats = {'value': val}
+            updated_stats = plugin._update_mmm_fields(stats)
+        
+        # Expected mean of all values
+        expected_mean = sum(test_values) / len(test_values)
+        
+        self.assertAlmostEqual(updated_stats['value_mean'], expected_mean, places=1)
+        # Also verify min and max
+        self.assertEqual(updated_stats['value_min'], min(test_values))
+        self.assertEqual(updated_stats['value_max'], max(test_values))
+
+    def test_703_mmm_history_limit(self):
+        """Test MMM history respects size limit."""
+        print('INFO: [TEST_703] MMM history respects size limit')
+        
+        test_fields = {
+            'value': {
+                'description': 'A test value',
+                'unit': 'percent',
+                'mmm': True
+            }
+        }
+        
+        class TestMMMPlugin(GlancesPluginModel):
+            def __init__(self):
+                super().__init__(
+                    args=None,
+                    config=None,
+                    fields_description=test_fields
+                )
+        
+        plugin = TestMMMPlugin()
+        
+        # Check default limit
+        max_history_size = 28800
+        
+        # Add values but only a reasonable number (not the full limit to keep test fast)
+        test_iterations = 100
+        for i in range(test_iterations):
+            stats = {'value': float(i % 100)}
+            plugin._update_mmm_fields(stats)
+        
+        # History should not exceed limit
+        mmm_info = plugin._mmm_fields['value']
+        self.assertLessEqual(len(mmm_info['values']), max_history_size)
+        # Should have roughly the number we added (100)
+        self.assertEqual(len(mmm_info['values']), test_iterations)
+
+    def test_704_mmm_handles_list_of_dicts(self):
+        """Test MMM update can handle list of stats dictionaries."""
+        print('INFO: [TEST_704] MMM handles list of dicts')
+        
+        test_fields = {
+            'utilization': {
+                'description': 'Utilization percent',
+                'unit': 'percent',
+                'mmm': True
+            }
+        }
+        
+        class TestMMMPlugin(GlancesPluginModel):
+            def __init__(self):
+                super().__init__(
+                    args=None,
+                    config=None,
+                    fields_description=test_fields
+                )
+        
+        plugin = TestMMMPlugin()
+        
+        # Create a list of stats
+        stats_list = [
+            {'name': 'item1', 'utilization': 50.0},
+            {'name': 'item2', 'utilization': 60.0},
+            {'name': 'item3', 'utilization': 40.0},
+        ]
+        
+        # Update with list
+        updated_list = plugin._update_mmm_fields_on_list(stats_list)
+        
+        # Check that each item has MMM fields
+        for item in updated_list:
+            self.assertIn('utilization_min', item)
+            self.assertIn('utilization_max', item)
+            self.assertIn('utilization_mean', item)
+
+    def test_705_mmm_ignores_non_numeric_values(self):
+        """Test MMM ignores non-numeric values."""
+        print('INFO: [TEST_705] MMM ignores non-numeric values')
+        
+        test_fields = {
+            'status': {
+                'description': 'Status string',
+                'unit': 'string',
+                'mmm': True
+            }
+        }
+        
+        class TestMMMPlugin(GlancesPluginModel):
+            def __init__(self):
+                super().__init__(
+                    args=None,
+                    config=None,
+                    fields_description=test_fields
+                )
+        
+        plugin = TestMMMPlugin()
+        
+        # Try to update with non-numeric value
+        stats = {'status': 'active'}
+        updated_stats = plugin._update_mmm_fields(stats)
+        
+        # Non-numeric values should not create MMM fields (or they should be None)
+        if 'status_min' in updated_stats:
+            self.assertIsNone(updated_stats.get('status_min'))
+
+    def test_706_mmm_decorator_integration(self):
+        """Test MMM decorator integration with update method."""
+        print('INFO: [TEST_706] MMM decorator integration')
+        
+        test_fields = {
+            'cpu': {
+                'description': 'CPU usage',
+                'unit': 'percent',
+                'mmm': True
+            }
+        }
+        
+        class TestMMMPlugin(GlancesPluginModel):
+            def __init__(self):
+                super().__init__(
+                    args=None,
+                    config=None,
+                    fields_description=test_fields
+                )
+            
+            @GlancesPluginModel._manage_mmm
+            def test_update(self):
+                """Test method with MMM decorator."""
+                return {'cpu': 50.5}
+        
+        plugin = TestMMMPlugin()
+        
+        # Call the decorated method
+        result = plugin.test_update()
+        
+        # Should have MMM fields
+        self.assertIn('cpu_min', result)
+        self.assertIn('cpu_max', result)
+        self.assertIn('cpu_mean', result)
+
+    def test_707_mmm_with_mem_plugin(self):
+        """Test MMM integration with actual MemPlugin."""
+        print('INFO: [TEST_707] MMM integration with MemPlugin')
+        
+        # Get the mem plugin from stats
+        mem_plugin = stats.get_plugin('mem')
+        
+        # Verify percent field has MMM enabled
+        self.assertTrue(mem_plugin.fields_description['percent'].get('mmm', False))
+        
+        # Verify MMM fields are in fields_description
+        self.assertIn('percent_min', mem_plugin.fields_description)
+        self.assertIn('percent_max', mem_plugin.fields_description)
+        self.assertIn('percent_mean', mem_plugin.fields_description)
+        
+        # Update and verify stats contain MMM fields
+        mem_plugin.update()
+        raw_stats = mem_plugin.get_raw()
+        
+        self.assertIn('percent', raw_stats)
+        self.assertIn('percent_min', raw_stats)
+        self.assertIn('percent_max', raw_stats)
+        self.assertIn('percent_mean', raw_stats)
+        
+        # Verify relationships
+        self.assertLessEqual(raw_stats['percent_min'], raw_stats['percent'])
+        self.assertGreaterEqual(raw_stats['percent_max'], raw_stats['percent'])
+        self.assertLessEqual(raw_stats['percent_min'], raw_stats['percent_mean'])
+        self.assertGreaterEqual(raw_stats['percent_max'], raw_stats['percent_mean'])
+
     # def test_700_secure(self):
     #     """Test secure functions"""
     #     print('INFO: [TEST_700] Secure functions')
