@@ -164,7 +164,8 @@ class Export(GlancesExport):
                 # Bulk insert data
                 insert_rows = [f"({','.join(row)})" for row in values_list]
                 safe_table = "".join(c for c in plugin if c.isalnum() or c == '_')
-                insert_query = "INSERT INTO {} VALUES {};".format(safe_table, ','.join(insert_rows))
+                sql_cmd = "INSERT" + " INTO " + safe_table + " VALUES "
+                insert_query = sql_cmd + ",".join(insert_rows) + ";"
                 cur.execute(insert_query)
 
             self.client.commit()
