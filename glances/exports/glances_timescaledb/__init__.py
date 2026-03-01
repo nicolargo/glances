@@ -163,7 +163,8 @@ class Export(GlancesExport):
 
                 # Bulk insert data
                 insert_rows = [f"({','.join(row)})" for row in values_list]
-                insert_query = f"INSERT INTO {plugin} VALUES {','.join(insert_rows)};"
+                safe_table = "".join(c for c in plugin if c.isalnum() or c == '_')
+                insert_query = "INSERT INTO {} VALUES {};".format(safe_table, ','.join(insert_rows))
                 cur.execute(insert_query)
 
             self.client.commit()
@@ -192,6 +193,6 @@ class Export(GlancesExport):
                 # Only wait if the connection is still alive
                 time.sleep(1)
                 self.client.close()
-            except Exception:
-                pass
+            except Exception as e:
+                self.logger.debug(f"TimescaleDB export failed: {e}")
         super().exit()
