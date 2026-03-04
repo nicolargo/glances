@@ -322,6 +322,17 @@ To upgrade Glances to the latest version:
 
     pip install --upgrade glances
 
+UVx, the magic way
+------------------
+
+Install and run directly Glances with the one line:
+
+.. code-block:: console
+
+    uvx glances
+
+Note: `Uv`_ should be installed on your system.
+
 PyPI: PipX, the alternative way
 -------------------------------
 
@@ -662,6 +673,7 @@ Please give us a star on `GitHub`_ if you like this project.
 .. _package: https://repology.org/project/glances/versions
 .. _sponsors: https://github.com/sponsors/nicolargo
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
+.. _Uv: https://docs.astral.sh/uv/getting-started/installation/
 .. _Docker: https://github.com/nicolargo/glances/blob/master/docs/docker.rst
 .. _GitHub: https://github.com/nicolargo/glances
 .. _PythonApi: https://glances.readthedocs.io/en/develop/api/python.html
