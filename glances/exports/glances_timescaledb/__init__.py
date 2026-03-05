@@ -12,7 +12,7 @@ import sys
 import time
 from platform import node
 
-import psycopg
+
 
 from glances.exports.export import GlancesExport
 from glances.logger import logger
@@ -66,7 +66,13 @@ class Export(GlancesExport):
         """Init the connection to the TimescaleDB server."""
         if not self.export_enable:
             return None
-
+        # lazy import psycopg
+        try:
+            import psycopg
+        except ImportError:
+            logger.critical(
+                "TimescaleDB export requires 'psycopg' library. Install it with: pip install psycopg[binary]")
+            return None
         try:
             # See https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
             conn_str = f"host={self.host} port={self.port} dbname={self.db} user={self.user} password={self.password}"
