@@ -221,7 +221,7 @@ process:
 ``Memory info``           Extended memory information about the process
 
                           For example, on Linux: swap, shared, text,
-                          lib, data and dirty
+                          and data
 ``Open``                  The number of threads, files and network
                           sessions (TCP and UDP) used by the process
 ``IO nice``               The process I/O niceness (priority)
