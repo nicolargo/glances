@@ -331,7 +331,8 @@ class GlancesRestfulApi:
                 full_mcp_path,
                 self._mcp_server.get_asgi_app(mount_path=full_mcp_path),
             )
-            bindmsg = f'Glances MCP server started on {self.protocol}://{self.args.bind_address}:{self.args.port}{full_mcp_path}'
+            bindaddr = f"{self.protocol}://{self.args.bind_address}:{self.args.port}{full_mcp_path}"
+            bindmsg = f'Glances MCP server started on {bindaddr}'
             logger.info(bindmsg)
             print(bindmsg)
         elif self.mcp_enabled and not MCP_AVAILABLE:
@@ -376,8 +377,12 @@ class GlancesRestfulApi:
             self.mcp_path = config.get_value('outputs', 'mcp_path', default='/mcp')
             if not self.mcp_path.startswith('/'):
                 self.mcp_path = '/' + self.mcp_path
+
         logger.debug(f"Protocol for Resful API and WebUI: {self.protocol}")
-        logger.debug(f"MCP server enabled: {self.mcp_enabled} (path: {self.url_prefix + self.mcp_path})")
+        logger.debug(
+            f"MCP server enabled: {self.mcp_enabled} \
+            (path: {self.url_prefix + self.mcp_path})"
+        )
 
     def is_ssl(self):
         """Return true if the Glances server use SSL."""
