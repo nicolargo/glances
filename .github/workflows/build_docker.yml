@@ -52,6 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - create_docker_images_list
+    if: needs.create_docker_images_list.outputs.tags != '[]'
     strategy:
       fail-fast: false
       matrix:
