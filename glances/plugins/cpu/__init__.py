@@ -18,7 +18,7 @@ from glances.plugins.plugin.model import GlancesPluginModel
 # Fields description
 # https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
-    'total': {'description': 'Sum of all CPU percentages (except idle).', 'unit': 'percent', 'log': True},
+    'total': {'description': 'Sum of all CPU percentages (except idle).', 'unit': 'percent', 'log': True, 'mmm': True},
     'system': {
         'description': 'Percent time spent in kernel space. System CPU time is the \
 time spent running code in the Operating System kernel.',
