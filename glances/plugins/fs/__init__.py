@@ -269,9 +269,10 @@ class FsPlugin(GlancesPluginModel):
         # Alert
         # Do not display threshold for volume mounted in 'ro' (read-only) #3143
         for i in [d for d in self.stats if 'ro' not in d.get('options', '').split(',')]:
-            self.views[i[self.get_key()]]['used']['decoration'] = self.get_alert(
-                current=i['size'] - i['free'], maximum=i['size'], header=i['mnt_point']
-            )
+            if i[self.get_key()] in self.views:
+                self.views[i[self.get_key()]]['used']['decoration'] = self.get_alert(
+                    current=i['size'] - i['free'], maximum=i['size'], header=i['mnt_point']
+                )
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -294,7 +295,7 @@ class FsPlugin(GlancesPluginModel):
         # Header
         msg = '{:{width}}'.format('FILE SYS', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        if args.fs_free_space:
+        if args and args.fs_free_space:
             msg = '{:>8}'.format('Free')
         else:
             msg = '{:>8}'.format('Used')
@@ -314,7 +315,7 @@ class FsPlugin(GlancesPluginModel):
                 mnt_point = mnt_point[:name_max_width] + '_'
             msg = '{:{width}}'.format(nativestr(mnt_point), width=name_max_width + 1)
             ret.append(self.curse_add_line(msg))
-            if args.fs_free_space:
+            if args and args.fs_free_space:
                 msg = '{:>7}'.format(self.auto_unit(i['free']))
             else:
                 msg = '{:>7}'.format(self.auto_unit(i['used']))

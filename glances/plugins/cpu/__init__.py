@@ -11,14 +11,14 @@
 import psutil
 
 from glances.cpu_percent import cpu_percent
-from glances.globals import LINUX, SUNOS, WINDOWS
+from glances.globals import LINUX, MACOS
 from glances.plugins.core import CorePlugin
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
 # https://github.com/nicolargo/glances/wiki/How-to-create-a-new-plugin-%3F#create-the-plugin-script
 fields_description = {
-    'total': {'description': 'Sum of all CPU percentages (except idle).', 'unit': 'percent', 'log': True},
+    'total': {'description': 'Sum of all CPU percentages (except idle).', 'unit': 'percent', 'log': True, 'mmm': True},
     'system': {
         'description': 'Percent time spent in kernel space. System CPU time is the \
 time spent running code in the Operating System kernel.',
@@ -305,30 +305,28 @@ class CpuPlugin(GlancesPluginModel):
         idle_tag = 'user' not in self.stats
 
         # First line
-        # Total + (idle) + ctx_sw
+        # Total + (idle) + (ctx_sw)
         msg = '{:8}'.format('CPU')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Total CPU usage
         msg = '{:5.1f}%'.format(self.stats['total'])
         ret.append(self.curse_add_line(msg, self.get_views(key='total', option='decoration')))
-        # Idle CPU
+        # Idle CPU (if available and not idle_tag)
         if 'idle' in self.stats and not idle_tag:
             msg = '  {:8}'.format('idle')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle', option='optional')))
             msg = '{:4.1f}%'.format(self.stats['idle'])
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle', option='optional')))
-        # ctx_switches
-        # On WINDOWS/SUNOS the ctx_switches is displayed in the third line
-        if not WINDOWS and not SUNOS:
-            ret.extend(self.curse_add_stat('ctx_switches', width=15, header='  '))
+        # ctx_switches (if available)
+        ret.extend(self.curse_add_stat('ctx_switches', width=15, header='  '))
 
         # Second line
-        # user|idle + irq + interrupts
         ret.append(self.curse_new_line())
+        # user|idle + irq + interrupts
         # User CPU
         if not idle_tag:
             ret.extend(self.curse_add_stat('user', width=15))
-        elif 'idle' in self.stats:
+        else:
             ret.extend(self.curse_add_stat('idle', width=15))
         # IRQ CPU
         ret.extend(self.curse_add_stat('irq', width=14, header='  '))
@@ -336,8 +334,8 @@ class CpuPlugin(GlancesPluginModel):
         ret.extend(self.curse_add_stat('interrupts', width=15, header='  '))
 
         # Third line
-        # system|core + nice + sw_int
         ret.append(self.curse_new_line())
+        # system|core + nice + sw_int
         # System CPU
         if not idle_tag:
             ret.extend(self.curse_add_stat('system', width=15))
@@ -346,29 +344,29 @@ class CpuPlugin(GlancesPluginModel):
         # Nice CPU
         ret.extend(self.curse_add_stat('nice', width=14, header='  '))
         # soft_interrupts
-        if not WINDOWS and not SUNOS:
+        if 'soft_interrupts' in self.stats:
             ret.extend(self.curse_add_stat('soft_interrupts', width=15, header='  '))
         else:
             ret.extend(self.curse_add_stat('ctx_switches', width=15, header='  '))
 
         # Fourth line
-        # iowait + steal + (syscalls or guest)
         ret.append(self.curse_new_line())
+        # iowait + steal + (syscalls or guest)
         if 'iowait' in self.stats:
             # IOWait CPU
             ret.extend(self.curse_add_stat('iowait', width=15))
-        elif 'dpc' in self.stats:
+        else:
             # DPC CPU
             ret.extend(self.curse_add_stat('dpc', width=15))
         # Steal CPU usage
         ret.extend(self.curse_add_stat('steal', width=14, header='  '))
-        if not LINUX:
-            # syscalls: number of system calls since boot. Always set to 0 on Linux. (do not display)
-            ret.extend(self.curse_add_stat('syscalls', width=15, header='  '))
-        else:
-            # So instead on Linux we display the guest CPU usage (see #2667)
+        if 'guest' in self.stats:
+            # On Linux we display the guest CPU usage (see #2667)
             # guest: time spent running a virtual CPU for guest operating systems under
             ret.extend(self.curse_add_stat('guest', width=14, header='  '))
+        elif not LINUX or not MACOS:
+            # syscalls: number of system calls since boot. Always set to 0 on Linux. (do not display)
+            ret.extend(self.curse_add_stat('syscalls', width=15, header='  '))
 
         # Return the message with decoration
         return ret

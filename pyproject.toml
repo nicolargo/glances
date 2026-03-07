@@ -20,8 +20,7 @@ classifiers = [
 dependencies = [
   "defusedxml",
   "packaging",
-  "psutil>=5.6.7; platform_system != 'Darwin' or platform_version >= '11.'",
-  "psutil>=5.6.7,<=7.1.1; platform_system == 'Darwin' and platform_version < '11.'", # See https://github.com/nicolargo/glances/issues/3364
+  "psutil>=5.6.7",
   "windows-curses; platform_system == 'Windows'",
   "shtab; platform_system != 'Windows'",
   "jinja2",
@@ -65,7 +64,7 @@ dev = [
 [project.optional-dependencies]
 action = ["chevron"]
 # all but not dev
-all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,raid,sensors,smart,snmp,sparklines,web,wifi]"]
+all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,mcp,raid,sensors,smart,snmp,sparklines,web,wifi]"]
 browser = ["zeroconf"]
 cloud = ["requests"]
 containers = [
@@ -76,8 +75,7 @@ containers = [
   "six",
 ]
 export = [
-  "bernhard",
-  #"cassandra-driver",
+  "bernhard", # "cassandra-driver, may cause issue on Docker image, TODO: test",
   "elasticsearch",
   "graphitesender",
   "ibmcloudant",
@@ -97,6 +95,7 @@ export = [
 ]
 gpu = ["nvidia-ml-py"]
 graph = ["pygal"]
+mcp = ["mcp>=1.0.0"]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART"]

@@ -22,6 +22,9 @@ module.exports = (_, env) => {
 			clean: true,
 		},
 		devtool: isProd ? false : "eval-source-map",
+		performance: {
+			hints: false,
+		},
 		module: {
 			rules: [
 				{
@@ -39,6 +42,11 @@ module.exports = (_, env) => {
 						},
 						{
 							loader: "sass-loader",
+							options: {
+								sassOptions: {
+									silenceDeprecations: ["import", "global-builtin", "color-functions", "if-function"],
+								},
+							},
 						},
 					],
 				},

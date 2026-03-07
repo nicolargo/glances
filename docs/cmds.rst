@@ -175,6 +175,15 @@ Command-Line Options
 
     run Glances in web server mode (FastAPI lib needed)
 
+.. option:: --enable-mcp
+
+    enable the MCP (Model Context Protocol) server alongside the web server
+    (``mcp`` package needed, see :ref:`api_mcp`)
+
+.. option:: --mcp-path MCP_PATH
+
+    set the MCP server mount path [default: /mcp]
+
 .. option:: --cached-time CACHED_TIME
 
     set the server cache time [default: 1 sec]
