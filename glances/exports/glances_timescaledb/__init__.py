@@ -180,10 +180,7 @@ class Export(GlancesExport):
                 # Build CREATE TABLE using sql.Identifier for column names (prevents injection)
                 # Each item in creation_list is "colname TYPE [NULL|NOT NULL]"
                 fields = sql.SQL(', ').join(
-                    sql.SQL("{} {}").format(
-                        sql.Identifier(item.split(' ')[0]),
-                        sql.SQL(' '.join(item.split(' ')[1:]))
-                    )
+                    sql.SQL("{} {}").format(sql.Identifier(item.split(' ')[0]), sql.SQL(' '.join(item.split(' ')[1:])))
                     for item in creation_list
                 )
                 create_query = sql.SQL(
