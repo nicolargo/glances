@@ -16,12 +16,14 @@ from glances.logger import logger
 
 try:
     from mcp.server.fastmcp import FastMCP
+    from mcp.server.sse import TransportSecuritySettings
 
     MCP_AVAILABLE = True
     logging.getLogger("mcp").setLevel(logging.WARNING)
 except ImportError:
     MCP_AVAILABLE = False
     FastMCP = None
+    TransportSecuritySettings = None
 
 
 class GlancesMcpServer:
@@ -72,6 +74,8 @@ class GlancesMcpServer:
                 "The 'mcp' package is required for MCP support. Install it with: pip install 'glances[mcp]'"
             )
 
+        self._load_config(config)
+
         self._mcp = FastMCP(
             "Glances",
             instructions=(
@@ -80,6 +84,7 @@ class GlancesMcpServer:
                 "(CPU, memory, disk, network, processes, containers, sensors, …). "
                 "Use prompts to generate structured analyses of the current system state."
             ),
+            transport_security=self._build_transport_security(),
         )
 
         self._setup_resources()
@@ -114,15 +119,50 @@ class GlancesMcpServer:
         Returns:
             A Starlette ASGI application.
         """
-        logger.debug(f"MCP server (SSE transport) mounted at {mount_path}")
+        logger.debug(f"MCP server (SSE transport) mounted at {mount_path} with allowed hosts: {self.mcp_allowed_hosts}")
         # Call sse_app() without mount_path so FastMCP keeps its default '/'.
         # Starlette will prepend scope['root_path'] (= mount_path) at runtime,
         # producing the correct absolute endpoint URL for clients.
+        # transport_security is already configured on self._mcp at construction time.
         return self._mcp.sse_app()
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    def _load_config(self, config):
+        # MCP allowed hosts for DNS rebinding protection
+        # Default: loopback only (safe for existing deployments)
+        self.mcp_allowed_hosts = ["localhost", "127.0.0.1"]
+        if config is not None and config.has_section('outputs'):
+            raw_mcp_hosts = config.get_value("outputs", "mcp_allowed_hosts", default=None)
+            if raw_mcp_hosts == "*":
+                self.mcp_allowed_hosts = ["*"]
+                logger.warning(
+                    "MCP mcp_allowed_hosts is set to wildcard (*). Ensure the server is behind a trusted reverse proxy."
+                )
+            elif raw_mcp_hosts:
+                self.mcp_allowed_hosts = [h.strip() for h in raw_mcp_hosts.split(",") if h.strip()]
+        logger.debug(f"MCP allowed hosts: {self.mcp_allowed_hosts}")
+
+    def _build_transport_security(self):
+        """Return TransportSecuritySettings derived from mcp_allowed_hosts.
+
+        Wildcard ("*") disables DNS rebinding protection entirely.
+        Otherwise each hostname is converted to a "host:*" pattern (any port)
+        and paired with http/https origin patterns.
+        """
+        if self.mcp_allowed_hosts == ["*"]:
+            return TransportSecuritySettings(enable_dns_rebinding_protection=False)
+
+        # Append :* to plain hostnames so the middleware matches any port.
+        allowed_hosts = [h if ":" in h else f"{h}:*" for h in self.mcp_allowed_hosts]
+        allowed_origins = [f"http://{h}" for h in allowed_hosts] + [f"https://{h}" for h in allowed_hosts]
+        return TransportSecuritySettings(
+            enable_dns_rebinding_protection=True,
+            allowed_hosts=allowed_hosts,
+            allowed_origins=allowed_origins,
+        )
 
     def _get_stats(self):
         """Return the stats manager, raising RuntimeError if not yet set."""
