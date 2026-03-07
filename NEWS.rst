@@ -28,6 +28,11 @@ Enhancements:
 * All plugins now expose min/max/mean statistics since startup #3462
 * Improved CPU plugin display on macOS (graceful handling of unavailable fields) #3464
 
+Security patches:
+
+* Unauthenticated Configuration Secrets Exposure
+* SQL Injection via Process Names in TimescaleDB Export
+
 Code quality:
 
 * JSON serializer hardened with comprehensive type normalization #3454
@@ -38,7 +43,7 @@ Code quality:
 Thanks to all the contributors for this version: @YamiYukiSenpai, @amzon-ex,
 @axodentally, @fpusan, @janusn, @kleinmatic, @lcheylus, @lubomir-moric, @mark-rahal,
 @mikemhenry, @Ambika-Patidar, @AbdelhamidKhald, @Julietmgbole,
-@sdoshi2061, @cjlindem
+@sdoshi2061, @cjlindem, @theamanrawat
 
 ===============
 Version 4.5.0.5
