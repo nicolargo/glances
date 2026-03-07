@@ -19,7 +19,7 @@ jobs:
       uses: ./.github/workflows/build.yml
       needs: [quality, test]
     build_docker:
-      if: github.event_name != 'pull_request'
+      if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/'))
       uses: ./.github/workflows/build_docker.yml
       secrets:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
