@@ -10,9 +10,11 @@
 
 import sys
 import time
+from datetime import datetime, timezone
 from platform import node
 
 import psycopg
+from psycopg import sql
 
 from glances.exports.export import GlancesExport
 from glances.logger import logger
@@ -77,20 +79,13 @@ class Export(GlancesExport):
         return db
 
     def normalize(self, value):
-        """Normalize the value to be exportable to TimescaleDB."""
-        if value is None:
-            return 'NULL'
-        if isinstance(value, bool):
-            return str(value).upper()
+        """Normalize the value for use in a parameterized psycopg query (returns raw Python value)."""
         if isinstance(value, (list, tuple)):
             # Special case for list of one boolean
             if len(value) == 1 and isinstance(value[0], bool):
-                return str(value[0]).upper()
-            return ', '.join([f"'{v}'" for v in value])
-        if isinstance(value, str):
-            return f"'{value}'"
-
-        return f"{value}"
+                return value[0]
+            return ', '.join(str(v) for v in value)
+        return value  # None → NULL, bool/str/int/float handled natively by psycopg
 
     def update(self, stats):
         """Update the TimescaleDB export module."""
@@ -137,8 +132,8 @@ class Export(GlancesExport):
                 segmented_by.extend(['hostname_id'])  # Segment by hostname
                 for key, value in plugin_stats.items():
                     creation_list.append(f"{key} {convert_types[type(value).__name__]} NULL")
-                values_list.append('NOW()')  # Add the current time (insertion time)
-                values_list.append(f"'{self.hostname}'")  # Add the hostname
+                values_list.append(datetime.now(timezone.utc))  # Add the current time (insertion time)
+                values_list.append(self.hostname)  # Add the hostname
                 values_list.extend([self.normalize(value) for value in plugin_stats.values()])
                 values_list = [values_list]
             elif isinstance(plugin_stats, list) and len(plugin_stats) > 0 and 'key' in plugin_stats[0]:
@@ -153,9 +148,9 @@ class Export(GlancesExport):
                 # Create the values list (it is a list of list to have a single datamodel for all the plugins)
                 for plugin_item in plugin_stats:
                     item_list = []
-                    item_list.append('NOW()')  # Add the current time (insertion time)
-                    item_list.append(f"'{self.hostname}'")  # Add the hostname
-                    item_list.append(f"'{plugin_item.get('key')}'")
+                    item_list.append(datetime.now(timezone.utc))  # Add the current time (insertion time)
+                    item_list.append(self.hostname)  # Add the hostname
+                    item_list.append(plugin_item.get('key'))
                     item_list.extend([self.normalize(value) for value in plugin_item.values()])
                     values_list.append(item_list[:-1])
             else:
@@ -175,20 +170,32 @@ class Export(GlancesExport):
 
         with self.client.cursor() as cur:
             # Is the table exists?
-            cur.execute(f"select exists(select * from information_schema.tables where table_name='{plugin}')")
+            cur.execute(
+                "SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name=%s)",
+                [plugin],
+            )
             if not cur.fetchone()[0]:
                 # Create the table if it does not exist
                 # https://github.com/timescale/timescaledb/blob/main/README.md#create-a-hypertable
-                # Execute the create table query
-                create_query = f"""
-CREATE TABLE {plugin} (
-    {', '.join(creation_list)}
-)
-WITH (
-    timescaledb.hypertable,
-    timescaledb.partition_column='time',
-    timescaledb.segmentby = '{", ".join(segmented_by)}'
-);"""
+                # Build CREATE TABLE using sql.Identifier for column names (prevents injection)
+                # Each item in creation_list is "colname TYPE [NULL|NOT NULL]"
+                fields = sql.SQL(', ').join(
+                    sql.SQL("{} {}").format(
+                        sql.Identifier(item.split(' ')[0]),
+                        sql.SQL(' '.join(item.split(' ')[1:]))
+                    )
+                    for item in creation_list
+                )
+                create_query = sql.SQL(
+                    "CREATE TABLE {table} ({fields}) WITH ("
+                    "timescaledb.hypertable, "
+                    "timescaledb.partition_column='time', "
+                    "timescaledb.segmentby = {segmentby});"
+                ).format(
+                    table=sql.Identifier(plugin),
+                    fields=fields,
+                    segmentby=sql.Literal(', '.join(segmented_by)),
+                )
                 logger.debug(f"Create table: {create_query}")
                 try:
                     cur.execute(create_query)
@@ -196,13 +203,19 @@ WITH (
                     logger.error(f"Cannot create table {plugin}: {e}")
                     return
 
-            # Insert the data
+            # Insert the data using parameterized queries (prevents injection)
             # https://github.com/timescale/timescaledb/blob/main/README.md#insert-and-query-data
-            insert_list = [f"({','.join(i)})" for i in values_list]
-            insert_query = f"INSERT INTO {plugin} VALUES {','.join(insert_list)};"
+            col_names = [item.split(' ')[0] for item in creation_list]
+            cols = sql.SQL(', ').join(sql.Identifier(c) for c in col_names)
+            placeholders = sql.SQL(', ').join(sql.Placeholder() for _ in col_names)
+            insert_query = sql.SQL("INSERT INTO {table} ({cols}) VALUES ({vals})").format(
+                table=sql.Identifier(plugin),
+                cols=cols,
+                vals=placeholders,
+            )
             logger.debug(f"Insert data into table: {insert_query}")
             try:
-                cur.execute(insert_query)
+                cur.executemany(insert_query, values_list)
             except Exception as e:
                 logger.error(f"Cannot insert data into table {plugin}: {e}")
                 return
