@@ -23,6 +23,7 @@ fields_description = {
 waiting in the run-queue plus the number currently executing \
 over 1 minute.',
         'unit': 'float',
+        'mmm': True,
     },
     'min5': {
         'description': 'Average sum of the number of processes \

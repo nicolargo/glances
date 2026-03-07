@@ -307,7 +307,7 @@ class TestMemPluginExport:
 
 class TestMemPluginMMM:
     """Test Memory plugin MMM (Min/Max/Mean) feature.
-    
+
     The MMM feature automatically tracks minimum, maximum, and mean values
     for fields marked with 'mmm': True in fields_description.
     """
@@ -353,12 +353,12 @@ class TestMemPluginMMM:
         assert 'percent_min' in mem_plugin.fields_description
         assert 'percent_max' in mem_plugin.fields_description
         assert 'percent_mean' in mem_plugin.fields_description
-        
+
         # Check descriptions exist
         assert 'description' in mem_plugin.fields_description['percent_min']
         assert 'description' in mem_plugin.fields_description['percent_max']
         assert 'description' in mem_plugin.fields_description['percent_mean']
-        
+
         # Check units match
         assert mem_plugin.fields_description['percent_min']['unit'] == 'percent'
         assert mem_plugin.fields_description['percent_max']['unit'] == 'percent'
@@ -437,11 +437,11 @@ class TestMemPluginMMM:
         """Test that MMM tracking accumulates history correctly."""
         # Force multiple updates to build history
         from glances.timer import Timer
-        
+
         for _ in range(3):
             mem_plugin.refresh_timer = Timer(0)
             mem_plugin.update()
-        
+
         # Check that history has accumulated
         mmm_info = mem_plugin._mmm_fields['percent']
         # After 3 updates, we should have at least 3 values in history
@@ -450,54 +450,55 @@ class TestMemPluginMMM:
     def test_mmm_min_max_monotonic(self, mem_plugin):
         """Test that min only decreases (or stays) and max only increases (or stays)."""
         from glances.timer import Timer
-        
+
         prev_min = None
         prev_max = None
-        
+
         for _ in range(3):
             mem_plugin.refresh_timer = Timer(0)
             mem_plugin.update()
             stats = mem_plugin.get_raw()
-            
+
             if prev_min is not None:
                 # min should never increase, max should never decrease
                 assert stats['percent_min'] <= prev_min or prev_min is None
                 assert stats['percent_max'] >= prev_max or prev_max is None
-            
+
             prev_min = stats['percent_min']
             prev_max = stats['percent_max']
 
     def test_mmm_history_limit(self, mem_plugin):
         """Test that MMM history respects the size limit."""
         mmm_info = mem_plugin._mmm_fields['percent']
-        
+
         # The limit should be set to a reasonable value (28800 by default)
         max_history_size = 28800
-        
+
         # After a single update, history should be small
         from glances.timer import Timer
+
         mem_plugin.refresh_timer = Timer(0)
         mem_plugin.update()
-        
+
         # History should not exceed the limit
         assert len(mmm_info['values']) <= max_history_size
 
     def test_mmm_fields_with_multiple_updates(self, mem_plugin):
         """Test MMM tracking across multiple updates."""
         from glances.timer import Timer
-        
+
         # Perform multiple updates
         for i in range(5):
             mem_plugin.refresh_timer = Timer(0)
             mem_plugin.update()
-        
+
         stats = mem_plugin.get_raw()
-        
+
         # All MMM fields should be present
         assert 'percent_min' in stats
         assert 'percent_max' in stats
         assert 'percent_mean' in stats
-        
+
         # Values should be relative to each other
         assert stats['percent_min'] <= stats['percent'] <= stats['percent_max']
         assert stats['percent_min'] <= stats['percent_mean'] <= stats['percent_max']
@@ -508,10 +509,8 @@ class TestMemPluginMMM:
         # We can verify this by checking that MMM fields appear in stats
         self._force_update(mem_plugin)
         stats = mem_plugin.get_raw()
-        
+
         # If decorator is applied correctly, these fields should exist
         assert 'percent_min' in stats
         assert 'percent_max' in stats
         assert 'percent_mean' in stats
-
-

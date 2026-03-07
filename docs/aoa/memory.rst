@@ -19,7 +19,7 @@ Stats description:
 - **used**: memory used, calculated differently depending on the platform and
   designed for informational purposes only.
   It's compute as following:
-   used memory = total - free (with free = available + buffers + cached)
+  used memory = total - free (with free = available + buffers + cached)
 - **free**: memory not being used at all (zeroed) that is readily available;
   note that this doesn’t reflect the actual memory available (use ‘available’
   instead).
