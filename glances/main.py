@@ -469,6 +469,19 @@ Examples of use:
             help='run Glances in web server mode (FastAPI, Uvicorn, Jinja2 libs needed)',
         )
         parser.add_argument(
+            '--enable-mcp',
+            action='store_true',
+            default=False,
+            dest='enable_mcp',
+            help='enable the MCP (Model Context Protocol) server alongside the web server (mcp package needed)',
+        )
+        parser.add_argument(
+            '--mcp-path',
+            default=None,
+            dest='mcp_path',
+            help='set the MCP server mount path [default: /mcp]',
+        )
+        parser.add_argument(
             '--cached-time',
             default=self.cached_time,
             type=int,

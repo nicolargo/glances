@@ -23,6 +23,7 @@ fields_description = {
 waiting in the run-queue plus the number currently executing \
 over 1 minute.',
         'unit': 'float',
+        'mmm': True,
     },
     'min5': {
         'description': 'Average sum of the number of processes \
@@ -164,7 +165,7 @@ class LoadPlugin(GlancesPluginModel):
             ret.append(self.curse_new_line())
             msg = '{:7}'.format(f'{load_time} min')
             ret.append(self.curse_add_line(msg))
-            if args.disable_irix and log_core() != 0:
+            if args and args.disable_irix and log_core() != 0:
                 # Enable Irix mode for load (see issue #1554)
                 load_stat = self.stats[f'min{load_time}'] / log_core() * 100
                 msg = f'{load_stat:>5.1f}%'

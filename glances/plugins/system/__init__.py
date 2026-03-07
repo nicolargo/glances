@@ -235,7 +235,7 @@ class SystemPlugin(GlancesPluginModel):
             return ret
 
         # Build the string message
-        if args.client:
+        if args and args.client:
             # Client mode
             if args.cs_status.lower() == "connected":
                 msg = 'Connected to '

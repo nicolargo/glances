@@ -220,7 +220,7 @@ class ProcesslistPlugin(GlancesPluginModel):
             glances_processes.set_sort_key(config.as_dict()['processlist']['sort_key'], False)
         if 'export' in config.as_dict()['processlist']:
             glances_processes.export_process_filter = config.as_dict()['processlist']['export']
-            if args.export:
+            if args and args.export:
                 logger.info("Export process filter is set to: {}".format(config.as_dict()['processlist']['export']))
         if 'focus' in config.as_dict()['processlist']:
             glances_processes.process_focus = config.as_dict()['processlist']['focus']
@@ -229,7 +229,7 @@ class ProcesslistPlugin(GlancesPluginModel):
             )
         if 'disable_stats' in config.as_dict()['processlist']:
             logger.info(
-                'Followings processes stats wil not be displayed: {}'.format(
+                'Followings processes stats will not be displayed: {}'.format(
                     config.as_dict()['processlist']['disable_stats']
                 )
             )
@@ -302,7 +302,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         """Return process CPU curses"""
         if key_exist_value_not_none_not_v('cpu_percent', p, ''):
             cpu_layout = self.layout_stat['cpu'] if p['cpu_percent'] < 100 else self.layout_stat['cpu_no_digit']
-            if args.disable_irix and self.nb_log_core != 0:
+            if args and args.disable_irix and self.nb_log_core != 0:
                 msg = cpu_layout.format(p['cpu_percent'] / float(self.nb_log_core))
             else:
                 msg = cpu_layout.format(p['cpu_percent'])
@@ -505,7 +505,7 @@ class ProcesslistPlugin(GlancesPluginModel):
                     msg = self.layout_stat['command'].format(cmd)
                     ret.append(self.curse_add_line(msg, decoration=process_decoration, splittable=True))
                 if arguments:
-                    msg = ' ' if args.cursor_process_name_position == 0 else unicode_message('THREE_DOTS')
+                    msg = ' ' if args and args.cursor_process_name_position == 0 else unicode_message('THREE_DOTS')
                     msg += self.layout_stat['command'].format(arguments[args.cursor_process_name_position :])
                     ret.append(self.curse_add_line(msg, splittable=True))
             else:
@@ -588,7 +588,7 @@ class ProcesslistPlugin(GlancesPluginModel):
 
         # A filter is set Display the stats summaries
         if glances_processes.process_filter is not None:
-            if args.reset_minmax_tag:
+            if args and args.reset_minmax_tag:
                 args.reset_minmax_tag = not args.reset_minmax_tag
                 self._mmm_reset()
             self._msg_curse_sum(ret, args=args)
@@ -756,9 +756,9 @@ class ProcesslistPlugin(GlancesPluginModel):
     def _msg_curse_header_cpu(self, ret, process_sort_key, display_stats, sort_style='SORT', args=None):
         """Build the header and add it to the ret dict."""
         if 'cpu_percent' in display_stats:
-            if args.disable_irix and 0 < self.nb_log_core < 10:
+            if args and args.disable_irix and 0 < self.nb_log_core < 10:
                 msg = self.layout_header['cpu'].format('CPU%/' + str(self.nb_log_core))
-            elif args.disable_irix and self.nb_log_core != 0:
+            elif args and args.disable_irix and self.nb_log_core != 0:
                 msg = self.layout_header['cpu'].format('CPUi')
             else:
                 msg = self.layout_header['cpu'].format('CPU%')
@@ -840,7 +840,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         if 'cpu_num' in display_stats:
             msg = self.layout_header['processor'].format('CPU')
             ret.append(self.curse_add_line(msg, optional=True))
-        if args.is_standalone and not args.disable_cursor:
+        if args and args.is_standalone and not args.disable_cursor:
             shortkey = "('e' to pin | 'k' to kill)"
         else:
             shortkey = ""

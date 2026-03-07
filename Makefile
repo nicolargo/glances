@@ -80,7 +80,7 @@ requirements-all: ## Generate the all-requirements.txt files (all dependencies)
 	$(UV_RUN) export --no-emit-workspace --no-hashes --all-extras --no-group dev --output-file all-requirements.txt
 
 requirements-docker: ## Generate the docker-requirements.txt files (Docker specific dependencies)
-	$(UV_RUN) export --no-emit-workspace --no-hashes --no-group dev --extra containers --extra web --output-file docker-requirements.txt
+	$(UV_RUN) export --no-emit-workspace --no-hashes --no-group dev --extra containers --extra web --extra mcp --output-file docker-requirements.txt
 
 requirements-dev: ## Generate the dev-requirements.txt files (dev dependencies)
 	$(UV_RUN) export --no-hashes --only-dev --output-file dev-requirements.txt
@@ -140,7 +140,8 @@ test-export-timescaledb: ## Run interface tests with TimescaleDB
 test-export-nats: ## Run interface tests with NATS
 	/bin/bash ./tests/test_export_nats.sh
 
-test-exports: test-export-csv test-export-json test-export-influxdb-v1 test-export-influxdb-v3 test-export-timescaledb test-export-nats ## Tests all exports
+test-exports: ## Tests all exports
+	@for f in ./tests/test_export_*.sh; do /bin/bash "$$f"; done
 
 # ===================================================================
 # Linters, profilers and cyber security
@@ -191,7 +192,7 @@ profiling-pyinstrument: ## PyInstrument profiling
 
 profiling-pyspy: ## Flame profiling
 	$(DISPLAY-BANNER)
-	$(UV_RUN) run py-spy record -o $(OUT_DIR)/glances-flame.svg -d 60 -s -- .venv-uv/bin/uvrun python run-venv.py -C $(CONF) --stop-after $(TIMES)
+	$(UV_RUN) run py-spy record -o $(OUT_DIR)/glances-flame.svg -d 60 -s -- .venv/bin/python -m glances -C $(CONF) --stop-after $(TIMES)
 
 profiling: profiling-gprof profiling-pyinstrument profiling-pyspy ## Profiling of the Glances software
 
@@ -266,7 +267,7 @@ webui-audit: ## Audit the Web UI
 	cd $(DIR) && npm audit
 
 webui-audit-fix: webui-gen-config ## Fix audit the Web UI
-	cd $(DIR) && npm audit fix && npm ci && npm run build
+	cd $(DIR) && npm ci && npm audit fix && npm run build
 
 webui-update: webui-gen-config ## Update JS dependencies
 	cd $(DIR) && npm update --save && npm ci && npm run build
@@ -355,13 +356,19 @@ generate-ssl: ## Generate local and sel signed SSL certificates for dev (need mk
 run-webserver: ## Start Glances in Web server mode
 	$(UV_RUN) run python -m glances -C $(CONF) -w
 
+run-webserver-mcp: ## Start Glances in Web server mode with MCP
+	$(UV_RUN) run python -m glances -C $(CONF) -w --enable-mcp
+
 run-webserver-local-conf: ## Start Glances in Web server mode with the system conf file
 	$(UV_RUN) run python -m glances -w
+
+run-webserver-mcp-local-conf: ## Start Glances in Web server mode with MCP and the system conf file
+	$(UV_RUN) run python -m glances -w --enable-mcp
 
 run-webserver-local-conf-hide-public: ## Start Glances in Web server mode with the system conf file and hide public info
 	$(UV_RUN) run python -m glances -w --hide-public-info
 
-run-webui: un-webserver  ## Start Glances in Web server mode
+run-webui: run-webserver  ## Start Glances in Web server mode
 
 run-restapiserver: ## Start Glances in REST API server mode
 	$(UV_RUN) run python -m glances -C $(CONF) -w --disable-webui

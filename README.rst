@@ -75,6 +75,9 @@ Web interface or API (XML-RPC and RESTful).
 Stats can also be exported to files or external time/value databases, CSV or direct
 output to STDOUT.
 
+AI assistants (Claude, Cursor, …) can query Glances directly through the built-in 
+MCP server (available in Glances 4.5.1 and higher).
+
 Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can
 add new plugins or exports modules.
@@ -102,17 +105,14 @@ In this mode, a HTTP/Restful API is exposed, see document `RestfulApi`_ for more
 
 .. image:: ./docs/_static/screenshot-web.png
 
-For the client/server mode (remote monitoring through XML-RPC), run the following command on the server:
+To also expose a `MCP (Model Context Protocol)`_ server (for AI assistants), add ``--enable-mcp``:
 
 .. code-block:: console
 
-    $ glances -s
+    $ glances -w --enable-mcp
 
-and this one on the client:
-
-.. code-block:: console
-
-    $ glances -c <ip>
+The MCP endpoint (SSE transport) is then available at ``http://<ip>:61208/mcp/sse``.
+See the `McpApi`_ documentation for client configuration and usage.
 
 You can also detect and display all Glances servers available on your
 network (or defined in the configuration file) in TUI:
@@ -168,6 +168,18 @@ Last but not least, you can use the fetch mode to get a quick look of a machine:
 Results look like this:
 
 .. image:: ./docs/_static/screenshot-fetch.png
+
+For the record, Glances also have a XML-RPC client/server mode, run the following command on the server:
+
+.. code-block:: console
+
+    $ glances -s
+
+and this one on the client:
+
+.. code-block:: console
+
+    $ glances -c <ip>
 
 Use Glances as a Python library 📚
 ==================================
@@ -295,6 +307,7 @@ Features list:
 - gpu: install dependencies for GPU plugin
 - graph: install dependencies for graph export
 - ip: install dependencies for IP public option
+- mcp: install dependencies for the MCP server (AI assistant integration)
 - raid: install dependencies for RAID plugin
 - sensors: install dependencies for sensors plugin
 - smart: install dependencies for smart plugin
@@ -308,6 +321,17 @@ To upgrade Glances to the latest version:
 .. code-block:: console
 
     pip install --upgrade glances
+
+UVx, the magic way
+------------------
+
+Install and run directly Glances with the one line:
+
+.. code-block:: console
+
+    uvx glances
+
+Note: `Uv`_ should be installed on your system.
 
 PyPI: PipX, the alternative way
 -------------------------------
@@ -569,6 +593,7 @@ Extra dependencies:
 - ``docker`` (for the Containers Docker monitoring support)
 - ``elasticsearch`` (for the Elastic Search export module)
 - ``FastAPI`` and ``Uvicorn`` (for Web server mode)
+- ``mcp`` (for the MCP server — AI assistant integration)
 - ``graphitesender`` (For the Graphite export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB version 1 export module)
@@ -648,9 +673,12 @@ Please give us a star on `GitHub`_ if you like this project.
 .. _package: https://repology.org/project/glances/versions
 .. _sponsors: https://github.com/sponsors/nicolargo
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
+.. _Uv: https://docs.astral.sh/uv/getting-started/installation/
 .. _Docker: https://github.com/nicolargo/glances/blob/master/docs/docker.rst
 .. _GitHub: https://github.com/nicolargo/glances
 .. _PythonApi: https://glances.readthedocs.io/en/develop/api/python.html
 .. _RestfulApi: https://glances.readthedocs.io/en/develop/api/restful.html
+.. _McpApi: https://glances.readthedocs.io/en/develop/api/mcp.html
+.. _`MCP (Model Context Protocol)`: https://modelcontextprotocol.io
 .. _FAQ: https://github.com/nicolargo/glances/blob/develop/docs/faq.rst
 .. _Discussions: https://github.com/nicolargo/glances/discussions

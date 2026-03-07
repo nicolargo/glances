@@ -311,7 +311,10 @@ class GlancesExport:
             else:
                 pre_key = ""
             # Walk through the dict
-            for key, value in sorted(stats.items()):
+            # Priviously, we sort the dict but it breaks export for some plugins (see #3449)
+            for key, value in stats.items():
+                # Convert the key to a string and lower case it
+                key = str(key).lower()
                 if isinstance(value, bool):
                     value = json_dumps(value).decode()
 
@@ -320,14 +323,14 @@ class GlancesExport:
 
                 if isinstance(value, dict):
                     item_names, item_values = self.build_export(value)
-                    item_names = [pre_key + key.lower() + str(i) for i in item_names]
+                    item_names = [pre_key + key + str(i) for i in item_names]
                     export_names += item_names
                     export_values += item_values
                 else:
                     # We are on a simple value
-                    if self.is_excluded(pre_key + key.lower()):
+                    if self.is_excluded(pre_key + key):
                         continue
-                    export_names.append(pre_key + key.lower())
+                    export_names.append(pre_key + key)
                     export_values.append(value)
         elif isinstance(stats, list):
             # Stats is a list (of dict)

@@ -28,6 +28,10 @@ services:
     volumes:
       - "/:/rootfs:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      # Uncomment for qemu/libvirt/kvm support with modular libvirt daemons
+      # - "/var/run/libvirt/virtqemud-sock:/var/run/libvirt/libvirt-sock:ro"
+      # OR monolithic libvirt daemon
+      # - "/var/run/libvirt/libvirt-sock:/var/run/libvirt/libvirt-sock:ro"
       - "/run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro"
       - "./glances.conf:/glances/conf/glances.conf"
       # Uncomment for proper distro information in upper panel.
@@ -38,9 +42,9 @@ services:
       - /tmp
 
     environment:
+      - GLANCES_OPT=-C /glances/conf/glances.conf -w --enable-mcp --enable-plugin smart
       # Please set to your local timezone (or use local ${TZ} environment variable if set on your host)
       - TZ=Europe/Paris
-      - GLANCES_OPT=-C /glances/conf/glances.conf -w --enable-plugin smart
       - PYTHONPYCACHEPREFIX=/tmp/py_caches
 
 #     # Uncomment for GPU compatibility (Nvidia) inside the container
