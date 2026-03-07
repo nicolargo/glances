@@ -269,9 +269,10 @@ class FsPlugin(GlancesPluginModel):
         # Alert
         # Do not display threshold for volume mounted in 'ro' (read-only) #3143
         for i in [d for d in self.stats if 'ro' not in d.get('options', '').split(',')]:
-            self.views[i[self.get_key()]]['used']['decoration'] = self.get_alert(
-                current=i['size'] - i['free'], maximum=i['size'], header=i['mnt_point']
-            )
+            if i[self.get_key()] in self.views:
+                self.views[i[self.get_key()]]['used']['decoration'] = self.get_alert(
+                    current=i['size'] - i['free'], maximum=i['size'], header=i['mnt_point']
+                )
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
