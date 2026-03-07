@@ -28,6 +28,7 @@ and it is supposed to be used to monitor actual memory usage in a cross platform
     'percent': {
         'description': 'The percentage usage calculated as (total - available) / total * 100.',
         'unit': 'percent',
+        'mmm': True
     },
     'used': {
         'description': 'Memory used, calculated differently depending on the platform and \
@@ -249,8 +250,10 @@ class MemPlugin(GlancesPluginModel):
 
         return stats
 
+
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
+    @GlancesPluginModel._manage_mmm
     def update(self):
         """Update RAM memory stats using the input method."""
         init = self.get_init_value()
