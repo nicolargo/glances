@@ -192,7 +192,7 @@ profiling-pyinstrument: ## PyInstrument profiling
 
 profiling-pyspy: ## Flame profiling
 	$(DISPLAY-BANNER)
-	$(UV_RUN) run py-spy record -o $(OUT_DIR)/glances-flame.svg -d 60 -s -- .venv-uv/bin/uvrun python run-venv.py -C $(CONF) --stop-after $(TIMES)
+	$(UV_RUN) run py-spy record -o $(OUT_DIR)/glances-flame.svg -d 60 -s -- .venv/bin/python -m glances -C $(CONF) --stop-after $(TIMES)
 
 profiling: profiling-gprof profiling-pyinstrument profiling-pyspy ## Profiling of the Glances software
 
