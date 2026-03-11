@@ -30,8 +30,8 @@ Enhancements:
 
 Security patches:
 
-* Unauthenticated Configuration Secrets Exposure
-* SQL Injection via Process Names in TimescaleDB Export
+* Unauthenticated Configuration Secrets Exposure - Correct CVE-2026-30928
+* SQL Injection via Process Names in TimescaleDB Export - Correct CVE-2026-30930
 
 Code quality:
 
