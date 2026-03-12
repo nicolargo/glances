@@ -108,7 +108,7 @@ class Export(GlancesExport):
         self._last_exported_list = [p for p in self.plugins_to_export(stats) if p not in ['sensors', 'fs', 'diskio']]
 
         all_stats = stats.getAllExportsAsDict(plugin_list=self.last_exported_list())
-        
+
         for plugin in self.last_exported_list():
             plugin_stats = all_stats.get(plugin)
             if not plugin_stats:
@@ -205,6 +205,6 @@ class Export(GlancesExport):
         if self.client:
             try:
                 self.client.close()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"TimescaleDB export exit error: {e}")
         super().exit()
