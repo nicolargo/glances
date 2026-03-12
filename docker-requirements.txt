@@ -14,14 +14,14 @@ attrs==25.4.0
     # via
     #   jsonschema
     #   referencing
-certifi==2026.1.4
+certifi==2026.2.25
     # via
     #   httpcore
     #   httpx
     #   requests
 cffi==2.0.0 ; platform_python_implementation != 'PyPy'
     # via cryptography
-charset-normalizer==3.4.4
+charset-normalizer==3.4.5
     # via requests
 click==8.1.8
     # via uvicorn
@@ -39,7 +39,7 @@ ecdsa==0.19.1
     # via python-jose
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.129.2
+fastapi==0.135.1
     # via glances
 h11==0.16.0
     # via
@@ -70,7 +70,7 @@ packaging==26.0
     # via glances
 podman==5.7.0
     # via glances
-psutil==7.1.1
+psutil==7.2.2
     # via glances
 pyasn1==0.6.2
     # via
@@ -93,7 +93,7 @@ pyjwt==2.11.0
     # via mcp
 python-dateutil==2.9.0.post0
     # via glances
-python-dotenv==1.2.1
+python-dotenv==1.2.2
     # via pydantic-settings
 python-jose==3.5.0
     # via glances
@@ -125,7 +125,7 @@ six==1.17.0
     #   ecdsa
     #   glances
     #   python-dateutil
-sse-starlette==3.2.0
+sse-starlette==3.3.2
     # via mcp
 starlette==0.52.1
     # via

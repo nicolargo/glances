@@ -32,19 +32,19 @@ boolean-py==5.0
     # via license-expression
 bracex==2.6
     # via wcmatch
-certifi==2026.1.4
+certifi==2026.2.25
     # via
     #   httpcore
     #   httpx
     #   requests
     #   selenium
-cffi==2.0.0 ; (implementation_name != 'pypy' and os_name == 'nt' and platform_version >= '11.') or (implementation_name != 'pypy' and os_name == 'nt' and sys_platform != 'darwin') or platform_python_implementation != 'PyPy'
+cffi==2.0.0 ; (implementation_name != 'pypy' and os_name == 'nt') or platform_python_implementation != 'PyPy'
     # via
     #   cryptography
     #   trio
 cfgv==3.5.0
     # via pre-commit
-charset-normalizer==3.4.4
+charset-normalizer==3.4.5
     # via
     #   python-debian
     #   requests
@@ -57,7 +57,7 @@ click==8.1.8
     #   uvicorn
 click-option-group==0.5.9
     # via semgrep
-codespell==2.4.1
+codespell==2.4.2
 colorama==0.4.6
     # via
     #   click
@@ -93,13 +93,15 @@ exceptiongroup==1.2.2
     #   trio-websocket
 face==26.0.0
     # via glom
-filelock==3.24.3
-    # via virtualenv
+filelock==3.25.0
+    # via
+    #   python-discovery
+    #   virtualenv
 fonttools==4.61.1
     # via matplotlib
 glom==25.12.0
     # via semgrep
-googleapis-common-protos==1.72.0
+googleapis-common-protos==1.73.0
     # via opentelemetry-exporter-otlp-proto-http
 gprof2dot==2025.4.14
 h11==0.16.0
@@ -113,7 +115,7 @@ httpx==0.28.1
     # via mcp
 httpx-sse==0.4.3
     # via mcp
-identify==2.6.16
+identify==2.6.17
     # via pre-commit
 idna==3.11
     # via
@@ -121,7 +123,7 @@ idna==3.11
     #   httpx
     #   requests
     #   trio
-imagesize==1.4.1
+imagesize==2.0.0
     # via sphinx
 importlib-metadata==8.7.1
     # via opentelemetry-api
@@ -216,8 +218,10 @@ peewee==3.19.0
     # via semgrep
 pillow==12.1.1
     # via matplotlib
-platformdirs==4.9.2
-    # via virtualenv
+platformdirs==4.9.4
+    # via
+    #   python-discovery
+    #   virtualenv
 pluggy==1.6.0
     # via pytest
 pre-commit==4.5.1
@@ -225,10 +229,10 @@ protobuf==6.33.5
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
-psutil==7.1.1
+psutil==7.2.2
     # via memory-profiler
 py-spy==0.4.1
-pycparser==3.0 ; (implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt' and platform_version >= '11.') or (implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt' and sys_platform != 'darwin') or (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy')
+pycparser==3.0 ; (implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt') or (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy')
     # via cffi
 pydantic==2.12.5
     # via
@@ -259,7 +263,9 @@ python-dateutil==2.9.0.post0
     # via matplotlib
 python-debian==1.1.0
     # via reuse
-python-dotenv==1.2.1
+python-discovery==1.1.1
+    # via virtualenv
+python-dotenv==1.2.2
     # via
     #   pydantic-settings
     #   webdriver-manager
@@ -285,7 +291,7 @@ requests==2.32.5
     #   webdriver-manager
 requirements-parser==0.13.0
 reuse==6.2.0
-rich==13.5.3
+rich==14.3.3
     # via
     #   semgrep
     #   typer
@@ -302,11 +308,11 @@ ruamel-yaml==0.19.1
     # via semgrep
 ruamel-yaml-clib==0.2.14
     # via semgrep
-ruff==0.15.2
+ruff==0.15.5
 selenium==4.41.0
 semantic-version==2.10.0
     # via semgrep
-semgrep==1.152.0
+semgrep==1.154.0
 setuptools==82.0.0
 shellingham==1.5.4
     # via typer
@@ -345,7 +351,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-sse-starlette==3.2.0
+sse-starlette==3.3.2
     # via mcp
 starlette==0.52.1
     # via
@@ -397,7 +403,7 @@ urllib3==2.6.3
     #   semgrep
 uvicorn==0.41.0 ; sys_platform != 'emscripten'
     # via mcp
-virtualenv==20.38.0
+virtualenv==21.1.0
     # via pre-commit
 wcmatch==8.5.2
     # via semgrep

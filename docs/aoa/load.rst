@@ -18,6 +18,18 @@ Be aware that Load on Linux, BSD and Windows are different things, high
 `load on BSD`_ does not means high CPU load. The Windows load is emulated
 by the PsUtil lib (see `load on Windows`_)
 
+Load stats description:
+
+- **min1**: Average sum of the number of processes waiting in the run-queue
+  plus the number currently executing over 1 minute.
+- **min1_min**: Minimum average value observed since Glances startup.
+- **min1_max**: Maximum average value observed since Glances startup.
+- **min1_mean**: Mean (average) value computed from the history.
+- **min5**: Average sum of the number of processes waiting in the run-queue
+  plus the number currently executing over 5 minutes.
+- **min15**: Average sum of the number of processes waiting in the run-queue
+  plus the number currently executing over 15 minutes.
+
 Glances gets the number of CPU core (displayed on the first line) to adapt
 the alerts. Alerts on load average are only set on 15 minutes time period.
 

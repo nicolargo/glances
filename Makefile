@@ -192,7 +192,7 @@ profiling-pyinstrument: ## PyInstrument profiling
 
 profiling-pyspy: ## Flame profiling
 	$(DISPLAY-BANNER)
-	$(UV_RUN) run py-spy record -o $(OUT_DIR)/glances-flame.svg -d 60 -s -- .venv-uv/bin/uvrun python run-venv.py -C $(CONF) --stop-after $(TIMES)
+	$(UV_RUN) run py-spy record -o $(OUT_DIR)/glances-flame.svg -d 60 -s -- .venv/bin/python -m glances -C $(CONF) --stop-after $(TIMES)
 
 profiling: profiling-gprof profiling-pyinstrument profiling-pyspy ## Profiling of the Glances software
 
@@ -368,7 +368,7 @@ run-webserver-mcp-local-conf: ## Start Glances in Web server mode with MCP and t
 run-webserver-local-conf-hide-public: ## Start Glances in Web server mode with the system conf file and hide public info
 	$(UV_RUN) run python -m glances -w --hide-public-info
 
-run-webui: un-webserver  ## Start Glances in Web server mode
+run-webui: run-webserver  ## Start Glances in Web server mode
 
 run-restapiserver: ## Start Glances in REST API server mode
 	$(UV_RUN) run python -m glances -C $(CONF) -w --disable-webui

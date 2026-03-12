@@ -17,6 +17,10 @@ displayed.
 
 CPU stats description:
 
+- **total**: sum of all CPU percentages (except idle).
+- **total_min**: minimum total observed since Glances startup.
+- **total_max**: maximum total observed since Glances startup.
+- **total_mean**: mean (average) total computed from the history.
 - **user**: percent time spent in user space. User CPU time is the time
   spent on the processor running your program's code (or code in
   libraries).

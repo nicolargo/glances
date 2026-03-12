@@ -229,7 +229,7 @@ class ProcesslistPlugin(GlancesPluginModel):
             )
         if 'disable_stats' in config.as_dict()['processlist']:
             logger.info(
-                'Followings processes stats wil not be displayed: {}'.format(
+                'Followings processes stats will not be displayed: {}'.format(
                     config.as_dict()['processlist']['disable_stats']
                 )
             )

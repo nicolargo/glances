@@ -8,7 +8,7 @@ markupsafe==3.0.3
     # via jinja2
 packaging==26.0
     # via glances
-psutil==7.1.1
+psutil==7.2.2
     # via glances
 pyinstrument==5.1.2
     # via glances

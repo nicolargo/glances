@@ -10,9 +10,11 @@
 
 import sys
 import time
+from datetime import datetime, timezone
 from platform import node
 
-
+import psycopg
+from psycopg import sql
 
 from glances.exports.export import GlancesExport
 from glances.logger import logger
@@ -86,19 +88,13 @@ class Export(GlancesExport):
         return db
 
     def normalize(self, value):
-        """Normalize the value to be exportable to TimescaleDB."""
-        if value is None:
-            return 'NULL'
-        if isinstance(value, bool):
-            return str(value).upper()
+        """Normalize the value for use in a parameterized psycopg query (returns raw Python value)."""
         if isinstance(value, (list, tuple)):
             # Special case for list of one boolean
             if len(value) == 1 and isinstance(value[0], bool):
-                return str(value[0]).upper()
-            return ', '.join([f"'{v}'" for v in value])
-        if isinstance(value, str):
-            return f"'{value}'"
-        return f"{value}"
+                return value[0]
+            return ', '.join(str(v) for v in value)
+        return value  # None → NULL, bool/str/int/float handled natively by psycopg
 
     def _prepare_stats(self, plugin, plugin_stats, plugin_limits):
         """Clean and normalize plugin data. Return a list regardless of whether the original data is a dictionary or a list"""
@@ -142,27 +138,41 @@ class Export(GlancesExport):
             if not items:
                 continue
 
-            # 2. Generate metadata (table schema and segmentation information)
-            creation_list = ['time TIMESTAMPTZ NOT NULL', 'hostname_id TEXT NOT NULL']
-            segmented_by = ['hostname_id']
-
-            # If it is a list type (e.g., process list), add key_id for identification
-            is_list_type = isinstance(all_stats[plugin], list) and 'key' in items[0]
-            if is_list_type:
+            plugin_stats = all_stats[plugin]
+            creation_list = []  # List used to create the TimescaleDB table
+            segmented_by = []  # List of columns used to segment the data
+            values_list = []  # List of values to insert (list of lists, one list per row)
+            if isinstance(plugin_stats, dict):
+                # Stats is a dict
+                # Create the list used to create the TimescaleDB table
+                creation_list.append('time TIMESTAMPTZ NOT NULL')
+                creation_list.append('hostname_id TEXT NOT NULL')
+                segmented_by.extend(['hostname_id'])  # Segment by hostname
+                for key, value in plugin_stats.items():
+                    creation_list.append(f"{key} {convert_types[type(value).__name__]} NULL")
+                values_list.append(datetime.now(timezone.utc))  # Add the current time (insertion time)
+                values_list.append(self.hostname)  # Add the hostname
+                values_list.extend([self.normalize(value) for value in plugin_stats.values()])
+                values_list = [values_list]
+            elif isinstance(plugin_stats, list) and len(plugin_stats) > 0 and 'key' in plugin_stats[0]:
+                # Stats is a list
+                # Create the list used to create the TimescaleDB table
+                creation_list.append('time TIMESTAMPTZ NOT NULL')
+                creation_list.append('hostname_id TEXT NOT NULL')
                 creation_list.append('key_id TEXT NOT NULL')
-                segmented_by.append('key_id')
-
-            # Dynamically generate column definitions based on the first item
-            for key, value in items[0].items():
-                v_type = convert_types.get(type(value).__name__, 'TEXT')
-                creation_list.append(f"{key} {v_type} NULL")
-
-            # 3. Prepare value rows for insertion
-            values_list = []
-            for item in items:
-                row = ['NOW()', f"'{self.hostname}'"]
-                if is_list_type:
-                    row.append(f"'{item.get('key')}'")
+                segmented_by.extend(['hostname_id', 'key_id'])  # Segment by hostname and key
+                for key, value in plugin_stats[0].items():
+                    creation_list.append(f"{key} {convert_types[type(value).__name__]} NULL")
+                # Create the values list (it is a list of list to have a single datamodel for all the plugins)
+                for plugin_item in plugin_stats:
+                    item_list = []
+                    item_list.append(datetime.now(timezone.utc))  # Add the current time (insertion time)
+                    item_list.append(self.hostname)  # Add the hostname
+                    item_list.append(plugin_item.get('key'))
+                    item_list.extend([self.normalize(value) for value in plugin_item.values()])
+                    values_list.append(item_list[:-1])
+            else:
+                continue
 
                 row.extend([self.normalize(v) for v in item.values()])
 
@@ -177,22 +187,56 @@ class Export(GlancesExport):
 
     def export(self, plugin, creation_list, values_list, segmented_by=None):
         """Export the stats to the TimescaleDB server."""
-        if segmented_by is None:
-            segmented_by = []
+        logger.debug(f"Export {plugin} stats to TimescaleDB")
 
-        try:
-            with self.client.cursor() as cur:
-                # Check whether the table exists
-                cur.execute("SELECT exists(SELECT * FROM information_schema.tables WHERE table_name=%s)", (plugin,))
-                if not cur.fetchone()[0]:
-                    self._create_hypertable(cur, plugin, creation_list, segmented_by)
+        with self.client.cursor() as cur:
+            # Is the table exists?
+            cur.execute(
+                "SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name=%s)",
+                [plugin],
+            )
+            if not cur.fetchone()[0]:
+                # Create the table if it does not exist
+                # https://github.com/timescale/timescaledb/blob/main/README.md#create-a-hypertable
+                # Build CREATE TABLE using sql.Identifier for column names (prevents injection)
+                # Each item in creation_list is "colname TYPE [NULL|NOT NULL]"
+                fields = sql.SQL(', ').join(
+                    sql.SQL("{} {}").format(sql.Identifier(item.split(' ')[0]), sql.SQL(' '.join(item.split(' ')[1:])))
+                    for item in creation_list
+                )
+                create_query = sql.SQL(
+                    "CREATE TABLE {table} ({fields}) WITH ("
+                    "timescaledb.hypertable, "
+                    "timescaledb.partition_column='time', "
+                    "timescaledb.segmentby = {segmentby});"
+                ).format(
+                    table=sql.Identifier(plugin),
+                    fields=fields,
+                    segmentby=sql.Literal(', '.join(segmented_by)),
+                )
+                logger.debug(f"Create table: {create_query}")
+                try:
+                    cur.execute(create_query)
+                except Exception as e:
+                    logger.error(f"Cannot create table {plugin}: {e}")
+                    return
 
-                # Bulk insert data
-                insert_rows = [f"({','.join(row)})" for row in values_list]
-                safe_table = "".join(c for c in plugin if c.isalnum() or c == '_')
-                sql_cmd = "INSERT" + " INTO " + safe_table + " VALUES "
-                insert_query = sql_cmd + ",".join(insert_rows) + ";"
-                cur.execute(insert_query)
+            # Insert the data using parameterized queries (prevents injection)
+            # https://github.com/timescale/timescaledb/blob/main/README.md#insert-and-query-data
+            col_names = [item.split(' ')[0] for item in creation_list]
+            cols = sql.SQL(', ').join(sql.Identifier(c) for c in col_names)
+            placeholders = sql.SQL(', ').join(sql.Placeholder() for _ in col_names)
+            insert_query = sql.SQL("INSERT INTO {table} ({cols}) VALUES ({vals})").format(
+                table=sql.Identifier(plugin),
+                cols=cols,
+                vals=placeholders,
+            )
+            logger.debug(f"Insert data into table: {insert_query}")
+            try:
+                cur.executemany(insert_query, values_list)
+            except Exception as e:
+                logger.error(f"Cannot insert data into table {plugin}: {e}")
+                return
 
             self.client.commit()
         except Exception as e:

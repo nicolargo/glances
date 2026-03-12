@@ -2,6 +2,49 @@
                                 Glances ChangeLog
 ==============================================================================
 
+=============
+Version 4.5.1
+=============
+
+Bug corrected:
+
+* DiskIO plugin crashes Glances on OpenBSD (regression from 4.5.0.5) #3452
+* DiskIO plugin does not handle empty args in msg_curse() #3429
+* Filesystem plugin KeyError on /etc/hostname in get_view() #3470
+* Sensors show/hide by alias name not working #3439
+* SMART plugin non-uniform key types cause TypeError with InfluxDB2 export #3449
+* WebUI displays incorrect temperature values in Fahrenheit mode #3450
+* AMD GPU plugin PermissionError on /usr/share/libdrm/amdgpu.ids crashes Glances at startup (Snap) #3456
+* NVIDIA GPU not detected under Snap strict confinement #3292
+* MCP server rejects external host connections due to DNS rebinding protection #3467
+* --enable-history flag silently ignored #3416
+
+Enhancements:
+
+* Intel GPU monitoring support added to GPU plugin #994
+* Docker container health status and alerts #3402
+* Add libvirt client to Docker image for VM monitoring #3436
+* Add DeviceName key to SMART plugin device stats #3457
+* All plugins now expose min/max/mean statistics since startup #3462
+* Improved CPU plugin display on macOS (graceful handling of unavailable fields) #3464
+
+Security patches:
+
+* Unauthenticated Configuration Secrets Exposure - Correct CVE-2026-30928
+* SQL Injection via Process Names in TimescaleDB Export - Correct CVE-2026-30930
+
+Code quality:
+
+* JSON serializer hardened with comprehensive type normalization #3454
+* Reduce cyclomatic complexity of split_esc() in globals #3461
+* Add plugin tests to Makefile #3446
+* Fix code block formatting in documentation #3447
+
+Thanks to all the contributors for this version: @YamiYukiSenpai, @amzon-ex,
+@axodentally, @fpusan, @janusn, @kleinmatic, @lcheylus, @lubomir-moric, @mark-rahal,
+@mikemhenry, @Ambika-Patidar, @AbdelhamidKhald, @Julietmgbole,
+@sdoshi2061, @cjlindem, @theamanrawat
+
 ===============
 Version 4.5.0.5
 ===============

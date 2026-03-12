@@ -331,7 +331,8 @@ class GlancesRestfulApi:
                 full_mcp_path,
                 self._mcp_server.get_asgi_app(mount_path=full_mcp_path),
             )
-            bindmsg = f'Glances MCP server started on {self.protocol}://{self.args.bind_address}:{self.args.port}{full_mcp_path}'
+            bindaddr = f"{self.protocol}://{self.args.bind_address}:{self.args.port}{full_mcp_path}"
+            bindmsg = f'Glances MCP server started on {bindaddr}'
             logger.info(bindmsg)
             print(bindmsg)
         elif self.mcp_enabled and not MCP_AVAILABLE:
@@ -376,8 +377,12 @@ class GlancesRestfulApi:
             self.mcp_path = config.get_value('outputs', 'mcp_path', default='/mcp')
             if not self.mcp_path.startswith('/'):
                 self.mcp_path = '/' + self.mcp_path
+
         logger.debug(f"Protocol for Resful API and WebUI: {self.protocol}")
-        logger.debug(f"MCP server enabled: {self.mcp_enabled} (path: {self.url_prefix + self.mcp_path})")
+        logger.debug(
+            f"MCP server enabled: {self.mcp_enabled} \
+            (path: {self.url_prefix + self.mcp_path})"
+        )
 
     def is_ssl(self):
         """Return true if the Glances server use SSL."""
@@ -1160,7 +1165,7 @@ class GlancesRestfulApi:
         """
         try:
             # Get the RAW value of the config' dict
-            args_json = self.config.as_dict()
+            args_json = self.config.as_dict() if self.args.password else self.config.as_dict_secure()
         except Exception as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get config ({str(e)})")
         else:
@@ -1174,7 +1179,7 @@ class GlancesRestfulApi:
         HTTP/400 if item is not found
         HTTP/404 if others error
         """
-        config_dict = self.config.as_dict()
+        config_dict = self.config.as_dict() if self.args.password else self.config.as_dict_secure()
         if section not in config_dict:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Unknown configuration item {section}")
 
@@ -1194,7 +1199,7 @@ class GlancesRestfulApi:
         HTTP/400 if item is not found
         HTTP/404 if others error
         """
-        config_dict = self.config.as_dict()
+        config_dict = self.config.as_dict() if self.args.password else self.config.as_dict_secure()
         if section not in config_dict:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Unknown configuration item {section}")
 
