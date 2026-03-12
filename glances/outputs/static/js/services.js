@@ -1,5 +1,5 @@
 import Favico from "favico.js";
-import { store } from "./store.js";
+import { store, pushHistory } from "./store.js";
 
 // prettier-ignore
 const fetchAll = () =>
@@ -89,6 +89,7 @@ class GlancesStatsService {
 					this.data = data;
 					store.data = data;
 					store.status = "SUCCESS";
+					pushHistory(data.stats);
 				})
 				.catch((error) => {
 					console.log(error);
