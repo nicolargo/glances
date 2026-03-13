@@ -175,24 +175,56 @@ class ProgramlistPlugin(ProcesslistPlugin):
         msg = self.layout_stat['nprocs'].format(p['nprocs'])
         return self.curse_add_line(msg)
 
+    def _msg_curse_header_cpu(self, ret, process_sort_key, display_stats, sort_style='SORT', args=None):
+        """Build the CPU% header column."""
+        if 'cpu_percent' not in display_stats:
+            return
+        if args.disable_irix and 0 < self.nb_log_core < 10:
+            msg = self.layout_header['cpu'].format('CPU%/' + str(self.nb_log_core))
+        elif args.disable_irix and self.nb_log_core != 0:
+            msg = self.layout_header['cpu'].format('CPU%/C')
+        else:
+            msg = self.layout_header['cpu'].format('CPU%')
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
+
+    def _msg_curse_header_io(self, ret, process_sort_key, display_stats, sort_style='SORT'):
+        """Build the IO R/s and W/s header columns."""
+        if 'io_counters' not in display_stats:
+            return
+        msg = self.layout_header['ior'].format('R/s')
+        ret.append(
+            self.curse_add_line(
+                msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
+            )
+        )
+        msg = self.layout_header['iow'].format('W/s')
+        ret.append(
+            self.curse_add_line(
+                msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
+            )
+        )
+
+    def _msg_curse_header_command(self, ret, process_sort_key, display_stats, sort_style='SORT', args=None):
+        """Build the command/program header column."""
+        if 'cmdline' not in display_stats:
+            return
+        if args.is_standalone and not args.disable_cursor:
+            shortkey = "('k' to kill)"
+        else:
+            shortkey = ""
+        msg = self.layout_header['command'].format("Programs", shortkey)
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
+
     def _msg_curse_header(self, ret, process_sort_key, args=None):
         """Build the header and add it to the ret dict."""
         sort_style = 'SORT'
 
         display_stats = [i for i in self.enable_stats if i not in glances_processes.disable_stats]
 
-        if 'cpu_percent' in display_stats:
-            if args.disable_irix and 0 < self.nb_log_core < 10:
-                msg = self.layout_header['cpu'].format('CPU%/' + str(self.nb_log_core))
-            elif args.disable_irix and self.nb_log_core != 0:
-                msg = self.layout_header['cpu'].format('CPU%/C')
-            else:
-                msg = self.layout_header['cpu'].format('CPU%')
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
-
-        if 'memory_percent' in display_stats:
-            msg = self.layout_header['mem'].format('MEM%')
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
+        self._msg_curse_header_cpu(ret, process_sort_key, display_stats, sort_style=sort_style, args=args)
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'memory_percent', display_stats, 'mem', 'MEM%', sort_style=sort_style
+        )
         if 'memory_info' in display_stats:
             msg = self.layout_header['virt'].format('VIRT')
             ret.append(self.curse_add_line(msg, optional=True))
@@ -201,43 +233,23 @@ class ProgramlistPlugin(ProcesslistPlugin):
         if 'nprocs' in display_stats:
             msg = self.layout_header['nprocs'].format('NPROCS')
             ret.append(self.curse_add_line(msg))
-        if 'username' in display_stats:
-            msg = self.layout_header['user'].format('USER')
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'username', display_stats, 'user', 'USER', sort_style=sort_style
+        )
         if 'cpu_times' in display_stats:
             msg = self.layout_header['time'].format('TIME+')
             ret.append(
                 self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_times' else 'DEFAULT', optional=True)
             )
-        if 'num_threads' in display_stats:
-            msg = self.layout_header['thread'].format('THR')
-            ret.append(self.curse_add_line(msg))
-        if 'nice' in display_stats:
-            msg = self.layout_header['nice'].format('NI')
-            ret.append(self.curse_add_line(msg))
-        if 'status' in display_stats:
-            msg = self.layout_header['status'].format('S')
-            ret.append(self.curse_add_line(msg))
-        if 'io_counters' in display_stats:
-            msg = self.layout_header['ior'].format('R/s')
-            ret.append(
-                self.curse_add_line(
-                    msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
-                )
-            )
-            msg = self.layout_header['iow'].format('W/s')
-            ret.append(
-                self.curse_add_line(
-                    msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
-                )
-            )
-        if args.is_standalone and not args.disable_cursor:
-            shortkey = "('k' to kill)"
-        else:
-            shortkey = ""
-        if 'cmdline' in display_stats:
-            msg = self.layout_header['command'].format("Programs", shortkey)
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'num_threads', display_stats, 'thread', 'THR', sort_style=sort_style
+        )
+        self.msg_curse_header_common(ret, process_sort_key, 'nice', display_stats, 'nice', 'NI', sort_style=sort_style)
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'status', display_stats, 'status', 'S', sort_style=sort_style
+        )
+        self._msg_curse_header_io(ret, process_sort_key, display_stats, sort_style=sort_style)
+        self._msg_curse_header_command(ret, process_sort_key, display_stats, sort_style=sort_style, args=args)
 
     def _msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):
         """
