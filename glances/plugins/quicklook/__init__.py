@@ -193,20 +193,8 @@ class QuicklookPlugin(GlancesPluginModel):
         ##########################
 
         # System information
-        if 'cpu_hz_current' in self.stats and self.stats['cpu_hz_current'] is not None:
-            if 'cpu_hz' in self.stats and self.stats['cpu_hz'] is not None:
-                msg_freq = ' {:.2f}/{:.2f}GHz'.format(
-                    self._hz_to_ghz(self.stats['cpu_hz_current']), self._hz_to_ghz(self.stats['cpu_hz'])
-                )
-            else:
-                msg_freq = ' {:.2f}GHz'.format(self._hz_to_ghz(self.stats['cpu_hz_current']))
-        else:
-            msg_freq = ''
-
-        if 'cpu_name' in self.stats and (max_width - len(msg_freq) + 7) > 0:
-            msg_name = '{:{width}}'.format(self.stats['cpu_name'], width=max_width - len(msg_freq) + 7)
-        else:
-            msg_name = '' if msg_freq == '' else 'Frequency'
+        msg_freq = self._build_freq_msg()
+        msg_name = self._build_cpu_name_msg(msg_freq, max_width)
 
         ret.append(self.curse_add_line(msg_name))
         ret.append(self.curse_add_line(msg_freq))
@@ -214,27 +202,14 @@ class QuicklookPlugin(GlancesPluginModel):
 
         # Loop over CPU, MEM and LOAD
         # Define the data: Bar (default behavior) or Sparkline
-        data = {}
-        for key in self.stats_list:
-            bar_size = max(len(msg_name) + len(msg_freq) - 7, max_width)
-            if self.args.sparkline and self.history_enable() and not self.args.client:
-                data[key] = Sparkline(bar_size)
-            else:
-                # Fallback to bar if Sparkline module is not installed
-                data[key] = Bar(bar_size, bar_char=self.get_conf_value('bar_char', default=['|'])[0])
+        bar_size = max(len(msg_name) + len(msg_freq) - 7, max_width)
+        data = self._build_data_widgets(bar_size)
 
         for key in self.stats_list:
             if key == 'cpu' and args.percpu:
                 ret.extend(self._msg_per_cpu(data, key, max_width))
             else:
-                if type(data[key]).__name__ == 'Sparkline':
-                    # Sparkline display an history
-                    data[key].percents = [i[1] for i in self.get_raw_history(item=key, nb=data[key].size)]
-                    # A simple padding in order to align metrics to the right
-                    data[key].percents += [None] * (data[key].size - len(data[key].percents))
-                else:
-                    # Bar only the last value
-                    data[key].percent = self.stats[key]
+                self._populate_stat_data(data[key], key)
                 msg = f'{key.upper():4} '
                 ret.extend(self._msg_create_line(msg, data[key], key))
                 ret.append(self.curse_new_line())
@@ -244,6 +219,44 @@ class QuicklookPlugin(GlancesPluginModel):
 
         # Return the message with decoration
         return ret
+
+    def _build_freq_msg(self):
+        """Build the CPU frequency message string."""
+        hz_current = self.stats.get('cpu_hz_current')
+        if hz_current is None:
+            return ''
+        hz_max = self.stats.get('cpu_hz')
+        if hz_max is not None:
+            return f' {self._hz_to_ghz(hz_current):.2f}/{self._hz_to_ghz(hz_max):.2f}GHz'
+        return f' {self._hz_to_ghz(hz_current):.2f}GHz'
+
+    def _build_cpu_name_msg(self, msg_freq, max_width):
+        """Build the CPU name message string."""
+        if 'cpu_name' in self.stats and (max_width - len(msg_freq) + 7) > 0:
+            return '{:{width}}'.format(self.stats['cpu_name'], width=max_width - len(msg_freq) + 7)
+        return '' if msg_freq == '' else 'Frequency'
+
+    def _build_data_widgets(self, bar_size):
+        """Build Bar or Sparkline data widgets for each stat key."""
+        data = {}
+        use_sparkline = self.args.sparkline and self.history_enable() and not self.args.client
+        for key in self.stats_list:
+            if use_sparkline:
+                data[key] = Sparkline(bar_size)
+            else:
+                data[key] = Bar(bar_size, bar_char=self.get_conf_value('bar_char', default=['|'])[0])
+        return data
+
+    def _populate_stat_data(self, widget, key):
+        """Populate a Sparkline or Bar widget with data for the given stat key."""
+        if type(widget).__name__ == 'Sparkline':
+            # Sparkline display an history
+            widget.percents = [i[1] for i in self.get_raw_history(item=key, nb=widget.size)]
+            # A simple padding in order to align metrics to the right
+            widget.percents += [None] * (widget.size - len(widget.percents))
+        else:
+            # Bar only the last value
+            widget.percent = self.stats[key]
 
     def _msg_per_cpu(self, data, key, max_width):
         """Create per-cpu view"""
