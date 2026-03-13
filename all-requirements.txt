@@ -107,7 +107,7 @@ kafka-python==2.3.0
     # via glances
 markupsafe==3.0.3
     # via jinja2
-mcp==1.23.3
+mcp==1.26.0
     # via glances
 msgpack==1.1.2
     # via influxdb
