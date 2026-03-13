@@ -720,12 +720,28 @@ Examples of use:
 
     def init_plugins(self, args):
         """Init Glances plugins"""
-        # Allow users to disable plugins from the glances.conf (issue #1378)
+        self._apply_config_disables(args)
+        self._apply_plugin_overrides(args)
+        self._activate_exporters(args)
+
+        # By default help is hidden
+        args.help_tag = False
+
+        # Display Rx and Tx, not the sum for the network
+        args.network_sum = False
+        args.network_cumul = False
+
+        self._apply_process_defaults(args)
+
+    def _apply_config_disables(self, args):
+        """Disable plugins listed in the configuration file (issue #1378)."""
         for s in self.config.sections():
-            if self.config.has_section(s) and (self.config.get_bool_value(s, 'disable', False)):
+            if self.config.has_section(s) and self.config.get_bool_value(s, 'disable', False):
                 disable(args, s)
                 logger.debug(f'{s} disabled by the configuration file')
-        # The configuration key can be overwrite from the command line
+
+    def _apply_plugin_overrides(self, args):
+        """Apply --disable-plugin and --enable-plugin command line overrides."""
         if args and args.disable_plugin and 'all' in args.disable_plugin.split(','):
             if not args.enable_plugin:
                 logger.critical("'all' key in --disable-plugin needs to be used with --enable-plugin")
@@ -741,19 +757,15 @@ Examples of use:
             for p in args.enable_plugin.split(','):
                 enable(args, p)
 
-        # Exporters activation
-        if args.export is not None:
-            for p in args.export.split(','):
-                setattr(args, 'export_' + p, True)
+    def _activate_exporters(self, args):
+        """Activate exporters from the --export command line option."""
+        if args.export is None:
+            return
+        for p in args.export.split(','):
+            setattr(args, 'export_' + p, True)
 
-        # By default help is hidden
-        args.help_tag = False
-
-        # Display Rx and Tx, not the sum for the network
-        args.network_sum = False
-        args.network_cumul = False
-
-        # Processlist is updated in processcount
+    def _apply_process_defaults(self, args):
+        """Apply default settings for processcount, processlist, and process filter."""
         if getattr(args, 'disable_processcount', False):
             logger.warning('Processcount is disable, so processlist (updated by processcount) is also disable')
             disable(args, 'processlist')
