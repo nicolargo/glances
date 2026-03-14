@@ -289,11 +289,23 @@ class GlancesRestfulApi:
 
         # FastAPI Enable CORS
         # https://fastapi.tiangolo.com/tutorial/cors/
+        cors_origins = config.get_list_value('outputs', 'cors_origins', default=["*"])
+        cors_credentials = config.get_bool_value('outputs', 'cors_credentials', default=False)
+
+        # Reject the insecure wildcard + credentials combination,
+        # even if the user explicitly sets cors_credentials=True in their config.
+        if cors_origins == ["*"] and cors_credentials:
+            logger.warning(
+                "CORS: allow_origins=['*'] combined with allow_credentials=True is insecure. "
+                "Disabling credentials. Set explicit cors_origins to enable credentialed requests."
+            )
+            cors_credentials = False
+
         self._app.add_middleware(
             CORSMiddleware,
             # Related to https://github.com/nicolargo/glances/issues/2812
-            allow_origins=config.get_list_value('outputs', 'cors_origins', default=["*"]),
-            allow_credentials=config.get_bool_value('outputs', 'cors_credentials', default=True),
+            allow_origins=cors_origins,
+            allow_credentials=cors_credentials,
             allow_methods=config.get_list_value('outputs', 'cors_methods', default=["*"]),
             allow_headers=config.get_list_value('outputs', 'cors_headers', default=["*"]),
         )

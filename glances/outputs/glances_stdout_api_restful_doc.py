@@ -229,6 +229,31 @@ for production environments.
     deployments on non-loopback interfaces, always set ``webui_allowed_hosts``
     and consider enabling authentication.
 
+**CORS (Cross-Origin Resource Sharing)** controls which external websites can
+make requests to the Glances API from a browser. By default, Glances allows
+requests from any origin (``cors_origins=*``) but does **not** allow credentials
+(``cors_credentials=False``). This means cross-origin requests work for
+unauthenticated API access, but browsers will not send stored credentials
+(e.g. Basic Auth) to the API from a third-party page.
+
+If you need credentialed cross-origin access (e.g. a separate dashboard
+application that authenticates to Glances), you **must** configure explicit
+origins — the wildcard ``*`` combined with credentials is insecure and will be
+automatically rejected:
+
+.. code-block:: ini
+
+    [outputs]
+    cors_origins=https://my-dashboard.internal.example.com
+    cors_credentials=True
+
+.. warning::
+
+    Setting ``cors_credentials=True`` with ``cors_origins=*`` is not allowed.
+    Glances will automatically disable credentials and log a warning if this
+    combination is detected. This prevents a class of cross-site data theft
+    attacks where any website could read your monitoring data.
+
 When Glances is started without authentication or without host filtering,
 warning messages are displayed at startup to remind you of the risks.
 
