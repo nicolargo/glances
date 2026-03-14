@@ -128,6 +128,44 @@
 				</tr>
 			</tbody>
 		</table>
+		<h2 style="margin-top:20px">Styles</h2>
+		<table class="help-styles">
+			<thead>
+				<tr>
+					<th>Level</th>
+					<th>Text</th>
+					<th>Log</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>DEFAULT</td>
+					<td><span style="color:var(--fg)">default text</span></td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>OK</td>
+					<td><span class="ok">ok text</span></td>
+					<td><span class="ok_log">ok_log text</span></td>
+				</tr>
+				<tr>
+					<td>CAREFUL</td>
+					<td><span class="careful">careful text</span></td>
+					<td><span class="careful_log">careful_log text</span></td>
+				</tr>
+				<tr>
+					<td>WARNING</td>
+					<td><span class="warning">warning text</span></td>
+					<td><span class="warning_log">warning_log text</span></td>
+				</tr>
+				<tr>
+					<td>CRITICAL</td>
+					<td><span class="critical">critical text</span></td>
+					<td><span class="critical_log">critical_log text</span></td>
+				</tr>
+			</tbody>
+		</table>
+
 		<p style="margin-top:12px">
 			For an exhaustive list of key bindings,
 			<a href="https://glances.readthedocs.io/en/latest/cmds.html#interactive-commands" style="color:var(--cyan)">click here</a>.

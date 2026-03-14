@@ -8,7 +8,7 @@ export default {
 		data: { type: Array, default: () => [] },
 		max: { type: Number, default: 100 },
 		height: { type: Number, default: 22 },
-		color: { type: String, default: '#00ff88' },
+		color: { type: String, default: '#2ecc71' },
 	},
 	mounted() {
 		this.resizeObserver = new ResizeObserver(() => this.draw());

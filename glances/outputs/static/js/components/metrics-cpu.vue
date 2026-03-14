@@ -42,16 +42,17 @@ function colorFor(pct) {
 	if (pct >= 90) return '#ff3355';
 	if (pct >= 75) return '#ffcc00';
 	if (pct >= 50) return '#4488ff';
-	return '#00ff88';
+	return '#2ecc71';
 }
 
 function decoClass(v) {
 	if (!v || !v.decoration) return 'dim';
 	const d = v.decoration.toLowerCase();
-	if (d === 'ok' || d === 'ok_log') return 'ok';
-	if (d === 'warning' || d === 'warning_log') return 'warn';
-	if (d === 'critical' || d === 'critical_log') return 'crit';
-	if (d === 'careful' || d === 'careful_log') return 'hi';
+	if (d.endsWith('_log')) return d;
+	if (d === 'ok') return 'ok';
+	if (d === 'warning') return 'warn';
+	if (d === 'critical') return 'crit';
+	if (d === 'careful') return 'hi';
 	if (d === 'default') return 'dim';
 	return 'dim';
 }
@@ -67,8 +68,7 @@ export default {
 		totalDisplay() { return this.total.toFixed(1); },
 		decoration() {
 			if (!this.view.total) return 'ok';
-			const d = this.view.total.decoration?.toLowerCase() || 'ok';
-			return d.replace('_log', '');
+			return this.view.total.decoration?.toLowerCase() || 'ok';
 		},
 		decorationLabel() {
 			const d = this.decoration;

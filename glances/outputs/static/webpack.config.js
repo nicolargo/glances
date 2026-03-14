@@ -18,7 +18,7 @@ module.exports = (_, env) => {
 		output: {
 			path: path.join(__dirname, "public"),
 			filename: "[name].js",
-			publicPath: "/",
+			publicPath: isProd ? "/static/" : "/",
 			clean: true,
 		},
 		devtool: isProd ? false : "eval-source-map",
@@ -60,6 +60,10 @@ module.exports = (_, env) => {
 							loader: "css-loader",
 						},
 					],
+				},
+				{
+					test: /\.(woff2?|ttf|eot)$/i,
+					type: "asset/resource",
 				},
 			],
 		},

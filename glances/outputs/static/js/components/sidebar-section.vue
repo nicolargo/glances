@@ -30,9 +30,9 @@
 		<div class="sb-section" v-if="!args.disable_wifi && hasWifi">
 			<template v-for="ap in wifiList" :key="ap.ssid">
 				<div class="sb-row">
-					<span class="name" style="font-size:10px;color:var(--fg3)">{{ ap.ssid }}</span>
+					<span class="name">{{ ap.ssid }}</span>
 					<span class="vals">
-						<span class="dim">{{ ap.signal }} dBm</span>
+						<span class="v" :class="ap.deco">{{ ap.signal }} dBm</span>
 					</span>
 				</div>
 			</template>
@@ -182,11 +182,11 @@ export default {
 			return ports.map((p, i) => {
 				let display, deco;
 				if (p.port != null) {
-					// TCP port
+					// TCP port — status is RTT in seconds, convert to ms
 					if (p.status === null) { deco = 'careful'; display = '?'; }
 					else if (p.status === false) { deco = 'critical'; display = 'Timeout'; }
-					else if (p.rtt_warning && p.status > p.rtt_warning) { deco = 'warning'; display = p.status.toFixed(0) + 'ms'; }
-					else { deco = 'ok'; display = p.status.toFixed(0) + 'ms'; }
+					else if (p.rtt_warning && p.status > p.rtt_warning) { deco = 'warning'; display = (p.status * 1000).toFixed(0) + 'ms'; }
+					else { deco = 'ok'; display = (p.status * 1000).toFixed(0) + 'ms'; }
 				} else if (p.url != null) {
 					// Web URL
 					if (p.status === null) { deco = 'careful'; display = '?'; }
@@ -207,10 +207,18 @@ export default {
 		},
 		wifiList() {
 			const w = this.data?.stats?.wifi || [];
-			return w.filter(h => h.ssid).map(h => ({
-				ssid: h.ssid,
-				signal: h.quality_level,
-			}));
+			const views = this.data?.views?.wifi || {};
+			return w.filter(h => h.ssid).map(h => {
+				let deco = 'default';
+				if (views[h.ssid]?.quality_level?.decoration) {
+					deco = views[h.ssid].quality_level.decoration.toLowerCase();
+				}
+				return {
+					ssid: h.ssid,
+					signal: h.quality_level,
+					deco,
+				};
+			});
 		},
 
 		// ── DISK I/O ──
@@ -263,9 +271,10 @@ export default {
 
 			return fsList.map(f => {
 				const mnt = f.mnt_point;
-				let deco = 'ok';
+				let deco = 'default';
 				if (views[mnt]?.percent?.decoration) {
-					deco = views[mnt].percent.decoration.toLowerCase();
+					const d = views[mnt].percent.decoration.toLowerCase();
+					deco = (d === 'default') ? 'default' : d;
 				}
 				const alias = f.alias || (mnt === '/' ? 'Root' : mnt.split('/').pop() || mnt);
 				return {

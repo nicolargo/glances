@@ -27,7 +27,7 @@ function colorFor(pct) {
 	if (pct >= 90) return '#ff3355';
 	if (pct >= 75) return '#ffcc00';
 	if (pct >= 50) return '#4488ff';
-	return '#00ff88';
+	return '#2ecc71';
 }
 
 export default {
@@ -72,6 +72,7 @@ export default {
 		gpuProcDeco(gpu) {
 			if (this.view[gpu.gpu_id]?.proc?.decoration) {
 				const d = this.view[gpu.gpu_id].proc.decoration.toLowerCase();
+				if (d.endsWith('_log')) return d;
 				if (d === 'ok') return 'ok';
 				if (d === 'warning') return 'warn';
 				if (d === 'critical') return 'crit';

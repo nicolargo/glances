@@ -257,19 +257,16 @@ install: ## Open a Web Browser to the installation procedure
 
 webui webui%: DIR = glances/outputs/static/
 
-webui-gen-config: ## Generate the Web UI config file
-	$(UV_RUN) run python ./generate_webui_conf.py > ./glances/outputs/static/js/uiconfig.json
-
-webui: webui-gen-config ## Build the Web UI
+webui: ## Build the Web UI
 	cd $(DIR) && npm ci && npm run build
 
 webui-audit: ## Audit the Web UI
 	cd $(DIR) && npm audit
 
-webui-audit-fix: webui-gen-config ## Fix audit the Web UI
+webui-audit-fix: ## Fix audit the Web UI
 	cd $(DIR) && npm ci && npm audit fix && npm run build
 
-webui-update: webui-gen-config ## Update JS dependencies
+webui-update: ## Update JS dependencies
 	cd $(DIR) && npm update --save && npm ci && npm run build
 
 # ===================================================================
