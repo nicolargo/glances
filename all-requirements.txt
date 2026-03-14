@@ -52,8 +52,6 @@ dnspython==2.8.0
     # via pymongo
 docker==7.1.0
     # via glances
-duckdb==1.5.0
-    # via glances
 ecdsa==0.19.1
     # via python-jose
 elastic-transport==9.2.1
