@@ -249,7 +249,7 @@ pygments==2.19.2
     #   rich
     #   sphinx
 pyinstrument==5.1.2
-pyjwt==2.11.0
+pyjwt==2.12.0
     # via
     #   mcp
     #   semgrep

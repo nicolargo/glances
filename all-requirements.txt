@@ -161,7 +161,7 @@ pygal==3.1.0
     # via glances
 pyinstrument==5.1.2
     # via glances
-pyjwt==2.11.0
+pyjwt==2.12.0
     # via
     #   ibm-cloud-sdk-core
     #   ibmcloudant
