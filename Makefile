@@ -243,7 +243,7 @@ docs-jupyter:  ## Start Jupyter Notebook
 	$(UV_RUN) run --with jupyter jupyter lab
 
 release-note: ## Generate release note
-	git --no-pager log $(LASTTAG)..HEAD --first-parent --pretty=format:"* %s"
+	git --no-pager log $(LASTTAG)..HEAD --pretty=format:"* %s"
 	@echo "\n"
 	git --no-pager shortlog -s -n $(LASTTAG)..HEAD
 

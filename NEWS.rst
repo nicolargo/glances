@@ -3,6 +3,83 @@
 ==============================================================================
 
 =============
+Version 4.5.2
+=============
+
+Bug corrected:
+
+* System display error on "little" terminal #3469
+
+Security patches:
+
+* Default CORS Configuration Allows Cross-Origin Credential Theft - Correct CVE-2026-32610
+* Incomplete Secrets Redaction: /api/v4/args Endpoint Leaks Password Hash and SNMP Credentials - Correct CVE-2026-32609
+* REST/WebUI Lacks Host Validation and Remains Exposed to DNS Rebinding - Correct CVE-2026-32632
+* Unauthenticated API Exposure / Add warning message on startup - Correct CVE-2026-32596
+* SQL Injection in DuckDB Export via Unparameterized DDL Statements - Correct CVE-2026-32611
+* Command Injection via Process Names in Action Command Templates - Correct CVE-2026-32608
+* Central Browser Autodiscovery Leaks Reusable Credentials to Zeroconf-Spoofed Servers - Correct CVE-2026-32634
+* Browser API Exposes Reusable Downstream Credentials via  - Correct CVE-2026-32633
+
+Breaking changes: This release addresses 8 security vulnerabilities (see below).
+Several of the mitigations change observable behaviour. Users who run Glances in
+web server or API mode (``-w`` / ``--enable-webserver``) should read the items below before upgrading.
+
+* [CVE-2026-32632] Host header validation is now enforced on the
+  built-in web server. Requests whose ``Host`` header does not match
+  ``localhost`` or ``127.0.0.1`` will be rejected with HTTP 400 by
+  default. Users accessing Glances through a reverse proxy, a custom
+  hostname, or a non-loopback IP address must declare the allowed
+  values with the new ``allowed_hosts`` key in the ``[outputs]``
+  section of ``glances.conf`` (comma-separated list). This was
+  already required for the MCP server since 4.5.1; it now also
+  applies to the main REST/WebUI server.
+
+* [CVE-2026-32610] The default CORS policy is now restrictive.
+  Previously, the server replied with ``Access-Control-Allow-Origin: *``
+  which allowed any web page to issue credentialed cross-origin requests
+  against the API. The wildcard is removed. Users running third-party
+  web dashboards or custom front-ends on a different origin must
+  explicitly list allowed origins with the ``cors_origins`` key in the
+  ``[outputs]`` section of ``glances.conf``.
+
+* [CVE-2026-32609] Sensitive fields are now redacted on unauthenticated
+  API responses. The ``/api/4/args`` and ``/api/4/config`` endpoints no
+  longer return password hashes, SSL key paths, or SNMP community
+  strings to callers that have not authenticated. Scripts and
+  integrations that relied on reading these values from the API must
+  now authenticate (token or password) to receive them.
+
+* [CVE-2026-32633, CVE-2026-32634] The Browser (multi-server mode)
+  no longer forwards configured credentials to remote Glances servers,
+  whether discovered via Zeroconf or listed in the ``[serverlist]``
+  section. Credentials are only sent after the user explicitly logs in
+  to an individual server. Automated setups that relied on transparent
+  credential propagation must switch to per-server authentication.
+
+* [CVE-2026-32596] A WARNING is now printed to stdout at startup when
+  the REST API is running without authentication (no ``--password`` and
+  no API token configured). This is an informational message; the
+  unauthenticated mode itself is unchanged and remains the default for
+  private-network deployments. Startup scripts or monitoring pipelines
+  that treat any stderr/stdout output as a failure may need to be
+  updated.
+
+* [CVE-2026-32611] The DuckDB export module now uses parameterized DDL
+  statements. Table names derived from plugin or metric names are
+  sanitized before use. Existing DuckDB databases whose table names
+  contained characters that were previously interpolated verbatim may
+  need to be recreated.
+
+* [CVE-2026-32608] Process names used in ``[action]`` command templates
+  are now shell-escaped before substitution. Templates that relied on
+  unescaped special characters in process names to construct compound
+  shell expressions will no longer behave as before.
+
+Thanks to @psyberck for the UI patch and @DhiyaneshGeek / @restriction for CVEs reports.
+
+
+=============
 Version 4.5.1
 =============
 
