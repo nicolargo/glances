@@ -192,6 +192,23 @@ precautions:
 
     glances -w --bind 127.0.0.1
 
+**Enable DNS rebinding protection** by setting ``webui_allowed_hosts`` in
+``glances.conf``. This restricts the HTTP ``Host`` header values accepted by the
+web server. Without this setting, a DNS rebinding attack could allow an
+untrusted web page to read the REST API from a victim's browser on the same
+network, even without direct network access to the Glances instance.
+
+.. code-block:: ini
+
+    [outputs]
+    # Comma-separated list of allowed hostnames/IPs.
+    # Wildcards are supported (e.g. *.example.com).
+    webui_allowed_hosts=localhost,127.0.0.1,myserver.example.com
+
+When ``webui_allowed_hosts`` is set, requests with a ``Host`` header not in the
+list are rejected with ``400 Bad Request``. When absent or commented out
+(the default), no host filtering is applied.
+
 **Use a reverse proxy** (nginx, Caddy, Apache) with TLS and authentication for
 any public-facing or semi-public deployment. This is the recommended approach
 for production environments.
@@ -201,11 +218,19 @@ for production environments.
     # Example: restrict bind to localhost, access via reverse proxy
     # In glances.conf:
     [outputs]
-    # Set the bind address to localhost
+    # Bind to localhost, let the reverse proxy handle external access
     # then configure your reverse proxy to forward to 127.0.0.1:61208
+    webui_allowed_hosts=localhost,127.0.0.1
 
-When Glances is started without authentication, a warning message is displayed
-at startup to remind you of the risk.
+.. note::
+
+    The bind address (``0.0.0.0`` by default) controls which network interfaces
+    the server listens on, but it is **not a security boundary**. For
+    deployments on non-loopback interfaces, always set ``webui_allowed_hosts``
+    and consider enabling authentication.
+
+When Glances is started without authentication or without host filtering,
+warning messages are displayed at startup to remind you of the risks.
 
 WebUI refresh
 -------------

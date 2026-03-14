@@ -298,6 +298,15 @@ class GlancesRestfulApi:
             allow_headers=config.get_list_value('outputs', 'cors_headers', default=["*"]),
         )
 
+        # FastAPI Enable DNS rebinding protection via Host header validation
+        # When webui_allowed_hosts is configured, requests with a Host header
+        # not in the allowlist are rejected with 400 Bad Request.
+        if self.webui_allowed_hosts:
+            from starlette.middleware.trustedhost import TrustedHostMiddleware
+
+            self._app.add_middleware(TrustedHostMiddleware, allowed_hosts=self.webui_allowed_hosts)
+            logger.info(f"TrustedHostMiddleware enabled (allowed hosts: {self.webui_allowed_hosts})")
+
         # FastAPI Define routes
         # Token endpoint router (no authentication required) - must be added first
         if self.args.password and self._jwt_handler is not None:
@@ -356,6 +365,7 @@ class GlancesRestfulApi:
         self.ssl_keyfile = None
         self.ssl_keyfile_password = None
         self.ssl_certfile = None
+        self.webui_allowed_hosts = None
         self.mcp_enabled = False
         self.mcp_path = '/mcp'
         if config is not None and config.has_section('outputs'):
@@ -372,6 +382,8 @@ class GlancesRestfulApi:
             self.ssl_keyfile_password = config.get_value('outputs', 'ssl_keyfile_password', default=None)
             self.ssl_certfile = config.get_value('outputs', 'ssl_certfile', default=None)
             self.protocol = 'https' if self.is_ssl() else 'http'
+            # DNS rebinding protection for the REST API / WebUI
+            self.webui_allowed_hosts = config.get_list_value('outputs', 'webui_allowed_hosts', default=None)
             # MCP server
             self.mcp_enabled = config.get_bool_value('outputs', 'enable_mcp', default=False)
             self.mcp_path = config.get_value('outputs', 'mcp_path', default='/mcp')
@@ -533,7 +545,7 @@ class GlancesRestfulApi:
         # Logo
         print(self._logo())
 
-        # Security warning if no authentication is configured
+        # Security warnings
         if not self.args.password:
             is_localhost = self.args.bind_address in ('127.0.0.1', 'localhost', '::1')
             warn_lines = [
@@ -548,6 +560,17 @@ class GlancesRestfulApi:
             warn_lines.append("         See https://glances.readthedocs.io/en/latest/api/restful.html#security")
             print('\n'.join(warn_lines) + '\n')
             logger.warning("Glances web server is running without authentication")
+
+        if not self.webui_allowed_hosts:
+            warn_lines = [
+                "WARNING: Glances web server is running without Host header validation.",
+                "         DNS rebinding attacks may allow untrusted pages to read the REST API.",
+                "         Set webui_allowed_hosts in glances.conf [outputs] to restrict access:",
+                "           webui_allowed_hosts=localhost,127.0.0.1,<your-hostname>",
+                "         See https://glances.readthedocs.io/en/latest/api/restful.html#security",
+            ]
+            print('\n'.join(warn_lines) + '\n')
+            logger.warning("Glances web server is running without Host header validation (DNS rebinding protection)")
 
         # Browser WEBUI
         if hasattr(self.args, 'browser') and self.args.browser:
