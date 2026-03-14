@@ -1,6 +1,7 @@
 {
 	"private": true,
 	"dependencies": {
+		"@fontsource/jetbrains-mono": "^5.2.8",
 		"bootstrap": "^5.3.8",
 		"favico.js": "^0.3.10",
 		"hotkeys-js": "^3.13.15",

@@ -1,7 +1,7 @@
 <template>
 	<div class="m-tile tile-load" style="--t-color:var(--green)">
 		<div class="m-head">
-			<span class="m-id">LOAD</span>
+			<span class="m-id">LOAD <span class="m-id-sub">{{ cpucore }}-core</span></span>
 		</div>
 		<div class="m-spark-row">
 			<span class="m-val" :class="decoration">{{ min1Display }}</span>
@@ -11,7 +11,6 @@
 			<div class="m-kv">1min  <span class="v" :class="min1Deco">{{ min1Display }}</span></div>
 			<div class="m-kv">5min  <span class="v" :class="min5Deco">{{ min5Display }}</span></div>
 			<div class="m-kv">15min <span class="v" :class="min15Deco">{{ min15Display }}</span></div>
-			<div class="m-kv">cores <span class="v hi">{{ cpucore }}</span></div>
 		</div>
 	</div>
 </template>
@@ -24,16 +23,17 @@ function colorFor(pct) {
 	if (pct >= 90) return '#ff3355';
 	if (pct >= 75) return '#ffcc00';
 	if (pct >= 50) return '#4488ff';
-	return '#00ff88';
+	return '#2ecc71';
 }
 
 function decoStr(v) {
 	if (!v || !v.decoration) return '';
 	const d = v.decoration.toLowerCase();
-	if (d === 'ok' || d === 'ok_log') return 'ok';
-	if (d === 'warning' || d === 'warning_log') return 'warn';
-	if (d === 'critical' || d === 'critical_log') return 'crit';
-	if (d === 'careful' || d === 'careful_log') return 'hi';
+	if (d.endsWith('_log')) return d;
+	if (d === 'ok') return 'ok';
+	if (d === 'warning') return 'warn';
+	if (d === 'critical') return 'crit';
+	if (d === 'careful') return 'hi';
 	if (d === 'default') return 'dim';
 	return 'dim';
 }
@@ -54,8 +54,7 @@ export default {
 		min15Display() { return this.min15.toFixed(2); },
 		decoration() {
 			if (!this.view.min1) return 'ok';
-			const d = this.view.min1.decoration?.toLowerCase() || 'ok';
-			return d.replace('_log', '');
+			return this.view.min1.decoration?.toLowerCase() || 'ok';
 		},
 		decorationLabel() {
 			const d = this.decoration;
