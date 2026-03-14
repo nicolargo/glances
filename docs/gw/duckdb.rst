@@ -3,7 +3,9 @@
 DuckDB
 ===========
 
-DuckDB is an in-process SQL OLAP database management system.
+Warning: For the moment the DuckDB lib is not configure as a dependency of Glances because
+it breaks the build on Docker Alpine images. If you want to use this export, you have to
+install DuckDB Python lib on your side.
 
 You can export statistics to a ``DuckDB`` server.
 

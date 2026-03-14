@@ -116,18 +116,41 @@ class GlancesServersList:
                 self.threads_list[key] = thread
                 thread.start()
 
+    @staticmethod
+    def _get_connect_host(server):
+        """Return the host to use for connecting to the server.
+
+        For dynamic (Zeroconf) servers, use the discovered IP address
+        instead of the untrusted advertised name.
+        """
+        if server.get('type') == 'DYNAMIC':
+            return server['ip']
+        return server['name']
+
+    def _get_preconfigured_password(self, server):
+        """Return the preconfigured password for the server.
+
+        Dynamic (Zeroconf) entries are untrusted and should not inherit
+        saved or default credentials to prevent credential exfiltration
+        via fake Zeroconf services.
+        """
+        if server.get('type') == 'DYNAMIC':
+            return None
+        return self.password.get_password(server['name'])
+
     def get_uri(self, server):
         """Return the URI for the given server dict."""
+        host = self._get_connect_host(server)
         # Select the connection mode (with or without password)
         if server['password'] != "":
             if server['status'] == 'PROTECTED':
-                # Try with the preconfigure password (only if status is PROTECTED)
-                clear_password = self.password.get_password(server['name'])
+                # Try with the preconfigured password (only if status is PROTECTED)
+                clear_password = self._get_preconfigured_password(server)
                 if clear_password is not None:
                     server['password'] = self.password.get_hash(clear_password)
-            uri = 'http://{}:{}@{}:{}'.format(server['username'], server['password'], server['name'], server['port'])
+            uri = 'http://{}:{}@{}:{}'.format(server['username'], server['password'], host, server['port'])
         else:
-            uri = 'http://{}:{}'.format(server['name'], server['port'])
+            uri = 'http://{}:{}'.format(host, server['port'])
         return uri
 
     def set_in_selected(self, selected, key, value):

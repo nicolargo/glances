@@ -18,6 +18,16 @@ import duckdb
 from glances.exports.export import GlancesExport
 from glances.logger import logger
 
+
+def _quote_identifier(name):
+    """Quote a SQL identifier to prevent injection.
+
+    DuckDB uses standard double-quote escaping for identifiers.
+    Any embedded double-quote is doubled to escape it.
+    """
+    return '"' + str(name).replace('"', '""') + '"'
+
+
 # Define the type conversions for DuckDB
 # https://duckdb.org/docs/stable/clients/python/conversion
 convert_types = {
@@ -112,10 +122,12 @@ class Export(GlancesExport):
             values_list = []  # List of values to insert (list of lists, one list per row)
             if isinstance(plugin_stats, dict):
                 # Create the list to create the table
-                creation_list.append('time TIMETZ')
-                creation_list.append('hostname_id VARCHAR')
+                creation_list.append(f'{_quote_identifier("time")} TIMETZ')
+                creation_list.append(f'{_quote_identifier("hostname_id")} VARCHAR')
                 for key, value in plugin_stats.items():
-                    creation_list.append(f"{key} {convert_types[type(self.normalize(value)).__name__]}")
+                    creation_list.append(
+                        f"{_quote_identifier(key)} {convert_types[type(self.normalize(value)).__name__]}"
+                    )
                 # Create the list of values to insert
                 item_list = []
                 item_list.append(self.normalize(datetime.now().replace(microsecond=0)))
@@ -124,11 +136,13 @@ class Export(GlancesExport):
                 values_list = [item_list]
             elif isinstance(plugin_stats, list) and len(plugin_stats) > 0 and 'key' in plugin_stats[0]:
                 # Create the list to create the table
-                creation_list.append('time TIMETZ')
-                creation_list.append('hostname_id VARCHAR')
-                creation_list.append('key_id VARCHAR')
+                creation_list.append(f'{_quote_identifier("time")} TIMETZ')
+                creation_list.append(f'{_quote_identifier("hostname_id")} VARCHAR')
+                creation_list.append(f'{_quote_identifier("key_id")} VARCHAR')
                 for key, value in plugin_stats[0].items():
-                    creation_list.append(f"{key} {convert_types[type(self.normalize(value)).__name__]}")
+                    creation_list.append(
+                        f"{_quote_identifier(key)} {convert_types[type(self.normalize(value)).__name__]}"
+                    )
                 # Create the list of values to insert
                 for plugin_item in plugin_stats:
                     item_list = []
@@ -150,13 +164,11 @@ class Export(GlancesExport):
         logger.debug(f"Export {plugin} stats to DuckDB")
 
         # Create the table if it does not exist
+        quoted_plugin = _quote_identifier(plugin)
         table_list = [t[0] for t in self.client.sql("SHOW TABLES").fetchall()]
         if plugin not in table_list:
             # Execute the create table query
-            create_query = f"""
-CREATE TABLE {plugin} (
-{', '.join(creation_list)}
-);"""
+            create_query = f"CREATE TABLE {quoted_plugin} ({', '.join(creation_list)});"
             logger.debug(f"Create table: {create_query}")
             try:
                 self.client.execute(create_query)
@@ -169,10 +181,7 @@ CREATE TABLE {plugin} (
 
         # Insert values into the table
         for values in values_list:
-            insert_query = f"""
-INSERT INTO {plugin} VALUES (
-{', '.join(['?' for _ in values])}
-);"""
+            insert_query = f"INSERT INTO {quoted_plugin} VALUES ({', '.join(['?' for _ in values])});"
             logger.debug(f"Insert values into table {plugin}: {values}")
             try:
                 self.client.execute(insert_query, values)

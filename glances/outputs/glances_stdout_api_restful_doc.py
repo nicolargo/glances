@@ -164,6 +164,99 @@ You can configure JWT settings in the Glances configuration file:
 **Note:** The token endpoint (``/api/{__apiversion__}/token``) does not require authentication.
 Protected endpoints support both Bearer token and Basic Auth authentication methods.
 
+.. _security:
+
+Security
+--------
+
+By default, Glances web server runs **without authentication** and binds to
+**all network interfaces** (``0.0.0.0``). This means any client that can reach
+the server on the network can access the full REST API, including sensitive
+system information such as process command-lines, which may contain credentials
+(passwords, API keys, tokens passed as arguments).
+
+This default is intentional for ease of use on private, trusted networks (home
+labs, local machines, internal infrastructure). However, if your Glances
+instance is reachable from untrusted networks, you should take the following
+precautions:
+
+**Enable authentication** by starting Glances with the ``--password`` option:
+
+.. code-block:: bash
+
+    glances -w --password
+
+**Bind to localhost only** if remote access is not needed:
+
+.. code-block:: bash
+
+    glances -w --bind 127.0.0.1
+
+**Enable DNS rebinding protection** by setting ``webui_allowed_hosts`` in
+``glances.conf``. This restricts the HTTP ``Host`` header values accepted by the
+web server. Without this setting, a DNS rebinding attack could allow an
+untrusted web page to read the REST API from a victim's browser on the same
+network, even without direct network access to the Glances instance.
+
+.. code-block:: ini
+
+    [outputs]
+    # Comma-separated list of allowed hostnames/IPs.
+    # Wildcards are supported (e.g. *.example.com).
+    webui_allowed_hosts=localhost,127.0.0.1,myserver.example.com
+
+When ``webui_allowed_hosts`` is set, requests with a ``Host`` header not in the
+list are rejected with ``400 Bad Request``. When absent or commented out
+(the default), no host filtering is applied.
+
+**Use a reverse proxy** (nginx, Caddy, Apache) with TLS and authentication for
+any public-facing or semi-public deployment. This is the recommended approach
+for production environments.
+
+.. code-block:: ini
+
+    # Example: restrict bind to localhost, access via reverse proxy
+    # In glances.conf:
+    [outputs]
+    # Bind to localhost, let the reverse proxy handle external access
+    # then configure your reverse proxy to forward to 127.0.0.1:61208
+    webui_allowed_hosts=localhost,127.0.0.1
+
+.. note::
+
+    The bind address (``0.0.0.0`` by default) controls which network interfaces
+    the server listens on, but it is **not a security boundary**. For
+    deployments on non-loopback interfaces, always set ``webui_allowed_hosts``
+    and consider enabling authentication.
+
+**CORS (Cross-Origin Resource Sharing)** controls which external websites can
+make requests to the Glances API from a browser. By default, Glances allows
+requests from any origin (``cors_origins=*``) but does **not** allow credentials
+(``cors_credentials=False``). This means cross-origin requests work for
+unauthenticated API access, but browsers will not send stored credentials
+(e.g. Basic Auth) to the API from a third-party page.
+
+If you need credentialed cross-origin access (e.g. a separate dashboard
+application that authenticates to Glances), you **must** configure explicit
+origins — the wildcard ``*`` combined with credentials is insecure and will be
+automatically rejected:
+
+.. code-block:: ini
+
+    [outputs]
+    cors_origins=https://my-dashboard.internal.example.com
+    cors_credentials=True
+
+.. warning::
+
+    Setting ``cors_credentials=True`` with ``cors_origins=*`` is not allowed.
+    Glances will automatically disable credentials and log a warning if this
+    combination is detected. This prevents a class of cross-site data theft
+    attacks where any website could read your monitoring data.
+
+When Glances is started without authentication or without host filtering,
+warning messages are displayed at startup to remind you of the risks.
+
 WebUI refresh
 -------------
 

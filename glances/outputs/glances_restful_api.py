@@ -289,14 +289,35 @@ class GlancesRestfulApi:
 
         # FastAPI Enable CORS
         # https://fastapi.tiangolo.com/tutorial/cors/
+        cors_origins = config.get_list_value('outputs', 'cors_origins', default=["*"])
+        cors_credentials = config.get_bool_value('outputs', 'cors_credentials', default=False)
+
+        # Reject the insecure wildcard + credentials combination,
+        # even if the user explicitly sets cors_credentials=True in their config.
+        if cors_origins == ["*"] and cors_credentials:
+            logger.warning(
+                "CORS: allow_origins=['*'] combined with allow_credentials=True is insecure. "
+                "Disabling credentials. Set explicit cors_origins to enable credentialed requests."
+            )
+            cors_credentials = False
+
         self._app.add_middleware(
             CORSMiddleware,
             # Related to https://github.com/nicolargo/glances/issues/2812
-            allow_origins=config.get_list_value('outputs', 'cors_origins', default=["*"]),
-            allow_credentials=config.get_bool_value('outputs', 'cors_credentials', default=True),
+            allow_origins=cors_origins,
+            allow_credentials=cors_credentials,
             allow_methods=config.get_list_value('outputs', 'cors_methods', default=["*"]),
             allow_headers=config.get_list_value('outputs', 'cors_headers', default=["*"]),
         )
+
+        # FastAPI Enable DNS rebinding protection via Host header validation
+        # When webui_allowed_hosts is configured, requests with a Host header
+        # not in the allowlist are rejected with 400 Bad Request.
+        if self.webui_allowed_hosts:
+            from starlette.middleware.trustedhost import TrustedHostMiddleware
+
+            self._app.add_middleware(TrustedHostMiddleware, allowed_hosts=self.webui_allowed_hosts)
+            logger.info(f"TrustedHostMiddleware enabled (allowed hosts: {self.webui_allowed_hosts})")
 
         # FastAPI Define routes
         # Token endpoint router (no authentication required) - must be added first
@@ -356,6 +377,7 @@ class GlancesRestfulApi:
         self.ssl_keyfile = None
         self.ssl_keyfile_password = None
         self.ssl_certfile = None
+        self.webui_allowed_hosts = None
         self.mcp_enabled = False
         self.mcp_path = '/mcp'
         if config is not None and config.has_section('outputs'):
@@ -372,6 +394,8 @@ class GlancesRestfulApi:
             self.ssl_keyfile_password = config.get_value('outputs', 'ssl_keyfile_password', default=None)
             self.ssl_certfile = config.get_value('outputs', 'ssl_certfile', default=None)
             self.protocol = 'https' if self.is_ssl() else 'http'
+            # DNS rebinding protection for the REST API / WebUI
+            self.webui_allowed_hosts = config.get_list_value('outputs', 'webui_allowed_hosts', default=None)
             # MCP server
             self.mcp_enabled = config.get_bool_value('outputs', 'enable_mcp', default=False)
             self.mcp_path = config.get_value('outputs', 'mcp_path', default='/mcp')
@@ -532,6 +556,33 @@ class GlancesRestfulApi:
 
         # Logo
         print(self._logo())
+
+        # Security warnings
+        if not self.args.password:
+            is_localhost = self.args.bind_address in ('127.0.0.1', 'localhost', '::1')
+            warn_lines = [
+                "WARNING: Glances web server is running WITHOUT authentication.",
+            ]
+            if is_localhost:
+                warn_lines.append("         Use --password to enable authentication.")
+            else:
+                warn_lines.append("         Any client on the network can access system information.")
+                warn_lines.append("         Use --password to enable authentication or")
+                warn_lines.append("         --bind 127.0.0.1 to restrict access to localhost.")
+            warn_lines.append("         See https://glances.readthedocs.io/en/latest/api/restful.html#security")
+            print('\n'.join(warn_lines) + '\n')
+            logger.warning("Glances web server is running without authentication")
+
+        if not self.webui_allowed_hosts:
+            warn_lines = [
+                "WARNING: Glances web server is running without Host header validation.",
+                "         DNS rebinding attacks may allow untrusted pages to read the REST API.",
+                "         Set webui_allowed_hosts in glances.conf [outputs] to restrict access:",
+                "           webui_allowed_hosts=localhost,127.0.0.1,<your-hostname>",
+                "         See https://glances.readthedocs.io/en/latest/api/restful.html#security",
+            ]
+            print('\n'.join(warn_lines) + '\n')
+            logger.warning("Glances web server is running without Host header validation (DNS rebinding protection)")
 
         # Browser WEBUI
         if hasattr(self.args, 'browser') and self.args.browser:
@@ -793,6 +844,14 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(plist)
 
+    @staticmethod
+    def _sanitize_server(server):
+        """Return a copy of the server dict without credential-bearing fields."""
+        safe = dict(server)
+        safe.pop('password', None)
+        safe.pop('uri', None)
+        return safe
+
     def _api_servers_list(self):
         """Glances API RESTful implementation.
 
@@ -802,7 +861,8 @@ class GlancesRestfulApi:
         # Update the servers list (and the stats for all the servers)
         self.__update_servers_list()
 
-        return GlancesJSONResponse(self.servers_list.get_servers_list() if self.servers_list else [])
+        servers = self.servers_list.get_servers_list() if self.servers_list else []
+        return GlancesJSONResponse([self._sanitize_server(s) for s in servers])
 
     # Comment this solve an issue on Home Assistant See #3238
     def _api_all(self):
@@ -1219,6 +1279,38 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(ret_item)
 
+    # Args keys that must always be redacted (even for authenticated users)
+    _ALWAYS_REDACTED_ARGS = frozenset({'password'})
+
+    # Args keys redacted when no authentication is configured
+    _SENSITIVE_ARGS = frozenset(
+        {
+            'password',
+            'snmp_community',
+            'snmp_user',
+            'snmp_auth',
+            'conf_file',
+            'username',
+        }
+    )
+
+    def _sanitize_args(self):
+        """Return a sanitized copy of self.args as a dict.
+
+        - password hash is always redacted (even for authenticated users)
+        - other sensitive fields are redacted when no authentication is configured
+        """
+        args_json = vars(self.args).copy()
+        if not self.args.password:
+            for key in self._SENSITIVE_ARGS:
+                if key in args_json:
+                    args_json[key] = '********'
+        else:
+            for key in self._ALWAYS_REDACTED_ARGS:
+                if key in args_json and args_json[key]:
+                    args_json[key] = '********'
+        return args_json
+
     def _api_args(self):
         """Glances API RESTful implementation.
 
@@ -1227,10 +1319,7 @@ class GlancesRestfulApi:
         HTTP/404 if others error
         """
         try:
-            # Get the RAW value of the args' dict
-            # Use vars to convert namespace to dict
-            # Source: https://docs.python.org/%s/library/functions.html#vars
-            args_json = vars(self.args)
+            args_json = self._sanitize_args()
         except Exception as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get args ({str(e)})")
 
@@ -1248,10 +1337,7 @@ class GlancesRestfulApi:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Unknown argument item {item}")
 
         try:
-            # Get the RAW value of the args' dict
-            # Use vars to convert namespace to dict
-            # Source: https://docs.python.org/%s/library/functions.html#vars
-            args_json = vars(self.args)[item]
+            args_json = self._sanitize_args()[item]
         except Exception as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get args item ({str(e)})")
 

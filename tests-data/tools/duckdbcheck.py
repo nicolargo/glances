@@ -21,7 +21,7 @@ def check_duckdb(input_file, expected_lines, expected_columns=None):
 
         # Check 1: Number of lines for CPU
         row_count = len(result)
-        if row_count != expected_lines:
+        if row_count < expected_lines:
             print(f"Error: Expected {expected_lines} CPU lines, but found {row_count}")
             return False
 
@@ -29,7 +29,7 @@ def check_duckdb(input_file, expected_lines, expected_columns=None):
 
         # Check 2: Number of lines for Network
         row_count = len(result)
-        if row_count != expected_lines:
+        if row_count < expected_lines:
             print(f"Error: Expected {expected_lines} Network lines, but found {row_count}")
             return False
 

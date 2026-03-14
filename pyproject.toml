@@ -75,7 +75,8 @@ containers = [
   "six",
 ]
 export = [
-  "bernhard", # "cassandra-driver, may cause issue on Docker image, TODO: test",
+  #"duckdb",  # Make the Github pipeline failed when building Alpine Docker
+  "bernhard",
   "elasticsearch",
   "graphitesender",
   "ibmcloudant",

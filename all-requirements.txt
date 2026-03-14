@@ -31,7 +31,7 @@ cffi==2.0.0 ; implementation_name == 'pypy' or platform_python_implementation !=
     # via
     #   cryptography
     #   pyzmq
-chardet==7.0.1
+chardet==7.1.0
     # via pysmart
 charset-normalizer==3.4.5
     # via requests
@@ -161,7 +161,7 @@ pygal==3.1.0
     # via glances
 pyinstrument==5.1.2
     # via glances
-pyjwt==2.11.0
+pyjwt==2.12.1
     # via
     #   ibm-cloud-sdk-core
     #   ibmcloudant
@@ -226,7 +226,7 @@ rpds-py==0.30.0
     #   referencing
 rsa==4.9.1
     # via python-jose
-setuptools==82.0.0
+setuptools==82.0.1
     # via wifi
 shtab==1.8.0 ; sys_platform != 'win32'
     # via glances
@@ -265,6 +265,7 @@ typing-extensions==4.15.0
     #   psycopg
     #   pydantic
     #   pydantic-core
+    #   pyjwt
     #   reactivex
     #   referencing
     #   starlette

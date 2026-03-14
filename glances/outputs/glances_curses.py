@@ -697,12 +697,20 @@ class _GlancesCurses:
         """
         # First line
         self.new_line()
-        self.space_between_column = 0
         l_uptime = 1
         for i in ['system', 'ip', 'uptime']:
             if i in stat_display:
                 l_uptime += self.get_stats_display_width(stat_display[i])
-        self.display_plugin(stat_display["system"], display_optional=(self.term_window.getmaxyx()[1] >= l_uptime))
+
+        display_system_optional = self.term_window.getmaxyx()[1] >= l_uptime
+
+        # Calculate the initial `space_between_column` based on displayed system messages
+        msgs = stat_display["system"]["msgdict"]
+        visible_msgs = [msg for msg in msgs if display_system_optional or not msg["optional"]]
+        ends_with_space = bool(visible_msgs) and visible_msgs[-1]["msg"].endswith(" ")
+        self.space_between_column = 0 if ends_with_space else 1
+
+        self.display_plugin(stat_display["system"], display_optional=display_system_optional)
         self.space_between_column = 3
         if 'ip' in stat_display:
             self.new_column()

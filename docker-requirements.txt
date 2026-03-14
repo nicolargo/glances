@@ -89,7 +89,7 @@ pydantic-settings==2.13.1
     # via mcp
 pyinstrument==5.1.2
     # via glances
-pyjwt==2.11.0
+pyjwt==2.12.1
     # via mcp
 python-dateutil==2.9.0.post0
     # via glances
@@ -142,6 +142,7 @@ typing-extensions==4.15.0
     #   mcp
     #   pydantic
     #   pydantic-core
+    #   pyjwt
     #   referencing
     #   starlette
     #   typing-inspection

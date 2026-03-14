@@ -93,11 +93,11 @@ exceptiongroup==1.2.2
     #   trio-websocket
 face==26.0.0
     # via glom
-filelock==3.25.0
+filelock==3.25.2
     # via
     #   python-discovery
     #   virtualenv
-fonttools==4.61.1
+fonttools==4.62.1
     # via matplotlib
 glom==25.12.0
     # via semgrep
@@ -139,7 +139,7 @@ jsonschema==4.25.1
     #   semgrep
 jsonschema-specifications==2025.9.1
     # via jsonschema
-kiwisolver==1.4.9
+kiwisolver==1.5.0
     # via matplotlib
 license-expression==30.4.4
     # via reuse
@@ -161,7 +161,7 @@ numpy==2.2.6 ; python_full_version < '3.11'
     # via
     #   contourpy
     #   matplotlib
-numpy==2.4.2 ; python_full_version >= '3.11'
+numpy==2.4.3 ; python_full_version >= '3.11'
     # via
     #   contourpy
     #   matplotlib
@@ -249,7 +249,7 @@ pygments==2.19.2
     #   rich
     #   sphinx
 pyinstrument==5.1.2
-pyjwt==2.11.0
+pyjwt==2.12.1
     # via
     #   mcp
     #   semgrep
@@ -263,7 +263,7 @@ python-dateutil==2.9.0.post0
     # via matplotlib
 python-debian==1.1.0
     # via reuse
-python-discovery==1.1.1
+python-discovery==1.1.3
     # via virtualenv
 python-dotenv==1.2.2
     # via
@@ -308,12 +308,12 @@ ruamel-yaml==0.19.1
     # via semgrep
 ruamel-yaml-clib==0.2.14
     # via semgrep
-ruff==0.15.5
+ruff==0.15.6
 selenium==4.41.0
 semantic-version==2.10.0
     # via semgrep
-semgrep==1.154.0
-setuptools==82.0.0
+semgrep==1.155.0
+setuptools==82.0.1
 shellingham==1.5.4
     # via typer
 six==1.17.0
@@ -383,6 +383,7 @@ typing-extensions==4.15.0
     #   opentelemetry-semantic-conventions
     #   pydantic
     #   pydantic-core
+    #   pyjwt
     #   pyright
     #   referencing
     #   selenium
@@ -403,7 +404,7 @@ urllib3==2.6.3
     #   semgrep
 uvicorn==0.41.0 ; sys_platform != 'emscripten'
     # via mcp
-virtualenv==21.1.0
+virtualenv==21.2.0
     # via pre-commit
 wcmatch==8.5.2
     # via semgrep

@@ -52,7 +52,9 @@ class GlancesClientBrowser:
         # A password is needed to access to the server's stats
         if server['password'] is None:
             # First of all, check if a password is available in the [passwords] section
-            clear_password = self.servers_list.password.get_password(server['name'])
+            # Use _get_preconfigured_password to avoid leaking saved/default credentials
+            # to untrusted dynamic (Zeroconf) server entries
+            clear_password = self.servers_list._get_preconfigured_password(server)
             if (
                 clear_password is None
                 or self.servers_list.get_servers_list()[self.screen.active_server]['status'] == 'PROTECTED'
