@@ -793,6 +793,14 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(plist)
 
+    @staticmethod
+    def _sanitize_server(server):
+        """Return a copy of the server dict without credential-bearing fields."""
+        safe = dict(server)
+        safe.pop('password', None)
+        safe.pop('uri', None)
+        return safe
+
     def _api_servers_list(self):
         """Glances API RESTful implementation.
 
@@ -802,7 +810,8 @@ class GlancesRestfulApi:
         # Update the servers list (and the stats for all the servers)
         self.__update_servers_list()
 
-        return GlancesJSONResponse(self.servers_list.get_servers_list() if self.servers_list else [])
+        servers = self.servers_list.get_servers_list() if self.servers_list else []
+        return GlancesJSONResponse([self._sanitize_server(s) for s in servers])
 
     # Comment this solve an issue on Home Assistant See #3238
     def _api_all(self):
