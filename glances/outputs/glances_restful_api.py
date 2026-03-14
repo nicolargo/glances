@@ -533,6 +533,22 @@ class GlancesRestfulApi:
         # Logo
         print(self._logo())
 
+        # Security warning if no authentication is configured
+        if not self.args.password:
+            is_localhost = self.args.bind_address in ('127.0.0.1', 'localhost', '::1')
+            warn_lines = [
+                "WARNING: Glances web server is running WITHOUT authentication.",
+            ]
+            if is_localhost:
+                warn_lines.append("         Use --password to enable authentication.")
+            else:
+                warn_lines.append("         Any client on the network can access system information.")
+                warn_lines.append("         Use --password to enable authentication or")
+                warn_lines.append("         --bind 127.0.0.1 to restrict access to localhost.")
+            warn_lines.append("         See https://glances.readthedocs.io/en/latest/api/restful.html#security")
+            print('\n'.join(warn_lines) + '\n')
+            logger.warning("Glances web server is running without authentication")
+
         # Browser WEBUI
         if hasattr(self.args, 'browser') and self.args.browser:
             # Template for the root browser.html file
