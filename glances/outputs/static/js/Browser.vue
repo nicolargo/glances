@@ -100,7 +100,8 @@ export default {
 						String(server.port),
 				);
 			} else {
-				window.location.href = server.uri;
+				window.location.href =
+					"http://" + String(server.name) + ":" + String(server.port);
 			}
 		},
 		getDecoration(server, column) {
