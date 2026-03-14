@@ -144,6 +144,49 @@ You can configure JWT settings in the Glances configuration file:
 **Note:** The token endpoint (``/api/4/token``) does not require authentication.
 Protected endpoints support both Bearer token and Basic Auth authentication methods.
 
+.. _security:
+
+Security
+--------
+
+By default, Glances web server runs **without authentication** and binds to
+**all network interfaces** (``0.0.0.0``). This means any client that can reach
+the server on the network can access the full REST API, including sensitive
+system information such as process command-lines, which may contain credentials
+(passwords, API keys, tokens passed as arguments).
+
+This default is intentional for ease of use on private, trusted networks (home
+labs, local machines, internal infrastructure). However, if your Glances
+instance is reachable from untrusted networks, you should take the following
+precautions:
+
+**Enable authentication** by starting Glances with the ``--password`` option:
+
+.. code-block:: bash
+
+    glances -w --password
+
+**Bind to localhost only** if remote access is not needed:
+
+.. code-block:: bash
+
+    glances -w --bind 127.0.0.1
+
+**Use a reverse proxy** (nginx, Caddy, Apache) with TLS and authentication for
+any public-facing or semi-public deployment. This is the recommended approach
+for production environments.
+
+.. code-block:: ini
+
+    # Example: restrict bind to localhost, access via reverse proxy
+    # In glances.conf:
+    [outputs]
+    # Set the bind address to localhost
+    # then configure your reverse proxy to forward to 127.0.0.1:61208
+
+When Glances is started without authentication, a warning message is displayed
+at startup to remind you of the risk.
+
 WebUI refresh
 -------------
 
