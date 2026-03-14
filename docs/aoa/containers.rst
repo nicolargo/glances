@@ -45,7 +45,7 @@ under the ``[containers]`` section:
     containername_cpu_careful=10
     containername_cpu_warning=20
     containername_cpu_critical=30
-    containername_cpu_critical_action=echo {{Image}} {{Id}} {{cpu}} > /tmp/container_{{name}}.alert
+    containername_cpu_critical_action=/etc/glances/actions.d/container-alert.sh {{Image}} {{Id}} {{cpu}} {{name}}
     # By default, Glances only display running containers
     # Set the following key to True to display all containers
     all=False
@@ -53,6 +53,21 @@ under the ``[containers]`` section:
     #podman_sock=unix:///run/user/1000/podman/podman.sock
 
 You can use all the variables ({{foo}}) available in the containers plugin.
+
+.. note::
+
+    Shell operators (``&&``, ``|``, ``>``, ``>>``) are **not allowed**
+    directly in action command lines. If your action requires pipes or
+    redirections, write a shell script and call it from the action.
+    For example, create ``/etc/glances/actions.d/container-alert.sh``:
+
+    .. code-block:: bash
+
+        #!/bin/bash
+        # Usage: container-alert.sh <image> <id> <cpu> <name>
+        echo "$1 $2 $3" > "/tmp/container_$4.alert"
+
+    See :ref:`actions` for details.
 
 Filtering (for hide or show) is based on regular expression. Please be sure that your regular
 expression works as expected. You can use an online tool like `regex101`_ in
