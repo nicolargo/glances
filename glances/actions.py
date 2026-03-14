@@ -20,6 +20,31 @@ except ImportError:
 else:
     chevron_tag = True
 
+# Characters that secure_popen interprets as shell operators.
+# Mustache-rendered values must not contain these to prevent command injection.
+_SHELL_OPERATORS = ('&&', '|', '>>', '>')
+
+
+def _sanitize_mustache_dict(mustache_dict):
+    """Return a copy of mustache_dict with shell operators replaced by spaces.
+
+    This prevents command injection when user-controllable data (process names,
+    container names, mount points, etc.) is rendered into action command lines
+    via Mustache templates.
+    """
+    if not mustache_dict:
+        return mustache_dict
+
+    safe = {}
+    for k, v in mustache_dict.items():
+        if isinstance(v, str):
+            for op in _SHELL_OPERATORS:
+                v = v.replace(op, ' ')
+            safe[k] = v
+        else:
+            safe[k] = v
+    return safe
+
 
 class GlancesActions:
     """This class manage action if an alert is reached."""
@@ -75,7 +100,9 @@ class GlancesActions:
         for cmd in commands:
             # Replace {{arg}} by the dict one (Thk to {Mustache})
             if chevron_tag:
-                cmd_full = chevron.render(cmd, mustache_dict)
+                # Sanitize mustache values to prevent shell operator injection
+                safe_dict = _sanitize_mustache_dict(mustache_dict)
+                cmd_full = chevron.render(cmd, safe_dict)
             else:
                 cmd_full = cmd
             # Execute the action

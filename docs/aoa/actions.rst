@@ -33,20 +33,39 @@ reached:
 
     [fs]
     warning=70
-    warning_action=echo "{{time}} {{mnt_point}} {{used}}/{{size}}" > /tmp/fs.alert
+    warning_action=python /path/to/fs-warning.py {{mnt_point}} {{used}} {{size}}
 
-A last example would be to create a log file containing the total user disk
+.. note::
+
+    For security reasons, Mustache-rendered values are sanitized: the
+    characters ``&&``, ``|``, ``>`` and ``>>`` are replaced by spaces
+    before execution. This prevents command injection through
+    user-controllable data such as process names, container names or
+    mount points.
+
+    As a consequence, **shell operators (pipes, redirections, command
+    chaining) cannot be used directly in action command lines**. If your
+    action requires pipes, redirections or chained commands, write a
+    shell script and call it from the action instead.
+
+For example, to create a log file containing the total user disk
 space usage for a device and notify by email each time a space trigger
-critical is reached:
+critical is reached, create a shell script ``/etc/glances/actions.d/fs-critical.sh``:
+
+.. code-block:: bash
+
+    #!/bin/bash
+    # Usage: fs-critical.sh <time> <device_name> <percent>
+    echo "$1 $2 $3" > /tmp/fs.alert
+    python /etc/glances/actions.d/fs-critical.py
+
+Then reference it in the configuration file:
 
 .. code-block:: ini
 
     [fs]
     critical=90
-    critical_action_repeat=echo "{{time}} {{device_name}} {{percent}}" > /tmp/fs.alert && python /etc/glances/actions.d/fs-critical.py
-
-.. note::
-    Use && as separator for multiple commands
+    critical_action_repeat=/etc/glances/actions.d/fs-critical.sh {{time}} {{device_name}} {{percent}}
 
 Within ``/etc/glances/actions.d/fs-critical.py``:
 
