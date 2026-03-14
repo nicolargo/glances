@@ -166,6 +166,7 @@ class LxdExtension:
         self.ext_name = "containers (LXD)"
         self.endpoint = endpoint
         self.stats_fetchers = {}
+        self.local_node = None
 
         self.connect()
 
@@ -178,6 +179,12 @@ class LxdExtension:
                 self.client = LxdClient()
             # Verify connectivity
             self.client.has_api_extension('instances')
+            # Determine local cluster member name (for filtering)
+            try:
+                env = self.client.host_info.get('environment', {})
+                self.local_node = env.get('server_name')
+            except Exception:
+                self.local_node = None
         except Exception as e:
             logger.debug(f"{self.ext_name} plugin - Can't connect to LXD ({e})")
             self.client = None
@@ -195,6 +202,9 @@ class LxdExtension:
         # List instances
         try:
             instances = self.client.instances.all()
+            # In a cluster, only show instances running on this node
+            if self.local_node:
+                instances = [i for i in instances if getattr(i, 'location', None) == self.local_node]
             if not all_tag:
                 instances = [i for i in instances if i.status in self.CONTAINER_ACTIVE_STATUS]
             self.display_error = True
@@ -274,6 +284,26 @@ class LxdExtension:
         if all(k in stats['network'] for k in ('rx', 'tx', 'time_since_update')):
             stats['network_rx'] = stats['network']['rx'] // stats['network']['time_since_update']
             stats['network_tx'] = stats['network']['tx'] // stats['network']['time_since_update']
+
+        # Ports from proxy devices (e.g. listen=tcp:0.0.0.0:80 connect=tcp:127.0.0.1:80)
+        try:
+            devices = instance.expanded_devices or {}
+            port_list = []
+            for dev in devices.values():
+                if dev.get('type') != 'proxy':
+                    continue
+                listen = dev.get('listen', '')
+                connect = dev.get('connect', '')
+                # Extract port from "tcp:0.0.0.0:80" format
+                listen_port = listen.rsplit(':', 1)[-1] if listen else ''
+                connect_port = connect.rsplit(':', 1)[-1] if connect else ''
+                if listen_port:
+                    proto = listen.split(':')[0] if ':' in listen else 'tcp'
+                    port_list.append(f"{listen_port}->{connect_port}/{proto}")
+            if port_list:
+                stats['ports'] = ','.join(port_list)
+        except (AttributeError, TypeError) as e:
+            logger.debug(f"{self.ext_name} plugin - Can't get ports for {instance.name} ({e})")
 
         # Uptime from last_used_at
         try:
