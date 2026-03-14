@@ -75,7 +75,8 @@ containers = [
   "six",
 ]
 export = [
-  "bernhard", # "cassandra-driver, may cause issue on Docker image, TODO: test",
+  "bernhard",
+  "duckdb",
   "elasticsearch",
   "graphitesender",
   "ibmcloudant",
