@@ -1267,6 +1267,38 @@ class GlancesRestfulApi:
 
         return GlancesJSONResponse(ret_item)
 
+    # Args keys that must always be redacted (even for authenticated users)
+    _ALWAYS_REDACTED_ARGS = frozenset({'password'})
+
+    # Args keys redacted when no authentication is configured
+    _SENSITIVE_ARGS = frozenset(
+        {
+            'password',
+            'snmp_community',
+            'snmp_user',
+            'snmp_auth',
+            'conf_file',
+            'username',
+        }
+    )
+
+    def _sanitize_args(self):
+        """Return a sanitized copy of self.args as a dict.
+
+        - password hash is always redacted (even for authenticated users)
+        - other sensitive fields are redacted when no authentication is configured
+        """
+        args_json = vars(self.args).copy()
+        if not self.args.password:
+            for key in self._SENSITIVE_ARGS:
+                if key in args_json:
+                    args_json[key] = '********'
+        else:
+            for key in self._ALWAYS_REDACTED_ARGS:
+                if key in args_json and args_json[key]:
+                    args_json[key] = '********'
+        return args_json
+
     def _api_args(self):
         """Glances API RESTful implementation.
 
@@ -1275,10 +1307,7 @@ class GlancesRestfulApi:
         HTTP/404 if others error
         """
         try:
-            # Get the RAW value of the args' dict
-            # Use vars to convert namespace to dict
-            # Source: https://docs.python.org/%s/library/functions.html#vars
-            args_json = vars(self.args)
+            args_json = self._sanitize_args()
         except Exception as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get args ({str(e)})")
 
@@ -1296,10 +1325,7 @@ class GlancesRestfulApi:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Unknown argument item {item}")
 
         try:
-            # Get the RAW value of the args' dict
-            # Use vars to convert namespace to dict
-            # Source: https://docs.python.org/%s/library/functions.html#vars
-            args_json = vars(self.args)[item]
+            args_json = self._sanitize_args()[item]
         except Exception as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get args item ({str(e)})")
 
