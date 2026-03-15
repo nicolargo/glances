@@ -35,7 +35,7 @@ class LxdStatsFetcher:
 
         # Store previous stats for rate calculations
         self._old_computed_stats = {}
-        self._last_stats_computed_time = 0
+        self._last_stats_computed_time = time.time()
 
         # Latest polled state
         self._state = None
@@ -182,7 +182,7 @@ class LxdStatsFetcher:
 class LxdExtension:
     """Glances' Containers Plugin's LXD Extension unit"""
 
-    CONTAINER_ACTIVE_STATUS = ['Running', 'running']
+    CONTAINER_ACTIVE_STATUS = ['Running']
 
     def __init__(self, endpoint=None, poll_interval=2):
         self.disable = disable_plugin_lxd
@@ -307,12 +307,12 @@ class LxdExtension:
         stats['memory_limit'] = stats['memory'].get('limit')
 
         if all(k in stats['io'] for k in ('ior', 'iow', 'time_since_update')):
-            stats['io_rx'] = stats['io']['ior'] // stats['io']['time_since_update']
-            stats['io_wx'] = stats['io']['iow'] // stats['io']['time_since_update']
+            stats['io_rx'] = stats['io']['ior'] // max(1, stats['io']['time_since_update'])
+            stats['io_wx'] = stats['io']['iow'] // max(1, stats['io']['time_since_update'])
 
         if all(k in stats['network'] for k in ('rx', 'tx', 'time_since_update')):
-            stats['network_rx'] = stats['network']['rx'] // stats['network']['time_since_update']
-            stats['network_tx'] = stats['network']['tx'] // stats['network']['time_since_update']
+            stats['network_rx'] = stats['network']['rx'] // max(1, stats['network']['time_since_update'])
+            stats['network_tx'] = stats['network']['tx'] // max(1, stats['network']['time_since_update'])
 
         # Ports from proxy devices (e.g. listen=tcp:0.0.0.0:80 connect=tcp:127.0.0.1:80)
         try:
