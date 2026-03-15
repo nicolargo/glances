@@ -565,17 +565,17 @@ body {
 .foot-clear:hover { opacity: 1; background: rgba(0,210,255,0.05); }
 .foot-alert {
   display: grid;
-  grid-template-columns: 8px 42px 52px 1fr;
+  grid-template-columns: 8px 56px 68px 1fr;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   padding: 1.5px 12px;
 }
 .foot-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 .foot-dot.crit { background: var(--red);    box-shadow: 0 0 6px var(--red);    animation: pulse 1.5s infinite; }
 .foot-dot.warn { background: var(--yellow); box-shadow: 0 0 4px var(--yellow); }
 .foot-dot.ok   { background: var(--green); }
-.foot-time { color: var(--fg3); font-size: 12px; flex-shrink: 0; min-width: 42px; }
-.foot-dur  { color: var(--fg2); font-size: 12px; flex-shrink: 0; min-width: 36px; }
+.foot-time { color: var(--fg3); font-size: 12px; flex-shrink: 0; min-width: 52px; }
+.foot-dur  { color: var(--fg2); font-size: 12px; flex-shrink: 0; min-width: 50px; }
 .foot-ongoing {
   font-size: 11px; padding: 0 5px; border-radius: 2px; flex-shrink: 0;
 }

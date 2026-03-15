@@ -29,7 +29,7 @@
 					<span class="pulse-dot" :class="{ disconnected: isDisconnected }"></span>
 					<span class="hdr-uptime">&uarr; {{ uptime }}</span>
 				</div>
-				<div class="hdr-clock">{{ clock }}</div>
+				<div class="hdr-clock" :class="{ critical_log: isDisconnected }">{{ clock }}</div>
 			</div>
 		</div>
 	</header>
