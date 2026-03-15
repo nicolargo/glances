@@ -17,6 +17,7 @@ from glances.globals import nativestr
 from glances.logger import logger
 from glances.plugins.containers.engines import ContainersExtension
 from glances.plugins.containers.engines.docker import DockerExtension, disable_plugin_docker
+from glances.plugins.containers.engines.lxd import LxdExtension, disable_plugin_lxd
 from glances.plugins.containers.engines.podman import PodmanExtension, disable_plugin_podman
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.processes import glances_processes
@@ -86,7 +87,7 @@ fields_description = {
         'description': 'Container uptime',
     },
     'engine': {
-        'description': 'Container engine (Docker and Podman are currently supported)',
+        'description': 'Container engine (Docker, Podman, and LXD are currently supported)',
     },
     'pod_name': {
         'description': 'Pod name (only with Podman)',
@@ -163,6 +164,10 @@ class ContainersPlugin(GlancesPluginModel):
         # Init the Podman API
         if not disable_plugin_podman:
             self.watchers['podman'] = PodmanExtension(podman_sock=self._podman_sock())
+
+        # Init the LXD API
+        if not disable_plugin_lxd:
+            self.watchers['lxd'] = LxdExtension(poll_interval=self.get_refresh())
 
         # Sort key
         self.sort_key = None
