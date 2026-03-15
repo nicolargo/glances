@@ -16,16 +16,28 @@ concurrency:
 
 jobs:
     quality:
+      permissions:
+        actions: read
+        contents: read
+        security-events: write
       uses: ./.github/workflows/quality.yml
     test:
+      permissions:
+        contents: read
       uses: ./.github/workflows/test.yml
       needs: [quality]
     build:
       if: github.event_name != 'pull_request'
+      permissions:
+        contents: read
+        attestations: write
+        id-token: write
       uses: ./.github/workflows/build.yml
       needs: [quality, test]
     build_docker:
       if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/'))
+      permissions:
+        contents: read
       uses: ./.github/workflows/build_docker.yml
       secrets:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -33,9 +45,14 @@ jobs:
       needs: [quality, test]
     cyber:
       if: github.ref == 'refs/heads/develop'
+      permissions:
+        contents: read
+        security-events: write
       uses: ./.github/workflows/cyber.yml
       needs: [quality, test]
     webui:
       if: github.ref == 'refs/heads/develop'
+      permissions:
+        contents: write
       uses: ./.github/workflows/webui.yml
       needs: [quality, test]
