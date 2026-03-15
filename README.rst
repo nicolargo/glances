@@ -75,7 +75,7 @@ Web interface or API (XML-RPC and RESTful).
 Stats can also be exported to files or external time/value databases, CSV or direct
 output to STDOUT.
 
-AI assistants (Claude, Cursor, …) can query Glances directly through the built-in 
+AI assistants (Claude, Cursor, …) can query Glances directly through the built-in
 MCP server (available in Glances 4.5.1 and higher).
 
 Glances is written in Python and uses libraries to grab information from
@@ -606,6 +606,7 @@ Extra dependencies:
 - ``podman`` (for the Containers Podman monitoring support)
 - ``potsdb`` (for the OpenTSDB export module)
 - ``prometheus_client`` (for the Prometheus export module)
+- ``pylxd`` (for the LXC Containers monitoring support)
 - ``psycopg[binary]`` (for the PostgreSQL/TimeScale export module)
 - ``pygal`` (for the graph export module)
 - ``pymdstat`` (for RAID support) [Linux-only]
