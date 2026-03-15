@@ -27,7 +27,7 @@ This implies:
 ## Tech stack
 
 | Layer | Technology |
-|---|---|
+| --- | --- |
 | Backend | Python, psutil, FastAPI (REST API), curses (TUI) |
 | Frontend | Vue.js, Bootstrap 5, SCSS |
 | Export plugins | InfluxDB, MongoDB, MQTT, DuckDB, and others |
@@ -37,32 +37,145 @@ This implies:
 
 ---
 
+## Development Setup
+
+```bash
+make install-uv          # Install UV in .venv-uv/
+make venv-dev            # Create virtualenv with all deps + dev tools + pre-commit hooks
+```
+
+---
+
+## Common Commands
+
+### Tests
+
+```bash
+make test                # All tests (via pytest)
+make test-core           # Core unit tests (tests/test_core.py)
+make test-plugins        # Plugin tests (tests/test_plugin_*.py)
+make test-restful        # REST API tests
+make test-webui          # Selenium WebUI tests
+make test-exports        # All export integration tests (shell scripts, need Docker)
+
+# Single test file or specific test:
+.venv-uv/bin/uv run pytest tests/test_core.py
+.venv-uv/bin/uv run pytest tests/test_core.py::TestGlances::test_000_update
+```
+
+### Linting & Formatting
+
+```bash
+make format              # Ruff format
+make lint                # Ruff check --fix
+make pre-commit          # All pre-commit hooks (ruff, gitleaks, shellcheck, etc.)
+```
+
+### WebUI
+
+```bash
+make webui               # npm ci && npm run build (outputs to glances/outputs/static/public/)
+```
+
+### Running Glances
+
+```bash
+.venv-uv/bin/uv run python -m glances                       # Standalone TUI
+.venv-uv/bin/uv run python -m glances -w                    # Web server (default port 61208)
+.venv-uv/bin/uv run python -m glances -C conf/glances.conf  # With specific config
+```
+
+## Architecture
+
+### Modes (selected in `glances/main.py` → dispatched in `glances/__init__.py`)
+
+- **Standalone** — curses TUI (`glances/standalone.py`)
+- **Client/Server** — XML-RPC remote monitoring (`glances/client.py`, `glances/server.py`)
+- **Web server** — FastAPI REST API + Vue.js WebUI + optional MCP (`glances/webserver.py`)
+
+### Stats Engine (`glances/stats.py`)
+
+Central orchestrator that dynamically discovers and loads all plugins and
+exports. Exposes `get<PluginName>()` magic methods. Runs plugin updates
+concurrently.
+
+### Plugin System (`glances/plugins/`)
+
+- **Base class:** `GlancesPluginModel` in `glances/plugins/plugin/model.py`
+- **Convention:** each plugin lives in `glances/plugins/<name>/__init__.py`,
+  exports a class inheriting from `GlancesPluginModel`
+- **Interface:** `update()` fetches data (typically from psutil), stores in
+  `self.stats`; `fields_description` dict declares field metadata (unit,
+  thresholds, rates, alerts)
+- **Dependency DAG:** `glances/plugins/plugin/dag.py` — declares inter-plugin
+  dependencies (e.g. `cpu` depends on `core`), used by the REST API to resolve
+  fetch order
+- **Auto-discovery:** plugins are discovered automatically — no central
+  registration needed; just add a new directory under `glances/plugins/`
+- **~39 plugins:** cpu, mem, memswap, network, diskio, fs, containers, gpu,
+  sensors, processlist, alert, etc.
+
+### Export System (`glances/exports/`)
+
+- **Base class:** `GlancesExport` in `glances/exports/export.py`
+- **Convention:** each exporter in `glances/exports/glances_<name>/__init__.py`,
+  class named `Export`
+- **Auto-discovery:** same pattern as plugins — no central registration needed
+- **Non-exportable plugins** (hardcoded filter): alert, help, plugin,
+  psutilversion, quicklook, version
+- **~26 exporters:** CSV, JSON, InfluxDB (v1/v2/v3), Prometheus, Elasticsearch,
+  Kafka, MQTT, etc.
+
+### REST API (`glances/outputs/glances_restful_api.py`)
+
+FastAPI app with Basic + JWT auth, CORS, optional TLS, DNS rebinding
+protection. Endpoints under `/api/<plugin>` for stats, `/api/<plugin>/history`
+for time-series.
+
+All new configuration keys must be declared and loaded in
+`GlancesRestfulApi.load_config()`. Advanced options use config-file keys only
+(no CLI flag) — follow the `cors_origins` pattern.
+
+### MCP Server (`glances/outputs/glances_mcp.py`)
+
+FastMCP-based, mounted as ASGI in the FastAPI app. Provides resources (plugin
+stats, limits, history) and prompts (system health, alerts analysis).
+
+### Process Manager (`glances/processes.py`)
+
+Complex module (~31 KB) managing the process list with threading, sorting, and
+filtering. Used by the `processlist` plugin.
+
+### Configuration (`glances/config.py`)
+
+INI format, searched in `~/.config/glances/`, `/etc/glances/`, and bundled
+`conf/`. Per-plugin sections with thresholds and options. Sensitive keys
+(passwords, tokens, API keys) are filtered from public API responses.
+
+---
+
 ## Code principles
 
 ### No dead code
+
 Never merge code that is not used anywhere in the codebase, regardless of its
 quality. Every PR must either fix a bug, introduce an actively integrated
 feature, or replace existing code. Dead code burdens reviews, confuses future
 contributors, and misleads static analysis tools.
 
 ### Surgical edits
+
 Prefer targeted, atomic changes over full rewrites. Validate — visually or
 functionally — after each atomic change. Never bundle multiple distinct logical
 fixes into a single edit block.
 
-### Architecture layers — never violate them
-- Business logic does not belong in the I/O layer.
-- Plugins must not depend on each other directly; the dependency graph is managed
-  in `glances/plugins/plugin/dag.py`.
-- Every new configuration key must be declared and loaded in
-  `GlancesRestfulApi.load_config()`. No CLI flag for advanced options — follow
-  the `cors_origins` pattern (config file only).
-
 ### Exception handling for Snap confinement
+
 Wrap the `open()` call inside `try/except`, not just the `read()`. Snap's strict
 confinement blocks host file access at the open stage, not the read stage.
 
 ### Kubernetes workloads
+
 Use a **DaemonSet** (one pod per node) for system-level monitoring.
 Prefer `SYS_PTRACE` over `privileged: true`.
 
@@ -71,6 +184,7 @@ Prefer `SYS_PTRACE` over `privileged: true`.
 ## Security
 
 ### General philosophy
+
 Glances runs unauthenticated by default — this is intentional and documented.
 The majority of users deploy it on private networks for personal use. Security
 mitigations must:
@@ -84,6 +198,7 @@ mitigations must:
 4. **Document risks and hardening recommendations** in the official docs.
 
 ### Pattern for a new optional protection
+
 ```ini
 # [outputs] in glances.conf
 # Commented out by default = unchanged behaviour (backward compatibility guaranteed)
@@ -92,6 +207,7 @@ mitigations must:
 ```
 
 ### Sensitive endpoints
+
 - `/api/4/config` and `/api/4/args` — never expose credentials in plain text
   (InfluxDB passwords, MongoDB tokens, MQTT passphrases, SSL key paths, etc.)
   for unauthenticated access. Use the conditional `as_dict_secure()` method,
@@ -103,6 +219,7 @@ mitigations must:
   `TransportSecuritySettings` in `glances/outputs/glances_mcp.py`.
 
 ### Security documents
+
 Security reports and internal remediation plans are **confidential internal
 documents**. Always deliver them as downloadable files — never as inline text
 in a conversation.
@@ -112,6 +229,7 @@ in a conversation.
 ## Contribution management (PRs and Issues)
 
 ### Dead code rule
+
 Systematically reject any PR that introduces unused code. Offer the contributor
 a path forward:
 - complete the PR with the actual integration, or
@@ -120,6 +238,7 @@ a path forward:
 Never close a PR without offering a resolution path.
 
 ### Tone with contributors
+
 - Always acknowledge the quality of the code, even when rejecting the PR.
 - Label the problem as a "blocking concern", not a judgement.
 - End with an explicit invitation to keep collaborating.
@@ -134,8 +253,10 @@ Never close a PR without offering a resolution path.
 - [ ] New configuration keys are documented
 - [ ] Breaking changes are identified and documented
 - [ ] The PR targets the correct branch
+- [ ] Code should be formated and linted (make lint && make format)
 
 ### GitHub Issues
+
 Always deliver GitHub issues as a **downloadable `.md` file** — never as inline
 text in the conversation. Expected structure:
 - Summary / symptom
@@ -146,6 +267,7 @@ text in the conversation. Expected structure:
 - Breaking changes if any
 
 ### Responses to security reports
+
 Same structure as issues, with the addition of:
 - Maintainer's position on the default behaviour (justified)
 - What will be done / what will not be done (and why)
@@ -157,7 +279,7 @@ Same structure as issues, with the addition of:
 ## Expected output formats
 
 | Deliverable | Format |
-|---|---|
+| --- | --- |
 | GitHub issue | Downloadable `.md` file — never inline |
 | Security alert response | Downloadable `.md` file, marked confidential if internal |
 | Audit report (architecture, security) | Downloadable `.md` file |
@@ -224,7 +346,7 @@ failure without this condition).
 ## Communication
 
 | Context | Language |
-|---|---|
+| --- | --- |
 | Working exchanges | French or English |
 | Issues, PRs, contributor messages | English |
 | Public documentation | English |
