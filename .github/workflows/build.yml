@@ -11,10 +11,13 @@ jobs:
     name: Build distribution 📦
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: "3.14"
       - name: Install pypa/build
@@ -26,7 +29,7 @@ jobs:
       - name: Build a binary wheel and a source tarball
         run: python3 -m build
       - name: Store the distribution packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: python-package-distributions
           path: dist/
@@ -37,6 +40,7 @@ jobs:
     needs:
       - build
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     environment:
       name: pypi
       url: https://pypi.org/p/glances
@@ -45,12 +49,12 @@ jobs:
       id-token: write
     steps:
       - name: Download all the dists
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: python-package-distributions
           path: dist/
       - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # release/v1
         with:
           skip-existing: true
           attestations: false
@@ -62,6 +66,7 @@ jobs:
     needs:
       - build
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     environment:
       name: testpypi
       url: https://pypi.org/p/glances
@@ -70,12 +75,12 @@ jobs:
       id-token: write
     steps:
       - name: Download all the dists
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: python-package-distributions
           path: dist/
       - name: Publish distribution 📦 to TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
           skip-existing: true
