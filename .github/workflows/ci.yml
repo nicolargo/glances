@@ -26,6 +26,12 @@ jobs:
         contents: read
       uses: ./.github/workflows/test.yml
       needs: [quality]
+    webui:
+      if: github.ref == 'refs/heads/develop'
+      permissions:
+        contents: write
+      uses: ./.github/workflows/webui.yml
+      needs: [quality, test]
     build:
       if: github.event_name != 'pull_request'
       permissions:
@@ -33,7 +39,7 @@ jobs:
         attestations: write
         id-token: write
       uses: ./.github/workflows/build.yml
-      needs: [quality, test]
+      needs: [quality, test, webui]
     build_docker:
       if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/'))
       permissions:
@@ -42,17 +48,11 @@ jobs:
       secrets:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-      needs: [quality, test]
+      needs: [quality, test, webui]
     cyber:
       if: github.ref == 'refs/heads/develop'
       permissions:
         contents: read
         security-events: write
       uses: ./.github/workflows/cyber.yml
-      needs: [quality, test]
-    webui:
-      if: github.ref == 'refs/heads/develop'
-      permissions:
-        contents: write
-      uses: ./.github/workflows/webui.yml
       needs: [quality, test]

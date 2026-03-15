@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    continue-on-error: true
+    # continue-on-error: true
     timeout-minutes: 10
 
     runs-on: ubuntu-latest
