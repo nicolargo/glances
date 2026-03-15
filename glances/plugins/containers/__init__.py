@@ -167,7 +167,9 @@ class ContainersPlugin(GlancesPluginModel):
 
         # Init the LXD API
         if not disable_plugin_lxd:
-            self.watchers['lxd'] = LxdExtension()
+            self.watchers['lxd'] = LxdExtension(
+                poll_interval=self.get_refresh() if hasattr(self, 'get_refresh') else 2
+            )
 
         # Sort key
         self.sort_key = None

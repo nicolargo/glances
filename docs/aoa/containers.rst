@@ -3,8 +3,9 @@
 Containers
 ==========
 
-If you use ``containers``, Glances can help you to monitor your Docker or Podman containers.
-Glances uses the containers API through the `docker-py`_ and `podman-py`_ libraries.
+If you use ``containers``, Glances can help you to monitor your Docker, Podman,
+or LXD containers. Glances uses the containers API through the `docker-py`_,
+`podman-py`_, and `pylxd`_ libraries.
 
 You can install this dependency using:
 
@@ -76,3 +77,4 @@ order to test your regular expression.
 .. _regex101: https://regex101.com/
 .. _docker-py: https://github.com/containers/containers-py
 .. _podman-py: https://github.com/containers/podman-py
+.. _pylxd: https://github.com/canonical/pylxd

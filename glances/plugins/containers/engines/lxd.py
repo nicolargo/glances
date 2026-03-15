@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 from typing import Any
 
-from glances.globals import nativestr, pretty_date, replace_special_chars
+from glances.globals import nativestr, pretty_date
 from glances.logger import logger
 
 # pylxd library (optional and Linux-only)
@@ -73,81 +73,109 @@ class LxdStatsFetcher:
         return max(1, time.time() - self._last_stats_computed_time)
 
     def _compute_activity_stats(self) -> dict[str, dict[str, Any]]:
-        stats = {"cpu": {}, "memory": {}, "io": {}, "network": {}}
-
         with self._state_lock:
             state = self._state
 
         if state is None:
-            return stats
+            return {"cpu": {}, "memory": {}, "io": {}, "network": {}}
 
-        # CPU: state.cpu["usage"] is cumulative nanoseconds
+        return {
+            "cpu": self._get_cpu_stats(state),
+            "memory": self._get_memory_stats(state),
+            "io": self._get_io_stats(state),
+            "network": self._get_network_stats(state),
+        }
+
+    def _get_cpu_stats(self, state) -> dict[str, Any]:
+        """Return CPU usage stats.
+
+        LXD reports cumulative CPU time in nanoseconds.
+        We compute a percentage from the delta between two polls.
+        """
+        stats = {}
         try:
             cumulative_cpu_ns = state.cpu["usage"]
-            stats["cpu"]["cumulative_ns"] = cumulative_cpu_ns
+            stats["cumulative_ns"] = cumulative_cpu_ns
 
             old_cpu = self._old_computed_stats.get("cpu", {})
             if "cumulative_ns" in old_cpu:
                 delta_ns = cumulative_cpu_ns - old_cpu["cumulative_ns"]
                 delta_seconds = self.time_since_update
                 # Convert ns delta to a percentage (assuming 1 core = 100%)
-                stats["cpu"]["total"] = (delta_ns / (delta_seconds * 1e9)) * 100.0
+                stats["total"] = (delta_ns / (delta_seconds * 1e9)) * 100.0
             else:
-                stats["cpu"]["total"] = 0.0
+                stats["total"] = 0.0
         except (KeyError, TypeError, ZeroDivisionError) as e:
             logger.debug(f"containers (LXD) Instance({self._instance.name}): Can't grab CPU stats ({e})")
+        return stats
 
-        # Memory: state.memory values are in bytes
+    def _get_memory_stats(self, state) -> dict[str, Any]:
+        """Return memory usage stats.
+
+        LXD reports memory values in bytes.
+        'total' is 0 when unlimited; fall back to usage_peak.
+        """
+        stats = {}
         try:
-            stats["memory"]["usage"] = state.memory["usage"]
-            # total is 0 when unlimited; fall back to usage_peak
+            stats["usage"] = state.memory["usage"]
             mem_total = state.memory.get("total", 0)
             if mem_total > 0:
-                stats["memory"]["limit"] = mem_total
+                stats["limit"] = mem_total
             else:
-                stats["memory"]["limit"] = state.memory.get("usage_peak", state.memory["usage"])
-            stats["memory"]["inactive_file"] = 0
+                stats["limit"] = state.memory.get("usage_peak", state.memory["usage"])
+            stats["inactive_file"] = 0
         except (KeyError, TypeError) as e:
             logger.debug(f"containers (LXD) Instance({self._instance.name}): Can't grab MEM stats ({e})")
+        return stats
 
-        # Disk IO: state.disk["root"]["usage"] is cumulative bytes
+    def _get_io_stats(self, state) -> dict[str, Any]:
+        """Return disk IO stats.
+
+        LXD only exposes cumulative disk usage per device, not separate read/write.
+        """
+        stats = {}
         try:
             if state.disk and "root" in state.disk:
                 cumulative_disk = state.disk["root"].get("usage", 0)
-                stats["io"]["cumulative_ior"] = cumulative_disk
-                stats["io"]["cumulative_iow"] = 0  # LXD doesn't split read/write
+                stats["cumulative_ior"] = cumulative_disk
+                stats["cumulative_iow"] = 0
 
                 old_io = self._old_computed_stats.get("io", {})
                 if "cumulative_ior" in old_io:
-                    stats["io"]["time_since_update"] = round(self.time_since_update)
-                    stats["io"]["ior"] = max(0, cumulative_disk - old_io["cumulative_ior"])
-                    stats["io"]["iow"] = 0
+                    stats["time_since_update"] = round(self.time_since_update)
+                    stats["ior"] = max(0, cumulative_disk - old_io["cumulative_ior"])
+                    stats["iow"] = 0
         except (KeyError, TypeError) as e:
             logger.debug(f"containers (LXD) Instance({self._instance.name}): Can't grab IO stats ({e})")
+        return stats
 
-        # Network: sum counters across all non-loopback interfaces
+    def _get_network_stats(self, state) -> dict[str, Any]:
+        """Return network usage stats.
+
+        Sums counters across all non-loopback interfaces.
+        """
+        stats = {}
         try:
             if state.network:
                 cumulative_rx = 0
                 cumulative_tx = 0
-                for iface_name, iface in state.network.items():
+                for iface in state.network.values():
                     if iface.get("type") == "loopback":
                         continue
                     counters = iface.get("counters", {})
                     cumulative_rx += counters.get("bytes_received", 0)
                     cumulative_tx += counters.get("bytes_sent", 0)
 
-                stats["network"]["cumulative_rx"] = cumulative_rx
-                stats["network"]["cumulative_tx"] = cumulative_tx
+                stats["cumulative_rx"] = cumulative_rx
+                stats["cumulative_tx"] = cumulative_tx
 
                 old_net = self._old_computed_stats.get("network", {})
                 if "cumulative_rx" in old_net:
-                    stats["network"]["time_since_update"] = round(self.time_since_update)
-                    stats["network"]["rx"] = max(0, cumulative_rx - old_net["cumulative_rx"])
-                    stats["network"]["tx"] = max(0, cumulative_tx - old_net["cumulative_tx"])
+                    stats["time_since_update"] = round(self.time_since_update)
+                    stats["rx"] = max(0, cumulative_rx - old_net["cumulative_rx"])
+                    stats["tx"] = max(0, cumulative_tx - old_net["cumulative_tx"])
         except (KeyError, TypeError) as e:
             logger.debug(f"containers (LXD) Instance({self._instance.name}): Can't grab NET stats ({e})")
-
         return stats
 
 
@@ -156,7 +184,7 @@ class LxdExtension:
 
     CONTAINER_ACTIVE_STATUS = ['Running', 'running']
 
-    def __init__(self, endpoint=None):
+    def __init__(self, endpoint=None, poll_interval=2):
         self.disable = disable_plugin_lxd
         if self.disable:
             raise Exception("Missing libs required to run LXD Extension (Containers)")
@@ -165,6 +193,7 @@ class LxdExtension:
         self.client = None
         self.ext_name = "containers (LXD)"
         self.endpoint = endpoint
+        self.poll_interval = poll_interval
         self.stats_fetchers = {}
         self.local_node = None
 
@@ -220,7 +249,7 @@ class LxdExtension:
         for instance in instances:
             if instance.name not in self.stats_fetchers:
                 logger.debug(f"{self.ext_name} plugin - Create thread for instance {instance.name}")
-                self.stats_fetchers[instance.name] = LxdStatsFetcher(instance)
+                self.stats_fetchers[instance.name] = LxdStatsFetcher(instance, poll_interval=self.poll_interval)
 
         # Stop threads for removed instances
         current_names = {i.name for i in instances}
