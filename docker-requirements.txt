@@ -30,6 +30,7 @@ colorama==0.4.6 ; sys_platform == 'win32'
 cryptography==46.0.5
     # via
     #   pyjwt
+    #   pylxd
     #   python-jose
 defusedxml==0.7.1
     # via glances
@@ -91,8 +92,12 @@ pyinstrument==5.1.2
     # via glances
 pyjwt==2.12.1
     # via mcp
-python-dateutil==2.9.0.post0
+pylxd==2.3.9
     # via glances
+python-dateutil==2.9.0.post0
+    # via
+    #   glances
+    #   pylxd
 python-dotenv==1.2.2
     # via pydantic-settings
 python-jose==3.5.0
@@ -112,6 +117,10 @@ requests==2.32.5
     #   docker
     #   glances
     #   podman
+    #   pylxd
+    #   requests-toolbelt
+requests-toolbelt==1.0.0
+    # via pylxd
 rpds-py==0.30.0
     # via
     #   jsonschema
@@ -164,3 +173,5 @@ uvicorn==0.41.0
     #   mcp
 windows-curses==2.4.1 ; sys_platform == 'win32'
     # via glances
+ws4py==0.6.0
+    # via pylxd
