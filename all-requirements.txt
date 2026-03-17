@@ -142,7 +142,7 @@ psycopg-binary==3.3.3 ; implementation_name != 'pypy'
     # via psycopg
 pyarrow==23.0.1
     # via influxdb3-python
-pyasn1==0.6.2
+pyasn1==0.6.3
     # via
     #   pysnmp-lextudio
     #   python-jose
