@@ -32,5 +32,18 @@
       "description": "Build and run Glances Docker images",
       "path": "skills/docker.md"
     }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx block-no-verify@1.1.2"
+          }
+        ]
+      }
+    ]
   }
 }
