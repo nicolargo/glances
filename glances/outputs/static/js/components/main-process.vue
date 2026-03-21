@@ -59,6 +59,43 @@
 			</div>
 		</div>
 
+		<!-- Extended process (pinned) -->
+		<div class="ext-proc" v-if="extendedProc">
+			<div class="ext-proc-header">
+				<span class="ext-proc-title">
+					PID {{ extendedProc.pid }} — {{ extendedProc.name }}
+				</span>
+				<button class="t-pill" @click="unpinExtended">Unpin</button>
+			</div>
+			<div class="ext-proc-stats">
+				<div class="ext-proc-col">
+					<span class="ext-kv">CPU: <strong :class="getCpuClass(extendedProc.cpu_percent)">{{ (extendedProc.cpu_percent || 0).toFixed(1) }}%</strong></span>
+					<span class="ext-kv" v-if="extendedProc.cpu_min != null">min:{{ extendedProc.cpu_min.toFixed(1) }}%</span>
+					<span class="ext-kv" v-if="extendedProc.cpu_mean != null">avg:{{ extendedProc.cpu_mean.toFixed(1) }}%</span>
+					<span class="ext-kv" v-if="extendedProc.cpu_max != null">max:{{ extendedProc.cpu_max.toFixed(1) }}%</span>
+				</div>
+				<div class="ext-proc-col">
+					<span class="ext-kv">MEM: <strong :class="getMemClass(extendedProc.memory_percent)">{{ (extendedProc.memory_percent || 0).toFixed(1) }}%</strong></span>
+					<span class="ext-kv" v-if="extendedProc.memory_min != null">min:{{ extendedProc.memory_min.toFixed(1) }}%</span>
+					<span class="ext-kv" v-if="extendedProc.memory_mean != null">avg:{{ extendedProc.memory_mean.toFixed(1) }}%</span>
+					<span class="ext-kv" v-if="extendedProc.memory_max != null">max:{{ extendedProc.memory_max.toFixed(1) }}%</span>
+				</div>
+				<div class="ext-proc-col">
+					<span class="ext-kv" v-if="extendedProc.num_threads != null">Threads: <strong>{{ extendedProc.num_threads }}</strong></span>
+					<span class="ext-kv" v-if="extendedProc.nice != null">Nice: <strong>{{ extendedProc.nice }}</strong></span>
+					<span class="ext-kv">Status: <strong>{{ extendedProc.status }}</strong></span>
+				</div>
+				<div class="ext-proc-col">
+					<span class="ext-kv" v-if="extendedProc.tcp != null">TCP: <strong>{{ extendedProc.tcp }}</strong></span>
+					<span class="ext-kv" v-if="extendedProc.udp != null">UDP: <strong>{{ extendedProc.udp }}</strong></span>
+					<span class="ext-kv" v-if="extendedProc.memory_swap != null">Swap: <strong>{{ $filters.bytes(extendedProc.memory_swap) }}</strong></span>
+				</div>
+			</div>
+			<div class="ext-proc-cmd" v-if="extendedProc.cmdline">
+				<span class="ext-kv">cmdline: {{ Array.isArray(extendedProc.cmdline) ? extendedProc.cmdline.join(' ') : extendedProc.cmdline }}</span>
+			</div>
+		</div>
+
 		<!-- Process table -->
 		<div class="proc-wrap">
 			<table class="proc-table">
@@ -79,7 +116,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="proc in processList" :key="proc.pid" @click="toggleExtended(proc.pid)">
+					<tr v-for="proc in processList" :key="proc.pid" @click="toggleExtended(proc.pid)" :class="{ pinned: pinnedPid === proc.pid }" style="cursor:pointer">
 						<td :class="proc.cpuClass">
 							<div class="cpu-bar-wrap">
 								<span style="min-width:32px;text-align:right">{{ proc.cpu }}</span>
@@ -119,6 +156,19 @@ const REVERSE_COLUMNS = new Set([
 
 export default {
 	props: { data: { type: Object } },
+	data() {
+		return {
+			pinnedPid: null,
+			extendedProc: null,
+		};
+	},
+	watch: {
+		data() {
+			if (this.pinnedPid != null) {
+				this.fetchExtended();
+			}
+		},
+	},
 	computed: {
 		args() { return store.args || {}; },
 		config() { return store.config || {}; },
@@ -273,7 +323,28 @@ export default {
 		containers() {
 			const list = this.data?.stats?.containers || [];
 			const fmt = this.$filters.bytes;
-			return list.slice(0, 10).map(c => {
+			const sortCol = this.currentSort || 'cpu_percent';
+
+			// Map process sort keys to container fields
+			let containerSortKey, containerSortDir;
+			if (sortCol === 'cpu_percent') {
+				containerSortKey = c => c.cpu?.total || 0;
+				containerSortDir = 'desc';
+			} else if (sortCol === 'memory_percent') {
+				containerSortKey = c => c.memory?.usage || 0;
+				containerSortDir = 'desc';
+			} else if (sortCol === 'name') {
+				containerSortKey = c => (c.name || '').toLowerCase();
+				containerSortDir = 'asc';
+			} else {
+				// For keys not available in containers (io, time, user...), sort by name
+				containerSortKey = c => (c.name || '').toLowerCase();
+				containerSortDir = 'asc';
+			}
+
+			const sorted = orderBy(list, [containerSortKey], [containerSortDir]);
+
+			return sorted.slice(0, 10).map(c => {
 				const status = c.Status || c.status || 'unknown';
 				const statusClass = status.startsWith('Up') || status === 'running' ? 'ok' : 'critical';
 				return {
@@ -325,7 +396,34 @@ export default {
 			store.args.sort_processes_key = key;
 		},
 		toggleExtended(pid) {
-			fetch(`api/4/processes/extended/${pid}`, { method: 'POST' });
+			if (this.pinnedPid === pid) {
+				this.unpinExtended();
+				return;
+			}
+			this.pinnedPid = pid;
+			fetch(`api/4/processes/extended/${pid}`, { method: 'POST' })
+				.then(() => this.fetchExtended());
+		},
+		unpinExtended() {
+			this.pinnedPid = null;
+			this.extendedProc = null;
+			fetch('api/4/processes/extended/disable', { method: 'POST' });
+		},
+		fetchExtended() {
+			fetch('api/4/processes/extended')
+				.then(r => r.json())
+				.then(data => {
+					if (data && data.pid != null) {
+						this.extendedProc = data;
+					} else {
+						this.extendedProc = null;
+						this.pinnedPid = null;
+					}
+				})
+				.catch(() => {
+					this.extendedProc = null;
+					this.pinnedPid = null;
+				});
 		},
 		getCpuClass(val) {
 			const alert = GlancesHelper.getAlert('processlist', 'processlist_cpu_', val, 100);

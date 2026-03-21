@@ -128,7 +128,7 @@ body {
   font-size: 10.5px;
   letter-spacing: 0.1em;
   color: var(--fg3);
-  width: 36px;
+  width: 52px;
   flex-shrink: 0;
 }
 .hdr-ip-val {
@@ -437,8 +437,8 @@ body {
 .t-pill.active { color: var(--cyan); border-color: rgba(0,210,255,0.3); }
 
 /* Container table column widths */
-.container-table .ct-name   { width: 120px; text-align: left; overflow: hidden; text-overflow: ellipsis; }
-.container-table .ct-status { width: 64px; text-align: left; }
+.container-table .ct-name   { width: 180px; text-align: left; overflow: hidden; text-overflow: ellipsis; }
+.container-table .ct-status { width: 80px; text-align: left; }
 .container-table .ct-cpu    { width: 50px; }
 .container-table .ct-mem    { width: 56px; }
 .container-table .ct-cmd    { width: auto; text-align: left; }
@@ -460,6 +460,51 @@ body {
 .amps-name { font-weight: 600; min-width: 100px; flex-shrink: 0; }
 .amps-count { color: var(--fg2); min-width: 24px; flex-shrink: 0; }
 .amps-result { color: var(--fg2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 400px; }
+
+/* Extended process (pinned) */
+.ext-proc {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border2);
+  padding: 6px 14px 8px;
+  flex-shrink: 0;
+}
+.ext-proc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.ext-proc-title {
+  font-size: 12px; font-weight: 700; color: var(--cyan);
+}
+.ext-proc-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.ext-proc-col {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.ext-kv {
+  font-size: 12px;
+  color: var(--fg3);
+}
+.ext-kv strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.ext-proc-cmd {
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ext-proc-cmd .ext-kv {
+  font-size: 11px;
+  color: var(--fg3);
+}
 
 /* containers/vms section above process list */
 .main-section-title {
@@ -498,7 +543,8 @@ body {
   border-bottom: 1px solid rgba(0,210,255,0.022);
   transition: background 0.08s;
 }
-.proc-table tbody tr:hover { background: rgba(0,210,255,0.028); }
+.proc-table tbody tr:hover { background: rgba(0,210,255,0.08); }
+.proc-table tbody tr.pinned { background: rgba(0,210,255,0.06); }
 .proc-table tbody td {
   font-size: 13px; padding: 2.5px 6px; text-align: right;
   color: var(--fg2); white-space: nowrap; font-variant-numeric: tabular-nums;

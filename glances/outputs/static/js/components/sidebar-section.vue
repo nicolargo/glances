@@ -60,7 +60,7 @@
 					<div class="sb-minibar">
 						<div class="sb-minibar-fill" :class="fs.deco" :style="{ width: fs.percent + '%' }"></div>
 					</div>
-					<span class="v neutral">{{ fs.used }}/{{ fs.size }}</span>
+					<span class="v" :class="fs.deco">{{ fs.used }}/{{ fs.size }}</span>
 				</span>
 			</div>
 		</div>
@@ -272,8 +272,8 @@ export default {
 			return fsList.map(f => {
 				const mnt = f.mnt_point;
 				let deco = 'default';
-				if (views[mnt]?.percent?.decoration) {
-					const d = views[mnt].percent.decoration.toLowerCase();
+				if (views[mnt]?.used?.decoration) {
+					const d = views[mnt].used.decoration.toLowerCase();
 					deco = (d === 'default') ? 'default' : d;
 				}
 				const alias = f.alias || (mnt === '/' ? 'Root' : mnt.split('/').pop() || mnt);
