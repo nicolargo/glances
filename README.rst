@@ -26,7 +26,7 @@ An Eye on your System
     :alt: Docker pull
 
 .. |pypistat| image:: https://pepy.tech/badge/glances/month
-    :target: https://pepy.tech/project/glances
+    :target: https://clickpy.clickhouse.com/dashboard/glances
     :alt: Pypi downloads
 
 .. |test| image:: https://github.com/nicolargo/glances/actions/workflows/ci.yml/badge.svg?branch=develop
