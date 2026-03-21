@@ -87,6 +87,7 @@ another while ensuring that the tasks do not conflict.',
         'short_name': 'ctx_sw',
         'optional': True,
     },
+    # In PsUtil 8+ the 'interrupt' field is renamed to 'irq' - See #3472
     'interrupts': {
         'description': 'number of interrupts per second.',
         'unit': 'number',
@@ -331,6 +332,7 @@ class CpuPlugin(GlancesPluginModel):
         # IRQ CPU
         ret.extend(self.curse_add_stat('irq', width=14, header='  '))
         # interrupts
+        # In PsUtil 8+ the 'interrupt' field is renamed to 'irq' - See #3472
         ret.extend(self.curse_add_stat('interrupts', width=15, header='  '))
 
         # Third line

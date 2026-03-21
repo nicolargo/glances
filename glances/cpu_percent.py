@@ -333,6 +333,7 @@ class CpuPercent:
                 'guest': cpu_times.guest if hasattr(cpu_times, 'guest') else None,
                 'guest_nice': cpu_times.steal if hasattr(cpu_times, 'guest_nice') else None,
                 'dpc': cpu_times.dpc if hasattr(cpu_times, 'dpc') else None,
+                # In PsUtil 8+ the 'interrupt' field is renamed to 'irq' - See #3472
                 'interrupt': cpu_times.interrupt if hasattr(cpu_times, 'interrupt') else None,
             }
             for cpu_number, cpu_times in psutil_percpu
