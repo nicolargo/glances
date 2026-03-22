@@ -16,8 +16,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-def make_mock_state(cpu_ns=5_000_000_000, mem_usage=1_000_000_000, mem_total=2_000_000_000,
-                    mem_usage_peak=None, disk_usage=500_000, net_rx=10_000, net_tx=20_000):
+def make_mock_state(
+    cpu_ns=5_000_000_000,
+    mem_usage=1_000_000_000,
+    mem_total=2_000_000_000,
+    mem_usage_peak=None,
+    disk_usage=500_000,
+    net_rx=10_000,
+    net_tx=20_000,
+):
     """Create a mock LXD instance state."""
     return SimpleNamespace(
         cpu={"usage": cpu_ns},
@@ -36,9 +43,15 @@ def make_mock_state(cpu_ns=5_000_000_000, mem_usage=1_000_000_000, mem_total=2_0
     )
 
 
-def make_mock_instance(name="test-container", status="Running", config=None,
-                       expanded_devices=None, created_at="2026-01-01T00:00:00Z",
-                       last_used_at="2026-03-15T10:00:00Z", location="node1"):
+def make_mock_instance(
+    name="test-container",
+    status="Running",
+    config=None,
+    expanded_devices=None,
+    created_at="2026-01-01T00:00:00Z",
+    last_used_at="2026-03-15T10:00:00Z",
+    location="node1",
+):
     """Create a mock LXD instance."""
     instance = MagicMock()
     instance.name = name
