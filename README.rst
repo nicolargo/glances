@@ -589,6 +589,7 @@ Extra dependencies:
 - ``batinfo`` (for battery monitoring)
 - ``bernhard`` (for the Riemann export module)
 - ``cassandra-driver`` (for the Cassandra export module)
+- ``clickhouse-connect`` (for the ClickHouse export module)
 - ``chevron`` (for the action script feature)
 - ``docker`` (for the Containers Docker monitoring support)
 - ``elasticsearch`` (for the Elastic Search export module)

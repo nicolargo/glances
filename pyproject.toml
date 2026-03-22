@@ -78,6 +78,7 @@ containers = [
 export = [
   #"duckdb",  # Make the Github pipeline failed when building Alpine Docker
   "bernhard",
+  "clickhouse-connect",
   "elasticsearch",
   "graphitesender",
   "ibmcloudant",
