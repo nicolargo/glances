@@ -14,7 +14,7 @@ The connection should be defined in the Glances configuration file as following:
 
     [clickhouse]
     host=localhost
-    port=5432
+    port=8123
     db=glances
     user=default
     password=password
