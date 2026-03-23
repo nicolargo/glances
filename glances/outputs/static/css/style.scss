@@ -282,6 +282,53 @@ body {
 .cpu-row .v.hi    { color: var(--cyan); }
 .cpu-row .v.dim   { color: var(--fg2); }
 
+/* Per-CPU bars */
+.percpu-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+}
+.percpu-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+.percpu-label {
+  width: 24px;
+  text-align: right;
+  color: var(--fg3);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.percpu-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+.percpu-bar-sys,
+.percpu-bar-usr,
+.percpu-bar-iow {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 3px;
+}
+.percpu-bar-sys { background: var(--red); }
+.percpu-bar-usr { background: var(--green); }
+.percpu-bar-iow { background: var(--yellow); }
+.percpu-val {
+  width: 34px;
+  text-align: right;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
 /* MEM+SWAP unified tile */
 .ms-heads {
   display: flex;

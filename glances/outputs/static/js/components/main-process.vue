@@ -27,6 +27,33 @@
 			</div>
 		</template>
 
+		<!-- VMs section -->
+		<template v-if="!args.disable_vms && hasVms">
+			<div class="main-section-title">VMs ({{ vmsList.length }})</div>
+			<div class="proc-wrap" style="flex:none;max-height:120px">
+				<table class="proc-table container-table">
+					<thead>
+						<tr>
+							<th class="ct-name">Name</th>
+							<th class="ct-status">Status</th>
+							<th class="ct-cpu">CPU%</th>
+							<th class="ct-mem">MEM</th>
+							<th class="ct-cmd">Release</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="vm in vmsList" :key="vm.id">
+							<td class="ct-name" style="color:var(--fg)">{{ vm.name }}</td>
+							<td class="ct-status" :class="vm.statusClass">{{ vm.status }}</td>
+							<td class="ct-cpu">{{ vm.cpu }}</td>
+							<td class="ct-mem">{{ vm.mem }}</td>
+							<td class="ct-cmd cmd-cell">{{ vm.release }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</template>
+
 		<!-- AMPs section -->
 		<template v-if="!args.disable_amps && hasAmps">
 			<div class="main-section-title">AMPs</div>
@@ -261,6 +288,29 @@ export default {
 					cmdDisplay,
 					cmdFull,
 					cmdClass,
+				};
+			});
+		},
+
+		// ── VMs ──
+		hasVms() {
+			const v = this.data?.stats?.vms;
+			return v && v.length > 0;
+		},
+		vmsList() {
+			const list = this.data?.stats?.vms || [];
+			const fmt = this.$filters.bytes;
+			return list.slice(0, 10).map(v => {
+				const status = v.status || 'unknown';
+				const statusClass = status === 'Running' || status === 'running' ? 'ok' : 'critical';
+				return {
+					id: v.id || v.name,
+					name: v.name || '',
+					status,
+					statusClass,
+					cpu: v.cpu_time != null ? v.cpu_time.toFixed(1) : (v.cpu_count || '?'),
+					mem: fmt(v.memory_usage || 0),
+					release: v.release || '',
 				};
 			});
 		},

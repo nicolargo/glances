@@ -1,41 +1,41 @@
 <template>
-    <div v-if="!serversListLoaded" id="loading-page" class="container-fluid">
-        <div class="loader">Glances Central Browser is loading...</div>
+    <div v-if="!serversListLoaded" class="loading-page">
+        Glances Central Browser is loading...
     </div>
-    <main v-else>
-        <span v-show="servers.length == 0">
-            <p class="title">No Glances server available</p>
+    <main v-else style="padding:20px">
+        <div v-show="servers.length == 0">
+            <p style="color:var(--cyan);font-weight:700">No Glances server available</p>
             <br />
             <p>Glances servers can be defined in the glances.conf file.</p>
-            <p>Glances servers can be detected automaticaly on the same local area network.</p>
-        </span>
-        <span v-show="servers.length == 1" class="title">One Glances server available</span>
-        <span v-show="servers.length > 1" class="title"> {{ servers.length }} Glances servers available</span>
-        <table v-show="servers.length > 0" class="table table-sm table-borderless margin-bottom table-hover">
+            <p>Glances servers can be detected automatically on the same local area network.</p>
+        </div>
+        <div v-show="servers.length == 1" style="color:var(--cyan);font-weight:700;margin-bottom:10px">One Glances server available</div>
+        <div v-show="servers.length > 1" style="color:var(--cyan);font-weight:700;margin-bottom:10px">{{ servers.length }} Glances servers available</div>
+        <table v-show="servers.length > 0" class="proc-table">
             <thead>
                 <tr>
-                    <th scope="col">NAME</th>
-                    <th scope="col" class="">IP</th>
-                    <th scope="col" class="">STATUS</th>
-                    <th scope="col" class="">PROTOCOL</th>
+                    <th>NAME</th>
+                    <th>IP</th>
+                    <th>STATUS</th>
+                    <th>PROTOCOL</th>
                     <th v-for="(column, columnId) in servers[0].columns" v-if="servers.length" :key="columnId">
                         {{ column.replace(/_/g, ' ').toUpperCase() }}
                     </th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(server, serverId) in servers" :key="serverId" style="cursor: pointer"
+                <tr v-for="(server, serverId) in servers" :key="serverId" style="cursor:pointer"
                     @click="goToGlances(server)">
-                    <td scope=" row">
+                    <td style="color:var(--fg)">
                         {{ server.alias ? server.alias : server.name, 32 }}
                     </td>
-                    <td class="">
+                    <td>
                         {{ server.ip }}
                     </td>
-                    <td class="">
+                    <td>
                         {{ server.status }}
                     </td>
-                    <td class="">
+                    <td>
                         {{ server.protocol }}
                     </td>
                     <td v-for="(column, columnId) in server.columns" v-if="servers.length" :key="columnId"

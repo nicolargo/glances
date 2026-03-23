@@ -13,6 +13,7 @@ export const store = reactive({
 		swap: [],
 		load: [],
 		gpu: [],
+		npu: [],
 	},
 });
 
@@ -44,5 +45,12 @@ export function pushHistory(stats) {
 			stats.gpu.reduce((s, g) => s + (g.proc || 0), 0) / stats.gpu.length;
 		store.history.gpu.push(meanProc);
 		if (store.history.gpu.length > MAX_HISTORY) store.history.gpu.shift();
+	}
+
+	if (stats.npu != null && Array.isArray(stats.npu) && stats.npu.length > 0) {
+		const meanProc =
+			stats.npu.reduce((s, n) => s + (n.proc || 0), 0) / stats.npu.length;
+		store.history.npu.push(meanProc);
+		if (store.history.npu.length > MAX_HISTORY) store.history.npu.shift();
 	}
 }
