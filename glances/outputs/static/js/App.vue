@@ -13,6 +13,7 @@
 			<metrics-mem v-if="!args.disable_mem" :data="data"></metrics-mem>
 			<metrics-load v-if="!args.disable_load" :data="data"></metrics-load>
 			<metrics-gpu v-if="!args.disable_gpu && hasGpu" :data="data"></metrics-gpu>
+			<metrics-npu v-if="!args.disable_npu && hasNpu" :data="data"></metrics-npu>
 		</section>
 
 		<!-- BODY: sidebar + main -->
@@ -34,6 +35,7 @@ import MetricsCpu from "./components/metrics-cpu.vue";
 import MetricsMem from "./components/metrics-mem.vue";
 import MetricsLoad from "./components/metrics-load.vue";
 import MetricsGpu from "./components/metrics-gpu.vue";
+import MetricsNpu from "./components/metrics-npu.vue";
 import SidebarSection from "./components/sidebar-section.vue";
 import MainProcess from "./components/main-process.vue";
 import FooterAlerts from "./components/footer-alerts.vue";
@@ -48,6 +50,7 @@ export default {
 		MetricsMem,
 		MetricsLoad,
 		MetricsGpu,
+		MetricsNpu,
 		SidebarSection,
 		MainProcess,
 		FooterAlerts,
@@ -69,6 +72,7 @@ export default {
 		metricsClass() {
 			const classes = [];
 			if (this.args.disable_gpu || !this.hasGpu) classes.push('no-gpu');
+			if (this.args.disable_npu || !this.hasNpu) classes.push('no-npu');
 			if (this.args.disable_load) classes.push('no-load');
 			return classes.join(' ');
 		},

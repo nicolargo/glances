@@ -7,8 +7,20 @@
 			<span class="m-val" :class="decoration">{{ totalDisplay }}<span class="unit">%</span></span>
 			<sparkline :data="history" :max="100" :color="sparkColor" :height="22" />
 		</div>
+		<!-- Per-CPU bars (toggle with hotkey 1) -->
+		<div class="percpu-bars" v-if="showPerCpu && perCpuList.length > 0">
+			<div class="percpu-row" v-for="pc in perCpuList" :key="pc.cpu_number">
+				<span class="percpu-label">C{{ pc.cpu_number }}</span>
+				<div class="percpu-bar">
+					<div class="percpu-bar-sys" :style="{ width: pc.system + '%' }"></div>
+					<div class="percpu-bar-usr" :style="{ width: pc.user + '%', left: pc.system + '%' }"></div>
+					<div class="percpu-bar-iow" :style="{ width: pc.iowait + '%', left: (pc.system + pc.user) + '%' }"></div>
+				</div>
+				<span class="percpu-val" :class="percpuDeco(pc)">{{ pc.total.toFixed(0) }}%</span>
+			</div>
+		</div>
 		<!-- 3-column extended stats grid -->
-		<div class="cpu-stats-grid">
+		<div class="cpu-stats-grid" v-if="!showPerCpu">
 			<!-- col 1 -->
 			<div class="cpu-col">
 				<div class="cpu-row"><span class="k">user:</span><span class="v" :class="userDeco">{{ user }}%</span></div>
@@ -112,6 +124,25 @@ export default {
 		iowaitDeco() { return decoClass(this.view.iowait); },
 		dpcDeco() { return decoClass(this.view.dpc); },
 		ctxDeco() { return decoClass(this.view.ctx_switches); },
+		showPerCpu() { return store.args?.percpu; },
+		perCpuList() {
+			const list = this.data?.stats?.percpu || [];
+			return list.map(c => ({
+				cpu_number: c.cpu_number,
+				total: c.total ?? 0,
+				user: c.user ?? 0,
+				system: c.system ?? 0,
+				iowait: c.iowait ?? 0,
+			}));
+		},
+	},
+	methods: {
+		percpuDeco(pc) {
+			if (pc.total >= 90) return 'critical';
+			if (pc.total >= 75) return 'warning';
+			if (pc.total >= 50) return 'careful';
+			return 'ok';
+		},
 	},
 };
 </script>
