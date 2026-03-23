@@ -78,10 +78,12 @@ class GlancesClient:
     def log_and_exit(self, msg=''):
         """Log and exit."""
         if not self.return_to_browser:
-            logger.critical(f"Error when connecting to Glances server: {msg}")
+            # Do not include msg here because it may contain sensitive information
+            logger.critical("Error when connecting to Glances server")
             sys.exit(2)
         else:
-            logger.error(msg)
+            # Avoid logging potentially sensitive details contained in msg
+            logger.error("Error when connecting to Glances server")
 
     @property
     def client_mode(self):
