@@ -20,6 +20,7 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -112,11 +113,8 @@ def browser_conf_path(tmp_path_factory):
 @pytest.fixture(scope='module')
 def glances_browser_server(browser_conf_path):
     """Start a Glances web server in browser mode with the generated config."""
-    if os.path.isfile('.venv/bin/python'):
-        cmdline = '.venv/bin/python'
-    else:
-        cmdline = 'python'
-    cmdline += (
+    cmdline = (
+        f'{sys.executable}'
         f' -m glances -B 0.0.0.0 -w --browser'
         f' -p {SERVER_PORT} --disable-webui --disable-autodiscover'
         f' -C {browser_conf_path}'

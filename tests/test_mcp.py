@@ -14,6 +14,7 @@ import base64
 import os
 import shlex
 import subprocess
+import sys
 import time
 import unittest
 
@@ -61,11 +62,8 @@ class TestGlancesMcp(unittest.TestCase):
         global pid
 
         print('INFO: [TEST_000] Start the Glances Web Server with MCP enabled')
-        if os.path.isfile('.venv/bin/python'):
-            cmdline = ".venv/bin/python"
-        else:
-            cmdline = "python"
-        cmdline += (
+        cmdline = (
+            f"{sys.executable}"
             f" -m glances -B 0.0.0.0 -w --disable-webui"
             f" -p {SERVER_PORT} --disable-autodiscover"
             f" --enable-mcp -C ./conf/glances.conf"
