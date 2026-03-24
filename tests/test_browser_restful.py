@@ -16,7 +16,6 @@ Tests cover:
 - Server list structure validation
 """
 
-import os
 import re
 import shlex
 import subprocess

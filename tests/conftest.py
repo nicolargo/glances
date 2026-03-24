@@ -17,7 +17,6 @@ For WebUI tests, the following are required:
 """
 
 import logging
-import os
 import shlex
 import subprocess
 import sys

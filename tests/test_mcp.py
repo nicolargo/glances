@@ -11,7 +11,6 @@
 
 import asyncio
 import base64
-import os
 import shlex
 import subprocess
 import sys

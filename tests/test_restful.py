@@ -10,7 +10,6 @@
 """Glances unitary tests suite for the RESTful API."""
 
 import numbers
-import os
 import shlex
 import subprocess
 import sys
