@@ -78,8 +78,7 @@ class RockchipNPU:
         stats = NPUStats()
 
         stats.npu_id = 'rockship_1'
-        model = self._read_file(os.path.join(self.device_folder, 'model'))
-        stats.name = model if model else "Rockchip NPU"
+        stats.name = self._get_npu_name()
         stats.freq_current = self._read_file(os.path.join(self.freq_folder, 'cur_freq'), as_int=True)
         stats.freq_max = self._read_file(os.path.join(self.freq_folder, 'max_freq'), as_int=True)
         stats.freq = int(stats.freq_current / stats.freq_max * 100)
@@ -106,23 +105,58 @@ class RockchipNPU:
         """Map ROCKCHIP device ID to product name"""
         return device_id
 
-    def parse_rknpu_load(self, content: str) -> list[dict]:
+    def _get_npu_name(self) -> str:
+        """Get NPU name from the device-tree compatible string.
+
+        Reads the NPU's own compatible property (e.g. 'rockchip,rv1126b-rknpu')
+        and formats it as a human-readable name (e.g. 'Rockchip RV1126B RKNPU').
+        Falls back to the board model or a generic name.
+        """
+        # Try the NPU's own device-tree compatible string first
+        compatible_path = os.path.join(self.freq_folder, 'device', 'of_node', 'compatible')
+        compatible = self._read_file(compatible_path)
+        if compatible:
+            # e.g. "rockchip,rv1126b-rknpu" -> "Rockchip RV1126B RKNPU"
+            parts = compatible.split(',', 1)
+            if len(parts) == 2:
+                vendor = parts[0].capitalize()
+                # "rv1126b-rknpu" -> "RV1126B RKNPU"
+                device = parts[1].replace('-', ' ').upper()
+                return f"{vendor} {device}"
+
+        # Fall back to board model
+        model = self._read_file(os.path.join(self.device_folder, 'model'))
+        return model if model else "Rockchip NPU"
+
+    def parse_rknpu_load(self, content: str) -> int | None:
         """
         Parse the content of the rknpu load file.
         Return average load across all cores.
         0% means idle, 100% means full load.
+
+        Supports two formats:
+        - Multi-core (e.g. RK3588): "NPU load: Core0: 45%, Core1: 32%, Core2: 0%,"
+        - Single-core (e.g. RV1126B): "NPU load:  0%"
         """
         if not content:
             return None
 
+        # Multi-core format: "Core0: 45%, Core1: 32%, Core2: 0%,"
         load = []
-
         pattern = r'Core(\d+):\s*(\d+)%'
         matches = re.findall(pattern, content)
         for _, utilization in matches:
             load.append(int(utilization))
 
-        return int(sum(load) / len(load)) if load else 0
+        if load:
+            return int(sum(load) / len(load))
+
+        # Single-core format: "NPU load:  0%"
+        single_match = re.search(r'NPU load:\s*(\d+)%', content)
+        if single_match:
+            return int(single_match.group(1))
+
+        return None
 
 
 # End of file
