@@ -16,29 +16,39 @@ from glances.outputs.glances_restful_api import GlancesRestfulApi
 
 
 class QueryParamsStub(dict):
+    """Provide the subset of request query params used by the handlers."""
+
     def get(self, key, default=None):
+        """Mirror dict.get for request stub compatibility."""
         return super().get(key, default)
 
 
 class OldStyleTemplates:
+    """Mimic the legacy Starlette TemplateResponse signature."""
+
     def __init__(self):
         self.calls = []
 
     def TemplateResponse(self, name, context):
+        """Record legacy TemplateResponse calls."""
         self.calls.append((name, context))
         return context
 
 
 class NewStyleTemplates:
+    """Mimic the current Starlette TemplateResponse signature."""
+
     def __init__(self):
         self.calls = []
 
     def TemplateResponse(self, request, name, context=None):
+        """Record request-first TemplateResponse calls."""
         self.calls.append((request, name, context))
         return context
 
 
 def make_api(templates):
+    """Build a lightweight GlancesRestfulApi instance for template tests."""
     api = GlancesRestfulApi.__new__(GlancesRestfulApi)
     api._templates = templates
     api.args = SimpleNamespace(time='3')
@@ -46,6 +56,7 @@ def make_api(templates):
 
 
 def test_template_response_supports_old_starlette_signature():
+    """Use the legacy signature when the template backend expects it."""
     api = make_api(OldStyleTemplates())
     request = object()
     context = {"request": request, "refresh_time": "5"}
@@ -56,6 +67,7 @@ def test_template_response_supports_old_starlette_signature():
 
 
 def test_template_response_supports_new_starlette_signature():
+    """Use the request-first signature when the backend requires it."""
     api = make_api(NewStyleTemplates())
     request = object()
     context = {"request": request, "refresh_time": "5"}
@@ -66,6 +78,7 @@ def test_template_response_supports_new_starlette_signature():
 
 
 def test_index_uses_template_helper_for_new_starlette_signature():
+    """Route the index view through the compatibility helper."""
     api = make_api(NewStyleTemplates())
     request = SimpleNamespace(query_params=QueryParamsStub(refresh='7'))
 
@@ -78,6 +91,7 @@ def test_index_uses_template_helper_for_new_starlette_signature():
 
 
 def test_browser_uses_template_helper_for_old_starlette_signature():
+    """Keep browser view rendering compatible with the legacy signature."""
     api = make_api(OldStyleTemplates())
     request = SimpleNamespace(query_params=QueryParamsStub())
 
@@ -90,6 +104,7 @@ def test_browser_uses_template_helper_for_old_starlette_signature():
 
 
 def test_index_renders_with_installed_jinja2_templates(tmp_path):
+    """Render the index view with the installed Jinja2Templates backend."""
     (tmp_path / "index.html").write_text(
         "refresh={{ refresh_time }}", encoding="utf-8"
     )
