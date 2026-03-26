@@ -72,7 +72,9 @@ def test_index_uses_template_helper_for_new_starlette_signature():
     response = api._index(request)
 
     assert response["refresh_time"] == '7'
-    assert api._templates.calls == [(request, "index.html", {"request": request, "refresh_time": '7'})]
+    assert api._templates.calls == [
+        (request, "index.html", {"request": request, "refresh_time": '7'})
+    ]
 
 
 def test_browser_uses_template_helper_for_old_starlette_signature():
@@ -82,11 +84,15 @@ def test_browser_uses_template_helper_for_old_starlette_signature():
     response = api._browser(request)
 
     assert response["refresh_time"] == 3
-    assert api._templates.calls == [("browser.html", {"request": request, "refresh_time": 3})]
+    assert api._templates.calls == [
+        ("browser.html", {"request": request, "refresh_time": 3})
+    ]
 
 
 def test_index_renders_with_installed_jinja2_templates(tmp_path):
-    (tmp_path / "index.html").write_text("refresh={{ refresh_time }}", encoding="utf-8")
+    (tmp_path / "index.html").write_text(
+        "refresh={{ refresh_time }}", encoding="utf-8"
+    )
     api = make_api(Jinja2Templates(directory=tmp_path))
     request = SimpleNamespace(query_params=QueryParamsStub(refresh='9'))
 
