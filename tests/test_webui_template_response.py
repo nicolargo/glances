@@ -8,6 +8,8 @@
 
 """Regression tests for WebUI template rendering."""
 
+# pylint: disable=invalid-name,protected-access,too-few-public-methods
+
 from types import SimpleNamespace
 
 from fastapi.templating import Jinja2Templates
