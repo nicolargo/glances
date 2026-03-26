@@ -63,9 +63,9 @@ def test_template_response_supports_old_starlette_signature():
     request = object()
     context = {"request": request, "refresh_time": "5"}
 
-    assert api._template_response_requires_request() is False
-    assert api._template_response(request, "index.html", context) == context
-    assert api._templates.calls == [("index.html", context)]
+    assert api._template_response_requires_request() is False  # nosec B101
+    assert api._template_response(request, "index.html", context) == context  # nosec B101
+    assert api._templates.calls == [("index.html", context)]  # nosec B101
 
 
 def test_template_response_supports_new_starlette_signature():
@@ -74,9 +74,9 @@ def test_template_response_supports_new_starlette_signature():
     request = object()
     context = {"request": request, "refresh_time": "5"}
 
-    assert api._template_response_requires_request() is True
-    assert api._template_response(request, "index.html", context) == context
-    assert api._templates.calls == [(request, "index.html", context)]
+    assert api._template_response_requires_request() is True  # nosec B101
+    assert api._template_response(request, "index.html", context) == context  # nosec B101
+    assert api._templates.calls == [(request, "index.html", context)]  # nosec B101
 
 
 def test_index_uses_template_helper_for_new_starlette_signature():
@@ -86,8 +86,8 @@ def test_index_uses_template_helper_for_new_starlette_signature():
 
     response = api._index(request)
 
-    assert response["refresh_time"] == '7'
-    assert api._templates.calls == [
+    assert response["refresh_time"] == '7'  # nosec B101
+    assert api._templates.calls == [  # nosec B101
         (request, "index.html", {"request": request, "refresh_time": '7'})
     ]
 
@@ -99,8 +99,8 @@ def test_browser_uses_template_helper_for_old_starlette_signature():
 
     response = api._browser(request)
 
-    assert response["refresh_time"] == 3
-    assert api._templates.calls == [
+    assert response["refresh_time"] == 3  # nosec B101
+    assert api._templates.calls == [  # nosec B101
         ("browser.html", {"request": request, "refresh_time": 3})
     ]
 
@@ -115,6 +115,6 @@ def test_index_renders_with_installed_jinja2_templates(tmp_path):
 
     response = api._index(request)
 
-    assert response.template.name == "index.html"
-    assert response.context["request"] is request
-    assert response.context["refresh_time"] == '9'
+    assert response.template.name == "index.html"  # nosec B101
+    assert response.context["request"] is request  # nosec B101
+    assert response.context["refresh_time"] == '9'  # nosec B101
