@@ -131,6 +131,7 @@ iniconfig==2.3.0
     # via pytest
 jinja2==3.1.6
     # via
+    #   memray
     #   reuse
     #   sphinx
 jsonschema==4.25.1
@@ -143,16 +144,24 @@ kiwisolver==1.5.0
     # via matplotlib
 license-expression==30.4.4
     # via reuse
+linkify-it-py==2.1.0
+    # via markdown-it-py
 markdown-it-py==4.0.0
-    # via rich
+    # via
+    #   mdit-py-plugins
+    #   rich
+    #   textual
 markupsafe==3.0.3
     # via jinja2
 matplotlib==3.10.8
 mcp==1.23.3
     # via semgrep
+mdit-py-plugins==0.5.0
+    # via textual
 mdurl==0.1.2
     # via markdown-it-py
 memory-profiler==0.61.0
+memray==1.19.2
 nodeenv==1.10.0
     # via
     #   pre-commit
@@ -221,6 +230,7 @@ pillow==12.1.1
 platformdirs==4.9.4
     # via
     #   python-discovery
+    #   textual
     #   virtualenv
 pluggy==1.6.0
     # via pytest
@@ -231,7 +241,6 @@ protobuf==6.33.6
     #   opentelemetry-proto
 psutil==7.2.2
     # via memory-profiler
-py-spy==0.4.1
 pycparser==3.0 ; (implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt') or (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy')
     # via cffi
 pydantic==2.12.5
@@ -248,6 +257,7 @@ pygments==2.19.2
     #   pytest
     #   rich
     #   sphinx
+    #   textual
 pyinstrument==5.1.2
 pyjwt==2.12.1
     # via
@@ -293,7 +303,9 @@ requirements-parser==0.13.0
 reuse==6.2.0
 rich==14.3.3
     # via
+    #   memray
     #   semgrep
+    #   textual
     #   typer
 roman-numerals==4.1.0 ; python_full_version >= '3.11'
     # via sphinx
@@ -357,6 +369,8 @@ starlette==1.0.0
     # via
     #   mcp
     #   sse-starlette
+textual==8.2.0
+    # via memray
 tomli==2.0.2
     # via
     #   pytest
@@ -389,6 +403,7 @@ typing-extensions==4.15.0
     #   selenium
     #   semgrep
     #   starlette
+    #   textual
     #   typing-inspection
     #   uvicorn
     #   virtualenv
@@ -397,6 +412,8 @@ typing-inspection==0.4.2
     #   mcp
     #   pydantic
     #   pydantic-settings
+uc-micro-py==2.0.0
+    # via linkify-it-py
 urllib3==2.6.3
     # via
     #   requests

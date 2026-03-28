@@ -24,7 +24,6 @@ dependencies = [
   "windows-curses; platform_system == 'Windows'",
   "shtab; platform_system != 'Windows'",
   "jinja2",
-  "pyinstrument>=5.1.2",
 ]
 description = "A cross-platform curses-based monitoring tool"
 dynamic = ["version"]
@@ -41,12 +40,12 @@ dev = [
   "fonttools>=4.43.0",
   "gprof2dot",
   "matplotlib",
+  "memray>=1.19.2",
   "memory-profiler",
   "numpy>=1.22.2",
   "pillow>=10.0.1",
   "pre-commit",
-  "py-spy",
-  "pyinstrument>=5.1.1",
+  "pyinstrument>=5.1.2",
   "pyright",
   "pytest",
   "requirements-parser",

@@ -10,8 +10,6 @@ packaging==26.0
     # via glances
 psutil==7.2.2
     # via glances
-pyinstrument==5.1.2
-    # via glances
 shtab==1.8.0 ; sys_platform != 'win32'
     # via glances
 windows-curses==2.4.1 ; sys_platform == 'win32'

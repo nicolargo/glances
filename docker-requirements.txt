@@ -88,8 +88,6 @@ pydantic-core==2.41.5
     # via pydantic
 pydantic-settings==2.13.1
     # via mcp
-pyinstrument==5.1.2
-    # via glances
 pyjwt==2.12.1
     # via mcp
 pylxd==2.4.0
