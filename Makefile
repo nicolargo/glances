@@ -140,6 +140,9 @@ test-export-timescaledb: ## Run interface tests with TimescaleDB
 test-export-nats: ## Run interface tests with NATS
 	/bin/bash ./tests/test_export_nats.sh
 
+test-export-clickhouse: ## Run interface tests with ClickHouse
+	/bin/bash ./tests/test_export_clickhouse.sh
+
 test-exports: ## Tests all exports
 	@for f in ./tests/test_export_*.sh; do /bin/bash "$$f"; done
 

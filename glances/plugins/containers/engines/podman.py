@@ -375,9 +375,6 @@ class PodmanExtension:
             'uptime': None,
         }
 
-        if stats['status'] not in self.CONTAINER_ACTIVE_STATUS:
-            return stats
-
         stats_fetcher = self.container_stats_fetchers[container.id]
         activity_stats = stats_fetcher.activity_stats
         stats.update(activity_stats)
@@ -414,3 +411,6 @@ class PodmanExtension:
             )
 
         return stats
+
+
+# End of file

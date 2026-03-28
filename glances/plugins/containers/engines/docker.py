@@ -320,9 +320,10 @@ class DockerExtension:
 
         # Container Image
         try:
-            # API fails on Unraid - See issue 2233
+            # API fails on Unraid - See issue #2233
             stats['image'] = (','.join(container.image.tags if container.image.tags else []),)
-        except requests.exceptions.HTTPError:
+        except (requests.exceptions.HTTPError, docker.errors.NullResource):
+            # Container plugin crashes with docker.errors.NullResource on Podman pod infra containers issue #3498
             stats['image'] = ''
 
         if container.attrs['Config'].get('Entrypoint', None):
