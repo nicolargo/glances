@@ -39,7 +39,9 @@ class GlancesXMLRPCHandler(xmlrpc.xmlrpc_server.SimpleXMLRPCRequestHandler):
 
     def send_my_headers(self):
         # Specific header is here (solved the issue #227)
-        self.send_header("Access-Control-Allow-Origin", "*")
+        # Use configurable CORS origins (default: *) read from the server instance
+        cors_origin = getattr(self.server, 'cors_origin', '*')
+        self.send_header("Access-Control-Allow-Origin", cors_origin)
 
     def authenticate(self, headers):
         # auth = headers.get('Authorization')
@@ -98,6 +100,18 @@ class GlancesXMLRPCServer(xmlrpc.xmlrpc_server.SimpleXMLRPCServer):
         self.bind_address = bind_address
         self.bind_port = bind_port
         self.config = config
+
+        # Read CORS origins from config — same key as the REST API
+        # Default: "*" for backward compatibility
+        if config is not None:
+            cors_origins = config.get_list_value('outputs', 'cors_origins', default=["*"])
+        else:
+            cors_origins = ["*"]
+        # For the XML-RPC handler we emit a single Access-Control-Allow-Origin
+        # header. If the config lists a single explicit origin, use it;
+        # otherwise fall back to "*".
+        self.cors_origin = cors_origins[0] if len(cors_origins) == 1 else "*"
+
         try:
             self.address_family = socket.getaddrinfo(bind_address, bind_port)[0][0]
         except OSError as e:
@@ -194,6 +208,17 @@ class GlancesServer:
         # By default, no auth is needed
         self.server.user_dict = {}
         self.server.isAuth = False
+
+        # Warn if running unauthenticated with wildcard CORS
+        if args.password == "" and self.server.cors_origin == "*":
+            print(
+                "WARNING: XML-RPC server is running without authentication and with CORS Allow-Origin: *.\n"
+                "         Mitigations: set a password (-P/--password) and/or restrict\n"
+                "         cors_origins in glances.conf [outputs] section."
+            )
+            logger.warning(
+                "XML-RPC server is running without authentication and with CORS Access-Control-Allow-Origin: *. "
+            )
 
         # Register functions
         self.server.register_introspection_functions()
