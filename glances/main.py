@@ -114,8 +114,7 @@ Examples of use:
 
         # Load the configuration file, if it exists
         # This function should be called after the parse_args
-        # because the configuration file path can be defined
-        self.config = Config(self.args.conf_file)
+        self.config = Config(config_dir=self.args.conf_file, disable_config_exec=self.args.disable_config_exec)
 
         # Init Glances debug mode
         self.init_debug(self.args)
@@ -664,6 +663,14 @@ Examples of use:
             action='store_true',
             default=False,
             help='hide public information (like public IP)',
+        )
+        # Security options
+        parser.add_argument(
+            '--disable-config-exec',
+            action='store_true',
+            default=False,
+            dest='disable_config_exec',
+            help='disable backtick command execution in configuration values (recommended for system services)',
         )
         # Globals options
         parser.add_argument(
