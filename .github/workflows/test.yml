@@ -97,6 +97,7 @@ jobs:
       run: |
         if (Test-Path -PathType Leaf "dev-requirements.txt") { python -m pip install -r dev-requirements.txt }
         if (Test-Path -PathType Leaf "requirements.txt") { python -m pip install -r requirements.txt }
+        pip install pytest
         pip install .
 
     - name: Unitary tests
