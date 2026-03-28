@@ -40,7 +40,7 @@ dev = [
   "fonttools>=4.43.0",
   "gprof2dot",
   "matplotlib",
-  "memray>=1.19.2",
+  "memray>=1.19.2; platform_system != 'Windows'",
   "memory-profiler",
   "numpy>=1.22.2",
   "pillow>=10.0.1",
