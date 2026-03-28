@@ -30,11 +30,6 @@ sensors_definition = {
     'battery': {'type': 'battery', 'unit': '%'},
 }
 
-# Define the default refresh multiplicator
-# Default value is 5 * Glances refresh time
-# Can be overwritten by the refresh option in the sensors section of the glances.conf file
-DEFAULT_REFRESH = 5
-
 # Fields description
 # description: human readable description
 # short_name: shortname to use un UI
@@ -111,10 +106,6 @@ class SensorsPlugin(GlancesPluginModel):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-
-        # Not necessary to refresh every refresh time
-        if args and self.get_refresh() == args.time:
-            self.set_refresh(self.get_refresh() * DEFAULT_REFRESH)
 
     def get_key(self):
         """Return the key of the list."""
