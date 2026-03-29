@@ -6,7 +6,7 @@
 		"hotkeys-js": "^4.0.2",
 		"lodash": "^4.17.23",
 		"sanitize-html": "^2.17.2",
-		"vue": "^3.5.13"
+		"vue": "^3.5.31"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -14,7 +14,7 @@
 		"copy-webpack-plugin": "^14.0.0",
 		"css-loader": "^7.1.4",
 		"del": "^8.0.1",
-		"eslint": "^10.0.3",
+		"eslint": "^10.1.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-vue": "^10.8.0",
 		"globals": "^17.4.0",
@@ -24,7 +24,7 @@
 		"sass": "^1.98.0",
 		"sass-loader": "^16.0.7",
 		"style-loader": "^4.0.0",
-		"typescript-eslint": "^8.57.1",
+		"typescript-eslint": "^8.57.2",
 		"vue-loader": "^17.4.2",
 		"webpack": "^5.105.4",
 		"webpack-cli": "^7.0.2",
