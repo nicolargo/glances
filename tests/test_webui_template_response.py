@@ -107,9 +107,7 @@ def test_browser_uses_template_helper_for_old_starlette_signature():
 
 def test_index_renders_with_installed_jinja2_templates(tmp_path):
     """Render the index view with the installed Jinja2Templates backend."""
-    (tmp_path / "index.html").write_text(
-        "refresh={{ refresh_time }}", encoding="utf-8"
-    )
+    (tmp_path / "index.html").write_text("refresh={{ refresh_time }}", encoding="utf-8")
     api = make_api(Jinja2Templates(directory=tmp_path))
     request = SimpleNamespace(query_params=QueryParamsStub(refresh='9'))
 

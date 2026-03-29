@@ -671,9 +671,7 @@ class GlancesRestfulApi:
     def _template_response_requires_request(self):
         """Return True when Starlette expects request as the first argument."""
         try:
-            parameters = tuple(
-                inspect.signature(self._templates.TemplateResponse).parameters
-            )
+            parameters = tuple(inspect.signature(self._templates.TemplateResponse).parameters)
         except (TypeError, ValueError):
             return False
 
@@ -687,14 +685,10 @@ class GlancesRestfulApi:
     ):
         """Render a template using the supported TemplateResponse signature."""
         if not hasattr(self, '_template_response_use_request_first'):
-            self._template_response_use_request_first = (
-                self._template_response_requires_request()
-            )
+            self._template_response_use_request_first = self._template_response_requires_request()
 
         if self._template_response_use_request_first:
-            return self._templates.TemplateResponse(
-                request, template_name, context
-            )
+            return self._templates.TemplateResponse(request, template_name, context)
 
         return self._templates.TemplateResponse(template_name, context)
 
@@ -706,9 +700,7 @@ class GlancesRestfulApi:
 
         Note: This function is only called the first time the page is loaded.
         """
-        refresh_time = request.query_params.get(
-            'refresh', default=max(1, int(self.args.time))
-        )
+        refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
 
         # Display
         return self._template_response(
@@ -722,9 +714,7 @@ class GlancesRestfulApi:
 
         Note: This function is only called the first time the page is loaded.
         """
-        refresh_time = request.query_params.get(
-            'refresh', default=max(1, int(self.args.time))
-        )
+        refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
 
         # Display
         return self._template_response(

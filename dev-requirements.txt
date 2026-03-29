@@ -156,12 +156,12 @@ markupsafe==3.0.3
 matplotlib==3.10.8
 mcp==1.23.3
     # via semgrep
-mdit-py-plugins==0.5.0
+mdit-py-plugins==0.5.0 ; sys_platform != 'win32'
     # via textual
 mdurl==0.1.2
     # via markdown-it-py
 memory-profiler==0.61.0
-memray==1.19.2
+memray==1.19.2 ; sys_platform != 'win32'
 nodeenv==1.10.0
     # via
     #   pre-commit
@@ -170,7 +170,7 @@ numpy==2.2.6 ; python_full_version < '3.11'
     # via
     #   contourpy
     #   matplotlib
-numpy==2.4.3 ; python_full_version >= '3.11'
+numpy==2.4.4 ; python_full_version >= '3.11'
     # via
     #   contourpy
     #   matplotlib
@@ -252,7 +252,7 @@ pydantic-core==2.41.5
     # via pydantic
 pydantic-settings==2.13.1
     # via mcp
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   pytest
     #   rich
@@ -363,13 +363,13 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-sse-starlette==3.3.3
+sse-starlette==3.3.4
     # via mcp
 starlette==1.0.0
     # via
     #   mcp
     #   sse-starlette
-textual==8.2.0
+textual==8.2.1 ; sys_platform != 'win32'
     # via memray
 tomli==2.0.2
     # via

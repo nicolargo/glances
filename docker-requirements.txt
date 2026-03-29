@@ -132,7 +132,7 @@ six==1.17.0
     #   ecdsa
     #   glances
     #   python-dateutil
-sse-starlette==3.3.3
+sse-starlette==3.3.4
     # via mcp
 starlette==1.0.0
     # via
