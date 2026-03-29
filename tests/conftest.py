@@ -17,9 +17,9 @@ For WebUI tests, the following are required:
 """
 
 import logging
-import os
 import shlex
 import subprocess
+import sys
 import time
 from unittest.mock import patch
 
@@ -74,10 +74,7 @@ def glances_stats_no_history():
 
 @pytest.fixture(scope="session")
 def glances_webserver():
-    if os.path.isfile('.venv/bin/python'):
-        cmdline = ".venv/bin/python"
-    else:
-        cmdline = "python"
+    cmdline = sys.executable
     cmdline += f" -m glances -B 0.0.0.0 -w --browser -p {SERVER_PORT} -C ./conf/glances.conf"
     args = shlex.split(cmdline)
     pid = subprocess.Popen(args)

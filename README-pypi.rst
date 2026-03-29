@@ -336,6 +336,7 @@ Extra dependencies:
 - ``podman`` (for the Containers Podman monitoring support)
 - ``potsdb`` (for the OpenTSDB export module)
 - ``prometheus_client`` (for the Prometheus export module)
+- ``pylxd`` (for the LXC Containers monitoring support)
 - ``psycopg[binary]`` (for the PostgreSQL/TimeScale export module)
 - ``pygal`` (for the graph export module)
 - ``pymdstat`` (for RAID support) [Linux-only]

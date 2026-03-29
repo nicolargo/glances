@@ -8,6 +8,7 @@
 
 """RestFul API interface class."""
 
+import inspect
 import os
 import socket
 import sys
@@ -667,6 +668,30 @@ class GlancesRestfulApi:
             self.autodiscover_client.close()
         logger.info("Close the Web server")
 
+    def _template_response_requires_request(self):
+        """Return True when Starlette expects request as the first argument."""
+        try:
+            parameters = tuple(inspect.signature(self._templates.TemplateResponse).parameters)
+        except (TypeError, ValueError):
+            return False
+
+        return bool(parameters) and parameters[0] == 'request'
+
+    def _template_response(
+        self,
+        request: Request,
+        template_name: str,
+        context: dict[str, Any],
+    ):
+        """Render a template using the supported TemplateResponse signature."""
+        if not hasattr(self, '_template_response_use_request_first'):
+            self._template_response_use_request_first = self._template_response_requires_request()
+
+        if self._template_response_use_request_first:
+            return self._templates.TemplateResponse(request, template_name, context)
+
+        return self._templates.TemplateResponse(template_name, context)
+
     def _index(self, request: Request):
         """Return main index.html (/) file.
 
@@ -678,7 +703,11 @@ class GlancesRestfulApi:
         refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
 
         # Display
-        return self._templates.TemplateResponse("index.html", {"request": request, "refresh_time": refresh_time})
+        return self._template_response(
+            request,
+            "index.html",
+            {"request": request, "refresh_time": refresh_time},
+        )
 
     def _browser(self, request: Request):
         """Return main browser.html (/browser) file.
@@ -688,7 +717,11 @@ class GlancesRestfulApi:
         refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
 
         # Display
-        return self._templates.TemplateResponse("browser.html", {"request": request, "refresh_time": refresh_time})
+        return self._template_response(
+            request,
+            "browser.html",
+            {"request": request, "refresh_time": refresh_time},
+        )
 
     def _api_status(self):
         """Glances API RESTful implementation.

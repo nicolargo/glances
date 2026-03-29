@@ -78,13 +78,13 @@ class PodmanContainerStatsFetcher:
             return stats
 
         if any(field not in api_stats for field in self.MANDATORY_FIELDS) or (
-            "Network" not in api_stats and any(k not in api_stats for k in ['NetInput', 'NetOutput'])
+            "Network" not in api_stats and any(k not in api_stats for k in ["NetInput", "NetOutput"])
         ):
             logger.error(f"containers (Podman) Container({self._container.id}): Missing mandatory fields")
             return stats
 
         try:
-            stats["cpu"]["total"] = api_stats['CPU']
+            stats["cpu"]["total"] = api_stats["CPU"]
 
             stats["memory"]["usage"] = api_stats["MemUsage"]
             stats["memory"]["limit"] = api_stats["MemLimit"]
@@ -96,26 +96,29 @@ class PodmanContainerStatsFetcher:
 
             if "Network" not in api_stats:
                 # For podman rooted mode
-                stats["network"]['rx'] = api_stats["NetInput"]
-                stats["network"]['tx'] = api_stats["NetOutput"]
-                stats["network"]['time_since_update'] = 1
+                stats["network"]["rx"] = api_stats["NetInput"]
+                stats["network"]["tx"] = api_stats["NetOutput"]
+                stats["network"]["time_since_update"] = 1
                 # Hardcode to 1 as podman already sends at the same fixed rate per second
             elif api_stats["Network"] is not None:
                 # api_stats["Network"] can be None if the infra container of the pod is killed
                 # For podman in rootless mode
-                stats['network'] = {
+                stats["network"] = {
                     "cumulative_rx": sum(interface["RxBytes"] for interface in api_stats["Network"].values()),
                     "cumulative_tx": sum(interface["TxBytes"] for interface in api_stats["Network"].values()),
                 }
                 # Using previous stats to calculate rates
                 old_network_stats = self._old_computed_stats.get("network")
                 if old_network_stats:
-                    stats['network']['time_since_update'] = round(self.time_since_update)
-                    stats['network']['rx'] = stats['network']['cumulative_rx'] - old_network_stats["cumulative_rx"]
-                    stats['network']['tx'] = stats['network']['cumulative_tx'] - old_network_stats['cumulative_tx']
+                    stats["network"]["time_since_update"] = round(self.time_since_update)
+                    stats["network"]["rx"] = stats["network"]["cumulative_rx"] - old_network_stats["cumulative_rx"]
+                    stats["network"]["tx"] = stats["network"]["cumulative_tx"] - old_network_stats["cumulative_tx"]
 
         except ValueError as e:
-            logger.error(f"containers (Podman) Container({self._container.id}): Non float stats values found", e)
+            logger.error(
+                f"containers (Podman) Container({self._container.id}): Non float stats values found",
+                e,
+            )
 
         return stats
 
@@ -195,7 +198,7 @@ class PodmanPodStatsFetcher:
             self._log_debug("Compute MEM usage failed", e)
             return None
 
-        return {'usage': usage, 'limit': limit, 'inactive_file': 0}
+        return {"usage": usage, "limit": limit, "inactive_file": 0}
 
     def _get_network_stats(self, stats) -> dict | None:
         """Return the container network usage using the Docker API (v1.0 or higher).
@@ -253,7 +256,7 @@ class PodmanPodStatsFetcher:
 class PodmanExtension:
     """Glances' Containers Plugin's Docker Extension unit"""
 
-    CONTAINER_ACTIVE_STATUS = ['running', 'healthy', 'paused']
+    CONTAINER_ACTIVE_STATUS = ["running", "healthy", "paused"]
 
     def __init__(self, podman_sock):
         self.disable = disable_plugin_podman
@@ -349,68 +352,68 @@ class PodmanExtension:
     @property
     def key(self) -> str:
         """Return the key of the list."""
-        return 'name'
+        return "name"
 
     def generate_stats(self, container) -> dict[str, Any]:
         # Init the stats for the current container
         stats = {
-            'key': self.key,
-            'name': nativestr(container.name),
-            'id': container.id,
-            'image': ','.join(container.image.tags if container.image.tags else []),
-            'status': container.attrs['State'],
-            'created': container.attrs['Created'],
-            'command': container.attrs.get('Command') or [],
-            'io': {},
-            'cpu': {},
-            'memory': {},
-            'network': {},
-            'io_rx': None,
-            'io_wx': None,
-            'cpu_percent': None,
-            'memory_percent': None,
-            'network_rx': None,
-            'network_tx': None,
-            'ports': '',
-            'uptime': None,
+            "key": self.key,
+            "name": nativestr(container.name),
+            "id": container.id,
+            "image": ",".join(container.image.tags if container.image.tags else []),
+            "status": container.attrs["State"],
+            "created": container.attrs["Created"],
+            "command": container.attrs.get("Command") or [],
+            "io": {},
+            "cpu": {},
+            "memory": {},
+            "network": {},
+            "io_rx": None,
+            "io_wx": None,
+            "cpu_percent": None,
+            "memory_percent": None,
+            "network_rx": None,
+            "network_tx": None,
+            "ports": "",
+            "uptime": None,
         }
-
-        if stats['status'] not in self.CONTAINER_ACTIVE_STATUS:
-            return stats
 
         stats_fetcher = self.container_stats_fetchers[container.id]
         activity_stats = stats_fetcher.activity_stats
         stats.update(activity_stats)
 
         # Additional fields
-        stats['cpu_percent'] = stats['cpu'].get('total')
-        stats['memory_usage'] = stats['memory'].get('usage')
-        if stats['memory'].get('cache') is not None:
-            stats['memory_usage'] -= stats['memory']['cache']
-        stats['memory_inactive_file'] = stats['memory'].get('inactive_file')
-        stats['memory_limit'] = stats['memory'].get('limit')
+        stats["cpu_percent"] = stats["cpu"].get("total")
+        stats["memory_usage"] = stats["memory"].get("usage")
+        if stats["memory"].get("cache") is not None:
+            stats["memory_usage"] -= stats["memory"]["cache"]
+        stats["memory_inactive_file"] = stats["memory"].get("inactive_file")
+        stats["memory_limit"] = stats["memory"].get("limit")
 
-        if all(k in stats['io'] for k in ('ior', 'iow', 'time_since_update')):
-            stats['io_rx'] = stats['io']['ior'] // stats['io']['time_since_update']
-            stats['io_wx'] = stats['io']['iow'] // stats['io']['time_since_update']
+        if all(k in stats["io"] for k in ("ior", "iow", "time_since_update")):
+            stats["io_rx"] = stats["io"]["ior"] // stats["io"]["time_since_update"]
+            stats["io_wx"] = stats["io"]["iow"] // stats["io"]["time_since_update"]
 
-        if all(k in stats['network'] for k in ('rx', 'tx', 'time_since_update')):
-            stats['network_rx'] = stats['network']['rx'] // stats['network']['time_since_update']
-            stats['network_tx'] = stats['network']['tx'] // stats['network']['time_since_update']
+        if all(k in stats["network"] for k in ("rx", "tx", "time_since_update")):
+            stats["network_rx"] = stats["network"]["rx"] // stats["network"]["time_since_update"]
+            stats["network_tx"] = stats["network"]["tx"] // stats["network"]["time_since_update"]
 
-        started_at = datetime.fromtimestamp(container.attrs['StartedAt'])
-        stats['uptime'] = pretty_date(started_at)
+        started_at = datetime.fromtimestamp(container.attrs["StartedAt"])
+        stats["uptime"] = pretty_date(started_at)
 
         # Manage special chars in command (see issue#2733)
-        stats['command'] = replace_special_chars(' '.join(stats['command']))
+        stats["command"] = replace_special_chars(" ".join(stats["command"]))
 
         # Manage ports (see issue#2054)
-        if hasattr(container, 'ports'):
-            stats['ports'] = ','.join(
+        if hasattr(container, "ports"):
+            stats["ports"] = ",".join(
                 [
-                    f'{container.ports[cp][0]["HostPort"]}->{cp}' if container.ports[cp] else f'{cp}'
+                    (f'{container.ports[cp][0]["HostPort"]}->{cp}' if container.ports[cp] else f"{cp}")
                     for cp in container.ports
                 ]
             )
 
         return stats
+
+
+# End of file

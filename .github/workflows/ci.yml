@@ -8,28 +8,51 @@ on:
       tags:
         - v*
 
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
     quality:
+      permissions:
+        actions: read
+        contents: read
+        security-events: write
       uses: ./.github/workflows/quality.yml
     test:
+      permissions:
+        contents: read
       uses: ./.github/workflows/test.yml
       needs: [quality]
+    webui:
+      if: github.ref == 'refs/heads/develop'
+      permissions:
+        contents: write
+      uses: ./.github/workflows/webui.yml
+      needs: [quality, test]
     build:
       if: github.event_name != 'pull_request'
+      permissions:
+        contents: read
+        attestations: write
+        id-token: write
       uses: ./.github/workflows/build.yml
-      needs: [quality, test]
+      needs: [quality, test, webui]
     build_docker:
       if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/'))
+      permissions:
+        contents: read
       uses: ./.github/workflows/build_docker.yml
       secrets:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-      needs: [quality, test]
+      needs: [quality, test, webui]
     cyber:
       if: github.ref == 'refs/heads/develop'
+      permissions:
+        contents: read
+        security-events: write
       uses: ./.github/workflows/cyber.yml
-      needs: [quality, test]
-    webui:
-      if: github.ref == 'refs/heads/develop'
-      uses: ./.github/workflows/webui.yml
       needs: [quality, test]

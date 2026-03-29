@@ -10,9 +10,9 @@
 """Glances unitary tests suite for the RESTful API."""
 
 import numbers
-import os
 import shlex
 import subprocess
+import sys
 import time
 import types
 import unittest
@@ -54,10 +54,7 @@ class TestGlances(unittest.TestCase):
         global pid
 
         print('INFO: [TEST_000] Start the Glances Web Server API')
-        if os.path.isfile('.venv/bin/python'):
-            cmdline = ".venv/bin/python"
-        else:
-            cmdline = "python"
+        cmdline = sys.executable
         cmdline += f" -m glances -B 0.0.0.0 -w --browser -p {SERVER_PORT} --disable-webui -C ./conf/glances.conf"
         print(f"Run the Glances Web Server on port {SERVER_PORT}")
         args = shlex.split(cmdline)

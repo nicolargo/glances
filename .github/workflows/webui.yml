@@ -5,9 +5,13 @@ on:
 
 jobs:
   build:
-    continue-on-error: true
+    # continue-on-error: true
+    timeout-minutes: 10
 
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
 
     strategy:
       matrix:
@@ -16,9 +20,9 @@ jobs:
         node-version: [24.x]
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
     - name: Glances will be build with Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v5
+      uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'

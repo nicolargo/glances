@@ -59,6 +59,9 @@ class GlancesEvent:
     global_msg: str
     end: int = -1
 
+    def __post_init__(self):
+        self.top_dict = {}
+
     def is_ongoing(self):
         """Return True if the event is ongoing"""
         return self.end == -1
@@ -92,7 +95,15 @@ class GlancesEvent:
             self.state = state
             # TOP PROCESS LIST (only for CRITICAL ALERT)
             self.sort = sort_key
-            self.top = [p['name'] for p in sort_stats(proc_list, sort_key)[0:3]]
+            # Count of the top processes
+            for p in sort_stats(proc_list, sort_key)[0:6]:
+                if p['name'] not in self.top_dict.keys():
+                    self.top_dict[p['name']] = 1
+                else:
+                    self.top_dict[p['name']] += 1
+            self.top = [i[0] for i in sorted(self.top_dict.items(), key=lambda item: item[1], reverse=True)][0:3]
+        else:
+            self.top_dict = {}
 
         # MONITORED PROCESSES DESC
         self.desc = proc_desc

@@ -140,6 +140,9 @@ test-export-timescaledb: ## Run interface tests with TimescaleDB
 test-export-nats: ## Run interface tests with NATS
 	/bin/bash ./tests/test_export_nats.sh
 
+test-export-clickhouse: ## Run interface tests with ClickHouse
+	/bin/bash ./tests/test_export_clickhouse.sh
+
 test-exports: ## Tests all exports
 	@for f in ./tests/test_export_*.sh; do /bin/bash "$$f"; done
 
@@ -190,11 +193,14 @@ profiling-pyinstrument: ## PyInstrument profiling
 	$(UV_RUN) add pyinstrument
 	$(UV_RUN) run pyinstrument -r html -o $(OUT_DIR)/glances-pyinstrument.html -m glances -C $(CONF) --stop-after $(TIMES)
 
-profiling-pyspy: ## Flame profiling
+profiling-memray: ## Flame profiling (memory)
 	$(DISPLAY-BANNER)
-	$(UV_RUN) run py-spy record -o $(OUT_DIR)/glances-flame.svg -d 60 -s -- .venv/bin/python -m glances -C $(CONF) --stop-after $(TIMES)
+	$(UV_RUN) run memray run -o $(OUT_DIR)/glances-memray.bin -f -m glances -C $(CONF) --quiet --stop-after $(TIMES)
+	$(UV_RUN) run memray flamegraph $(OUT_DIR)/glances-memray.bin -o $(OUT_DIR)/glances-flame.html -f
+	@rm -f $(OUT_DIR)/glances-memray.bin
+	@echo "Flame graph generated in $(OUT_DIR)/glances-flame.html"
 
-profiling: profiling-gprof profiling-pyinstrument profiling-pyspy ## Profiling of the Glances software
+profiling: profiling-gprof profiling-pyinstrument profiling-memray ## Profiling of the Glances software
 
 trace-malloc: ## Trace the malloc() calls
 	@echo "Malloc test is running, please wait ~30 secondes..."

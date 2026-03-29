@@ -1,0 +1,49 @@
+{
+  "skills": {
+    "test": {
+      "description": "Run the appropriate test suite based on changed files",
+      "path": "skills/test.md"
+    },
+    "lint": {
+      "description": "Format and lint the codebase with Ruff",
+      "path": "skills/lint.md"
+    },
+    "new-plugin": {
+      "description": "Scaffold a new Glances monitoring plugin",
+      "path": "skills/new-plugin.md"
+    },
+    "new-export": {
+      "description": "Scaffold a new Glances export module",
+      "path": "skills/new-export.md"
+    },
+    "review": {
+      "description": "Review code changes against project guidelines",
+      "path": "skills/review.md"
+    },
+    "debug": {
+      "description": "Diagnose and fix a Glances bug",
+      "path": "skills/debug.md"
+    },
+    "webui": {
+      "description": "Build and work with the Vue.js WebUI",
+      "path": "skills/webui.md"
+    },
+    "docker": {
+      "description": "Build and run Glances Docker images",
+      "path": "skills/docker.md"
+    }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx block-no-verify@1.1.2"
+          }
+        ]
+      }
+    ]
+  }
+}

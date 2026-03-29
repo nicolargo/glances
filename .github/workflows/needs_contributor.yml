@@ -3,10 +3,14 @@ on:
   issues:
     types:
       - labeled
+
+permissions: {}
+
 jobs:
   add-comment:
     if: github.event.label.name == 'needs contributor'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       issues: write
     steps:

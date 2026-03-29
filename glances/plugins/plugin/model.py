@@ -1340,10 +1340,12 @@ class GlancesPluginModel:
             if stats_previous is None:
                 return stats
 
+            key = self.get_key()
+            previous_by_key = {s[key]: s for s in stats_previous}
             for stat in stats:
-                olds = [i for i in stats_previous if i[self.get_key()] == stat[self.get_key()]]
-                if len(olds) == 1:
-                    compute_rate(self, stat, olds[0])
+                old = previous_by_key.get(stat[key])
+                if old is not None:
+                    compute_rate(self, stat, old)
             return stats
 
         def wrapper(self, *args, **kw):
