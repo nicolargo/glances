@@ -3,6 +3,37 @@
 ==============================================================================
 
 =============
+Version 4.5.3
+=============
+
+Bug corrected:
+
+* Internal Server Error (Web Server Mode) #3502
+* Container plugin crashes with docker.errors.NullResource on Podman pod infra containers #3498
+* [ALERTS] Sometime the top process list is not the good one #3481
+
+Enhancements:
+
+* Support for LXC/LXD containers #3480
+* Add export to ClickHouse #3320
+
+Security patches:
+
+* Command Injection via Dynamic Configuration Values - Mitigate CVE-2026-33641
+* Cross-Origin System Information Disclosure via XML-RPC Server CORS Wildcard - Mitigate CVE-2026-33533
+
+Continious integration and documentation:
+
+* Use sys.executable in the testsuite #3497
+* Add unit tests for LXD container engine #3487
+* Replace Py-Spy per Memray for FlameGraph generation
+* Make the WebUI build before the packages and Docker images build
+* Harden GitHub Actions workflows: minimal permissions, SHA pins, timeouts
+
+Thanks to all the contributors for this version: Christian Rishøj, Jeongwoo Kim,
+Ofek Gabay, Steve Kowalik, Tanishq Shah, Mithun M.
+
+=============
 Version 4.5.2
 =============
 
