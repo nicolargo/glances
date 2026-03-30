@@ -209,7 +209,13 @@ class MemPlugin(GlancesPluginModel):
             # Update percent to reflect new 'available' value
             stats['percent'] = round(float((stats['total'] - stats['available']) / stats['total'] * 100), 1)
 
-        stats['used'] = stats['total'] - stats['available']
+        # In LXC/cgroup-v2 containers the kernel may report
+        # ``available`` > ``total`` (memory over-commit / cgroup accounting
+        # quirks).  Clamp ``used`` and ``percent`` to [0, total] so they are
+        # never displayed as negative numbers.
+        stats['used'] = max(0, stats['total'] - stats['available'])
+        if stats.get('percent') is not None:
+            stats['percent'] = max(0.0, min(100.0, stats['percent']))
 
         return stats
 
