@@ -169,13 +169,7 @@ class ProgramlistPlugin(ProcesslistPlugin):
         """Return the sorted processes list for the API."""
         return glances_processes.get_list(sorted=True, as_programs=True)
 
-    def _get_process_curses_nprocs(self, p, selected, args):
-        """Return process NPROCS curses"""
-        # Display the number of children processes
-        msg = self.layout_stat['nprocs'].format(p['nprocs'])
-        return self.curse_add_line(msg)
-
-    def _msg_curse_header(self, ret, process_sort_key, args=None):
+def _msg_curse_header(self, ret, process_sort_key, args=None):
         """Build the header and add it to the ret dict."""
         sort_style = 'SORT'
 
