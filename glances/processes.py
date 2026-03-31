@@ -328,11 +328,7 @@ class GlancesProcesses:
         """Return the max values dict."""
         return self._max_values
 
-    def get_max_values(self, key):
-        """Get the maximum values of the given stat (key)."""
-        return self._max_values[key]
-
-    def set_max_values(self, key, value):
+def set_max_values(self, key, value):
         """Set the maximum value for a specific stat (key)."""
         self._max_values[key] = value
 
