@@ -44,7 +44,7 @@ cffi==2.0.0 ; (implementation_name != 'pypy' and os_name == 'nt') or platform_py
     #   trio
 cfgv==3.5.0
     # via pre-commit
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via
     #   python-debian
     #   requests
@@ -101,7 +101,7 @@ fonttools==4.62.1
     # via matplotlib
 glom==25.12.0
     # via semgrep
-googleapis-common-protos==1.73.1
+googleapis-common-protos==1.74.0
     # via opentelemetry-exporter-otlp-proto-http
 gprof2dot==2025.4.14
 h11==0.16.0
@@ -225,7 +225,7 @@ packaging==26.0
     #   webdriver-manager
 peewee==3.19.0
     # via semgrep
-pillow==12.1.1
+pillow==12.2.0
     # via matplotlib
 platformdirs==4.9.4
     # via
@@ -293,7 +293,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.33.0
+requests==2.33.1
     # via
     #   opentelemetry-exporter-otlp-proto-http
     #   semgrep
@@ -320,11 +320,11 @@ ruamel-yaml==0.19.1
     # via semgrep
 ruamel-yaml-clib==0.2.14
     # via semgrep
-ruff==0.15.8
+ruff==0.15.9
 selenium==4.41.0
 semantic-version==2.10.0
     # via semgrep
-semgrep==1.156.0
+semgrep==1.157.0
 setuptools==82.0.1
 shellingham==1.5.4
     # via typer
@@ -369,7 +369,7 @@ starlette==1.0.0
     # via
     #   mcp
     #   sse-starlette
-textual==8.2.1 ; sys_platform != 'win32'
+textual==8.2.2 ; sys_platform != 'win32'
     # via memray
 tomli==2.0.2
     # via
@@ -419,7 +419,7 @@ urllib3==2.6.3
     #   requests
     #   selenium
     #   semgrep
-uvicorn==0.42.0 ; sys_platform != 'emscripten'
+uvicorn==0.43.0 ; sys_platform != 'emscripten'
     # via mcp
 virtualenv==21.2.0
     # via pre-commit
