@@ -124,10 +124,16 @@ def to_ascii(s):
     return s.encode('ascii', 'ignore').decode()
 
 
+def listitems(d):
+    return list(d.items())
+
 
 def listkeys(d):
     return list(d.keys())
 
+
+def listvalues(d):
+    return list(d.values())
 
 
 def u(s, errors='replace'):
@@ -164,6 +170,18 @@ def system_exec(command, timeout=5):
         res = f'ERROR: {e}'
     return res.rstrip()
 
+
+def subsample(data, sampling):
+    """Compute a simple mean subsampling.
+
+    Data should be a list of numerical itervalues
+
+    Return a subsampled list of sampling length
+    """
+    if len(data) <= sampling:
+        return data
+    sampling_length = int(round(len(data) / float(sampling)))
+    return [mean(data[s * sampling_length : (s + 1) * sampling_length]) for s in range(0, sampling)]
 
 
 def time_series_subsample(data, sampling):
@@ -214,6 +232,12 @@ def is_admin():
         return os.getuid() == 0
 
 
+def key_exist_value_not_none(k, d):
+    # Return True if:
+    # - key k exists
+    # - d[k] is not None
+    return k in d and d[k] is not None
+
 
 def key_exist_value_not_none_not_v(k, d, value='', length=None):
     # Return True if:
@@ -248,11 +272,31 @@ def safe_makedirs(path):
             raise
 
 
+def get_time_diffs(ref, now):
+    if isinstance(ref, int):
+        diff = now - datetime.fromtimestamp(ref)
+    elif isinstance(ref, datetime):
+        diff = now - ref
+    elif not ref:
+        diff = 0
+
+    return diff
+
+
+def get_first_true_val(conds):
+    return next(key for key, val in conds.items() if val)
 
 
 def maybe_add_plural(count):
     return "s" if count > 1 else ""
 
+
+def build_str_when_more_than_seven_days(day_diff, unit):
+    scale = {'week': 7, 'month': 30, 'year': 365}[unit]
+
+    count = day_diff // scale
+
+    return str(count) + " " + unit + maybe_add_plural(count)
 
 
 def pretty_date(ref, now=None):
