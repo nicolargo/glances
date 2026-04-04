@@ -277,6 +277,13 @@ body {
     }
 }
 
+#mpp {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
 #gpu {
     * > td span {
         display: inline-block;

@@ -4,6 +4,7 @@
         "cpu",
         "percpu",
         "npu",
+        "mpp",
         "gpu",
         "mem",
         "memswap",
