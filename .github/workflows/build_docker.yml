@@ -60,6 +60,7 @@ jobs:
     if: needs.create_docker_images_list.outputs.tags != '[]'
     strategy:
       fail-fast: false
+      max-parallel: 2       
       matrix:
         os: ['alpine', 'ubuntu']
         tag: ${{ fromJson(needs.create_docker_images_list.outputs.tags) }}
