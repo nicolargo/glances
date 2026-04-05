@@ -124,10 +124,8 @@ def to_ascii(s):
     return s.encode('ascii', 'ignore').decode()
 
 
-
 def listkeys(d):
     return list(d.keys())
-
 
 
 def u(s, errors='replace'):
@@ -163,7 +161,6 @@ def system_exec(command, timeout=5):
     except Exception as e:
         res = f'ERROR: {e}'
     return res.rstrip()
-
 
 
 def time_series_subsample(data, sampling):
@@ -214,7 +211,6 @@ def is_admin():
         return os.getuid() == 0
 
 
-
 def key_exist_value_not_none_not_v(k, d, value='', length=None):
     # Return True if:
     # - key k exists
@@ -249,10 +245,8 @@ def safe_makedirs(path):
 
 
 
-
 def maybe_add_plural(count):
     return "s" if count > 1 else ""
-
 
 
 def pretty_date(ref, now=None):

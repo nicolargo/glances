@@ -328,14 +328,14 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
             plugin_list = self.getPluginsList()
         return {p: self._plugins[p].get_raw() for p in plugin_list}
 
-def getAllFieldsDescriptionAsDict(self, plugin_list=None):
+    def getAllFieldsDescriptionAsDict(self, plugin_list=None):
         """Return all fields description (as dict)."""
         if plugin_list is None:
             # All enabled plugins should be exported
             plugin_list = self.getPluginsList()
         return {p: self._plugins[p].fields_description for p in plugin_list}
 
-def getAllExportsAsDict(self, plugin_list=None):
+    def getAllExportsAsDict(self, plugin_list=None):
         """Return all the stats to be exported as a dict.
 
         Default behavior is to export all the stat
@@ -392,7 +392,7 @@ def getAllExportsAsDict(self, plugin_list=None):
             return self._plugins[plugin_name]
         return None
 
-def end(self):
+    def end(self):
         """End of the Glances stats."""
         # Close export modules
         for e in self._exports:

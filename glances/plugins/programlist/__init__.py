@@ -169,7 +169,7 @@ class ProgramlistPlugin(ProcesslistPlugin):
         """Return the sorted processes list for the API."""
         return glances_processes.get_list(sorted=True, as_programs=True)
 
-def _msg_curse_header(self, ret, process_sort_key, args=None):
+    def _msg_curse_header(self, ret, process_sort_key, args=None):
         """Build the header and add it to the ret dict."""
         sort_style = 'SORT'
 
