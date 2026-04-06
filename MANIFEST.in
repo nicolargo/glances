@@ -12,3 +12,5 @@ include all-requirements.txt
 recursive-include docs *
 recursive-include glances *.py
 recursive-include glances/outputs/static *
+global-exclude __pycache__/*
+global-exclude *.py[co]
