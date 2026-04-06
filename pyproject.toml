@@ -133,7 +133,9 @@ glances = "glances:main"
 version = {attr = "glances.__version__"}
 
 [tool.setuptools.packages.find]
+exclude = ["*__pycache__*"]
 include = ["glances*"]
+where = ["."]
 
 [tool.ruff]
 line-length = 120
