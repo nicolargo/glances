@@ -32,15 +32,15 @@ cffi==2.0.0 ; implementation_name == 'pypy' or platform_python_implementation !=
     # via
     #   cryptography
     #   pyzmq
-chardet==7.4.0.post1
+chardet==7.4.0.post2
     # via pysmart
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
 chevron==0.14.0
     # via glances
 click==8.1.8
     # via uvicorn
-clickhouse-connect==0.15.0
+clickhouse-connect==0.15.1
     # via glances
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
@@ -64,7 +64,7 @@ elasticsearch==9.3.0
     # via glances
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.135.2
+fastapi==0.135.3
     # via glances
 graphitesender==0.11.2
     # via glances
@@ -165,6 +165,8 @@ pydantic-settings==2.13.1
     # via mcp
 pygal==3.1.0
     # via glances
+pyinstrument==5.1.2
+    # via glances
 pyjwt==2.12.1
     # via
     #   ibm-cloud-sdk-core
@@ -220,7 +222,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.33.0
+requests==2.33.1
     # via
     #   docker
     #   glances
@@ -290,7 +292,7 @@ typing-inspection==0.4.2
     #   mcp
     #   pydantic
     #   pydantic-settings
-tzdata==2025.3 ; sys_platform == 'win32'
+tzdata==2026.1 ; sys_platform == 'win32'
     # via psycopg
 urllib3==2.6.3
     # via
@@ -302,13 +304,13 @@ urllib3==2.6.3
     #   influxdb3-python
     #   podman
     #   requests
-uvicorn==0.42.0
+uvicorn==0.43.0
     # via
     #   glances
     #   mcp
 wifi==0.3.8
     # via glances
-windows-curses==2.4.1 ; sys_platform == 'win32'
+windows-curses==2.4.2 ; sys_platform == 'win32'
     # via glances
 ws4py==0.6.0
     # via pylxd

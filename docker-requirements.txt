@@ -21,7 +21,7 @@ certifi==2026.2.25
     #   requests
 cffi==2.0.0 ; platform_python_implementation != 'PyPy'
     # via cryptography
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
 click==8.1.8
     # via uvicorn
@@ -40,7 +40,7 @@ ecdsa==0.19.2
     # via python-jose
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.135.2
+fastapi==0.135.3
     # via glances
 h11==0.16.0
     # via
@@ -88,6 +88,8 @@ pydantic-core==2.41.5
     # via pydantic
 pydantic-settings==2.13.1
     # via mcp
+pyinstrument==5.1.2
+    # via glances
 pyjwt==2.12.1
     # via mcp
 pylxd==2.4.0
@@ -110,7 +112,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.33.0
+requests==2.33.1
     # via
     #   docker
     #   glances
@@ -165,11 +167,11 @@ urllib3==2.6.3
     #   docker
     #   podman
     #   requests
-uvicorn==0.42.0
+uvicorn==0.43.0
     # via
     #   glances
     #   mcp
-windows-curses==2.4.1 ; sys_platform == 'win32'
+windows-curses==2.4.2 ; sys_platform == 'win32'
     # via glances
 ws4py==0.6.0
     # via pylxd

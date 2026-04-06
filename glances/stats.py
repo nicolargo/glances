@@ -328,12 +328,27 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
             plugin_list = self.getPluginsList()
         return {p: self._plugins[p].get_raw() for p in plugin_list}
 
+    def getAllFieldsDescription(self):
+        """Return all fields description (as list)."""
+        return [self._plugins[p].fields_description for p in self.getPluginsList(enable=False)]
+
     def getAllFieldsDescriptionAsDict(self, plugin_list=None):
         """Return all fields description (as dict)."""
         if plugin_list is None:
             # All enabled plugins should be exported
             plugin_list = self.getPluginsList()
         return {p: self._plugins[p].fields_description for p in plugin_list}
+
+    def getAllExports(self, plugin_list=None):
+        """Return all the stats to be exported as a list.
+
+        Default behavior is to export all the stat
+        if plugin_list is provided (list), only export stats of given plugins
+        """
+        if plugin_list is None:
+            # All enabled plugins should be exported
+            plugin_list = self.getPluginsList()
+        return [self._plugins[p].get_export() for p in plugin_list]
 
     def getAllExportsAsDict(self, plugin_list=None):
         """Return all the stats to be exported as a dict.
@@ -390,6 +405,12 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         """Return the plugin stats."""
         if plugin_name in self._plugins:
             return self._plugins[plugin_name]
+        return None
+
+    def get_plugin_view(self, plugin_name):
+        """Return the plugin views."""
+        if plugin_name in self._plugins:
+            return self._plugins[plugin_name].get_views()
         return None
 
     def end(self):

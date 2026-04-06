@@ -132,6 +132,14 @@ class GlancesAutoDiscoverListener:
         self.servers.remove_server(srv_name)
         logger.info(f"Glances server {srv_name} removed from the autodetect list")
 
+    def update_service(self, zeroconf, srv_type, srv_name):
+        """Update the server from the list.
+        Done by a dirty hack (remove + add).
+        """
+        self.remove_service(zeroconf, srv_type, srv_name)
+        self.add_service(zeroconf, srv_type, srv_name)
+        logger.info(f"Glances server {srv_name} updated from the autodetect list")
+
 
 class GlancesAutoDiscoverServer:
     """Implementation of the Zeroconf protocol (server side for the Glances client)."""
