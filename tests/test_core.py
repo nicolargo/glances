@@ -44,6 +44,7 @@ from glances.globals import (
 from glances.main import GlancesMain
 from glances.outputs.glances_bars import Bar
 from glances.plugins.fs.zfs import zfs_enable, zfs_stats
+from glances.plugins.mpp import MppPlugin
 from glances.plugins.npu import NpuPlugin
 from glances.plugins.plugin.dag import get_plugin_dependencies
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -716,6 +717,47 @@ class TestGlances(unittest.TestCase):
                 'power': None,
             },
         )
+
+    @unittest.skipIf(not LINUX, "MPP available only on Linux")
+    @unittest.skipIf(WINDOWS, "MPP available only on Linux")
+    @unittest.skipIf(WSL, "MPP available only on Linux")
+    def test_026_mpp(self):
+        """Check MPP plugin."""
+        print('INFO: [TEST_026] Check MPP stats')
+        if stats.get_plugin('mpp').is_disabled():
+            return
+        stats_grab = stats.get_plugin('mpp').get_raw()
+        self.assertTrue(isinstance(stats_grab, list), msg='MPP stats is not a list')
+        # Test Rockchip MPP plugin with test data
+        print('INFO: [TEST_026] Check Rockchip MPP stats with test data')
+        stats_rockchip_mpp = MppPlugin(
+            config=test_config, args=test_args, rockchip_mpp_root_folder='./tests-data/plugins/mpp/rockchip'
+        )
+        stats_rockchip_mpp.update()
+        stats_grab = stats_rockchip_mpp.get_raw()
+        self.assertTrue(isinstance(stats_grab, list), msg='MPP stats is not a list')
+        self.assertEqual(len(stats_grab), 3, msg='Expected 3 MPP engines')
+        # Build a dict keyed by engine_id for easier assertions
+        by_id = {s['engine_id']: s for s in stats_grab}
+        self.assertIn('rockchip_rkvenc', by_id)
+        self.assertIn('rockchip_rkvdec', by_id)
+        self.assertIn('rockchip_jpegd', by_id)
+        # Check RKVENC values
+        self.assertEqual(by_id['rockchip_rkvenc']['name'], 'RKVENC')
+        self.assertEqual(by_id['rockchip_rkvenc']['type'], 'enc')
+        self.assertAlmostEqual(by_id['rockchip_rkvenc']['load'], 24.80)
+        self.assertAlmostEqual(by_id['rockchip_rkvenc']['utilization'], 24.39)
+        self.assertEqual(by_id['rockchip_rkvenc']['sessions'], 1)
+        # Check RKVDEC values
+        self.assertEqual(by_id['rockchip_rkvdec']['name'], 'RKVDEC')
+        self.assertEqual(by_id['rockchip_rkvdec']['type'], 'dec')
+        self.assertAlmostEqual(by_id['rockchip_rkvdec']['load'], 28.23)
+        self.assertEqual(by_id['rockchip_rkvdec']['sessions'], 1)
+        # Check JPEGD values (idle)
+        self.assertEqual(by_id['rockchip_jpegd']['name'], 'JPEGD')
+        self.assertEqual(by_id['rockchip_jpegd']['type'], 'jpeg')
+        self.assertAlmostEqual(by_id['rockchip_jpegd']['load'], 0.0)
+        self.assertEqual(by_id['rockchip_jpegd']['sessions'], 0)
 
     def test_093_auto_unit(self):
         """Test auto_unit classe"""
