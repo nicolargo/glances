@@ -62,7 +62,6 @@ class RockchipMPP:
 
     def exit(self):
         """Close Rockchip MPP class."""
-        pass
 
     def _ensure_load_interval(self):
         """Set load_interval if not already set, so /proc/mpp_service/load returns data."""
@@ -125,7 +124,7 @@ class RockchipMPP:
 
         pattern = r'(\S+)\.(\w+)\s+load:\s*([\d.]+)%\s+utilization:\s*([\d.]+)%'
         for match in re.finditer(pattern, content):
-            addr, dev_name, load_str, util_str = match.groups()
+            _, dev_name, load_str, util_str = match.groups()
 
             stats = MPPStats()
             stats.engine_id = f'rockchip_{dev_name}'
