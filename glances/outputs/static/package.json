@@ -26,7 +26,7 @@
 		"style-loader": "^4.0.0",
 		"typescript-eslint": "^8.58.1",
 		"vue-loader": "^17.4.2",
-		"webpack": "^5.106.0",
+		"webpack": "^5.106.1",
 		"webpack-cli": "^7.0.2",
 		"webpack-dev-server": "^5.2.3"
 	},

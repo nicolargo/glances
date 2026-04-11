@@ -25,10 +25,10 @@ Tested on Rockchip RV1126B-P platform with Linux Kernel 6.1.141 and MPP 4.0.0.
 
 Each entry in the list shows:
 
-============== ============================================
-``name``       Engine name (e.g. RKVENC, RKVDEC, RKJPEGD)
-``type``       Engine type (enc, dec, jpeg)
-``load``       Engine load (%)
-``utilization``Engine utilization (%)
-``sessions``   Number of active sessions
-============== ============================================
+===============  ===================================================
+``name``         Engine name (e.g. RKVENC, RKVDEC, RKJPEGD)
+``type``         Engine type (enc, dec, jpeg)
+``load``         Engine load (%)
+``utilization``  Engine utilization (%)
+``sessions``     Number of active sessions
+===============  ===================================================
