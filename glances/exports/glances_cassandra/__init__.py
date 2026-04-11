@@ -69,8 +69,9 @@ class Export(GlancesExport):
             if self.replication_factor < 1:
                 raise ValueError("replication_factor must be a positive integer")
         except ValueError as e:
-            logger.critical(f"Cassandra configuration error: {e}")
-            sys.exit(2)
+            logger.error(f"Cassandra configuration error: {e}")
+            self.export_enable = False
+            return
 
         # Init the Cassandra client
         self.cluster, self.session = self.init()
