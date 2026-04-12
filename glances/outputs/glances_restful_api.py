@@ -559,11 +559,25 @@ class GlancesRestfulApi:
         print(self._logo())
 
         # Security warnings
-        if not self.args.password:
-            is_localhost = self.args.bind_address in ('127.0.0.1', 'localhost', '::1')
+        cors_origins = self.config.get_list_value('outputs', 'cors_origins', default=["*"])
+        if not self.args.password and cors_origins == ["*"]:
             warn_lines = [
-                "WARNING: Glances web server is running WITHOUT authentication.",
+                "WARNING: Glances web server is running without authentication and with permissive",
+                "         CORS (Access-Control-Allow-Origin: *). Any web page reachable from your",
+                "         browser can read system metrics. Consider binding to 127.0.0.1, enabling",
+                "         authentication, or setting cors_origins in glances.conf.",
+                "         See https://glances.readthedocs.io/en/latest/api/restful.html#security",
             ]
+            print('\n'.join(warn_lines) + '\n')
+            logger.warning(
+                "Glances web server is running without authentication and with permissive CORS "
+                "(Access-Control-Allow-Origin: *)"
+            )
+        elif not self.args.password:
+            warn_lines = [
+                "WARNING: Glances web server is running without authentication.",
+            ]
+            is_localhost = self.args.bind_address in ('127.0.0.1', 'localhost', '::1')
             if is_localhost:
                 warn_lines.append("         Use --password to enable authentication.")
             else:
