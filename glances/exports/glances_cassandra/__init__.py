@@ -8,6 +8,7 @@
 
 """Cassandra/Scylla interface class."""
 
+import re
 import sys
 from datetime import datetime
 from numbers import Number
@@ -19,6 +20,19 @@ from cassandra.util import uuid_from_time
 
 from glances.exports.export import GlancesExport
 from glances.logger import logger
+
+
+_CQL_IDENTIFIER_RE = re.compile(r'^[a-zA-Z][a-zA-Z0-9_]*$')
+
+
+def _validate_cql_identifier(value, name):
+    """Raise ValueError if value is not a safe CQL identifier."""
+    if not _CQL_IDENTIFIER_RE.match(str(value)):
+        raise ValueError(
+            f"Invalid CQL identifier for '{name}': {value!r}. "
+            "Only letters, digits, and underscores are allowed, and it must start with a letter."
+        )
+    return str(value)
 
 
 class Export(GlancesExport):
@@ -46,6 +60,18 @@ class Export(GlancesExport):
         )
         if not self.export_enable:
             sys.exit(2)
+
+        # Validate CQL identifiers to prevent injection via config values
+        try:
+            self.keyspace = _validate_cql_identifier(self.keyspace, 'keyspace')
+            self.table = _validate_cql_identifier(self.table, 'table')
+            self.replication_factor = int(self.replication_factor)
+            if self.replication_factor < 1:
+                raise ValueError("replication_factor must be a positive integer")
+        except ValueError as e:
+            logger.error(f"Cassandra configuration error: {e}")
+            self.export_enable = False
+            return
 
         # Init the Cassandra client
         self.cluster, self.session = self.init()
