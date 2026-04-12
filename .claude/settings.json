@@ -1,4 +1,17 @@
 {
+  "permissions": {
+    "deny": [
+      "Read: .venv-uv/**",
+      "Read: node_modules/**",
+      "Read: __pycache__/**",
+      "Read: *.pyc",
+      "Read: dist/**",
+      "Read: build/**",
+      "Read: glances/outputs/static/public/**",
+      "Read: .git/**",
+      "Read: *.egg-info/**"
+    ]
+  },
   "skills": {
     "test": {
       "description": "Run the appropriate test suite based on changed files",
