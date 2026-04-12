@@ -19,7 +19,6 @@ from glances.outputs.glances_json_serializer import GlancesJSONSerializer
 class GlancesStdoutJson:
     """This class manages the Stdout JSON display."""
 
-    DEFAULT_DURATION: int = 3
     FALLBACK_ERROR_JSON: str = '{"error": "Failed to serialize stats"}'
 
     def __init__(self, config: Any | None = None, args: Any | None = None):

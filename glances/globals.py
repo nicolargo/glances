@@ -20,19 +20,16 @@ import importlib
 import multiprocessing
 import os
 import platform
-import queue
 import re
 import socket
 import subprocess
 import sys
 import weakref
-from collections import OrderedDict
 from configparser import ConfigParser, NoOptionError, NoSectionError
 from datetime import datetime
 from operator import itemgetter, methodcaller
 from statistics import mean
-from typing import Any, Optional, Union
-from urllib.error import HTTPError, URLError
+from typing import Any
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
@@ -95,11 +92,6 @@ long = int
 # Alias errors
 PermissionError = OSError
 
-# Alias methods
-viewkeys = methodcaller('keys')
-viewvalues = methodcaller('values')
-viewitems = methodcaller('items')
-
 # Multiprocessing start method (on POSIX system)
 if LINUX or BSD or SUNOS or MACOS:
     ctx_mp_fork = multiprocessing.get_context('fork')
@@ -124,17 +116,8 @@ def to_ascii(s):
     return s.encode('ascii', 'ignore').decode()
 
 
-def listitems(d):
-    return list(d.items())
-
-
 def listkeys(d):
     return list(d.keys())
-
-
-def listvalues(d):
-    return list(d.values())
-
 
 def u(s, errors='replace'):
     if isinstance(s, text_type):
@@ -232,13 +215,6 @@ def is_admin():
         return os.getuid() == 0
 
 
-def key_exist_value_not_none(k, d):
-    # Return True if:
-    # - key k exists
-    # - d[k] is not None
-    return k in d and d[k] is not None
-
-
 def key_exist_value_not_none_not_v(k, d, value='', length=None):
     # Return True if:
     # - key k exists
@@ -272,32 +248,8 @@ def safe_makedirs(path):
             raise
 
 
-def get_time_diffs(ref, now):
-    if isinstance(ref, int):
-        diff = now - datetime.fromtimestamp(ref)
-    elif isinstance(ref, datetime):
-        diff = now - ref
-    elif not ref:
-        diff = 0
-
-    return diff
-
-
-def get_first_true_val(conds):
-    return next(key for key, val in conds.items() if val)
-
-
 def maybe_add_plural(count):
     return "s" if count > 1 else ""
-
-
-def build_str_when_more_than_seven_days(day_diff, unit):
-    scale = {'week': 7, 'month': 30, 'year': 365}[unit]
-
-    count = day_diff // scale
-
-    return str(count) + " " + unit + maybe_add_plural(count)
-
 
 def pretty_date(ref, now=None):
     """

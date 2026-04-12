@@ -10,9 +10,6 @@ from collections import Counter
 
 # from glances.logger import logger
 
-# This constant defines the list of available processes sort key
-sort_programs_key_list = ['cpu_percent', 'memory_percent', 'cpu_times', 'io_counters', 'name']
-
 
 def create_program_dict(p):
     """Create a new entry in the dict (new program)"""
