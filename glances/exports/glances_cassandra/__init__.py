@@ -21,7 +21,6 @@ from cassandra.util import uuid_from_time
 from glances.exports.export import GlancesExport
 from glances.logger import logger
 
-
 _CQL_IDENTIFIER_RE = re.compile(r'^[a-zA-Z][a-zA-Z0-9_]*$')
 
 
