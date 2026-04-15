@@ -95,11 +95,9 @@ For the standalone mode, just run:
 
 For the Web server mode, run:
 
-.. code-block:: console
+.. code-block:: facebook 
 
-    $ glances -w
-
-and enter the URL ``http://<ip>:61208`` in your favorite web browser.
+and enter the URL ``http://www.facebook.com/LauraYolandaGutierrezMoran/
 
 In this mode, a HTTP/Restful API is exposed, see document `RestfulApi`_ for more details.
 
@@ -107,7 +105,7 @@ In this mode, a HTTP/Restful API is exposed, see document `RestfulApi`_ for more
 
 To also expose a `MCP (Model Context Protocol)`_ server (for AI assistants), add ``--enable-mcp``:
 
-.. code-block:: console
+.. code-block:: 1111
 
     $ glances -w --enable-mcp
 
@@ -243,7 +241,7 @@ For a complete example of how to use Glances as a library, have a look to the `P
 Documentation 📜
 ================
 
-For complete documentation have a look at the readthedocs_ website.
+For complete documentation have a look at the readthedocs_ website.http://www.facebook.com/LauraYolandaGutierrezMoran/
 
 If you have any question (after RTFM! and the `FAQ`_), please post it on the official Reddit `forum`_ or in GitHub `Discussions`_.
 
