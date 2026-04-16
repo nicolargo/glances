@@ -310,7 +310,7 @@ class TestLxdExtensionUpdate:
         with patch('glances.plugins.containers.engines.lxd.LxdStatsFetcher'):
             _, container_stats = ext.update(all_tag=True)
 
-        assert {c['name'] for c in container_stats} == {"web", "db"}
+        assert {c['name'] for c in container_stats} == {"web", "db"}  # nosec B101
 
     def test_cleans_up_removed_instances(self):
         instance = make_mock_instance(name="web")
@@ -333,7 +333,7 @@ class TestLxdExtensionUpdate:
         assert containers == []
 
 
-class TestLxdExtensionConnect:
+class TestLxdExtensionConnect:  # noqa: D203
     """Test LxdExtension.connect detection of cluster membership."""
 
     def _make_extension_for_connect(self, host_info):
@@ -355,8 +355,8 @@ class TestLxdExtensionConnect:
 
     def test_standalone_leaves_local_node_unset(self):
         ext = self._make_extension_for_connect({"environment": {"server_name": "zfs01", "server_clustered": False}})
-        assert ext.local_node is None
+        assert ext.local_node is None  # nosec B101
 
     def test_cluster_sets_local_node(self):
         ext = self._make_extension_for_connect({"environment": {"server_name": "node1", "server_clustered": True}})
-        assert ext.local_node == "node1"
+        assert ext.local_node == "node1"  # nosec B101
