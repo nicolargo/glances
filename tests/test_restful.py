@@ -127,7 +127,6 @@ class TestGlances(unittest.TestCase):
                 'processlist',
                 'programlist',
                 'diskio',
-                'hddtemp',
                 'batpercent',
                 'network',
                 'folders',

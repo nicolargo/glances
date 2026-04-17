@@ -40,7 +40,6 @@ Legend:
    raid
    smart
    sensors
-   hddtemp
    ps
    containers
    vms
