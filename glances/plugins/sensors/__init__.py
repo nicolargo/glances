@@ -19,14 +19,12 @@ from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.plugins.sensors.sensor.glances_batpercent import BatpercentPlugin
-from glances.plugins.sensors.sensor.glances_hddtemp import HddtempPlugin
 from glances.timer import Counter
 
 # Define all kind of sensors available in Glances
 sensors_definition = {
     'cpu_temp': {'type': 'temperature_core', 'unit': 'C'},
     'fan_speed': {'type': 'fan_speed', 'unit': 'R'},
-    'hdd_temp': {'type': 'temperature_hdd', 'unit': 'C'},
     'battery': {'type': 'battery', 'unit': '%'},
 }
 
@@ -56,7 +54,7 @@ fields_description = {
         'unit': 'number',
     },
     'type': {
-        'description': 'Sensor type (one of battery, temperature_core, fan_speed)',
+        'description': 'Sensor type (one of temperature_core, fan_speed, battery)',
     },
 }
 
@@ -83,11 +81,6 @@ class SensorsPlugin(GlancesPluginModel):
         glances_grab_sensors_fan_speed = GlancesGrabSensors(sensors_definition.get('fan_speed'))
         logger.debug(f"Fan speed sensor plugin init duration: {start_duration.get()} seconds")
 
-        # Instance for the HDDTemp Plugin in order to display the hard disks temperatures
-        start_duration.reset()
-        hddtemp_plugin = HddtempPlugin(args=args, config=config)
-        logger.debug(f"HDDTemp sensor plugin init duration: {start_duration.get()} seconds")
-
         # Instance for the BatPercent in order to display the batteries capacities
         start_duration.reset()
         batpercent_plugin = BatpercentPlugin(args=args, config=config)
@@ -101,7 +94,6 @@ class SensorsPlugin(GlancesPluginModel):
         if glances_grab_sensors_fan_speed.init:
             self.sensors_grab_map[sensors_definition.get('fan_speed').get('type')] = glances_grab_sensors_fan_speed
 
-        self.sensors_grab_map[sensors_definition.get('hdd_temp').get('type')] = hddtemp_plugin
         self.sensors_grab_map[sensors_definition.get('battery').get('type')] = batpercent_plugin
 
         # We want to display the stat in the curse interface

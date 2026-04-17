@@ -596,7 +596,6 @@ Extra dependencies:
 - ``FastAPI`` and ``Uvicorn`` (for Web server mode)
 - ``mcp`` (for the MCP server — AI assistant integration)
 - ``graphitesender`` (For the Graphite export module)
-- ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB version 1 export module)
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
 - ``kafka-python`` (for the Kafka export module)

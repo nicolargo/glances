@@ -841,10 +841,7 @@ Sensors limits:
      'sensors_battery_warning': 80.0,
      'sensors_disable': ['False'],
      'sensors_hide': ['unknown.*'],
-     'sensors_refresh': 10.0,
-     'sensors_temperature_hdd_careful': 45.0,
-     'sensors_temperature_hdd_critical': 60.0,
-     'sensors_temperature_hdd_warning': 52.0}
+     'sensors_refresh': 10.0}
 
 Glances uptime
 --------------

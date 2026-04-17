@@ -326,7 +326,6 @@ Extra dependencies:
 - ``elasticsearch`` (for the Elastic Search export module)
 - ``FastAPI`` and ``Uvicorn`` (for Web server mode)
 - ``graphitesender`` (For the Graphite export module)
-- ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB version 1 export module)
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
 - ``kafka-python`` (for the Kafka export module)

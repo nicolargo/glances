@@ -7,10 +7,9 @@ Sensors
 
 .. image:: ../_static/sensors.png
 
-Glances can display the sensors information using ``psutil``,
-``hddtemp`` and ``batinfo``:
+Glances can display the sensors information using ``psutil``
+and ``batinfo``:
 - motherboard and CPU temperatures
-- hard disk temperature
 - battery capacity
 
 Limit values and sensors alias names can be defined in the configuration

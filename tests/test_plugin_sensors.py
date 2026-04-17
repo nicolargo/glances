@@ -88,7 +88,7 @@ class TestSensorsPluginTypes:
         """Test that sensor types are valid."""
         sensors_plugin.update()
         stats = sensors_plugin.get_raw()
-        valid_types = ['temperature_core', 'fan_speed', 'temperature_hdd', 'battery']
+        valid_types = ['temperature_core', 'fan_speed', 'battery']
         for sensor in stats:
             assert sensor['type'] in valid_types
 
