@@ -6,7 +6,7 @@ jinja2==3.1.6
     # via glances
 markupsafe==3.0.3
     # via jinja2
-packaging==26.0
+packaging==26.1
     # via glances
 psutil==7.2.2
     # via glances
