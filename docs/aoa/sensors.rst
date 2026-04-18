@@ -23,17 +23,32 @@ thresholds (default behavor).
 
     [sensors]
     # Sensors core thresholds (in Celsius...)
-    # By default values are grabbed from the system
+    # Note: By default values are grabbed from the system (if values are available)
+    # Core temperature thresholds in °C
+    # Default values if not defined: 45/52/60
+    temperature_core_careful=45
+    temperature_core_warning=65
+    temperature_core_critical=80
+    # Temperatures threshold in °C for hddtemp
+    # Default values if not defined: 45/52/60
+    #temperature_hdd_careful=45
+    #temperature_hdd_warning=52
+    #temperature_hdd_critical=60
+    # Battery threshold in %
+    # Default values if not defined: 70/80/90
+    #battery_careful=70
+    #battery_warning=80
+    #battery_critical=90
+    # Fan speed threshold in RPM
+    #fan_speed_careful=100
     # Overwrite thresholds for a specific sensor
-    temperature_core_Ambient_careful=45
-    temperature_core_Ambient_warning=65
-    temperature_core_Ambient_critical=80
-    temperature_core_Ambient_log=False
-    # Overwrite thresholds for a specific type of sensor
-    #temperature_core_careful=45
-    #temperature_core_warning=65
-    #temperature_core_critical=80
-    #alias=temp1:Motherboard 0,core 0:CPU Core 0
+    #temperature_core_Ambient_careful=40
+    #temperature_core_Ambient_warning=60
+    #temperature_core_Ambient_critical=85
+    #temperature_core_Ambient_log=True
+    #temperature_core_Ambient_critical_action=echo "{{time}} {{label}} temperature {{value}}{{unit}} higher than {{critical}}{{unit}}" > /tmp/temperature.alert
+    # Sensors alias
+    #alias=core 0:CPU Core 0,core 1:CPU Core 1
 
 .. note 1::
     The support for multiple batteries is only available if
