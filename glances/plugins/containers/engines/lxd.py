@@ -208,14 +208,17 @@ class LxdExtension:
                 self.client = LxdClient()
             # Verify connectivity
             self.client.has_api_extension('instances')
-            # Determine local cluster member name (for filtering)
+            # In a cluster, determine local member name so we can filter to instances
+            # running on this node. On a standalone host, server_name is still set but
+            # instance.location is empty, so we must gate on server_clustered.
             try:
                 env = self.client.host_info.get('environment', {})
-                self.local_node = env.get('server_name')
+                if env.get('server_clustered'):
+                    self.local_node = env.get('server_name')
             except Exception:
                 self.local_node = None
         except Exception as e:
-            logger.debug(f"{self.ext_name} plugin - Can't connect to LXD ({e})")
+            logger.error(f"{self.ext_name} plugin - Can't connect to LXD ({e})")
             self.client = None
             self.disable = True
 
