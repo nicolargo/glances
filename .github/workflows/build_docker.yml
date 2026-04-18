@@ -95,7 +95,7 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Build and push image
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           push: ${{ env.PUSH_BRANCH == 'true' }}
           tags: "${{ env.DEFAULT_DOCKER_IMAGE }}:${{ matrix.os != 'alpine' && format('{0}-', matrix.os) || '' }}${{ matrix.tag.tag }}"
