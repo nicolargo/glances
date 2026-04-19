@@ -369,7 +369,7 @@ starlette==1.0.0
     # via
     #   mcp
     #   sse-starlette
-textual==8.2.3 ; sys_platform != 'win32'
+textual==8.2.4 ; sys_platform != 'win32'
     # via memray
 tomli==2.0.2
     # via
