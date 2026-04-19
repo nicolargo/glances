@@ -126,7 +126,12 @@ class GlancesAttribute:
         return self._history[-pos]
 
     def history_raw(self, nb=0):
-        """Return the history in ISO JSON format"""
+        """Return the history in ISO JSON format.
+
+        :param nb: Number of entries to return. 0 means all entries.
+        """
+        if nb <= 0:
+            return self._history
         return self._history[-nb:]
 
     def history_json(self, nb=0):
@@ -134,6 +139,12 @@ class GlancesAttribute:
         return [(i[0].isoformat(), i[1]) for i in self._history[-nb:]]
 
     def history_mean(self, nb=5):
-        """Return the mean on the <nb> values in the history."""
-        _, v = zip(*self._history)
-        return sum(v[-nb:]) / float(v[-1] - v[-nb])
+        """Return the mean on the <nb> values in the history.
+
+        :param nb: Number of entries to average over. Defaults to 5.
+        :return: Mean value or None if insufficient data.
+        """
+        if len(self._history) < nb:
+            return None
+        _, v = zip(*self._history[-nb:])
+        return sum(v) / len(v)

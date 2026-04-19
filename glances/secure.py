@@ -21,13 +21,9 @@ def secure_popen(cmd):
 
     :return: the result of the commands
     """
-    ret = ''
-
     # Split by multiple commands (only '&&' separator is supported)
-    for c in cmd.split('&&'):
-        ret += __secure_popen(c)
-
-    return ret
+    results = [__secure_popen(c) for c in cmd.split('&&')]
+    return ''.join(results)
 
 
 def __secure_popen(cmd):
@@ -41,6 +37,9 @@ def __secure_popen(cmd):
         return f'Glances error: Only one file redirection allowed ({cmd})'
     if len(cmd_split_redirect) == 2:
         stdout_redirect = cmd_split_redirect[1].strip()
+        # Validate redirect path to prevent path traversal attacks
+        if '..' in stdout_redirect or stdout_redirect.startswith('/'):
+            return f'Glances error: Invalid redirection path ({stdout_redirect})'
         cmd = cmd_split_redirect[0]
     else:
         stdout_redirect = None
