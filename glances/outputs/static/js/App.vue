@@ -54,6 +54,10 @@
 			<div v-if="!args.disable_npu && hasNpu" class="d-none d-xl-block">
 				<glances-plugin-npu :data="data"></glances-plugin-npu>
 			</div>
+			<!-- MPP -->
+			<div v-if="!args.disable_mpp && hasMpp" class="d-none d-xl-block">
+				<glances-plugin-mpp :data="data"></glances-plugin-mpp>
+			</div>
 			<!-- GPU -->
 			<div v-if="!args.disable_gpu && hasGpu" class="d-none d-xl-block">
 				<glances-plugin-gpu :data="data"></glances-plugin-gpu>
@@ -104,6 +108,7 @@ import GlancesPluginCpu from "./components/plugin-cpu.vue";
 import GlancesPluginDiskio from "./components/plugin-diskio.vue";
 import GlancesPluginFolders from "./components/plugin-folders.vue";
 import GlancesPluginFs from "./components/plugin-fs.vue";
+import GlancesPluginMpp from "./components/plugin-mpp.vue";
 import GlancesPluginNpu from "./components/plugin-npu.vue";
 import GlancesPluginGpu from "./components/plugin-gpu.vue";
 import GlancesPluginHostname from "./components/plugin-hostname.vue";
@@ -141,6 +146,7 @@ export default {
 		GlancesPluginContainers,
 		GlancesPluginFolders,
 		GlancesPluginFs,
+		GlancesPluginMpp,
 		GlancesPluginNpu,
 		GlancesPluginGpu,
 		GlancesPluginHostname,
@@ -180,6 +186,9 @@ export default {
 		},
 		dataLoaded() {
 			return this.store.data !== undefined;
+		},
+		hasMpp() {
+			return this.store.data.stats.mpp && this.store.data.stats.mpp.length > 0;
 		},
 		hasNpu() {
 			return this.store.data.stats.npu.length > 0;

@@ -40,5 +40,19 @@ jobs:
         git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
         git config --global user.email "glances@nicolargo.com"
         git add glances/outputs/static
-        /bin/bash -c "git commit -m '${{ env.CI_COMMIT_MESSAGE }}' || true"
-        git push
+        if git diff --cached --quiet; then
+          echo "No WebUI changes to commit, skipping push."
+          exit 0
+        fi
+        git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+        for attempt in 1 2 3; do
+          if git pull --rebase origin "${GITHUB_REF_NAME}" && git push; then
+            echo "Push succeeded on attempt ${attempt}."
+            exit 0
+          fi
+          echo "Push attempt ${attempt} failed, retrying in $((attempt * 5))s..."
+          git rebase --abort 2>/dev/null || true
+          sleep $((attempt * 5))
+        done
+        echo "Push failed after 3 attempts."
+        exit 1

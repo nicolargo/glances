@@ -48,6 +48,7 @@ class _GlancesCurses:
         '5': {'handler': '_handle_top_menu'},
         '6': {'switch': 'meangpu'},
         '7': {'switch': 'disable_npu'},
+        '8': {'switch': 'disable_mpp'},
         '/': {'switch': 'process_short_name'},
         'a': {'sort_key': 'auto'},
         'A': {'switch': 'disable_amps'},
@@ -106,7 +107,7 @@ class _GlancesCurses:
     _sort_loop = sort_processes_stats_list
 
     # Define top menu
-    _top = ['quicklook', 'cpu', 'percpu', 'npu', 'gpu', 'mem', 'memswap', 'load']
+    _top = ['quicklook', 'cpu', 'percpu', 'npu', 'mpp', 'gpu', 'mem', 'memswap', 'load']
     _quicklook_max_width = 58
 
     # Define left sidebar
@@ -445,13 +446,13 @@ class _GlancesCurses:
 
     def disable_fullquicklook(self):
         """Disable the full quicklook mode"""
-        for p in ['quicklook', 'cpu', 'npu', 'gpu', 'mem', 'memswap']:
+        for p in ['quicklook', 'cpu', 'npu', 'mpp', 'gpu', 'mem', 'memswap']:
             setattr(self.args, 'disable_' + p, False)
 
     def enable_fullquicklook(self):
         """Disable the full quicklook mode"""
         self.args.disable_quicklook = False
-        for p in ['cpu', 'npu', 'gpu', 'mem', 'memswap']:
+        for p in ['cpu', 'npu', 'mpp', 'gpu', 'mem', 'memswap']:
             setattr(self.args, 'disable_' + p, True)
 
     def end(self):

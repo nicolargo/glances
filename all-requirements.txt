@@ -32,19 +32,19 @@ cffi==2.0.0 ; implementation_name == 'pypy' or platform_python_implementation !=
     # via
     #   cryptography
     #   pyzmq
-chardet==7.4.0.post1
+chardet==7.4.3
     # via pysmart
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
 chevron==0.14.0
     # via glances
 click==8.1.8
     # via uvicorn
-clickhouse-connect==0.15.0
+clickhouse-connect==0.15.1
     # via glances
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
-cryptography==46.0.6
+cryptography==46.0.7
     # via
     #   pyjwt
     #   pylxd
@@ -64,7 +64,7 @@ elasticsearch==9.3.0
     # via glances
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.135.2
+fastapi==0.136.0
     # via glances
 graphitesender==0.11.2
     # via glances
@@ -107,7 +107,7 @@ jsonschema==4.25.1
     # via mcp
 jsonschema-specifications==2025.9.1
     # via jsonschema
-kafka-python==2.3.0
+kafka-python==2.3.1
     # via glances
 lz4==4.4.5
     # via clickhouse-connect
@@ -121,7 +121,7 @@ nats-py==2.14.0
     # via glances
 nvidia-ml-py==13.595.45
     # via glances
-packaging==26.0
+packaging==26.1
     # via glances
 paho-mqtt==2.1.0
     # via glances
@@ -135,7 +135,7 @@ podman==5.8.0
     # via glances
 potsdb==1.0.3
     # via glances
-prometheus-client==0.24.1
+prometheus-client==0.25.0
     # via glances
 protobuf==6.33.6
     # via bernhard
@@ -154,23 +154,25 @@ pyasn1==0.6.3
     #   rsa
 pycparser==3.0 ; (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (implementation_name == 'pypy' and platform_python_implementation == 'PyPy')
     # via cffi
-pydantic==2.12.5
+pydantic==2.13.2
     # via
     #   fastapi
     #   mcp
     #   pydantic-settings
-pydantic-core==2.41.5
+pydantic-core==2.46.2
     # via pydantic
 pydantic-settings==2.13.1
     # via mcp
 pygal==3.1.0
+    # via glances
+pyinstrument==5.1.2
     # via glances
 pyjwt==2.12.1
     # via
     #   ibm-cloud-sdk-core
     #   ibmcloudant
     #   mcp
-pylxd==2.4.0
+pylxd==2.4.1
     # via glances
 pymdstat==0.5.1
     # via glances
@@ -200,7 +202,7 @@ python-dotenv==1.2.2
     # via pydantic-settings
 python-jose==3.5.0
     # via glances
-python-multipart==0.0.22
+python-multipart==0.0.26
     # via mcp
 pytz==2026.1.post1
     # via
@@ -220,7 +222,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.33.0
+requests==2.33.1
     # via
     #   docker
     #   glances
@@ -290,7 +292,7 @@ typing-inspection==0.4.2
     #   mcp
     #   pydantic
     #   pydantic-settings
-tzdata==2025.3 ; sys_platform == 'win32'
+tzdata==2026.1 ; sys_platform == 'win32'
     # via psycopg
 urllib3==2.6.3
     # via
@@ -302,19 +304,19 @@ urllib3==2.6.3
     #   influxdb3-python
     #   podman
     #   requests
-uvicorn==0.42.0
+uvicorn==0.44.0
     # via
     #   glances
     #   mcp
 wifi==0.3.8
     # via glances
-windows-curses==2.4.1 ; sys_platform == 'win32'
+windows-curses==2.4.2 ; sys_platform == 'win32'
     # via glances
 ws4py==0.6.0
     # via pylxd
 zeroconf==0.148.0
     # via glances
-zipp==3.23.0
+zipp==3.23.1
     # via importlib-metadata
 zstandard==0.25.0
     # via clickhouse-connect
