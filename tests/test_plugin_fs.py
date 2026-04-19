@@ -10,6 +10,7 @@
 """Tests for the FileSystem plugin."""
 
 import json
+from types import SimpleNamespace
 
 import pytest
 
@@ -297,6 +298,21 @@ class TestFsPluginAlias:
         for fs in stats:
             if 'alias' in fs:
                 assert fs['alias'] is None or isinstance(fs['alias'], str)
+
+    def test_alias_matches_mixed_case_mount_point(self, fs_plugin, monkeypatch):
+        """Test that aliases match mount points even when the path contains uppercase characters."""
+        partition = SimpleNamespace(device='/dev/disk7s1', mountpoint='/Volumes/SSD', fstype='apfs', opts='rw')
+        usage = SimpleNamespace(total=100, used=20, free=80, percent=20.0)
+
+        monkeypatch.setattr(fs_plugin, 'get_disk_partitions', lambda fetch_all=False: [partition])
+        monkeypatch.setattr('glances.plugins.fs.get_disk_usage', lambda fs: usage)
+
+        fs_plugin._limits['fs_alias'] = ['/Volumes/SSD:SSD']
+        fs_plugin.alias = fs_plugin.read_alias()
+
+        stats = fs_plugin.update_local()
+
+        assert stats[0]['alias'] == 'SSD'
 
 
 class TestFsPluginDiskPartitions:
