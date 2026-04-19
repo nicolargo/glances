@@ -12,7 +12,7 @@ from glances.logger import logger
 
 
 class GlancesFilterList:
-    """Manage a lis of GlancesFilter objects
+    """Manage a list of GlancesFilter objects
 
     >>> fl = GlancesFilterList()
     >>> fl.filter = '.*python.*,user:nicolargo'
