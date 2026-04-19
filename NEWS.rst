@@ -3,6 +3,37 @@
 ==============================================================================
 
 =============
+Version 4.5.4
+=============
+
+Bug corrected:
+
+* Cannot set warning/critical temperature for a specific sensor #3525
+* Memory percentage and used displayed as negative numbers #3358
+* Incorrect Docker container count via Homeassistant Integration #3433
+* Fix LXD filter excluding containers on standalone hosts #3529
+
+Enhancements:
+
+* Add Rockchip MPP plugin for hardware encoder/decoder monitoring #3514
+* Clamp memory used/percent to non-negative values for LXC containers #3505
+* Support single-core Rockchip NPU load parsing and improve device naming #3499
+
+Security patches:
+
+* SSRF in Glances IP Plugin via public_api leads to credential leakage - Correct CVE-2026-35587
+* Cross-Origin Information Disclosure via Unauthenticated REST API (/api/4) - Correct CVE-2026-34839
+* fix(cassandra): validate keyspace/table/replication_factor to prevent CQL injection - Correct CVE-2026-35588 #3520
+
+Continious integration and documentation:
+
+* pycache file is put in wheel #3516
+* Remove dead code #3507
+
+Thanks to all the contributors for this version: csvke, Christian Rishøj,
+duriantaco, Julio César Suástegui, Paul and morimori-dev.
+
+=============
 Version 4.5.3
 =============
 
