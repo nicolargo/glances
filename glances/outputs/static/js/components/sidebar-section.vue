@@ -92,6 +92,40 @@
 			</div>
 		</div>
 
+		<!-- IRQ -->
+		<div class="sb-section" v-if="args.enable_irq && hasIrq">
+			<div class="sb-title">IRQ <span class="sub">Rate/s</span></div>
+			<div class="sb-row" v-for="irq in irqList" :key="irq.irq_line">
+				<span class="name">{{ irq.irq_line }}</span>
+				<span class="vals">
+					<span class="v neutral">{{ irq.rate }}</span>
+				</span>
+			</div>
+		</div>
+
+		<!-- RAID -->
+		<div class="sb-section" v-if="hasRaid">
+			<div class="sb-title">RAID</div>
+			<div class="sb-row" v-for="(raid, name) in raidArrays" :key="name">
+				<span class="name">{{ name }}</span>
+				<span class="vals">
+					<span class="v" :class="raid.deco">{{ raid.status }}</span>
+				</span>
+			</div>
+		</div>
+
+		<!-- SMART -->
+		<div class="sb-section" v-if="hasSmart">
+			<div class="sb-title">SMART</div>
+			<div class="sb-row" v-for="disk in smartList" :key="disk.name">
+				<span class="name">{{ disk.name }}</span>
+				<span class="vals">
+					<span class="v" :class="disk.deco">{{ disk.display }}</span>
+				</span>
+			</div>
+		</div>
+
+
 		<!-- CONNECTIONS -->
 		<div class="sb-section" v-if="!args.disable_connections && hasConnections" style="border-bottom:none">
 			<div class="sb-title">Connections</div>
@@ -272,8 +306,8 @@ export default {
 			return fsList.map(f => {
 				const mnt = f.mnt_point;
 				let deco = 'default';
-				if (views[mnt]?.used?.decoration) {
-					const d = views[mnt].used.decoration.toLowerCase();
+				if (views[mnt]?.percent?.decoration) {
+					const d = views[mnt].percent.decoration.toLowerCase();
 					deco = (d === 'default') ? 'default' : d;
 				}
 				const alias = f.alias || (mnt === '/' ? 'Root' : mnt.split('/').pop() || mnt);
@@ -356,6 +390,58 @@ export default {
 				return { label: s.label, type: s.type, display, deco, barPercent };
 			});
 		},
+
+		// ── IRQ ──
+		hasIrq() {
+			const irq = this.data?.stats?.irq;
+			return irq && irq.length > 0;
+		},
+		irqList() {
+			const irqs = this.data?.stats?.irq || [];
+			return irqs.slice(0, 10).map(i => ({
+				irq_line: i.irq_line,
+				rate: Math.round(i.irq_rate || 0).toLocaleString(),
+			}));
+		},
+
+		// ── RAID ──
+		hasRaid() {
+			const r = this.data?.stats?.raid;
+			return r && Object.keys(r).length > 0;
+		},
+		raidArrays() {
+			const raid = this.data?.stats?.raid || {};
+			const result = {};
+			for (const [name, arr] of Object.entries(raid)) {
+				const status = arr.status || 'unknown';
+				let deco = 'ok';
+				if (status === 'inactive' || status === 'faulty') deco = 'critical';
+				else if (status.includes('degraded') || status.includes('rebuild')) deco = 'warning';
+				result[name] = { status, deco };
+			}
+			return result;
+		},
+
+		// ── SMART ──
+		hasSmart() {
+			const s = this.data?.stats?.smart;
+			return s && s.length > 0;
+		},
+		smartList() {
+			const smart = this.data?.stats?.smart || [];
+			return smart.map(d => {
+				let display = d.assessment || d.Health || 'N/A';
+				let deco = 'ok';
+				if (display === 'FAIL' || display === 'FAILED') deco = 'critical';
+				else if (display !== 'PASS' && display !== 'PASSED' && display !== 'OK') deco = 'careful';
+				return {
+					name: d.DeviceName || d.device_name || d.name || '?',
+					display,
+					deco,
+				};
+			});
+		},
+
 
 		// ── CONNECTIONS ──
 		hasConnections() {

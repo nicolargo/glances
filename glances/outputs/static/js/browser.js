@@ -6,8 +6,6 @@ if (module.hot) {
 import "../css/custom.scss";
 import "../css/style.scss";
 
-import * as bootstrap from "bootstrap";
-
 import { createApp } from "vue";
 import App from "./Browser.vue";
 import * as filters from "./filters.js";
