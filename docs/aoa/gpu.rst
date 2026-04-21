@@ -7,13 +7,25 @@ For the moment, following GPU are supported:
 - NVidia (thanks to the `nvidia-ml-py`_ library)
 - AMD (only on Linux Operating system with kernel 5.14 or higher)
 - Intel (only on Linux Operating system)
+- ARM (only on Linux Operating system with kernel 6.0 or higher;
+  drivers: msm/Adreno, Panfrost, Panthor, v3d, Lima, Etnaviv)
 
 The GPU stats are shown as a percentage of value and for the configured
 refresh time. It displays:
 
-- GPU usage (NVidia and AMD) or frequency (Intel)
-- memory consumption (NVidia and AMD)
+- GPU usage (NVidia, AMD and ARM) or frequency (Intel)
+- memory consumption (NVidia, AMD, and ARM when exposed by fdinfo)
 - temperature (if available)
+
+.. note::
+    For ``panthor`` and ``panfrost``, per-engine sampling
+    (``drm-engine-*`` and ``drm-cycles-*`` fdinfo counters) is disabled
+    by default to save power. Enable it via sysfs:
+
+    .. code-block:: bash
+
+        echo 1 > /sys/bus/platform/drivers/panthor/*.gpu/profiling
+        echo 1 > /sys/bus/platform/drivers/panfrost/*.gpu/profiling
 
 .. image:: ../_static/gpu.png
 

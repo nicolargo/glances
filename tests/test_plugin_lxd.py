@@ -16,8 +16,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-def make_mock_state(cpu_ns=5_000_000_000, mem_usage=1_000_000_000, mem_total=2_000_000_000,
-                    mem_usage_peak=None, disk_usage=500_000, net_rx=10_000, net_tx=20_000):
+def make_mock_state(
+    cpu_ns=5_000_000_000,
+    mem_usage=1_000_000_000,
+    mem_total=2_000_000_000,
+    mem_usage_peak=None,
+    disk_usage=500_000,
+    net_rx=10_000,
+    net_tx=20_000,
+):
     """Create a mock LXD instance state."""
     return SimpleNamespace(
         cpu={"usage": cpu_ns},
@@ -36,9 +43,15 @@ def make_mock_state(cpu_ns=5_000_000_000, mem_usage=1_000_000_000, mem_total=2_0
     )
 
 
-def make_mock_instance(name="test-container", status="Running", config=None,
-                       expanded_devices=None, created_at="2026-01-01T00:00:00Z",
-                       last_used_at="2026-03-15T10:00:00Z", location="node1"):
+def make_mock_instance(
+    name="test-container",
+    status="Running",
+    config=None,
+    expanded_devices=None,
+    created_at="2026-01-01T00:00:00Z",
+    last_used_at="2026-03-15T10:00:00Z",
+    location="node1",
+):
     """Create a mock LXD instance."""
     instance = MagicMock()
     instance.name = name
@@ -287,6 +300,18 @@ class TestLxdExtensionUpdate:
         assert len(container_stats) == 1
         assert container_stats[0]['name'] == 'web'
 
+    def test_standalone_does_not_filter_by_location(self):
+        # On a non-clustered LXD host, instance.location is typically empty.
+        # local_node stays None, so every instance must pass through.
+        a = make_mock_instance(name="web", location="")
+        b = make_mock_instance(name="db", location=None)
+        ext = self._make_extension_with_client([a, b], local_node=None)
+
+        with patch('glances.plugins.containers.engines.lxd.LxdStatsFetcher'):
+            _, container_stats = ext.update(all_tag=True)
+
+        assert {c['name'] for c in container_stats} == {"web", "db"}  # nosec B101
+
     def test_cleans_up_removed_instances(self):
         instance = make_mock_instance(name="web")
         ext = self._make_extension_with_client([instance])
@@ -306,3 +331,32 @@ class TestLxdExtensionUpdate:
         version, containers = ext.update(all_tag=True)
         assert version == {}
         assert containers == []
+
+
+class TestLxdExtensionConnect:  # noqa: D203
+    """Test LxdExtension.connect detection of cluster membership."""
+
+    def _make_extension_for_connect(self, host_info):
+        from glances.plugins.containers.engines.lxd import LxdExtension
+
+        mock_client = MagicMock()
+        mock_client.host_info = host_info
+
+        with patch.object(LxdExtension, '__init__', lambda self, **kwargs: None):
+            ext = LxdExtension.__new__(LxdExtension)
+            ext.ext_name = "containers (LXD)"
+            ext.endpoint = None
+            ext.local_node = None
+            ext.disable = False
+
+            with patch('glances.plugins.containers.engines.lxd.LxdClient', return_value=mock_client, create=True):
+                ext.connect()
+        return ext
+
+    def test_standalone_leaves_local_node_unset(self):
+        ext = self._make_extension_for_connect({"environment": {"server_name": "zfs01", "server_clustered": False}})
+        assert ext.local_node is None  # nosec B101
+
+    def test_cluster_sets_local_node(self):
+        ext = self._make_extension_for_connect({"environment": {"server_name": "node1", "server_clustered": True}})
+        assert ext.local_node == "node1"  # nosec B101

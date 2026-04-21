@@ -39,7 +39,7 @@ jobs:
         attestations: write
         id-token: write
       uses: ./.github/workflows/build.yml
-      needs: [quality, test, webui]
+      needs: [quality, test]
     build_docker:
       if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/'))
       permissions:
@@ -48,7 +48,7 @@ jobs:
       secrets:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-      needs: [quality, test, webui]
+      needs: [quality, test]
     cyber:
       if: github.ref == 'refs/heads/develop'
       permissions:

@@ -26,7 +26,7 @@ An Eye on your System
     :alt: Docker pull
 
 .. |pypistat| image:: https://pepy.tech/badge/glances/month
-    :target: https://pepy.tech/project/glances
+    :target: https://clickpy.clickhouse.com/dashboard/glances
     :alt: Pypi downloads
 
 .. |test| image:: https://github.com/nicolargo/glances/actions/workflows/ci.yml/badge.svg?branch=develop
@@ -253,7 +253,7 @@ Gateway to other services 🌐
 Glances can export stats to:
 
 - files: ``CSV`` and ``JSON``
-- databases:  ``InfluxDB``, ``ElasticSearch``, ``PostgreSQL/TimeScale``, ``Cassandra``, ``CouchDB``, ``OpenTSDB``, ``Prometheus``, ``StatsD``, ``Riemann`` and ``Graphite``
+- databases:  ``InfluxDB``, ``ElasticSearch``, ``PostgreSQL/TimeScale``, ``Cassandra``, ``ClickHouse``, ``CouchDB``, ``OpenTSDB``, ``Prometheus``, ``StatsD``, ``Riemann`` and ``Graphite``
 - brokers: ``RabbitMQ/ActiveMQ``, ``NATS``, ``ZeroMQ`` and ``Kafka``
 - others: ``RESTful`` endpoint
 
@@ -589,6 +589,7 @@ Extra dependencies:
 - ``batinfo`` (for battery monitoring)
 - ``bernhard`` (for the Riemann export module)
 - ``cassandra-driver`` (for the Cassandra export module)
+- ``clickhouse-connect`` (for the ClickHouse export module)
 - ``chevron`` (for the action script feature)
 - ``docker`` (for the Containers Docker monitoring support)
 - ``elasticsearch`` (for the Elastic Search export module)
@@ -638,17 +639,18 @@ or just say "thank you" by:
 
 - sponsor me using one-time or monthly tier Github sponsors_ page
 - send me some pieces of bitcoin: 185KN9FCix3svJYp7JQM7hRMfSKyeaJR4X
-- buy me a gift on my wishlist_ page
 
 Any and all contributions are greatly appreciated.
 
 Authors and Contributors 🔥
 ===========================
 
-Nicolas Hennion (@nicolargo) <nicolas@nicolargo.com>
+Glances has been created by Nicolas Hennion (@nicolargo) <nicolas@nicolargo.com>
 
 .. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
     :target: https://twitter.com/nicolargo
+
+and developed by a wonderfull contributors_ community.
 
 License 📜
 ==========
@@ -683,3 +685,4 @@ Please give us a star on `GitHub`_ if you like this project.
 .. _`MCP (Model Context Protocol)`: https://modelcontextprotocol.io
 .. _FAQ: https://github.com/nicolargo/glances/blob/develop/docs/faq.rst
 .. _Discussions: https://github.com/nicolargo/glances/discussions
+.. _contributors: https://github.com/nicolargo/glances/graphs/contributors

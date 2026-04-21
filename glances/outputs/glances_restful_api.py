@@ -8,6 +8,7 @@
 
 """RestFul API interface class."""
 
+import inspect
 import os
 import socket
 import sys
@@ -558,11 +559,25 @@ class GlancesRestfulApi:
         print(self._logo())
 
         # Security warnings
-        if not self.args.password:
-            is_localhost = self.args.bind_address in ('127.0.0.1', 'localhost', '::1')
+        cors_origins = self.config.get_list_value('outputs', 'cors_origins', default=["*"])
+        if not self.args.password and cors_origins == ["*"]:
             warn_lines = [
-                "WARNING: Glances web server is running WITHOUT authentication.",
+                "WARNING: Glances web server is running without authentication and with permissive",
+                "         CORS (Access-Control-Allow-Origin: *). Any web page reachable from your",
+                "         browser can read system metrics. Consider binding to 127.0.0.1, enabling",
+                "         authentication, or setting cors_origins in glances.conf.",
+                "         See https://glances.readthedocs.io/en/latest/api/restful.html#security",
             ]
+            print('\n'.join(warn_lines) + '\n')
+            logger.warning(
+                "Glances web server is running without authentication and with permissive CORS "
+                "(Access-Control-Allow-Origin: *)"
+            )
+        elif not self.args.password:
+            warn_lines = [
+                "WARNING: Glances web server is running without authentication.",
+            ]
+            is_localhost = self.args.bind_address in ('127.0.0.1', 'localhost', '::1')
             if is_localhost:
                 warn_lines.append("         Use --password to enable authentication.")
             else:
@@ -667,6 +682,30 @@ class GlancesRestfulApi:
             self.autodiscover_client.close()
         logger.info("Close the Web server")
 
+    def _template_response_requires_request(self):
+        """Return True when Starlette expects request as the first argument."""
+        try:
+            parameters = tuple(inspect.signature(self._templates.TemplateResponse).parameters)
+        except (TypeError, ValueError):
+            return False
+
+        return bool(parameters) and parameters[0] == 'request'
+
+    def _template_response(
+        self,
+        request: Request,
+        template_name: str,
+        context: dict[str, Any],
+    ):
+        """Render a template using the supported TemplateResponse signature."""
+        if not hasattr(self, '_template_response_use_request_first'):
+            self._template_response_use_request_first = self._template_response_requires_request()
+
+        if self._template_response_use_request_first:
+            return self._templates.TemplateResponse(request, template_name, context)
+
+        return self._templates.TemplateResponse(template_name, context)
+
     def _index(self, request: Request):
         """Return main index.html (/) file.
 
@@ -678,7 +717,11 @@ class GlancesRestfulApi:
         refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
 
         # Display
-        return self._templates.TemplateResponse("index.html", {"request": request, "refresh_time": refresh_time})
+        return self._template_response(
+            request,
+            "index.html",
+            {"request": request, "refresh_time": refresh_time},
+        )
 
     def _browser(self, request: Request):
         """Return main browser.html (/browser) file.
@@ -688,7 +731,11 @@ class GlancesRestfulApi:
         refresh_time = request.query_params.get('refresh', default=max(1, int(self.args.time)))
 
         # Display
-        return self._templates.TemplateResponse("browser.html", {"request": request, "refresh_time": refresh_time})
+        return self._template_response(
+            request,
+            "browser.html",
+            {"request": request, "refresh_time": refresh_time},
+        )
 
     def _api_status(self):
         """Glances API RESTful implementation.

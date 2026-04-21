@@ -4,13 +4,13 @@ annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.7.0
     # via pydantic
-anyio==4.12.1
+anyio==4.13.0
     # via
     #   httpx
     #   mcp
     #   sse-starlette
     #   starlette
-attrs==25.4.0
+attrs==26.1.0
     # via
     #   jsonschema
     #   referencing
@@ -21,13 +21,13 @@ certifi==2026.2.25
     #   requests
 cffi==2.0.0 ; platform_python_implementation != 'PyPy'
     # via cryptography
-charset-normalizer==3.4.5
+charset-normalizer==3.4.7
     # via requests
 click==8.1.8
     # via uvicorn
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
-cryptography==46.0.5
+cryptography==46.0.7
     # via
     #   pyjwt
     #   pylxd
@@ -36,11 +36,11 @@ defusedxml==0.7.1
     # via glances
 docker==7.1.0
     # via glances
-ecdsa==0.19.1
+ecdsa==0.19.2
     # via python-jose
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.135.1
+fastapi==0.136.0
     # via glances
 h11==0.16.0
     # via
@@ -67,24 +67,24 @@ markupsafe==3.0.3
     # via jinja2
 mcp==1.23.3
     # via glances
-packaging==26.0
+packaging==26.1
     # via glances
-podman==5.7.0
+podman==5.8.0
     # via glances
 psutil==7.2.2
     # via glances
-pyasn1==0.6.2
+pyasn1==0.6.3
     # via
     #   python-jose
     #   rsa
 pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
-pydantic==2.12.5
+pydantic==2.13.2
     # via
     #   fastapi
     #   mcp
     #   pydantic-settings
-pydantic-core==2.41.5
+pydantic-core==2.46.2
     # via pydantic
 pydantic-settings==2.13.1
     # via mcp
@@ -92,7 +92,7 @@ pyinstrument==5.1.2
     # via glances
 pyjwt==2.12.1
     # via mcp
-pylxd==2.3.9
+pylxd==2.4.1
     # via glances
 python-dateutil==2.9.0.post0
     # via
@@ -102,7 +102,7 @@ python-dotenv==1.2.2
     # via pydantic-settings
 python-jose==3.5.0
     # via glances
-python-multipart==0.0.22
+python-multipart==0.0.26
     # via mcp
 pywin32==311 ; sys_platform == 'win32'
     # via
@@ -112,7 +112,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.5
+requests==2.33.1
     # via
     #   docker
     #   glances
@@ -134,9 +134,9 @@ six==1.17.0
     #   ecdsa
     #   glances
     #   python-dateutil
-sse-starlette==3.3.2
+sse-starlette==3.3.4
     # via mcp
-starlette==0.52.1
+starlette==1.0.0
     # via
     #   fastapi
     #   mcp
@@ -167,11 +167,11 @@ urllib3==2.6.3
     #   docker
     #   podman
     #   requests
-uvicorn==0.41.0
+uvicorn==0.44.0
     # via
     #   glances
     #   mcp
-windows-curses==2.4.1 ; sys_platform == 'win32'
+windows-curses==2.4.2 ; sys_platform == 'win32'
     # via glances
 ws4py==0.6.0
     # via pylxd

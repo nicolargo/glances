@@ -128,11 +128,12 @@ class Config:
     :type config_dir: str or None
     """
 
-    def __init__(self, config_dir=None):
+    def __init__(self, config_dir=None, disable_config_exec=False):
         self.config_dir = config_dir
         self.config_filename = 'glances.conf'
         self._loaded_config_file = None
         self._config_file_paths = self.config_file_paths()
+        self._disable_config_exec = disable_config_exec
 
         # Re pattern for optimize research of `foo`
         self.re_pattern = re.compile(r'(\`.+?\`)')
@@ -362,7 +363,12 @@ class Config:
             try:
                 match = self.re_pattern.findall(ret)
                 for m in match:
-                    ret = ret.replace(m, system_exec(m[1:-1]))
+                    command = m[1:-1]
+                    if self._disable_config_exec:
+                        logger.warning(f"Config exec disabled: skipping command `{command}` in [{section}] {option}")
+                    else:
+                        logger.warning(f"Executing config command `{command}` for [{section}] {option}")
+                        ret = ret.replace(m, system_exec(command))
             except TypeError:
                 pass
         return ret

@@ -41,12 +41,12 @@ dev = [
   "fonttools>=4.43.0",
   "gprof2dot",
   "matplotlib",
+  "memray>=1.19.2; platform_system != 'Windows'",
   "memory-profiler",
   "numpy>=1.22.2",
   "pillow>=10.0.1",
   "pre-commit",
-  "py-spy",
-  "pyinstrument>=5.1.1",
+  "pyinstrument>=5.1.2",
   "pyright",
   "pytest",
   "requirements-parser",
@@ -78,6 +78,7 @@ containers = [
 export = [
   #"duckdb",  # Make the Github pipeline failed when building Alpine Docker
   "bernhard",
+  "clickhouse-connect",
   "elasticsearch",
   "graphitesender",
   "ibmcloudant",
@@ -132,7 +133,9 @@ glances = "glances:main"
 version = {attr = "glances.__version__"}
 
 [tool.setuptools.packages.find]
+exclude = ["*__pycache__*"]
 include = ["glances*"]
+where = ["."]
 
 [tool.ruff]
 line-length = 120

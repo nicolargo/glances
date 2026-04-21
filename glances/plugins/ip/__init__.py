@@ -9,6 +9,8 @@
 """IP plugin."""
 
 import threading
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 from glances.globals import get_ip_address, json_loads, urlopen_auth
 from glances.logger import logger
@@ -71,6 +73,17 @@ class IpPlugin(GlancesPluginModel):
             or self.public_api is None
             or self.public_field is None
         )
+
+        # Defence-in-depth: validate URL scheme to prevent SSRF via config
+        if not self.public_disabled and self.public_api:
+            parsed = urlparse(self.public_api)
+            if parsed.scheme not in ('http', 'https'):
+                logger.warning(
+                    f"IP plugin - public_api uses forbidden scheme '{parsed.scheme}://', "
+                    "only http:// and https:// are allowed. Public IP disabled."
+                )
+                self.public_disabled = True
+
         self.public_address_refresh_interval = self.get_conf_value(
             "public_refresh_interval", default=self._default_public_refresh_interval
         )
@@ -258,7 +271,10 @@ class ThreadPublicIpAddress(threading.Thread):
     def _fetch_public_ip_info(self):
         """Fetch public IP information from the configured API."""
         try:
-            response = urlopen_auth(self.url, self.username, self.password, self.timeout).read()
+            if self.username and self.password:
+                response = urlopen_auth(self.url, self.username, self.password, self.timeout).read()
+            else:
+                response = urlopen(Request(self.url), timeout=self.timeout).read()
             return json_loads(response)
         except Exception as e:
             logger.debug(f"IP plugin - Cannot get public IP information from {self.url} ({e})")

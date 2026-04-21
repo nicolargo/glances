@@ -156,10 +156,16 @@ def nativestr(s, errors='replace'):
     return s.decode('utf-8', errors=errors)
 
 
-def system_exec(command):
-    """Execute a system command and return the result as a str"""
+def system_exec(command, timeout=5):
+    """Execute a system command and return the result as a str.
+
+    A hard timeout (default 5 s) prevents blocking commands from hanging
+    the process indefinitely.
+    """
     try:
-        res = subprocess.run(command.split(' '), stdout=subprocess.PIPE).stdout.decode('utf-8')
+        res = subprocess.run(command.split(' '), stdout=subprocess.PIPE, timeout=timeout).stdout.decode('utf-8')
+    except subprocess.TimeoutExpired:
+        res = f'ERROR: command `{command}` timed out after {timeout}s'
     except Exception as e:
         res = f'ERROR: {e}'
     return res.rstrip()

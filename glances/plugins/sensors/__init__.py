@@ -30,11 +30,6 @@ sensors_definition = {
     'battery': {'type': 'battery', 'unit': '%'},
 }
 
-# Define the default refresh multiplicator
-# Default value is 5 * Glances refresh time
-# Can be overwritten by the refresh option in the sensors section of the glances.conf file
-DEFAULT_REFRESH = 5
-
 # Fields description
 # description: human readable description
 # short_name: shortname to use un UI
@@ -53,11 +48,11 @@ fields_description = {
         'unit': 'number',
     },
     'warning': {
-        'description': 'Warning threshold',
+        'description': 'System warning threshold (regardless of the user configuration in the glances.conf file)',
         'unit': 'number',
     },
     'critical': {
-        'description': 'Critical threshold',
+        'description': 'System critical threshold (regardless of the user configuration in the glances.conf file)',
         'unit': 'number',
     },
     'type': {
@@ -111,10 +106,6 @@ class SensorsPlugin(GlancesPluginModel):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-
-        # Not necessary to refresh every refresh time
-        if args and self.get_refresh() == args.time:
-            self.set_refresh(self.get_refresh() * DEFAULT_REFRESH)
 
     def get_key(self):
         """Return the key of the list."""
@@ -200,7 +191,7 @@ class SensorsPlugin(GlancesPluginModel):
 
     def __get_system_thresholds(self, sensor):
         """Return the alert level thanks to the system thresholds.
-        Note: Only Warning (aka High) and Critical thresholds are used.
+        Note: Only Warning (aka High) and Critical thresholds are used. Careful is not available.
         """
         alert = 'OK'
         if sensor['critical'] is None:
@@ -226,8 +217,8 @@ class SensorsPlugin(GlancesPluginModel):
             # Alert processing
             if i['type'] == sensors_definition.get('cpu_temp').get('type'):
                 if self.is_limit('critical', stat_name=i['type'] + '_' + i['label']):
-                    # Get thresholds for the specific sensor in the glances.conf file (see #2058)abel']}")
-                    alert = self.get_alert(current=i['value'], header=i['type'], action_key=i['label'])
+                    # Get thresholds for the specific sensor in the glances.conf file (see #2058)
+                    alert = self.get_alert(current=i['value'], header=i['label'], action_key=i['type'])
                 elif self.is_limit('critical', stat_name=i['type']):
                     # Get thresholds for the sensor type in the glances.conf file (see #3049)
                     alert = self.get_alert(current=i['value'], header=i['type'])

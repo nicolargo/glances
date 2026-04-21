@@ -27,6 +27,7 @@ Legend:
    load
    gpu
    npu
+   mpp
    network
    connections
    wifi

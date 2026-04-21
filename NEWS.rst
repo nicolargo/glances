@@ -3,6 +3,68 @@
 ==============================================================================
 
 =============
+Version 4.5.4
+=============
+
+Bug corrected:
+
+* Cannot set warning/critical temperature for a specific sensor #3525
+* Memory percentage and used displayed as negative numbers #3358
+* Incorrect Docker container count via Homeassistant Integration #3433
+* Fix LXD filter excluding containers on standalone hosts #3529
+
+Enhancements:
+
+* Add Rockchip MPP plugin for hardware encoder/decoder monitoring #3514
+* Clamp memory used/percent to non-negative values for LXC containers #3505
+* Support single-core Rockchip NPU load parsing and improve device naming #3499
+
+Security patches:
+
+* SSRF in Glances IP Plugin via public_api leads to credential leakage - Correct CVE-2026-35587
+* Cross-Origin Information Disclosure via Unauthenticated REST API (/api/4) - Correct CVE-2026-34839
+* fix(cassandra): validate keyspace/table/replication_factor to prevent CQL injection - Correct CVE-2026-35588 #3520
+
+Continious integration and documentation:
+
+* pycache file is put in wheel #3516
+* Remove dead code #3507
+
+Thanks to all the contributors for this version: csvke, Christian Rishøj,
+duriantaco, Julio César Suástegui, Paul and morimori-dev.
+
+=============
+Version 4.5.3
+=============
+
+Bug corrected:
+
+* Internal Server Error (Web Server Mode) #3502
+* Container plugin crashes with docker.errors.NullResource on Podman pod infra containers #3498
+* [ALERTS] Sometime the top process list is not the good one #3481
+
+Enhancements:
+
+* Support for LXC/LXD containers #3480
+* Add export to ClickHouse #3320
+
+Security patches:
+
+* Command Injection via Dynamic Configuration Values - Mitigate CVE-2026-33641
+* Cross-Origin System Information Disclosure via XML-RPC Server CORS Wildcard - Mitigate CVE-2026-33533
+
+Continious integration and documentation:
+
+* Use sys.executable in the testsuite #3497
+* Add unit tests for LXD container engine #3487
+* Replace Py-Spy per Memray for FlameGraph generation
+* Make the WebUI build before the packages and Docker images build
+* Harden GitHub Actions workflows: minimal permissions, SHA pins, timeouts
+
+Thanks to all the contributors for this version: Christian Rishøj, Jeongwoo Kim,
+Ofek Gabay, Steve Kowalik, Tanishq Shah, Mithun M.
+
+=============
 Version 4.5.2
 =============
 
