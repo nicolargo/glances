@@ -40,7 +40,7 @@ else:
 # Define the logging configuration
 LOGGING_CFG = {
     "version": 1,
-    "disable_existing_loggers": "False",
+    "disable_existing_loggers": False,
     "root": {"level": "INFO", "handlers": ["file", "console"]},
     "formatters": {
         "standard": {"format": "%(asctime)s -- %(levelname)s -- %(message)s"},
