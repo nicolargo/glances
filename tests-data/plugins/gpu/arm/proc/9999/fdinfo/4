@@ -1,0 +1,5 @@
+pos:	0
+flags:	02100002
+mnt_id:	12
+ino:	2010
+# Non-DRM fd: should be ignored by parse_fdinfo
