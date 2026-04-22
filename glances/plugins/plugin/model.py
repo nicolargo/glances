@@ -1072,7 +1072,7 @@ class GlancesPluginModel:
         return {}
 
     def has_alias(self, header):
-        """Return the alias name for the relative header it it exists otherwise None."""
+        """Return the alias name for the relative header if it exists, otherwise None."""
         if isinstance(header, str):
             header = header.lower()
         return self.alias.get(header, None)
