@@ -3,9 +3,15 @@
 Configuration
 =============
 
-No configuration file is mandatory to use Glances.
+Glances configuration is layered:
 
-Furthermore, a configuration file is needed to access more settings.
+Layered overlay of (ascending priority):
+1. Hardcoded DEFAULTS
+2. /etc/glances/glances.conf on Linux (see bellow for others operating systems)
+3. $XDG_CONFIG_HOME/glances/glances.conf (fallback ~/.config/glances/glances.conf)
+4. $GLANCES_CONFIG_FILE
+5. -C <path> CLI flag
+6. GLANCES_<SECTION>__<KEY>=<value> environment variables (highest)
 
 Location
 --------
@@ -34,6 +40,19 @@ Syntax
 ------
 
 Glances read configuration files in the *ini* syntax.
+
+The file is segmented by sections composed of key/value pairs.
+
+For example "refresh=2" is a key/value pair. refresh is the key and 2 is the value.
+
+Key is always a string.
+
+Value is one of the followings types:
+
+- integer (ex: refresh=2)
+- float (ex: foo=1.23)
+- bool (ex: check_update=true). Glances accepts true, 1, yes, on as bool.
+- comma-separated list of values (ex: focus=.*firefox.*,.*python.*)
 
 A first section (called global) is available:
 
