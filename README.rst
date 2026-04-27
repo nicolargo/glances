@@ -435,9 +435,9 @@ plugins are enabled.
 
 Note: The Debian package (and all other Debian-based distributions) do
 not include anymore the JS statics files used by the Web interface
-(see ``issue2021``). If you want to add it to your Glances installation,
-follow the instructions: ``issue2021comment``. In Glances version 4 and
-higher, the path to the statics file is configurable (see ``issue2612``).
+(see `issue 2021 <https://github.com/nicolargo/glances/issues/2021>`_). If you want to add it to your Glances installation,
+follow the instructions `here: <https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157>`_. In Glances version 4 and
+higher, the path to the statics file is configurable (see `issue 2621 <https://github.com/nicolargo/glances/issues/2612>`_).
 
 FreeBSD
 -------
