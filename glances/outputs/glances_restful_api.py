@@ -534,6 +534,7 @@ class GlancesRestfulApi:
             f'{base_path}/all/views': self._api_all_views,
             f'{base_path}/pluginslist': self._api_plugins,
             f'{base_path}/serverslist': self._api_servers_list,
+            f'{base_path}/python_version': self._api_python_version,
             f'{base_path}/processes/extended': self._api_get_extended_processes,
             f'{base_path}/processes/{{pid}}': self._api_get_processes,
             f'{plugin_path}': self._api,
@@ -747,6 +748,15 @@ class GlancesRestfulApi:
         """
 
         return GlancesJSONResponse({'version': __version__})
+
+    def _api_python_version(self):
+        """Glances API RESTful implementation.
+
+        Return the current Python version.
+        This entry point returns the Python version running Glances.
+        """
+
+        return GlancesJSONResponse({'python_version': f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}'})
 
     def _events_clear_warning(self):
         """Glances API RESTful implementation.
