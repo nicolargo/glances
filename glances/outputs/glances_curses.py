@@ -651,7 +651,7 @@ class _GlancesCurses:
             else:
                 logger.warning('Graph export module is disable. Run Glances with --export graph to enable it.')
                 self.args.generate_graph = False
-
+        self.display_popup("Test popup\nSecond line", popup_type='yesno')  # Monisha - for testing
         return True
 
     def nice_increase(self, process):
@@ -869,6 +869,21 @@ class _GlancesCurses:
                 else:
                     self.display_plugin(stat_display[p])
 
+    def get_popup_size(self, message, size_x, size_y, popup_type, input_size):
+        sentence_list = message.split('\n')
+        if size_x is None:
+            size_x = len(max(sentence_list, key=len)) + 4
+            # Add space for the input field
+            if popup_type == 'input':
+                size_x += input_size
+        if size_y is None:
+            size_y = len(sentence_list) + 4
+        screen_x = self.term_window.getmaxyx()[1]
+        screen_y = self.term_window.getmaxyx()[0]
+        pos_x = int((screen_x - size_x) / 2)
+        pos_y = int((screen_y - size_y) / 2)
+        return sentence_list, pos_x, pos_y, screen_x, screen_y, size_x, size_y
+
     def display_popup(
         self,
         message,
@@ -903,21 +918,13 @@ class _GlancesCurses:
          Return True (yes) or False (no)
         """
         # Center the popup
-        sentence_list = message.split('\n')
-        if size_x is None:
-            size_x = len(max(sentence_list, key=len)) + 4
-            # Add space for the input field
-            if popup_type == 'input':
-                size_x += input_size
-        if size_y is None:
-            size_y = len(sentence_list) + 4
-        screen_x = self.term_window.getmaxyx()[1]
-        screen_y = self.term_window.getmaxyx()[0]
+        sentence_list, pos_x, pos_y, screen_x, screen_y, size_x, size_y = self.get_popup_size(
+            message, size_x, size_y, popup_type, input_size
+        )
+
         if size_x > screen_x or size_y > screen_y:
             # No size to display the popup => abord
             return False
-        pos_x = int((screen_x - size_x) / 2)
-        pos_y = int((screen_y - size_y) / 2)
 
         # Create the popup
         popup = curses.newwin(size_y, size_x, pos_y, pos_x)
@@ -967,27 +974,29 @@ class _GlancesCurses:
             return None
 
         if popup_type == 'yesno':
-            # Create a sub-window for the text field
-            sub_pop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)
-            sub_pop.attron(self.colors_list['FILTER'])
-            # Init the field with the current value
-            try:
-                sub_pop.addnstr(0, 0, '', 0)
-            except curses.error:
-                pass
-            # Display the popup
-            popup.refresh()
-            sub_pop.refresh()
-            # Create the textbox inside the sub-windows
-            self.set_cursor(2)
-            self.term_window.keypad(1)
-            textbox = GlancesTextboxYesNo(sub_pop, insert_mode=False)
-            textbox.edit()
-            self.set_cursor(0)
-            # self.term_window.keypad(0)
-            return textbox.gather()
-
+            return self._handle_yesno_popup(popup, sentence_list, m)
         return None
+
+    def _handle_yesno_popup(self, popup, sentence_list, m):
+        # Create a sub-window for the text field
+        sub_pop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)
+        sub_pop.attron(self.colors_list['FILTER'])
+        # Init the field with the current value
+        try:
+            sub_pop.addnstr(0, 0, '', 0)
+        except curses.error:
+            pass
+        # Display the popup
+        popup.refresh()
+        sub_pop.refresh()
+        # Create the textbox inside the sub-windows
+        self.set_cursor(2)
+        self.term_window.keypad(1)
+        textbox = GlancesTextboxYesNo(sub_pop, insert_mode=False)
+        textbox.edit()
+        self.set_cursor(0)
+        # self.term_window.keypad(0)
+        return textbox.gather()
 
     def setup_upper_left_pos(self, plugin_stats):
         screen_y, screen_x = self.term_window.getmaxyx()
