@@ -15,6 +15,7 @@ from glances.logger import logger
 from glances.outputs.glances_bars import Bar
 from glances.outputs.glances_sparklines import Sparkline
 from glances.plugins.fs.zfs import zfs_enable, zfs_stats
+from glances.plugins.gpu import GpuPlugin
 from glances.plugins.load import load_average, log_core, phys_core
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -80,7 +81,7 @@ class QuicklookPlugin(GlancesPluginModel):
     'stats' is a dictionary.
     """
 
-    AVAILABLE_STATS_LIST = ['cpu', 'mem', 'swap', 'load']
+    AVAILABLE_STATS_LIST = ['cpu', 'mem', 'swap', 'load', 'gpu_mem', 'gpu_proc']
     DEFAULT_STATS_LIST = ['cpu', 'mem', 'load']
 
     def __init__(self, args=None, config=None):
@@ -153,6 +154,24 @@ class QuicklookPlugin(GlancesPluginModel):
             except (TypeError, IndexError):
                 stats['load'] = None
 
+            gpus = None
+            try:
+                gpus = GpuPlugin()
+                if gpus is not None:
+                    gpus.update()
+                avg_gmem = gpus._get_mean("mem")
+                if avg_gmem is None:
+                    avg_gmem = 0
+                stats['gpu_mem'] = avg_gmem
+                avg_gcpu = gpus._get_mean("proc")
+                if avg_gcpu is None:
+                    avg_gcpu = 0
+                stats['gpu_proc'] = avg_gcpu
+                gpus.exit()
+            except Exception:
+                stats['gpu_mem'] = stats.get('gpu_mem', 0)
+                stats['gpu_proc'] = stats.get('gpu_proc', 0)
+
         elif self.input_method == 'snmp':
             # Not available
             pass
@@ -167,7 +186,7 @@ class QuicklookPlugin(GlancesPluginModel):
         # Call the father's method
         super().update_views()
 
-        # Alert for CPU, MEM and SWAP
+        # Alert for CPU, MEM and SWAP + GPU
         for key in self.stats_list:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
@@ -319,6 +338,10 @@ class QuicklookPlugin(GlancesPluginModel):
     def _mhz_to_hz(self, hz):
         """Convert Mhz to Hz."""
         return hz * 1000000.0
+
+    def exit(self):
+        if self.gups:
+            self.gpus.exit()
 
 
 # End of file
