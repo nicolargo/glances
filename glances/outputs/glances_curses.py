@@ -965,18 +965,25 @@ class _GlancesCurses:
         return None
 
     def _handle_input_popup(self, m, input_size, input_value, popup, is_password):
-        # Create a sub-window for the text field
+        # Create a single-line input sub-window positioned relative to the
+        # rendered message length (m) within the parent popup
         sub_pop = popup.derwin(1, input_size, 2, 2 + len(m))
         sub_pop.attron(self.colors_list['FILTER'])
-        # Init the field with the current value
+
+        # Pre-populate the field if an initial value is provided
         if input_value is not None:
             sub_pop.addnstr(0, 0, input_value, len(input_value))
-        # Display the popup
+
+        # Render both the popup and input field before capturing input
         popup.refresh()
         sub_pop.refresh()
-        # Create the textbox inside the sub-windows
+
+        # Enable cursor visibility and keypad mode for user interaction
         self.set_cursor(2)
         self.term_window.keypad(1)
+
+        # Password input: bypass curses textbox and use standard terminal input
+        # (input is not displayed in the sub-window)
         if is_password:
             textbox = getpass.getpass('')
             self.set_cursor(0)
@@ -984,10 +991,14 @@ class _GlancesCurses:
                 return textbox
             return None
 
-        # No password
+        # Standard text input using curses textbox within the sub-window
         textbox = GlancesTextbox(sub_pop, insert_mode=True)
         textbox.edit()
+
+        # Restore cursor state after input completes
         self.set_cursor(0)
+
+        # Extract value; curses textbox appends a trailing newline, so strip it
         if textbox.gather() != '':
             return textbox.gather()[:-1]
         return None
