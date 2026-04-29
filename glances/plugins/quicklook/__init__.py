@@ -62,6 +62,14 @@ fields_description = {
         'description': 'CPU max frequency',
         'unit': 'hertz',
     },
+    'gpu_mem': {
+        'description': 'Average GPU Memory consumption',
+        'unit': 'percent',
+    },
+    'gpu_proc': {
+        'description': 'Average GPU Processor consumption',
+        'unit': 'percent',
+    },
 }
 
 # Define the history items list
@@ -98,6 +106,11 @@ class QuicklookPlugin(GlancesPluginModel):
 
         # Manage the maximum number of CPU to display (related to enhancement request #2734)
         self.max_cpu_display = config.get_int_value('percpu', 'max_cpu_display', 4) if config else 4
+
+        try:
+            self.gpus = GpuPlugin(args, config)
+        except Exception:
+            self.gpus = None
 
         # Define the stats list
         self.stats_list = self.get_conf_value('list', default=self.DEFAULT_STATS_LIST)
@@ -154,23 +167,20 @@ class QuicklookPlugin(GlancesPluginModel):
             except (TypeError, IndexError):
                 stats['load'] = None
 
-            gpus = None
             try:
-                gpus = GpuPlugin()
-                if gpus is not None:
-                    gpus.update()
-                avg_gmem = gpus._get_mean("mem")
+                if self.gpus is not None:
+                    self.gpus.update()
+                avg_gmem = self.gpus._get_mean("mem")
                 if avg_gmem is None:
                     avg_gmem = 0
                 stats['gpu_mem'] = avg_gmem
-                avg_gcpu = gpus._get_mean("proc")
+                avg_gcpu = self.gpus._get_mean("proc")
                 if avg_gcpu is None:
                     avg_gcpu = 0
                 stats['gpu_proc'] = avg_gcpu
-                gpus.exit()
             except Exception:
-                stats['gpu_mem'] = stats.get('gpu_mem', 0)
-                stats['gpu_proc'] = stats.get('gpu_proc', 0)
+                stats['gpu_mem'] = 0
+                stats['gpu_proc'] = 0
 
         elif self.input_method == 'snmp':
             # Not available
@@ -340,8 +350,12 @@ class QuicklookPlugin(GlancesPluginModel):
         return hz * 1000000.0
 
     def exit(self):
-        if self.gups:
-            self.gpus.exit()
+        super().exit()
+
+        the_gpus = self.__dict__.get("gpus", None)
+
+        if the_gpus:
+            the_gpus.exit()
 
 
 # End of file
