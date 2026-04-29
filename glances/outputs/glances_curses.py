@@ -651,7 +651,7 @@ class _GlancesCurses:
             else:
                 logger.warning('Graph export module is disable. Run Glances with --export graph to enable it.')
                 self.args.generate_graph = False
-        self.display_popup("Test popup", popup_type='input')  # Monisha - for testing
+
         return True
 
     def nice_increase(self, process):
