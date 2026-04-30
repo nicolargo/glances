@@ -985,6 +985,8 @@ class _GlancesCurses:
         # Password input: bypass curses textbox and use standard terminal input
         # (input is not displayed in the sub-window)
         if is_password:
+            if not sys.stdin.isatty():
+                return None
             textbox = getpass.getpass('')
             self.set_cursor(0)
             if textbox != '':
