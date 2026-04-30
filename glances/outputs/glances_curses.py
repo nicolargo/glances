@@ -957,7 +957,33 @@ class _GlancesCurses:
         if popup_type == 'input':
             logger.info(popup_type)
             logger.info(is_password)
-            return self._handle_input_popup(m, input_size, input_value, popup, is_password)
+            # Create a sub-window for the text field
+            sub_pop = popup.derwin(1, input_size, 2, 2 + len(m))
+            sub_pop.attron(self.colors_list['FILTER'])
+            # Init the field with the current value
+            if input_value is not None:
+                sub_pop.addnstr(0, 0, input_value, len(input_value))
+            # Display the popup
+            popup.refresh()
+            sub_pop.refresh()
+            # Create the textbox inside the sub-windows
+            self.set_cursor(2)
+            self.term_window.keypad(1)
+            if is_password:
+                textbox = getpass.getpass('')
+                self.set_cursor(0)
+                if textbox != '':
+                    return textbox
+                return None
+
+            # No password
+            textbox = GlancesTextbox(sub_pop, insert_mode=True)
+            textbox.edit()
+            self.set_cursor(0)
+            if textbox.gather() != '':
+                return textbox.gather()[:-1]
+            return None
+        #            return self._handle_input_popup(m, input_size, input_value, popup, is_password)
 
         # Popup accepts a user input as Y or N for yes no
         if popup_type == 'yesno':
@@ -985,8 +1011,6 @@ class _GlancesCurses:
         # Password input: bypass curses textbox and use standard terminal input
         # (input is not displayed in the sub-window)
         if is_password:
-            if not sys.stdin.isatty():
-                return None
             textbox = getpass.getpass('')
             self.set_cursor(0)
             if textbox != '':
