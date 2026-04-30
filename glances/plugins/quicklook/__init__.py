@@ -15,6 +15,7 @@ from glances.logger import logger
 from glances.outputs.glances_bars import Bar
 from glances.outputs.glances_sparklines import Sparkline
 from glances.plugins.fs.zfs import zfs_enable, zfs_stats
+from glances.plugins.gpu import GpuPlugin
 from glances.plugins.load import load_average, log_core, phys_core
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -61,6 +62,14 @@ fields_description = {
         'description': 'CPU max frequency',
         'unit': 'hertz',
     },
+    'gpu_mem': {
+        'description': 'Average GPU Memory consumption',
+        'unit': 'percent',
+    },
+    'gpu_proc': {
+        'description': 'Average GPU Processor consumption',
+        'unit': 'percent',
+    },
 }
 
 # Define the history items list
@@ -80,7 +89,7 @@ class QuicklookPlugin(GlancesPluginModel):
     'stats' is a dictionary.
     """
 
-    AVAILABLE_STATS_LIST = ['cpu', 'mem', 'swap', 'load']
+    AVAILABLE_STATS_LIST = ['cpu', 'mem', 'swap', 'load', 'gpu_mem', 'gpu_proc']
     DEFAULT_STATS_LIST = ['cpu', 'mem', 'load']
 
     def __init__(self, args=None, config=None):
@@ -97,6 +106,11 @@ class QuicklookPlugin(GlancesPluginModel):
 
         # Manage the maximum number of CPU to display (related to enhancement request #2734)
         self.max_cpu_display = config.get_int_value('percpu', 'max_cpu_display', 4) if config else 4
+
+        try:
+            self.gpus = GpuPlugin(args, config)
+        except Exception:
+            self.gpus = None
 
         # Define the stats list
         self.stats_list = self.get_conf_value('list', default=self.DEFAULT_STATS_LIST)
@@ -153,6 +167,21 @@ class QuicklookPlugin(GlancesPluginModel):
             except (TypeError, IndexError):
                 stats['load'] = None
 
+            try:
+                if self.gpus is not None:
+                    self.gpus.update()
+                avg_gmem = self.gpus._get_mean("mem")
+                if avg_gmem is None:
+                    avg_gmem = 0
+                stats['gpu_mem'] = avg_gmem
+                avg_gcpu = self.gpus._get_mean("proc")
+                if avg_gcpu is None:
+                    avg_gcpu = 0
+                stats['gpu_proc'] = avg_gcpu
+            except Exception:
+                stats['gpu_mem'] = 0
+                stats['gpu_proc'] = 0
+
         elif self.input_method == 'snmp':
             # Not available
             pass
@@ -167,7 +196,7 @@ class QuicklookPlugin(GlancesPluginModel):
         # Call the father's method
         super().update_views()
 
-        # Alert for CPU, MEM and SWAP
+        # Alert for CPU, MEM and SWAP + GPU
         for key in self.stats_list:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
@@ -319,6 +348,14 @@ class QuicklookPlugin(GlancesPluginModel):
     def _mhz_to_hz(self, hz):
         """Convert Mhz to Hz."""
         return hz * 1000000.0
+
+    def exit(self):
+        super().exit()
+
+        the_gpus = self.__dict__.get("gpus", None)
+
+        if the_gpus:
+            the_gpus.exit()
 
 
 # End of file
