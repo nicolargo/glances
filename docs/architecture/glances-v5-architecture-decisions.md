@@ -452,7 +452,7 @@ All v4.x security fixes are reproduced in v5.0. v5 starts from the hardened base
 - **Conservative defaults.** All new security or behavioural options are opt-in via `glances.conf`, with a `WARNING`-level log when running permissively.
 - **No dead code.** Every new class and method must be wired and used.
 - **Surgical edits over rewrites.** Plugin migration is incremental, one plugin at a time.
-- **Test stack.** `unittest` + `unittest.mock` only. No pytest.
+- **Test stack.** `pytest` + `pytest-asyncio` (`asyncio_mode = "auto"`) + `unittest.mock`. Style: pytest-native (top-level functions + fixtures, `assert` statements). No `unittest.TestCase` for new v5 tests.
 - **Existing v4 unit tests must pass.** All v4 unit tests are migrated to v5 and adapted where necessary (API changes, datamodel changes). A v5 release is not valid if any migrated test is failing or has been silently dropped.
 - **Datamodel changes between v4 and v5 are allowed.** v5 is a clean break; API consumers must migrate. Changes must be documented in release notes.
 - **All v4 plugins migrated.**

@@ -49,6 +49,7 @@ dev = [
   "pyinstrument>=5.1.2",
   "pyright",
   "pytest",
+  "pytest-asyncio",
   "requirements-parser",
   "reuse",
   "rstcheck",
@@ -261,6 +262,8 @@ log_cli = false
 log_level = "INFO"
 #log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
 #log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+# v5 tests use async functions; auto mode avoids per-test @pytest.mark.asyncio.
+asyncio_mode = "auto"
 
 [tool.flake8]
 max-line-length = 120

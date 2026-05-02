@@ -131,24 +131,25 @@ reading the key. Two rules:
 
 ## Testing
 
-Test stack: `unittest` + `unittest.mock` only (architecture decision §9, no
-pytest).
+Test stack: `pytest` + `pytest-asyncio` (`asyncio_mode = "auto"`) +
+`unittest.mock` (architecture decision §9). Style: pytest-native top-level
+functions with fixtures and `assert` statements — no `unittest.TestCase`.
 
-The test file `tests/test_config_v5.py` provides a `_ConfigCase` base that
-isolates each test in its own `tempfile.TemporaryDirectory` and patches:
+The test file `tests/test_config_v5.py` provides an `env` fixture that
+isolates each test in its own `tmp_path` and patches:
 
-- `os.environ` (cleared)
+- `os.environ` (cleared via `monkeypatch.delenv`)
 - `XDG_CONFIG_HOME` (pointed at the tmp dir)
 - `HOME` (pointed at the tmp dir)
 - `GlancesConfigV5.SYSTEM_CONFIG_PATH` (pointed at the tmp dir)
 
-Use this base for any test that needs a controlled config environment.
+Reuse this fixture for any test that needs a controlled config environment.
 
 ## Module path
 
 ```
 glances/config_v5.py        # implementation
-tests/test_config_v5.py     # unit tests (42 tests, ~25 ms)
+tests/test_config_v5.py     # unit tests (pytest-native)
 ```
 
 The v4 `glances/config.py` is **not modified**, **not imported**, **not
