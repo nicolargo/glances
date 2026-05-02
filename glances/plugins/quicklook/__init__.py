@@ -10,12 +10,12 @@
 
 import psutil
 
+import glances.gpu_percent as gpu_stats
 from glances.cpu_percent import cpu_percent
 from glances.logger import logger
 from glances.outputs.glances_bars import Bar
 from glances.outputs.glances_sparklines import Sparkline
 from glances.plugins.fs.zfs import zfs_enable, zfs_stats
-from glances.plugins.gpu import GpuPlugin
 from glances.plugins.load import load_average, log_core, phys_core
 from glances.plugins.plugin.model import GlancesPluginModel
 
@@ -107,16 +107,15 @@ class QuicklookPlugin(GlancesPluginModel):
         # Manage the maximum number of CPU to display (related to enhancement request #2734)
         self.max_cpu_display = config.get_int_value('percpu', 'max_cpu_display', 4) if config else 4
 
-        try:
-            self.gpus = GpuPlugin(args, config)
-        except Exception:
-            self.gpus = None
-
         # Define the stats list
         self.stats_list = self.get_conf_value('list', default=self.DEFAULT_STATS_LIST)
         if not set(self.stats_list).issubset(self.AVAILABLE_STATS_LIST):
             logger.warning(f'Quicklook plugin: Invalid stats list: {self.stats_list}')
             self.stats_list = self.AVAILABLE_STATS_LIST
+        if "gpu_mem" in self.stats_list:
+            gpu_stats.get_gpu_mem = True
+        if "gpu_proc" in self.stats_list:
+            gpu_stats.get_gpu_proc = True
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
@@ -167,20 +166,8 @@ class QuicklookPlugin(GlancesPluginModel):
             except (TypeError, IndexError):
                 stats['load'] = None
 
-            try:
-                if self.gpus is not None:
-                    self.gpus.update()
-                avg_gmem = self.gpus._get_mean("mem")
-                if avg_gmem is None:
-                    avg_gmem = 0
-                stats['gpu_mem'] = avg_gmem
-                avg_gcpu = self.gpus._get_mean("proc")
-                if avg_gcpu is None:
-                    avg_gcpu = 0
-                stats['gpu_proc'] = avg_gcpu
-            except Exception:
-                stats['gpu_mem'] = 0
-                stats['gpu_proc'] = 0
+            stats['gpu_mem'] = gpu_stats.gpu_mem
+            stats['gpu_proc'] = gpu_stats.gpu_proc
 
         elif self.input_method == 'snmp':
             # Not available
@@ -348,14 +335,6 @@ class QuicklookPlugin(GlancesPluginModel):
     def _mhz_to_hz(self, hz):
         """Convert Mhz to Hz."""
         return hz * 1000000.0
-
-    def exit(self):
-        super().exit()
-
-        the_gpus = self.__dict__.get("gpus", None)
-
-        if the_gpus:
-            the_gpus.exit()
 
 
 # End of file
