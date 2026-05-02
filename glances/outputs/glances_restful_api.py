@@ -321,7 +321,7 @@ class GlancesRestfulApi:
             logger.info(f"TrustedHostMiddleware enabled (allowed hosts: {self.webui_allowed_hosts})")
 
         # FastAPI Define routes
-        # Status endpoint router (no authentication required) - health check, see #3544
+        # Status endpoint router (no authentication required) - health check
         self._app.include_router(self._status_router())
         # Token endpoint router (no authentication required) - must be added first
         if self.args.password and self._jwt_handler is not None:
@@ -498,10 +498,9 @@ class GlancesRestfulApi:
     def _status_router(self) -> APIRouter:
         """Define a router for the status endpoint (no authentication required).
 
-        The /status endpoint is used for health checks (see issue #1988) and must
-        remain reachable even when --password is set, so that container probes
-        like Docker HEALTHCHECK do not get a 401 (issue #3544). It exposes no
-        sensitive data — only the Glances version.
+        The /status endpoint is used for health checks and must remain reachable
+        even when --password is set, so that container probes like Docker
+        HEALTHCHECK do not get a 401.
         """
         base_path = f'/api/{self.API_VERSION}'
         router = APIRouter(prefix=self.url_prefix)
@@ -522,8 +521,6 @@ class GlancesRestfulApi:
 
         # REST API route definition
         # ==========================
-        # /status is registered separately in _status_router() so it bypasses
-        # authentication (used as a health check endpoint, see issue #3544).
 
         # POST
         router.add_api_route(f'{base_path}/events/clear/warning', self._events_clear_warning, methods=['POST'])
