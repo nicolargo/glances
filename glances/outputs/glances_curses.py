@@ -869,6 +869,30 @@ class _GlancesCurses:
                 else:
                     self.display_plugin(stat_display[p])
 
+    def get_popup_size(self, message, size_x, size_y, popup_type, input_size):
+        # Split the message into lines (seperated by \n)
+        sentence_list = message.split('\n')
+        # If length size_x has not been give, calculate the same
+        # as a calculation of the max sentence length
+        if size_x is None:
+            size_x = len(max(sentence_list, key=len)) + 4
+            # Add space for the input field
+            if popup_type == 'input':
+                size_x += input_size
+        # if height size_y has not been given, calculate this depending on
+        # the no of lines in sentence
+        if size_y is None:
+            size_y = len(sentence_list) + 4
+        # Calculate screen size
+        screen_x = self.term_window.getmaxyx()[1]
+        screen_y = self.term_window.getmaxyx()[0]
+        # Identify the centre position for the popup on the screen
+        pos_x = int((screen_x - size_x) / 2)
+        pos_y = int((screen_y - size_y) / 2)
+        # return sentence_list message to be displayed, x & y pos of popup,
+        # screen size in x, y and popup size in x, y
+        return sentence_list, pos_x, pos_y, screen_x, screen_y, size_x, size_y
+
     def display_popup(
         self,
         message,
@@ -902,22 +926,14 @@ class _GlancesCurses:
          else set it automatically
          Return True (yes) or False (no)
         """
-        # Center the popup
-        sentence_list = message.split('\n')
-        if size_x is None:
-            size_x = len(max(sentence_list, key=len)) + 4
-            # Add space for the input field
-            if popup_type == 'input':
-                size_x += input_size
-        if size_y is None:
-            size_y = len(sentence_list) + 4
-        screen_x = self.term_window.getmaxyx()[1]
-        screen_y = self.term_window.getmaxyx()[0]
+        # Calculate the centre and content of the popup
+        sentence_list, pos_x, pos_y, screen_x, screen_y, size_x, size_y = self.get_popup_size(
+            message, size_x, size_y, popup_type, input_size
+        )
+
         if size_x > screen_x or size_y > screen_y:
-            # No size to display the popup => abord
+            # No size to display the popup => abort
             return False
-        pos_x = int((screen_x - size_x) / 2)
-        pos_y = int((screen_y - size_y) / 2)
 
         # Create the popup
         popup = curses.newwin(size_y, size_x, pos_y, pos_x)
@@ -930,64 +946,93 @@ class _GlancesCurses:
             if m:
                 popup.addnstr(2 + y, 2, m, len(m))
 
+        # Popup is for 'info' ie display only
         if popup_type == 'info':
             # Display the popup
             popup.refresh()
             self.wait(duration * 1000)
             return True
 
+        # Popup accepts a input
         if popup_type == 'input':
             logger.info(popup_type)
             logger.info(is_password)
-            # Create a sub-window for the text field
-            sub_pop = popup.derwin(1, input_size, 2, 2 + len(m))
-            sub_pop.attron(self.colors_list['FILTER'])
-            # Init the field with the current value
-            if input_value is not None:
-                sub_pop.addnstr(0, 0, input_value, len(input_value))
-            # Display the popup
-            popup.refresh()
-            sub_pop.refresh()
-            # Create the textbox inside the sub-windows
-            self.set_cursor(2)
-            self.term_window.keypad(1)
-            if is_password:
-                textbox = getpass.getpass('')
-                self.set_cursor(0)
-                if textbox != '':
-                    return textbox
-                return None
+            return self._handle_input_popup(m, input_size, input_value, popup, is_password)
 
-            # No password
-            textbox = GlancesTextbox(sub_pop, insert_mode=True)
-            textbox.edit()
+        # Popup accepts a user input as Y or N for yes no
+        if popup_type == 'yesno':
+            return self._handle_yesno_popup(popup, sentence_list, m)
+        return None
+
+    def _handle_input_popup(self, m, input_size, input_value, popup, is_password):
+        # Create a single-line input sub-window positioned relative to the
+        # rendered message length (m) within the parent popup
+        sub_pop = popup.derwin(1, input_size, 2, 2 + len(m))
+        sub_pop.attron(self.colors_list['FILTER'])
+
+        # Pre-populate the field if an initial value is provided
+        if input_value is not None:
+            sub_pop.addnstr(0, 0, input_value, len(input_value))
+
+        # Render both the popup and input field before capturing input
+        popup.refresh()
+        sub_pop.refresh()
+
+        # Enable cursor visibility and keypad mode for user interaction
+        self.set_cursor(2)
+        self.term_window.keypad(1)
+
+        # Password input: bypass curses textbox and use standard terminal input
+        # (input is not displayed in the sub-window)
+        if is_password:
+            textbox = getpass.getpass('')
             self.set_cursor(0)
-            if textbox.gather() != '':
-                return textbox.gather()[:-1]
+            if textbox != '':
+                return textbox
             return None
 
-        if popup_type == 'yesno':
-            # Create a sub-window for the text field
-            sub_pop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)
-            sub_pop.attron(self.colors_list['FILTER'])
-            # Init the field with the current value
-            try:
-                sub_pop.addnstr(0, 0, '', 0)
-            except curses.error:
-                pass
-            # Display the popup
-            popup.refresh()
-            sub_pop.refresh()
-            # Create the textbox inside the sub-windows
-            self.set_cursor(2)
-            self.term_window.keypad(1)
-            textbox = GlancesTextboxYesNo(sub_pop, insert_mode=False)
-            textbox.edit()
-            self.set_cursor(0)
-            # self.term_window.keypad(0)
-            return textbox.gather()
+        # Standard text input using curses textbox within the sub-window
+        textbox = GlancesTextbox(sub_pop, insert_mode=True)
+        textbox.edit()
 
+        # Restore cursor state after input completes
+        self.set_cursor(0)
+
+        # Extract value; curses textbox appends a trailing newline, so strip it
+        if textbox.gather() != '':
+            return textbox.gather()[:-1]
         return None
+
+    def _handle_yesno_popup(self, popup, sentence_list, m):
+        # Create a 1x2 sub-window positioned after the last line of text;
+        # width/offset is based on the rendered message length (m)
+        sub_pop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)
+
+        # Apply input field styling (uses FILTER color scheme)
+        sub_pop.attron(self.colors_list['FILTER'])
+
+        # Initialize the field (defensive: curses may raise on small windows)
+        try:
+            sub_pop.addnstr(0, 0, '', 0)
+        except curses.error:
+            pass
+
+        # Ensure both parent popup and input field are rendered
+        popup.refresh()
+        sub_pop.refresh()
+
+        # Enable cursor + keypad for user input within the popup
+        self.set_cursor(2)
+        self.term_window.keypad(1)
+
+        # Create and run the Yes/No textbox (single-line input)
+        textbox = GlancesTextboxYesNo(sub_pop, insert_mode=False)
+        textbox.edit()
+
+        # Restore cursor state after input completes
+        self.set_cursor(0)
+        # Return the captured user input
+        return textbox.gather()
 
     def setup_upper_left_pos(self, plugin_stats):
         screen_y, screen_x = self.term_window.getmaxyx()
