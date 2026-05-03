@@ -431,18 +431,44 @@ def get_export(self) -> dict | list:
 
 ## 8. Security constraints (non-negotiable)
 
-All v4.x security fixes are reproduced in v5.0. v5 starts from the hardened baseline.
+All v4.x published security advisories are reproduced or resolved in v5.0. v5 starts from the hardened baseline. The table below lists every published GitHub Security advisory for the project and how v5 addresses each one.
 
-| CVE | Fix carried forward |
-|---|---|
-| CVE-2026-32596 | `WARNING` at startup when REST API runs unauthenticated. Default behaviour unchanged. |
-| CVE-2026-32608 | Shell-escape process names in `[action]` command templates before substitution. |
-| CVE-2026-32609 | Redact password hash, SSL key paths, SNMP community strings from unauthenticated API responses (`as_dict_secure()`). |
-| CVE-2026-32610 | No wildcard `Access-Control-Allow-Origin`. Allowed origins via `cors_origins` in `[outputs]`. `allow_credentials=False` is the FastAPI default. |
-| CVE-2026-32611 | Parameterized DDL in DuckDB export. Plugin/metric names sanitized, never string-interpolated. |
-| CVE-2026-32632 | Host validation against DNS rebinding. `webui_allowed_hosts` config key. Startup warning when unset in non-loopback mode. |
-| CVE-2026-32633 | `/api/serverslist` must not return credential-bearing `uri` fields. Strip `password` and `uri` before serialization. |
-| CVE-2026-32634 | Browser autodiscovery must not forward configured credentials to discovered servers. |
+**v5 status** uses three values:
+- `Carry forward` — same fix mechanism as v4, ported into the v5 module structure
+- `Resolved by architecture` — vulnerability does not exist in v5 because the affected component was removed (e.g. XML-RPC) or the affected feature was deliberately not carried over (e.g. backtick command substitution in config)
+- `New v5 mitigation` — additional v5-specific work required beyond what v4 shipped
+
+| CVE | Severity | Fix in v5 | v5 status |
+|---|---|---|---|
+| CVE-2026-30928 | high | Redact secrets from `/api/5/config` for unauthenticated callers via `GlancesConfigV5.as_dict_secure()` (Phase 0.2). Same mechanism as CVE-2026-32609. | Carry forward |
+| CVE-2026-30930 | high | Parameterized SQL in TimescaleDB export. Process names, mount points, interface names, container names — every string drawn from monitored data — must be parameterized, never f-string-interpolated. | Carry forward (Phase 3) |
+| CVE-2026-32596 | high | `WARNING` at startup when REST API runs unauthenticated. Default behaviour unchanged. | Carry forward (Phase 1) |
+| CVE-2026-32608 | high | Shell-escape process names in `[action]` command templates before Mustache substitution. Implemented in the concrete `shell` action under `glances/actions_v5/shell/`, not in `GlancesActionBase`. | Carry forward (Phase 1) |
+| CVE-2026-32609 | high | Redact password hash, SSL key paths, SNMP community strings from `/api/5/args` (and any other unauthenticated endpoint) via `as_dict_secure()`. | Carry forward (Phase 0.2 ✅) |
+| CVE-2026-32610 | high | No wildcard `Access-Control-Allow-Origin`. Allowed origins via `cors_origins` in `[outputs]`. `allow_credentials=False` is the FastAPI default. | Carry forward (Phase 1) |
+| CVE-2026-32611 | high | Parameterized DDL in DuckDB export. Plugin/metric names sanitized, never string-interpolated. | Carry forward (Phase 3) |
+| CVE-2026-32632 | medium | Host validation against DNS rebinding. `webui_allowed_hosts` config key. Startup warning when unset in non-loopback mode. | Carry forward (Phase 1) |
+| CVE-2026-32633 | critical | `/api/5/serverslist` must not return credential-bearing `uri` fields. Strip `password` and `uri` before serialization. | Carry forward (Phase 3) |
+| CVE-2026-32634 | high | Browser autodiscovery must not forward configured credentials to discovered servers. | Carry forward (Phase 3) |
+| CVE-2026-33533 | high | XML-RPC server is removed in v5 (§1.1). The vulnerable code path no longer exists. | Resolved by architecture |
+| CVE-2026-33641 | high | Backtick command substitution in configuration values is **not** ported to `GlancesConfigV5`. The `re_pattern = r'(\`.+?\`)'` regex and `system_exec()` call paths from v4 `glances/config.py` are deliberately absent. Documented as a breaking change in NEWS.rst at v5.0.0. | Resolved by architecture |
+| CVE-2026-34839 | high | REST API CORS hardening — same mechanism as CVE-2026-32610 applied to `/api/5/*`. `cors_origins` enforced; wildcard rejected when credentials are allowed. | Carry forward (Phase 1) |
+| CVE-2026-35587 | high | SSRF in IP plugin via `public_api`. v5 plugin migration must validate the URL scheme (allow `http`/`https` only), reject loopback / link-local / RFC1918 / cloud metadata IPs unless explicitly opted in via a new `public_api_allow_internal=true` config key, and **never** send `public_username`/`public_password` to a hostname not on an allowlist. | New v5 mitigation (Phase 2 — `ip` plugin migration) |
+| CVE-2026-35588 | medium | Parameterized CQL in Cassandra export. `keyspace`, `table`, `replication_factor` validated against an allowlist regex (`^[A-Za-z][A-Za-z0-9_]*$`) before being interpolated into DDL. Same family as CVE-2026-32611 / CVE-2026-30930. | Carry forward (Phase 3) |
+
+### Watching — unpublished advisories
+
+| GHSA | Severity | State | v5 plan |
+|---|---|---|---|
+| GHSA-mcm7-fmh3-v6v3 | medium | draft | Curses terminal escape injection + memory exhaustion via process names rendered in alerts. v5 alerts plugin (Phase 2) must sanitize control sequences (`re.sub(r'[\x00-\x1f\x7f]', '?', name)`) and cap rendered string size. Tracked separately until the advisory is published. |
+
+### Closed — fixed in v4, no v5 action required
+
+The following advisories were fixed in v4 before the v5 effort began. The fixes are present in the v4 codebase that `develop-v5` inherits via the weekly merge, and no additional v5-specific work is needed.
+
+- GHSA-93gr-c454-3xw7 — Passwords exposed in plain text
+- GHSA-w4m6-4mpc-gq25 — BasicAuth Bypass
+- GHSA-f533-jmqq-4www — Public IP visible on documentation screenshot
 
 ---
 
