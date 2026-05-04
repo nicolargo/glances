@@ -37,6 +37,7 @@ from abc import ABC, abstractmethod
 from typing import Any, ClassVar, Generic, TypeVar
 
 from glances.config_v5 import GlancesConfigV5
+from glances.plugins.plugin.thresholds_v5 import compute_level, read_thresholds
 from glances.stats_store_v5 import StatsStoreV5
 
 logger = logging.getLogger(__name__)
@@ -157,10 +158,57 @@ class GlancesPluginBase(Generic[T], ABC):
     def _derived_parameters(self) -> None:
         """Compute derived fields and `_levels`.
 
-        No-op default. The actual `_levels` computation is owned by
-        GlancesAlerts (Phase 1, architecture §3.3 / §3.4). Until then,
-        `_levels` is left empty.
+        Default implementation: walk `fields_description`, compute a level
+        for every scalar field flagged with `watched: True` against the
+        thresholds resolved from config (with `default_thresholds` from
+        the field schema as fallback). See architecture §3.3.
+
+        Each entry in `_levels` is a nested dict carrying both the level
+        and the `prominent` flag (architecture §3.3):
+
+            {"percent": {"level": "warning", "prominent": True}}
+
+        `prominent` defaults to `True` when the field is `watched` (a
+        watched field is meant to be visible by default) but the plugin
+        author can opt out per field by setting `prominent: False` in
+        `fields_description`. The flag drives the renderer rendering
+        mode (font-only vs. background-highlight) and is copied into
+        every alert event for downstream filtering (LLM diagnostic).
+
+        Plugins that need a derived value for the level computation
+        (e.g. `load` normalising `min1` by core count) override this.
+
+        The collection branch (level computation indexed by primary key)
+        lands in Phase 1.3 alongside the first collection plugin
+        (`network`). Until then, collection plugins keep `_levels = {}`.
         """
+        self._levels = {}
+
+        if self.IS_COLLECTION:
+            return  # Phase 1.3
+
+        if not isinstance(self._stats, dict):
+            return
+
+        for field_name, schema in self._fields.items():
+            if not schema.get("watched"):
+                continue
+            value = self._stats.get(field_name)
+            if value is None:
+                continue
+            thresholds = read_thresholds(
+                self.config,
+                self.plugin_name,
+                field_name,
+                defaults=schema.get("default_thresholds"),
+            )
+            if not thresholds:
+                continue
+            direction = schema.get("watch_direction", "high")
+            self._levels[field_name] = {
+                "level": compute_level(value, thresholds, direction),
+                "prominent": bool(schema.get("prominent", True)),
+            }
 
     def _remove_parameters(self) -> None:
         """Filter out fields not declared in `fields_description` and strip

@@ -114,9 +114,23 @@ stays in place (stale handling lands in Phase 3).
 | `unit` | str | `bytes`, `percent`, `bytespers`, `seconds`, `string`, … |
 | `label` | str | Compact label for TUI/WebUI (replaces v4 `short_name`) |
 | `history` | bool | Min/max/mean tracked when `True` (replaces v4 `mmm`) |
-| `thresholds` | dict | `{"careful": …, "warning": …, "critical": …}` (overridable via `glances.conf`) |
+| `watched` | bool | If `True`, this field gets a `_levels` entry computed each cycle. Default `False`. |
+| `watch_direction` | `"high"` / `"low"` | Threshold direction. `"high"` (default) alerts on `value >= threshold`; `"low"` alerts on `value <= threshold` (e.g. fs free). |
+| `prominent` | bool | When `True`, the field is rendered with **background highlight** (TUI/WebUI) and every level transition is tagged `prominent: True` in the alert event feed. Replaces v4 `_log` flag. Default `True` for watched fields. |
+| `default_thresholds` | dict | `{"careful": …, "warning": …, "critical": …}` — plugin-author defaults. Overridable per-level via `glances.conf [<plugin>] careful=N` (or `<field>_careful=N` for multi-watched plugins). |
 | `primary_key` | bool | Marks the join key for `_levels` indexing in collection plugins |
 | `exportable` | bool | Defaults to `True`. Set `False` for internal fields. |
+
+`_levels` payload shape (architecture §3.3): each entry is a nested dict
+carrying both the level and the prominence flag.
+
+```python
+"_levels": {"percent": {"level": "warning", "prominent": True}}
+```
+
+Consumers (TUI, WebUI, REST clients, `GlancesAlerts`) read both fields
+from the same payload — no extra round-trip to `/api/5/<plugin>/info`
+needed for alert rendering.
 
 The base class injects `time_since_update` (with `exportable: False`) into
 every plugin's `_fields` automatically — do not redeclare it.
@@ -139,9 +153,9 @@ not the dict envelope.
 
 ## What's deferred (out of scope for new plugins right now)
 
-- **Threshold loading from `glances.conf`** — Phase 1 (alongside `GlancesAlerts`)
-- **Effective `_levels` computation** — Phase 1 (`_derived_parameters` no-op default)
-- **Counter-to-rate conversion** in `_transform_gauge` — Phase 1 (first gauge plugin)
+- **Counter-to-rate conversion** in `_transform_gauge` — Phase 1.2 (`cpu` plugin, first gauge use)
+- **Collection `_levels` indexing by primary key** — Phase 1.3 (`network` plugin)
+- **`GlancesAlerts` ingestion of `_levels`** (stateful tracking, history feed) — Phase 1.4
 - **Min/max/mean history** — Phase 2
 - **Stale data handling** (`"stale": true`) — Phase 3 (remote client)
 - **`msg_curse()` / `update_views()`** — rejected (architecture §3.6)

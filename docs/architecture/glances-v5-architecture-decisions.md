@@ -118,12 +118,15 @@ The `_transform()` method is itself a pipeline of four ordered steps, all implem
 | `unit` | `str` | Semantic unit: `bytes`, `percent`, `bytespers`, `string`, `seconds`, … Drives numeric formatting in all renderers. |
 | `label` | `str` | Short display label, renderer-neutral. Replaces v4 `short_name`. Single source of truth for compact labels across TUI and WebUI. |
 | `history` | `bool` | Whether min/max/mean statistics are computed for this field. Replaces v4 `mmm`. |
-| `thresholds` | `dict` | Default alert thresholds (`careful`, `warning`, `critical`). Replaces v4 flat threshold keys. Overridable via `glances.conf`. |
+| `watched` | `bool` | If `True`, this field gets a `_levels` entry computed each cycle. Defaults to `False`. |
+| `watch_direction` | `"high"` / `"low"` | Threshold direction. `"high"` = alert when `value >= threshold` (e.g. mem percent used). `"low"` = alert when `value <= threshold` (e.g. fs free percent). Defaults to `"high"`. |
+| `prominent` | `bool` | When `True`, the field is rendered with **background highlight** in the TUI/WebUI and every level transition is tagged `prominent: True` in the alert event feed. When `False`, only the font color changes and the event is tagged `prominent: False`. Replaces v4 `_log` flag. Defaults to `True` for watched fields (a watched field is meant to be visible by default). |
+| `default_thresholds` | `dict` | Default alert thresholds (`careful`, `warning`, `critical`). Replaces v4 flat threshold keys. Overridable per-level via `glances.conf [<plugin>] careful=N` or `<field>_careful=N` for multi-watched plugins. |
 | `primary_key` | `bool` | Marks the join key for `_levels` indexing in list plugins. |
 | `exportable` | `bool` | Whether the field is included in `get_export()` output. Defaults to `True`. Set to `False` for internal fields (`time_since_update`, etc.). |
 
 - `min_symbol` (v4) is **removed**. Display floor is derived from `unit` by the renderer. Plugin-specific behaviour belongs in `msg_curse()`.
-- User overrides from `glances.conf` are injected into `self._fields["thresholds"]` at init via `_load_fields_description()`.
+- User overrides from `glances.conf` are layered over `default_thresholds` per level (per-key merge — overriding only `critical` keeps `careful` and `warning` at their declared defaults).
 - `_transform()` filters output to declared fields only. Undeclared psutil fields do not reach the StatsStore or the API.
 - Exposed via `GET /api/5/<plugin>/info`.
 
@@ -135,7 +138,10 @@ fields_description = {
         "unit": "percent",
         "label": "MEM",
         "history": True,
-        "thresholds": {
+        "watched": True,
+        "watch_direction": "high",
+        "prominent": True,
+        "default_thresholds": {
             "careful": 50.0,
             "warning": 70.0,
             "critical": 90.0,
@@ -156,9 +162,20 @@ fields_description = {
 
 ### 3.3 Alert levels — _levels computed in _transform()
 
-`_transform()` computes `_levels` as a **pure functional operation** (`f(value, thresholds) → level`), stored at root level in the StatsStore, cleanly separated from metric values.
+`_transform()` computes `_levels` as a **pure functional operation** (`f(value, thresholds, direction) → level`), stored at root level in the StatsStore, cleanly separated from metric values.
 
 Levels: `"ok"` / `"careful"` / `"warning"` / `"critical"`.
+
+Each entry in `_levels` is a **nested dict** carrying both the level and the `prominent` flag:
+
+```python
+{"level": "warning", "prominent": True}
+```
+
+The nested shape — chosen over a flat string for v5 — keeps every consumer self-sufficient with a single payload (one REST request, one dict access). `prominent` is sourced from `fields_description.<field>.prominent` (see §3.2) and replaces the v4 `_log` flag. It drives:
+
+- **rendering** — TUI/WebUI surface `prominent: True` fields with background highlight; `prominent: False` fields use font color only.
+- **alert-event tagging** — `GlancesAlerts` (§3.4) ingests **every** level transition, prominent or not, and copies the flag into each event so downstream consumers (LLM diagnostic, alert history view, exporters) can filter by prominence. This is a deliberate evolution from v4, which only fed `_log=True` fields into the alert system.
 
 **Scalar plugin (dict):**
 ```python
@@ -168,8 +185,8 @@ Levels: `"ok"` / `"careful"` / `"warning"` / `"critical"`.
     "total": 16000000000,
     # ...
     "_levels": {
-        "percent": "warning",
-        "swap_percent": "ok",
+        "percent":      {"level": "warning", "prominent": True},
+        "swap_percent": {"level": "ok",      "prominent": False},
     }
 }
 ```
@@ -183,8 +200,14 @@ Levels: `"ok"` / `"careful"` / `"warning"` / `"critical"`.
         {"interface_name": "lo",   "rx": 0,    "tx": 0},
     ],
     "_levels": {                        # indexed by primary key, not inline
-        "eth0": {"rx": "warning", "tx": "ok"},
-        "lo":   {"rx": "ok",      "tx": "ok"},
+        "eth0": {
+            "rx": {"level": "warning", "prominent": True},
+            "tx": {"level": "ok",      "prominent": True},
+        },
+        "lo":   {
+            "rx": {"level": "ok",      "prominent": True},
+            "tx": {"level": "ok",      "prominent": True},
+        },
     }
 }
 ```
@@ -196,8 +219,22 @@ Primary key is declared in `fields_description` with `"primary_key": True` on th
 - Reads `_levels` from the StatsStore. **Never recomputes thresholds.**
 - Manages stateful logic: minimum duration before firing, hysteresis to prevent flapping.
 - Maintains an alert history exposed via `GET /api/5/alert`. Datamodel may differ from v4 (see §9 constraints).
+- **Ingests every level transition** — including transitions to `ok` (resolution events) and including `prominent: False` fields. The `prominent` flag is copied into each event so downstream consumers can filter (e.g. v4-equivalent view = `prominent: True` only; LLM diagnostic = full feed). This is a deliberate evolution from v4, which only fed `_log=True` fields and never recorded resolution events.
 - Export triggers from alert actions are **not** in scope (not a v4 feature).
 - **Alert scope in client/server mode (Option C):** each instance — server and client — runs its own `GlancesAlerts` stack independently. The server evaluates thresholds against locally collected data and triggers its own configured actions. The client does the same locally. The two configurations are fully independent, covering both headless server deployments and client-specific rules.
+
+**Alert event shape** (Phase 1.4):
+```python
+{
+    "ts":             "2026-05-04T12:34:56Z",   # ISO 8601, UTC
+    "plugin":         "mem",
+    "field":          "percent",
+    "level":          "warning",                # ok | careful | warning | critical
+    "previous_level": "ok",                     # transition source
+    "value":          75.0,
+    "prominent":      True,                     # copied from fields_description
+}
+```
 
 #### Action system architecture (issues #2328, #2600)
 

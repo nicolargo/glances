@@ -284,11 +284,70 @@ async def test_time_since_update_increases_on_second_cycle(store, config):
 async def test_derived_parameters_can_populate_levels(store, config):
     class WithLevels(FakeScalarPlugin):
         def _derived_parameters(self) -> None:
-            self._levels = {"percent": "warning"}
+            # Standard nested shape: {field: {"level": ..., "prominent": bool}}
+            self._levels = {"percent": {"level": "warning", "prominent": True}}
 
     plugin = WithLevels(store, config)
     await plugin.update()
-    assert store.get("fakescalar")["_levels"] == {"percent": "warning"}
+    assert store.get("fakescalar")["_levels"] == {"percent": {"level": "warning", "prominent": True}}
+
+
+async def test_default_levels_pipeline_writes_nested_entry(store, config):
+    """A `watched` field with default_thresholds gets a {level, prominent} entry."""
+
+    class Watched(FakeScalarPlugin):
+        fields_description = {
+            "percent": {
+                "description": "p",
+                "unit": "percent",
+                "watched": True,
+                "watch_direction": "high",
+                "prominent": True,
+                "default_thresholds": {"careful": 50.0, "warning": 70.0, "critical": 90.0},
+            },
+        }
+
+    plugin = Watched(store, config, payload={"percent": 75.0})
+    await plugin.update()
+    assert store.get("fakescalar")["_levels"] == {"percent": {"level": "warning", "prominent": True}}
+
+
+async def test_prominent_defaults_to_true_when_absent_from_schema(store, config):
+    """`prominent` is opt-in to False — absent means True for watched fields."""
+
+    class Watched(FakeScalarPlugin):
+        fields_description = {
+            "percent": {
+                "description": "p",
+                "unit": "percent",
+                "watched": True,
+                # `prominent` not declared — must default to True.
+                "default_thresholds": {"warning": 70.0},
+            },
+        }
+
+    plugin = Watched(store, config, payload={"percent": 75.0})
+    await plugin.update()
+    assert store.get("fakescalar")["_levels"]["percent"]["prominent"] is True
+
+
+async def test_prominent_can_be_opted_out_per_field(store, config):
+    """A plugin author can demote a watched field with `prominent: False`."""
+
+    class Watched(FakeScalarPlugin):
+        fields_description = {
+            "percent": {
+                "description": "p",
+                "unit": "percent",
+                "watched": True,
+                "prominent": False,
+                "default_thresholds": {"warning": 70.0},
+            },
+        }
+
+    plugin = Watched(store, config, payload={"percent": 75.0})
+    await plugin.update()
+    assert store.get("fakescalar")["_levels"]["percent"] == {"level": "warning", "prominent": False}
 
 
 async def test_pipeline_runs_grab_before_transform(store, config):
