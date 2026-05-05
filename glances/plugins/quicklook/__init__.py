@@ -230,20 +230,22 @@ class QuicklookPlugin(GlancesPluginModel):
 
         # Loop over CPU, MEM and LOAD
         # Define the data: Bar (default behavior) or Sparkline
-        data = {}
-        for key in self.stats_list:
-            bar_size = max(len(msg_name) + len(msg_freq) - 7, max_width)
-            if self.args.sparkline and self.history_enable() and not self.args.client:
-                data[key] = Sparkline(bar_size)
-            else:
-                # Fallback to bar if Sparkline module is not installed
-                data[key] = Bar(bar_size, bar_char=self.get_conf_value('bar_char', default=['|'])[0])
+        # Hoist loop-invariant computations out of the per-key loop.
+        bar_size = max(len(msg_name) + len(msg_freq) - 7, max_width)
+        use_sparkline = (
+            self.args.sparkline and self.history_enable() and not self.args.client and Sparkline(bar_size).available
+        )
+        if use_sparkline:
+            data = {key: Sparkline(bar_size) for key in self.stats_list}
+        else:
+            bar_char = self.get_conf_value('bar_char', default=['|'])[0]
+            data = {key: Bar(bar_size, bar_char=bar_char) for key in self.stats_list}
 
         for key in self.stats_list:
             if key == 'cpu' and args.percpu:
                 ret.extend(self._msg_per_cpu(data, key, max_width))
             else:
-                if type(data[key]).__name__ == 'Sparkline':
+                if isinstance(data[key], Sparkline):
                     # Sparkline display an history
                     data[key].percents = [i[1] for i in self.get_raw_history(item=key, nb=data[key].size)]
                     # A simple padding in order to align metrics to the right
