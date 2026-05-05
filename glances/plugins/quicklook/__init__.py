@@ -10,6 +10,7 @@
 
 import psutil
 
+import glances.gpu_percent as gpu_stats
 from glances.cpu_percent import cpu_percent
 from glances.logger import logger
 from glances.outputs.glances_bars import Bar
@@ -61,6 +62,14 @@ fields_description = {
         'description': 'CPU max frequency',
         'unit': 'hertz',
     },
+    'gpu_mem': {
+        'description': 'Average GPU Memory consumption',
+        'unit': 'percent',
+    },
+    'gpu_proc': {
+        'description': 'Average GPU Processor consumption',
+        'unit': 'percent',
+    },
 }
 
 # Define the history items list
@@ -80,7 +89,7 @@ class QuicklookPlugin(GlancesPluginModel):
     'stats' is a dictionary.
     """
 
-    AVAILABLE_STATS_LIST = ['cpu', 'mem', 'swap', 'load']
+    AVAILABLE_STATS_LIST = ['cpu', 'mem', 'swap', 'load', 'gpu_mem', 'gpu_proc']
     DEFAULT_STATS_LIST = ['cpu', 'mem', 'load']
 
     def __init__(self, args=None, config=None):
@@ -103,6 +112,10 @@ class QuicklookPlugin(GlancesPluginModel):
         if not set(self.stats_list).issubset(self.AVAILABLE_STATS_LIST):
             logger.warning(f'Quicklook plugin: Invalid stats list: {self.stats_list}')
             self.stats_list = self.AVAILABLE_STATS_LIST
+        if "gpu_mem" in self.stats_list:
+            gpu_stats.get_gpu_mem = True
+        if "gpu_proc" in self.stats_list:
+            gpu_stats.get_gpu_proc = True
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
@@ -153,6 +166,9 @@ class QuicklookPlugin(GlancesPluginModel):
             except (TypeError, IndexError):
                 stats['load'] = None
 
+            stats['gpu_mem'] = gpu_stats.gpu_mem
+            stats['gpu_proc'] = gpu_stats.gpu_proc
+
         elif self.input_method == 'snmp':
             # Not available
             pass
@@ -167,7 +183,7 @@ class QuicklookPlugin(GlancesPluginModel):
         # Call the father's method
         super().update_views()
 
-        # Alert for CPU, MEM and SWAP
+        # Alert for CPU, MEM and SWAP + GPU
         for key in self.stats_list:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
