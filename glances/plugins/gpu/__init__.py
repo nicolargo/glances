@@ -21,6 +21,7 @@ Quick test:
 - In a terminal: vblank_mode=0 glxgears
 """
 
+import glances.gpu_percent as gpu_avg_stats
 from glances.globals import to_fahrenheit
 from glances.logger import logger
 from glances.plugins.gpu.cards.amd import AmdGPU
@@ -193,6 +194,17 @@ class GpuPlugin(GlancesPluginModel):
         #         "fan_speed": 75,
         #     },
         # ]
+        if gpu_avg_stats.get_gpu_mem:
+            avg_mem = self._get_mean("mem")
+            if avg_mem is None:
+                avg_mem = 0
+            gpu_avg_stats.gpu_mem = avg_mem
+
+        if gpu_avg_stats.get_gpu_proc:
+            avg_proc = self._get_mean("proc")
+            if avg_proc is None:
+                avg_proc = 0
+            gpu_avg_stats.gpu_proc = avg_proc
 
         # Update the stats
         self.stats = stats
