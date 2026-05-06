@@ -725,6 +725,24 @@ class _GlancesCurses:
             self.new_line()
             self.display_plugin(stat_display["cloud"])
 
+    def _get_plugin_width(self, stat_display):
+        plugin_widths = {}
+        for p in self._top:
+            plugin_widths[p] = (
+                self.get_stats_display_width(stat_display.get(p, 0)) if hasattr(self.args, 'disable_' + p) else 0
+            )
+        return plugin_widths
+
+    def _get_stats_summary(self, stat_display, plugin_widths):
+        # Width of all plugins
+        stats_width = sum(plugin_widths.values())
+
+        # Number of plugin but quicklook
+        stats_number = sum(
+            [int(stat_display[p]['msgdict'] != []) for p in self._top if not getattr(self.args, 'disable_' + p)]
+        )
+        return stats_width, stats_number
+
     def __display_top(self, stat_display, stats):
         """Display the second line in the Curses interface.
 
@@ -736,20 +754,19 @@ class _GlancesCurses:
         # Init quicklook
         stat_display['quicklook'] = {'msgdict': []}
 
-        # Dict for plugins width
-        plugin_widths = {}
-        for p in self._top:
-            plugin_widths[p] = (
-                self.get_stats_display_width(stat_display.get(p, 0)) if hasattr(self.args, 'disable_' + p) else 0
-            )
+        # Get Dict for plugins width
+        plugin_widths = self._get_plugin_width(stat_display)
+
+        # Get width of all plugins and number of plugin but quicklook
+        stats_width, stats_number = self._get_stats_summary(stat_display, plugin_widths)
 
         # Width of all plugins
-        stats_width = sum(plugin_widths.values())
+        #        stats_width = sum(plugin_widths.values())
 
         # Number of plugin but quicklook
-        stats_number = sum(
-            [int(stat_display[p]['msgdict'] != []) for p in self._top if not getattr(self.args, 'disable_' + p)]
-        )
+        # stats_number = sum(
+        #     [int(stat_display[p]['msgdict'] != []) for p in self._top if not getattr(self.args, 'disable_' + p)]
+        # )
 
         if not self.args.disable_quicklook:
             # Quick look is in the place !
