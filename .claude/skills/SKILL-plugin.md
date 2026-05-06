@@ -118,6 +118,8 @@ stays in place (stale handling lands in Phase 3).
 | `watch_direction` | `"high"` / `"low"` | Threshold direction. `"high"` (default) alerts on `value >= threshold`; `"low"` alerts on `value <= threshold` (e.g. fs free). |
 | `prominent` | bool | When `True`, the field is rendered with **background highlight** (TUI/WebUI) and every level transition is tagged `prominent: True` in the alert event feed. Replaces v4 `_log` flag. Default `True` for watched fields. |
 | `default_thresholds` | dict | `{"careful": …, "warning": …, "critical": …}` — plugin-author defaults. Overridable per-level via `glances.conf [<plugin>] careful=N` (or `<field>_careful=N` for multi-watched plugins). |
+| `normalize_by` | str | Optional. Name of another field whose value divides this field before threshold comparison: `level = compute_level(value / stats[normalize_by], …)`. Used for per-core normalisation (`load.min15` ÷ `cpucore`, `cpu.ctx_switches` ÷ `cpucore`). Falls back to `1` when the divisor is missing or zero. |
+| `rate` | bool | When `True`, the field is a cumulative counter; the base class converts it to a per-second rate via `_transform_gauge` (`(current - previous) / time_since_update`). On the first cycle the field is **absent** from the payload (no previous sample). Counter wrap or reboot clamps to `0.0`. |
 | `primary_key` | bool | Marks the join key for `_levels` indexing in collection plugins |
 | `exportable` | bool | Defaults to `True`. Set `False` for internal fields. |
 
@@ -151,14 +153,55 @@ the API.
 collection plugins it returns a `list[dict]` (the unwrapped `data` array),
 not the dict envelope.
 
+## Counter-to-rate fields (`rate: True`)
+
+Plugins consuming psutil cumulative counters (cpu ctx_switches, network
+bytes_recv, …) declare those fields with `rate: True`. The base class's
+`_transform_gauge` walks every such scalar field and replaces the
+cumulative value with `(current - previous) / time_since_update`.
+
+```python
+"ctx_switches": {
+    "description": "Number of context switches per second.",
+    "unit": "number",
+    "rate": True,
+    "watched": True,
+    "prominent": True,
+    "default_thresholds": {"careful": 50.0, "warning": 70.0, "critical": 90.0},
+    "normalize_by": "cpucore",          # threshold compared against rate / cpucore
+}
+```
+
+Behaviour:
+
+- **First cycle** — the rate field is **absent** from the payload (no
+  previous sample to diff against). Consumers must accept absence.
+- **Counter wrap or reboot** — clamped to `0.0`, never negative.
+- **Pipeline order** — `_transform_gauge` runs before `_derived_parameters`,
+  so `normalize_by` and `_levels` see the per-second rate, not the raw
+  counter.
+- **Collection plugins** — per-item rates land in Phase 1.3 alongside
+  the `network` plugin.
+
+## Sharing psutil calls between sibling plugins (samplers)
+
+When two plugins consume the same psutil source — `cpu` ↔ `percpu`,
+or future `network` aggregate ↔ per-interface — pull the psutil call
+into a shared sampler module so the cost is paid once per refresh
+window, not twice. See architecture §3.7. First instance:
+`glances/cpu_sampler_v5.py` exposes a module-level `sampler` singleton
+that both `cpu/model_v5.py` and `percpu/model_v5.py` import. TTL-based
+caching (default `1.0 s`) plus an `asyncio.Lock` for serialised access.
+
 ## What's deferred (out of scope for new plugins right now)
 
-- **Counter-to-rate conversion** in `_transform_gauge` — Phase 1.2 (`cpu` plugin, first gauge use)
 - **Collection `_levels` indexing by primary key** — Phase 1.3 (`network` plugin)
+- **Collection rate fields** (per-item `_transform_gauge`) — Phase 1.3
 - **`GlancesAlerts` ingestion of `_levels`** (stateful tracking, history feed) — Phase 1.4
 - **Min/max/mean history** — Phase 2
 - **Stale data handling** (`"stale": true`) — Phase 3 (remote client)
 - **`msg_curse()` / `update_views()`** — rejected (architecture §3.6)
+- **SNMP** — not ported to v5 (architecture §10)
 
 ## Testing a plugin
 

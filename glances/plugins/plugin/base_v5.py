@@ -85,6 +85,10 @@ class GlancesPluginBase(Generic[T], ABC):
 
         self._stats: T = self._empty_stats()
         self._stats_previous: T | None = None
+        # Snapshot of the raw psutil values from the previous successful
+        # cycle, kept across `_transform()` runs so `_transform_gauge` can
+        # diff cumulative counters. None until the second cycle.
+        self._raw_previous: dict[str, Any] | None = None
         self._metadata: dict[str, Any] = {}
         self._levels: dict[str, Any] = {}
         self._last_update_ts: float | None = None
@@ -106,9 +110,16 @@ class GlancesPluginBase(Generic[T], ABC):
             self._stats_previous = self._stats
             self._stats = await self._grab_stats()
             self._validate_stats_type()
+            # Snapshot the raw cumulative values now, before _transform mutates
+            # them. The next cycle's _transform_gauge will read this snapshot
+            # via self._raw_previous to compute counter rates.
+            new_raw = self._snapshot_raw()
             self._add_metadata()
             self._transform()
             await self.store.set(self.plugin_name, self._build_store_payload())
+            # Promote the snapshot only after a successful cycle so a failed
+            # grab can't poison the next rate computation.
+            self._raw_previous = new_raw
         except Exception as e:
             logger.warning("Plugin %s update failed: %s", self.plugin_name, e)
 
@@ -143,14 +154,59 @@ class GlancesPluginBase(Generic[T], ABC):
         self._derived_parameters()
         self._remove_parameters()
 
+    def _snapshot_raw(self) -> dict[str, Any] | None:
+        """Snapshot the raw scalar payload before `_transform` mutates it.
+
+        Returns None for collection plugins — collection rate computation
+        (per-item, indexed by primary key) lands in Phase 1.3.
+        """
+        if self.IS_COLLECTION:
+            return None
+        if not isinstance(self._stats, dict):
+            return None
+        return dict(self._stats)
+
     # Override hooks ---------------------------------------------------------
 
     def _transform_gauge(self) -> None:
-        """Turn cumulative counters into rates using `_stats_previous`.
+        """Convert cumulative counter fields to per-second rates.
 
-        No-op default. Override only for non-standard rate computation.
-        Concrete rate logic lands in Phase 1 with the first gauge plugin.
+        Walks every scalar field declared with `rate: True` in the schema
+        and replaces the cumulative counter with `(current - previous) / elapsed`.
+
+        Behaviour:
+        - First cycle (no `_raw_previous`) or `time_since_update == 0`: the
+          rate field is **removed** from the payload — consumers see it as
+          absent rather than a misleading 0.0 or a raw counter value.
+        - Counter wrap or reboot (delta < 0): clamped to 0.0.
+        - Collection plugins are no-op here; per-item rate computation
+          (indexed by primary key) lands in Phase 1.3 alongside the
+          `network` plugin.
+
+        Override only for non-standard rate computation.
         """
+        if self.IS_COLLECTION:
+            return
+        if not isinstance(self._stats, dict):
+            return
+        elapsed = self._metadata.get("time_since_update", 0.0)
+        prev_raw = self._raw_previous if isinstance(self._raw_previous, dict) else {}
+        for field_name, schema in self._fields.items():
+            if not schema.get("rate"):
+                continue
+            if field_name not in self._stats:
+                continue
+            if elapsed <= 0 or field_name not in prev_raw:
+                # First cycle (or no previous sample for this field) — strip
+                # the field; consumers must accept its absence.
+                del self._stats[field_name]
+                continue
+            try:
+                delta = float(self._stats[field_name]) - float(prev_raw[field_name])
+            except (TypeError, ValueError):
+                del self._stats[field_name]
+                continue
+            self._stats[field_name] = max(0.0, delta / float(elapsed))
 
     def _expand_parameters(self) -> None:
         """Expand compound psutil fields (e.g. cpu_times → user/system/iowait)."""
@@ -175,8 +231,12 @@ class GlancesPluginBase(Generic[T], ABC):
         mode (font-only vs. background-highlight) and is copied into
         every alert event for downstream filtering (LLM diagnostic).
 
-        Plugins that need a derived value for the level computation
-        (e.g. `load` normalising `min1` by core count) override this.
+        ``normalize_by``: when the schema declares ``"normalize_by":
+        "<other_field>"``, the level is computed against
+        ``value / stats[<other_field>]``. Used for per-core normalisation
+        (e.g. ``ctx_switches`` and ``load`` averaged across CPU cores).
+        The divisor falls back to ``1`` if the referenced field is
+        missing or zero.
 
         The collection branch (level computation indexed by primary key)
         lands in Phase 1.3 alongside the first collection plugin
@@ -196,6 +256,13 @@ class GlancesPluginBase(Generic[T], ABC):
             value = self._stats.get(field_name)
             if value is None:
                 continue
+            normalize_field = schema.get("normalize_by")
+            if normalize_field:
+                divisor = self._stats.get(normalize_field, 1) or 1
+                try:
+                    value = float(value) / float(divisor)
+                except (TypeError, ValueError, ZeroDivisionError):
+                    continue
             thresholds = read_thresholds(
                 self.config,
                 self.plugin_name,

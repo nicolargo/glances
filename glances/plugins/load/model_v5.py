@@ -23,9 +23,9 @@ In v5, both `min5` and `min15` transitions feed `GlancesAlerts.history`
 the visual treatment and, downstream, lets consumers (LLM diagnostic
 plugin, etc.) filter by severity.
 
-Thresholds are interpreted **per core** (v4-compatible). With
-`careful=0.7, warning=1.0, critical=5.0` and 4 cores, alerts fire on
-`min<N>` at `min<N>=2.8 / 4.0 / 20.0` respectively.
+Thresholds are interpreted **per core** via `normalize_by: "cpucore"`
+(v4-compatible). With `careful=0.7, warning=1.0, critical=5.0` and 4
+cores, alerts fire on `min<N>` at `min<N>=2.8 / 4.0 / 20.0` respectively.
 """
 
 from __future__ import annotations
@@ -36,7 +36,6 @@ from typing import Any, ClassVar
 import psutil
 
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
-from glances.plugins.plugin.thresholds_v5 import compute_level, read_thresholds
 
 
 def _logical_cores() -> int:
@@ -72,6 +71,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "watch_direction": "high",
             "prominent": False,
             "default_thresholds": _DEFAULT_THRESHOLDS,
+            "normalize_by": "cpucore",
         },
         "min15": {
             "description": (
@@ -82,6 +82,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "watch_direction": "high",
             "prominent": True,
             "default_thresholds": _DEFAULT_THRESHOLDS,
+            "normalize_by": "cpucore",
         },
         "cpucore": {
             "description": "Total number of logical CPU cores.",
@@ -100,36 +101,3 @@ class PluginModel(GlancesPluginBase[dict]):
             "min15": float(avg[2]),
             "cpucore": _logical_cores(),
         }
-
-    def _derived_parameters(self) -> None:
-        """Override: compute level against `<field> / cpucore` for every watched field.
-
-        Walks `min5` and `min15` (the watched fields), normalises the raw
-        value by the logical core count, and writes the nested
-        `{level, prominent}` entry into `_levels`.
-        """
-        self._levels = {}
-        if not isinstance(self._stats, dict):
-            return
-
-        cpucore = self._stats.get("cpucore", 1) or 1
-
-        for field_name, schema in self._fields.items():
-            if not schema.get("watched"):
-                continue
-            if field_name not in self._stats:
-                continue
-            normalized = float(self._stats[field_name]) / float(cpucore)
-            thresholds = read_thresholds(
-                self.config,
-                self.plugin_name,
-                field_name,
-                defaults=schema.get("default_thresholds"),
-            )
-            if not thresholds:
-                continue
-            direction = schema.get("watch_direction", "high")
-            self._levels[field_name] = {
-                "level": compute_level(normalized, thresholds, direction),
-                "prominent": bool(schema.get("prominent", True)),
-            }

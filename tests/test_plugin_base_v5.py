@@ -373,6 +373,161 @@ async def test_pipeline_runs_grab_before_transform(store, config):
     assert order == ["grab", "gauge", "expand", "derived"]
 
 
+# ---------------------------------------------------------- normalize_by
+
+
+async def test_normalize_by_divides_value_by_referenced_field(store, config):
+    """`normalize_by: cpucore` divides the value before threshold check."""
+
+    class Normalised(FakeScalarPlugin):
+        fields_description = {
+            "load": {
+                "description": "load",
+                "unit": "float",
+                "watched": True,
+                "default_thresholds": {"warning": 1.0},
+                "normalize_by": "cpucore",
+            },
+            "cpucore": {"description": "cpu cores", "unit": "number"},
+        }
+
+    # 4.0 / 4 = 1.0 → warning
+    plugin = Normalised(store, config, payload={"load": 4.0, "cpucore": 4})
+    await plugin.update()
+    assert store.get("fakescalar")["_levels"]["load"]["level"] == "warning"
+
+    # 0.4 / 4 = 0.1 → ok (below 1.0)
+    plugin2 = Normalised(store, config, payload={"load": 0.4, "cpucore": 4})
+    await plugin2.update()
+    assert store.get("fakescalar")["_levels"]["load"]["level"] == "ok"
+
+
+async def test_normalize_by_falls_back_to_one_when_referenced_field_missing(store, config):
+    """A missing or zero divisor falls back to 1 (defensive — never divides by 0)."""
+
+    class Normalised(FakeScalarPlugin):
+        fields_description = {
+            "load": {
+                "description": "load",
+                "unit": "float",
+                "watched": True,
+                "default_thresholds": {"warning": 1.0},
+                "normalize_by": "cpucore",
+            },
+        }
+
+    # No `cpucore` in payload — divisor falls back to 1, value 1.5 / 1 → warning.
+    plugin = Normalised(store, config, payload={"load": 1.5})
+    await plugin.update()
+    assert store.get("fakescalar")["_levels"]["load"]["level"] == "warning"
+
+
+# ---------------------------------------------------------- _transform_gauge (rate)
+
+
+async def test_rate_field_absent_on_first_cycle(store, config):
+    """First cycle has no _raw_previous — rate fields are stripped."""
+
+    class Counter(FakeScalarPlugin):
+        fields_description = {
+            "ctx_switches": {"description": "ctx", "unit": "number", "rate": True},
+        }
+
+    plugin = Counter(store, config, payload={"ctx_switches": 10_000})
+    await plugin.update()
+    payload = store.get("fakescalar")
+    assert "ctx_switches" not in payload  # absent on first cycle
+
+
+async def test_rate_field_computed_on_second_cycle(store, config, monkeypatch):
+    """Second cycle: rate = (curr - prev) / elapsed."""
+
+    class Counter(FakeScalarPlugin):
+        fields_description = {
+            "ctx_switches": {"description": "ctx", "unit": "number", "rate": True},
+        }
+
+    plugin = Counter(store, config, payload={"ctx_switches": 10_000})
+
+    # Force time_since_update == 2.0 between the two cycles by patching
+    # the monotonic clock observed by `_add_metadata`.
+    fake_now = [100.0]
+
+    def fake_monotonic() -> float:
+        return fake_now[0]
+
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", fake_monotonic)
+
+    await plugin.update()  # first cycle, ctx_switches stripped, _raw_previous = {ctx_switches: 10_000}
+
+    fake_now[0] = 102.0  # +2 s
+    plugin._payload = {"ctx_switches": 10_500}
+    await plugin.update()
+
+    payload = store.get("fakescalar")
+    # delta = 500 over 2 s = 250 events/s
+    assert payload["ctx_switches"] == 250.0
+
+
+async def test_rate_field_clamps_negative_delta_to_zero(store, config, monkeypatch):
+    """Counter wrap or reboot (delta < 0) → rate = 0.0, never negative."""
+
+    class Counter(FakeScalarPlugin):
+        fields_description = {
+            "ctx_switches": {"description": "ctx", "unit": "number", "rate": True},
+        }
+
+    plugin = Counter(store, config, payload={"ctx_switches": 10_000})
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    await plugin.update()
+    fake_now[0] = 102.0
+    plugin._payload = {"ctx_switches": 5_000}  # counter wrap
+    await plugin.update()
+
+    assert store.get("fakescalar")["ctx_switches"] == 0.0
+
+
+async def test_rate_field_with_normalize_by_uses_rate_then_normalises(store, config, monkeypatch):
+    """Pipeline order: gauge converts to rate, then derived normalises rate / cpucore."""
+
+    class Counter(FakeScalarPlugin):
+        fields_description = {
+            "ctx_switches": {
+                "description": "ctx",
+                "unit": "number",
+                "rate": True,
+                "watched": True,
+                "default_thresholds": {"warning": 70.0},
+                "normalize_by": "cpucore",
+            },
+            "cpucore": {"description": "cpu cores", "unit": "number"},
+        }
+
+    plugin = Counter(store, config, payload={"ctx_switches": 0, "cpucore": 4})
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    await plugin.update()
+    fake_now[0] = 101.0  # +1 s
+    plugin._payload = {"ctx_switches": 300, "cpucore": 4}
+    await plugin.update()
+
+    # rate = 300/s ; normalised = 300 / 4 = 75 ≥ 70 → warning
+    payload = store.get("fakescalar")
+    assert payload["ctx_switches"] == 300.0
+    assert payload["_levels"]["ctx_switches"]["level"] == "warning"
+
+
 # ---------------------------------------------------------- empty payloads
 
 

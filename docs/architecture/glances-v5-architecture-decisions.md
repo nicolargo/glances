@@ -101,9 +101,9 @@ The `_transform()` method is itself a pipeline of four ordered steps, all implem
 
 | Step | Base class method | Role | Override? |
 |---|---|---|---|
-| 1 | `_transform_gauge()` | Convert cumulative counters to rates using `_stats_previous` | Rarely — only for non-standard rate computation |
+| 1 | `_transform_gauge()` | Convert cumulative counters to per-second rates by walking every field declared with `rate: True` and computing `(current - previous) / time_since_update`. Uses a dedicated `_raw_previous` snapshot taken before transform so cross-cycle diffs work even after `_remove_parameters` strips internals. | Rarely — only for non-standard rate computation |
 | 2 | `_expand_parameters()` | Expand compound psutil fields into sub-fields (e.g. `cpu_times` → `user`, `system`, `iowait`) | Per plugin if needed |
-| 3 | `_derived_parameters()` | Compute derived fields and `_levels` | Per plugin if needed |
+| 3 | `_derived_parameters()` | Compute derived fields and `_levels`. Honours `watched`, `watch_direction`, `prominent`, `default_thresholds`, and `normalize_by` (per-core / per-divisor normalisation before threshold comparison). | Per plugin if needed |
 | 4 | `_remove_parameters()` | Filter out fields not in `fields_description` and strip internal keys | Never — base class only |
 
 **Only `_grab_stats()` is mandatory** in individual plugins — it is the psutil call, wrapped in `asyncio.to_thread()`. All other steps have a working default in the base class that covers the common case. A plugin overrides only the steps specific to its data model (e.g. `_transform_gauge()` for network rate computation, `_expand_parameters()` for cpu times).
@@ -122,6 +122,8 @@ The `_transform()` method is itself a pipeline of four ordered steps, all implem
 | `watch_direction` | `"high"` / `"low"` | Threshold direction. `"high"` = alert when `value >= threshold` (e.g. mem percent used). `"low"` = alert when `value <= threshold` (e.g. fs free percent). Defaults to `"high"`. |
 | `prominent` | `bool` | When `True`, the field is rendered with **background highlight** in the TUI/WebUI and every level transition is tagged `prominent: True` in the alert event feed. When `False`, only the font color changes and the event is tagged `prominent: False`. Replaces v4 `_log` flag. Defaults to `True` for watched fields (a watched field is meant to be visible by default). |
 | `default_thresholds` | `dict` | Default alert thresholds (`careful`, `warning`, `critical`). Replaces v4 flat threshold keys. Overridable per-level via `glances.conf [<plugin>] careful=N` or `<field>_careful=N` for multi-watched plugins. |
+| `normalize_by` | `str` | Optional. Name of another field in the same payload whose value is used as a divisor before threshold comparison: `level = compute_level(value / stats[normalize_by], thresholds, direction)`. Used for per-core normalisation (e.g. `load.min15` divided by `cpucore`, `cpu.ctx_switches` divided by `cpucore` — matches v4 `get_alert(value, maximum=100*cpucore)`). Falls back to `1` when the referenced field is missing or zero. |
+| `rate` | `bool` | When `True`, the field is treated as a cumulative counter and converted to a per-second rate by `_transform_gauge` (`(current - previous) / time_since_update`). On the first cycle the field is **absent** from the payload (no previous sample to diff against). Counter wrap or reboot (delta < 0) clamps to `0.0`. |
 | `primary_key` | `bool` | Marks the join key for `_levels` indexing in list plugins. |
 | `exportable` | `bool` | Whether the field is included in `get_export()` output. Defaults to `True`. Set to `False` for internal fields (`time_since_update`, etc.). |
 
@@ -359,7 +361,52 @@ warning_action=echo "{{#device_name}}[{{device_name}}] {{/device_name}}{{percent
 
 Both are rejected. Each renderer (TUI, WebUI) is fully responsible for its own display logic. The TUI requires dynamic layout that no declarative descriptor can encode.
 
-### 3.7 Migration scope
+### 3.7 Shared samplers — coalescing psutil calls between sibling plugins
+
+When two plugins share the same psutil source — typically a system-wide
+plugin and its per-item companion (`cpu` ↔ `percpu`, future `network`
+aggregate ↔ per-interface, etc.) — a **shared sampler module** caches
+the psutil result under a TTL window so the cost is paid once per
+window regardless of how many plugins consume it.
+
+Pattern:
+
+```
+glances/<resource>_sampler_v5.py
+├── class <Resource>SamplerV5:
+│   ├── async def get_<sub_sample>() → cached psutil call
+│   └── ...
+└── sampler = <Resource>SamplerV5()        # module-level singleton
+```
+
+Properties:
+
+- **TTL coalescing** — repeated callers within the TTL window receive
+  the cached value. Default TTL: `1.0 s` (transparent at the default
+  `refresh_time = 2 s`).
+- **asyncio-safe** — concurrent samples are serialised under an
+  `asyncio.Lock` so two parallel plugin updates can't trigger two
+  psutil calls for the same sub-sample.
+- **No state across cycles** — the sampler is a pure cache, never the
+  source of truth for cumulative counter rates (which live in the
+  consuming plugin's `_raw_previous` via `_transform_gauge`).
+- **Implementations** — first instance: `glances/cpu_sampler_v5.py`
+  (consumed by `cpu/model_v5.py` and `percpu/model_v5.py`). Equivalent
+  of v4's `glances/cpu_percent.py` shared singleton.
+
+Plugins import the singleton and consume it from `_grab_stats`:
+
+```python
+from glances.cpu_sampler_v5 import sampler
+
+class PluginModel(GlancesPluginBase[dict]):
+    plugin_name = "cpu"
+    async def _grab_stats(self) -> dict:
+        agg = await sampler.get_aggregate()
+        ...
+```
+
+### 3.8 Migration scope
 
 - **All v4 plugins** must be migrated. No plugin omitted.
 - Migration order: `mem` → `network` → remaining by increasing complexity.
