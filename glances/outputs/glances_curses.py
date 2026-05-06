@@ -743,6 +743,33 @@ class _GlancesCurses:
         )
         return stats_width, stats_number
 
+    def _handle_quicklook_for_display(self, stat_display, stats, plugin_widths, stats_width, stats_number):
+        # Quick look is in the place !
+        if self.args.full_quicklook:
+            quicklook_width = self.term_window.getmaxyx()[1] - (
+                stats_width + 8 + stats_number * self.space_between_column
+            )
+        else:
+            quicklook_width = min(
+                self.term_window.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column),
+                self._quicklook_max_width - 5,
+            )
+
+        try:
+            stat_display["quicklook"] = stats.get_plugin('quicklook').get_stats_display(
+                max_width=quicklook_width, args=self.args
+            )
+        except AttributeError as e:
+            logger.debug(f"Quicklook plugin not available ({e})")
+        else:
+            plugin_widths['quicklook'] = self.get_stats_display_width(stat_display["quicklook"])
+            stats_width = sum(plugin_widths.values()) + 1
+
+        self.space_between_column = 1
+        self.display_plugin(stat_display["quicklook"])
+        self.new_column()
+        return plugin_widths, stats_width
+
     def __display_top(self, stat_display, stats):
         """Display the second line in the Curses interface.
 
@@ -760,37 +787,10 @@ class _GlancesCurses:
         # Get width of all plugins and number of plugin but quicklook
         stats_width, stats_number = self._get_stats_summary(stat_display, plugin_widths)
 
-        # Width of all plugins
-        #        stats_width = sum(plugin_widths.values())
-
-        # Number of plugin but quicklook
-        # stats_number = sum(
-        #     [int(stat_display[p]['msgdict'] != []) for p in self._top if not getattr(self.args, 'disable_' + p)]
-        # )
-
         if not self.args.disable_quicklook:
-            # Quick look is in the place !
-            if self.args.full_quicklook:
-                quicklook_width = self.term_window.getmaxyx()[1] - (
-                    stats_width + 8 + stats_number * self.space_between_column
-                )
-            else:
-                quicklook_width = min(
-                    self.term_window.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column),
-                    self._quicklook_max_width - 5,
-                )
-            try:
-                stat_display["quicklook"] = stats.get_plugin('quicklook').get_stats_display(
-                    max_width=quicklook_width, args=self.args
-                )
-            except AttributeError as e:
-                logger.debug(f"Quicklook plugin not available ({e})")
-            else:
-                plugin_widths['quicklook'] = self.get_stats_display_width(stat_display["quicklook"])
-                stats_width = sum(plugin_widths.values()) + 1
-            self.space_between_column = 1
-            self.display_plugin(stat_display["quicklook"])
-            self.new_column()
+            plugin_widths, stats_width = self._handle_quicklook_for_display(
+                stat_display, stats, plugin_widths, stats_width, stats_number
+            )
 
         # Compute spaces between plugins
         # Note: Only one space between Quicklook and others
