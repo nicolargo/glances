@@ -8,8 +8,7 @@ from glances.outputs.glances_curses import _GlancesCurses
 
 @pytest.fixture
 def glancescreen():
-    """
-    Create a lightweight _GlancesCurses instance for helper method testing.
+    """Create a lightweight _GlancesCurses instance for helper method testing.
 
     The full curses interface is intentionally bypassed in order to isolate
     and test layout/helper logic independently from terminal rendering.
