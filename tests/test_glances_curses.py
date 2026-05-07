@@ -8,8 +8,16 @@ from glances.outputs.glances_curses import _GlancesCurses
 
 @pytest.fixture
 def glancescreen():
+    """Create a lightweight _GlancesCurses instance for helper method testing.
+
+    The full curses interface is intentionally bypassed in order to isolate
+    and test layout/helper logic independently from terminal rendering.
+    """
+
+    # Bypass full curses initialization and create a lightweight instance
     screen = _GlancesCurses.__new__(_GlancesCurses)
 
+    # Mock runtime arguments required by helper methods
     screen.args = SimpleNamespace(
         disable_cpu=False,
         disable_mem=False,
@@ -18,12 +26,15 @@ def glancescreen():
         full_quicklook=False,
     )
 
+    # Mock terminal dimensions
     screen.term_window = Mock()
     screen.term_window.getmaxyx.return_value = (24, 120)
 
+    # Mock rendering-related methods to isolate layout logic
     screen.display_plugin = Mock()
     screen.new_column = Mock()
 
+    # Initialize required internal state
     screen.space_between_column = 3
     screen._quicklook_max_width = 100
     screen._top = ['cpu', 'mem', 'load']
@@ -32,9 +43,11 @@ def glancescreen():
 
 
 class TestDisplayTopHelpers:
-    """Tests for __display_top helper methods."""
+    """Tests for helper methods extracted from __display_top."""
 
     def test_get_stats_summary(self, glancescreen):
+        """Ensure plugin width totals and active plugin counts are computed correctly."""
+
         stat_display = {
             'cpu': {'msgdict': ['cpu']},
             'mem': {'msgdict': ['mem']},
@@ -56,6 +69,8 @@ class TestDisplayTopHelpers:
         assert stats_number == 2
 
     def test_compute_spacing_single_plugin(self, glancescreen):
+        """Ensure spacing logic behaves correctly when only one plugin is displayed."""
+
         stat_display = {
             'cpu': {'msgdict': ['cpu']},
         }
@@ -80,6 +95,8 @@ class TestDisplayTopHelpers:
         self,
         glancescreen,
     ):
+        """Ensure optional CPU and MEM display elements are disabled when spacing is constrained."""
+
         stat_display = {
             'cpu': {'msgdict': ['cpu']},
             'mem': {'msgdict': ['mem']},
@@ -92,8 +109,10 @@ class TestDisplayTopHelpers:
 
         glancescreen._top = ['cpu', 'mem']
 
+        # Simulate a constrained terminal width
         glancescreen.term_window.getmaxyx.return_value = (24, 40)
 
+        # Mock reduced widths after optional content removal
         glancescreen.get_stats_display_width = MagicMock(return_value=20)
 
         plugin_display_optional, _ = glancescreen._compute_spacing_and_optional(
@@ -108,6 +127,8 @@ class TestDisplayTopHelpers:
         assert glancescreen.space_between_column >= 1
 
     def test_get_plugin_width(self, glancescreen):
+        """Ensure plugin widths are correctly retrieved and mapped."""
+
         stat_display = {
             'cpu': {'msgdict': ['cpu']},
             'mem': {'msgdict': ['mem']},
@@ -131,8 +152,11 @@ class TestDisplayTopHelpers:
         self,
         glancescreen,
     ):
+        """Ensure unavailable quicklook plugins are handled gracefully."""
+
         stats = Mock()
 
+        # Simulate unavailable quicklook plugin
         stats.get_plugin.side_effect = AttributeError
 
         stat_display = {
