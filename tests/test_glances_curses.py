@@ -8,8 +8,7 @@ from glances.outputs.glances_curses import _GlancesCurses
 
 @pytest.fixture
 def glancescreen():
-    """
-    Create a lightweight _GlancesCurses instance for helper method testing.
+    """Create a lightweight _GlancesCurses instance for helper method testing.
 
     The full curses interface is intentionally bypassed in order to isolate
     and test layout/helper logic independently from terminal rendering.
@@ -119,9 +118,9 @@ class TestDisplayTopHelpers:
             stats_number=2,
         )
 
-        assert plugin_display_optional['cpu'] is False
-        assert plugin_display_optional['mem'] is False
-        assert glancescreen.space_between_column >= 1
+        assert plugin_display_optional['cpu'] is False  # nosec B101
+        assert plugin_display_optional['mem'] is False  # nosec B101
+        assert glancescreen.space_between_column >= 1  # nosec B101
 
     def test_get_plugin_width(self, glancescreen):
         """Ensure plugin widths are correctly retrieved and mapped."""
@@ -142,7 +141,7 @@ class TestDisplayTopHelpers:
         assert plugin_widths == {
             'cpu': 10,
             'mem': 20,
-        }
+        }  # nosec B101
 
     def test_handle_quicklook_plugin_unavailable(
         self,
@@ -168,5 +167,5 @@ class TestDisplayTopHelpers:
             stats_number=1,
         )
 
-        assert result_widths == plugin_widths
-        assert result_stats_width == 0
+        assert result_widths == plugin_widths  # nosec B101
+        assert result_stats_width == 0  # nosec B101

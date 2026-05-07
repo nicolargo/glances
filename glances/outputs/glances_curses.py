@@ -748,7 +748,6 @@ class _GlancesCurses:
         Compute total plugin width and number of active plugins.
 
         Returns
-
         -------
         tuple
                 stats_width (int): Combined width of all plugins.
@@ -776,7 +775,6 @@ class _GlancesCurses:
     ):
         """
         Compute, retrieve, and display the quicklook plugin.
-
 
         This helper handles quicklook width calculation, plugin retrieval,
         display rendering, and spacing adjustments required before the
