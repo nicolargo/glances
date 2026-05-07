@@ -753,6 +753,7 @@ class _GlancesCurses:
                 stats_width (int): Combined width of all plugins.
                 stats_number (int): Number of plugins containing
                     displayable content.
+
         """
         # Compute total width occupied by all plugins
         stats_width = sum(plugin_widths.values())
