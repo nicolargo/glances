@@ -8,8 +8,8 @@ from glances.outputs.glances_curses import _GlancesCurses
 
 @pytest.fixture
 def glancescreen():
-    """Create a lightweight _GlancesCurses instance for helper method testing.
-
+    """
+    Create a lightweight _GlancesCurses instance for helper method testing.
     The full curses interface is intentionally bypassed in order to isolate
     and test layout/helper logic independently from terminal rendering.
     """
@@ -43,11 +43,12 @@ def glancescreen():
 
 
 class TestDisplayTopHelpers:
-    """Tests for helper methods extracted from __display_top."""
+    """
+    Tests for helper methods extracted from __display_top.
+    """
 
     def test_get_stats_summary(self, glancescreen):
         """Ensure plugin width totals and active plugin counts are computed correctly."""
-
         stat_display = {
             'cpu': {'msgdict': ['cpu']},
             'mem': {'msgdict': ['mem']},
@@ -64,13 +65,13 @@ class TestDisplayTopHelpers:
             stat_display,
             plugin_widths,
         )
-
+        # nosec B101
         assert stats_width == 35
+        # nosec B101
         assert stats_number == 2
 
     def test_compute_spacing_single_plugin(self, glancescreen):
         """Ensure spacing logic behaves correctly when only one plugin is displayed."""
-
         stat_display = {
             'cpu': {'msgdict': ['cpu']},
         }
@@ -87,8 +88,9 @@ class TestDisplayTopHelpers:
             stats_width=10,
             stats_number=1,
         )
-
+        # nosec B101
         assert glancescreen.space_between_column == 0
+        # nosec B101
         assert plugin_display_optional['cpu'] is True
 
     def test_compute_spacing_disables_optional_stats(
@@ -96,7 +98,6 @@ class TestDisplayTopHelpers:
         glancescreen,
     ):
         """Ensure optional CPU and MEM display elements are disabled when spacing is constrained."""
-
         stat_display = {
             'cpu': {'msgdict': ['cpu']},
             'mem': {'msgdict': ['mem']},
@@ -128,7 +129,6 @@ class TestDisplayTopHelpers:
 
     def test_get_plugin_width(self, glancescreen):
         """Ensure plugin widths are correctly retrieved and mapped."""
-
         stat_display = {
             'cpu': {'msgdict': ['cpu']},
             'mem': {'msgdict': ['mem']},
@@ -153,7 +153,6 @@ class TestDisplayTopHelpers:
         glancescreen,
     ):
         """Ensure unavailable quicklook plugins are handled gracefully."""
-
         stats = Mock()
 
         # Simulate unavailable quicklook plugin

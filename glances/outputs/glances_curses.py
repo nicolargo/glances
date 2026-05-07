@@ -726,13 +726,13 @@ class _GlancesCurses:
             self.display_plugin(stat_display["cloud"])
 
     def _get_plugin_width(self, stat_display):
-        """Compute the display width for each top plugin.
+        """
+        Compute the display width for each top plugin.
 
         The width is calculated using the plugin display data currently
         available in stat_display. Plugins that are not enabled through
         runtime arguments are assigned a width of 0.
         """
-
         # Store calculated widths for each plugin
         plugin_widths = {}
 
@@ -744,15 +744,16 @@ class _GlancesCurses:
         return plugin_widths
 
     def _get_stats_summary(self, stat_display, plugin_widths):
-        """Compute total plugin width and number of active plugins.
+        """
+        Compute total plugin width and number of active plugins.
 
-        Returns:
-            tuple:
+        Returns
+        -------
+        tuple
                 stats_width (int): Combined width of all plugins.
                 stats_number (int): Number of plugins containing
                     displayable content.
         """
-
         # Compute total width occupied by all plugins
         stats_width = sum(plugin_widths.values())
 
@@ -778,7 +779,6 @@ class _GlancesCurses:
         display rendering, and spacing adjustments required before the
         remaining top plugins are rendered.
         """
-
         # Compute available width for quicklook display
         if self.args.full_quicklook:
             quicklook_width = self.term_window.getmaxyx()[1] - (
@@ -829,7 +829,6 @@ class _GlancesCurses:
         disables optional CPU and MEM display elements when horizontal
         space becomes constrained.
         """
-
         # Enable optional display for all plugins by default
         plugin_display_optional = dict.fromkeys(self._top, True)
 
