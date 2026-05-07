@@ -10,10 +10,10 @@ from glances.outputs.glances_curses import _GlancesCurses
 def glancescreen():
     """
     Create a lightweight _GlancesCurses instance for helper method testing.
+
     The full curses interface is intentionally bypassed in order to isolate
     and test layout/helper logic independently from terminal rendering.
     """
-
     # Bypass full curses initialization and create a lightweight instance
     screen = _GlancesCurses.__new__(_GlancesCurses)
 
@@ -43,9 +43,7 @@ def glancescreen():
 
 
 class TestDisplayTopHelpers:
-    """
-    Tests for helper methods extracted from __display_top.
-    """
+    """Tests for helper methods extracted from __display_top."""
 
     def test_get_stats_summary(self, glancescreen):
         """Ensure plugin width totals and active plugin counts are computed correctly."""
@@ -65,10 +63,9 @@ class TestDisplayTopHelpers:
             stat_display,
             plugin_widths,
         )
-        # nosec B101
-        assert stats_width == 35
-        # nosec B101
-        assert stats_number == 2
+
+        assert stats_width == 35  # nosec B101
+        assert stats_number == 2  # nosec B101
 
     def test_compute_spacing_single_plugin(self, glancescreen):
         """Ensure spacing logic behaves correctly when only one plugin is displayed."""
@@ -88,10 +85,9 @@ class TestDisplayTopHelpers:
             stats_width=10,
             stats_number=1,
         )
-        # nosec B101
-        assert glancescreen.space_between_column == 0
-        # nosec B101
-        assert plugin_display_optional['cpu'] is True
+
+        assert glancescreen.space_between_column == 0  # nosec B101
+        assert plugin_display_optional['cpu'] is True  # nosec B101
 
     def test_compute_spacing_disables_optional_stats(
         self,
