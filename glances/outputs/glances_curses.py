@@ -726,25 +726,60 @@ class _GlancesCurses:
             self.display_plugin(stat_display["cloud"])
 
     def _get_plugin_width(self, stat_display):
+        """Compute the display width for each top plugin.
+
+        The width is calculated using the plugin display data currently
+        available in stat_display. Plugins that are not enabled through
+        runtime arguments are assigned a width of 0.
+        """
+
+        # Store calculated widths for each plugin
         plugin_widths = {}
+
         for p in self._top:
             plugin_widths[p] = (
                 self.get_stats_display_width(stat_display.get(p, 0)) if hasattr(self.args, 'disable_' + p) else 0
             )
+
         return plugin_widths
 
     def _get_stats_summary(self, stat_display, plugin_widths):
-        # Width of all plugins
+        """Compute total plugin width and number of active plugins.
+
+        Returns:
+            tuple:
+                stats_width (int): Combined width of all plugins.
+                stats_number (int): Number of plugins containing
+                    displayable content.
+        """
+
+        # Compute total width occupied by all plugins
         stats_width = sum(plugin_widths.values())
 
-        # Number of plugin but quicklook
+        # Count plugins that currently contain display data
+        # Quicklook is excluded from this stage of computation
         stats_number = sum(
             [int(stat_display[p]['msgdict'] != []) for p in self._top if not getattr(self.args, 'disable_' + p)]
         )
+
         return stats_width, stats_number
 
-    def _handle_quicklook_for_display(self, stat_display, stats, plugin_widths, stats_width, stats_number):
-        # Quick look is in the place !
+    def _handle_quicklook_for_display(
+        self,
+        stat_display,
+        stats,
+        plugin_widths,
+        stats_width,
+        stats_number,
+    ):
+        """Compute, retrieve, and display the quicklook plugin.
+
+        This helper handles quicklook width calculation, plugin retrieval,
+        display rendering, and spacing adjustments required before the
+        remaining top plugins are rendered.
+        """
+
+        # Compute available width for quicklook display
         if self.args.full_quicklook:
             quicklook_width = self.term_window.getmaxyx()[1] - (
                 stats_width + 8 + stats_number * self.space_between_column
@@ -756,47 +791,80 @@ class _GlancesCurses:
             )
 
         try:
+            # Retrieve quicklook display data
             stat_display["quicklook"] = stats.get_plugin('quicklook').get_stats_display(
-                max_width=quicklook_width, args=self.args
+                max_width=quicklook_width,
+                args=self.args,
             )
+
         except AttributeError as e:
             logger.debug(f"Quicklook plugin not available ({e})")
+
         else:
+            # Update quicklook width after successful retrieval
             plugin_widths['quicklook'] = self.get_stats_display_width(stat_display["quicklook"])
+
+            # Recompute total width including quicklook
             stats_width = sum(plugin_widths.values()) + 1
 
+        # Quicklook uses a dedicated single-column spacing rule
         self.space_between_column = 1
+
+        # Display quicklook before remaining plugins
         self.display_plugin(stat_display["quicklook"])
         self.new_column()
+
         return plugin_widths, stats_width
 
-    def _compute_spacing_and_optional(self, stat_display, plugin_widths, stats_width, stats_number):
-        # Init optional display
+    def _compute_spacing_and_optional(
+        self,
+        stat_display,
+        plugin_widths,
+        stats_width,
+        stats_number,
+    ):
+        """Compute spacing and optional display behaviour for top plugins.
+
+        This helper adjusts spacing dynamically based on terminal width and
+        disables optional CPU and MEM display elements when horizontal
+        space becomes constrained.
+        """
+
+        # Enable optional display for all plugins by default
         plugin_display_optional = dict.fromkeys(self._top, True)
 
         if stats_number > 1:
+            # Compute spacing between plugin columns
             self.space_between_column = max(
                 1,
                 int((self.term_window.getmaxyx()[1] - stats_width) / (stats_number - 1)),
             )
 
             for p in ['mem', 'cpu']:
+                # Remove optional display elements when spacing becomes too small
                 if self.space_between_column < 3:
                     plugin_display_optional[p] = False
 
+                    # Recompute plugin width without optional display elements
                     plugin_widths[p] = (
-                        self.get_stats_display_width(stat_display[p], without_option=True)
+                        self.get_stats_display_width(
+                            stat_display[p],
+                            without_option=True,
+                        )
                         if hasattr(self.args, 'disable_' + p)
                         else 0
                     )
 
+                    # Recompute total width after optional removal
                     stats_width = sum(plugin_widths.values()) + 1
 
+                    # Recompute spacing with updated widths
                     self.space_between_column = max(
                         1,
                         int((self.term_window.getmaxyx()[1] - stats_width) / (stats_number - 1)),
                     )
         else:
+            # No spacing required when only one plugin is displayed
             self.space_between_column = 0
 
         return plugin_display_optional, plugin_widths
