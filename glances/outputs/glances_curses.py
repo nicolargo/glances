@@ -108,7 +108,7 @@ class _GlancesCurses:
 
     # Define top menu
     _top = ['quicklook', 'cpu', 'percpu', 'npu', 'mpp', 'gpu', 'mem', 'memswap', 'load']
-    _quicklook_max_width = 58
+    _quicklook_max_width = 48
 
     # Define left sidebar
     # This variable is used in the make webui task in order to generate the
