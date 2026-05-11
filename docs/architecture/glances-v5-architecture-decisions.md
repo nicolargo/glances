@@ -122,7 +122,7 @@ The `_transform()` method is itself a pipeline of four ordered steps, all implem
 | `watch_direction` | `"high"` / `"low"` | Threshold direction. `"high"` = alert when `value >= threshold` (e.g. mem percent used). `"low"` = alert when `value <= threshold` (e.g. fs free percent). Defaults to `"high"`. |
 | `prominent` | `bool` | When `True`, the field is rendered with **background highlight** in the TUI/WebUI and every level transition is tagged `prominent: True` in the alert event feed. When `False`, only the font color changes and the event is tagged `prominent: False`. Replaces v4 `_log` flag. Defaults to `True` for watched fields (a watched field is meant to be visible by default). |
 | `default_thresholds` | `dict` | Default alert thresholds (`careful`, `warning`, `critical`). Replaces v4 flat threshold keys. Overridable per-level via `glances.conf [<plugin>] careful=N` or `<field>_careful=N` for multi-watched plugins. |
-| `normalize_by` | `str` | Optional. Name of another field in the same payload whose value is used as a divisor before threshold comparison: `level = compute_level(value / stats[normalize_by], thresholds, direction)`. Used for per-core normalisation (e.g. `load.min15` divided by `cpucore`, `cpu.ctx_switches` divided by `cpucore` — matches v4 `get_alert(value, maximum=100*cpucore)`). Falls back to `1` when the referenced field is missing or zero. |
+| `normalize_by` | `str` | Optional. Name of another field in the same payload whose value is used as a divisor before threshold comparison: `level = compute_level(value / stats[normalize_by], thresholds, direction)`. Used for per-core normalisation (e.g. `load.min15` divided by `cpucore`, `cpu.ctx_switches` divided by `cpucore` — matches v4 `get_alert(value, maximum=100*cpucore)`) and for percent-of-capacity comparisons (`network.bytes_recv` divided by `bytes_speed_rate_per_sec`). When the divisor is **missing, `None`, or zero**, the level is **skipped** for this field on this item — meaning "no meaningful threshold computable" (e.g. an interface whose link speed is unknown). Thresholds whose result is a ratio in `[0, 1]` (capacity-relative) should declare ratio-valued `default_thresholds` (e.g. `{"careful": 0.7, "warning": 0.8, "critical": 0.9}`). |
 | `rate` | `bool` | When `True`, the field is treated as a cumulative counter and converted to a per-second rate by `_transform_gauge` (`(current - previous) / time_since_update`). On the first cycle the field is **absent** from the payload (no previous sample to diff against). Counter wrap or reboot (delta < 0) clamps to `0.0`. |
 | `primary_key` | `bool` | Marks the join key for `_levels` indexing in list plugins. |
 | `exportable` | `bool` | Whether the field is included in `get_export()` output. Defaults to `True`. Set to `False` for internal fields (`time_since_update`, etc.). |
@@ -406,7 +406,43 @@ class PluginModel(GlancesPluginBase[dict]):
         ...
 ```
 
-### 3.8 Migration scope
+### 3.8 Collection filtering — `show` / `hide`
+
+Collection plugins (`network`, future `fs`, `containers`, …) expose a
+generic regex-based item filter, driven from the plugin's config section
+and applied **inside the base class** — concrete plugins inherit it for
+free.
+
+```ini
+[network]
+# Both keys are optional. Regex list, comma-separated.
+# show: if set, only items whose primary-key value matches at least one
+#       pattern pass through (re.search, substring-friendly).
+# hide: matching items are dropped (applied after show).
+show=eth.*,wlan.*
+hide=docker.*,veth.*
+```
+
+Properties:
+
+- **Generic, not per-plugin** — the base class reads `show` / `hide` from
+  `[<plugin_name>]` and applies them by `primary_key` value. Any collection
+  plugin gets the feature without writing code.
+- **Both API and UI** — filtering happens at the data layer, before
+  `_snapshot_raw` / `_transform`. Hidden items never appear in the REST
+  payload (`/api/5/<plugin>`), nor in exporters, nor in any UI consuming
+  the StatsStore. This matters for the client/server topology: hiding an
+  interface on the server hides it for every connected client.
+- **Filtered items have no `_raw_previous` entry** — re-showing an item
+  via config reload starts a fresh rate window (first cycle absent),
+  same as a newly appearing interface.
+- **Invalid regexes are logged and skipped** — never raise. A typo in
+  the config can't crash a plugin.
+- **One field per plugin must declare `primary_key: True`** — validated
+  at plugin construction. Collection plugins without exactly one primary
+  key raise `ValueError`.
+
+### 3.9 Migration scope
 
 - **All v4 plugins** must be migrated. No plugin omitted.
 - Migration order: `mem` → `network` → remaining by increasing complexity.

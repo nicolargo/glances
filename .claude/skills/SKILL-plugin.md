@@ -118,7 +118,7 @@ stays in place (stale handling lands in Phase 3).
 | `watch_direction` | `"high"` / `"low"` | Threshold direction. `"high"` (default) alerts on `value >= threshold`; `"low"` alerts on `value <= threshold` (e.g. fs free). |
 | `prominent` | bool | When `True`, the field is rendered with **background highlight** (TUI/WebUI) and every level transition is tagged `prominent: True` in the alert event feed. Replaces v4 `_log` flag. Default `True` for watched fields. |
 | `default_thresholds` | dict | `{"careful": …, "warning": …, "critical": …}` — plugin-author defaults. Overridable per-level via `glances.conf [<plugin>] careful=N` (or `<field>_careful=N` for multi-watched plugins). |
-| `normalize_by` | str | Optional. Name of another field whose value divides this field before threshold comparison: `level = compute_level(value / stats[normalize_by], …)`. Used for per-core normalisation (`load.min15` ÷ `cpucore`, `cpu.ctx_switches` ÷ `cpucore`). Falls back to `1` when the divisor is missing or zero. |
+| `normalize_by` | str | Optional. Name of another field whose value divides this field before threshold comparison: `level = compute_level(value / stats[normalize_by], …)`. Used for per-core normalisation (`load.min15` ÷ `cpucore`, `cpu.ctx_switches` ÷ `cpucore`) and percent-of-capacity comparisons (`network.bytes_recv` ÷ `bytes_speed_rate_per_sec`). When the divisor is **missing, `None`, or `0`** the level is **skipped** for that field — meaning "no meaningful threshold computable" (e.g. interface with unknown link speed). Capacity-relative thresholds should be declared as ratios in `[0, 1]`. |
 | `rate` | bool | When `True`, the field is a cumulative counter; the base class converts it to a per-second rate via `_transform_gauge` (`(current - previous) / time_since_update`). On the first cycle the field is **absent** from the payload (no previous sample). Counter wrap or reboot clamps to `0.0`. |
 | `primary_key` | bool | Marks the join key for `_levels` indexing in collection plugins |
 | `exportable` | bool | Defaults to `True`. Set `False` for internal fields. |
@@ -157,8 +157,8 @@ not the dict envelope.
 
 Plugins consuming psutil cumulative counters (cpu ctx_switches, network
 bytes_recv, …) declare those fields with `rate: True`. The base class's
-`_transform_gauge` walks every such scalar field and replaces the
-cumulative value with `(current - previous) / time_since_update`.
+`_transform_gauge` walks every such field and replaces the cumulative
+value with `(current - previous) / time_since_update`.
 
 ```python
 "ctx_switches": {
@@ -180,8 +180,44 @@ Behaviour:
 - **Pipeline order** — `_transform_gauge` runs before `_derived_parameters`,
   so `normalize_by` and `_levels` see the per-second rate, not the raw
   counter.
-- **Collection plugins** — per-item rates land in Phase 1.3 alongside
-  the `network` plugin.
+- **Collection plugins** — rates are computed per item, matched between
+  cycles by the field declared with `primary_key: True`. An item that
+  newly appears (or comes back from a `hide`) has no previous sample, so
+  its rate fields are absent on that first cycle.
+
+## Collection plugins — primary key, `_levels`, filtering
+
+A collection plugin (`IS_COLLECTION = True`) must declare **exactly one**
+field with `primary_key: True`. The base class validates this at plugin
+construction and uses the primary key to:
+
+1. **Index `_raw_previous`** — `{pk_value: {field: counter}}` snapshots
+   indexed by the primary key value, used by `_transform_gauge` to match
+   items across cycles.
+2. **Index `_levels`** — `{pk_value: {field: {level, prominent}}}` —
+   each item has its own per-field level entry.
+3. **Filter items via `show` / `hide`** — see below.
+
+### `show` / `hide` filters
+
+Generic regex filtering driven from the plugin's config section. The
+base class applies it before any transformation; concrete plugins
+inherit the feature for free.
+
+```ini
+[network]
+# Both keys are optional. Comma-separated list of regexes.
+# show: if set, only items matching at least one pattern pass through.
+# hide: matching items are dropped (applied after show).
+show=eth.*,wlan.*
+hide=docker.*,veth.*
+```
+
+Matching is done with `re.search` (substring-friendly). Filtering happens
+at the data layer, so hidden items never appear in REST payloads,
+exporters, or any UI — important for client/server deployments. Filtered
+items have no `_raw_previous` entry, so un-hiding restarts the rate
+window.
 
 ## Sharing psutil calls between sibling plugins (samplers)
 
@@ -195,9 +231,9 @@ caching (default `1.0 s`) plus an `asyncio.Lock` for serialised access.
 
 ## What's deferred (out of scope for new plugins right now)
 
-- **Collection `_levels` indexing by primary key** — Phase 1.3 (`network` plugin)
-- **Collection rate fields** (per-item `_transform_gauge`) — Phase 1.3
 - **`GlancesAlerts` ingestion of `_levels`** (stateful tracking, history feed) — Phase 1.4
+- **Per-item threshold overrides** via config (`[network] eth0_bytes_recv_critical=…`) — Phase 2+
+- **`hide_no_up` / `hide_no_ip` boolean filters** for network — Phase 2 (UI-level concerns)
 - **Min/max/mean history** — Phase 2
 - **Stale data handling** (`"stale": true`) — Phase 3 (remote client)
 - **`msg_curse()` / `update_views()`** — rejected (architecture §3.6)

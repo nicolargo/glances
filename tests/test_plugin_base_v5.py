@@ -402,24 +402,38 @@ async def test_normalize_by_divides_value_by_referenced_field(store, config):
     assert store.get("fakescalar")["_levels"]["load"]["level"] == "ok"
 
 
-async def test_normalize_by_falls_back_to_one_when_referenced_field_missing(store, config):
-    """A missing or zero divisor falls back to 1 (defensive — never divides by 0)."""
+async def test_normalize_by_skips_level_when_divisor_is_missing_or_zero(store, config):
+    """A missing, None, or zero divisor → level is skipped ("no limit" semantics).
+
+    Used when the threshold-base field can legitimately be 0 (e.g. an
+    interface whose link speed is unknown). Skipping avoids spurious
+    alerts against an arbitrary fallback divisor.
+    """
 
     class Normalised(FakeScalarPlugin):
         fields_description = {
-            "load": {
-                "description": "load",
-                "unit": "float",
+            "bytes_recv": {
+                "description": "bytes per second",
+                "unit": "bytespers",
                 "watched": True,
-                "default_thresholds": {"warning": 1.0},
-                "normalize_by": "cpucore",
+                "default_thresholds": {"warning": 0.8},
+                "normalize_by": "bytes_speed_rate_per_sec",
+            },
+            "bytes_speed_rate_per_sec": {
+                "description": "per-direction link speed in bytes/s",
+                "unit": "bytespers",
             },
         }
 
-    # No `cpucore` in payload — divisor falls back to 1, value 1.5 / 1 → warning.
-    plugin = Normalised(store, config, payload={"load": 1.5})
+    # Divisor missing entirely → no level for bytes_recv.
+    plugin = Normalised(store, config, payload={"bytes_recv": 1_000_000})
     await plugin.update()
-    assert store.get("fakescalar")["_levels"]["load"]["level"] == "warning"
+    assert "bytes_recv" not in store.get("fakescalar")["_levels"]
+
+    # Divisor explicitly 0 (e.g. loopback) → no level either.
+    plugin2 = Normalised(store, config, payload={"bytes_recv": 1_000_000, "bytes_speed_rate_per_sec": 0})
+    await plugin2.update()
+    assert "bytes_recv" not in store.get("fakescalar")["_levels"]
 
 
 # ---------------------------------------------------------- _transform_gauge (rate)
@@ -526,6 +540,251 @@ async def test_rate_field_with_normalize_by_uses_rate_then_normalises(store, con
     payload = store.get("fakescalar")
     assert payload["ctx_switches"] == 300.0
     assert payload["_levels"]["ctx_switches"]["level"] == "warning"
+
+
+# ---------------------------------------------------------- collection: primary key validation
+
+
+def test_collection_missing_primary_key_raises(store, config):
+    """A collection plugin without `primary_key=True` on any field is a bug."""
+
+    class NoPK(GlancesPluginBase[list]):
+        plugin_name = "nopk"
+        IS_COLLECTION = True
+        fields_description = {"name": {"description": "n", "unit": "string"}}
+
+        async def _grab_stats(self) -> list:
+            return []
+
+    with pytest.raises(ValueError, match="primary_key=True"):
+        NoPK(store, config)
+
+
+def test_collection_multiple_primary_keys_raises(store, config):
+    """At most one field may carry `primary_key=True`."""
+
+    class TwoPK(GlancesPluginBase[list]):
+        plugin_name = "twopk"
+        IS_COLLECTION = True
+        fields_description = {
+            "a": {"description": "a", "unit": "string", "primary_key": True},
+            "b": {"description": "b", "unit": "string", "primary_key": True},
+        }
+
+        async def _grab_stats(self) -> list:
+            return []
+
+    with pytest.raises(ValueError, match="primary_key=True"):
+        TwoPK(store, config)
+
+
+# ---------------------------------------------------------- collection: _transform_gauge (rate)
+
+
+class _CounterCollection(FakeCollectionPlugin):
+    """Collection plugin with a `rate: True` field on each item."""
+
+    fields_description = {
+        "name": {"description": "n", "unit": "string", "primary_key": True},
+        "rx": {"description": "rx", "unit": "bytespers", "rate": True},
+    }
+
+
+async def test_collection_rate_absent_on_first_cycle(store, config):
+    """First cycle: no _raw_previous, all per-item rate fields stripped."""
+    plugin = _CounterCollection(store, config, payload=[{"name": "eth0", "rx": 1000}, {"name": "wlan0", "rx": 500}])
+    await plugin.update()
+    items = store.get("fakecollection")["data"]
+    assert all("rx" not in item for item in items)
+
+
+async def test_collection_rate_computed_per_item_on_second_cycle(store, config, monkeypatch):
+    """Second cycle: rate = (curr - prev) / elapsed, matched per primary key."""
+    plugin = _CounterCollection(store, config, payload=[{"name": "eth0", "rx": 1000}, {"name": "wlan0", "rx": 500}])
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    await plugin.update()  # cycle 1 — rx stripped
+
+    fake_now[0] = 102.0  # +2 s
+    plugin._payload = [{"name": "eth0", "rx": 3000}, {"name": "wlan0", "rx": 800}]
+    await plugin.update()
+
+    items = {item["name"]: item for item in store.get("fakecollection")["data"]}
+    # eth0: delta 2000 / 2 s = 1000 ; wlan0: delta 300 / 2 s = 150
+    assert items["eth0"]["rx"] == 1000.0
+    assert items["wlan0"]["rx"] == 150.0
+
+
+async def test_collection_rate_absent_for_newly_appearing_item(store, config, monkeypatch):
+    """An interface that appears between cycles has no rate on its first appearance."""
+    plugin = _CounterCollection(store, config, payload=[{"name": "eth0", "rx": 1000}])
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    await plugin.update()
+
+    fake_now[0] = 101.0
+    plugin._payload = [{"name": "eth0", "rx": 1500}, {"name": "wlan0", "rx": 500}]
+    await plugin.update()
+
+    items = {item["name"]: item for item in store.get("fakecollection")["data"]}
+    assert items["eth0"]["rx"] == 500.0  # rate computed
+    assert "rx" not in items["wlan0"]  # absent — first appearance
+
+
+async def test_collection_disappearing_item_does_not_poison_others(store, config, monkeypatch):
+    """An interface present in cycle N but absent in N+1 doesn't break rates for others."""
+    plugin = _CounterCollection(store, config, payload=[{"name": "eth0", "rx": 1000}, {"name": "wlan0", "rx": 500}])
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    await plugin.update()
+
+    fake_now[0] = 101.0
+    plugin._payload = [{"name": "eth0", "rx": 1500}]  # wlan0 disappears
+    await plugin.update()
+
+    items = store.get("fakecollection")["data"]
+    assert len(items) == 1
+    assert items[0]["name"] == "eth0"
+    assert items[0]["rx"] == 500.0
+
+
+# ---------------------------------------------------------- collection: _levels indexing
+
+
+class _WatchedCollection(FakeCollectionPlugin):
+    """Collection plugin with a watched field and `normalize_by`."""
+
+    fields_description = {
+        "name": {"description": "n", "unit": "string", "primary_key": True},
+        "rx": {
+            "description": "rx",
+            "unit": "bytespers",
+            "watched": True,
+            "default_thresholds": {"careful": 0.5, "warning": 0.7, "critical": 0.9},
+            "normalize_by": "speed",
+        },
+        "speed": {"description": "speed", "unit": "bytespers"},
+    }
+
+
+async def test_collection_levels_indexed_by_primary_key(store, config):
+    """`_levels` for a collection is keyed by the primary-key value."""
+    plugin = _WatchedCollection(
+        store,
+        config,
+        payload=[
+            {"name": "eth0", "rx": 800, "speed": 1000},  # 0.8 → warning
+            {"name": "wlan0", "rx": 200, "speed": 1000},  # 0.2 → ok
+        ],
+    )
+    await plugin.update()
+    levels = store.get("fakecollection")["_levels"]
+    assert levels == {
+        "eth0": {"rx": {"level": "warning", "prominent": True}},
+        "wlan0": {"rx": {"level": "ok", "prominent": True}},
+    }
+
+
+async def test_collection_levels_skip_field_when_divisor_is_zero(store, config):
+    """An item whose normalize_by divisor is 0 has no level for that field."""
+    plugin = _WatchedCollection(
+        store,
+        config,
+        payload=[
+            {"name": "eth0", "rx": 800, "speed": 1000},
+            {"name": "lo", "rx": 1, "speed": 0},  # speed=0 → no level for rx
+        ],
+    )
+    await plugin.update()
+    levels = store.get("fakecollection")["_levels"]
+    assert "rx" in levels["eth0"]
+    # lo has no entry at all (no other watched fields contributed).
+    assert "lo" not in levels
+
+
+# ---------------------------------------------------------- collection: hide / show filtering
+
+
+def _write_config(tmp_path, monkeypatch, body: str) -> GlancesConfigV5:
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text(body)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    return GlancesConfigV5()
+
+
+async def test_collection_hide_drops_matching_items(tmp_path, monkeypatch, store):
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nhide=lo,docker.*\n")
+    plugin = FakeCollectionPlugin(
+        store,
+        config,
+        payload=[
+            {"name": "eth0", "rx": 100},
+            {"name": "lo", "rx": 0},
+            {"name": "docker0", "rx": 50},
+        ],
+    )
+    await plugin.update()
+    names = [item["name"] for item in store.get("fakecollection")["data"]]
+    assert names == ["eth0"]
+
+
+async def test_collection_show_keeps_only_matching_items(tmp_path, monkeypatch, store):
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nshow=eth.*\n")
+    plugin = FakeCollectionPlugin(
+        store,
+        config,
+        payload=[
+            {"name": "eth0", "rx": 100},
+            {"name": "eth1", "rx": 200},
+            {"name": "wlan0", "rx": 50},
+        ],
+    )
+    await plugin.update()
+    names = sorted(item["name"] for item in store.get("fakecollection")["data"])
+    assert names == ["eth0", "eth1"]
+
+
+async def test_collection_show_then_hide_combined(tmp_path, monkeypatch, store):
+    """`show` runs first, `hide` runs second — both apply."""
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nshow=^e\nhide=eth1\n")
+    plugin = FakeCollectionPlugin(
+        store,
+        config,
+        payload=[
+            {"name": "eth0", "rx": 100},
+            {"name": "eth1", "rx": 200},
+            {"name": "wlan0", "rx": 50},
+        ],
+    )
+    await plugin.update()
+    names = [item["name"] for item in store.get("fakecollection")["data"]]
+    assert names == ["eth0"]  # wlan0 excluded by show; eth1 excluded by hide
+
+
+async def test_collection_invalid_regex_is_logged_and_ignored(tmp_path, monkeypatch, store, caplog):
+    """An invalid regex pattern is logged and skipped, not raised."""
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nhide=[\n")
+    with caplog.at_level(logging.WARNING):
+        plugin = FakeCollectionPlugin(store, config, payload=[{"name": "eth0", "rx": 100}])
+        await plugin.update()
+    assert "invalid hide regex" in caplog.text
+    # Other items still flow through (no filter applied).
+    assert store.get("fakecollection")["data"][0]["name"] == "eth0"
 
 
 # ---------------------------------------------------------- empty payloads
