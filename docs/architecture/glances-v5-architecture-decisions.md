@@ -129,6 +129,10 @@ The `_transform()` method is itself a pipeline of four ordered steps, all implem
 
 - `min_symbol` (v4) is **removed**. Display floor is derived from `unit` by the renderer. Plugin-specific behaviour belongs in `msg_curse()`.
 - User overrides from `glances.conf` are layered over `default_thresholds` per level (per-key merge — overriding only `critical` keeps `careful` and `warning` at their declared defaults).
+- **Threshold key precedence** (3 levels, first non-empty wins per level):
+  1. ``<pk_value>_<field>_<level>``  — per-item, per-field (collection plugins only — e.g. ``wlan0_bytes_recv_warning``).
+  2. ``<field>_<level>``             — per-field, all items (e.g. ``bytes_recv_warning``).
+  3. ``<level>``                     — applies to any watched field in the plugin section (e.g. ``warning``).
 - `_transform()` filters output to declared fields only. Undeclared psutil fields do not reach the StatsStore or the API.
 - Exposed via `GET /api/5/<plugin>/info`.
 
@@ -228,15 +232,62 @@ Primary key is declared in `fields_description` with `"primary_key": True` on th
 **Alert event shape** (Phase 1.4):
 ```python
 {
-    "ts":             "2026-05-04T12:34:56Z",   # ISO 8601, UTC
-    "plugin":         "mem",
-    "field":          "percent",
-    "level":          "warning",                # ok | careful | warning | critical
-    "previous_level": "ok",                     # transition source
-    "value":          75.0,
-    "prominent":      True,                     # copied from fields_description
+    "ts":             "2026-05-04T12:34:56+00:00",  # ISO 8601, UTC
+    "plugin":         "network",
+    "key":            "eth0",                       # pk_value for collections; None for scalars
+    "field":          "bytes_recv",
+    "level":          "warning",                    # ok | careful | warning | critical
+    "previous_level": "ok",                         # transition source
+    "value":          53125000.0,
+    "prominent":      True,                         # copied from fields_description
+    "hostname":       "myhost",                     # server hostname (client/server scope)
 }
 ```
+
+**Hysteresis & history config** (Phase 1.4):
+
+```ini
+[alerts]
+# Minimum time a new level must persist before the transition fires.
+# Prevents flapping on bursty signals (network rate, CPU spikes).
+min_duration_seconds=5.0
+
+# Number of events kept in the in-memory ring buffer exposed via
+# `GET /api/5/alert` (Phase 1.6).
+history_size=200
+
+[<plugin>]
+# Optional per-plugin override — useful for very volatile plugins
+# (e.g. network) where 5 s may not be enough.
+min_duration_seconds=10.0
+```
+
+A new level becomes "committed" only after it has been observed
+continuously for ``min_duration_seconds``. Oscillations during the
+debounce window reset the timer. ``min_duration_seconds=0`` disables
+hysteresis entirely (mostly useful for tests).
+
+**Action dispatch** is **fire-and-forget** — the scheduler never waits
+on `action.execute()`. The monitoring loop's latency is independent of
+how slow a shell command or webhook is. Action failures are logged at
+WARNING level with full context; they never propagate.
+
+**Action config key precedence** (3 levels, from most-specific to
+least-specific — the first non-empty key wins per action):
+
+```ini
+[network]
+# Level 3 — bare (any watched field, any item)
+critical_action=logger any-field-any-iface
+
+# Level 2 — field-specific (any item)
+bytes_recv_critical_action=logger bytes-recv-on-any-iface
+
+# Level 1 — (pk_value, field)-specific
+wlan0_bytes_recv_critical_action=ifconfig wlan0 down
+```
+
+The same precedence applies to threshold keys (§3.2).
 
 #### Action system architecture (issues #2328, #2600)
 

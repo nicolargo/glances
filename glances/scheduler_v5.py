@@ -32,6 +32,7 @@ import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from glances.alerts_v5 import GlancesAlerts
     from glances.config_v5 import GlancesConfigV5
     from glances.plugins.plugin.base_v5 import GlancesPluginBase
     from glances.stats_store_v5 import StatsStoreV5
@@ -54,9 +55,19 @@ class AsyncScheduler:
         # in another coroutine: await scheduler.stop()
     """
 
-    def __init__(self, store: StatsStoreV5, config: GlancesConfigV5) -> None:
+    def __init__(
+        self,
+        store: StatsStoreV5,
+        config: GlancesConfigV5,
+        alerts: GlancesAlerts | None = None,
+    ) -> None:
         self.store = store
         self.config = config
+        # Optional alerts hook — when set, the scheduler calls
+        # `alerts.ingest_plugin(plugin)` after each plugin update so the
+        # alert state machine sees every `_levels` payload. Absent → no
+        # alerts ingestion (back-compatible with the Phase 0.6 contract).
+        self.alerts = alerts
 
         self._entries: list[_PluginEntry] = []
         self._tasks: list[asyncio.Task[None]] = []
@@ -136,7 +147,7 @@ class AsyncScheduler:
     # ------------------------------------------------------------ internals
 
     async def _plugin_loop(self, entry: _PluginEntry) -> None:
-        """Per-plugin loop: `update()` then `sleep(refresh_time)`, forever."""
+        """Per-plugin loop: `update()` → optional alerts ingest → `sleep`, forever."""
         plugin_name = entry.plugin.plugin_name
         while True:
             try:
@@ -145,6 +156,12 @@ class AsyncScheduler:
                 # Defensive: GlancesPluginBase.update() already swallows.
                 # This catches anything a future plugin override might leak.
                 logger.warning("Scheduler caught exception from %s: %s", plugin_name, e)
+            if self.alerts is not None:
+                try:
+                    await self.alerts.ingest_plugin(entry.plugin)
+                except Exception as e:
+                    # Defensive: alerts must never tear down the loop either.
+                    logger.warning("Alerts ingest failed for %s: %s", plugin_name, e)
             await asyncio.sleep(entry.refresh_time)
 
 

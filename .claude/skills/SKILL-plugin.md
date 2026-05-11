@@ -117,7 +117,7 @@ stays in place (stale handling lands in Phase 3).
 | `watched` | bool | If `True`, this field gets a `_levels` entry computed each cycle. Default `False`. |
 | `watch_direction` | `"high"` / `"low"` | Threshold direction. `"high"` (default) alerts on `value >= threshold`; `"low"` alerts on `value <= threshold` (e.g. fs free). |
 | `prominent` | bool | When `True`, the field is rendered with **background highlight** (TUI/WebUI) and every level transition is tagged `prominent: True` in the alert event feed. Replaces v4 `_log` flag. Default `True` for watched fields. |
-| `default_thresholds` | dict | `{"careful": …, "warning": …, "critical": …}` — plugin-author defaults. Overridable per-level via `glances.conf [<plugin>] careful=N` (or `<field>_careful=N` for multi-watched plugins). |
+| `default_thresholds` | dict | `{"careful": …, "warning": …, "critical": …}` — plugin-author defaults. Overridable per-level following the **3-level precedence** (most-specific wins, first non-empty key): `<pk_value>_<field>_<level>` (collection items, e.g. `wlan0_bytes_recv_warning=0.7`) > `<field>_<level>` (multi-watched plugins) > `<level>` (single-field plugins). Layering is per-key: overriding only `critical` keeps `careful` and `warning` at defaults. |
 | `normalize_by` | str | Optional. Name of another field whose value divides this field before threshold comparison: `level = compute_level(value / stats[normalize_by], …)`. Used for per-core normalisation (`load.min15` ÷ `cpucore`, `cpu.ctx_switches` ÷ `cpucore`) and percent-of-capacity comparisons (`network.bytes_recv` ÷ `bytes_speed_rate_per_sec`). When the divisor is **missing, `None`, or `0`** the level is **skipped** for that field — meaning "no meaningful threshold computable" (e.g. interface with unknown link speed). Capacity-relative thresholds should be declared as ratios in `[0, 1]`. |
 | `rate` | bool | When `True`, the field is a cumulative counter; the base class converts it to a per-second rate via `_transform_gauge` (`(current - previous) / time_since_update`). On the first cycle the field is **absent** from the payload (no previous sample). Counter wrap or reboot clamps to `0.0`. |
 | `primary_key` | bool | Marks the join key for `_levels` indexing in collection plugins |
@@ -231,8 +231,8 @@ caching (default `1.0 s`) plus an `asyncio.Lock` for serialised access.
 
 ## What's deferred (out of scope for new plugins right now)
 
-- **`GlancesAlerts` ingestion of `_levels`** (stateful tracking, history feed) — Phase 1.4
-- **Per-item threshold overrides** via config (`[network] eth0_bytes_recv_critical=…`) — Phase 2+
+- **Apprise / LLM actions** — Phase 1.5 / Phase 2. The `shell` action
+  is the only concrete action in Phase 1.4.
 - **`hide_no_up` / `hide_no_ip` boolean filters** for network — Phase 2 (UI-level concerns)
 - **Min/max/mean history** — Phase 2
 - **Stale data handling** (`"stale": true`) — Phase 3 (remote client)

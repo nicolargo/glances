@@ -357,16 +357,23 @@ class GlancesPluginBase(Generic[T], ABC):
             if pk_value is None:
                 continue
             entry: dict[str, Any] = {}
-            self._compute_levels_for_item(item, entry)
+            self._compute_levels_for_item(item, entry, pk_value=str(pk_value))
             if entry:
                 self._levels[pk_value] = entry
 
-    def _compute_levels_for_item(self, item: dict[str, Any], target: dict[str, Any]) -> None:
+    def _compute_levels_for_item(
+        self,
+        item: dict[str, Any],
+        target: dict[str, Any],
+        pk_value: str | None = None,
+    ) -> None:
         """Walk `fields_description`, populate `target[field] = {level, prominent}`.
 
-        Same logic for scalar plugins (target is `self._levels`) and for
-        each item of a collection plugin (target is the per-item dict
-        keyed by primary-key value).
+        Same logic for scalar plugins (target is `self._levels`, no
+        ``pk_value``) and for each item of a collection plugin (target
+        is the per-item entry, ``pk_value`` carries the primary-key value
+        used to honour per-item config overrides — e.g.
+        ``[network] wlan0_bytes_recv_warning=0.7``).
         """
         for field_name, schema in self._fields.items():
             if not schema.get("watched"):
@@ -389,7 +396,8 @@ class GlancesPluginBase(Generic[T], ABC):
             thresholds = read_thresholds(
                 self.config,
                 self.plugin_name,
-                field_name,
+                field=field_name,
+                pk_value=pk_value,
                 defaults=schema.get("default_thresholds"),
             )
             if not thresholds:

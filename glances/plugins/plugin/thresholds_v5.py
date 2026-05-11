@@ -70,30 +70,40 @@ def read_thresholds(
     config: Any,
     section: str,
     field: str | None = None,
+    pk_value: str | None = None,
     defaults: dict[str, float] | None = None,
 ) -> dict[str, float]:
     """Read thresholds from a config section, layered over `defaults`.
 
-    Two key patterns are supported:
+    Three key patterns are supported, walked from most specific to least
+    specific — the first non-absent key wins for each level:
 
-    - `[section] careful=N, warning=N, critical=N` — single-watched-field plugin.
-    - `[section] <field>_careful=N, <field>_warning=N, ...` — multi-field plugin.
+    1. ``<pk_value>_<field>_<level>``  — per-item, per-field (e.g.
+       ``wlan0_bytes_recv_warning``). Requires both ``field`` and
+       ``pk_value`` to be provided.
+    2. ``<field>_<level>``             — per-field, all items (e.g.
+       ``bytes_recv_warning``). Requires ``field``.
+    3. ``<level>``                     — applies to any watched field
+       (e.g. ``warning``).
 
-    When `field` is provided, field-prefixed keys are tried first, with
-    fallback to bare keys. When `field` is None, only bare keys are read.
-
-    Per-level defaults (from the field schema's `default_thresholds`) are
-    used when neither the field-prefixed nor the bare key is configured.
-    Layering is per-key — the user can override only one level and keep
-    the others at their defaults.
+    Per-level defaults (from the field schema's ``default_thresholds``)
+    are used when none of the three keys are configured. Layering is
+    per-key — the user can override only one level and keep the others
+    at their declared defaults.
 
     A negative value in the config is treated as "absent" so users can
-    explicitly disable a level by setting `careful=-1`.
+    explicitly disable a level by setting ``careful=-1``.
     """
     out: dict[str, float] = dict(defaults) if defaults else {}
 
     for level in _BOUNDARY_KEYS_DESCENDING:
-        keys = (f"{field}_{level}", level) if field is not None else (level,)
+        keys: tuple[str, ...]
+        if field is not None and pk_value is not None:
+            keys = (f"{pk_value}_{field}_{level}", f"{field}_{level}", level)
+        elif field is not None:
+            keys = (f"{field}_{level}", level)
+        else:
+            keys = (level,)
         for key in keys:
             value = config.get(section, key, _ABSENT)
             if value is None:

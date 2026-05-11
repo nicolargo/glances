@@ -156,3 +156,75 @@ def test_read_thresholds_per_level_layering():
     defaults = {"careful": 50.0, "warning": 70.0, "critical": 90.0}
     out = read_thresholds(config, "mem", "percent", defaults=defaults)
     assert out == {"careful": 50.0, "warning": 70.0, "critical": 95.0}
+
+
+# ---------------------------------------------------------- 3-level precedence
+
+
+def test_read_thresholds_pk_specific_takes_priority_over_field_and_bare():
+    """`<pk>_<field>_<level>` beats `<field>_<level>` beats `<level>`."""
+    config = FakeConfig(
+        {
+            ("network", "warning"): "0.80",
+            ("network", "bytes_recv_warning"): "0.75",
+            ("network", "wlan0_bytes_recv_warning"): "0.70",
+        }
+    )
+    out = read_thresholds(config, "network", field="bytes_recv", pk_value="wlan0")
+    assert out == {"warning": 0.70}
+
+
+def test_read_thresholds_falls_back_to_field_when_pk_specific_missing():
+    """Without a `<pk>_<field>_<level>` key, the `<field>_<level>` key applies."""
+    config = FakeConfig(
+        {
+            ("network", "warning"): "0.80",
+            ("network", "bytes_recv_warning"): "0.75",
+        }
+    )
+    # wlan0 has no specific key — falls back to the field-wide one.
+    out = read_thresholds(config, "network", field="bytes_recv", pk_value="wlan0")
+    assert out == {"warning": 0.75}
+
+
+def test_read_thresholds_pk_specific_only_applies_to_matching_pk():
+    """A wlan0-specific key must not bleed into other interfaces."""
+    config = FakeConfig(
+        {
+            ("network", "bytes_recv_warning"): "0.80",
+            ("network", "wlan0_bytes_recv_warning"): "0.50",
+        }
+    )
+    # eth0 sees the field-wide value, not the wlan0-specific override.
+    out_eth = read_thresholds(config, "network", field="bytes_recv", pk_value="eth0")
+    assert out_eth == {"warning": 0.80}
+    # wlan0 sees its own override.
+    out_wlan = read_thresholds(config, "network", field="bytes_recv", pk_value="wlan0")
+    assert out_wlan == {"warning": 0.50}
+
+
+def test_read_thresholds_pk_layering_per_level():
+    """Different levels may use different scopes — each level resolves independently."""
+    config = FakeConfig(
+        {
+            ("network", "critical"): "0.95",  # bare: applies to all
+            ("network", "bytes_recv_warning"): "0.80",  # field-wide warning
+            ("network", "wlan0_bytes_recv_careful"): "0.50",  # pk-specific careful
+        }
+    )
+    out = read_thresholds(config, "network", field="bytes_recv", pk_value="wlan0")
+    # careful from pk-specific ; warning from field-wide ; critical from bare.
+    assert out == {"careful": 0.50, "warning": 0.80, "critical": 0.95}
+
+
+def test_read_thresholds_pk_value_none_falls_back_to_two_levels():
+    """When pk_value is None (scalar plugin), only field-wide and bare keys are tried."""
+    config = FakeConfig(
+        {
+            ("cpu", "warning"): "70",
+            ("cpu", "total_warning"): "80",
+            ("cpu", "host1_total_warning"): "60",  # would NOT match — pk_value=None
+        }
+    )
+    out = read_thresholds(config, "cpu", field="total", pk_value=None)
+    assert out == {"warning": 80.0}

@@ -289,3 +289,70 @@ async def test_smoke_two_plugins_write_to_store(store, config):
     assert slow_payload["value"] >= 10
     assert "time_since_update" in fast_payload
     assert "time_since_update" in slow_payload
+
+
+# ---------------------------------------------------------- alerts integration
+
+
+class _RecordingAlerts:
+    """Minimal alerts stand-in — records every ingest call."""
+
+    def __init__(self) -> None:
+        self.ingested: list[str] = []
+
+    async def ingest_plugin(self, plugin) -> None:
+        self.ingested.append(plugin.plugin_name)
+
+
+class _BoomAlerts:
+    """Alerts stand-in whose ingest always raises (resilience test)."""
+
+    async def ingest_plugin(self, plugin) -> None:
+        raise RuntimeError("alerts blew up")
+
+
+async def test_alerts_ingest_is_called_after_each_plugin_update(store, config):
+    alerts = _RecordingAlerts()
+    scheduler = AsyncScheduler(store, config, alerts=alerts)  # type: ignore[arg-type]
+    fast = FastPlugin(store, config)
+    scheduler.register(fast, refresh_time=0.01)
+
+    run_task = asyncio.create_task(scheduler.run_forever())
+    await asyncio.sleep(0.05)
+    await scheduler.stop()
+    await run_task
+
+    # At least one ingest per cycle. Multiple cycles run during the 50 ms window.
+    assert alerts.ingested.count("fast") >= 1
+
+
+async def test_alerts_ingest_exception_does_not_crash_scheduler(store, config, caplog):
+    """A failing alerts.ingest_plugin must never tear down the plugin loop."""
+    scheduler = AsyncScheduler(store, config, alerts=_BoomAlerts())  # type: ignore[arg-type]
+    fast = FastPlugin(store, config)
+    scheduler.register(fast, refresh_time=0.01)
+
+    run_task = asyncio.create_task(scheduler.run_forever())
+    with caplog.at_level(logging.WARNING):
+        await asyncio.sleep(0.05)
+        await scheduler.stop()
+        await run_task
+
+    # Plugin still produced stats despite alerts raising every cycle.
+    assert store.get("fast") is not None
+    assert "Alerts ingest failed" in caplog.text
+
+
+async def test_scheduler_without_alerts_does_not_call_anything(store, config):
+    """Back-compat: omitting `alerts=` behaves exactly like Phase 0.6."""
+    scheduler = AsyncScheduler(store, config)
+    assert scheduler.alerts is None
+    fast = FastPlugin(store, config)
+    scheduler.register(fast, refresh_time=0.01)
+
+    run_task = asyncio.create_task(scheduler.run_forever())
+    await asyncio.sleep(0.03)
+    await scheduler.stop()
+    await run_task
+
+    assert store.get("fast") is not None

@@ -229,10 +229,11 @@ def test_discover_ignores_reexported_classes(fake_package):
     assert list(registry.keys()) == ["webhook"]
 
 
-def test_discover_real_v5_package_is_empty():
-    """Phase 0 ships zero concrete actions — the real package must be empty."""
+def test_discover_real_v5_package_contains_shell_action():
+    """Phase 1.4 ships the shell action — it must be discoverable in the real package."""
     registry = discover_actions("glances.actions_v5")
-    assert registry == {}
+    assert "action" in registry
+    assert type(registry["action"]).__name__ == "ShellAction"
 
 
 def test_discover_rejects_non_package(tmp_path, monkeypatch):

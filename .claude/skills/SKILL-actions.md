@@ -9,10 +9,22 @@ The v4 module `glances/actions.py` is kept untouched during the transition.
 
 ## When does an action run?
 
-Actions are triggered by `GlancesAlerts` (architecture §3.4) when a plugin's
-`_levels` indicates a threshold crossing. `GlancesAlerts` lands in Phase 1.
-Phase 0 ships only the base class and the discovery mechanism — there are
-**zero concrete actions** in the v5 codebase yet (no dead code).
+Actions are triggered by `GlancesAlerts` (architecture §3.4, module
+`glances/alerts_v5.py`) when a plugin's `_levels` indicates a level
+transition. The scheduler calls `alerts.ingest_plugin(plugin)` after
+every plugin update; the alert engine debounces transitions with a
+configurable hysteresis (``[alerts] min_duration_seconds=N``, default
+``5.0 s``), then dispatches every configured action **fire-and-forget**
+via `asyncio.create_task`. The monitoring loop never blocks on an
+action.
+
+Concrete actions shipped:
+
+| Package | `action_name` | Status |
+|---|---|---|
+| `glances/actions_v5/shell/` | `action` (matches v4 `_action` keys) | Phase 1.4 ✅ |
+| `glances/actions_v5/apprise/` | `apprise` | Phase 1.5 (deferred) |
+| `glances/actions_v5/llm/` | `llm` | Phase 2 (deferred) |
 
 ## Action contract
 
@@ -42,9 +54,10 @@ class WebhookAction(GlancesActionBase):
             await client.post(action_value, json=context, timeout=5.0)
 ```
 
-That's it. The class is auto-discovered. As soon as `GlancesAlerts` ships
-in Phase 1, the action becomes available as
-`<level>_webhook=<url>` in any plugin section of `glances.conf`.
+That's it. The class is auto-discovered and immediately available as
+`<level>_webhook=<url>` in any plugin section of `glances.conf` —
+`GlancesAlerts` resolves the key with 3-level precedence and dispatches
+the action when a transition fires (see "Config key precedence" below).
 
 ## Optional dependencies (`requires`)
 
@@ -87,21 +100,68 @@ modes are deliberately defensive:
 | Two actions share the same `action_name` | `ValueError` at discovery (loud) |
 | Re-exported class from another module | Ignored (only register classes defined in their own module) |
 
-## Mustache rendering (deferred — Phase 1)
+## Mustache rendering
 
-The architecture (§3.4.1) specifies that `action_value` is a Mustache
-template rendered against `context` using the `chevron` library, with
-built-in variables `_glances_hostname`, `_glances_plugin`,
-`_glances_level`, `_glances_timestamp`. **Phase 0 does not implement
-rendering** — `GlancesAlerts` (Phase 1) will inject the rendered string
-into `execute()` or pass `chevron.render` into the context. The contract
-above shows `action_value: str` deliberately as the raw value for now.
+`action_value` is the **raw** template string from `glances.conf`.
+`GlancesAlerts` does not pre-render it — each action renders the
+template itself using the `chevron` library (already a core
+dependency). This lets different action types pick the right escape
+strategy:
 
-## Shell escaping (CVE-2026-32608)
+| Action type | Escape strategy |
+|---|---|
+| `shell` (`ShellAction`) | `shlex.quote()` every context value before `chevron.render` — defeats CVE-2026-32608 shell injection. |
+| `apprise` (future) | No escape — body sent as opaque text. |
+| `webhook` (future) | JSON-encode context — pass to body, not URL. |
 
-The `shell` action (Phase 1) is required to shell-escape every Mustache
-substitution before exec. This is the responsibility of the concrete
-`ShellAction` implementation, **not** of the base class.
+`context` is `plugin.get_export()` output (for the matching item, for
+collections) plus four built-in variables:
+
+| Variable | Value |
+|---|---|
+| `{{_glances_hostname}}` | Hostname of the Glances instance |
+| `{{_glances_plugin}}` | Plugin name (e.g. `mem`, `network`) |
+| `{{_glances_level}}` | Alert level (`careful` / `warning` / `critical`) |
+| `{{_glances_timestamp}}` | ISO 8601 UTC timestamp of the firing |
+
+## Config key precedence — 3 levels
+
+`GlancesAlerts` resolves each action key against three patterns,
+walking from most-specific to least-specific and firing the **first
+non-empty** value:
+
+1. ``<pk_value>_<field>_<level>_<action_name>[_repeat]``  (collection items only)
+2. ``<field>_<level>_<action_name>[_repeat]``
+3. ``<level>_<action_name>[_repeat]``
+
+Example for the `network` plugin (pk = `interface_name`):
+
+```ini
+[network]
+critical_action=logger "ANY field on ANY iface"
+bytes_recv_warning_action=logger "bytes_recv only, any iface"
+wlan0_bytes_recv_warning_action=ifconfig wlan0 down
+```
+
+The same precedence applies to thresholds (see SKILL-plugin.md).
+
+## Firing semantics
+
+- **Non-repeat** (``<level>_<action>``): fires once, on transition
+  entry into a non-ok level.
+- **`_repeat`** (``<level>_<action>_repeat``): fires every refresh
+  cycle while the committed level stays non-ok (matches v4). Entry
+  cycle fires both keys if both are configured.
+- **Resolution** (any → `ok`): event recorded in history, no action
+  fired. Use `_repeat` for "still failing" reminders.
+
+## Fire-and-forget dispatch
+
+`GlancesAlerts` schedules `action.execute()` via `asyncio.create_task`
+— the scheduler never waits. Action failures are caught by
+`GlancesAlerts` and logged at WARNING with `plugin_name`, `level`,
+`repeat`. Well-behaved actions log their own failures with full
+context and return normally; do not raise to signal failure.
 
 ## Testing an action
 
@@ -120,19 +180,22 @@ for the reference fixture.
 
 ## What's deferred (out of scope for new actions today)
 
-- **Concrete actions** (`shell`, `apprise`, `llm`) — Phase 1 alongside `GlancesAlerts`
-- **Mustache rendering** of `action_value` — Phase 1 (in `GlancesAlerts` or in each action)
-- **Shell escaping** — Phase 1 (in `shell` action)
-- **Per-action timeout / retry** — Phase 1
-- **Apprise URL globalisation** (`[outputs] apprise_url=...`) — Phase 1
-- **Action triggering by `GlancesAlerts`** — Phase 1 (no caller exists yet)
+- **Apprise action** (multi-service notifications) — Phase 1.5
+- **LLM action** (LiteLLM health reports) — Phase 2
+- **Per-action timeout / retry** — Phase 2
+- **Apprise URL globalisation** (`[outputs] apprise_url=...`) — Phase 1.5
+- **Resolution-event actions** (fire on transition to `ok`) — not planned
 
 ## Module path
 
 ```
 glances/actions_v5/__init__.py        # re-exports GlancesActionBase + discover_actions
 glances/actions_v5/action_base.py     # base class + discovery
-tests/test_action_base_v5.py          # contract + discovery tests
+glances/actions_v5/shell/__init__.py  # concrete shell action (Phase 1.4)
+glances/alerts_v5.py                  # GlancesAlerts — schedules action.execute()
+tests/test_action_base_v5.py          # base class + discovery tests
+tests/test_action_shell_v5.py         # shell action tests
+tests/test_alerts_v5.py               # state machine + dispatch tests
 ```
 
 Concrete actions ship as sub-packages: `glances/actions_v5/<name>/__init__.py`.

@@ -300,6 +300,38 @@ async def test_user_config_overrides_bandwidth_threshold(tmp_path, monkeypatch, 
     assert levels["bytes_recv"]["level"] == "careful"
 
 
+async def test_per_interface_threshold_overrides_field_wide(tmp_path, monkeypatch, store):
+    """`[network] wlan0_bytes_recv_warning=0.50` applies to wlan0 only."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[network]\nbytes_recv_warning=0.80\nwlan0_bytes_recv_warning=0.50\n",
+    )
+    plugin = PluginModel(store, config)
+    now = _fake_now(monkeypatch)
+
+    with _patch_psutil(
+        io_counters={"eth0": _io(rx=0), "wlan0": _io(rx=0)},
+        if_stats={"eth0": _stats(speed=1000), "wlan0": _stats(speed=1000)},
+    ):
+        await plugin.update()
+
+    now[0] = 101.0
+    # Both interfaces hit ratio 0.75 in this cycle.
+    # eth0: 0.75 ≥ careful (default 0.7), 0.75 < warning (0.80 from field-wide) → careful
+    # wlan0: 0.75 ≥ warning (0.50 from pk-specific), 0.75 < critical (default 0.9) → warning
+    rate = int(0.75 * 62_500_000)
+    with _patch_psutil(
+        io_counters={"eth0": _io(rx=rate), "wlan0": _io(rx=rate)},
+        if_stats={"eth0": _stats(speed=1000), "wlan0": _stats(speed=1000)},
+    ):
+        await plugin.update()
+
+    levels = store.get("network")["_levels"]
+    assert levels["eth0"]["bytes_recv"]["level"] == "careful"
+    assert levels["wlan0"]["bytes_recv"]["level"] == "warning"
+
+
 async def test_hide_drops_matching_interfaces(tmp_path, monkeypatch, store):
     config = _config_with(tmp_path, monkeypatch, "[network]\nhide=lo,docker.*\n")
     plugin = PluginModel(store, config)
