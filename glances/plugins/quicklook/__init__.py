@@ -245,22 +245,30 @@ class QuicklookPlugin(GlancesPluginModel):
             if key == 'cpu' and args.percpu:
                 ret.extend(self._msg_per_cpu(data, key, max_width))
             else:
-                if isinstance(data[key], Sparkline):
-                    # Sparkline display an history
-                    data[key].percents = [i[1] for i in self.get_raw_history(item=key, nb=data[key].size)]
-                    # A simple padding in order to align metrics to the right
-                    data[key].percents += [None] * (data[key].size - len(data[key].percents))
-                else:
-                    # Bar only the last value
-                    data[key].percent = self.stats[key]
-                msg = f'{key.upper():4} '
-                ret.extend(self._msg_create_line(msg, data[key], key))
-                ret.append(self.curse_new_line())
+                ret.extend(self._msg_cpu(data, key, max_width))
 
         # Remove the last new line
         ret.pop()
 
         # Return the message with decoration
+        return ret
+
+    def _msg_cpu(self, data, key, max_width):
+        """Create CPU view"""
+        ret = []
+
+        if isinstance(data[key], Sparkline):
+            # Sparkline display an history
+            data[key].percents = [i[1] for i in self.get_raw_history(item=key, nb=data[key].size)]
+            # A simple padding in order to align metrics to the right
+            data[key].percents += [None] * (data[key].size - len(data[key].percents))
+        else:
+            # Bar only the last value
+            data[key].percent = self.stats[key]
+        msg = f'{key.upper():4} '
+        ret.extend(self._msg_create_line(msg, data[key], key))
+        ret.append(self.curse_new_line())
+
         return ret
 
     def _msg_per_cpu(self, data, key, max_width):
