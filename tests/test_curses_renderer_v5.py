@@ -5,11 +5,17 @@ from __future__ import annotations
 from glances.outputs.curses_renderer_v5 import (
     Cell,
     ColorRole,
+    Frame,
+    PluginBlock,
     Row,
+    build_frame,
+    render_alert_block,
+    render_collection_plugin,
     render_scalar_plugin,
+    slot_for,
 )
 
-# ---------------------------------------------------------------- dataclasses
+# --------------------------------------------------------------- dataclasses
 
 
 def test_cell_defaults_to_default_color():
@@ -22,7 +28,55 @@ def test_row_holds_cells():
     assert [c.text for c in row.cells] == ["A", "B"]
 
 
-# ---------------------------------------------------------------- scalar plugin
+def test_pluginblock_height_and_width():
+    block = PluginBlock(
+        name="cpu",
+        rows=[
+            Row(cells=[Cell("CPU"), Cell("12.3%")]),
+            Row(cells=[Cell("user:"), Cell("8.1%")]),
+        ],
+    )
+    assert block.height == 2
+    # "CPU" + " " + "12.3%" = 9; "user:" + " " + "8.1%" = 10
+    assert block.width == 10
+
+
+# --------------------------------------------------------------- slot routing
+
+
+def test_slot_for_cpu_is_top():
+    assert slot_for("cpu") == "top"
+
+
+def test_slot_for_mem_is_top():
+    assert slot_for("mem") == "top"
+
+
+def test_slot_for_load_is_top():
+    assert slot_for("load") == "top"
+
+
+def test_slot_for_percpu_is_top():
+    assert slot_for("percpu") == "top"
+
+
+def test_slot_for_network_is_left():
+    assert slot_for("network") == "left"
+
+
+def test_slot_for_alert_is_right():
+    assert slot_for("alert") == "right"
+
+
+def test_slot_for_processlist_is_right():
+    assert slot_for("processlist") == "right"
+
+
+def test_slot_for_unknown_plugin_defaults_to_left():
+    assert slot_for("unknownplugin") == "left"
+
+
+# --------------------------------------------------------------- scalar plugin
 
 
 MEM_FIELDS = {
@@ -87,9 +141,6 @@ def test_render_scalar_applies_critical_color_with_prominent():
     rows = render_scalar_plugin("mem", _mem_payload(level="critical"), MEM_FIELDS)
     percent_cells = [c for row in rows for c in row.cells if "%" in c.text]
     assert percent_cells[0].color == ColorRole.CRITICAL
-    # prominent=True triggers background-highlight rendering — exposed as
-    # the `prominent` flag on the cell so the curses layer can pick the
-    # right attribute (A_REVERSE vs plain colour).
     assert percent_cells[0].prominent is True
 
 
@@ -98,7 +149,6 @@ def test_render_scalar_handles_empty_payload():
     rows = render_scalar_plugin("mem", {}, MEM_FIELDS)
     flat = " ".join(c.text for row in rows for c in row.cells)
     assert "MEM" in flat  # header still rendered
-    # No percent value — should not crash.
 
 
 def test_render_scalar_honours_explicit_format_hint():
@@ -110,7 +160,7 @@ def test_render_scalar_honours_explicit_format_hint():
     assert "12.345%" in flat
 
 
-# ---------------------------------------------------------------- collection plugin
+# --------------------------------------------------------------- collection plugin
 
 
 NETWORK_FIELDS = {
@@ -141,26 +191,19 @@ def _network_payload() -> dict:
 
 
 def test_render_collection_returns_header_plus_one_row_per_item():
-    from glances.outputs.curses_renderer_v5 import render_collection_plugin
-
     rows = render_collection_plugin("network", _network_payload(), NETWORK_FIELDS)
     # 1 header + 2 interfaces
     assert len(rows) == 3
 
 
 def test_render_collection_header_uses_plugin_name_uppercase():
-    from glances.outputs.curses_renderer_v5 import render_collection_plugin
-
     rows = render_collection_plugin("network", _network_payload(), NETWORK_FIELDS)
     header_text = " ".join(c.text for c in rows[0].cells)
     assert "NETWORK" in header_text
 
 
 def test_render_collection_emits_per_item_level_colors():
-    from glances.outputs.curses_renderer_v5 import render_collection_plugin
-
     rows = render_collection_plugin("network", _network_payload(), NETWORK_FIELDS)
-    # Find the eth0 row and check Rx cell color.
     eth_row = next(r for r in rows if any("eth0" in c.text for c in r.cells))
     rx_cells = [c for c in eth_row.cells if c.text.endswith("/s") and c.color != ColorRole.DEFAULT]
     assert any(c.color == ColorRole.WARNING for c in rx_cells)
@@ -168,20 +211,15 @@ def test_render_collection_emits_per_item_level_colors():
 
 def test_render_collection_skips_filtered_items_handled_upstream():
     """The base class filters items before the renderer sees them."""
-    from glances.outputs.curses_renderer_v5 import render_collection_plugin
-
     payload = {"data": [], "_levels": {}}
     rows = render_collection_plugin("network", payload, NETWORK_FIELDS)
-    # Just the header, no item rows.
     assert len(rows) == 1
 
 
-# ---------------------------------------------------------------- footer
+# --------------------------------------------------------------- alert block
 
 
-def test_render_alert_footer_shows_recent_events():
-    from glances.outputs.curses_renderer_v5 import render_alert_footer
-
+def test_render_alert_block_shows_recent_events():
     history = [
         {
             "ts": "2026-05-12T10:00:00+00:00",
@@ -206,16 +244,14 @@ def test_render_alert_footer_shows_recent_events():
             "hostname": "h",
         },
     ]
-    rows = render_alert_footer(history, limit=10)
-    assert len(rows) == 1 + 2  # header + 2 events
+    rows = render_alert_block(history, limit=10)
+    assert len(rows) == 1 + 2
     flat = " ".join(c.text for row in rows for c in row.cells)
     assert "mem" in flat
     assert "eth0" in flat
 
 
-def test_render_alert_footer_truncates_to_limit():
-    from glances.outputs.curses_renderer_v5 import render_alert_footer
-
+def test_render_alert_block_truncates_to_limit():
     history = [
         {
             "ts": f"2026-05-12T10:0{i}:00+00:00",
@@ -230,55 +266,116 @@ def test_render_alert_footer_truncates_to_limit():
         }
         for i in range(5)
     ]
-    rows = render_alert_footer(history, limit=3)
-    # 1 header + 3 events (the most recent 3).
+    rows = render_alert_block(history, limit=3)
     assert len(rows) == 4
 
 
-def test_render_alert_footer_handles_empty_history():
-    from glances.outputs.curses_renderer_v5 import render_alert_footer
-
-    rows = render_alert_footer([], limit=10)
-    # Just a header saying "no alerts" or similar — exact wording unspecified,
-    # but it must produce at least one row and not crash.
+def test_render_alert_block_handles_empty_history():
+    rows = render_alert_block([], limit=10)
     assert len(rows) >= 1
 
 
-# ---------------------------------------------------------------- frame builder
+# --------------------------------------------------------------- frame builder
 
 
-def test_build_frame_arranges_scalars_left_collections_right():
-    from glances.outputs.curses_renderer_v5 import build_frame
-
+def test_build_frame_routes_cpu_mem_load_to_top_slot():
+    """cpu, mem, load → top row (horizontal), matching v4's `_top` list."""
     store_snapshot = {
+        "cpu": {"percent": 12.0, "_levels": {"percent": {"level": "ok"}}},
+        "mem": _mem_payload(),
+        "load": {"min1": 0.5, "_levels": {"min1": {"level": "ok"}}},
+    }
+    fields_by_plugin = {
+        "cpu": {"percent": {"unit": "percent", "label": "CPU", "watched": True}},
+        "mem": MEM_FIELDS,
+        "load": {"min1": {"unit": "number", "label": "1 min", "watched": True}},
+    }
+    registry = [("cpu", False), ("mem", False), ("load", False)]
+
+    frame = build_frame(store_snapshot, fields_by_plugin, registry, alerts_history=[])
+
+    top_names = [b.name for b in frame.top]
+    assert top_names == ["cpu", "mem", "load"]
+    assert all(isinstance(b, PluginBlock) for b in frame.top)
+
+
+def test_build_frame_routes_network_to_left_slot():
+    """network → left sidebar, matching v4's `_left_sidebar`."""
+    store_snapshot = {"network": _network_payload()}
+    fields_by_plugin = {"network": NETWORK_FIELDS}
+    registry = [("network", True)]
+
+    frame = build_frame(store_snapshot, fields_by_plugin, registry, alerts_history=[])
+
+    assert [b.name for b in frame.left] == ["network"]
+    assert frame.top == []
+
+
+def test_build_frame_synthesizes_alert_block_in_right_slot():
+    """Alerts always appear in the right slot, even with no plugins."""
+    frame = build_frame(
+        store_snapshot={},
+        fields_by_plugin={},
+        registry=[],
+        alerts_history=[],
+    )
+    assert [b.name for b in frame.right] == ["alert"]
+
+
+def test_build_frame_alert_block_carries_history():
+    history = [
+        {
+            "ts": "2026-05-12T10:00:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 73.0,
+            "prominent": True,
+            "hostname": "h",
+        },
+    ]
+    frame = build_frame({}, {}, [], alerts_history=history)
+    alert_block = frame.right[0]
+    flat = " ".join(c.text for row in alert_block.rows for c in row.cells)
+    assert "mem" in flat
+
+
+def test_build_frame_full_layout():
+    """Mixed registry: cpu/mem in top, network in left, alert in right."""
+    store_snapshot = {
+        "cpu": {"percent": 25.0, "_levels": {"percent": {"level": "ok"}}},
         "mem": _mem_payload(),
         "network": _network_payload(),
     }
     fields_by_plugin = {
+        "cpu": {"percent": {"unit": "percent", "label": "CPU", "watched": True}},
         "mem": MEM_FIELDS,
         "network": NETWORK_FIELDS,
     }
-    registry = [("mem", False), ("network", True)]  # (plugin_name, is_collection)
+    registry = [("cpu", False), ("mem", False), ("network", True)]
 
     frame = build_frame(store_snapshot, fields_by_plugin, registry, alerts_history=[])
 
-    # mem is scalar → left column. network is collection → right column.
-    assert frame.left
-    assert frame.right
-    assert any("MEM" in c.text for row in frame.left for c in row.cells)
-    assert any("NETWORK" in c.text for row in frame.right for c in row.cells)
+    assert [b.name for b in frame.top] == ["cpu", "mem"]
+    assert [b.name for b in frame.left] == ["network"]
+    assert [b.name for b in frame.right] == ["alert"]
 
 
 def test_build_frame_handles_missing_plugin_payload():
     """A plugin in the registry but absent from the store (cycle-0)."""
-    from glances.outputs.curses_renderer_v5 import build_frame
-
     frame = build_frame(
         store_snapshot={},
         fields_by_plugin={"mem": MEM_FIELDS},
         registry=[("mem", False)],
         alerts_history=[],
     )
-    # Header rendered, no value rows.
-    flat = " ".join(c.text for row in frame.left for c in row.cells)
+    mem_block = next(b for b in frame.top if b.name == "mem")
+    flat = " ".join(c.text for row in mem_block.rows for c in row.cells)
     assert "MEM" in flat
+
+
+def test_build_frame_returns_a_frame_instance():
+    frame = build_frame({}, {}, [], [])
+    assert isinstance(frame, Frame)

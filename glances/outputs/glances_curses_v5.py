@@ -33,6 +33,8 @@ from glances.outputs.curses_renderer_v5 import (
     Cell,
     ColorRole,
     Frame,
+    PluginBlock,
+    Row,
     build_frame,
 )
 
@@ -152,34 +154,121 @@ class TuiV5(threading.Thread):
 
     # ----------------------------------------------------------- paint
 
+    # Spacing constants — mirror v4 (cf. `_GlancesCurses.space_between_column`).
+    _TOP_GAP = 3
+    _SIDEBAR_SEPARATOR_GAP = 2
+
     def _paint(self, stdscr, frame: Frame) -> None:
+        """Lay out the frame on the terminal, mirroring v4:
+
+        top blocks         (cpu | mem | load | ...)  side-by-side
+        <separator line>
+        left blocks         right blocks              two vertical columns
+        """
         stdscr.erase()
         max_y, max_x = stdscr.getmaxyx()
 
-        left_width = max_x // 2
-        right_x = left_width
-        right_width = max_x - left_width
+        # 1. Top row: paint each block side-by-side.
+        top_height = self._paint_top_row(stdscr, frame.top, 0, max_x)
 
-        footer_height = len(frame.footer)
-        body_height = max(0, max_y - footer_height - 1)
+        # 2. Separator under the top row (if any top content was painted).
+        body_y0 = top_height
+        if top_height > 0 and top_height < max_y:
+            self._paint_separator(stdscr, top_height, 0, max_x)
+            body_y0 = top_height + 1
 
-        self._paint_column(stdscr, frame.left, 0, 0, left_width, body_height)
-        self._paint_column(stdscr, frame.right, 0, right_x, right_width, body_height)
-        self._paint_column(stdscr, frame.footer, max_y - footer_height, 0, max_x, footer_height)
+        # 3. Below the top row: left + right sidebars side-by-side.
+        body_height = max(0, max_y - body_y0)
+        if body_height > 0:
+            left_width = self._sidebar_split(frame, max_x)
+            right_x = left_width + self._SIDEBAR_SEPARATOR_GAP
+            right_width = max(0, max_x - right_x)
 
-    def _paint_column(self, stdscr, rows, y0: int, x0: int, width: int, height: int) -> None:
-        for i, row in enumerate(rows[:height]):
-            x = x0
-            for cell in row.cells:
-                if x >= x0 + width:
-                    break
-                text = cell.text[: x0 + width - x]
-                attr = _attr_for(cell)
-                try:
-                    stdscr.addstr(y0 + i, x, text, attr)
-                except curses.error:
-                    break
-                x += len(text) + 1  # one-space gap between cells
+            self._paint_sidebar(stdscr, frame.left, body_y0, 0, left_width, body_height)
+            self._paint_sidebar(stdscr, frame.right, body_y0, right_x, right_width, body_height)
+
+    @staticmethod
+    def _sidebar_split(frame: Frame, max_x: int) -> int:
+        """Width allocated to the left sidebar — bounded like v4
+        (`_left_sidebar_min_width=23`, `_left_sidebar_max_width=34`).
+        """
+        natural = max((b.width for b in frame.left), default=0)
+        # +2 for breathing room, mirroring v4's column gap.
+        natural = max(natural + 2, 23)
+        return min(natural, 34, max(1, max_x // 2))
+
+    def _paint_top_row(self, stdscr, blocks: list[PluginBlock], y0: int, max_x: int) -> int:
+        """Paint TOP blocks side-by-side. Returns the height of the row
+        (the tallest block painted)."""
+        if not blocks:
+            return 0
+        x = 0
+        height = 0
+        for block in blocks:
+            if x >= max_x:
+                break
+            block_width = max(1, max_x - x)
+            painted_w = self._paint_block(stdscr, block, y0, x, block_width, fit_to_term=False)
+            x += painted_w + self._TOP_GAP
+            height = max(height, block.height)
+        return height
+
+    def _paint_sidebar(self, stdscr, blocks: list[PluginBlock], y0: int, x0: int, width: int, height: int) -> None:
+        """Stack blocks vertically; each block separated by one empty line."""
+        if width <= 0 or height <= 0:
+            return
+        y = y0
+        end_y = y0 + height
+        for block in blocks:
+            if y >= end_y:
+                break
+            painted_h = self._paint_block(stdscr, block, y, x0, width, fit_to_term=True, max_height=end_y - y)
+            y += painted_h + 1  # one empty line between blocks
+
+    def _paint_block(
+        self,
+        stdscr,
+        block: PluginBlock,
+        y0: int,
+        x0: int,
+        width: int,
+        fit_to_term: bool,
+        max_height: int | None = None,
+    ) -> int:
+        """Paint a single block at (y0, x0) within the given width.
+
+        Returns the actual width painted (for top row layout to advance).
+        """
+        rows = block.rows
+        if max_height is not None:
+            rows = rows[:max_height]
+        widest = 0
+        for i, row in enumerate(rows):
+            painted_w = self._paint_row(stdscr, row, y0 + i, x0, width)
+            widest = max(widest, painted_w)
+        return min(widest, width) if fit_to_term else widest
+
+    def _paint_row(self, stdscr, row: Row, y: int, x0: int, width: int) -> int:
+        """Paint a single row's cells with a one-space gap. Returns width consumed."""
+        x = x0
+        limit = x0 + width
+        for cell in row.cells:
+            if x >= limit:
+                break
+            text = cell.text[: limit - x]
+            attr = _attr_for(cell)
+            try:
+                stdscr.addstr(y, x, text, attr)
+            except curses.error:
+                break
+            x += len(text) + 1
+        return max(0, x - x0 - 1)
+
+    def _paint_separator(self, stdscr, y: int, x0: int, width: int) -> None:
+        try:
+            stdscr.addstr(y, x0, "-" * max(0, width - 1))
+        except curses.error:
+            pass
 
 
 # ----------------------------------------------------------------- colors

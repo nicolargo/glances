@@ -8,13 +8,26 @@
 
 """Glances v5 — pure curses renderer (no I/O).
 
-The renderer is the layout brain of the TUI: it takes a snapshot of the
-StatsStore (a `dict` of `plugin_name → payload`) plus the alert history
-and produces a structured `Frame` of `Row`s of `Cell`s. The curses I/O
-thread (glances_curses_v5.py) then plots the frame onto the terminal.
+Layout mirrors v4 (`glances/outputs/glances_curses.py`):
 
-Keeping the renderer pure (no curses, no threading, no I/O) lets us
-unit-test layout decisions exhaustively without driving a real terminal.
+    +--------------------------------------------------+
+    | (optional header — not in G0)                    |
+    +--------------------------------------------------+
+    | CPU block | MEM block | LOAD block | ...         |   top row (horizontal)
+    +--------------------------------------------------+
+    | NETWORK            | ALERT                       |
+    | ...                | ...                         |   left + right sidebars
+    | (other left)       | (other right)               |
+    +--------------------------------------------------+
+
+The renderer produces three slot lists of `PluginBlock`s (each a list of
+`Row`s). The curses I/O thread (`glances_curses_v5.py`) is responsible
+for placing the blocks onto the terminal:
+    - top blocks are painted side-by-side from row 0
+    - left/right blocks are stacked vertically below the top row
+
+Keeping the renderer pure (no curses, no threading) lets us unit-test
+slot routing + per-plugin rendering without driving a real terminal.
 """
 
 from __future__ import annotations
@@ -24,6 +37,47 @@ from enum import Enum
 from typing import Any
 
 from glances.outputs.curses_formatters_v5 import format_value
+
+# --------------------------------------------------------------- v4 slot lists
+#
+# Mirrors v4's `_top`, `_left_sidebar`, `_right_sidebar` (see
+# `glances/outputs/glances_curses.py`). Plugin names not in any list
+# default to LEFT (same fallback as v4). Configurable via [outputs] later.
+
+TOP_SLOT: tuple[str, ...] = ("quicklook", "cpu", "percpu", "gpu", "mem", "memswap", "load")
+LEFT_SLOT: tuple[str, ...] = (
+    "network",
+    "ports",
+    "wifi",
+    "connections",
+    "diskio",
+    "fs",
+    "irq",
+    "folders",
+    "raid",
+    "smart",
+    "sensors",
+    "now",
+)
+RIGHT_SLOT: tuple[str, ...] = (
+    "vms",
+    "containers",
+    "processcount",
+    "amps",
+    "processlist",
+    "programlist",
+    "alert",
+)
+
+
+def slot_for(plugin_name: str) -> str:
+    """Return the layout slot for a plugin: 'top', 'left', or 'right'."""
+    if plugin_name in TOP_SLOT:
+        return "top"
+    if plugin_name in RIGHT_SLOT:
+        return "right"
+    # Default to left sidebar (matches v4: an unknown plugin lands there).
+    return "left"
 
 
 class ColorRole(Enum):
@@ -64,15 +118,36 @@ class Row:
 
 
 @dataclass
+class PluginBlock:
+    """A plugin's multi-line output as a self-contained block.
+
+    The painter places blocks: TOP-slot blocks side-by-side on row 0,
+    LEFT/RIGHT-slot blocks stacked vertically below the top row.
+    """
+
+    name: str
+    rows: list[Row] = field(default_factory=list)
+
+    @property
+    def height(self) -> int:
+        return len(self.rows)
+
+    @property
+    def width(self) -> int:
+        """Max printable width across rows (single-space cell separator)."""
+        return max((sum(len(c.text) for c in r.cells) + max(0, len(r.cells) - 1) for r in self.rows), default=0)
+
+
+@dataclass
 class Frame:
-    """The complete TUI screen: ordered rows for left/right columns + footer."""
+    """The complete TUI screen, sliced into v4-equivalent slots."""
 
-    left: list[Row] = field(default_factory=list)
-    right: list[Row] = field(default_factory=list)
-    footer: list[Row] = field(default_factory=list)
+    top: list[PluginBlock] = field(default_factory=list)
+    left: list[PluginBlock] = field(default_factory=list)
+    right: list[PluginBlock] = field(default_factory=list)
 
 
-# ----------------------------------------------------------------- helpers
+# --------------------------------------------------------------- helpers
 
 
 def _level_entry(payload: dict[str, Any], field_name: str) -> dict[str, Any]:
@@ -98,7 +173,7 @@ def _cell_for_field(
     return Cell(text=text, color=role, prominent=prominent)
 
 
-# ----------------------------------------------------------------- scalar
+# --------------------------------------------------------------- scalar
 
 
 def render_scalar_plugin(
@@ -106,17 +181,19 @@ def render_scalar_plugin(
     payload: dict[str, Any],
     fields_desc: dict[str, dict[str, Any]],
 ) -> list[Row]:
-    """Render a scalar plugin (`mem`, `cpu`, `load`).
+    """Render a scalar plugin (`mem`, `cpu`, `load`) as a block.
 
-    Layout: a header row carrying the plugin label, then one row per
-    visible field showing `label: value`. The "primary" field (the only
-    `watched: True` one or the first declared) is highlighted in the
-    header alongside the plugin name.
+    Layout — replicates v4's compact "block per plugin" style used in the
+    top row:
 
-    The header label is the plugin's most-prominent watched field's
-    `label` upper-cased (e.g. `MEM` for the `percent` field of the `mem`
-    plugin). Falls back to the plugin_name in upper case when no watched
-    field is found.
+        HEADER  primary%               <- header row: label (HEADER) + primary value
+        label1: value1                 <- one row per remaining displayed field
+        label2: value2
+        ...
+
+    The header label is the plugin's most-prominent watched field's `label`
+    upper-cased (e.g. `MEM` for the `percent` field of the `mem` plugin).
+    Falls back to plugin_name.upper() when no watched field is found.
     """
     header_label, primary_field = _resolve_header(plugin_name, fields_desc)
     header_cells: list[Cell] = [Cell(text=header_label, color=ColorRole.HEADER)]
@@ -154,7 +231,7 @@ def _resolve_header(plugin_name: str, fields_desc: dict[str, dict[str, Any]]) ->
     return plugin_name.upper(), None
 
 
-# ----------------------------------------------------------------- collection
+# --------------------------------------------------------------- collection
 
 
 def render_collection_plugin(
@@ -162,22 +239,22 @@ def render_collection_plugin(
     payload: dict[str, Any],
     fields_desc: dict[str, dict[str, Any]],
 ) -> list[Row]:
-    """Render a collection plugin (`network`, `fs`, …).
+    """Render a collection plugin (`network`, `fs`, …) as a block.
 
-    Layout:
-        Header row with the plugin name and column labels.
-        One row per item, each cell formatted per `fields_desc`.
+    Layout — replicates v4's left-sidebar style (header row + one row per
+    item):
 
-    The primary-key field is always the leftmost column. Other columns
-    appear in `fields_desc` declaration order. Per-item `_levels` are
-    looked up under `payload['_levels'][pk_value]`.
+        NETWORK         Rx     Tx        <- header: plugin name + column labels
+        eth0            1.2M   300K
+        wlp0s20f3       45K    12K
+        ...
+
+    Per-item `_levels` are looked up under `payload['_levels'][pk_value]`.
     """
     pk_field = _resolve_primary_key(fields_desc)
     visible_fields = [name for name in fields_desc if name != pk_field]
 
     header_cells: list[Cell] = [Cell(text=plugin_name.upper(), color=ColorRole.HEADER)]
-    if pk_field:
-        header_cells.append(Cell(text=fields_desc[pk_field].get("label", pk_field), color=ColorRole.HEADER))
     for name in visible_fields:
         header_cells.append(Cell(text=fields_desc[name].get("label", name), color=ColorRole.HEADER))
     rows: list[Row] = [Row(cells=header_cells)]
@@ -192,7 +269,7 @@ def render_collection_plugin(
         item_levels = levels_index.get(pk_value, {}) if isinstance(levels_index, dict) else {}
         per_item_payload = {**item, "_levels": item_levels}
 
-        cells: list[Cell] = [Cell(text="")]  # spacer under the plugin-name header column
+        cells: list[Cell] = []
         if pk_field:
             cells.append(Cell(text=format_value(item.get(pk_field), fields_desc[pk_field])))
         for name in visible_fields:
@@ -209,11 +286,11 @@ def _resolve_primary_key(fields_desc: dict[str, dict[str, Any]]) -> str | None:
     return None
 
 
-# ----------------------------------------------------------------- footer
+# --------------------------------------------------------------- alert block
 
 
-def render_alert_footer(history: list[dict[str, Any]], limit: int = 10) -> list[Row]:
-    """Render the alert history footer (vertical list, most recent at top).
+def render_alert_block(history: list[dict[str, Any]], limit: int = 10) -> list[Row]:
+    """Render the alert history (vertical list, most recent at top).
 
     Header row: `ALERTS (n)`. Then up to `limit` event rows showing
     timestamp, plugin/key, field, transition (previous → new). When the
@@ -248,7 +325,7 @@ def render_alert_footer(history: list[dict[str, Any]], limit: int = 10) -> list[
     return rows
 
 
-# ----------------------------------------------------------------- frame
+# --------------------------------------------------------------- frame
 
 
 def build_frame(
@@ -258,32 +335,44 @@ def build_frame(
     alerts_history: list[dict[str, Any]],
     alerts_limit: int = 10,
 ) -> Frame:
-    """Assemble a complete TUI Frame.
+    """Assemble a complete TUI Frame following v4's slot layout.
 
     Args:
         store_snapshot: `{plugin_name: payload}` — a shallow copy of the store.
         fields_by_plugin: `{plugin_name: fields_description}`.
-        registry: ordered list of `(plugin_name, is_collection)` — controls
-            which plugins are displayed and in which order.
-        alerts_history: the deque output of `GlancesAlerts.get_history()`.
-        alerts_limit: cap on the number of events rendered in the footer.
+        registry: ordered list of `(plugin_name, is_collection)`. The
+            collection flag drives the rendering function (scalar vs
+            collection) — the slot (top / left / right) is derived from
+            the plugin name via `slot_for()`.
+        alerts_history: output of `GlancesAlerts.get_history()`.
+        alerts_limit: cap on the number of events rendered in the alert block.
 
-    Rules:
-        - Scalar plugins → left column.
-        - Collection plugins → right column.
-        - Footer → alerts history.
-        - A plugin in the registry with no payload (cycle-0) still gets its
-          header rendered.
+    Rules (matching v4's `__display_top` / `__display_left` / `__display_right`):
+        - cpu / percpu / mem / load → TOP slot (rendered side-by-side
+          horizontally by the painter).
+        - network and other collections → LEFT slot.
+        - alerts (synthesized) → RIGHT slot.
+        - Unknown plugins default to LEFT (same as v4's fallback).
     """
     frame = Frame()
     for plugin_name, is_collection in registry:
         payload = store_snapshot.get(plugin_name) or {}
         fields_desc = fields_by_plugin.get(plugin_name, {})
         if is_collection:
-            frame.right.extend(render_collection_plugin(plugin_name, payload, fields_desc))
-            frame.right.append(Row(cells=[Cell(text="")]))  # spacer between plugins
+            rows = render_collection_plugin(plugin_name, payload, fields_desc)
         else:
-            frame.left.extend(render_scalar_plugin(plugin_name, payload, fields_desc))
-            frame.left.append(Row(cells=[Cell(text="")]))
-    frame.footer = render_alert_footer(alerts_history, limit=alerts_limit)
+            rows = render_scalar_plugin(plugin_name, payload, fields_desc)
+        block = PluginBlock(name=plugin_name, rows=rows)
+
+        slot = slot_for(plugin_name)
+        if slot == "top":
+            frame.top.append(block)
+        elif slot == "right":
+            frame.right.append(block)
+        else:
+            frame.left.append(block)
+
+    # Synthesize the alerts block in the RIGHT slot (mirrors v4's `alert`
+    # plugin in `_right_sidebar`).
+    frame.right.append(PluginBlock(name="alert", rows=render_alert_block(alerts_history, limit=alerts_limit)))
     return frame
