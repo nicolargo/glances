@@ -26,6 +26,7 @@ import curses
 import logging
 import threading
 import time
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from glances.outputs.curses_renderer_v5 import (
@@ -64,6 +65,7 @@ class TuiV5(threading.Thread):
         registry: list[tuple[str, bool]],
         fields_by_plugin: dict[str, dict[str, dict[str, Any]]],
         refresh_interval: float = 1.0,
+        on_quit: Callable[[], None] | None = None,
     ) -> None:
         super().__init__(name="glances-tui-v5", daemon=True)
         self.store = store
@@ -72,6 +74,11 @@ class TuiV5(threading.Thread):
         self.registry = registry
         self.fields_by_plugin = fields_by_plugin
         self.refresh_interval = refresh_interval
+        # Fired once when the user quits the TUI via `q`/ESC, so the main
+        # asyncio loop (uvicorn) can shut down too. Without this, closing
+        # the TUI leaves the server running and the shell prompt blocked
+        # until Ctrl-C. None = no-op (used in tests).
+        self._on_quit = on_quit
         self._stop_event = threading.Event()
 
     # ----------------------------------------------------------- control
@@ -104,6 +111,11 @@ class TuiV5(threading.Thread):
             key = stdscr.getch()
             if key in (ord("q"), 27):  # 27 = ESC
                 self.stop()
+                if self._on_quit is not None:
+                    try:
+                        self._on_quit()
+                    except Exception as e:  # pragma: no cover — defensive
+                        logger.warning("TUI on_quit callback failed: %s", e)
                 break
 
             self._sleep_responsive(self.refresh_interval)

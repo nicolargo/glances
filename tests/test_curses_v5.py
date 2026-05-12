@@ -132,3 +132,28 @@ def test_tui_v5_quit_on_q_key(monkeypatch, fake_store, fake_alerts, fake_config)
     tui.join(timeout=1.0)
     assert not tui.is_alive()
     assert tui._stop_event.is_set()
+
+
+def test_tui_v5_q_key_fires_on_quit_callback(monkeypatch, fake_store, fake_alerts, fake_config):
+    """Pressing 'q' fires the on_quit callback so the main loop can shut down."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    fake_stdscr = MagicMock()
+    fake_stdscr.getmaxyx.return_value = (24, 80)
+    fake_stdscr.getch.side_effect = [ord("q"), -1, -1]
+
+    monkeypatch.setattr(tui_mod, "_safe_curses_wrapper", lambda fn: fn(fake_stdscr))
+
+    fired: list[bool] = []
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("mem", False)],
+        fields_by_plugin={"mem": {}},
+        refresh_interval=0.01,
+        on_quit=lambda: fired.append(True),
+    )
+    tui.start()
+    tui.join(timeout=1.0)
+    assert fired == [True]

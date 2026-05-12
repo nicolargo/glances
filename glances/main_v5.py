@@ -43,7 +43,9 @@ import contextlib
 import getpass
 import importlib
 import logging
+import os
 import pkgutil
+import signal
 import sys
 from typing import TYPE_CHECKING
 
@@ -113,6 +115,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Enable debug-level logging.",
     )
     parser.add_argument(
+        "--quiet",
         "--no-tui",
         dest="no_tui",
         action="store_true",
@@ -287,6 +290,11 @@ def assemble(
         registry = [(p.plugin_name, p.IS_COLLECTION) for p in plugins]
         fields_by_plugin = {p.plugin_name: p._fields for p in plugins}
         refresh = float(config.get("outputs", "tui_refresh_interval", 1.0))
+        # When the user quits the TUI via `q`/ESC we must also stop uvicorn,
+        # otherwise the process keeps running and the shell prompt stays
+        # blocked until Ctrl-C. SIGINT is delivered to the main thread,
+        # raises KeyboardInterrupt inside `asyncio.run(serve(...))`, and
+        # `serve`'s `finally` clause cleans up the scheduler.
         tui = _TuiV5(
             store=store,
             alerts=alerts,
@@ -294,6 +302,7 @@ def assemble(
             registry=registry,
             fields_by_plugin=fields_by_plugin,
             refresh_interval=refresh,
+            on_quit=lambda: os.kill(os.getpid(), signal.SIGINT),
         )
 
     return app, scheduler, host, int(port), tui
