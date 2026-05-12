@@ -502,6 +502,8 @@ Properties:
 
 ## 4. REST API server — FastAPI
 
+### 4.1 Topology
+
 - Single server on `:61208`, replacing both Bottle (`:61208`) and XML-RPC (`:61209`).
 - **No v4 API compatibility.** API version is `5`. Entry point: `/api/5/`.
 - Route structure identical to v4, version number updated: `/api/5/cpu`, `/api/5/mem`, `/api/5/all`, etc.
@@ -511,7 +513,94 @@ Properties:
   [outputs]
   api_doc=false
   ```
-- Authentication: **Bearer token** (v4.5.0+) and **Basic Auth** (PBKDF2), both preserved. Startup `WARNING` logged when neither is configured (CVE-2026-32596).
+- Liveness / readiness probes: `GET /status` (v4-compat) and `GET /healthz` (Kubernetes / Prometheus / Docker healthcheck convention). Both return the same payload, both are **hard-coded as exempt from authentication** so probes work even on a locked-down deployment.
+
+### 4.2 `build_app(config, store, alerts=None)` — Phase 1.5
+
+The app skeleton lives in `glances/webserver_v5.py`. It builds the FastAPI instance, wires the security middlewares, and exposes the runtime objects via `app.state`:
+
+| `app.state.<name>` | Type | Set by |
+|---|---|---|
+| `config` | `GlancesConfigV5` | `build_app()` argument |
+| `store` | `StatsStoreV5` | `build_app()` argument |
+| `alerts` | `GlancesAlerts \| None` | `build_app()` argument |
+| `jwt_handler` | `JWTHandler \| None` | populated by `_wire_auth()` when `[outputs] password` is set |
+
+Phase 1.6 routes consume these via the FastAPI `Request.app.state` channel. The scheduler is not started inside `build_app()` — that wiring lives in the Phase 1.7 CLI entrypoint, so the same app can be reused for testing without an async loop.
+
+### 4.3 Middleware stack
+
+Composed outer → inner:
+
+```
+TrustedHostMiddleware    ← DNS rebinding (CVE-2026-32632)
+    ↓
+CORSMiddleware           ← Cross-origin policy (CVE-2026-32610 / 34839)
+    ↓
+AuthMiddleware           ← Basic / Bearer (CVE-2026-32596)
+    ↓
+route handler / probe
+```
+
+Starlette applies middlewares in reverse registration order; `build_app()` registers them inner-first (auth, CORS, trusted-hosts) so the runtime order is the one above.
+
+#### TrustedHost — `[outputs] webui_allowed_hosts`
+
+```ini
+[outputs]
+# Comma-separated list. When empty, the middleware is not wired and a
+# WARNING is logged at startup if bind_address is not loopback.
+webui_allowed_hosts=glances.example,glances.local
+```
+
+Default behaviour matches v4: no allowlist → no filtering → WARNING. Setting an allowlist activates Starlette's `TrustedHostMiddleware`, which 400s requests whose `Host` header is not on the list.
+
+#### CORS — `[outputs] cors_origins`
+
+```ini
+[outputs]
+# Comma-separated list of allowed origins. Wildcard '*' is honoured but
+# is incompatible with cors_allow_credentials=True (CVE-2026-32610); if
+# both are set, allow_credentials is forced to False with a WARNING.
+cors_origins=https://glances.example,https://dashboard.example
+cors_allow_credentials=false
+```
+
+Default: no `cors_origins` → CORS middleware not wired → browsers block cross-origin requests, which is the safe stance. Allowed methods are hard-coded to `GET, POST`; allowed headers to `Authorization, Content-Type` (REST API surface only).
+
+#### Authentication — `[outputs] password` + JWT
+
+| Key | Default | Purpose |
+|---|---|---|
+| `password` | unset | PBKDF2-SHA256 `salt$hex` hash. Set to enable Basic + Bearer. Unset → API is open + startup WARNING (CVE-2026-32596). |
+| `username` | `glances` | Basic-Auth username. |
+| `jwt_secret_key` | random per-process | HS256 signing key. Random default → tokens invalidate on restart; set to a stable value in production. |
+| `jwt_expire_minutes` | 60 | JWT lifetime. |
+
+When `password` is unset, the auth middleware is not wired and `app.state.jwt_handler` is `None`. JWT Bearer is only enabled when Basic Auth is configured, because `/api/5/token` (Phase 1.6) is the only path to mint a token and that endpoint authenticates via Basic.
+
+The middleware checks **Bearer first** (so `Authorization: Bearer …` is never misinterpreted as Basic), then Basic. Failed Bearer → `401` with `WWW-Authenticate: Bearer`. Failed/missing Basic → `401` with `WWW-Authenticate: Basic realm="Glances"` so browsers pop the auth dialog.
+
+`/status` and `/healthz` are in a hard-coded `UNAUTH_PATHS` set checked before any credential is read.
+
+### 4.4 Hash format & migration
+
+v5 passwords are stored as `salt$pbkdf2_hex` with PBKDF2-SHA256, 100 000 iterations, `dklen=128`. The plaintext is never stored.
+
+This is **not byte-compatible** with the v4 stored hash, which applies an extra `pbkdf2(plain, salt='')` pre-hash before the salted PBKDF2. v4 → v5 migration requires regenerating the hash via the Phase 1.7 CLI (`glances-v5 --set-password`). The algorithmic strength is preserved.
+
+### 4.5 Rate limiting — reserved keys, deferred implementation
+
+Rate limiting is part of the v5 scope but not delivered in Phase 1.5. Reserved configuration keys:
+
+```ini
+[outputs]
+# Default 0 = disabled. Phase 2+ implementation.
+rate_limit_per_minute=0
+rate_limit_burst=0
+```
+
+Implementation will use a Starlette-level middleware (token-bucket or `slowapi`-style), inserted between TrustedHost and CORS. The `UNAUTH_PATHS` probes will always be exempt.
 
 ---
 
