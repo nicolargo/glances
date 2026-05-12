@@ -126,6 +126,8 @@ The `_transform()` method is itself a pipeline of four ordered steps, all implem
 | `rate` | `bool` | When `True`, the field is treated as a cumulative counter and converted to a per-second rate by `_transform_gauge` (`(current - previous) / time_since_update`). On the first cycle the field is **absent** from the payload (no previous sample to diff against). Counter wrap or reboot (delta < 0) clamps to `0.0`. |
 | `primary_key` | `bool` | Marks the join key for `_levels` indexing in list plugins. |
 | `exportable` | `bool` | Whether the field is included in `get_export()` output. Defaults to `True`. Set to `False` for internal fields (`time_since_update`, etc.). |
+| `format` | `str` | Optional. Explicit Python format string for the renderer (`"%5.1f%%"`, `"%>10s"`). Overrides the default unit-driven formatter. Pure formatting hint — does **not** influence threshold computation, export, or any non-rendering logic. |
+| `column_width` | `int` | Optional. Fixed width (characters) for this field's column in the TUI. Overrides the auto-sizing computed from the label and observed max content width. Pure formatting hint. |
 
 - `min_symbol` (v4) is **removed**. Display floor is derived from `unit` by the renderer. Plugin-specific behaviour belongs in `msg_curse()`.
 - User overrides from `glances.conf` are layered over `default_thresholds` per level (per-key merge — overriding only `critical` keeps `careful` and `warning` at their declared defaults).
@@ -135,6 +137,8 @@ The `_transform()` method is itself a pipeline of four ordered steps, all implem
   3. ``<level>``                     — applies to any watched field in the plugin section (e.g. ``warning``).
 - `_transform()` filters output to declared fields only. Undeclared psutil fields do not reach the StatsStore or the API.
 - Exposed via `GET /api/5/<plugin>/info`.
+
+**Renderer hints are not layout descriptors.** `format` and `column_width` describe *how a single field is formatted*, never *where it sits relative to other fields*. The plugin's overall layout (which fields appear, in which order, in which column) remains the renderer's responsibility (§1.4) — consistent with the §3.6 rejection of `view_layout`.
 
 **Canonical example:**
 ```python
