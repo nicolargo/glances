@@ -43,9 +43,47 @@ _Last updated: 2026-04-06_
 
 ### 1.4 Curses TUI integration
 
-- The TUI runs in a **dedicated thread**, reading the StatsStore synchronously.
-- Curses is not async-native; a thread avoids blocking the asyncio event loop.
-- The thread reads the StatsStore without a lock (same lockless contract as other consumers).
+- The TUI runs in a **dedicated `threading.Thread`** spawned by `serve()` in
+  `main_v5.py` after the scheduler and before `uvicorn.Server.serve()`. It
+  reads the StatsStore synchronously and without a lock (same lockless
+  contract as exporters and the REST API — §1.3).
+- The thread is implemented in `glances/outputs/glances_curses_v5.py` and is
+  split into three units:
+  - `curses_formatters_v5.py` — pure unit-driven formatters keyed by the
+    `unit` value declared in `fields_description` (§3.2).
+  - `curses_renderer_v5.py` — pure renderer producing a structured `Frame`
+    (`Row`s of `Cell`s) from a store snapshot + an alerts history. No
+    curses, no threading — fully unit-testable in isolation.
+  - `glances_curses_v5.py` — `TuiV5(threading.Thread)` owning the curses
+    event loop, the color pair initialisation, and the `addstr` paint
+    pipeline. Listens to `q` / `ESC` for shutdown; honours a
+    `threading.Event` set by the asyncio task in its `finally` clause.
+- **Layout** — two-column grid. Scalar plugins (cpu, mem, load, …) populate
+  the left column; collection plugins (network, fs, …) populate the right
+  column. Order within each column follows registry order
+  (`[(plugin_name, is_collection), …]`), itself derived from discovery
+  order at startup. The bottom of the screen carries the alerts footer
+  (`ALERTS (n)` header + up to 10 most-recent events, configurable).
+- **Color mapping** — renderer `ColorRole` (HEADER, OK, CAREFUL, WARNING,
+  CRITICAL, DEFAULT) → curses color pairs. `prominent: True` on a
+  WARNING/CRITICAL cell adds `A_REVERSE` for background highlight; on
+  non-alert cells `prominent` only changes color. No 256-color advanced
+  support in this iteration — base ANSI palette only.
+- **Renderer hints** in `fields_description` (§3.2) — `format` and
+  `column_width` give plugin authors a controlled way to override the
+  unit-driven defaults without re-introducing the rejected `view_layout`
+  mechanism (§3.6). They describe per-field formatting, never overall
+  layout.
+- **CLI control** — `--no-tui` disables the thread entirely (REST API only).
+  Default behaviour in standalone mode is TUI on. Server mode uses
+  `--no-tui` in practice.
+- **Refresh cadence** — configurable via `[outputs] tui_refresh_interval`
+  (default `1.0` second). Independent of plugin `refresh_time` (plugin
+  cadence) — the TUI repaints from the store at its own rhythm.
+- **Shutdown** — `q` or `ESC` keypress, or `Ctrl-C` propagating through
+  uvicorn, sets the shared `threading.Event`. The TUI's main loop polls
+  the event between curses cycles and exits gracefully, restoring the
+  terminal via `curses.wrapper`.
 
 ---
 
