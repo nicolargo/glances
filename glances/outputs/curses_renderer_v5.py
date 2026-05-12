@@ -152,3 +152,138 @@ def _resolve_header(plugin_name: str, fields_desc: dict[str, dict[str, Any]]) ->
             label = (schema.get("label") or plugin_name).upper()
             return label, name
     return plugin_name.upper(), None
+
+
+# ----------------------------------------------------------------- collection
+
+
+def render_collection_plugin(
+    plugin_name: str,
+    payload: dict[str, Any],
+    fields_desc: dict[str, dict[str, Any]],
+) -> list[Row]:
+    """Render a collection plugin (`network`, `fs`, …).
+
+    Layout:
+        Header row with the plugin name and column labels.
+        One row per item, each cell formatted per `fields_desc`.
+
+    The primary-key field is always the leftmost column. Other columns
+    appear in `fields_desc` declaration order. Per-item `_levels` are
+    looked up under `payload['_levels'][pk_value]`.
+    """
+    pk_field = _resolve_primary_key(fields_desc)
+    visible_fields = [name for name in fields_desc if name != pk_field]
+
+    header_cells: list[Cell] = [Cell(text=plugin_name.upper(), color=ColorRole.HEADER)]
+    if pk_field:
+        header_cells.append(Cell(text=fields_desc[pk_field].get("label", pk_field), color=ColorRole.HEADER))
+    for name in visible_fields:
+        header_cells.append(Cell(text=fields_desc[name].get("label", name), color=ColorRole.HEADER))
+    rows: list[Row] = [Row(cells=header_cells)]
+
+    items = payload.get("data", []) if isinstance(payload, dict) else []
+    levels_index = payload.get("_levels", {}) if isinstance(payload, dict) else {}
+
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        pk_value = item.get(pk_field) if pk_field else None
+        item_levels = levels_index.get(pk_value, {}) if isinstance(levels_index, dict) else {}
+        per_item_payload = {**item, "_levels": item_levels}
+
+        cells: list[Cell] = [Cell(text="")]  # spacer under the plugin-name header column
+        if pk_field:
+            cells.append(Cell(text=format_value(item.get(pk_field), fields_desc[pk_field])))
+        for name in visible_fields:
+            cells.append(_cell_for_field(name, item.get(name), fields_desc[name], per_item_payload))
+        rows.append(Row(cells=cells))
+
+    return rows
+
+
+def _resolve_primary_key(fields_desc: dict[str, dict[str, Any]]) -> str | None:
+    for name, schema in fields_desc.items():
+        if schema.get("primary_key"):
+            return name
+    return None
+
+
+# ----------------------------------------------------------------- footer
+
+
+def render_alert_footer(history: list[dict[str, Any]], limit: int = 10) -> list[Row]:
+    """Render the alert history footer (vertical list, most recent at top).
+
+    Header row: `ALERTS (n)`. Then up to `limit` event rows showing
+    timestamp, plugin/key, field, transition (previous → new). When the
+    history is empty, a single info row is shown.
+    """
+    rows: list[Row] = [Row(cells=[Cell(text=f"ALERTS ({len(history)})", color=ColorRole.HEADER)])]
+    if not history:
+        rows.append(Row(cells=[Cell(text="(no events)")]))
+        return rows
+
+    recent = list(reversed(history[-limit:]))
+    for evt in recent:
+        ts = str(evt.get("ts", "")).split("T")[-1][:8]  # HH:MM:SS
+        plugin = str(evt.get("plugin", ""))
+        key = evt.get("key")
+        target = f"{plugin}[{key}]" if key is not None else plugin
+        field_name = str(evt.get("field", ""))
+        previous = str(evt.get("previous_level", ""))
+        new_level = str(evt.get("level", ""))
+        prominent = bool(evt.get("prominent", False))
+        role = _LEVEL_TO_ROLE.get(new_level, ColorRole.DEFAULT)
+        rows.append(
+            Row(
+                cells=[
+                    Cell(text=ts),
+                    Cell(text=target),
+                    Cell(text=field_name),
+                    Cell(text=f"{previous} → {new_level}", color=role, prominent=prominent),
+                ]
+            )
+        )
+    return rows
+
+
+# ----------------------------------------------------------------- frame
+
+
+def build_frame(
+    store_snapshot: dict[str, dict[str, Any]],
+    fields_by_plugin: dict[str, dict[str, dict[str, Any]]],
+    registry: list[tuple[str, bool]],
+    alerts_history: list[dict[str, Any]],
+    alerts_limit: int = 10,
+) -> Frame:
+    """Assemble a complete TUI Frame.
+
+    Args:
+        store_snapshot: `{plugin_name: payload}` — a shallow copy of the store.
+        fields_by_plugin: `{plugin_name: fields_description}`.
+        registry: ordered list of `(plugin_name, is_collection)` — controls
+            which plugins are displayed and in which order.
+        alerts_history: the deque output of `GlancesAlerts.get_history()`.
+        alerts_limit: cap on the number of events rendered in the footer.
+
+    Rules:
+        - Scalar plugins → left column.
+        - Collection plugins → right column.
+        - Footer → alerts history.
+        - A plugin in the registry with no payload (cycle-0) still gets its
+          header rendered.
+    """
+    frame = Frame()
+    for plugin_name, is_collection in registry:
+        payload = store_snapshot.get(plugin_name) or {}
+        fields_desc = fields_by_plugin.get(plugin_name, {})
+        if is_collection:
+            frame.right.extend(render_collection_plugin(plugin_name, payload, fields_desc))
+            frame.right.append(Row(cells=[Cell(text="")]))  # spacer between plugins
+        else:
+            frame.left.extend(render_scalar_plugin(plugin_name, payload, fields_desc))
+            frame.left.append(Row(cells=[Cell(text="")]))
+    frame.footer = render_alert_footer(alerts_history, limit=alerts_limit)
+    return frame
