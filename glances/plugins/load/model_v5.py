@@ -87,6 +87,7 @@ class PluginModel(GlancesPluginBase[dict]):
         "cpucore": {
             "description": "Total number of logical CPU cores.",
             "unit": "number",
+            "internal": True,
         },
     }
 

@@ -52,6 +52,7 @@ _BASE_METADATA_FIELDS: dict[str, dict[str, Any]] = {
         "description": "Seconds elapsed since the previous successful update cycle.",
         "unit": "seconds",
         "exportable": False,
+        "internal": True,
     },
 }
 

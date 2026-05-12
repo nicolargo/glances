@@ -184,37 +184,45 @@ def render_scalar_plugin(
     """Render a scalar plugin (`mem`, `cpu`, `load`) as a block.
 
     Layout — replicates v4's compact "block per plugin" style used in the
-    top row:
+    top row, laid out as a 2-column table:
 
-        HEADER  primary%               <- header row: label (HEADER) + primary value
-        label1: value1                 <- one row per remaining displayed field
-        label2: value2
+        HEADER          primary%       <- header row: label (HEADER) + primary value
+        label1          value1         <- one row per remaining displayed field
+        label2          value2
         ...
 
     The header label is the plugin's most-prominent watched field's `label`
     upper-cased (e.g. `MEM` for the `percent` field of the `mem` plugin).
     Falls back to plugin_name.upper() when no watched field is found.
+
+    Fields flagged ``internal: True`` in the schema (e.g. ``time_since_update``,
+    ``cpucore``) are skipped — they support computation but never appear in
+    the UI.
     """
     header_label, primary_field = _resolve_header(plugin_name, fields_desc)
-    header_cells: list[Cell] = [Cell(text=header_label, color=ColorRole.HEADER)]
-
+    # Header row.
+    header_label_cell = Cell(text=header_label, color=ColorRole.HEADER)
     if primary_field and primary_field in payload:
-        header_cells.append(
-            _cell_for_field(primary_field, payload.get(primary_field), fields_desc[primary_field], payload)
+        header_value_cell = _cell_for_field(
+            primary_field, payload.get(primary_field), fields_desc[primary_field], payload
         )
+    else:
+        header_value_cell = Cell(text="")
+    rows: list[Row] = [Row(cells=[header_label_cell, header_value_cell])]
 
-    rows: list[Row] = [Row(cells=header_cells)]
-
+    # Body rows.
     for field_name, schema in fields_desc.items():
         if field_name == primary_field:
+            continue
+        if schema.get("internal"):
             continue
         if field_name not in payload:
             continue
         label = schema.get("label") or field_name
         value_cell = _cell_for_field(field_name, payload.get(field_name), schema, payload)
-        rows.append(Row(cells=[Cell(text=f"{label}:"), value_cell]))
+        rows.append(Row(cells=[Cell(text=label), value_cell]))
 
-    return rows
+    return _align_two_column_table(rows)
 
 
 def _resolve_header(plugin_name: str, fields_desc: dict[str, dict[str, Any]]) -> tuple[str, str | None]:
@@ -242,17 +250,18 @@ def render_collection_plugin(
     """Render a collection plugin (`network`, `fs`, …) as a block.
 
     Layout — replicates v4's left-sidebar style (header row + one row per
-    item):
+    item) as a multi-column table:
 
         NETWORK         Rx     Tx        <- header: plugin name + column labels
-        eth0            1.2M   300K
+        eth0           1.2M   300K       <- primary key left-aligned, values right-aligned
         wlp0s20f3       45K    12K
         ...
 
     Per-item `_levels` are looked up under `payload['_levels'][pk_value]`.
+    Fields flagged ``internal: True`` are skipped.
     """
     pk_field = _resolve_primary_key(fields_desc)
-    visible_fields = [name for name in fields_desc if name != pk_field]
+    visible_fields = [name for name in fields_desc if name != pk_field and not fields_desc[name].get("internal")]
 
     header_cells: list[Cell] = [Cell(text=plugin_name.upper(), color=ColorRole.HEADER)]
     for name in visible_fields:
@@ -276,7 +285,7 @@ def render_collection_plugin(
             cells.append(_cell_for_field(name, item.get(name), fields_desc[name], per_item_payload))
         rows.append(Row(cells=cells))
 
-    return rows
+    return _align_multi_column_table(rows)
 
 
 def _resolve_primary_key(fields_desc: dict[str, dict[str, Any]]) -> str | None:
@@ -284,6 +293,74 @@ def _resolve_primary_key(fields_desc: dict[str, dict[str, Any]]) -> str | None:
         if schema.get("primary_key"):
             return name
     return None
+
+
+# --------------------------------------------------------------- alignment
+
+
+def _align_two_column_table(rows: list[Row]) -> list[Row]:
+    """Pad each row's two cells for table-style alignment:
+    column 0 (label) left-aligned, column 1 (value) right-aligned.
+    Column widths auto-fit to the widest content. Padding is baked into
+    the cell text so the painter's natural one-space cell gap separates
+    the columns.
+    """
+    if not rows:
+        return rows
+    label_w = max((len(r.cells[0].text) for r in rows if r.cells), default=0)
+    value_w = max((len(r.cells[1].text) for r in rows if len(r.cells) >= 2), default=0)
+
+    aligned: list[Row] = []
+    for r in rows:
+        if not r.cells:
+            aligned.append(r)
+            continue
+        label_cell = r.cells[0]
+        padded_label = Cell(
+            text=label_cell.text.ljust(label_w),
+            color=label_cell.color,
+            prominent=label_cell.prominent,
+        )
+        if len(r.cells) >= 2:
+            value_cell = r.cells[1]
+            padded_value = Cell(
+                text=value_cell.text.rjust(value_w),
+                color=value_cell.color,
+                prominent=value_cell.prominent,
+            )
+            aligned.append(Row(cells=[padded_label, padded_value]))
+        else:
+            aligned.append(Row(cells=[padded_label]))
+    return aligned
+
+
+def _align_multi_column_table(rows: list[Row]) -> list[Row]:
+    """Pad each row's cells for multi-column table alignment:
+    column 0 (primary key / plugin name header) left-aligned, every other
+    column right-aligned. Column widths auto-fit to the widest content
+    across all rows.
+    """
+    if not rows:
+        return rows
+    ncols = max((len(r.cells) for r in rows), default=0)
+    if ncols == 0:
+        return rows
+    col_widths = [0] * ncols
+    for r in rows:
+        for i, cell in enumerate(r.cells):
+            col_widths[i] = max(col_widths[i], len(cell.text))
+
+    aligned: list[Row] = []
+    for r in rows:
+        new_cells: list[Cell] = []
+        for i, cell in enumerate(r.cells):
+            if i == 0:
+                text = cell.text.ljust(col_widths[i])
+            else:
+                text = cell.text.rjust(col_widths[i])
+            new_cells.append(Cell(text=text, color=cell.color, prominent=cell.prominent))
+        aligned.append(Row(cells=new_cells))
+    return aligned
 
 
 # --------------------------------------------------------------- alert block

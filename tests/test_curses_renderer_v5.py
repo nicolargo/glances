@@ -160,6 +160,90 @@ def test_render_scalar_honours_explicit_format_hint():
     assert "12.345%" in flat
 
 
+def test_render_scalar_skips_internal_fields():
+    """`internal: True` fields (e.g. time_since_update, cpucore) are
+    never displayed — they support computation only."""
+    fields = {
+        "percent": {"unit": "percent", "label": "CPU", "watched": True},
+        "time_since_update": {"unit": "seconds", "internal": True},
+        "cpucore": {"unit": "number", "label": "cores", "internal": True},
+        "user": {"unit": "percent", "label": "user"},
+    }
+    payload = {"percent": 12.0, "time_since_update": 1.5, "cpucore": 8, "user": 5.0}
+    rows = render_scalar_plugin("cpu", payload, fields)
+
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "time_since_update" not in flat
+    assert "cpucore" not in flat
+    assert "cores" not in flat
+    # But declared visible fields are still rendered.
+    assert "user" in flat
+    assert "CPU" in flat
+
+
+def test_render_scalar_aligns_columns_as_two_column_table():
+    """Labels are left-padded, values right-padded; widths fit the widest."""
+    fields = {
+        "percent": {"unit": "percent", "label": "CPU", "watched": True},
+        "user": {"unit": "percent", "label": "user"},
+        "system": {"unit": "percent", "label": "system"},
+    }
+    payload = {"percent": 12.0, "user": 5.0, "system": 100.0}
+    rows = render_scalar_plugin("cpu", payload, fields)
+
+    # All label cells should be padded to the same width.
+    label_widths = {len(r.cells[0].text) for r in rows if r.cells}
+    assert len(label_widths) == 1, f"label cells not aligned: {label_widths}"
+    # Same for value cells.
+    value_widths = {len(r.cells[1].text) for r in rows if len(r.cells) >= 2}
+    assert len(value_widths) == 1, f"value cells not aligned: {value_widths}"
+
+    # Label cell text must end with spaces (left-aligned within its column).
+    assert rows[1].cells[0].text == "user  "  # "user" padded to 6 ("system" is widest)
+    # Value cell must start with spaces (right-aligned within its column).
+    assert rows[1].cells[1].text == "  5.0%"  # "5.0%" right-padded to 6 ("100.0%" is widest)
+
+
+def test_render_collection_skips_internal_fields():
+    fields = {
+        "interface_name": {"unit": "string", "label": "iface", "primary_key": True},
+        "bytes_recv": {"unit": "bytespers", "label": "Rx"},
+        "time_since_update": {"unit": "seconds", "internal": True},
+    }
+    payload = {
+        "data": [{"interface_name": "eth0", "bytes_recv": 1024.0, "time_since_update": 1.5}],
+        "_levels": {},
+    }
+    rows = render_collection_plugin("network", payload, fields)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "time_since_update" not in flat
+    # Header should NOT include a time_since_update column.
+    header_text = " ".join(c.text for c in rows[0].cells)
+    assert "time_since_update" not in header_text
+
+
+def test_render_collection_aligns_columns():
+    """All cells in the same column share the same padded width."""
+    fields = {
+        "interface_name": {"unit": "string", "label": "iface", "primary_key": True},
+        "bytes_recv": {"unit": "bytespers", "label": "Rx"},
+        "bytes_sent": {"unit": "bytespers", "label": "Tx"},
+    }
+    payload = {
+        "data": [
+            {"interface_name": "eth0", "bytes_recv": 1024.0, "bytes_sent": 256.0},
+            {"interface_name": "wlp0s20f3", "bytes_recv": 12345.0, "bytes_sent": 9876.0},
+        ],
+        "_levels": {},
+    }
+    rows = render_collection_plugin("network", payload, fields)
+
+    # Each column has uniform width across rows.
+    for col_idx in range(len(rows[0].cells)):
+        widths = {len(r.cells[col_idx].text) for r in rows if col_idx < len(r.cells)}
+        assert len(widths) == 1, f"col {col_idx} widths differ: {widths}"
+
+
 # --------------------------------------------------------------- collection plugin
 
 

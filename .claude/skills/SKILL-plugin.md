@@ -280,7 +280,7 @@ call `await plugin.update()`, assert on the store payload or
 
 ## Renderer hints in `fields_description`
 
-Two **optional** keys give plugin authors fine control over the TUI/WebUI
+Three **optional** keys give plugin authors fine control over the TUI/WebUI
 rendering without re-introducing the rejected `view_layout` mechanism
 (§3.6 of the architecture document):
 
@@ -288,6 +288,7 @@ rendering without re-introducing the rejected `view_layout` mechanism
 |---|---|---|
 | `format` | `str` | Explicit Python format string applied to the value (e.g. `"%5.1f%%"`). Overrides the default unit-driven formatter. |
 | `column_width` | `int` | Fixed character width for the field's column in the TUI. Overrides the auto-sizing computed from label + observed max content width. |
+| `internal` | `bool` | When `True`, the field is **never displayed** in any UI (TUI, WebUI). It is still stored in the StatsStore, exposed via the REST API (subject to `exportable`), and available to threshold computation and rate calculation. Use for support fields like `time_since_update`, `cpucore`, or any value the plugin needs internally but shouldn't surface visually. |
 
 Both are pure *formatting* hints — they describe how a single field is
 displayed, never *where* it sits relative to others. The overall layout
