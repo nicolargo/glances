@@ -2,6 +2,18 @@
                                 Glances ChangeLog
 ==============================================================================
 
+================================
+Version 5.0.0a2 (Phase 2 G0)
+================================
+
+Date: 2026-05-12
+
+Enhancements:
+
+* v5: curses TUI v5 thread (lockless StatsStore reads, asyncio-friendly), driven entirely by ``fields_description``. Default layout: scalar plugins (cpu, mem, load) in the left column, collection plugins (network) in the right column, alerts footer at the bottom.
+* v5: optional ``fields_description`` keys ``format`` and ``column_width`` give per-field rendering hints without revisiting the rejected ``view_layout`` (see architecture §3.2 / §3.6).
+* v5: new ``--no-tui`` CLI flag for headless / server-mode deployments. TUI on by default in standalone.
+
 =============
 Version 4.5.4
 =============
