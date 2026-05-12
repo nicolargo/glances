@@ -98,27 +98,39 @@ class TuiV5(threading.Thread):
     def _loop(self, stdscr) -> None:
         _init_colors()
         stdscr.nodelay(True)
+        cursor_was_hidden = False
         try:
             curses.curs_set(0)
+            cursor_was_hidden = True
         except curses.error:
             pass
 
-        while not self._stop_event.is_set():
-            frame = self._build_frame()
-            self._paint(stdscr, frame)
-            stdscr.refresh()
+        try:
+            while not self._stop_event.is_set():
+                frame = self._build_frame()
+                self._paint(stdscr, frame)
+                stdscr.refresh()
 
-            key = stdscr.getch()
-            if key in (ord("q"), 27):  # 27 = ESC
-                self.stop()
-                if self._on_quit is not None:
-                    try:
-                        self._on_quit()
-                    except Exception as e:  # pragma: no cover — defensive
-                        logger.warning("TUI on_quit callback failed: %s", e)
-                break
+                key = stdscr.getch()
+                if key in (ord("q"), 27):  # 27 = ESC
+                    self.stop()
+                    if self._on_quit is not None:
+                        try:
+                            self._on_quit()
+                        except Exception as e:  # pragma: no cover — defensive
+                            logger.warning("TUI on_quit callback failed: %s", e)
+                    break
 
-            self._sleep_responsive(self.refresh_interval)
+                self._sleep_responsive(self.refresh_interval)
+        finally:
+            # `curses.endwin()` doesn't reliably restore cursor visibility
+            # on every terminal — if we hid it, restore it ourselves so the
+            # shell prompt that follows shows a blinking cursor.
+            if cursor_was_hidden:
+                try:
+                    curses.curs_set(1)
+                except curses.error:
+                    pass
 
     def _sleep_responsive(self, total: float, step: float = 0.05) -> None:
         elapsed = 0.0
