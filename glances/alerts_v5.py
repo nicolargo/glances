@@ -126,10 +126,13 @@ class GlancesAlerts:
         if not isinstance(levels, dict):
             return
 
-        min_duration = self._min_duration_for(plugin.plugin_name)
         for key, field_name, observed_level, value, prominent in self._observations(plugin, payload, levels):
             state_key = (plugin.plugin_name, key, field_name)
             state = self._state.setdefault(state_key, _AlertState())
+            # Per-(field, level) lookup — the most-specific key depends on
+            # the *observed* level, e.g. `ctx_switches_critical_min_duration_seconds=300`
+            # slows entry into critical without affecting warning/careful ramps.
+            min_duration = self._min_duration_for(plugin.plugin_name, key, field_name, observed_level)
             transition = self._reconcile(state, observed_level, min_duration)
 
             if transition is not None:
@@ -155,15 +158,57 @@ class GlancesAlerts:
 
     # ----------------------------------------------------- min duration override
 
-    def _min_duration_for(self, plugin_name: str) -> float:
-        """`[<plugin>] min_duration_seconds` overrides `[alerts] min_duration_seconds`."""
-        v = self.config.get(plugin_name, "min_duration_seconds", -1.0)
-        try:
-            v = float(v)
-        except (TypeError, ValueError):
-            return self._global_min_duration
-        if v >= 0:
-            return v
+    def _min_duration_for(
+        self,
+        plugin_name: str,
+        key: str | None,
+        field_name: str,
+        observed_level: str,
+    ) -> float:
+        """Resolve ``min_duration_seconds`` for a given transition observation.
+
+        Precedence (most specific wins, first non-negative float):
+
+        Scalar plugins (``key is None``):
+            1. ``<field>_<level>_min_duration_seconds``
+            2. ``<field>_min_duration_seconds``
+            3. ``min_duration_seconds``                  (plugin section)
+            4. ``[alerts] min_duration_seconds``         (global default)
+
+        Collection plugins (``key`` = primary-key value, e.g. ``wlan0``):
+            1. ``<pk>_<field>_<level>_min_duration_seconds``
+            2. ``<pk>_<field>_min_duration_seconds``
+            3. ``<field>_<level>_min_duration_seconds``
+            4. ``<field>_min_duration_seconds``
+            5. ``min_duration_seconds``                  (plugin section)
+            6. ``[alerts] min_duration_seconds``         (global default)
+
+        Symmetric with the 3-level precedence used for thresholds
+        (``read_thresholds``) and action keys (``_lookup_action_value``).
+
+        Same ``min_duration`` is applied to every transition direction
+        (any → ok, any → non-ok). Possible improvement: introduce a
+        separate ``_recovery_min_duration_seconds`` family of keys to
+        split entry vs recovery — e.g. fast entry into critical but
+        slow drop back to ok. Not implemented today to keep the config
+        surface small; see architecture §3.4.
+        """
+        candidates: list[str] = []
+        if key is not None:
+            candidates.append(f"{key}_{field_name}_{observed_level}_min_duration_seconds")
+            candidates.append(f"{key}_{field_name}_min_duration_seconds")
+        candidates.append(f"{field_name}_{observed_level}_min_duration_seconds")
+        candidates.append(f"{field_name}_min_duration_seconds")
+        candidates.append("min_duration_seconds")
+
+        for cand in candidates:
+            raw = self.config.get(plugin_name, cand, -1.0)
+            try:
+                fv = float(raw)
+            except (TypeError, ValueError):
+                continue
+            if fv >= 0:
+                return fv
         return self._global_min_duration
 
     # --------------------------------------------------------- observation walk

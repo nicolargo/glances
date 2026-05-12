@@ -18,6 +18,18 @@ configurable hysteresis (``[alerts] min_duration_seconds=N``, default
 via `asyncio.create_task`. The monitoring loop never blocks on an
 action.
 
+Hysteresis can be refined per `(plugin, [pk_value], field, level)` with
+``min_duration_seconds`` keys following the same precedence used for
+thresholds and action keys (4 levels for scalars, 6 for collections —
+see architecture §3.4 "Hysteresis precedence"). Example:
+
+```ini
+[cpu]
+# Only the critical level of ctx_switches uses a 300 s ramp;
+# careful/warning keep the global default.
+ctx_switches_critical_min_duration_seconds=300
+```
+
 Concrete actions shipped:
 
 | Package | `action_name` | Status |

@@ -122,7 +122,7 @@ The `_transform()` method is itself a pipeline of four ordered steps, all implem
 | `watch_direction` | `"high"` / `"low"` | Threshold direction. `"high"` = alert when `value >= threshold` (e.g. mem percent used). `"low"` = alert when `value <= threshold` (e.g. fs free percent). Defaults to `"high"`. |
 | `prominent` | `bool` | When `True`, the field is rendered with **background highlight** in the TUI/WebUI and every level transition is tagged `prominent: True` in the alert event feed. When `False`, only the font color changes and the event is tagged `prominent: False`. Replaces v4 `_log` flag. Defaults to `True` for watched fields (a watched field is meant to be visible by default). |
 | `default_thresholds` | `dict` | Default alert thresholds (`careful`, `warning`, `critical`). Replaces v4 flat threshold keys. Overridable per-level via `glances.conf [<plugin>] careful=N` or `<field>_careful=N` for multi-watched plugins. |
-| `normalize_by` | `str` | Optional. Name of another field in the same payload whose value is used as a divisor before threshold comparison: `level = compute_level(value / stats[normalize_by], thresholds, direction)`. Used for per-core normalisation (e.g. `load.min15` divided by `cpucore`, `cpu.ctx_switches` divided by `cpucore` — matches v4 `get_alert(value, maximum=100*cpucore)`) and for percent-of-capacity comparisons (`network.bytes_recv` divided by `bytes_speed_rate_per_sec`). When the divisor is **missing, `None`, or zero**, the level is **skipped** for this field on this item — meaning "no meaningful threshold computable" (e.g. an interface whose link speed is unknown). Thresholds whose result is a ratio in `[0, 1]` (capacity-relative) should declare ratio-valued `default_thresholds` (e.g. `{"careful": 0.7, "warning": 0.8, "critical": 0.9}`). |
+| `normalize_by` | `str` | Optional. Name of another field in the same payload whose value is used as a divisor before threshold comparison: `level = compute_level(value / stats[normalize_by], thresholds, direction)`. Used for per-core normalisation (e.g. `load.min15` divided by `cpucore`) and for percent-of-capacity comparisons (`network.bytes_recv` divided by `bytes_speed_rate_per_sec`). When the divisor is **missing, `None`, or zero**, the level is **skipped** for this field on this item — meaning "no meaningful threshold computable" (e.g. an interface whose link speed is unknown). Thresholds whose result is a ratio in `[0, 1]` (capacity-relative) should declare ratio-valued `default_thresholds` (e.g. `{"careful": 0.7, "warning": 0.8, "critical": 0.9}`). **Note:** `cpu.ctx_switches` is **not** normalised in v5 — system-wide ctx-switch rate is signalled by an absolute threshold (10k/15k/20k) regardless of core count. v4 documents `50000*cpucore` but its `get_limit` fallback chain never resolves the default, so v4 ships effectively no threshold; v5 ships a real one. Documented in NEWS.rst at 5.0.0. |
 | `rate` | `bool` | When `True`, the field is treated as a cumulative counter and converted to a per-second rate by `_transform_gauge` (`(current - previous) / time_since_update`). On the first cycle the field is **absent** from the payload (no previous sample to diff against). Counter wrap or reboot (delta < 0) clamps to `0.0`. |
 | `primary_key` | `bool` | Marks the join key for `_levels` indexing in list plugins. |
 | `exportable` | `bool` | Whether the field is included in `get_export()` output. Defaults to `True`. Set to `False` for internal fields (`time_since_update`, etc.). |
@@ -266,6 +266,39 @@ A new level becomes "committed" only after it has been observed
 continuously for ``min_duration_seconds``. Oscillations during the
 debounce window reset the timer. ``min_duration_seconds=0`` disables
 hysteresis entirely (mostly useful for tests).
+
+**Hysteresis precedence — `min_duration_seconds`** (symmetric with thresholds and action keys). The resolution walks the chain below at *each* observation; the first non-negative float wins.
+
+Scalar plugins (`key is None`):
+
+1. `<field>_<level>_min_duration_seconds`
+2. `<field>_min_duration_seconds`
+3. `min_duration_seconds`                     (plugin section)
+4. `[alerts] min_duration_seconds`            (global default)
+
+Collection plugins (`key` = primary-key value, e.g. `wlan0`):
+
+1. `<pk>_<field>_<level>_min_duration_seconds`
+2. `<pk>_<field>_min_duration_seconds`
+3. `<field>_<level>_min_duration_seconds`
+4. `<field>_min_duration_seconds`
+5. `min_duration_seconds`                     (plugin section)
+6. `[alerts] min_duration_seconds`            (global default)
+
+```ini
+[cpu]
+# CRITICAL on ctx_switches fires only after 300 s sustained above the threshold.
+# Other levels (careful/warning) of the same field keep the plugin or global default.
+ctx_switches_critical_min_duration_seconds=300
+
+[network]
+# Tighten min_duration only for wlan0's bytes_recv at the warning level.
+wlan0_bytes_recv_warning_min_duration_seconds=60
+```
+
+The most-specific key depends on the **observed** level (not the committed one), so a value transitioning ok → warning → critical sees three independent windows, each scoped to its own configured key.
+
+**Symmetry note (open improvement):** the resolved `min_duration` is applied to *every* transition direction (any → ok, any → non-ok). A possible future refinement is a parallel ``_recovery_min_duration_seconds`` family of keys that would let users have fast entry into a non-ok level and slow drop back to ok (or the reverse). Not implemented today to keep the config surface small. Captured as a TODO in `glances/alerts_v5.py::_min_duration_for`.
 
 **Action dispatch** is **fire-and-forget** — the scheduler never waits
 on `action.execute()`. The monitoring loop's latency is independent of
@@ -633,7 +666,86 @@ A plugin registered but not yet updated returns `200 null` rather than `404` or 
 - `/api/5/args` — depends on the Phase 1.7 CLI args module
 - `/api/5/serverslist` — Phase 3 (browser mode, CVE-2026-32633)
 
-### 4.7 Security audit — end of v5 development
+### 4.7 CLI entrypoint — Phase 1.7
+
+The runnable assembly lives in `glances/main_v5.py`. Exposed as console script `glances-v5` (renamed to `glances` at the end of the migration when v4 is retired).
+
+```
+config (file + env + CLI overlay)
+    ↓
+discover_plugins(store, config)         ← walks glances.plugins.*.model_v5
+    ↓
+discover_actions("glances.actions_v5")  ← registry { "action": ShellAction(), ... }
+    ↓
+GlancesAlerts(config, actions=registry)
+    ↓
+build_app(config, store, alerts)        ← FastAPI + middlewares + routes
+register_plugin(app, plugin)            ← for each discovered plugin
+    ↓
+AsyncScheduler(store, config, alerts)   ← scheduler.register(plugin) for each
+    ↓
+asyncio.gather(scheduler.run_forever(), uvicorn.Server.serve())
+```
+
+CLI arguments (overlay on top of `glances.conf`):
+
+| Flag | Effect |
+|---|---|
+| `-C, --config <path>` | Additional config file (overlays system + user defaults). |
+| `--bind <addr>` | Bind address (overrides `[outputs] bind_address`; default `127.0.0.1`). |
+| `--port <n>` | Listening port (overrides `[outputs] port`; default `61208`). |
+| `--api-doc` / `--no-api-doc` | Enable / disable Swagger + ReDoc (overrides `[outputs] api_doc`). |
+| `-d, --debug` | Debug-level logging. |
+| `--set-password` | Interactive PBKDF2 hash generator. Prints to stdout. Does **not** modify any file. |
+| `--version` | Print `Glances <version>` and exit. |
+
+Bind/port precedence: **CLI > config > default** (`127.0.0.1:61208`).
+
+#### Zero-plugin startup is a valid state
+
+`discover_plugins()` returning `[]` is **not** treated as an error. The server starts, logs a WARNING ("No v5 plugins discovered. The server will start with an empty registry; plugins can be activated later via the REST API"), and waits. Forward-looking design for [issue #3548](https://github.com/nicolargo/glances/issues/3548) (runtime plugin toggling via REST).
+
+#### Lifecycle
+
+```python
+async def serve(app, scheduler, host, port):
+    scheduler_task = asyncio.create_task(scheduler.run_forever())  # only if entries > 0
+    server = uvicorn.Server(uvicorn.Config(app, host=host, port=port, ...))
+    try:
+        await server.serve()
+    finally:
+        await scheduler.stop()
+        await scheduler_task   # swallowed CancelledError
+```
+
+`Ctrl-C` / `SIGTERM` → uvicorn shuts down → finally branch → scheduler.stop() cancels every plugin task → drain. No fuite, no zombie tasks.
+
+#### `--set-password` flow
+
+```
+$ glances-v5 --set-password
+Password: ********
+Confirm:  ********
+
+Paste this value into [outputs] password of your glances.conf:
+
+<hex-salt>$<256-hex-digest>
+```
+
+Stdout only — never writes the config file. Operator owns the paste. v4 → v5 hash migration documented in `NEWS.rst`.
+
+#### Makefile entry points
+
+```
+make run-v5            # Start the v5 REST server with conf/glances.conf
+make run-v5-debug      # Same, debug logging
+make test-v5           # Run only v5 unit tests
+make set-password-v5   # Interactive hash helper
+```
+
+(The `make help` regex was extended to recognize digits in target names — pre-existing bug exposed by these v5 targets.)
+
+### 4.8 Security audit — end of v5 development
 
 Before merging `develop-v5 → develop`, schedule a **full cybersecurity audit on the `develop-v5` branch**. Open items the audit must explicitly address:
 
@@ -866,7 +978,7 @@ _Goal: production-ready. Release `5.0.0rc1` then `5.0.0`._
 
 - All v4 unit tests migrated and passing
 - Performance validation (no regression on refresh latency)
-- **Full cybersecurity audit on the `develop-v5` branch** — release blocker. See §4.7 for the open items the audit must address (each CVE in §8 re-verified against actual v5 code, `/api/5/config` auth posture decision, `UNAUTH_PATHS` review, rate limiting wired, no v4 module leaks into v5 imports). Output: downloadable `.md` audit report.
+- **Full cybersecurity audit on the `develop-v5` branch** — release blocker. See §4.8 for the open items the audit must address (each CVE in §8 re-verified against actual v5 code, `/api/5/config` auth posture decision, `UNAUTH_PATHS` review, rate limiting wired, no v4 module leaks into v5 imports). Output: downloadable `.md` audit report.
 - Release notes documenting all breaking changes and datamodel differences
 - Merge `develop-v5 → develop`
 - PyPI, Docker, Snap, Helm packages published

@@ -118,7 +118,7 @@ stays in place (stale handling lands in Phase 3).
 | `watch_direction` | `"high"` / `"low"` | Threshold direction. `"high"` (default) alerts on `value >= threshold`; `"low"` alerts on `value <= threshold` (e.g. fs free). |
 | `prominent` | bool | When `True`, the field is rendered with **background highlight** (TUI/WebUI) and every level transition is tagged `prominent: True` in the alert event feed. Replaces v4 `_log` flag. Default `True` for watched fields. |
 | `default_thresholds` | dict | `{"careful": …, "warning": …, "critical": …}` — plugin-author defaults. Overridable per-level following the **3-level precedence** (most-specific wins, first non-empty key): `<pk_value>_<field>_<level>` (collection items, e.g. `wlan0_bytes_recv_warning=0.7`) > `<field>_<level>` (multi-watched plugins) > `<level>` (single-field plugins). Layering is per-key: overriding only `critical` keeps `careful` and `warning` at defaults. |
-| `normalize_by` | str | Optional. Name of another field whose value divides this field before threshold comparison: `level = compute_level(value / stats[normalize_by], …)`. Used for per-core normalisation (`load.min15` ÷ `cpucore`, `cpu.ctx_switches` ÷ `cpucore`) and percent-of-capacity comparisons (`network.bytes_recv` ÷ `bytes_speed_rate_per_sec`). When the divisor is **missing, `None`, or `0`** the level is **skipped** for that field — meaning "no meaningful threshold computable" (e.g. interface with unknown link speed). Capacity-relative thresholds should be declared as ratios in `[0, 1]`. |
+| `normalize_by` | str | Optional. Name of another field whose value divides this field before threshold comparison: `level = compute_level(value / stats[normalize_by], …)`. Used for per-core normalisation (`load.min15` ÷ `cpucore`) and percent-of-capacity comparisons (`network.bytes_recv` ÷ `bytes_speed_rate_per_sec`). When the divisor is **missing, `None`, or `0`** the level is **skipped** for that field — meaning "no meaningful threshold computable" (e.g. interface with unknown link speed). Capacity-relative thresholds should be declared as ratios in `[0, 1]`. **`cpu.ctx_switches` is NOT normalised in v5** — absolute thresholds (10k/15k/20k); see `glances/plugins/cpu/model_v5.py` for the rationale. |
 | `rate` | bool | When `True`, the field is a cumulative counter; the base class converts it to a per-second rate via `_transform_gauge` (`(current - previous) / time_since_update`). On the first cycle the field is **absent** from the payload (no previous sample). Counter wrap or reboot clamps to `0.0`. |
 | `primary_key` | bool | Marks the join key for `_levels` indexing in collection plugins |
 | `exportable` | bool | Defaults to `True`. Set `False` for internal fields. |
@@ -141,6 +141,20 @@ Fields not declared in `fields_description` are **stripped** by
 `_remove_parameters()`. Undeclared psutil fields never reach the store or
 the API.
 
+### Alert hysteresis — `min_duration_seconds`
+
+`GlancesAlerts` debounces level transitions with a configurable
+`min_duration_seconds`. The lookup follows a precedence chain symmetric
+to `default_thresholds` — 4 levels for scalars (`<field>_<level>` >
+`<field>` > plugin > `[alerts]`), 6 levels for collections (with the
+extra `<pk>_<field>_<level>` and `<pk>_<field>` prefixes). The most
+specific key wins. See architecture §3.4 "Hysteresis precedence".
+
+Useful for plugins whose levels have very different urgency profiles —
+e.g. `[cpu] ctx_switches_critical_min_duration_seconds=300` keeps a
+fast careful/warning ramp while only raising critical after 5 minutes
+of sustained pressure.
+
 ## Consumer access patterns
 
 | Consumer | Method | Notes |
@@ -161,14 +175,25 @@ bytes_recv, …) declare those fields with `rate: True`. The base class's
 value with `(current - previous) / time_since_update`.
 
 ```python
+# Example with normalize_by — `bytes_recv` is compared as a ratio of link speed:
+"bytes_recv": {
+    "description": "Bytes received per second.",
+    "unit": "bytespers",
+    "rate": True,
+    "watched": True,
+    "prominent": True,
+    "default_thresholds": {"careful": 0.7, "warning": 0.8, "critical": 0.9},
+    "normalize_by": "bytes_speed_rate_per_sec",   # threshold compared to (rate / link speed)
+}
+
+# Example with absolute thresholds — no per-core or per-link normalisation:
 "ctx_switches": {
     "description": "Number of context switches per second.",
     "unit": "number",
     "rate": True,
     "watched": True,
     "prominent": True,
-    "default_thresholds": {"careful": 50.0, "warning": 70.0, "critical": 90.0},
-    "normalize_by": "cpucore",          # threshold compared against rate / cpucore
+    "default_thresholds": {"careful": 10000.0, "warning": 15000.0, "critical": 20000.0},
 }
 ```
 

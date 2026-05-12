@@ -331,6 +331,149 @@ async def test_per_plugin_min_duration_overrides_global(tmp_path, monkeypatch, s
     assert len(alerts.get_history()) == 1
 
 
+# ----------------------- min_duration precedence (Phase 1.2 fix) -----------
+
+
+async def test_field_min_duration_overrides_plugin(tmp_path, monkeypatch, store):
+    """`<field>_min_duration_seconds` beats the plugin-section default."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        # Plugin says 10 s for everything; the field-specific key says 0 → commits now.
+        "[alerts]\nmin_duration_seconds=10\n[fakescalar]\nmin_duration_seconds=10\npercent_min_duration_seconds=0\n",
+    )
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    assert len(alerts.get_history()) == 1
+
+
+async def test_field_level_min_duration_overrides_field(tmp_path, monkeypatch, store):
+    """`<field>_<level>_min_duration_seconds` beats `<field>_min_duration_seconds`.
+
+    This is the contract the user asked for:
+    ``ctx_switches_critical_min_duration_seconds=300`` raises critical
+    only after 300 s sustained, while other levels of the same field stay
+    fast. Here we encode the same shape with `warning_min_duration_seconds=10`
+    overridden to `0` only for the critical level — entering critical must
+    commit instantly while entering warning would still hold.
+    """
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[alerts]\nmin_duration_seconds=10\n"
+        "[fakescalar]\npercent_min_duration_seconds=10\n"
+        "percent_critical_min_duration_seconds=0\n",
+    )
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+    # Observing `critical` directly → uses the 0 s override → immediate commit.
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert len(alerts.get_history()) == 1
+    assert alerts.get_history()[0]["level"] == "critical"
+
+
+async def test_warning_level_uses_field_default_when_only_critical_overridden(tmp_path, monkeypatch, store):
+    """Per-level override on `critical` must NOT bleed into `warning`."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[alerts]\nmin_duration_seconds=10\n"
+        "[fakescalar]\npercent_min_duration_seconds=10\n"
+        "percent_critical_min_duration_seconds=0\n",
+    )
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+    # warning observation → field default (10 s) applies → no immediate commit.
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    assert alerts.get_history() == []
+
+
+async def test_collection_pk_field_level_min_duration_overrides_field_level(tmp_path, monkeypatch, store):
+    """`<pk>_<field>_<level>_min_duration_seconds` beats `<field>_<level>_min_duration_seconds`."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[alerts]\nmin_duration_seconds=10\n"
+        "[fakecollection]\nrx_warning_min_duration_seconds=10\n"
+        "eth0_rx_warning_min_duration_seconds=0\n",
+    )
+    alerts = GlancesAlerts(config)
+    plugin = _FakeCollectionPlugin(store, config)
+    # eth0 hits the pk-specific 0 s → immediate commit. lo stays under the 10 s field default.
+    await _run_with_levels(
+        plugin,
+        alerts,
+        {
+            "eth0": {"rx": {"level": "warning", "prominent": True}},
+            "lo": {"rx": {"level": "warning", "prominent": True}},
+        },
+    )
+    history = alerts.get_history()
+    keys = {(e["key"], e["level"]) for e in history}
+    assert ("eth0", "warning") in keys
+    assert ("lo", "warning") not in keys  # held back by 10 s field default
+
+
+async def test_collection_pk_field_min_duration_overrides_field(tmp_path, monkeypatch, store):
+    """`<pk>_<field>_min_duration_seconds` beats `<field>_min_duration_seconds`."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[alerts]\nmin_duration_seconds=10\n"
+        "[fakecollection]\nrx_min_duration_seconds=10\n"
+        "eth0_rx_min_duration_seconds=0\n",
+    )
+    alerts = GlancesAlerts(config)
+    plugin = _FakeCollectionPlugin(store, config)
+    await _run_with_levels(
+        plugin,
+        alerts,
+        {
+            "eth0": {"rx": {"level": "warning", "prominent": True}},
+            "lo": {"rx": {"level": "warning", "prominent": True}},
+        },
+    )
+    keys = {(e["key"], e["level"]) for e in alerts.get_history()}
+    assert ("eth0", "warning") in keys
+    assert ("lo", "warning") not in keys
+
+
+async def test_ctx_switches_critical_300s_end_to_end(tmp_path, monkeypatch, store):
+    """End-to-end scenario validating the user-requested contract:
+
+    ``ctx_switches_critical_min_duration_seconds=300`` raises CRITICAL only
+    after the value has been at critical for at least 300 s. Earlier cycles
+    stay pending; warning observations during the window reset the timer.
+    """
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[alerts]\nmin_duration_seconds=5\n[fakescalar]\npercent_critical_min_duration_seconds=300\n",
+    )
+    clock = _clock()
+    alerts = GlancesAlerts(config, now=clock)
+    plugin = _FakeScalarPlugin(store, config)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert alerts.get_history() == []  # 0 s — pending
+
+    clock.tick(150.0)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert alerts.get_history() == []  # 150 s — still pending
+
+    clock.tick(149.0)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert alerts.get_history() == []  # 299 s — still pending
+
+    clock.tick(2.0)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+    # 301 s ≥ 300 → commit.
+    history = alerts.get_history()
+    assert len(history) == 1
+    assert history[0]["level"] == "critical"
+
+
 # ---------------------------------------------------------- action dispatch
 
 

@@ -23,7 +23,7 @@ UV_RUN		   	  := .venv-uv/bin/uv
 .PHONY: help test docs docs-server venv requirements profiling docker all clean all test
 
 help: ## List all make commands available
-	@grep -E '^[\.a-zA-Z_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	@grep -E '^[\.a-zA-Z0-9_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	awk -F ":" '{print $1}' | \
 	grep -v % | sed 's/\\//g' | sort | \
 	awk 'BEGIN {FS = ":[^:]*?##"}; {printf "\033[1;34mmake %-50s\033[0m %s\n", $$1, $$2}'
@@ -98,6 +98,9 @@ test: ## Run All unit tests
 
 test-core: ## Run Core unit tests
 	$(UV_RUN) run pytest tests/test_core.py
+
+test-v5: ## Run only v5 unit tests
+	$(UV_RUN) run pytest tests/ -k "v5 or stats_store or scheduler or config_v5 or action or thresholds or alerts or security or webserver or routes"
 
 test-plugins: ## Run Plugins unit tests
 	$(UV_RUN) run pytest tests/test_plugin_*.py
@@ -345,6 +348,15 @@ run-like-htop: ## Start Glances with the same features than Htop
 
 run-fetch: ## Start Glances in fetch mode
 	$(UV_RUN) run python -m glances --fetch
+
+run-v5: ## Start Glances v5 REST server (FastAPI on :61208)
+	$(UV_RUN) run python -m glances.main_v5 -C $(CONF)
+
+run-v5-debug: ## Start Glances v5 REST server in debug mode
+	$(UV_RUN) run python -m glances.main_v5 -C $(CONF) -d
+
+set-password-v5: ## Generate a PBKDF2 hash for [outputs] password (v5)
+	$(UV_RUN) run python -m glances.main_v5 --set-password
 
 $(DOCKER_RUNTIMES): run-docker-%:
 	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-$*

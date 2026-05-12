@@ -115,6 +115,7 @@ wifi = ["wifi"]
 
 [project.scripts]
 glances = "glances:main"
+glances-v5 = "glances.main_v5:main"
 
 [tool.setuptools.data-files]
 "share/doc/glances" = [

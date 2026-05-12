@@ -69,7 +69,7 @@ Config keys in `[outputs]`: `password`, `username`, `jwt_secret_key`, `jwt_expir
 - `/api/5/args` — deferred to Phase 1.7 (no CLI args module yet). Same redaction discipline applies when added.
 - `/api/5/serverslist` — Phase 3 (browser mode). CVE-2026-32633 mandates stripping `password`/`uri` fields.
 
-> **Open audit item** (architecture §4.7): is `/api/5/config` returning redacted data sufficient to remain unauthenticated, or should it require auth even when redacted? Captured for the end-of-v5 cybersecurity audit before merging `develop-v5 → develop`.
+> **Open audit item** (architecture §4.8): is `/api/5/config` returning redacted data sufficient to remain unauthenticated, or should it require auth even when redacted? Captured for the end-of-v5 cybersecurity audit before merging `develop-v5 → develop`.
 
 ## Plugin registry — `app.state.plugins`
 

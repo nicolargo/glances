@@ -219,7 +219,7 @@ immediately, not accumulated. See `SKILL-ci-cd.md`.
 
 ## End-of-v5 cybersecurity audit (release blocker)
 
-Before merging `develop-v5 → develop`, run a **full audit on the `develop-v5` branch**. Open items the audit must address (architecture §4.7):
+Before merging `develop-v5 → develop`, run a **full audit on the `develop-v5` branch**. Open items the audit must address (architecture §4.8):
 
 - Is `/api/5/config` returning redacted data sufficient to remain unauthenticated when the global API is unauthenticated, or should it require auth even when `as_dict_secure()` redacts the obvious secrets?
 - Confirm `UNAUTH_PATHS` (probes + `/api/5/token`) cannot be abused for enumeration or oracle attacks.

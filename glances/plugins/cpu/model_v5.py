@@ -23,10 +23,12 @@ V4-aligned watched fields:
 - ``steal``        prominent True  — virtualised CPU stolen by hypervisor.
                    Stricter thresholds (5/15/30) — any non-trivial steal
                    indicates a noisy-neighbour situation worth surfacing.
-- ``ctx_switches`` prominent True  — counter rate, per-core normalised.
-                   Default thresholds applied to ``rate / cpucore``,
-                   matching v4's ``maximum=100*cpucore`` semantics in
-                   ``update_views()``.
+- ``ctx_switches`` prominent True  — counter rate, **absolute thresholds**
+                   (10k/15k/20k). Not per-core normalised — the metric
+                   is a system-wide scheduler-pressure signal. Diverges
+                   from v4 (which documents 50000*cpucore but its
+                   ``get_limit`` chain never resolves the default, so v4
+                   ships effectively no threshold).
 
 SNMP support is **not ported to v5** (architecture §10).
 """
@@ -40,9 +42,18 @@ from glances.plugins.plugin.base_v5 import GlancesPluginBase
 
 _DEFAULT_PERCENT_THRESHOLDS = {"careful": 50.0, "warning": 70.0, "critical": 90.0}
 _DEFAULT_STEAL_THRESHOLDS = {"careful": 5.0, "warning": 15.0, "critical": 30.0}
-# `ctx_switches` thresholds are interpreted per core (normalize_by=cpucore)
-# to match v4's `get_alert(ctx_rate, maximum=100*cpucore)` semantics.
-_DEFAULT_CTX_THRESHOLDS = {"careful": 50.0, "warning": 70.0, "critical": 90.0}
+# `ctx_switches` thresholds are absolute (no per-core normalisation). Empirical
+# values: typical desktop idle ~3-10k ctx/s; busy parallel build 50k+. Picked
+# to flag system-wide scheduler pressure regardless of core count — a single
+# thrashing process produces similar absolute rates on any machine. Big SMP
+# servers (128+ cores) can override via `[cpu] ctx_switches_*` in glances.conf.
+#
+# v5 divergence from v4: v4 documents `critical = 50000 * cpucore` in
+# `conf/glances.conf` but the `get_limit` fallback chain in v4 silently
+# never resolves to a value (double-prefix bug in `_limits` keys), so v4
+# ships effectively no default threshold. v5 fixes this by shipping
+# real defaults. Documented in NEWS.rst at 5.0.0.
+_DEFAULT_CTX_THRESHOLDS = {"careful": 10000.0, "warning": 15000.0, "critical": 20000.0}
 
 
 class PluginModel(GlancesPluginBase[dict]):
@@ -150,7 +161,6 @@ class PluginModel(GlancesPluginBase[dict]):
             "watch_direction": "high",
             "prominent": True,
             "default_thresholds": _DEFAULT_CTX_THRESHOLDS,
-            "normalize_by": "cpucore",
         },
         "interrupts": {
             "description": "Number of interrupts per second.",
