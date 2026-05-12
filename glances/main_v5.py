@@ -62,6 +62,8 @@ from glances.webserver_v5 import build_app, register_plugin
 if TYPE_CHECKING:
     from fastapi import FastAPI
 
+    from glances.outputs.glances_curses_v5 import TuiV5
+
 logger = logging.getLogger(__name__)
 
 _VERSION = "5.0.0a1"
@@ -109,6 +111,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--debug",
         action="store_true",
         help="Enable debug-level logging.",
+    )
+    parser.add_argument(
+        "--no-tui",
+        dest="no_tui",
+        action="store_true",
+        help="Disable the curses TUI (REST API only). Useful for headless / server-mode deployments.",
     )
     parser.add_argument(
         "--set-password",
@@ -232,12 +240,13 @@ def cli_set_password() -> int:
 # --------------------------------------------------------------- assemble
 
 
-def assemble(args: argparse.Namespace, config: GlancesConfigV5) -> tuple[FastAPI, AsyncScheduler, str, int]:
-    """Wire every Phase 1 component into a runnable pair (app, scheduler).
+def assemble(
+    args: argparse.Namespace, config: GlancesConfigV5
+) -> tuple[FastAPI, AsyncScheduler, str, int, TuiV5 | None]:
+    """Wire every Phase 1 component into a runnable tuple.
 
-    Resolves bind/port precedence (CLI > config > default) and returns
-    them alongside the assembled objects so the caller can hand them to
-    uvicorn.
+    Also instantiates the curses TUI thread unless ``--no-tui`` is set.
+    The TUI is started by `serve()`, not here.
     """
     store = StatsStoreV5()
     actions = discover_actions("glances.actions_v5")
@@ -270,17 +279,43 @@ def assemble(args: argparse.Namespace, config: GlancesConfigV5) -> tuple[FastAPI
     host = args.bind or config.get("outputs", "bind_address", _DEFAULT_BIND_ADDRESS)
     port = args.port or config.get("outputs", "port", _DEFAULT_PORT)
 
-    return app, scheduler, host, int(port)
+    tui: TuiV5 | None = None
+    if not getattr(args, "no_tui", False):
+        # Local import — curses is platform-dependent and only needed when the TUI is on.
+        from glances.outputs.glances_curses_v5 import TuiV5 as _TuiV5
+
+        registry = [(p.plugin_name, p.IS_COLLECTION) for p in plugins]
+        fields_by_plugin = {p.plugin_name: p._fields for p in plugins}
+        refresh = float(config.get("outputs", "tui_refresh_interval", 1.0))
+        tui = _TuiV5(
+            store=store,
+            alerts=alerts,
+            config=config,
+            registry=registry,
+            fields_by_plugin=fields_by_plugin,
+            refresh_interval=refresh,
+        )
+
+    return app, scheduler, host, int(port), tui
 
 
 # --------------------------------------------------------------- serve
 
 
-async def serve(app: FastAPI, scheduler: AsyncScheduler, host: str, port: int) -> None:
-    """Run scheduler and uvicorn concurrently. Returns when uvicorn stops."""
+async def serve(
+    app: FastAPI,
+    scheduler: AsyncScheduler,
+    host: str,
+    port: int,
+    tui: TuiV5 | None = None,
+) -> None:
+    """Run scheduler, uvicorn, and (optionally) the TUI thread concurrently."""
     scheduler_task: asyncio.Task[None] | None = None
     if scheduler._entries:  # type: ignore[attr-defined]
         scheduler_task = asyncio.create_task(scheduler.run_forever())
+
+    if tui is not None:
+        tui.start()
 
     uvi_config = uvicorn.Config(
         app,
@@ -293,6 +328,10 @@ async def serve(app: FastAPI, scheduler: AsyncScheduler, host: str, port: int) -
     try:
         await server.serve()
     finally:
+        if tui is not None:
+            tui.stop()
+            # Join in a thread executor — never block the event loop.
+            await asyncio.to_thread(tui.join, 2.0)
         await scheduler.stop()
         if scheduler_task is not None:
             with contextlib.suppress(asyncio.CancelledError, Exception):
@@ -310,11 +349,11 @@ def main(argv: list[str] | None = None) -> int:
         return cli_set_password()
 
     config = GlancesConfigV5(cli_config_path=args.config_path)
-    app, scheduler, host, port = assemble(args, config)
+    app, scheduler, host, port, tui = assemble(args, config)
 
     logger.info("Starting Glances v5 REST API on http://%s:%d", host, port)
     try:
-        asyncio.run(serve(app, scheduler, host, port))
+        asyncio.run(serve(app, scheduler, host, port, tui))
     except KeyboardInterrupt:
         pass
     return 0

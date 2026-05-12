@@ -208,8 +208,8 @@ def test_cli_set_password_keyboard_interrupt(monkeypatch, capsys):
 
 
 def test_assemble_resolves_bind_and_port_from_cli(config):
-    args = build_parser().parse_args(["--bind", "0.0.0.0", "--port", "1234"])
-    app, scheduler, host, port = assemble(args, config)
+    args = build_parser().parse_args(["--bind", "0.0.0.0", "--port", "1234", "--no-tui"])
+    app, scheduler, host, port, _tui = assemble(args, config)
     assert host == "0.0.0.0"
     assert port == 1234
     # Scheduler picks up the plugins; app exposes them via registry.
@@ -221,28 +221,28 @@ def test_assemble_resolves_bind_and_port_from_config(config, monkeypatch):
     monkeypatch.setenv("GLANCES_OUTPUTS__BIND_ADDRESS", "10.0.0.1")
     monkeypatch.setenv("GLANCES_OUTPUTS__PORT", "9999")
     cfg = GlancesConfigV5()
-    args = build_parser().parse_args([])
-    _, _, host, port = assemble(args, cfg)
+    args = build_parser().parse_args(["--no-tui"])
+    _, _, host, port, _tui = assemble(args, cfg)
     assert host == "10.0.0.1"
     assert port == 9999
 
 
 def test_assemble_falls_back_to_defaults(config):
-    args = build_parser().parse_args([])
-    _, _, host, port = assemble(args, config)
+    args = build_parser().parse_args(["--no-tui"])
+    _, _, host, port, _tui = assemble(args, config)
     assert host == "127.0.0.1"
     assert port == 61208
 
 
 def test_assemble_wires_alerts_into_scheduler(config):
-    args = build_parser().parse_args([])
-    _, scheduler, _, _ = assemble(args, config)
+    args = build_parser().parse_args(["--no-tui"])
+    _, scheduler, _, _, _tui = assemble(args, config)
     assert scheduler.alerts is not None
 
 
 def test_assemble_api_doc_cli_override(config):
-    args = build_parser().parse_args(["--no-api-doc"])
-    app, _, _, _ = assemble(args, config)
+    args = build_parser().parse_args(["--no-api-doc", "--no-tui"])
+    app, _, _, _, _tui = assemble(args, config)
     # /docs disabled → no Swagger route on the app.
     routes = [getattr(r, "path", None) for r in app.routes]
     assert "/docs" not in routes
@@ -252,8 +252,8 @@ def test_assemble_api_doc_cli_override(config):
 
 
 def test_serve_stops_scheduler_after_uvicorn_returns(config):
-    args = build_parser().parse_args([])
-    app, scheduler, host, port = assemble(args, config)
+    args = build_parser().parse_args(["--no-tui"])
+    app, scheduler, host, port, tui = assemble(args, config)
 
     with patch("glances.main_v5.uvicorn.Server") as MockServer:
         instance = MockServer.return_value
@@ -264,7 +264,7 @@ def test_serve_stops_scheduler_after_uvicorn_returns(config):
         scheduler.run_forever = AsyncMock(return_value=None)  # type: ignore[method-assign]
         scheduler.stop = AsyncMock(return_value=None)  # type: ignore[method-assign]
 
-        asyncio.run(serve(app, scheduler, host, port))
+        asyncio.run(serve(app, scheduler, host, port, tui))
 
         instance.serve.assert_awaited_once()
         scheduler.stop.assert_awaited()
@@ -277,3 +277,30 @@ def test_main_dispatches_to_set_password(monkeypatch):
     monkeypatch.setattr("getpass.getpass", lambda prompt="": "")  # empty → exit 1
     rc = main(["--set-password"])
     assert rc == 1
+
+
+# ---------------------------------------------------------------- TUI wiring
+
+
+def test_parser_accepts_no_tui_flag():
+    args = build_parser().parse_args(["--no-tui"])
+    assert args.no_tui is True
+
+
+def test_parser_tui_defaults_to_enabled():
+    args = build_parser().parse_args([])
+    assert args.no_tui is False
+
+
+def test_assemble_builds_tui_when_enabled(config):
+    """assemble() returns a TuiV5 instance when --no-tui is not set."""
+    args = build_parser().parse_args([])
+    app, scheduler, host, port, tui = assemble(args, config)
+    assert tui is not None
+
+
+def test_assemble_skips_tui_when_no_tui(config):
+    """assemble() returns None for the tui slot when --no-tui is set."""
+    args = build_parser().parse_args(["--no-tui"])
+    app, scheduler, host, port, tui = assemble(args, config)
+    assert tui is None
