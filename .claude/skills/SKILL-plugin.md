@@ -278,6 +278,71 @@ call `await plugin.update()`, assert on the store payload or
 `tests/test_plugin_base_v5.py` provides reference fakes
 (`FakeScalarPlugin`, `FakeCollectionPlugin`) demonstrating the pattern.
 
+## Renderer hints in `fields_description`
+
+Two **optional** keys give plugin authors fine control over the TUI/WebUI
+rendering without re-introducing the rejected `view_layout` mechanism
+(§3.6 of the architecture document):
+
+| Key | Type | Purpose |
+|---|---|---|
+| `format` | `str` | Explicit Python format string applied to the value (e.g. `"%5.1f%%"`). Overrides the default unit-driven formatter. |
+| `column_width` | `int` | Fixed character width for the field's column in the TUI. Overrides the auto-sizing computed from label + observed max content width. |
+
+Both are pure *formatting* hints — they describe how a single field is
+displayed, never *where* it sits relative to others. The overall layout
+(which fields appear, in which column, in which order) remains owned by
+the renderer.
+
+**When to use:**
+- The unit-driven default does not match v4 (e.g. trailing space, three-digit
+  padding) → declare `format`.
+- The auto-sized column flickers because content length varies cycle-to-cycle
+  → declare `column_width`.
+
+**When NOT to use:** when you want a different *layout* (custom column order,
+two-line rendering, sparkline). The renderer owns layout. If your need is
+truly different, open an issue first — adding a renderer feature is a
+deliberate decision, not a per-plugin escape hatch.
+
+## Visual parity contract
+
+Every plugin PR ships with a screenshot pair (v4 vs v5) in its description,
+on the same data set. The reviewer arbitrates:
+
+- Field labels visually similar?
+- Values formatted with the same unit/precision?
+- Threshold-driven coloration triggered at the same boundaries?
+
+If the visual diff is non-trivial and the reviewer wants automation, the
+PR author adds a text fixture under `tests/fixtures/tui_<plugin>_v5.txt`
+and a `test_curses_<plugin>_v5.py` assertion that the renderer output
+matches the fixture (line-by-line). This is opt-in per plugin.
+
+The catalogue of v4 patterns lives in
+`docs/architecture/tui-v4-rendering-patterns.md` — extend it whenever a
+new plugin is migrated.
+
+## Done-bar checklist (Phase 2)
+
+Before requesting review on a plugin migration PR:
+
+- [ ] `glances/plugins/<name>/model_v5.py` exists with a complete
+      `fields_description` (description, unit, label, watched,
+      watch_direction, prominent, default_thresholds, primary_key for
+      collections, exportable, rate where applicable).
+- [ ] `tests/test_plugin_<name>_v5.py` covers `_grab_stats`, the four
+      `_transform` steps, `_levels`, the field schema, and `get_export`.
+- [ ] `tests/test_plugin_<name>.py` (v4) still passes — no regression.
+- [ ] `GET /api/5/<name>` and `GET /api/5/<name>/info` return the expected
+      shapes (verified in `tests/test_routes_v5.py` or via curl in the
+      PR description).
+- [ ] TUI wiring done in the same PR — screenshot v4 vs v5 attached.
+- [ ] Perf check (`tests/test_perf_v5.py`) shows no regression > 20%.
+- [ ] `make lint && make format` clean.
+- [ ] `NEWS.rst` updated if a visible-API change (datamodel, thresholds,
+      config keys) is introduced.
+
 ## Module path
 
 ```
