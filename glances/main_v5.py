@@ -365,6 +365,18 @@ def main(argv: list[str] | None = None) -> int:
         asyncio.run(serve(app, scheduler, host, port, tui))
     except KeyboardInterrupt:
         pass
+    finally:
+        # Safety net: when the TUI is cleaned up via Ctrl-C, the curses
+        # endwin() inside a worker thread sometimes leaves the terminal
+        # with the cursor hidden. Re-emit DECTCEM (cursor visible) on
+        # stdout — works on every VT100-compatible terminal and is a
+        # no-op on dumb terminals.
+        if tui is not None and sys.stdout.isatty():
+            try:
+                sys.stdout.write("\x1b[?25h")
+                sys.stdout.flush()
+            except OSError:
+                pass
     return 0
 
 
