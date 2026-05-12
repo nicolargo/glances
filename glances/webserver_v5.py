@@ -49,16 +49,20 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import GlancesConfigV5
+from glances.plugins.plugin.base_v5 import GlancesPluginBase
+from glances.routes_v5 import build_router
 from glances.security_v5 import JWTHandler, verify_password
 from glances.stats_store_v5 import StatsStoreV5
 
 logger = logging.getLogger(__name__)
 
-# Liveness / readiness probes — always exempt from authentication. ``/status``
-# matches the v4 endpoint name; ``/healthz`` is the Kubernetes / Prometheus /
-# Docker healthcheck convention. Hardcoded — deliberately not configurable
-# so the probe surface stays predictable.
-UNAUTH_PATHS: frozenset[str] = frozenset({"/status", "/healthz"})
+# Endpoints that bypass the global Auth middleware. Two categories:
+# - Liveness probes (``/status``, ``/healthz``) — must always answer.
+# - ``/api/5/token`` — the JWT minting endpoint authenticates Basic creds
+#   itself; it cannot live behind the Bearer-or-Basic middleware because
+#   the very purpose of the call is to *obtain* the Bearer token.
+# Hardcoded — deliberately not configurable so the surface stays predictable.
+UNAUTH_PATHS: frozenset[str] = frozenset({"/status", "/healthz", "/api/5/token"})
 
 # Loopback addresses that suppress the "no TrustedHost configured" warning.
 _LOOPBACK_HOSTS: frozenset[str] = frozenset({"127.0.0.1", "::1", "localhost"})
@@ -110,6 +114,10 @@ def build_app(
     app.state.store = store
     app.state.alerts = alerts
     app.state.jwt_handler = None  # set by _wire_auth() when password is configured
+    # Populated by ``register_plugin(app, plugin)`` — used by /pluginslist
+    # and /<plugin>/info. Routes that only need the store payload do not
+    # consult this dict.
+    app.state.plugins = {}
 
     # Register from inner to outer — Starlette applies middlewares in reverse.
     _wire_auth(app, config)
@@ -117,6 +125,7 @@ def build_app(
     _wire_trusted_hosts(app, config)
 
     _register_health_endpoints(app)
+    app.include_router(build_router())
 
     if not _auth_is_configured(config):
         logger.warning(
@@ -125,6 +134,19 @@ def build_app(
         )
 
     return app
+
+
+def register_plugin(app: FastAPI, plugin: GlancesPluginBase) -> None:
+    """Make ``plugin`` discoverable by the REST API.
+
+    Used by the Phase 1.7 CLI entrypoint, which registers each plugin
+    with both the scheduler (so it gets updated) and the FastAPI app (so
+    ``/api/5/pluginslist`` and ``/api/5/<plugin>/info`` can find it).
+    """
+    plugins = app.state.plugins
+    if plugin.plugin_name in plugins:
+        raise ValueError(f"Plugin {plugin.plugin_name!r} is already registered with the FastAPI app")
+    plugins[plugin.plugin_name] = plugin
 
 
 # ---------------------------------------------------------- middlewares

@@ -602,6 +602,49 @@ rate_limit_burst=0
 
 Implementation will use a Starlette-level middleware (token-bucket or `slowapi`-style), inserted between TrustedHost and CORS. The `UNAUTH_PATHS` probes will always be exempt.
 
+### 4.6 REST routes — Phase 1.6
+
+Routes live in `glances/routes_v5.py` as a single `APIRouter(prefix="/api/5")`, mounted by `build_app()` after middleware wiring.
+
+| Path | Method | Auth | Source | Notes |
+|---|---|---|---|---|
+| `/api/5/token` | POST | Basic (route-level) | `app.state.jwt_handler` | Exempt from the global Auth middleware (listed in `UNAUTH_PATHS`). Returns `{access_token, token_type:"bearer", expires_in}`. 404 if `[outputs] password` is unset. |
+| `/api/5/pluginslist` | GET | per-config | `app.state.plugins` keys | Sorted plugin-name list. |
+| `/api/5/all` | GET | per-config | `store.as_dict()` | Every plugin's payload in a single dict. Plugins that have never written are absent. |
+| `/api/5/alert` | GET | per-config | `alerts.get_history()` | Returns the ring buffer. 404 if `alerts is None`. |
+| `/api/5/config` | GET | per-config | `config.as_dict_secure()` | Redacted via `as_dict_secure()` — CVE-2026-32609 / 30928. |
+| `/api/5/<plugin>` | GET | per-config | `store.get(plugin)` | Raw payload **with `_levels`**. `200 null` if the plugin is registered but has not yet published (scheduler cycle 0). `404` if the plugin is not registered. |
+| `/api/5/<plugin>/info` | GET | per-config | `plugin.fields_description` | Schema for clients. 404 if the plugin is not registered. |
+
+**"per-config"** = the global Auth middleware applies its policy: when `[outputs] password` is set the request must carry Bearer or Basic credentials; otherwise the route is open.
+
+#### Plugin registry — `app.state.plugins`
+
+`build_app()` initialises `app.state.plugins = {}`. The Phase 1.7 CLI registers each plugin with both the scheduler (so it gets updated) and the FastAPI app (so `/pluginslist` and `/<plugin>/info` can find it) via `register_plugin(app, plugin)`. The registry is *only* consulted by `/pluginslist` and `/<plugin>/info`; routes that read store data go through `app.state.store` directly.
+
+#### Cycle-0 semantics
+
+A plugin registered but not yet updated returns `200 null` rather than `404` or `503`. Distinguishes "unknown plugin" (404) from "data not yet available" (transient — clients poll). Decision recorded for clarity: the API never serves a stale-or-empty fallback dict for cycle 0, so consumers do not have to differentiate "no data" from "all zeros".
+
+#### Deferred for follow-up
+- `/api/5/<plugin>/<field>` — single-field accessor (scalar convenience)
+- `/api/5/<plugin>/<field>/history` — plugin-level history buffer (Phase 2)
+- `/api/5/<plugin>/<pk_value>` — collection item lookup
+- `/api/5/args` — depends on the Phase 1.7 CLI args module
+- `/api/5/serverslist` — Phase 3 (browser mode, CVE-2026-32633)
+
+### 4.7 Security audit — end of v5 development
+
+Before merging `develop-v5 → develop`, schedule a **full cybersecurity audit on the `develop-v5` branch**. Open items the audit must explicitly address:
+
+- Is `/api/5/config` returning redacted data sufficient to keep it unauthenticated when the global API is unauthenticated? Or should the endpoint require auth even when `as_dict_secure()` redacts the obvious secrets? (Captured during Phase 1.6 review.)
+- Confirm `UNAUTH_PATHS` (probes + `/api/5/token`) cannot be abused for enumeration or oracle attacks.
+- Confirm rate limiting is wired before any release candidate (Phase 2+).
+- Re-check every CVE in §8 against the actual v5 code, not just against the original v4 fix.
+- Confirm no v4 module that has reached EOL leaks through `from glances.<x> import ...` in any `_v5` file.
+
+The audit produces a downloadable `.md` report (per the contribution guidelines) and is a **release blocker** for `5.0.0`.
+
 ---
 
 ## 5. Browser / multi-server mode
@@ -823,7 +866,7 @@ _Goal: production-ready. Release `5.0.0rc1` then `5.0.0`._
 
 - All v4 unit tests migrated and passing
 - Performance validation (no regression on refresh latency)
-- Security audit against §8 checklist
+- **Full cybersecurity audit on the `develop-v5` branch** — release blocker. See §4.7 for the open items the audit must address (each CVE in §8 re-verified against actual v5 code, `/api/5/config` auth posture decision, `UNAUTH_PATHS` review, rate limiting wired, no v4 module leaks into v5 imports). Output: downloadable `.md` audit report.
 - Release notes documenting all breaking changes and datamodel differences
 - Merge `develop-v5 → develop`
 - PyPI, Docker, Snap, Helm packages published

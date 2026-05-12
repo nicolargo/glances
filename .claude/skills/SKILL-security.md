@@ -217,9 +217,20 @@ Concretely: when a CVE is patched in `develop` (v4) post-Phase-0, it
 → develop-v5` (CI) is the primary channel; conflicts are resolved
 immediately, not accumulated. See `SKILL-ci-cd.md`.
 
+## End-of-v5 cybersecurity audit (release blocker)
+
+Before merging `develop-v5 → develop`, run a **full audit on the `develop-v5` branch**. Open items the audit must address (architecture §4.7):
+
+- Is `/api/5/config` returning redacted data sufficient to remain unauthenticated when the global API is unauthenticated, or should it require auth even when `as_dict_secure()` redacts the obvious secrets?
+- Confirm `UNAUTH_PATHS` (probes + `/api/5/token`) cannot be abused for enumeration or oracle attacks.
+- Re-check every CVE in §8 against the actual v5 code, not just against the v4 fix.
+- Confirm rate limiting is wired before any release candidate.
+- Confirm no v4 module that has reached EOL leaks through `from glances.<x> import ...` in any `_v5` file.
+
+Output: downloadable `.md` audit report. Release blocker for `5.0.0`.
+
 ## What's deferred
 
-- **`/api/5/token` route** — Phase 1.6 (JWT minting endpoint behind Basic Auth).
 - **`glances-v5 --set-password` CLI** — Phase 1.7 (regenerate hash for `[outputs] password`).
 - **Rate limiting middleware** (`rate_limit_per_minute`, `rate_limit_burst`) — Phase 2+.
 - **IP plugin SSRF mitigation** (CVE-2026-35587) — Phase 2 (`ip` plugin migration). New v5 mitigation, not present in v4.
