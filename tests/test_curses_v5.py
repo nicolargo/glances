@@ -181,6 +181,83 @@ def test_attr_for_prominent_default_color_stays_plain():
     assert not (attr & curses.A_REVERSE)
 
 
+def test_tui_v5_default_top_shows_cpu_not_percpu(monkeypatch, fake_store, fake_alerts, fake_config):
+    """At startup, cpu is in the top slot and percpu is hidden (v4 default)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    fake_store.as_dict.return_value = {
+        "cpu": {"total": 5.0, "_levels": {}},
+        "percpu": {"data": [], "_levels": {}},
+    }
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("cpu", False), ("percpu", True)],
+        fields_by_plugin={
+            "cpu": {"total": {"unit": "percent", "watched": True, "label": "CPU"}},
+            "percpu": {"cpu_number": {"unit": "number", "primary_key": True}},
+        },
+        refresh_interval=0.01,
+    )
+    frame = tui._build_frame()
+    top_names = [b.name for b in frame.top]
+    assert "cpu" in top_names
+    assert "percpu" not in top_names
+
+
+def test_tui_v5_toggle_swaps_cpu_for_percpu(monkeypatch, fake_store, fake_alerts, fake_config):
+    """Once `_show_percpu` flips True, the top slot exposes percpu instead of cpu."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    fake_store.as_dict.return_value = {
+        "cpu": {"total": 5.0, "_levels": {}},
+        "percpu": {"data": [], "_levels": {}},
+    }
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("cpu", False), ("percpu", True)],
+        fields_by_plugin={
+            "cpu": {"total": {"unit": "percent", "watched": True, "label": "CPU"}},
+            "percpu": {"cpu_number": {"unit": "number", "primary_key": True}},
+        },
+        refresh_interval=0.01,
+    )
+    tui._show_percpu = True
+    frame = tui._build_frame()
+    top_names = [b.name for b in frame.top]
+    assert "percpu" in top_names
+    assert "cpu" not in top_names
+
+
+def test_tui_v5_hotkey_1_toggles_percpu(monkeypatch, fake_store, fake_alerts, fake_config):
+    """Pressing '1' flips `_show_percpu`."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    fake_stdscr = MagicMock()
+    fake_stdscr.getmaxyx.return_value = (24, 80)
+    # Sequence: one '1' keypress to toggle, then a 'q' to exit.
+    fake_stdscr.getch.side_effect = [ord("1"), ord("q"), -1, -1]
+    monkeypatch.setattr(tui_mod, "_safe_curses_wrapper", lambda fn: fn(fake_stdscr))
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("mem", False)],
+        fields_by_plugin={"mem": {}},
+        refresh_interval=0.01,
+    )
+    assert tui._show_percpu is False
+    tui.start()
+    tui.join(timeout=1.0)
+    # After one '1' press, the flag was flipped — the thread exits on 'q'
+    # but the flag retains the toggled value.
+    assert tui._show_percpu is True
+
+
 def test_tui_v5_q_key_fires_on_quit_callback(monkeypatch, fake_store, fake_alerts, fake_config):
     """Pressing 'q' fires the on_quit callback so the main loop can shut down."""
     from glances.outputs import glances_curses_v5 as tui_mod

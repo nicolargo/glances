@@ -82,6 +82,11 @@ class TuiV5(threading.Thread):
         # until Ctrl-C. None = no-op (used in tests).
         self._on_quit = on_quit
         self._stop_event = threading.Event()
+        # Toggle between cpu (default) and percpu in the top row. Mirrors
+        # v4's `args.percpu` flag controlled by hotkey '1'. When True,
+        # `cpu` is hidden from the top slot and `percpu` is shown; when
+        # False, the reverse.
+        self._show_percpu = False
 
     # ----------------------------------------------------------- control
 
@@ -122,6 +127,9 @@ class TuiV5(threading.Thread):
                         except Exception as e:  # pragma: no cover — defensive
                             logger.warning("TUI on_quit callback failed: %s", e)
                     break
+                if key == ord("1"):
+                    # Toggle CPU ↔ perCPU in the top row (matches v4 hotkey).
+                    self._show_percpu = not self._show_percpu
 
                 self._sleep_responsive(self.refresh_interval)
         finally:
@@ -145,12 +153,16 @@ class TuiV5(threading.Thread):
     def _build_frame(self) -> Frame:
         snapshot = self.store.as_dict()
         history = self.alerts.get_history() if self.alerts is not None else []
-        return build_frame(
+        frame = build_frame(
             store_snapshot=snapshot,
             fields_by_plugin=self.fields_by_plugin,
             registry=self.registry,
             alerts_history=history,
         )
+        # CPU ↔ perCPU mutual exclusion (v4 parity, hotkey '1').
+        hidden = "cpu" if self._show_percpu else "percpu"
+        frame.top = [b for b in frame.top if b.name != hidden]
+        return frame
 
     # ----------------------------------------------------------- paint
 
