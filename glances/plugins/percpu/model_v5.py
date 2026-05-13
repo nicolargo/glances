@@ -111,6 +111,8 @@ class PluginModel(GlancesPluginBase[list]):
     }
 
     async def _grab_stats(self) -> list:
+        # The shared sampler guards against psutil's "no baseline yet"
+        # first-call behaviour (cf. `cpu_sampler_v5._is_unsettled`).
         per_core = await sampler.get_per_core()
         out: list[dict[str, Any]] = []
         for cpu_number, cpu_times in enumerate(per_core):

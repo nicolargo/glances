@@ -73,12 +73,49 @@ class CpuSamplerV5:
 
     # ----------------------------------------------------------- aggregate
 
+    @staticmethod
+    def _is_unsettled(sample: Any) -> bool:
+        """Detect a psutil sample taken before its baseline is built.
+
+        ``psutil.cpu_times_percent(interval=0.0)`` returns ``0.0`` for
+        every field on the very first call (no anchor). The next few
+        calls — until enough wall time has elapsed since the anchor —
+        return partial samples that don't sum to ~100% (typical
+        signature: ``idle≈1.0, every other field == 0.0``). Cache-ing
+        such a sample would propagate the "100% CPU spike" for a full
+        TTL window after startup.
+
+        Heuristic: a settled cpu_times_percent sample sums to roughly
+        100%. Below 50% means no real baseline yet.
+        """
+        names = ("user", "system", "idle", "nice", "iowait", "irq", "softirq", "steal", "guest", "dpc")
+        total = 0.0
+        for n in names:
+            v = getattr(sample, n, 0.0)
+            if isinstance(v, (int, float)):
+                total += float(v)
+        return total < 50.0
+
+    async def _fetch_aggregate(self, percpu: bool = False) -> Any:
+        """Pull a psutil sample; if it looks unsettled, sleep briefly and
+        retry once. Caller is responsible for holding ``self._lock``."""
+        result = await asyncio.to_thread(psutil.cpu_times_percent, interval=0.0, percpu=percpu)
+        first = result[0] if (percpu and result) else result
+        if first is not None and self._is_unsettled(first):
+            # Give psutil's anchor enough wall time to register a real
+            # delta on the next call. 50 ms is comfortably above the
+            # ~1 ms granularity below which psutil reports all zeros and
+            # imperceptible to the user at startup.
+            await asyncio.sleep(0.05)
+            result = await asyncio.to_thread(psutil.cpu_times_percent, interval=0.0, percpu=percpu)
+        return result
+
     async def get_aggregate(self) -> Any:
         """System-wide ``cpu_times_percent`` (cached over ``ttl``)."""
         async with self._lock:
             if self._is_fresh(self._aggregate_ts) and self._aggregate is not None:
                 return self._aggregate
-            self._aggregate = await asyncio.to_thread(psutil.cpu_times_percent, interval=0.0)
+            self._aggregate = await self._fetch_aggregate(percpu=False)
             self._aggregate_ts = time.monotonic()
             return self._aggregate
 
@@ -89,7 +126,7 @@ class CpuSamplerV5:
         async with self._lock:
             if self._is_fresh(self._per_core_ts) and self._per_core:
                 return self._per_core
-            self._per_core = await asyncio.to_thread(psutil.cpu_times_percent, interval=0.0, percpu=True)
+            self._per_core = await self._fetch_aggregate(percpu=True)
             self._per_core_ts = time.monotonic()
             return self._per_core
 

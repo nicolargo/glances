@@ -159,3 +159,68 @@ def test_module_level_singleton_exists():
     from glances.cpu_sampler_v5 import sampler
 
     assert isinstance(sampler, CpuSamplerV5)
+
+
+# ---------------------------------------------------------- unsettled-sample guard
+
+
+def test_is_unsettled_detects_all_zero_sample():
+    """psutil returns 0.0 everywhere on the first call (no baseline)."""
+    zeroed = _agg(idle=0.0)._replace(user=0.0, system=0.0, nice=0.0, iowait=0.0)
+    assert CpuSamplerV5._is_unsettled(zeroed) is True
+
+
+def test_is_unsettled_detects_partial_first_call():
+    """Real-world bug: first call after init returns e.g. idle=1.0 and
+    everything else 0.0 — sum ≪ 100 → unsettled."""
+    partial = CpuTimesPercent(
+        user=0.0,
+        system=0.0,
+        idle=1.0,
+        nice=0.0,
+        iowait=0.0,
+        irq=0.0,
+        softirq=0.0,
+        steal=0.0,
+        guest=0.0,
+        guest_nice=0.0,
+    )
+    assert CpuSamplerV5._is_unsettled(partial) is True
+
+
+def test_is_unsettled_accepts_settled_sample():
+    """A real sample sums to ~100% across the time-percent fields."""
+    settled = _agg(idle=72.5)  # user=10+system=15+idle=72.5+... ≈ 100
+    assert CpuSamplerV5._is_unsettled(settled) is False
+
+
+async def test_fetch_aggregate_retries_after_unsettled_sample():
+    """If the first psutil call returns an unsettled sample, the sampler
+    sleeps briefly and re-samples once."""
+    sampler = CpuSamplerV5(ttl=10.0)
+    unsettled = CpuTimesPercent(
+        user=0.0,
+        system=0.0,
+        idle=1.0,
+        nice=0.0,
+        iowait=0.0,
+        irq=0.0,
+        softirq=0.0,
+        steal=0.0,
+        guest=0.0,
+        guest_nice=0.0,
+    )
+    settled = _agg(idle=72.0)
+    results = [unsettled, settled]
+
+    def stub(*args, **kwargs):
+        return results.pop(0)
+
+    with patch("glances.cpu_sampler_v5.psutil.cpu_times_percent", side_effect=stub):
+        # Bypass the asyncio.sleep so the test runs instantly.
+        with patch("glances.cpu_sampler_v5.asyncio.sleep") as fake_sleep:
+            fake_sleep.return_value = None
+            actual = await sampler.get_aggregate()
+
+    assert actual.idle == 72.0  # the settled second sample is what we cached
+    assert results == []  # both samples were consumed

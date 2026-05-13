@@ -185,9 +185,11 @@ class PluginModel(GlancesPluginBase[dict]):
     }
 
     async def _grab_stats(self) -> dict:
-        # Both psutil calls are coalesced through the shared sampler — when the
-        # `percpu` plugin is updated in the same scheduler tick, only one
-        # psutil sample fires per sub-call.
+        # Both psutil calls are coalesced through the shared sampler —
+        # when the `percpu` plugin is updated in the same scheduler
+        # tick, only one psutil sample fires per sub-call. The sampler
+        # also guards against psutil's "no baseline yet" first-call
+        # behaviour (cf. `_is_unsettled`).
         agg = await sampler.get_aggregate()
         cpu_stats = await sampler.get_stats()
 
