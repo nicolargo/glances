@@ -286,6 +286,11 @@ class TuiV5(threading.Thread):
 # ----------------------------------------------------------------- colors
 
 
+# Separate dict: for each alert role, the "white-on-color" curses pair
+# used when a cell is marked prominent. Filled in `_init_colors`.
+_COLOR_PAIRS_REVERSE: dict[ColorRole, int] = {}
+
+
 def _init_colors() -> None:
     try:
         if not curses.has_colors():
@@ -295,6 +300,8 @@ def _init_colors() -> None:
             curses.use_default_colors()
         except curses.error:
             pass
+        # Foreground pairs (used by default for coloured text on the
+        # terminal's native background).
         pairs = [
             (ColorRole.OK, curses.COLOR_GREEN),
             (ColorRole.CAREFUL, curses.COLOR_BLUE),
@@ -311,6 +318,26 @@ def _init_colors() -> None:
                 curses.init_pair(i, color, curses.COLOR_BLACK)
             _COLOR_PAIRS[role] = curses.color_pair(i)
         _COLOR_PAIRS[ColorRole.DEFAULT] = curses.color_pair(0)
+
+        # Reverse pairs — explicit "white fg on coloured bg" (v4 parity).
+        # Using A_REVERSE alone would inherit the terminal's default
+        # foreground for the swapped fg, often a mid-gray that is hard to
+        # read on a magenta/red background. Defining a separate pair
+        # guarantees a white foreground.
+        reverse_pairs = [
+            (ColorRole.OK, curses.COLOR_GREEN),
+            (ColorRole.CAREFUL, curses.COLOR_BLUE),
+            (ColorRole.WARNING, curses.COLOR_MAGENTA),
+            (ColorRole.CRITICAL, curses.COLOR_RED),
+        ]
+        for j, (role, bg) in enumerate(reverse_pairs, start=len(pairs) + 1):
+            try:
+                curses.init_pair(j, curses.COLOR_WHITE, bg)
+            except curses.error:
+                # Terminal can't allocate the pair (very limited palettes).
+                # Fall back to plain reverse so we don't crash.
+                continue
+            _COLOR_PAIRS_REVERSE[role] = curses.color_pair(j)
     except curses.error:
         # curses not initialised (e.g. under unit-test mock or non-TTY).
         # The renderer paints monochrome — that's fine.
@@ -318,22 +345,27 @@ def _init_colors() -> None:
 
 
 def _attr_for(cell: Cell) -> int:
-    attr = _COLOR_PAIRS.get(cell.color, 0)
+    # When the cell is `prominent: True` AND carries an alert level, use
+    # the white-on-colour pair (v4 ``*_LOG`` decoration parity). Falls
+    # back to plain `A_REVERSE` on the foreground pair if the dedicated
+    # background pair couldn't be allocated.
+    is_alert_color = cell.color in (
+        ColorRole.OK,
+        ColorRole.CAREFUL,
+        ColorRole.WARNING,
+        ColorRole.CRITICAL,
+    )
+    if cell.prominent and is_alert_color:
+        attr = _COLOR_PAIRS_REVERSE.get(cell.color)
+        if attr is None:
+            attr = _COLOR_PAIRS.get(cell.color, 0) | curses.A_REVERSE
+    else:
+        attr = _COLOR_PAIRS.get(cell.color, 0)
+
     # HEADER role is bold by default (v4 TITLE decoration). Cells of any
     # other colour can opt in to bold via the `bold` flag — useful for
     # alert-coloured plugin titles (e.g. red+bold MEM when the percent
     # field hits critical).
     if cell.color == ColorRole.HEADER or cell.bold:
         attr |= curses.A_BOLD
-    # When the field is marked `prominent: True` (architecture §3.3),
-    # any non-DEFAULT alert level renders as background highlight
-    # (A_REVERSE) — matches v4 `*_LOG` decoration behaviour. This includes
-    # OK/CAREFUL/WARNING/CRITICAL; DEFAULT (no level) stays plain.
-    if cell.prominent and cell.color in (
-        ColorRole.OK,
-        ColorRole.CAREFUL,
-        ColorRole.WARNING,
-        ColorRole.CRITICAL,
-    ):
-        attr |= curses.A_REVERSE
     return attr

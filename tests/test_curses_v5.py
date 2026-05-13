@@ -206,6 +206,45 @@ def test_attr_for_header_is_bold_without_explicit_flag():
     assert attr & curses.A_BOLD
 
 
+def test_attr_for_prominent_uses_dedicated_reverse_pair_when_available(monkeypatch):
+    """When `_init_colors` has populated `_COLOR_PAIRS_REVERSE`, prominent
+    cells use the dedicated white-on-colour pair instead of A_REVERSE on
+    the foreground pair — matching v4 readability for *_LOG decorations."""
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole
+    from glances.outputs.glances_curses_v5 import _attr_for
+
+    # Inject sentinel attr values into the module-level dicts so we can
+    # observe which path `_attr_for` took.
+    monkeypatch.setattr("glances.outputs.glances_curses_v5._COLOR_PAIRS", {ColorRole.WARNING: 0xCAFE})
+    monkeypatch.setattr(
+        "glances.outputs.glances_curses_v5._COLOR_PAIRS_REVERSE",
+        {ColorRole.WARNING: 0xBEEF},
+    )
+
+    cell = Cell(text="80%", color=ColorRole.WARNING, prominent=True)
+    attr = _attr_for(cell)
+    # The reverse-pair sentinel is in the attr.
+    assert attr & 0xBEEF == 0xBEEF
+    # The foreground-pair sentinel is NOT used.
+    assert not (attr & 0xCAFE == 0xCAFE)
+
+
+def test_attr_for_prominent_falls_back_to_reverse_when_pair_unallocated(monkeypatch):
+    """If the white-on-colour pair couldn't be allocated (limited
+    palette), `_attr_for` falls back to A_REVERSE on the foreground
+    pair so the cell is still visibly highlighted."""
+    import curses
+
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole
+    from glances.outputs.glances_curses_v5 import _attr_for
+
+    monkeypatch.setattr("glances.outputs.glances_curses_v5._COLOR_PAIRS_REVERSE", {})
+
+    cell = Cell(text="80%", color=ColorRole.WARNING, prominent=True)
+    attr = _attr_for(cell)
+    assert attr & curses.A_REVERSE
+
+
 def test_tui_v5_default_top_shows_cpu_not_percpu(monkeypatch, fake_store, fake_alerts, fake_config):
     """At startup, cpu is in the top slot and percpu is hidden (v4 default)."""
     from glances.outputs import glances_curses_v5 as tui_mod
