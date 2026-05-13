@@ -213,3 +213,56 @@ def test_render_title_role_critical_when_percent_critical(mem_fields):
     }
     rows = render(payload, mem_fields)
     assert rows[0].cells[0].color == ColorRole.CRITICAL
+
+
+def test_render_pulls_short_name_from_schema(mem_payload_linux):
+    """The mem renderer reads `short_name` from the schema for compact labels."""
+    fields = {
+        "total": {"unit": "bytes"},
+        "available": {"unit": "bytes", "short_name": "avail"},
+        "percent": {"unit": "percent", "watched": True, "prominent": True},
+        "used": {"unit": "bytes"},
+        "free": {"unit": "bytes"},
+        "active": {"unit": "bytes"},
+        "inactive": {"unit": "bytes", "short_name": "inactiv"},
+        "buffers": {"unit": "bytes", "short_name": "buffer"},
+        "cached": {"unit": "bytes"},
+    }
+    rows = render(mem_payload_linux, fields)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "avail" in flat
+    assert "inactiv" in flat
+    assert "buffer" in flat
+    # Full forms must NOT appear (the short variants supersede them).
+    assert "available" not in flat
+    assert "inactive" not in flat
+    # "buffers" might still match "buffer" substring; explicit guard:
+    label_texts = {r.cells[0].text.strip() for r in rows if r.cells} | {
+        r.cells[2].text.strip() for r in rows if len(r.cells) > 2
+    }
+    assert "buffers" not in label_texts
+    assert "buffer" in label_texts
+
+
+def test_render_column_widths_shrink_with_short_names(mem_payload_linux):
+    """Without short_name (e.g. 'available' = 9 chars), col 0 is 9-wide.
+    With short_name 'avail' (5 chars), col 0 shrinks to 5 — saving space."""
+    fields_long = {
+        "total": {"unit": "bytes"},
+        "available": {"unit": "bytes"},  # no short_name → label width = 9
+        "percent": {"unit": "percent", "watched": True, "prominent": True},
+        "free": {"unit": "bytes"},
+        "active": {"unit": "bytes"},
+        "inactive": {"unit": "bytes"},
+        "buffers": {"unit": "bytes"},
+        "cached": {"unit": "bytes"},
+    }
+    fields_short = {**fields_long, "available": {"unit": "bytes", "short_name": "avail"}}
+
+    rows_long = render(mem_payload_linux, fields_long)
+    rows_short = render(mem_payload_linux, fields_short)
+
+    col0_long = max(len(r.cells[0].text) for r in rows_long)
+    col0_short = max(len(r.cells[0].text) for r in rows_short)
+    assert col0_short < col0_long
+    assert col0_short == 5  # "avail" / "total" / "free" / "MEM" all ≤ 5

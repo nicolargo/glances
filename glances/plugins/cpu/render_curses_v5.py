@@ -75,25 +75,19 @@ def _ctx_sw_value_cell(payload: dict[str, Any], fields_desc: dict[str, dict[str,
     return Cell(text=f"{int(value)}", color=cell.color, prominent=cell.prominent)
 
 
-# Fixed widths for the cpu block — picked so columns don't resize cycle-to-cycle.
-#   value cols hold either "100.0%" (6) or "999.9K" (6) — pick 6.
-#   label cols are constant strings; we still floor to widest static label.
+# Value cells need a stable floor — their content can shrink
+# cycle-to-cycle (e.g. "5.0%" vs "100.0%"). Label cells don't — labels
+# come from the schema (``short_name`` → ``label`` → field name) and
+# are constant strings, so the auto-size is naturally stable.
 _CPU_VALUE_WIDTH = 6
-_CPU_LABEL_MIN_WIDTHS = (6, 6, 10)  # col1 (system/iowait), col2 (steal), col3 (interrupts)
 
 
 def _align_grid(rows: list[list[Cell]]) -> list[Row]:
-    """Per-column alignment for a 6-cell grid (3 label/value pairs):
+    """Per-column alignment for a 6-cell grid (3 label/value pairs).
 
-        col 0: label (left-aligned)   - min width `_CPU_LABEL_MIN_WIDTHS[0]`
-        col 1: value (right-aligned)  - fixed width `_CPU_VALUE_WIDTH`
-        col 2: label (left-aligned)   - min width `_CPU_LABEL_MIN_WIDTHS[1]`
-        col 3: value (right-aligned)  - fixed width `_CPU_VALUE_WIDTH`
-        col 4: label (left-aligned)   - min width `_CPU_LABEL_MIN_WIDTHS[2]`
-        col 5: value (right-aligned)  - fixed width `_CPU_VALUE_WIDTH`
-
-    Widths are stable across cycles (only grow if exceptional content
-    overflows the floor).
+    Value columns are floored at ``_CPU_VALUE_WIDTH`` so they don't
+    jiggle when their content shrinks. Label columns auto-size to the
+    widest observed text.
     """
     if not rows:
         return []
@@ -102,14 +96,9 @@ def _align_grid(rows: list[list[Cell]]) -> list[Row]:
     for r in rows:
         for i, c in enumerate(r):
             widths[i] = max(widths[i], len(c.text))
-    # Apply per-column floors so the block doesn't jiggle cycle-to-cycle.
     for i in range(ncols):
         if i % 2 == 1:  # value column
             widths[i] = max(widths[i], _CPU_VALUE_WIDTH)
-        else:  # label column
-            floor_idx = i // 2
-            if floor_idx < len(_CPU_LABEL_MIN_WIDTHS):
-                widths[i] = max(widths[i], _CPU_LABEL_MIN_WIDTHS[floor_idx])
 
     aligned: list[Row] = []
     for r in rows:

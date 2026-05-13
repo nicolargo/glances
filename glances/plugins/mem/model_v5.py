@@ -43,6 +43,7 @@ class PluginModel(GlancesPluginBase[dict]):
                 "cross-platform fashion."
             ),
             "unit": "bytes",
+            "short_name": "avail",
         },
         "percent": {
             "description": "Percentage usage calculated as (total - available) / total * 100.",
@@ -74,10 +75,12 @@ class PluginModel(GlancesPluginBase[dict]):
         "inactive": {
             "description": "(UNIX) Memory that is marked as not used.",
             "unit": "bytes",
+            "short_name": "inactiv",
         },
         "buffers": {
             "description": "(Linux, BSD) Cache for items like filesystem metadata.",
             "unit": "bytes",
+            "short_name": "buffer",
         },
         "cached": {
             "description": "(Linux, BSD) Cache for various things (including ZFS cache).",
