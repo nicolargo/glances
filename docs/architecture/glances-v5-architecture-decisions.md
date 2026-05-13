@@ -74,6 +74,16 @@ _Last updated: 2026-04-06_
   unit-driven defaults without re-introducing the rejected `view_layout`
   mechanism (§3.6). They describe per-field formatting, never overall
   layout.
+- **Per-plugin TUI renderer** (optional) — when v4's layout for a plugin
+  cannot be expressed by the generic 2-col / N-col table fallback
+  (e.g. CPU's 3-col × 4-row grid), the plugin opts in by providing a
+  `render_curses_v5.py` module next to `model_v5.py`. The module exports
+  `render(payload, fields_desc) -> list[Row]`. `build_frame()`
+  auto-discovers and caches the lookup; absence falls back to the
+  generic renderer; runtime exceptions fall back for that cycle. The
+  plugin model itself stays pure (no curses imports) — the split file
+  satisfies §3.6 (no declarative view descriptor) while restoring v4's
+  per-plugin layout freedom.
 - **CLI control** — `--no-tui` disables the thread entirely (REST API only).
   Default behaviour in standalone mode is TUI on. Server mode uses
   `--no-tui` in practice.

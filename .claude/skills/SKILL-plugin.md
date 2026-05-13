@@ -302,9 +302,51 @@ the renderer.
   → declare `column_width`.
 
 **When NOT to use:** when you want a different *layout* (custom column order,
-two-line rendering, sparkline). The renderer owns layout. If your need is
-truly different, open an issue first — adding a renderer feature is a
-deliberate decision, not a per-plugin escape hatch.
+two-line rendering, sparkline). The renderer hints above can't change layout —
+declare a **per-plugin TUI renderer** instead (next section).
+
+## Per-plugin TUI renderer (`render_curses_v5.py`)
+
+When v4's layout for a plugin can't be reproduced by the generic
+2-column / N-column table fallback — e.g. CPU's 3-column × 4-row grid —
+the plugin opts in to a custom layout by providing a `render_curses_v5.py`
+module next to `model_v5.py`:
+
+```
+glances/plugins/<name>/
+├── __init__.py
+├── model_v5.py              # stats (no TUI coupling)
+└── render_curses_v5.py      # OPTIONAL — per-plugin TUI layout
+```
+
+The module exports a pure `render` function:
+
+```python
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
+
+def render(payload: dict, fields_desc: dict) -> list[Row]:
+    """Build the plugin's TUI block from its current StatsStore payload."""
+    ...
+```
+
+`build_frame()` auto-discovers the module at first use and caches the
+lookup. A plugin without `render_curses_v5.py` falls back to the
+generic renderer — no breakage. If `render()` raises at runtime, the
+generic fallback applies for that cycle only.
+
+**Why a separate file rather than a method on the plugin class?**
+The plugin model must stay pure (no curses imports, no TUI logic) so it
+can be loaded headless by exporters and the REST API. The split file
+keeps that contract while restoring v4's per-plugin layout freedom.
+
+**Reference implementations:**
+- `glances/plugins/cpu/render_curses_v5.py` — 3-column grid (mirrors v4
+  `cpu.msg_curse()`).
+
+**Migration source:** for each plugin to migrate, the v4 `msg_curse()` in
+`glances/plugins/<name>/__init__.py` is the spec. The catalogue in
+`docs/architecture/tui-v4-rendering-patterns.md` summarises every Phase 1
+plugin's v4 layout — read it before writing `render_curses_v5.py`.
 
 ## Visual parity contract
 
