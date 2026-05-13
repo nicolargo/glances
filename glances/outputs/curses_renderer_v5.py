@@ -247,6 +247,29 @@ def _min_value_width(schema: dict[str, Any]) -> int:
     return _UNIT_MIN_WIDTHS.get(schema.get("unit", ""), 0)
 
 
+def field_label(schema: dict[str, Any], field_name: str, prefer_short: bool = False) -> str:
+    """Resolve the user-visible label for a field, honouring renderer hints.
+
+    Precedence:
+        - When ``prefer_short`` is True: ``short_name`` → ``label`` → field name.
+        - When ``prefer_short`` is False (default — generic renderer):
+          ``label`` → field name.
+
+    Per-plugin renderers (``render_curses_v5.py``) pass ``prefer_short=True``
+    when they pack a block into a tight grid (e.g. cpu's 3-column row of
+    counter rates). v5 ``short_name`` mirrors v4 ``short_name`` (cf.
+    ``curse_add_stat`` in ``glances/plugins/plugin/model.py``).
+    """
+    if prefer_short:
+        short = schema.get("short_name")
+        if isinstance(short, str) and short:
+            return short
+    label = schema.get("label")
+    if isinstance(label, str) and label:
+        return label
+    return field_name
+
+
 def _cell_for_field(
     field_name: str,
     value: Any,

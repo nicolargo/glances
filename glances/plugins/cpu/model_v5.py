@@ -161,16 +161,19 @@ class PluginModel(GlancesPluginBase[dict]):
             "watch_direction": "high",
             "prominent": True,
             "default_thresholds": _DEFAULT_CTX_THRESHOLDS,
+            "short_name": "ctx_sw",
         },
         "interrupts": {
             "description": "Number of interrupts per second.",
             "unit": "number",
             "rate": True,
+            "short_name": "inter",
         },
         "soft_interrupts": {
             "description": "Number of software interrupts per second. Always 0 on Windows and SunOS.",
             "unit": "number",
             "rate": True,
+            "short_name": "sw_int",
         },
         "syscalls": {
             "description": "Number of system calls per second. Always 0 on Linux.",

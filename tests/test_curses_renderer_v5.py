@@ -597,6 +597,37 @@ def test_cell_supports_bold_flag():
     assert Cell(text="x").bold is False
 
 
+# --------------------------------------------------------------- field_label
+
+
+def test_field_label_returns_label_by_default():
+    from glances.outputs.curses_renderer_v5 import field_label
+
+    schema = {"label": "ctx switches", "short_name": "ctx_sw"}
+    assert field_label(schema, "ctx_switches") == "ctx switches"
+
+
+def test_field_label_prefers_short_name_when_requested():
+    from glances.outputs.curses_renderer_v5 import field_label
+
+    schema = {"label": "ctx switches", "short_name": "ctx_sw"}
+    assert field_label(schema, "ctx_switches", prefer_short=True) == "ctx_sw"
+
+
+def test_field_label_falls_back_to_label_when_short_missing():
+    from glances.outputs.curses_renderer_v5 import field_label
+
+    schema = {"label": "ctx switches"}
+    assert field_label(schema, "ctx_switches", prefer_short=True) == "ctx switches"
+
+
+def test_field_label_falls_back_to_field_name_when_nothing_set():
+    from glances.outputs.curses_renderer_v5 import field_label
+
+    assert field_label({}, "ctx_switches") == "ctx_switches"
+    assert field_label({}, "ctx_switches", prefer_short=True) == "ctx_switches"
+
+
 # --------------------------------------------------------------- per-plugin renderer discovery
 
 

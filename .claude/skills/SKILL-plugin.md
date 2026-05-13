@@ -289,6 +289,7 @@ rendering without re-introducing the rejected `view_layout` mechanism
 | `format` | `str` | Explicit Python format string applied to the value (e.g. `"%5.1f%%"`). Overrides the default unit-driven formatter. |
 | `column_width` | `int` | Fixed character width for the field's column in the TUI. Overrides the auto-sizing computed from label + observed max content width. |
 | `internal` | `bool` | When `True`, the field is **never displayed** in any UI (TUI, WebUI). It is still stored in the StatsStore, exposed via the REST API (subject to `exportable`), and available to threshold computation and rate calculation. Use for support fields like `time_since_update`, `cpucore`, or any value the plugin needs internally but shouldn't surface visually. |
+| `short_name` | `str` | Compact label used by per-plugin renderers in tight layouts (e.g. cpu's 3-column top-row grid). Falls back to `label`, then the field name. Mirrors v4 `short_name`. Example: ``ctx_switches.short_name = "ctx_sw"``. |
 
 Both are pure *formatting* hints — they describe how a single field is
 displayed, never *where* it sits relative to others. The overall layout

@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, _cell_for_field, title_role
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, _cell_for_field, field_label, title_role
 
 
 def _stat_cells(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], key: str, label: str) -> list[Cell]:
@@ -160,34 +160,37 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         line1_cells += [Cell(text=""), Cell(text="")]
     if "ctx_switches" in payload:
         line1_cells += [
-            Cell(text="ctx_sw"),
+            Cell(text=field_label(fields_desc.get("ctx_switches", {}), "ctx_switches", prefer_short=True)),
             _ctx_sw_value_cell(payload, fields_desc, "ctx_switches"),
         ]
     else:
         line1_cells += [Cell(text=""), Cell(text="")]
 
+    def _kl(key: str) -> tuple[str, str]:
+        """(key, short-label) — pulls short_name → label → key from schema."""
+        return (key, field_label(fields_desc.get(key, {}), key, prefer_short=True))
+
     # Lines 2–4: 3-column grid.
     if not idle_tag:
-        col1_keys_labels = [("user", "user"), ("system", "system"), ("iowait", "iowait")]
+        col1_keys_labels = [_kl("user"), _kl("system"), _kl("iowait")]
     else:
-        col1_keys_labels = [("idle", "idle"), ("core", "core"), ("dpc", "dpc")]
+        col1_keys_labels = [_kl("idle"), _kl("core"), _kl("dpc")]
 
-    col2_keys_labels = [("irq", "irq"), ("nice", "nice"), ("steal", "steal")]
+    col2_keys_labels = [_kl("irq"), _kl("nice"), _kl("steal")]
 
     # Col 3 — variants matching v4:
     #   line 2: interrupts
     #   line 3: soft_interrupts (Linux) or ctx_switches (Windows)
     #   line 4: guest (Linux) or syscalls (non-Linux/non-macOS)
-    col3_keys_labels: list[tuple[str, str]] = []
-    col3_keys_labels.append(("interrupts", "interrupts"))
+    col3_keys_labels: list[tuple[str, str]] = [_kl("interrupts")]
     if "soft_interrupts" in payload:
-        col3_keys_labels.append(("soft_interrupts", "sw_int"))
+        col3_keys_labels.append(_kl("soft_interrupts"))
     else:
-        col3_keys_labels.append(("ctx_switches", "sw_int"))
+        col3_keys_labels.append(_kl("ctx_switches"))
     if "guest" in payload:
-        col3_keys_labels.append(("guest", "guest"))
+        col3_keys_labels.append(_kl("guest"))
     elif "syscalls" in payload:
-        col3_keys_labels.append(("syscalls", "syscalls"))
+        col3_keys_labels.append(_kl("syscalls"))
     else:
         col3_keys_labels.append(("", ""))
 

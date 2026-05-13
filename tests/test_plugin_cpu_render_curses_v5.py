@@ -21,9 +21,9 @@ def cpu_fields():
         "irq": {"unit": "percent"},
         "steal": {"unit": "percent"},
         "guest": {"unit": "percent"},
-        "ctx_switches": {"unit": "number", "rate": True},
-        "interrupts": {"unit": "number", "rate": True},
-        "soft_interrupts": {"unit": "number", "rate": True},
+        "ctx_switches": {"unit": "number", "rate": True, "short_name": "ctx_sw"},
+        "interrupts": {"unit": "number", "rate": True, "short_name": "inter"},
+        "soft_interrupts": {"unit": "number", "rate": True, "short_name": "sw_int"},
     }
 
 
@@ -183,6 +183,50 @@ def test_render_value_columns_have_stable_width_across_cycles(cpu_fields):
         w_low = {len(r.cells[col].text) for r in rows_low if col < len(r.cells)}
         w_high = {len(r.cells[col].text) for r in rows_high if col < len(r.cells)}
         assert w_low == w_high, f"col {col} widths differ across cycles: {w_low} vs {w_high}"
+
+
+def test_render_uses_short_name_from_schema_for_counter_labels(cpu_payload_linux, cpu_fields):
+    """The cpu renderer pulls short labels from `short_name` in the schema
+    rather than hardcoding 'ctx_sw' / 'sw_int' / 'inter'."""
+    rows = render(cpu_payload_linux, cpu_fields)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "ctx_sw" in flat
+    assert "sw_int" in flat
+    # 'interrupts' (full name) should NOT appear — the schema's short_name
+    # 'inter' wins.
+    assert "interrupts" not in flat
+    assert "inter" in flat
+
+
+def test_render_falls_back_to_field_name_when_short_name_absent():
+    """If short_name is not declared, the field name (or label) is used."""
+    minimal_fields = {
+        "total": {"unit": "percent", "watched": True, "prominent": True},
+        "user": {"unit": "percent"},
+        "system": {"unit": "percent"},
+        "iowait": {"unit": "percent"},
+        "irq": {"unit": "percent"},
+        "nice": {"unit": "percent"},
+        "steal": {"unit": "percent"},
+        "guest": {"unit": "percent"},
+        "interrupts": {"unit": "number", "rate": True},  # no short_name
+    }
+    payload = {
+        "total": 5.0,
+        "user": 4.0,
+        "system": 1.0,
+        "iowait": 0.0,
+        "irq": 0.0,
+        "nice": 0.0,
+        "steal": 0.0,
+        "guest": 0.0,
+        "interrupts": 100.0,
+        "_levels": {},
+    }
+    rows = render(payload, minimal_fields)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    # Falls back to the field name itself.
+    assert "interrupts" in flat
 
 
 def test_render_uses_header_role_for_cpu_title(cpu_payload_linux, cpu_fields):
