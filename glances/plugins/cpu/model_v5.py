@@ -101,7 +101,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "unit": "percent",
             "watched": True,
             "watch_direction": "high",
-            "prominent": False,
+            "prominent": True,
             "default_thresholds": _DEFAULT_PERCENT_THRESHOLDS,
         },
         "dpc": {
@@ -139,7 +139,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "unit": "percent",
             "watched": True,
             "watch_direction": "high",
-            "prominent": True,
+            "prominent": False,
             "default_thresholds": _DEFAULT_STEAL_THRESHOLDS,
         },
         "guest": {
@@ -159,7 +159,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "rate": True,
             "watched": True,
             "watch_direction": "high",
-            "prominent": True,
+            "prominent": False,
             "default_thresholds": _DEFAULT_CTX_THRESHOLDS,
             "short_name": "ctx_sw",
         },
