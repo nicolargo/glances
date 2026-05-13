@@ -229,6 +229,91 @@ def test_attr_for_prominent_uses_dedicated_reverse_pair_when_available(monkeypat
     assert not (attr & 0xCAFE == 0xCAFE)
 
 
+def test_top_row_gaps_evenly_distributes_remaining_space(fake_store, fake_alerts, fake_config):
+    """3 blocks of widths [10, 15, 12] in a 60-col terminal:
+    total=37, available=23, 2 gaps → 12 + 11 (extra char to the leftmost).
+    First block flush-left; last block's right edge at column 59."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    gaps = tui._top_row_gaps([10, 15, 12], max_x=60)
+    assert sum(gaps) + 10 + 15 + 12 == 60
+    assert gaps == [12, 11]
+
+
+def test_top_row_gaps_handles_single_block(fake_store, fake_alerts, fake_config):
+    """One block alone has no gaps (and is flush-left)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    assert tui._top_row_gaps([20], max_x=80) == []
+
+
+def test_top_row_gaps_handles_empty_input(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    assert tui._top_row_gaps([], max_x=80) == []
+
+
+def test_top_row_gaps_falls_back_to_min_gap_when_no_room(fake_store, fake_alerts, fake_config):
+    """When the terminal is narrower than the natural content + min gaps,
+    every gap collapses to the minimum so curses can clip the overflow
+    rather than overlap blocks."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    # 3 blocks of widths [30, 30, 30] in 50 cols — way too narrow.
+    gaps = tui._top_row_gaps([30, 30, 30], max_x=50)
+    assert gaps == [tui_mod.TuiV5._TOP_GAP_MIN, tui_mod.TuiV5._TOP_GAP_MIN]
+
+
+def test_top_row_gaps_distributes_evenly_when_remainder_is_zero(fake_store, fake_alerts, fake_config):
+    """If available % n_gaps == 0, every gap is identical."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    # 4 blocks [10, 10, 10, 10] = 40; 80 - 40 = 40 / 3 gaps = 13 r1 (one extra)
+    # Pick an exact divisor: 3 gaps and available=30 → 10/10/10
+    gaps = tui._top_row_gaps([10, 10, 10, 10], max_x=70)
+    assert gaps == [10, 10, 10]
+
+
 def test_attr_for_prominent_falls_back_to_reverse_when_pair_unallocated(monkeypatch):
     """If the white-on-colour pair couldn't be allocated (limited
     palette), `_attr_for` falls back to A_REVERSE on the foreground

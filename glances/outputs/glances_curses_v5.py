@@ -166,9 +166,11 @@ class TuiV5(threading.Thread):
 
     # ----------------------------------------------------------- paint
 
-    # Spacing constants — mirror v4 (cf. `_GlancesCurses.space_between_column`).
-    _TOP_GAP = 3
+    # Sidebar split spacing (left ↔ right column gap below the top row).
     _SIDEBAR_SEPARATOR_GAP = 2
+    # Minimum gap between two adjacent top-row blocks when the terminal
+    # is too narrow to distribute extra space — fallback only.
+    _TOP_GAP_MIN = 1
 
     def _paint(self, stdscr, frame: Frame) -> None:
         """Lay out the frame on the terminal, mirroring v4:
@@ -211,19 +213,56 @@ class TuiV5(threading.Thread):
 
     def _paint_top_row(self, stdscr, blocks: list[PluginBlock], y0: int, max_x: int) -> int:
         """Paint TOP blocks side-by-side. Returns the height of the row
-        (the tallest block painted)."""
+        (the tallest block painted).
+
+        Distribution rule (v4 fidelity):
+        - first block flush-left (x=0),
+        - last block flush-right (right edge at ``max_x``),
+        - any blocks in between separated by an evenly-distributed gap
+          computed from the remaining horizontal space.
+        Fallback when the natural sum of block widths exceeds ``max_x``:
+        pack each adjacent pair with the minimum gap and let curses clip
+        whatever overflows the screen.
+        """
         if not blocks:
             return 0
+        widths = [b.width for b in blocks]
+        gaps = self._top_row_gaps(widths, max_x)
+
         x = 0
         height = 0
-        for block in blocks:
+        for i, block in enumerate(blocks):
             if x >= max_x:
                 break
-            block_width = max(1, max_x - x)
-            painted_w = self._paint_block(stdscr, block, y0, x, block_width, fit_to_term=False)
-            x += painted_w + self._TOP_GAP
+            self._paint_block(stdscr, block, y0, x, max(1, max_x - x), fit_to_term=False)
             height = max(height, block.height)
+            x += widths[i]
+            if i < len(gaps):
+                x += gaps[i]
         return height
+
+    def _top_row_gaps(self, widths: list[int], max_x: int) -> list[int]:
+        """Return the N-1 inter-block gaps for the top row.
+
+        - 0 or 1 block → no gaps.
+        - N blocks fit within ``max_x``: distribute the remaining space
+          evenly across N-1 gaps so the last block's right edge lands on
+          column ``max_x - 1``. Remainder pixels (when ``available %
+          n_gaps != 0``) are pushed into the leftmost gaps so the
+          distribution stays balanced within ±1 char.
+        - Otherwise: every gap collapses to ``_TOP_GAP_MIN``.
+        """
+        n = len(widths)
+        if n <= 1:
+            return []
+        total = sum(widths)
+        n_gaps = n - 1
+        if total + n_gaps * self._TOP_GAP_MIN > max_x:
+            return [self._TOP_GAP_MIN] * n_gaps
+        available = max_x - total
+        base = available // n_gaps
+        extra = available - base * n_gaps
+        return [base + (1 if i < extra else 0) for i in range(n_gaps)]
 
     def _paint_sidebar(self, stdscr, blocks: list[PluginBlock], y0: int, x0: int, width: int, height: int) -> None:
         """Stack blocks vertically; each block separated by one empty line."""
