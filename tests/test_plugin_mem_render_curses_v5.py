@@ -151,14 +151,13 @@ def test_render_handles_empty_payload(mem_fields):
 
 def test_render_title_cell_carries_mem_text_and_bold(mem_payload_linux, mem_fields):
     """The first cell carries the plugin label as bold text. Its colour
-    is dynamic (see dedicated title-role tests below). With the default
-    payload (careful percent), the title escalates to CAREFUL."""
+    is dynamic. With the default payload (careful percent), the title
+    stays HEADER (white) — careful does NOT escalate the title."""
     rows = render(mem_payload_linux, mem_fields)
     first_cell = rows[0].cells[0]
     assert "MEM" in first_cell.text
     assert first_cell.bold is True
-    # mem_payload_linux has percent at careful → title is CAREFUL coloured.
-    assert first_cell.color == ColorRole.CAREFUL
+    assert first_cell.color == ColorRole.HEADER
 
 
 def test_render_percent_color_reflects_level(mem_payload_linux, mem_fields):

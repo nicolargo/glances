@@ -151,13 +151,14 @@ def _max_prominent_level(payload: dict[str, Any]) -> str:
 def title_role(payload: dict[str, Any]) -> ColorRole:
     """Pick the renderer role for a plugin title given its payload.
 
-    - No prominent escalation → ``ColorRole.HEADER`` (bold white, v4 TITLE
-      decoration).
-    - Worst prominent level is careful/warning/critical → the level's
-      role (rendered bold + that colour).
+    - No prominent field at warning or above → ``ColorRole.HEADER``
+      (bold white, v4 TITLE decoration). ``ok`` and ``careful`` keep
+      the title neutral.
+    - Worst prominent level is warning/critical → the level's role
+      (rendered bold + that colour).
     """
     level = _max_prominent_level(payload)
-    if level == "ok":
+    if level in ("ok", "careful"):
         return ColorRole.HEADER
     return _LEVEL_TO_ROLE.get(level, ColorRole.HEADER)
 

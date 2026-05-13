@@ -525,11 +525,19 @@ def test_title_role_returns_header_when_no_prominent_escalation():
     assert title_role(payload) == ColorRole.HEADER
 
 
-def test_title_role_returns_careful_when_prominent_at_careful():
+def test_title_role_stays_header_when_prominent_at_careful():
+    """careful does NOT escalate the title — only warning/critical do."""
     from glances.outputs.curses_renderer_v5 import title_role
 
     payload = {"_levels": {"percent": {"level": "careful", "prominent": True}}}
-    assert title_role(payload) == ColorRole.CAREFUL
+    assert title_role(payload) == ColorRole.HEADER
+
+
+def test_title_role_returns_warning_when_prominent_at_warning():
+    from glances.outputs.curses_renderer_v5 import title_role
+
+    payload = {"_levels": {"percent": {"level": "warning", "prominent": True}}}
+    assert title_role(payload) == ColorRole.WARNING
 
 
 def test_title_role_returns_critical_for_worst_level():
