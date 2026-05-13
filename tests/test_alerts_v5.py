@@ -116,8 +116,15 @@ def store() -> StatsStoreV5:
 
 @pytest.fixture
 def config(tmp_path, monkeypatch) -> GlancesConfigV5:
+    """Default test config — disables the alert warmup so each test can
+    observe a single ingestion. The warmup itself is tested separately
+    via `_config_with(... warmup_cycles=N ...)`."""
     monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
-    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text("[alerts]\nwarmup_cycles=0\n")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
     return GlancesConfigV5()
 
 
@@ -126,6 +133,14 @@ def _config_with(tmp_path, monkeypatch, body: str) -> GlancesConfigV5:
     xdg = tmp_path / "xdg"
     cfg_dir = xdg / "glances"
     cfg_dir.mkdir(parents=True)
+    # Default to no warmup so individual alert tests can ingest once and
+    # observe the outcome. Tests that need the warmup pass an explicit
+    # `warmup_cycles=N` in their body.
+    if "warmup_cycles" not in body:
+        if "[alerts]" in body:
+            body = body.replace("[alerts]", "[alerts]\nwarmup_cycles=0", 1)
+        else:
+            body = "[alerts]\nwarmup_cycles=0\n" + body
     (cfg_dir / "glances.conf").write_text(body)
     monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
     return GlancesConfigV5()
@@ -649,6 +664,65 @@ async def test_ingest_plugin_with_no_actions_is_safe(tmp_path, monkeypatch, stor
     """A `GlancesAlerts` with no actions registry still ingests transitions cleanly."""
     config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
     alerts = GlancesAlerts(config)  # actions=None default
+    plugin = _FakeScalarPlugin(store, config)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    assert len(alerts.get_history()) == 1
+
+
+# ---------------------------------------------------------- warmup
+
+
+async def test_warmup_skips_first_n_cycles(tmp_path, monkeypatch, store):
+    """For the first `warmup_cycles` ingestions per plugin, no event is emitted."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\nwarmup_cycles=3\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+    # First 3 ingestions: warming up, ignored even with a warning level.
+    for _ in range(3):
+        await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    assert alerts.get_history() == []
+    # Cycle 4: warmup elapsed, first real ingestion fires the transition.
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    history = alerts.get_history()
+    assert len(history) == 1
+    assert history[0]["level"] == "warning"
+    assert history[0]["previous_level"] == "ok"
+
+
+async def test_warmup_is_per_plugin(tmp_path, monkeypatch, store):
+    """Two plugins ingesting interleaved each have their own warmup window."""
+
+    class _PluginP1(_FakeScalarPlugin):
+        plugin_name = "p1"
+
+    class _PluginP2(_FakeScalarPlugin):
+        plugin_name = "p2"
+
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\nwarmup_cycles=2\n")
+    alerts = GlancesAlerts(config)
+    p1 = _PluginP1(store, config)
+    p2 = _PluginP2(store, config)
+
+    await _run_with_levels(p1, alerts, {"percent": {"level": "warning", "prominent": True}})
+    await _run_with_levels(p2, alerts, {"percent": {"level": "warning", "prominent": True}})
+    # Each plugin: 1 warmup tick consumed, still in warmup.
+    assert alerts.get_history() == []
+
+    await _run_with_levels(p1, alerts, {"percent": {"level": "warning", "prominent": True}})
+    await _run_with_levels(p2, alerts, {"percent": {"level": "warning", "prominent": True}})
+    # Each plugin: 2 warmup ticks consumed (== warmup_cycles), still no event.
+    assert alerts.get_history() == []
+
+    await _run_with_levels(p1, alerts, {"percent": {"level": "warning", "prominent": True}})
+    # p1 cycle 3 — warmup over → emits event.
+    assert len(alerts.get_history()) == 1
+    assert alerts.get_history()[0]["plugin"] == "p1"
+
+
+async def test_warmup_zero_means_immediate_ingestion(tmp_path, monkeypatch, store):
+    """`warmup_cycles=0` disables the warmup (used by most existing tests)."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\nwarmup_cycles=0\n")
+    alerts = GlancesAlerts(config)
     plugin = _FakeScalarPlugin(store, config)
     await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
     assert len(alerts.get_history()) == 1

@@ -142,6 +142,49 @@ def test_render_windows_path_uses_idle_core_dpc(cpu_fields):
     assert "idle" in flat
 
 
+def test_render_value_columns_have_stable_width_across_cycles(cpu_fields):
+    """Value columns are floored at a fixed width — same width whether
+    every stat is 5.0% or 100.0%."""
+    payload_low = {
+        "total": 5.0,
+        "user": 1.0,
+        "system": 0.5,
+        "idle": 95.0,
+        "iowait": 0.0,
+        "irq": 0.0,
+        "nice": 0.0,
+        "steal": 0.0,
+        "guest": 0.0,
+        "ctx_switches": 100.0,
+        "interrupts": 50.0,
+        "soft_interrupts": 20.0,
+        "_levels": {},
+    }
+    payload_high = {
+        "total": 100.0,
+        "user": 99.9,
+        "system": 99.9,
+        "idle": 0.0,
+        "iowait": 99.9,
+        "irq": 99.9,
+        "nice": 99.9,
+        "steal": 99.9,
+        "guest": 99.9,
+        "ctx_switches": 9999.0,
+        "interrupts": 9999.0,
+        "soft_interrupts": 9999.0,
+        "_levels": {},
+    }
+    rows_low = render(payload_low, cpu_fields)
+    rows_high = render(payload_high, cpu_fields)
+
+    # Compare value-column widths (cols 1, 3, 5) between the two cycles.
+    for col in (1, 3, 5):
+        w_low = {len(r.cells[col].text) for r in rows_low if col < len(r.cells)}
+        w_high = {len(r.cells[col].text) for r in rows_high if col < len(r.cells)}
+        assert w_low == w_high, f"col {col} widths differ across cycles: {w_low} vs {w_high}"
+
+
 def test_render_uses_header_role_for_cpu_title(cpu_payload_linux, cpu_fields):
     rows = render(cpu_payload_linux, cpu_fields)
     # First cell of first row is the CPU title (after potential padding).

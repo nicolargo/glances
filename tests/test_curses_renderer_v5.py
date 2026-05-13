@@ -223,6 +223,30 @@ def test_render_collection_skips_internal_fields():
     assert "time_since_update" not in header_text
 
 
+def test_render_scalar_value_width_floored_per_unit():
+    """Value cells are padded to a minimum width derived from `unit`, so
+    column widths don't jiggle cycle-to-cycle (percent → 6 chars min)."""
+    fields = {
+        "percent": {"unit": "percent", "label": "CPU", "watched": True},
+        "user": {"unit": "percent", "label": "user"},
+    }
+    # Cycle A: small value (4 chars formatted).
+    rows_a = render_scalar_plugin("cpu", {"percent": 5.0, "user": 1.0}, fields)
+    # Cycle B: large value (6 chars formatted).
+    rows_b = render_scalar_plugin("cpu", {"percent": 100.0, "user": 99.9}, fields)
+
+    # In both cycles every value cell must be at least 6 chars wide.
+    for rows in (rows_a, rows_b):
+        for row in rows:
+            if len(row.cells) >= 2:
+                assert len(row.cells[1].text) >= 6, f"value cell too narrow: {row.cells[1].text!r}"
+
+    # Same alignment width in both cycles.
+    value_widths_a = {len(r.cells[1].text) for r in rows_a if len(r.cells) >= 2}
+    value_widths_b = {len(r.cells[1].text) for r in rows_b if len(r.cells) >= 2}
+    assert value_widths_a == value_widths_b
+
+
 def test_render_collection_aligns_columns():
     """All cells in the same column share the same padded width."""
     fields = {

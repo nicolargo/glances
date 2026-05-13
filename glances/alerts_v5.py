@@ -52,9 +52,14 @@ from glances.plugins.plugin.base_v5 import GlancesPluginBase
 logger = logging.getLogger(__name__)
 
 # Defaults — chosen to match v4 behaviour (5 s of persistence before firing
-# a transition, 200-event ring buffer).
+# a transition, 200-event ring buffer, 3-cycle warmup at startup).
 _DEFAULT_MIN_DURATION_SECONDS = 5.0
 _DEFAULT_HISTORY_SIZE = 200
+# Skip alert ingestion for the first N refresh cycles per plugin. Mirrors
+# v4: rates are not yet computed on cycle 0, thresholds can fire spuriously
+# on cycle 1-2 while the system warms up. The cell colouring in the TUI is
+# unaffected (it reads `_levels` directly from the payload).
+_DEFAULT_WARMUP_CYCLES = 3
 
 
 @dataclass
@@ -89,7 +94,12 @@ class GlancesAlerts:
 
         self._global_min_duration = float(config.get("alerts", "min_duration_seconds", _DEFAULT_MIN_DURATION_SECONDS))
         self._history_size = int(config.get("alerts", "history_size", _DEFAULT_HISTORY_SIZE))
+        self._warmup_cycles = max(0, int(config.get("alerts", "warmup_cycles", _DEFAULT_WARMUP_CYCLES)))
         self._history: deque[dict[str, Any]] = deque(maxlen=self._history_size)
+
+        # Per-plugin ingestion counter. Ingestion is skipped while
+        # `_plugin_cycles[name] < warmup_cycles` — see `_DEFAULT_WARMUP_CYCLES`.
+        self._plugin_cycles: dict[str, int] = {}
 
         # State per (plugin_name, key, field) — key is None for scalars,
         # the primary-key value (stringified) for collections.
@@ -118,7 +128,21 @@ class GlancesAlerts:
         await asyncio.gather(*list(self._action_tasks), return_exceptions=True)
 
     async def ingest_plugin(self, plugin: GlancesPluginBase) -> None:
-        """Reconcile one plugin's transitions and dispatch actions."""
+        """Reconcile one plugin's transitions and dispatch actions.
+
+        Skips entirely during the warmup window (the first
+        ``warmup_cycles`` calls per plugin — default 3). Rates and
+        threshold-derived `_levels` may not be stable before then; v4
+        ignores logs during the same window.
+        """
+        # Warmup: increment the per-plugin counter and bail out early until
+        # the warmup window has elapsed. The TUI still colours cells from
+        # `_levels` — only the alert ingestion (history + actions) waits.
+        seen = self._plugin_cycles.get(plugin.plugin_name, 0) + 1
+        self._plugin_cycles[plugin.plugin_name] = seen
+        if seen <= self._warmup_cycles:
+            return
+
         payload = plugin.get_stats()
         if not isinstance(payload, dict):
             return

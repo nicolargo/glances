@@ -307,6 +307,15 @@ def _attr_for(cell: Cell) -> int:
     attr = _COLOR_PAIRS.get(cell.color, 0)
     if cell.color == ColorRole.HEADER:
         attr |= curses.A_BOLD
-    if cell.prominent and cell.color in (ColorRole.WARNING, ColorRole.CRITICAL):
+    # When the field is marked `prominent: True` (architecture §3.3),
+    # any non-DEFAULT alert level renders as background highlight
+    # (A_REVERSE) — matches v4 `*_LOG` decoration behaviour. This includes
+    # OK/CAREFUL/WARNING/CRITICAL; DEFAULT (no level) stays plain.
+    if cell.prominent and cell.color in (
+        ColorRole.OK,
+        ColorRole.CAREFUL,
+        ColorRole.WARNING,
+        ColorRole.CRITICAL,
+    ):
         attr |= curses.A_REVERSE
     return attr

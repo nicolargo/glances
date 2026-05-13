@@ -164,6 +164,33 @@ def _level_entry(payload: dict[str, Any], field_name: str) -> dict[str, Any]:
     return {}
 
 
+# Per-unit minimum column widths (chars). Picked so a "full" value never
+# resizes the column cycle-to-cycle:
+#   percent     "100.0%"   = 6
+#   bytes       "999.9G"   = 6
+#   bytespers   "999.9G/s" = 8
+#   seconds     "1d23h"    = 5  (rounded to 6 for breathing room)
+#   number      "9999"     = 5
+#   bool        "yes"/"no" = 3
+# An explicit `column_width` in the schema overrides the unit default.
+_UNIT_MIN_WIDTHS: dict[str, int] = {
+    "percent": 6,
+    "bytes": 6,
+    "bytespers": 8,
+    "seconds": 6,
+    "number": 5,
+    "bool": 3,
+}
+
+
+def _min_value_width(schema: dict[str, Any]) -> int:
+    """Return the fixed minimum width for a value cell, given its schema."""
+    cw = schema.get("column_width")
+    if isinstance(cw, int) and cw > 0:
+        return cw
+    return _UNIT_MIN_WIDTHS.get(schema.get("unit", ""), 0)
+
+
 def _cell_for_field(
     field_name: str,
     value: Any,
@@ -171,6 +198,9 @@ def _cell_for_field(
     payload: dict[str, Any],
 ) -> Cell:
     text = format_value(value, schema)
+    min_w = _min_value_width(schema)
+    if min_w > 0 and len(text) < min_w:
+        text = text.rjust(min_w)
     entry = _level_entry(payload, field_name)
     level = entry.get("level")
     role = _LEVEL_TO_ROLE.get(level, ColorRole.DEFAULT)

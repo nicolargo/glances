@@ -134,6 +134,53 @@ def test_tui_v5_quit_on_q_key(monkeypatch, fake_store, fake_alerts, fake_config)
     assert tui._stop_event.is_set()
 
 
+def test_attr_for_prominent_ok_uses_reverse():
+    """A prominent cell with OK level renders with background highlight."""
+    import curses
+
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole
+    from glances.outputs.glances_curses_v5 import _attr_for
+
+    cell = Cell(text="50%", color=ColorRole.OK, prominent=True)
+    attr = _attr_for(cell)
+    assert attr & curses.A_REVERSE
+
+
+def test_attr_for_prominent_warning_uses_reverse():
+    import curses
+
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole
+    from glances.outputs.glances_curses_v5 import _attr_for
+
+    cell = Cell(text="80%", color=ColorRole.WARNING, prominent=True)
+    attr = _attr_for(cell)
+    assert attr & curses.A_REVERSE
+
+
+def test_attr_for_non_prominent_warning_does_not_use_reverse():
+    """Non-prominent cells never get A_REVERSE, even at WARNING/CRITICAL."""
+    import curses
+
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole
+    from glances.outputs.glances_curses_v5 import _attr_for
+
+    cell = Cell(text="80%", color=ColorRole.WARNING, prominent=False)
+    attr = _attr_for(cell)
+    assert not (attr & curses.A_REVERSE)
+
+
+def test_attr_for_prominent_default_color_stays_plain():
+    """`prominent` only matters when an alert level is set."""
+    import curses
+
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole
+    from glances.outputs.glances_curses_v5 import _attr_for
+
+    cell = Cell(text="—", color=ColorRole.DEFAULT, prominent=True)
+    attr = _attr_for(cell)
+    assert not (attr & curses.A_REVERSE)
+
+
 def test_tui_v5_q_key_fires_on_quit_callback(monkeypatch, fake_store, fake_alerts, fake_config):
     """Pressing 'q' fires the on_quit callback so the main loop can shut down."""
     from glances.outputs import glances_curses_v5 as tui_mod
