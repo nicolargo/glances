@@ -451,6 +451,28 @@ def test_build_frame_alert_block_carries_history():
     assert "mem" in flat
 
 
+def test_build_frame_orders_top_slot_per_v4_list():
+    """Even if discovery yields plugins alphabetically (cpu, load, mem),
+    the top slot must render them in the v4-declared order (cpu, mem, load)."""
+    store_snapshot = {
+        "cpu": {"percent": 12.0, "_levels": {"percent": {"level": "ok"}}},
+        "load": {"min1": 0.5, "_levels": {"min1": {"level": "ok"}}},
+        "mem": _mem_payload(),
+    }
+    fields_by_plugin = {
+        "cpu": {"percent": {"unit": "percent", "label": "CPU", "watched": True}},
+        "load": {"min1": {"unit": "number", "label": "1 min", "watched": True}},
+        "mem": MEM_FIELDS,
+    }
+    # Discovery order is alphabetical → cpu, load, mem.
+    registry = [("cpu", False), ("load", False), ("mem", False)]
+
+    frame = build_frame(store_snapshot, fields_by_plugin, registry, alerts_history=[])
+
+    top_names = [b.name for b in frame.top]
+    assert top_names == ["cpu", "mem", "load"], f"top order wrong: {top_names}"
+
+
 def test_build_frame_full_layout():
     """Mixed registry: cpu/mem in top, network in left, alert in right."""
     store_snapshot = {

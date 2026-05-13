@@ -556,6 +556,13 @@ def build_frame(
         else:
             frame.left.append(block)
 
+    # v4 fidelity: enforce the slot-declared order, not the discovery
+    # order (which is alphabetical and would give cpu/load/mem instead
+    # of cpu/mem/load in the top row).
+    frame.top.sort(key=lambda b: TOP_SLOT.index(b.name) if b.name in TOP_SLOT else len(TOP_SLOT))
+    frame.left.sort(key=lambda b: LEFT_SLOT.index(b.name) if b.name in LEFT_SLOT else len(LEFT_SLOT))
+    frame.right.sort(key=lambda b: RIGHT_SLOT.index(b.name) if b.name in RIGHT_SLOT else len(RIGHT_SLOT))
+
     # Synthesize the alerts block in the RIGHT slot (mirrors v4's `alert`
     # plugin in `_right_sidebar`).
     frame.right.append(PluginBlock(name="alert", rows=render_alert_block(alerts_history, limit=alerts_limit)))
