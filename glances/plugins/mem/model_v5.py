@@ -75,7 +75,7 @@ class PluginModel(GlancesPluginBase[dict]):
         "inactive": {
             "description": "(UNIX) Memory that is marked as not used.",
             "unit": "bytes",
-            "short_name": "inactiv",
+            "short_name": "inacti",
         },
         "buffers": {
             "description": "(Linux, BSD) Cache for items like filesystem metadata.",
