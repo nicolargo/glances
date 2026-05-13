@@ -8,6 +8,7 @@ from glances.outputs.curses_renderer_v5 import (
     Frame,
     PluginBlock,
     Row,
+    _reset_plugin_renderer_cache,
     build_frame,
     render_alert_block,
     render_collection_plugin,
@@ -463,3 +464,91 @@ def test_build_frame_handles_missing_plugin_payload():
 def test_build_frame_returns_a_frame_instance():
     frame = build_frame({}, {}, [], [])
     assert isinstance(frame, Frame)
+
+
+# --------------------------------------------------------------- per-plugin renderer discovery
+
+
+def test_build_frame_uses_custom_renderer_when_available(monkeypatch):
+    """If `glances.plugins.<name>.render_curses_v5` exposes `render()`,
+    it overrides the generic fallback."""
+    import sys
+    import types
+
+    _reset_plugin_renderer_cache()
+
+    sentinel_rows = [
+        Row(cells=[Cell(text="MYCUSTOM"), Cell(text="42")]),
+        Row(cells=[Cell(text="hello"), Cell(text="world")]),
+    ]
+    fake_module = types.ModuleType("glances.plugins.fakecpu.render_curses_v5")
+    fake_module.render = lambda payload, fields_desc: sentinel_rows  # noqa: E731
+    monkeypatch.setitem(sys.modules, "glances.plugins.fakecpu.render_curses_v5", fake_module)
+    # Also mark fakecpu as a TOP-slot plugin via the constants — we monkeypatch by adding
+    # to the TOP_SLOT tuple at module level.
+    monkeypatch.setattr(
+        "glances.outputs.curses_renderer_v5.TOP_SLOT",
+        ("fakecpu",),
+    )
+
+    frame = build_frame(
+        store_snapshot={"fakecpu": {"value": 42}},
+        fields_by_plugin={"fakecpu": {"value": {"unit": "number"}}},
+        registry=[("fakecpu", False)],
+        alerts_history=[],
+    )
+
+    assert len(frame.top) == 1
+    assert frame.top[0].rows == sentinel_rows
+    _reset_plugin_renderer_cache()
+
+
+def test_build_frame_falls_back_to_generic_when_no_custom_renderer():
+    """A plugin without a `render_curses_v5` module gets the generic renderer."""
+    _reset_plugin_renderer_cache()
+
+    fields = {
+        "percent": {"unit": "percent", "label": "MEM", "watched": True},
+    }
+    frame = build_frame(
+        store_snapshot={"mem": {"percent": 50.0}},
+        fields_by_plugin={"mem": fields},
+        registry=[("mem", False)],
+        alerts_history=[],
+    )
+    mem_block = next(b for b in frame.top if b.name == "mem")
+    flat = " ".join(c.text for row in mem_block.rows for c in row.cells)
+    assert "MEM" in flat
+    assert "50.0%" in flat
+
+
+def test_build_frame_custom_renderer_exception_falls_back_safely(monkeypatch):
+    """If the custom renderer raises, we fall back to the generic one for this cycle."""
+    import sys
+    import types
+
+    _reset_plugin_renderer_cache()
+
+    def boom(payload, fields_desc):
+        raise RuntimeError("custom renderer broke")
+
+    fake_module = types.ModuleType("glances.plugins.brokenplug.render_curses_v5")
+    fake_module.render = boom
+    monkeypatch.setitem(sys.modules, "glances.plugins.brokenplug.render_curses_v5", fake_module)
+    monkeypatch.setattr(
+        "glances.outputs.curses_renderer_v5.TOP_SLOT",
+        ("brokenplug",),
+    )
+
+    fields = {"value": {"unit": "number", "label": "VAL", "watched": True}}
+    frame = build_frame(
+        store_snapshot={"brokenplug": {"value": 1}},
+        fields_by_plugin={"brokenplug": fields},
+        registry=[("brokenplug", False)],
+        alerts_history=[],
+    )
+    # Should not crash; block exists with generic-rendered content.
+    assert len(frame.top) == 1
+    flat = " ".join(c.text for row in frame.top[0].rows for c in row.cells)
+    assert "VAL" in flat
+    _reset_plugin_renderer_cache()

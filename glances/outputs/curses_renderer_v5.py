@@ -32,11 +32,16 @@ slot routing + per-plugin rendering without driving a real terminal.
 
 from __future__ import annotations
 
+import importlib
+import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
 from glances.outputs.curses_formatters_v5 import format_value
+
+logger = logging.getLogger(__name__)
 
 # --------------------------------------------------------------- v4 slot lists
 #
@@ -405,6 +410,56 @@ def render_alert_block(history: list[dict[str, Any]], limit: int = 10) -> list[R
 # --------------------------------------------------------------- frame
 
 
+# --------------------------------------------------------------- per-plugin renderer discovery
+
+
+# Cache: plugin_name → render function or None (sentinel for "no custom renderer").
+# Avoids retrying failed imports on every cycle.
+_PLUGIN_RENDERERS: dict[str, Callable[[dict[str, Any], dict[str, dict[str, Any]]], list[Row]] | None] = {}
+
+
+def _discover_plugin_renderer(
+    plugin_name: str,
+) -> Callable[[dict[str, Any], dict[str, dict[str, Any]]], list[Row]] | None:
+    """Look up `glances.plugins.<name>.render_curses_v5.render`.
+
+    The convention: a plugin opts in to a custom TUI layout (v4-style)
+    by providing a `render_curses_v5.py` module next to `model_v5.py`.
+    The module exports `render(payload, fields_desc) -> list[Row]`.
+
+    When the module is absent or fails to import, returns `None` and the
+    caller falls back to the generic `render_scalar_plugin` /
+    `render_collection_plugin`.
+    """
+    if plugin_name in _PLUGIN_RENDERERS:
+        return _PLUGIN_RENDERERS[plugin_name]
+
+    full_name = f"glances.plugins.{plugin_name}.render_curses_v5"
+    try:
+        module = importlib.import_module(full_name)
+    except ModuleNotFoundError:
+        _PLUGIN_RENDERERS[plugin_name] = None
+        return None
+    except Exception as e:  # pragma: no cover — defensive
+        logger.warning("TUI: failed to import %s (%s); using generic renderer", full_name, e)
+        _PLUGIN_RENDERERS[plugin_name] = None
+        return None
+
+    fn = getattr(module, "render", None)
+    if not callable(fn):
+        logger.warning("TUI: %s does not expose a callable `render`; using generic renderer", full_name)
+        _PLUGIN_RENDERERS[plugin_name] = None
+        return None
+
+    _PLUGIN_RENDERERS[plugin_name] = fn
+    return fn
+
+
+def _reset_plugin_renderer_cache() -> None:
+    """Test-only helper to clear the discovery cache."""
+    _PLUGIN_RENDERERS.clear()
+
+
 def build_frame(
     store_snapshot: dict[str, dict[str, Any]],
     fields_by_plugin: dict[str, dict[str, dict[str, Any]]],
@@ -418,15 +473,21 @@ def build_frame(
         store_snapshot: `{plugin_name: payload}` — a shallow copy of the store.
         fields_by_plugin: `{plugin_name: fields_description}`.
         registry: ordered list of `(plugin_name, is_collection)`. The
-            collection flag drives the rendering function (scalar vs
+            collection flag drives the generic fallback (scalar vs
             collection) — the slot (top / left / right) is derived from
             the plugin name via `slot_for()`.
         alerts_history: output of `GlancesAlerts.get_history()`.
         alerts_limit: cap on the number of events rendered in the alert block.
 
+    Per-plugin renderer:
+        If `glances.plugins.<name>.render_curses_v5` exists and exposes a
+        callable `render(payload, fields_desc) -> list[Row]`, that
+        function is used to build the plugin's block — replicating v4's
+        `msg_curse()` style of per-plugin layout. Otherwise the generic
+        2-col / N-col table fallback is used.
+
     Rules (matching v4's `__display_top` / `__display_left` / `__display_right`):
-        - cpu / percpu / mem / load → TOP slot (rendered side-by-side
-          horizontally by the painter).
+        - cpu / percpu / mem / load → TOP slot.
         - network and other collections → LEFT slot.
         - alerts (synthesized) → RIGHT slot.
         - Unknown plugins default to LEFT (same as v4's fallback).
@@ -435,12 +496,28 @@ def build_frame(
     for plugin_name, is_collection in registry:
         payload = store_snapshot.get(plugin_name) or {}
         fields_desc = fields_by_plugin.get(plugin_name, {})
-        if is_collection:
+
+        custom = _discover_plugin_renderer(plugin_name)
+        if custom is not None:
+            try:
+                rows = custom(payload, fields_desc)
+            except Exception as e:  # pragma: no cover — defensive
+                logger.warning(
+                    "TUI: custom renderer for %r raised %s; using generic fallback this cycle",
+                    plugin_name,
+                    e,
+                )
+                rows = (
+                    render_collection_plugin(plugin_name, payload, fields_desc)
+                    if is_collection
+                    else render_scalar_plugin(plugin_name, payload, fields_desc)
+                )
+        elif is_collection:
             rows = render_collection_plugin(plugin_name, payload, fields_desc)
         else:
             rows = render_scalar_plugin(plugin_name, payload, fields_desc)
-        block = PluginBlock(name=plugin_name, rows=rows)
 
+        block = PluginBlock(name=plugin_name, rows=rows)
         slot = slot_for(plugin_name)
         if slot == "top":
             frame.top.append(block)
