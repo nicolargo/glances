@@ -125,18 +125,25 @@ def test_total_is_watched_prominent(store, config):
     assert schema["prominent"] is True
 
 
-def test_system_user_iowait_dpc_are_watched_non_prominent(store, config):
+def test_system_user_dpc_are_watched_non_prominent(store, config):
     fields = PluginModel(store, config)._fields
-    for name in ("system", "user", "iowait", "dpc"):
+    for name in ("system", "user", "dpc"):
         assert fields[name]["watched"] is True, name
         assert fields[name]["prominent"] is False, name
 
 
-def test_steal_is_watched_prominent_with_strict_thresholds(store, config):
-    schema = PluginModel(store, config)._fields["steal"]
+def test_iowait_is_watched_prominent(store, config):
+    """iowait surfaces as prominent — sustained I/O wait is worth highlighting."""
+    schema = PluginModel(store, config)._fields["iowait"]
     assert schema["watched"] is True
     assert schema["prominent"] is True
-    # Strict — any non-trivial steal is worth surfacing.
+
+
+def test_steal_is_watched_non_prominent_with_strict_thresholds(store, config):
+    schema = PluginModel(store, config)._fields["steal"]
+    assert schema["watched"] is True
+    assert schema["prominent"] is False
+    # Strict — any non-trivial steal is worth surfacing (level only, not prominent).
     assert schema["default_thresholds"]["critical"] == 30.0
 
 
@@ -150,7 +157,7 @@ def test_ctx_switches_is_rate_watched_with_absolute_thresholds(store, config):
     schema = PluginModel(store, config)._fields["ctx_switches"]
     assert schema["rate"] is True
     assert schema["watched"] is True
-    assert schema["prominent"] is True
+    assert schema["prominent"] is False
     assert "normalize_by" not in schema
     assert schema["default_thresholds"] == {"careful": 10000.0, "warning": 15000.0, "critical": 20000.0}
 
@@ -246,7 +253,7 @@ async def test_steal_strict_thresholds(store, config):
     plugin = PluginModel(store, config)
     with _patch_sampler(agg=_agg(steal=20.0)):
         await plugin.update()
-    assert store.get("cpu")["_levels"]["steal"] == {"level": "warning", "prominent": True}
+    assert store.get("cpu")["_levels"]["steal"] == {"level": "warning", "prominent": False}
 
 
 async def test_ctx_switches_level_uses_absolute_thresholds(store, config, monkeypatch):
@@ -271,7 +278,7 @@ async def test_ctx_switches_level_uses_absolute_thresholds(store, config, monkey
 
     payload = store.get("cpu")
     assert payload["ctx_switches"] == 16_000.0
-    assert payload["_levels"]["ctx_switches"] == {"level": "warning", "prominent": True}
+    assert payload["_levels"]["ctx_switches"] == {"level": "warning", "prominent": False}
 
 
 async def test_ctx_switches_level_ok_at_typical_desktop_rate(store, config, monkeypatch):

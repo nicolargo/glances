@@ -45,7 +45,7 @@ def cpu_payload_linux():
         "soft_interrupts": 1782.5,
         "_levels": {
             "total": {"level": "ok", "prominent": True},
-            "steal": {"level": "ok", "prominent": True},
+            "steal": {"level": "ok", "prominent": False},
         },
     }
 
