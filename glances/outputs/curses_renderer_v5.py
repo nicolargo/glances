@@ -107,6 +107,60 @@ _LEVEL_TO_ROLE: dict[str, ColorRole] = {
     "critical": ColorRole.CRITICAL,
 }
 
+# Severity ordering for picking the "worst" level across multiple
+# prominent fields in a single plugin payload.
+_LEVEL_PRIORITY: dict[str, int] = {"ok": 0, "careful": 1, "warning": 2, "critical": 3}
+
+
+def _max_prominent_level(payload: dict[str, Any]) -> str:
+    """Return the worst level among prominent `_levels` entries.
+
+    Supports both scalar payload (`_levels` is `{field: {level, prominent}}`)
+    and collection payload (`_levels` is `{pk: {field: {level, prominent}}}`).
+    Returns ``"ok"`` when no prominent field is escalated.
+    """
+    levels = payload.get("_levels", {}) if isinstance(payload, dict) else {}
+    if not isinstance(levels, dict):
+        return "ok"
+
+    def _scan(entries: dict) -> str:
+        worst = "ok"
+        worst_pri = 0
+        for entry in entries.values():
+            if not isinstance(entry, dict):
+                continue
+            # Detect shape: leaf entry has a `level` key.
+            if "level" in entry:
+                if not entry.get("prominent"):
+                    continue
+                lvl = entry.get("level", "ok")
+                pri = _LEVEL_PRIORITY.get(lvl, 0)
+                if pri > worst_pri:
+                    worst, worst_pri = lvl, pri
+            else:
+                # Nested (collection) — recurse one level.
+                nested = _scan(entry)
+                pri = _LEVEL_PRIORITY.get(nested, 0)
+                if pri > worst_pri:
+                    worst, worst_pri = nested, pri
+        return worst
+
+    return _scan(levels)
+
+
+def title_role(payload: dict[str, Any]) -> ColorRole:
+    """Pick the renderer role for a plugin title given its payload.
+
+    - No prominent escalation → ``ColorRole.HEADER`` (bold white, v4 TITLE
+      decoration).
+    - Worst prominent level is careful/warning/critical → the level's
+      role (rendered bold + that colour).
+    """
+    level = _max_prominent_level(payload)
+    if level == "ok":
+        return ColorRole.HEADER
+    return _LEVEL_TO_ROLE.get(level, ColorRole.HEADER)
+
 
 @dataclass
 class Cell:
@@ -115,6 +169,7 @@ class Cell:
     text: str
     color: ColorRole = ColorRole.DEFAULT
     prominent: bool = False  # background highlight when True (cf. §3.3)
+    bold: bool = False  # explicit bold attribute (HEADER cells are bold automatically)
 
 
 @dataclass
@@ -355,6 +410,7 @@ def _align_two_column_table(rows: list[Row]) -> list[Row]:
             text=label_cell.text.ljust(label_w),
             color=label_cell.color,
             prominent=label_cell.prominent,
+            bold=label_cell.bold,
         )
         if len(r.cells) >= 2:
             value_cell = r.cells[1]
@@ -362,6 +418,7 @@ def _align_two_column_table(rows: list[Row]) -> list[Row]:
                 text=value_cell.text.rjust(value_w),
                 color=value_cell.color,
                 prominent=value_cell.prominent,
+                bold=value_cell.bold,
             )
             aligned.append(Row(cells=[padded_label, padded_value]))
         else:
@@ -393,7 +450,7 @@ def _align_multi_column_table(rows: list[Row]) -> list[Row]:
                 text = cell.text.ljust(col_widths[i])
             else:
                 text = cell.text.rjust(col_widths[i])
-            new_cells.append(Cell(text=text, color=cell.color, prominent=cell.prominent))
+            new_cells.append(Cell(text=text, color=cell.color, prominent=cell.prominent, bold=cell.bold))
         aligned.append(Row(cells=new_cells))
     return aligned
 

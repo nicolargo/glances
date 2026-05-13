@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, _cell_for_field
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, _cell_for_field, title_role
 
 
 def _stat_cells(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], key: str, label: str) -> list[Cell]:
@@ -119,7 +119,7 @@ def _align_grid(rows: list[list[Cell]]) -> list[Row]:
                 text = c.text.ljust(widths[i])
             else:
                 text = c.text.rjust(widths[i])
-            new_cells.append(Cell(text=text, color=c.color, prominent=c.prominent))
+            new_cells.append(Cell(text=text, color=c.color, prominent=c.prominent, bold=c.bold))
         aligned.append(Row(cells=new_cells))
     return aligned
 
@@ -137,14 +137,17 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
     """
     # Cycle-0 / no data yet: show just the title.
     if not payload:
-        return [Row(cells=[Cell(text="CPU", color=ColorRole.HEADER)])]
+        return [Row(cells=[Cell(text="CPU", color=ColorRole.HEADER, bold=True)])]
 
     # `idle_tag` (Windows): no `user` field → display idle/core/dpc instead.
     idle_tag = "user" not in payload
 
     # Line 1: title + total% + (idle label/value) + (ctx_sw label/value)
+    # Title colour reflects the worst prominent alert level in the payload
+    # (HEADER/white when nothing is escalated, careful/warning/critical
+    # colour otherwise — always bold).
     line1_cells: list[Cell] = [
-        Cell(text="CPU", color=ColorRole.HEADER),
+        Cell(text="CPU", color=title_role(payload), bold=True),
         _cell_for_field("total", payload.get("total"), fields_desc.get("total", {}), payload),
     ]
     if not idle_tag and payload.get("idle") is not None:

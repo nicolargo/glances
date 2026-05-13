@@ -149,11 +149,16 @@ def test_render_handles_empty_payload(mem_fields):
     assert "MEM" in flat
 
 
-def test_render_uses_header_role_for_mem_title(mem_payload_linux, mem_fields):
+def test_render_title_cell_carries_mem_text_and_bold(mem_payload_linux, mem_fields):
+    """The first cell carries the plugin label as bold text. Its colour
+    is dynamic (see dedicated title-role tests below). With the default
+    payload (careful percent), the title escalates to CAREFUL."""
     rows = render(mem_payload_linux, mem_fields)
     first_cell = rows[0].cells[0]
-    assert first_cell.color == ColorRole.HEADER
     assert "MEM" in first_cell.text
+    assert first_cell.bold is True
+    # mem_payload_linux has percent at careful → title is CAREFUL coloured.
+    assert first_cell.color == ColorRole.CAREFUL
 
 
 def test_render_percent_color_reflects_level(mem_payload_linux, mem_fields):
@@ -171,3 +176,41 @@ def test_render_percent_is_prominent_per_schema(mem_payload_linux, mem_fields):
     rows = render(mem_payload_linux, mem_fields)
     percent_cell = rows[0].cells[1]
     assert percent_cell.prominent is True
+
+
+def test_render_title_role_default_when_ok(mem_fields):
+    """When all prominent fields are OK, title uses HEADER (white+bold)."""
+    payload = {
+        "total": 1024,
+        "percent": 30.0,
+        "active": 256,
+        "_levels": {"percent": {"level": "ok", "prominent": True}},
+    }
+    rows = render(payload, mem_fields)
+    assert rows[0].cells[0].color == ColorRole.HEADER
+    assert rows[0].cells[0].bold is True
+
+
+def test_render_title_role_warning_when_percent_warning(mem_fields):
+    """percent at WARNING (prominent) → title coloured WARNING + bold."""
+    payload = {
+        "total": 1024,
+        "percent": 80.0,
+        "active": 256,
+        "_levels": {"percent": {"level": "warning", "prominent": True}},
+    }
+    rows = render(payload, mem_fields)
+    assert rows[0].cells[0].color == ColorRole.WARNING
+    assert rows[0].cells[0].bold is True
+
+
+def test_render_title_role_critical_when_percent_critical(mem_fields):
+    """percent at CRITICAL → title red + bold."""
+    payload = {
+        "total": 1024,
+        "percent": 95.0,
+        "active": 256,
+        "_levels": {"percent": {"level": "critical", "prominent": True}},
+    }
+    rows = render(payload, mem_fields)
+    assert rows[0].cells[0].color == ColorRole.CRITICAL

@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, _cell_for_field
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, _cell_for_field, title_role
 
 # Fixed widths so the block doesn't jiggle cycle-to-cycle.
 #   value cols hold "999.9G" (6) at worst — pick 6.
@@ -81,7 +81,7 @@ def _align_grid(rows: list[list[Cell]]) -> list[Row]:
                 text = c.text.ljust(widths[i])
             else:
                 text = c.text.rjust(widths[i])
-            new_cells.append(Cell(text=text, color=c.color, prominent=c.prominent))
+            new_cells.append(Cell(text=text, color=c.color, prominent=c.prominent, bold=c.bold))
         aligned.append(Row(cells=new_cells))
     return aligned
 
@@ -89,11 +89,12 @@ def _align_grid(rows: list[list[Cell]]) -> list[Row]:
 def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
     """Render the mem plugin's TUI block — mirrors v4 ``mem.msg_curse``."""
     if not payload:
-        return [Row(cells=[Cell(text="MEM", color=ColorRole.HEADER)])]
+        return [Row(cells=[Cell(text="MEM", color=ColorRole.HEADER, bold=True)])]
 
     # Line 1: title + percent + active.
+    # Title colour reflects the worst prominent alert level in the payload.
     line1: list[Cell] = [
-        Cell(text="MEM", color=ColorRole.HEADER),
+        Cell(text="MEM", color=title_role(payload), bold=True),
         _cell_for_field("percent", payload.get("percent"), fields_desc.get("percent", {}), payload),
     ]
     line1 += _stat_pair(payload, fields_desc, "active", "active")

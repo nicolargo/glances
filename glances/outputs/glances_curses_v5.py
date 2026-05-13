@@ -300,7 +300,9 @@ def _init_colors() -> None:
             (ColorRole.CAREFUL, curses.COLOR_BLUE),
             (ColorRole.WARNING, curses.COLOR_MAGENTA),
             (ColorRole.CRITICAL, curses.COLOR_RED),
-            (ColorRole.HEADER, curses.COLOR_CYAN),
+            # v4 fidelity: plugin titles use the TITLE decoration which is
+            # bold + default-text (white-ish on dark terminals).
+            (ColorRole.HEADER, curses.COLOR_WHITE),
         ]
         for i, (role, color) in enumerate(pairs, start=1):
             try:
@@ -317,7 +319,11 @@ def _init_colors() -> None:
 
 def _attr_for(cell: Cell) -> int:
     attr = _COLOR_PAIRS.get(cell.color, 0)
-    if cell.color == ColorRole.HEADER:
+    # HEADER role is bold by default (v4 TITLE decoration). Cells of any
+    # other colour can opt in to bold via the `bold` flag — useful for
+    # alert-coloured plugin titles (e.g. red+bold MEM when the percent
+    # field hits critical).
+    if cell.color == ColorRole.HEADER or cell.bold:
         attr |= curses.A_BOLD
     # When the field is marked `prominent: True` (architecture §3.3),
     # any non-DEFAULT alert level renders as background highlight

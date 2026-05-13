@@ -39,7 +39,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
 
 # Fixed widths.
 _LOAD_LABEL_WIDTH = 6  # "15 min" = 6 chars
@@ -70,7 +70,7 @@ def _load_value_cell(payload: dict[str, Any], key: str) -> Cell:
 def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
     """Render the load plugin's TUI block — mirrors v4 ``load.msg_curse``."""
     if not payload:
-        return [Row(cells=[Cell(text="LOAD", color=ColorRole.HEADER)])]
+        return [Row(cells=[Cell(text="LOAD", color=ColorRole.HEADER, bold=True)])]
 
     # Line 1: title + cpucore suffix.
     # The value cell width must match the body load-average value width
@@ -78,7 +78,10 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
     # block align. v4 padded the int with `{:3}core` (7 chars), which
     # made the corecount cell 1 char wider than the load-average values
     # and produced a visible 1-char overhang.
-    header_cells: list[Cell] = [Cell(text="LOAD".ljust(_LOAD_LABEL_WIDTH), color=ColorRole.HEADER)]
+    # Title colour reflects the worst prominent alert level in the payload.
+    header_cells: list[Cell] = [
+        Cell(text="LOAD".ljust(_LOAD_LABEL_WIDTH), color=title_role(payload), bold=True),
+    ]
     cores = payload.get("cpucore")
     if isinstance(cores, (int, float)) and cores > 0:
         header_cells.append(Cell(text=f"{int(cores)}core".rjust(_LOAD_VALUE_WIDTH)))

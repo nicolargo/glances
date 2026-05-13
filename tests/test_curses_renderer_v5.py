@@ -512,6 +512,83 @@ def test_build_frame_returns_a_frame_instance():
     assert isinstance(frame, Frame)
 
 
+# --------------------------------------------------------------- dynamic title role
+
+
+def test_title_role_returns_header_when_no_prominent_escalation():
+    from glances.outputs.curses_renderer_v5 import title_role
+
+    payload = {
+        "percent": 30.0,
+        "_levels": {"percent": {"level": "ok", "prominent": True}},
+    }
+    assert title_role(payload) == ColorRole.HEADER
+
+
+def test_title_role_returns_careful_when_prominent_at_careful():
+    from glances.outputs.curses_renderer_v5 import title_role
+
+    payload = {"_levels": {"percent": {"level": "careful", "prominent": True}}}
+    assert title_role(payload) == ColorRole.CAREFUL
+
+
+def test_title_role_returns_critical_for_worst_level():
+    """Multiple prominent fields — the worst level wins."""
+    from glances.outputs.curses_renderer_v5 import title_role
+
+    payload = {
+        "_levels": {
+            "percent": {"level": "warning", "prominent": True},
+            "steal": {"level": "critical", "prominent": True},
+            "iowait": {"level": "careful", "prominent": True},
+        },
+    }
+    assert title_role(payload) == ColorRole.CRITICAL
+
+
+def test_title_role_ignores_non_prominent_escalations():
+    """A non-prominent field at critical doesn't promote the title color."""
+    from glances.outputs.curses_renderer_v5 import title_role
+
+    payload = {
+        "_levels": {
+            "irq": {"level": "critical", "prominent": False},
+            "percent": {"level": "ok", "prominent": True},
+        },
+    }
+    assert title_role(payload) == ColorRole.HEADER
+
+
+def test_title_role_handles_collection_levels():
+    """Collection plugins use a nested `_levels`: {pk: {field: {level, prominent}}}."""
+    from glances.outputs.curses_renderer_v5 import title_role
+
+    payload = {
+        "_levels": {
+            "eth0": {
+                "bytes_recv": {"level": "warning", "prominent": True},
+            },
+            "lo": {"bytes_recv": {"level": "ok", "prominent": True}},
+        },
+    }
+    assert title_role(payload) == ColorRole.WARNING
+
+
+def test_title_role_handles_empty_payload():
+    from glances.outputs.curses_renderer_v5 import title_role
+
+    assert title_role({}) == ColorRole.HEADER
+
+
+def test_cell_supports_bold_flag():
+    """Cell carries an explicit `bold` field for non-HEADER colour cells
+    that should still render bold (e.g. alert-coloured plugin titles)."""
+    c = Cell(text="MEM", color=ColorRole.CRITICAL, bold=True)
+    assert c.bold is True
+    # default still False
+    assert Cell(text="x").bold is False
+
+
 # --------------------------------------------------------------- per-plugin renderer discovery
 
 

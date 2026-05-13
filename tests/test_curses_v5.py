@@ -181,6 +181,31 @@ def test_attr_for_prominent_default_color_stays_plain():
     assert not (attr & curses.A_REVERSE)
 
 
+def test_attr_for_explicit_bold_flag_applies_a_bold():
+    """A non-HEADER cell with `bold=True` still gets A_BOLD (used for
+    alert-coloured plugin titles)."""
+    import curses
+
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole
+    from glances.outputs.glances_curses_v5 import _attr_for
+
+    cell = Cell(text="MEM", color=ColorRole.CRITICAL, bold=True)
+    attr = _attr_for(cell)
+    assert attr & curses.A_BOLD
+
+
+def test_attr_for_header_is_bold_without_explicit_flag():
+    """Backwards compat: HEADER role implies bold even without `bold=True`."""
+    import curses
+
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole
+    from glances.outputs.glances_curses_v5 import _attr_for
+
+    cell = Cell(text="MEM", color=ColorRole.HEADER)
+    attr = _attr_for(cell)
+    assert attr & curses.A_BOLD
+
+
 def test_tui_v5_default_top_shows_cpu_not_percpu(monkeypatch, fake_store, fake_alerts, fake_config):
     """At startup, cpu is in the top slot and percpu is hidden (v4 default)."""
     from glances.outputs import glances_curses_v5 as tui_mod
