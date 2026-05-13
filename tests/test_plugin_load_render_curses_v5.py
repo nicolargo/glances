@@ -130,3 +130,19 @@ def test_render_columns_align(load_payload, load_fields):
     rows = render(load_payload, load_fields)
     label_widths = {len(r.cells[0].text) for r in rows if r.cells}
     assert len(label_widths) == 1
+
+
+def test_render_value_cells_share_width_across_header_and_body(load_payload, load_fields):
+    """The corecount cell (header) and the load-average cells (body) must
+    have the same width so right edges align. Earlier bug: `{:3}core`
+    produced 7-char header value vs 6-char body values → 1-char overhang."""
+    rows = render(load_payload, load_fields)
+    widths = {len(r.cells[1].text) for r in rows if len(r.cells) >= 2}
+    assert len(widths) == 1, f"value cells not uniform: {widths}"
+
+
+def test_render_total_line_width_matches_across_rows(load_payload, load_fields):
+    """Each line's total rendered width (cells joined with 1 space) is identical."""
+    rows = render(load_payload, load_fields)
+    totals = {sum(len(c.text) for c in r.cells) + max(0, len(r.cells) - 1) for r in rows}
+    assert len(totals) == 1, f"line widths differ: {totals}"

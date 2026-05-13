@@ -73,11 +73,15 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         return [Row(cells=[Cell(text="LOAD", color=ColorRole.HEADER)])]
 
     # Line 1: title + cpucore suffix.
+    # The value cell width must match the body load-average value width
+    # (`_LOAD_VALUE_WIDTH = 6`) so the right edges of every line in the
+    # block align. v4 padded the int with `{:3}core` (7 chars), which
+    # made the corecount cell 1 char wider than the load-average values
+    # and produced a visible 1-char overhang.
     header_cells: list[Cell] = [Cell(text="LOAD".ljust(_LOAD_LABEL_WIDTH), color=ColorRole.HEADER)]
     cores = payload.get("cpucore")
     if isinstance(cores, (int, float)) and cores > 0:
-        # v4 format: `{:3}core` — `'  4core'` for 4 cores.
-        header_cells.append(Cell(text=f"{int(cores):>3}core".rjust(_LOAD_VALUE_WIDTH)))
+        header_cells.append(Cell(text=f"{int(cores)}core".rjust(_LOAD_VALUE_WIDTH)))
     else:
         header_cells.append(Cell(text="".rjust(_LOAD_VALUE_WIDTH)))
     rows: list[Row] = [Row(cells=header_cells)]
