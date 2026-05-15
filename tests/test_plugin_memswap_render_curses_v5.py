@@ -77,6 +77,48 @@ def test_render_does_not_show_used_or_free(memswap_payload, memswap_fields):
     assert "free" not in labels
 
 
+def test_render_sin_sout_use_default_color_without_thresholds(memswap_fields):
+    """When sin/sout have no _levels entry (no thresholds configured), the
+    rendered cells must use ``ColorRole.DEFAULT`` — never a threshold colour.
+    Also verifies the cells are not marked prominent (no reverse-video)."""
+    payload = {
+        "total": 16 * 1024**3,
+        "percent": 25.0,
+        "sin": 100_000.0,
+        "sout": 50_000.0,
+        # No _levels entries for sin/sout — the framework skipped them
+        # because no thresholds were configured.
+        "_levels": {"percent": {"level": "ok", "prominent": True}},
+    }
+    rows = render(payload, memswap_fields)
+    sin_row = next(r for r in rows[1:] if r.cells[0].text.strip() == "sin")
+    sout_row = next(r for r in rows[1:] if r.cells[0].text.strip() == "sout")
+    # Value cell is col 1.
+    assert sin_row.cells[1].color == ColorRole.DEFAULT
+    assert sin_row.cells[1].prominent is False
+    assert sout_row.cells[1].color == ColorRole.DEFAULT
+    assert sout_row.cells[1].prominent is False
+
+
+def test_render_sin_carries_level_color_when_thresholds_set(memswap_fields):
+    """With a _levels.sin entry (user configured thresholds), the cell picks
+    up the level role but stays non-prominent."""
+    payload = {
+        "total": 16 * 1024**3,
+        "percent": 25.0,
+        "sin": 15_000.0,
+        "sout": 0.0,
+        "_levels": {
+            "percent": {"level": "ok", "prominent": True},
+            "sin": {"level": "warning", "prominent": False},
+        },
+    }
+    rows = render(payload, memswap_fields)
+    sin_row = next(r for r in rows[1:] if r.cells[0].text.strip() == "sin")
+    assert sin_row.cells[1].color == ColorRole.WARNING
+    assert sin_row.cells[1].prominent is False
+
+
 def test_render_handles_missing_sin_sout_on_first_cycle(memswap_fields):
     """Cycle 1: sin/sout absent from payload (no baseline) — renderer shows ``-``."""
     payload = {

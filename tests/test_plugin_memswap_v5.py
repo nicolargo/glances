@@ -95,6 +95,40 @@ def test_sin_sout_are_watched_without_default_thresholds(store, config):
         assert "default_thresholds" not in fields[name], name
 
 
+def test_sin_sout_are_not_prominent(store, config):
+    """sin/sout colour only the foreground when an alert fires — they must
+    NEVER reverse-video the cell. The framework defaults missing
+    ``prominent`` to True, so this requires an *explicit* False in the
+    schema."""
+    fields = PluginModel(store, config)._fields
+    for name in ("sin", "sout"):
+        assert fields[name].get("prominent") is False, name
+
+
+async def test_sin_threshold_from_config_carries_non_prominent_level(tmp_path, monkeypatch, store):
+    """Even when the user configures thresholds in glances.conf, the resulting
+    _levels entry must carry ``prominent=False`` — sin/sout are coloured but
+    never highlighted."""
+    config = _config_with(tmp_path, monkeypatch, "[memswap]\nsin_careful=5000\nsin_warning=10000\nsin_critical=20000\n")
+    plugin = PluginModel(store, config)
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.memswap.model_v5.psutil.swap_memory"
+    with patch(psutil_path, return_value=_swap(sin=0)):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value=_swap(sin=15_000)):
+        await plugin.update()
+
+    levels = store.get("memswap")["_levels"]
+    assert levels["sin"]["level"] == "warning"
+    assert levels["sin"]["prominent"] is False
+
+
 async def test_sin_sout_no_levels_without_user_thresholds(store, config):
     """With no [memswap] sin_*/sout_* config keys, no level entry must
     appear for sin/sout in the store payload."""

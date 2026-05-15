@@ -82,7 +82,11 @@ class PluginModel(GlancesPluginBase[dict]):
             # config: 40/400/800 KB/s.
             "watched": True,
             "watch_direction": "high",
-            "prominent": True,
+            # Explicit False — the framework defaults missing ``prominent`` to
+            # True (cf. base_v5._compute_levels_for_item). Swap I/O coloring
+            # should tint the value foreground only, never reverse-video the
+            # whole cell.
+            "prominent": False,
         },
         "sout": {
             "description": (
@@ -93,7 +97,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "rate": True,
             "watched": True,
             "watch_direction": "high",
-            "prominent": True,
+            "prominent": False,
         },
     }
 
