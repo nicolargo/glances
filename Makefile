@@ -349,11 +349,20 @@ run-like-htop: ## Start Glances with the same features than Htop
 run-fetch: ## Start Glances in fetch mode
 	$(UV_RUN) run python -m glances --fetch
 
-run-v5: ## Start Glances v5 REST server (FastAPI on :61208)
+run-v5: ## Start Glances v5 in TUI mode (no REST API bound)
 	$(UV_RUN) run python -m glances.main_v5 -C $(CONF)
 
-run-v5-debug: ## Start Glances v5 REST server in debug mode
+run-v5-debug: ## Start Glances v5 TUI in debug mode
 	$(UV_RUN) run python -m glances.main_v5 -C $(CONF) -d
+
+run-v5-server: ## Start Glances v5 REST server (FastAPI on :61208, headless)
+	$(UV_RUN) run python -m glances.main_v5 -C $(CONF) -s
+
+run-v5-server-debug: ## Start Glances v5 REST server in debug mode (headless)
+	$(UV_RUN) run python -m glances.main_v5 -C $(CONF) -s -d
+
+run-v5-mcp: ## Start Glances v5 REST server with the MCP endpoint mounted (--enable-mcp will be operational once G3-MCP lands)
+	$(UV_RUN) run python -m glances.main_v5 -C $(CONF) -s --enable-mcp
 
 set-password-v5: ## Generate a PBKDF2 hash for [outputs] password (v5)
 	$(UV_RUN) run python -m glances.main_v5 --set-password
