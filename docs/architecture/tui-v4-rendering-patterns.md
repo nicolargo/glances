@@ -230,6 +230,70 @@ later phase pending CLI / max_width plumbing.)
 
 ---
 
+## diskio
+
+**Source:** `glances/plugins/diskio/__init__.py::msg_curse`
+
+**Guard:** returns empty if `not self.stats`, plugin disabled, or
+`max_width` is `None` (logs a debug message).
+
+**Expected v4-equivalent output (default — byte rates):**
+
+```
+DISK I/O              R/s     W/s
+nvme0n1              100B     50B
+sda                   1.4M   732K
+```
+
+**`name_max_width` computation:** `max_width - 13`
+
+**Header field table (default mode):**
+
+| field | label | format | alignment | width | notes |
+|---|---|---|---|---|---|
+| (title) | `DISK I/O` | `'{:{width}}'.format('DISK I/O', width=name_max_width)` | left | name_max_width | `TITLE` |
+| read | `R/s` | `'{:>8}'.format('R/s')` | right | 8 | `DEFAULT` |
+| write | `W/s` | `'{:>7}'.format('W/s')` | right | 7 | `DEFAULT` |
+
+Header variants (controlled by `args`):
+
+| mode | labels shown |
+|---|---|
+| default (rate) | `R/s` + `W/s` |
+| `--diskio-iops` | `IOR/s` + `IOW/s` |
+| `--diskio-latency` | `ms/opR` + `ms/opW` |
+
+**Per-disk row:**
+
+| field | format | alignment | width | color rule |
+|---|---|---|---|---|
+| disk_name | left-padded, tail-truncated with `_` when too long | left | name_max_width | `DEFAULT` |
+| read | `auto_unit(read_bytes_rate_per_sec)` (no `/s` suffix — header carries it) | right | 7 | `get_views(item=disk, key='read_bytes', option='decoration')` |
+| write | same for write_bytes | right | 7 | `get_views(item=disk, key='write_bytes', option='decoration')` |
+
+**Sort order:** disk name ascending (`sorted_stats()`).
+
+**Color logic:** `read_bytes` / `write_bytes` decorations come from
+``get_alert(bytes, header='rx', action_key=disk_name)`` and the ``tx``
+variant. v4 thresholds are configurable but ship with no defaults —
+v5 keeps this opt-in semantic via ``strict_thresholds=True`` so a
+legacy ``[diskio] careful=50`` cannot bleed onto per-disk rates.
+
+**Conditional behaviour:**
+- Disks whose name starts with ``ram`` are hidden unless
+  ``--diskio-show-ramfs`` is passed (issue #714). Not implemented in
+  v5 G4 — operators can use the show/hide regex filters.
+- ``--diskio-iops`` / ``--diskio-latency`` alt modes deferred to a
+  later phase pending args plumbing through ``render()``.
+- v4 hides disks that never had non-zero traffic
+  (``hide_zero_fields`` per-view). v5 keeps zero-traffic disks
+  visible — operators can filter via ``[diskio] hide=`` regex.
+
+✅ **v5 renderer:** `glances/plugins/diskio/render_curses_v5.py`
+(Added in G4-diskio. Default rate mode only; alt modes deferred.)
+
+---
+
 ## load
 
 **Source:** `glances/plugins/load/__init__.py::msg_curse`

@@ -378,12 +378,12 @@ def test_attach_mcp_logs_known_v5_gaps(config_factory, store, caplog):
     assert "not yet ported" in msgs
     # The canonical missing v4 plugins must be named so operators can
     # match the message against MCP client errors. Updated as plugins
-    # land in v5 (memswap → G4-memswap, fs → G4-fs).
-    for missing in ("processlist", "diskio"):
-        assert missing in msgs
+    # land in v5 (memswap → G4-memswap, fs → G4-fs, diskio → G4-diskio).
+    assert "processlist" in msgs
     # Already ported — must NOT appear as missing.
     assert "memswap" not in msgs
     assert "fs " not in msgs and "fs," not in msgs
+    assert "diskio" not in msgs
 
 
 def test_attach_mcp_logs_history_limitation(config_factory, store, caplog):

@@ -54,10 +54,7 @@ logger = logging.getLogger(__name__)
 # ``attach_mcp`` startup so operators know which resources will fail.
 # Update this list as v5 absorbs v4 plugins; the adapter logic itself
 # does not need to change.
-KNOWN_V5_MISSING_PLUGINS: tuple[str, ...] = (
-    "processlist",
-    "diskio",
-)
+KNOWN_V5_MISSING_PLUGINS: tuple[str, ...] = ("processlist",)
 
 # Throttle the "history not supported" WARN so polling MCP clients don't
 # spam the log. Tracked per plugin name (including the synthetic 'alert')
