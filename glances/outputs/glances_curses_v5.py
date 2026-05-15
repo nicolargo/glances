@@ -270,7 +270,8 @@ class TuiV5(threading.Thread):
         return [base + (1 if i < extra else 0) for i in range(n_gaps)]
 
     def _paint_sidebar(self, stdscr, blocks: list[PluginBlock], y0: int, x0: int, width: int, height: int) -> None:
-        """Stack blocks vertically; each block separated by one empty line."""
+        """Stack blocks vertically; each block separated by one empty line
+        (v4 sidebar parity)."""
         if width <= 0 or height <= 0:
             return
         y = y0
@@ -278,8 +279,15 @@ class TuiV5(threading.Thread):
         for block in blocks:
             if y >= end_y:
                 break
-            painted_h = self._paint_block(stdscr, block, y, x0, width, fit_to_term=True, max_height=end_y - y)
-            y += painted_h + 1  # one empty line between blocks
+            max_h = end_y - y
+            self._paint_block(stdscr, block, y, x0, width, fit_to_term=True, max_height=max_h)
+            # Advance by the number of rows actually painted (capped to the
+            # remaining vertical room) plus one blank line. `_paint_block`
+            # returns the width painted, not the height — using `block.height`
+            # directly mirrors `_paint_top_row` and avoids the old bug where
+            # the row width was added to `y` (visible as a large empty band
+            # between two sidebar blocks).
+            y += min(block.height, max_h) + 1
 
     def _paint_block(
         self,

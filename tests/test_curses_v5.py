@@ -110,6 +110,47 @@ def test_tui_v5_calls_addstr_for_rendered_cells(monkeypatch, fake_store, fake_al
     assert "MEM" in flat
 
 
+def test_paint_sidebar_advances_y_by_block_height_plus_one_blank_line(fake_store, fake_alerts, fake_config):
+    """Regression: ``_paint_sidebar`` used to pass the return of
+    ``_paint_block`` (the WIDTH painted, ~34 chars) as a height, leaving a
+    huge gap between sidebar blocks (network → fs would skip ~35 lines).
+    The fix advances ``y`` by ``block.height + 1`` instead — one blank
+    line between blocks, matching v4 sidebar layout.
+    """
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Cell, PluginBlock, Row
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+
+    # Two blocks of distinct, known heights.
+    block_a = PluginBlock(
+        name="network",
+        rows=[Row(cells=[Cell(text="NETWORK")]), Row(cells=[Cell(text="eth0")])],
+    )  # height = 2
+    block_b = PluginBlock(
+        name="fs",
+        rows=[Row(cells=[Cell(text="FILE SYS")]), Row(cells=[Cell(text="/")])],
+    )  # height = 2
+
+    fake_stdscr = MagicMock()
+    tui._paint_sidebar(fake_stdscr, [block_a, block_b], y0=5, x0=0, width=34, height=20)
+
+    # Collect every (y, text) addstr call.
+    rows_painted = [(call.args[0], call.args[2]) for call in fake_stdscr.addstr.call_args_list]
+    # Block A rendered at y=5, y=6. Block B at y=5+2+1=8, y=9. y=7 must be empty.
+    ys = sorted({y for y, _ in rows_painted})
+    assert ys == [5, 6, 8, 9], f"unexpected y-coordinates: {ys}"
+    # And there's no row painted at y=7 (the blank separator line).
+    assert all(y != 7 for y, _ in rows_painted)
+
+
 def test_tui_v5_quit_on_q_key(monkeypatch, fake_store, fake_alerts, fake_config):
     """Pressing 'q' triggers stop()."""
     from glances.outputs import glances_curses_v5 as tui_mod
