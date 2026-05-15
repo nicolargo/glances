@@ -208,51 +208,89 @@ def test_cli_set_password_keyboard_interrupt(monkeypatch, capsys):
 
 
 def test_assemble_resolves_bind_and_port_from_cli(config):
-    args = build_parser().parse_args(["--bind", "0.0.0.0", "--port", "1234", "--no-tui"])
+    args = build_parser().parse_args(["-s", "--bind", "0.0.0.0", "--port", "1234"])
     app, scheduler, host, port, _tui = assemble(args, config)
     assert host == "0.0.0.0"
     assert port == 1234
     # Scheduler picks up the plugins; app exposes them via registry.
     assert len(scheduler._entries) > 0
-    assert app.state.plugins  # at least one plugin registered
+    assert app is not None and app.state.plugins  # at least one plugin registered
 
 
 def test_assemble_resolves_bind_and_port_from_config(config, monkeypatch):
     monkeypatch.setenv("GLANCES_OUTPUTS__BIND_ADDRESS", "10.0.0.1")
     monkeypatch.setenv("GLANCES_OUTPUTS__PORT", "9999")
     cfg = GlancesConfigV5()
-    args = build_parser().parse_args(["--no-tui"])
+    args = build_parser().parse_args(["-s"])
     _, _, host, port, _tui = assemble(args, cfg)
     assert host == "10.0.0.1"
     assert port == 9999
 
 
 def test_assemble_falls_back_to_defaults(config):
-    args = build_parser().parse_args(["--no-tui"])
+    args = build_parser().parse_args(["-s"])
     _, _, host, port, _tui = assemble(args, config)
     assert host == "127.0.0.1"
     assert port == 61208
 
 
 def test_assemble_wires_alerts_into_scheduler(config):
-    args = build_parser().parse_args(["--no-tui"])
+    args = build_parser().parse_args(["-s"])
     _, scheduler, _, _, _tui = assemble(args, config)
     assert scheduler.alerts is not None
 
 
 def test_assemble_api_doc_cli_override(config):
-    args = build_parser().parse_args(["--no-api-doc", "--no-tui"])
+    args = build_parser().parse_args(["-s", "--no-api-doc"])
     app, _, _, _, _tui = assemble(args, config)
     # /docs disabled → no Swagger route on the app.
+    assert app is not None
     routes = [getattr(r, "path", None) for r in app.routes]
     assert "/docs" not in routes
+
+
+# ---------------------------------------------------------------- mode dispatch (G2)
+
+
+def test_assemble_default_mode_builds_no_app(config):
+    """Without -s, assemble() does not build a FastAPI app (TUI-only mode)."""
+    args = build_parser().parse_args([])
+    app, scheduler, _host, _port, tui = assemble(args, config)
+    assert app is None
+    assert tui is not None
+    # Scheduler is still wired — the TUI needs it.
+    assert scheduler is not None
+
+
+def test_assemble_server_mode_skips_tui(config):
+    """With -s, assemble() returns tui=None (headless per design alignment #1)."""
+    args = build_parser().parse_args(["-s"])
+    app, _scheduler, _host, _port, tui = assemble(args, config)
+    assert app is not None
+    assert tui is None
+
+
+def test_assemble_server_mode_plus_no_tui_is_idempotent(config):
+    """-s --quiet behaves like -s (TUI already off in server mode)."""
+    args = build_parser().parse_args(["-s", "--quiet"])
+    app, _scheduler, _host, _port, tui = assemble(args, config)
+    assert app is not None
+    assert tui is None
+
+
+def test_assemble_default_mode_no_tui_disables_everything(config):
+    """Default mode + --no-tui: no app AND no tui (scheduler-only, useful for test rigs)."""
+    args = build_parser().parse_args(["--no-tui"])
+    app, _scheduler, _host, _port, tui = assemble(args, config)
+    assert app is None
+    assert tui is None
 
 
 # ----------------------------------------------------------- serve
 
 
 def test_serve_stops_scheduler_after_uvicorn_returns(config):
-    args = build_parser().parse_args(["--no-tui"])
+    args = build_parser().parse_args(["-s"])
     app, scheduler, host, port, tui = assemble(args, config)
 
     with patch("glances.main_v5.uvicorn.Server") as MockServer:
@@ -264,10 +302,29 @@ def test_serve_stops_scheduler_after_uvicorn_returns(config):
         scheduler.run_forever = AsyncMock(return_value=None)  # type: ignore[method-assign]
         scheduler.stop = AsyncMock(return_value=None)  # type: ignore[method-assign]
 
-        asyncio.run(serve(app, scheduler, host, port, tui))
+        asyncio.run(serve(args, app, scheduler, host, port, tui))
 
         instance.serve.assert_awaited_once()
         scheduler.stop.assert_awaited()
+
+
+def test_serve_tui_mode_does_not_instantiate_uvicorn(config):
+    """Default mode (no -s): serve() must NOT build a uvicorn.Server."""
+    args = build_parser().parse_args(["--no-tui"])
+    app, scheduler, host, port, tui = assemble(args, config)
+    # Sanity: assemble produced no FastAPI app.
+    assert app is None
+
+    scheduler.run_forever = AsyncMock(return_value=None)  # type: ignore[method-assign]
+    scheduler.stop = AsyncMock(return_value=None)  # type: ignore[method-assign]
+
+    with patch("glances.main_v5.uvicorn.Server") as MockServer:
+        asyncio.run(serve(args, app, scheduler, host, port, tui))
+        # The bind-no-socket contract: uvicorn.Server must never be
+        # instantiated in TUI mode — otherwise it could open a port.
+        MockServer.assert_not_called()
+
+    scheduler.stop.assert_awaited()
 
 
 # ----------------------------------------------------------- main
