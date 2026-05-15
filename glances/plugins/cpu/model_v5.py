@@ -53,7 +53,7 @@ _DEFAULT_STEAL_THRESHOLDS = {"careful": 5.0, "warning": 15.0, "critical": 30.0}
 # never resolves to a value (double-prefix bug in `_limits` keys), so v4
 # ships effectively no default threshold. v5 fixes this by shipping
 # real defaults. Documented in NEWS.rst at 5.0.0.
-_DEFAULT_CTX_THRESHOLDS = {"careful": 10000.0, "warning": 15000.0, "critical": 20000.0}
+_DEFAULT_CTX_THRESHOLDS = {"careful": 30000.0, "warning": 50000.0, "critical": 100000.0}
 
 
 class PluginModel(GlancesPluginBase[dict]):

@@ -159,7 +159,7 @@ def test_ctx_switches_is_rate_watched_with_absolute_thresholds(store, config):
     assert schema["watched"] is True
     assert schema["prominent"] is False
     assert "normalize_by" not in schema
-    assert schema["default_thresholds"] == {"careful": 10000.0, "warning": 15000.0, "critical": 20000.0}
+    assert schema["default_thresholds"] == {"careful": 30000.0, "warning": 50000.0, "critical": 100000.0}
 
 
 def test_interrupts_and_soft_interrupts_and_syscalls_are_rate_only(store, config):
@@ -272,12 +272,12 @@ async def test_ctx_switches_level_uses_absolute_thresholds(store, config, monkey
     with _patch_sampler(stats=_stats(ctx=0), cpu_count=4):
         await plugin.update()
 
-    fake_now[0] = 101.0  # +1 s — ctx rate = 16_000/s → warning (≥15_000, <20_000)
-    with _patch_sampler(stats=_stats(ctx=16_000), cpu_count=4):
+    fake_now[0] = 101.0  # +1 s — ctx rate = 51_000/s → warning (≥50_000, <100_000)
+    with _patch_sampler(stats=_stats(ctx=51_000), cpu_count=4):
         await plugin.update()
 
     payload = store.get("cpu")
-    assert payload["ctx_switches"] == 16_000.0
+    assert payload["ctx_switches"] == 51_000.0
     assert payload["_levels"]["ctx_switches"] == {"level": "warning", "prominent": False}
 
 
