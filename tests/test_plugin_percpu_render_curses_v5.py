@@ -226,3 +226,13 @@ def test_render_title_cell_is_header_bold(percpu_payload_4cores, percpu_fields, 
     assert "CPU" in title.text
     assert title.color == ColorRole.HEADER
     assert title.bold is True
+
+
+def test_render_column_names_are_neither_bold_nor_header(percpu_payload_4cores, percpu_fields, monkeypatch):
+    """v4 parity: column names (`total`, `user`, …) are plain text — no
+    HEADER color, no bold (only the leading `CPU` title gets decoration)."""
+    monkeypatch.setattr("sys.platform", "linux")
+    rows = render(percpu_payload_4cores, percpu_fields)
+    for cell in rows[0].cells[1:]:
+        assert cell.bold is False, f"column header {cell.text!r} is bold"
+        assert cell.color == ColorRole.DEFAULT, f"column header {cell.text!r} has color {cell.color}"

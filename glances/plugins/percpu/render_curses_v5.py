@@ -43,7 +43,7 @@ from __future__ import annotations
 import sys
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, title_role
+from glances.outputs.curses_renderer_v5 import Cell, Row, title_role
 
 # v4 fidelity: top-N cores shown, the rest collapsed into a CPU* row.
 _DEFAULT_MAX_CPU_DISPLAY = 4
@@ -105,7 +105,9 @@ def _label_cell(text: str) -> Cell:
 
 
 def _header_cell(text: str) -> Cell:
-    return Cell(text=text.rjust(_VALUE_WIDTH), color=ColorRole.HEADER, bold=True)
+    # v4 parity: column names are emitted via plain ``curse_add_line(msg)``
+    # with no decoration — neither bold nor HEADER coloured.
+    return Cell(text=text.rjust(_VALUE_WIDTH))
 
 
 def _build_data_row(label: str, stats: dict[str, Any], headers: list[str]) -> Row:
