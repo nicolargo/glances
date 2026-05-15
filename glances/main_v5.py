@@ -115,11 +115,32 @@ def build_parser() -> argparse.ArgumentParser:
         help="Enable debug-level logging.",
     )
     parser.add_argument(
+        "-s",
+        "--server",
+        dest="server",
+        action="store_true",
+        help=(
+            "Run as a REST API server (FastAPI on bind_address:port). Headless — "
+            "no curses TUI. Without this flag, Glances runs in TUI mode and does not "
+            "bind any TCP socket."
+        ),
+    )
+    parser.add_argument(
+        "--enable-mcp",
+        dest="enable_mcp",
+        action="store_true",
+        help="Mount the MCP endpoint at /mcp. Requires --server. Off by default.",
+    )
+    parser.add_argument(
         "--quiet",
         "--no-tui",
         dest="no_tui",
         action="store_true",
-        help="Disable the curses TUI (REST API only). Useful for headless / server-mode deployments.",
+        help=(
+            "Disable the curses TUI. Kept for backwards compatibility — "
+            "prefer --server (-s) for headless REST deployments. "
+            "May be repurposed or removed in a future v5 phase."
+        ),
     )
     parser.add_argument(
         "--set-password",
@@ -132,6 +153,29 @@ def build_parser() -> argparse.ArgumentParser:
         version=f"Glances {_VERSION}",
     )
     return parser
+
+
+# --------------------------------------------------------------- validation
+
+
+def validate_args(args: argparse.Namespace) -> None:
+    """Validate cross-flag constraints after argparse parsing.
+
+    - ``--enable-mcp`` is meaningful only in server mode — reject the
+      combination ``--enable-mcp`` without ``--server`` so the user gets
+      a clear error instead of a silently-ignored flag.
+    - ``--server`` + ``--quiet`` is harmless (``-s`` already implies
+      headless) but worth a log hint so the user knows ``--quiet`` is
+      redundant.
+
+    Calls ``build_parser().error(...)`` on rejection — argparse exits
+    the process with status 2 after printing the message to stderr,
+    matching the convention used for argparse-native validation.
+    """
+    if args.enable_mcp and not args.server:
+        build_parser().error("--enable-mcp requires --server (-s). MCP is only mounted in REST server mode.")
+    if args.server and args.no_tui:
+        logger.info("--server (-s) already implies headless operation — the --quiet / --no-tui flag is redundant here.")
 
 
 # --------------------------------------------------------------- logging
@@ -353,6 +397,7 @@ async def serve(
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     setup_logging(args.debug)
+    validate_args(args)
 
     if args.set_password:
         return cli_set_password()
