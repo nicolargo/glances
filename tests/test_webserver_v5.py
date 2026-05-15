@@ -303,6 +303,87 @@ def test_docs_disabled_by_config(config_factory, store):
         assert client.get("/redoc").status_code == 404
 
 
+# ------------------------------------------------------------- attach_mcp (G3-MCP Task 2)
+
+
+def _has_mount(app, prefix: str) -> bool:
+    """Return True if `app` has a Mount route whose path starts with `prefix`."""
+    from starlette.routing import Mount
+
+    return any(isinstance(r, Mount) and r.path == prefix for r in app.routes)
+
+
+def test_build_app_does_not_mount_mcp_by_default(config_factory, store):
+    """Without [outputs] enable_mcp=true, /mcp must NOT be mounted."""
+    config = config_factory()
+    app = build_app(config=config, store=store)
+    assert not _has_mount(app, "/mcp")
+    with TestClient(app) as client:
+        assert client.get("/mcp").status_code == 404
+
+
+def test_attach_mcp_skips_when_gate_off(config_factory, store):
+    from glances.webserver_v5 import attach_mcp
+
+    config = config_factory()
+    app = build_app(config=config, store=store)
+    attached = attach_mcp(app, config=config, store=store, plugins=[])
+    assert attached is False
+    assert not _has_mount(app, "/mcp")
+
+
+def test_attach_mcp_mounts_when_gate_on(config_factory, store):
+    """[outputs] enable_mcp=true → /mcp is mounted."""
+    from glances.webserver_v5 import attach_mcp
+
+    config = config_factory(enable_mcp="true")
+    app = build_app(config=config, store=store)
+    attached = attach_mcp(app, config=config, store=store, plugins=[])
+    assert attached is True
+    assert _has_mount(app, "/mcp")
+
+
+def test_attach_mcp_records_server_in_app_state(config_factory, store):
+    """Successful attach exposes the MCP server via app.state for diagnostics."""
+    from glances.webserver_v5 import attach_mcp
+
+    config = config_factory(enable_mcp="true")
+    app = build_app(config=config, store=store)
+    attach_mcp(app, config=config, store=store, plugins=[])
+    assert app.state.mcp_server is not None
+
+
+def test_attach_mcp_skipped_path_emits_no_warning(config_factory, store, caplog):
+    """Gate off is the common case — must not log anything."""
+    from glances.webserver_v5 import attach_mcp
+
+    config = config_factory()
+    app = build_app(config=config, store=store)
+    with caplog.at_level(logging.WARNING):
+        attach_mcp(app, config=config, store=store, plugins=[])
+    mcp_warnings = [r for r in caplog.records if "MCP" in r.message and r.levelno >= logging.WARNING]
+    assert mcp_warnings == []
+
+
+def test_attach_mcp_logs_when_package_missing(config_factory, store, monkeypatch, caplog):
+    """If MCP_AVAILABLE is False, attach_mcp returns False + clear WARN."""
+    from glances.outputs import glances_mcp
+    from glances.webserver_v5 import attach_mcp
+
+    monkeypatch.setattr(glances_mcp, "MCP_AVAILABLE", False)
+
+    config = config_factory(enable_mcp="true")
+    app = build_app(config=config, store=store)
+    with caplog.at_level(logging.WARNING):
+        attached = attach_mcp(app, config=config, store=store, plugins=[])
+
+    assert attached is False
+    assert not _has_mount(app, "/mcp")
+    msgs = " ".join(r.message for r in caplog.records if r.levelno >= logging.WARNING)
+    assert "mcp" in msgs.lower()
+    assert "pip install" in msgs
+
+
 # ------------------------------------------------------------- helper
 
 

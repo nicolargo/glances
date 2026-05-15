@@ -149,6 +149,67 @@ def register_plugin(app: FastAPI, plugin: GlancesPluginBase) -> None:
     plugins[plugin.plugin_name] = plugin
 
 
+def attach_mcp(
+    app: FastAPI,
+    *,
+    config: GlancesConfigV5,
+    store: StatsStoreV5,
+    plugins: list[GlancesPluginBase],
+    alerts: GlancesAlerts | None = None,
+) -> bool:
+    """Mount the MCP SSE endpoint at ``/mcp`` when the config gate is on.
+
+    Gate: ``[outputs] enable_mcp`` (Boolean, default ``False``). The
+    CLI flag ``--enable-mcp`` flips it via the config overlay in
+    ``main_v5.assemble`` (cf. G3-MCP Task 3).
+
+    Returns ``True`` when the mount was added, ``False`` when skipped
+    (gate off or the ``mcp`` package is missing). Skipping is silent
+    on the gate-off path and emits a clear WARNING on the missing-package
+    path — never raises.
+
+    Auth posture: the global v5 auth middleware
+    (cf. ``_wire_auth``) is HTTP-level and passes through SSE responses
+    unchanged. The MCP mount inherits that policy — no extra wiring
+    here. Unauthenticated MCP requests get a 401 from the same code path
+    as the rest of the API.
+
+    DNS rebinding: ``GlancesMcpServer`` reads
+    ``[outputs] mcp_allowed_hosts`` from the config itself (loopback
+    only by default). The SSE transport applies its own protection
+    independently of ``[outputs] webui_allowed_hosts``.
+    """
+    if not config.get("outputs", "enable_mcp", False):
+        return False
+
+    # Local import so a missing optional dep does not break ``build_app``.
+    try:
+        from glances.outputs.glances_mcp import MCP_AVAILABLE, GlancesMcpServer
+    except ImportError as exc:  # pragma: no cover — defensive
+        logger.warning("MCP requested but the import of glances_mcp failed: %s", exc)
+        return False
+
+    if not MCP_AVAILABLE:
+        logger.warning(
+            "MCP requested via [outputs] enable_mcp=true but the 'mcp' package is not installed. "
+            "Install with: pip install 'glances[mcp]' — skipping the mount."
+        )
+        return False
+
+    from types import SimpleNamespace
+
+    from glances.outputs.mcp_adapter_v5 import McpStatsAdapter
+
+    adapter = McpStatsAdapter(store=store, plugins=plugins, alerts=alerts)
+    # ``GlancesMcpServer`` stores ``args`` but never reads it (cf. v4 module).
+    # An empty namespace keeps the constructor happy without leaking v4 CLI shape.
+    mcp_server = GlancesMcpServer(stats=adapter, args=SimpleNamespace(), config=config)
+    app.mount("/mcp", mcp_server.get_asgi_app())
+    app.state.mcp_server = mcp_server
+    logger.info("MCP endpoint mounted at /mcp")
+    return True
+
+
 # ---------------------------------------------------------- middlewares
 
 
