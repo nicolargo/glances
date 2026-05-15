@@ -34,7 +34,10 @@ from glances.plugins.plugin.base_v5 import GlancesPluginBase
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_PERCENT_THRESHOLDS = {"careful": 50.0, "warning": 70.0, "critical": 90.0}
+# Filesystems are usually fine until close to full — the ladder here is
+# looser than mem's 50/70/90 to avoid noisy "careful" warnings on disks
+# that routinely sit at 60-70% on healthy hosts.
+_DEFAULT_PERCENT_THRESHOLDS = {"careful": 70.0, "warning": 80.0, "critical": 90.0}
 
 
 class PluginModel(GlancesPluginBase[list]):
@@ -82,7 +85,9 @@ class PluginModel(GlancesPluginBase[list]):
             "unit": "percent",
             "watched": True,
             "watch_direction": "high",
-            "prominent": True,
+            # Explicit False — colour the Used value but do not reverse-video
+            # the cell. The framework defaults missing ``prominent`` to True.
+            "prominent": False,
             "default_thresholds": _DEFAULT_PERCENT_THRESHOLDS,
         },
     }

@@ -80,11 +80,21 @@ def test_mnt_point_is_primary_key(store, config):
     assert fields["mnt_point"].get("primary_key") is True
 
 
-def test_percent_is_watched_prominent(store, config):
+def test_percent_is_watched_but_not_prominent(store, config):
+    """fs.percent colours the Used cell when an alert fires but must NOT
+    reverse-video it — the framework defaults missing ``prominent`` to
+    True, so this requires an explicit False in the schema."""
     schema = PluginModel(store, config)._fields["percent"]
     assert schema["watched"] is True
-    assert schema["prominent"] is True
+    assert schema["prominent"] is False
     assert schema["unit"] == "percent"
+
+
+def test_percent_default_thresholds_are_70_80_90(store, config):
+    """Looser ladder than ``mem``/``memswap`` — filesystems often sit at
+    60-70% on healthy hosts."""
+    schema = PluginModel(store, config)._fields["percent"]
+    assert schema["default_thresholds"] == {"careful": 70.0, "warning": 80.0, "critical": 90.0}
 
 
 def test_size_used_free_are_bytes_not_watched(store, config):
@@ -165,12 +175,13 @@ async def test_update_handles_permission_error_globally(store, config):
 
 async def test_levels_indexed_by_mnt_point(store, config):
     plugin = PluginModel(store, config)
-    with _patch_psutil([_root(percent=75.0), _home(percent=30.0)]):
+    with _patch_psutil([_root(percent=85.0), _home(percent=30.0)]):
         await plugin.update()
     levels = store.get("fs")["_levels"]
-    # 75% → warning, 30% → ok
+    # New ladder is 70/80/90 → 85% sits in warning, 30% in ok.
     assert levels["/"]["percent"]["level"] == "warning"
-    assert levels["/"]["percent"]["prominent"] is True
+    # prominent: False per schema — the cell is coloured, never reversed.
+    assert levels["/"]["percent"]["prominent"] is False
     assert levels["/home"]["percent"]["level"] == "ok"
 
 

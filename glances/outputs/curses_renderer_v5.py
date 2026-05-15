@@ -526,7 +526,24 @@ def render_alert_block(
     - ``is_initializing=False``: show ``(no events)`` — the system has
       truly produced nothing of interest yet.
     """
-    rows: list[Row] = [Row(cells=[Cell(text=f"ALERTS ({len(history)})", color=ColorRole.HEADER)])]
+    # Identify ongoing alerts. "Ongoing" = the most-recent event for a
+    # given (plugin, key, field) tuple has a non-ok level. Older events
+    # for the same tuple are not ongoing even if their own level was
+    # non-ok — they have been superseded.
+    latest_per_tuple: dict[tuple[str, Any, str], dict[str, Any]] = {}
+    for evt in history:
+        latest_per_tuple[(str(evt.get("plugin", "")), evt.get("key"), str(evt.get("field", "")))] = evt
+    ongoing_event_ids: set[int] = {id(evt) for evt in latest_per_tuple.values() if str(evt.get("level", "")) != "ok"}
+    n_ongoing = len(ongoing_event_ids)
+    n_total = len(history)
+
+    rows: list[Row] = [
+        Row(
+            cells=[
+                Cell(text=f"ALERT ({n_ongoing} ongoing / {n_total} total)", color=ColorRole.HEADER),
+            ]
+        )
+    ]
     if not history:
         placeholder = "(initializing)" if is_initializing else "(no events)"
         rows.append(Row(cells=[Cell(text=placeholder)]))
@@ -547,10 +564,18 @@ def render_alert_block(
         new_level = str(evt.get("level", ""))
         prominent = bool(evt.get("prominent", False))
         is_initial = bool(evt.get("is_initial", False))
+        is_ongoing = id(evt) in ongoing_event_ids
         # Initial state observed at startup: show the bare level instead of
         # ``ok → <level>`` since no transition actually happened — Glances
         # just discovered the system was already in this state.
         level_text = new_level if is_initial else f"{previous} → {new_level}"
+        if is_ongoing:
+            # Suffix the level cell with a visible marker so operators can
+            # spot the active alerts at a glance. The "ongoing" marker only
+            # decorates the most-recent event per (plugin, key, field) tuple
+            # — older non-ok events for the same target have been
+            # superseded and are not ongoing any more.
+            level_text = f"{level_text} (ongoing)"
         role = _LEVEL_TO_ROLE.get(new_level, ColorRole.DEFAULT)
         rows.append(
             Row(

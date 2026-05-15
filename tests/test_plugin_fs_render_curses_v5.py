@@ -141,15 +141,16 @@ def test_render_long_mnt_point_truncated_with_underscore(fs_fields):
 
 def test_render_used_cell_inherits_percent_level(fs_fields):
     """Per-fs ``_levels.<mnt>.percent`` drives the Used cell color (v4 parity:
-    v4 decorates the ``used`` cell with the percent threshold)."""
+    v4 decorates the ``used`` cell with the percent threshold). The cell is
+    coloured but NOT prominent — see fs.percent schema (``prominent: False``)."""
     payload = {
         "data": [{"mnt_point": "/", "size": 100, "used": 95, "free": 5, "percent": 95.0}],
-        "_levels": {"/": {"percent": {"level": "critical", "prominent": True}}},
+        "_levels": {"/": {"percent": {"level": "critical", "prominent": False}}},
     }
     rows = render(payload, fs_fields)
     used_cell = rows[1].cells[1]
     assert used_cell.color == ColorRole.CRITICAL
-    assert used_cell.prominent is True
+    assert used_cell.prominent is False
 
 
 def test_render_title_role_header_when_no_prominent_alert(fs_payload, fs_fields):

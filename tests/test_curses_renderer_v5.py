@@ -509,6 +509,131 @@ def test_render_alert_block_nonempty_history_ignores_initializing_flag():
     assert "careful" in flat
 
 
+def test_render_alert_block_header_uses_new_ongoing_total_format():
+    """Header is ``ALERT (<n> ongoing / <m> total)``."""
+    history = [
+        # Ongoing: warning, no resolution after.
+        {
+            "ts": "2026-05-15T08:00:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "careful",
+            "is_initial": False,
+            "prominent": True,
+            "value": 75.0,
+            "hostname": "h",
+        },
+        # Resolved: warning → ok.
+        {
+            "ts": "2026-05-15T09:00:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "ok",
+            "previous_level": "warning",
+            "is_initial": False,
+            "prominent": True,
+            "value": 30.0,
+            "hostname": "h",
+        },
+    ]
+    rows = render_alert_block(history, limit=10)
+    header = rows[0].cells[0].text
+    assert "ALERT" in header
+    assert "1 ongoing" in header
+    assert "2 total" in header
+
+
+def test_render_alert_block_ongoing_event_carries_marker():
+    """Latest event per (plugin, key, field) with non-ok level is marked
+    ongoing — visible suffix on the level cell."""
+    history = [
+        {
+            "ts": "2026-05-15T08:00:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "careful",
+            "previous_level": "ok",
+            "is_initial": True,
+            "prominent": True,
+            "value": 60.0,
+            "hostname": "h",
+        },
+    ]
+    rows = render_alert_block(history, limit=10)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "ongoing" in flat
+
+
+def test_render_alert_block_resolution_event_not_marked_ongoing():
+    """``warning → ok`` is a resolution. Not ongoing."""
+    history = [
+        {
+            "ts": "2026-05-15T08:00:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "ok",
+            "previous_level": "warning",
+            "is_initial": False,
+            "prominent": True,
+            "value": 30.0,
+            "hostname": "h",
+        },
+    ]
+    rows = render_alert_block(history, limit=10)
+    # Check only data rows (the header carries the ongoing/total counts and
+    # would match the substring otherwise).
+    data_flat = " ".join(c.text for row in rows[1:] for c in row.cells)
+    assert "ongoing" not in data_flat
+    # Header reflects "0 ongoing / 1 total".
+    header = rows[0].cells[0].text
+    assert "0 ongoing" in header
+    assert "1 total" in header
+
+
+def test_render_alert_block_only_latest_per_tuple_is_ongoing():
+    """Two events for the same (plugin, key, field) — older non-ok is no
+    longer ongoing once a newer event arrives."""
+    history = [
+        # Older non-ok.
+        {
+            "ts": "2026-05-15T08:00:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "careful",
+            "is_initial": False,
+            "prominent": True,
+            "value": 75.0,
+            "hostname": "h",
+        },
+        # Newer resolution.
+        {
+            "ts": "2026-05-15T08:05:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "ok",
+            "previous_level": "warning",
+            "is_initial": False,
+            "prominent": True,
+            "value": 30.0,
+            "hostname": "h",
+        },
+    ]
+    rows = render_alert_block(history, limit=10)
+    data_flat = " ".join(c.text for row in rows[1:] for c in row.cells)
+    # Neither data row is ongoing — resolved.
+    assert "ongoing" not in data_flat
+    header = rows[0].cells[0].text
+    assert "0 ongoing" in header
+
+
 def test_render_alert_block_initial_state_omits_arrow():
     """is_initial=True events render as the bare level (no `ok → ...` arrow)."""
     history = [
