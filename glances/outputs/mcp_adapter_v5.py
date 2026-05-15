@@ -47,6 +47,20 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# v4 plugins that the v5 MCP adapter does not yet expose because the
+# underlying plugin is not ported yet. ``get_plugin(name)`` returns
+# ``None`` for each of these → ``GlancesMcpServer`` raises its canonical
+# ``ValueError("Plugin '<x>' not found")`` to the MCP client. Surfaced at
+# ``attach_mcp`` startup so operators know which resources will fail.
+# Update this list as v5 absorbs v4 plugins; the adapter logic itself
+# does not need to change.
+KNOWN_V5_MISSING_PLUGINS: tuple[str, ...] = (
+    "processlist",
+    "fs",
+    "diskio",
+    "memswap",
+)
+
 # Throttle the "history not supported" WARN so polling MCP clients don't
 # spam the log. Tracked per plugin name (including the synthetic 'alert')
 # and persists for the process lifetime.

@@ -198,7 +198,7 @@ def attach_mcp(
 
     from types import SimpleNamespace
 
-    from glances.outputs.mcp_adapter_v5 import McpStatsAdapter
+    from glances.outputs.mcp_adapter_v5 import KNOWN_V5_MISSING_PLUGINS, McpStatsAdapter
 
     adapter = McpStatsAdapter(store=store, plugins=plugins, alerts=alerts)
     # ``GlancesMcpServer`` stores ``args`` but never reads it (cf. v4 module).
@@ -207,6 +207,21 @@ def attach_mcp(
     app.mount("/mcp", mcp_server.get_asgi_app())
     app.state.mcp_server = mcp_server
     logger.info("MCP endpoint mounted at /mcp")
+
+    # Surface the v4↔v5 gap so operators know which MCP resources will
+    # return "Plugin not found" (cf. McpStatsAdapter docstring). The
+    # list is small (≤4 entries) so it fits a single log line.
+    missing_in_registry = [p for p in KNOWN_V5_MISSING_PLUGINS if p not in (pl.plugin_name for pl in plugins)]
+    if missing_in_registry:
+        logger.info(
+            "MCP: v4 plugins not yet ported to v5 — requesting these via MCP returns 'Plugin not found': %s",
+            ", ".join(missing_in_registry),
+        )
+    # History is also unsupported — see McpPluginView.get_raw_history.
+    logger.info(
+        "MCP: history resources return empty datasets in v5 (no history buffer yet). "
+        "See docs/architecture/glances-v5-architecture-decisions.md §11."
+    )
     return True
 
 

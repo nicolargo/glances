@@ -365,6 +365,37 @@ def test_attach_mcp_skipped_path_emits_no_warning(config_factory, store, caplog)
     assert mcp_warnings == []
 
 
+def test_attach_mcp_logs_known_v5_gaps(config_factory, store, caplog):
+    """Operators must see, on mount, which v4 plugins MCP cannot expose yet."""
+    from glances.webserver_v5 import attach_mcp
+
+    config = config_factory(enable_mcp="true")
+    app = build_app(config=config, store=store)
+    with caplog.at_level(logging.INFO):
+        attach_mcp(app, config=config, store=store, plugins=[])
+
+    msgs = " ".join(r.message for r in caplog.records if r.levelno == logging.INFO)
+    assert "not yet ported" in msgs
+    # The canonical missing v4 plugins must be named so operators can
+    # match the message against MCP client errors.
+    for missing in ("processlist", "fs", "diskio", "memswap"):
+        assert missing in msgs
+
+
+def test_attach_mcp_logs_history_limitation(config_factory, store, caplog):
+    """A single INFO line surfaces the deferred history semantic."""
+    from glances.webserver_v5 import attach_mcp
+
+    config = config_factory(enable_mcp="true")
+    app = build_app(config=config, store=store)
+    with caplog.at_level(logging.INFO):
+        attach_mcp(app, config=config, store=store, plugins=[])
+
+    msgs = " ".join(r.message for r in caplog.records if r.levelno == logging.INFO)
+    assert "history" in msgs.lower()
+    assert "empty" in msgs.lower()
+
+
 def test_attach_mcp_logs_when_package_missing(config_factory, store, monkeypatch, caplog):
     """If MCP_AVAILABLE is False, attach_mcp returns False + clear WARN."""
     from glances.outputs import glances_mcp
