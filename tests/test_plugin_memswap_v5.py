@@ -105,6 +105,38 @@ def test_sin_sout_are_not_prominent(store, config):
         assert fields[name].get("prominent") is False, name
 
 
+async def test_sin_sout_ignore_bare_level_keys_in_memswap_section(tmp_path, monkeypatch, store):
+    """Regression guard: a legacy ``[memswap] careful=50`` (no field prefix)
+    must NOT spill onto sin/sout. The ``strict_thresholds=True`` flag on
+    these fields skips the bare-level fallback in ``read_thresholds``.
+
+    Real-world trigger: a v4-era user XDG glances.conf carries
+    ``careful``/``warning``/``critical`` bare keys that get merged with
+    the v5 project conf via the config layering."""
+    config = _config_with(tmp_path, monkeypatch, "[memswap]\ncareful=50\nwarning=70\ncritical=90\n")
+    plugin = PluginModel(store, config)
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.memswap.model_v5.psutil.swap_memory"
+    with patch(psutil_path, return_value=_swap(sin=0, sout=0)):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value=_swap(sin=1_000, sout=1_000)):
+        await plugin.update()
+
+    levels = store.get("memswap")["_levels"]
+    # `percent` still picks up the bare keys (it does not opt out of the
+    # legacy fallback — preserves existing behaviour).
+    assert "percent" in levels
+    # sin/sout MUST NOT inherit the bare-level keys.
+    assert "sin" not in levels
+    assert "sout" not in levels
+
+
 async def test_sin_threshold_from_config_carries_non_prominent_level(tmp_path, monkeypatch, store):
     """Even when the user configures thresholds in glances.conf, the resulting
     _levels entry must carry ``prominent=False`` — sin/sout are coloured but

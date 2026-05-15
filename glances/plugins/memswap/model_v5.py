@@ -87,6 +87,13 @@ class PluginModel(GlancesPluginBase[dict]):
             # should tint the value foreground only, never reverse-video the
             # whole cell.
             "prominent": False,
+            # Opt out of the bare-``<level>`` fallback in
+            # ``read_thresholds``. Legacy XDG glances.conf files often carry
+            # a v4-era ``[memswap] careful=70`` etc. that would otherwise
+            # bleed onto sin/sout. Only the field-prefixed
+            # ``sin_careful``/``sin_warning``/``sin_critical`` (and the
+            # ``sout_`` variants) activate alerts here.
+            "strict_thresholds": True,
         },
         "sout": {
             "description": (
@@ -98,6 +105,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "watched": True,
             "watch_direction": "high",
             "prominent": False,
+            "strict_thresholds": True,
         },
     }
 

@@ -400,6 +400,7 @@ class GlancesPluginBase(Generic[T], ABC):
                 field=field_name,
                 pk_value=pk_value,
                 defaults=schema.get("default_thresholds"),
+                strict=bool(schema.get("strict_thresholds", False)),
             )
             if not thresholds:
                 continue

@@ -72,6 +72,7 @@ def read_thresholds(
     field: str | None = None,
     pk_value: str | None = None,
     defaults: dict[str, float] | None = None,
+    strict: bool = False,
 ) -> dict[str, float]:
     """Read thresholds from a config section, layered over `defaults`.
 
@@ -84,7 +85,7 @@ def read_thresholds(
     2. ``<field>_<level>``             — per-field, all items (e.g.
        ``bytes_recv_warning``). Requires ``field``.
     3. ``<level>``                     — applies to any watched field
-       (e.g. ``warning``).
+       (e.g. ``warning``). **Skipped when** ``strict=True``.
 
     Per-level defaults (from the field schema's ``default_thresholds``)
     are used when none of the three keys are configured. Layering is
@@ -93,16 +94,32 @@ def read_thresholds(
 
     A negative value in the config is treated as "absent" so users can
     explicitly disable a level by setting ``careful=-1``.
+
+    ``strict=True`` opts a field out of the bare-``<level>`` fallback.
+    Used by opt-in alert fields (cf. ``memswap.sin``/``sout``) where
+    legacy bare keys in the plugin section — common in user XDG
+    glances.conf files inherited from earlier versions — must not
+    inadvertently trigger unrelated alerts. The field-prefixed key
+    (``<field>_<level>``) and the pk-field-level key for collections
+    continue to work normally.
     """
     out: dict[str, float] = dict(defaults) if defaults else {}
 
     for level in _BOUNDARY_KEYS_DESCENDING:
         keys: tuple[str, ...]
         if field is not None and pk_value is not None:
-            keys = (f"{pk_value}_{field}_{level}", f"{field}_{level}", level)
+            if strict:
+                keys = (f"{pk_value}_{field}_{level}", f"{field}_{level}")
+            else:
+                keys = (f"{pk_value}_{field}_{level}", f"{field}_{level}", level)
         elif field is not None:
-            keys = (f"{field}_{level}", level)
+            if strict:
+                keys = (f"{field}_{level}",)
+            else:
+                keys = (f"{field}_{level}", level)
         else:
+            # No field given — strict has no field-prefix to fall back to;
+            # the bare key is the only option. Keep the same behaviour.
             keys = (level,)
         for key in keys:
             value = config.get(section, key, _ABSENT)

@@ -123,6 +123,37 @@ def test_read_thresholds_falls_back_to_bare_when_field_prefixed_missing():
     assert out == {"warning": 1.5}
 
 
+def test_read_thresholds_strict_ignores_bare_level_keys():
+    """With strict=True, only field-prefixed (or pk-prefixed) keys are
+    considered. Bare ``<level>`` keys in the plugin section are skipped
+    entirely — used by opt-in alert fields (e.g. memswap.sin/sout) that
+    must not inherit unrelated bare keys."""
+    config = FakeConfig({("memswap", "warning"): "70"})
+    out = read_thresholds(config, "memswap", field="sin", strict=True)
+    assert out == {}
+
+
+def test_read_thresholds_strict_still_honours_field_prefixed_keys():
+    """Strict mode does NOT block explicit ``<field>_<level>`` keys."""
+    config = FakeConfig({("memswap", "warning"): "70", ("memswap", "sin_warning"): "100"})
+    out = read_thresholds(config, "memswap", field="sin", strict=True)
+    assert out == {"warning": 100.0}
+
+
+def test_read_thresholds_strict_collection_honours_pk_prefixed_keys():
+    """Strict mode keeps the per-item key working for collection plugins."""
+    config = FakeConfig({("network", "warning"): "1000", ("network", "eth0_bytes_recv_warning"): "9000"})
+    out = read_thresholds(config, "network", field="bytes_recv", pk_value="eth0", strict=True)
+    assert out == {"warning": 9000.0}
+
+
+def test_read_thresholds_strict_collection_ignores_bare_warning():
+    """Strict + collection + only bare-level present → empty."""
+    config = FakeConfig({("network", "warning"): "1000"})
+    out = read_thresholds(config, "network", field="bytes_recv", pk_value="eth0", strict=True)
+    assert out == {}
+
+
 def test_read_thresholds_no_field_argument_only_bare_keys():
     config = FakeConfig({("mem", "warning"): "60", ("mem", "percent_warning"): "65"})
     # field=None → field-prefixed keys are ignored.
