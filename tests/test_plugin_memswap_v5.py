@@ -137,9 +137,10 @@ async def test_second_cycle_computes_swap_rates(store, config, monkeypatch):
 
 async def test_percent_level_uses_default_thresholds(store, config):
     plugin = PluginModel(store, config)
-    with patch("glances.plugins.memswap.model_v5.psutil.swap_memory", return_value=_swap(percent=75.0)):
+    with patch("glances.plugins.memswap.model_v5.psutil.swap_memory", return_value=_swap(percent=85.0)):
         await plugin.update()
-    # 75 between warning (70) and critical (90) → warning, prominent
+    # 85 between warning (80) and critical (95) → warning, prominent.
+    # Default ladder for swap is 60/80/95 (looser than mem's 50/70/90).
     assert store.get("memswap")["_levels"]["percent"] == {"level": "warning", "prominent": True}
 
 

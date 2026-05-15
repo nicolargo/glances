@@ -35,9 +35,10 @@ from glances.plugins.plugin.base_v5 import GlancesPluginBase
 
 logger = logging.getLogger(__name__)
 
-# Same default ladder as `mem` so the swap and memory panels share a
-# UX baseline. Override in glances.conf under [memswap] if needed.
-_DEFAULT_PERCENT_THRESHOLDS = {"careful": 50.0, "warning": 70.0, "critical": 90.0}
+# Swap thresholds are looser than `mem` (60/80/95 vs 50/70/90): a fairly
+# full swap is normal on systems with active paging and only really
+# concerning near saturation. Override in glances.conf under [memswap].
+_DEFAULT_PERCENT_THRESHOLDS = {"careful": 60.0, "warning": 80.0, "critical": 95.0}
 
 
 class PluginModel(GlancesPluginBase[dict]):
