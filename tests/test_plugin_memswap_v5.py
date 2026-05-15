@@ -45,6 +45,16 @@ def config(tmp_path, monkeypatch) -> GlancesConfigV5:
     return GlancesConfigV5()
 
 
+def _config_with(tmp_path, monkeypatch, body: str) -> GlancesConfigV5:
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text(body)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    return GlancesConfigV5()
+
+
 # ---------------------------------------------------------- contract
 
 
@@ -73,6 +83,65 @@ def test_sin_sout_are_rate_counters(store, config):
     fields = PluginModel(store, config)._fields
     for name in ("sin", "sout"):
         assert fields[name].get("rate") is True, name
+
+
+def test_sin_sout_are_watched_without_default_thresholds(store, config):
+    """sin/sout are opt-in alerts — watched=True so the framework computes
+    levels when the user sets thresholds in glances.conf, but no
+    ``default_thresholds`` so the field stays silent on a stock install."""
+    fields = PluginModel(store, config)._fields
+    for name in ("sin", "sout"):
+        assert fields[name].get("watched") is True, name
+        assert "default_thresholds" not in fields[name], name
+
+
+async def test_sin_sout_no_levels_without_user_thresholds(store, config):
+    """With no [memswap] sin_*/sout_* config keys, no level entry must
+    appear for sin/sout in the store payload."""
+    plugin = PluginModel(store, config)
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch_target = base_module.time
+
+    original_monotonic = monkeypatch_target.monotonic
+    monkeypatch_target.monotonic = lambda: fake_now[0]
+    try:
+        psutil_path = "glances.plugins.memswap.model_v5.psutil.swap_memory"
+        with patch(psutil_path, return_value=_swap(sin=0, sout=0)):
+            await plugin.update()
+        fake_now[0] = 101.0
+        with patch(psutil_path, return_value=_swap(sin=1_000_000, sout=500_000)):
+            await plugin.update()
+    finally:
+        monkeypatch_target.monotonic = original_monotonic
+
+    payload = store.get("memswap")
+    levels = payload.get("_levels", {})
+    assert "sin" not in levels
+    assert "sout" not in levels
+
+
+async def test_sin_threshold_from_config_triggers_level(tmp_path, monkeypatch, store):
+    """User-set ``[memswap] sin_warning=10000`` makes sin alert at that level."""
+    config = _config_with(tmp_path, monkeypatch, "[memswap]\nsin_careful=5000\nsin_warning=10000\nsin_critical=20000\n")
+    plugin = PluginModel(store, config)
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    with patch("glances.plugins.memswap.model_v5.psutil.swap_memory", return_value=_swap(sin=0)):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch("glances.plugins.memswap.model_v5.psutil.swap_memory", return_value=_swap(sin=15_000)):
+        # 15_000 bytes / 1s = 15_000 bytes/s → between warning (10000) and critical (20000) → warning
+        await plugin.update()
+
+    payload = store.get("memswap")
+    assert payload["_levels"]["sin"]["level"] == "warning"
 
 
 # ---------------------------------------------------------- update pipeline

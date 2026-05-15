@@ -75,6 +75,14 @@ class PluginModel(GlancesPluginBase[dict]):
             ),
             "unit": "bytespers",
             "rate": True,
+            # No ``default_thresholds`` — sustained swap traffic is host-specific
+            # (a healthy database server may page steadily). Users opt in by
+            # setting ``sin_careful``/``warning``/``critical`` in glances.conf
+            # under ``[memswap]``. Suggested ladder shipped commented in the
+            # config: 40/400/800 KB/s.
+            "watched": True,
+            "watch_direction": "high",
+            "prominent": True,
         },
         "sout": {
             "description": (
@@ -83,6 +91,9 @@ class PluginModel(GlancesPluginBase[dict]):
             ),
             "unit": "bytespers",
             "rate": True,
+            "watched": True,
+            "watch_direction": "high",
+            "prominent": True,
         },
     }
 

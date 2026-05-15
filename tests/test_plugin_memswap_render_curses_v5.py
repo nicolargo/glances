@@ -28,9 +28,11 @@ def memswap_fields():
 def memswap_payload():
     return {
         "total": 16 * 1024**3,
-        "used": 4 * 1024**3,
-        "free": 12 * 1024**3,
+        "used": 4 * 1024**3,  # kept in payload but not rendered
+        "free": 12 * 1024**3,  # kept in payload but not rendered
         "percent": 25.0,
+        "sin": 100_000.0,  # bytes/s, computed by the framework
+        "sout": 0.0,
         "_levels": {"percent": {"level": "ok", "prominent": True}},
     }
 
@@ -55,12 +57,40 @@ def test_render_first_row_includes_percent(memswap_payload, memswap_fields):
     assert "25.0%" in text
 
 
-def test_render_body_rows_have_total_used_free(memswap_payload, memswap_fields):
+def test_render_body_rows_have_total_sin_sout(memswap_payload, memswap_fields):
+    """Layout: total (capacity) + sin/sout (swap I/O rates). ``used``/``free``
+    are dropped — redundant with ``percent`` + ``total``."""
     rows = render(memswap_payload, memswap_fields)
     flat = " ".join(c.text for row in rows[1:] for c in row.cells)
     assert "total" in flat
-    assert "used" in flat
-    assert "free" in flat
+    assert "sin" in flat
+    assert "sout" in flat
+
+
+def test_render_does_not_show_used_or_free(memswap_payload, memswap_fields):
+    """``used`` and ``free`` are intentionally not rendered (redundant)."""
+    rows = render(memswap_payload, memswap_fields)
+    # Only check the label columns (col 0) to avoid false positives from
+    # arbitrary substring matches in the value column.
+    labels = {r.cells[0].text.strip() for r in rows[1:] if r.cells}
+    assert "used" not in labels
+    assert "free" not in labels
+
+
+def test_render_handles_missing_sin_sout_on_first_cycle(memswap_fields):
+    """Cycle 1: sin/sout absent from payload (no baseline) — renderer shows ``-``."""
+    payload = {
+        "total": 16 * 1024**3,
+        "percent": 25.0,
+        "_levels": {},
+    }
+    rows = render(payload, memswap_fields)
+    # 4 rows still produced; sin/sout values are the dash placeholder.
+    assert len(rows) == 4
+    sin_row = next(r for r in rows[1:] if r.cells[0].text.strip() == "sin")
+    sout_row = next(r for r in rows[1:] if r.cells[0].text.strip() == "sout")
+    assert sin_row.cells[1].text.strip() == "-"
+    assert sout_row.cells[1].text.strip() == "-"
 
 
 def test_render_each_body_row_has_two_cells(memswap_payload, memswap_fields):
@@ -81,16 +111,16 @@ def test_render_value_columns_have_stable_width_across_cycles(memswap_fields):
     """Value cells must keep a stable width when stats vary cycle-to-cycle."""
     low = {
         "total": 1024.0,
-        "used": 100.0,
-        "free": 924.0,
         "percent": 5.0,
+        "sin": 100.0,
+        "sout": 0.0,
         "_levels": {},
     }
     high = {
         "total": 999_999_999_999.0,
-        "used": 800_000_000_000.0,
-        "free": 199_999_999_999.0,
         "percent": 100.0,
+        "sin": 999_999_999.0,
+        "sout": 999_999_999.0,
         "_levels": {},
     }
     rows_low = render(low, memswap_fields)

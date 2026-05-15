@@ -15,17 +15,22 @@ laid out as a single-column label/value grid, with line 1 carrying the
 
 Reference layout:
 
-    SWAP    25.0%
-    total          16.0G
-    used            4.0G
-    free           12.0G
+    SWAP   25.0%
+    total  16.0G
+    sin   100.0K/s
+    sout    0.0K/s
 
 - Line 1: ``SWAP`` (HEADER) + percent value coloured by ``_levels.percent``.
-- Lines 2-4: ``total`` / ``used`` / ``free`` (label-left, value-right).
+- Line 2: ``total`` capacity (used/free intentionally dropped — they are
+  redundant with ``percent`` and ``total``).
+- Lines 3-4: ``sin`` / ``sout`` swap I/O rates. Absent until cycle 2 (no
+  baseline) — the renderer shows ``-`` in that case.
 
-Compared to the v5 ``mem`` renderer, this is a slimmer single-column
-grid — there are only three body rows to show, and v4 splits them on
-separate lines rather than a 2-column grid.
+V4 displayed ``total``/``used``/``free`` on three lines; v5 trades the
+redundant pair for actionable I/O rates that highlight live paging
+activity. The columns ``sin``/``sout`` are only coloured when the user
+explicitly enables thresholds in ``[memswap]`` of ``glances.conf``
+(no default ladder — see model_v5).
 """
 
 from __future__ import annotations
@@ -86,9 +91,9 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         _cell_for_field("percent", payload.get("percent"), fields_desc.get("percent", {}), payload),
     ]
 
-    # Lines 2-4: total / used / free.
+    # Lines 2-4: total capacity + sin/sout swap I/O rates.
     grid: list[list[Cell]] = [line1]
-    for key in ("total", "used", "free"):
+    for key in ("total", "sin", "sout"):
         grid.append(_stat_pair(payload, fields_desc, key))
 
     return _align_grid(grid)
