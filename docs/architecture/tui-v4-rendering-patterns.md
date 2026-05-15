@@ -177,6 +177,59 @@ free           12.0G
 
 ---
 
+## fs
+
+**Source:** `glances/plugins/fs/__init__.py::msg_curse`
+
+**Guard:** returns empty if `not self.stats`, plugin disabled, or
+`max_width` is `None` (logs a debug message).
+
+**Expected v4-equivalent output (default — used + total):**
+
+```
+FILE SYS              Used   Total
+/                   125.0G  500.0G
+/home               512.0G    1.0T
+```
+
+**`name_max_width` computation:** `max_width - 13`
+
+**Header field table:**
+
+| field | label | format | alignment | width | notes |
+|---|---|---|---|---|---|
+| (title) | `FILE SYS` | `'{:{width}}'.format('FILE SYS', width=name_max_width)` | left | name_max_width | `TITLE` |
+| Used / Free | `Used` or `Free` | `'{:>8}'.format(...)` | right | 8 | depends on `--fs-free-space` flag |
+| Total | `Total` | `'{:>7}'.format('Total')` | right | 7 | `DEFAULT` |
+
+**Per-filesystem row:**
+
+| field | format | alignment | width | color rule |
+|---|---|---|---|---|
+| mnt_point | concatenated `mnt (device_short)` when room, else truncated with leading `_` | left | name_max_width | `DEFAULT` |
+| used / free | `auto_unit(value)` right-padded to 7 | right | 7 | `get_alert(used, max=size)` |
+| total | `auto_unit(size)` right-padded to 7 | right | 7 | `DEFAULT` |
+
+**Sort order:** mountpoint ascending (`operator.itemgetter('mnt_point')`).
+
+**Color logic:** the `used` cell carries the alert decoration computed
+from `get_alert(current=size-free, maximum=size, header=mnt_point)` —
+standard CAREFUL/WARNING/CRITICAL ladder. Read-only mounts (`ro` in
+options) skip the alert in v4 (issue #3143); v5 keeps the alert
+universal — operators can suppress via the show/hide filters.
+
+**Conditional behaviour:**
+- `--fs-free-space`: header shows `Free`, row value shows `auto_unit(free)`
+  instead of `auto_unit(used)`.
+- Mountpoints whose alias / show / hide filters reject them are skipped.
+
+✅ **v5 renderer:** `glances/plugins/fs/render_curses_v5.py`
+(Added in G4-fs. Default mode only — ``--fs-free-space`` toggle and
+the optional ``(device)`` suffix on mountpoints are deferred to a
+later phase pending CLI / max_width plumbing.)
+
+---
+
 ## load
 
 **Source:** `glances/plugins/load/__init__.py::msg_curse`

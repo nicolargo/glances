@@ -56,7 +56,6 @@ logger = logging.getLogger(__name__)
 # does not need to change.
 KNOWN_V5_MISSING_PLUGINS: tuple[str, ...] = (
     "processlist",
-    "fs",
     "diskio",
 )
 
