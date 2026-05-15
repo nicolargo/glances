@@ -3,6 +3,24 @@
 ==============================================================================
 
 ================================
+Version 5.0.0a3 (Phase 2 G1)
+================================
+
+Date: 2026-05-15
+
+Enhancements:
+
+* v5: per-plugin TUI renderer convention — each Phase 1 plugin ships a ``render_curses_v5.py`` module next to its ``model_v5.py`` replicating v4's ``msg_curse()`` layout. Plugins migrated in G1: ``cpu``, ``mem``, ``load``, ``network``, ``percpu``. Visual parity contract enforced via the v4 catalogue (``docs/architecture/tui-v4-rendering-patterns.md``).
+* v5: discovery mechanism in ``glances/outputs/curses_renderer_v5.py`` — ``build_frame`` automatically picks up ``glances.plugins.<name>.render_curses_v5.render`` when present, falling back to the generic 2-col / N-col table for unmigrated plugins.
+* v5: new schema renderer hints — ``short_name`` (compact label, v4 parity) and ``internal`` (filtered from UI but kept in computations and API), in addition to the ``format`` / ``column_width`` hints shipped in G0.
+* v5: prominent + warning/critical cells now use explicit white-on-color curses pairs for readability (v4 parity).
+* v5: 3-cycle alert warmup at startup, per-plugin (v4 parity — avoids spurious CRITICAL on the first refresh).
+* v5: dynamic top-row spacing — first block flush-left, last flush-right, remaining gaps distributed evenly.
+* v5: CPU / perCPU mutual exclusion via hotkey ``1`` (v4 parity).
+* v5: dynamic title color — warning/critical only escalates the title; ``ok`` and ``careful`` keep the neutral HEADER role.
+* v5: CPU sampler guards against psutil's "no baseline yet" first-call behaviour (sum<50% heuristic + re-sample) to avoid the 100% spike on startup.
+
+================================
 Version 5.0.0a2 (Phase 2 G0)
 ================================
 

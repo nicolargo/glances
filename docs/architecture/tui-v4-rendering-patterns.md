@@ -71,6 +71,8 @@ Lines 2–4 start with `curse_new_line()`.
 - All rate fields (`ctx_switches`, `interrupts`, `soft_interrupts`, `syscalls`) are
   `optional=True` — hidden when terminal is narrow.
 
+✅ **v5 renderer:** `glances/plugins/cpu/render_curses_v5.py`
+
 ---
 
 ## mem
@@ -131,6 +133,8 @@ All byte fields are `DEFAULT` (no threshold configured for them).
 - Line 3 shows `available` when `self.available` is True (Linux/macOS), otherwise `used`.
 - `active`, `inactive`, `buffers`, `cached` are `optional=True` — hidden on narrow terminals.
 
+✅ **v5 renderer:** `glances/plugins/mem/render_curses_v5.py`
+
 ---
 
 ## load
@@ -172,6 +176,8 @@ drives the trend arrow.
 **Conditional behaviour:**
 - `cpucore` segment only shown when `'cpucore' in self.stats and self.stats['cpucore'] > 0`.
 - Irix-mode formatting only when `args.disable_irix` and cores > 0.
+
+✅ **v5 renderer:** `glances/plugins/load/render_curses_v5.py`
 
 ---
 
@@ -242,6 +248,11 @@ Total row width = `name_max_width + 14` (two 7-char columns) or `name_max_width 
 - `--network-sum`: collapses Rx+Tx into a single 14-char column.
 - `--byte`: displays bytes instead of bits.
 
+✅ **v5 renderer:** `glances/plugins/network/render_curses_v5.py`
+(G1 ships the default rate-bits-2col mode only — ``--byte``,
+``--network-cumul`` and ``--network-sum`` deferred to G2+ pending
+``max_width`` / ``args`` plumbing through ``render()``.)
+
 ---
 
 ## percpu
@@ -307,3 +318,7 @@ key, mapping to CAREFUL/WARNING/CRITICAL thresholds configured for each CPU fiel
 - Only active when `args.percpu` is True; cpu plugin hides itself in that case.
 - `max_cpu_display` can be overridden in `glances.conf` under `[percpu] max_cpu_display`.
 - The set of columns shown is OS-dependent (see header construction above).
+
+✅ **v5 renderer:** `glances/plugins/percpu/render_curses_v5.py`
+(G1 ships the quicklook-disabled mode — ``CPU`` title + ``total`` column
+always present. Quicklook-enabled toggle deferred to G2+.)
