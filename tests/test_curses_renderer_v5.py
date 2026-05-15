@@ -384,6 +384,53 @@ def test_render_alert_block_handles_empty_history():
     assert len(rows) >= 1
 
 
+def test_render_alert_block_initial_state_omits_arrow():
+    """is_initial=True events render as the bare level (no `ok → ...` arrow)."""
+    history = [
+        {
+            "ts": "2026-05-15T14:00:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "careful",
+            "previous_level": "ok",
+            "value": 60.0,
+            "prominent": True,
+            "is_initial": True,
+            "hostname": "h",
+        },
+    ]
+    rows = render_alert_block(history, limit=10)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    # The arrow is for real transitions only.
+    assert "→" not in flat
+    # The level itself must still appear so operators see the steady state.
+    assert "careful" in flat
+
+
+def test_render_alert_block_transition_keeps_arrow():
+    """is_initial=False (or absent) events render as `previous → new` (v5 default)."""
+    history = [
+        {
+            "ts": "2026-05-15T14:01:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "careful",
+            "value": 75.0,
+            "prominent": True,
+            "is_initial": False,
+            "hostname": "h",
+        },
+    ]
+    rows = render_alert_block(history, limit=10)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "→" in flat
+    assert "careful" in flat
+    assert "warning" in flat
+
+
 # --------------------------------------------------------------- frame builder
 
 

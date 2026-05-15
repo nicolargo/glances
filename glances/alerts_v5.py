@@ -69,12 +69,22 @@ class _AlertState:
     committed_level: str = "ok"
     pending_level: str | None = None
     pending_since: float | None = None
+    # ``False`` until the very first observation has been processed for this
+    # (plugin, key, field). The transition produced by that first observation
+    # — if any — carries ``is_initial=True`` so the renderer can show a
+    # steady-state level instead of a misleading "ok → <level>" arrow when
+    # Glances starts while the system is already in a non-ok state.
+    has_committed: bool = False
 
 
 @dataclass
 class _Transition:
     previous: str
     new: str
+    # See ``_AlertState.has_committed`` — set on the FIRST commit out of the
+    # default ``committed_level="ok"`` initial state. Subsequent transitions
+    # are real changes and stay ``is_initial=False``.
+    is_initial: bool = False
 
 
 class GlancesAlerts:
@@ -168,6 +178,7 @@ class GlancesAlerts:
                     new_level=transition.new,
                     value=value,
                     prominent=prominent,
+                    is_initial=transition.is_initial,
                 )
                 self._history.append(event)
                 if transition.new != "ok":
@@ -279,19 +290,25 @@ class GlancesAlerts:
     def _reconcile(self, state: _AlertState, observed: str, min_duration: float) -> _Transition | None:
         """Update state and return a `_Transition` iff one fires this cycle."""
         if observed == state.committed_level:
-            # Back to committed — cancel any pending transition.
+            # Observation matches the committed level — cancel any pending
+            # transition AND record that we have now seen at least one
+            # observation. Later transitions out of this state will be real
+            # changes (``is_initial=False``).
             state.pending_level = None
             state.pending_since = None
+            state.has_committed = True
             return None
 
         # No hysteresis configured — commit immediately. Useful for tests
         # and for users who explicitly disable debouncing.
         if min_duration <= 0:
             previous = state.committed_level
+            is_initial = not state.has_committed
             state.committed_level = observed
             state.pending_level = None
             state.pending_since = None
-            return _Transition(previous=previous, new=observed)
+            state.has_committed = True
+            return _Transition(previous=previous, new=observed, is_initial=is_initial)
 
         now = self._now()
         if state.pending_level == observed:
@@ -299,10 +316,12 @@ class GlancesAlerts:
             assert state.pending_since is not None
             if now - state.pending_since >= min_duration:
                 previous = state.committed_level
+                is_initial = not state.has_committed
                 state.committed_level = observed
                 state.pending_level = None
                 state.pending_since = None
-                return _Transition(previous=previous, new=observed)
+                state.has_committed = True
+                return _Transition(previous=previous, new=observed, is_initial=is_initial)
             return None
 
         # Either no pending candidate, or the candidate just changed — start
@@ -323,6 +342,7 @@ class GlancesAlerts:
         new_level: str,
         value: Any,
         prominent: bool,
+        is_initial: bool = False,
     ) -> dict[str, Any]:
         return {
             "ts": datetime.now(timezone.utc).isoformat(),
@@ -333,6 +353,7 @@ class GlancesAlerts:
             "previous_level": previous_level,
             "value": value,
             "prominent": prominent,
+            "is_initial": is_initial,
             "hostname": self._hostname,
         }
 

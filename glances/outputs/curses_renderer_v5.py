@@ -504,6 +504,11 @@ def render_alert_block(history: list[dict[str, Any]], limit: int = 10) -> list[R
         previous = str(evt.get("previous_level", ""))
         new_level = str(evt.get("level", ""))
         prominent = bool(evt.get("prominent", False))
+        is_initial = bool(evt.get("is_initial", False))
+        # Initial state observed at startup: show the bare level instead of
+        # ``ok → <level>`` since no transition actually happened — Glances
+        # just discovered the system was already in this state.
+        level_text = new_level if is_initial else f"{previous} → {new_level}"
         role = _LEVEL_TO_ROLE.get(new_level, ColorRole.DEFAULT)
         rows.append(
             Row(
@@ -511,7 +516,7 @@ def render_alert_block(history: list[dict[str, Any]], limit: int = 10) -> list[R
                     Cell(text=ts),
                     Cell(text=target),
                     Cell(text=field_name),
-                    Cell(text=f"{previous} → {new_level}", color=role, prominent=prominent),
+                    Cell(text=level_text, color=role, prominent=prominent),
                 ]
             )
         )
