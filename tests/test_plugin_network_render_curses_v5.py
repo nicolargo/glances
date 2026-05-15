@@ -187,7 +187,7 @@ def test_render_handles_empty_payload(network_fields):
 
 def test_render_long_interface_name_truncated_with_underscore(network_fields):
     """Long names tail-truncated with a leading underscore (v4 parity)."""
-    long_name = "docker0123456789abcdefXYZ"  # 25 chars > 20
+    long_name = "docker0123456789abcdefXYZ"  # 25 chars > _NAME_MAX_WIDTH
     payload = {
         "data": [
             {"interface_name": long_name, "bytes_recv": 100.0, "bytes_sent": 50.0, "is_up": True},
@@ -196,10 +196,20 @@ def test_render_long_interface_name_truncated_with_underscore(network_fields):
     }
     rows = render(payload, network_fields)
     name_text = rows[1].cells[0].text
-    # Truncated to 20 chars, prefixed with `_`, tail preserved.
+    # Truncated to _NAME_MAX_WIDTH (18 chars), prefixed with `_`, tail preserved.
     assert name_text.startswith("_")
-    assert len(name_text) == 20
+    assert len(name_text) == 18
     assert name_text.endswith("XYZ")
+
+
+def test_render_total_block_width_fits_sidebar_cap(network_payload, network_fields):
+    """Each row's natural width (cells + 1-char gaps) must not exceed the
+    v5 left sidebar cap (34) — otherwise the painter clips the right side
+    of the Tx/s column. Regression guard for the 36→34 clipping bug."""
+    rows = render(network_payload, network_fields)
+    for r in rows:
+        natural_w = sum(len(c.text) for c in r.cells) + max(0, len(r.cells) - 1)
+        assert natural_w <= 34, f"row width {natural_w} exceeds sidebar cap 34"
 
 
 def test_render_columns_align_across_rows(network_payload, network_fields):

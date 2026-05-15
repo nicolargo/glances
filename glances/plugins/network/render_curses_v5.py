@@ -39,9 +39,15 @@ from typing import Any
 
 from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
 
-# Hardcoded for G1. v4 computes `max_width - 12`; once render() accepts a
-# `max_width` we'll honour it here.
-_NAME_MAX_WIDTH = 20
+# Hardcoded for G1 — must match the v5 left sidebar max width.
+# Painter caps the sidebar at 34 chars (`_left_sidebar_max_width=34`,
+# mirrors v4) and inserts a 1-space gap between cells. Total block width:
+#     name (_NAME_MAX_WIDTH) + 1 + rx (7) + 1 + tx (7) = _NAME_MAX_WIDTH + 16
+# Set to 18 so the natural block width is exactly 34 and the Tx/s column
+# is not clipped on the right.
+# TODO(G2+): once render() accepts `max_width`, compute dynamically as
+#     max_width - 2 (gaps) - 2 * _RATE_COL_WIDTH.
+_NAME_MAX_WIDTH = 18
 _RATE_COL_WIDTH = 7
 
 
