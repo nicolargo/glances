@@ -377,9 +377,12 @@ def test_attach_mcp_logs_known_v5_gaps(config_factory, store, caplog):
     msgs = " ".join(r.message for r in caplog.records if r.levelno == logging.INFO)
     assert "not yet ported" in msgs
     # The canonical missing v4 plugins must be named so operators can
-    # match the message against MCP client errors.
-    for missing in ("processlist", "fs", "diskio", "memswap"):
+    # match the message against MCP client errors. Updated as plugins
+    # land in v5: memswap was ported in G4-memswap.
+    for missing in ("processlist", "fs", "diskio"):
         assert missing in msgs
+    # memswap is now ported — must NOT appear as missing.
+    assert "memswap" not in msgs
 
 
 def test_attach_mcp_logs_history_limitation(config_factory, store, caplog):

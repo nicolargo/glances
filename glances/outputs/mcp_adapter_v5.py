@@ -58,7 +58,6 @@ KNOWN_V5_MISSING_PLUGINS: tuple[str, ...] = (
     "processlist",
     "fs",
     "diskio",
-    "memswap",
 )
 
 # Throttle the "history not supported" WARN so polling MCP clients don't

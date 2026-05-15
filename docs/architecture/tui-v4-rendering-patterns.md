@@ -137,6 +137,46 @@ All byte fields are `DEFAULT` (no threshold configured for them).
 
 ---
 
+## memswap
+
+**Source:** `glances/plugins/memswap/__init__.py::msg_curse`
+
+**Guard:** returns empty if `not self.stats` or plugin is disabled.
+
+**Expected v4-equivalent output:**
+
+```
+SWAP   25.0%
+total          16.0G
+used            4.0G
+free           12.0G
+```
+
+**Header field table:**
+
+| field | label | format | width | color rule |
+|---|---|---|---|---|
+| (title) | `SWAP` | `'{:4}'.format('SWAP')` | 4 | `TITLE` |
+| trend arrow | `↑/↓/` | `'{:2}'.format(trend_msg(...))` | 2 | `DEFAULT` |
+| percent | `25.0%` | `'{:>6.1%}'.format(percent / 100)` | 6 | `get_views(key='percent', option='decoration')` |
+
+**Body rows** (lines 2-4): each row is `curse_add_stat(<field>, width=15)` — single label/value pair, label left-aligned, value right-aligned, total row width 15 chars.
+
+| Line | Field | Notes |
+|---|---|---|
+| 2 | `total` | Total swap memory |
+| 3 | `used` | Used swap memory |
+| 4 | `free` | Free swap memory |
+
+**Color logic:** `percent` decoration comes from `get_alert_log(used, maximum=total)` — standard CAREFUL/WARNING/CRITICAL ladder.
+
+**Conditional behaviour:** the plugin is hidden when the system has no swap configured (psutil raises on `swap_memory()` — see Illumos/OpenBSD issues #1767, #2719).
+
+✅ **v5 renderer:** `glances/plugins/memswap/render_curses_v5.py`
+(Added in G4-memswap. Trend arrow not yet ported — same status as `mem`/`load`.)
+
+---
+
 ## load
 
 **Source:** `glances/plugins/load/__init__.py::msg_curse`
