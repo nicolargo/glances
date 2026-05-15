@@ -1109,3 +1109,145 @@ _Goal: production-ready. Release `5.0.0rc1` then `5.0.0`._
 - Release notes documenting all breaking changes and datamodel differences
 - Merge `develop-v5 → develop`
 - PyPI, Docker, Snap, Helm packages published
+
+---
+
+## 11. MCP endpoint — Model Context Protocol
+
+### 11.1 Opt-in lifecycle
+
+The MCP server is **doubly opt-in**:
+
+1. **CLI** — pass `--enable-mcp`. Validated by `validate_args` to
+   require `-s` / `--server` (cf. §1.5 mode dispatch). The flag flips
+   `[outputs] enable_mcp` via the config overlay used elsewhere for
+   `--api-doc`.
+2. **Config** — `[outputs] enable_mcp=true` standalone (no CLI) is
+   also honoured. Either path produces the same result.
+
+Default behaviour (no flag, no config key): the FastAPI app is built
+without any `/mcp` mount. No SSE socket. No MCP-related logs.
+
+```
+glances-v5 --server                       # REST API, no MCP
+glances-v5 --server --enable-mcp          # REST API + /mcp mount
+glances-v5                                # TUI only, no REST, no MCP
+```
+
+### 11.2 Adapter architecture
+
+The v4 ``GlancesMcpServer`` class
+(`glances/outputs/glances_mcp.py`) is **reused unchanged** in v5. A
+thin adapter — ``McpStatsAdapter`` in
+``glances/outputs/mcp_adapter_v5.py`` — bridges v5's lockless
+``StatsStoreV5`` + plugin registry + ``GlancesAlerts`` to the
+v4-``GlancesStats``-shape duck-typed surface the MCP class consumes
+(``getPluginsList`` / ``getAllAsDict`` / ``getAllLimitsAsDict`` /
+``get_plugin``).
+
+```
+   MCP client (SSE)
+        │
+        ▼
+   FastAPI app  ── auth middleware (Basic+Bearer) ──┐
+        │                                           │
+   app.mount("/mcp", …)                             │ no body buffering
+        │                                           │ → SSE passes through
+        ▼                                           │
+   GlancesMcpServer  (v4 module, unchanged) ◄───────┘
+        │
+        ▼
+   McpStatsAdapter   ──→  StatsStoreV5 (read)
+   (v5 module)       ──→  list[GlancesPluginBase]  (.fields, .plugin_name)
+                     ──→  GlancesAlerts.get_history()
+```
+
+Decision rationale: porting MCP "natively" to v5 would mean rewriting
+every resource and prompt against new APIs. The adapter is ~150 lines,
+preserves the v4 class verbatim (single source of MCP truth), and
+keeps the upgrade path trivial when v5 absorbs more v4 plugins — the
+adapter automatically picks them up via the dynamic registry.
+
+### 11.3 Resource and prompt inventory (v5 status)
+
+| MCP entity | Underlying source | v5 status |
+|---|---|---|
+| `glances://plugins` | `StatsStoreV5.keys()` + synthetic `alert` | ✅ |
+| `glances://stats` | `StatsStoreV5.as_dict()` | ✅ |
+| `glances://stats/{plugin}` | `StatsStoreV5.get(plugin)` | ✅ for ported plugins; `ValueError("Plugin not found")` otherwise |
+| `glances://stats/{plugin}/history` | _(no history buffer yet)_ | ⚠ returns `{}` + WARN log (once per plugin) |
+| `glances://limits` | aggregated `plugin._fields[*].default_thresholds` | ✅ |
+| `glances://limits/{plugin}` | per-plugin field thresholds | ✅ |
+| Prompt `system_health_summary` | cpu, mem, memswap, load, fs, network | partial (memswap, fs absent → empty dicts) |
+| Prompt `alert_analysis` | `GlancesAlerts.get_history()` | ✅ (v5-native schema, see §11.5) |
+| Prompt `top_processes_report` | processlist | ⚠ processlist not ported — empty list |
+| Prompt `storage_health` | fs, diskio | ⚠ not ported — empty dicts |
+
+### 11.4 Known v5 gaps (logged on mount)
+
+`KNOWN_V5_MISSING_PLUGINS` in `mcp_adapter_v5.py` lists the v4 plugins
+not yet ported (``processlist``, ``fs``, ``diskio``, ``memswap`` at
+the time of writing). When ``attach_mcp`` mounts the endpoint, two
+INFO log lines name (a) the missing plugins, (b) the deferred history
+semantic — so operators see the gap without having to read the source.
+
+The list is a moving target: each future phase that ports a v4 plugin
+to v5 removes one entry. The adapter logic itself does not branch on
+this list — it stays data-driven via the actual plugin registry.
+
+### 11.5 Alert schema (v5-native)
+
+The synthetic `alert` plugin exposed by the adapter forwards
+`GlancesAlerts.get_history()` unchanged. The schema is the **v5-native
+event shape**:
+
+```python
+{
+    "ts": "2026-05-15T13:54:09.123",
+    "plugin": "cpu",
+    "key": None,                # primary-key value for collection plugins
+    "field": "total",
+    "level": "warning",
+    "previous_level": "ok",
+    "prominent": True,
+    "value": 75.0,
+    "thresholds": {"careful": 50.0, "warning": 70.0, "critical": 90.0},
+}
+```
+
+No translation to v4's flatter `type` / `start` / `end` shape — the
+`alert_analysis` prompt is a free-form "Analyze these alerts" template
+so the LLM consumer absorbs the schema variation. Decision recorded
+in the G3-MCP plan.
+
+### 11.6 Authentication
+
+The MCP mount inherits the v5 auth middleware
+(``glances/webserver_v5.py::_wire_auth`` — Basic + Bearer). The
+middleware is an HTTP-level FastAPI middleware: `call_next(request)`
+returns a `StreamingResponse` for SSE, which passes through without
+body buffering. No special MCP-only auth middleware is needed
+(v4 had ``GlancesMcpAuthMiddleware`` because it used Bottle, not
+FastAPI).
+
+When no password is configured, the MCP endpoint is unauthenticated
+just like the rest of the REST API — same security posture, same
+CVE-2026-32596 startup WARNING applies.
+
+### 11.7 DNS rebinding protection
+
+Independent from the REST API's `[outputs] webui_allowed_hosts` (which
+backs Starlette's `TrustedHostMiddleware`). The MCP SSE transport
+applies its own check via `TransportSecuritySettings` driven by
+`[outputs] mcp_allowed_hosts` (default: `localhost,127.0.0.1`).
+Wildcard `*` disables protection — only acceptable behind a trusted
+reverse proxy.
+
+### 11.8 Out of scope
+
+1. **History storage in v5.** A real ring-buffer in `StatsStoreV5` or
+   `GlancesPluginBase` is its own design task. Until then,
+   `McpPluginView.get_raw_history` returns `{}`.
+2. **Porting v4 plugins to v5.** Each plugin in
+   `KNOWN_V5_MISSING_PLUGINS` is its own plan-sized chunk.
+3. **WebSocket transport for MCP.** v5 keeps SSE.
