@@ -59,7 +59,7 @@ from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.scheduler_v5 import AsyncScheduler
 from glances.security_v5 import hash_password, verify_password
 from glances.stats_store_v5 import StatsStoreV5
-from glances.webserver_v5 import build_app, register_plugin
+from glances.webserver_v5 import attach_mcp, build_app, register_plugin
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
@@ -335,9 +335,16 @@ def assemble(
         # ``-s`` is headless per G2 design alignment point 1.
         if args.api_doc is not None:
             config._merged.setdefault("outputs", {})["api_doc"] = bool(args.api_doc)
+        if args.enable_mcp:
+            # Flip the MCP gate via the same overlay mechanism used for api_doc.
+            # `attach_mcp` reads `[outputs] enable_mcp` from the merged config
+            # — no need to pass the flag explicitly through the call chain.
+            config._merged.setdefault("outputs", {})["enable_mcp"] = True
         app = build_app(config=config, store=store, alerts=alerts)
         for plugin in plugins:
             register_plugin(app, plugin)
+        # Plugin registry is now populated — mount /mcp if the gate is on.
+        attach_mcp(app, config=config, store=store, plugins=plugins, alerts=alerts)
     elif not getattr(args, "no_tui", False):
         # TUI mode: no FastAPI app, no uvicorn — only the curses thread
         # reading from the shared StatsStoreV5.

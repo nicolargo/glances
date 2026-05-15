@@ -286,6 +286,35 @@ def test_assemble_default_mode_no_tui_disables_everything(config):
     assert tui is None
 
 
+# ---------------------------------------------------------------- MCP overlay (G3-MCP Task 3)
+
+
+def _has_mcp_mount(app) -> bool:
+    from starlette.routing import Mount
+
+    return any(isinstance(r, Mount) and r.path == "/mcp" for r in app.routes)
+
+
+def test_assemble_server_without_enable_mcp_does_not_mount(config):
+    """``-s`` alone: REST API up, but no /mcp mount."""
+    args = build_parser().parse_args(["-s"])
+    app, _scheduler, _host, _port, _tui = assemble(args, config)
+    assert app is not None
+    assert not _has_mcp_mount(app)
+
+
+def test_assemble_propagates_enable_mcp_overlay(config):
+    """``-s --enable-mcp``: the CLI flag flips ``[outputs] enable_mcp`` and
+    ``attach_mcp`` mounts /mcp."""
+    args = build_parser().parse_args(["-s", "--enable-mcp"])
+    app, _scheduler, _host, _port, _tui = assemble(args, config)
+    assert app is not None
+    # The CLI overlay must have set the config gate.
+    assert config.get("outputs", "enable_mcp", False) is True
+    # And attach_mcp must have honoured it.
+    assert _has_mcp_mount(app)
+
+
 # ----------------------------------------------------------- serve
 
 
