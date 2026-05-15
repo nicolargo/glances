@@ -127,17 +127,32 @@ class GlancesAlerts:
         return list(self._history)
 
     def is_initializing(self) -> bool:
-        """Return ``True`` while at least one ingested plugin is still in
-        its warmup window — alerts physically cannot have fired yet, so
-        the UI shows "(initializing)" instead of the misleading
-        "(no events)".
+        """Return ``True`` while the alert engine cannot have produced
+        any event yet — meaning *one* of the following holds:
 
-        Also ``True`` when no plugin has been ingested at all (e.g. the
-        scheduler has not yet completed its first tick).
+        - **No ingestion has happened.** Scheduler has not yet completed
+          a first tick (``_plugin_cycles`` empty).
+        - **A plugin is still inside its warmup window.** Warmup skips
+          ingestion entirely for the first N cycles per plugin (default
+          3) — alerts cannot fire during that window.
+        - **A non-warmup observation is sitting in hysteresis.** After
+          warmup, the first cycle where ``observed != committed`` only
+          sets ``pending_level``; the transition does not commit (and the
+          event does not fire) until ``min_duration`` has elapsed. During
+          that window the UI must not show "(no events)" — it would
+          flash misleadingly between warmup completion and the first
+          emitted event.
+
+        Once all plugins are past warmup AND no state is hysteresis-
+        pending, the engine is settled — empty history then truly means
+        "no events".
         """
         if not self._plugin_cycles:
             return True
-        return any(seen <= self._warmup_cycles for seen in self._plugin_cycles.values())
+        if any(seen <= self._warmup_cycles for seen in self._plugin_cycles.values()):
+            return True
+        # Settling: a pending transition exists somewhere in `_state`.
+        return any(state.pending_level is not None for state in self._state.values())
 
     async def drain(self) -> None:
         """Wait for every in-flight action task to complete.

@@ -36,6 +36,7 @@ import importlib
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -482,10 +483,36 @@ def _align_multi_column_table(rows: list[Row]) -> list[Row]:
 # --------------------------------------------------------------- alert block
 
 
+def _format_alert_time(ts: str, now: datetime | None = None) -> str:
+    """Convert an ISO-8601 timestamp (UTC, as emitted by `GlancesAlerts._build_event`)
+    to a short local-time string.
+
+    Same-day events: ``HH:MM:SS`` (8 chars). Older events: ``MM-DD HH:MM:SS``
+    (14 chars) — date prefix so operators can tell when an alert that has
+    been hanging around for a day or more actually fired.
+
+    Naive timestamps (no tz suffix) are assumed UTC — matches what
+    ``_build_event`` produces. Unparseable input falls back to the raw
+    first 8 chars so the renderer can never crash on a malformed event.
+    """
+    try:
+        dt = datetime.fromisoformat(ts)
+    except (ValueError, TypeError):
+        return str(ts)[:8]
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    local_dt = dt.astimezone()
+    now_local = (now or datetime.now(tz=timezone.utc)).astimezone()
+    if local_dt.date() == now_local.date():
+        return local_dt.strftime("%H:%M:%S")
+    return local_dt.strftime("%m-%d %H:%M:%S")
+
+
 def render_alert_block(
     history: list[dict[str, Any]],
     limit: int = 10,
     is_initializing: bool = False,
+    now: datetime | None = None,
 ) -> list[Row]:
     """Render the alert history (vertical list, most recent at top).
 
@@ -505,9 +532,13 @@ def render_alert_block(
         rows.append(Row(cells=[Cell(text=placeholder)]))
         return rows
 
+    # Compute the reference "now" once so every event in the same frame
+    # uses the same same-day cutoff.
+    now_local = (now or datetime.now(tz=timezone.utc)).astimezone()
+
     recent = list(reversed(history[-limit:]))
     for evt in recent:
-        ts = str(evt.get("ts", "")).split("T")[-1][:8]  # HH:MM:SS
+        ts = _format_alert_time(str(evt.get("ts", "")), now=now_local)
         plugin = str(evt.get("plugin", ""))
         key = evt.get("key")
         target = f"{plugin}[{key}]" if key is not None else plugin

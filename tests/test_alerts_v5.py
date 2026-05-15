@@ -322,6 +322,33 @@ async def test_is_initializing_false_after_warmup_completes(tmp_path, monkeypatc
     assert alerts.is_initializing() is False
 
 
+async def test_is_initializing_true_during_pending_transition(tmp_path, monkeypatch, store):
+    """Post-warmup, while a non-ok observation is still inside its
+    min_duration window, the alert subsystem is "settling" — keep the
+    initializing flag True so the UI does not flash "(no events)" between
+    the warmup phase and the first emitted event."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nwarmup_cycles=1\nmin_duration_seconds=5\n")
+    clock = _clock()
+    alerts = GlancesAlerts(config, now=clock)
+    plugin = _FakeScalarPlugin(store, config)
+
+    # First cycle is warmup → state untouched.
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "careful", "prominent": True}})
+    assert alerts.is_initializing() is True
+
+    # Second cycle: post-warmup. observed=careful, committed=ok → pending.
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "careful", "prominent": True}})
+    # History still empty (min_duration not elapsed) but a pending transition exists.
+    assert alerts.get_history() == []
+    assert alerts.is_initializing() is True
+
+    # After min_duration elapses, the transition fires — pending cleared.
+    clock.tick(6.0)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "careful", "prominent": True}})
+    assert alerts.get_history() != []
+    assert alerts.is_initializing() is False
+
+
 async def test_is_initializing_true_if_any_plugin_still_warming(tmp_path, monkeypatch, store):
     """Mixed state — one plugin done, another still warming up → still initializing."""
     config = _config_with(tmp_path, monkeypatch, "[alerts]\nwarmup_cycles=3\n")

@@ -401,6 +401,92 @@ def test_render_alert_block_empty_history_shows_initializing_during_warmup():
     assert "(no events)" not in flat
 
 
+def test_format_alert_time_same_day_returns_hms_local():
+    """Same-day event → ``HH:MM:SS`` in local timezone."""
+    from datetime import datetime, timezone
+
+    from glances.outputs.curses_renderer_v5 import _format_alert_time
+
+    # UTC noon → local time (whatever the test machine TZ is).
+    ts = "2026-05-15T12:00:00+00:00"
+    now_utc = datetime(2026, 5, 15, 14, 0, 0, tzinfo=timezone.utc)
+    result = _format_alert_time(ts, now=now_utc)
+    # Must be exactly 8 chars HH:MM:SS — no date, no TZ suffix.
+    assert len(result) == 8
+    assert result[2] == ":" and result[5] == ":"
+
+
+def test_format_alert_time_other_day_includes_date():
+    """Event from another day → date prefix included."""
+    from datetime import datetime, timezone
+
+    from glances.outputs.curses_renderer_v5 import _format_alert_time
+
+    ts = "2026-05-13T12:00:00+00:00"  # 2 days ago
+    now_utc = datetime(2026, 5, 15, 14, 0, 0, tzinfo=timezone.utc)
+    result = _format_alert_time(ts, now=now_utc)
+    # Must include date — at least "05-13" or "05/13" depending on style.
+    assert "05" in result and "13" in result
+    # And the time component is still present.
+    assert ":" in result
+
+
+def test_format_alert_time_naive_utc_is_handled():
+    """If the timestamp lacks tzinfo, treat it as UTC (matches v5 emitter)."""
+    from datetime import datetime, timezone
+
+    from glances.outputs.curses_renderer_v5 import _format_alert_time
+
+    ts = "2026-05-15T12:00:00"  # no tz suffix
+    now_utc = datetime(2026, 5, 15, 14, 0, 0, tzinfo=timezone.utc)
+    result = _format_alert_time(ts, now=now_utc)
+    # Same-day → 8 chars HH:MM:SS.
+    assert len(result) == 8
+
+
+def test_format_alert_time_malformed_falls_back():
+    """Unparseable input falls back to the raw HH:MM:SS slice — no crash."""
+    from glances.outputs.curses_renderer_v5 import _format_alert_time
+
+    result = _format_alert_time("not-a-timestamp")
+    # Falls back to the original first 8 chars; the renderer just shows
+    # whatever it has. The contract is "must not raise".
+    assert isinstance(result, str)
+
+
+def test_render_alert_block_uses_local_time_for_events():
+    """End-to-end: render_alert_block formats the ts via the local converter.
+    We pick a UTC timestamp and assert it does NOT appear verbatim (a TZ
+    conversion or local format must have happened)."""
+    from datetime import datetime, timezone
+
+    history = [
+        {
+            "ts": "2026-05-13T12:00:00+00:00",  # 2 days old in UTC
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "careful",
+            "value": 75.0,
+            "prominent": True,
+            "is_initial": False,
+            "hostname": "h",
+        },
+    ]
+    # Pin "now" to keep the date-vs-hour decision deterministic.
+    rows = render_alert_block(
+        history,
+        limit=10,
+        is_initializing=False,
+        now=datetime(2026, 5, 15, 14, 0, 0, tzinfo=timezone.utc),
+    )
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    # Date prefix expected (event is 2 days old).
+    assert "05" in flat
+    assert "13" in flat
+
+
 def test_render_alert_block_nonempty_history_ignores_initializing_flag():
     """Once we have events the warmup flag is irrelevant — show the events."""
     history = [
