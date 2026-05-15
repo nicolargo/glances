@@ -153,11 +153,16 @@ class TuiV5(threading.Thread):
     def _build_frame(self) -> Frame:
         snapshot = self.store.as_dict()
         history = self.alerts.get_history() if self.alerts is not None else []
+        # Distinguish "still in warmup" (alerts cannot fire yet) from "truly
+        # empty history" — the alert block shows different placeholders for
+        # the two cases.
+        initializing = self.alerts.is_initializing() if self.alerts is not None else False
         frame = build_frame(
             store_snapshot=snapshot,
             fields_by_plugin=self.fields_by_plugin,
             registry=self.registry,
             alerts_history=history,
+            alerts_initializing=initializing,
         )
         # CPU ↔ perCPU mutual exclusion (v4 parity, hotkey '1').
         hidden = "cpu" if self._show_percpu else "percpu"

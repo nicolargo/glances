@@ -384,6 +384,45 @@ def test_render_alert_block_handles_empty_history():
     assert len(rows) >= 1
 
 
+def test_render_alert_block_empty_history_shows_no_events_when_not_initializing():
+    """Default (initializing=False): empty history → "(no events)"."""
+    rows = render_alert_block([], limit=10, is_initializing=False)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "(no events)" in flat
+    assert "initializing" not in flat
+
+
+def test_render_alert_block_empty_history_shows_initializing_during_warmup():
+    """is_initializing=True (warmup): empty history → "(initializing)" so the
+    user knows alerts can't have fired yet."""
+    rows = render_alert_block([], limit=10, is_initializing=True)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "(initializing)" in flat
+    assert "(no events)" not in flat
+
+
+def test_render_alert_block_nonempty_history_ignores_initializing_flag():
+    """Once we have events the warmup flag is irrelevant — show the events."""
+    history = [
+        {
+            "ts": "2026-05-15T14:00:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "careful",
+            "previous_level": "ok",
+            "value": 60.0,
+            "prominent": True,
+            "is_initial": True,
+            "hostname": "h",
+        },
+    ]
+    rows = render_alert_block(history, limit=10, is_initializing=True)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "initializing" not in flat
+    assert "careful" in flat
+
+
 def test_render_alert_block_initial_state_omits_arrow():
     """is_initial=True events render as the bare level (no `ok → ...` arrow)."""
     history = [

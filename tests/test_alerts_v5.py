@@ -294,6 +294,50 @@ async def test_event_shape_includes_required_fields(tmp_path, monkeypatch, store
     assert "ts" in event
 
 
+async def test_is_initializing_true_before_any_ingest(config):
+    """At construction time no plugin has been ingested → initializing."""
+    alerts = GlancesAlerts(config)
+    assert alerts.is_initializing() is True
+
+
+async def test_is_initializing_true_during_warmup(tmp_path, monkeypatch, store):
+    """While at least one plugin is still inside the warmup window → initializing."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nwarmup_cycles=3\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+    # Cycles 1..3 are warmup — no events can fire yet.
+    for _ in range(3):
+        await _run_with_levels(plugin, alerts, {"percent": {"level": "ok", "prominent": True}})
+    assert alerts.is_initializing() is True
+
+
+async def test_is_initializing_false_after_warmup_completes(tmp_path, monkeypatch, store):
+    """Once every ingested plugin is past its warmup → no longer initializing."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nwarmup_cycles=3\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+    # 4 cycles: 3 warmup + 1 real ingest.
+    for _ in range(4):
+        await _run_with_levels(plugin, alerts, {"percent": {"level": "ok", "prominent": True}})
+    assert alerts.is_initializing() is False
+
+
+async def test_is_initializing_true_if_any_plugin_still_warming(tmp_path, monkeypatch, store):
+    """Mixed state — one plugin done, another still warming up → still initializing."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nwarmup_cycles=3\n")
+    alerts = GlancesAlerts(config)
+    p_done = _FakeScalarPlugin(store, config)
+    p_done.plugin_name = "fast"
+    p_slow = _FakeScalarPlugin(store, config)
+    p_slow.plugin_name = "slow"
+    # `fast` gets 4 cycles, `slow` only 2 — `slow` is still warming up.
+    for _ in range(4):
+        await _run_with_levels(p_done, alerts, {"percent": {"level": "ok", "prominent": True}})
+    for _ in range(2):
+        await _run_with_levels(p_slow, alerts, {"percent": {"level": "ok", "prominent": True}})
+    assert alerts.is_initializing() is True
+
+
 async def test_first_event_after_warmup_is_flagged_initial(tmp_path, monkeypatch, store):
     """When the first post-warmup observation is already non-ok, the emitted
     event is flagged ``is_initial=True`` — Glances was started while the

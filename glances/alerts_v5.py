@@ -126,6 +126,19 @@ class GlancesAlerts:
         """Return the alert history as a list (most-recent-last)."""
         return list(self._history)
 
+    def is_initializing(self) -> bool:
+        """Return ``True`` while at least one ingested plugin is still in
+        its warmup window — alerts physically cannot have fired yet, so
+        the UI shows "(initializing)" instead of the misleading
+        "(no events)".
+
+        Also ``True`` when no plugin has been ingested at all (e.g. the
+        scheduler has not yet completed its first tick).
+        """
+        if not self._plugin_cycles:
+            return True
+        return any(seen <= self._warmup_cycles for seen in self._plugin_cycles.values())
+
     async def drain(self) -> None:
         """Wait for every in-flight action task to complete.
 

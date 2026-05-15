@@ -482,16 +482,27 @@ def _align_multi_column_table(rows: list[Row]) -> list[Row]:
 # --------------------------------------------------------------- alert block
 
 
-def render_alert_block(history: list[dict[str, Any]], limit: int = 10) -> list[Row]:
+def render_alert_block(
+    history: list[dict[str, Any]],
+    limit: int = 10,
+    is_initializing: bool = False,
+) -> list[Row]:
     """Render the alert history (vertical list, most recent at top).
 
-    Header row: `ALERTS (n)`. Then up to `limit` event rows showing
-    timestamp, plugin/key, field, transition (previous → new). When the
-    history is empty, a single info row is shown.
+    Header row: ``ALERTS (n)``. Then up to ``limit`` event rows showing
+    timestamp, plugin/key, field, transition (previous → new).
+
+    Empty history:
+    - ``is_initializing=True``: show ``(initializing)`` — the alert
+      engine is still inside its per-plugin warmup window so no event
+      can have fired yet. Avoids the misleading "(no events)" at startup.
+    - ``is_initializing=False``: show ``(no events)`` — the system has
+      truly produced nothing of interest yet.
     """
     rows: list[Row] = [Row(cells=[Cell(text=f"ALERTS ({len(history)})", color=ColorRole.HEADER)])]
     if not history:
-        rows.append(Row(cells=[Cell(text="(no events)")]))
+        placeholder = "(initializing)" if is_initializing else "(no events)"
+        rows.append(Row(cells=[Cell(text=placeholder)]))
         return rows
 
     recent = list(reversed(history[-limit:]))
@@ -582,6 +593,7 @@ def build_frame(
     registry: list[tuple[str, bool]],
     alerts_history: list[dict[str, Any]],
     alerts_limit: int = 10,
+    alerts_initializing: bool = False,
 ) -> Frame:
     """Assemble a complete TUI Frame following v4's slot layout.
 
@@ -651,5 +663,10 @@ def build_frame(
 
     # Synthesize the alerts block in the RIGHT slot (mirrors v4's `alert`
     # plugin in `_right_sidebar`).
-    frame.right.append(PluginBlock(name="alert", rows=render_alert_block(alerts_history, limit=alerts_limit)))
+    frame.right.append(
+        PluginBlock(
+            name="alert",
+            rows=render_alert_block(alerts_history, limit=alerts_limit, is_initializing=alerts_initializing),
+        )
+    )
     return frame
