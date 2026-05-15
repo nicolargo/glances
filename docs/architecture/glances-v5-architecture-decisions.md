@@ -84,16 +84,84 @@ _Last updated: 2026-04-06_
   plugin model itself stays pure (no curses imports) — the split file
   satisfies §3.6 (no declarative view descriptor) while restoring v4's
   per-plugin layout freedom.
-- **CLI control** — `--no-tui` disables the thread entirely (REST API only).
-  Default behaviour in standalone mode is TUI on. Server mode uses
-  `--no-tui` in practice.
+- **CLI control** — mode dispatch (§1.5) selects whether the TUI is built.
+  By default (no flag) the TUI is on and uvicorn is NOT started.
+  `-s` / `--server` runs headless (REST API only, no TUI). The legacy
+  `--quiet` / `--no-tui` flag is retained as a deprecated path —
+  see §1.5 "Open points".
 - **Refresh cadence** — configurable via `[outputs] tui_refresh_interval`
   (default `1.0` second). Independent of plugin `refresh_time` (plugin
   cadence) — the TUI repaints from the store at its own rhythm.
 - **Shutdown** — `q` or `ESC` keypress, or `Ctrl-C` propagating through
-  uvicorn, sets the shared `threading.Event`. The TUI's main loop polls
-  the event between curses cycles and exits gracefully, restoring the
-  terminal via `curses.wrapper`.
+  the event loop, sets the shared `threading.Event`. The TUI's main loop
+  polls the event between curses cycles and exits gracefully, restoring
+  the terminal via `curses.wrapper`. In TUI mode the `on_quit` callback
+  raises `SIGINT` to wake `asyncio.run()` so the process terminates with
+  the shell prompt restored.
+
+### §1.5 Mode dispatch (CLI ↔ runtime)
+
+v5 runs in one of two modes selected at startup by the CLI:
+
+| Mode | Flag(s) | Scheduler | TUI | REST | MCP |
+|---|---|---|---|---|---|
+| **TUI** (default) | _(none)_ | ✅ | ✅ | ❌ | ❌ |
+| **Server** | `-s` / `--server` | ✅ | ❌ | ✅ | ❌ |
+| **Server + MCP** | `-s --enable-mcp` | ✅ | ❌ | ✅ | ⏳ (G3-MCP) |
+| **Legacy / scheduler-only** | `--quiet` / `--no-tui` | ✅ | ❌ | ❌ | ❌ |
+
+```
+                       ┌────────────────────────────────┐
+                       │ build_parser() + validate_args │
+                       └─────────────┬──────────────────┘
+                                     │
+                  ┌──────────────────┴────────────────┐
+            args.server                          NOT args.server
+                  │                                   │
+                  ▼                                   ▼
+         ┌─────────────────┐                ┌──────────────────┐
+         │ build FastAPI   │                │ skip FastAPI app │
+         │ register plugins│                │ build TuiV5      │
+         │ tui = None      │                │ (unless --no-tui)│
+         └────────┬────────┘                └────────┬─────────┘
+                  │                                   │
+                  ▼                                   ▼
+        ┌─────────────────┐                ┌──────────────────┐
+        │ serve(args, …)  │                │ serve(args, …)   │
+        │ uvicorn.Server  │                │ await scheduler  │
+        │ + scheduler     │                │ (no socket bound)│
+        └─────────────────┘                └──────────────────┘
+```
+
+**Why TUI by default does not start uvicorn:** Glances v4 mental model
+(`glances` = TUI, `glances -s` = server) is the user's expectation.
+Binding the REST API in TUI mode opens a network surface unannounced —
+the user must explicitly opt in. This restores the v4 behaviour and
+removes an unauthenticated-default footgun (cf. §8).
+
+**Why MCP is gated by an additional flag:** the MCP endpoint is opt-in
+even in server mode — mirrors v4's `--enable-mcp` opt-in. The flag is
+validated in `validate_args()` to reject `--enable-mcp` without `-s`.
+The actual mount wiring is deferred to a dedicated **G3-MCP plan**
+because MCP is not yet ported into v5 `build_app`.
+
+**Implementation:** `glances/main_v5.py::assemble` returns a 5-tuple
+`(app, scheduler, host, port, tui)` where `app` is `None` in TUI mode
+and `tui` is `None` in server mode. `glances/main_v5.py::serve(args, …)`
+branches on `args.server` inside a single `try`/`finally`, sharing the
+scheduler-stop and TUI-join cleanup across both modes.
+
+**Open points (carried forward):**
+
+1. **Fate of `--quiet` / `--no-tui`.** Currently means "no TUI" — which
+   `-s` already covers when REST is desired. The orthogonal use case
+   ("scheduler only, no TUI, no REST", useful for test rigs and the
+   future `--export` modes) is also covered by `--no-tui` today. A
+   decision on whether to rename, deprecate, or repurpose this flag is
+   pending — see the plan
+   `docs/superpowers/plans/2026-05-15-glances-v5-phase2-g2.md`.
+2. **Client mode.** v4 has a `-c` client mode that connects to a remote
+   v4 server. Not yet ported to v5 — orthogonal to G2.
 
 ---
 
@@ -588,6 +656,11 @@ Properties:
 ---
 
 ## 4. REST API server — FastAPI
+
+**Opt-in:** the FastAPI app + uvicorn are only built and started when the
+CLI receives `-s` / `--server` (cf. §1.5 mode dispatch). The default
+mode (TUI) does NOT bind any TCP socket — so everything below applies
+to server mode exclusively.
 
 ### 4.1 Topology
 
