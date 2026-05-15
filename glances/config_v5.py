@@ -9,25 +9,37 @@
 
 """Glances v5 configuration loader.
 
-Layered overlay of (ascending priority):
-1. Hardcoded DEFAULTS
-2. /etc/glances/glances.conf
-3. $XDG_CONFIG_HOME/glances/glances.conf (fallback ~/.config/glances/glances.conf)
-4. $GLANCES_CONFIG_FILE
-5. -C <path> CLI flag
-6. GLANCES_<SECTION>__<KEY>=<value> environment variables (highest)
+Loading model (v4-aligned, **single config file**):
 
-Each layer overlays specific keys onto the previous; layers are not
-replaced in bulk. This is a semantic change vs. v4 (which used
-"first-found-wins"), accepted as part of the v5 clean break.
+1. Hardcoded DEFAULTS — codebase baseline.
+2. **Exactly one** glances.conf file:
+   - If ``-C <path>`` is passed, that file is used (no search, no
+     fallback merging). A missing CLI path logs a WARNING and the
+     loader proceeds with DEFAULTS only.
+   - Otherwise the loader walks the v4 search path and stops at the
+     first existing file:
+       a. ``$XDG_CONFIG_HOME/glances/glances.conf`` (or
+          ``~/.config/glances/glances.conf``)
+       b. ``/etc/glances/glances.conf``
+3. ``GLANCES_<SECTION>__<KEY>=<value>`` env vars overlay on top — kept
+   because env-driven overrides are useful for containers / CI and are
+   orthogonal to the config-file question.
+
+Note: prior versions of this loader merged keys across all available
+config files (the "layered overlay" design). That introduced surprising
+cross-file inheritance — e.g. a legacy v4-era ``~/.config/glances/glances.conf``
+silently leaking ``[memswap] careful=50`` onto v5's new opt-in
+``memswap.sin``/``sout`` fields. The single-file model mirrors v4
+``glances/config.py::config_file_paths`` (first existing wins).
 
 Public API:
-- get(section, option, default: T) -> T   (typed accessor, T inferred)
-- get_value(...)                          (v4 alias)
-- has_section(section) / sections()       (introspection)
-- as_dict() / as_dict_secure()            (full / redacted dump)
-- reload()                                (re-run the overlay chain)
-- loaded_sources                          (files actually read, in order)
+- ``get(section, option, default: T) -> T``   (typed accessor, T inferred)
+- ``get_value(...)``                          (v4 alias)
+- ``has_section(section) / sections()``       (introspection)
+- ``as_dict() / as_dict_secure()``            (full / redacted dump)
+- ``reload()``                                (re-run the resolution)
+- ``loaded_sources``                          (the **at most one** file
+                                              actually read)
 """
 
 from __future__ import annotations
@@ -113,26 +125,47 @@ class GlancesConfigV5:
         self._loaded_sources = []
         self._merged = {}
 
-        # 1. Defaults
+        # 1. Defaults — codebase baseline. Always applied; not a "file
+        # merge", just the set of keys the codebase guarantees to read.
         self._overlay_dict(self.DEFAULTS)
 
-        # 2. /etc
-        self._overlay_file(self.SYSTEM_CONFIG_PATH)
+        # 2. Exactly one glances.conf — see module docstring for the
+        # resolution rules. Missing-file paths are silent no-ops.
+        chosen = self._resolve_config_file()
+        if chosen is not None:
+            self._overlay_file(chosen)
 
-        # 3. XDG user config
-        self._overlay_file(self._user_config_path())
-
-        # 4. $GLANCES_CONFIG_FILE
-        env_path = os.environ.get("GLANCES_CONFIG_FILE")
-        if env_path:
-            self._overlay_file(Path(env_path))
-
-        # 5. -C CLI flag
-        if self._cli_config_path:
-            self._overlay_file(Path(self._cli_config_path))
-
-        # 6. Environment variable overlay (highest priority)
+        # 3. Environment variable overlay (orthogonal to the file
+        # question — useful for containers / CI / per-run overrides).
         self._overlay_env()
+
+    def _resolve_config_file(self) -> Path | None:
+        """Pick the single glances.conf to load, or ``None``.
+
+        Honours ``-C`` first (any path, no search); otherwise walks the
+        v4 search path (user → system) and returns the first existing
+        entry. A non-existing ``-C`` path logs a WARNING; missing search
+        entries are silent (operating without a config file is valid —
+        the DEFAULTS layer suffices).
+        """
+        if self._cli_config_path:
+            path = Path(self._cli_config_path)
+            if path.is_file():
+                return path
+            logger.warning(
+                "Config file %s (from -C / --config) does not exist — using DEFAULTS only.",
+                path,
+            )
+            return None
+
+        for path in self._search_paths():
+            if path.is_file():
+                return path
+        return None
+
+    def _search_paths(self) -> list[Path]:
+        """v4-style search list: user config first, then system."""
+        return [self._user_config_path(), self.SYSTEM_CONFIG_PATH]
 
     def _user_config_path(self) -> Path:
         xdg = os.environ.get("XDG_CONFIG_HOME")

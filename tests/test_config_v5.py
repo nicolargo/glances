@@ -11,15 +11,19 @@
 
 Test stack: pytest + pytest-asyncio (auto mode). See architecture decisions §9.
 
-Tests cover:
-- Layered priority: defaults < /etc < XDG < $GLANCES_CONFIG_FILE < -C < env
-- XDG_CONFIG_HOME respected with fallback to ~/.config
-- Typed accessor: int, float, bool variants, list, str, missing keys
-- Bool parsing rejects unknown values
-- as_dict_secure() redacts secret-like keys, preserves the rest
-- reload() picks up file changes
-- loaded_sources reports the file load order
-- has_section / sections introspection
+Tests cover the **single-file** loading model (v4-aligned):
+- DEFAULTS layer always applied (codebase baseline).
+- ``-C`` selects exactly one file (no search). Missing path → DEFAULTS only.
+- Without ``-C``, v4 search order: user (XDG) → system. First existing wins.
+- No cross-file merging — keys present in /etc but absent from XDG are
+  **not** inherited when XDG is the chosen file.
+- ``GLANCES_<SECTION>__<KEY>`` env vars overlay (orthogonal — kept).
+- Typed accessor: int, float, bool variants, list, str, missing keys.
+- Bool parsing rejects unknown values.
+- ``as_dict_secure()`` redacts secret-like keys, preserves the rest.
+- ``reload()`` picks up file changes.
+- ``loaded_sources`` reports the (at most one) file actually read.
+- ``has_section`` / ``sections`` introspection.
 """
 
 from __future__ import annotations
@@ -88,15 +92,32 @@ def test_defaults_section_present(env: Path) -> None:
 # ============================================================================
 
 
-def test_etc_overrides_defaults(env: Path) -> None:
+def test_etc_loaded_when_no_xdg(env: Path) -> None:
+    """/etc is read when XDG file is absent."""
     write(etc_path(env), "[global]\nrefresh_time = 5\n")
     assert GlancesConfigV5().get("global", "refresh_time", 999) == 5
 
 
-def test_xdg_overrides_etc(env: Path) -> None:
+def test_xdg_wins_over_etc_when_both_present(env: Path) -> None:
+    """User XDG conf is preferred over /etc. v4-style first-found-wins."""
     write(etc_path(env), "[global]\nrefresh_time = 5\n")
     write(xdg_path(env), "[global]\nrefresh_time = 7\n")
     assert GlancesConfigV5().get("global", "refresh_time", 999) == 7
+
+
+def test_xdg_does_not_inherit_etc_keys(env: Path) -> None:
+    """Regression guard: a key present only in /etc must NOT bleed into
+    the loaded config when XDG is the chosen file. The pre-rewrite loader
+    merged across files, which caused legacy v4-era ``careful=50`` keys
+    in /etc to silently apply to v5 plugins reading from XDG."""
+    write(etc_path(env), "[memswap]\ncareful = 50\nwarning = 70\ncritical = 90\n")
+    write(xdg_path(env), "[memswap]\npercent_careful = 60\n")
+    config = GlancesConfigV5()
+    # XDG selected → only its keys appear in [memswap].
+    assert config.get("memswap", "percent_careful", -1) == 60
+    # /etc keys must NOT have been carried over.
+    assert config.get("memswap", "careful", "absent") == "absent"
+    assert config.get("memswap", "warning", "absent") == "absent"
 
 
 def test_xdg_fallback_to_home_when_xdg_unset(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -105,25 +126,50 @@ def test_xdg_fallback_to_home_when_xdg_unset(env: Path, monkeypatch: pytest.Monk
     assert GlancesConfigV5().get("global", "refresh_time", 999) == 9
 
 
-def test_glances_config_file_env_overrides_xdg(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_glances_config_file_env_is_ignored(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """``$GLANCES_CONFIG_FILE`` was a v5-only convenience that introduced
+    cross-file merging surprises. v5 now aligns with v4: only ``-C`` can
+    explicitly select a config file. The env var is silently ignored."""
     custom = env / "custom.conf"
     write(xdg_path(env), "[global]\nrefresh_time = 7\n")
     write(custom, "[global]\nrefresh_time = 10\n")
     monkeypatch.setenv("GLANCES_CONFIG_FILE", str(custom))
-    assert GlancesConfigV5().get("global", "refresh_time", 999) == 10
+    # XDG still wins; the env var was ignored.
+    assert GlancesConfigV5().get("global", "refresh_time", 999) == 7
 
 
-def test_cli_path_overrides_glances_config_file(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    env_file = env / "env.conf"
+def test_cli_path_bypasses_search(env: Path) -> None:
+    """``-C`` selects exactly one file. XDG / /etc are ignored entirely."""
     cli_file = env / "cli.conf"
-    write(env_file, "[global]\nrefresh_time = 10\n")
+    write(etc_path(env), "[global]\nrefresh_time = 5\n")
+    write(xdg_path(env), "[global]\nrefresh_time = 7\n")
     write(cli_file, "[global]\nrefresh_time = 12\n")
-    monkeypatch.setenv("GLANCES_CONFIG_FILE", str(env_file))
     assert GlancesConfigV5(cli_config_path=str(cli_file)).get("global", "refresh_time", 999) == 12
 
 
+def test_cli_path_does_not_merge_with_other_files(env: Path) -> None:
+    """A key present only in /etc must NOT show up when -C selects another file."""
+    cli_file = env / "cli.conf"
+    write(etc_path(env), "[memswap]\ncareful = 50\n")
+    write(cli_file, "[global]\nrefresh_time = 12\n")
+    config = GlancesConfigV5(cli_config_path=str(cli_file))
+    assert config.get("global", "refresh_time", 999) == 12
+    assert config.get("memswap", "careful", "absent") == "absent"
+
+
+def test_missing_cli_path_falls_back_to_defaults_only(env: Path, caplog: pytest.LogCaptureFixture) -> None:
+    """A non-existent ``-C`` path logs a WARNING and uses DEFAULTS only —
+    does NOT silently fall back to the search path."""
+    write(xdg_path(env), "[global]\nrefresh_time = 7\n")  # exists but must be ignored
+    with caplog.at_level("WARNING"):
+        config = GlancesConfigV5(cli_config_path=str(env / "nonexistent.conf"))
+    # Default value, not the XDG one.
+    assert config.get("global", "refresh_time", 999) == 2
+    assert any("does not exist" in r.message for r in caplog.records)
+
+
 def test_missing_files_silently_skipped(env: Path) -> None:
-    # No fixture files written. Should not crash.
+    """No XDG, no /etc → DEFAULTS only. No crash, no warning."""
     assert GlancesConfigV5().get("global", "refresh_time", 0) == 2
 
 
@@ -376,16 +422,17 @@ def test_loaded_sources_empty_with_no_files(env: Path) -> None:
     assert GlancesConfigV5().loaded_sources == []
 
 
-def test_loaded_sources_lists_etc_when_present(env: Path) -> None:
+def test_loaded_sources_lists_etc_when_only_etc_present(env: Path) -> None:
     write(etc_path(env), "[global]\nrefresh_time = 5\n")
-    assert etc_path(env) in GlancesConfigV5().loaded_sources
+    assert GlancesConfigV5().loaded_sources == [etc_path(env)]
 
 
-def test_loaded_sources_preserves_load_order(env: Path) -> None:
+def test_loaded_sources_contains_only_the_chosen_file(env: Path) -> None:
+    """When both XDG and /etc exist, only XDG (the chosen file) appears."""
     write(etc_path(env), "[global]\nrefresh_time = 5\n")
     write(xdg_path(env), "[global]\nrefresh_time = 7\n")
     sources = GlancesConfigV5().loaded_sources
-    assert sources.index(etc_path(env)) < sources.index(xdg_path(env))
+    assert sources == [xdg_path(env)]
 
 
 def test_loaded_sources_returns_a_copy(env: Path) -> None:
