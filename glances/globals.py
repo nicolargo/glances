@@ -470,9 +470,9 @@ def auto_unit(number, low_precision=False, min_symbol='K', none_symbol='-'):
         value = float(number) / prefix[symbol]
         if value > 1:
             decimal_precision = 0
-            if value < 10:
+            if value <= 9.995:
                 decimal_precision = 2
-            elif value < 100:
+            elif value < 99.95:
                 decimal_precision = 1
             if low_precision:
                 if symbol in 'MK':
