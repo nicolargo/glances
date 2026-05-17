@@ -9,12 +9,21 @@
 
 """Glances v5 threshold engine — pure functional `_levels` computation.
 
-`f(value, thresholds, direction) -> "ok" | "careful" | "warning" | "critical"`
+Two evaluation modes, both consumed by ``GlancesPluginBase``:
 
-Consumed by `GlancesPluginBase._derived_parameters()` to populate the
-`_levels` dict written to the StatsStore. `GlancesAlerts` (Phase 1.4)
-reads `_levels` from the store but **never recomputes thresholds** —
-this module is the single source of truth for level computation.
+- **Numeric** (default): ``compute_level(value, thresholds, direction)``
+  compares ``value`` against numeric ``careful`` / ``warning`` /
+  ``critical`` thresholds. Used by every quantitative field (cpu %,
+  mem %, byte rates, etc.).
+- **Categorical**: ``compute_level_categorical(value, mapping)`` matches
+  a discrete value against per-level value-sets. Used for fields whose
+  alert semantics are membership-based (e.g. process ``status``: ``Z``
+  / ``D`` are critical, ``R`` / ``W`` are ok). Driven by config keys
+  like ``status_critical=Z,D``.
+
+`GlancesAlerts` (Phase 1.4) reads ``_levels`` from the store but **never
+recomputes thresholds** — this module is the single source of truth for
+level computation.
 
 See architecture decisions §3.3.
 """
@@ -30,6 +39,11 @@ LEVELS: tuple[Level, ...] = ("ok", "careful", "warning", "critical")
 
 # Walked from most severe to least severe so the first match wins.
 _BOUNDARY_KEYS_DESCENDING: tuple[Level, ...] = ("critical", "warning", "careful")
+# For categorical thresholds, ``ok`` is a configurable bucket too — a
+# value explicitly listed in ``<field>_ok=`` is matched as ok even when
+# higher-severity buckets exist. The walk order still goes most-severe
+# first so that membership in a higher bucket wins on conflict.
+_CATEGORICAL_KEYS_DESCENDING: tuple[Level, ...] = ("critical", "warning", "careful", "ok")
 
 _ABSENT = -1.0
 
@@ -133,4 +147,97 @@ def read_thresholds(
                 out[level] = fvalue
                 break
 
+    return out
+
+
+# --------------------------------------------------------------- categorical
+
+
+def _parse_csv_tokens(raw: Any) -> list[str]:
+    """Split a config value (``"R,W,P,I"`` or ``"-1, -2, -3"``) into tokens.
+
+    Whitespace is stripped per-token. Empty tokens are dropped. Returns
+    an empty list if ``raw`` is missing or not a string.
+    """
+    if raw is None:
+        return []
+    if isinstance(raw, (list, tuple, set)):
+        return [str(t).strip() for t in raw if str(t).strip()]
+    text = str(raw).strip()
+    if not text:
+        return []
+    return [t.strip() for t in text.split(",") if t.strip()]
+
+
+def compute_level_categorical(
+    value: Any,
+    mapping: dict[str, set[str]],
+) -> Level:
+    """Return the alert level whose value-set contains ``value``.
+
+    Args:
+        value: A discrete value (string letter, integer-as-string, etc.).
+        mapping: ``{"critical": {...}, "warning": {...}, ...}`` — per-level
+            value-sets. Levels with no entry (absent or empty set) match
+            no value.
+
+    Behaviour:
+        - The walk order is **most-severe-first** so a value that appears
+          in two buckets (a user misconfiguration) escalates to the
+          higher one rather than being silently downgraded.
+        - A value not in any configured set returns ``"ok"`` — v4 parity:
+          ``status_ok=R,W,P,I`` doesn't catch ``S`` (sleeping) but the
+          default is still ok, not "no level".
+    """
+    if value is None:
+        return "ok"
+    token = str(value).strip()
+    for level in _CATEGORICAL_KEYS_DESCENDING:
+        bucket = mapping.get(level)
+        if bucket and token in bucket:
+            return level
+    return "ok"
+
+
+def read_thresholds_categorical(
+    config: Any,
+    section: str,
+    field: str | None = None,
+    pk_value: str | None = None,
+) -> dict[str, set[str]]:
+    """Read ``<field>_<level>=<csv>`` keys into per-level value-sets.
+
+    Three key patterns mirror ``read_thresholds`` (most-specific wins):
+
+    1. ``<pk_value>_<field>_<level>``
+    2. ``<field>_<level>``
+    3. ``<level>`` (bare, only when ``field`` is None — categorical
+       fields cannot inherit a bare ``<level>`` key because the value
+       sets are field-specific by nature).
+
+    Empty / missing keys produce an empty set for that level. Levels
+    that resolve to an empty set are dropped from the returned mapping
+    so ``compute_level_categorical`` can short-circuit cheaply.
+    """
+    out: dict[str, set[str]] = {}
+    for level in _CATEGORICAL_KEYS_DESCENDING:
+        keys: tuple[str, ...]
+        if field is not None and pk_value is not None:
+            keys = (f"{pk_value}_{field}_{level}", f"{field}_{level}")
+        elif field is not None:
+            keys = (f"{field}_{level}",)
+        else:
+            keys = (level,)
+        bucket: set[str] = set()
+        for key in keys:
+            # Empty-string default so ``config.get`` infers str coercion;
+            # ``config.get(default=None)`` raises because NoneType has no
+            # registered coercion path (cf. GlancesConfigV5._coerce).
+            raw = config.get(section, key, "")
+            tokens = _parse_csv_tokens(raw)
+            if tokens:
+                bucket.update(tokens)
+                break
+        if bucket:
+            out[level] = bucket
     return out

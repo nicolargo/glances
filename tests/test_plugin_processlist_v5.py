@@ -193,3 +193,80 @@ async def test_user_can_override_cpu_percent_threshold(tmp_path, monkeypatch, st
         await plugin.update()
     levels = store.get("processlist")["_levels"]
     assert levels[1]["cpu_percent"]["level"] == "warning"
+
+
+# ---------------------------------------------------------- categorical thresholds
+
+
+async def test_status_categorical_threshold_from_config(tmp_path, monkeypatch, store):
+    """`status_critical=Z,D` should mark zombies as critical."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[processlist]\nstatus_ok=R,W,P,I\nstatus_critical=Z,D\n",
+    )
+    plugin = PluginModel(store, config)
+    procs = [
+        _proc(pid=1, status="R"),
+        _proc(pid=2, status="Z"),
+        _proc(pid=3, status="S"),  # not in any bucket → ok
+    ]
+    with patch("glances.plugins.processlist.model_v5.glances_processes.get_list", return_value=procs):
+        await plugin.update()
+    levels = store.get("processlist")["_levels"]
+    assert levels[1]["status"]["level"] == "ok"
+    assert levels[2]["status"]["level"] == "critical"
+    assert levels[3]["status"]["level"] == "ok"
+
+
+async def test_status_without_config_emits_no_level_entry(store, config):
+    """No `status_*=` in conf → status is watched but no level computed."""
+    plugin = PluginModel(store, config)
+    procs = [_proc(pid=1, status="Z")]
+    with patch("glances.plugins.processlist.model_v5.glances_processes.get_list", return_value=procs):
+        await plugin.update()
+    levels = store.get("processlist")["_levels"]
+    # status not configured → no entry under levels[1].
+    assert "status" not in levels.get(1, {})
+
+
+async def test_nice_categorical_threshold_from_config(tmp_path, monkeypatch, store):
+    """`nice_warning=-1,1,...` flags non-zero nice values as warning."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[processlist]\nnice_warning=-1,1,2,3,4,5\n",
+    )
+    plugin = PluginModel(store, config)
+    procs = [
+        _proc(pid=1, nice=0),  # not in list → ok
+        _proc(pid=2, nice=3),  # in list → warning
+        _proc(pid=3, nice=-1),  # in list → warning
+    ]
+    with patch("glances.plugins.processlist.model_v5.glances_processes.get_list", return_value=procs):
+        await plugin.update()
+    levels = store.get("processlist")["_levels"]
+    assert levels[1]["nice"]["level"] == "ok"
+    assert levels[2]["nice"]["level"] == "warning"
+    assert levels[3]["nice"]["level"] == "warning"
+
+
+async def test_nice_escalating_categorical_thresholds(tmp_path, monkeypatch, store):
+    """Buckets careful / warning / critical escalate by membership."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[processlist]\nnice_careful=1,2,3,4,5,6,7,8,9\nnice_warning=10,11,12,13,14\nnice_critical=15,16,17,18,19\n",
+    )
+    plugin = PluginModel(store, config)
+    procs = [
+        _proc(pid=1, nice=5),
+        _proc(pid=2, nice=12),
+        _proc(pid=3, nice=18),
+    ]
+    with patch("glances.plugins.processlist.model_v5.glances_processes.get_list", return_value=procs):
+        await plugin.update()
+    levels = store.get("processlist")["_levels"]
+    assert levels[1]["nice"]["level"] == "careful"
+    assert levels[2]["nice"]["level"] == "warning"
+    assert levels[3]["nice"]["level"] == "critical"

@@ -18,7 +18,12 @@ from typing import Any
 
 import pytest
 
-from glances.plugins.plugin.thresholds_v5 import compute_level, read_thresholds
+from glances.plugins.plugin.thresholds_v5 import (
+    compute_level,
+    compute_level_categorical,
+    read_thresholds,
+    read_thresholds_categorical,
+)
 
 # ---------------------------------------------------------- compute_level
 
@@ -259,3 +264,80 @@ def test_read_thresholds_pk_value_none_falls_back_to_two_levels():
     )
     out = read_thresholds(config, "cpu", field="total", pk_value=None)
     assert out == {"warning": 80.0}
+
+
+# ---------------------------------------------------------- categorical
+
+
+def test_compute_level_categorical_membership_returns_level():
+    mapping = {
+        "ok": {"R", "W", "P", "I"},
+        "critical": {"Z", "D"},
+    }
+    assert compute_level_categorical("R", mapping) == "ok"
+    assert compute_level_categorical("Z", mapping) == "critical"
+    # Unconfigured value falls back to ok (v4 parity, see decision log).
+    assert compute_level_categorical("S", mapping) == "ok"
+
+
+def test_compute_level_categorical_walks_severity_descending():
+    """A value in two buckets escalates to the higher severity."""
+    mapping = {
+        "ok": {"R"},
+        "critical": {"R"},  # misconfiguration: R in both
+    }
+    # 'critical' wins over 'ok' because the walk starts with most-severe.
+    assert compute_level_categorical("R", mapping) == "critical"
+
+
+def test_compute_level_categorical_none_value_returns_ok():
+    assert compute_level_categorical(None, {"critical": {"Z"}}) == "ok"
+
+
+def test_compute_level_categorical_handles_integer_value():
+    """nice is an int; the helper compares string tokens."""
+    mapping = {"warning": {"1", "2", "3"}, "critical": {"15", "16"}}
+    assert compute_level_categorical(2, mapping) == "warning"
+    assert compute_level_categorical(15, mapping) == "critical"
+    assert compute_level_categorical(0, mapping) == "ok"
+
+
+def test_read_thresholds_categorical_field_prefixed_csv():
+    config = FakeConfig(
+        {
+            ("processlist", "status_ok"): "R,W,P,I",
+            ("processlist", "status_critical"): "Z,D",
+        }
+    )
+    out = read_thresholds_categorical(config, "processlist", field="status")
+    assert out == {"ok": {"R", "W", "P", "I"}, "critical": {"Z", "D"}}
+
+
+def test_read_thresholds_categorical_handles_whitespace_in_csv():
+    config = FakeConfig({("processlist", "nice_warning"): " -2, -1 , 1 ,2 "})
+    out = read_thresholds_categorical(config, "processlist", field="nice")
+    assert out == {"warning": {"-2", "-1", "1", "2"}}
+
+
+def test_read_thresholds_categorical_empty_keys_dropped():
+    """A level configured with an empty string is dropped from the mapping."""
+    config = FakeConfig({("processlist", "status_warning"): ""})
+    out = read_thresholds_categorical(config, "processlist", field="status")
+    assert out == {}
+
+
+def test_read_thresholds_categorical_no_keys_returns_empty():
+    config = FakeConfig({})
+    assert read_thresholds_categorical(config, "processlist", field="status") == {}
+
+
+def test_read_thresholds_categorical_pk_prefixed_wins():
+    """Per-item override takes priority for collection plugins."""
+    config = FakeConfig(
+        {
+            ("network", "status_critical"): "Z",
+            ("network", "wlan0_status_critical"): "Z,D",
+        }
+    )
+    out = read_thresholds_categorical(config, "network", field="status", pk_value="wlan0")
+    assert out["critical"] == {"Z", "D"}

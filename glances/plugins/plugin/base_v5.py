@@ -38,7 +38,12 @@ from abc import ABC, abstractmethod
 from typing import Any, ClassVar, Generic, TypeVar
 
 from glances.config_v5 import GlancesConfigV5
-from glances.plugins.plugin.thresholds_v5 import compute_level, read_thresholds
+from glances.plugins.plugin.thresholds_v5 import (
+    compute_level,
+    compute_level_categorical,
+    read_thresholds,
+    read_thresholds_categorical,
+)
 from glances.stats_store_v5 import StatsStoreV5
 
 logger = logging.getLogger(__name__)
@@ -382,6 +387,27 @@ class GlancesPluginBase(Generic[T], ABC):
             value = item.get(field_name)
             if value is None:
                 continue
+
+            # Categorical fields (status, nice, etc.) take a separate
+            # path — value sets, no normalisation, no numeric comparison.
+            if schema.get("threshold_type") == "categorical":
+                mapping = read_thresholds_categorical(
+                    self.config,
+                    self.plugin_name,
+                    field=field_name,
+                    pk_value=pk_value,
+                )
+                if not mapping:
+                    # No user configuration for this categorical field →
+                    # no level entry. Skipping mirrors numeric fields with
+                    # no thresholds and avoids advertising "ok" everywhere.
+                    continue
+                target[field_name] = {
+                    "level": compute_level_categorical(value, mapping),
+                    "prominent": bool(schema.get("prominent", True)),
+                }
+                continue
+
             normalize_field = schema.get("normalize_by")
             if normalize_field:
                 divisor = item.get(normalize_field)

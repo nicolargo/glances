@@ -64,10 +64,27 @@ class PluginModel(GlancesPluginBase[list]):
         "status": {
             "description": "Process status (single letter — S sleeping, R running, etc.).",
             "unit": "string",
+            "watched": True,
+            "threshold_type": "categorical",
+            "prominent": False,
+            # No defaults — operators opt in via:
+            #   [processlist]
+            #   status_ok=R,W,P,I
+            #   status_critical=Z,D
         },
         "nice": {
             "description": "Process nice value.",
             "unit": "number",
+            "watched": True,
+            "threshold_type": "categorical",
+            "prominent": False,
+            # Opt-in via comma-separated int lists, e.g.:
+            #   [processlist]
+            #   nice_warning=-20,-19,...,-1,1,2,...,19   (non-zero is warning)
+            # or escalating buckets:
+            #   nice_careful=1,2,3,4,5,6,7,8,9
+            #   nice_warning=10,11,12,13,14
+            #   nice_critical=15,16,17,18,19
         },
         "num_threads": {
             "description": "Number of threads spawned by the process.",

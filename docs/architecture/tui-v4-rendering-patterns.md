@@ -563,7 +563,11 @@ CPU%  MEM%      PID USER       THR  NI S Command
   sorted_by=sort_key, reverse=sort_reverse)`.
 
 ✅ **v5 renderer:** `glances/plugins/processlist/render_curses_v5.py`
-(Added in G4-processlist. Minimal scope: header + top-20 rows + the
-core column set; engine sort hardcoded to `cpu_percent` desc, no
-extended view, no programs aggregation, no filter UI — these come
-back with the v5 argv/config plumbing in G5.)
+(Added in G4-processlist. Layout: `CPU% MEM% VIRT RES PID USER THR
+NI S R/s W/s Command` — full v4 default column set. Categorical
+thresholds wired for `status` and `nice` via
+`status_<level>=<csv>` / `nice_<level>=<csv>` in `[processlist]`.
+Command rendering ports v4's `split_cmdline`: path + **bold** cmd +
+arguments. Top-20 rows, engine sort hardcoded to `cpu_percent` desc,
+no extended view, no programs aggregation, no filter UI — these
+come back with the v5 argv/config plumbing in G5.)
