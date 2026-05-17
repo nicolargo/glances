@@ -47,6 +47,7 @@ def make_mock_instance(
     name="test-container",
     status="Running",
     config=None,
+    expanded_config=None,
     expanded_devices=None,
     created_at="2026-01-01T00:00:00Z",
     last_used_at="2026-03-15T10:00:00Z",
@@ -57,6 +58,7 @@ def make_mock_instance(
     instance.name = name
     instance.status = status
     instance.config = config or {"image.description": "Ubuntu 24.04 LTS"}
+    instance.expanded_config = expanded_config or {}
     instance.expanded_devices = expanded_devices or {}
     instance.created_at = created_at
     instance.last_used_at = last_used_at
@@ -154,6 +156,33 @@ class TestLxdStatsFetcher:
         # total=0 means unlimited, should fall back to usage_peak
         assert stats["memory"]["limit"] == 4_000_000_000
 
+    def test_cpu_limit_explicit(self):
+        from glances.plugins.containers.engines.lxd import LxdStatsFetcher
+
+        instance = make_mock_instance(expanded_config={'limits.cpu': '4'})
+        instance.state = lambda: make_mock_state()
+
+        fetcher = LxdStatsFetcher(instance, poll_interval=999)
+        time.sleep(0.2)
+        stats = fetcher.activity_stats
+        fetcher.stop()
+
+        assert stats["cpu"]["limit"] == 4.0
+
+    def test_cpu_limit_fallback(self):
+        from glances.plugins.containers.engines.lxd import LxdStatsFetcher
+
+        instance = make_mock_instance(expanded_config={})
+        instance.state = lambda: make_mock_state()
+
+        with patch('psutil.cpu_count', return_value=8):
+            fetcher = LxdStatsFetcher(instance, poll_interval=999)
+            time.sleep(0.2)
+            stats = fetcher.activity_stats
+            fetcher.stop()
+
+        assert stats["cpu"]["limit"] == 8.0
+
     def test_stop_terminates_thread(self, mock_instance):
         from glances.plugins.containers.engines.lxd import LxdStatsFetcher
 
@@ -193,7 +222,7 @@ class TestLxdExtensionGenerateStats:
 
         fetcher = MagicMock()
         fetcher.activity_stats = {
-            "cpu": {"total": 50.0},
+            "cpu": {"total": 50.0, "limit": 2.0},
             "memory": {"usage": 1_000_000_000, "limit": 2_000_000_000, "inactive_file": 0},
             "io": {"ior": 100, "iow": 50, "time_since_update": 2},
             "network": {"rx": 5000, "tx": 3000, "time_since_update": 2},
@@ -203,6 +232,7 @@ class TestLxdExtensionGenerateStats:
         stats = ext.generate_stats(instance)
 
         assert stats['cpu_percent'] == 50.0
+        assert stats['cpu_limit'] == 2.0
         assert stats['memory_usage'] == 1_000_000_000
         assert stats['memory_limit'] == 2_000_000_000
         assert stats['io_rx'] == 50

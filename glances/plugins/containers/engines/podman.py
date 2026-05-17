@@ -11,6 +11,8 @@ import time
 from datetime import datetime
 from typing import Any
 
+import psutil
+
 from glances.globals import nativestr, pretty_date, replace_special_chars, string_value_to_float
 from glances.logger import logger
 from glances.stats_streamer import ThreadedIterableStreamer
@@ -32,6 +34,12 @@ class PodmanContainerStatsFetcher:
 
     def __init__(self, container):
         self._container = container
+
+        # Full inspection to get limits (see issue #1152: List API doesn't include HostConfig)
+        try:
+            self._inspect_data = self._container.inspect()
+        except Exception:
+            self._inspect_data = {}
 
         # Previous stats are stored in the self._old_computed_stats variable
         # We store time data to enable rate calculations to avoid complexity for consumers of the APIs exposed.
@@ -85,6 +93,19 @@ class PodmanContainerStatsFetcher:
 
         try:
             stats["cpu"]["total"] = api_stats["CPU"]
+            # CPU limit
+            host_config = self._inspect_data.get('HostConfig')
+            nano_cpus = host_config.get('NanoCpus', 0)
+            if nano_cpus > 0:
+                stats['cpu']['limit'] = nano_cpus / 1e9
+            else:
+                cpu_quota = host_config.get('CpuQuota', 0)
+                cpu_period = host_config.get('CpuPeriod', 0)
+                if cpu_quota > 0 and cpu_period > 0:
+                    stats['cpu']['limit'] = cpu_quota / cpu_period
+                else:
+                    # Fallback to the number of available cores
+                    stats['cpu']['limit'] = float(psutil.cpu_count())
 
             stats["memory"]["usage"] = api_stats["MemUsage"]
             stats["memory"]["limit"] = api_stats["MemLimit"]
@@ -384,6 +405,7 @@ class PodmanExtension:
 
         # Additional fields
         stats["cpu_percent"] = stats["cpu"].get("total")
+        stats["cpu_limit"] = stats["cpu"].get("limit")
         stats["memory_usage"] = stats["memory"].get("usage")
         if stats["memory"].get("cache") is not None:
             stats["memory_usage"] -= stats["memory"]["cache"]
