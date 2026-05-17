@@ -104,7 +104,10 @@ def test_schema_watched_fields(store, config):
     fields = PluginModel(store, config)._fields
     for name in ("bytes_recv", "bytes_sent", "errors_in", "errors_out"):
         assert fields[name]["watched"] is True, name
-        assert fields[name]["prominent"] is True, name
+        # Network watched fields are never prominent (no reverse-video) —
+        # the alert plugin already surfaces the event, the sidebar should
+        # stay readable.
+        assert fields[name]["prominent"] is False, name
         assert fields[name]["rate"] is True, name
 
 
@@ -227,7 +230,7 @@ async def test_levels_indexed_by_interface_name(store, config, monkeypatch):
 
     levels = store.get("network")["_levels"]
     assert "eth0" in levels
-    assert levels["eth0"]["bytes_recv"] == {"level": "warning", "prominent": True}
+    assert levels["eth0"]["bytes_recv"] == {"level": "warning", "prominent": False}
 
 
 async def test_levels_skip_bandwidth_for_unknown_speed(store, config, monkeypatch):
