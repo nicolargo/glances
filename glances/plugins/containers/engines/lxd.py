@@ -12,6 +12,8 @@ import time
 from datetime import datetime
 from typing import Any
 
+import psutil
+
 from glances.globals import nativestr, pretty_date
 from glances.logger import logger
 
@@ -107,6 +109,16 @@ class LxdStatsFetcher:
                 stats["total"] = 0.0
         except (KeyError, TypeError, ZeroDivisionError) as e:
             logger.debug(f"containers (LXD) Instance({self._instance.name}): Can't grab CPU stats ({e})")
+
+        try:
+            limit = self._instance.expanded_config.get('limits.cpu')
+            if limit:
+                stats['limit'] = float(limit)
+            else:
+                stats['limit'] = float(psutil.cpu_count())
+        except (ValueError, TypeError):
+            stats['limit'] = float(psutil.cpu_count())
+
         return stats
 
     def _get_memory_stats(self, state) -> dict[str, Any]:
@@ -305,6 +317,7 @@ class LxdExtension:
 
         # Additional fields
         stats['cpu_percent'] = stats['cpu'].get('total')
+        stats['cpu_limit'] = stats['cpu'].get('limit')
         stats['memory_usage'] = stats['memory'].get('usage')
         stats['memory_inactive_file'] = stats['memory'].get('inactive_file')
         stats['memory_limit'] = stats['memory'].get('limit')
