@@ -25,7 +25,6 @@ from __future__ import annotations
 import curses
 import logging
 import threading
-import time
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
@@ -142,11 +141,16 @@ class TuiV5(threading.Thread):
                 except curses.error:
                     pass
 
-    def _sleep_responsive(self, total: float, step: float = 0.05) -> None:
-        elapsed = 0.0
-        while elapsed < total and not self._stop_event.is_set():
-            time.sleep(step)
-            elapsed += step
+    def _sleep_responsive(self, total: float) -> None:
+        """Sleep ``total`` seconds, returning early if ``_stop_event`` is set.
+
+        Uses ``Event.wait(timeout)`` so the thread blocks until either the
+        timeout expires or ``stop()`` flips the event — no polling, no
+        wake-and-sleep loop. Previously ``time.sleep(0.05)`` was looped
+        20×/s just to check the event; that added measurable CPU on
+        otherwise-idle systems where Glances is meant to be the lightest
+        possible monitor."""
+        self._stop_event.wait(timeout=total)
 
     # ----------------------------------------------------------- helpers
 

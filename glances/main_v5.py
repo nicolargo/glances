@@ -353,7 +353,17 @@ def assemble(
 
         registry = [(p.plugin_name, p.IS_COLLECTION) for p in plugins]
         fields_by_plugin = {p.plugin_name: p._fields for p in plugins}
-        refresh = float(config.get("outputs", "tui_refresh_interval", 1.0))
+        # TUI repaint cadence. Default to the global plugin refresh
+        # interval — there is no point repainting more often than the
+        # data underneath changes. Operators who *want* a faster TUI can
+        # set ``[outputs] tui_refresh_interval`` explicitly.
+        refresh = float(
+            config.get(
+                "outputs",
+                "tui_refresh_interval",
+                float(config.get("global", "refresh_time", 2.0)),
+            )
+        )
         # When the user quits the TUI via `q`/ESC we must also stop the
         # scheduler, otherwise the process keeps running and the shell
         # prompt stays blocked. SIGINT is delivered to the main thread,

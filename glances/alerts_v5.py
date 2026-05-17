@@ -191,11 +191,25 @@ class GlancesAlerts:
         for key, field_name, observed_level, value, prominent in self._observations(plugin, payload, levels):
             state_key = (plugin.plugin_name, key, field_name)
             state = self._state.setdefault(state_key, _AlertState())
-            # Per-(field, level) lookup — the most-specific key depends on
-            # the *observed* level, e.g. `ctx_switches_critical_min_duration_seconds=300`
-            # slows entry into critical without affecting warning/careful ramps.
-            min_duration = self._min_duration_for(plugin.plugin_name, key, field_name, observed_level)
-            transition = self._reconcile(state, observed_level, min_duration)
+            # Hot-path short-circuit: when the observation matches the
+            # currently committed level AND no candidate transition is
+            # pending, no min_duration is needed and ``_reconcile`` would
+            # take its fast-path no-op anyway. Skipping the call here
+            # saves a ``_min_duration_for`` lookup (up to 5 config reads).
+            # processlist with 580 procs × 2 stable ok-levels = 1160 obs
+            # per cycle, almost all stable — short-circuit savings:
+            # ~5800 config reads/cycle. We still need ``has_committed``
+            # book-keeping and the steady-state repeat-action dispatch
+            # below, so we set the flag and fall through.
+            if observed_level == state.committed_level and state.pending_level is None:
+                state.has_committed = True
+                transition = None
+            else:
+                # Per-(field, level) lookup — the most-specific key depends on
+                # the *observed* level, e.g. `ctx_switches_critical_min_duration_seconds=300`
+                # slows entry into critical without affecting warning/careful ramps.
+                min_duration = self._min_duration_for(plugin.plugin_name, key, field_name, observed_level)
+                transition = self._reconcile(state, observed_level, min_duration)
 
             if transition is not None:
                 event = self._build_event(
