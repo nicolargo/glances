@@ -365,8 +365,13 @@ def test_attach_mcp_skipped_path_emits_no_warning(config_factory, store, caplog)
     assert mcp_warnings == []
 
 
-def test_attach_mcp_logs_known_v5_gaps(config_factory, store, caplog):
-    """Operators must see, on mount, which v4 plugins MCP cannot expose yet."""
+def test_attach_mcp_does_not_log_gaps_when_registry_complete(config_factory, store, caplog):
+    """Every v4 plugin is ported to v5 as of G4-processlist — the
+    "not yet ported" line must NOT appear at MCP mount time.
+
+    If ``KNOWN_V5_MISSING_PLUGINS`` ever grows again (a regression port
+    or a new v4-only plugin), flip this test to re-assert the gap list.
+    """
     from glances.webserver_v5 import attach_mcp
 
     config = config_factory(enable_mcp="true")
@@ -375,15 +380,7 @@ def test_attach_mcp_logs_known_v5_gaps(config_factory, store, caplog):
         attach_mcp(app, config=config, store=store, plugins=[])
 
     msgs = " ".join(r.message for r in caplog.records if r.levelno == logging.INFO)
-    assert "not yet ported" in msgs
-    # The canonical missing v4 plugins must be named so operators can
-    # match the message against MCP client errors. Updated as plugins
-    # land in v5 (memswap → G4-memswap, fs → G4-fs, diskio → G4-diskio).
-    assert "processlist" in msgs
-    # Already ported — must NOT appear as missing.
-    assert "memswap" not in msgs
-    assert "fs " not in msgs and "fs," not in msgs
-    assert "diskio" not in msgs
+    assert "not yet ported" not in msgs
 
 
 def test_attach_mcp_logs_history_limitation(config_factory, store, caplog):

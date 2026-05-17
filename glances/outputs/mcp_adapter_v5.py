@@ -22,11 +22,13 @@ V5 limitations exposed by this adapter (all explicit, not silent):
 - **History is not stored in v5 yet.** ``McpPluginView.get_raw_history``
   returns ``{}`` and logs a WARNING (throttled — one per plugin) so
   the MCP client sees an empty dataset rather than a crash.
-- **Plugins not yet ported to v5** (``processlist``, ``fs``, ``diskio``,
-  ``memswap`` at the time of writing) are absent from the registry.
-  ``get_plugin("<unported>")`` returns ``None``; the MCP server then
-  raises its canonical ``ValueError("Plugin '<x>' not found")`` —
-  matching v4 behaviour when a plugin is disabled.
+- **Plugins not yet ported to v5** are tracked in
+  ``KNOWN_V5_MISSING_PLUGINS`` below — empty as of G4-processlist (every
+  v4 plugin has a v5 model). Whenever a v4-only plugin is reintroduced,
+  add it back to that tuple: ``get_plugin("<unported>")`` will then
+  return ``None`` and the MCP server raises its canonical
+  ``ValueError("Plugin '<x>' not found")`` — matching v4 behaviour when
+  a plugin is disabled.
 - **Alert schema is v5-native** (``ts`` / ``plugin`` / ``key`` /
   ``field`` / ``level`` / ``previous_level`` / ``prominent``) — no
   translation to v4's flatter ``type`` / ``start`` / ``end`` shape.
@@ -54,7 +56,7 @@ logger = logging.getLogger(__name__)
 # ``attach_mcp`` startup so operators know which resources will fail.
 # Update this list as v5 absorbs v4 plugins; the adapter logic itself
 # does not need to change.
-KNOWN_V5_MISSING_PLUGINS: tuple[str, ...] = ("processlist",)
+KNOWN_V5_MISSING_PLUGINS: tuple[str, ...] = ()
 
 # Throttle the "history not supported" WARN so polling MCP clients don't
 # spam the log. Tracked per plugin name (including the synthetic 'alert')

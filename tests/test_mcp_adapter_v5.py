@@ -143,11 +143,15 @@ def test_get_plugin_returns_view_for_known_plugin(adapter):
 
 
 def test_get_plugin_returns_none_for_unknown(adapter):
-    """Plugin not in v5 registry → None (MCP raises 'Plugin not found')."""
-    assert adapter.get_plugin("processlist") is None
-    assert adapter.get_plugin("fs") is None
-    assert adapter.get_plugin("memswap") is None
-    assert adapter.get_plugin("diskio") is None
+    """Plugin not in v5 registry → None (MCP raises 'Plugin not found').
+
+    Use a synthetic name here — every real v4 plugin is ported as of
+    G4-processlist, so we can no longer pick a "definitely unported"
+    name from the v4 catalogue. The adapter must still return ``None``
+    for anything outside the registry.
+    """
+    assert adapter.get_plugin("no_such_plugin") is None
+    assert adapter.get_plugin("") is None
 
 
 def test_plugin_view_get_raw_returns_store_value(adapter, store_with_data):

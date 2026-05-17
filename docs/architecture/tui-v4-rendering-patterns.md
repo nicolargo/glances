@@ -479,3 +479,91 @@ key, mapping to CAREFUL/WARNING/CRITICAL thresholds configured for each CPU fiel
 ✅ **v5 renderer:** `glances/plugins/percpu/render_curses_v5.py`
 (G1 ships the quicklook-disabled mode — ``CPU`` title + ``total`` column
 always present. Quicklook-enabled toggle deferred to G2+.)
+
+---
+
+## processcount
+
+**Source:** `glances/plugins/processcount/__init__.py::msg_curse`
+
+**Layout:**
+
+```
+TASKS 215 (1452 thr), 3 run, 195 slp, 17 oth   Threads sorted automatically
+                                                by cpu_percent
+```
+
+**Header construction:**
+- Title: `'TASKS'` (`TITLE` decoration).
+- Total: `'{:>4}'.format(processcount['total'])`.
+- Threads (when `'thread'` in stats): ` ({} thr),`.
+- Running / Sleeping: ` {} run,` / ` {} slp,`.
+- Other: ` {} oth ` where `other = total - running - sleeping`.
+
+**Sort line:**
+- Drives off `args.programs` ("Programs" / "Threads") and
+  `glances_processes.sort_key` (mapped through `sort_for_human`).
+- Adds " sorted automatically" when `glances_processes.auto_sort` is True.
+
+**Conditional behaviour:**
+- `args.disable_process` short-circuits with the single line
+  ``PROCESSES DISABLED (press 'z' to display)``.
+- `glances_processes.process_filter` (when set) prepends a multi-line
+  ``Processes filter: <expr> on column <key>`` header with a hint
+  ``('ENTER' to edit, 'E' to reset)``.
+
+✅ **v5 renderer:** `glances/plugins/processcount/render_curses_v5.py`
+(Added in G4-processlist. Sort indicator and filter UI deferred — v5
+hardcodes engine sort to `cpu_percent`; argv/config plumbing comes
+with G5.)
+
+---
+
+## processlist
+
+**Source:** `glances/plugins/processlist/__init__.py::msg_curse`
+
+**Layout (excerpt — header + top rows):**
+
+```
+CPU%  MEM%      PID USER       THR  NI S Command
+78.4   3.1     1234 alice        4   0 S python3 myscript.py
+12.5   3.1      512 root         2   0 S sshd
+ 0.5   0.2       42 bob          1   0 S htop
+```
+
+**Header construction:**
+- Each column header is produced by `msg_curse_header_common(field, label, …)`
+  with the `layout_header` width tokens (e.g. `'cpu': '{:<6} '`, `'mem': '{:<5} '`,
+  `'pid': '{:>{width}} '`).
+- Active sort column is decorated with `SORT`; the rest get `DEFAULT`.
+- v4 conditionally shows VIRT/RES (memory_info), TIME+, R/s/W/s and CPU
+  core columns depending on `disable_stats` + `disable_virtual_memory`.
+
+**Per-process row:**
+
+| element | format | color rule |
+|---|---|---|
+| CPU% | `{:<6.1f}` (or `{:<6.0f}` when no-digit) | `get_alert(cpu_percent, header='cpu_percent')` |
+| MEM% | `{:<5.1f}` | `get_alert(memory_percent, header='memory_percent')` |
+| PID | `{:>{width}}` (width = `_max_pid_size`) | `DEFAULT` |
+| USER | `{:<10}` (truncated, trailing `+` on overflow) | `DEFAULT` |
+| THR | `{:<3}` | `DEFAULT` |
+| NI | `{:>3}` | `DEFAULT` |
+| S | `{:>1}` | `DEFAULT` |
+| Command | `{}` (joined cmdline, fallback `[name]`) | `DEFAULT` |
+
+**Conditional behaviour:**
+- `args.programs` swaps the per-thread list for an aggregated
+  per-program view (sums of cpu_percent / memory_percent etc.).
+- `args.enable_process_extended` and `cursor_position` highlight one
+  process and append a multi-line extended block (open files, threads,
+  TCP/UDP, swap, mean/min/max).
+- The list is pre-sorted by the engine via `sort_stats(processlist,
+  sorted_by=sort_key, reverse=sort_reverse)`.
+
+✅ **v5 renderer:** `glances/plugins/processlist/render_curses_v5.py`
+(Added in G4-processlist. Minimal scope: header + top-20 rows + the
+core column set; engine sort hardcoded to `cpu_percent` desc, no
+extended view, no programs aggregation, no filter UI — these come
+back with the v5 argv/config plumbing in G5.)
