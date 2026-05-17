@@ -93,17 +93,37 @@ class PluginModel(GlancesPluginBase[list]):
     }
 
     async def _grab_stats(self) -> list:
+        # Snap-heavy hosts routinely expose 70+ mountpoints (one per
+        # installed snap revision). Calling
+        # ``await asyncio.to_thread(psutil.disk_usage, mnt)`` per partition
+        # produces N+1 thread-pool submissions + epoll wakes per cycle,
+        # which dominates idle-CPU on machines with many snaps installed.
+        # Coalesce the whole walk inside a single worker thread so the
+        # asyncio loop sees exactly one wake per fs cycle.
         try:
-            partitions = await asyncio.to_thread(psutil.disk_partitions, all=False)
+            return await asyncio.to_thread(self._collect_sync)
         except (PermissionError, OSError) as exc:
-            # Locked-down host or psutil failure — degrade gracefully.
+            logger.debug("fs: collection failed: %s", exc)
+            return []
+
+    @staticmethod
+    def _collect_sync() -> list[dict[str, Any]]:
+        """Synchronous collector — runs in a single worker thread."""
+        try:
+            partitions = psutil.disk_partitions(all=False)
+        except (PermissionError, OSError) as exc:
             logger.debug("fs: psutil.disk_partitions() failed: %s", exc)
             return []
 
         out: list[dict[str, Any]] = []
         for part in partitions:
-            usage = await self._safe_disk_usage(part.mountpoint)
-            if usage is None:
+            try:
+                usage = psutil.disk_usage(part.mountpoint)
+            except (OSError, PermissionError) as exc:
+                # Disk ejected, broken NFS mount, transient FS error — drop
+                # this partition from the cycle without aborting the whole
+                # update.
+                logger.debug("fs: disk_usage(%s) failed: %s", part.mountpoint, exc)
                 continue
             # v4 issue #1065: non-breaking space in mountpoint can break
             # serialisation downstream — normalise to a plain space.
@@ -121,13 +141,3 @@ class PluginModel(GlancesPluginBase[list]):
                 }
             )
         return out
-
-    @staticmethod
-    async def _safe_disk_usage(mountpoint: str):
-        try:
-            return await asyncio.to_thread(psutil.disk_usage, mountpoint)
-        except (OSError, PermissionError) as exc:
-            # Disk ejected, broken NFS mount, transient FS error — drop this
-            # partition from the cycle without aborting the whole update.
-            logger.debug("fs: disk_usage(%s) failed: %s", mountpoint, exc)
-            return None

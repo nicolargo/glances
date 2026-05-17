@@ -90,6 +90,17 @@ class GlancesPluginBase(Generic[T], ABC):
         # happen, plugins are not supposed to redeclare time_since_update).
         self._fields: dict[str, dict[str, Any]] = {**_BASE_METADATA_FIELDS, **self.fields_description}
 
+        # Hot-loop precomputation. Walking ``_fields.items()`` per item to
+        # filter on schema flags burns measurable CPU on large collections
+        # (processlist with 580 procs × 17 fields = 9860 iterations per
+        # cycle inside ``_compute_rates_in_dict`` ALONE). These subsets
+        # never change at runtime, so we cache them at construction.
+        self._rate_fields: list[tuple[str, dict[str, Any]]] = [(n, s) for n, s in self._fields.items() if s.get("rate")]
+        self._watched_fields: list[tuple[str, dict[str, Any]]] = [
+            (n, s) for n, s in self._fields.items() if s.get("watched")
+        ]
+        self._allowed_field_names: set[str] = set(self._fields.keys())
+
         # Collection plugins must declare exactly one field as the primary
         # key — used to index `_levels`, snapshot raw counters across cycles
         # for per-item rates, and match items between cycles.
@@ -234,7 +245,15 @@ class GlancesPluginBase(Generic[T], ABC):
         Collection plugins: `{primary_key_value: {field: value}}` (per-item).
         Items without a resolvable primary-key value are skipped — they
         cannot be matched across cycles for rate computation.
+
+        Plugins with no ``rate: True`` field never consult the snapshot
+        (``_transform_gauge`` is a no-op for them), so we skip the dict
+        copies entirely — ``processlist`` with 580+ procs saves ~580
+        per-cycle dict allocations alone.
         """
+        if not self._rate_fields:
+            return None
+
         if not self.IS_COLLECTION:
             if not isinstance(self._stats, dict):
                 return None
@@ -292,9 +311,9 @@ class GlancesPluginBase(Generic[T], ABC):
 
     def _compute_rates_in_dict(self, stats: dict[str, Any], prev_raw: dict[str, Any], elapsed: float) -> None:
         """Replace counter fields with per-second rates inside one dict."""
-        for field_name, schema in self._fields.items():
-            if not schema.get("rate"):
-                continue
+        if not self._rate_fields:
+            return
+        for field_name, _schema in self._rate_fields:
             if field_name not in stats:
                 continue
             if elapsed <= 0 or field_name not in prev_raw:
@@ -400,9 +419,7 @@ class GlancesPluginBase(Generic[T], ABC):
         Empty / unconfigured fields are omitted from the result.
         """
         out: dict[str, dict[str, Any]] = {}
-        for field_name, schema in self._fields.items():
-            if not schema.get("watched"):
-                continue
+        for field_name, schema in self._watched_fields:
             if schema.get("threshold_type") == "categorical":
                 mapping = read_thresholds_categorical(self.config, self.plugin_name, field=field_name)
                 if mapping:
@@ -429,7 +446,7 @@ class GlancesPluginBase(Generic[T], ABC):
         and the explicit feature for network (per-interface overrides).
         """
         out: set[str] = set()
-        if not self._fields:
+        if not self._watched_fields:
             return out
         # ``ok`` is added so the categorical path is covered too (numeric
         # only uses careful/warning/critical, but the extra check is cheap).
@@ -439,9 +456,7 @@ class GlancesPluginBase(Generic[T], ABC):
         except AttributeError:
             return out  # config object without introspection API → skip optim
         for key in section_keys:
-            for field_name in self._fields:
-                if not self._fields[field_name].get("watched"):
-                    continue
+            for field_name, _schema in self._watched_fields:
                 # Pattern: `<pk>_<field>_<level>` — `<pk>` must be non-empty
                 # and must NOT be ``<field>_`` (that's the plain
                 # `<field>_<level>` key, already handled by precompute).
@@ -478,9 +493,7 @@ class GlancesPluginBase(Generic[T], ABC):
         ``None`` — the function falls back to the original eager-read
         behaviour.
         """
-        for field_name, schema in self._fields.items():
-            if not schema.get("watched"):
-                continue
+        for field_name, schema in self._watched_fields:
             value = item.get(field_name)
             if value is None:
                 continue
@@ -584,13 +597,13 @@ class GlancesPluginBase(Generic[T], ABC):
         """Filter out fields not declared in `fields_description` and strip
         internal keys (`_*`). Implemented in the base class — never override.
         """
-        declared = set(self._fields.keys())
+        allowed = self._allowed_field_names
 
         if self.IS_COLLECTION:
             # self._stats is list[dict]
-            self._stats = [self._filter_dict(item, declared) for item in self._stats]  # type: ignore[assignment]
+            self._stats = [self._filter_dict(item, allowed) for item in self._stats]  # type: ignore[assignment]
         else:
-            self._stats = self._filter_dict(self._stats, declared)  # type: ignore[assignment]
+            self._stats = self._filter_dict(self._stats, allowed)  # type: ignore[assignment]
 
     @staticmethod
     def _filter_dict(d: dict[str, Any], allowed: set[str]) -> dict[str, Any]:
