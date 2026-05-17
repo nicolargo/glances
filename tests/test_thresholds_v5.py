@@ -276,8 +276,9 @@ def test_compute_level_categorical_membership_returns_level():
     }
     assert compute_level_categorical("R", mapping) == "ok"
     assert compute_level_categorical("Z", mapping) == "critical"
-    # Unconfigured value falls back to ok (v4 parity, see decision log).
-    assert compute_level_categorical("S", mapping) == "ok"
+    # Unconfigured value returns None → no level entry (v4 get_alert
+    # returns 'DEFAULT', not 'OK', for unmatched categorical values).
+    assert compute_level_categorical("S", mapping) is None
 
 
 def test_compute_level_categorical_walks_severity_descending():
@@ -290,8 +291,8 @@ def test_compute_level_categorical_walks_severity_descending():
     assert compute_level_categorical("R", mapping) == "critical"
 
 
-def test_compute_level_categorical_none_value_returns_ok():
-    assert compute_level_categorical(None, {"critical": {"Z"}}) == "ok"
+def test_compute_level_categorical_none_value_returns_none():
+    assert compute_level_categorical(None, {"critical": {"Z"}}) is None
 
 
 def test_compute_level_categorical_handles_integer_value():
@@ -299,7 +300,8 @@ def test_compute_level_categorical_handles_integer_value():
     mapping = {"warning": {"1", "2", "3"}, "critical": {"15", "16"}}
     assert compute_level_categorical(2, mapping) == "warning"
     assert compute_level_categorical(15, mapping) == "critical"
-    assert compute_level_categorical(0, mapping) == "ok"
+    # 0 is not in any bucket → None (the renderer leaves the cell default).
+    assert compute_level_categorical(0, mapping) is None
 
 
 def test_read_thresholds_categorical_field_prefixed_csv():

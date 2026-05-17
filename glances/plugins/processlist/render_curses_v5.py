@@ -188,23 +188,23 @@ def _io_cell(value: Any, is_unknown: bool, width: int) -> Cell:
 
 
 def _command_cells(item: dict[str, Any]) -> list[Cell]:
-    """Render the command as path + bold cmd + args (multi-cell).
+    """Render the command as bold cmd + plain args.
+
+    v4 parity (short-name view — default): the ``/path/to/`` prefix of
+    ``cmdline[0]`` is stripped via ``split_cmdline`` and only the
+    executable name + arguments are shown. The full-path view (toggled
+    via the ``/`` hotkey in v4) is not ported — it lives in G5+ with the
+    rest of the keyboard plumbing.
 
     Empty / missing cmdline falls back to the kernel-thread convention
-    ``[name]`` (no bold) — v4 parity for kthreads which have an empty
-    cmdline in ``/proc``.
+    ``[name]`` (no bold) — kthreads have no cmdline in ``/proc``.
     """
     cmdline = item.get("cmdline")
     if not isinstance(cmdline, list) or not cmdline:
         name = str(item.get("name") or "")
         return [Cell(text=f"[{name}]" if name else "")]
-    path, cmd, args = _split_cmdline(item)
-    cells: list[Cell] = []
-    if path:
-        # ``os.path.split`` strips the trailing separator; restore it so the
-        # bold cmd token stays visually attached to its path.
-        cells.append(Cell(text=path + os.sep))
-    cells.append(Cell(text=cmd, bold=True))
+    _, cmd, args = _split_cmdline(item)
+    cells: list[Cell] = [Cell(text=cmd, bold=True)]
     if args:
         cells.append(Cell(text=" " + args))
     return cells

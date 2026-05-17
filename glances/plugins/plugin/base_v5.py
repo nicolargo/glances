@@ -399,11 +399,17 @@ class GlancesPluginBase(Generic[T], ABC):
                 )
                 if not mapping:
                     # No user configuration for this categorical field →
-                    # no level entry. Skipping mirrors numeric fields with
-                    # no thresholds and avoids advertising "ok" everywhere.
+                    # no level entry.
+                    continue
+                level = compute_level_categorical(value, mapping)
+                if level is None:
+                    # Value not in any configured bucket → no level entry.
+                    # Renderer falls back to DEFAULT (no colour), alert
+                    # pipeline sees no event. Mirrors v4 ``get_alert``
+                    # returning ``'DEFAULT'`` for unmatched values.
                     continue
                 target[field_name] = {
-                    "level": compute_level_categorical(value, mapping),
+                    "level": level,
                     "prominent": bool(schema.get("prominent", True)),
                 }
                 continue

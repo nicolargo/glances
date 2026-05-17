@@ -172,8 +172,9 @@ def _parse_csv_tokens(raw: Any) -> list[str]:
 def compute_level_categorical(
     value: Any,
     mapping: dict[str, set[str]],
-) -> Level:
-    """Return the alert level whose value-set contains ``value``.
+) -> Level | None:
+    """Return the alert level whose value-set contains ``value``, or
+    ``None`` when ``value`` belongs to **no** configured bucket.
 
     Args:
         value: A discrete value (string letter, integer-as-string, etc.).
@@ -185,18 +186,21 @@ def compute_level_categorical(
         - The walk order is **most-severe-first** so a value that appears
           in two buckets (a user misconfiguration) escalates to the
           higher one rather than being silently downgraded.
-        - A value not in any configured set returns ``"ok"`` — v4 parity:
-          ``status_ok=R,W,P,I`` doesn't catch ``S`` (sleeping) but the
-          default is still ok, not "no level".
+        - A value not in any configured set returns ``None``. Callers
+          (typically ``base_v5._compute_levels_for_item``) interpret
+          this as "no level entry" — the cell stays default-coloured in
+          the TUI and the alert pipeline sees no event for that field.
+          This matches v4 ``get_alert`` which returns ``'DEFAULT'`` for
+          unmatched categorical values rather than ``'OK'``.
     """
     if value is None:
-        return "ok"
+        return None
     token = str(value).strip()
     for level in _CATEGORICAL_KEYS_DESCENDING:
         bucket = mapping.get(level)
         if bucket and token in bucket:
             return level
-    return "ok"
+    return None
 
 
 def read_thresholds_categorical(

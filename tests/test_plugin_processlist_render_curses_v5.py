@@ -222,18 +222,23 @@ def test_render_command_cmd_is_bold(fields):
     assert any("python3" in c.text for c in bold_cells)
 
 
-def test_render_command_path_split_when_full_path(fields):
-    """cmdline[0]=/usr/bin/python3 and name='python3' don't match (no startswith)
-    → os.path.split → path='/usr/bin' + cmd='python3'."""
+def test_render_command_path_stripped_in_default_view(fields):
+    """v4 short-name view (default): ``/usr/bin/python3 script.py`` →
+    only ``python3`` (bold) + ``script.py`` is shown — the path prefix
+    is dropped. The full-path view is toggled by the ``/`` hotkey in v4
+    and is deferred to G5+ (no hotkey plumbing yet)."""
     p = _proc(pid=1, name="python3", cmdline=["/usr/bin/python3", "script.py"])
     rows = render({"data": [p], "_levels": {}}, fields)
     cmd_cells = rows[1].cells[CMD_START:]
+    flat = "".join(c.text for c in cmd_cells)
+    # No path leak.
+    assert "/usr/bin" not in flat
+    # cmd is bold.
     bold_cells = [c for c in cmd_cells if c.bold]
-    plain_cells = [c for c in cmd_cells if not c.bold]
-    # Bold cell is just the cmd token (no path).
     assert any(c.text == "python3" for c in bold_cells)
-    # A path-prefix cell is emitted (non-bold) — contains "/usr/bin".
-    assert any("/usr/bin" in c.text for c in plain_cells)
+    # Arguments follow.
+    plain_cells = [c for c in cmd_cells if not c.bold]
+    assert any("script.py" in c.text for c in plain_cells)
 
 
 def test_render_command_arguments_are_non_bold(fields):

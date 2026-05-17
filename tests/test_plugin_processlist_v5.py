@@ -199,7 +199,13 @@ async def test_user_can_override_cpu_percent_threshold(tmp_path, monkeypatch, st
 
 
 async def test_status_categorical_threshold_from_config(tmp_path, monkeypatch, store):
-    """`status_critical=Z,D` should mark zombies as critical."""
+    """`status_critical=Z,D` should mark zombies as critical.
+
+    Values explicitly listed in ``status_ok`` get a level=ok entry. Values
+    in NO bucket (here: 'S') get **no** entry — the renderer keeps the
+    default colour. Mirrors v4 ``get_alert`` returning ``'DEFAULT'`` for
+    unmatched categorical values.
+    """
     config = _config_with(
         tmp_path,
         monkeypatch,
@@ -209,14 +215,16 @@ async def test_status_categorical_threshold_from_config(tmp_path, monkeypatch, s
     procs = [
         _proc(pid=1, status="R"),
         _proc(pid=2, status="Z"),
-        _proc(pid=3, status="S"),  # not in any bucket → ok
+        _proc(pid=3, status="S"),  # not in any bucket → no level entry
     ]
     with patch("glances.plugins.processlist.model_v5.glances_processes.get_list", return_value=procs):
         await plugin.update()
     levels = store.get("processlist")["_levels"]
     assert levels[1]["status"]["level"] == "ok"
     assert levels[2]["status"]["level"] == "critical"
-    assert levels[3]["status"]["level"] == "ok"
+    # pid 3 has no status entry (or no entry at all if no other watched
+    # field fired) — the renderer falls back to DEFAULT colour.
+    assert "status" not in levels.get(3, {})
 
 
 async def test_status_without_config_emits_no_level_entry(store, config):
@@ -231,7 +239,11 @@ async def test_status_without_config_emits_no_level_entry(store, config):
 
 
 async def test_nice_categorical_threshold_from_config(tmp_path, monkeypatch, store):
-    """`nice_warning=-1,1,...` flags non-zero nice values as warning."""
+    """`nice_warning=-1,1,...` flags non-zero nice values as warning.
+
+    nice=0 stays default-coloured (no level entry) — listing it in
+    ``nice_ok=0`` would be the way to force an explicit OK.
+    """
     config = _config_with(
         tmp_path,
         monkeypatch,
@@ -239,14 +251,14 @@ async def test_nice_categorical_threshold_from_config(tmp_path, monkeypatch, sto
     )
     plugin = PluginModel(store, config)
     procs = [
-        _proc(pid=1, nice=0),  # not in list → ok
+        _proc(pid=1, nice=0),  # not in any list → no level entry
         _proc(pid=2, nice=3),  # in list → warning
         _proc(pid=3, nice=-1),  # in list → warning
     ]
     with patch("glances.plugins.processlist.model_v5.glances_processes.get_list", return_value=procs):
         await plugin.update()
     levels = store.get("processlist")["_levels"]
-    assert levels[1]["nice"]["level"] == "ok"
+    assert "nice" not in levels.get(1, {})
     assert levels[2]["nice"]["level"] == "warning"
     assert levels[3]["nice"]["level"] == "warning"
 
