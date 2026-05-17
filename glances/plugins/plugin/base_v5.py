@@ -356,6 +356,18 @@ class GlancesPluginBase(Generic[T], ABC):
 
         if not isinstance(self._stats, list) or self._primary_key is None:
             return
+
+        # Hot path. ``read_thresholds*`` is invariant in ``pk_value`` for
+        # the vast majority of deployments — only network plugins
+        # historically expose per-interface overrides like
+        # ``wlan0_bytes_recv_warning=0.7``. processlist with 500+ items
+        # used to incur 500× redundant config reads + CSV parses per
+        # cycle. We precompute the plugin-level thresholds once here,
+        # detect whether **any** per-pk override exists in the section,
+        # and only fall back to the per-item config read when it does.
+        plugin_thresholds = self._precompute_plugin_thresholds()
+        fields_with_pk_overrides = self._scan_pk_override_fields()
+
         for item in self._stats:
             if not isinstance(item, dict):
                 continue
@@ -363,15 +375,94 @@ class GlancesPluginBase(Generic[T], ABC):
             if pk_value is None:
                 continue
             entry: dict[str, Any] = {}
-            self._compute_levels_for_item(item, entry, pk_value=str(pk_value))
+            self._compute_levels_for_item(
+                item,
+                entry,
+                pk_value=str(pk_value),
+                plugin_thresholds=plugin_thresholds,
+                fields_with_pk_overrides=fields_with_pk_overrides,
+            )
             if entry:
                 self._levels[pk_value] = entry
+
+    # --------------------------------------------------- threshold precompute
+
+    def _precompute_plugin_thresholds(self) -> dict[str, dict[str, Any]]:
+        """Build plugin-level (pk-agnostic) thresholds for each watched field.
+
+        Called once per cycle by ``_derived_parameters``; the result is
+        reused for every item of a collection. ``_compute_levels_for_item``
+        layers per-item ``<pk>_<field>_<level>`` overrides on top only
+        when the section actually carries such keys.
+
+        Returns ``{field_name: {"thresholds": {...}}}`` for numeric fields
+        and ``{field_name: {"mapping": {...}}}`` for categorical ones.
+        Empty / unconfigured fields are omitted from the result.
+        """
+        out: dict[str, dict[str, Any]] = {}
+        for field_name, schema in self._fields.items():
+            if not schema.get("watched"):
+                continue
+            if schema.get("threshold_type") == "categorical":
+                mapping = read_thresholds_categorical(self.config, self.plugin_name, field=field_name)
+                if mapping:
+                    out[field_name] = {"mapping": mapping}
+            else:
+                thresholds = read_thresholds(
+                    self.config,
+                    self.plugin_name,
+                    field=field_name,
+                    defaults=schema.get("default_thresholds"),
+                    strict=bool(schema.get("strict_thresholds", False)),
+                )
+                if thresholds:
+                    out[field_name] = {"thresholds": thresholds}
+        return out
+
+    def _scan_pk_override_fields(self) -> set[str]:
+        """Return the set of watched field names that have **at least one**
+        ``<pk>_<field>_<level>`` key configured in the plugin's section.
+
+        Used to short-circuit the per-item ``read_thresholds*`` re-read
+        when no operator has configured per-pk overrides — the common
+        case for processlist (500 procs × per-pid override = nonsensical)
+        and the explicit feature for network (per-interface overrides).
+        """
+        out: set[str] = set()
+        if not self._fields:
+            return out
+        # ``ok`` is added so the categorical path is covered too (numeric
+        # only uses careful/warning/critical, but the extra check is cheap).
+        levels = ("ok", "careful", "warning", "critical")
+        try:
+            section_keys = self.config.section_keys(self.plugin_name)
+        except AttributeError:
+            return out  # config object without introspection API → skip optim
+        for key in section_keys:
+            for field_name in self._fields:
+                if not self._fields[field_name].get("watched"):
+                    continue
+                # Pattern: `<pk>_<field>_<level>` — `<pk>` must be non-empty
+                # and must NOT be ``<field>_`` (that's the plain
+                # `<field>_<level>` key, already handled by precompute).
+                for level in levels:
+                    suffix = f"_{field_name}_{level}"
+                    if key.endswith(suffix) and not key.startswith(f"{field_name}_"):
+                        # `<pk>` is whatever precedes `_<field>_<level>` —
+                        # must be non-empty.
+                        prefix_len = len(key) - len(suffix)
+                        if prefix_len > 0:
+                            out.add(field_name)
+                            break
+        return out
 
     def _compute_levels_for_item(
         self,
         item: dict[str, Any],
         target: dict[str, Any],
         pk_value: str | None = None,
+        plugin_thresholds: dict[str, dict[str, Any]] | None = None,
+        fields_with_pk_overrides: set[str] | None = None,
     ) -> None:
         """Walk `fields_description`, populate `target[field] = {level, prominent}`.
 
@@ -380,6 +471,12 @@ class GlancesPluginBase(Generic[T], ABC):
         is the per-item entry, ``pk_value`` carries the primary-key value
         used to honour per-item config overrides — e.g.
         ``[network] wlan0_bytes_recv_warning=0.7``).
+
+        ``plugin_thresholds`` / ``fields_with_pk_overrides`` are populated
+        by ``_derived_parameters`` for collection plugins and skip
+        per-item config reads when no override exists. Scalars pass
+        ``None`` — the function falls back to the original eager-read
+        behaviour.
         """
         for field_name, schema in self._fields.items():
             if not schema.get("watched"):
@@ -391,15 +488,13 @@ class GlancesPluginBase(Generic[T], ABC):
             # Categorical fields (status, nice, etc.) take a separate
             # path — value sets, no normalisation, no numeric comparison.
             if schema.get("threshold_type") == "categorical":
-                mapping = read_thresholds_categorical(
-                    self.config,
-                    self.plugin_name,
-                    field=field_name,
-                    pk_value=pk_value,
+                mapping = self._resolve_categorical_mapping(
+                    field_name,
+                    pk_value,
+                    plugin_thresholds=plugin_thresholds,
+                    fields_with_pk_overrides=fields_with_pk_overrides,
                 )
                 if not mapping:
-                    # No user configuration for this categorical field →
-                    # no level entry.
                     continue
                 level = compute_level_categorical(value, mapping)
                 if level is None:
@@ -426,13 +521,12 @@ class GlancesPluginBase(Generic[T], ABC):
                     value = float(value) / float(divisor)
                 except (TypeError, ValueError, ZeroDivisionError):
                     continue
-            thresholds = read_thresholds(
-                self.config,
-                self.plugin_name,
-                field=field_name,
-                pk_value=pk_value,
-                defaults=schema.get("default_thresholds"),
-                strict=bool(schema.get("strict_thresholds", False)),
+            thresholds = self._resolve_numeric_thresholds(
+                field_name,
+                schema,
+                pk_value,
+                plugin_thresholds=plugin_thresholds,
+                fields_with_pk_overrides=fields_with_pk_overrides,
             )
             if not thresholds:
                 continue
@@ -441,6 +535,50 @@ class GlancesPluginBase(Generic[T], ABC):
                 "level": compute_level(value, thresholds, direction),
                 "prominent": bool(schema.get("prominent", True)),
             }
+
+    def _resolve_categorical_mapping(
+        self,
+        field_name: str,
+        pk_value: str | None,
+        plugin_thresholds: dict[str, dict[str, Any]] | None,
+        fields_with_pk_overrides: set[str] | None,
+    ) -> dict[str, set[str]]:
+        """Resolve the per-item categorical mapping.
+
+        Fast path: when the cycle-level scan reports no pk-specific keys
+        for this field, reuse the precomputed plugin-level mapping
+        verbatim. Slow path (rare): re-read with pk_value to apply the
+        per-pk override.
+        """
+        if plugin_thresholds is not None and (
+            fields_with_pk_overrides is None or field_name not in fields_with_pk_overrides
+        ):
+            entry = plugin_thresholds.get(field_name)
+            return entry.get("mapping", {}) if entry else {}
+        return read_thresholds_categorical(self.config, self.plugin_name, field=field_name, pk_value=pk_value)
+
+    def _resolve_numeric_thresholds(
+        self,
+        field_name: str,
+        schema: dict[str, Any],
+        pk_value: str | None,
+        plugin_thresholds: dict[str, dict[str, Any]] | None,
+        fields_with_pk_overrides: set[str] | None,
+    ) -> dict[str, float]:
+        """Resolve the per-item numeric thresholds. Same fast/slow split."""
+        if plugin_thresholds is not None and (
+            fields_with_pk_overrides is None or field_name not in fields_with_pk_overrides
+        ):
+            entry = plugin_thresholds.get(field_name)
+            return entry.get("thresholds", {}) if entry else {}
+        return read_thresholds(
+            self.config,
+            self.plugin_name,
+            field=field_name,
+            pk_value=pk_value,
+            defaults=schema.get("default_thresholds"),
+            strict=bool(schema.get("strict_thresholds", False)),
+        )
 
     def _remove_parameters(self) -> None:
         """Filter out fields not declared in `fields_description` and strip

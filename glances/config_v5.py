@@ -246,6 +246,13 @@ class GlancesConfigV5:
     def sections(self) -> list[str]:
         return list(self._merged.keys())
 
+    def section_keys(self, section: str) -> list[str]:
+        """Return the option names declared in ``section`` (empty list if
+        the section is missing). Used by hot-path callers that need to
+        introspect which keys exist without forcing them through
+        ``as_dict()`` (which deep-copies)."""
+        return list(self._merged.get(section, {}).keys())
+
     def as_dict(self) -> dict[str, dict[str, Any]]:
         return {s: dict(opts) for s, opts in self._merged.items()}
 
