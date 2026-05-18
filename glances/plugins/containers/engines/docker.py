@@ -86,9 +86,9 @@ class DockerStatsFetcher:
     def _get_cpu_stats(self) -> dict[str, float] | None:
         """Return the container CPU usage.
 
-        Output: a dict {'total': 1.49}
+        Output: a dict {'total': 1.49, 'limit': 2.0}
         """
-        stats = {'total': 0.0}
+        stats = {'total': 0.0, 'limit': 0.0}
 
         try:
             cpu_stats = self._streamer.stats['cpu_stats']
@@ -113,6 +113,18 @@ class DockerStatsFetcher:
         except TypeError as e:
             self._log_debug("Can't compute CPU usage", e)
             return None
+
+        host_config = self._container.attrs.get('HostConfig', {})
+        nano_cpus = host_config.get('NanoCpus', 0)
+        if nano_cpus > 0:
+            stats['limit'] = nano_cpus / 1e9
+        else:
+            cpu_quota = host_config.get('CpuQuota', 0)
+            cpu_period = host_config.get('CpuPeriod', 100_000)
+            if cpu_quota > 0 and cpu_period > 0:
+                stats['limit'] = cpu_quota / cpu_period
+            else:
+                stats['limit'] = float(cpu.get('nb_core', 0))
 
         # Return the stats
         return stats
@@ -342,6 +354,7 @@ class DockerExtension:
 
         # Additional fields
         stats['cpu_percent'] = stats['cpu']['total']
+        stats['cpu_limit'] = stats['cpu'].get('limit')
         stats['memory_usage'] = stats['memory'].get('usage')
         if stats['memory'].get('cache') is not None:
             stats['memory_usage'] -= stats['memory']['cache']
