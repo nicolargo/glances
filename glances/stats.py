@@ -149,9 +149,14 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         """Return True if the module defines a PluginModel class."""
 
         try:
+            # Read and parse the Python source file into an AST
+            # so plugin detection is based on actual class definitions
+            # rather than fragile string matching.
             content = plugin_file.read_text(encoding="utf-8")
             tree = ast.parse(content)
 
+            # Walk through all nodes in the AST and look for
+            # a class named PluginModel.
             for node in ast.walk(tree):
                 if isinstance(node, ast.ClassDef):
                     if node.name == "PluginModel":
@@ -168,16 +173,21 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
 
         plugin_list = []
 
+        # Iterate through each directory in the configured plugin path.
         for plugin in os.listdir(plugin_path):
             path = Path(plugin_path) / plugin
 
+            # Ignore non-directories and internal Python directories.
             if not path.is_dir() or path.name.startswith('__'):
                 continue
 
+            # Search Python files within the plugin directory.
             for fil in path.glob('*.py'):
+                # Skip invalid filesystem entries.
                 if not fil.is_file():
                     continue
 
+                # Register the plugin if a PluginModel class exists.
                 if self._contains_plugin_model(fil):
                     plugin_list.append(plugin)
                     break
@@ -192,26 +202,35 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         if config and config.parser.has_option('global', 'plugin_dir'):
             path = config.parser['global']['plugin_dir']
 
+        # Command-line argument takes precedence over config value.
         if args and 'plugin_dir' in args and args.plugin_dir:
             path = args.plugin_dir
 
+        # No additional plugin directory configured.
         if not path:
             return
 
-        # Get list before starting the counter
+        # Store original sys.path so it can be restored after loading.
         _sys_path = sys.path
+
+        # Used to measure plugin startup duration.
         start_duration = Counter()
-        # Ensure that plugins can be found in plugin_dir
+
+        # Ensure plugins can be imported from the configured directory.
         sys.path.insert(0, path)
 
         for plugin in self._get_addl_plugins(path):
+            # Prevent duplicate imports for plugins already loaded.
             if plugin in sys.modules:
                 logger.warn(f"Plugin {plugin} already in sys.modules, skipping (workaround: rename plugin)")
                 continue
 
             start_duration.reset()
             try:
+                # Dynamically import the plugin model module.
                 _mod_loaded = import_module(plugin + '.model')
+
+                # Create and register the plugin instance.
                 self._plugins[plugin] = _mod_loaded.PluginModel(args=args, config=config)
                 logger.debug(f"Plugin {plugin} started in {start_duration.get()} seconds")
             except Exception as e:
@@ -223,8 +242,9 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
                 if args:
                     setattr(args, 'disable_' + plugin, False)
 
+        # Restore original Python import path.
         sys.path = _sys_path
-        # Log plugins list
+        # Log active additional plugins list
         logger.debug(f"Active additional plugins list: {self.getPluginsList()}")
 
     def load_exports(self, args=None):
