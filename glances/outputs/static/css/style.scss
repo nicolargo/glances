@@ -1,488 +1,717 @@
-// Glances theme
+// ============================================================
+// Glances WebUI v5 — Modern Dark Theme
+// A refreshed look for the Glances system monitoring dashboard
+// ============================================================
 
-$glances-bg: #000;
-$glances-fg: #CCC;
-$glances-link-hover-color: #57cb6a;
-$glances-fonts: "Lucida Sans Typewriter","Lucida Console",Monaco,"Bitstream Vera Sans Mono",monospace;
-$glances-fonts-size: 14px;
+// === Color Palette ===
+$glances-bg-primary: #0d1117;
+$glances-bg-secondary: #161b22;
+$glances-bg-card: #1c2128;
+$glances-bg-elevated: #222830;
+$glances-border: #30363d;
+$glances-border-hover: #484f58;
+$glances-fg-primary: #e6edf3;
+$glances-fg-secondary: #8b949e;
+$glances-fg-muted: #6e7681;
 
-// Define colors and fonts
+// Semantic status colors
+$glances-ok: #3fb950;
+$glances-ok-bg: rgba(63, 185, 80, 0.15);
+$glances-careful: #58a6ff;
+$glances-careful-bg: rgba(88, 166, 255, 0.15);
+$glances-warning: #d2991d;
+$glances-warning-bg: rgba(210, 153, 29, 0.15);
+$glances-critical: #f85149;
+$glances-critical-bg: rgba(248, 81, 73, 0.15);
+$glances-error: #f0883e;
+$glances-error-bg: rgba(240, 136, 62, 0.15);
 
-// https://getbootstrap.com/docs/5.3/customize/css-variables/#root-variables
-:root,[data-bs-theme=dark] {
-    --bs-body-bg: $glances-bg;
-    --bs-body-color: $glances-fg;
-    --bs-body-font-size: $glances-fonts-size;
+// Accent
+$glances-accent: #7ee787;
+$glances-link: #58a6ff;
+$glances-link-hover: #79c0ff;
+
+// Typography
+$glances-font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+  Helvetica, Arial, sans-serif;
+$glances-font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code",
+  "SF Mono", "Lucida Sans Typewriter", "Lucida Console", Monaco,
+  "Bitstream Vera Sans Mono", monospace;
+$glances-font-size: 13px;
+$glances-font-size-sm: 12px;
+$glances-font-size-lg: 14px;
+
+// Radius
+$glances-radius: 6px;
+$glances-radius-lg: 8px;
+
+// === Bootstrap Variable Overrides ===
+:root,
+[data-bs-theme="dark"] {
+  --bs-body-bg: #{$glances-bg-primary};
+  --bs-body-color: #{$glances-fg-primary};
+  --bs-body-font-size: #{$glances-font-size};
+  --bs-border-color: #{$glances-border};
 }
 
+// === Base ===
 body {
-    background-color: $glances-bg;
-    color: $glances-fg;
-    font-family: $glances-fonts;
-    font-size: $glances-fonts-size;
-    overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    $glances-bg-primary 0%,
+    $glances-bg-secondary 100%
+  );
+  color: $glances-fg-primary;
+  font-family: $glances-font-ui;
+  font-size: $glances-font-size;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.title {
-    font-weight: bold;
+// Monospace for data values
+.plugin td span,
+.plugin th,
+#quicklook td span,
+.frequency,
+.progress,
+.table {
+  font-family: $glances-font-mono;
 }
-.highlight {
-    font-weight: bold !important;
-    color: #5D4062 !important;
-}
-.ok, .status, .process {
-    color: #3E7B04 !important;
+
+// === Status Colors ===
+.ok,
+.status,
+.process {
+  color: $glances-ok !important;
 }
 .ok_log {
-    background-color: #3E7B04 !important;
-    color: white !important;
+  background-color: $glances-ok !important;
+  color: #fff !important;
 }
 .max {
-    color: #3E7B04 !important;
-    font-weight: bold !important;
+  color: $glances-ok !important;
+  font-weight: bold !important;
 }
+
 .careful {
-    color: #295183 !important;
-    font-weight: bold !important;
+  color: $glances-careful !important;
+  font-weight: bold !important;
 }
 .careful_log {
-    background-color: #295183 !important;
-    color: white !important;
-    font-weight: bold !important;
+  background-color: $glances-careful !important;
+  color: #fff !important;
+  font-weight: bold !important;
 }
-.warning, .nice {
-    color: #5D4062 !important;
-    font-weight: bold !important;
+
+.warning,
+.nice {
+  color: $glances-warning !important;
+  font-weight: bold !important;
 }
 .warning_log {
-    background-color: #5D4062 !important;
-    color: white !important;
-    font-weight: bold !important;
+  background-color: $glances-warning !important;
+  color: #0d1117 !important;
+  font-weight: bold !important;
 }
+
 .critical {
-    color: #A30000 !important;
-    font-weight: bold !important;
+  color: $glances-critical !important;
+  font-weight: bold !important;
 }
 .critical_log {
-    background-color: #A30000 !important;
-    color: white !important;
-    font-weight: bold !important;
+  background-color: $glances-critical !important;
+  color: #fff !important;
+  font-weight: bold !important;
 }
+
 .error {
-    color: #EE6600 !important;
-    font-weight: bold !important;
+  color: $glances-error !important;
+  font-weight: bold !important;
 }
 .error_log {
-    background-color: #EE6600 !important;
-    color: white !important;
-    font-weight: bold !important;
+  background-color: $glances-error !important;
+  color: #0d1117 !important;
+  font-weight: bold !important;
 }
 
-// Layout
+.highlight {
+  font-weight: bold !important;
+  color: $glances-warning !important;
+}
+.title {
+  font-weight: 600;
+  color: $glances-fg-primary;
+  letter-spacing: 0.02em;
+}
 
+// === Layout ===
 .container-fluid {
-    margin-left: 0px;
-    margin-right: 0px;
-    padding-left: 0px;
-    padding-right: 0px;
+  margin: 0;
+  padding: 0;
 }
 
 .header {
-    height: 30px;
+  height: 36px;
+  padding: 6px 12px;
+  background: $glances-bg-secondary;
+  border-bottom: 1px solid $glances-border;
+  backdrop-filter: blur(12px);
 }
 
 .header-small {
-    height: 50px;
+  height: 52px;
+  padding: 4px 8px;
+  background: $glances-bg-secondary;
+  border-bottom: 1px solid $glances-border;
 }
 
 .header-small > div:nth-child(1) > section:nth-child(1) {
-    margin-bottom: 0em;
+  margin-bottom: 0;
+}
+
+// Top metrics bar
+.top {
+  padding: 8px 10px;
+  gap: 8px;
+  background: $glances-bg-primary;
 }
 
 .top-min {
-    height: 100px;
+  height: 110px;
 }
 
 .top-max {
-    height: 180px;
+  height: 190px;
 }
 
+// Sidebar
 .sidebar-min {
-    overflow-y: auto;
-    height: calc(100vh - 30px - 100px);
+  overflow-y: auto;
+  height: calc(100vh - 36px - 110px);
+  padding: 0 8px;
 }
 
 .sidebar-max {
-    overflow-y: auto;
-    height: calc(100vh - 30px - 180px);
+  overflow-y: auto;
+  height: calc(100vh - 36px - 190px);
+  padding: 0 8px;
 }
 
 .inline {
-    display: inline-block;
+  display: inline-block;
 }
 
-// Table
+// === Plugin Cards ===
+.plugin {
+  margin-bottom: 10px;
+  background: $glances-bg-card;
+  border: 1px solid $glances-border;
+  border-radius: $glances-radius-lg;
+  padding: 10px 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
+  &:hover {
+    border-color: $glances-border-hover;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+}
+
+// === Tables ===
 .table {
-    margin-bottom: 0px;
-}
-
-.margin-top {
-    margin-top: 0.5em;
-}
-
-.margin-bottom {
-    margin-bottom: 0.5em;
+  margin-bottom: 0;
+  color: $glances-fg-primary;
+  font-size: $glances-font-size-sm;
 }
 
 .table-sm > :not(caption) > * > * {
-    padding-top: 0em;
-    padding-right: 0.25rem;
-    padding-bottom: 0em;
-    padding-left: 0.25rem;
+  padding: 2px 6px;
 }
 
+.table-borderless > tbody > tr > td,
+.table-borderless > tbody > tr > th {
+  border: none;
+}
+
+.margin-top {
+  margin-top: 0.5em;
+}
+.margin-bottom {
+  margin-bottom: 0.5em;
+}
+
+// === Sortable headers ===
 .sort {
-    font-weight: bold;
-    color: white;
+  font-weight: 600;
+  color: $glances-fg-primary;
 }
-
 .sortable {
-    cursor: pointer;
-    text-decoration: underline;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: $glances-border;
+  text-underline-offset: 4px;
+
+  &:hover {
+    text-decoration-color: $glances-link;
+    color: $glances-link;
+  }
 }
 
 .text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// === Table hover ===
+#browser .table-hover tbody tr:hover td {
+  background: rgba($glances-link, 0.08);
+}
+#processlist .table-hover tbody tr:hover td {
+  background: rgba($glances-link, 0.08);
+}
+
+// === Buttons ===
+.button {
+  color: $glances-link;
+  background: rgba($glances-link, 0.1);
+  border: 1px solid rgba($glances-link, 0.3);
+  padding: 2px 8px;
+  border-radius: $glances-radius;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: $glances-font-ui;
+  font-size: $glances-font-size-sm;
+
+  &:hover {
+    background: rgba($glances-link, 0.2);
+    border-color: $glances-link;
+    color: $glances-link-hover;
+    box-shadow: 0 0 8px rgba($glances-link, 0.15);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+// === Frequency display ===
+.frequency {
+  display: inline-block;
+  width: 8em;
+  color: $glances-fg-secondary;
+}
+
+// === System header ===
+#system {
+  span {
+    padding-left: 12px;
+    color: $glances-fg-secondary;
+
+    &:first-child {
+      padding-left: 0;
+      color: $glances-accent;
+      font-weight: 600;
+    }
+  }
+}
+
+#ip span {
+  padding-left: 12px;
+  color: $glances-fg-secondary;
+}
+
+// === Quicklook ===
+#quicklook {
+  span {
+    padding: 0;
+    margin: 0;
+  }
+
+  .cpu-name {
     white-space: nowrap;
     overflow: hidden;
+    width: 100%;
     text-overflow: ellipsis;
-}
+    font-weight: 600;
+    color: $glances-fg-primary;
+  }
 
-#browser .table-hover tbody tr:hover td {
-    background: $glances-link-hover-color;
-}
-
-// Plugins
-
-.plugin {
-    margin-bottom: 1em;
-}
-
-.button {
-    color: #99CCFF;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid #99CCFF;
-    padding: 1px 5px;
-    border-radius: 5px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-    position: relative;
+  .progress {
+    min-width: 100px;
+    background-color: $glances-bg-primary;
+    height: 1.4em;
+    border-radius: $glances-radius;
+    text-align: right;
     overflow: hidden;
-}
+  }
 
-.button:hover {
-    background: rgba(183, 214, 255, 0.30);
-    border-color: #B0D0FF;
-    color: #B0D0FF;
-}
+  .progress-bar-ok {
+    background: linear-gradient(
+      90deg,
+      rgba($glances-ok, 0.8),
+      $glances-ok
+    );
+    border-radius: $glances-radius;
+    transition: width 0.4s ease;
+  }
 
-.button:active {
-    transform: scale(0.95);
-    box-shadow: 0 0 8px rgba(153, 204, 255, 0.5);
-}
+  .progress-bar-careful {
+    background: linear-gradient(
+      90deg,
+      rgba($glances-careful, 0.8),
+      $glances-careful
+    );
+    border-radius: $glances-radius;
+    transition: width 0.4s ease;
+  }
 
-.frequency {
+  .progress-bar-warning {
+    background: linear-gradient(
+      90deg,
+      rgba($glances-warning, 0.8),
+      $glances-warning
+    );
+    border-radius: $glances-radius;
+    transition: width 0.4s ease;
+  }
+
+  .progress-bar-critical {
+    background: linear-gradient(
+      90deg,
+      rgba($glances-critical, 0.8),
+      $glances-critical
+    );
+    border-radius: $glances-radius;
+    transition: width 0.4s ease;
+    animation: pulse-critical 2s ease-in-out infinite;
+  }
+
+  * > th,
+  td {
+    margin: 0;
+    padding: 2px 4px;
+  }
+
+  * > th:nth-child(1),
+  td:nth-child(1) {
+    width: 4em;
+    color: $glances-fg-secondary;
+    font-weight: 500;
+  }
+
+  * > th:nth-last-child(1),
+  td:nth-last-child(1) {
+    width: 4em;
+    text-align: right;
+    font-weight: 600;
+  }
+
+  * > td span {
     display: inline-block;
-    width: 8em;
+    width: 4em;
+    text-align: right;
+  }
 }
 
-#system {
-    span {
-        padding-left: 10px;
-    }
-    span:nth-child(1) {
-        padding-left: 0px;
-    }
-}
-
-#ip {
-    span {
-        padding-left: 10px;
-    }
-}
-
-#quicklook {
-    span {
-        padding: 0;
-        margin: 0;
-        padding-left: 10px;
-    }
-    span:nth-child(1) {
-        padding-left: 0px;
-    }
-    * > th, td {
-        margin: 0;
-        padding: 0;
-    }
-    * > th:nth-child(1), td:nth-child(1) {
-        width: 4em;
-    }
-    * > th:nth-last-child(1), td:nth-last-child(1) {
-        width: 4em;
-    }
-    * > td span {
-        display: inline-block;
-        width: 4em;
-    }
-    .progress {
-        min-width: 100px;
-        background-color: #000;
-        height: 1.5em;
-        border-radius: 0px;
-        text-align: right;
-    }
-    .progress-bar-ok {
-        background-color: #3E7B04;
-
-    }
-    .progress-bar-careful {
-        background-color: #295183;
-    }
-    .progress-bar-warning {
-        background-color: #5D4062;
-    }
-    .progress-bar-critical {
-        background-color: #A30000;
-    }
-    .cpu-name {
-        white-space: nowrap;
-        overflow: hidden;
-        width: 100%;
-        text-overflow: ellipsis;
-    }
-}
-
-#cpu {
-    * > td span {
-        display: inline-block;
-        width: 4em;
-    }
-}
-
-#npu {
-    * > td span {
-        display: inline-block;
-        width: 4em;
-    }
-}
-
-#mpp {
-    * > td span {
-        display: inline-block;
-        width: 4em;
-    }
-}
-
-#gpu {
-    * > td span {
-        display: inline-block;
-        width: 4em;
-    }
-}
-
-#mem {
-    * > td span {
-        display: inline-block;
-        width: 4em;
-    }
-}
-
+// === CPU, NPU, MPP, GPU, MEM ===
+#cpu,
+#npu,
+#mpp,
+#gpu,
+#mem,
 #memswap {
-    * > td span {
-        display: inline-block;
-        width: 4em;
-    }
+  * > td span {
+    display: inline-block;
+    width: 4em;
+    text-align: right;
+  }
 }
 
 #load {
-    * > td span {
-        display: inline-block;
-        width: 3em;
-    }
+  * > td span {
+    display: inline-block;
+    width: 3em;
+    text-align: right;
+  }
 }
 
-#vms {
-    span {
-        padding-left: 10px;
-    }
-    span:nth-child(1) {
-        padding-left: 0px;
-    }
-    .table {
-        margin-bottom: 1em;
-    }
-    * > th:not(:last-child), td:not(:last-child) {
-        width: 5em;
-    }
-    * > td:nth-child(2) {
-        width: 15em;
-    }
-    * > td:nth-child(3) {
-        width: 6em;
-    }
-    * > td:nth-child(6) {
-        text-align: right;
-    }
-    * > td:nth-child(8) {
-        width: 10em;
-    }
-    * > td:nth-child(7), td:nth-child(8), td:nth-child(9) {
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-}
-
+// === Containers ===
 #containers {
-    span {
-        padding-left: 10px;
+  span {
+    padding-left: 10px;
+    &:first-child {
+      padding-left: 0;
     }
-    span:nth-child(1) {
-        padding-left: 0px;
-    }
-    .table {
-        margin-bottom: 1em;
-    }
-    // Default column size
-    * > td:not(:last-child) {
-        width: 5em;
-    }
-    * > td:nth-child(1) {
-        width: 10em;
-    }
-    * > td:nth-child(2), td:nth-child(3) {
-        width: 15em;
-    }
-    * > td:nth-child(3) {
-        white-space: nowrap;
-        overflow: hidden;
-    }
-    // Status
-    * > td:nth-child(4) {
-        width: 6em;
-    }
-    * > td:nth-child(5) {
-        width: 10em;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    // Some column are align to the right
-    * > td:nth-child(7), td:nth-child(9), td:nth-child(11) {
-        text-align: right;
-    }
-    // Command
-    * > td:nth-child(13) {
-        text-align: left;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+  }
+
+  .table {
+    margin-bottom: 1em;
+  }
+
+  * > td:not(:last-child) {
+    width: 5em;
+  }
+
+  * > td:nth-child(1) {
+    width: 10em;
+    font-weight: 500;
+  }
+
+  * > td:nth-child(2),
+  td:nth-child(3) {
+    width: 15em;
+  }
+
+  * > td:nth-child(3) {
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  * > td:nth-child(4) {
+    width: 6em;
+  }
+
+  * > td:nth-child(5) {
+    width: 10em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  * > td:nth-child(7),
+  td:nth-child(9),
+  td:nth-child(11) {
+    text-align: right;
+  }
+
+  * > td:nth-child(13) {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
+// === VMS ===
+#vms {
+  .table {
+    margin-bottom: 1em;
+  }
+
+  * > th:not(:last-child),
+  td:not(:last-child) {
+    width: 5em;
+  }
+
+  * > td:nth-child(2) {
+    width: 15em;
+  }
+
+  * > td:nth-child(3) {
+    width: 6em;
+  }
+
+  * > td:nth-child(6) {
+    text-align: right;
+  }
+
+  * > td:nth-child(8) {
+    width: 10em;
+  }
+
+  * > td:nth-child(7),
+  td:nth-child(8),
+  td:nth-child(9) {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// === Process Count ===
 #processcount {
-    span {
-        padding-left: 10px;
+  margin-bottom: 0;
+  padding: 8px 12px;
+  background: $glances-bg-card;
+  border: 1px solid $glances-border;
+  border-radius: $glances-radius-lg;
+
+  span {
+    padding-left: 10px;
+    &:first-child {
+      padding-left: 0;
     }
-    span:nth-child(1) {
-        padding-left: 0px;
-    }
-    margin-bottom: 0px;
+  }
 }
 
-#amps {
-    .process-result {
-        max-width: 300px;
-        overflow: hidden;
-        white-space: pre-wrap;
-        padding-left: 10px;
-        text-overflow: ellipsis;
-    }
-    .table {
-        margin-bottom: 1em;
-    }
-    * > td:nth-child(8) {
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-}
-
-#processlist div.extendedstats {
-        margin-bottom: 1em;
-        margin-top: 1em;
-}
-
-#processlist div.extendedstats div span:not(:last-child) {
-        margin-right: 1em;
-}
-
+// === Process List ===
 #processlist {
-    overflow-y: auto;
-    height: 600px;
+  overflow-y: auto;
+  height: 600px;
+  margin-top: 8px;
+
+  .table {
+    margin-bottom: 1em;
+  }
+
+  div.extendedstats {
+    margin-bottom: 1em;
     margin-top: 1em;
 
-    .table {
-        margin-bottom: 1em;
+    div span:not(:last-child) {
+      margin-right: 1em;
     }
+  }
 
-    .table-hover tbody tr:hover td {
-        background: $glances-link-hover-color;
-    }
+  * > td:nth-child(-n + 12) {
+    width: 5em;
+  }
 
-    // Default column size
-    * > td:nth-child(-n+12) {
-        width: 5em;
-    }
-    // Some column are align to the right
-    * > td:nth-child(5), td:nth-child(7), td:nth-child(9), td:nth-child(11) {
-        text-align: right;
-    }
-    // Process user
-    * > td:nth-child(6) {
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        width: 6em;
-    }
-    // Time
-    * > td:nth-child(7) {
-        width: 6em;
-    }
-    // Nice and Status
-    * > td:nth-child(9), td:nth-child(10) {
-        width: 2em;
-    }
-    // Process name & Command line
-    * > td:nth-child(13), td:nth-child(14) {
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+  * > td:nth-child(5),
+  td:nth-child(7),
+  td:nth-child(9),
+  td:nth-child(11) {
+    text-align: right;
+  }
+
+  * > td:nth-child(6) {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 6em;
+  }
+
+  * > td:nth-child(7) {
+    width: 6em;
+  }
+
+  * > td:nth-child(9),
+  td:nth-child(10) {
+    width: 2em;
+  }
+
+  * > td:nth-child(13),
+  td:nth-child(14) {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
+// === AMPS ===
+#amps {
+  .process-result {
+    max-width: 300px;
+    overflow: hidden;
+    white-space: pre-wrap;
+    padding-left: 10px;
+    text-overflow: ellipsis;
+    color: $glances-fg-secondary;
+  }
 
+  .table {
+    margin-bottom: 1em;
+  }
+
+  * > td:nth-child(8) {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// === Alerts ===
 #alerts {
-    span {
-        padding-left: 10px;
+  span {
+    padding-left: 10px;
+    &:first-child {
+      padding-left: 0;
     }
-    span:nth-child(1) {
-        padding-left: 0px;
-    }
-    * > td:nth-child(1) {
-        width: 20em;
-    }
+  }
+
+  * > td:nth-child(1) {
+    width: 20em;
+    font-weight: 500;
+  }
 }
 
-// Central Glances Browser
-
+// === Browser ===
 #browser {
-    table {
-        margin-top: 1em;
-    }
+  table {
+    margin-top: 1em;
+  }
+}
+
+// === Loading Screen ===
+#loading-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: $glances-bg-primary;
+}
+
+.loader {
+  color: $glances-fg-secondary;
+  font-family: $glances-font-mono;
+  font-size: 14px;
+  animation: fade-pulse 1.5s ease-in-out infinite;
+}
+
+// === Scrollbar ===
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $glances-border;
+  border-radius: 3px;
+
+  &:hover {
+    background: $glances-border-hover;
+  }
+}
+
+// === Animations ===
+@keyframes fade-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-critical {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba($glances-critical, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 8px 2px rgba($glances-critical, 0.2);
+  }
+}
+
+// Value change transition
+.plugin td span,
+.progress-bar-ok,
+.progress-bar-careful,
+.progress-bar-warning,
+.progress-bar-critical {
+  transition: all 0.3s ease;
+}
+
+// === Responsive tweaks ===
+@media (max-width: 768px) {
+  .plugin {
+    padding: 6px 8px;
+    margin-bottom: 6px;
+    border-radius: $glances-radius;
+  }
+
+  .top {
+    padding: 4px;
+    gap: 4px;
+  }
 }
