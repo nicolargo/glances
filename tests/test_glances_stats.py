@@ -13,7 +13,7 @@ def plugin_manager():
     return GlancesStats()
 
 
-class Testload_additional_plugins:
+class Testload_additional_plugins:  # noqa: D203
     """Tests for helper methods and main method of load_additional_plugins."""
 
     def test_contains_plugin_model_returns_true(self, plugin_manager):
