@@ -18,7 +18,6 @@ class Testload_additional_plugins:
 
     def test_contains_plugin_model_returns_true(self, plugin_manager):
         """Should return True when PluginModel class exists."""
-
         with tempfile.TemporaryDirectory() as tmpdir:
             plugin_file = Path(tmpdir) / "model.py"
 
@@ -29,11 +28,10 @@ class Testload_additional_plugins:
 
             result = plugin_manager._contains_plugin_model(plugin_file)
 
-            assert result is True
+            assert result is True  # nosec B101
 
     def test_contains_plugin_model_returns_false(self, plugin_manager):
         """Should return False when PluginModel class does not exist."""
-
         with tempfile.TemporaryDirectory() as tmpdir:
             plugin_file = Path(tmpdir) / "model.py"
 
@@ -44,11 +42,10 @@ class Testload_additional_plugins:
 
             result = plugin_manager._contains_plugin_model(plugin_file)
 
-            assert result is False
+            assert result is False  # nosec B101
 
     def test_contains_plugin_model_handles_syntax_error(self, plugin_manager):
         """Should return False for invalid Python syntax."""
-
         with tempfile.TemporaryDirectory() as tmpdir:
             plugin_file = Path(tmpdir) / "model.py"
 
@@ -59,11 +56,10 @@ class Testload_additional_plugins:
 
             result = plugin_manager._contains_plugin_model(plugin_file)
 
-            assert result is False
+            assert result is False  # nosec B101
 
     def test_get_addl_plugins_returns_valid_plugins(self, plugin_manager):
         """Should return only valid plugin directories."""
-
         with tempfile.TemporaryDirectory() as tmpdir:
             plugin_dir = Path(tmpdir)
 
@@ -85,7 +81,7 @@ class Testload_additional_plugins:
 
             result = plugin_manager._get_addl_plugins(plugin_dir)
 
-            assert result == ["valid_plugin"]
+            assert result == ["valid_plugin"]  # nosec B101
 
     @patch("glances.stats.import_module")
     @patch("glances.stats.Counter")
@@ -96,7 +92,6 @@ class Testload_additional_plugins:
         plugin_manager,
     ):
         """Should load and register additional plugins."""
-
         mock_args = MagicMock()
         mock_args.plugin_dir = "/fake/plugins"
         mock_args.__contains__.return_value = True
@@ -114,4 +109,4 @@ class Testload_additional_plugins:
         ):
             plugin_manager.load_additional_plugins(args=mock_args)
 
-        assert "test_plugin" in plugin_manager._plugins
+        assert "test_plugin" in plugin_manager._plugins  # nosec B101

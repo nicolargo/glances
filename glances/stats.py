@@ -147,7 +147,6 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
 
     def _contains_plugin_model(self, plugin_file):
         """Return True if the module defines a PluginModel class."""
-
         try:
             # Read and parse the Python source file into an AST
             # so plugin detection is based on actual class definitions
@@ -170,7 +169,6 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
 
     def _get_addl_plugins(self, plugin_path):
         """Get list of additional plugins."""
-
         plugin_list = []
 
         # Iterate through each directory in the configured plugin path.
