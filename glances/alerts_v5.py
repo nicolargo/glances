@@ -173,6 +173,14 @@ class GlancesAlerts:
         threshold-derived `_levels` may not be stable before then; v4
         ignores logs during the same window.
         """
+        # Plugin-level opt-out: when ``EMITS_ALERTS=False`` the plugin still
+        # produces ``_levels`` for the renderer's colouring, but the alerts
+        # pipeline ignores it (no history, no action dispatch). Used by
+        # plugins whose watched-field semantic is decorative — see
+        # ``GlancesPluginBase.EMITS_ALERTS``.
+        if not getattr(plugin, "EMITS_ALERTS", True):
+            return
+
         # Warmup: increment the per-plugin counter and bail out early until
         # the warmup window has elapsed. The TUI still colours cells from
         # `_levels` — only the alert ingestion (history + actions) waits.

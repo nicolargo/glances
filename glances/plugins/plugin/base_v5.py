@@ -73,6 +73,16 @@ class GlancesPluginBase(Generic[T], ABC):
     IS_COLLECTION: ClassVar[bool] = False
     """False for scalar plugins (cpu, mem), True for collection plugins (fs, network)."""
 
+    EMITS_ALERTS: ClassVar[bool] = True
+    """Whether ``_levels`` produced by this plugin should drive the alerts pipeline.
+
+    When False, `_levels` is still computed (so the TUI keeps colouring cells)
+    but `GlancesAlerts.ingest_plugin` skips this plugin entirely — no history
+    events, no action dispatch. Used by plugins where the watched-field
+    semantic is decorative only (e.g. processlist: per-process CPU/MEM
+    colouring informs the operator visually but does not warrant an
+    actionable alert per-pid, since v4 does not page on individual procs)."""
+
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {}
     """Per-field schema. See architecture §3.2."""
 

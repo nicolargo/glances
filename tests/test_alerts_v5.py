@@ -855,3 +855,36 @@ async def test_warmup_zero_means_immediate_ingestion(tmp_path, monkeypatch, stor
     plugin = _FakeScalarPlugin(store, config)
     await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
     assert len(alerts.get_history()) == 1
+
+
+# ---------------------------------------------------------- EMITS_ALERTS opt-out
+
+
+async def test_plugin_with_emits_alerts_false_is_skipped(tmp_path, monkeypatch, store):
+    """Plugins flagged ``EMITS_ALERTS=False`` produce ``_levels`` for the
+    renderer but contribute nothing to the alerts history.
+
+    Mirrors the processlist case: per-process CPU/MEM thresholds drive cell
+    colouring without paging the operator on individual pids."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\nwarmup_cycles=0\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+    plugin.EMITS_ALERTS = False  # opt-out (subclass-level in real plugins)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert alerts.get_history() == []
+
+
+async def test_plugin_with_emits_alerts_false_does_not_fire_actions(tmp_path, monkeypatch, store):
+    """Opt-out also prevents action dispatch (entry + repeat)."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[alerts]\nmin_duration_seconds=0\nwarmup_cycles=0\n[fakescalar]\npercent_critical_action=run_recording\n",
+    )
+    recording = _RecordingAction()
+    registry = {"run_recording": recording}
+    alerts = GlancesAlerts(config, actions=registry)
+    plugin = _FakeScalarPlugin(store, config)
+    plugin.EMITS_ALERTS = False
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert recording.calls == []

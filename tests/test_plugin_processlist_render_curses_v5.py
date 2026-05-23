@@ -19,9 +19,10 @@ USER_COL = 5
 THR_COL = 6
 NICE_COL = 7
 STATUS_COL = 8
-RS_COL = 9
-WS_COL = 10
-CMD_START = 11
+TIME_COL = 9
+RS_COL = 10
+WS_COL = 11
+CMD_START = 12
 
 
 @pytest.fixture
@@ -57,6 +58,7 @@ def _proc(**overrides):
         "cpu_num": 2,
         "memory_info": {"rss": 32 * 1024**2, "vms": 120 * 1024**2},
         "io_counters": [0, 0, 0, 0, 1],  # io_tag=1, zero traffic
+        "cpu_times": {"user": 1.0, "system": 0.5},
         "time_since_update": 1.0,
     }
     base.update(overrides)
@@ -94,7 +96,7 @@ def payload():
 def test_render_header_first_row(payload, fields):
     rows = render(payload, fields)
     flat = " ".join(c.text for c in rows[0].cells)
-    for col in ("CPU%", "MEM%", "VIRT", "RES", "PID", "USER", "THR", "NI", "S", "R/s", "W/s", "Command"):
+    for col in ("CPU%", "MEM%", "VIRT", "RES", "PID", "USER", "THR", "NI", "S", "TIME+", "R/s", "W/s", "Command"):
         assert col in flat, col
 
 
@@ -180,6 +182,37 @@ def test_render_io_rate_unknown_when_no_io_counters(fields):
     p = _proc(pid=1, io_counters=None)
     rows = render({"data": [p], "_levels": {}}, fields)
     assert "?" in rows[1].cells[RS_COL].text
+
+
+# ---------------------------------------------------------- TIME+ column
+
+
+def test_render_time_under_one_hour_uses_minutes_seconds(fields):
+    """``cpu_times.user + .system`` < 1h → ``MM:SS`` (v4 parity)."""
+    p = _proc(pid=1, cpu_times={"user": 60.0, "system": 30.0})  # 1m30s
+    rows = render({"data": [p], "_levels": {}}, fields)
+    assert "1:30" in rows[1].cells[TIME_COL].text
+
+
+def test_render_time_over_one_hour_uses_h_mm_ss(fields):
+    """1h ≤ t < 100h → ``{H}h{MM:SS}``."""
+    p = _proc(pid=1, cpu_times={"user": 3600.0 + 5 * 60 + 30, "system": 0.0})  # 1h05:30
+    rows = render({"data": [p], "_levels": {}}, fields)
+    assert "1h05:30" in rows[1].cells[TIME_COL].text
+
+
+def test_render_time_missing_renders_question(fields):
+    """No cpu_times → ``?`` (v4 parity)."""
+    p = _proc(pid=1, cpu_times=None)
+    rows = render({"data": [p], "_levels": {}}, fields)
+    assert "?" in rows[1].cells[TIME_COL].text
+
+
+def test_render_time_tuple_format_supported(fields):
+    """psutil pcputimes namedtuple comes through as a (user, system, ...) tuple."""
+    p = _proc(pid=1, cpu_times=(2.0, 1.0, 0.0, 0.0))  # 3s total
+    rows = render({"data": [p], "_levels": {}}, fields)
+    assert "0:03" in rows[1].cells[TIME_COL].text
 
 
 # ---------------------------------------------------------- categorical colour

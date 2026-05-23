@@ -13,9 +13,9 @@ processes (engine pre-sorts by ``cpu_percent`` descending).
 
 Reference layout:
 
-    CPU%  MEM%  VIRT   RES      PID USER       THR  NI S   R/s  W/s  Command
-    78.4   3.1  120M  32.1M   12345 alice        4   0 S   0B   0B   python myscript.py
-     0.5   0.2   2.4M  1.0M     512 root         2   0 S   0B   0B   sshd
+    CPU%  MEM%  VIRT   RES      PID USER       THR  NI S  TIME+    R/s  W/s  Command
+    78.4   3.1  120M  32.1M   12345 alice        4   0 S  0:12     0B   0B   python myscript.py
+     0.5   0.2   2.4M  1.0M     512 root         2   0 S  3:42     0B   0B   sshd
     ...
 
 Columns:
@@ -27,6 +27,9 @@ Columns:
 - ``THR``             — number of threads.
 - ``NI``              — nice value (categorical alert when configured).
 - ``S``               — single-letter status (categorical alert when configured).
+- ``TIME+``           — cumulative CPU time (``cpu_times.user + cpu_times.system``).
+  Format mirrors v4: ``MM:SS`` under 1h, ``Hh{MM:SS}`` between 1h and 99h,
+  ``<hours>h`` past 100h. Unknown → ``?``.
 - ``R/s`` / ``W/s``   — IO rates from ``io_counters[0..3]`` / ``time_since_update``
   (engine pattern: ``[r_new, w_new, r_old, w_old, io_tag]``). ``io_tag == 0``
   (access denied or first cycle) → ``?``.
@@ -55,6 +58,7 @@ _W_USER = 10
 _W_THR = 3
 _W_NI = 2
 _W_STATUS = 1
+_W_TIME = 8
 _W_IO = 5
 _W_PID_DEFAULT = 7
 _MAX_ROWS = 20
@@ -84,6 +88,40 @@ def _format_username(value: Any) -> str:
     if len(text) > _W_USER:
         return text[: _W_USER - 1] + "+"
     return text.ljust(_W_USER)
+
+
+def _format_cpu_time(item: dict[str, Any], width: int) -> str:
+    """Render ``cpu_times.user + cpu_times.system`` as v4-style TIME+.
+
+    Same rules as v4 ``_get_process_curses_cpu_times``:
+    - ``hours > 99``           → ``{hours}h`` (left-padded to width).
+    - ``0 < hours < 100``      → ``{H}h{MM:SS}``  (e.g. ``1h05:30``).
+    - ``hours == 0``           → ``{M}:{SS}``    (e.g. ``5:30``).
+    - Missing / unparsable     → ``?``.
+    """
+    raw = item.get("cpu_times")
+    user = system = None
+    if isinstance(raw, dict):
+        user = raw.get("user")
+        system = raw.get("system")
+    elif isinstance(raw, (tuple, list)) and len(raw) >= 2:
+        user, system = raw[0], raw[1]
+    try:
+        total = float(user) + float(system)
+    except (TypeError, ValueError):
+        return "?".rjust(width)
+    if total < 0:
+        return "?".rjust(width)
+    total_int = int(total)
+    minutes, seconds = divmod(total_int, 60)
+    hours, minutes = divmod(minutes, 60)
+    if hours > 99:
+        text = f"{hours}h"
+    elif hours > 0:
+        text = f"{hours}h{minutes:02d}:{seconds:02d}"
+    else:
+        text = f"{minutes}:{seconds:02d}"
+    return text.rjust(width)
 
 
 def _format_bytes(value: Any, width: int) -> str:
@@ -245,6 +283,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         Cell(text="THR".rjust(_W_THR), color=ColorRole.HEADER, bold=True),
         Cell(text="NI".rjust(_W_NI), color=ColorRole.HEADER, bold=True),
         Cell(text="S".rjust(_W_STATUS), color=ColorRole.HEADER, bold=True),
+        Cell(text="TIME+".rjust(_W_TIME), color=ColorRole.HEADER, bold=True),
         Cell(text="R/s".rjust(_W_IO), color=ColorRole.HEADER, bold=True),
         Cell(text="W/s".rjust(_W_IO), color=ColorRole.HEADER, bold=True),
         Cell(text="Command", color=ColorRole.HEADER, bold=True),
@@ -271,6 +310,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
             Cell(text=_format_int(item.get("num_threads"), _W_THR)),
             _level_text_cell(nice_text, pid_levels.get("nice")),
             _level_text_cell(status_letter, pid_levels.get("status")),
+            Cell(text=_format_cpu_time(item, _W_TIME)),
             _io_cell(r_rate, r_unknown, _W_IO),
             _io_cell(w_rate, w_unknown, _W_IO),
         ]

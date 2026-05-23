@@ -46,6 +46,11 @@ class PluginModel(GlancesPluginBase[list]):
 
     plugin_name: ClassVar[str] = "processlist"
     IS_COLLECTION: ClassVar[bool] = True
+    # Per-process thresholds drive the TUI colouring (high-CPU procs in
+    # warning/critical) but must NOT page or pile up events: v4 never raised
+    # alerts on individual processes, only on aggregate signals (CPU%, MEM%,
+    # LOAD…). Keep colouring, skip the alerts pipeline.
+    EMITS_ALERTS: ClassVar[bool] = False
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "pid": {

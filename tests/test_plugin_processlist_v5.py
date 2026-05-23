@@ -74,6 +74,14 @@ def test_plugin_identity(store, config):
     assert plugin._primary_key == "pid"
 
 
+def test_processlist_opts_out_of_alerts(store, config):
+    """processlist colours cells but must NOT emit alerts events / actions.
+
+    v4 never paged on individual processes; v5 mirrors this — `_levels` is
+    computed for the renderer only. See base ``EMITS_ALERTS`` doc."""
+    assert PluginModel.EMITS_ALERTS is False
+
+
 def test_pid_is_primary_key(store, config):
     fields = PluginModel(store, config)._fields
     assert fields["pid"].get("primary_key") is True
