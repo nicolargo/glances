@@ -240,6 +240,16 @@ class GlancesServer:
                 "XML-RPC server is running without authentication and with CORS Access-Control-Allow-Origin: *. "
             )
 
+        # Warn if running without Host header validation (DNS rebinding protection)
+        if not getattr(self.server, 'allowed_hosts', None):
+            print(
+                "WARNING: Glances XML-RPC server is running without Host header validation.\n"
+                "         DNS rebinding attacks may allow untrusted pages to read the XML-RPC API.\n"
+                "         Set xmlrpc_allowed_hosts in glances.conf [outputs] to restrict access:\n"
+                "           xmlrpc_allowed_hosts=localhost,127.0.0.1,<your-hostname>"
+            )
+            logger.warning("XML-RPC server is running without Host header validation (DNS rebinding protection)")
+
         # Register functions
         self.server.register_introspection_functions()
         self.server.register_instance(GlancesInstance(config, args))
