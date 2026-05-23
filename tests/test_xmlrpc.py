@@ -7,8 +7,9 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Tests for the Glances XML-RPC server Host header validation
-(GHSA-w856-8p3r-p338 / CVE-2026-46611)."""
+"""Tests for the Glances XML-RPC server security headers:
+- Host header validation (GHSA-w856-8p3r-p338 / CVE-2026-46611)
+- CORS per-request origin reflection (GHSA-87qc-fj39-wccr / CVE-2026-46608)."""
 
 import shlex
 import socket
@@ -25,11 +26,15 @@ URL = f"http://127.0.0.1:{SERVER_PORT}/RPC2"
 SECURE_PORT = 62210
 SECURE_URL = f"http://127.0.0.1:{SECURE_PORT}/RPC2"
 
+CORS_PORT = 62211
+CORS_URL = f"http://127.0.0.1:{CORS_PORT}/RPC2"
+
 XMLRPC_BODY = '<?xml version="1.0"?><methodCall><methodName>init</methodName></methodCall>'
 
 
 pid = None
 pid_secure = None
+pid_cors = None
 
 
 class TestGlancesXmlrpc(unittest.TestCase):
@@ -122,6 +127,78 @@ class TestGlancesXmlrpc(unittest.TestCase):
         r = self.post_secure(f'127.0.0.1:{SECURE_PORT}')
         self.assertEqual(r.status_code, 200)
 
+    def post_with_origin(self, url, origin):
+        """POST an XML-RPC call with a specific Origin header."""
+        return requests.post(
+            url,
+            data=XMLRPC_BODY,
+            headers={'Origin': origin, 'Content-Type': 'text/plain'},
+            timeout=5,
+        )
+
+    def test_020_default_cors_wildcard(self):
+        """Default cors_origins=* echoes ACAO: * for any Origin."""
+        print('INFO: [TEST_020] Default CORS wildcard')
+        r = self.post_with_origin(URL, 'http://evil.example.com')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.headers.get('Access-Control-Allow-Origin'), '*')
+
+    def test_030_start_cors_server(self):
+        """Start a third XML-RPC server with a two-entry cors_origins allowlist."""
+        global pid_cors
+        print('INFO: [TEST_030] Start CORS-restricted XML-RPC server')
+        cmdline = sys.executable
+        cmdline += (
+            f" -m glances -B 127.0.0.1 -s -p {CORS_PORT}"
+            " --disable-autodiscover"
+            " -C ./tests/conf/glances_xmlrpc_cors.conf"
+        )
+        print(f"Run: {cmdline}")
+        pid_cors = subprocess.Popen(shlex.split(cmdline))
+        print("Wait 5 seconds for server start...")
+        time.sleep(5)
+        self.assertIsNotNone(pid_cors)
+
+    def test_031_cors_reflects_first_allowed_origin(self):
+        """Multi-origin allowlist reflects a matching Origin, with Vary: Origin."""
+        print('INFO: [TEST_031] First allowlisted Origin reflected')
+        r = self.post_with_origin(CORS_URL, 'https://dashboard.glances.test')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(
+            r.headers.get('Access-Control-Allow-Origin'),
+            'https://dashboard.glances.test',
+        )
+        self.assertEqual(r.headers.get('Vary'), 'Origin')
+
+    def test_032_cors_reflects_second_allowed_origin(self):
+        """All entries in the allowlist are honoured, not just the first one."""
+        print('INFO: [TEST_032] Second allowlisted Origin reflected')
+        r = self.post_with_origin(CORS_URL, 'https://grafana.glances.test')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(
+            r.headers.get('Access-Control-Allow-Origin'),
+            'https://grafana.glances.test',
+        )
+
+    def test_033_cors_foreign_origin_no_header(self):
+        """Foreign Origin: no ACAO header is emitted (request still succeeds)."""
+        print('INFO: [TEST_033] Foreign Origin gets no ACAO header')
+        r = self.post_with_origin(CORS_URL, 'http://evil.example.com')
+        self.assertEqual(r.status_code, 200)
+        self.assertNotIn('Access-Control-Allow-Origin', r.headers)
+
+    def test_034_cors_no_origin_no_header(self):
+        """Non-browser client (no Origin header): no ACAO emitted either."""
+        print('INFO: [TEST_034] Missing Origin header -> no ACAO')
+        r = requests.post(
+            CORS_URL,
+            data=XMLRPC_BODY,
+            headers={'Content-Type': 'text/plain'},
+            timeout=5,
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertNotIn('Access-Control-Allow-Origin', r.headers)
+
     def test_016_secure_missing_host_rejected(self):
         """HTTP/1.0 request with no Host header -> 400."""
         print('INFO: [TEST_016] Missing Host header rejected')
@@ -144,11 +221,13 @@ class TestGlancesXmlrpc(unittest.TestCase):
         self.assertIn(b'400', status_line)
 
     def test_999_stop_server(self):
-        """Stop both Glances XML-RPC servers."""
-        print('INFO: [TEST_999] Stop both servers')
+        """Stop all Glances XML-RPC servers."""
+        print('INFO: [TEST_999] Stop all servers')
         pid.terminate()
         if pid_secure is not None:
             pid_secure.terminate()
+        if pid_cors is not None:
+            pid_cors.terminate()
         time.sleep(1)
         self.assertTrue(True)
 
