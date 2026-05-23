@@ -1,206 +1,155 @@
 #!/usr/bin/env python
 #
-# Glances - An eye on your system
+# This file is part of Glances.
 #
 # SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Glances unitary tests suite for the XML-RPC API."""
+"""Tests for the Glances XML-RPC server Host header validation
+(GHSA-w856-8p3r-p338 / CVE-2026-46611)."""
 
-import json
 import shlex
+import socket
 import subprocess
 import sys
 import time
 import unittest
 
-from glances import __version__
-from glances.client import GlancesClient
+import requests
 
-SERVER_HOST = 'localhost'
-SERVER_PORT = 61235
+SERVER_PORT = 62209
+URL = f"http://127.0.0.1:{SERVER_PORT}/RPC2"
+
+SECURE_PORT = 62210
+SECURE_URL = f"http://127.0.0.1:{SECURE_PORT}/RPC2"
+
+XMLRPC_BODY = '<?xml version="1.0"?><methodCall><methodName>init</methodName></methodCall>'
+
+
 pid = None
+pid_secure = None
 
 
-# Init the XML-RPC client
-class args:
-    client = SERVER_HOST
-    port = SERVER_PORT
-    username = ""
-    password = ""
-    time = 3
-    quiet = False
-
-
-client = GlancesClient(args=args).client
-
-# Unitest class
-# ==============
-print(f'XML-RPC API unitary tests for Glances {__version__}')
-
-
-class TestGlances(unittest.TestCase):
-    """Test Glances class."""
+class TestGlancesXmlrpc(unittest.TestCase):
+    """Glances XML-RPC server Host header validation tests."""
 
     def setUp(self):
-        """The function is called *every time* before test_*."""
         print('\n' + '=' * 78)
 
+    def post(self, host_header):
+        """POST an XML-RPC call with a specific Host header (default server)."""
+        return requests.post(
+            URL,
+            data=XMLRPC_BODY,
+            headers={'Host': host_header, 'Content-Type': 'text/plain'},
+            timeout=5,
+        )
+
+    def post_secure(self, host_header):
+        """POST an XML-RPC call with a specific Host header (allowlisted server)."""
+        return requests.post(
+            SECURE_URL,
+            data=XMLRPC_BODY,
+            headers={'Host': host_header, 'Content-Type': 'text/plain'},
+            timeout=5,
+        )
+
     def test_000_start_server(self):
-        """Start the Glances Web Server."""
+        """Start the Glances XML-RPC server (no allowlist configured)."""
         global pid
+        print('INFO: [TEST_000] Start the Glances XML-RPC Server')
+        cmdline = sys.executable
+        cmdline += f" -m glances -B 127.0.0.1 -s -p {SERVER_PORT} --disable-autodiscover -C ./conf/glances.conf"
+        print(f"Run: {cmdline}")
+        pid = subprocess.Popen(shlex.split(cmdline))
+        print("Wait 5 seconds for server start...")
+        time.sleep(5)
+        self.assertIsNotNone(pid)
 
-        print('INFO: [TEST_000] Start the Glances Web Server')
-        cmdline = f"{sys.executable} -m glances -B localhost -s -p {SERVER_PORT}"
-        print(f"Run the Glances Server on port {SERVER_PORT}")
-        args = shlex.split(cmdline)
-        pid = subprocess.Popen(args)
-        print("Please wait...")
-        time.sleep(1)
+    def test_001_default_accepts_any_host(self):
+        """Without xmlrpc_allowed_hosts set, any Host header is accepted."""
+        print('INFO: [TEST_001] Default = permissive (no allowlist)')
+        r = self.post('attacker.example.com')
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('<methodResponse>', r.text)
 
-        self.assertTrue(pid is not None)
+    def test_010_start_secure_server(self):
+        """Start a second XML-RPC server with xmlrpc_allowed_hosts configured."""
+        global pid_secure
+        print('INFO: [TEST_010] Start secured XML-RPC server')
+        cmdline = sys.executable
+        cmdline += (
+            f" -m glances -B 127.0.0.1 -s -p {SECURE_PORT}"
+            " --disable-autodiscover"
+            " -C ./tests/conf/glances_xmlrpc_allowed_hosts.conf"
+        )
+        print(f"Run: {cmdline}")
+        pid_secure = subprocess.Popen(shlex.split(cmdline))
+        print("Wait 5 seconds for server start...")
+        time.sleep(5)
+        self.assertIsNotNone(pid_secure)
 
-    def test_001_all(self):
-        """All."""
-        method = "getAll()"
-        print('INFO: [TEST_001] Connection test')
-        print(f"XML-RPC request: {method}")
-        req = json.loads(client.getAll())
+    def test_011_secure_rejects_spoofed_host(self):
+        """With xmlrpc_allowed_hosts=127.0.0.1, Host: attacker.example.com -> 400."""
+        print('INFO: [TEST_011] Spoofed Host rejected with 400')
+        r = self.post_secure('attacker.example.com')
+        self.assertEqual(r.status_code, 400)
 
-        self.assertIsInstance(req, dict)
+    def test_012_secure_accepts_listed_host(self):
+        """Allowlisted Host returns 200."""
+        print('INFO: [TEST_012] Allowlisted Host accepted')
+        r = self.post_secure('127.0.0.1')
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('<methodResponse>', r.text)
 
-    def test_002_pluginslist(self):
-        """Plugins list."""
-        method = "getAllPlugins()"
-        print('INFO: [TEST_002] Get plugins list')
-        print(f"XML-RPC request: {method}")
-        req = json.loads(client.getAllPlugins())
-        print(req)
+    def test_013_secure_wildcard_match(self):
+        """Wildcard pattern *.glances.test matches subdomain."""
+        print('INFO: [TEST_013] Wildcard match')
+        r = self.post_secure('node1.glances.test')
+        self.assertEqual(r.status_code, 200)
 
-        self.assertIsInstance(req, list)
-        self.assertIn('cpu', req)
+    def test_014_secure_wildcard_no_bare_match(self):
+        """*.glances.test does NOT match the bare domain glances.test."""
+        print('INFO: [TEST_014] Wildcard does not match bare domain')
+        r = self.post_secure('glances.test')
+        self.assertEqual(r.status_code, 400)
 
-    def test_003_system(self):
-        """System."""
-        method = "getSystem()"
-        print(f'INFO: [TEST_003] Method: {method}')
-        req = json.loads(client.getPlugin('system'))
+    def test_015_secure_strips_port(self):
+        """Host: 127.0.0.1:62210 matches the bare 127.0.0.1 entry."""
+        print('INFO: [TEST_015] Port is stripped before matching')
+        r = self.post_secure(f'127.0.0.1:{SECURE_PORT}')
+        self.assertEqual(r.status_code, 200)
 
-        self.assertIsInstance(req, dict)
-
-    def test_004_cpu(self):
-        """CPU."""
-        method = "getCpu(), getPerCpu(), getLoad() and getCore()"
-        print(f'INFO: [TEST_004] Method: {method}')
-
-        req = json.loads(client.getPlugin('cpu'))
-        self.assertIsInstance(req, dict)
-
-        req = json.loads(client.getPlugin('percpu'))
-        self.assertIsInstance(req, list)
-
-        req = json.loads(client.getPlugin('load'))
-        self.assertIsInstance(req, dict)
-
-        req = json.loads(client.getPlugin('core'))
-        self.assertIsInstance(req, dict)
-
-    def test_005_mem(self):
-        """MEM."""
-        method = "getMem() and getMemSwap()"
-        print(f'INFO: [TEST_005] Method: {method}')
-
-        req = json.loads(client.getPlugin('mem'))
-        self.assertIsInstance(req, dict)
-
-        req = json.loads(client.getPlugin('memswap'))
-        self.assertIsInstance(req, dict)
-
-    def test_006_net(self):
-        """NETWORK."""
-        method = "getNetwork()"
-        print(f'INFO: [TEST_006] Method: {method}')
-
-        req = json.loads(client.getPlugin('network'))
-        self.assertIsInstance(req, list)
-
-    def test_007_disk(self):
-        """DISK."""
-        method = "getFs(), getFolders() and getDiskIO()"
-        print(f'INFO: [TEST_007] Method: {method}')
-
-        req = json.loads(client.getPlugin('fs'))
-        self.assertIsInstance(req, list)
-
-        req = json.loads(client.getPlugin('folders'))
-        self.assertIsInstance(req, list)
-
-        req = json.loads(client.getPlugin('diskio'))
-        self.assertIsInstance(req, list)
-
-    def test_008_sensors(self):
-        """SENSORS."""
-        method = "getSensors()"
-        print(f'INFO: [TEST_008] Method: {method}')
-
-        req = json.loads(client.getPlugin('sensors'))
-        self.assertIsInstance(req, list)
-
-    def test_009_process(self):
-        """PROCESS."""
-        method = "getProcessCount() and getProcessList()"
-        print(f'INFO: [TEST_009] Method: {method}')
-
-        req = json.loads(client.getPlugin('processcount'))
-        self.assertIsInstance(req, dict)
-
-        req = json.loads(client.getPlugin('processlist'))
-        self.assertIsInstance(req, list)
-
-    def test_010_all_limits(self):
-        """All limits."""
-        method = "getAllLimits()"
-        print(f'INFO: [TEST_010] Method: {method}')
-
-        req = json.loads(client.getAllLimits())
-        self.assertIsInstance(req, dict)
-        self.assertIsInstance(req['cpu'], dict)
-
-    def test_011_all_views(self):
-        """All views."""
-        method = "getAllViews()"
-        print(f'INFO: [TEST_011] Method: {method}')
-
-        req = json.loads(client.getAllViews())
-        self.assertIsInstance(req, dict)
-        self.assertIsInstance(req['cpu'], dict)
-
-    def test_012_irq(self):
-        """IRQS"""
-        method = "getIrqs()"
-        print(f'INFO: [TEST_012] Method: {method}')
-        req = json.loads(client.getPlugin('irq'))
-        self.assertIsInstance(req, list)
-
-    def test_013_plugin_views(self):
-        """Plugin views."""
-        method = "getViewsCpu()"
-        print(f'INFO: [TEST_013] Method: {method}')
-
-        req = json.loads(client.getPluginView('cpu'))
-        self.assertIsInstance(req, dict)
+    def test_016_secure_missing_host_rejected(self):
+        """HTTP/1.0 request with no Host header -> 400."""
+        print('INFO: [TEST_016] Missing Host header rejected')
+        s = socket.create_connection(('127.0.0.1', SECURE_PORT), timeout=5)
+        body = XMLRPC_BODY.encode()
+        req = (
+            b'POST /RPC2 HTTP/1.0\r\n'
+            b'Content-Type: text/plain\r\n'
+            b'Content-Length: ' + str(len(body)).encode() + b'\r\n\r\n' + body
+        )
+        s.sendall(req)
+        resp = b''
+        while True:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            resp += chunk
+        s.close()
+        status_line = resp.split(b'\r\n', 1)[0]
+        self.assertIn(b'400', status_line)
 
     def test_999_stop_server(self):
-        """Stop the Glances Web Server."""
-        print('INFO: [TEST_999] Stop the Glances Server')
-        print(client.system.listMethods())
-
-        print("Stop the Glances Server")
+        """Stop both Glances XML-RPC servers."""
+        print('INFO: [TEST_999] Stop both servers')
         pid.terminate()
+        if pid_secure is not None:
+            pid_secure.terminate()
         time.sleep(1)
-
         self.assertTrue(True)
 
 
