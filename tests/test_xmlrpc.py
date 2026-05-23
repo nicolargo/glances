@@ -103,6 +103,18 @@ class TestGlancesXmlrpc(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertIn('<methodResponse>', r.text)
 
+    def test_013_secure_wildcard_match(self):
+        """Wildcard pattern *.glances.test matches subdomain."""
+        print('INFO: [TEST_013] Wildcard match')
+        r = self.post_secure('node1.glances.test')
+        self.assertEqual(r.status_code, 200)
+
+    def test_014_secure_wildcard_no_bare_match(self):
+        """*.glances.test does NOT match the bare domain glances.test."""
+        print('INFO: [TEST_014] Wildcard does not match bare domain')
+        r = self.post_secure('glances.test')
+        self.assertEqual(r.status_code, 400)
+
     def test_999_stop_server(self):
         """Stop both Glances XML-RPC servers."""
         print('INFO: [TEST_999] Stop both servers')
