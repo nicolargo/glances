@@ -96,6 +96,13 @@ class TestGlancesXmlrpc(unittest.TestCase):
         r = self.post_secure('attacker.example.com')
         self.assertEqual(r.status_code, 400)
 
+    def test_012_secure_accepts_listed_host(self):
+        """Allowlisted Host returns 200."""
+        print('INFO: [TEST_012] Allowlisted Host accepted')
+        r = self.post_secure('127.0.0.1')
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('<methodResponse>', r.text)
+
     def test_999_stop_server(self):
         """Stop both Glances XML-RPC servers."""
         print('INFO: [TEST_999] Stop both servers')
