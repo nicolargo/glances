@@ -116,7 +116,13 @@ Connect an MCP client
 Claude Desktop
 ~~~~~~~~~~~~~~
 
-Add the following entry to your ``claude_desktop_config.json``
+Configure Glances MCP from Claude command line:
+
+.. code-block:: json
+
+    claude mcp add --transport sse glances http://localhost:61208/mcp/sse
+
+Or add the following entry to your ``claude_desktop_config.json``
 (``~/Library/Application Support/Claude/claude_desktop_config.json`` on macOS,
 ``%APPDATA%\Claude\claude_desktop_config.json`` on Windows):
 

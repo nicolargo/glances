@@ -11,6 +11,8 @@
 import os
 import re
 from functools import cache
+from subprocess import TimeoutExpired
+from subprocess import run as subprocess_run
 from typing import Any
 
 from glances.globals import nativestr
@@ -22,9 +24,31 @@ from glances.secure import secure_popen
 VIRSH_PATH = '/usr/bin/virsh'
 VIRSH_VERSION_OPTIONS = 'version'
 VIRSH_INFO_OPTIONS = 'list --all'
-VIRSH_DOMAIN_STATS_OPTIONS = 'domstats --nowait'
-VIRSH_DOMAIN_TITLE_OPTIONS = 'desc --title'
+# Sub-command argument lists for the two calls that interpolate an
+# untrusted VM domain name. They are passed to subprocess.run with
+# shell=False so that operator characters in the domain (&&, |, >) are
+# never interpreted as shell metacharacters
+# (GHSA-v5r2-qh84-fjx5 / CVE-2026-46606).
+VIRSH_DOMAIN_STATS_ARGS = ('domstats', '--nowait')
+VIRSH_DOMAIN_TITLE_ARGS = ('desc', '--title')
+VIRSH_TIMEOUT_SECONDS = 10
 import_virsh_error_tag = not os.path.exists(VIRSH_PATH) or not os.access(VIRSH_PATH, os.X_OK)
+
+
+def _run_virsh(args):
+    """Execute virsh with an explicit argument list (shell=False).
+
+    Bypasses secure_popen's shell-operator interpretation so that an
+    attacker-controlled VM domain name cannot inject commands.
+    Returns the decoded stdout on success, empty string on any failure.
+    """
+    try:
+        result = subprocess_run(args, capture_output=True, timeout=VIRSH_TIMEOUT_SECONDS)
+    except (OSError, TimeoutExpired):
+        return ''
+    if result.returncode != 0:
+        return ''
+    return nativestr(result.stdout)
 
 
 class VmExtension(VmsExtension):
@@ -182,7 +206,7 @@ class VmExtension(VmsExtension):
         #   vm.mmu_flooded.sum=0
         #   vm.mmu_pte_write.sum=0
         #   vm.remote_tlb_flush_requests.sum=609455
-        ret_cmd = secure_popen(f'{VIRSH_PATH} {VIRSH_DOMAIN_STATS_OPTIONS} {domain}')
+        ret_cmd = _run_virsh([VIRSH_PATH, *VIRSH_DOMAIN_STATS_ARGS, domain])
 
         try:
             # Ignore first line (domain name already know) and last line (empty)
@@ -201,7 +225,7 @@ class VmExtension(VmsExtension):
     def update_title(self, domain):
         # ❯ virsh desc --title Kali_Linux_2024
         # Kali Linux 2024
-        ret_cmd = secure_popen(f'{VIRSH_PATH} {VIRSH_DOMAIN_TITLE_OPTIONS} {domain}')
+        ret_cmd = _run_virsh([VIRSH_PATH, *VIRSH_DOMAIN_TITLE_ARGS, domain])
 
         return ret_cmd.rstrip()
 

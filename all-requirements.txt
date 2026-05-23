@@ -19,7 +19,7 @@ batinfo==0.4.2 ; sys_platform == 'linux'
     # via glances
 bernhard==0.2.6
     # via glances
-certifi==2026.2.25
+certifi==2026.5.20
     # via
     #   clickhouse-connect
     #   elastic-transport
@@ -40,11 +40,11 @@ chevron==0.14.0
     # via glances
 click==8.1.8
     # via uvicorn
-clickhouse-connect==0.15.1
+clickhouse-connect==1.0.1
     # via glances
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
-cryptography==46.0.7
+cryptography==48.0.0
     # via
     #   pyjwt
     #   pylxd
@@ -58,13 +58,13 @@ docker==7.1.0
     # via glances
 ecdsa==0.19.2
     # via python-jose
-elastic-transport==9.2.1
+elastic-transport==9.4.0
     # via elasticsearch
-elasticsearch==9.3.0
+elasticsearch==9.4.0
     # via glances
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.136.0
+fastapi==0.136.1
     # via glances
 graphitesender==0.11.2
     # via glances
@@ -82,9 +82,9 @@ humanfriendly==10.0
     # via pysmart
 ibm-cloud-sdk-core==3.24.4
     # via ibmcloudant
-ibmcloudant==0.11.5
+ibmcloudant==0.11.7
     # via glances
-idna==3.11
+idna==3.16
     # via
     #   anyio
     #   httpx
@@ -97,7 +97,7 @@ influxdb==5.3.2
     # via glances
 influxdb-client==1.50.0
     # via glances
-influxdb3-python==0.18.0
+influxdb3-python==0.19.0
     # via glances
 jinja2==3.1.6
     # via
@@ -121,13 +121,13 @@ nats-py==2.14.0
     # via glances
 nvidia-ml-py==13.595.45
     # via glances
-packaging==26.1
+packaging==26.2
     # via glances
 paho-mqtt==2.1.0
     # via glances
 pbkdf2==1.3
     # via wifi
-pika==1.3.2
+pika==1.4.1
     # via glances
 ply==3.11
     # via pysmi-lextudio
@@ -141,11 +141,11 @@ protobuf==6.33.6
     # via bernhard
 psutil==7.2.2
     # via glances
-psycopg==3.3.3
+psycopg==3.3.4
     # via glances
-psycopg-binary==3.3.3 ; implementation_name != 'pypy'
+psycopg-binary==3.3.4 ; implementation_name != 'pypy'
     # via psycopg
-pyarrow==23.0.1
+pyarrow==24.0.0
     # via influxdb3-python
 pyasn1==0.6.3
     # via
@@ -154,14 +154,14 @@ pyasn1==0.6.3
     #   rsa
 pycparser==3.0 ; (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (implementation_name == 'pypy' and platform_python_implementation == 'PyPy')
     # via cffi
-pydantic==2.13.2
+pydantic==2.13.4
     # via
     #   fastapi
     #   mcp
     #   pydantic-settings
-pydantic-core==2.46.2
+pydantic-core==2.46.4
     # via pydantic
-pydantic-settings==2.13.1
+pydantic-settings==2.14.1
     # via mcp
 pygal==3.1.0
     # via glances
@@ -176,9 +176,9 @@ pylxd==2.4.1
     # via glances
 pymdstat==0.5.1
     # via glances
-pymongo==4.16.0
+pymongo==4.17.0
     # via glances
-pyreadline3==3.5.4 ; sys_platform == 'win32'
+pyreadline3==3.5.6 ; sys_platform == 'win32'
     # via humanfriendly
 pysmart==1.4.2
     # via glances
@@ -202,12 +202,10 @@ python-dotenv==1.2.2
     # via pydantic-settings
 python-jose==3.5.0
     # via glances
-python-multipart==0.0.26
+python-multipart==0.0.29
     # via mcp
-pytz==2026.1.post1
-    # via
-    #   clickhouse-connect
-    #   influxdb
+pytz==2026.2
+    # via influxdb
 pywin32==311 ; sys_platform == 'win32'
     # via
     #   docker
@@ -222,7 +220,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.33.1
+requests==2.34.2
     # via
     #   docker
     #   glances
@@ -257,9 +255,9 @@ sniffio==1.3.1
     #   elasticsearch
 sparklines==0.7.0
     # via glances
-sse-starlette==3.3.4
+sse-starlette==3.4.4
     # via mcp
-starlette==1.0.0
+starlette==1.0.1
     # via
     #   fastapi
     #   mcp
@@ -268,7 +266,7 @@ statsd==4.0.1
     # via glances
 termcolor==3.3.0
     # via sparklines
-tomli==2.0.2 ; python_full_version < '3.11'
+tomli==2.4.1 ; python_full_version < '3.11'
     # via podman
 typing-extensions==4.15.0
     # via
@@ -292,9 +290,11 @@ typing-inspection==0.4.2
     #   mcp
     #   pydantic
     #   pydantic-settings
-tzdata==2026.1 ; sys_platform == 'win32'
-    # via psycopg
-urllib3==2.6.3
+tzdata==2026.2 ; sys_platform == 'win32'
+    # via
+    #   clickhouse-connect
+    #   psycopg
+urllib3==2.7.0
     # via
     #   clickhouse-connect
     #   docker
@@ -304,7 +304,7 @@ urllib3==2.6.3
     #   influxdb3-python
     #   podman
     #   requests
-uvicorn==0.44.0
+uvicorn==0.47.0
     # via
     #   glances
     #   mcp
@@ -314,9 +314,9 @@ windows-curses==2.4.2 ; sys_platform == 'win32'
     # via glances
 ws4py==0.6.0
     # via pylxd
-zeroconf==0.148.0
+zeroconf==0.149.16
     # via glances
-zipp==3.23.1
+zipp==4.1.0
     # via importlib-metadata
 zstandard==0.25.0
     # via clickhouse-connect

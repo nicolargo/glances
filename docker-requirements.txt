@@ -14,7 +14,7 @@ attrs==26.1.0
     # via
     #   jsonschema
     #   referencing
-certifi==2026.2.25
+certifi==2026.5.20
     # via
     #   httpcore
     #   httpx
@@ -27,7 +27,7 @@ click==8.1.8
     # via uvicorn
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
-cryptography==46.0.7
+cryptography==48.0.0
     # via
     #   pyjwt
     #   pylxd
@@ -40,7 +40,7 @@ ecdsa==0.19.2
     # via python-jose
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.136.0
+fastapi==0.136.1
     # via glances
 h11==0.16.0
     # via
@@ -52,7 +52,7 @@ httpx==0.28.1
     # via mcp
 httpx-sse==0.4.3
     # via mcp
-idna==3.11
+idna==3.16
     # via
     #   anyio
     #   httpx
@@ -67,7 +67,7 @@ markupsafe==3.0.3
     # via jinja2
 mcp==1.23.3
     # via glances
-packaging==26.1
+packaging==26.2
     # via glances
 podman==5.8.0
     # via glances
@@ -79,14 +79,14 @@ pyasn1==0.6.3
     #   rsa
 pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
-pydantic==2.13.2
+pydantic==2.13.4
     # via
     #   fastapi
     #   mcp
     #   pydantic-settings
-pydantic-core==2.46.2
+pydantic-core==2.46.4
     # via pydantic
-pydantic-settings==2.13.1
+pydantic-settings==2.14.1
     # via mcp
 pyinstrument==5.1.2
     # via glances
@@ -102,7 +102,7 @@ python-dotenv==1.2.2
     # via pydantic-settings
 python-jose==3.5.0
     # via glances
-python-multipart==0.0.26
+python-multipart==0.0.29
     # via mcp
 pywin32==311 ; sys_platform == 'win32'
     # via
@@ -112,7 +112,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.33.1
+requests==2.34.2
     # via
     #   docker
     #   glances
@@ -134,14 +134,14 @@ six==1.17.0
     #   ecdsa
     #   glances
     #   python-dateutil
-sse-starlette==3.3.4
+sse-starlette==3.4.4
     # via mcp
-starlette==1.0.0
+starlette==1.0.1
     # via
     #   fastapi
     #   mcp
     #   sse-starlette
-tomli==2.0.2 ; python_full_version < '3.11'
+tomli==2.4.1 ; python_full_version < '3.11'
     # via podman
 typing-extensions==4.15.0
     # via
@@ -162,12 +162,12 @@ typing-inspection==0.4.2
     #   mcp
     #   pydantic
     #   pydantic-settings
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   docker
     #   podman
     #   requests
-uvicorn==0.44.0
+uvicorn==0.47.0
     # via
     #   glances
     #   mcp
