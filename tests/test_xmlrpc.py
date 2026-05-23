@@ -11,6 +11,7 @@
 (GHSA-w856-8p3r-p338 / CVE-2026-46611)."""
 
 import shlex
+import socket
 import subprocess
 import sys
 import time
@@ -114,6 +115,33 @@ class TestGlancesXmlrpc(unittest.TestCase):
         print('INFO: [TEST_014] Wildcard does not match bare domain')
         r = self.post_secure('glances.test')
         self.assertEqual(r.status_code, 400)
+
+    def test_015_secure_strips_port(self):
+        """Host: 127.0.0.1:62210 matches the bare 127.0.0.1 entry."""
+        print('INFO: [TEST_015] Port is stripped before matching')
+        r = self.post_secure(f'127.0.0.1:{SECURE_PORT}')
+        self.assertEqual(r.status_code, 200)
+
+    def test_016_secure_missing_host_rejected(self):
+        """HTTP/1.0 request with no Host header -> 400."""
+        print('INFO: [TEST_016] Missing Host header rejected')
+        s = socket.create_connection(('127.0.0.1', SECURE_PORT), timeout=5)
+        body = XMLRPC_BODY.encode()
+        req = (
+            b'POST /RPC2 HTTP/1.0\r\n'
+            b'Content-Type: text/plain\r\n'
+            b'Content-Length: ' + str(len(body)).encode() + b'\r\n\r\n' + body
+        )
+        s.sendall(req)
+        resp = b''
+        while True:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            resp += chunk
+        s.close()
+        status_line = resp.split(b'\r\n', 1)[0]
+        self.assertIn(b'400', status_line)
 
     def test_999_stop_server(self):
         """Stop both Glances XML-RPC servers."""
