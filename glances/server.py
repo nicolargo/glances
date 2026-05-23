@@ -39,10 +39,21 @@ class GlancesXMLRPCHandler(xmlrpc.xmlrpc_server.SimpleXMLRPCRequestHandler):
         super().end_headers()
 
     def send_my_headers(self):
-        # Specific header is here (solved the issue #227)
-        # Use configurable CORS origins (default: *) read from the server instance
-        cors_origin = getattr(self.server, 'cors_origin', '*')
-        self.send_header("Access-Control-Allow-Origin", cors_origin)
+        # CORS Access-Control-Allow-Origin (issue #227, GHSA-87qc-fj39-wccr).
+        # Per-request reflection against the configured allowlist:
+        #   - "*" in the allowlist (default)  -> echo "*"
+        #   - request Origin in the allowlist -> reflect it + Vary: Origin
+        #   - otherwise                        -> omit ACAO entirely so browsers
+        #     block cross-origin JS reads. The XML-RPC call itself still runs;
+        #     non-browser clients (curl, custom XML-RPC libs) are unaffected.
+        cors_origins = getattr(self.server, 'cors_origins', ['*'])
+        if '*' in cors_origins:
+            self.send_header("Access-Control-Allow-Origin", "*")
+            return
+        request_origin = self.headers.get('Origin', '')
+        if request_origin and request_origin in cors_origins:
+            self.send_header("Access-Control-Allow-Origin", request_origin)
+            self.send_header("Vary", "Origin")
 
     def authenticate(self, headers):
         # auth = headers.get('Authorization')
@@ -111,16 +122,14 @@ class GlancesXMLRPCServer(xmlrpc.xmlrpc_server.SimpleXMLRPCServer):
         self.bind_port = bind_port
         self.config = config
 
-        # Read CORS origins from config — same key as the REST API
-        # Default: "*" for backward compatibility
+        # CORS origins (GHSA-87qc-fj39-wccr / CVE-2026-46608).
+        # Stored as a list; the handler reflects the request Origin against it
+        # per request. Default ["*"] preserves backward compatibility for the
+        # majority of users who run on a private network without configuration.
         if config is not None:
-            cors_origins = config.get_list_value('outputs', 'cors_origins', default=["*"])
+            self.cors_origins = config.get_list_value('outputs', 'cors_origins', default=["*"])
         else:
-            cors_origins = ["*"]
-        # For the XML-RPC handler we emit a single Access-Control-Allow-Origin
-        # header. If the config lists a single explicit origin, use it;
-        # otherwise fall back to "*".
-        self.cors_origin = cors_origins[0] if len(cors_origins) == 1 else "*"
+            self.cors_origins = ["*"]
 
         # DNS rebinding protection (GHSA-w856-8p3r-p338 / CVE-2026-46611).
         # When xmlrpc_allowed_hosts is set, the handler rejects requests whose
@@ -230,7 +239,7 @@ class GlancesServer:
         self.server.isAuth = False
 
         # Warn if running unauthenticated with wildcard CORS
-        if args.password == "" and self.server.cors_origin == "*":
+        if args.password == "" and "*" in self.server.cors_origins:
             print(
                 "WARNING: XML-RPC server is running without authentication and with CORS Allow-Origin: *.\n"
                 "         Mitigations: set a password (-P/--password) and/or restrict\n"
