@@ -54,6 +54,13 @@ class TestGlancesXmlrpc(unittest.TestCase):
         time.sleep(5)
         self.assertIsNotNone(pid)
 
+    def test_001_default_accepts_any_host(self):
+        """Without xmlrpc_allowed_hosts set, any Host header is accepted."""
+        print('INFO: [TEST_001] Default = permissive (no allowlist)')
+        r = self.post('attacker.example.com')
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('<methodResponse>', r.text)
+
     def test_999_stop_server(self):
         """Stop the Glances XML-RPC server."""
         print('INFO: [TEST_999] Stop server')
