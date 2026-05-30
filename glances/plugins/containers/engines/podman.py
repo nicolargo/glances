@@ -156,7 +156,10 @@ class PodmanPodStatsFetcher:
         # Threaded Streamer
         # Temporary patch to get podman extension working
         stats_iterable = (pod_manager.stats(decode=True) for _ in iter(int, 1))
-        self._streamer = ThreadedIterableStreamer(stats_iterable, initial_stream_value={}, sleep_duration=2)
+        # WARNING: Podman API doesn't specify the rate at which stats are sent, so we set it to 1 second
+        # to avoid overloading the system with stats calculations. With a lot of pods, this can cause some
+        # delay in stats display but it is better than overloading the system.
+        self._streamer = ThreadedIterableStreamer(stats_iterable, initial_stream_value={}, sleep_duration=1)
 
     def _log_debug(self, msg, exception=None):
         logger.debug(f"containers (Podman): Pod Manager - {msg} ({exception})")
