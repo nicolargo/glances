@@ -25,7 +25,9 @@ from __future__ import annotations
 import curses
 import logging
 import threading
+import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from glances.outputs.curses_renderer_v5 import (
@@ -36,6 +38,7 @@ from glances.outputs.curses_renderer_v5 import (
     Row,
     build_frame,
 )
+from glances.processes import glances_processes, sort_stats
 
 if TYPE_CHECKING:
     from glances.alerts_v5 import GlancesAlerts
@@ -50,6 +53,28 @@ logger = logging.getLogger(__name__)
 _COLOR_PAIRS: dict[ColorRole, int] = {}
 
 
+@dataclass
+class ViewState:
+    """User-toggled TUI view options, driven by hotkeys (v4 parity).
+
+    Only the *boolean view switches* live here. The process **sort key**
+    is owned by the ``glances_processes`` engine singleton (set via
+    ``set_sort_key``) — duplicating it here would risk drift; the renderer
+    reads it back from the engine each frame for the column indicator.
+
+    Defaults mirror v4:
+    - ``show_percpu=False`` — top row shows aggregate ``cpu`` (hotkey ``1``).
+    - ``process_short_name=True`` — command column shows the short exec name,
+      not the full path (hotkey ``/``).
+    - ``programs=False`` — process list shows threads, not the per-program
+      aggregation (hotkey ``j``).
+    """
+
+    show_percpu: bool = False
+    process_short_name: bool = True
+    programs: bool = False
+
+
 def _safe_curses_wrapper(fn):
     """`curses.wrapper` wrapper — separated so tests can monkeypatch it."""
     curses.wrapper(fn)
@@ -57,6 +82,34 @@ def _safe_curses_wrapper(fn):
 
 class TuiV5(threading.Thread):
     """Curses TUI v5 thread."""
+
+    # Hotkey dispatch table (v4 ``glances_curses._hotkeys`` parity).
+    # Two action kinds:
+    #   - ``switch``: toggle the named ``ViewState`` boolean.
+    #   - ``sort``  : set the engine process sort key (``'auto'`` enables
+    #                 the dynamic alert-driven auto-sort).
+    # Data-driven so a new hotkey is one dict entry, no control-flow edit
+    # (cf. CLAUDE.md "extensibilité sans modification du cœur").
+    _HOTKEYS: dict[str, dict[str, str]] = {
+        "1": {"switch": "show_percpu"},
+        "/": {"switch": "process_short_name"},
+        "j": {"switch": "programs"},
+        "a": {"sort": "auto"},
+        "c": {"sort": "cpu_percent"},
+        "m": {"sort": "memory_percent"},
+        "i": {"sort": "io_counters"},
+        "t": {"sort": "cpu_times"},
+        "p": {"sort": "name"},
+        "u": {"sort": "username"},
+        "o": {"sort": "cpu_num"},
+    }
+
+    # Guard-rail: a key-driven repaint happens at most once per this window —
+    # instant when idle, coalesced under rapid key mashing.
+    _MIN_KEY_REPAINT_INTERVAL = 1.0
+    # Upper bound on a single blocking ``getch`` so an external ``stop()`` is
+    # honoured promptly even when the next scheduled repaint is far off.
+    _MAX_GETCH_BLOCK = 0.25
 
     def __init__(
         self,
@@ -81,17 +134,52 @@ class TuiV5(threading.Thread):
         # until Ctrl-C. None = no-op (used in tests).
         self._on_quit = on_quit
         self._stop_event = threading.Event()
-        # Toggle between cpu (default) and percpu in the top row. Mirrors
-        # v4's `args.percpu` flag controlled by hotkey '1'. When True,
-        # `cpu` is hidden from the top slot and `percpu` is shown; when
-        # False, the reverse.
-        self._show_percpu = False
+        # User-toggled view options (percpu / short-name / programs),
+        # driven by the hotkey dispatch table. The process sort key is
+        # held by the ``glances_processes`` engine, not here.
+        self._view = ViewState()
 
     # ----------------------------------------------------------- control
 
     def stop(self) -> None:
         """Signal the thread to exit at the next loop iteration."""
         self._stop_event.set()
+
+    # ----------------------------------------------------------- input
+
+    def _handle_key(self, key: int) -> str:
+        """Dispatch a single keypress. Returns one of:
+
+        - ``"quit"``    — ``q`` / ESC: the loop should shut down.
+        - ``"changed"`` — a mapped key mutated the view state or sort key
+          (the caller should repaint, rate-limited).
+        - ``"ignored"`` — unmapped key / non-character: no state change.
+
+        Pure (no curses calls) so it can be unit-tested without a terminal.
+        """
+        if key in (ord("q"), 27):  # 27 = ESC
+            return "quit"
+        try:
+            ch = chr(key)
+        except ValueError:
+            return "ignored"
+        action = self._HOTKEYS.get(ch)
+        if action is None:
+            return "ignored"
+        if "switch" in action:
+            attr = action["switch"]
+            setattr(self._view, attr, not getattr(self._view, attr))
+            return "changed"
+        if "sort" in action:
+            sort_key = action["sort"]
+            # v4 contract: pressing a manual key turns auto-sort OFF;
+            # 'auto' turns it ON (set_sort_key resets the key to cpu_percent).
+            try:
+                glances_processes.set_sort_key(sort_key, sort_key == "auto")
+            except Exception as e:  # pragma: no cover — defensive
+                logger.warning("TUI: set_sort_key(%s) failed: %s", sort_key, e)
+            return "changed"
+        return "ignored"
 
     # ----------------------------------------------------------- run loop
 
@@ -103,7 +191,6 @@ class TuiV5(threading.Thread):
 
     def _loop(self, stdscr) -> None:
         _init_colors()
-        stdscr.nodelay(True)
         cursor_was_hidden = False
         try:
             curses.curs_set(0)
@@ -112,25 +199,61 @@ class TuiV5(threading.Thread):
             pass
 
         try:
+            # Responsive input with low idle CPU: ``getch`` BLOCKS (with a
+            # per-iteration timeout) instead of busy-polling. It returns the
+            # instant a key is pressed — so a hotkey feels immediate — and
+            # otherwise the thread sleeps in the kernel until the next paint
+            # is due. Repaint policy:
+            # - regular cadence: repaint every ``refresh_interval``;
+            # - key-driven: a recognised key marks the frame dirty and forces
+            #   an early repaint, throttled (leading-edge) to at most once per
+            #   ``_MIN_KEY_REPAINT_INTERVAL`` *between key changes*. A lone
+            #   keypress after a quiet period is therefore instant; only rapid
+            #   mashing is coalesced (the guard-rail). The throttle is measured
+            #   from the last key-driven repaint, NOT the last regular one, so
+            #   a keypress right after a cadence refresh still reacts at once.
+            # Each block is capped at ``_MAX_GETCH_BLOCK`` so an external
+            # ``stop()`` is honoured within that bound.
+            self._repaint(stdscr)
+            now = time.monotonic()
+            last_paint = now
+            # Seed so the first keypress is eligible for an instant repaint.
+            last_change_paint = now - self._MIN_KEY_REPAINT_INTERVAL
+            dirty = False
             while not self._stop_event.is_set():
-                frame = self._build_frame()
-                self._paint(stdscr, frame)
-                stdscr.refresh()
+                now = time.monotonic()
+                next_regular = last_paint + self.refresh_interval
+                next_change = last_change_paint + self._MIN_KEY_REPAINT_INTERVAL if dirty else float("inf")
+                block = max(0.0, min(min(next_regular, next_change) - now, self._MAX_GETCH_BLOCK))
+                stdscr.timeout(int(block * 1000))
 
                 key = stdscr.getch()
-                if key in (ord("q"), 27):  # 27 = ESC
-                    self.stop()
-                    if self._on_quit is not None:
-                        try:
-                            self._on_quit()
-                        except Exception as e:  # pragma: no cover — defensive
-                            logger.warning("TUI on_quit callback failed: %s", e)
-                    break
-                if key == ord("1"):
-                    # Toggle CPU ↔ perCPU in the top row (matches v4 hotkey).
-                    self._show_percpu = not self._show_percpu
+                if key != -1:
+                    result = self._handle_key(key)
+                    if result == "quit":
+                        self.stop()
+                        if self._on_quit is not None:
+                            try:
+                                self._on_quit()
+                            except Exception as e:  # pragma: no cover — defensive
+                                logger.warning("TUI on_quit callback failed: %s", e)
+                        break
+                    if result == "changed":
+                        dirty = True
+                    # Loop back to recompute the block; a due (or rate-limited)
+                    # repaint happens on the next timeout, not on every keystroke.
+                    continue
 
-                self._sleep_responsive(self.refresh_interval)
+                # getch timed out — repaint only if a paint is actually due
+                # (a capped block may expire before the next paint is due).
+                now = time.monotonic()
+                regular_due, change_due = self._repaint_decision(now, last_paint, last_change_paint, dirty)
+                if regular_due or change_due:
+                    self._repaint(stdscr)
+                    last_paint = now
+                    if change_due:
+                        last_change_paint = now
+                    dirty = False
         finally:
             # `curses.endwin()` doesn't reliably restore cursor visibility
             # on every terminal — if we hid it, restore it ourselves so the
@@ -141,21 +264,34 @@ class TuiV5(threading.Thread):
                 except curses.error:
                     pass
 
-    def _sleep_responsive(self, total: float) -> None:
-        """Sleep ``total`` seconds, returning early if ``_stop_event`` is set.
+    def _repaint_decision(
+        self, now: float, last_paint: float, last_change_paint: float, dirty: bool
+    ) -> tuple[bool, bool]:
+        """Return ``(regular_due, change_due)`` for the repaint policy. Pure.
 
-        Uses ``Event.wait(timeout)`` so the thread blocks until either the
-        timeout expires or ``stop()`` flips the event — no polling, no
-        wake-and-sleep loop. Previously ``time.sleep(0.05)`` was looped
-        20×/s just to check the event; that added measurable CPU on
-        otherwise-idle systems where Glances is meant to be the lightest
-        possible monitor."""
-        self._stop_event.wait(timeout=total)
+        - ``regular_due``: the periodic ``refresh_interval`` cadence elapsed.
+        - ``change_due``: a pending key change exists AND at least
+          ``_MIN_KEY_REPAINT_INTERVAL`` has passed since the last key-driven
+          repaint (the once-per-second guard-rail).
+        """
+        regular_due = (now - last_paint) >= self.refresh_interval
+        change_due = dirty and (now - last_change_paint) >= self._MIN_KEY_REPAINT_INTERVAL
+        return regular_due, change_due
+
+    def _repaint(self, stdscr) -> None:
+        """Build the current frame and paint it to the terminal."""
+        frame = self._build_frame()
+        self._paint(stdscr, frame)
+        stdscr.refresh()
 
     # ----------------------------------------------------------- helpers
 
     def _build_frame(self) -> Frame:
         snapshot = self.store.as_dict()
+        # Re-sort the process collections by the engine's *current* sort key
+        # so a key change is reflected on the very next repaint, without
+        # waiting for the engine's next update cycle to re-sort the store.
+        self._apply_live_sort(snapshot)
         history = self.alerts.get_history() if self.alerts is not None else []
         # Distinguish "still in warmup" (alerts cannot fire yet) from "truly
         # empty history" — the alert block shows different placeholders for
@@ -167,11 +303,59 @@ class TuiV5(threading.Thread):
             registry=self.registry,
             alerts_history=history,
             alerts_initializing=initializing,
+            view=self._render_view(),
         )
         # CPU ↔ perCPU mutual exclusion (v4 parity, hotkey '1').
-        hidden = "cpu" if self._show_percpu else "percpu"
-        frame.top = [b for b in frame.top if b.name != hidden]
+        hidden_top = "cpu" if self._view.show_percpu else "percpu"
+        frame.top = [b for b in frame.top if b.name != hidden_top]
+        # Threads ↔ programs mutual exclusion (v4 parity, hotkey 'j'):
+        # show exactly one of processlist / programlist.
+        hidden_right = "processlist" if self._view.programs else "programlist"
+        frame.right = [b for b in frame.right if b.name != hidden_right]
         return frame
+
+    # Process collections re-sorted live in the TUI so a sort hotkey takes
+    # effect on the next repaint rather than on the engine's next update.
+    _LIVE_SORT_PLUGINS = ("processlist", "programlist")
+
+    def _apply_live_sort(self, snapshot: dict[str, Any]) -> None:
+        """Re-sort process collections in-place on the *snapshot* by the
+        engine's current sort key.
+
+        ``store.as_dict()`` is a shallow copy — the payload objects are shared
+        with the store. We therefore never mutate a payload: we replace the
+        snapshot's entry with a fresh dict holding a freshly sorted list
+        (``sort_stats`` returns a new list), leaving the store untouched."""
+        key = getattr(glances_processes, "sort_key", None)
+        if not key:
+            return
+        reverse = bool(getattr(glances_processes, "sort_reverse", True))
+        for name in self._LIVE_SORT_PLUGINS:
+            payload = snapshot.get(name)
+            if not isinstance(payload, dict):
+                continue
+            data = payload.get("data")
+            if not isinstance(data, list) or not data:
+                continue
+            try:
+                ordered = sort_stats(list(data), sorted_by=key, reverse=reverse)
+            except Exception as e:  # pragma: no cover — defensive (engine sort quirks)
+                logger.debug("TUI live sort failed for %s: %s", name, e)
+                continue
+            snapshot[name] = {**payload, "data": ordered}
+
+    def _render_view(self) -> dict[str, Any]:
+        """Snapshot the view state the per-plugin renderers may consult.
+
+        Carries the boolean switches plus the engine's current sort key /
+        auto-sort flag (read back here so the processlist renderer can mark
+        the active sort column without importing the engine itself)."""
+        return {
+            "process_short_name": self._view.process_short_name,
+            "programs": self._view.programs,
+            "sort_key": getattr(glances_processes, "sort_key", None),
+            "auto_sort": getattr(glances_processes, "auto_sort", None),
+        }
 
     # ----------------------------------------------------------- paint
 
@@ -317,10 +501,14 @@ class TuiV5(threading.Thread):
         return min(widest, width) if fit_to_term else widest
 
     def _paint_row(self, stdscr, row: Row, y: int, x0: int, width: int) -> int:
-        """Paint a single row's cells with a one-space gap. Returns width consumed."""
+        """Paint a single row's cells. One space separates adjacent cells,
+        except a ``glue`` cell which is painted flush against the previous
+        one (no separator). Returns width consumed."""
         x = x0
         limit = x0 + width
-        for cell in row.cells:
+        for i, cell in enumerate(row.cells):
+            if i > 0 and not cell.glue:
+                x += 1  # one-space separator before this cell
             if x >= limit:
                 break
             text = cell.text[: limit - x]
@@ -329,8 +517,8 @@ class TuiV5(threading.Thread):
                 stdscr.addstr(y, x, text, attr)
             except curses.error:
                 break
-            x += len(text) + 1
-        return max(0, x - x0 - 1)
+            x += len(text)
+        return max(0, x - x0)
 
     def _paint_separator(self, stdscr, y: int, x0: int, width: int) -> None:
         try:
@@ -424,4 +612,8 @@ def _attr_for(cell: Cell) -> int:
     # field hits critical).
     if cell.color == ColorRole.HEADER or cell.bold:
         attr |= curses.A_BOLD
+    # v4 'SORT' decoration = A_UNDERLINE | A_BOLD — the active sort column
+    # header sets `underline` (and is already bold).
+    if cell.underline:
+        attr |= curses.A_UNDERLINE
     return attr

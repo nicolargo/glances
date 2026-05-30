@@ -215,6 +215,52 @@ def test_render_time_tuple_format_supported(fields):
     assert "0:03" in rows[1].cells[TIME_COL].text
 
 
+# ---------------------------------------------------------- sort indicator (view)
+
+
+def test_render_sort_indicator_underlines_active_column(payload, fields):
+    """The active sort column header is underlined (v4 'SORT' decoration)."""
+    rows = render(payload, fields, view={"sort_key": "memory_percent"})
+    header = rows[0].cells
+    assert header[MEM_COL].underline is True
+    assert header[CPU_COL].underline is False
+
+
+def test_render_sort_indicator_cpu_default(payload, fields):
+    rows = render(payload, fields, view={"sort_key": "cpu_percent"})
+    assert rows[0].cells[CPU_COL].underline is True
+
+
+def test_render_sort_indicator_io_underlines_both_rate_columns(payload, fields):
+    """`io_counters` sort underlines the R/s and W/s pair."""
+    rows = render(payload, fields, view={"sort_key": "io_counters"})
+    header = rows[0].cells
+    assert header[RS_COL].underline is True
+    assert header[WS_COL].underline is True
+
+
+def test_render_sort_indicator_name_underlines_command(payload, fields):
+    rows = render(payload, fields, view={"sort_key": "name"})
+    assert rows[0].cells[CMD_START].underline is True
+
+
+def test_render_sort_indicator_time_underlines_time_column(payload, fields):
+    rows = render(payload, fields, view={"sort_key": "cpu_times"})
+    assert rows[0].cells[TIME_COL].underline is True
+
+
+def test_render_no_view_means_no_underline(payload, fields):
+    """Export / tests pass no view → no header is marked."""
+    rows = render(payload, fields)
+    assert all(c.underline is False for c in rows[0].cells)
+
+
+def test_render_sort_indicator_unmarked_column_not_underlined(payload, fields):
+    """A sort key with no matching column (cpu_num) underlines nothing."""
+    rows = render(payload, fields, view={"sort_key": "cpu_num"})
+    assert all(c.underline is False for c in rows[0].cells)
+
+
 # ---------------------------------------------------------- categorical colour
 
 
@@ -256,10 +302,10 @@ def test_render_command_cmd_is_bold(fields):
 
 
 def test_render_command_path_stripped_in_default_view(fields):
-    """v4 short-name view (default): ``/usr/bin/python3 script.py`` →
-    only ``python3`` (bold) + ``script.py`` is shown — the path prefix
-    is dropped. The full-path view is toggled by the ``/`` hotkey in v4
-    and is deferred to G5+ (no hotkey plumbing yet)."""
+    """v4 short-name view (default, no view passed): ``/usr/bin/python3
+    script.py`` → only ``python3`` (bold) + ``script.py`` is shown — the
+    path prefix is dropped. The full-path view (``/`` hotkey) is covered by
+    the ``full-path view`` section below."""
     p = _proc(pid=1, name="python3", cmdline=["/usr/bin/python3", "script.py"])
     rows = render({"data": [p], "_levels": {}}, fields)
     cmd_cells = rows[1].cells[CMD_START:]
@@ -272,6 +318,32 @@ def test_render_command_path_stripped_in_default_view(fields):
     # Arguments follow.
     plain_cells = [c for c in cmd_cells if not c.bold]
     assert any("script.py" in c.text for c in plain_cells)
+
+
+def test_render_command_args_have_no_leading_space(fields):
+    """The args cell must not carry a leading space — the painter already
+    inserts exactly one separator space between cmd and args (regression:
+    'python3  /usr/bin/x' double space → single space)."""
+    p = _proc(pid=1, name="python3", cmdline=["python3", "/usr/bin/terminator"])
+    rows = render({"data": [p], "_levels": {}}, fields)
+    cmd_cells = rows[1].cells[CMD_START:]
+    args_cells = [c for c in cmd_cells if not c.bold]
+    assert args_cells, "expected an args cell"
+    assert not args_cells[0].text.startswith(" ")
+    assert args_cells[0].text == "/usr/bin/terminator"
+
+
+def test_render_full_path_view_glues_command_to_path(fields, monkeypatch):
+    """In full-path view the bold command is glued (no separating space) to
+    the plain path prefix so it reads '/usr/bin/python3'."""
+    import glances.plugins.processlist.render_curses_v5 as mod
+
+    monkeypatch.setattr(mod.os.path, "isdir", lambda p: True)
+    p = _proc(pid=1, name="python3", cmdline=["/usr/bin/python3", "script.py"])
+    rows = render({"data": [p], "_levels": {}}, fields, view={"process_short_name": False})
+    cmd_cells = rows[1].cells[CMD_START:]
+    glued = [c for c in cmd_cells if c.glue]
+    assert any(c.text == "python3" and c.bold for c in glued)
 
 
 def test_render_command_arguments_are_non_bold(fields):
@@ -295,6 +367,44 @@ def test_render_command_when_cmdline_none(fields):
     rows = render({"data": [p], "_levels": {}}, fields)
     cmd_text = " ".join(c.text for c in rows[1].cells[CMD_START:])
     assert "[ghost]" in cmd_text
+
+
+# ---------------------------------------------------------- full-path view ('/')
+
+
+def test_render_full_path_view_shows_path_prefix(fields, monkeypatch):
+    """`process_short_name=False` + real dir → plain ``path/`` before bold cmd."""
+    import glances.plugins.processlist.render_curses_v5 as mod
+
+    monkeypatch.setattr(mod.os.path, "isdir", lambda p: True)
+    p = _proc(pid=1, name="python3", cmdline=["/usr/bin/python3", "script.py"])
+    rows = render({"data": [p], "_levels": {}}, fields, view={"process_short_name": False})
+    cmd_cells = rows[1].cells[CMD_START:]
+    flat = "".join(c.text for c in cmd_cells)
+    assert "/usr/bin/" in flat
+    # The path prefix is plain; the command stays bold.
+    assert any(c.text == "/usr/bin/" and not c.bold for c in cmd_cells)
+    assert any(c.text == "python3" and c.bold for c in cmd_cells)
+
+
+def test_render_full_path_view_skips_nonexistent_path(fields, monkeypatch):
+    """`isdir` False → no path prefix even in full view (v4 guard)."""
+    import glances.plugins.processlist.render_curses_v5 as mod
+
+    monkeypatch.setattr(mod.os.path, "isdir", lambda p: False)
+    p = _proc(pid=1, name="python3", cmdline=["/weird/python3", "script.py"])
+    rows = render({"data": [p], "_levels": {}}, fields, view={"process_short_name": False})
+    flat = "".join(c.text for c in rows[1].cells[CMD_START:])
+    assert "/weird" not in flat
+
+
+def test_render_short_name_view_strips_path_with_view(fields):
+    """`process_short_name=True` via view keeps the v4 short behaviour."""
+    p = _proc(pid=1, name="python3", cmdline=["/usr/bin/python3", "script.py"])
+    rows = render({"data": [p], "_levels": {}}, fields, view={"process_short_name": True})
+    flat = "".join(c.text for c in rows[1].cells[CMD_START:])
+    assert "/usr/bin" not in flat
+    assert any(c.text == "python3" and c.bold for c in rows[1].cells[CMD_START:])
 
 
 # ---------------------------------------------------------- truncation / alignment

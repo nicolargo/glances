@@ -1011,3 +1011,18 @@ def test_build_frame_custom_renderer_exception_falls_back_safely(monkeypatch):
     flat = " ".join(c.text for row in frame.top[0].rows for c in row.cells)
     assert "VAL" in flat
     _reset_plugin_renderer_cache()
+
+
+# --------------------------------------------------------------- glue width
+
+
+def test_pluginblock_width_counts_one_space_between_cells():
+    block = PluginBlock(name="x", rows=[Row(cells=[Cell("ab"), Cell("cd")])])
+    # "ab" + " " + "cd" = 5
+    assert block.width == 5
+
+
+def test_pluginblock_width_glue_cell_has_no_separator():
+    block = PluginBlock(name="x", rows=[Row(cells=[Cell("ab"), Cell("cd", glue=True)])])
+    # glued: "ab" + "cd" = 4 (no separator space)
+    assert block.width == 4

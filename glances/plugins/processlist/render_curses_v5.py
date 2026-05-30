@@ -63,6 +63,20 @@ _W_IO = 5
 _W_PID_DEFAULT = 7
 _MAX_ROWS = 20
 
+# Header label → engine sort key. The active sort column's header is
+# underlined (v4 'SORT' decoration). Columns with no sort key (VIRT, RES,
+# PID, THR, NI, S) are never marked. ``R/s`` and ``W/s`` both map to
+# ``io_counters`` so the IO sort underlines the pair.
+_HEADER_SORT_KEY: dict[str, str] = {
+    "CPU%": "cpu_percent",
+    "MEM%": "memory_percent",
+    "USER": "username",
+    "TIME+": "cpu_times",
+    "R/s": "io_counters",
+    "W/s": "io_counters",
+    "Command": "name",
+}
+
 
 # ----------------------------------------------------------- value formatting
 
@@ -225,14 +239,16 @@ def _io_cell(value: Any, is_unknown: bool, width: int) -> Cell:
     return Cell(text=_format_bytes(value, width))
 
 
-def _command_cells(item: dict[str, Any]) -> list[Cell]:
+def _command_cells(item: dict[str, Any], short_name: bool = True) -> list[Cell]:
     """Render the command as bold cmd + plain args.
 
-    v4 parity (short-name view — default): the ``/path/to/`` prefix of
-    ``cmdline[0]`` is stripped via ``split_cmdline`` and only the
-    executable name + arguments are shown. The full-path view (toggled
-    via the ``/`` hotkey in v4) is not ported — it lives in G5+ with the
-    rest of the keyboard plumbing.
+    - ``short_name=True`` (default, v4 short view): the ``/path/to/``
+      prefix of ``cmdline[0]`` is stripped via ``split_cmdline`` — only
+      the executable name (bold) + arguments are shown.
+    - ``short_name=False`` (v4 ``/`` hotkey full view): when the stripped
+      path is a real directory, it is prepended as a plain ``path + os.sep``
+      cell before the bold cmd (mirrors v4 ``_get_process_curses_cmdline``,
+      including the ``os.path.isdir`` guard so a bogus path is not shown).
 
     Empty / missing cmdline falls back to the kernel-thread convention
     ``[name]`` (no bold) — kthreads have no cmdline in ``/proc``.
@@ -241,10 +257,19 @@ def _command_cells(item: dict[str, Any]) -> list[Cell]:
     if not isinstance(cmdline, list) or not cmdline:
         name = str(item.get("name") or "")
         return [Cell(text=f"[{name}]" if name else "")]
-    _, cmd, args = _split_cmdline(item)
-    cells: list[Cell] = [Cell(text=cmd, bold=True)]
+    path, cmd, args = _split_cmdline(item)
+    cells: list[Cell] = []
+    if not short_name and path and os.path.isdir(path):
+        # Plain path prefix, with the bold command glued flush after it so
+        # it reads "/usr/bin/python3" (no space between path and exe name).
+        cells.append(Cell(text=path + os.sep))
+        cells.append(Cell(text=cmd, bold=True, glue=True))
+    else:
+        cells.append(Cell(text=cmd, bold=True))
     if args:
-        cells.append(Cell(text=" " + args))
+        # No leading space: the painter already inserts one separator space
+        # between this cell and the command (single space, not double).
+        cells.append(Cell(text=args))
     return cells
 
 
@@ -256,8 +281,29 @@ def _pid_width(items: list[dict[str, Any]]) -> int:
 # ----------------------------------------------------------- entry point
 
 
-def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
-    """Render the processlist plugin's process table."""
+def render(
+    payload: dict[str, Any],
+    fields_desc: dict[str, dict[str, Any]],
+    view: dict[str, Any] | None = None,
+) -> list[Row]:
+    """Render the processlist plugin's process table.
+
+    ``view`` (optional, supplied by the TUI) carries the active engine
+    ``sort_key`` — used to underline the sorted column header (v4 'SORT'
+    decoration). Absent ``view`` (export / tests) → no column is marked.
+    """
+    sort_key = (view or {}).get("sort_key")
+    short_name = (view or {}).get("process_short_name", True)
+
+    def _header(label: str, width: int, *, ljust: bool = False, color: ColorRole = ColorRole.HEADER) -> Cell:
+        text = label.ljust(width) if ljust else label.rjust(width)
+        return Cell(
+            text=text,
+            color=color,
+            bold=True,
+            underline=_HEADER_SORT_KEY.get(label) == sort_key if sort_key else False,
+        )
+
     pid_width = _W_PID_DEFAULT
     items: list[dict[str, Any]] = []
 
@@ -274,19 +320,19 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
     title_color = title_role(payload) if items else ColorRole.HEADER
 
     header_cells = [
-        Cell(text="CPU%".rjust(_W_CPU), color=title_color, bold=True),
-        Cell(text="MEM%".rjust(_W_MEM), color=ColorRole.HEADER, bold=True),
-        Cell(text="VIRT".rjust(_W_VIRT), color=ColorRole.HEADER, bold=True),
-        Cell(text="RES".rjust(_W_RES), color=ColorRole.HEADER, bold=True),
-        Cell(text="PID".rjust(pid_width), color=ColorRole.HEADER, bold=True),
-        Cell(text="USER".ljust(_W_USER), color=ColorRole.HEADER, bold=True),
-        Cell(text="THR".rjust(_W_THR), color=ColorRole.HEADER, bold=True),
-        Cell(text="NI".rjust(_W_NI), color=ColorRole.HEADER, bold=True),
-        Cell(text="S".rjust(_W_STATUS), color=ColorRole.HEADER, bold=True),
-        Cell(text="TIME+".rjust(_W_TIME), color=ColorRole.HEADER, bold=True),
-        Cell(text="R/s".rjust(_W_IO), color=ColorRole.HEADER, bold=True),
-        Cell(text="W/s".rjust(_W_IO), color=ColorRole.HEADER, bold=True),
-        Cell(text="Command", color=ColorRole.HEADER, bold=True),
+        _header("CPU%", _W_CPU, color=title_color),
+        _header("MEM%", _W_MEM),
+        _header("VIRT", _W_VIRT),
+        _header("RES", _W_RES),
+        _header("PID", pid_width),
+        _header("USER", _W_USER, ljust=True),
+        _header("THR", _W_THR),
+        _header("NI", _W_NI),
+        _header("S", _W_STATUS),
+        _header("TIME+", _W_TIME),
+        _header("R/s", _W_IO),
+        _header("W/s", _W_IO),
+        _header("Command", len("Command")),
     ]
     rows: list[Row] = [Row(cells=header_cells)]
 
@@ -314,6 +360,6 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
             _io_cell(r_rate, r_unknown, _W_IO),
             _io_cell(w_rate, w_unknown, _W_IO),
         ]
-        rows.append(Row(cells=fixed_cells + _command_cells(item)))
+        rows.append(Row(cells=fixed_cells + _command_cells(item, short_name)))
 
     return rows

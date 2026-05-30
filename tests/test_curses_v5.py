@@ -397,7 +397,7 @@ def test_tui_v5_default_top_shows_cpu_not_percpu(monkeypatch, fake_store, fake_a
 
 
 def test_tui_v5_toggle_swaps_cpu_for_percpu(monkeypatch, fake_store, fake_alerts, fake_config):
-    """Once `_show_percpu` flips True, the top slot exposes percpu instead of cpu."""
+    """Once `_view.show_percpu` flips True, the top slot exposes percpu instead of cpu."""
     from glances.outputs import glances_curses_v5 as tui_mod
 
     fake_store.as_dict.return_value = {
@@ -415,7 +415,7 @@ def test_tui_v5_toggle_swaps_cpu_for_percpu(monkeypatch, fake_store, fake_alerts
         },
         refresh_interval=0.01,
     )
-    tui._show_percpu = True
+    tui._view.show_percpu = True
     frame = tui._build_frame()
     top_names = [b.name for b in frame.top]
     assert "percpu" in top_names
@@ -423,7 +423,7 @@ def test_tui_v5_toggle_swaps_cpu_for_percpu(monkeypatch, fake_store, fake_alerts
 
 
 def test_tui_v5_hotkey_1_toggles_percpu(monkeypatch, fake_store, fake_alerts, fake_config):
-    """Pressing '1' flips `_show_percpu`."""
+    """Pressing '1' flips `_view.show_percpu`."""
     from glances.outputs import glances_curses_v5 as tui_mod
 
     fake_stdscr = MagicMock()
@@ -440,12 +440,245 @@ def test_tui_v5_hotkey_1_toggles_percpu(monkeypatch, fake_store, fake_alerts, fa
         fields_by_plugin={"mem": {}},
         refresh_interval=0.01,
     )
-    assert tui._show_percpu is False
+    assert tui._view.show_percpu is False
     tui.start()
     tui.join(timeout=1.0)
     # After one '1' press, the flag was flipped — the thread exits on 'q'
     # but the flag retains the toggled value.
-    assert tui._show_percpu is True
+    assert tui._view.show_percpu is True
+
+
+class _FakeEngine:
+    """Minimal ``glances_processes`` stand-in recording sort-key changes."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, bool]] = []
+        self.sort_key = "cpu_percent"
+        self.auto_sort = False
+
+    def set_sort_key(self, key, auto) -> None:
+        self.calls.append((key, auto))
+        self.sort_key = "cpu_percent" if key == "auto" else key
+        self.auto_sort = (key == "auto") or auto
+
+
+def _make_tui(tui_mod, fake_store, fake_alerts, fake_config, **kw):
+    return tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=kw.get("registry", [("mem", False)]),
+        fields_by_plugin=kw.get("fields_by_plugin", {"mem": {}}),
+        refresh_interval=0.01,
+    )
+
+
+def test_tui_v5_handle_key_quit(fake_store, fake_alerts, fake_config):
+    """`q` and ESC request shutdown; any other key does not."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._handle_key(ord("q")) == "quit"
+    assert tui._handle_key(27) == "quit"
+    assert tui._handle_key(ord("z")) == "ignored"
+
+
+def test_tui_v5_sort_hotkeys_drive_engine(monkeypatch, fake_store, fake_alerts, fake_config):
+    """Manual sort keys set the engine key with auto=False; 'a' enables auto."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    engine = _FakeEngine()
+    monkeypatch.setattr(tui_mod, "glances_processes", engine)
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+
+    for ch, expected in [
+        ("c", "cpu_percent"),
+        ("m", "memory_percent"),
+        ("i", "io_counters"),
+        ("t", "cpu_times"),
+        ("p", "name"),
+        ("u", "username"),
+        ("o", "cpu_num"),
+    ]:
+        assert tui._handle_key(ord(ch)) == "changed"
+        assert engine.calls[-1] == (expected, False)
+
+    assert tui._handle_key(ord("a")) == "changed"
+    assert engine.calls[-1] == ("auto", True)
+    assert engine.auto_sort is True
+
+
+def test_tui_v5_switch_hotkeys_toggle_view(fake_store, fake_alerts, fake_config):
+    """`/` toggles short-name, `j` toggles the programs view."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._view.process_short_name is True
+    assert tui._handle_key(ord("/")) == "changed"
+    assert tui._view.process_short_name is False
+
+    assert tui._view.programs is False
+    assert tui._handle_key(ord("j")) == "changed"
+    assert tui._view.programs is True
+
+
+def test_tui_v5_unknown_key_is_noop(fake_store, fake_alerts, fake_config):
+    """An unmapped key leaves view state untouched and does not quit."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    before = (tui._view.show_percpu, tui._view.process_short_name, tui._view.programs)
+    assert tui._handle_key(ord("Z")) == "ignored"
+    after = (tui._view.show_percpu, tui._view.process_short_name, tui._view.programs)
+    assert before == after
+
+
+def test_tui_v5_programs_toggle_hides_one_list(fake_store, fake_alerts, fake_config):
+    """`j` shows exactly one of processlist / programlist in the right slot."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    fake_store.as_dict.return_value = {
+        "processlist": {"data": [], "_levels": {}},
+        "programlist": {"data": [], "_levels": {}},
+    }
+    tui = _make_tui(
+        tui_mod,
+        fake_store,
+        fake_alerts,
+        fake_config,
+        registry=[("processlist", True), ("programlist", True)],
+        fields_by_plugin={"processlist": {}, "programlist": {}},
+    )
+    # Default (threads view): programlist hidden, processlist shown.
+    names = [b.name for b in tui._build_frame().right]
+    assert "processlist" in names
+    assert "programlist" not in names
+    # Programs view: the reverse.
+    tui._view.programs = True
+    names = [b.name for b in tui._build_frame().right]
+    assert "programlist" in names
+    assert "processlist" not in names
+
+
+def test_tui_v5_render_view_snapshots_engine_sort(monkeypatch, fake_store, fake_alerts, fake_config):
+    """`_render_view` exposes engine sort key + view switches to renderers."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    engine = _FakeEngine()
+    engine.sort_key = "memory_percent"
+    engine.auto_sort = True
+    monkeypatch.setattr(tui_mod, "glances_processes", engine)
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._view.process_short_name = False
+    tui._view.programs = True
+
+    view = tui._render_view()
+    assert view["sort_key"] == "memory_percent"
+    assert view["auto_sort"] is True
+    assert view["process_short_name"] is False
+    assert view["programs"] is True
+
+
+def test_tui_v5_repaint_decision_guard_rail(fake_store, fake_alerts, fake_config):
+    """A pending key change repaints at most once per `_MIN_KEY_REPAINT_INTERVAL`
+    (the guard-rail), measured from the last key-driven repaint."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    interval = tui._MIN_KEY_REPAINT_INTERVAL
+
+    # A change 0.5 s after the last key repaint → throttled (not yet due).
+    _, change_due = tui._repaint_decision(
+        now=100.0, last_paint=100.0, last_change_paint=100.0 - 0.5 * interval, dirty=True
+    )
+    assert change_due is False
+
+    # A change a full interval later → due.
+    _, change_due = tui._repaint_decision(now=100.0, last_paint=100.0, last_change_paint=100.0 - interval, dirty=True)
+    assert change_due is True
+
+    # No pending change → never change-due regardless of elapsed time.
+    _, change_due = tui._repaint_decision(now=100.0, last_paint=100.0, last_change_paint=0.0, dirty=False)
+    assert change_due is False
+
+
+def test_tui_v5_repaint_decision_regular_cadence(fake_store, fake_alerts, fake_config):
+    """Regular cadence is independent of key changes."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    # last paint older than refresh_interval → regular due.
+    regular_due, _ = tui._repaint_decision(
+        now=100.0, last_paint=100.0 - tui.refresh_interval, last_change_paint=100.0, dirty=False
+    )
+    assert regular_due is True
+    # last paint just now → not due.
+    regular_due, _ = tui._repaint_decision(now=100.0, last_paint=100.0, last_change_paint=0.0, dirty=False)
+    assert regular_due is False
+
+
+def test_tui_v5_live_sort_reorders_by_engine_key(monkeypatch, fake_store, fake_alerts, fake_config):
+    """`_apply_live_sort` reorders process data by the engine's current key so
+    a sort hotkey is reflected on the next repaint (not the next engine tick)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    engine = _FakeEngine()
+    engine.sort_key = "memory_percent"  # reverse=True default
+    monkeypatch.setattr(tui_mod, "glances_processes", engine)
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+
+    snapshot = {
+        "processlist": {
+            "data": [
+                {"pid": 1, "cpu_percent": 90.0, "memory_percent": 1.0, "name": "a"},
+                {"pid": 2, "cpu_percent": 1.0, "memory_percent": 90.0, "name": "b"},
+            ],
+            "_levels": {},
+        }
+    }
+    tui._apply_live_sort(snapshot)
+    pids = [p["pid"] for p in snapshot["processlist"]["data"]]
+    assert pids == [2, 1]  # memory_percent descending
+
+
+def test_tui_v5_live_sort_does_not_mutate_store_payload(monkeypatch, fake_store, fake_alerts, fake_config):
+    """The shallow store snapshot must not be mutated — the entry is replaced
+    by a fresh dict with a freshly sorted list, leaving the original intact."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    engine = _FakeEngine()
+    engine.sort_key = "memory_percent"
+    monkeypatch.setattr(tui_mod, "glances_processes", engine)
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+
+    original_payload = {
+        "data": [
+            {"pid": 1, "cpu_percent": 90.0, "memory_percent": 1.0, "name": "a"},
+            {"pid": 2, "cpu_percent": 1.0, "memory_percent": 90.0, "name": "b"},
+        ],
+        "_levels": {},
+    }
+    original_data = original_payload["data"]
+    snapshot = {"processlist": original_payload}
+    tui._apply_live_sort(snapshot)
+    # Snapshot entry replaced (not the same object) but the original payload
+    # and its list keep their original order.
+    assert snapshot["processlist"] is not original_payload
+    assert [p["pid"] for p in original_data] == [1, 2]
+
+
+def test_tui_v5_live_sort_noop_without_key(monkeypatch, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    engine = _FakeEngine()
+    engine.sort_key = None
+    monkeypatch.setattr(tui_mod, "glances_processes", engine)
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+
+    payload = {"data": [{"pid": 1, "cpu_percent": 1.0, "memory_percent": 1.0, "name": "a"}], "_levels": {}}
+    snapshot = {"processlist": payload}
+    tui._apply_live_sort(snapshot)
+    assert snapshot["processlist"] is payload  # untouched
 
 
 def test_tui_v5_q_key_fires_on_quit_callback(monkeypatch, fake_store, fake_alerts, fake_config):

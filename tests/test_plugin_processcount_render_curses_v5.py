@@ -98,3 +98,31 @@ def test_render_no_total_skips_aggregate(fields):
     rows = render(payload, fields)
     flat = "".join(c.text for c in rows[0].cells)
     assert flat == "TASKS"
+
+
+# ---------------------------------------------------------- sort indicator (view)
+
+
+def test_render_no_view_omits_sort_indicator(payload, fields):
+    """Without a view (export / no TUI), the TASKS line carries no sort text."""
+    rows = render(payload, fields)
+    flat = " ".join(c.text for c in rows[0].cells)
+    assert "sorted" not in flat
+
+
+def test_render_threads_auto_sort_indicator(payload, fields):
+    rows = render(payload, fields, view={"programs": False, "auto_sort": True, "sort_key": "cpu_percent"})
+    flat = " ".join(c.text for c in rows[0].cells)
+    assert "Threads sorted automatically by CPU consumption" in flat
+
+
+def test_render_programs_manual_sort_indicator(payload, fields):
+    rows = render(payload, fields, view={"programs": True, "auto_sort": False, "sort_key": "memory_percent"})
+    flat = " ".join(c.text for c in rows[0].cells)
+    assert "Programs sorted by memory consumption" in flat
+
+
+def test_render_sort_indicator_unknown_key_falls_back_to_raw(payload, fields):
+    rows = render(payload, fields, view={"programs": False, "auto_sort": False, "sort_key": "weird_key"})
+    flat = " ".join(c.text for c in rows[0].cells)
+    assert "Threads sorted by weird_key" in flat

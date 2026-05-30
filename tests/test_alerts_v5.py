@@ -888,3 +888,105 @@ async def test_plugin_with_emits_alerts_false_does_not_fire_actions(tmp_path, mo
     plugin.EMITS_ALERTS = False
     await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
     assert recording.calls == []
+
+
+# ---------------------------------------------------------- dynamic process auto-sort
+
+
+class _MemPlugin(_FakeScalarPlugin):
+    """Scalar plugin named ``mem`` — drives auto-sort to memory_percent."""
+
+    plugin_name = "mem"
+
+
+class _CpuPlugin(_FakeScalarPlugin):
+    """Scalar plugin named ``cpu`` — its ``iowait`` field drives io_counters."""
+
+    plugin_name = "cpu"
+
+
+class _FakeProcessEngine:
+    """Duck-typed ``glances_processes`` stand-in for auto-sort tests."""
+
+    def __init__(self, auto_sort: bool = True) -> None:
+        self.auto_sort = auto_sort
+        self.sort_key = "cpu_percent"
+        self.calls: list[tuple[str, bool]] = []
+
+    def set_sort_key(self, key, auto=True) -> None:
+        self.calls.append((key, auto))
+        self.sort_key = "cpu_percent" if key == "auto" else key
+        self.auto_sort = True if key == "auto" else auto
+
+
+async def test_auto_sort_defaults_to_cpu_percent(tmp_path, monkeypatch, store):
+    """No active alert → auto-sort keeps cpu_percent (and stays enabled)."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeProcessEngine()
+    alerts = GlancesAlerts(config, process_engine=engine)
+    plugin = _CpuPlugin(store, config)
+    await _run_with_levels(plugin, alerts, {"total": {"level": "ok", "prominent": True}})
+    assert engine.sort_key == "cpu_percent"
+    assert engine.calls[-1] == ("cpu_percent", True)
+
+
+async def test_auto_sort_switches_to_memory_on_mem_alert(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeProcessEngine()
+    alerts = GlancesAlerts(config, process_engine=engine)
+    plugin = _MemPlugin(store, config)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert engine.sort_key == "memory_percent"
+
+
+async def test_auto_sort_switches_to_io_on_cpu_iowait_alert(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeProcessEngine()
+    alerts = GlancesAlerts(config, process_engine=engine)
+    plugin = _CpuPlugin(store, config)
+    await _run_with_levels(plugin, alerts, {"iowait": {"level": "warning", "prominent": True}})
+    assert engine.sort_key == "io_counters"
+
+
+async def test_auto_sort_mem_takes_precedence_over_iowait(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeProcessEngine()
+    alerts = GlancesAlerts(config, process_engine=engine)
+    cpu = _CpuPlugin(store, config)
+    mem = _MemPlugin(store, config)
+    await _run_with_levels(cpu, alerts, {"iowait": {"level": "warning", "prominent": True}})
+    assert engine.sort_key == "io_counters"
+    await _run_with_levels(mem, alerts, {"percent": {"level": "critical", "prominent": True}})
+    # MEM now active alongside IOWAIT → memory_percent wins.
+    assert engine.sort_key == "memory_percent"
+
+
+async def test_auto_sort_resets_after_recovery(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeProcessEngine()
+    alerts = GlancesAlerts(config, process_engine=engine)
+    mem = _MemPlugin(store, config)
+    await _run_with_levels(mem, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert engine.sort_key == "memory_percent"
+    # Memory pressure clears → back to the cpu_percent default.
+    await _run_with_levels(mem, alerts, {"percent": {"level": "ok", "prominent": True}})
+    assert engine.sort_key == "cpu_percent"
+
+
+async def test_auto_sort_noop_when_manual_sort_selected(tmp_path, monkeypatch, store):
+    """`auto_sort=False` (user picked a manual key) → engine untouched."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeProcessEngine(auto_sort=False)
+    alerts = GlancesAlerts(config, process_engine=engine)
+    mem = _MemPlugin(store, config)
+    await _run_with_levels(mem, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert engine.calls == []
+
+
+async def test_auto_sort_noop_without_engine(tmp_path, monkeypatch, store):
+    """No engine wired (default) → ingest still works, no crash."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    alerts = GlancesAlerts(config)  # process_engine=None
+    mem = _MemPlugin(store, config)
+    await _run_with_levels(mem, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert len(alerts.get_history()) == 1

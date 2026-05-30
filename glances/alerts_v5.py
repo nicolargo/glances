@@ -96,11 +96,18 @@ class GlancesAlerts:
         actions: dict[str, GlancesActionBase] | None = None,
         hostname: str | None = None,
         now: Callable[[], float] = time.monotonic,
+        process_engine: Any | None = None,
     ) -> None:
         self.config = config
         self.actions = actions or {}
         self._hostname = hostname or socket.gethostname()
         self._now = now
+        # Optional process engine (``glances.processes.glances_processes``)
+        # for dynamic auto-sort (v4 ``events_list.set_process_sort`` parity).
+        # Duck-typed: needs ``.auto_sort`` (bool) and ``.set_sort_key``. When
+        # ``None`` (default — tests, headless rigs without the process
+        # plugins) auto-sort is a no-op and no global state is touched.
+        self._process_engine = process_engine
 
         self._global_min_duration = float(config.get("alerts", "min_duration_seconds", _DEFAULT_MIN_DURATION_SECONDS))
         self._history_size = int(config.get("alerts", "history_size", _DEFAULT_HISTORY_SIZE))
@@ -240,6 +247,53 @@ class GlancesAlerts:
             # the entry transition (v4-aligned behaviour).
             if state.committed_level != "ok":
                 self._fire_actions(plugin, key, field_name, state.committed_level, value, repeat=True)
+
+        # Dynamic process auto-sort (v4 parity) — recomputed from the full
+        # committed state after every ingest so recovery resets the key too.
+        self._update_auto_sort()
+
+    # ------------------------------------------------------- process auto-sort
+
+    def _auto_sort_key(self) -> str:
+        """Map the current worst active alert to a process sort key.
+
+        Mirrors v4 ``EventsList.get_event_sort_key``:
+        - an active ``mem`` alert        → ``memory_percent``
+        - an active ``cpu`` iowait alert → ``io_counters``
+        - otherwise                      → ``cpu_percent`` (the default)
+
+        "Active" = the (plugin, field) has a committed non-ok level. MEM
+        takes precedence over IOWAIT, matching v4's intent of surfacing the
+        memory hogs first when memory pressure is the dominant signal.
+        """
+        mem_active = False
+        iowait_active = False
+        for (plugin_name, _key, field_name), state in self._state.items():
+            if state.committed_level == "ok":
+                continue
+            if plugin_name == "mem":
+                mem_active = True
+            elif plugin_name == "cpu" and field_name == "iowait":
+                iowait_active = True
+        if mem_active:
+            return "memory_percent"
+        if iowait_active:
+            return "io_counters"
+        return "cpu_percent"
+
+    def _update_auto_sort(self) -> None:
+        """Push the alert-derived sort key to the engine when auto-sort is on.
+
+        No-op when no engine is wired or the user has selected a manual sort
+        key (``auto_sort`` False). ``set_sort_key(key, auto=True)`` keeps
+        auto-sort enabled — only the manual hotkeys turn it off."""
+        engine = self._process_engine
+        if engine is None or not getattr(engine, "auto_sort", False):
+            return
+        try:
+            engine.set_sort_key(self._auto_sort_key(), auto=True)
+        except Exception as e:  # pragma: no cover — defensive
+            logger.debug("auto-sort update failed: %s", e)
 
     # ----------------------------------------------------- min duration override
 

@@ -307,7 +307,12 @@ def assemble(
     """
     store = StatsStoreV5()
     actions = discover_actions("glances.actions_v5")
-    alerts = GlancesAlerts(config, actions=actions)
+    # Wire the process engine so the alert pipeline can drive the dynamic
+    # process auto-sort (v4 parity) — the sort key follows the dominant
+    # active alert (MEM → memory_percent, CPU iowait → io_counters).
+    from glances.processes import glances_processes
+
+    alerts = GlancesAlerts(config, actions=actions, process_engine=glances_processes)
 
     plugins = discover_plugins(store, config)
     if not plugins:

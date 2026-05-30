@@ -33,6 +33,7 @@ slot routing + per-plugin rendering without driving a real terminal.
 from __future__ import annotations
 
 import importlib
+import inspect
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -172,6 +173,9 @@ class Cell:
     color: ColorRole = ColorRole.DEFAULT
     prominent: bool = False  # background highlight when True (cf. §3.3)
     bold: bool = False  # explicit bold attribute (HEADER cells are bold automatically)
+    underline: bool = False  # v4 'SORT' decoration (A_UNDERLINE) — active sort column header
+    glue: bool = False  # paint with NO separating space before it (contiguous segments,
+    # e.g. exec path "/usr/bin/" + bold name "python3" → "/usr/bin/python3")
 
 
 @dataclass
@@ -196,8 +200,17 @@ class PluginBlock:
 
     @property
     def width(self) -> int:
-        """Max printable width across rows (single-space cell separator)."""
-        return max((sum(len(c.text) for c in r.cells) + max(0, len(r.cells) - 1) for r in self.rows), default=0)
+        """Max printable width across rows.
+
+        One space separates adjacent cells, except a ``glue`` cell which is
+        painted flush against the previous one (no separator)."""
+
+        def row_width(row: Row) -> int:
+            text = sum(len(c.text) for c in row.cells)
+            separators = sum(1 for i, c in enumerate(row.cells) if i > 0 and not c.glue)
+            return text + separators
+
+        return max((row_width(r) for r in self.rows), default=0)
 
 
 @dataclass
@@ -598,17 +611,35 @@ def render_alert_block(
 
 # Cache: plugin_name → render function or None (sentinel for "no custom renderer").
 # Avoids retrying failed imports on every cycle.
-_PLUGIN_RENDERERS: dict[str, Callable[[dict[str, Any], dict[str, dict[str, Any]]], list[Row]] | None] = {}
+_PLUGIN_RENDERERS: dict[str, Callable[..., list[Row]] | None] = {}
+# Parallel cache: does the discovered renderer accept a ``view`` argument?
+# Renderers predating the hotkey work keep the 2-arg ``(payload, fields_desc)``
+# signature and must still be called with exactly two args.
+_RENDERER_ACCEPTS_VIEW: dict[str, bool] = {}
+
+
+def _accepts_view(fn: Callable[..., Any]) -> bool:
+    """True if ``fn`` can receive the optional ``view`` keyword.
+
+    Either it declares a ``view`` parameter explicitly or it captures
+    ``**kwargs``. Inspection failures default to False (call with two args)."""
+    try:
+        params = inspect.signature(fn).parameters
+    except (ValueError, TypeError):  # pragma: no cover — builtins / C funcs
+        return False
+    if "view" in params:
+        return True
+    return any(p.kind == p.VAR_KEYWORD for p in params.values())
 
 
 def _discover_plugin_renderer(
     plugin_name: str,
-) -> Callable[[dict[str, Any], dict[str, dict[str, Any]]], list[Row]] | None:
+) -> Callable[..., list[Row]] | None:
     """Look up `glances.plugins.<name>.render_curses_v5.render`.
 
     The convention: a plugin opts in to a custom TUI layout (v4-style)
     by providing a `render_curses_v5.py` module next to `model_v5.py`.
-    The module exports `render(payload, fields_desc) -> list[Row]`.
+    The module exports `render(payload, fields_desc[, view]) -> list[Row]`.
 
     When the module is absent or fails to import, returns `None` and the
     caller falls back to the generic `render_scalar_plugin` /
@@ -635,12 +666,14 @@ def _discover_plugin_renderer(
         return None
 
     _PLUGIN_RENDERERS[plugin_name] = fn
+    _RENDERER_ACCEPTS_VIEW[plugin_name] = _accepts_view(fn)
     return fn
 
 
 def _reset_plugin_renderer_cache() -> None:
     """Test-only helper to clear the discovery cache."""
     _PLUGIN_RENDERERS.clear()
+    _RENDERER_ACCEPTS_VIEW.clear()
 
 
 def build_frame(
@@ -650,6 +683,7 @@ def build_frame(
     alerts_history: list[dict[str, Any]],
     alerts_limit: int = 10,
     alerts_initializing: bool = False,
+    view: dict[str, Any] | None = None,
 ) -> Frame:
     """Assemble a complete TUI Frame following v4's slot layout.
 
@@ -684,7 +718,10 @@ def build_frame(
         custom = _discover_plugin_renderer(plugin_name)
         if custom is not None:
             try:
-                rows = custom(payload, fields_desc)
+                if _RENDERER_ACCEPTS_VIEW.get(plugin_name):
+                    rows = custom(payload, fields_desc, view=view)
+                else:
+                    rows = custom(payload, fields_desc)
             except Exception as e:  # pragma: no cover — defensive
                 logger.warning(
                     "TUI: custom renderer for %r raised %s; using generic fallback this cycle",
