@@ -253,23 +253,45 @@ async def test_fetch_aggregate_keeps_settled_first_sample():
     assert [c.get("interval") for c in calls] == [0.0]  # single non-blocking call
 
 
-async def test_fetch_per_core_retries_non_blocking_after_unsettled():
-    """Per-core keeps its legacy best-effort retry (brief sleep + one more
-    non-blocking sample) — it settles over a couple of refreshes, not via a
-    short blocking window."""
+async def test_fetch_per_core_recovers_with_long_blocking_sample_after_unsettled():
+    """Regression (#startup-100%, per-core): when the non-blocking per-core
+    sample is unsettled (every core all-zeros → total=100 %), the sampler
+    recovers with a single *blocking* sample over the longer per-core settle
+    window, so the percpu plugin never pins every core at 100 % at startup."""
     sampler = CpuSamplerV5(ttl=10.0)
-    unsettled = [_all_zero(), _all_zero()]
     settled = _per_core(2)
-    results = [unsettled, settled]
+    calls: list[dict] = []
 
     def stub(*args, **kwargs):
-        return results.pop(0)
+        calls.append(kwargs)
+        # Cold non-blocking probe → all-zeros for every core; the blocking
+        # recovery (interval > 0) returns real, settled per-core samples.
+        if kwargs.get("interval") == 0.0:
+            return [_all_zero(), _all_zero()]
+        return settled
 
     with patch("glances.cpu_sampler_v5.psutil.cpu_times_percent", side_effect=stub):
-        with patch("glances.cpu_sampler_v5.asyncio.sleep") as fake_sleep:
-            fake_sleep.return_value = None
-            actual = await sampler.get_per_core()
+        actual = await sampler.get_per_core()
 
-    assert actual[0].idle == 70.0  # the settled second sample
-    assert results == []  # both samples consumed
-    fake_sleep.assert_awaited_once()  # per-core path still sleeps
+    assert actual[0].idle == 70.0  # the settled blocking sample
+    assert all(core.idle != 0.0 for core in actual)  # never the all-zeros artifact
+    # Cold non-blocking probe + one blocking recovery over the per-core window.
+    assert [c.get("interval") for c in calls] == [0.0, 1.0]
+    assert calls[1].get("percpu") is True
+
+
+async def test_fetch_per_core_keeps_settled_first_sample():
+    """A settled first per-core sample is returned without a blocking recovery
+    call (steady-state hot path stays cheap)."""
+    sampler = CpuSamplerV5(ttl=10.0)
+    calls: list[dict] = []
+
+    def stub(*args, **kwargs):
+        calls.append(kwargs)
+        return _per_core(2)
+
+    with patch("glances.cpu_sampler_v5.psutil.cpu_times_percent", side_effect=stub):
+        actual = await sampler.get_per_core()
+
+    assert actual[0].idle == 70.0
+    assert [c.get("interval") for c in calls] == [0.0]  # single non-blocking call

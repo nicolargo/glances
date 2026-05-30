@@ -22,9 +22,10 @@ without an additional psutil call. The default TTL is `1.0 s` — short
 enough to be transparent at the default `refresh_time = 2 s`, long
 enough to absorb cycles fired in the same scheduler tick.
 
-Concurrent samplers are serialised under an `asyncio.Lock` so two
-parallel plugin updates can't trigger two psutil calls for the same
-sub-sample.
+Each sub-sample has its own `asyncio.Lock` so two parallel plugin
+updates can't trigger two psutil calls for the same sub-sample — while a
+slow startup recovery on one path (the ~1 s per-core settle) never
+serialises the fast aggregate/counters paths.
 
 Public API (consumed by `cpu/model_v5.py` and `percpu/model_v5.py`):
 
@@ -59,13 +60,31 @@ DEFAULT_TTL_SECONDS = 1.0
 # thread, so the asyncio event loop is never blocked.
 _AGGREGATE_SETTLE_INTERVAL = 0.1
 
+# Blocking interval used to recover a settled *per-core* sample at startup.
+# Per-core ``cpu_times_percent`` settles ~10× slower than the system-wide
+# aggregate: each core's fields only sum to ~100 % after ~1 s of real elapsed
+# time (vs ~0.1 s for the aggregate). Below that the cores read all-zeros and
+# the percpu plugin renders every core at ``total=100 %`` — a spike that
+# otherwise lingers for several refreshes at startup. A single blocking sample
+# over this longer window is settled by construction (worker thread → the event
+# loop is not blocked). The per-core sampler holds its own lock (see
+# ``__init__``) so this longer call never delays the fast aggregate path.
+_PER_CORE_SETTLE_INTERVAL = 1.0
+
 
 class CpuSamplerV5:
     """TTL-coalesced wrapper around psutil CPU sampling calls."""
 
     def __init__(self, ttl: float = DEFAULT_TTL_SECONDS) -> None:
         self._ttl = ttl
-        self._lock = asyncio.Lock()
+        # One lock per sub-sample (aggregate / per-core / counters). They guard
+        # independent psutil calls and independent cached state, so a slow
+        # recovery on one path (e.g. the ~1 s per-core settle at startup) must
+        # not serialise the others. Each lock still prevents two concurrent
+        # callers from duplicating the *same* psutil sub-sample.
+        self._aggregate_lock = asyncio.Lock()
+        self._per_core_lock = asyncio.Lock()
+        self._stats_lock = asyncio.Lock()
 
         self._aggregate: Any | None = None
         self._aggregate_ts: float = 0.0
@@ -111,7 +130,7 @@ class CpuSamplerV5:
     async def _fetch_aggregate(self, percpu: bool = False) -> Any:
         """Pull a psutil sample; if it looks unsettled (no usable baseline
         yet, typical at startup), recover with a guaranteed-settled sample.
-        Caller is responsible for holding ``self._lock``."""
+        Caller is responsible for holding the relevant sub-sample lock."""
         result = await asyncio.to_thread(psutil.cpu_times_percent, interval=0.0, percpu=percpu)
         first = result[0] if (percpu and result) else result
         if first is None or not self._is_unsettled(first):
@@ -124,18 +143,15 @@ class CpuSamplerV5:
             # spike. Runs in a worker thread, so the event loop is not blocked.
             return await asyncio.to_thread(psutil.cpu_times_percent, interval=_AGGREGATE_SETTLE_INTERVAL, percpu=percpu)
 
-        # Per-core sampling settles ~10× slower than the aggregate (it needs
-        # ~1 s of elapsed time, not ~0.1 s), so a short blocking window would
-        # not help here. Keep the legacy best-effort behaviour: a brief sleep
-        # to let psutil's anchor age, then one more non-blocking sample. The
-        # per-core block converges to real values within the first couple of
-        # refreshes.
-        await asyncio.sleep(0.05)
-        return await asyncio.to_thread(psutil.cpu_times_percent, interval=0.0, percpu=percpu)
+        # Per-core: same recovery as the aggregate, but over the longer
+        # ``_PER_CORE_SETTLE_INTERVAL`` window that per-core sampling needs to
+        # settle. One blocking sample is settled by construction — no all-zeros
+        # artifact, no every-core ``total=100`` spike at startup.
+        return await asyncio.to_thread(psutil.cpu_times_percent, interval=_PER_CORE_SETTLE_INTERVAL, percpu=percpu)
 
     async def get_aggregate(self) -> Any:
         """System-wide ``cpu_times_percent`` (cached over ``ttl``)."""
-        async with self._lock:
+        async with self._aggregate_lock:
             if self._is_fresh(self._aggregate_ts) and self._aggregate is not None:
                 return self._aggregate
             self._aggregate = await self._fetch_aggregate(percpu=False)
@@ -146,7 +162,7 @@ class CpuSamplerV5:
 
     async def get_per_core(self) -> list[Any]:
         """Per-core ``cpu_times_percent`` (cached over ``ttl``)."""
-        async with self._lock:
+        async with self._per_core_lock:
             if self._is_fresh(self._per_core_ts) and self._per_core:
                 return self._per_core
             self._per_core = await self._fetch_aggregate(percpu=True)
@@ -157,7 +173,7 @@ class CpuSamplerV5:
 
     async def get_stats(self) -> Any:
         """``psutil.cpu_stats()`` — context switches, interrupts, etc."""
-        async with self._lock:
+        async with self._stats_lock:
             if self._is_fresh(self._stats_ts) and self._stats is not None:
                 return self._stats
             self._stats = await asyncio.to_thread(psutil.cpu_stats)
