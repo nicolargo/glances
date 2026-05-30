@@ -47,6 +47,18 @@ import psutil
 
 DEFAULT_TTL_SECONDS = 1.0
 
+# Blocking interval used to recover a settled *aggregate* sample at startup.
+# psutil's ``cpu_times_percent(interval=0.0)`` only yields a meaningful value
+# once a prior call sits far enough in the past to produce a real delta. On
+# the first call(s) — and under startup contention — that delta is missing and
+# psutil returns an all-zeros sample, which the cpu plugin maps to ``idle=0``
+# → ``total=100 %`` (the spurious "100 % CPU spike" seen for the first one or
+# two refreshes). Empirically the aggregate sample settles (its fields sum to
+# ~100 %) after ~0.1 s of real elapsed time, so a single short *blocking*
+# sample over that window is settled by construction. It runs in a worker
+# thread, so the asyncio event loop is never blocked.
+_AGGREGATE_SETTLE_INTERVAL = 0.1
+
 
 class CpuSamplerV5:
     """TTL-coalesced wrapper around psutil CPU sampling calls."""
@@ -97,18 +109,29 @@ class CpuSamplerV5:
         return total < 50.0
 
     async def _fetch_aggregate(self, percpu: bool = False) -> Any:
-        """Pull a psutil sample; if it looks unsettled, sleep briefly and
-        retry once. Caller is responsible for holding ``self._lock``."""
+        """Pull a psutil sample; if it looks unsettled (no usable baseline
+        yet, typical at startup), recover with a guaranteed-settled sample.
+        Caller is responsible for holding ``self._lock``."""
         result = await asyncio.to_thread(psutil.cpu_times_percent, interval=0.0, percpu=percpu)
         first = result[0] if (percpu and result) else result
-        if first is not None and self._is_unsettled(first):
-            # Give psutil's anchor enough wall time to register a real
-            # delta on the next call. 50 ms is comfortably above the
-            # ~1 ms granularity below which psutil reports all zeros and
-            # imperceptible to the user at startup.
-            await asyncio.sleep(0.05)
-            result = await asyncio.to_thread(psutil.cpu_times_percent, interval=0.0, percpu=percpu)
-        return result
+        if first is None or not self._is_unsettled(first):
+            return result
+
+        if not percpu:
+            # Aggregate: a single short *blocking* sample measures the delta
+            # over a real window (``_AGGREGATE_SETTLE_INTERVAL``) and is
+            # settled by construction — no all-zeros artifact, no ``total=100``
+            # spike. Runs in a worker thread, so the event loop is not blocked.
+            return await asyncio.to_thread(psutil.cpu_times_percent, interval=_AGGREGATE_SETTLE_INTERVAL, percpu=percpu)
+
+        # Per-core sampling settles ~10× slower than the aggregate (it needs
+        # ~1 s of elapsed time, not ~0.1 s), so a short blocking window would
+        # not help here. Keep the legacy best-effort behaviour: a brief sleep
+        # to let psutil's anchor age, then one more non-blocking sample. The
+        # per-core block converges to real values within the first couple of
+        # refreshes.
+        await asyncio.sleep(0.05)
+        return await asyncio.to_thread(psutil.cpu_times_percent, interval=0.0, percpu=percpu)
 
     async def get_aggregate(self) -> Any:
         """System-wide ``cpu_times_percent`` (cached over ``ttl``)."""

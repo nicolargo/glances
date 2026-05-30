@@ -194,14 +194,13 @@ def test_is_unsettled_accepts_settled_sample():
     assert CpuSamplerV5._is_unsettled(settled) is False
 
 
-async def test_fetch_aggregate_retries_after_unsettled_sample():
-    """If the first psutil call returns an unsettled sample, the sampler
-    sleeps briefly and re-samples once."""
-    sampler = CpuSamplerV5(ttl=10.0)
-    unsettled = CpuTimesPercent(
+def _all_zero() -> CpuTimesPercent:
+    """The all-zeros sample psutil returns on the very first call (no
+    baseline). idle=0 → the cpu plugin would render total=100 %."""
+    return CpuTimesPercent(
         user=0.0,
         system=0.0,
-        idle=1.0,
+        idle=0.0,
         nice=0.0,
         iowait=0.0,
         irq=0.0,
@@ -210,17 +209,67 @@ async def test_fetch_aggregate_retries_after_unsettled_sample():
         guest=0.0,
         guest_nice=0.0,
     )
+
+
+async def test_fetch_aggregate_recovers_with_blocking_sample_after_unsettled():
+    """Regression (#startup-100%): when the non-blocking aggregate sample is
+    unsettled, the sampler recovers with a short *blocking* sample
+    (``interval > 0``) that psutil guarantees to be settled — so the cpu
+    plugin never renders the spurious ``total=100 %`` spike at startup."""
+    sampler = CpuSamplerV5(ttl=10.0)
     settled = _agg(idle=72.0)
+    calls: list[dict] = []
+
+    def stub(*args, **kwargs):
+        calls.append(kwargs)
+        # First (non-blocking) call is the unsettled all-zeros artifact;
+        # the blocking recovery call returns a real, settled sample.
+        return _all_zero() if kwargs.get("interval") == 0.0 else settled
+
+    with patch("glances.cpu_sampler_v5.psutil.cpu_times_percent", side_effect=stub):
+        actual = await sampler.get_aggregate()
+
+    assert actual.idle == 72.0  # the settled blocking sample is what we cached
+    assert actual.idle != 0.0  # never the all-zeros artifact → never total=100
+    # Exactly two calls: the cold non-blocking probe + one blocking recovery.
+    assert [c.get("interval") for c in calls] == [0.0, 0.1]
+    assert calls[1].get("percpu") is False
+
+
+async def test_fetch_aggregate_keeps_settled_first_sample():
+    """When the first non-blocking sample is already settled, no blocking
+    recovery call is made (steady-state hot path stays cheap)."""
+    sampler = CpuSamplerV5(ttl=10.0)
+    calls: list[dict] = []
+
+    def stub(*args, **kwargs):
+        calls.append(kwargs)
+        return _agg(idle=72.0)
+
+    with patch("glances.cpu_sampler_v5.psutil.cpu_times_percent", side_effect=stub):
+        actual = await sampler.get_aggregate()
+
+    assert actual.idle == 72.0
+    assert [c.get("interval") for c in calls] == [0.0]  # single non-blocking call
+
+
+async def test_fetch_per_core_retries_non_blocking_after_unsettled():
+    """Per-core keeps its legacy best-effort retry (brief sleep + one more
+    non-blocking sample) — it settles over a couple of refreshes, not via a
+    short blocking window."""
+    sampler = CpuSamplerV5(ttl=10.0)
+    unsettled = [_all_zero(), _all_zero()]
+    settled = _per_core(2)
     results = [unsettled, settled]
 
     def stub(*args, **kwargs):
         return results.pop(0)
 
     with patch("glances.cpu_sampler_v5.psutil.cpu_times_percent", side_effect=stub):
-        # Bypass the asyncio.sleep so the test runs instantly.
         with patch("glances.cpu_sampler_v5.asyncio.sleep") as fake_sleep:
             fake_sleep.return_value = None
-            actual = await sampler.get_aggregate()
+            actual = await sampler.get_per_core()
 
-    assert actual.idle == 72.0  # the settled second sample is what we cached
-    assert results == []  # both samples were consumed
+    assert actual[0].idle == 70.0  # the settled second sample
+    assert results == []  # both samples consumed
+    fake_sleep.assert_awaited_once()  # per-core path still sleeps
