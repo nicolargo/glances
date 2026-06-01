@@ -78,6 +78,7 @@ class GlancesStdoutIssue:
         time.sleep(2)
 
         counter_total = Counter()
+        plugin_timings = []
         for plugin in sorted(stats._plugins):
             if stats._plugins[plugin].is_disabled():
                 # If current plugin is disable
@@ -102,8 +103,9 @@ class GlancesStdoutIssue:
                         stat[key] = '***'
             except Exception as e:
                 stat_error = e
+            elapsed = counter.get()
             if stat_error is None:
-                result = (colors.GREEN + '[OK]   ' + colors.BLUE + f' {counter.get():.5f}s ').rjust(41 - len(plugin))
+                result = (colors.GREEN + '[OK]   ' + colors.BLUE + f' {elapsed:.5f}s ').rjust(41 - len(plugin))
                 if isinstance(stat, list) and len(stat) > 0 and 'key' in stat[0]:
                     key = 'key={} '.format(stat[0]['key'])
                     stat_output = pprint.pformat([stat[0]], compact=True, width=120, depth=3)
@@ -111,8 +113,11 @@ class GlancesStdoutIssue:
                 else:
                     message = '\n' + colors.NO + pprint.pformat(stat, compact=True, width=120, depth=2)
             else:
-                result = (colors.RED + '[ERROR]' + colors.BLUE + f' {counter.get():.5f}s ').rjust(41 - len(plugin))
+                result = (colors.RED + '[ERROR]' + colors.BLUE + f' {elapsed:.5f}s ').rjust(41 - len(plugin))
                 message = colors.NO + str(stat_error)[0 : TERMINAL_WIDTH - 41]
+
+            # Record timing for the summary table
+            plugin_timings.append((plugin, elapsed))
 
             # Display the result
             self.print_issue(plugin, result, message)
@@ -121,6 +126,18 @@ class GlancesStdoutIssue:
         sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
         print(f"Total time to update all stats: {colors.BLUE}{counter_total.get():.5f}s{colors.NO}")
         sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
+
+        # Display top 10 slowest plugins
+        top_n = 10
+        slowest = sorted(plugin_timings, key=lambda x: x[1], reverse=True)[:top_n]
+        if slowest:
+            sys.stdout.write(f'\nTop {top_n} slowest plugins:\n')
+            sys.stdout.write('-' * TERMINAL_WIDTH + '\n')
+            for rank, (plugin, elapsed) in enumerate(slowest, start=1):
+                sys.stdout.write(
+                    f'{rank:>2}. {colors.BLUE}{plugin:<20}{colors.NO} {colors.ORANGE}{elapsed:.5f}s{colors.NO}\n'
+                )
+            sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
 
         # Return True to exit directly (no refresh)
         return True
