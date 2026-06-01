@@ -295,6 +295,10 @@ class PodmanExtension:
         self.pods_stats_fetcher = None
         self.container_stats_fetchers = {}
 
+        # Issue #3559: cache the (immutable) image tags per container id to avoid
+        # one inspect_image API call per container on every refresh.
+        self.image_cache = {}
+
         self.connect()
 
     def connect(self):
@@ -354,13 +358,18 @@ class PodmanExtension:
                 self.container_stats_fetchers[container.id] = PodmanContainerStatsFetcher(container)
 
         # Stop threads for non-existing containers
-        absent_containers = set(self.container_stats_fetchers.keys()) - {c.id for c in containers}
+        current_ids = {c.id for c in containers}
+        absent_containers = set(self.container_stats_fetchers.keys()) - current_ids
         for container_id in absent_containers:
             # Stop the StatsFetcher
             logger.debug(f"{self.ext_name} plugin - Stop thread for old container {container_id[:12]}")
             self.container_stats_fetchers[container_id].stop()
             # Delete the StatsFetcher from the dict
             del self.container_stats_fetchers[container_id]
+
+        # Drop image cache entries for non-existing containers (issue #3559)
+        for container_id in set(self.image_cache) - current_ids:
+            del self.image_cache[container_id]
 
         # Get stats for all containers
         container_stats = [self.generate_stats(container) for container in containers]
@@ -378,13 +387,26 @@ class PodmanExtension:
         """Return the key of the list."""
         return "name"
 
+    def _get_image(self, container):
+        """Return the container image tags, cached per container id (issue #3559).
+
+        `container.image` performs an inspect_image API call. The image of a container
+        is immutable for its lifetime, so the result is cached to avoid one synchronous
+        API call per container on every refresh.
+        """
+        if container.id not in self.image_cache:
+            # Access container.image only once (it triggers an inspect_image API call)
+            tags = container.image.tags
+            self.image_cache[container.id] = ",".join(tags if tags else [])
+        return self.image_cache[container.id]
+
     def generate_stats(self, container) -> dict[str, Any]:
         # Init the stats for the current container
         stats = {
             "key": self.key,
             "name": nativestr(container.name),
             "id": container.id,
-            "image": ",".join(container.image.tags if container.image.tags else []),
+            "image": self._get_image(container),
             "status": container.attrs["State"],
             "created": container.attrs["Created"],
             "command": container.attrs.get("Command") or [],

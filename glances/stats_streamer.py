@@ -18,7 +18,7 @@ class ThreadedIterableStreamer:
     Use `ThreadedIterableStreamer.stats` to access the latest streamed results
     """
 
-    def __init__(self, iterable, initial_stream_value=None, sleep_duration=0.01):
+    def __init__(self, iterable, initial_stream_value=None, sleep_duration=0.1):
         """
         iterable: an Iterable instance that needs to be streamed
         """

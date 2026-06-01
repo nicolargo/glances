@@ -9,6 +9,7 @@
 """Docker Extension unit for Glances' Containers plugin."""
 
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from glances.globals import nativestr, pretty_date, replace_special_chars
@@ -27,6 +28,13 @@ except Exception as e:
     logger.warning(f"Error loading Docker deps Lib. Docker plugin is disabled ({e})")
 else:
     disable_plugin_docker = False
+
+
+# Issue #3559: number of containers inspected concurrently per update cycle.
+# docker-py's default list() inspects each container sequentially (one synchronous
+# API call per container). Kept under docker-py's default connection pool size to
+# avoid "connection pool is full" warnings.
+MAX_CONCURRENT_INSPECT = 6
 
 
 class DockerStatsFetcher:
@@ -235,6 +243,10 @@ class DockerExtension:
         self.ext_name = "containers (Docker)"
         self.stats_fetchers = {}
 
+        # Issue #3559: cache the (immutable) image tags per container id to avoid
+        # one inspect_image API call per container on every refresh.
+        self.image_cache = {}
+
         self.connect()
 
     def connect(self) -> None:
@@ -269,7 +281,11 @@ class DockerExtension:
         try:
             # Issue #1152: Docker module doesn't export details about stopped containers
             # The Containers/all key of the configuration file should be set to True
-            containers = self.client.containers.list(all=all_tag)
+            # Issue #3559: docker-py's list() inspects each container sequentially (one
+            # synchronous API call per container), which dominates the update time when
+            # there are many containers. Use sparse=True to get the list in a single API
+            # call, then inspect the containers concurrently (see _inspect_concurrently).
+            containers = self.client.containers.list(all=all_tag, sparse=True)
             self.display_error = True
         except Exception as e:
             if self.display_error:
@@ -278,6 +294,9 @@ class DockerExtension:
             else:
                 logger.debug(f"{self.ext_name} plugin - Can't get containers list ({e})")
             return version_stats, []
+
+        # Inspect the containers concurrently to populate their attributes (issue #3559)
+        containers = self._inspect_concurrently(containers)
 
         # Start new thread for new container
         for container in containers:
@@ -288,7 +307,8 @@ class DockerExtension:
                 self.stats_fetchers[container.id] = DockerStatsFetcher(container)
 
         # Stop threads for non-existing containers
-        absent_containers = set(self.stats_fetchers.keys()) - {c.id for c in containers}
+        current_ids = {c.id for c in containers}
+        absent_containers = set(self.stats_fetchers.keys()) - current_ids
         for container_id in absent_containers:
             # Stop the StatsFetcher
             logger.debug(f"{self.ext_name} plugin - Stop thread for old container {container_id[:12]}")
@@ -296,14 +316,68 @@ class DockerExtension:
             # Delete the StatsFetcher from the dict
             del self.stats_fetchers[container_id]
 
+        # Drop image cache entries for non-existing containers (issue #3559)
+        for container_id in set(self.image_cache) - current_ids:
+            del self.image_cache[container_id]
+
         # Get stats for all containers
         container_stats = [self.generate_stats(container) for container in containers]
         return version_stats, container_stats
+
+    def _inspect_concurrently(self, containers: list) -> list:
+        """Inspect the given (sparse) containers concurrently and return the live ones.
+
+        docker-py's `list()` inspects containers one at a time, i.e. O(N) synchronous
+        API calls on the caller thread (issue #3559). `list(sparse=True)` returns
+        summary-only objects in a single call; `reload()` performs the per-container
+        inspect, which we parallelise here to keep the update time roughly independent
+        of the number of containers. Containers removed between the list and the inspect
+        are dropped.
+        """
+        if not containers:
+            return []
+
+        def reload_container(container):
+            try:
+                container.reload()
+                return container
+            except Exception as e:
+                # Container removed between list and inspect, or inspect failed
+                logger.debug(f"{self.ext_name} plugin - Can't inspect container {container.id[:12]} ({e})")
+                return None
+
+        max_workers = min(len(containers), MAX_CONCURRENT_INSPECT)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            reloaded = executor.map(reload_container, containers)
+
+        return [container for container in reloaded if container is not None]
 
     @property
     def key(self) -> str:
         """Return the key of the list."""
         return 'name'
+
+    def _get_image(self, container):
+        """Return the container image tags, cached per container id (issue #3559).
+
+        `container.image` performs an inspect_image API call. The image of a container
+        is immutable for its lifetime, so the result is cached to avoid one synchronous
+        API call per container on every refresh.
+        """
+        if container.id in self.image_cache:
+            return self.image_cache[container.id]
+
+        try:
+            # API fails on Unraid - See issue #2233
+            # Access container.image only once (it triggers an inspect_image API call)
+            tags = container.image.tags
+            image = (','.join(tags if tags else []),)
+        except (requests.exceptions.HTTPError, docker.errors.NullResource):
+            # Container plugin crashes with docker.errors.NullResource on Podman pod infra containers issue #3498
+            image = ''
+
+        self.image_cache[container.id] = image
+        return image
 
     def generate_stats(self, container) -> dict[str, Any]:
         # Init the stats for the current container
@@ -331,12 +405,7 @@ class DockerExtension:
         }
 
         # Container Image
-        try:
-            # API fails on Unraid - See issue #2233
-            stats['image'] = (','.join(container.image.tags if container.image.tags else []),)
-        except (requests.exceptions.HTTPError, docker.errors.NullResource):
-            # Container plugin crashes with docker.errors.NullResource on Podman pod infra containers issue #3498
-            stats['image'] = ''
+        stats['image'] = self._get_image(container)
 
         if container.attrs['Config'].get('Entrypoint', None):
             stats['command'].extend(container.attrs['Config'].get('Entrypoint', []))
