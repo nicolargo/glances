@@ -62,6 +62,14 @@ class GlancesStdoutIssue:
         sys.stdout.write(colors.NO + '\n')
         sys.stdout.flush()
 
+    def print_top_slowest_plugins(self, plugin_durations):
+        """Display the ten slowest plugin updates."""
+        sys.stdout.write('Top 10 slowest plugins:\n')
+        sys.stdout.write(f'{"Plugin":<30} {"Update duration":>15}\n')
+        for plugin, duration in sorted(plugin_durations, key=lambda item: item[1], reverse=True)[:10]:
+            sys.stdout.write(f'{plugin:<30} {duration:>14.5f}s\n')
+        sys.stdout.flush()
+
     def update(self, stats, duration=3):
         """Display issue"""
         self.print_version()
@@ -78,6 +86,7 @@ class GlancesStdoutIssue:
         time.sleep(2)
 
         counter_total = Counter()
+        plugin_durations = []
         for plugin in sorted(stats._plugins):
             if stats._plugins[plugin].is_disabled():
                 # If current plugin is disable
@@ -102,8 +111,10 @@ class GlancesStdoutIssue:
                         stat[key] = '***'
             except Exception as e:
                 stat_error = e
+            plugin_duration = counter.get()
+            plugin_durations.append((plugin, plugin_duration))
             if stat_error is None:
-                result = (colors.GREEN + '[OK]   ' + colors.BLUE + f' {counter.get():.5f}s ').rjust(41 - len(plugin))
+                result = (colors.GREEN + '[OK]   ' + colors.BLUE + f' {plugin_duration:.5f}s ').rjust(41 - len(plugin))
                 if isinstance(stat, list) and len(stat) > 0 and 'key' in stat[0]:
                     key = 'key={} '.format(stat[0]['key'])
                     stat_output = pprint.pformat([stat[0]], compact=True, width=120, depth=3)
@@ -111,7 +122,7 @@ class GlancesStdoutIssue:
                 else:
                     message = '\n' + colors.NO + pprint.pformat(stat, compact=True, width=120, depth=2)
             else:
-                result = (colors.RED + '[ERROR]' + colors.BLUE + f' {counter.get():.5f}s ').rjust(41 - len(plugin))
+                result = (colors.RED + '[ERROR]' + colors.BLUE + f' {plugin_duration:.5f}s ').rjust(41 - len(plugin))
                 message = colors.NO + str(stat_error)[0 : TERMINAL_WIDTH - 41]
 
             # Display the result
@@ -120,6 +131,7 @@ class GlancesStdoutIssue:
         # Display total time need to update all plugins
         sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
         print(f"Total time to update all stats: {colors.BLUE}{counter_total.get():.5f}s{colors.NO}")
+        self.print_top_slowest_plugins(plugin_durations)
         sys.stdout.write('=' * TERMINAL_WIDTH + '\n')
 
         # Return True to exit directly (no refresh)
