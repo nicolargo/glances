@@ -18,8 +18,8 @@ def test_top_slowest_plugins_are_sorted_and_limited(capsys):
     screen.print_top_slowest_plugins(durations)
 
     lines = capsys.readouterr().out.splitlines()
-    assert lines[:2] == ["Top 10 slowest plugins:", "Plugin                         Update duration"]
-    assert lines[2].split() == ["plugin-11", "11.00000s"]
-    assert lines[-1].split() == ["plugin-2", "2.00000s"]
-    assert "plugin-1" not in lines
-    assert "plugin-0" not in lines
+    assert lines[:2] == ["Top 10 slowest plugins:", "Plugin                         Update duration"]  # nosec B101
+    assert lines[2].split() == ["plugin-11", "11.00000s"]  # nosec B101
+    assert lines[-1].split() == ["plugin-2", "2.00000s"]  # nosec B101
+    assert "plugin-1" not in lines  # nosec B101
+    assert "plugin-0" not in lines  # nosec B101
