@@ -45,7 +45,7 @@ import os
 import re
 
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
-DEVICE_FOLDER_PATTERN: str = 'card[0-9]/device'
+DEVICE_FOLDER_PATTERN: str = 'card[0-9]*/device'
 AMDGPU_IDS_FILE: str = '/usr/share/libdrm/amdgpu.ids'
 PCI_DEVICE_ID: str = 'device'
 PCI_REVISION_ID: str = 'revision'
