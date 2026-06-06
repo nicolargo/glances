@@ -28,8 +28,10 @@ import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from itertools import zip_longest
 from typing import TYPE_CHECKING, Any
 
+from glances import __version__
 from glances.outputs.curses_renderer_v5 import (
     Cell,
     ColorRole,
@@ -68,11 +70,13 @@ class ViewState:
       not the full path (hotkey ``/``).
     - ``programs=False`` — process list shows threads, not the per-program
       aggregation (hotkey ``j``).
+    - ``show_help=False`` — the help overlay is hidden (hotkey ``h``).
     """
 
     show_percpu: bool = False
     process_short_name: bool = True
     programs: bool = False
+    show_help: bool = False
 
 
 def _safe_curses_wrapper(fn):
@@ -84,25 +88,43 @@ class TuiV5(threading.Thread):
     """Curses TUI v5 thread."""
 
     # Hotkey dispatch table (v4 ``glances_curses._hotkeys`` parity).
-    # Two action kinds:
+    # Three action kinds:
     #   - ``switch``: toggle the named ``ViewState`` boolean.
     #   - ``sort``  : set the engine process sort key (``'auto'`` enables
     #                 the dynamic alert-driven auto-sort).
+    #   - ``action``: a named control verb handled in ``_handle_key``
+    #                 (``help`` toggles the overlay, ``quit`` exits).
     # Data-driven so a new hotkey is one dict entry, no control-flow edit
     # (cf. CLAUDE.md "extensibilité sans modification du cœur").
+    #
+    # Each entry ALSO carries ``group`` + ``desc``: this same table is the
+    # single source of truth for the ``h`` help overlay (``_help_lines``),
+    # so every dispatched key is documented and the two can never drift.
     _HOTKEYS: dict[str, dict[str, str]] = {
-        "1": {"switch": "show_percpu"},
-        "/": {"switch": "process_short_name"},
-        "j": {"switch": "programs"},
-        "a": {"sort": "auto"},
-        "c": {"sort": "cpu_percent"},
-        "m": {"sort": "memory_percent"},
-        "i": {"sort": "io_counters"},
-        "t": {"sort": "cpu_times"},
-        "p": {"sort": "name"},
-        "u": {"sort": "username"},
-        "o": {"sort": "cpu_num"},
+        # Process sort keys.
+        "a": {"sort": "auto", "group": "SORT PROCESSES", "desc": "Automatically"},
+        "c": {"sort": "cpu_percent", "group": "SORT PROCESSES", "desc": "By CPU consumption"},
+        "m": {"sort": "memory_percent", "group": "SORT PROCESSES", "desc": "By MEM consumption"},
+        "i": {"sort": "io_counters", "group": "SORT PROCESSES", "desc": "By disk I/O rate"},
+        "t": {"sort": "cpu_times", "group": "SORT PROCESSES", "desc": "By CPU time"},
+        "p": {"sort": "name", "group": "SORT PROCESSES", "desc": "By process name"},
+        "u": {"sort": "username", "group": "SORT PROCESSES", "desc": "By user name"},
+        "o": {"sort": "cpu_num", "group": "SORT PROCESSES", "desc": "By CPU core number"},
+        # View toggles.
+        "1": {"switch": "show_percpu", "group": "TOGGLE VIEW", "desc": "Per-CPU / aggregated CPU"},
+        "/": {"switch": "process_short_name", "group": "TOGGLE VIEW", "desc": "Short / full process name"},
+        "j": {"switch": "programs", "group": "TOGGLE VIEW", "desc": "Threads / programs view"},
+        # Misc / control.
+        "h": {"action": "help", "group": "MISCELLANEOUS", "desc": "Show / hide this help screen"},
+        "q": {"action": "quit", "group": "MISCELLANEOUS", "desc": "Quit Glances (or Esc)"},
     }
+
+    # Display order of the hotkey groups in the help overlay.
+    _HELP_GROUPS: tuple[str, ...] = ("SORT PROCESSES", "TOGGLE VIEW", "MISCELLANEOUS")
+    # Horizontal gap between the two help columns.
+    _HELP_COL_GAP = 4
+    # Documentation link shown in the help overlay (v4 parity).
+    _HELP_DOC_URL = "https://glances.readthedocs.io/en/latest/cmds.html#interactive-commands"
 
     # Guard-rail: a key-driven repaint happens at most once per this window —
     # instant when idle, coalesced under rapid key mashing.
@@ -138,6 +160,10 @@ class TuiV5(threading.Thread):
         # driven by the hotkey dispatch table. The process sort key is
         # held by the ``glances_processes`` engine, not here.
         self._view = ViewState()
+        # Vertical scroll offset of the help overlay (rows). Reset to 0 each
+        # time the overlay is opened; clamped to the content in ``_paint_help``
+        # (which is the only place that knows the terminal height).
+        self._help_scroll = 0
 
     # ----------------------------------------------------------- control
 
@@ -153,11 +179,19 @@ class TuiV5(threading.Thread):
         - ``"quit"``    — ``q`` / ESC: the loop should shut down.
         - ``"changed"`` — a mapped key mutated the view state or sort key
           (the caller should repaint, rate-limited).
+        - ``"repaint"`` — a help-overlay key (open / close / scroll): the
+          caller should repaint *immediately*, bypassing the key throttle
+          (the help frame is static and cheap to rebuild).
         - ``"ignored"`` — unmapped key / non-character: no state change.
 
-        Pure (no curses calls) so it can be unit-tested without a terminal.
+        Pure (no curses I/O) so it can be unit-tested without a terminal.
         """
-        if key in (ord("q"), 27):  # 27 = ESC
+        # While the help overlay is open it captures every key: scrolling and
+        # closing only — q / ESC / h close the help instead of quitting.
+        if self._view.show_help:
+            return self._handle_help_key(key)
+
+        if key == 27:  # ESC always quits (not a printable hotkey).
             return "quit"
         try:
             ch = chr(key)
@@ -165,6 +199,15 @@ class TuiV5(threading.Thread):
             return "ignored"
         action = self._HOTKEYS.get(ch)
         if action is None:
+            return "ignored"
+        if "action" in action:
+            verb = action["action"]
+            if verb == "quit":
+                return "quit"
+            if verb == "help":
+                self._view.show_help = True
+                self._help_scroll = 0
+                return "repaint"
             return "ignored"
         if "switch" in action:
             attr = action["switch"]
@@ -179,6 +222,37 @@ class TuiV5(threading.Thread):
             except Exception as e:  # pragma: no cover — defensive
                 logger.warning("TUI: set_sort_key(%s) failed: %s", sort_key, e)
             return "changed"
+        return "ignored"
+
+    # Rows scrolled per PageUp / PageDown in the help overlay.
+    _HELP_PAGE_STEP = 10
+
+    def _handle_help_key(self, key: int) -> str:
+        """Dispatch a keypress while the help overlay is open.
+
+        Closing keys (``q`` / ESC / ``h``) hide the overlay; arrow / vim /
+        page keys scroll it. The upper scroll bound depends on the terminal
+        height, so it is clamped in ``_paint_help`` (here we only floor at 0).
+        Returns ``"repaint"`` for any handled key, ``"ignored"`` otherwise.
+        """
+        if key in (ord("q"), 27, ord("h")):
+            self._view.show_help = False
+            return "repaint"
+        if key in (curses.KEY_DOWN, ord("j")):
+            self._help_scroll += 1
+            return "repaint"
+        if key in (curses.KEY_UP, ord("k")):
+            self._help_scroll = max(0, self._help_scroll - 1)
+            return "repaint"
+        if key == curses.KEY_NPAGE:  # Page Down
+            self._help_scroll += self._HELP_PAGE_STEP
+            return "repaint"
+        if key == curses.KEY_PPAGE:  # Page Up
+            self._help_scroll = max(0, self._help_scroll - self._HELP_PAGE_STEP)
+            return "repaint"
+        if key == curses.KEY_HOME:
+            self._help_scroll = 0
+            return "repaint"
         return "ignored"
 
     # ----------------------------------------------------------- run loop
@@ -238,6 +312,17 @@ class TuiV5(threading.Thread):
                             except Exception as e:  # pragma: no cover — defensive
                                 logger.warning("TUI on_quit callback failed: %s", e)
                         break
+                    if result == "repaint":
+                        # Help open / close / scroll: repaint at once, bypassing
+                        # the key throttle (the help frame is static and cheap).
+                        # Seed the throttle so the next *stats* key change is
+                        # still eligible for an instant repaint.
+                        self._repaint(stdscr)
+                        now = time.monotonic()
+                        last_paint = now
+                        last_change_paint = now - self._MIN_KEY_REPAINT_INTERVAL
+                        dirty = False
+                        continue
                     if result == "changed":
                         dirty = True
                     # Loop back to recompute the block; a due (or rate-limited)
@@ -279,9 +364,15 @@ class TuiV5(threading.Thread):
         return regular_due, change_due
 
     def _repaint(self, stdscr) -> None:
-        """Build the current frame and paint it to the terminal."""
-        frame = self._build_frame()
-        self._paint(stdscr, frame)
+        """Build the current frame and paint it to the terminal.
+
+        When the help overlay is open it fully replaces the stats frame
+        (mirrors v4, where ``help_tag`` swaps the whole screen)."""
+        if self._view.show_help:
+            self._paint_help(stdscr)
+        else:
+            frame = self._build_frame()
+            self._paint(stdscr, frame)
         stdscr.refresh()
 
     # ----------------------------------------------------------- helpers
@@ -523,6 +614,177 @@ class TuiV5(threading.Thread):
     def _paint_separator(self, stdscr, y: int, x0: int, width: int) -> None:
         try:
             stdscr.addstr(y, x0, "-" * max(0, width - 1))
+        except curses.error:
+            pass
+
+    # ----------------------------------------------------------- help overlay
+
+    def _help_lines(self) -> list[Row]:
+        """Build the help body as a single column of display rows.
+
+        Generated straight from ``_HOTKEYS`` (the dispatch table) so the
+        overlay documents *every* key the TUI actually responds to — add a
+        hotkey and it shows up here automatically, with no second list to
+        keep in sync (CLAUDE.md "extensibilité sans modification du cœur").
+
+        Each group is a bold header followed by one ``  k  description`` row
+        per key, with a blank spacer line between groups.
+        """
+        lines: list[Row] = []
+        for group in self._HELP_GROUPS:
+            keys = [(k, spec) for k, spec in self._HOTKEYS.items() if spec.get("group") == group]
+            if not keys:
+                continue
+            if lines:
+                lines.append(Row(cells=[Cell(text="")]))  # spacer between groups
+            lines.append(Row(cells=[Cell(text=group, color=ColorRole.HEADER)]))
+            for k, spec in keys:
+                lines.append(Row(cells=[Cell(text=f"  {k:>2}  {spec.get('desc', '')}")]))
+        return lines
+
+    @staticmethod
+    def _help_row_width(row: Row) -> int:
+        """Printable width of a (single-cell) help row."""
+        return max((len(c.text) for c in row.cells), default=0)
+
+    def _loaded_config_path(self) -> str:
+        """Path of the configuration file actually in use, or a default note.
+
+        v5 reads at most one file (``GlancesConfigV5.loaded_sources``).
+        Wrapped defensively: the help overlay must never crash on a config
+        object that lacks the attribute (e.g. a test stub)."""
+        try:
+            sources = self.config.loaded_sources
+        except Exception:
+            return ""
+        if sources:
+            return str(sources[-1])
+        return "(none — built-in defaults)"
+
+    def _help_color_rows(self) -> list[Row]:
+        """Colour-binding legend, rendered in the *actual* TUI attributes.
+
+        Each sample word carries the real ``ColorRole`` / decoration so the
+        user sees exactly what each colour means on their terminal (v4's
+        "Colors binding" section, adapted to v5's smaller palette)."""
+        levels = Row(
+            cells=[
+                Cell(text="OK", color=ColorRole.OK),
+                Cell(text="CAREFUL", color=ColorRole.CAREFUL),
+                Cell(text="WARNING", color=ColorRole.WARNING),
+                Cell(text="CRITICAL", color=ColorRole.CRITICAL),
+                Cell(text="= stat severity (vs thresholds)"),
+            ]
+        )
+        decorations = Row(
+            cells=[
+                Cell(text="Title", color=ColorRole.HEADER),
+                Cell(text="Sort", color=ColorRole.DEFAULT, bold=True, underline=True),
+                Cell(text="Alert", color=ColorRole.CRITICAL, prominent=True),
+                Cell(text="= section title / active sort column / ongoing alert"),
+            ]
+        )
+        return [levels, decorations]
+
+    def _help_visual_rows(self, max_x: int) -> tuple[list[tuple[Row, Row | None]], int]:
+        """Assemble the full scrollable help document as ``(left, right)`` rows.
+
+        ``right is None`` marks a full-width line (config path, doc link,
+        colour legend); a non-None ``right`` is the second column of the
+        two-column key list. Returns the rows plus the key-column width so the
+        painter can place the right column. Everything scrolls as one document.
+        """
+        key_lines = self._help_lines()
+        col_w = max((self._help_row_width(r) for r in key_lines), default=0)
+
+        # Two columns when both halves fit side-by-side, else a single column.
+        if max_x >= col_w + self._HELP_COL_GAP + col_w:
+            n_left = (len(key_lines) + 1) // 2
+            key_pairs = list(zip_longest(key_lines[:n_left], key_lines[n_left:]))
+        else:
+            key_pairs = [(row, None) for row in key_lines]
+
+        def full(text: str, **kw) -> tuple[Row, None]:
+            return (Row(cells=[Cell(text=text, **kw)]), None)
+
+        rows: list[tuple[Row, Row | None]] = []
+        # 1. Configuration file currently in use (v4 parity).
+        rows.append(full(f"Configuration file: {self._loaded_config_path()}"))
+        rows.append(full(""))
+        # 2. Key shortcuts (two columns).
+        rows.extend(key_pairs)
+        # 3. Documentation link (v4 parity).
+        rows.append(full(""))
+        rows.append(full("For an exhaustive list of key bindings:"))
+        rows.append(full(self._HELP_DOC_URL, color=ColorRole.CAREFUL, underline=True))
+        # 4. Colour binding legend (v4 parity, v5 palette).
+        rows.append(full(""))
+        rows.append(full("Color binding:", color=ColorRole.HEADER))
+        rows.extend((r, None) for r in self._help_color_rows())
+        return rows, col_w
+
+    def _paint_help(self, stdscr) -> None:
+        """Paint the help overlay: title, then a scrollable document holding
+        the config path, the two-column key list, the doc link and the colour
+        legend.
+
+        Mirrors v4's help, then improves on it: the key list is generated from
+        the dispatch table (exhaustive) and, when the whole document does not
+        fit the terminal, it scrolls (↑/↓, PgUp/PgDn) instead of being
+        silently clipped.
+        """
+        stdscr.erase()
+        max_y, max_x = stdscr.getmaxyx()
+        if max_y < 1 or max_x < 1:
+            return
+
+        title = f"Glances {__version__} help — h/q/Esc to close"
+        try:
+            stdscr.addstr(0, 0, title[: max_x - 1], curses.A_BOLD)
+        except curses.error:
+            pass
+
+        rows, col_w = self._help_visual_rows(max_x)
+
+        # Layout: row 0 = title, row 1 = blank, body below, last row = footer.
+        body_y0 = 2
+        footer_h = 1
+        body_h = max(1, max_y - body_y0 - footer_h)
+
+        total = len(rows)
+        max_scroll = max(0, total - body_h)
+        # Clamp here (the only place that knows the terminal height).
+        self._help_scroll = max(0, min(self._help_scroll, max_scroll))
+        start = self._help_scroll
+        shown = rows[start : start + body_h]
+
+        right_x = col_w + self._HELP_COL_GAP
+        for i, (left_row, right_row) in enumerate(shown):
+            y = body_y0 + i
+            if right_row is not None:
+                # Two-column key line.
+                self._paint_row(stdscr, left_row, y, 0, col_w)
+                self._paint_row(stdscr, right_row, y, right_x, max(1, max_x - right_x))
+            else:
+                # Full-width line (config / link / colour legend).
+                self._paint_row(stdscr, left_row, y, 0, max_x)
+
+        if max_scroll > 0:
+            self._paint_help_footer(stdscr, max_y - 1, max_x, start, body_h, total, max_scroll)
+
+    @staticmethod
+    def _paint_help_footer(stdscr, y: int, max_x: int, start: int, body_h: int, total: int, max_scroll: int) -> None:
+        """Bottom-line scroll indicator, shown only when the help overflows."""
+        if start <= 0:
+            arrow = "↓"
+        elif start >= max_scroll:
+            arrow = "↑"
+        else:
+            arrow = "↑↓"
+        last = min(start + body_h, total)
+        footer = f"  {arrow} more  ({start + 1}-{last}/{total})  ↑/↓ PgUp/PgDn to scroll"
+        try:
+            stdscr.addstr(y, 0, footer[: max_x - 1])
         except curses.error:
             pass
 

@@ -681,6 +681,244 @@ def test_tui_v5_live_sort_noop_without_key(monkeypatch, fake_store, fake_alerts,
     assert snapshot["processlist"] is payload  # untouched
 
 
+# ---------------------------------------------------------------- help overlay
+
+
+def test_tui_v5_every_hotkey_is_documented(fake_store, fake_alerts, fake_config):
+    """Req #1 (exhaustiveness): every dispatched key carries a help group +
+    description, and the group is one the overlay actually renders. Guards
+    against adding a hotkey without documenting it."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    for key, spec in tui_mod.TuiV5._HOTKEYS.items():
+        assert spec.get("desc"), f"hotkey {key!r} has no help description"
+        assert spec.get("group") in tui_mod.TuiV5._HELP_GROUPS, f"hotkey {key!r} has an unknown help group"
+
+
+def test_tui_v5_help_lines_cover_all_hotkeys(fake_store, fake_alerts, fake_config):
+    """The generated help body mentions every hotkey from the dispatch table
+    (single source of truth → no drift)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    rendered = "\n".join(cell.text for row in tui._help_lines() for cell in row.cells)
+    for key in tui_mod.TuiV5._HOTKEYS:
+        assert f" {key} " in f" {rendered} " or f"{key:>2}" in rendered, f"{key!r} missing from help body"
+    # Group headers present.
+    for group in tui_mod.TuiV5._HELP_GROUPS:
+        assert group in rendered
+
+
+def test_tui_v5_h_key_opens_help(fake_store, fake_alerts, fake_config):
+    """Pressing 'h' opens the overlay and asks for an immediate repaint."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._view.show_help is False
+    assert tui._handle_key(ord("h")) == "repaint"
+    assert tui._view.show_help is True
+    assert tui._help_scroll == 0
+
+
+def test_tui_v5_help_close_keys_return_to_stats(fake_store, fake_alerts, fake_config):
+    """While help is open, q / ESC / h all close it (and never quit)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    for closing in (ord("q"), 27, ord("h")):
+        tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+        tui._view.show_help = True
+        assert tui._handle_key(closing) == "repaint"
+        assert tui._view.show_help is False
+
+
+def test_tui_v5_help_swallows_stats_hotkeys(monkeypatch, fake_store, fake_alerts, fake_config):
+    """An open overlay captures all input: a sort key does NOT reach the
+    engine, and the app does not quit on a non-close key."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    engine = _FakeEngine()
+    monkeypatch.setattr(tui_mod, "glances_processes", engine)
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._view.show_help = True
+
+    assert tui._handle_key(ord("c")) == "ignored"  # 'c' is not a help-nav key
+    assert engine.calls == []  # never reached the sort engine
+    assert tui._view.show_help is True  # still open
+
+
+def test_tui_v5_help_scroll_keys(fake_store, fake_alerts, fake_config):
+    """Arrow / vim / page keys move the scroll offset; up is floored at 0."""
+    import curses
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._view.show_help = True
+
+    assert tui._handle_key(curses.KEY_DOWN) == "repaint"
+    assert tui._help_scroll == 1
+    assert tui._handle_key(ord("j")) == "repaint"
+    assert tui._help_scroll == 2
+    assert tui._handle_key(curses.KEY_UP) == "repaint"
+    assert tui._help_scroll == 1
+    # Up past the top floors at 0.
+    tui._handle_key(curses.KEY_UP)
+    tui._handle_key(curses.KEY_UP)
+    assert tui._help_scroll == 0
+    # Page down jumps by the page step.
+    assert tui._handle_key(curses.KEY_NPAGE) == "repaint"
+    assert tui._help_scroll == tui._HELP_PAGE_STEP
+    # Home returns to the top.
+    assert tui._handle_key(curses.KEY_HOME) == "repaint"
+    assert tui._help_scroll == 0
+
+
+def test_tui_v5_paint_help_renders_title_and_keys(fake_store, fake_alerts, fake_config):
+    """`_paint_help` paints the title and at least one documented key."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    fake_stdscr.getmaxyx.return_value = (24, 80)
+    tui._paint_help(fake_stdscr)
+
+    flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
+    assert "Glances" in flat
+    assert "help" in flat
+    assert "SORT PROCESSES" in flat
+    assert "Quit Glances" in flat
+
+
+def test_tui_v5_help_shows_config_file(fake_store, fake_alerts):
+    """The overlay shows the configuration file actually in use (v4 parity)."""
+    from pathlib import Path
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    cfg = MagicMock()
+    cfg.loaded_sources = [Path("/etc/glances/glances.conf")]
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, cfg)
+    fake_stdscr = MagicMock()
+    fake_stdscr.getmaxyx.return_value = (30, 100)
+    tui._paint_help(fake_stdscr)
+
+    flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
+    assert "Configuration file:" in flat
+    assert "/etc/glances/glances.conf" in flat
+
+
+def test_tui_v5_help_config_file_defaults_note_when_none(fake_store, fake_alerts):
+    """No config file loaded → a clear 'built-in defaults' note, not a crash."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    cfg = MagicMock()
+    cfg.loaded_sources = []
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, cfg)
+    assert "(none" in tui._loaded_config_path()
+
+
+def test_tui_v5_help_config_path_is_defensive(fake_store, fake_alerts):
+    """A config object without `loaded_sources` must not crash the overlay."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    class _NoSources:
+        @property
+        def loaded_sources(self):
+            raise AttributeError("nope")
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, _NoSources())
+    assert tui._loaded_config_path() == ""
+
+
+def test_tui_v5_help_shows_doc_link(fake_store, fake_alerts, fake_config):
+    """The overlay links to the readthedocs interactive-commands page."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    fake_stdscr.getmaxyx.return_value = (30, 100)
+    tui._paint_help(fake_stdscr)
+
+    flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
+    assert "https://glances.readthedocs.io/en/latest/cmds.html#interactive-commands" in flat
+
+
+def test_tui_v5_help_shows_color_binding(fake_store, fake_alerts, fake_config):
+    """The colour-binding legend documents the v5 palette + decorations."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    fake_stdscr.getmaxyx.return_value = (30, 100)
+    tui._paint_help(fake_stdscr)
+
+    flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
+    assert "Color binding:" in flat
+    for sample in ("OK", "CAREFUL", "WARNING", "CRITICAL", "Title", "Sort", "Alert"):
+        assert sample in flat
+
+
+def test_tui_v5_help_color_rows_use_real_attributes(fake_store, fake_alerts, fake_config):
+    """Each legend sample carries the actual ColorRole / decoration so it
+    renders in the colour it documents."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import ColorRole
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    levels, decorations = tui._help_color_rows()
+    by_text = {c.text: c for c in levels.cells}
+    assert by_text["OK"].color is ColorRole.OK
+    assert by_text["CRITICAL"].color is ColorRole.CRITICAL
+    deco = {c.text: c for c in decorations.cells}
+    assert deco["Sort"].underline is True
+    assert deco["Alert"].prominent is True
+
+
+def test_tui_v5_paint_help_clamps_scroll_and_shows_footer(fake_store, fake_alerts, fake_config):
+    """On a terminal too short for the whole list, an over-scroll is clamped
+    and the scroll footer is shown."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    # Tiny + narrow → single column, content overflows vertically.
+    fake_stdscr.getmaxyx.return_value = (8, 30)
+    tui._help_scroll = 999  # absurd over-scroll
+    tui._paint_help(fake_stdscr)
+
+    # Clamped to a sane bound (< total rows).
+    assert tui._help_scroll < 999
+    flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
+    assert "more" in flat  # the scroll footer was painted
+
+
+def test_tui_v5_paint_help_no_footer_when_everything_fits(fake_store, fake_alerts, fake_config):
+    """A roomy terminal shows the whole help with no scroll footer."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    fake_stdscr.getmaxyx.return_value = (40, 120)
+    tui._paint_help(fake_stdscr)
+
+    flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
+    assert "more" not in flat  # nothing to scroll → no footer
+
+
+def test_tui_v5_repaint_uses_help_when_open(fake_store, fake_alerts, fake_config):
+    """`_repaint` paints the help overlay (not the stats frame) when open."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._view.show_help = True
+    fake_stdscr = MagicMock()
+    fake_stdscr.getmaxyx.return_value = (24, 80)
+    tui._repaint(fake_stdscr)
+
+    flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
+    assert "Glances" in flat and "help" in flat
+
+
 def test_tui_v5_q_key_fires_on_quit_callback(monkeypatch, fake_store, fake_alerts, fake_config):
     """Pressing 'q' fires the on_quit callback so the main loop can shut down."""
     from glances.outputs import glances_curses_v5 as tui_mod
