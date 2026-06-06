@@ -422,3 +422,25 @@ def test_assemble_registry_excludes_non_display_plugins(config, monkeypatch):
     registry_names = [name for name, _is_coll in tui.registry]
     assert "shown_probe" in registry_names
     assert "hidden_probe" not in registry_names
+
+
+def test_assemble_tui_registry_shows_displayables_hides_rest_only(config):
+    """End-to-end: the real discovered plugins route correctly.
+
+    Displayed trivials (uptime/system/now) appear in the TUI registry;
+    REST-only trivials (core/version/psutilversion) do not. All six are
+    still discovered (served via REST)."""
+    from glances.main_v5 import discover_plugins
+
+    store = StatsStoreV5()
+    all_names = {p.plugin_name for p in discover_plugins(store, config)}
+    for name in ("uptime", "system", "now", "core", "version", "psutilversion"):
+        assert name in all_names, f"{name} not discovered"
+
+    args = build_parser().parse_args([])  # TUI mode
+    _app, _scheduler, _host, _port, tui = assemble(args, config)
+    registry_names = {name for name, _ in tui.registry}
+    for name in ("uptime", "system", "now"):
+        assert name in registry_names
+    for name in ("core", "version", "psutilversion"):
+        assert name not in registry_names

@@ -571,3 +571,68 @@ Command rendering ports v4's `split_cmdline`: path + **bold** cmd +
 arguments. Top-20 rows, engine sort hardcoded to `cpu_percent` desc,
 no extended view, no programs aggregation, no filter UI — these
 come back with the v5 argv/config plumbing in G5.)
+
+---
+
+## system
+
+**Source:** `glances/plugins/system/__init__.py::msg_curse`
+
+**Guard:** returns empty if `not self.stats` or plugin is disabled.
+
+**Layout:**
+
+```
+hostname  Linux Ubuntu 22.04 LTS
+```
+
+Single line: hostname rendered as `TITLE`, followed by a space-padded
+`hr_name` (human-readable OS description) as an `optional` segment
+(hidden on narrow terminals). In client mode, a connection-status
+prefix (`Connected to` / `SNMP from` / `Disconnected from`) is
+prepended with an `OK` or `CRITICAL` decoration.
+
+**Conditional behaviour:**
+- Client mode adds a connection-status prefix (`args.client`).
+- `hr_name` segment is `optional=True` — hidden on narrow terminals.
+
+> ✅ v5: `glances/plugins/system/render_curses_v5.py` (Phase 2 G1). Header line painted by `glances_curses_v5._paint_header`.
+
+---
+
+## uptime
+
+**Source:** `glances/plugins/uptime/__init__.py::msg_curse`
+
+**Guard:** returns empty if `not self.stats` or plugin is disabled.
+
+**Layout:**
+
+```
+Uptime: 3 days, 4:12:07
+```
+
+Single `DEFAULT`-decorated line: literal prefix `'Uptime: '` followed
+by the pre-formatted uptime string returned by the model.
+
+> ✅ v5: `glances/plugins/uptime/render_curses_v5.py` (Phase 2 G1). Header line painted by `glances_curses_v5._paint_header`.
+
+---
+
+## now
+
+**Source:** `glances/plugins/now/__init__.py::msg_curse`
+
+**Guard:** returns empty if `not self.stats` or plugin is disabled.
+
+**Layout:**
+
+```
+2024-03-15 14:23:05 UTC
+```
+
+Single `DEFAULT`-decorated line: `stats['custom']` formatted to
+exactly 23 characters (`'{:23}'.format(...)`) — fixed-width to pad
+cleanly against the right edge of the header row.
+
+> ✅ v5: `glances/plugins/now/render_curses_v5.py` (Phase 2 G1). Left-sidebar block.
