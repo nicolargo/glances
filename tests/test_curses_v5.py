@@ -942,3 +942,75 @@ def test_tui_v5_q_key_fires_on_quit_callback(monkeypatch, fake_store, fake_alert
     tui.start()
     tui.join(timeout=1.0)
     assert fired == [True]
+
+
+# ---------------------------------------------------------------- header line
+
+
+def test_paint_header_places_first_left_and_last_right(fake_store, fake_alerts, fake_config):
+    """Header: first block flush-left at x=0; last block's right edge near max_x."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Cell, PluginBlock, Row
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    left = PluginBlock(name="system", rows=[Row(cells=[Cell(text="myhost Ubuntu")])])
+    right = PluginBlock(name="uptime", rows=[Row(cells=[Cell(text="Uptime: 3d04h")])])
+
+    fake_stdscr = MagicMock()
+    height = tui._paint_header(fake_stdscr, [left, right], y0=0, max_x=80)
+
+    assert height == 1
+    calls = [(c.args[0], c.args[1], c.args[2]) for c in fake_stdscr.addstr.call_args_list]
+    # Left block at x=0.
+    assert any(y == 0 and x == 0 and "myhost" in text for (y, x, text) in calls)
+    # Right block flush-right: its x is max_x - width("Uptime: 3d04h").
+    expected_right_x = 80 - len("Uptime: 3d04h")
+    assert any(y == 0 and x == expected_right_x and "Uptime" in text for (y, x, text) in calls)
+
+
+def test_paint_header_empty_returns_zero(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    assert tui._paint_header(MagicMock(), [], y0=0, max_x=80) == 0
+
+
+def test_paint_shifts_top_row_below_header(fake_store, fake_alerts, fake_config):
+    """When a header is present, the top row starts at y=1, not y=0."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Cell, Frame, PluginBlock, Row
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    frame = Frame(
+        header=[PluginBlock(name="system", rows=[Row(cells=[Cell(text="myhost")])])],
+        top=[PluginBlock(name="cpu", rows=[Row(cells=[Cell(text="CPU 5%")])])],
+    )
+    fake_stdscr = MagicMock()
+    fake_stdscr.getmaxyx.return_value = (24, 80)
+    tui._paint(fake_stdscr, frame)
+
+    calls = [(c.args[0], c.args[2]) for c in fake_stdscr.addstr.call_args_list]
+    # Header on row 0, CPU top-row on row 1.
+    assert any(y == 0 and "myhost" in text for (y, text) in calls)
+    assert any(y == 1 and "CPU" in text for (y, text) in calls)

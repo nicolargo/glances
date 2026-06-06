@@ -459,6 +459,7 @@ class TuiV5(threading.Thread):
     def _paint(self, stdscr, frame: Frame) -> None:
         """Lay out the frame on the terminal, mirroring v4:
 
+        header line        (hostname/OS ............ Uptime)  row 0
         top blocks         (cpu | mem | load | ...)  side-by-side
         <separator line>
         left blocks         right blocks              two vertical columns
@@ -466,14 +467,18 @@ class TuiV5(threading.Thread):
         stdscr.erase()
         max_y, max_x = stdscr.getmaxyx()
 
-        # 1. Top row: paint each block side-by-side.
-        top_height = self._paint_top_row(stdscr, frame.top, 0, max_x)
+        # 0. Header line (system flush-left, uptime flush-right).
+        header_height = self._paint_header(stdscr, frame.header, 0, max_x)
+
+        # 1. Top row, below the header.
+        top_y0 = header_height
+        top_height = self._paint_top_row(stdscr, frame.top, top_y0, max_x)
 
         # 2. Separator under the top row (if any top content was painted).
-        body_y0 = top_height
-        if top_height > 0 and top_height < max_y:
-            self._paint_separator(stdscr, top_height, 0, max_x)
-            body_y0 = top_height + 1
+        body_y0 = top_y0 + top_height
+        if top_height > 0 and body_y0 < max_y:
+            self._paint_separator(stdscr, body_y0, 0, max_x)
+            body_y0 += 1
 
         # 3. Below the top row: left + right sidebars side-by-side.
         body_height = max(0, max_y - body_y0)
@@ -494,6 +499,30 @@ class TuiV5(threading.Thread):
         # +2 for breathing room, mirroring v4's column gap.
         natural = max(natural + 2, 23)
         return min(natural, 34, max(1, max_x // 2))
+
+    def _paint_header(self, stdscr, blocks: list[PluginBlock], y0: int, max_x: int) -> int:
+        """Paint the header line (v4 parity): first block flush-left, last
+        block flush-right. Returns the header height (0 when empty, else the
+        tallest block painted — normally 1).
+
+        Only the first and last blocks are positioned explicitly; the header
+        is expected to hold at most two blocks (system + uptime). Any middle
+        block (not expected in v5) is skipped rather than overlapped.
+        """
+        if not blocks:
+            return 0
+        height = 0
+        first = blocks[0]
+        self._paint_block(stdscr, first, y0, 0, max_x, fit_to_term=False)
+        height = max(height, first.height)
+        if len(blocks) > 1:
+            last = blocks[-1]
+            # Flush-right, but never overlap the flush-left block.
+            x = max(first.width + 1, max_x - last.width)
+            if x < max_x:
+                self._paint_block(stdscr, last, y0, x, max(1, max_x - x), fit_to_term=False)
+                height = max(height, last.height)
+        return height
 
     def _paint_top_row(self, stdscr, blocks: list[PluginBlock], y0: int, max_x: int) -> int:
         """Paint TOP blocks side-by-side. Returns the height of the row
