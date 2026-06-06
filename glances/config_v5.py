@@ -182,7 +182,7 @@ class GlancesConfigV5:
     def _overlay_file(self, path: Path) -> None:
         if not path.is_file():
             return
-        parser = configparser.ConfigParser()
+        parser = configparser.ConfigParser(interpolation=None)
         try:
             parser.read(path)
         except configparser.Error as e:

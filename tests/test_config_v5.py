@@ -441,3 +441,21 @@ def test_loaded_sources_returns_a_copy(env: Path) -> None:
     sources = config.loaded_sources
     sources.clear()
     assert len(config.loaded_sources) == 1
+
+
+# ============================================================================
+# Interpolation — percent-literal values must not be mangled
+# ============================================================================
+
+
+def test_percent_values_are_not_interpolated(env: Path) -> None:
+    """Regression guard for ConfigParser(interpolation=None).
+
+    strftime format strings (and any value containing ``%``) must be stored
+    and returned verbatim.  Before the fix, the default BasicInterpolation
+    raised ``InterpolationSyntaxError`` on ``%Y``, ``%H``, etc.
+    """
+    raw = "%Y-%m-%d %H:%M:%S"
+    write(etc_path(env), f"[global]\nstrftime_format = {raw}\n")
+    config = GlancesConfigV5()
+    assert config.get("global", "strftime_format", "") == raw
