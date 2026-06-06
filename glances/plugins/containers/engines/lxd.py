@@ -245,7 +245,12 @@ class LxdExtension:
 
         # List instances
         try:
-            instances = self.client.instances.all()
+            # Issue #3559: recursion=1 fetches every instance's config (status, devices,
+            # created_at, ...) in a single API call. Without it, pylxd creates name-only
+            # instances and each attribute access below (i.status, expanded_devices, ...)
+            # lazily triggers one synchronous GET per instance, i.e. O(N) calls per cycle.
+            # State (CPU/MEM/NET/IO) still comes from the background pollers, not from here.
+            instances = self.client.instances.all(recursion=1)
             # In a cluster, only show instances running on this node
             if self.local_node:
                 instances = [i for i in instances if getattr(i, 'location', None) == self.local_node]
