@@ -356,8 +356,8 @@ def assemble(
         # Local import — curses is platform-dependent and only needed when the TUI is on.
         from glances.outputs.glances_curses_v5 import TuiV5 as _TuiV5
 
-        registry = [(p.plugin_name, p.IS_COLLECTION) for p in plugins]
-        fields_by_plugin = {p.plugin_name: p._fields for p in plugins}
+        registry = [(p.plugin_name, p.IS_COLLECTION) for p in plugins if p.DISPLAY_IN_TUI]
+        fields_by_plugin = {p.plugin_name: p._fields for p in plugins if p.DISPLAY_IN_TUI}
         # TUI repaint cadence. Default to the global plugin refresh
         # interval — there is no point repainting more often than the
         # data underneath changes. Operators who *want* a faster TUI can

@@ -83,6 +83,15 @@ class GlancesPluginBase(Generic[T], ABC):
     colouring informs the operator visually but does not warrant an
     actionable alert per-pid, since v4 does not page on individual procs)."""
 
+    DISPLAY_IN_TUI: ClassVar[bool] = True
+    """Whether this plugin is rendered in the curses TUI.
+
+    Mirrors v4's ``display_curse``. Default True. Set False for plugins
+    that exist only for the REST API / exporters and were never shown in
+    the v4 TUI (``core``, ``version``, ``psutilversion``). The flag is
+    read by ``main_v5.assemble`` when it builds the TUI registry; it does
+    not affect REST registration (every discovered plugin is served)."""
+
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {}
     """Per-field schema. See architecture §3.2."""
 

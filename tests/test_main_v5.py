@@ -390,3 +390,35 @@ def test_assemble_skips_tui_when_no_tui(config):
     args = build_parser().parse_args(["--no-tui"])
     app, scheduler, host, port, tui = assemble(args, config)
     assert tui is None
+
+
+def test_assemble_registry_excludes_non_display_plugins(config, monkeypatch):
+    """The TUI registry skips plugins with DISPLAY_IN_TUI=False; REST keeps all."""
+    from glances.plugins.plugin.base_v5 import GlancesPluginBase
+
+    class _Shown(GlancesPluginBase):
+        plugin_name = "shown_probe"
+        IS_COLLECTION = False
+        DISPLAY_IN_TUI = True
+
+        async def _grab_stats(self):
+            return {}
+
+    class _Hidden(GlancesPluginBase):
+        plugin_name = "hidden_probe"
+        IS_COLLECTION = False
+        DISPLAY_IN_TUI = False
+
+        async def _grab_stats(self):
+            return {}
+
+    store = StatsStoreV5()
+    fakes = [_Shown(store, config), _Hidden(store, config)]
+    monkeypatch.setattr("glances.main_v5.discover_plugins", lambda *a, **k: fakes)
+
+    args = build_parser().parse_args([])  # TUI mode (no -s)
+    _app, _scheduler, _host, _port, tui = assemble(args, config)
+
+    registry_names = [name for name, _is_coll in tui.registry]
+    assert "shown_probe" in registry_names
+    assert "hidden_probe" not in registry_names

@@ -803,3 +803,28 @@ async def test_get_export_collection_before_update_returns_empty_list(store, con
 async def test_get_stats_before_update_returns_empty_dict(store, config):
     plugin = FakeScalarPlugin(store, config)
     assert plugin.get_stats() == {}
+
+
+# ---------------------------------------------------------- DISPLAY_IN_TUI flag
+
+
+def test_display_in_tui_defaults_true():
+    """Plugins are shown in the TUI unless they opt out."""
+    from glances.plugins.plugin.base_v5 import GlancesPluginBase
+
+    assert GlancesPluginBase.DISPLAY_IN_TUI is True
+
+
+def test_display_in_tui_can_be_overridden():
+    """A subclass can hide itself from the TUI (mirrors v4 display_curse=False)."""
+    from glances.plugins.plugin.base_v5 import GlancesPluginBase
+
+    class _Hidden(GlancesPluginBase):
+        plugin_name = "hidden_probe"
+        IS_COLLECTION = False
+        DISPLAY_IN_TUI = False
+
+        async def _grab_stats(self):
+            return {}
+
+    assert _Hidden.DISPLAY_IN_TUI is False
