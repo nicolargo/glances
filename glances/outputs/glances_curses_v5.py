@@ -155,6 +155,11 @@ class TuiV5(threading.Thread):
         # the TUI leaves the server running and the shell prompt blocked
         # until Ctrl-C. None = no-op (used in tests).
         self._on_quit = on_quit
+        # Horizontal rule between sections (header↔top, top↔body). Default
+        # ``─`` (box-drawing). ``[outputs] separator=False`` keeps each rule
+        # row blank instead, so the vertical rhythm of the layout is
+        # preserved (v4 collapses the row; v5 keeps a blank line).
+        self._separator_enabled = bool(self.config.get("outputs", "separator", True))
         self._stop_event = threading.Event()
         # User-toggled view options (percpu / short-name / programs),
         # driven by the hotkey dispatch table. The process sort key is
@@ -460,6 +465,7 @@ class TuiV5(threading.Thread):
         """Lay out the frame on the terminal, mirroring v4:
 
         header line        (hostname/OS ............ Uptime)  row 0
+        <separator line>
         top blocks         (cpu | mem | load | ...)  side-by-side
         <separator line>
         left blocks         right blocks              two vertical columns
@@ -470,8 +476,15 @@ class TuiV5(threading.Thread):
         # 0. Header line (system flush-left, uptime flush-right).
         header_height = self._paint_header(stdscr, frame.header, 0, max_x)
 
-        # 1. Top row, below the header.
+        # 0b. Separator between the header and the top row (v4 parity). The
+        # row is always reserved when a header is present — with separators
+        # disabled it stays blank rather than collapsing.
         top_y0 = header_height
+        if header_height > 0 and top_y0 < max_y:
+            self._paint_separator(stdscr, top_y0, 0, max_x)
+            top_y0 += 1
+
+        # 1. Top row, below the header (and its separator).
         top_height = self._paint_top_row(stdscr, frame.top, top_y0, max_x)
 
         # 2. Separator under the top row (if any top content was painted).
@@ -640,9 +653,21 @@ class TuiV5(threading.Thread):
             x += len(text)
         return max(0, x - x0)
 
+    # Horizontal rule glyph (U+2500 BOX DRAWINGS LIGHT HORIZONTAL) — v4 parity
+    # (v4 paints curses.ACS_HLINE, which renders as the same ─).
+    _SEPARATOR_CHAR = "─"
+
     def _paint_separator(self, stdscr, y: int, x0: int, width: int) -> None:
+        """Paint a horizontal rule at row ``y``.
+
+        Default: a ``─`` rule spanning the width. When ``[outputs]
+        separator`` is False the rule is suppressed — the caller still
+        reserves the row, so it renders as a blank line.
+        """
+        if not self._separator_enabled:
+            return
         try:
-            stdscr.addstr(y, x0, "-" * max(0, width - 1))
+            stdscr.addstr(y, x0, self._SEPARATOR_CHAR * max(0, width - 1))
         except curses.error:
             pass
 

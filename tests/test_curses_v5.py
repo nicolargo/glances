@@ -822,6 +822,9 @@ def test_tui_v5_help_config_path_is_defensive(fake_store, fake_alerts):
     from glances.outputs import glances_curses_v5 as tui_mod
 
     class _NoSources:
+        def get(self, section, key, default=None):
+            return default
+
         @property
         def loaded_sources(self):
             raise AttributeError("nope")
@@ -990,7 +993,7 @@ def test_paint_header_empty_returns_zero(fake_store, fake_alerts, fake_config):
 
 
 def test_paint_shifts_top_row_below_header(fake_store, fake_alerts, fake_config):
-    """When a header is present, the top row starts at y=1, not y=0."""
+    """When a header is present, a separator sits at y=1 and the top row at y=2."""
     from glances.outputs import glances_curses_v5 as tui_mod
     from glances.outputs.curses_renderer_v5 import Cell, Frame, PluginBlock, Row
 
@@ -1011,6 +1014,86 @@ def test_paint_shifts_top_row_below_header(fake_store, fake_alerts, fake_config)
     tui._paint(fake_stdscr, frame)
 
     calls = [(c.args[0], c.args[2]) for c in fake_stdscr.addstr.call_args_list]
-    # Header on row 0, CPU top-row on row 1.
+    # Header on row 0, separator (─) on row 1, CPU top-row on row 2.
     assert any(y == 0 and "myhost" in text for (y, text) in calls)
-    assert any(y == 1 and "CPU" in text for (y, text) in calls)
+    assert any(y == 1 and "─" in text for (y, text) in calls)
+    assert any(y == 2 and "CPU" in text for (y, text) in calls)
+
+
+def test_separator_default_enabled_uses_box_drawing_char(fake_store, fake_alerts, fake_config):
+    """Default separator glyph is ─ (U+2500), not the ASCII hyphen."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    assert tui._separator_enabled is True
+    fake_stdscr = MagicMock()
+    tui._paint_separator(fake_stdscr, y=3, x0=0, width=20)
+    drawn = [c.args[2] for c in fake_stdscr.addstr.call_args_list]
+    assert any("─" in text for text in drawn)
+    # The old ASCII-hyphen rule must be gone.
+    assert not any(set(text) == {"-"} for text in drawn)
+
+
+def test_separator_disabled_paints_nothing(fake_store, fake_alerts):
+    """[outputs] separator=False → _paint_separator draws no glyph."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    cfg = MagicMock()
+    cfg.get.side_effect = lambda section, key, default=None: (
+        False if (section, key) == ("outputs", "separator") else default
+    )
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=cfg,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    assert tui._separator_enabled is False
+    fake_stdscr = MagicMock()
+    tui._paint_separator(fake_stdscr, y=3, x0=0, width=20)
+    fake_stdscr.addstr.assert_not_called()
+
+
+def test_separator_disabled_renders_blank_line(fake_store, fake_alerts):
+    """[outputs] separator=False → separator rows are blank, layout preserved.
+
+    The top row still lands at y=2 (header y=0, blank separator y=1), so the
+    vertical rhythm matches the enabled case — only the ─ glyph disappears."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Cell, Frame, PluginBlock, Row
+
+    cfg = MagicMock()
+    cfg.get.side_effect = lambda section, key, default=None: (
+        False if (section, key) == ("outputs", "separator") else default
+    )
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=cfg,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    frame = Frame(
+        header=[PluginBlock(name="system", rows=[Row(cells=[Cell(text="myhost")])])],
+        top=[PluginBlock(name="cpu", rows=[Row(cells=[Cell(text="CPU 5%")])])],
+    )
+    fake_stdscr = MagicMock()
+    fake_stdscr.getmaxyx.return_value = (24, 80)
+    tui._paint(fake_stdscr, frame)
+
+    calls = [(c.args[0], c.args[2]) for c in fake_stdscr.addstr.call_args_list]
+    # No box-drawing rule anywhere.
+    assert not any("─" in text for (_y, text) in calls)
+    # But the blank separator row is still reserved: top row remains at y=2.
+    assert any(y == 0 and "myhost" in text for (y, text) in calls)
+    assert any(y == 2 and "CPU" in text for (y, text) in calls)
