@@ -20,10 +20,11 @@ Layout mirrors v4 (`glances/outputs/glances_curses.py`):
     | (other left)       | (other right)               |
     +--------------------------------------------------+
 
-The renderer produces three slot lists of `PluginBlock`s (each a list of
+The renderer produces four slot lists of `PluginBlock`s (each a list of
 `Row`s). The curses I/O thread (`glances_curses_v5.py`) is responsible
 for placing the blocks onto the terminal:
-    - top blocks are painted side-by-side from row 0
+    - header blocks are painted side-by-side above the top row
+    - top blocks are painted side-by-side below the header
     - left/right blocks are stacked vertically below the top row
 
 Keeping the renderer pure (no curses, no threading) lets us unit-test
@@ -51,6 +52,7 @@ logger = logging.getLogger(__name__)
 # `glances/outputs/glances_curses.py`). Plugin names not in any list
 # default to LEFT (same fallback as v4). Configurable via [outputs] later.
 
+HEADER_SLOT: tuple[str, ...] = ("system", "uptime")
 TOP_SLOT: tuple[str, ...] = ("quicklook", "cpu", "percpu", "gpu", "mem", "memswap", "load")
 LEFT_SLOT: tuple[str, ...] = (
     "network",
@@ -78,7 +80,9 @@ RIGHT_SLOT: tuple[str, ...] = (
 
 
 def slot_for(plugin_name: str) -> str:
-    """Return the layout slot for a plugin: 'top', 'left', or 'right'."""
+    """Return the layout slot for a plugin: 'header', 'top', 'left', or 'right'."""
+    if plugin_name in HEADER_SLOT:
+        return "header"
     if plugin_name in TOP_SLOT:
         return "top"
     if plugin_name in RIGHT_SLOT:
@@ -217,6 +221,7 @@ class PluginBlock:
 class Frame:
     """The complete TUI screen, sliced into v4-equivalent slots."""
 
+    header: list[PluginBlock] = field(default_factory=list)
     top: list[PluginBlock] = field(default_factory=list)
     left: list[PluginBlock] = field(default_factory=list)
     right: list[PluginBlock] = field(default_factory=list)
@@ -740,7 +745,9 @@ def build_frame(
 
         block = PluginBlock(name=plugin_name, rows=rows)
         slot = slot_for(plugin_name)
-        if slot == "top":
+        if slot == "header":
+            frame.header.append(block)
+        elif slot == "top":
             frame.top.append(block)
         elif slot == "right":
             frame.right.append(block)
@@ -750,6 +757,7 @@ def build_frame(
     # v4 fidelity: enforce the slot-declared order, not the discovery
     # order (which is alphabetical and would give cpu/load/mem instead
     # of cpu/mem/load in the top row).
+    frame.header.sort(key=lambda b: HEADER_SLOT.index(b.name) if b.name in HEADER_SLOT else len(HEADER_SLOT))
     frame.top.sort(key=lambda b: TOP_SLOT.index(b.name) if b.name in TOP_SLOT else len(TOP_SLOT))
     frame.left.sort(key=lambda b: LEFT_SLOT.index(b.name) if b.name in LEFT_SLOT else len(LEFT_SLOT))
     frame.right.sort(key=lambda b: RIGHT_SLOT.index(b.name) if b.name in RIGHT_SLOT else len(RIGHT_SLOT))

@@ -1026,3 +1026,43 @@ def test_pluginblock_width_glue_cell_has_no_separator():
     block = PluginBlock(name="x", rows=[Row(cells=[Cell("ab"), Cell("cd", glue=True)])])
     # glued: "ab" + "cd" = 4 (no separator space)
     assert block.width == 4
+
+
+# --------------------------------------------------------------- header slot
+
+
+def test_slot_for_header_plugins():
+    assert slot_for("system") == "header"
+    assert slot_for("uptime") == "header"
+    assert slot_for("cpu") == "top"
+    assert slot_for("network") == "left"
+
+
+def test_build_frame_routes_system_and_uptime_to_header():
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    snapshot = {
+        "system": {"hostname": "h", "hr_name": "Ubuntu", "_levels": {}},
+        "uptime": {"seconds": 3600, "_levels": {}},
+        "cpu": {"total": 5.0, "_levels": {}},
+    }
+    fields = {
+        "system": {"hostname": {"unit": "string"}, "hr_name": {"unit": "string"}},
+        "uptime": {"seconds": {"unit": "seconds"}},
+        "cpu": {"total": {"unit": "percent", "watched": True, "label": "CPU"}},
+    }
+    registry = [("system", False), ("uptime", False), ("cpu", False)]
+    frame = build_frame(
+        store_snapshot=snapshot,
+        fields_by_plugin=fields,
+        registry=registry,
+        alerts_history=[],
+    )
+    header_names = [b.name for b in frame.header]
+    # Ordered: system first, uptime last (HEADER_SLOT order).
+    assert header_names == ["system", "uptime"]
+    # They must NOT leak into the other slots.
+    assert "system" not in [b.name for b in frame.top + frame.left + frame.right]
+    assert "uptime" not in [b.name for b in frame.top + frame.left + frame.right]
+    # cpu still lands in the top row.
+    assert "cpu" in [b.name for b in frame.top]
