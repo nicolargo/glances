@@ -112,6 +112,37 @@ the Glances UI:
 You can force Glances to display the result in one line setting
 ``one_line`` to true.
 
+Security considerations
+-----------------------
+
+AMP ``command`` and ``service_cmd`` values are read verbatim from the
+configuration file and executed. The execution helper interprets three
+shell-like operators:
+
+- ``&&`` to chain commands
+- ``|`` to pipe one command output into the next one
+- ``>`` to redirect the output to a file
+
+These operators are convenient but mean that **anyone able to edit the
+Glances configuration file can run arbitrary commands or write to arbitrary
+files** through an AMP section.
+
+For system services or any deployment where the configuration file is not
+fully trusted, start Glances with the ``--disable-config-exec`` option. In
+addition to disabling backtick command execution in configuration values,
+this option makes AMP commands run as a single process: ``&&``, ``|`` and
+``>`` are then treated as literal arguments and are no longer interpreted, so
+an AMP command can neither chain commands, pipe, nor write to an arbitrary
+file.
+
+.. code-block:: console
+
+    $ glances --disable-config-exec
+
+Note: with ``--disable-config-exec`` set, AMP commands that rely on these
+operators stop working. Move such logic into a dedicated shell script and
+point the ``command`` option to that script instead.
+
 Embedded AMP
 ------------
 
