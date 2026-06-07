@@ -7,11 +7,12 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Tests for the GPU plugin (ARM backend)."""
+"""Tests for the GPU plugin (ARM and Tegra backends)."""
 
 import pytest
 
 from glances.globals import LINUX
+from glances.plugins.gpu.cards import tegra
 from glances.plugins.gpu.cards.arm import (
     ArmGPU,
     aggregate_fdinfo,
@@ -24,6 +25,10 @@ from glances.plugins.gpu.cards.arm import (
 ARM_TEST_DATA_ROOT = './tests-data/plugins/gpu/arm'
 ARM_DRM_ROOT = f'{ARM_TEST_DATA_ROOT}/sys/class/drm'
 ARM_PROC_ROOT = f'{ARM_TEST_DATA_ROOT}/proc'
+
+TEGRA_TEST_DATA_ROOT = './tests-data/plugins/gpu/tegra'
+TEGRA_GPU_FOLDER = f'{TEGRA_TEST_DATA_ROOT}/sys/devices/platform/gpu.0'
+TEGRA_THERMAL_ROOT = f'{TEGRA_TEST_DATA_ROOT}/sys/class/thermal'
 
 
 @pytest.fixture
@@ -198,6 +203,36 @@ class TestArmAggregation:
         assert bucket['engine_total_ns'] == 9_500_000
         assert bucket['mem_total_bytes'] == 3072 * 1024
         assert bucket['mem_used_bytes'] == 1536 * 1024
+
+
+# Tegra (Jetson) sysfs fallback tests against committed fixtures.
+class TestTegraBackend:
+    def test_is_tegra_by_name(self):
+        # NVML reports names such as "Orin (nvgpu)" on Jetson.
+        assert tegra.is_tegra('Orin (nvgpu)') is True  # nosec B101
+        assert tegra.is_tegra('NVIDIA Tegra Xavier (nvgpu)') is True  # nosec B101
+
+    def test_is_tegra_rejects_discrete(self):
+        # A discrete GPU name with no Tegra sysfs node must not trigger.
+        assert tegra.is_tegra('NVIDIA GeForce RTX 4090', gpu_device_folder='/nope') is False  # nosec B101
+
+    def test_is_tegra_by_sysfs(self):
+        assert tegra.is_tegra(None, gpu_device_folder=TEGRA_GPU_FOLDER) is True  # nosec B101
+        assert tegra.is_tegra(None, gpu_device_folder='/this/does/not/exist') is False  # nosec B101
+
+    def test_proc_permille_to_percent(self):
+        # Fixture load node holds 774 per-mille -> 77 %.
+        assert tegra.get_proc(gpu_device_folder=TEGRA_GPU_FOLDER) == 77  # nosec B101
+
+    def test_proc_missing_node(self):
+        assert tegra.get_proc(gpu_device_folder='/this/does/not/exist') is None  # nosec B101
+
+    def test_temperature_picks_gpu_thermal_zone(self):
+        # Must select the gpu-thermal zone (51312 -> 51 C), not cpu/soc zones.
+        assert tegra.get_temperature(thermal_root=TEGRA_THERMAL_ROOT) == 51  # nosec B101
+
+    def test_temperature_missing_root(self):
+        assert tegra.get_temperature(thermal_root='/this/does/not/exist') is None  # nosec B101
 
 
 class TestGpuPluginIntegration:
