@@ -3,6 +3,15 @@
 ==============================================================================
 
 =============
+Version 4.5.5
+=============
+
+Enhancements:
+
+* GPU plugin: display proc and temperature on NVIDIA Jetson (Tegra) integrated
+  GPUs by falling back to Tegra sysfs when NVML returns NVML_ERROR_NOT_SUPPORTED
+
+=============
 Version 4.5.4
 =============
 
