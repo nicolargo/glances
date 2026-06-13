@@ -8,8 +8,8 @@
 # Ex: Python 3.12 for Ubuntu 24.04
 # Note: ENV is for future running containers. ARG for building your Docker image.
 
-ARG IMAGE_VERSION=24.04
-ARG PYTHON_VERSION=3.12
+ARG IMAGE_VERSION=26.04
+ARG PYTHON_VERSION=3.14
 
 ##############################################################################
 # Base layer to be used for building dependencies and the release images
@@ -21,7 +21,7 @@ RUN apt-get update \
     python3 \
     curl \
     lm-sensors \
-    wireless-tools \
+    # wireless-tools \
     smartmontools \
     net-tools \
     tzdata \
@@ -120,7 +120,7 @@ FROM release AS full
 ARG PYTHON_VERSION
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends \ 
+  && apt-get install -y --no-install-recommends \
     libzmq5 \
     libvirt-clients \
   && apt-get clean \
