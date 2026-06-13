@@ -12,8 +12,6 @@ For the moment, only following MPP engines are supported on modern Linux Kernel:
 
 Tested on Rockchip RV1126B-P platform with Linux Kernel 6.1.141 and MPP 4.0.0.
 
-.. image:: ../_static/mpp.png
-
 .. code-block:: ini
 
     [mpp]
