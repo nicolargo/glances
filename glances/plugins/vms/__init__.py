@@ -55,13 +55,13 @@ fields_description = {
         'unit': 'byte',
     },
     'load_1min': {
-        'description': 'Vm Load last 1 min',
+        'description': 'Vm Load last 1 min (None if not supported by the engine)',
     },
     'load_5min': {
-        'description': 'Vm Load last 5 mins',
+        'description': 'Vm Load last 5 mins (None if not supported by the engine)',
     },
     'load_15min': {
-        'description': 'Vm Load last 15 mins',
+        'description': 'Vm Load last 15 mins (None if not supported by the engine)',
     },
     'ipv4': {
         'description': 'Vm IP v4 address',
@@ -250,8 +250,9 @@ class VmsPlugin(GlancesPluginModel):
         ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'memory_usage' else 'DEFAULT'))
         msg = '/{:<7}'.format('MAX')
         ret.append(self.curse_add_line(msg))
-        msg = '{:>17}'.format('LOAD 1/5/15min')
-        ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'load_1min' else 'DEFAULT'))
+        if self.stats[0].get('load_1min') is not None:
+            msg = '{:>17}'.format('LOAD 1/5/15min')
+            ret.append(self.curse_add_line(msg, 'SORT' if self.sort_key == 'load_1min' else 'DEFAULT'))
         msg = '{:>10}'.format('Release')
         ret.append(self.curse_add_line(msg))
 
@@ -298,9 +299,11 @@ class VmsPlugin(GlancesPluginModel):
             # LOAD
             try:
                 msg = '{:>5.1f}/{:>5.1f}/{:>5.1f}'.format(vm['load_1min'], vm['load_5min'], vm['load_15min'])
+                ret.append(
+                    self.curse_add_line(msg, self.get_views(item=vm['name'], key='load_1min', option='decoration'))
+                )
             except (KeyError, TypeError):
-                msg = '{:>5}/{:>5}/{:>5}'.format('-', '-', '-')
-            ret.append(self.curse_add_line(msg, self.get_views(item=vm['name'], key='load_1min', option='decoration')))
+                pass
             # Release
             if vm['release'] is not None:
                 msg = '   {}'.format(vm['release'])
@@ -329,10 +332,10 @@ def sort_vm_stats(stats: list[dict[str, Any]]) -> tuple[str, list[dict[str, Any]
         sort_by_secondary = 'cpu_time'
     elif glances_processes.sort_key == 'name':
         sort_by = 'name'
-        sort_by_secondary = 'load_1min'
+        sort_by_secondary = 'cpu_time'
     else:
         sort_by = 'cpu_time'
-        sort_by_secondary = 'load_1min'
+        sort_by_secondary = 'memory_usage'
 
     # Sort vm stats
     sort_stats_processes(

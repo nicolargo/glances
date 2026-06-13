@@ -27,7 +27,9 @@ This section describes the available exporters and how to configure them:
 
    csv
    cassandra
+   clickhouse
    couchdb
+   duckdb
    elastic
    graph
    graphite

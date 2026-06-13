@@ -779,6 +779,30 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(auto_unit(1073741824, low_precision=True), '1024M')
         self.assertEqual(auto_unit(1181116006), '1.10G')
         self.assertEqual(auto_unit(1181116006, low_precision=True), '1.1G')
+        # Edge cases:
+        m = 2**20
+        g = 2**30
+        self.assertEqual(auto_unit(9.9 * m), '9.90M')
+        self.assertEqual(auto_unit(9.99 * m), '9.99M')
+        self.assertEqual(auto_unit(9.991 * m), '9.99M')
+        self.assertEqual(auto_unit(9.994 * m), '9.99M')
+        self.assertEqual(auto_unit(9.995 * m), '9.99M')
+        self.assertEqual(auto_unit(10 * m), '10.0M')
+        self.assertEqual(auto_unit(99 * m), '99.0M')
+        self.assertEqual(auto_unit(99.9 * m), '99.9M')
+        self.assertEqual(auto_unit(99.91 * m), '99.9M')
+        self.assertEqual(auto_unit(99.94 * m), '99.9M')
+        self.assertEqual(auto_unit(100 * m), '100M')
+        # Special cases that used to overflow and misalign columns
+        self.assertEqual(auto_unit(9.996 * m), '10.0M')  # was 10.00M
+        self.assertEqual(auto_unit(9.999 * m), '10.0M')  # was 10.00M
+        self.assertEqual(auto_unit(99.95 * m), '100M')  # was 100.0M
+        self.assertEqual(auto_unit(99.96 * m), '100M')  # was 100.0M
+        self.assertEqual(auto_unit(99.99 * m), '100M')  # was 100.0M
+        self.assertEqual(auto_unit(10 * m - 1), '10.0M')  # was 10.00M
+        self.assertEqual(auto_unit(100 * m - 1), '100M')  # was 100.0M
+        self.assertEqual(auto_unit(10 * g - 1), '10.0G')  # was 10.00G
+        self.assertEqual(auto_unit(100 * g - 1), '100G')  # was 100.0G
 
     def test_094_thresholds(self):
         """Test thresholds classes"""

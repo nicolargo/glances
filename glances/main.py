@@ -670,7 +670,9 @@ Examples of use:
             action='store_true',
             default=False,
             dest='disable_config_exec',
-            help='disable backtick command execution in configuration values (recommended for system services)',
+            help='disable backtick command execution in configuration values '
+            'and shell operator interpretation (&&, |, >) in AMP commands '
+            '(recommended for system services)',
         )
         # Globals options
         parser.add_argument(

@@ -1,0 +1,11 @@
+pos:	0
+flags:	02100002
+mnt_id:	25
+ino:	3099
+drm-driver:	panthor
+drm-client-id:	43
+drm-pdev:	fe9b0000.gpu
+drm-total-memory:	1024 KiB
+drm-resident-memory:	512 KiB
+drm-engine-fragment:	1000000 ns
+drm-engine-vertex-tiler:	500000 ns

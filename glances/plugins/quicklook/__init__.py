@@ -10,6 +10,7 @@
 
 import psutil
 
+import glances.gpu_percent as gpu_stats
 from glances.cpu_percent import cpu_percent
 from glances.logger import logger
 from glances.outputs.glances_bars import Bar
@@ -61,6 +62,14 @@ fields_description = {
         'description': 'CPU max frequency',
         'unit': 'hertz',
     },
+    'gpu_mem': {
+        'description': 'Average GPU Memory consumption',
+        'unit': 'percent',
+    },
+    'gpu_proc': {
+        'description': 'Average GPU Processor consumption',
+        'unit': 'percent',
+    },
 }
 
 # Define the history items list
@@ -80,7 +89,7 @@ class QuicklookPlugin(GlancesPluginModel):
     'stats' is a dictionary.
     """
 
-    AVAILABLE_STATS_LIST = ['cpu', 'mem', 'swap', 'load']
+    AVAILABLE_STATS_LIST = ['cpu', 'mem', 'swap', 'load', 'gpu_mem', 'gpu_proc']
     DEFAULT_STATS_LIST = ['cpu', 'mem', 'load']
 
     def __init__(self, args=None, config=None):
@@ -103,6 +112,10 @@ class QuicklookPlugin(GlancesPluginModel):
         if not set(self.stats_list).issubset(self.AVAILABLE_STATS_LIST):
             logger.warning(f'Quicklook plugin: Invalid stats list: {self.stats_list}')
             self.stats_list = self.AVAILABLE_STATS_LIST
+        if "gpu_mem" in self.stats_list:
+            gpu_stats.get_gpu_mem = True
+        if "gpu_proc" in self.stats_list:
+            gpu_stats.get_gpu_proc = True
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
@@ -153,6 +166,9 @@ class QuicklookPlugin(GlancesPluginModel):
             except (TypeError, IndexError):
                 stats['load'] = None
 
+            stats['gpu_mem'] = gpu_stats.gpu_mem
+            stats['gpu_proc'] = gpu_stats.gpu_proc
+
         elif self.input_method == 'snmp':
             # Not available
             pass
@@ -167,7 +183,7 @@ class QuicklookPlugin(GlancesPluginModel):
         # Call the father's method
         super().update_views()
 
-        # Alert for CPU, MEM and SWAP
+        # Alert for CPU, MEM and SWAP + GPU
         for key in self.stats_list:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
@@ -214,35 +230,45 @@ class QuicklookPlugin(GlancesPluginModel):
 
         # Loop over CPU, MEM and LOAD
         # Define the data: Bar (default behavior) or Sparkline
-        data = {}
-        for key in self.stats_list:
-            bar_size = max(len(msg_name) + len(msg_freq) - 7, max_width)
-            if self.args.sparkline and self.history_enable() and not self.args.client:
-                data[key] = Sparkline(bar_size)
-            else:
-                # Fallback to bar if Sparkline module is not installed
-                data[key] = Bar(bar_size, bar_char=self.get_conf_value('bar_char', default=['|'])[0])
+        # Hoist loop-invariant computations out of the per-key loop.
+        bar_size = max(len(msg_name) + len(msg_freq) - 7, max_width)
+        use_sparkline = (
+            self.args.sparkline and self.history_enable() and not self.args.client and Sparkline(bar_size).available
+        )
+        if use_sparkline:
+            data = {key: Sparkline(bar_size) for key in self.stats_list}
+        else:
+            bar_char = self.get_conf_value('bar_char', default=['|'])[0]
+            data = {key: Bar(bar_size, bar_char=bar_char) for key in self.stats_list}
 
         for key in self.stats_list:
             if key == 'cpu' and args.percpu:
                 ret.extend(self._msg_per_cpu(data, key, max_width))
             else:
-                if type(data[key]).__name__ == 'Sparkline':
-                    # Sparkline display an history
-                    data[key].percents = [i[1] for i in self.get_raw_history(item=key, nb=data[key].size)]
-                    # A simple padding in order to align metrics to the right
-                    data[key].percents += [None] * (data[key].size - len(data[key].percents))
-                else:
-                    # Bar only the last value
-                    data[key].percent = self.stats[key]
-                msg = f'{key.upper():4} '
-                ret.extend(self._msg_create_line(msg, data[key], key))
-                ret.append(self.curse_new_line())
+                ret.extend(self._msg_cpu(data, key, max_width))
 
         # Remove the last new line
         ret.pop()
 
         # Return the message with decoration
+        return ret
+
+    def _msg_cpu(self, data, key, max_width):
+        """Create CPU view"""
+        ret = []
+
+        if isinstance(data[key], Sparkline):
+            # Sparkline display an history
+            data[key].percents = [i[1] for i in self.get_raw_history(item=key, nb=data[key].size)]
+            # A simple padding in order to align metrics to the right
+            data[key].percents += [None] * (data[key].size - len(data[key].percents))
+        else:
+            # Bar only the last value
+            data[key].percent = self.stats[key]
+        msg = f'{key.upper():4} '
+        ret.extend(self._msg_create_line(msg, data[key], key))
+        ret.append(self.curse_new_line())
+
         return ret
 
     def _msg_per_cpu(self, data, key, max_width):

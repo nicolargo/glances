@@ -13,15 +13,19 @@ Currently supported:
 - NVIDIA GPU (need pynvml lib)
 - AMD GPU (no lib needed)
 - Intel GPU (no lib needed)
+- ARM GPU (Linux kernel >= 6.0, no lib needed; drivers: msm/Adreno,
+  Panfrost, Panthor, v3d, Lima, Etnaviv)
 
 Quick test:
 - Start Glances
 - In a terminal: vblank_mode=0 glxgears
 """
 
+import glances.gpu_percent as gpu_avg_stats
 from glances.globals import to_fahrenheit
 from glances.logger import logger
 from glances.plugins.gpu.cards.amd import AmdGPU
+from glances.plugins.gpu.cards.arm import ArmGPU
 from glances.plugins.gpu.cards.intel import IntelGPU
 from glances.plugins.gpu.cards.nvidia import NvidiaGPU
 from glances.plugins.plugin.model import GlancesPluginModel
@@ -105,14 +109,32 @@ class GpuPlugin(GlancesPluginModel):
         # Just for test purpose (uncomment to test on computer without Intel GPU)
         # self.intel = IntelGPU(drm_root_folder='./tests-data/plugins/gpu/intel/sys/class/drm')
 
+        # Init the ARM GPU API (msm, panfrost, panthor, v3d, lima, etnaviv)
+        try:
+            self.arm = ArmGPU()
+        except Exception as e:
+            logger.debug(f'ARM GPU initialization error: {e}')
+            self.arm = None
+        # Just for test purpose (uncomment to test on computer without ARM GPU)
+        # self.arm = ArmGPU(
+        #     drm_root_folder='./tests-data/plugins/gpu/arm/sys/class/drm',
+        #     proc_root_folder='./tests-data/plugins/gpu/arm/proc',
+        # )
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
     def exit(self):
         """Overwrite the exit method to close the GPU API."""
-        self.nvidia.exit()
-        self.amd.exit()
-        self.intel.exit()
+        # Each backend may be None if its initialization failed.
+        if self.nvidia:
+            self.nvidia.exit()
+        if self.amd:
+            self.amd.exit()
+        if self.intel:
+            self.intel.exit()
+        if self.arm:
+            self.arm.exit()
         # Call the father exit method
         super().exit()
 
@@ -134,6 +156,8 @@ class GpuPlugin(GlancesPluginModel):
             stats.extend(self.amd.get_device_stats())
         if self.intel:
             stats.extend(self.intel.get_device_stats())
+        if self.arm:
+            stats.extend(self.arm.get_device_stats())
 
         # !!!
         # Uncomment to test on computer without Nvidia GPU
@@ -170,6 +194,17 @@ class GpuPlugin(GlancesPluginModel):
         #         "fan_speed": 75,
         #     },
         # ]
+        if gpu_avg_stats.get_gpu_mem:
+            avg_mem = self._get_mean("mem")
+            if avg_mem is None:
+                avg_mem = 0
+            gpu_avg_stats.gpu_mem = avg_mem
+
+        if gpu_avg_stats.get_gpu_proc:
+            avg_proc = self._get_mean("proc")
+            if avg_proc is None:
+                avg_proc = 0
+            gpu_avg_stats.gpu_proc = avg_proc
 
         # Update the stats
         self.stats = stats

@@ -108,7 +108,7 @@ class _GlancesCurses:
 
     # Define top menu
     _top = ['quicklook', 'cpu', 'percpu', 'npu', 'mpp', 'gpu', 'mem', 'memswap', 'load']
-    _quicklook_max_width = 58
+    _quicklook_max_width = 48
 
     # Define left sidebar
     # This variable is used in the make webui task in order to generate the
@@ -725,6 +725,152 @@ class _GlancesCurses:
             self.new_line()
             self.display_plugin(stat_display["cloud"])
 
+    def _get_plugin_width(self, stat_display):
+        """
+        Compute the display width for each top plugin.
+
+        The width is calculated using the plugin display data currently
+        available in stat_display. Plugins that are not enabled through
+        runtime arguments are assigned a width of 0.
+        """
+        # Store calculated widths for each plugin
+        plugin_widths = {}
+
+        for p in self._top:
+            plugin_widths[p] = (
+                self.get_stats_display_width(stat_display.get(p, 0)) if hasattr(self.args, 'disable_' + p) else 0
+            )
+
+        return plugin_widths
+
+    def _get_stats_summary(self, stat_display, plugin_widths):
+        """
+        Compute total plugin width and number of active plugins.
+
+        Returns
+        -------
+        tuple
+                stats_width (int): Combined width of all plugins.
+                stats_number (int): Number of plugins containing
+                    displayable content.
+
+        """
+        # Compute total width occupied by all plugins
+        stats_width = sum(plugin_widths.values())
+
+        # Count plugins that currently contain display data
+        # Quicklook is excluded from this stage of computation
+        stats_number = sum(
+            [int(stat_display[p]['msgdict'] != []) for p in self._top if not getattr(self.args, 'disable_' + p)]
+        )
+
+        return stats_width, stats_number
+
+    def _handle_quicklook_for_display(
+        self,
+        stat_display,
+        stats,
+        plugin_widths,
+        stats_width,
+        stats_number,
+    ):
+        """
+        Compute, retrieve, and display the quicklook plugin.
+
+        This helper handles quicklook width calculation, plugin retrieval,
+        display rendering, and spacing adjustments required before the
+        remaining top plugins are rendered.
+        """
+        # Compute available width for quicklook display
+        if self.args.full_quicklook:
+            quicklook_width = self.term_window.getmaxyx()[1] - (
+                stats_width + 8 + stats_number * self.space_between_column
+            )
+        else:
+            quicklook_width = min(
+                self.term_window.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column),
+                self._quicklook_max_width - 5,
+            )
+
+        try:
+            # Retrieve quicklook display data
+            stat_display["quicklook"] = stats.get_plugin('quicklook').get_stats_display(
+                max_width=quicklook_width,
+                args=self.args,
+            )
+
+        except AttributeError as e:
+            logger.debug(f"Quicklook plugin not available ({e})")
+
+        else:
+            # Update quicklook width after successful retrieval
+            plugin_widths['quicklook'] = self.get_stats_display_width(stat_display["quicklook"])
+
+            # Recompute total width including quicklook
+            stats_width = sum(plugin_widths.values()) + 1
+
+        # Quicklook uses a dedicated single-column spacing rule
+        self.space_between_column = 1
+
+        # Display quicklook before remaining plugins
+        self.display_plugin(stat_display["quicklook"])
+        self.new_column()
+
+        return plugin_widths, stats_width
+
+    def _compute_spacing_and_optional(
+        self,
+        stat_display,
+        plugin_widths,
+        stats_width,
+        stats_number,
+    ):
+        """
+        Compute spacing and optional display behaviour for top plugins.
+
+        This helper adjusts spacing dynamically based on terminal width and
+        disables optional CPU and MEM display elements when horizontal
+        space becomes constrained.
+        """
+        # Enable optional display for all plugins by default
+        plugin_display_optional = dict.fromkeys(self._top, True)
+
+        if stats_number > 1:
+            # Compute spacing between plugin columns
+            self.space_between_column = max(
+                1,
+                int((self.term_window.getmaxyx()[1] - stats_width) / (stats_number - 1)),
+            )
+
+            for p in ['mem', 'cpu']:
+                # Remove optional display elements when spacing becomes too small
+                if self.space_between_column < 3:
+                    plugin_display_optional[p] = False
+
+                    # Recompute plugin width without optional display elements
+                    plugin_widths[p] = (
+                        self.get_stats_display_width(
+                            stat_display[p],
+                            without_option=True,
+                        )
+                        if hasattr(self.args, 'disable_' + p)
+                        else 0
+                    )
+
+                    # Recompute total width after optional removal
+                    stats_width = sum(plugin_widths.values()) + 1
+
+                    # Recompute spacing with updated widths
+                    self.space_between_column = max(
+                        1,
+                        int((self.term_window.getmaxyx()[1] - stats_width) / (stats_number - 1)),
+                    )
+        else:
+            # No spacing required when only one plugin is displayed
+            self.space_between_column = 0
+
+        return plugin_display_optional, plugin_widths
+
     def __display_top(self, stat_display, stats):
         """Display the second line in the Curses interface.
 
@@ -736,67 +882,23 @@ class _GlancesCurses:
         # Init quicklook
         stat_display['quicklook'] = {'msgdict': []}
 
-        # Dict for plugins width
-        plugin_widths = {}
-        for p in self._top:
-            plugin_widths[p] = (
-                self.get_stats_display_width(stat_display.get(p, 0)) if hasattr(self.args, 'disable_' + p) else 0
-            )
+        # Get Dict for plugins width
+        plugin_widths = self._get_plugin_width(stat_display)
 
-        # Width of all plugins
-        stats_width = sum(plugin_widths.values())
-
-        # Number of plugin but quicklook
-        stats_number = sum(
-            [int(stat_display[p]['msgdict'] != []) for p in self._top if not getattr(self.args, 'disable_' + p)]
-        )
+        # Get width of all plugins and number of plugin but quicklook
+        stats_width, stats_number = self._get_stats_summary(stat_display, plugin_widths)
 
         if not self.args.disable_quicklook:
-            # Quick look is in the place !
-            if self.args.full_quicklook:
-                quicklook_width = self.term_window.getmaxyx()[1] - (
-                    stats_width + 8 + stats_number * self.space_between_column
-                )
-            else:
-                quicklook_width = min(
-                    self.term_window.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column),
-                    self._quicklook_max_width - 5,
-                )
-            try:
-                stat_display["quicklook"] = stats.get_plugin('quicklook').get_stats_display(
-                    max_width=quicklook_width, args=self.args
-                )
-            except AttributeError as e:
-                logger.debug(f"Quicklook plugin not available ({e})")
-            else:
-                plugin_widths['quicklook'] = self.get_stats_display_width(stat_display["quicklook"])
-                stats_width = sum(plugin_widths.values()) + 1
-            self.space_between_column = 1
-            self.display_plugin(stat_display["quicklook"])
-            self.new_column()
+            plugin_widths, stats_width = self._handle_quicklook_for_display(
+                stat_display, stats, plugin_widths, stats_width, stats_number
+            )
 
         # Compute spaces between plugins
         # Note: Only one space between Quicklook and others
-        plugin_display_optional = {}
-        for p in self._top:
-            plugin_display_optional[p] = True
-        if stats_number > 1:
-            self.space_between_column = max(1, int((self.term_window.getmaxyx()[1] - stats_width) / (stats_number - 1)))
-            for p in ['mem', 'cpu']:
-                # No space ? Remove optional stats
-                if self.space_between_column < 3:
-                    plugin_display_optional[p] = False
-                    plugin_widths[p] = (
-                        self.get_stats_display_width(stat_display[p], without_option=True)
-                        if hasattr(self.args, 'disable_' + p)
-                        else 0
-                    )
-                    stats_width = sum(plugin_widths.values()) + 1
-                    self.space_between_column = max(
-                        1, int((self.term_window.getmaxyx()[1] - stats_width) / (stats_number - 1))
-                    )
-        else:
-            self.space_between_column = 0
+
+        plugin_display_optional, plugin_widths = self._compute_spacing_and_optional(
+            stat_display, plugin_widths, stats_width, stats_number
+        )
 
         # Display CPU, MEM, SWAP and LOAD
         for p in self._top:
@@ -869,6 +971,30 @@ class _GlancesCurses:
                 else:
                     self.display_plugin(stat_display[p])
 
+    def get_popup_size(self, message, size_x, size_y, popup_type, input_size):
+        # Split the message into lines (seperated by \n)
+        sentence_list = message.split('\n')
+        # If length size_x has not been give, calculate the same
+        # as a calculation of the max sentence length
+        if size_x is None:
+            size_x = len(max(sentence_list, key=len)) + 4
+            # Add space for the input field
+            if popup_type == 'input':
+                size_x += input_size
+        # if height size_y has not been given, calculate this depending on
+        # the no of lines in sentence
+        if size_y is None:
+            size_y = len(sentence_list) + 4
+        # Calculate screen size
+        screen_x = self.term_window.getmaxyx()[1]
+        screen_y = self.term_window.getmaxyx()[0]
+        # Identify the centre position for the popup on the screen
+        pos_x = int((screen_x - size_x) / 2)
+        pos_y = int((screen_y - size_y) / 2)
+        # return sentence_list message to be displayed, x & y pos of popup,
+        # screen size in x, y and popup size in x, y
+        return sentence_list, pos_x, pos_y, screen_x, screen_y, size_x, size_y
+
     def display_popup(
         self,
         message,
@@ -902,22 +1028,14 @@ class _GlancesCurses:
          else set it automatically
          Return True (yes) or False (no)
         """
-        # Center the popup
-        sentence_list = message.split('\n')
-        if size_x is None:
-            size_x = len(max(sentence_list, key=len)) + 4
-            # Add space for the input field
-            if popup_type == 'input':
-                size_x += input_size
-        if size_y is None:
-            size_y = len(sentence_list) + 4
-        screen_x = self.term_window.getmaxyx()[1]
-        screen_y = self.term_window.getmaxyx()[0]
+        # Calculate the centre and content of the popup
+        sentence_list, pos_x, pos_y, screen_x, screen_y, size_x, size_y = self.get_popup_size(
+            message, size_x, size_y, popup_type, input_size
+        )
+
         if size_x > screen_x or size_y > screen_y:
-            # No size to display the popup => abord
+            # No size to display the popup => abort
             return False
-        pos_x = int((screen_x - size_x) / 2)
-        pos_y = int((screen_y - size_y) / 2)
 
         # Create the popup
         popup = curses.newwin(size_y, size_x, pos_y, pos_x)
@@ -930,64 +1048,93 @@ class _GlancesCurses:
             if m:
                 popup.addnstr(2 + y, 2, m, len(m))
 
+        # Popup is for 'info' ie display only
         if popup_type == 'info':
             # Display the popup
             popup.refresh()
             self.wait(duration * 1000)
             return True
 
+        # Popup accepts a input
         if popup_type == 'input':
             logger.info(popup_type)
             logger.info(is_password)
-            # Create a sub-window for the text field
-            sub_pop = popup.derwin(1, input_size, 2, 2 + len(m))
-            sub_pop.attron(self.colors_list['FILTER'])
-            # Init the field with the current value
-            if input_value is not None:
-                sub_pop.addnstr(0, 0, input_value, len(input_value))
-            # Display the popup
-            popup.refresh()
-            sub_pop.refresh()
-            # Create the textbox inside the sub-windows
-            self.set_cursor(2)
-            self.term_window.keypad(1)
-            if is_password:
-                textbox = getpass.getpass('')
-                self.set_cursor(0)
-                if textbox != '':
-                    return textbox
-                return None
+            return self._handle_input_popup(m, input_size, input_value, popup, is_password)
 
-            # No password
-            textbox = GlancesTextbox(sub_pop, insert_mode=True)
-            textbox.edit()
+        # Popup accepts a user input as Y or N for yes no
+        if popup_type == 'yesno':
+            return self._handle_yesno_popup(popup, sentence_list, m)
+        return None
+
+    def _handle_input_popup(self, m, input_size, input_value, popup, is_password):
+        # Create a single-line input sub-window positioned relative to the
+        # rendered message length (m) within the parent popup
+        sub_pop = popup.derwin(1, input_size, 2, 2 + len(m))
+        sub_pop.attron(self.colors_list['FILTER'])
+
+        # Pre-populate the field if an initial value is provided
+        if input_value is not None:
+            sub_pop.addnstr(0, 0, input_value, len(input_value))
+
+        # Render both the popup and input field before capturing input
+        popup.refresh()
+        sub_pop.refresh()
+
+        # Enable cursor visibility and keypad mode for user interaction
+        self.set_cursor(2)
+        self.term_window.keypad(1)
+
+        # Password input: bypass curses textbox and use standard terminal input
+        # (input is not displayed in the sub-window)
+        if is_password:
+            textbox = getpass.getpass('')
             self.set_cursor(0)
-            if textbox.gather() != '':
-                return textbox.gather()[:-1]
+            if textbox != '':
+                return textbox
             return None
 
-        if popup_type == 'yesno':
-            # Create a sub-window for the text field
-            sub_pop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)
-            sub_pop.attron(self.colors_list['FILTER'])
-            # Init the field with the current value
-            try:
-                sub_pop.addnstr(0, 0, '', 0)
-            except curses.error:
-                pass
-            # Display the popup
-            popup.refresh()
-            sub_pop.refresh()
-            # Create the textbox inside the sub-windows
-            self.set_cursor(2)
-            self.term_window.keypad(1)
-            textbox = GlancesTextboxYesNo(sub_pop, insert_mode=False)
-            textbox.edit()
-            self.set_cursor(0)
-            # self.term_window.keypad(0)
-            return textbox.gather()
+        # Standard text input using curses textbox within the sub-window
+        textbox = GlancesTextbox(sub_pop, insert_mode=True)
+        textbox.edit()
 
+        # Restore cursor state after input completes
+        self.set_cursor(0)
+
+        # Extract value; curses textbox appends a trailing newline, so strip it
+        if textbox.gather() != '':
+            return textbox.gather()[:-1]
         return None
+
+    def _handle_yesno_popup(self, popup, sentence_list, m):
+        # Create a 1x2 sub-window positioned after the last line of text;
+        # width/offset is based on the rendered message length (m)
+        sub_pop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)
+
+        # Apply input field styling (uses FILTER color scheme)
+        sub_pop.attron(self.colors_list['FILTER'])
+
+        # Initialize the field (defensive: curses may raise on small windows)
+        try:
+            sub_pop.addnstr(0, 0, '', 0)
+        except curses.error:
+            pass
+
+        # Ensure both parent popup and input field are rendered
+        popup.refresh()
+        sub_pop.refresh()
+
+        # Enable cursor + keypad for user input within the popup
+        self.set_cursor(2)
+        self.term_window.keypad(1)
+
+        # Create and run the Yes/No textbox (single-line input)
+        textbox = GlancesTextboxYesNo(sub_pop, insert_mode=False)
+        textbox.edit()
+
+        # Restore cursor state after input completes
+        self.set_cursor(0)
+        # Return the captured user input
+        return textbox.gather()
 
     def setup_upper_left_pos(self, plugin_stats):
         screen_y, screen_x = self.term_window.getmaxyx()
