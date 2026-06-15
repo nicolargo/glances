@@ -27,7 +27,7 @@ click==8.1.8
     # via uvicorn
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
-cryptography==48.0.0
+cryptography==49.0.0
     # via
     #   pyjwt
     #   pylxd
@@ -40,7 +40,7 @@ ecdsa==0.19.2
     # via python-jose
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.136.1
+fastapi==0.136.3
     # via glances
 h11==0.16.0
     # via
@@ -52,7 +52,7 @@ httpx==0.28.1
     # via mcp
 httpx-sse==0.4.3
     # via mcp
-idna==3.16
+idna==3.18
     # via
     #   anyio
     #   httpx
@@ -90,7 +90,7 @@ pydantic-settings==2.14.1
     # via mcp
 pyinstrument==5.1.2
     # via glances
-pyjwt==2.12.1
+pyjwt==2.13.0
     # via mcp
 pylxd==2.4.1
     # via glances
@@ -102,7 +102,7 @@ python-dotenv==1.2.2
     # via pydantic-settings
 python-jose==3.5.0
     # via glances
-python-multipart==0.0.29
+python-multipart==0.0.32
     # via mcp
 pywin32==311 ; sys_platform == 'win32'
     # via
@@ -121,7 +121,11 @@ requests==2.34.2
     #   requests-toolbelt
 requests-toolbelt==1.0.0
     # via pylxd
-rpds-py==0.30.0
+rpds-py==0.30.0 ; python_full_version < '3.11'
+    # via
+    #   jsonschema
+    #   referencing
+rpds-py==2026.5.1 ; python_full_version >= '3.11'
     # via
     #   jsonschema
     #   referencing
@@ -136,7 +140,7 @@ six==1.17.0
     #   python-dateutil
 sse-starlette==3.4.4
     # via mcp
-starlette==1.0.1
+starlette==1.3.1
     # via
     #   fastapi
     #   mcp
@@ -167,7 +171,7 @@ urllib3==2.7.0
     #   docker
     #   podman
     #   requests
-uvicorn==0.47.0
+uvicorn==0.49.0
     # via
     #   glances
     #   mcp
