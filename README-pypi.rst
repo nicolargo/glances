@@ -230,7 +230,7 @@ To install it, use the following command:
 
     pip install --user 'glances[web]'
 
-For a full installation (with all features, see features list bellow):
+For a full installation (with all features, see features list below):
 
 .. code-block:: console
 

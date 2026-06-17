@@ -972,7 +972,7 @@ class _GlancesCurses:
                     self.display_plugin(stat_display[p])
 
     def get_popup_size(self, message, size_x, size_y, popup_type, input_size):
-        # Split the message into lines (seperated by \n)
+        # Split the message into lines (separated by \n)
         sentence_list = message.split('\n')
         # If length size_x has not been give, calculate the same
         # as a calculation of the max sentence length
