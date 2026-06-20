@@ -78,6 +78,12 @@ RIGHT_SLOT: tuple[str, ...] = (
     "alert",
 )
 
+# In full-quicklook mode these TOP-slot plugins are hidden so quicklook
+# takes the full width. EXACT v4 parity: `enable_fullquicklook`
+# (glances/outputs/glances_curses.py:455) disables cpu/npu/mpp/gpu/mem/memswap
+# only — `load` and `percpu` stay visible.
+_FULL_QUICKLOOK_HIDDEN: frozenset[str] = frozenset({"cpu", "npu", "mpp", "gpu", "mem", "memswap"})
+
 
 def slot_for(plugin_name: str) -> str:
     """Return the layout slot for a plugin: 'header', 'top', 'left', or 'right'."""
@@ -717,6 +723,12 @@ def build_frame(
     """
     frame = Frame()
     for plugin_name, is_collection in registry:
+        if view and view.get("full_quicklook") and plugin_name in _FULL_QUICKLOOK_HIDDEN:
+            continue
+        if view and view.get("hide_quicklook") and plugin_name == "quicklook":
+            continue
+        if view and view.get("hide_memswap") and plugin_name == "memswap":
+            continue
         payload = store_snapshot.get(plugin_name) or {}
         fields_desc = fields_by_plugin.get(plugin_name, {})
 

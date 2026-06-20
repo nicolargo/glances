@@ -113,17 +113,30 @@ def _align_grid(rows: list[list[Cell]]) -> list[Row]:
     return aligned
 
 
-def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
+def render(
+    payload: dict[str, Any],
+    fields_desc: dict[str, dict[str, Any]],
+    view: dict[str, Any] | None = None,
+) -> list[Row]:
     """Render the cpu plugin's TUI block — mirrors v4 `cpu.msg_curse`.
 
     Args:
         payload: the cpu plugin's StatsStore payload (current cycle).
         fields_desc: the plugin's `fields_description` schema (with the
             base-class metadata fields merged in).
+        view: optional view contract. `cpu_cols` (int, default 3, clamped
+            to 1..3) selects how many of the 3 grid columns to render —
+            lower values shrink the block for narrow terminals. With
+            `cpu_cols` at its default the output is byte-identical to the
+            3-column layout.
 
     Returns:
         A list of `Row`s ready for the curses painter.
     """
+    # How many of the 3 grid columns to render (responsive degradation).
+    n_cols = int((view or {}).get("cpu_cols", 3))
+    n_cols = max(1, min(3, n_cols))
+
     # Cycle-0 / no data yet: show just the title.
     if not payload:
         return [Row(cells=[Cell(text="CPU", color=ColorRole.HEADER, bold=True)])]
@@ -139,21 +152,25 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         Cell(text="CPU", color=title_role(payload), bold=True),
         _cell_for_field("total", payload.get("total"), fields_desc.get("total", {}), payload),
     ]
-    if not idle_tag and payload.get("idle") is not None:
-        line1_cells += [
-            Cell(text="idle"),
-            _cell_for_field("idle", payload.get("idle"), fields_desc.get("idle", {}), payload),
-        ]
-    else:
-        # Keep the slot so column alignment lines up; placeholders.
-        line1_cells += [Cell(text=""), Cell(text="")]
-    if "ctx_switches" in payload:
-        line1_cells += [
-            Cell(text=field_label(fields_desc.get("ctx_switches", {}), "ctx_switches", prefer_short=True)),
-            _ctx_sw_value_cell(payload, fields_desc, "ctx_switches"),
-        ]
-    else:
-        line1_cells += [Cell(text=""), Cell(text="")]
+    # Line-1 col-2 pair (idle) — only when column 2 survives.
+    if n_cols >= 2:
+        if not idle_tag and payload.get("idle") is not None:
+            line1_cells += [
+                Cell(text="idle"),
+                _cell_for_field("idle", payload.get("idle"), fields_desc.get("idle", {}), payload),
+            ]
+        else:
+            # Keep the slot so column alignment lines up; placeholders.
+            line1_cells += [Cell(text=""), Cell(text="")]
+    # Line-1 col-3 pair (ctx_sw) — only when column 3 survives.
+    if n_cols >= 3:
+        if "ctx_switches" in payload:
+            line1_cells += [
+                Cell(text=field_label(fields_desc.get("ctx_switches", {}), "ctx_switches", prefer_short=True)),
+                _ctx_sw_value_cell(payload, fields_desc, "ctx_switches"),
+            ]
+        else:
+            line1_cells += [Cell(text=""), Cell(text="")]
 
     def _kl(key: str) -> tuple[str, str]:
         """(key, short-label) — pulls short_name → label → key from schema."""
@@ -203,8 +220,10 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         # Skip line 4 col 3 entirely if no key applies.
         row = []
         row += _stat_cells(payload, fields_desc, c1_key, c1_label) if c1_key else [Cell(text=""), Cell(text="")]
-        row += _stat_cells(payload, fields_desc, c2_key, c2_label) if c2_key else [Cell(text=""), Cell(text="")]
-        row += [Cell(text=c3_label), _col3_cell(c3_key)] if c3_key else [Cell(text=""), Cell(text="")]
+        if n_cols >= 2:
+            row += _stat_cells(payload, fields_desc, c2_key, c2_label) if c2_key else [Cell(text=""), Cell(text="")]
+        if n_cols >= 3:
+            row += [Cell(text=c3_label), _col3_cell(c3_key)] if c3_key else [Cell(text=""), Cell(text="")]
         grid_rows.append(row)
 
     return _align_grid(grid_rows)

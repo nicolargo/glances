@@ -86,20 +86,29 @@ def _align_grid(rows: list[list[Cell]]) -> list[Row]:
     return aligned
 
 
-def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
-    """Render the mem plugin's TUI block — mirrors v4 ``mem.msg_curse``."""
+def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], view: dict | None = None) -> list[Row]:
+    """Render the mem plugin's TUI block — mirrors v4 ``mem.msg_curse``.
+
+    ``view["mem_cols"]`` (default 2, clamped to 1..2) controls how many
+    grid columns are rendered. With ``mem_cols == 1`` the 2nd column
+    (inactive/buffers/cached) and the line-1 ``active`` pair are dropped,
+    and the block genuinely shrinks (no placeholder cells).
+    """
     if not payload:
         return [Row(cells=[Cell(text="MEM", color=ColorRole.HEADER, bold=True)])]
 
-    # Line 1: title + percent + active.
+    n_cols = min(max(int((view or {}).get("mem_cols", 2)), 1), 2)
+
+    # Line 1: title + percent (+ active pair only when col-2 survives).
     # Title colour reflects the worst prominent alert level in the payload.
     line1: list[Cell] = [
         Cell(text="MEM", color=title_role(payload), bold=True),
         _cell_for_field("percent", payload.get("percent"), fields_desc.get("percent", {}), payload),
     ]
-    line1 += _stat_pair(payload, fields_desc, "active")
+    if n_cols >= 2:
+        line1 += _stat_pair(payload, fields_desc, "active")
 
-    # Lines 2-4. Each row: col-1 pair + col-2 pair.
+    # Lines 2-4. Each row: col-1 pair (+ col-2 pair when n_cols >= 2).
     # Col 1 (line 2-4): total / (avail|used) / free
     # Col 2 (line 2-4): inactive / buffers / cached
     if "available" in payload and payload.get("available") is not None:
@@ -118,7 +127,8 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
     for c1_key, c2_key in rows_spec:
         row: list[Cell] = []
         row += _stat_pair(payload, fields_desc, c1_key)
-        row += _stat_pair(payload, fields_desc, c2_key)
+        if n_cols >= 2:
+            row += _stat_pair(payload, fields_desc, c2_key)
         grid.append(row)
 
     return _align_grid(grid)

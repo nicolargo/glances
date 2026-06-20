@@ -482,6 +482,112 @@ always present. Quicklook-enabled toggle deferred to G2+.)
 
 ---
 
+## quicklook
+
+**Source:** `glances/plugins/quicklook/__init__.py::msg_curse`
+
+**Note:** This is a v5-native composite (Phase 2 G2), not a generic-rendered
+plugin. The model re-collects its own stats and ships a dedicated pure
+renderer; the v4 behaviour below is the visual-parity contract.
+
+**Guard (v4):** returns empty if `not self.stats` or plugin is disabled.
+
+**Representative output (compact mode):**
+
+```
+Intel Core i7-8550U 2.00/4.00GHz
+CPU  [|||||         45.0%]
+MEM  [|||||||       62.0%]
+LOAD [||            18.0%]
+```
+
+**Representative output (per-core mode, `--percpu`, > 4 cores):**
+
+```
+CPU0 [||||||||      78.0%]
+CPU1 [||||          41.0%]
+CPU2 [|||           33.0%]
+CPU3 [||            20.0%]
+CPU* [|||           29.0%]
+```
+
+**Bar layout:** each metric is a label cell (`{:<4}` + space), a bold `[`
+bracket cell, the bar string, and a bold `]` bracket cell. The bar string
+is produced by the **pure v4 helper** `glances.outputs.glances_bars.Bar`
+(`bar_char="|"`), reused verbatim — it returns e.g. `"|||||    45.0%"`.
+
+**Bar width (v5):**
+- **Compact mode** (not `full_quicklook`), header present: bars **justify to
+  the header line width** — every bar row's painter-width equals the header
+  row's, floored to keep the inner bar usable on very short headers
+  (`_MIN_BAR_TOTAL`). When the header is replaced by `"Frequency"` (cascade
+  step d) the header shrinks, so every bar row shrinks with it.
+- **Compact mode, no header** (no `cpu_hz_current`): falls back to the default
+  compact column width.
+- **Full mode** (`full_quicklook`): bars use `view["quicklook_width"]`
+  (`max(20, max_x-8)`), unchanged — they span (almost) the whole terminal and
+  do not justify to a header.
+
+**Color logic:** bar colour = the field's alert level from
+`payload["_levels"][key]["level"]` mapped through
+`curses_renderer_v5._LEVEL_TO_ROLE` (`_role_for`). In per-core mode every
+row uses the aggregate `cpu` level.
+
+**Optional header row:** `<cpu_name> <cur>/<max>GHz` (or `<cur>GHz` when max
+is unknown), shown only when `cpu_hz_current` is present. Name painted as
+`HEADER`. Mirrors v4 `msg_curse` lines 211–228.
+
+**v5 model:** `glances/plugins/quicklook/model_v5.py`
+
+- Scalar composite (`IS_COLLECTION = False`). Watched percent fields
+  `cpu` / `mem` / `swap` / `load`, plus the per-core list `percpu` and the
+  CPU metadata `cpu_name` / `cpu_hz_current` / `cpu_hz` / `cpu_log_core` /
+  `cpu_phys_core`.
+- `cpu` and `percpu` come from the v5-native shared sampler
+  `glances.cpu_sampler_v5.sampler` (`get_aggregate` / `get_per_core`),
+  exactly like the `cpu` / `percpu` plugins. `mem` / `swap` / `load` and
+  the CPU metadata come from `psutil` (each call independently guarded,
+  `_collect_sync` run via `asyncio.to_thread`). **No import from any v4
+  plugin module.**
+- `load` is the 15-min average normalised by logical core count
+  (`load15 / cpu_log_core * 100`). `mem` is plain
+  `(total - available) / total` (no ZFS arc adjustment — see scope cuts).
+
+**Internal fields reach the renderer:** `percpu`, `cpu_name`, `cpu_hz*` and
+the core counts are declared `internal: True, watched: False`. They are
+excluded from level computation and from the generic renderer, but remain
+present in the payload handed to `render_curses_v5.render`.
+
+**view contract:** the renderer reads three keys seeded by
+`TuiV5._build_view(max_x)` (`glances/outputs/glances_curses_v5.py`):
+
+| key | type | meaning |
+|---|---|---|
+| `view["percpu"]` | bool | replace the CPU bar with per-core bars |
+| `view["full_quicklook"]` | bool | full-width mode (wider bars) |
+| `view["quicklook_width"]` | int | target bar cell width (`max(20, max_x-8)` in full mode, else compact column width) |
+
+**Per-core mode** (`_per_cpu_rows`): show the top 4 cores by `total`
+(`_DEFAULT_MAX_CPU_DISPLAY`), then a `CPU*` row whose value is the **mean of
+the hidden / overflow cores** (not the displayed ones) — exact v4 Bar-path
+parity (`__init__.py` lines 322–324).
+
+**full-quicklook:** the `4` hotkey toggles `TuiV5._full_quicklook`;
+`build_frame` then hides the TOP-slot siblings in
+`curses_renderer_v5._FULL_QUICKLOOK_HIDDEN` = `{cpu, npu, mpp, gpu, mem,
+memswap}` (exact v4 `enable_fullquicklook` parity — `load` and `percpu`
+stay visible). The CLI flags `--full-quicklook` / `--percpu` seed the
+initial `_full_quicklook` / `_percpu` state.
+
+**Explicit scope cuts (G2):**
+- **No GPU** section — deferred to G4A with the gpu plugin.
+- **No sparkline** — no v5 history store yet; bars only.
+- **No ZFS** arc adjustment on `mem` — plain `(total-available)/total`.
+
+✅ **v5 renderer:** `glances/plugins/quicklook/render_curses_v5.py`
+
+---
+
 ## processcount
 
 **Source:** `glances/plugins/processcount/__init__.py::msg_curse`
@@ -572,6 +678,76 @@ arguments. Top-20 rows, engine sort hardcoded to `cpu_percent` desc,
 no extended view, no programs aggregation, no filter UI — these
 come back with the v5 argv/config plumbing in G5.)
 
+### Responsive columns (`view["proclist_width"]`)
+
+v5-specific behaviour with no v4 helper equivalent: the processlist lives in
+the RIGHT sidebar, and on a narrow terminal the full 12-fixed-column prefix
+crowds out the flexible `Command` column. The renderer drops low-priority
+fixed columns until `Command` is readable again.
+
+**The `view["proclist_width"]` contract:** the painter tells the renderer the
+exact width it will be painted at — the right-sidebar paint width. It is
+seeded by `TuiV5._fit_proclist_width` (`glances/outputs/glances_curses_v5.py`)
+as:
+
+```
+view["proclist_width"] = max_x - _sidebar_split(frame, max_x) - _SIDEBAR_SEPARATOR_GAP
+```
+
+This mirrors the `_paint` geometry exactly (`right_x = left_width +
+_SIDEBAR_SEPARATOR_GAP`). `left_width` depends only on `frame.left` natural
+widths — never on processlist's own columns — so one extra rebuild settles the
+value (no oscillation). `_fit_proclist_width` is a no-op (and skips the
+rebuild) when no processlist block is present, so the rest of the layout and
+wide terminals are unaffected.
+
+**Drop cascade (`_DROP_ORDER`, a→h):** columns are dropped one at a time, in
+this fixed maintainer-spec order, until `Command` fits:
+
+| step | column |
+|---|---|
+| (a) | VIRT |
+| (b) | TIME+ |
+| (c) | RES |
+| (d) | USER |
+| (e) | PID |
+| (f) | THR |
+| (g) | S |
+| (h) | NI |
+
+**Never dropped:** `CPU%`, `MEM%`, `R/s`, `W/s`, `Command`. These always
+survive — `CPU%`/`MEM%` are the primary signal, `R/s`/`W/s` the IO pair, and
+`Command` is the flexible column the whole cascade protects.
+
+**Drop rule (`_visible_fixed_keys`):** drop columns in `_DROP_ORDER` until the
+space left for `Command` is at least `_MIN_COMMAND_WIDTH` (= 8) characters, or
+all droppable columns are gone. The space accounts for the painter's
+inter-cell separators and the dynamic PID width (`_pid_width`, which scales
+with the widest PID).
+
+**Header + rows stay consistent:** the visible-column set is computed once per
+`render` call, then both the header row and every data row are filtered through
+the same `active_set` (`_filter_fixed`). So the header and the rows always drop
+the *same* columns and stay aligned.
+
+**Default (no width) keeps all columns:** when `view["proclist_width"]` is
+absent or not an `int` (export, tests, callers that pass no `view`), the
+renderer keeps all 12 fixed columns — byte-identical to the historical output
+(locked by `test_no_width_keeps_all_columns`). No regression for non-TUI
+consumers.
+
+**Measure-driven, not threshold-driven:** the visible set is computed from the
+*real* right-sidebar width, not a hard-coded column-count breakpoint. Crucially
+`_fit_proclist_width` runs at **both** `_build_fitted_frame` return points — the
+early return (TOP row already fits, wide terminal) and the post-cascade return
+— so the processlist is fitted to its sidebar width even when the TOP row never
+needed degrading.
+
+✅ **v5 renderer:** `glances/plugins/processlist/render_curses_v5.py`
+(`_DROP_ORDER`, `_FIXED_COL_KEYS`, `_MIN_COMMAND_WIDTH`,
+`_visible_fixed_keys`, `_filter_fixed`). Width seeded by
+`glances/outputs/glances_curses_v5.py::_fit_proclist_width`.
+
 ---
 
 ## system
@@ -636,3 +812,94 @@ exactly 23 characters (`'{:23}'.format(...)`) — fixed-width to pad
 cleanly against the right edge of the header row.
 
 > ✅ v5: `glances/plugins/now/render_curses_v5.py` (Phase 2 G1). Left-sidebar block.
+
+---
+
+## TOP-row responsive degradation
+
+v5-specific layout behaviour (no v4 equivalent helper, but it reproduces the v4
+*visual outcome*: the TOP plugin row never lets curses clip the rightmost block,
+LOAD). Implemented in `glances/outputs/glances_curses_v5.py`.
+
+**Problem:** the TOP slot stacks several blocks side by side (quicklook, cpu,
+mem, memswap, load…). On a narrow terminal their combined natural width exceeds
+`max_x`; the painter would collapse the inter-block gaps to `_TOP_GAP_MIN` and
+curses would clip the last block (LOAD). The degradation cascade drops detail
+from the *less important* blocks first so LOAD always survives.
+
+**view flags** (seeded with defaults that preserve today's wide-terminal output
+byte-for-byte — no regression):
+
+| key | type | default | meaning |
+|---|---|---|---|
+| `view["cpu_cols"]` | int | `3` | CPU grid columns to render (`3`→`2`→`1`) |
+| `view["mem_cols"]` | int | `2` | MEM grid columns to render (`2`→`1`) |
+| `view["quicklook_freq_only"]` | bool | `False` | quicklook header shows `"Frequency"` instead of the CPU name; compact bars shrink to match |
+| `view["hide_quicklook"]` | bool | `False` | `build_frame` skips the quicklook block |
+| `view["hide_memswap"]` | bool | `False` | `build_frame` skips the memswap (swap) block |
+
+**Cascade order (`_DEGRADE_STEPS`):** an ordered list applied one notch at a
+time until the row fits. Drop the least-important detail first; hide a whole
+block only as a last resort. `cpu_cols=1` subsumes the col-3 drop, so (b)
+(`cpu_cols=2`) is tried before (c) (`cpu_cols=1`):
+
+| step | mutation | effect |
+|---|---|---|
+| (a) | `mem_cols = 1` | hide MEM's 2nd column |
+| (b) | `cpu_cols = 2` | hide CPU's 3rd column |
+| (c) | `cpu_cols = 1` | hide CPU's 2nd column |
+| (d) | `quicklook_freq_only = True` | replace the CPU name with `"Frequency"` and shrink the quicklook block |
+| (e) | `hide_quicklook = True` | hide the quicklook block |
+| (f) | `hide_memswap = True` | hide the swap block |
+| (g) | _planned (G4A)_ `hide_gpu = True` | hide the gpu block — the very last resort, once the gpu plugin joins the TOP row |
+
+> **Planned (G4A — gpu):** the gpu plugin will insert into the TOP row. The cascade must then extend with step **(g)** `hide_gpu` _after_ (f), and `build_frame` must gain a matching `hide_gpu` guard (mirroring `hide_quicklook` / `hide_memswap`). Not added yet — it would be dead code without the gpu plugin.
+
+**Fit rule (`_top_fits`):** mirrors the painter's own layout test exactly — the
+TOP row fits iff
+
+```
+sum(block.width for block in frame.top) + (n - 1) * _TOP_GAP_MIN <= max_x
+```
+
+where `n` is the number of TOP blocks and `_TOP_GAP_MIN` (= `1`) is the minimum
+inter-block gap. An empty TOP row trivially fits.
+
+**The loop (`_build_fitted_frame`):**
+1. Build the per-cycle `view` (`_build_view(max_x)`) and the frame
+   (`_frame_for_view(view)`).
+2. If `full_quicklook` is active, or the frame already fits (`_top_fits`),
+   return it as-is — wide terminals take this early return and do exactly one
+   `build_frame` call, byte-identical to today.
+3. Otherwise walk `_DEGRADE_STEPS`, setting one flag at a time, rebuilding the
+   frame (`_frame_for_view`) and re-measuring after each step; stop as soon as
+   `_top_fits` is satisfied (or all steps are exhausted).
+
+`full_quicklook` mode is exempt from the cascade: it already owns the whole
+width via its own sibling-hiding (`_FULL_QUICKLOOK_HIDDEN`).
+
+**Measure-driven, not threshold-driven:** the cascade keys on the *real*
+`PluginBlock.width` of the rebuilt frame, not on fixed column-count thresholds.
+Because the natural widths include the CPU brand-name length, the cascade adapts
+automatically to a long CPU name (a wide quicklook header pushes the row over
+`max_x` sooner) rather than triggering at a hard-coded width. `build_frame` is
+pure and cheap, so calling it a handful of times per paint cycle to measure is
+negligible at the 2 s refresh rate (wide terminals call it once).
+
+**Cost:** up to 7 `build_frame` calls on a too-narrow cycle (1 initial + 6
+cascade steps); exactly 1 on a wide terminal.
+
+**Residual limit:** the cascade guarantees a fit for any realistic terminal
+width, but since cpu/mem/load are never hidden (LOAD is intentionally
+protected), a terminal narrower than the fully-degraded row — `cpu` (1 col) +
+`mem` (1 col) + `load`, below ~38 cols, far under any real terminal — will
+still let curses clip.
+
+✅ **v5 painter:** `glances/outputs/glances_curses_v5.py`
+(`_DEGRADE_STEPS`, `_build_fitted_frame`, `_top_fits`, `_frame_for_view`,
+`_build_view`, `_TOP_GAP_MIN`). Per-flag rendering lives in
+`glances/plugins/cpu/render_curses_v5.py` (`cpu_cols`),
+`glances/plugins/mem/render_curses_v5.py` (`mem_cols`),
+`glances/plugins/quicklook/render_curses_v5.py` (`quicklook_freq_only` +
+justify), and `glances/outputs/curses_renderer_v5.py::build_frame`
+(`hide_quicklook` / `hide_memswap`).

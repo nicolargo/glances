@@ -791,6 +791,92 @@ def test_build_frame_full_layout():
     assert [b.name for b in frame.right] == ["alert"]
 
 
+def test_full_quicklook_hides_top_siblings():
+    """In full-quicklook mode, TOP-slot siblings cpu/mem are hidden so
+    quicklook spans the full width; quicklook itself and LEFT plugins stay.
+
+    EXACT v4 parity (`enable_fullquicklook`, glances_curses.py:455): only
+    cpu/npu/mpp/gpu/mem/memswap are disabled — `load` and `percpu` MUST
+    stay visible. Hiding them would be a regression.
+    """
+    store_snapshot = {
+        "quicklook": {"cpu": 12.0, "_levels": {"cpu": {"level": "ok"}}},
+        "cpu": {"percent": 25.0, "_levels": {"percent": {"level": "ok"}}},
+        "percpu": {"data": []},
+        "mem": _mem_payload(),
+        "load": {"min1": 0.5, "_levels": {}},
+        "network": _network_payload(),
+    }
+    fields_by_plugin = {
+        "quicklook": {"cpu": {"unit": "percent", "label": "CPU", "watched": True}},
+        "cpu": {"percent": {"unit": "percent", "label": "CPU", "watched": True}},
+        "percpu": {"cpu_number": {"unit": "number", "primary_key": True}},
+        "mem": MEM_FIELDS,
+        "load": {"min1": {"unit": "number", "label": "1 min", "watched": True}},
+        "network": NETWORK_FIELDS,
+    }
+    registry = [
+        ("quicklook", False),
+        ("cpu", False),
+        ("percpu", True),
+        ("mem", False),
+        ("load", False),
+        ("network", True),
+    ]
+
+    frame = build_frame(
+        store_snapshot,
+        fields_by_plugin,
+        registry,
+        alerts_history=[],
+        view={"full_quicklook": True},
+    )
+
+    top_names = [b.name for b in frame.top]
+    # v4 parity: quicklook stays, and so do load + percpu.
+    assert "quicklook" in top_names
+    assert "load" in top_names
+    assert "percpu" in top_names
+    # cpu/mem are the hidden siblings.
+    assert "cpu" not in top_names
+    assert "mem" not in top_names
+    assert [b.name for b in frame.left] == ["network"]
+
+
+def test_no_full_quicklook_keeps_all_top():
+    """Without full-quicklook, all TOP-slot plugins are rendered as usual."""
+    store_snapshot = {
+        "quicklook": {"cpu": 12.0, "_levels": {"cpu": {"level": "ok"}}},
+        "cpu": {"percent": 25.0, "_levels": {"percent": {"level": "ok"}}},
+        "mem": _mem_payload(),
+        "network": _network_payload(),
+    }
+    fields_by_plugin = {
+        "quicklook": {"cpu": {"unit": "percent", "label": "CPU", "watched": True}},
+        "cpu": {"percent": {"unit": "percent", "label": "CPU", "watched": True}},
+        "mem": MEM_FIELDS,
+        "network": NETWORK_FIELDS,
+    }
+    registry = [
+        ("quicklook", False),
+        ("cpu", False),
+        ("mem", False),
+        ("network", True),
+    ]
+
+    frame = build_frame(
+        store_snapshot,
+        fields_by_plugin,
+        registry,
+        alerts_history=[],
+        view={"full_quicklook": False},
+    )
+
+    top_names = [b.name for b in frame.top]
+    assert top_names == ["quicklook", "cpu", "mem"]
+    assert [b.name for b in frame.left] == ["network"]
+
+
 def test_build_frame_handles_missing_plugin_payload():
     """A plugin in the registry but absent from the store (cycle-0)."""
     frame = build_frame(
@@ -1066,3 +1152,28 @@ def test_build_frame_routes_system_and_uptime_to_header():
     assert "uptime" not in [b.name for b in frame.top + frame.left + frame.right]
     # cpu still lands in the top row.
     assert "cpu" in [b.name for b in frame.top]
+
+
+# --------------------------------------------------------------- hide_* skip guards
+
+
+def test_hide_quicklook_skips_block():
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    registry = [("quicklook", False), ("cpu", False), ("mem", False)]
+    store = {n: {"_levels": {}} for n, _ in registry}
+    fields = {n: {} for n, _ in registry}
+    frame = build_frame(store, fields, registry, [], view={"hide_quicklook": True})
+    names = [b.name for b in frame.top]
+    assert "quicklook" not in names and "cpu" in names and "mem" in names
+
+
+def test_hide_memswap_skips_block():
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    registry = [("quicklook", False), ("memswap", False), ("cpu", False)]
+    store = {n: {"_levels": {}} for n, _ in registry}
+    fields = {n: {} for n, _ in registry}
+    frame = build_frame(store, fields, registry, [], view={"hide_memswap": True})
+    names = [b.name for b in frame.top]
+    assert "memswap" not in names and "quicklook" in names and "cpu" in names

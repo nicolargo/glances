@@ -235,3 +235,44 @@ def test_render_uses_header_role_for_cpu_title(cpu_payload_linux, cpu_fields):
     first_cell = rows[0].cells[0]
     assert first_cell.color == ColorRole.HEADER
     assert "CPU" in first_cell.text
+
+
+# ---------------------------------------------------------- responsive cols
+#
+# NOTE (adapted from the plan): the `cpu_fields` fixture declares
+# `short_name: "inter"` for `interrupts`, so the rendered col-3 label is
+# "inter", not "interrupts". We key the column-3 detection off the
+# unambiguous col-3 labels actually emitted by the fixture: "sw_int"
+# (soft_interrupts), "guest", and the line-1 "ctx_sw" pair.
+
+
+def test_cpu_cols_2_drops_third_column(cpu_payload_linux, cpu_fields):
+    full = render(cpu_payload_linux, cpu_fields)
+    two = render(cpu_payload_linux, cpu_fields, view={"cpu_cols": 2})
+    full_text = "\n".join("".join(c.text for c in r.cells) for r in full)
+    two_text = "\n".join("".join(c.text for c in r.cells) for r in two)
+    # Column 3 labels (interrupts / soft_interrupts / ctx_switches / guest)
+    # gone. The fixture emits these as "inter"/"sw_int"/"guest"/"ctx_sw".
+    for label in ("sw_int", "guest", "ctx_sw"):
+        assert label in full_text
+        assert label not in two_text
+    # Column 1 + 2 survive.
+    assert "user" in two_text and "irq" in two_text
+    # Narrower block.
+    assert max(len(r) for r in two_text.splitlines()) < max(len(r) for r in full_text.splitlines())
+
+
+def test_cpu_cols_1_keeps_only_first_column(cpu_payload_linux, cpu_fields):
+    one = render(cpu_payload_linux, cpu_fields, view={"cpu_cols": 1})
+    text = "\n".join("".join(c.text for c in r.cells) for r in one)
+    assert "user" in text  # col1 stays
+    assert "irq" not in text  # col2 gone
+    assert "sw_int" not in text  # col3 gone
+    assert "guest" not in text  # col3 gone
+    assert "ctx_sw" not in text  # line-1 col3 pair gone
+    assert "idle" not in text  # line-1 col2 pair gone
+    assert "CPU" in text and "%" in text  # title + total stay
+
+
+def test_cpu_default_is_three_columns(cpu_payload_linux, cpu_fields):
+    assert render(cpu_payload_linux, cpu_fields) == render(cpu_payload_linux, cpu_fields, view={"cpu_cols": 3})

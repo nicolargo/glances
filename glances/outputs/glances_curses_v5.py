@@ -50,6 +50,26 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+# Ordered TOP-row degradation cascade (a→f). Each entry mutates the per-cycle
+# ``view`` dict by one notch; the loop in ``_build_fitted_frame`` applies them
+# one at a time until the row fits ``max_x``. The order is the maintainer's v4
+# spec: drop the least-important detail first (MEM 2nd column) and only hide a
+# whole block (quicklook, then swap) as a last resort. ``cpu_cols=1`` subsumes
+# the col-3 drop, so step (b) (cpu_cols=2) is tried before (c) (cpu_cols=1).
+_DEGRADE_STEPS: list[tuple[str, Any]] = [
+    ("mem_cols", 1),  # (a) hide MEM 2nd column
+    ("cpu_cols", 2),  # (b) hide CPU 3rd column
+    ("cpu_cols", 1),  # (c) hide CPU 2nd column
+    ("quicklook_freq_only", True),  # (d) "Frequency" header + shrink quicklook
+    ("hide_quicklook", True),  # (e) hide quicklook block
+    ("hide_memswap", True),  # (f) hide swap block
+    # TODO(G4A — gpu): when the gpu plugin is ported it joins the TOP row;
+    # append ("hide_gpu", True) here as step (g) — the last resort, after
+    # swap — and add a matching `hide_gpu` guard in build_frame (mirror the
+    # hide_quicklook / hide_memswap guards in curses_renderer_v5.py).
+]
+
+
 # Map our renderer ColorRole → curses color pair index.
 # Filled in `_init_colors` once curses is initialised.
 _COLOR_PAIRS: dict[ColorRole, int] = {}
@@ -112,6 +132,7 @@ class TuiV5(threading.Thread):
         "o": {"sort": "cpu_num", "group": "SORT PROCESSES", "desc": "By CPU core number"},
         # View toggles.
         "1": {"switch": "show_percpu", "group": "TOGGLE VIEW", "desc": "Per-CPU / aggregated CPU"},
+        "4": {"action": "full_quicklook", "group": "TOGGLE VIEW", "desc": "Full quicklook (hide cpu/mem/load)"},
         "/": {"switch": "process_short_name", "group": "TOGGLE VIEW", "desc": "Short / full process name"},
         "j": {"switch": "programs", "group": "TOGGLE VIEW", "desc": "Threads / programs view"},
         # Misc / control.
@@ -142,6 +163,8 @@ class TuiV5(threading.Thread):
         fields_by_plugin: dict[str, dict[str, dict[str, Any]]],
         refresh_interval: float = 1.0,
         on_quit: Callable[[], None] | None = None,
+        full_quicklook: bool = False,
+        percpu: bool = False,
     ) -> None:
         super().__init__(name="glances-tui-v5", daemon=True)
         self.store = store
@@ -165,6 +188,13 @@ class TuiV5(threading.Thread):
         # driven by the hotkey dispatch table. The process sort key is
         # held by the ``glances_processes`` engine, not here.
         self._view = ViewState()
+        # Quicklook view options. ``_full_quicklook`` is also toggled live by
+        # the ``4`` hotkey; ``_percpu`` selects per-core bars inside the
+        # quicklook block (distinct from ``_view.show_percpu``, which swaps the
+        # whole cpu/percpu TOP block). Seeded from the CLI flags --full-quicklook
+        # / --percpu (wired in main_v5.assemble).
+        self._full_quicklook = bool(full_quicklook)
+        self._percpu = bool(percpu)
         # Vertical scroll offset of the help overlay (rows). Reset to 0 each
         # time the overlay is opened; clamped to the content in ``_paint_help``
         # (which is the only place that knows the terminal height).
@@ -184,13 +214,22 @@ class TuiV5(threading.Thread):
         - ``"quit"``    — ``q`` / ESC: the loop should shut down.
         - ``"changed"`` — a mapped key mutated the view state or sort key
           (the caller should repaint, rate-limited).
-        - ``"repaint"`` — a help-overlay key (open / close / scroll): the
-          caller should repaint *immediately*, bypassing the key throttle
-          (the help frame is static and cheap to rebuild).
+        - ``"repaint"`` — a help-overlay key (open / close / scroll) or a
+          terminal resize (``curses.KEY_RESIZE``): the caller should repaint
+          *immediately*, bypassing the key throttle (the help frame is static
+          and cheap to rebuild; a resize must reflow to the new dimensions at
+          once).
         - ``"ignored"`` — unmapped key / non-character: no state change.
 
         Pure (no curses I/O) so it can be unit-tested without a terminal.
         """
+        # Terminal resize (SIGWINCH → curses.KEY_RESIZE): force an immediate
+        # repaint so the layout reflows to the new dimensions without waiting
+        # for the next refresh cycle. Handled before the help check so it works
+        # in every mode; it must not close the help overlay.
+        if key == curses.KEY_RESIZE:
+            return "repaint"
+
         # While the help overlay is open it captures every key: scrolling and
         # closing only — q / ESC / h close the help instead of quitting.
         if self._view.show_help:
@@ -213,6 +252,12 @@ class TuiV5(threading.Thread):
                 self._view.show_help = True
                 self._help_scroll = 0
                 return "repaint"
+            if verb == "full_quicklook":
+                # v4 ``_handle_quicklook`` parity: toggle full-width quicklook
+                # (hides cpu/mem/load TOP siblings). A stats-view mutation, so
+                # it returns ``"changed"`` like the other view switches.
+                self._full_quicklook = not self._full_quicklook
+                return "changed"
             return "ignored"
         if "switch" in action:
             attr = action["switch"]
@@ -376,13 +421,30 @@ class TuiV5(threading.Thread):
         if self._view.show_help:
             self._paint_help(stdscr)
         else:
-            frame = self._build_frame()
+            _, max_x = stdscr.getmaxyx()
+            frame = self._build_fitted_frame(max_x)
             self._paint(stdscr, frame)
         stdscr.refresh()
 
     # ----------------------------------------------------------- helpers
 
-    def _build_frame(self) -> Frame:
+    # Default terminal width used when ``_build_frame`` is called without an
+    # explicit one (unit tests that exercise frame assembly headless).
+    _DEFAULT_MAX_X = 80
+
+    def _build_frame(self, max_x: int | None = None) -> Frame:
+        if max_x is None:
+            max_x = self._DEFAULT_MAX_X
+        return self._frame_for_view(self._build_view(max_x))
+
+    def _frame_for_view(self, view: dict[str, Any]) -> Frame:
+        """Build a :class:`Frame` from a fully-assembled ``view`` dict.
+
+        Pure with respect to the view: the same ``view`` always yields an
+        equivalent frame (modulo the live store snapshot), so the fitted-frame
+        loop can call it repeatedly with escalating degradation flags to
+        measure the resulting TOP-row width.
+        """
         snapshot = self.store.as_dict()
         # Re-sort the process collections by the engine's *current* sort key
         # so a key change is reflected on the very next repaint, without
@@ -399,7 +461,7 @@ class TuiV5(threading.Thread):
             registry=self.registry,
             alerts_history=history,
             alerts_initializing=initializing,
-            view=self._render_view(),
+            view=view,
         )
         # CPU ↔ perCPU mutual exclusion (v4 parity, hotkey '1').
         hidden_top = "cpu" if self._view.show_percpu else "percpu"
@@ -408,6 +470,60 @@ class TuiV5(threading.Thread):
         # show exactly one of processlist / programlist.
         hidden_right = "processlist" if self._view.programs else "programlist"
         frame.right = [b for b in frame.right if b.name != hidden_right]
+        return frame
+
+    def _top_fits(self, frame: Frame, max_x: int) -> bool:
+        """True iff the painter can lay the TOP row out without clipping.
+
+        Mirrors ``_paint_top_row``'s fit test exactly: the row fits when the
+        sum of the block widths plus the minimum inter-block gaps is within
+        ``max_x``. An empty TOP row trivially fits.
+        """
+        widths = [b.width for b in frame.top]
+        if not widths:
+            return True
+        return sum(widths) + (len(widths) - 1) * self._TOP_GAP_MIN <= max_x
+
+    def _build_fitted_frame(self, max_x: int) -> Frame:
+        """Build the frame, degrading the TOP row (a→f) until it fits ``max_x``.
+
+        Measure-driven (not threshold-driven): rebuilds the pure, cheap frame
+        with one extra degradation flag at a time and re-measures the real
+        ``PluginBlock.width`` until ``_top_fits`` is satisfied. Wide terminals
+        take the early return (one ``build_frame`` call, byte-identical output).
+        Full-quicklook mode already owns the whole width via its own
+        sibling-hiding, so it is exempt from the cascade.
+        """
+        view = self._build_view(max_x)
+        frame = self._frame_for_view(view)
+        if self._full_quicklook or self._top_fits(frame, max_x):
+            return self._fit_proclist_width(view, frame, max_x)
+        for key, val in _DEGRADE_STEPS:
+            view[key] = val
+            frame = self._frame_for_view(view)
+            if self._top_fits(frame, max_x):
+                break
+        return self._fit_proclist_width(view, frame, max_x)
+
+    def _fit_proclist_width(self, view: dict[str, Any], frame: Frame, max_x: int) -> Frame:
+        """Tell the processlist renderer the width it will be painted at.
+
+        The processlist lives in the RIGHT sidebar, painted at
+        ``right_width = max_x - left_width - _SIDEBAR_SEPARATOR_GAP`` (mirrors
+        ``_paint``). Feeding that as ``view["proclist_width"]`` lets the renderer
+        drop low-priority columns to keep ``Command`` readable. ``left_width``
+        depends only on ``frame.left`` natural widths — NOT on processlist's own
+        columns — so a single extra rebuild settles the width. No-op (and no
+        rebuild) when no processlist block is present, so wide terminals and
+        the rest of the layout are unaffected.
+        """
+        if not any(b.name == "processlist" for b in frame.right):
+            return frame
+        left_width = self._sidebar_split(frame, max_x)
+        right_width = max(0, max_x - left_width - self._SIDEBAR_SEPARATOR_GAP)
+        if right_width and view.get("proclist_width") != right_width:
+            view["proclist_width"] = right_width
+            frame = self._frame_for_view(view)
         return frame
 
     # Process collections re-sorted live in the TUI so a sort hotkey takes
@@ -452,6 +568,25 @@ class TuiV5(threading.Thread):
             "sort_key": getattr(glances_processes, "sort_key", None),
             "auto_sort": getattr(glances_processes, "auto_sort", None),
         }
+
+    # Compact-mode target width (cells) for the quicklook bars — a single
+    # TOP-slot column. Full mode widens them to (almost) the whole terminal.
+    _QUICKLOOK_COMPACT_WIDTH = 38
+
+    def _build_view(self, max_x: int) -> dict[str, Any]:
+        """Assemble the per-cycle ``view`` dict passed to ``build_frame``.
+
+        Extends ``_render_view`` (process switches + engine sort) with the
+        quicklook keys consumed by ``build_frame`` (``full_quicklook``
+        hides TOP siblings) and the quicklook renderer (``percpu`` draws
+        per-core bars, ``quicklook_width`` sizes them). ``max_x`` is the
+        terminal width, known only at paint time."""
+        view = self._render_view()
+        view["full_quicklook"] = self._full_quicklook
+        view["percpu"] = self._percpu
+        # Full mode: bars span (almost) the whole width; compact: a column.
+        view["quicklook_width"] = max(20, max_x - 8) if self._full_quicklook else self._QUICKLOOK_COMPACT_WIDTH
+        return view
 
     # ----------------------------------------------------------- paint
 

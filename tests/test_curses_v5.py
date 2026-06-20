@@ -483,6 +483,109 @@ def test_tui_v5_handle_key_quit(fake_store, fake_alerts, fake_config):
     assert tui._handle_key(ord("z")) == "ignored"
 
 
+def test_tui_v5_key_4_toggles_full_quicklook(fake_store, fake_alerts, fake_config):
+    """Pressing '4' flips `_full_quicklook` (off → on → off), v4 parity."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._full_quicklook is False
+    assert tui._handle_key(ord("4")) == "changed"
+    assert tui._full_quicklook is True
+    assert tui._handle_key(ord("4")) == "changed"
+    assert tui._full_quicklook is False
+
+
+def test_tui_v5_cli_flags_seed_quicklook_state(fake_store, fake_alerts, fake_config):
+    """`--full-quicklook` / `--percpu` reach the TUI via the constructor params
+    (wired in main_v5.assemble) instead of being parsed-but-dropped dead code."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("mem", False)],
+        fields_by_plugin={"mem": {}},
+        refresh_interval=0.01,
+        full_quicklook=True,
+        percpu=True,
+    )
+    assert tui._full_quicklook is True
+    assert tui._percpu is True
+
+    # Default construction (no flags) keeps both off (v4 defaults).
+    default_tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("mem", False)],
+        fields_by_plugin={"mem": {}},
+        refresh_interval=0.01,
+    )
+    assert default_tui._full_quicklook is False
+    assert default_tui._percpu is False
+
+
+def test_tui_v5_build_view_carries_quicklook_flags(fake_store, fake_alerts, fake_config):
+    """The assembled view dict carries `full_quicklook`, `percpu`, and an int
+    `quicklook_width` for the renderer / build_frame to consume."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._full_quicklook = True
+    tui._percpu = True
+    view = tui._build_view(max_x=120)
+    assert view["full_quicklook"] is True
+    assert view["percpu"] is True
+    assert isinstance(view["quicklook_width"], int)
+    # Full mode widens the bars to (almost) the whole terminal.
+    assert view["quicklook_width"] == max(20, 120 - 8)
+    # Compact mode falls back to a single-column width.
+    tui._full_quicklook = False
+    assert tui._build_view(max_x=120)["quicklook_width"] == tui_mod.TuiV5._QUICKLOOK_COMPACT_WIDTH
+
+
+def test_tui_v5_full_quicklook_hides_siblings_end_to_end(fake_store, fake_alerts, fake_config):
+    """End-to-end: with `_full_quicklook` on, `_build_frame(max_x)` drives the
+    real chain (_build_view → build_frame) and the hidden TOP siblings
+    (cpu/mem) vanish while quicklook stays. Proves the flag flows all the way
+    through, not just the literal-view shortcut. v4 parity: `load` stays."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    fake_store.as_dict.return_value = {
+        "quicklook": {"cpu": 12.0, "_levels": {}},
+        "cpu": {"total": 5.0, "_levels": {}},
+        "mem": {"percent": 72.0, "_levels": {}},
+        "load": {"min1": 0.5, "_levels": {}},
+    }
+    tui = _make_tui(
+        tui_mod,
+        fake_store,
+        fake_alerts,
+        fake_config,
+        registry=[
+            ("quicklook", False),
+            ("cpu", False),
+            ("mem", False),
+            ("load", False),
+        ],
+        fields_by_plugin={
+            "quicklook": {"cpu": {"unit": "percent", "label": "CPU", "watched": True}},
+            "cpu": {"total": {"unit": "percent", "label": "CPU", "watched": True}},
+            "mem": {"percent": {"unit": "percent", "label": "MEM", "watched": True}},
+            "load": {"min1": {"unit": "number", "label": "1 min", "watched": True}},
+        },
+    )
+
+    tui._full_quicklook = True
+    frame = tui._build_frame(max_x=120)
+    top_names = [b.name for b in frame.top]
+    assert "quicklook" in top_names
+    assert "load" in top_names  # v4 parity: load is NOT a hidden sibling
+    assert "cpu" not in top_names
+    assert "mem" not in top_names
+
+
 def test_tui_v5_sort_hotkeys_drive_engine(monkeypatch, fake_store, fake_alerts, fake_config):
     """Manual sort keys set the engine key with auto=False; 'a' enables auto."""
     from glances.outputs import glances_curses_v5 as tui_mod
@@ -531,6 +634,30 @@ def test_tui_v5_unknown_key_is_noop(fake_store, fake_alerts, fake_config):
     assert tui._handle_key(ord("Z")) == "ignored"
     after = (tui._view.show_percpu, tui._view.process_short_name, tui._view.programs)
     assert before == after
+
+
+def test_key_resize_forces_immediate_repaint(fake_store, fake_alerts, fake_config):
+    """A terminal resize (curses.KEY_RESIZE) routes through the immediate
+    repaint path so the layout reflows to the new dimensions at once."""
+    import curses
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._handle_key(curses.KEY_RESIZE) == "repaint"
+
+
+def test_key_resize_repaints_with_help_open_without_closing_it(fake_store, fake_alerts, fake_config):
+    """A resize while the help overlay is open repaints immediately but must
+    NOT close the overlay (resize is handled before the help check)."""
+    import curses
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._view.show_help = True
+    assert tui._handle_key(curses.KEY_RESIZE) == "repaint"
+    assert tui._view.show_help is True  # resize must NOT close the help overlay
 
 
 def test_tui_v5_programs_toggle_hides_one_list(fake_store, fake_alerts, fake_config):
@@ -1097,3 +1224,343 @@ def test_separator_disabled_renders_blank_line(fake_store, fake_alerts):
     # But the blank separator row is still reserved: top row remains at y=2.
     assert any(y == 0 and "myhost" in text for (y, text) in calls)
     assert any(y == 2 and "CPU" in text for (y, text) in calls)
+
+
+# ------------------------------------------------- TOP-row responsive degrade
+
+
+# Realistic TOP set (quicklook / cpu / mem / memswap / load) with representative
+# payloads + fields lifted from the per-plugin render-curses tests, so the
+# measured PluginBlock widths are real and the degradation cascade actually
+# triggers at a narrow ``max_x``. Driving the real renderers (not mocks) is the
+# whole point: the fitted-frame loop keys on ``PluginBlock.width``, which only
+# means something when the blocks carry real content. With this set the natural
+# TOP width is ~144 cols, so a 120-col terminal forces degradation while a
+# 400-col one takes the no-degradation early return.
+_TOP_PAYLOADS = {
+    "quicklook": {
+        "cpu": 20.0,
+        "mem": 42.0,
+        "swap": 10.0,
+        "load": 25.0,
+        "_levels": {
+            "cpu": {"level": "ok", "prominent": True},
+            "mem": {"level": "ok", "prominent": True},
+            "load": {"level": "ok", "prominent": True},
+        },
+    },
+    "cpu": {
+        "total": 4.5,
+        "user": 3.8,
+        "system": 0.7,
+        "idle": 95.5,
+        "nice": 0.0,
+        "iowait": 0.5,
+        "irq": 0.0,
+        "steal": 0.0,
+        "guest": 0.1,
+        "ctx_switches": 6727.5,
+        "interrupts": 3000.4,
+        "soft_interrupts": 1782.5,
+        "_levels": {"total": {"level": "ok", "prominent": True}},
+    },
+    "mem": {
+        "total": 16_421_208_064,
+        "available": 7_691_833_344,
+        "percent": 53.2,
+        "used": 8_729_374_720,
+        "free": 2_740_531_200,
+        "active": 6_184_337_408,
+        "inactive": 4_744_855_552,
+        "buffers": 194_555_904,
+        "cached": 4_538_667_008,
+        "_levels": {"percent": {"level": "careful", "prominent": True}},
+    },
+    "memswap": {
+        "total": 16 * 1024**3,
+        "used": 4 * 1024**3,
+        "free": 12 * 1024**3,
+        "percent": 25.0,
+        "sin": 100_000.0,
+        "sout": 0.0,
+        "_levels": {"percent": {"level": "ok", "prominent": True}},
+    },
+    "load": {
+        "min1": 0.857,
+        "min5": 0.716,
+        "min15": 0.801,
+        "cpucore": 16,
+        "_levels": {"min15": {"level": "ok", "prominent": True}},
+    },
+}
+
+_TOP_FIELDS = {
+    "quicklook": {
+        "cpu": {"unit": "percent"},
+        "mem": {"unit": "percent"},
+        "load": {"unit": "percent"},
+    },
+    "cpu": {
+        "total": {"unit": "percent", "watched": True, "prominent": True, "label": "CPU"},
+        "user": {"unit": "percent"},
+        "system": {"unit": "percent"},
+        "idle": {"unit": "percent"},
+        "nice": {"unit": "percent"},
+        "iowait": {"unit": "percent"},
+        "irq": {"unit": "percent"},
+        "steal": {"unit": "percent"},
+        "guest": {"unit": "percent"},
+        "ctx_switches": {"unit": "number", "rate": True, "short_name": "ctx_sw"},
+        "interrupts": {"unit": "number", "rate": True, "short_name": "inter"},
+        "soft_interrupts": {"unit": "number", "rate": True, "short_name": "sw_int"},
+    },
+    "mem": {
+        "total": {"unit": "bytes", "label": "total"},
+        "available": {"unit": "bytes", "label": "avail"},
+        "percent": {"unit": "percent", "label": "MEM", "watched": True, "prominent": True},
+        "used": {"unit": "bytes", "label": "used"},
+        "free": {"unit": "bytes", "label": "free"},
+        "active": {"unit": "bytes", "label": "active"},
+        "inactive": {"unit": "bytes", "label": "inactive"},
+        "buffers": {"unit": "bytes", "label": "buffers"},
+        "cached": {"unit": "bytes", "label": "cached"},
+    },
+    "memswap": {
+        "total": {"unit": "bytes"},
+        "used": {"unit": "bytes"},
+        "free": {"unit": "bytes"},
+        "percent": {"unit": "percent", "watched": True, "prominent": True},
+        "sin": {"unit": "bytespers", "rate": True},
+        "sout": {"unit": "bytespers", "rate": True},
+    },
+    "load": {
+        "min1": {"unit": "float", "label": "1 min", "watched": True},
+        "min5": {"unit": "float", "label": "5 min", "watched": True, "prominent": True},
+        "min15": {"unit": "float", "label": "15 min", "watched": True, "prominent": True},
+        "cpucore": {"unit": "number", "internal": True},
+    },
+}
+
+
+@pytest.fixture
+def make_tui_with_top(fake_alerts, fake_config):
+    """Build a ``TuiV5`` whose registry is a full, realistic TOP set.
+
+    The store snapshot and fields drive the real cpu/mem/quicklook/memswap/load
+    curses renderers, so ``PluginBlock.width`` reflects genuine content and the
+    measure-driven cascade behaves as it would on a real terminal.
+    """
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    def _factory():
+        store = MagicMock()
+        store.as_dict.return_value = {name: dict(p) for name, p in _TOP_PAYLOADS.items()}
+        alerts = MagicMock()
+        alerts.get_history.return_value = []
+        alerts.is_initializing.return_value = False
+        return tui_mod.TuiV5(
+            store=store,
+            alerts=alerts,
+            config=fake_config,
+            registry=[
+                ("quicklook", False),
+                ("cpu", False),
+                ("mem", False),
+                ("memswap", False),
+                ("load", False),
+            ],
+            fields_by_plugin={name: dict(f) for name, f in _TOP_FIELDS.items()},
+            refresh_interval=0.01,
+        )
+
+    return _factory
+
+
+def test_degrade_steps_order():
+    """The cascade order is the maintainer's v4 spec a→f, exported as a list."""
+    from glances.outputs.glances_curses_v5 import _DEGRADE_STEPS
+
+    assert _DEGRADE_STEPS == [
+        ("mem_cols", 1),
+        ("cpu_cols", 2),
+        ("cpu_cols", 1),
+        ("quicklook_freq_only", True),
+        ("hide_quicklook", True),
+        ("hide_memswap", True),
+    ]
+
+
+def test_wide_terminal_no_degradation(make_tui_with_top):
+    """A roomy terminal keeps every TOP plugin at full width (no degradation)."""
+    tui = make_tui_with_top()
+    natural = tui._build_frame(max_x=400)
+    fitted = tui._build_fitted_frame(max_x=400)
+    # All TOP plugins present.
+    assert {"quicklook", "cpu", "mem", "memswap", "load"} <= {b.name for b in fitted.top}
+    # Byte-for-byte the same widths as the non-degraded frame (early return).
+    assert [b.width for b in fitted.top] == [b.width for b in natural.top]
+
+
+def test_narrow_terminal_drops_load_never(make_tui_with_top):
+    """A narrow terminal degrades cols / blocks but never clips LOAD, and the
+    resulting TOP row actually fits ``max_x`` (the painter's own fit test)."""
+    tui = make_tui_with_top()
+    # Sanity: the natural row genuinely overflows 120 cols, so the cascade runs.
+    natural = tui._build_frame(max_x=120)
+    nat_w = [b.width for b in natural.top]
+    assert sum(nat_w) + max(0, len(nat_w) - 1) * tui._TOP_GAP_MIN > 120
+
+    frame = tui._build_fitted_frame(max_x=120)
+    names = {b.name for b in frame.top}
+    # LOAD must survive (the whole point of the cascade).
+    assert "load" in names
+    # The fitted top row must actually fit, mirroring the painter's fit rule.
+    widths = [b.width for b in frame.top]
+    assert sum(widths) + max(0, len(widths) - 1) * tui._TOP_GAP_MIN <= 120
+    assert tui._top_fits(frame, 120) is True
+
+
+def test_extreme_narrow_keeps_protected_blocks(make_tui_with_top):
+    """Limit behaviour: an absurdly narrow ``max_x`` the cascade can never
+    satisfy must not raise or loop forever. The cascade exhausts its hide
+    steps (quicklook / memswap gone) but the protected blocks cpu/mem/load
+    always survive — LOAD is protected by design, so the minimal degraded row
+    can still exceed ``max_x`` (and curses clips). This documents that
+    intended residual."""
+    tui = make_tui_with_top()
+    frame = tui._build_fitted_frame(max_x=20)
+    names = {b.name for b in frame.top}
+    # Protected blocks never hidden, even when the row cannot fit.
+    assert {"cpu", "mem", "load"} <= names
+    # The cascade exhausted its hide steps.
+    assert "quicklook" not in names
+    assert "memswap" not in names
+
+
+# ------------------------------------------- RIGHT-sidebar processlist width
+#
+# The processlist block is painted in the RIGHT sidebar at
+# ``right_width = max_x - left_width - _SIDEBAR_SEPARATOR_GAP``. ``TuiV5``
+# computes that width and feeds it to the renderer as ``view["proclist_width"]``
+# so it can drop low-priority columns to keep ``Command`` readable. A wide
+# terminal leaves enough room for all 13 columns; a narrow one forces a drop.
+# A realistic processlist payload + at least one LEFT plugin (network) make the
+# sidebar split non-trivial, so the measured ``left_width`` is genuine.
+
+# Realistic processlist payload + fields, lifted from
+# ``tests/test_plugin_processlist_render_curses_v5.py`` so the real renderer
+# produces genuine column widths.
+_PROC_FIELDS = {
+    "pid": {"unit": "number", "primary_key": True},
+    "name": {"unit": "string"},
+    "username": {"unit": "string"},
+    "status": {"unit": "string", "watched": True, "threshold_type": "categorical"},
+    "nice": {"unit": "number", "watched": True, "threshold_type": "categorical"},
+    "num_threads": {"unit": "number"},
+    "cpu_percent": {"unit": "percent", "watched": True, "prominent": False},
+    "memory_percent": {"unit": "percent", "watched": True, "prominent": False},
+    "cmdline": {"unit": "list"},
+    "cpu_num": {"unit": "number"},
+    "memory_info": {"unit": "byte", "internal": True},
+    "io_counters": {"unit": "byte", "internal": True},
+    "time_since_update": {"unit": "second", "internal": True},
+}
+
+
+def _proc(**overrides):
+    base = {
+        "pid": 1234,
+        "name": "python3",
+        "username": "alice",
+        "status": "S",
+        "nice": 0,
+        "num_threads": 4,
+        "cpu_percent": 12.5,
+        "memory_percent": 3.1,
+        "cmdline": ["python3", "myscript.py"],
+        "cpu_num": 2,
+        "memory_info": {"rss": 32 * 1024**2, "vms": 120 * 1024**2},
+        "io_counters": [0, 0, 0, 0, 1],
+        "cpu_times": {"user": 1.0, "system": 0.5},
+        "time_since_update": 1.0,
+    }
+    base.update(overrides)
+    return base
+
+
+_BODY_PAYLOADS = {
+    "processlist": {
+        "data": [
+            _proc(pid=1, cpu_percent=78.4, memory_percent=12.5, name="hot"),
+            _proc(pid=42, cpu_percent=12.5, memory_percent=3.1, name="med"),
+            _proc(pid=512, cpu_percent=0.5, memory_percent=0.2, username="root", name="sshd"),
+        ],
+        "_levels": {},
+    },
+    "network": {
+        "data": [
+            {"interface_name": "eth0", "bytes_recv": 1000, "bytes_sent": 500, "is_up": True, "time_since_update": 1.0},
+            {"interface_name": "lo", "bytes_recv": 0, "bytes_sent": 0, "is_up": True, "time_since_update": 1.0},
+        ],
+        "_levels": {},
+    },
+}
+
+_BODY_FIELDS = {
+    "processlist": _PROC_FIELDS,
+    "network": {
+        "interface_name": {"unit": "string", "primary_key": True},
+        "bytes_recv": {"unit": "bytespers", "rate": True, "watched": True},
+        "bytes_sent": {"unit": "bytespers", "rate": True, "watched": True},
+    },
+}
+
+
+@pytest.fixture
+def make_tui_with_body(fake_alerts, fake_config):
+    """Build a ``TuiV5`` with a realistic body: ``processlist`` in the RIGHT
+    slot and ``network`` in the LEFT slot, so the sidebar split is non-trivial
+    and the right-sidebar width fed to the processlist renderer is genuine.
+    """
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    def _factory():
+        store = MagicMock()
+        store.as_dict.return_value = {name: dict(p) for name, p in _BODY_PAYLOADS.items()}
+        alerts = MagicMock()
+        alerts.get_history.return_value = []
+        alerts.is_initializing.return_value = False
+        return tui_mod.TuiV5(
+            store=store,
+            alerts=alerts,
+            config=fake_config,
+            registry=[
+                ("network", False),
+                ("processlist", True),
+            ],
+            fields_by_plugin={name: dict(f) for name, f in _BODY_FIELDS.items()},
+            refresh_interval=0.01,
+        )
+
+    return _factory
+
+
+def test_proclist_width_passed_and_narrows_columns(make_tui_with_body):
+    """A narrow terminal: the right sidebar is small, so the processlist
+    renderer drops columns (fewer than the full 13 header cells) while always
+    keeping ``Command``."""
+    tui = make_tui_with_body()
+    frame = tui._build_fitted_frame(max_x=95)
+    proc = next(b for b in frame.right if b.name == "processlist")
+    header = proc.rows[0]
+    assert len(header.cells) < 13
+    assert any("Command" in c.text for c in header.cells)
+
+
+def test_wide_terminal_keeps_all_proclist_columns(make_tui_with_body):
+    """A roomy terminal leaves the right sidebar wide enough for every
+    column — all 13 header cells survive."""
+    tui = make_tui_with_body()
+    frame = tui._build_fitted_frame(max_x=400)
+    proc = next(b for b in frame.right if b.name == "processlist")
+    assert len(proc.rows[0].cells) == 13

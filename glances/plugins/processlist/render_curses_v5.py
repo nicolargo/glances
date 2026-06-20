@@ -63,6 +63,18 @@ _W_IO = 5
 _W_PID_DEFAULT = 7
 _MAX_ROWS = 20
 
+# Responsive columns (see view["proclist_width"]). When the painted width is
+# too narrow for the flexible ``Command`` column to show at least
+# ``_MIN_COMMAND_WIDTH`` characters, the lowest-priority fixed columns are
+# dropped one at a time, in ``_DROP_ORDER`` (maintainer spec a→h), until
+# ``Command`` fits (or all droppable columns are gone). Never dropped:
+# CPU%, MEM%, R/s, W/s, Command.
+_MIN_COMMAND_WIDTH = 8
+# Drop order a→h (maintainer spec). Never includes CPU%/MEM%/R/s/W/s/Command.
+_DROP_ORDER = ["VIRT", "TIME+", "RES", "USER", "PID", "THR", "S", "NI"]
+# Fixed columns in display order (the 12 cells before Command).
+_FIXED_COL_KEYS = ["CPU%", "MEM%", "VIRT", "RES", "PID", "USER", "THR", "NI", "S", "TIME+", "R/s", "W/s"]
+
 # Header label → engine sort key. The active sort column's header is
 # underlined (v4 'SORT' decoration). Columns with no sort key (VIRT, RES,
 # PID, THR, NI, S) are never marked. ``R/s`` and ``W/s`` both map to
@@ -278,6 +290,44 @@ def _pid_width(items: list[dict[str, Any]]) -> int:
     return max(width, 4)
 
 
+def _visible_fixed_keys(available_width: int, pid_width: int) -> list[str]:
+    """Return the fixed-column keys that fit at ``available_width``.
+
+    Drops columns in ``_DROP_ORDER`` (a→h) until the flexible ``Command``
+    column has at least ``_MIN_COMMAND_WIDTH`` characters (or all droppable
+    columns are gone). ``available_width`` is the painted processlist width
+    (``view["proclist_width"]``); ``pid_width`` is the dynamic PID column
+    width. ``CPU%``/``MEM%``/``R/s``/``W/s`` are never dropped.
+    """
+    widths = {
+        "CPU%": _W_CPU,
+        "MEM%": _W_MEM,
+        "VIRT": _W_VIRT,
+        "RES": _W_RES,
+        "PID": pid_width,
+        "USER": _W_USER,
+        "THR": _W_THR,
+        "NI": _W_NI,
+        "S": _W_STATUS,
+        "TIME+": _W_TIME,
+        "R/s": _W_IO,
+        "W/s": _W_IO,
+    }
+    active = list(_FIXED_COL_KEYS)
+
+    def command_space() -> int:
+        used = sum(widths[k] for k in active)
+        n_cells = len(active) + 1  # + Command
+        return available_width - used - (n_cells - 1)  # painter separators
+
+    for key in _DROP_ORDER:
+        if command_space() >= _MIN_COMMAND_WIDTH:
+            break
+        if key in active:
+            active.remove(key)
+    return active
+
+
 # ----------------------------------------------------------- entry point
 
 
@@ -294,6 +344,7 @@ def render(
     """
     sort_key = (view or {}).get("sort_key")
     short_name = (view or {}).get("process_short_name", True)
+    available = (view or {}).get("proclist_width")
 
     def _header(label: str, width: int, *, ljust: bool = False, color: ColorRole = ColorRole.HEADER) -> Cell:
         text = label.ljust(width) if ljust else label.rjust(width)
@@ -319,7 +370,17 @@ def render(
 
     title_color = title_role(payload) if items else ColorRole.HEADER
 
-    header_cells = [
+    # Responsive columns: which of the 12 fixed columns are visible. Absent
+    # ``proclist_width`` (export / tests / non-int) → keep all 12 (byte-identical
+    # to the historical output, locked by ``test_no_width_keeps_all_columns``).
+    active = _visible_fixed_keys(available, pid_width) if isinstance(available, int) else list(_FIXED_COL_KEYS)
+    active_set = set(active)
+
+    def _filter_fixed(cells: list[Cell]) -> list[Cell]:
+        """Keep only the fixed cells whose key is active, preserving order."""
+        return [cell for cell, key in zip(cells, _FIXED_COL_KEYS) if key in active_set]
+
+    header_fixed = [
         _header("CPU%", _W_CPU, color=title_color),
         _header("MEM%", _W_MEM),
         _header("VIRT", _W_VIRT),
@@ -332,8 +393,8 @@ def render(
         _header("TIME+", _W_TIME),
         _header("R/s", _W_IO),
         _header("W/s", _W_IO),
-        _header("Command", len("Command")),
     ]
+    header_cells = _filter_fixed(header_fixed) + [_header("Command", len("Command"))]
     rows: list[Row] = [Row(cells=header_cells)]
 
     for item in items[:_MAX_ROWS]:
@@ -360,6 +421,6 @@ def render(
             _io_cell(r_rate, r_unknown, _W_IO),
             _io_cell(w_rate, w_unknown, _W_IO),
         ]
-        rows.append(Row(cells=fixed_cells + _command_cells(item, short_name)))
+        rows.append(Row(cells=_filter_fixed(fixed_cells) + _command_cells(item, short_name)))
 
     return rows

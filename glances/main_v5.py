@@ -143,6 +143,20 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--percpu",
+        dest="percpu",
+        action="store_true",
+        default=False,
+        help="Start TUI with the per-CPU view in quicklook.",
+    )
+    parser.add_argument(
+        "--full-quicklook",
+        dest="full_quicklook",
+        action="store_true",
+        default=False,
+        help="Start TUI with the full-width quicklook (hides cpu/mem/... top blocks).",
+    )
+    parser.add_argument(
         "--set-password",
         action="store_true",
         help="Generate a PBKDF2 password hash interactively and print it to stdout. Does NOT modify glances.conf.",
@@ -382,6 +396,8 @@ def assemble(
             fields_by_plugin=fields_by_plugin,
             refresh_interval=refresh,
             on_quit=lambda: os.kill(os.getpid(), signal.SIGINT),
+            full_quicklook=getattr(args, "full_quicklook", False),
+            percpu=getattr(args, "percpu", False),
         )
 
     return app, scheduler, host, int(port), tui

@@ -266,3 +266,24 @@ def test_render_column_widths_shrink_with_short_names(mem_payload_linux):
     col0_short = max(len(r.cells[0].text) for r in rows_short)
     assert col0_short < col0_long
     assert col0_short == 5  # "avail" / "total" / "free" / "MEM" all ≤ 5
+
+
+# ---------------------------------------------------------------- view: mem_cols
+
+
+def test_mem_cols_1_drops_second_column(mem_payload_linux, mem_fields):
+    full = render(mem_payload_linux, mem_fields)
+    one = render(mem_payload_linux, mem_fields, view={"mem_cols": 1})
+    full_text = "\n".join("".join(c.text for c in r.cells) for r in full)
+    one_text = "\n".join("".join(c.text for c in r.cells) for r in one)
+    # 2nd column (inactive/buffers/cached) and the line-1 `active` pair gone.
+    for label in ("inactive", "buffers", "cached", "active"):
+        if label in full_text:
+            assert label not in one_text
+    assert "total" in one_text  # col1 stays
+    assert "MEM" in one_text and "%" in one_text
+    assert max(len(r) for r in one_text.splitlines()) < max(len(r) for r in full_text.splitlines())
+
+
+def test_mem_default_is_two_columns(mem_payload_linux, mem_fields):
+    assert render(mem_payload_linux, mem_fields) == render(mem_payload_linux, mem_fields, view={"mem_cols": 2})

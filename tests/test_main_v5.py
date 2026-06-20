@@ -378,6 +378,26 @@ def test_parser_tui_defaults_to_enabled():
     assert args.no_tui is False
 
 
+def test_parser_percpu_defaults_to_false():
+    args = build_parser().parse_args([])
+    assert args.percpu is False
+
+
+def test_parser_percpu_can_be_enabled():
+    args = build_parser().parse_args(["--percpu"])
+    assert args.percpu is True
+
+
+def test_parser_full_quicklook_defaults_to_false():
+    args = build_parser().parse_args([])
+    assert args.full_quicklook is False
+
+
+def test_parser_full_quicklook_can_be_enabled():
+    args = build_parser().parse_args(["--full-quicklook"])
+    assert args.full_quicklook is True
+
+
 def test_assemble_builds_tui_when_enabled(config):
     """assemble() returns a TuiV5 instance when --no-tui is not set."""
     args = build_parser().parse_args([])
