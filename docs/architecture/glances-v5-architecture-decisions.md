@@ -975,6 +975,8 @@ def get_export(self) -> dict | list:
 
 All v4.x published security advisories are reproduced or resolved in v5.0. v5 starts from the hardened baseline. The table below lists every published GitHub Security advisory for the project and how v5 addresses each one.
 
+_Last synced against the published advisory list on 2026-06-20 — includes the v4.5.5 batch (CVE-2026-46606 / 46607 / 46608 / 46611 / 53925, published 2026-06-13)._
+
 **v5 status** uses three values:
 - `Carry forward` — same fix mechanism as v4, ported into the v5 module structure
 - `Resolved by architecture` — vulnerability does not exist in v5 because the affected component was removed (e.g. XML-RPC) or the affected feature was deliberately not carried over (e.g. backtick command substitution in config)
@@ -997,12 +999,19 @@ All v4.x published security advisories are reproduced or resolved in v5.0. v5 st
 | CVE-2026-34839 | high | REST API CORS hardening — same mechanism as CVE-2026-32610 applied to `/api/5/*`. `cors_origins` enforced; wildcard rejected when credentials are allowed. | Carry forward (Phase 1) |
 | CVE-2026-35587 | high | SSRF in IP plugin via `public_api`. v5 plugin migration must validate the URL scheme (allow `http`/`https` only), reject loopback / link-local / RFC1918 / cloud metadata IPs unless explicitly opted in via a new `public_api_allow_internal=true` config key, and **never** send `public_username`/`public_password` to a hostname not on an allowlist. | New v5 mitigation (Phase 2 — `ip` plugin migration) |
 | CVE-2026-35588 | medium | Parameterized CQL in Cassandra export. `keyspace`, `table`, `replication_factor` validated against an allowlist regex (`^[A-Za-z][A-Za-z0-9_]*$`) before being interpolated into DDL. Same family as CVE-2026-32611 / CVE-2026-30930. | Carry forward (Phase 3) |
+| CVE-2026-46606 | high | Command injection via KVM/QEMU VM domain names (v4 `glances/plugins/vms/engines/virsh.py`). The v5 `vms` plugin migration must run `virsh` via `subprocess.run([...], shell=False)` with the domain name passed as a single opaque list argument — never through a shell or a `secure_popen` path that interprets `;`, `&&`, `\|`, `>`. Same family as CVE-2026-32608. | Carry forward (Phase 2 — `vms` plugin migration) |
+| CVE-2026-46607 | high | Insecure pickle deserialization of the version-update cache → arbitrary code execution (v4 `glances/outdated.py`, cache `~/.cache/glances/glances-version.db`). The v5 port of the update check must persist the cache as **JSON** (datetimes via `isoformat()`), never `pickle`; a malformed or legacy pickle file is treated as a silent cache miss, not loaded. | Carry forward (version-check port) |
+| CVE-2026-46608 | high | XML-RPC multi-origin CORS silently fell back to wildcard (incomplete fix for CVE-2026-33533). XML-RPC server is removed in v5 (§1.1). The v5 FastAPI CORS layer (`webserver_v5._wire_cors`) reflects only exact-match origins from `cors_origins` and never emits `*` for a multi-origin allowlist. | Resolved by architecture |
+| CVE-2026-46611 | medium | XML-RPC server lacked Host-header validation → DNS rebinding. XML-RPC server is removed in v5 (§1.1). REST/WebUI DNS-rebinding protection is already covered by `TrustedHostMiddleware` / `webui_allowed_hosts` (`webserver_v5._wire_trusted_hosts`, see CVE-2026-32632). | Resolved by architecture |
+| CVE-2026-53925 | high | Arbitrary file write and command execution via shell redirection / chaining operators (`>`, `>>`, `;`, `&&`, `\|`) in AMP command configuration through `secure_popen` (v4 `glances/secure.py` + `glances/amps/`). The v5 AMP/actions port must default to `shell=False` / explicit arg lists for config-sourced commands and only interpret operators behind an explicit opt-in (v4's `allow_operators` gate, hardened by `--disable-config-exec`). Same family as CVE-2026-32608 / CVE-2026-33641. | Carry forward (AMP / actions port) |
 
 ### Watching — unpublished advisories
 
 | GHSA | Severity | State | v5 plan |
 |---|---|---|---|
-| GHSA-mcm7-fmh3-v6v3 | medium | draft | Curses terminal escape injection + memory exhaustion via process names rendered in alerts. v5 alerts plugin (Phase 2) must sanitize control sequences (`re.sub(r'[\x00-\x1f\x7f]', '?', name)`) and cap rendered string size. Tracked separately until the advisory is published. |
+| GHSA-mcm7-fmh3-v6v3 | medium | draft | **Arbitrary code execution via malicious Glances plugin loading without signature verification.** v5 auto-discovery (`main_v5.discover_plugins`) must only import `model_v5.py` modules from the trusted installed package namespace — never from user-writable or config-specified paths. The planned runtime plugin toggling over REST (issue #3548) must only enable/disable already-discovered trusted plugins, never import an arbitrary module path. Tracked until the advisory is published. |
+
+> **Additional v5 hardening (no advisory assigned).** When the v5 alerts plugin and TUI render strings drawn from monitored data (process names, container names), they must sanitize terminal control sequences (`re.sub(r'[\x00-\x1f\x7f]', '?', name)`) and cap rendered string length, to prevent curses escape injection and memory exhaustion. _(This concern was previously mis-filed under GHSA-mcm7-fmh3-v6v3 in this doc; that GHSA actually covers plugin-signature verification — see the row above.)_
 
 ### Closed — fixed in v4, no v5 action required
 
