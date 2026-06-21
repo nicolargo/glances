@@ -31,6 +31,10 @@ class GlancesStdout:
         :return: A list of tuples. Example [(plugin, key, attribute), ... ]
         """
         ret = []
+
+        if self.args.stdout.lower == "all":
+            return [(["all"], None, None)]
+
         for p in self.args.stdout.split(','):
             pka = p.split('.')
             if len(pka) == 1:
@@ -54,6 +58,12 @@ class GlancesStdout:
         Refresh every duration second.
         """
         for plugin, key, attribute in self.plugins_list:
+            # Display all stats
+            if plugin == "all":
+                stat = stats.getAll()
+                printandflush(f"{plugin}: {stat}")
+                break
+
             # Check if the plugin exist and is enable
             if plugin in stats.getPluginsList() and stats.get_plugin(plugin).is_enabled():
                 stat = stats.get_plugin(plugin).get_export()
