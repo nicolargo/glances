@@ -714,4 +714,23 @@ body {
     padding: 4px;
     gap: 4px;
   }
+
+  .sidebar-min,
+  .sidebar-max {
+    height: auto;
+    max-height: calc(100vh - 120px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader,
+  .progress-bar-critical,
+  .plugin,
+  .button,
+  .progress-bar-ok,
+  .progress-bar-careful,
+  .progress-bar-warning {
+    animation: none !important;
+    transition: none !important;
+  }
 }
