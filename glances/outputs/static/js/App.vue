@@ -1,5 +1,5 @@
 <template>
-	<div v-if="!dataLoaded" id="loading-page" class="container-fluid">
+	<div v-if="!dataLoaded" id="loading-page" class="container-fluid" role="status" aria-live="polite">
 		<div class="loader">Glances is loading...</div>
 	</div>
 	<glances-help v-else-if="args.help_tag"></glances-help>
