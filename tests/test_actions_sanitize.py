@@ -23,7 +23,7 @@ from unittest.mock import patch
 
 import pytest
 
-from glances.actions import GlancesActions, _sanitize_mustache_dict
+from glances.actions import GlancesActions, _sanitize_mustache_dict, _sanitize_value
 from glances.secure import secure_popen
 
 # Skip the whole module on Windows where echo -n behaves differently
@@ -100,10 +100,41 @@ class TestSanitizeMustacheDict:
         safe = _sanitize_mustache_dict(d)
         assert safe['is_up'] is True
 
-    def test_preserves_list_values(self):
+    def test_preserves_list_of_numbers(self):
+        # Numeric list elements are not strings: left unchanged.
         d = {'ports': [80, 443], 'name': 'safe'}
         safe = _sanitize_mustache_dict(d)
         assert safe['ports'] == [80, 443]
+
+    def test_strips_operators_in_nested_list(self):
+        # GHSA-73wf-9vmv-5pv9: process cmdline is a list of attacker argv.
+        d = {'cmdline': ['x', '|touch /tmp/evil', '#']}
+        safe = _sanitize_mustache_dict(d)
+        assert '|' not in ''.join(safe['cmdline'])
+        assert safe['cmdline'] == ['x', ' touch /tmp/evil', '#']
+
+    def test_strips_operators_in_nested_dict(self):
+        d = {'meta': {'k': 'a|b && c > d'}}
+        safe = _sanitize_mustache_dict(d)
+        for op in ('|', '&&', '>'):
+            assert op not in safe['meta']['k']
+
+    def test_strips_operators_in_deeply_nested(self):
+        d = {'outer': {'inner': ['ok', 'evil|rm -rf /']}}
+        safe = _sanitize_mustache_dict(d)
+        assert '|' not in safe['outer']['inner'][1]
+
+    def test_preserves_tuple_type(self):
+        d = {'args': ('a', 'b|c')}
+        safe = _sanitize_mustache_dict(d)
+        assert isinstance(safe['args'], tuple)
+        assert '|' not in safe['args'][1]
+
+    def test_sanitize_value_passthrough_non_string(self):
+        assert _sanitize_value(95) == 95
+        assert _sanitize_value(3.14) == 3.14
+        assert _sanitize_value(True) is True
+        assert _sanitize_value(None) is None
 
     def test_clean_string_unchanged(self):
         d = {'name': 'my-web-server', 'mnt_point': '/data/disk1'}
@@ -320,6 +351,22 @@ class TestActionsRunIntegration:
             )
             called_cmd = mock_popen.call_args[0][0]
             assert '&&' in called_cmd
+
+    def test_run_sanitizes_cmdline_section(self, actions):
+        """GHSA-73wf-9vmv-5pv9: a pipe in the process cmdline list (rendered via
+        a Mustache section) must not survive into secure_popen."""
+        with patch('glances.actions.secure_popen') as mock_popen:
+            mock_popen.return_value = ''
+            actions.run(
+                'processlist',
+                'CRITICAL',
+                ['echo ALERT {{#cmdline}}{{.}} {{/cmdline}}'],
+                repeat=False,
+                mustache_dict={'cmdline': ['x', '|touch /tmp/evil', '#']},
+            )
+            called_cmd = mock_popen.call_args[0][0]
+            assert '|' not in called_cmd
+            assert 'touch /tmp/evil' in called_cmd  # text preserved, pipe removed
 
     def test_run_does_not_execute_when_already_triggered(self, actions):
         """Same criticality should not re-trigger if repeat=False."""

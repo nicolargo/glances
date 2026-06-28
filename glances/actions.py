@@ -25,25 +25,42 @@ else:
 _SHELL_OPERATORS = ('&&', '|', '>>', '>')
 
 
+def _sanitize_value(value):
+    """Replace shell operators by spaces in a string, recursing into containers.
+
+    Strings are sanitized; lists, tuples and dicts are walked so that nested
+    attacker-controlled values (most notably a process ``cmdline``, exposed as a
+    list of argv set by the attacker) are sanitized too. Other types (int,
+    float, bool, None) are returned unchanged.
+
+    Recursing is required: the top-level-only check left nested values
+    exploitable (GHSA-73wf-9vmv-5pv9, incomplete fix of CVE-2026-32608). The
+    Mustache renderer does not HTML-escape '|', so an unsanitized pipe in a
+    nested value would survive into secure_popen and be interpreted.
+    """
+    if isinstance(value, str):
+        for op in _SHELL_OPERATORS:
+            value = value.replace(op, ' ')
+        return value
+    if isinstance(value, (list, tuple)):
+        return type(value)(_sanitize_value(item) for item in value)
+    if isinstance(value, dict):
+        return {k: _sanitize_value(v) for k, v in value.items()}
+    return value
+
+
 def _sanitize_mustache_dict(mustache_dict):
     """Return a copy of mustache_dict with shell operators replaced by spaces.
 
     This prevents command injection when user-controllable data (process names,
     container names, mount points, etc.) is rendered into action command lines
-    via Mustache templates.
+    via Mustache templates. Sanitization is recursive so that strings nested in
+    lists or dicts are covered, not only top-level string values.
     """
     if not mustache_dict:
         return mustache_dict
 
-    safe = {}
-    for k, v in mustache_dict.items():
-        if isinstance(v, str):
-            for op in _SHELL_OPERATORS:
-                v = v.replace(op, ' ')
-            safe[k] = v
-        else:
-            safe[k] = v
-    return safe
+    return {k: _sanitize_value(v) for k, v in mustache_dict.items()}
 
 
 class GlancesActions:
