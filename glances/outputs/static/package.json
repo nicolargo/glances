@@ -6,7 +6,7 @@
 		"hotkeys-js": "^4.0.4",
 		"lodash": "^4.18.1",
 		"sanitize-html": "^2.17.5",
-		"vue": "^3.5.31"
+		"vue": "^3.5.39"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -14,20 +14,20 @@
 		"copy-webpack-plugin": "^14.0.0",
 		"css-loader": "^7.1.4",
 		"del": "^8.0.1",
-		"eslint": "^10.5.0",
+		"eslint": "^10.6.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-vue": "^10.9.2",
-		"globals": "^17.6.0",
+		"globals": "^17.7.0",
 		"html-webpack-plugin": "^5.6.7",
-		"less": "^4.6.4",
-		"less-loader": "^12.3.3",
+		"less": "^4.6.7",
+		"less-loader": "^13.0.0",
 		"sass": "^1.101.0",
-		"sass-loader": "^16.0.8",
+		"sass-loader": "^17.0.0",
 		"style-loader": "^4.0.0",
-		"typescript-eslint": "^8.61.0",
+		"typescript-eslint": "^8.62.1",
 		"vue-loader": "^17.4.2",
-		"webpack": "^5.107.2",
-		"webpack-cli": "^7.0.3",
+		"webpack": "^5.108.3",
+		"webpack-cli": "^7.1.0",
 		"webpack-dev-server": "^5.2.5"
 	},
 	"overrides": {
