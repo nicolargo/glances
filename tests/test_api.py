@@ -87,4 +87,4 @@ def test_glances_api_plugin_process():
 
 def test_glances_api_limits():
     assert isinstance(gl.cpu.limits, dict)
-    assert isinstance(gl.cpu.limits, dict)
+    assert isinstance(gl.network.limits, dict)
