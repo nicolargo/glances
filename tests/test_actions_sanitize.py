@@ -391,3 +391,91 @@ class TestActionsRunIntegration:
             mustache_dict={},
         )
         assert result is True
+
+
+# ---------------------------------------------------------------------------
+# Tests – --disable-config-exec on the on-alert action path
+# ---------------------------------------------------------------------------
+
+
+class _Args:
+    """Minimal args stub carrying only disable_config_exec."""
+
+    def __init__(self, disable_config_exec):
+        self.disable_config_exec = disable_config_exec
+
+
+class TestActionsDisableConfigExec:
+    """GHSA-59fj-m2j6-hcxh: --disable-config-exec must also disable shell
+    operators (&&, |, >) in config-defined on-alert action commands, not only
+    in AMP commands.
+    """
+
+    def _make_actions(self, args):
+        a = GlancesActions(args=args)
+        # Force the start timer to be finished so actions can run immediately
+        a.start_timer = type('FakeTimer', (), {'finished': lambda self: True})()
+        return a
+
+    def test_allow_operators_true_when_no_args(self):
+        assert GlancesActions().allow_operators() is True
+
+    def test_allow_operators_true_when_flag_absent(self):
+        assert GlancesActions(args=object()).allow_operators() is True
+
+    def test_allow_operators_false_when_disabled(self):
+        assert GlancesActions(args=_Args(True)).allow_operators() is False
+
+    def test_allow_operators_true_when_enabled(self):
+        assert GlancesActions(args=_Args(False)).allow_operators() is True
+
+    def test_run_passes_allow_operators_false_when_disabled(self):
+        """With --disable-config-exec, secure_popen must be called with
+        allow_operators=False so operators in the command are not interpreted."""
+        actions = self._make_actions(_Args(True))
+        with patch('glances.actions.secure_popen') as mock_popen:
+            mock_popen.return_value = ''
+            actions.run(
+                'cpu',
+                'CRITICAL',
+                ['echo MARKER > /tmp/poc_marker'],
+                repeat=False,
+                mustache_dict={},
+            )
+            assert mock_popen.call_args.kwargs['allow_operators'] is False
+
+    def test_run_passes_allow_operators_true_by_default(self):
+        """Without the flag, the historical behavior (operators interpreted) is
+        preserved for backward compatibility."""
+        actions = self._make_actions(_Args(False))
+        with patch('glances.actions.secure_popen') as mock_popen:
+            mock_popen.return_value = ''
+            actions.run(
+                'cpu',
+                'CRITICAL',
+                ['echo MARKER > /tmp/poc_marker'],
+                repeat=False,
+                mustache_dict={},
+            )
+            assert mock_popen.call_args.kwargs['allow_operators'] is True
+
+    def test_run_disabled_does_not_write_redirect_file(self):
+        """End-to-end: the '>' redirect must not create a file when the flag is
+        set (this is the concrete PoC from the advisory)."""
+        with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as f:
+            marker = f.name
+        os.unlink(marker)  # remove so we can detect a spurious re-creation
+        try:
+            actions = self._make_actions(_Args(True))
+            actions.run(
+                'cpu',
+                'CRITICAL',
+                [f'echo -n MARKER > {marker}'],
+                repeat=False,
+                mustache_dict={},
+            )
+            # allow_operators=False => '>' is a literal argument, no file written
+            assert not os.path.exists(marker)
+        finally:
+            if os.path.exists(marker):
+                os.unlink(marker)

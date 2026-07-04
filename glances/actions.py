@@ -68,6 +68,9 @@ class GlancesActions:
 
     def __init__(self, args=None):
         """Init GlancesActions class."""
+        # Keep a reference to args to honor --disable-config-exec (see run())
+        self.args = args
+
         # Dict with the criticality status
         # - key: stat_name
         # - value: criticality
@@ -80,6 +83,19 @@ class GlancesActions:
             self.start_timer = Timer(args.time * 2)
         else:
             self.start_timer = Timer(3)
+
+    def allow_operators(self):
+        """Return False when config-sourced command operators must be disabled.
+
+        Mirrors --disable-config-exec: when the user hardened config-driven
+        command execution, the on-alert action command lines (read from the same
+        glances.conf file as the AMP commands) must not let secure_popen
+        interpret the shell operators (&&, |, >). Otherwise an attacker able to
+        edit glances.conf could chain commands or write to an arbitrary file via
+        the redirection operator (GHSA-59fj-m2j6-hcxh, incomplete fix of
+        GHSA-3vwc-qwhc-3mj7 / CVE-2026-53925).
+        """
+        return not getattr(self.args, 'disable_config_exec', False)
 
     def get(self, stat_name):
         """Get the stat_name criticality."""
@@ -125,7 +141,7 @@ class GlancesActions:
             # Execute the action
             logger.info(f"Action triggered for {stat_name} ({criticality}): {cmd_full}")
             try:
-                ret = secure_popen(cmd_full)
+                ret = secure_popen(cmd_full, allow_operators=self.allow_operators())
             except OSError as e:
                 logger.error(f"Action error for {stat_name} ({criticality}): {e}")
             else:
