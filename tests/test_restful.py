@@ -29,6 +29,12 @@ API_VERSION = GlancesRestfulApi.API_VERSION
 URL = f"http://localhost:{SERVER_PORT}/api/{API_VERSION}"
 pid = None
 
+# Second server used to exercise the CORS credentials guard
+# (GHSA-fp27-88fp-2phg).
+CORS_PORT = 61235
+CORS_URL = f"http://localhost:{CORS_PORT}/api/{API_VERSION}"
+pid_cors = None
+
 # Unitest class
 # ==============
 print(f'RESTful API unitary tests for Glances {__version__}')
@@ -327,6 +333,47 @@ class TestGlances(unittest.TestCase):
             self.assertIsInstance(req.json(), dict)
             self.assertIsInstance(req.json()[item], int)
 
+    def test_050_start_cors_server(self):
+        """Start a second Web server with a wildcard+trusted multi-origin allowlist.
+
+        Regression guard for GHSA-fp27-88fp-2phg: the exact-match check
+        ``cors_origins == ["*"]`` let a multi-entry list containing "*" bypass
+        the credentials-disable protection.
+        """
+        global pid_cors
+        print('INFO: [TEST_050] Start CORS credentials-guard Web Server')
+        cmdline = sys.executable
+        cmdline += (
+            f" -m glances -B 0.0.0.0 -w -p {CORS_PORT} --disable-webui"
+            " --disable-autodiscover -C ./tests/conf/glances_restful_cors.conf"
+        )
+        print(f"Run: {cmdline}")
+        pid_cors = subprocess.Popen(shlex.split(cmdline))
+        print("Please wait 5 seconds...")
+        time.sleep(5)
+        self.assertIsNotNone(pid_cors)
+
+    def test_051_cors_credentials_disabled_for_wildcard_in_list(self):
+        """A foreign Origin must NOT get credentialed CORS reflection.
+
+        With ``cors_origins=*,https://trusted`` + ``cors_credentials=true`` the
+        guard must disable credentials, so Starlette emits ``ACAO: *`` and no
+        ``Access-Control-Allow-Credentials`` header for an arbitrary Origin.
+        """
+        print('INFO: [TEST_051] Wildcard-in-list disables CORS credentials')
+        r = requests.get(
+            f"{CORS_URL}/cpu",
+            headers={'Origin': 'https://totally-evil-attacker.com'},
+            timeout=5,
+        )
+        self.assertTrue(r.ok)
+        # Credentials must be off: no credentialed reflection of the evil Origin.
+        self.assertNotEqual(r.headers.get('Access-Control-Allow-Credentials'), 'true')
+        self.assertNotEqual(
+            r.headers.get('Access-Control-Allow-Origin'),
+            'https://totally-evil-attacker.com',
+        )
+
     def test_100_browser(self):
         """Get /serverslist (for Glances Central Browser)."""
         print('INFO: [TEST_100] Get /serverslist (for Glances Central Browser)')
@@ -342,6 +389,8 @@ class TestGlances(unittest.TestCase):
 
         print("Stop the Glances Web Server")
         pid.terminate()
+        if pid_cors is not None:
+            pid_cors.terminate()
         time.sleep(1)
 
         self.assertTrue(True)

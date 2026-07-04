@@ -295,7 +295,11 @@ class GlancesRestfulApi:
 
         # Reject the insecure wildcard + credentials combination,
         # even if the user explicitly sets cors_credentials=True in their config.
-        if cors_origins == ["*"] and cors_credentials:
+        # Use a membership test (not exact list equality): Starlette's
+        # CORSMiddleware treats any allowlist that *contains* "*" as "allow all
+        # origins", so a multi-entry list like ["*", "https://trusted"] must be
+        # caught here too (GHSA-fp27-88fp-2phg). Mirrors glances/server.py.
+        if "*" in cors_origins and cors_credentials:
             logger.warning(
                 "CORS: allow_origins=['*'] combined with allow_credentials=True is insecure. "
                 "Disabling credentials. Set explicit cors_origins to enable credentialed requests."
@@ -571,7 +575,11 @@ class GlancesRestfulApi:
 
         # Security warnings
         cors_origins = self.config.get_list_value('outputs', 'cors_origins', default=["*"])
-        if not self.args.password and cors_origins == ["*"]:
+        # Membership test (not exact list equality): a multi-entry allowlist
+        # containing "*" is still treated as "allow all origins" by Starlette,
+        # so the unauthenticated+permissive-CORS warning must fire for it too
+        # (GHSA-fp27-88fp-2phg). Mirrors the XML-RPC warning in glances/server.py.
+        if not self.args.password and "*" in cors_origins:
             warn_lines = [
                 "WARNING: Glances web server is running without authentication and with permissive",
                 "         CORS (Access-Control-Allow-Origin: *). Any web page reachable from your",
