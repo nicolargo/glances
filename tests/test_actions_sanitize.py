@@ -204,6 +204,22 @@ class TestCommandInjectionPrevention:
         safe = _sanitize_mustache_dict(mustache_dict)
         assert '>>' not in safe['name']
 
+    def test_lone_ampersand_is_stripped(self):
+        """GHSA-qcpp-8x79-hhp3: a single '&' (not '&&') must also be neutralised,
+        otherwise two adjacent unescaped variables can rejoin it into '&&'."""
+        safe = _sanitize_mustache_dict({'name': 'evilproc&'})
+        assert '&' not in safe['name']
+        assert safe['name'] == 'evilproc '
+
+    def test_cross_field_ampersand_reconstruction_blocked(self):
+        """GHSA-qcpp-8x79-hhp3: a trailing '&' in one value and a leading '&' in
+        the next must not reconstruct a real '&&' when rendered back to back."""
+        d = {'a': 'evilproc&', 'b': '& touch /tmp/evil'}
+        safe = _sanitize_mustache_dict(d)
+        # Concatenation of two unescaped variables (chevron {{{a}}}{{{b}}}).
+        rendered = safe['a'] + safe['b']
+        assert '&&' not in rendered
+
 
 # ---------------------------------------------------------------------------
 # Tests – secure_popen basic functionality
@@ -367,6 +383,21 @@ class TestActionsRunIntegration:
             called_cmd = mock_popen.call_args[0][0]
             assert '|' not in called_cmd
             assert 'touch /tmp/evil' in called_cmd  # text preserved, pipe removed
+
+    def test_run_blocks_cross_field_ampersand_chain(self, actions):
+        """GHSA-qcpp-8x79-hhp3: two adjacent unescaped variables whose values
+        end/begin with '&' must not reconstruct a real '&&' command chain."""
+        with patch('glances.actions.secure_popen') as mock_popen:
+            mock_popen.return_value = ''
+            actions.run(
+                'processlist',
+                'CRITICAL',
+                ['logger p={{{name}}}{{{cmdline}}}'],
+                repeat=False,
+                mustache_dict={'name': 'evilproc&', 'cmdline': '& touch /tmp/evil'},
+            )
+            called_cmd = mock_popen.call_args[0][0]
+            assert '&&' not in called_cmd
 
     def test_run_does_not_execute_when_already_triggered(self, actions):
         """Same criticality should not re-trigger if repeat=False."""

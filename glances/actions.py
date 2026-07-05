@@ -22,7 +22,18 @@ else:
 
 # Characters that secure_popen interprets as shell operators.
 # Mustache-rendered values must not contain these to prevent command injection.
-_SHELL_OPERATORS = ('&&', '|', '>>', '>')
+#
+# A lone '&' is included even though it is not itself an operator: when two
+# adjacent unescaped Mustache variables ({{{a}}}{{{b}}} / {{&a}}{{&b}}) are
+# rendered next to each other, a trailing '&' from the first value and a leading
+# '&' from the second join into a real '&&' *after* per-field sanitization, which
+# secure_popen would then interpret as a command chain (GHSA-qcpp-8x79-hhp3,
+# incomplete fix of CVE-2026-32608). Stripping the lone '&' from each value
+# removes the operator character on both sides of the variable boundary, so no
+# operator can be reconstructed across it. The multi-character operators stay
+# first so '&&'/'>>' collapse to a single space (stable whitespace, no double
+# strip).
+_SHELL_OPERATORS = ('&&', '|', '>>', '>', '&')
 
 
 def _sanitize_value(value):
