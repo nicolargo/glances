@@ -837,6 +837,7 @@ byte-for-byte — no regression):
 | `view["quicklook_freq_only"]` | bool | `False` | quicklook header shows `"Frequency"` instead of the CPU name; compact bars shrink to match |
 | `view["hide_quicklook"]` | bool | `False` | `build_frame` skips the quicklook block |
 | `view["hide_memswap"]` | bool | `False` | `build_frame` skips the memswap (swap) block |
+| `view["hide_gpu"]` | bool | `False` | `build_frame` skips the gpu block |
 
 **Cascade order (`_DEGRADE_STEPS`):** an ordered list applied one notch at a
 time until the row fits. Drop the least-important detail first; hide a whole
@@ -851,9 +852,7 @@ block only as a last resort. `cpu_cols=1` subsumes the col-3 drop, so (b)
 | (d) | `quicklook_freq_only = True` | replace the CPU name with `"Frequency"` and shrink the quicklook block |
 | (e) | `hide_quicklook = True` | hide the quicklook block |
 | (f) | `hide_memswap = True` | hide the swap block |
-| (g) | _planned (G4A)_ `hide_gpu = True` | hide the gpu block — the very last resort, once the gpu plugin joins the TOP row |
-
-> **Planned (G4A — gpu):** the gpu plugin will insert into the TOP row. The cascade must then extend with step **(g)** `hide_gpu` _after_ (f), and `build_frame` must gain a matching `hide_gpu` guard (mirroring `hide_quicklook` / `hide_memswap`). Not added yet — it would be dead code without the gpu plugin.
+| (g) | `hide_gpu = True` | hide the gpu plugin (last resort) |
 
 **Fit rule (`_top_fits`):** mirrors the painter's own layout test exactly — the
 TOP row fits iff

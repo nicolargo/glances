@@ -146,3 +146,72 @@ def test_collect_sync_smoke():
     out = _collect_sync()
     assert isinstance(out, dict)
     assert "cpu_name" in out  # always set, even when other metrics fail
+
+
+class _NoGpuSampler:
+    cpu_count = 1
+
+    async def get_aggregate(self):
+        class _A:
+            idle = 100.0
+
+        return _A()
+
+    async def get_per_core(self):
+        return []
+
+
+@pytest.mark.asyncio
+async def test_gpu_means_from_store(store, config, monkeypatch):
+    """quicklook computes gpu_mem/gpu_proc as the mean of the gpu plugin's cards."""
+    await store.set(
+        "gpu",
+        [
+            {"gpu_id": "n0", "mem": 40, "proc": 20},
+            {"gpu_id": "n1", "mem": 60, "proc": 40},
+        ],
+    )
+    p = PluginModel(store, config)
+
+    import glances.plugins.quicklook.model_v5 as mod
+
+    monkeypatch.setattr(mod, "_collect_sync", lambda: {})
+    monkeypatch.setattr(mod, "sampler", _NoGpuSampler())
+
+    stats = await p._grab_stats()
+    assert stats["gpu_mem"] == 50.0
+    assert stats["gpu_proc"] == 30.0
+
+
+@pytest.mark.asyncio
+async def test_no_gpu_keys_when_store_empty(store, config, monkeypatch):
+    p = PluginModel(store, config)
+    import glances.plugins.quicklook.model_v5 as mod
+
+    monkeypatch.setattr(mod, "_collect_sync", lambda: {})
+    monkeypatch.setattr(mod, "sampler", _NoGpuSampler())
+
+    stats = await p._grab_stats()
+    assert "gpu_mem" not in stats
+    assert "gpu_proc" not in stats
+
+
+@pytest.mark.asyncio
+async def test_no_gpu_keys_when_all_none(store, config, monkeypatch):
+    await store.set("gpu", [{"gpu_id": "n0", "mem": None, "proc": None}])
+    p = PluginModel(store, config)
+    import glances.plugins.quicklook.model_v5 as mod
+
+    monkeypatch.setattr(mod, "_collect_sync", lambda: {})
+    monkeypatch.setattr(mod, "sampler", _NoGpuSampler())
+
+    stats = await p._grab_stats()
+    assert "gpu_mem" not in stats
+    assert "gpu_proc" not in stats
+
+
+def test_gpu_fields_declared_watched():
+    fd = PluginModel.fields_description
+    for key in ("gpu_mem", "gpu_proc"):
+        assert fd[key]["watched"] is True
+        assert fd[key]["unit"] == "percent"

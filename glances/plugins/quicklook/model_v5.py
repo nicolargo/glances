@@ -154,6 +154,22 @@ class PluginModel(GlancesPluginBase[dict]):
             "prominent": True,
             "default_thresholds": _PERCENT_THRESHOLDS,
         },
+        "gpu_mem": {
+            "description": "Average GPU memory consumption.",
+            "unit": "percent",
+            "watched": True,
+            "watch_direction": "high",
+            "prominent": True,
+            "default_thresholds": _PERCENT_THRESHOLDS,
+        },
+        "gpu_proc": {
+            "description": "Average GPU processor consumption.",
+            "unit": "percent",
+            "watched": True,
+            "watch_direction": "high",
+            "prominent": True,
+            "default_thresholds": _PERCENT_THRESHOLDS,
+        },
         "percpu": {
             "description": "Per-core CPU usage (list of {cpu_number, total}).",
             "unit": "percent",
@@ -208,4 +224,22 @@ class PluginModel(GlancesPluginBase[dict]):
             pass
 
         out.update(await asyncio.to_thread(_collect_sync))
+        self._add_gpu_means(out)
         return out
+
+    def _add_gpu_means(self, out: dict[str, Any]) -> None:
+        """Average the gpu plugin's per-card proc/mem into gpu_proc/gpu_mem.
+
+        Cross-plugin read via the stats store — the gpu plugin publishes
+        its card list, quicklook averages it (replaces v4's global
+        `glances.gpu_percent` mutable channel). Keys are omitted entirely
+        when no GPU is present or every card reports None, so the renderer
+        draws no GPU bar (auto-show only when a GPU is detected).
+        """
+        cards = self.store.get("gpu")
+        if not isinstance(cards, list) or not cards:
+            return
+        for src, dst in (("mem", "gpu_mem"), ("proc", "gpu_proc")):
+            vals = [c[src] for c in cards if isinstance(c, dict) and c.get(src) is not None]
+            if vals:
+                out[dst] = round(sum(vals) / len(vals), 1)

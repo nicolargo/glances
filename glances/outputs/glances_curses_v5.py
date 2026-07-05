@@ -63,10 +63,7 @@ _DEGRADE_STEPS: list[tuple[str, Any]] = [
     ("quicklook_freq_only", True),  # (d) "Frequency" header + shrink quicklook
     ("hide_quicklook", True),  # (e) hide quicklook block
     ("hide_memswap", True),  # (f) hide swap block
-    # TODO(G4A — gpu): when the gpu plugin is ported it joins the TOP row;
-    # append ("hide_gpu", True) here as step (g) — the last resort, after
-    # swap — and add a matching `hide_gpu` guard in build_frame (mirror the
-    # hide_quicklook / hide_memswap guards in curses_renderer_v5.py).
+    ("hide_gpu", True),  # (g) hide gpu block (last resort)
 ]
 
 
@@ -165,6 +162,8 @@ class TuiV5(threading.Thread):
         on_quit: Callable[[], None] | None = None,
         full_quicklook: bool = False,
         percpu: bool = False,
+        meangpu: bool = False,
+        fahrenheit: bool = False,
     ) -> None:
         super().__init__(name="glances-tui-v5", daemon=True)
         self.store = store
@@ -195,6 +194,11 @@ class TuiV5(threading.Thread):
         # / --percpu (wired in main_v5.assemble).
         self._full_quicklook = bool(full_quicklook)
         self._percpu = bool(percpu)
+        # GPU view options seeded from the CLI flags --meangpu / --fahrenheit.
+        # ``_meangpu`` forces the gpu renderer into a single mean summary;
+        # ``_fahrenheit`` switches temperatures to °F. Consumed via _build_view.
+        self._meangpu = bool(meangpu)
+        self._fahrenheit = bool(fahrenheit)
         # Vertical scroll offset of the help overlay (rows). Reset to 0 each
         # time the overlay is opened; clamped to the content in ``_paint_help``
         # (which is the only place that knows the terminal height).
@@ -584,6 +588,8 @@ class TuiV5(threading.Thread):
         view = self._render_view()
         view["full_quicklook"] = self._full_quicklook
         view["percpu"] = self._percpu
+        view["meangpu"] = self._meangpu
+        view["fahrenheit"] = self._fahrenheit
         # Full mode: bars span (almost) the whole width; compact: a column.
         view["quicklook_width"] = max(20, max_x - 8) if self._full_quicklook else self._QUICKLOOK_COMPACT_WIDTH
         return view

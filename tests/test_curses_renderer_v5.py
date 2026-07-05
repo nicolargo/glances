@@ -1219,3 +1219,28 @@ def test_hide_memswap_skips_block():
     frame = build_frame(store, fields, registry, [], view={"hide_memswap": True})
     names = [b.name for b in frame.top]
     assert "memswap" not in names and "quicklook" in names and "cpu" in names
+
+
+def test_top_slot_has_npu_after_percpu_before_gpu():
+    from glances.outputs.curses_renderer_v5 import TOP_SLOT
+
+    assert "npu" in TOP_SLOT
+    assert TOP_SLOT.index("percpu") < TOP_SLOT.index("npu") < TOP_SLOT.index("gpu")
+
+
+def test_build_frame_hides_gpu_when_flagged():
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    # build_frame(store_snapshot, fields_by_plugin, registry, alerts_history, ..., view=None)
+    registry = [("gpu", True)]
+    snapshot = {
+        "gpu": {
+            "data": [{"gpu_id": "n0", "name": "X", "mem": 10, "proc": 5, "temperature": 40}],
+            "_levels": {},
+        }
+    }
+    fields = {"gpu": {}}
+    shown = build_frame(snapshot, fields, registry, [], view={"hide_gpu": False})
+    hidden = build_frame(snapshot, fields, registry, [], view={"hide_gpu": True})
+    assert "gpu" in [b.name for b in shown.top]
+    assert "gpu" not in [b.name for b in hidden.top]

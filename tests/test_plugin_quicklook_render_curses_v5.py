@@ -166,3 +166,16 @@ def test_freq_only_is_narrower_than_named():
         return max(_painter_width(r) for r in rows)
 
     assert block_w(freq) < block_w(named)
+
+
+def test_gpu_bars_render_when_present():
+    rows = render(_payload(gpu_mem=50.0, gpu_proc=30.0), FIELDS)
+    text = "\n".join(_text(r) for r in rows)
+    assert "GMEM" in text
+    assert "GPU" in text
+
+
+def test_no_gpu_bars_when_absent():
+    rows = render(_payload(), FIELDS)
+    text = "\n".join(_text(r) for r in rows)
+    assert "GMEM" not in text

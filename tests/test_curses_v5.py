@@ -545,6 +545,39 @@ def test_tui_v5_build_view_carries_quicklook_flags(fake_store, fake_alerts, fake
     assert tui._build_view(max_x=120)["quicklook_width"] == tui_mod.TuiV5._QUICKLOOK_COMPACT_WIDTH
 
 
+def test_build_view_seeds_meangpu_and_fahrenheit(fake_store, fake_alerts, fake_config):
+    """`--meangpu` / `--fahrenheit` reach the view dict via the constructor
+    params (wired in main_v5.assemble), consumed by the gpu renderer."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("mem", False)],
+        fields_by_plugin={"mem": {}},
+        refresh_interval=0.01,
+        meangpu=True,
+        fahrenheit=True,
+    )
+    assert tui._meangpu is True
+    assert tui._fahrenheit is True
+    view = tui._build_view(max_x=200)
+    assert view["meangpu"] is True
+    assert view["fahrenheit"] is True
+
+
+def test_build_view_meangpu_fahrenheit_default_false(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._meangpu is False
+    assert tui._fahrenheit is False
+    view = tui._build_view(max_x=200)
+    assert view["meangpu"] is False
+    assert view["fahrenheit"] is False
+
+
 def test_tui_v5_full_quicklook_hides_siblings_end_to_end(fake_store, fake_alerts, fake_config):
     """End-to-end: with `_full_quicklook` on, `_build_frame(max_x)` drives the
     real chain (_build_view → build_frame) and the hidden TOP siblings
@@ -1377,7 +1410,7 @@ def make_tui_with_top(fake_alerts, fake_config):
 
 
 def test_degrade_steps_order():
-    """The cascade order is the maintainer's v4 spec a→f, exported as a list."""
+    """The cascade order is the maintainer's v4 spec a→g, exported as a list."""
     from glances.outputs.glances_curses_v5 import _DEGRADE_STEPS
 
     assert _DEGRADE_STEPS == [
@@ -1387,6 +1420,7 @@ def test_degrade_steps_order():
         ("quicklook_freq_only", True),
         ("hide_quicklook", True),
         ("hide_memswap", True),
+        ("hide_gpu", True),
     ]
 
 
@@ -1564,3 +1598,12 @@ def test_wide_terminal_keeps_all_proclist_columns(make_tui_with_body):
     frame = tui._build_fitted_frame(max_x=400)
     proc = next(b for b in frame.right if b.name == "processlist")
     assert len(proc.rows[0].cells) == 13
+
+
+def test_hide_gpu_is_last_cascade_step():
+    from glances.outputs.glances_curses_v5 import _DEGRADE_STEPS
+
+    keys = [k for k, _ in _DEGRADE_STEPS]
+    assert keys[-1] == "hide_gpu"
+    # Ordering contract: gpu hidden only after quicklook + memswap.
+    assert keys.index("hide_memswap") < keys.index("hide_gpu")

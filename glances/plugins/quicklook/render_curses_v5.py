@@ -54,8 +54,14 @@ _BRACKETS_WIDTH = 2
 # 2 (brackets) + 8 (bar) = 15.
 _MIN_BAR_TOTAL = _LABEL_WIDTH + _BRACKETS_WIDTH + 8
 
-# Stats shown as bars, in v4 order. (GPU intentionally excluded in G2.)
-_BAR_KEYS = ("cpu", "mem", "load")
+# Stats shown as bars, in v4 order. GPU means appended (auto-shown when the
+# gpu plugin publishes cards — see quicklook/model_v5._add_gpu_means).
+_BAR_KEYS = ("cpu", "mem", "load", "gpu_mem", "gpu_proc")
+
+# 4-char display labels (the bar label cell is padded to 4). Keeps the
+# grid aligned — raw upper-cased keys "GPU_MEM"/"GPU_PROC" (7 chars) would
+# break it.
+_BAR_LABEL = {"gpu_mem": "GMEM", "gpu_proc": "GPU"}
 
 # Per-core: top-N shown, the rest collapsed into a "CPU*" mean row (v4).
 # TODO(G2+): read [percpu] max_cpu_display from config (v4 __init__.py:108);
@@ -157,7 +163,8 @@ def render(
             continue
         if key not in payload or payload.get(key) is None:
             continue
-        rows.append(Row(cells=_bar_cells(key.upper(), payload[key], _role_for(payload, key), width)))
+        label = _BAR_LABEL.get(key, key.upper())
+        rows.append(Row(cells=_bar_cells(label, payload[key], _role_for(payload, key), width)))
 
     return rows or [Row(cells=[Cell(text="CPU", color=ColorRole.HEADER, bold=True)])]
 

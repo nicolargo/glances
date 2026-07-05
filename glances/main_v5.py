@@ -157,6 +157,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Start TUI with the full-width quicklook (hides cpu/mem/... top blocks).",
     )
     parser.add_argument(
+        "--meangpu",
+        dest="meangpu",
+        action="store_true",
+        default=False,
+        help="Show a single mean GPU summary instead of per-GPU lines.",
+    )
+    parser.add_argument(
+        "--fahrenheit",
+        dest="fahrenheit",
+        action="store_true",
+        default=False,
+        help="Display temperatures in Fahrenheit (default: Celsius).",
+    )
+    parser.add_argument(
         "--set-password",
         action="store_true",
         help="Generate a PBKDF2 password hash interactively and print it to stdout. Does NOT modify glances.conf.",
@@ -398,6 +412,8 @@ def assemble(
             on_quit=lambda: os.kill(os.getpid(), signal.SIGINT),
             full_quicklook=getattr(args, "full_quicklook", False),
             percpu=getattr(args, "percpu", False),
+            meangpu=getattr(args, "meangpu", False),
+            fahrenheit=getattr(args, "fahrenheit", False),
         )
 
     return app, scheduler, host, int(port), tui

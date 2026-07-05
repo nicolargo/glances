@@ -86,6 +86,20 @@ def test_build_parser_no_api_doc():
     assert args.api_doc is False
 
 
+def test_meangpu_and_fahrenheit_flags_parse():
+    parser = build_parser()
+    args = parser.parse_args(["--meangpu", "--fahrenheit"])
+    assert args.meangpu is True
+    assert args.fahrenheit is True
+
+
+def test_meangpu_fahrenheit_default_false():
+    parser = build_parser()
+    args = parser.parse_args([])
+    assert getattr(args, "meangpu", False) is False
+    assert getattr(args, "fahrenheit", False) is False
+
+
 def test_build_parser_version_exits(capsys):
     parser = build_parser()
     with pytest.raises(SystemExit) as excinfo:

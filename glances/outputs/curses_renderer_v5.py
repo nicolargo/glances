@@ -53,7 +53,7 @@ logger = logging.getLogger(__name__)
 # default to LEFT (same fallback as v4). Configurable via [outputs] later.
 
 HEADER_SLOT: tuple[str, ...] = ("system", "uptime")
-TOP_SLOT: tuple[str, ...] = ("quicklook", "cpu", "percpu", "gpu", "mem", "memswap", "load")
+TOP_SLOT: tuple[str, ...] = ("quicklook", "cpu", "percpu", "npu", "gpu", "mem", "memswap", "load")
 LEFT_SLOT: tuple[str, ...] = (
     "network",
     "ports",
@@ -760,6 +760,8 @@ def build_frame(
         if view and view.get("hide_quicklook") and plugin_name == "quicklook":
             continue
         if view and view.get("hide_memswap") and plugin_name == "memswap":
+            continue
+        if view and view.get("hide_gpu") and plugin_name == "gpu":
             continue
         payload = store_snapshot.get(plugin_name) or {}
         fields_desc = fields_by_plugin.get(plugin_name, {})
