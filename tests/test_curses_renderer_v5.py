@@ -454,6 +454,44 @@ def test_format_alert_time_malformed_falls_back():
     assert isinstance(result, str)
 
 
+def test_format_alert_duration_elapsed():
+    """Elapsed time since the transition, formatted H:MM:SS, no microseconds."""
+    from datetime import datetime, timezone
+
+    from glances.outputs.curses_renderer_v5 import _format_alert_duration
+
+    ts = "2026-05-15T08:00:00+00:00"
+    now = datetime(2026, 5, 15, 8, 5, 30, 500000, tzinfo=timezone.utc)
+    assert _format_alert_duration(ts, now=now) == "0:05:30"
+
+
+def test_format_alert_duration_naive_ts_assumed_utc():
+    """A naive ISO timestamp (as emitted by _build_event) is treated as UTC."""
+    from datetime import datetime, timezone
+
+    from glances.outputs.curses_renderer_v5 import _format_alert_duration
+
+    now = datetime(2026, 5, 15, 8, 1, 0, tzinfo=timezone.utc)
+    assert _format_alert_duration("2026-05-15T08:00:00", now=now) == "0:01:00"
+
+
+def test_format_alert_duration_malformed_returns_none():
+    """Unparseable timestamp → None so the caller drops the duration."""
+    from glances.outputs.curses_renderer_v5 import _format_alert_duration
+
+    assert _format_alert_duration("not-a-timestamp") is None
+
+
+def test_format_alert_duration_future_returns_none():
+    """Clock skew (ts in the future) → None rather than a negative duration."""
+    from datetime import datetime, timezone
+
+    from glances.outputs.curses_renderer_v5 import _format_alert_duration
+
+    now = datetime(2026, 5, 15, 8, 0, 0, tzinfo=timezone.utc)
+    assert _format_alert_duration("2026-05-15T08:05:00+00:00", now=now) is None
+
+
 def test_render_alert_block_uses_local_time_for_events():
     """End-to-end: render_alert_block formats the ts via the local converter.
     We pick a UTC timestamp and assert it does NOT appear verbatim (a TZ
@@ -548,7 +586,9 @@ def test_render_alert_block_header_uses_new_ongoing_total_format():
 
 def test_render_alert_block_ongoing_event_carries_marker():
     """Latest event per (plugin, key, field) with non-ok level is marked
-    ongoing — visible suffix on the level cell."""
+    ongoing, with the elapsed duration since its transition."""
+    from datetime import datetime, timezone
+
     history = [
         {
             "ts": "2026-05-15T08:00:00+00:00",
@@ -563,9 +603,11 @@ def test_render_alert_block_ongoing_event_carries_marker():
             "hostname": "h",
         },
     ]
-    rows = render_alert_block(history, limit=10)
+    # Fixed "now" = 1h 23m 45s after the transition → deterministic duration.
+    now = datetime(2026, 5, 15, 9, 23, 45, tzinfo=timezone.utc)
+    rows = render_alert_block(history, limit=10, now=now)
     flat = " ".join(c.text for row in rows for c in row.cells)
-    assert "ongoing" in flat
+    assert "ongoing for 1:23:45" in flat
 
 
 def test_render_alert_block_resolution_event_not_marked_ongoing():

@@ -38,7 +38,7 @@ import inspect
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any
 
@@ -532,6 +532,34 @@ def _format_alert_time(ts: str, now: datetime | None = None) -> str:
     return local_dt.strftime("%m-%d %H:%M:%S")
 
 
+def _format_alert_duration(ts: str, now: datetime | None = None) -> str | None:
+    """Elapsed time since ``ts`` (the ongoing event's transition), as ``H:MM:SS``.
+
+    Used to tell operators how long an alert has been active. Mirrors the v4
+    finished-event duration format (``str(end - begin)``) but measured against
+    "now" for a still-ongoing alert. Sub-second precision is dropped so the
+    value is stable across refreshes.
+
+    Returns ``None`` when ``ts`` is unparseable or lies in the future (clock
+    skew) — the caller then omits the duration rather than showing a bogus or
+    negative value. Never raises: the renderer must not crash on a malformed
+    event.
+    """
+    try:
+        dt = datetime.fromisoformat(ts)
+    except (ValueError, TypeError):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    now_utc = now or datetime.now(tz=timezone.utc)
+    elapsed = now_utc - dt
+    if elapsed.total_seconds() < 0:
+        return None
+    # Drop microseconds: str(timedelta) would otherwise append ``.NNNNNN`` and
+    # make the value jitter every frame.
+    return str(timedelta(seconds=int(elapsed.total_seconds())))
+
+
 def render_alert_block(
     history: list[dict[str, Any]],
     limit: int = 10,
@@ -598,8 +626,12 @@ def render_alert_block(
             # spot the active alerts at a glance. The "ongoing" marker only
             # decorates the most-recent event per (plugin, key, field) tuple
             # — older non-ok events for the same target have been
-            # superseded and are not ongoing any more.
-            level_text = f"{level_text} (ongoing)"
+            # superseded and are not ongoing any more. Append how long the
+            # alert has been active (elapsed since its transition) so the
+            # operator sees the severity of a long-running condition; the
+            # duration is omitted if the timestamp is unparseable.
+            duration = _format_alert_duration(str(evt.get("ts", "")), now=now_local)
+            level_text = f"{level_text} (ongoing for {duration})" if duration else f"{level_text} (ongoing)"
         role = _LEVEL_TO_ROLE.get(new_level, ColorRole.DEFAULT)
         rows.append(
             Row(
