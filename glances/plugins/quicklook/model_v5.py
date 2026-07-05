@@ -114,6 +114,12 @@ class PluginModel(GlancesPluginBase[dict]):
 
     plugin_name: ClassVar[str] = "quicklook"
     IS_COLLECTION: ClassVar[bool] = False
+    # Quicklook re-exposes cpu/mem/swap/load with the standard percent ladder
+    # so its bars colour like the dedicated plugins — but those signals are
+    # ALREADY watched by the cpu/mem/memswap/load plugins. Ingesting quicklook
+    # too would double every aggregate alert. Keep colouring, skip the alerts
+    # pipeline. See ``GlancesPluginBase.EMITS_ALERTS``.
+    EMITS_ALERTS: ClassVar[bool] = False
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "cpu": {

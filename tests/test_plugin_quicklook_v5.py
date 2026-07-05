@@ -39,6 +39,14 @@ def test_plugin_identity(store, config):
     assert p.IS_COLLECTION is False
 
 
+def test_quicklook_opts_out_of_alerts(store, config):
+    """quicklook colours its bars from cpu/mem/swap/load `_levels` but must
+    NOT emit alerts events / actions: those aggregate signals are already
+    watched by the cpu/mem/memswap/load plugins, so ingesting quicklook too
+    would duplicate every alert. See base ``EMITS_ALERTS`` doc."""
+    assert PluginModel.EMITS_ALERTS is False
+
+
 def test_fields_description_keys():
     fd = PluginModel.fields_description
     for key in ("cpu", "mem", "swap", "load"):
