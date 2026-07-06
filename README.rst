@@ -398,11 +398,11 @@ variable setting parameters for the glances startup command):
 
 Where $HOME/.config/glances/glances.conf is a local directory containing your glances.conf file.
 
-Run the container in *Web server mode*:
+Run the container in *Web server mode* (and MCP server):
 
 .. code-block:: console
 
-    docker run -d --restart="always" -p 61208-61209:61208-61209 -e TZ="${TZ}" -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host nicolargo/glances:latest-full
+    docker run -d --restart="always" -p 61208-61209:61208-61209 -e TZ="${TZ}" -e GLANCES_OPT="-w --enable-mcp" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host nicolargo/glances:latest-full
 
 For a full list of options, see the Glances `Docker`_ documentation page.
 
