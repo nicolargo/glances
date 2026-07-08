@@ -354,7 +354,7 @@ def test_temperature_core_mean_option_groups_core_temperatures(sensors_plugin, c
 
     stats = plugin.update()
 
-    assert len(stats) == 1
-    assert stats[0]['label'] == 'Core (mean)'
-    assert stats[0]['value'] == expected_mean
-    assert stats[0]['type'] == 'temperature_core'
+    assert len(stats) == 1  # nosec B101
+    assert stats[0]['label'] == 'Core (mean)'  # nosec B101
+    assert stats[0]['value'] == expected_mean  # nosec B101
+    assert stats[0]['type'] == 'temperature_core'  # nosec B101
