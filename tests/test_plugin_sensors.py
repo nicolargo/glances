@@ -14,7 +14,7 @@ import json
 import pytest
 
 from glances.globals import LINUX
-from glances.plugins.sensors import GlancesGrabSensors
+from glances.plugins.sensors import GlancesGrabSensors, SensorsPlugin
 
 
 @pytest.fixture
@@ -79,6 +79,28 @@ class TestSensorsPluginUpdate:
         stats = sensors_plugin.get_raw()
         for sensor in stats:
             assert 'unit' in sensor
+
+    def test_temperature_core_mean_option_groups_core_temperatures(self, sensors_plugin):
+        """Test that temperature_core_mean groups core temperatures."""
+
+        class FakeTemperatureGrabber:
+            def update(self):
+                return [
+                    {'label': 'Core 0', 'unit': 'C', 'value': 43, 'warning': 80, 'critical': 100},
+                    {'label': 'Core 1', 'unit': 'C', 'value': 42, 'warning': 80, 'critical': 100},
+                    {'label': 'Core 2', 'unit': 'C', 'value': 41, 'warning': 80, 'critical': 100},
+                ]
+
+        plugin = SensorsPlugin(args=sensors_plugin.args)
+        plugin.sensors_grab_map = {'temperature_core': FakeTemperatureGrabber()}
+        plugin._limits['sensors_temperature_core_mean'] = ['true']
+
+        stats = plugin.update()
+
+        assert len(stats) == 1
+        assert stats[0]['label'] == 'Core (mean)'
+        assert stats[0]['value'] == 42
+        assert stats[0]['type'] == 'temperature_core'
 
 
 class TestSensorsPluginTypes:

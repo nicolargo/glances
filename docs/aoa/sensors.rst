@@ -22,6 +22,8 @@ thresholds (default behavor).
 .. code-block:: ini
 
     [sensors]
+    # Display CPU core temperatures as a single mean value (default is false)
+    temperature_core_mean=false
     # Sensors core thresholds (in Celsius...)
     # Note: By default values are grabbed from the system (if values are available)
     # Core temperature thresholds in °C

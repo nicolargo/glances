@@ -8,6 +8,7 @@
 
 """Sensors plugin."""
 
+import re
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
@@ -134,8 +135,31 @@ class SensorsPlugin(GlancesPluginModel):
             stats_transformed.append(stat)
         # Remove duplicates thanks to https://stackoverflow.com/a/9427216/1919431
         stats_transformed = [dict(t) for t in {tuple(d.items()) for d in stats_transformed}]
+        stats_transformed = self.__mean_temperature_core_sensors(stats_transformed)
         # Sort by label
         return sorted(stats_transformed, key=lambda d: natural_keys(d['label']))
+
+    def __mean_temperature_core_sensors(self, stats: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        if self.get_conf_value('mean', header='temperature_core', default=['false'])[0].lower() != 'true':
+            return stats
+
+        core_stats = []
+        other_stats = []
+        for stat in stats:
+            if stat.get('type') == sensors_definition.get('cpu_temp').get('type') and re.fullmatch(
+                r'Core \d+', stat.get('label', '')
+            ):
+                core_stats.append(stat)
+            else:
+                other_stats.append(stat)
+
+        if not core_stats:
+            return stats
+
+        mean_sensor = core_stats[0].copy()
+        mean_sensor['label'] = 'Core (mean)'
+        mean_sensor['value'] = int(round(sum(stat['value'] for stat in core_stats) / len(core_stats)))
+        return [*other_stats, mean_sensor]
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
