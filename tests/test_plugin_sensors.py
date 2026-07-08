@@ -10,7 +10,6 @@
 """Tests for the Sensors plugin."""
 
 import json
-from unittest.mock import Mock
 
 import pytest
 
@@ -80,43 +79,6 @@ class TestSensorsPluginUpdate:
         stats = sensors_plugin.get_raw()
         for sensor in stats:
             assert 'unit' in sensor
-
-    @pytest.mark.parametrize(
-        "core_values, expected_mean",
-        [
-            ([43, 42, 41], 42),
-            ([40, 41], 41),
-            ([44, 45, 46, 47], 46),
-        ],
-    )
-    def test_temperature_core_mean_option_groups_core_temperatures(self, sensors_plugin, core_values, expected_mean):
-        """Test that temperature_core_mean groups core temperatures."""
-
-        def get_conf_value(value, header="", **_kwargs):
-            """Return test configuration values."""
-            if value == 'mean' and header == 'temperature_core':
-                return ['true']
-            return []
-
-        plugin = SensorsPlugin(args=sensors_plugin.args)
-        plugin.sensors_grab_map = {
-            'temperature_core': Mock(
-                update=Mock(
-                    return_value=[
-                        {'label': f'Core {index}', 'unit': 'C', 'value': value, 'warning': 80, 'critical': 100}
-                        for index, value in enumerate(core_values)
-                    ]
-                )
-            )
-        }
-        plugin.get_conf_value = Mock(side_effect=get_conf_value)
-
-        stats = plugin.update()
-
-        assert len(stats) == 1
-        assert stats[0]['label'] == 'Core (mean)'
-        assert stats[0]['value'] == expected_mean
-        assert stats[0]['type'] == 'temperature_core'
 
 
 class TestSensorsPluginTypes:
@@ -359,3 +321,40 @@ class TestSensorsPluginAlerts:
             if label in views and 'value' in views[label]:
                 if sensor['value']:  # Only check if value is not empty
                     assert 'decoration' in views[label]['value']
+
+
+@pytest.mark.parametrize(
+    "core_values, expected_mean",
+    [
+        ([43, 42, 41], 42),
+        ([40, 41], 41),
+        ([44, 45, 46, 47], 46),
+    ],
+)
+def test_temperature_core_mean_option_groups_core_temperatures(sensors_plugin, core_values, expected_mean):
+    """Test that temperature_core_mean groups core temperatures."""
+    def get_conf_value(value, header="", **_kwargs):
+        """Return test configuration values."""
+        if value == 'mean' and header == 'temperature_core':
+            return ['true']
+        return []
+
+    def update_sensors():
+        """Return test core temperature values."""
+        return [
+            {'label': f'Core {index}', 'unit': 'C', 'value': value, 'warning': 80, 'critical': 100}
+            for index, value in enumerate(core_values)
+        ]
+
+    plugin = SensorsPlugin(args=sensors_plugin.args)
+    plugin.sensors_grab_map = {
+        'temperature_core': type('TemperatureGrabber', (), {'update': staticmethod(update_sensors)})()
+    }
+    plugin.get_conf_value = get_conf_value
+
+    stats = plugin.update()
+
+    assert len(stats) == 1
+    assert stats[0]['label'] == 'Core (mean)'
+    assert stats[0]['value'] == expected_mean
+    assert stats[0]['type'] == 'temperature_core'

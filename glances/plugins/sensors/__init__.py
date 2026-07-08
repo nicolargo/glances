@@ -331,7 +331,7 @@ class SensorsPlugin(GlancesPluginModel):
         return ret
 
 
-class GlancesGrabSensors:
+class GlancesGrabSensors:  # pylint: disable=too-few-public-methods
     """Get sensors stats."""
 
     def __init__(self, sensor_def: dict):
