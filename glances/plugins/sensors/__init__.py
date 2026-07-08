@@ -158,7 +158,7 @@ class SensorsPlugin(GlancesPluginModel):
 
         mean_sensor = core_stats[0].copy()
         mean_sensor['label'] = 'Core (mean)'
-        mean_sensor['value'] = int(round(sum(stat['value'] for stat in core_stats) / len(core_stats)))
+        mean_sensor['value'] = int((sum(stat['value'] for stat in core_stats) / len(core_stats)) + 0.5)
         return [*other_stats, mean_sensor]
 
     @GlancesPluginModel._check_decorator
