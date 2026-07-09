@@ -27,6 +27,16 @@ class GlancesStdoutCsv:
         # Display the header only on the first line
         self.header = True
 
+        # Remember, per plugin, the ordered list of list-item keys (e.g. network
+        # interface names) captured when the header was built. Data rows are then
+        # aligned to this fixed schema: absent items are filled with N/A and items
+        # that appear after export start are omitted (they have no header column).
+        self.list_keys = {}
+
+        # Number of fields per list item for each plugin, captured at header time,
+        # so a missing interface can be padded with the right number of N/A cells.
+        self.header_field_counts = {}
+
         # Build the list of plugin and/or plugin.attribute to display
         self.plugins_list = self.build_list()
 
@@ -58,10 +68,18 @@ class GlancesStdoutCsv:
                 for k in stat:
                     line += f'{plugin}.{str(k)}{self.separator}'
             elif isinstance(stat, list):
+                keys_order = []
                 for i in stat:
                     if isinstance(i, dict) and 'key' in i:
+                        keys_order.append(str(i[i['key']]))
                         for k in i:
                             line += '{}.{}.{}{}'.format(plugin, str(i[i['key']]), str(k), self.separator)
+                # Lock the interface schema (ordered identities + their fields)
+                self.list_keys[plugin] = keys_order
+                for i in stat:
+                    if isinstance(i, dict) and 'key' in i:
+                        self.header_field_counts[plugin] = len(i)
+                        break
             else:
                 line += f'{plugin}{self.separator}'
 
@@ -78,10 +96,23 @@ class GlancesStdoutCsv:
                 for v in stat.values():
                     line += f'{str(v)}{self.separator}'
             elif isinstance(stat, list):
+                # Index current items by their identity value
+                current = {}
                 for i in stat:
                     if isinstance(i, dict) and 'key' in i:
-                        for v in i.values():
+                        ident = str(i[i['key']])
+                        current[ident] = i
+                # Emit one block per identity locked in at header time.
+                # Absent identities are filled with N/A; identities that appeared
+                # after the header was built are omitted (no column exists).
+                for ident in self.list_keys.get(plugin, []):
+                    if ident in current:
+                        for v in current[ident].values():
                             line += f'{str(v)}{self.separator}'
+                    else:
+                        # Fill with N/A using the header's field count for this plugin.
+                        n_fields = self.header_field_counts.get(plugin, 0)
+                        line += (f'{self.na}{self.separator}') * n_fields
             else:
                 line += f'{str(stat)}{self.separator}'
 
