@@ -10,6 +10,7 @@
 """Tests for the Sensors plugin."""
 
 import json
+from copy import copy
 
 import pytest
 
@@ -346,10 +347,17 @@ def test_temperature_core_mean_option_groups_core_temperatures(sensors_plugin, c
             for index, value in enumerate(core_values)
         ]
 
-    plugin = SensorsPlugin(args=sensors_plugin.args)
-    plugin.sensors_grab_map = {
-        'temperature_core': type('TemperatureGrabber', (), {'update': staticmethod(update_sensors)})()
-    }
+    class TemperatureGrabber:
+        """Test temperature grabber."""
+
+        def update(self):
+            """Return test core temperature values."""
+            return update_sensors()
+
+    plugin_args = copy(sensors_plugin.args)
+    plugin_args.disable_sensors = False
+    plugin = SensorsPlugin(args=plugin_args)
+    plugin.sensors_grab_map = {'temperature_core': TemperatureGrabber()}
     plugin.get_conf_value = get_conf_value
 
     stats = plugin.update()
