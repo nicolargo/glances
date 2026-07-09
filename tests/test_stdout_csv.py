@@ -92,7 +92,9 @@ def test_list_plugin_interface_reappears_with_partial_fields():
     start = [_iface_full('eth0', 1, 2), _iface_full('wlan0', 3, 4)]
     header = csv.build_header('network', None, start)
     # wlan0 returns with only the non-rate fields present
-    data = csv.build_data('network', None, [_iface_full('eth0', 5, 6), _iface_partial('wlan0', 7, 8)])
+    data = csv.build_data(
+        'network', None, [_iface_full('eth0', 5, 6), _iface_partial('wlan0', 7, 8)]
+    )
     assert _ncols(data) == _ncols(header)
     # the 7 missing wlan0 fields become N/A
     assert data.count('N/A') == 7
@@ -104,7 +106,9 @@ def test_list_plugin_interface_added_is_omitted():
     start = [_iface_full('eth0', 1, 2), _iface_full('wlan0', 3, 4)]
     header = csv.build_header('network', None, start)
     data = csv.build_data(
-        'network', None, [_iface_full('eth0', 7, 8), _iface_full('ppp0', 9, 9), _iface_full('wlan0', 10, 11)]
+        'network',
+        None,
+        [_iface_full('eth0', 7, 8), _iface_full('ppp0', 9, 9), _iface_full('wlan0', 10, 11)],
     )
     assert _ncols(data) == _ncols(header)
     assert 'ppp0' not in data
@@ -116,7 +120,9 @@ def test_list_plugin_added_keeps_existing_aligned():
     start = [_iface_full('eth0', 1, 2), _iface_full('wlan0', 3, 4)]
     csv.build_header('network', None, start)
     data = csv.build_data(
-        'network', None, [_iface_full('eth0', 7, 8), _iface_full('ppp0', 9, 9), _iface_full('wlan0', 10, 11)]
+        'network',
+        None,
+        [_iface_full('eth0', 7, 8), _iface_full('ppp0', 9, 9), _iface_full('wlan0', 10, 11)],
     )
     cells = data.rstrip(',').split(',')
     # wlan0's current bytes_sent (10) must appear under wlan0's block, not eth0's
