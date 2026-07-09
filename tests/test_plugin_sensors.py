@@ -348,9 +348,6 @@ def test_temperature_core_mean_option_groups_core_temperatures(sensors_plugin, c
         ]
 
     class TemperatureGrabber:
-
-        """Test temperature grabber."""
-
         def update(self):
             """Return test core temperature values."""
             return update_sensors()
