@@ -33,9 +33,11 @@ class GlancesStdoutCsv:
         # that appear after export start are omitted (they have no header column).
         self.list_keys = {}
 
-        # Number of fields per list item for each plugin, captured at header time,
-        # so a missing interface can be padded with the right number of N/A cells.
-        self.header_field_counts = {}
+        # Ordered field names per list item for each plugin, captured at header time.
+        # Data rows emit values by these names (N/A when a field is missing this
+        # cycle, e.g. rate fields absent on an interface's first sample), so every
+        # interface block always matches the header width.
+        self.header_field_names = {}
 
         # Build the list of plugin and/or plugin.attribute to display
         self.plugins_list = self.build_list()
@@ -74,11 +76,11 @@ class GlancesStdoutCsv:
                         keys_order.append(str(i[i['key']]))
                         for k in i:
                             line += '{}.{}.{}{}'.format(plugin, str(i[i['key']]), str(k), self.separator)
-                # Lock the interface schema (ordered identities + their fields)
+                # Lock the interface schema: ordered identities + ordered field names
                 self.list_keys[plugin] = keys_order
                 for i in stat:
                     if isinstance(i, dict) and 'key' in i:
-                        self.header_field_counts[plugin] = len(i)
+                        self.header_field_names[plugin] = list(i.keys())
                         break
             else:
                 line += f'{plugin}{self.separator}'
@@ -102,17 +104,16 @@ class GlancesStdoutCsv:
                     if isinstance(i, dict) and 'key' in i:
                         ident = str(i[i['key']])
                         current[ident] = i
-                # Emit one block per identity locked in at header time.
-                # Absent identities are filled with N/A; identities that appeared
-                # after the header was built are omitted (no column exists).
+                # Emit one block per identity locked in at header time, always using
+                # the header's field names so the block width is constant. Missing
+                # fields (absent interface, or rate fields not yet computed on an
+                # interface's first sample) become N/A. Identities that appeared only
+                # after the header was built are omitted (they have no column).
+                field_names = self.header_field_names.get(plugin, [])
                 for ident in self.list_keys.get(plugin, []):
-                    if ident in current:
-                        for v in current[ident].values():
-                            line += f'{str(v)}{self.separator}'
-                    else:
-                        # Fill with N/A using the header's field count for this plugin.
-                        n_fields = self.header_field_counts.get(plugin, 0)
-                        line += (f'{self.na}{self.separator}') * n_fields
+                    item = current.get(ident, {})
+                    for field in field_names:
+                        line += f'{str(item.get(field, self.na))}{self.separator}'
             else:
                 line += f'{str(stat)}{self.separator}'
 
