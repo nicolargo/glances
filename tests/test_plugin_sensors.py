@@ -340,22 +340,21 @@ def test_temperature_core_mean_option_groups_core_temperatures(sensors_plugin, c
             return ['true']
         return []
 
-    def update_sensors():
-        """Return test core temperature values."""
-        return [
-            {'label': f'Core {index}', 'unit': 'C', 'value': value, 'warning': 80, 'critical': 100}
-            for index, value in enumerate(core_values)
-        ]
-
     class TemperatureGrabber:
+        def __init__(self, values):
+            self.values = values
+
         def update(self):
             """Return test core temperature values."""
-            return update_sensors()
+            return [
+                {'label': f'Core {index}', 'unit': 'C', 'value': value, 'warning': 80, 'critical': 100}
+                for index, value in enumerate(self.values)
+            ]
 
     plugin_args = copy(sensors_plugin.args)
     plugin_args.disable_sensors = False
     plugin = SensorsPlugin(args=plugin_args)
-    plugin.sensors_grab_map = {'temperature_core': TemperatureGrabber()}
+    plugin.sensors_grab_map = {'temperature_core': TemperatureGrabber(core_values)}
     plugin.get_conf_value = get_conf_value
 
     stats = plugin.update()
