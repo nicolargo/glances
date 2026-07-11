@@ -148,6 +148,29 @@ def test_register_falls_back_to_global(store, tmp_path, monkeypatch):
     assert scheduler._entries[0].refresh_time == 6.0
 
 
+def test_register_uses_plugin_section_refresh_v4_key(store, tmp_path, monkeypatch):
+    """The documented v4 key `[<plugin>] refresh` must be honoured (not only
+    the `refresh_time` alias) — every shipped conf uses `refresh`."""
+    config = _config_with_ini(tmp_path, monkeypatch, "[fast]\nrefresh = 10\n")
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(FastPlugin(store, config))
+    assert scheduler._entries[0].refresh_time == 10.0
+
+
+def test_register_uses_global_refresh_v4_key(store, tmp_path, monkeypatch):
+    config = _config_with_ini(tmp_path, monkeypatch, "[global]\nrefresh = 8\n")
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(FastPlugin(store, config))
+    assert scheduler._entries[0].refresh_time == 8.0
+
+
+def test_plugin_refresh_beats_global(store, tmp_path, monkeypatch):
+    config = _config_with_ini(tmp_path, monkeypatch, "[global]\nrefresh = 2\n[fast]\nrefresh = 10\n")
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(FastPlugin(store, config))
+    assert scheduler._entries[0].refresh_time == 10.0
+
+
 def test_register_falls_back_to_default(store, config):
     scheduler = AsyncScheduler(store, config)
     plugin = FastPlugin(store, config)

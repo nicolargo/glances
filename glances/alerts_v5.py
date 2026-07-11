@@ -61,6 +61,18 @@ _DEFAULT_HISTORY_SIZE = 200
 # unaffected (it reads `_levels` directly from the payload).
 _DEFAULT_WARMUP_CYCLES = 3
 
+# Only these levels raise an alert (history event + action dispatch). A
+# ``careful`` (or any other sub-warning) level still colours the TUI cell
+# from ``_levels`` but is treated as ``ok`` by the alert state machine, so
+# it never enters the alert history or the footer list. Mirrors v4, whose
+# logs record WARNING/CRITICAL only.
+_ALERTABLE_LEVELS = frozenset({"warning", "critical"})
+
+
+def _alert_level(level: str) -> str:
+    """Collapse any non-alertable level (e.g. ``careful``) to ``ok``."""
+    return level if level in _ALERTABLE_LEVELS else "ok"
+
 
 @dataclass
 class _AlertState:
@@ -365,7 +377,7 @@ class GlancesAlerts:
                 if not isinstance(level, str):
                     continue
                 prominent = bool(entry.get("prominent", True))
-                yield (None, field_name, level, payload.get(field_name), prominent)
+                yield (None, field_name, _alert_level(level), payload.get(field_name), prominent)
             return
 
         # Collection — levels is keyed by pk_value.
@@ -387,7 +399,7 @@ class GlancesAlerts:
                 if not isinstance(level, str):
                     continue
                 prominent = bool(entry.get("prominent", True))
-                yield (str(pk_value), field_name, level, item.get(field_name), prominent)
+                yield (str(pk_value), field_name, _alert_level(level), item.get(field_name), prominent)
 
     # ------------------------------------------------------------ hysteresis
 

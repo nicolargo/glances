@@ -84,8 +84,8 @@ class AsyncScheduler:
 
         Precedence for `refresh_time`:
         1. Explicit `refresh_time=` argument
-        2. `[<plugin_name>] refresh_time` from config
-        3. `[global] refresh_time` from config
+        2. `[<plugin_name>] refresh` (v4 key) or `refresh_time` (alias)
+        3. `[global] refresh` (v4 key) or `refresh_time` (alias)
         4. `_DEFAULT_REFRESH_TIME` (2.0s)
         """
         if self._running:
@@ -103,13 +103,32 @@ class AsyncScheduler:
     def _resolve_refresh_time(self, plugin_name: str, explicit: float | None) -> float:
         if explicit is not None:
             return float(explicit)
-        # Per-plugin section: `[<plugin_name>] refresh_time`. We pass a
-        # sentinel default of -1.0 so an unset value falls through to the
-        # global section instead of latching the float fallback.
-        per_plugin = self.config.get(plugin_name, "refresh_time", -1.0)
+        # Per-plugin section then global, each honouring the documented v4
+        # key `refresh` first and the `refresh_time` alias second. A
+        # sentinel of -1.0 (unset) falls through to the next source rather
+        # than latching. Historically the scheduler read only `refresh_time`,
+        # so every shipped `[<plugin>] refresh=N` (e.g. `[sensors] refresh=10`)
+        # was silently ignored and expensive plugins polled at the global
+        # rate — a real CPU regression. See config's `refresh` docs.
+        per_plugin = self._config_refresh(plugin_name)
         if per_plugin > 0:
-            return float(per_plugin)
-        return float(self.config.get("global", "refresh_time", _DEFAULT_REFRESH_TIME))
+            return per_plugin
+        glob = self._config_refresh("global")
+        if glob > 0:
+            return glob
+        return _DEFAULT_REFRESH_TIME
+
+    def _config_refresh(self, section: str) -> float:
+        """Return the refresh interval from `[section] refresh|refresh_time`, else -1.0."""
+        for key in ("refresh", "refresh_time"):
+            raw = self.config.get(section, key, -1.0)
+            try:
+                value = float(raw)
+            except (TypeError, ValueError):
+                continue
+            if value > 0:
+                return value
+        return -1.0
 
     # ------------------------------------------------------------ run/stop
 

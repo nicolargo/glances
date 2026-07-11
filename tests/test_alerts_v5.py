@@ -333,18 +333,18 @@ async def test_is_initializing_true_during_pending_transition(tmp_path, monkeypa
     plugin = _FakeScalarPlugin(store, config)
 
     # First cycle is warmup → state untouched.
-    await _run_with_levels(plugin, alerts, {"percent": {"level": "careful", "prominent": True}})
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
     assert alerts.is_initializing() is True
 
-    # Second cycle: post-warmup. observed=careful, committed=ok → pending.
-    await _run_with_levels(plugin, alerts, {"percent": {"level": "careful", "prominent": True}})
+    # Second cycle: post-warmup. observed=warning, committed=ok → pending.
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
     # History still empty (min_duration not elapsed) but a pending transition exists.
     assert alerts.get_history() == []
     assert alerts.is_initializing() is True
 
     # After min_duration elapses, the transition fires — pending cleared.
     clock.tick(6.0)
-    await _run_with_levels(plugin, alerts, {"percent": {"level": "careful", "prominent": True}})
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
     assert alerts.get_history() != []
     assert alerts.is_initializing() is False
 
@@ -373,14 +373,28 @@ async def test_first_event_after_warmup_is_flagged_initial(tmp_path, monkeypatch
     config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
     alerts = GlancesAlerts(config)
     plugin = _FakeScalarPlugin(store, config, payload={"percent": 60.0})
-    await _run_with_levels(plugin, alerts, {"percent": {"level": "careful", "prominent": True}})
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
 
     history = alerts.get_history()
     assert len(history) == 1
     event = history[0]
-    assert event["level"] == "careful"
+    assert event["level"] == "warning"
     assert event["previous_level"] == "ok"  # default committed_level
     assert event["is_initial"] is True
+
+
+async def test_careful_level_raises_no_alert(tmp_path, monkeypatch, store):
+    """A ``careful`` level colours the TUI but must NOT enter the alert
+    history (alerts are warning+ only). ``warning`` on the same field does."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config, payload={"percent": 50.0})
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "careful", "prominent": True}})
+    assert alerts.get_history() == []  # careful -> no alert
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    assert len(alerts.get_history()) == 1
+    assert alerts.get_history()[0]["level"] == "warning"
 
 
 async def test_subsequent_transitions_are_not_initial(tmp_path, monkeypatch, store):
@@ -416,8 +430,8 @@ async def test_initial_flag_set_when_first_observed_is_ok_then_non_ok(tmp_path, 
     await _run_with_levels(plugin, alerts, {"percent": {"level": "ok", "prominent": True}})
     assert alerts.get_history() == []
 
-    # Later, system enters careful — real transition, NOT initial.
-    await _run_with_levels(plugin, alerts, {"percent": {"level": "careful", "prominent": True}})
+    # Later, system enters warning — real transition, NOT initial.
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
     history = alerts.get_history()
     assert len(history) == 1
     assert history[0]["is_initial"] is False
