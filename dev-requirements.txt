@@ -6,7 +6,7 @@ annotated-doc==0.0.4
     # via typer
 annotated-types==0.7.0
     # via pydantic
-anyio==4.13.0
+anyio==4.14.1
     # via
     #   httpx
     #   mcp
@@ -30,21 +30,21 @@ boltons==21.0.0
     #   semgrep
 boolean-py==5.0
     # via license-expression
-bracex==2.6
+bracex==3.0
     # via wcmatch
-certifi==2026.5.20
+certifi==2026.6.17
     # via
     #   httpcore
     #   httpx
     #   requests
     #   selenium
-cffi==2.0.0 ; (implementation_name != 'pypy' and os_name == 'nt') or platform_python_implementation != 'PyPy'
+cffi==2.1.0 ; (implementation_name != 'pypy' and os_name == 'nt') or platform_python_implementation != 'PyPy'
     # via
     #   cryptography
     #   trio
 cfgv==3.5.0
     # via pre-commit
-charset-normalizer==3.4.7
+charset-normalizer==3.4.9
     # via requests
 click==8.1.8
     # via
@@ -89,9 +89,9 @@ exceptiongroup==1.2.2
     #   semgrep
     #   trio
     #   trio-websocket
-face==26.0.0
+face==26.0.1
     # via glom
-filelock==3.29.3
+filelock==3.29.7
     # via
     #   python-discovery
     #   virtualenv
@@ -169,7 +169,11 @@ numpy==2.2.6 ; python_full_version < '3.11'
     # via
     #   contourpy
     #   matplotlib
-numpy==2.4.6 ; python_full_version >= '3.11'
+numpy==2.4.6 ; python_full_version == '3.11.*'
+    # via
+    #   contourpy
+    #   matplotlib
+numpy==2.5.1 ; python_full_version >= '3.12'
     # via
     #   contourpy
     #   matplotlib
@@ -224,7 +228,7 @@ packaging==26.2
     #   webdriver-manager
 peewee==3.19.0
     # via semgrep
-pillow==12.2.0
+pillow==12.3.0
     # via matplotlib
 platformdirs==4.10.0
     # via
@@ -249,7 +253,7 @@ pydantic==2.13.4
     #   rstcheck-core
 pydantic-core==2.46.4
     # via pydantic
-pydantic-settings==2.14.1
+pydantic-settings==2.14.2
     # via mcp
 pygments==2.20.0
     # via
@@ -264,15 +268,15 @@ pyjwt==2.13.0
     #   semgrep
 pyparsing==3.3.2
     # via matplotlib
-pyright==1.1.410
+pyright==1.1.411
 pysocks==1.7.1
     # via urllib3
-pytest==9.0.3
+pytest==9.1.1
 python-dateutil==2.9.0.post0
     # via matplotlib
 python-debian==1.1.1
     # via reuse
-python-discovery==1.4.2
+python-discovery==1.4.4
     # via virtualenv
 python-dotenv==1.2.2
     # via
@@ -298,7 +302,7 @@ requests==2.34.2
     #   semgrep
     #   sphinx
     #   webdriver-manager
-requirements-parser==0.13.0
+requirements-parser==0.13.1
 reuse==6.2.0
 rich==15.0.0
     # via
@@ -312,7 +316,7 @@ rpds-py==0.30.0 ; python_full_version < '3.11'
     # via
     #   jsonschema
     #   referencing
-rpds-py==2026.5.1 ; python_full_version >= '3.11'
+rpds-py==2026.6.3 ; python_full_version >= '3.11'
     # via
     #   jsonschema
     #   referencing
@@ -323,12 +327,12 @@ ruamel-yaml==0.19.1
     # via semgrep
 ruamel-yaml-clib==0.2.15
     # via semgrep
-ruff==0.15.17
-selenium==4.44.0
+ruff==0.15.21
+selenium==4.46.0
 semantic-version==2.10.0
     # via semgrep
-semgrep==1.166.0
-setuptools==82.0.1
+semgrep==1.169.0
+setuptools==83.0.0
 shellingham==1.5.4
     # via typer
 six==1.17.0
@@ -366,13 +370,13 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-sse-starlette==3.4.4
+sse-starlette==3.4.5
     # via mcp
 starlette==1.3.1
     # via
     #   mcp
     #   sse-starlette
-textual==8.2.7 ; sys_platform != 'win32'
+textual==8.2.8 ; sys_platform != 'win32'
     # via memray
 tomli==2.4.1
     # via
@@ -387,9 +391,9 @@ trio==0.33.0
     #   trio-websocket
 trio-websocket==0.12.2
     # via selenium
-typer==0.26.7
+typer==0.26.8
     # via rstcheck
-typing-extensions==4.15.0
+typing-extensions==4.16.0
     # via
     #   anyio
     #   cryptography
@@ -422,9 +426,9 @@ urllib3==2.7.0
     #   requests
     #   selenium
     #   semgrep
-uvicorn==0.49.0 ; sys_platform != 'emscripten'
+uvicorn==0.51.0 ; sys_platform != 'emscripten'
     # via mcp
-virtualenv==21.4.3
+virtualenv==21.6.1
     # via pre-commit
 wcmatch==8.5.2
     # via semgrep
