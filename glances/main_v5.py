@@ -390,11 +390,16 @@ def assemble(
         # interval — there is no point repainting more often than the
         # data underneath changes. Operators who *want* a faster TUI can
         # set ``[outputs] tui_refresh_interval`` explicitly.
+        # `[global] refresh` (v4 key) takes precedence over the `refresh_time`
+        # alias, mirroring the scheduler's resolution.
+        global_refresh = config.get("global", "refresh", -1.0)
+        if not (isinstance(global_refresh, (int, float)) and global_refresh > 0):
+            global_refresh = config.get("global", "refresh_time", 2.0)
         refresh = float(
             config.get(
                 "outputs",
                 "tui_refresh_interval",
-                float(config.get("global", "refresh_time", 2.0)),
+                float(global_refresh),
             )
         )
         # When the user quits the TUI via `q`/ESC we must also stop the
