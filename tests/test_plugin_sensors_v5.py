@@ -192,6 +192,48 @@ def test_alias_runs_before_fold(tmp_path, monkeypatch, store):
     assert out[0]["value"] == 42
 
 
+def _rows_fan(*values):
+    return [
+        {"label": f"fan {i}", "unit": "R", "value": v, "warning": None, "critical": None, "type": "fan_speed"}
+        for i, v in enumerate(values)
+    ]
+
+
+def test_global_mean_folds_all_types(tmp_path, monkeypatch, store):
+    """[sensors] mean=true folds every type with a >= 2-member prefix group,
+    even types that carry no per-type <type>_mean key."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nmean=true\n")
+    p = PluginModel(store, config)
+    out = _expand(p, _rows_core(40, 42, 44) + _rows_fan(1000, 1200))
+    by_label = {r["label"]: r for r in out}
+    assert "Core (mean)" in by_label
+    assert "fan (mean)" in by_label
+    assert len(out) == 2
+
+
+def test_per_type_false_overrides_global_true(tmp_path, monkeypatch, store):
+    """An explicit <type>_mean=false opts a type OUT even when the global
+    mean=true is set (global default + per-type override)."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nmean=true\ntemperature_core_mean=false\n")
+    p = PluginModel(store, config)
+    out = _expand(p, _rows_core(40, 42, 44) + _rows_fan(1000, 1200))
+    by_label = {r["label"]: r for r in out}
+    # Core NOT folded (explicit opt-out); fan folded (inherits global true).
+    assert {"Core 0", "Core 1", "Core 2"} <= set(by_label)
+    assert "fan (mean)" in by_label
+
+
+def test_per_type_true_overrides_global_false(tmp_path, monkeypatch, store):
+    """An explicit <type>_mean=true still folds that type when the global
+    mean is false — backward compatibility with per-type-only configs."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nmean=false\ntemperature_core_mean=true\n")
+    p = PluginModel(store, config)
+    out = _expand(p, _rows_core(40, 42, 44) + _rows_fan(1000, 1200))
+    by_label = {r["label"]: r for r in out}
+    assert "Core (mean)" in by_label  # per-type true wins over global false
+    assert {"fan 0", "fan 1"} <= set(by_label)  # fan inherits global false -> not folded
+
+
 def _levels(p, rows):
     p._stats = rows
     p._derived_parameters()

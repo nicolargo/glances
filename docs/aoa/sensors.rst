@@ -47,8 +47,40 @@ thresholds (default behavor).
     #temperature_core_Ambient_critical=85
     #temperature_core_Ambient_log=True
     #temperature_core_Ambient_critical_action=echo "{{time}} {{label}} temperature {{value}}{{unit}} higher than {{critical}}{{unit}}" > /tmp/temperature.alert
+    # Display sensors in mean (fold same-prefix sensors into "<prefix> (mean)")
+    #mean=true
+    #temperature_core_mean=true
+    #fan_speed_mean=true
+    #temperature_hdd_mean=true
+    #battery_mean=true
     # Sensors alias
     #alias=core 0:CPU Core 0,core 1:CPU Core 1
+
+Displaying sensors in mean
+--------------------------
+
+When a sensor type exposes several similarly named entries (``Core 0``,
+``Core 1``, ...), Glances can fold them into a single averaged line named
+``<prefix> (mean)``. Folding only applies to a group of **more than one**
+sensor sharing the same prefix; a lone sensor is left untouched.
+
+Two levels of configuration are available under the ``[sensors]`` section:
+
+- ``mean=true`` — global toggle. Every sensor type with more than one line
+  is displayed in mean.
+- ``<type>_mean=true|false`` — per-type override (``temperature_core_mean``,
+  ``fan_speed_mean``, ``temperature_hdd_mean``, ``battery_mean``). When set,
+  it always wins over the global ``mean`` value.
+
+Both default to ``false``. The per-type key can opt a type *out* while the
+global toggle is on, or *in* while it is off. For example, to display every
+type in mean except the battery:
+
+.. code-block:: ini
+
+    [sensors]
+    mean=true
+    battery_mean=false
 
 .. note 1::
     The support for multiple batteries is only available if

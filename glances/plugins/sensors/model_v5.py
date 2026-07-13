@@ -198,11 +198,13 @@ class PluginModel(GlancesPluginBase[list]):
     def _apply_mean_fold(self, rows: list) -> list:
         """Fold same-prefix sensors of each enabled type into `<prefix> (mean)`.
 
-        A type is folded only if `[sensors] <type>_mean=true`. Within that
-        type, rows sharing a label prefix (label minus its trailing number)
-        with >= 2 numeric members collapse to one row: value = round(mean),
-        other fields copied from the first matched row. Non-numeric values
-        (ERR/SLP/UNK) and singletons pass through unchanged.
+        A type is folded when the global `[sensors] mean` toggle is true,
+        unless an explicit per-type `[sensors] <type>_mean` key overrides it
+        (see `_mean_enabled`). Within a folded type, rows sharing a label
+        prefix (label minus its trailing number) with >= 2 numeric members
+        collapse to one row: value = round(mean), other fields copied from
+        the first matched row. Non-numeric values (ERR/SLP/UNK) and
+        singletons pass through unchanged.
         """
         result: list = []
         # Partition rows by type, preserving non-folded types verbatim.
@@ -211,11 +213,28 @@ class PluginModel(GlancesPluginBase[list]):
             by_type.setdefault(str(row.get("type", "")), []).append(row)
 
         for sensor_type, type_rows in by_type.items():
-            if not self.config.get("sensors", f"{sensor_type}_mean", False):
+            if not self._mean_enabled(sensor_type):
                 result.extend(type_rows)
                 continue
             result.extend(self._fold_group(type_rows))
         return result
+
+    def _mean_enabled(self, sensor_type: str) -> bool:
+        """Whether `sensor_type` should be mean-folded.
+
+        The global `[sensors] mean` toggle sets the default for every type.
+        An explicit per-type `[sensors] <type>_mean` key always wins over it
+        — so a type can be opted OUT (`<type>_mean=false`) while the global
+        is on, or opted IN while the global is off. Both default to false.
+
+        Option names are stored lower-cased (ConfigParser optionxform) and
+        the sensor-type constants are already lower-case, so the composed
+        key matches the stored key directly.
+        """
+        per_type_key = f"{sensor_type}_mean"
+        if per_type_key in self.config.section_keys("sensors"):
+            return self.config.get("sensors", per_type_key, False)
+        return self.config.get("sensors", "mean", False)
 
     @staticmethod
     def _fold_group(type_rows: list) -> list:
