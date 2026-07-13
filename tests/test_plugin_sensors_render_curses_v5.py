@@ -10,7 +10,12 @@
 
 from __future__ import annotations
 
-from glances.plugins.sensors.render_curses_v5 import render
+from glances.plugins.sensors.render_curses_v5 import (
+    _LEFT_SIDEBAR_MAX_WIDTH,
+    _NAME_MAX_WIDTH,
+    _VALUE_COL_WIDTH,
+    render,
+)
 
 
 def _payload(rows, levels=None):
@@ -44,10 +49,23 @@ def test_header_and_one_row():
 
 def test_long_label_truncated():
     rows = render(_payload([_sensor("A" * 40, 42)]))
-    # No cell text exceeds the name column width (20) + value column (14).
+    # No cell text exceeds its column width.
     for r in rows:
         for c in r.cells:
-            assert len(c.text) <= 20
+            assert len(c.text) <= max(_NAME_MAX_WIDTH, _VALUE_COL_WIDTH)
+
+
+def test_row_fits_left_sidebar_budget():
+    """The painter inserts a one-space separator between the label and value
+    cells, so name + 1 + value must fit the 34-char left sidebar — otherwise
+    the trailing unit/trend is clipped off the value (the v4-parity bug)."""
+    assert _NAME_MAX_WIDTH + 1 + _VALUE_COL_WIDTH <= _LEFT_SIDEBAR_MAX_WIDTH
+    # A concrete row: label + value cell widths honour the budget with the
+    # unit character preserved at the end of the value.
+    rows = render(_payload([_sensor("Core 0", 42, unit="C")]))
+    label_cell, value_cell = rows[1].cells
+    assert len(label_cell.text) + 1 + len(value_cell.text) <= _LEFT_SIDEBAR_MAX_WIDTH
+    assert value_cell.text.rstrip().endswith("C")  # unit not clipped
 
 
 def test_string_sentinel_rendered():

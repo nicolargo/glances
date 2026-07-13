@@ -9,8 +9,15 @@
 """Glances v5 — TUI curses renderer for the sensors plugin.
 
 Mirrors v4 `sensors.msg_curse()`: a `SENSORS` header then one row per
-sensor (`label` + right-aligned value). LEFT sidebar (name 20 + value 14);
-the curses I/O layer truncates the block to the available `max_width`.
+sensor (`label` + right-aligned value). LEFT sidebar; the block must fit
+the v5 left-sidebar maximum (34 chars) *including* the one-space cell
+separator the painter inserts between the two cells:
+
+    name (_NAME_MAX_WIDTH) + 1 + value (_VALUE_COL_WIDTH) = 19 + 1 + 14 = 34
+
+Overshooting by even one char makes the painter truncate the rightmost
+cell — clipping the trailing unit/trend off the value (v4 parity via the
+fs renderer's documented budget).
 
     SENSORS
     Core 0                  42C
@@ -32,8 +39,12 @@ from glances.globals import to_fahrenheit
 from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
 from glances.outputs.glances_unicode import unicode_message
 
-_NAME_MAX_WIDTH = 20
+_NAME_MAX_WIDTH = 19
 _VALUE_COL_WIDTH = 14
+# Painter inserts a 1-space separator between the two cells, so the block
+# spans _NAME_MAX_WIDTH + 1 + _VALUE_COL_WIDTH. Must stay <= the left-sidebar
+# maximum or the trailing unit/trend is clipped (see module docstring).
+_LEFT_SIDEBAR_MAX_WIDTH = 34
 _SENTINELS = ("ERR", "SLP", "UNK", "NOS")
 _NO_FAHRENHEIT_TYPES = ("battery", "fan_speed")
 
