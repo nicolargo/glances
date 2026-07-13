@@ -30,6 +30,7 @@ Legend:
    mpp
    network
    connections
+   ip
    wifi
    ports
    diskio

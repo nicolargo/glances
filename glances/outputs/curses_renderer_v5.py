@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 # `glances/outputs/glances_curses.py`). Plugin names not in any list
 # default to LEFT (same fallback as v4). Configurable via [outputs] later.
 
-HEADER_SLOT: tuple[str, ...] = ("system", "uptime")
+HEADER_SLOT: tuple[str, ...] = ("system", "ip", "uptime")
 TOP_SLOT: tuple[str, ...] = ("quicklook", "cpu", "percpu", "npu", "gpu", "mem", "memswap", "load")
 LEFT_SLOT: tuple[str, ...] = (
     "network",
@@ -763,7 +763,20 @@ def build_frame(
             continue
         if view and view.get("hide_gpu") and plugin_name == "gpu":
             continue
+        # Header line progressive degradation (system … ip … uptime): when the
+        # terminal is too narrow the ip then the uptime block is dropped.
+        if view and view.get("hide_ip") and plugin_name == "ip":
+            continue
+        if view and view.get("hide_uptime") and plugin_name == "uptime":
+            continue
         payload = store_snapshot.get(plugin_name) or {}
+        # v4 parity: a collection (list) plugin with an empty list renders
+        # nothing at all — not even its header. v4 `msg_curse` starts with
+        # `if not self.stats or self.is_disabled(): return []`, so an absent /
+        # empty / disabled list plugin contributes no block (no lonely header).
+        # Scalar plugins are unaffected (their own renderer decides emptiness).
+        if is_collection and not payload.get("data"):
+            continue
         fields_desc = fields_by_plugin.get(plugin_name, {})
 
         custom = _discover_plugin_renderer(plugin_name)

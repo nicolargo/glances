@@ -52,3 +52,8 @@ You can also hide attributes, for example Self-tests, Errors, etc. Use a comma s
 
     [smart]
     hide_attributes=attribute_name1,attribute_name2
+
+.. note::
+    In the REST API (v4+) each device is exposed as an object with a ``name``
+    field (device identification string) and an ``attributes`` list; every
+    entry carries the SMART attribute ``name``, ``key``, ``raw`` and ``value``.

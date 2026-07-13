@@ -21,11 +21,14 @@ from typing import Any
 from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
 
 
-def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
+def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], view=None) -> list[Row]:
     if not payload or not payload.get("hostname"):
         return []
     cells = [Cell(text=str(payload["hostname"]), color=ColorRole.HEADER)]
+    # The OS-info string is the first thing dropped when the header line is
+    # too narrow (progressive degradation, driven by `view["hide_os_info"]`);
+    # the hostname is mandatory and always kept.
     hr_name = payload.get("hr_name")
-    if hr_name:
+    if hr_name and not (view or {}).get("hide_os_info"):
         cells.append(Cell(text=str(hr_name)))
     return [Row(cells=cells)]

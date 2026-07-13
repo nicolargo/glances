@@ -171,6 +171,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Display temperatures in Fahrenheit (default: Celsius).",
     )
     parser.add_argument(
+        "--hide-public-info",
+        dest="hide_public_info",
+        action="store_true",
+        default=False,
+        help="Mask the last two octets of the public IP address in the TUI (a.b.c.d -> a.b.*.*).",
+    )
+    parser.add_argument(
         "--set-password",
         action="store_true",
         help="Generate a PBKDF2 password hash interactively and print it to stdout. Does NOT modify glances.conf.",
@@ -419,6 +426,7 @@ def assemble(
             percpu=getattr(args, "percpu", False),
             meangpu=getattr(args, "meangpu", False),
             fahrenheit=getattr(args, "fahrenheit", False),
+            hide_public_info=getattr(args, "hide_public_info", False),
         )
 
     return app, scheduler, host, int(port), tui

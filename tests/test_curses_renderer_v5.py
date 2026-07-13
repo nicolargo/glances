@@ -759,6 +759,41 @@ def test_build_frame_routes_network_to_left_slot():
     assert frame.top == []
 
 
+def test_build_frame_drops_empty_collection_plugin():
+    """v4 parity: a collection (list) plugin with an empty list renders nothing
+    at all — not even its header. It must contribute NO block to any slot."""
+    store_snapshot = {"network": {"data": [], "_levels": {}}}
+    fields_by_plugin = {"network": NETWORK_FIELDS}
+    registry = [("network", True)]
+
+    frame = build_frame(store_snapshot, fields_by_plugin, registry, alerts_history=[])
+
+    assert frame.left == []
+    assert frame.top == []
+    assert [b.name for b in frame.header] == []
+
+
+def test_build_frame_drops_absent_collection_plugin():
+    """A collection plugin with no payload at all (disabled / not yet polled)
+    is likewise dropped — no lonely header."""
+    registry = [("network", True)]
+
+    frame = build_frame({}, {"network": NETWORK_FIELDS}, registry, alerts_history=[])
+
+    assert frame.left == []
+
+
+def test_build_frame_keeps_non_empty_collection_plugin():
+    """Control: the same plugin WITH list data still produces its block."""
+    store_snapshot = {"network": _network_payload()}
+    fields_by_plugin = {"network": NETWORK_FIELDS}
+    registry = [("network", True)]
+
+    frame = build_frame(store_snapshot, fields_by_plugin, registry, alerts_history=[])
+
+    assert [b.name for b in frame.left] == ["network"]
+
+
 def test_build_frame_synthesizes_alert_block_in_right_slot():
     """Alerts always appear in the right slot, even with no plugins."""
     frame = build_frame(
@@ -844,7 +879,7 @@ def test_full_quicklook_hides_top_siblings():
     store_snapshot = {
         "quicklook": {"cpu": 12.0, "_levels": {"cpu": {"level": "ok"}}},
         "cpu": {"percent": 25.0, "_levels": {"percent": {"level": "ok"}}},
-        "percpu": {"data": []},
+        "percpu": {"data": [{"cpu_number": 0, "total": 5.0}]},
         "mem": _mem_payload(),
         "load": {"min1": 0.5, "_levels": {}},
         "network": _network_payload(),
@@ -1166,6 +1201,13 @@ def test_slot_for_header_plugins():
     assert slot_for("network") == "left"
 
 
+def test_header_slot_orders_ip_between_system_and_uptime():
+    from glances.outputs.curses_renderer_v5 import HEADER_SLOT
+
+    assert HEADER_SLOT == ("system", "ip", "uptime")
+    assert slot_for("ip") == "header"
+
+
 def test_build_frame_routes_system_and_uptime_to_header():
     from glances.outputs.curses_renderer_v5 import build_frame
 
@@ -1194,6 +1236,85 @@ def test_build_frame_routes_system_and_uptime_to_header():
     assert "uptime" not in [b.name for b in frame.top + frame.left + frame.right]
     # cpu still lands in the top row.
     assert "cpu" in [b.name for b in frame.top]
+
+
+def _header_snapshot_and_fields():
+    snapshot = {
+        "system": {"hostname": "h", "hr_name": "Ubuntu", "_levels": {}},
+        "ip": {"address": "1.2.3.4", "mask_cidr": 24, "_levels": {}},
+        "uptime": {"seconds": 3600, "_levels": {}},
+    }
+    fields = {
+        "system": {"hostname": {"unit": "string"}, "hr_name": {"unit": "string"}},
+        "ip": {"address": {"unit": "string"}, "mask_cidr": {"unit": "number"}},
+        "uptime": {"seconds": {"unit": "seconds"}},
+    }
+    registry = [("system", False), ("ip", False), ("uptime", False)]
+    return snapshot, fields, registry
+
+
+def test_build_frame_header_all_three_when_no_flags():
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    snapshot, fields, registry = _header_snapshot_and_fields()
+    frame = build_frame(snapshot, fields, registry, alerts_history=[], view={})
+    assert [b.name for b in frame.header] == ["system", "ip", "uptime"]
+
+
+def test_build_frame_hide_ip_flag_drops_ip_block():
+    """Progressive header degradation level 2: `hide_ip` removes the ip block."""
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    snapshot, fields, registry = _header_snapshot_and_fields()
+    frame = build_frame(snapshot, fields, registry, alerts_history=[], view={"hide_ip": True})
+    assert [b.name for b in frame.header] == ["system", "uptime"]
+
+
+def test_build_frame_hide_uptime_flag_drops_uptime_block():
+    """Progressive header degradation level 3: `hide_uptime` removes uptime."""
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    snapshot, fields, registry = _header_snapshot_and_fields()
+    frame = build_frame(snapshot, fields, registry, alerts_history=[], view={"hide_ip": True, "hide_uptime": True})
+    assert [b.name for b in frame.header] == ["system"]
+
+
+def test_build_frame_hide_os_info_shortens_system_block():
+    """Level 1: `hide_os_info` drops the OS string from the system block but
+    keeps the block (hostname stays)."""
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    snapshot, fields, registry = _header_snapshot_and_fields()
+    full = build_frame(snapshot, fields, registry, alerts_history=[], view={})
+    short = build_frame(snapshot, fields, registry, alerts_history=[], view={"hide_os_info": True})
+    sys_full = next(b for b in full.header if b.name == "system")
+    sys_short = next(b for b in short.header if b.name == "system")
+    assert sys_short.width < sys_full.width  # OS-info dropped → narrower
+    assert "system" in [b.name for b in short.header]  # block itself kept
+
+
+def test_build_frame_header_order_system_ip_uptime():
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    snapshot = {
+        "uptime": {"seconds": 3600, "_levels": {}},
+        "ip": {"address": "192.168.1.10", "mask_cidr": 24, "_levels": {}},
+        "system": {"hostname": "h", "hr_name": "Ubuntu", "_levels": {}},
+    }
+    fields = {
+        "uptime": {"seconds": {"unit": "seconds"}},
+        "ip": {"address": {"unit": "string"}},
+        "system": {"hostname": {"unit": "string"}, "hr_name": {"unit": "string"}},
+    }
+    # Deliberately out of order — HEADER_SLOT.index must enforce the order.
+    registry = [("uptime", False), ("ip", False), ("system", False)]
+    frame = build_frame(
+        store_snapshot=snapshot,
+        fields_by_plugin=fields,
+        registry=registry,
+        alerts_history=[],
+    )
+    assert [b.name for b in frame.header] == ["system", "ip", "uptime"]
 
 
 # --------------------------------------------------------------- hide_* skip guards

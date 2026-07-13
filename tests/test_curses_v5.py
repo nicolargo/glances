@@ -377,7 +377,7 @@ def test_tui_v5_default_top_shows_cpu_not_percpu(monkeypatch, fake_store, fake_a
 
     fake_store.as_dict.return_value = {
         "cpu": {"total": 5.0, "_levels": {}},
-        "percpu": {"data": [], "_levels": {}},
+        "percpu": {"data": [{"cpu_number": 0, "total": 5.0}], "_levels": {}},
     }
     tui = tui_mod.TuiV5(
         store=fake_store,
@@ -402,7 +402,7 @@ def test_tui_v5_toggle_swaps_cpu_for_percpu(monkeypatch, fake_store, fake_alerts
 
     fake_store.as_dict.return_value = {
         "cpu": {"total": 5.0, "_levels": {}},
-        "percpu": {"data": [], "_levels": {}},
+        "percpu": {"data": [{"cpu_number": 0, "total": 5.0}], "_levels": {}},
     }
     tui = tui_mod.TuiV5(
         store=fake_store,
@@ -698,8 +698,8 @@ def test_tui_v5_programs_toggle_hides_one_list(fake_store, fake_alerts, fake_con
     from glances.outputs import glances_curses_v5 as tui_mod
 
     fake_store.as_dict.return_value = {
-        "processlist": {"data": [], "_levels": {}},
-        "programlist": {"data": [], "_levels": {}},
+        "processlist": {"data": [{"pid": 1}], "_levels": {}},
+        "programlist": {"data": [{"pid": 2}], "_levels": {}},
     }
     tui = _make_tui(
         tui_mod,
@@ -1136,6 +1136,75 @@ def test_paint_header_places_first_left_and_last_right(fake_store, fake_alerts, 
     # Right block flush-right: its x is max_x - width("Uptime: 3d04h").
     expected_right_x = 80 - len("Uptime: 3d04h")
     assert any(y == 0 and x == expected_right_x and "Uptime" in text for (y, x, text) in calls)
+
+
+def test_paint_header_two_blocks_unchanged(fake_store, fake_alerts, fake_config):
+    """REGRESSION GUARD: the 2-block path (system/uptime, no middle block)
+    must stay byte-for-byte equivalent to the pre-ip painter behaviour.
+    """
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Cell, PluginBlock, Row
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    left = PluginBlock(name="system", rows=[Row(cells=[Cell(text="myhost Ubuntu")])])
+    right = PluginBlock(name="uptime", rows=[Row(cells=[Cell(text="Uptime: 3d04h")])])
+
+    fake_stdscr = MagicMock()
+    height = tui._paint_header(fake_stdscr, [left, right], y0=0, max_x=80)
+
+    assert height == 1
+    calls = [(c.args[0], c.args[1], c.args[2]) for c in fake_stdscr.addstr.call_args_list]
+    assert any(y == 0 and x == 0 and "myhost" in text for (y, x, text) in calls)
+    expected_right_x = 80 - len("Uptime: 3d04h")
+    assert any(y == 0 and x == expected_right_x and "Uptime" in text for (y, x, text) in calls)
+
+
+def test_paint_header_packs_middle_block_between_first_and_last(fake_store, fake_alerts, fake_config):
+    """Header with 3 blocks (system/ip/uptime): first flush-left, middle
+    packed after it, last flush-right — v4 parity (`system … ip … uptime`).
+    """
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole, PluginBlock, Row
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    system = PluginBlock(name="system", rows=[Row(cells=[Cell(text="myhost Ubuntu")])])
+    ip = PluginBlock(
+        name="ip",
+        rows=[Row(cells=[Cell(text="IP", color=ColorRole.HEADER), Cell(text="192.168.1.10/24")])],
+    )
+    uptime = PluginBlock(name="uptime", rows=[Row(cells=[Cell(text="Uptime: 3d04h")])])
+
+    fake_stdscr = MagicMock()
+    max_x = 120
+    height = tui._paint_header(fake_stdscr, [system, ip, uptime], y0=0, max_x=max_x)
+
+    assert height == 1
+    calls = [(c.args[0], c.args[1], c.args[2]) for c in fake_stdscr.addstr.call_args_list]
+    uptime_x = max_x - len("Uptime: 3d04h")
+
+    # First block flush-left.
+    assert any(y == 0 and x == 0 and "myhost" in text for (y, x, text) in calls)
+    # Middle block (ip) painted after the first block and before the
+    # flush-right last block.
+    assert any(
+        y == 0 and system.width < x < uptime_x and ("IP" in text or "192.168.1.10" in text) for (y, x, text) in calls
+    )
+    # Last block flush-right.
+    assert any(y == 0 and x == uptime_x and "Uptime" in text for (y, x, text) in calls)
 
 
 def test_paint_header_empty_returns_zero(fake_store, fake_alerts, fake_config):
@@ -1607,3 +1676,59 @@ def test_hide_gpu_is_last_cascade_step():
     assert keys[-1] == "hide_gpu"
     # Ordering contract: gpu hidden only after quicklook + memswap.
     assert keys.index("hide_memswap") < keys.index("hide_gpu")
+
+
+def test_fit_header_progressively_degrades(fake_store, fake_alerts, fake_config):
+    """Header line (system … ip … uptime) degrades in the maintainer order as
+    the terminal narrows: full → drop system OS-info → hide ip → hide uptime.
+
+    Thresholds are computed from the real block widths so the test does not
+    hardcode fragile pixel counts; it asserts which level ``_build_fitted_frame``
+    settles on at each straddled width."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    fake_store.as_dict.return_value = {
+        "system": {"hostname": "host", "hr_name": "Ubuntu 24.04 64bit / Linux 6.17", "_levels": {}},
+        "ip": {"address": "192.168.1.100", "mask_cidr": 24, "_levels": {}},
+        "uptime": {"seconds": 3600, "_levels": {}},
+    }
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("system", False), ("ip", False), ("uptime", False)],
+        fields_by_plugin={
+            "system": {"hostname": {"unit": "string"}, "hr_name": {"unit": "string"}},
+            "ip": {"address": {"unit": "string"}, "mask_cidr": {"unit": "number"}},
+            "uptime": {"seconds": {"unit": "seconds"}},
+        },
+        refresh_interval=0.01,
+    )
+
+    def _flat(block):
+        return " ".join(c.text for r in block.rows for c in r.cells)
+
+    gap = tui_mod.TuiV5._HEADER_GAP
+
+    # Measure real widths at a very wide terminal (level 0 — everything shown).
+    wide = tui._build_fitted_frame(1000)
+    assert [b.name for b in wide.header] == ["system", "ip", "uptime"]
+    w = {b.name: b.width for b in wide.header}
+    assert "Ubuntu" in _flat(next(b for b in wide.header if b.name == "system"))
+
+    # Short-system width (hostname only) via the hide_os_info view.
+    short_view = {**tui._build_view(1000), "hide_os_info": True}
+    w_sys_short = next(b.width for b in tui._frame_for_view(short_view).header if b.name == "system")
+
+    # Level 1 — too narrow for the OS-info, but short system + ip + uptime fit.
+    f1 = tui._build_fitted_frame(w_sys_short + gap + w["ip"] + gap + w["uptime"])
+    assert [b.name for b in f1.header] == ["system", "ip", "uptime"]
+    assert "Ubuntu" not in _flat(next(b for b in f1.header if b.name == "system"))
+
+    # Level 2 — ip dropped (only short system + uptime fit).
+    f2 = tui._build_fitted_frame(w_sys_short + gap + w["uptime"])
+    assert [b.name for b in f2.header] == ["system", "uptime"]
+
+    # Level 3 — uptime dropped too (only the hostname survives).
+    f3 = tui._build_fitted_frame(w_sys_short)
+    assert [b.name for b in f3.header] == ["system"]

@@ -66,6 +66,18 @@ _DEGRADE_STEPS: list[tuple[str, Any]] = [
     ("hide_gpu", True),  # (g) hide gpu block (last resort)
 ]
 
+# Header line (system … ip … uptime) progressive degradation, applied
+# independently of the TOP row when the terminal is too narrow to show all
+# three blocks. Cumulative, in the maintainer-specified order: first drop the
+# system OS-info string, then hide ip, then hide uptime. v4 parity degrades
+# only the OS-info drop (`display_system_optional`); the ip/uptime hides refine
+# it for very narrow terminals.
+_HEADER_DEGRADE_STEPS: list[tuple[str, Any]] = [
+    ("hide_os_info", True),  # (1) drop the system OS-info string
+    ("hide_ip", True),  # (2) hide the ip block
+    ("hide_uptime", True),  # (3) hide the uptime block (last resort)
+]
+
 
 # Map our renderer ColorRole → curses color pair index.
 # Filled in `_init_colors` once curses is initialised.
@@ -164,6 +176,7 @@ class TuiV5(threading.Thread):
         percpu: bool = False,
         meangpu: bool = False,
         fahrenheit: bool = False,
+        hide_public_info: bool = False,
     ) -> None:
         super().__init__(name="glances-tui-v5", daemon=True)
         self.store = store
@@ -199,6 +212,7 @@ class TuiV5(threading.Thread):
         # ``_fahrenheit`` switches temperatures to °F. Consumed via _build_view.
         self._meangpu = bool(meangpu)
         self._fahrenheit = bool(fahrenheit)
+        self._hide_public_info = bool(hide_public_info)
         # Vertical scroll offset of the help overlay (rows). Reset to 0 each
         # time the overlay is opened; clamped to the content in ``_paint_help``
         # (which is the only place that knows the terminal height).
@@ -488,6 +502,18 @@ class TuiV5(threading.Thread):
             return True
         return sum(widths) + (len(widths) - 1) * self._TOP_GAP_MIN <= max_x
 
+    def _header_fits(self, frame: Frame, max_x: int) -> bool:
+        """True iff the header row (system … ip … uptime) fits ``max_x``.
+
+        Mirrors ``_paint_header``'s layout: the packed blocks plus one
+        ``_HEADER_GAP`` between each must be within ``max_x``. An empty or
+        single-block header trivially fits.
+        """
+        widths = [b.width for b in frame.header]
+        if len(widths) <= 1:
+            return True
+        return sum(widths) + (len(widths) - 1) * self._HEADER_GAP <= max_x
+
     def _build_fitted_frame(self, max_x: int) -> Frame:
         """Build the frame, degrading the TOP row (a→f) until it fits ``max_x``.
 
@@ -501,13 +527,33 @@ class TuiV5(threading.Thread):
         view = self._build_view(max_x)
         frame = self._frame_for_view(view)
         if self._full_quicklook or self._top_fits(frame, max_x):
+            frame = self._fit_header(view, frame, max_x)
             return self._fit_proclist_width(view, frame, max_x)
         for key, val in _DEGRADE_STEPS:
             view[key] = val
             frame = self._frame_for_view(view)
             if self._top_fits(frame, max_x):
                 break
+        frame = self._fit_header(view, frame, max_x)
         return self._fit_proclist_width(view, frame, max_x)
+
+    def _fit_header(self, view: dict[str, Any], frame: Frame, max_x: int) -> Frame:
+        """Degrade the header row (system … ip … uptime) until it fits ``max_x``.
+
+        Independent of the TOP-row degrade above: measures the real header
+        block widths and applies the cumulative ``_HEADER_DEGRADE_STEPS``
+        (drop OS info → hide ip → hide uptime) until ``_header_fits``. Wide
+        terminals take the early return (no extra rebuild); the header and TOP
+        degrade flags coexist in the same ``view``.
+        """
+        if self._header_fits(frame, max_x):
+            return frame
+        for key, val in _HEADER_DEGRADE_STEPS:
+            view[key] = val
+            frame = self._frame_for_view(view)
+            if self._header_fits(frame, max_x):
+                break
+        return frame
 
     def _fit_proclist_width(self, view: dict[str, Any], frame: Frame, max_x: int) -> Frame:
         """Tell the processlist renderer the width it will be painted at.
@@ -590,6 +636,7 @@ class TuiV5(threading.Thread):
         view["percpu"] = self._percpu
         view["meangpu"] = self._meangpu
         view["fahrenheit"] = self._fahrenheit
+        view["hide_public_info"] = self._hide_public_info
         # Full mode: bars span (almost) the whole width; compact: a column.
         view["quicklook_width"] = max(20, max_x - 8) if self._full_quicklook else self._QUICKLOOK_COMPACT_WIDTH
         return view
@@ -654,14 +701,20 @@ class TuiV5(threading.Thread):
         natural = max(natural + 2, 23)
         return min(natural, 34, max(1, max_x // 2))
 
+    # Horizontal gap between header blocks packed on the left (v4 parity:
+    # `space_between_column = 3` between the system and ip blocks).
+    _HEADER_GAP = 3
+
     def _paint_header(self, stdscr, blocks: list[PluginBlock], y0: int, max_x: int) -> int:
         """Paint the header line (v4 parity): first block flush-left, last
-        block flush-right. Returns the header height (0 when empty, else the
+        block flush-right, and any middle block(s) packed left-to-right after
+        the first (v4 paints `system … ip … uptime` this way, `glances_curses.py`
+        `__display_top`). Returns the header height (0 when empty, else the
         tallest block painted — normally 1).
 
-        Only the first and last blocks are positioned explicitly; the header
-        is expected to hold at most two blocks (system + uptime). Any middle
-        block (not expected in v5) is skipped rather than overlapped.
+        The middle-block packing is generic (not ip-specific): the header slot
+        order is owned by `HEADER_SLOT`; this painter just lays out whatever
+        blocks it is handed without overlapping them.
         """
         if not blocks:
             return 0
@@ -669,12 +722,22 @@ class TuiV5(threading.Thread):
         first = blocks[0]
         self._paint_block(stdscr, first, y0, 0, max_x, fit_to_term=False)
         height = max(height, first.height)
+        # Middle blocks (e.g. ip): packed after the first block, each separated
+        # by `_HEADER_GAP`. Stop if we run past the right edge.
+        x = first.width
+        for block in blocks[1:-1]:
+            x += self._HEADER_GAP
+            if x >= max_x:
+                break
+            self._paint_block(stdscr, block, y0, x, max(1, max_x - x), fit_to_term=False)
+            height = max(height, block.height)
+            x += block.width
         if len(blocks) > 1:
             last = blocks[-1]
-            # Flush-right, but never overlap the flush-left block.
-            x = max(first.width + 1, max_x - last.width)
-            if x < max_x:
-                self._paint_block(stdscr, last, y0, x, max(1, max_x - x), fit_to_term=False)
+            # Flush-right, but never overlap the left-packed blocks.
+            right_x = max(x + 1, max_x - last.width)
+            if right_x < max_x:
+                self._paint_block(stdscr, last, y0, right_x, max(1, max_x - right_x), fit_to_term=False)
                 height = max(height, last.height)
         return height
 
