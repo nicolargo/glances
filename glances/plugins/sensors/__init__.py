@@ -96,20 +96,29 @@ class SensorsPlugin(GlancesPluginModel):
 
         self.sensors_grab_map = {}
 
+        librehardwaremonitor_hdd_plugin = None
         if glances_grab_sensors_cpu_temp.init:
             self.sensors_grab_map[sensors_definition.get('cpu_temp').get('type')] = glances_grab_sensors_cpu_temp
         elif WINDOWS:
             # On Windows, psutil does not provide temperatures (see issue #3265)
-            # Grab them from the LibreHardwareMonitor web server (if available)
+            # Grab them from the LibreHardwareMonitor web server (if available):
+            # one instance for the CPU/motherboard/GPU temperatures and one for
+            # the disks ones (displayed as temperature_hdd, see below)
             start_duration.reset()
             librehardwaremonitor_plugin = LibrehardwaremonitorPlugin(args=args, config=config)
+            librehardwaremonitor_hdd_plugin = LibrehardwaremonitorPlugin(args=args, config=config, storage=True)
             logger.debug(f"LibreHardwareMonitor sensor plugin init duration: {start_duration.get()} seconds")
             self.sensors_grab_map[sensors_definition.get('cpu_temp').get('type')] = librehardwaremonitor_plugin
 
         if glances_grab_sensors_fan_speed.init:
             self.sensors_grab_map[sensors_definition.get('fan_speed').get('type')] = glances_grab_sensors_fan_speed
 
-        self.sensors_grab_map[sensors_definition.get('hdd_temp').get('type')] = hddtemp_plugin
+        if librehardwaremonitor_hdd_plugin is not None:
+            # On Windows, the hddtemp daemon is not available: grab the disks
+            # temperatures from the LibreHardwareMonitor web server too
+            self.sensors_grab_map[sensors_definition.get('hdd_temp').get('type')] = librehardwaremonitor_hdd_plugin
+        else:
+            self.sensors_grab_map[sensors_definition.get('hdd_temp').get('type')] = hddtemp_plugin
         self.sensors_grab_map[sensors_definition.get('battery').get('type')] = batpercent_plugin
 
         # We want to display the stat in the curse interface

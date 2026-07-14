@@ -125,6 +125,64 @@ DATA_JSON_SAMPLE = {
                                     "SensorId": "/intelcpu/0/temperature/0",
                                     "Type": "Temperature",
                                 },
+                                {
+                                    "id": 14,
+                                    "Text": "CPU Core #1 Distance to TjMax",
+                                    "Children": [],
+                                    "Min": "55,0 °C",
+                                    "Value": "62,0 °C",
+                                    "Max": "71,0 °C",
+                                    "ImageURL": "images/transparent.png",
+                                    "SensorId": "/intelcpu/0/temperature/10",
+                                    "Type": "Temperature",
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "id": 15,
+                    "Text": "Samsung SSD 980 1TB",
+                    "ImageURL": "images_icon/hdd.png",
+                    "Children": [
+                        {
+                            "id": 16,
+                            "Text": "Temperatures",
+                            "ImageURL": "images_icon/temperature.png",
+                            "Children": [
+                                {
+                                    "id": 17,
+                                    "Text": "Temperature",
+                                    "Children": [],
+                                    "Min": "38,0 °C",
+                                    "Value": "43,0 °C",
+                                    "Max": "51,0 °C",
+                                    "ImageURL": "images/transparent.png",
+                                    "SensorId": "/nvme/0/temperature/0",
+                                    "Type": "Temperature",
+                                },
+                                {
+                                    "id": 18,
+                                    "Text": "Warning Temperature",
+                                    "Children": [],
+                                    "Min": "83,0 °C",
+                                    "Value": "83,0 °C",
+                                    "Max": "83,0 °C",
+                                    "ImageURL": "images/transparent.png",
+                                    "SensorId": "/nvme/0/temperature/10",
+                                    "Type": "Temperature",
+                                },
+                                {
+                                    "id": 19,
+                                    "Text": "Critical Temperature",
+                                    "Children": [],
+                                    "Min": "87,0 °C",
+                                    "Value": "87,0 °C",
+                                    "Max": "87,0 °C",
+                                    "ImageURL": "images/transparent.png",
+                                    "SensorId": "/nvme/0/temperature/11",
+                                    "Type": "Temperature",
+                                },
                             ],
                         },
                     ],
@@ -144,11 +202,45 @@ class TestGlancesGrabLHMParsing:
         lhm.fetch = lambda: DATA_JSON_SAMPLE
         stats = lhm.get()
         labels = [i['label'] for i in stats]
-        assert 'Nuvoton NCT6793D SYSTIN' in labels
-        assert 'Intel Core i7-7700 CPU Package' in labels
+        assert 'SYSTIN (Nuvoton NCT6793D)' in labels
+        assert 'CPU Package (Intel Core i7-7700)' in labels
         # Voltages and fans are not temperatures
         assert not any('Vcore' in label for label in labels)
         assert not any('Fan' in label for label in labels)
+
+    def test_pseudo_sensors_are_excluded(self):
+        """Test that thresholds constants and thermal margins are not readings."""
+        lhm = GlancesGrabLHM()
+        lhm.fetch = lambda: DATA_JSON_SAMPLE
+        labels = [i['label'] for i in lhm.get()]
+        # NVMe thresholds constants (would trigger a permanent CRITICAL alert)
+        assert not any('Warning Temperature' in label for label in labels)
+        assert not any('Critical Temperature' in label for label in labels)
+        # Inverted thermal margin (higher means cooler)
+        assert not any('Distance to TjMax' in label for label in labels)
+
+    def test_disks_are_excluded_by_default(self):
+        """Test that the disks temperatures are not in the default (core) instance."""
+        lhm = GlancesGrabLHM()
+        lhm.fetch = lambda: DATA_JSON_SAMPLE
+        labels = [i['label'] for i in lhm.get()]
+        assert not any('Samsung' in label for label in labels)
+
+    def test_storage_instance_returns_disks_only(self):
+        """Test that the storage instance returns only the disks temperatures."""
+        lhm = GlancesGrabLHM(storage=True)
+        lhm.fetch = lambda: DATA_JSON_SAMPLE
+        stats = lhm.get()
+        assert [i['label'] for i in stats] == ['Temperature (Samsung SSD 980 1TB)']
+        assert stats[0]['value'] == 43.0
+
+    def test_nvme_thresholds_are_used_as_warning_critical(self):
+        """Test that the NVMe thresholds constants fill the warning/critical fields."""
+        lhm = GlancesGrabLHM(storage=True)
+        lhm.fetch = lambda: DATA_JSON_SAMPLE
+        disk = lhm.get()[0]
+        assert disk['warning'] == 83
+        assert disk['critical'] == 87
 
     def test_sensor_fields(self):
         """Test that each sensor entry has the expected fields."""
@@ -166,7 +258,7 @@ class TestGlancesGrabLHMParsing:
         lhm = GlancesGrabLHM()
         lhm.fetch = lambda: DATA_JSON_SAMPLE
         stats = lhm.get()
-        systin = next(i for i in stats if i['label'] == 'Nuvoton NCT6793D SYSTIN')
+        systin = next(i for i in stats if i['label'] == 'SYSTIN (Nuvoton NCT6793D)')
         assert systin['value'] == 29.5
 
     def test_sensor_without_value_is_skipped(self):
@@ -174,7 +266,7 @@ class TestGlancesGrabLHMParsing:
         lhm = GlancesGrabLHM()
         lhm.fetch = lambda: DATA_JSON_SAMPLE
         labels = [i['label'] for i in lhm.get()]
-        assert 'Intel Core i7-7700 CPU Core #1' not in labels
+        assert 'CPU Core #1 (Intel Core i7-7700)' not in labels
 
     def test_fetch_failure_returns_empty_list(self):
         """Test that a web server connection failure returns an empty list."""
