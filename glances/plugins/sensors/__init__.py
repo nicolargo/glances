@@ -14,12 +14,13 @@ from typing import Any
 
 import psutil
 
-from glances.globals import natural_keys, to_fahrenheit
+from glances.globals import WINDOWS, natural_keys, to_fahrenheit
 from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.plugins.sensors.sensor.glances_batpercent import BatpercentPlugin
 from glances.plugins.sensors.sensor.glances_hddtemp import HddtempPlugin
+from glances.plugins.sensors.sensor.glances_librehardwaremonitor import LibrehardwaremonitorPlugin
 from glances.timer import Counter
 
 # Define all kind of sensors available in Glances
@@ -97,6 +98,13 @@ class SensorsPlugin(GlancesPluginModel):
 
         if glances_grab_sensors_cpu_temp.init:
             self.sensors_grab_map[sensors_definition.get('cpu_temp').get('type')] = glances_grab_sensors_cpu_temp
+        elif WINDOWS:
+            # On Windows, psutil does not provide temperatures (see issue #3265)
+            # Grab them from the LibreHardwareMonitor web server (if available)
+            start_duration.reset()
+            librehardwaremonitor_plugin = LibrehardwaremonitorPlugin(args=args, config=config)
+            logger.debug(f"LibreHardwareMonitor sensor plugin init duration: {start_duration.get()} seconds")
+            self.sensors_grab_map[sensors_definition.get('cpu_temp').get('type')] = librehardwaremonitor_plugin
 
         if glances_grab_sensors_fan_speed.init:
             self.sensors_grab_map[sensors_definition.get('fan_speed').get('type')] = glances_grab_sensors_fan_speed
