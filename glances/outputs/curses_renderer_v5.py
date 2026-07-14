@@ -571,13 +571,17 @@ def render_alert_block(
     Header row: ``ALERTS (n)``. Then up to ``limit`` event rows showing
     timestamp, plugin/key, field, transition (previous → new).
 
-    Empty history:
-    - ``is_initializing=True``: show ``(initializing)`` — the alert
-      engine is still inside its per-plugin warmup window so no event
-      can have fired yet. Avoids the misleading "(no events)" at startup.
-    - ``is_initializing=False``: show ``(no events)`` — the system has
-      truly produced nothing of interest yet.
+    Empty history — a single header-styled line, no separate placeholder row
+    and no ``0 ongoing / 0 total`` count:
+    - ``is_initializing=True``: ``ALERT (initializing)`` — the alert engine is
+      still inside its per-plugin warmup window so no event can have fired yet.
+    - ``is_initializing=False``: ``ALERT (no alert detected)`` — the engine is
+      settled and has produced nothing of interest.
     """
+    if not history:
+        label = "ALERT (initializing)" if is_initializing else "ALERT (no alert detected)"
+        return [Row(cells=[Cell(text=label, color=ColorRole.HEADER)])]
+
     # Identify ongoing alerts. "Ongoing" = the most-recent event for a
     # given (plugin, key, field) tuple has a non-ok level. Older events
     # for the same tuple are not ongoing even if their own level was
@@ -596,10 +600,6 @@ def render_alert_block(
             ]
         )
     ]
-    if not history:
-        placeholder = "(initializing)" if is_initializing else "(no events)"
-        rows.append(Row(cells=[Cell(text=placeholder)]))
-        return rows
 
     # Compute the reference "now" once so every event in the same frame
     # uses the same same-day cutoff.

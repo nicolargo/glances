@@ -146,32 +146,34 @@ class GlancesAlerts:
         return list(self._history)
 
     def is_initializing(self) -> bool:
-        """Return ``True`` while the alert engine cannot have produced
-        any event yet — meaning *one* of the following holds:
+        """Return ``True`` only while the alert engine *cannot have produced any
+        event yet* — i.e. no plugin has finished its warmup window. Concretely,
+        ``True`` iff either:
 
         - **No ingestion has happened.** Scheduler has not yet completed
           a first tick (``_plugin_cycles`` empty).
-        - **A plugin is still inside its warmup window.** Warmup skips
-          ingestion entirely for the first N cycles per plugin (default
-          3) — alerts cannot fire during that window.
-        - **A non-warmup observation is sitting in hysteresis.** After
-          warmup, the first cycle where ``observed != committed`` only
-          sets ``pending_level``; the transition does not commit (and the
-          event does not fire) until ``min_duration`` has elapsed. During
-          that window the UI must not show "(no events)" — it would
-          flash misleadingly between warmup completion and the first
-          emitted event.
+        - **Every ingested plugin is still inside its warmup window.**
+          Warmup skips ingestion entirely for the first N cycles per plugin
+          (default 3) — alerts cannot fire during that window.
 
-        Once all plugins are past warmup AND no state is hysteresis-
-        pending, the engine is settled — empty history then truly means
-        "no events".
+        The test is "no plugin past warmup", NOT "some plugin still warming".
+        Each plugin runs its own refresh loop, so requiring *every* plugin to
+        clear warmup let a single slow-refresh plugin (polling every few
+        minutes) hold the flag ``True`` for minutes — and a plugin that only
+        ever ingests once would latch it ``True`` forever. As soon as one
+        plugin is past warmup the engine is live: an empty history then means
+        "no alert detected".
+
+        We also deliberately do NOT treat a still-pending (hysteresis)
+        transition as "initializing": a field that flaps across a threshold
+        keeps resetting its debounce window and never commits, which would
+        latch the flag ``True`` forever too. A pending-but-uncommitted
+        transition is genuinely "no alert yet"; if it commits, the event
+        appears within ``min_duration`` seconds.
         """
         if not self._plugin_cycles:
             return True
-        if any(seen <= self._warmup_cycles for seen in self._plugin_cycles.values()):
-            return True
-        # Settling: a pending transition exists somewhere in `_state`.
-        return any(state.pending_level is not None for state in self._state.values())
+        return not any(seen > self._warmup_cycles for seen in self._plugin_cycles.values())
 
     async def drain(self) -> None:
         """Wait for every in-flight action task to complete.

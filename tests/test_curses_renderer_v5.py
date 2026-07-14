@@ -384,21 +384,28 @@ def test_render_alert_block_handles_empty_history():
     assert len(rows) >= 1
 
 
-def test_render_alert_block_empty_history_shows_no_events_when_not_initializing():
-    """Default (initializing=False): empty history → "(no events)"."""
+def test_render_alert_block_empty_history_shows_no_alert_detected_when_settled():
+    """Settled (initializing=False), empty history → a single header line
+    ``ALERT (no alert detected)``. No separate placeholder row, no
+    ``0 ongoing / 0 total`` count."""
     rows = render_alert_block([], limit=10, is_initializing=False)
-    flat = " ".join(c.text for row in rows for c in row.cells)
-    assert "(no events)" in flat
-    assert "initializing" not in flat
+    assert len(rows) == 1
+    cell = rows[0].cells[0]
+    assert cell.text == "ALERT (no alert detected)"
+    assert cell.color == ColorRole.HEADER
+    assert "initializing" not in cell.text
+    assert "ongoing" not in cell.text
 
 
 def test_render_alert_block_empty_history_shows_initializing_during_warmup():
-    """is_initializing=True (warmup): empty history → "(initializing)" so the
-    user knows alerts can't have fired yet."""
+    """is_initializing=True (warmup), empty history → a single header line
+    ``ALERT (initializing)`` so the user knows alerts can't have fired yet."""
     rows = render_alert_block([], limit=10, is_initializing=True)
-    flat = " ".join(c.text for row in rows for c in row.cells)
-    assert "(initializing)" in flat
-    assert "(no events)" not in flat
+    assert len(rows) == 1
+    cell = rows[0].cells[0]
+    assert cell.text == "ALERT (initializing)"
+    assert cell.color == ColorRole.HEADER
+    assert "no alert detected" not in cell.text
 
 
 def test_format_alert_time_same_day_returns_hms_local():

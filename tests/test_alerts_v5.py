@@ -322,47 +322,52 @@ async def test_is_initializing_false_after_warmup_completes(tmp_path, monkeypatc
     assert alerts.is_initializing() is False
 
 
-async def test_is_initializing_true_during_pending_transition(tmp_path, monkeypatch, store):
-    """Post-warmup, while a non-ok observation is still inside its
-    min_duration window, the alert subsystem is "settling" — keep the
-    initializing flag True so the UI does not flash "(no events)" between
-    the warmup phase and the first emitted event."""
+async def test_is_initializing_false_after_warmup_even_with_pending(tmp_path, monkeypatch, store):
+    """Once warmup is done the engine is no longer "initializing" — even while
+    a non-ok observation is still inside its min_duration window (a pending,
+    not-yet-committed transition). Settling is NOT initializing: with an empty
+    history the UI shows "no alert detected", which is accurate (no alert has
+    committed yet). Dropping the old pending-based clause prevents
+    is_initializing() from latching True forever when a field flaps across a
+    threshold and its transition never commits."""
     config = _config_with(tmp_path, monkeypatch, "[alerts]\nwarmup_cycles=1\nmin_duration_seconds=5\n")
     clock = _clock()
     alerts = GlancesAlerts(config, now=clock)
     plugin = _FakeScalarPlugin(store, config)
 
-    # First cycle is warmup → state untouched.
+    # First cycle is warmup → still initializing.
     await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
     assert alerts.is_initializing() is True
 
     # Second cycle: post-warmup. observed=warning, committed=ok → pending.
+    # History still empty (min_duration not elapsed), but warmup is complete
+    # → no longer initializing.
     await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
-    # History still empty (min_duration not elapsed) but a pending transition exists.
     assert alerts.get_history() == []
-    assert alerts.is_initializing() is True
-
-    # After min_duration elapses, the transition fires — pending cleared.
-    clock.tick(6.0)
-    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
-    assert alerts.get_history() != []
     assert alerts.is_initializing() is False
 
 
-async def test_is_initializing_true_if_any_plugin_still_warming(tmp_path, monkeypatch, store):
-    """Mixed state — one plugin done, another still warming up → still initializing."""
+async def test_is_initializing_false_once_any_plugin_past_warmup(tmp_path, monkeypatch, store):
+    """Mixed state — as soon as ONE plugin has finished its warmup and produced
+    a real (post-warmup) ingest, the engine can have fired events, so it is no
+    longer "initializing", even while another plugin is still warming up.
+
+    Requiring EVERY plugin to finish warmup was a latch bug: each plugin has its
+    own refresh loop, so a single slow-refresh plugin (polling every few
+    minutes) would hold ``is_initializing()`` at ``True`` for minutes — and a
+    plugin that only ever ingests once would hold it forever."""
     config = _config_with(tmp_path, monkeypatch, "[alerts]\nwarmup_cycles=3\n")
     alerts = GlancesAlerts(config)
-    p_done = _FakeScalarPlugin(store, config)
-    p_done.plugin_name = "fast"
+    p_fast = _FakeScalarPlugin(store, config)
+    p_fast.plugin_name = "fast"
     p_slow = _FakeScalarPlugin(store, config)
     p_slow.plugin_name = "slow"
-    # `fast` gets 4 cycles, `slow` only 2 — `slow` is still warming up.
+    # `fast` gets 4 cycles (past warmup); `slow` only 2 (still warming).
     for _ in range(4):
-        await _run_with_levels(p_done, alerts, {"percent": {"level": "ok", "prominent": True}})
+        await _run_with_levels(p_fast, alerts, {"percent": {"level": "ok", "prominent": True}})
     for _ in range(2):
         await _run_with_levels(p_slow, alerts, {"percent": {"level": "ok", "prominent": True}})
-    assert alerts.is_initializing() is True
+    assert alerts.is_initializing() is False
 
 
 async def test_first_event_after_warmup_is_flagged_initial(tmp_path, monkeypatch, store):
