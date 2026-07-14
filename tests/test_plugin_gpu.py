@@ -19,6 +19,7 @@ from glances.plugins.gpu.cards.arm import (
     compute_mem_percent,
     get_device_list,
     get_device_name,
+    get_mem_capacity_bytes,
     parse_fdinfo,
 )
 
@@ -111,12 +112,54 @@ class TestArmComputeHelpers:
         snapshot = {'mem_total_bytes': 100, 'mem_used_bytes': 500}
         assert compute_mem_percent(snapshot) == 100
 
+    def test_compute_mem_percent_capacity_denominator(self):
+        # capacity_bytes (CmaTotal/MemTotal) overrides the fdinfo drm-total.
+        snapshot = {'mem_total_bytes': 100, 'mem_used_bytes': 500}
+        assert compute_mem_percent(snapshot, capacity_bytes=1000) == 50
+
+    def test_compute_mem_percent_capacity_clamped(self):
+        # used > capacity -> v3d spilled past the CMA pool; clamp to 100.
+        snapshot = {'mem_total_bytes': 100, 'mem_used_bytes': 500}
+        assert compute_mem_percent(snapshot, capacity_bytes=100) == 100
+
     def test_get_device_name_known(self):
         assert get_device_name('panthor') == 'Mali (Panthor)'
         assert get_device_name('msm') == 'Adreno (msm)'
 
     def test_get_device_name_unknown(self):
         assert get_device_name('unknown-driver-xyz') == 'ARM GPU'
+
+
+class TestArmMemCapacity:
+    """Denominator cascade for GPU mem% (issue #3611). Mocks /proc/meminfo."""
+
+    def _write_meminfo(self, tmp_path, content):
+        path = tmp_path / 'meminfo'
+        path.write_text(content)
+        return str(path)
+
+    def test_cma_total_present(self, tmp_path):
+        # CmaTotal > 0 -> denominator is CmaTotal (in bytes: kB * 1024).
+        path = self._write_meminfo(
+            tmp_path,
+            "MemTotal:        8192000 kB\nCmaTotal:         262144 kB\n",
+        )
+        assert get_mem_capacity_bytes(path) == 262144 * 1024
+
+    def test_cma_total_zero_falls_back_to_mem_total(self, tmp_path):
+        path = self._write_meminfo(
+            tmp_path,
+            "MemTotal:        8192000 kB\nCmaTotal:              0 kB\n",
+        )
+        assert get_mem_capacity_bytes(path) == 8192000 * 1024
+
+    def test_cma_total_absent_falls_back_to_mem_total(self, tmp_path):
+        path = self._write_meminfo(tmp_path, "MemTotal:        8192000 kB\n")
+        assert get_mem_capacity_bytes(path) == 8192000 * 1024
+
+    def test_meminfo_unreadable_returns_none(self, tmp_path):
+        # Non-Linux / restricted container -> None -> caller keeps legacy path.
+        assert get_mem_capacity_bytes(str(tmp_path / 'does-not-exist')) is None
 
 
 @pytest.mark.skipif(not LINUX, reason="ARM GPU backend is Linux-only")
@@ -149,7 +192,9 @@ class TestArmBackendDiscovery:
         assert stats[0]['fan_speed'] is None
 
     def test_mem_aggregated_from_fdinfo(self, arm_backend):
-        # Two clients: 1024 + 512 KiB used over 2048 + 1024 KiB total = 50%
+        # Numerator: 1024 + 512 = 1536 KiB resident (from fdinfo).
+        # Denominator: CmaTotal = 3072 KiB (from the proc/meminfo fixture, #3611).
+        # -> 1536 / 3072 = 50%
         stats = arm_backend.get_device_stats()
         assert stats[0]['mem'] == 50
 

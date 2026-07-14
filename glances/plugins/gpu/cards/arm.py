@@ -79,6 +79,8 @@ class ArmGPU:
             self.device_folders = get_device_list(drm_root_folder)
         # State for delta-based proc% computation
         self._last_sample: dict[str, tuple[int, int]] = {}
+        # Denominator for GPU mem% -- static system property, read once. See #3611.
+        self._mem_capacity_bytes = get_mem_capacity_bytes(os.path.join(proc_root_folder, 'meminfo'))
 
     def exit(self):
         """Close ARM GPU class."""
@@ -97,7 +99,7 @@ class ArmGPU:
                 'key': 'gpu_id',
                 'gpu_id': f'arm{index}',
                 'name': get_device_name(driver),
-                'mem': compute_mem_percent(snapshot),
+                'mem': compute_mem_percent(snapshot, self._mem_capacity_bytes),
                 'proc': self._compute_proc_percent(device, snapshot),
                 'temperature': get_temperature(device),
                 'fan_speed': None,
@@ -367,12 +369,59 @@ def aggregate_fdinfo(
     return per_device
 
 
-def compute_mem_percent(snapshot: dict | None) -> int | None:
-    """Return memory usage in % from a per-device fdinfo snapshot."""
+def _parse_meminfo(text: str) -> dict[str, int]:
+    """Parse /proc/meminfo -> {field: bytes}. Kernel reports values in kB (KiB)."""
+    fields: dict[str, int] = {}
+    for line in text.splitlines():
+        key, _, value = line.partition(':')
+        parts = value.split()
+        if not parts:
+            continue
+        try:
+            fields[key.strip()] = int(parts[0]) * 1024
+        except ValueError:
+            continue
+    return fields
+
+
+def get_mem_capacity_bytes(meminfo_path: str = '/proc/meminfo') -> int | None:
+    """Denominator for ARM/v3d GPU memory %, or None to keep legacy behaviour.
+
+    WHY NOT drm-total-memory: on Raspberry Pi 5 (BCM2712, DRM/V3D), the fdinfo
+    field ``drm-total-memory`` reports the firmware CMA reservation (``gpu_mem``
+    in config.txt, often 4 MiB headless) -- NOT a GPU capacity. The Pi 5 uses
+    unified memory: v3d buffers are allocated on demand from system RAM through
+    DRM/CMA, so used/drm-total pins near 93% while idle. Do NOT revert the
+    denominator to drm-total-memory. See issue #3611.
+
+    Cascade:
+      1. CmaTotal (the pool the DRM/CMA allocator draws from), if present and > 0
+      2. MemTotal (kernel without CMA / GPU not on the CMA path; unified memory)
+      3. None -> caller falls back to drm-total-memory (legacy, pre-#3611 output)
+    """
+    text = read_file(meminfo_path)
+    if text is None:
+        return None
+    fields = _parse_meminfo(text)
+    if fields.get('CmaTotal', 0) > 0:
+        return fields['CmaTotal']
+    if fields.get('MemTotal', 0) > 0:
+        return fields['MemTotal']
+    return None
+
+
+def compute_mem_percent(snapshot: dict | None, capacity_bytes: int | None = None) -> int | None:
+    """Return memory usage in % from a per-device fdinfo snapshot.
+
+    ``capacity_bytes`` (CmaTotal/MemTotal, see get_mem_capacity_bytes) is the
+    denominator. When None (e.g. /proc/meminfo unreadable), fall back to the
+    fdinfo ``drm-total-memory`` total -- the pre-#3611 behaviour, preserved
+    byte-for-byte.
+    """
     if snapshot is None:
         return None
-    total = snapshot.get('mem_total_bytes', 0)
     used = snapshot.get('mem_used_bytes', 0)
+    total = capacity_bytes if capacity_bytes else snapshot.get('mem_total_bytes', 0)
     if total <= 0:
         return None
     return max(0, min(100, round(used / total * 100)))
