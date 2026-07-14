@@ -178,6 +178,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Mask the last two octets of the public IP address in the TUI (a.b.c.d -> a.b.*.*).",
     )
     parser.add_argument(
+        "-b",
+        "--byte",
+        dest="byte",
+        action="store_true",
+        default=False,
+        help="Display network rate in bytes per second (default: bits per second).",
+    )
+    parser.add_argument(
         "--set-password",
         action="store_true",
         help="Generate a PBKDF2 password hash interactively and print it to stdout. Does NOT modify glances.conf.",
@@ -427,6 +435,7 @@ def assemble(
             meangpu=getattr(args, "meangpu", False),
             fahrenheit=getattr(args, "fahrenheit", False),
             hide_public_info=getattr(args, "hide_public_info", False),
+            byte=getattr(args, "byte", False),
         )
 
     return app, scheduler, host, int(port), tui

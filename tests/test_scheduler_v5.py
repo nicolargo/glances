@@ -270,6 +270,37 @@ async def test_stop_cancels_loops_cleanly(store, config):
     assert scheduler._tasks == []
 
 
+async def test_stop_calls_plugin_stop_on_every_plugin(store, config):
+    calls = []
+
+    class _P:
+        plugin_name = "p_ok"
+
+        def __init__(self, name):
+            self.plugin_name = name
+
+        async def update(self):
+            return None
+
+        def stop(self):
+            calls.append(self.plugin_name)
+
+    class _PRaises(_P):
+        def stop(self):
+            calls.append(self.plugin_name)
+            raise RuntimeError("boom")
+
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(_PRaises("p_bad"), refresh_time=1.0)
+    scheduler.register(_P("p_ok"), refresh_time=1.0)
+
+    # stop() before run: no tasks, but must still call each plugin.stop().
+    await scheduler.stop()
+
+    # Both plugins torn down; the raising one did not block the other.
+    assert set(calls) == {"p_bad", "p_ok"}
+
+
 async def test_one_plugin_crash_does_not_kill_others(store, config, caplog):
     scheduler = AsyncScheduler(store, config)
     raiser = RaisingPlugin(store, config)

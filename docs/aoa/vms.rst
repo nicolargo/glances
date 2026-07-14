@@ -26,6 +26,15 @@ Configuration file options:
     # Set the following key to True to display all VMs regarding their states
     all=False
 
+.. note::
+
+    The ``vms`` plugin is **disabled by default** (``disable=True``). It has
+    **no CPU/MEM thresholds or alerts** — VM rows are informational only (the
+    status is colour-coded: running is OK, starting/restarting is warning).
+    The TUI shows, per VM: engine (when more than one is active), name, status,
+    core count, CPU%, memory used / total, load (1/5/15 min, only when
+    available) and release.
+
 You can use all the variables ({{foo}}) available in the containers plugin.
 
 Filtering (for hide or show) is based on regular expression. Please be sure that your regular

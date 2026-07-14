@@ -53,6 +53,18 @@ under the ``[containers]`` section:
     # Define Podman sock
     #podman_sock=unix:///run/user/1000/podman/podman.sock
 
+.. note::
+
+    CPU and MEM alerts are raised **per container** and fire on ``warning``
+    and above; ``careful`` is colour-only (no history entry, no action). The
+    threshold keys are unchanged from earlier releases:
+    ``cpu_careful/cpu_warning/cpu_critical``,
+    ``mem_careful/mem_warning/mem_critical``, and the per-container overrides
+    ``<name>_cpu_*`` / ``<name>_mem_*``. MEM thresholds are evaluated as a
+    percentage of each container's memory **limit**.
+    ``disable_stats`` accepts any of
+    ``name,status,uptime,cpu,mem,diskio,networkio,ports,command``.
+
 You can use all the variables ({{foo}}) available in the containers plugin.
 
 .. note::

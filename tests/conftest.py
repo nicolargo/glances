@@ -21,12 +21,15 @@ import shlex
 import subprocess
 import sys
 import time
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
+from glances.config_v5 import GlancesConfigV5
 from glances.main import GlancesMain
 from glances.stats import GlancesStats
+from glances.stats_store_v5 import StatsStoreV5
 
 # Optional imports for WebUI testing
 try:
@@ -105,3 +108,41 @@ def web_browser():
 
     # Close the WebDriver instance
     driver.quit()
+
+
+@pytest.fixture
+def store_with():
+    """Factory fixture — returns a callable producing a fresh StatsStoreV5.
+
+    Shared across v5 plugin model tests (see
+    tests/test_plugin_base_v5_stop_and_threshold_field.py, the origin of
+    this fixture).
+    """
+
+    def _factory() -> StatsStoreV5:
+        return StatsStoreV5()
+
+    return _factory
+
+
+@pytest.fixture
+def config_with(tmp_path: Path, monkeypatch):
+    """Factory fixture — returns a callable that builds a real GlancesConfigV5
+    from a ``{section: {key: value}}`` dict, backed by a temp glances.conf.
+    """
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+
+    def _factory(sections: dict[str, dict[str, str]]) -> GlancesConfigV5:
+        body = ""
+        for section, options in sections.items():
+            body += f"[{section}]\n"
+            for key, value in options.items():
+                body += f"{key}={value}\n"
+        (cfg_dir / "glances.conf").write_text(body)
+        return GlancesConfigV5()
+
+    return _factory

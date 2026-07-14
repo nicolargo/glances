@@ -206,6 +206,15 @@ class GlancesPluginBase(Generic[T], ABC):
         except Exception as e:
             logger.warning("Plugin %s update failed: %s", self.plugin_name, e)
 
+    def stop(self) -> None:
+        """Release resources held by the plugin (background threads, sockets…).
+
+        Default no-op. Overridden by plugins that own long-lived resources
+        (e.g. ``containers`` engine streaming threads). Called once by the
+        scheduler on shutdown, after the plugin's update loop is cancelled.
+        Must be safe to call even if the plugin never produced stats.
+        """
+
     def _filter_collection(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Drop items whose primary-key value does not pass show/hide filters.
 
@@ -425,6 +434,17 @@ class GlancesPluginBase(Generic[T], ABC):
 
     # --------------------------------------------------- threshold precompute
 
+    @staticmethod
+    def _threshold_key(field_name: str, schema: dict[str, Any]) -> str:
+        """Config-key prefix for a watched field's thresholds.
+
+        Defaults to the field name; a field may declare ``threshold_field``
+        to decouple its config-key prefix from its value key (e.g.
+        ``containers`` stores CPU under ``cpu_percent`` but reads thresholds
+        from ``[containers] cpu_*``). See design §5.2.
+        """
+        return schema.get("threshold_field", field_name)
+
     def _precompute_plugin_thresholds(self) -> dict[str, dict[str, Any]]:
         """Build plugin-level (pk-agnostic) thresholds for each watched field.
 
@@ -439,15 +459,16 @@ class GlancesPluginBase(Generic[T], ABC):
         """
         out: dict[str, dict[str, Any]] = {}
         for field_name, schema in self._watched_fields:
+            key = self._threshold_key(field_name, schema)
             if schema.get("threshold_type") == "categorical":
-                mapping = read_thresholds_categorical(self.config, self.plugin_name, field=field_name)
+                mapping = read_thresholds_categorical(self.config, self.plugin_name, field=key)
                 if mapping:
                     out[field_name] = {"mapping": mapping}
             else:
                 thresholds = read_thresholds(
                     self.config,
                     self.plugin_name,
-                    field=field_name,
+                    field=key,
                     defaults=schema.get("default_thresholds"),
                     strict=bool(schema.get("strict_thresholds", False)),
                 )
@@ -475,14 +496,15 @@ class GlancesPluginBase(Generic[T], ABC):
         except AttributeError:
             return out  # config object without introspection API → skip optim
         for key in section_keys:
-            for field_name, _schema in self._watched_fields:
-                # Pattern: `<pk>_<field>_<level>` — `<pk>` must be non-empty
-                # and must NOT be ``<field>_`` (that's the plain
-                # `<field>_<level>` key, already handled by precompute).
+            for field_name, schema in self._watched_fields:
+                tkey = self._threshold_key(field_name, schema)
+                # Pattern: `<pk>_<tkey>_<level>` — `<pk>` must be non-empty
+                # and must NOT be ``<tkey>_`` (that's the plain
+                # `<tkey>_<level>` key, already handled by precompute).
                 for level in levels:
-                    suffix = f"_{field_name}_{level}"
-                    if key.endswith(suffix) and not key.startswith(f"{field_name}_"):
-                        # `<pk>` is whatever precedes `_<field>_<level>` —
+                    suffix = f"_{tkey}_{level}"
+                    if key.endswith(suffix) and not key.startswith(f"{tkey}_"):
+                        # `<pk>` is whatever precedes `_<tkey>_<level>` —
                         # must be non-empty.
                         prefix_len = len(key) - len(suffix)
                         if prefix_len > 0:
@@ -587,7 +609,10 @@ class GlancesPluginBase(Generic[T], ABC):
         ):
             entry = plugin_thresholds.get(field_name)
             return entry.get("mapping", {}) if entry else {}
-        return read_thresholds_categorical(self.config, self.plugin_name, field=field_name, pk_value=pk_value)
+        schema = self._fields.get(field_name, {})
+        return read_thresholds_categorical(
+            self.config, self.plugin_name, field=self._threshold_key(field_name, schema), pk_value=pk_value
+        )
 
     def _resolve_numeric_thresholds(
         self,
@@ -606,7 +631,7 @@ class GlancesPluginBase(Generic[T], ABC):
         return read_thresholds(
             self.config,
             self.plugin_name,
-            field=field_name,
+            field=self._threshold_key(field_name, schema),
             pk_value=pk_value,
             defaults=schema.get("default_thresholds"),
             strict=bool(schema.get("strict_thresholds", False)),

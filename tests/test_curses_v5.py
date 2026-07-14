@@ -578,6 +578,34 @@ def test_build_view_meangpu_fahrenheit_default_false(fake_store, fake_alerts, fa
     assert view["fahrenheit"] is False
 
 
+def test_build_view_carries_byte_flag(fake_store, fake_alerts, fake_config):
+    """`--byte` reaches the view dict via the constructor param (wired in
+    main_v5.assemble), consumed by the containers renderer."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("mem", False)],
+        fields_by_plugin={"mem": {}},
+        refresh_interval=0.01,
+        byte=True,
+    )
+    assert tui._byte is True
+    view = tui._build_view(max_x=200)
+    assert view["byte"] is True
+
+
+def test_build_view_byte_defaults_false(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._byte is False
+    view = tui._build_view(max_x=200)
+    assert view["byte"] is False
+
+
 def test_tui_v5_full_quicklook_hides_siblings_end_to_end(fake_store, fake_alerts, fake_config):
     """End-to-end: with `_full_quicklook` on, `_build_frame(max_x)` drives the
     real chain (_build_view → build_frame) and the hidden TOP siblings

@@ -230,7 +230,7 @@ class LxdExtension:
             except Exception:
                 self.local_node = None
         except Exception as e:
-            logger.error(f"{self.ext_name} plugin - Can't connect to LXD ({e})")
+            logger.debug(f"{self.ext_name} plugin - Can't connect to LXD ({e})")
             self.client = None
             self.disable = True
 

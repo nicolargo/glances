@@ -155,13 +155,22 @@ class AsyncScheduler:
             self._tasks = []
 
     async def stop(self) -> None:
-        """Cancel every plugin loop and wait for clean termination."""
+        """Cancel every plugin loop, then let each plugin release resources."""
         for task in self._tasks:
             task.cancel()
         # Drain cancellations. `return_exceptions=True` swallows the
         # `CancelledError` we just raised on each task.
         if self._tasks:
             await asyncio.gather(*self._tasks, return_exceptions=True)
+        # Teardown hook: let each plugin release long-lived resources
+        # (e.g. containers' engine streaming threads). Run in a thread so a
+        # blocking join cannot stall the event loop, and guard each so one
+        # failing teardown cannot block the others.
+        for entry in self._entries:
+            try:
+                await asyncio.to_thread(entry.plugin.stop)
+            except Exception as e:
+                logger.warning("Scheduler: stop() of %s failed: %s", entry.plugin.plugin_name, e)
 
     # ------------------------------------------------------------ internals
 

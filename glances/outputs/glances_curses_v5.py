@@ -177,6 +177,7 @@ class TuiV5(threading.Thread):
         meangpu: bool = False,
         fahrenheit: bool = False,
         hide_public_info: bool = False,
+        byte: bool = False,
     ) -> None:
         super().__init__(name="glances-tui-v5", daemon=True)
         self.store = store
@@ -213,6 +214,9 @@ class TuiV5(threading.Thread):
         self._meangpu = bool(meangpu)
         self._fahrenheit = bool(fahrenheit)
         self._hide_public_info = bool(hide_public_info)
+        # Network I/O unit for the containers renderer, seeded from --byte.
+        # False (default) = bits, matching the v4 default.
+        self._byte = bool(byte)
         # Vertical scroll offset of the help overlay (rows). Reset to 0 each
         # time the overlay is opened; clamped to the content in ``_paint_help``
         # (which is the only place that knows the terminal height).
@@ -637,6 +641,7 @@ class TuiV5(threading.Thread):
         view["meangpu"] = self._meangpu
         view["fahrenheit"] = self._fahrenheit
         view["hide_public_info"] = self._hide_public_info
+        view["byte"] = self._byte
         # Full mode: bars span (almost) the whole width; compact: a column.
         view["quicklook_width"] = max(20, max_x - 8) if self._full_quicklook else self._QUICKLOOK_COMPACT_WIDTH
         return view
