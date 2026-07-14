@@ -245,6 +245,17 @@ class SensorsPlugin(GlancesPluginModel):
             elif i['type'] == sensors_definition.get('battery').get('type'):
                 # Battery is in %
                 alert = self.get_alert(current=100 - i['value'], header=i['type'])
+            elif (
+                i['type'] == sensors_definition.get('hdd_temp').get('type')
+                and i.get('critical') is not None
+                and not self.is_limit('critical', stat_name=i['type'] + '_' + i['label'])
+            ):
+                # Disks sensors may carry their own thresholds (e.g. NVMe drives
+                # through LibreHardwareMonitor, see #3265): prefer them over the
+                # generic temperature_hdd limits (which are always set, see the
+                # set_default_cwc call in config.py), but not over a limit set
+                # for this specific sensor in the glances.conf file
+                alert = self.__get_system_thresholds(i)
             else:
                 alert = self.get_alert(current=i['value'], header=i['type'])
             # Set the alert in the view

@@ -291,6 +291,43 @@ class TestGlancesGrabLHMValueParsing:
         assert GlancesGrabLHM._parse_value(None) is None
 
 
+class TestHddSystemThresholds:
+    """Test that the disks own thresholds are used by the alert logic.
+
+    NVMe drives declare their thresholds (e.g. warning 83 / critical 87):
+    a healthy internal sensor at 59.9C must not be flagged against the
+    generic temperature_hdd limits (see #3265).
+    """
+
+    @staticmethod
+    def _views_decoration(sensors_plugin, value):
+        sensors_plugin.stats = [
+            {
+                'label': 'Temperature #1 (WD_BLACK SN770 500GB)',
+                'unit': 'C',
+                'value': value,
+                'warning': 83,
+                'critical': 87,
+                'type': 'temperature_hdd',
+                'key': 'label',
+            }
+        ]
+        sensors_plugin.update_views()
+        return sensors_plugin.get_views()['Temperature #1 (WD_BLACK SN770 500GB)']['value']['decoration']
+
+    def test_healthy_value_is_ok(self, glances_stats):
+        sensors_plugin = glances_stats.get_plugin('sensors')
+        assert self._views_decoration(sensors_plugin, 59.9) == 'OK'
+
+    def test_value_over_drive_warning_is_warning(self, glances_stats):
+        sensors_plugin = glances_stats.get_plugin('sensors')
+        assert self._views_decoration(sensors_plugin, 84.0) == 'WARNING'
+
+    def test_value_over_drive_critical_is_critical(self, glances_stats):
+        sensors_plugin = glances_stats.get_plugin('sensors')
+        assert self._views_decoration(sensors_plugin, 90.0) == 'CRITICAL'
+
+
 class TestGlancesGrabLHMSensorDetection:
     """Test the temperature sensor detection."""
 
