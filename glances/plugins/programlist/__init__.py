@@ -179,7 +179,7 @@ class ProgramlistPlugin(ProcesslistPlugin):
         """Return the CPU column header, depending on Irix mode and the number of cores."""
         if args.disable_irix and 0 < self.nb_log_core < 10:
             return self.layout_header['cpu'].format('CPU%/' + str(self.nb_log_core))
-        if args.disable_irix and self.nb_log_core != 0:
+        if args.disable_irix and self.nb_log_core:
             return self.layout_header['cpu'].format('CPU%/C')
         return self.layout_header['cpu'].format('CPU%')
 
