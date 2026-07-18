@@ -43,7 +43,7 @@ from __future__ import annotations
 import sys
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, Row, title_role
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
 
 # v4 fidelity: top-N cores shown, the rest collapsed into a CPU* row.
 _DEFAULT_MAX_CPU_DISPLAY = 4
@@ -123,7 +123,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
 
     # Header row: "CPU" title + column labels.
     header_cells: list[Cell] = [
-        Cell(text="CPU".ljust(_LABEL_WIDTH), color=title_role(payload), bold=True),
+        Cell(text="CPU".ljust(_LABEL_WIDTH), color=ColorRole.HEADER, bold=True),
     ]
     for stat in headers:
         header_cells.append(_header_cell(stat))

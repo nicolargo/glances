@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, title_role
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
 from glances.plugins.processlist.render_curses_v5 import (
     _HEADER_SORT_KEY,
     _W_CPU,
@@ -89,10 +89,8 @@ def render(
     raw_levels = payload.get("_levels") if isinstance(payload, dict) else None
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
 
-    title_color = title_role(payload) if items else ColorRole.HEADER
-
     header_cells = [
-        _header("CPU%", _W_CPU, color=title_color),
+        _header("CPU%", _W_CPU),
         _header("MEM%", _W_MEM),
         _header("VIRT", _W_VIRT),
         _header("RES", _W_RES),

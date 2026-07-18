@@ -32,7 +32,7 @@ from __future__ import annotations
 from typing import Any
 
 from glances.outputs.curses_formatters_v5 import format_value
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
 
 # Block width capped at the v5 left-sidebar maximum (34 chars).
 #     name (_NAME_MAX_WIDTH) + 1 + used (7) + 1 + total (7) = name + 16
@@ -71,7 +71,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
     """Render the fs plugin's TUI block — mirrors v4 ``fs.msg_curse``."""
     header_row = Row(
         cells=[
-            Cell(text="FILE SYS".ljust(_NAME_MAX_WIDTH), color=title_role(payload), bold=True),
+            Cell(text="FILE SYS".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
             Cell(text="Used".rjust(_USED_COL_WIDTH), color=ColorRole.HEADER, bold=True),
             Cell(text="Total".rjust(_TOTAL_COL_WIDTH), color=ColorRole.HEADER, bold=True),
         ]

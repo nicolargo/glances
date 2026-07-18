@@ -47,7 +47,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
 
 # Column widths (v4 parity — see ``processlist.layout_header``/``layout_stat``).
 _W_CPU = 5
@@ -94,10 +94,19 @@ _HEADER_SORT_KEY: dict[str, str] = {
 
 
 def _format_percent(value: Any, width: int) -> str:
+    """Percent with one decimal, dropped at >= 1000 so the column stays ``width``.
+
+    A process spread over many cores reads e.g. ``1384.7`` — 6 characters in a
+    5-wide column, which shifts every column to its right. Above 1000 the
+    decimal carries no useful signal, so it is dropped: ``1384``. Mirrors v4
+    ``layout_stat['cpu_no_digit']`` (v4 switches at 100 for its 6-wide column).
+    """
     try:
-        return f"{float(value):>{width}.1f}"
+        fvalue = float(value)
     except (TypeError, ValueError):
         return "?".rjust(width)
+    precision = 0 if abs(fvalue) >= 1000 else 1
+    return f"{fvalue:>{width}.{precision}f}"
 
 
 def _format_int(value: Any, width: int, *, signed: bool = False) -> str:
@@ -368,8 +377,6 @@ def render(
     raw_levels = payload.get("_levels") if isinstance(payload, dict) else None
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
 
-    title_color = title_role(payload) if items else ColorRole.HEADER
-
     # Responsive columns: which of the 12 fixed columns are visible. Absent
     # ``proclist_width`` (export / tests / non-int) → keep all 12 (byte-identical
     # to the historical output, locked by ``test_no_width_keeps_all_columns``).
@@ -381,7 +388,7 @@ def render(
         return [cell for cell, key in zip(cells, _FIXED_COL_KEYS) if key in active_set]
 
     header_fixed = [
-        _header("CPU%", _W_CPU, color=title_color),
+        _header("CPU%", _W_CPU),
         _header("MEM%", _W_MEM),
         _header("VIRT", _W_VIRT),
         _header("RES", _W_RES),

@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, _cell_for_field, field_label, title_role
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, _cell_for_field, field_label
 
 # Stable floor for the value column. ``mem`` and ``memswap`` both deal
 # with bytes / percent — same minimum width keeps the SWAP and MEM
@@ -87,7 +87,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
 
     # Line 1: title + percent.
     line1: list[Cell] = [
-        Cell(text="SWAP", color=title_role(payload), bold=True),
+        Cell(text="SWAP", color=ColorRole.HEADER, bold=True),
         _cell_for_field("percent", payload.get("percent"), fields_desc.get("percent", {}), payload),
     ]
 

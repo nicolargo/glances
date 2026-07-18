@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, _cell_for_field, field_label, title_role
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, _cell_for_field, field_label
 
 
 def _stat_cells(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], key: str, label: str) -> list[Cell]:
@@ -149,7 +149,7 @@ def render(
     # (HEADER/white when nothing is escalated, careful/warning/critical
     # colour otherwise — always bold).
     line1_cells: list[Cell] = [
-        Cell(text="CPU", color=title_role(payload), bold=True),
+        Cell(text="CPU", color=ColorRole.HEADER, bold=True),
         _cell_for_field("total", payload.get("total"), fields_desc.get("total", {}), payload),
     ]
     # Line-1 col-2 pair (idle) — only when column 2 survives.

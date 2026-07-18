@@ -530,3 +530,20 @@ def test_header_and_rows_drop_consistently(fields):
     ncols = len(rows[0].cells)
     for r in rows[1:]:
         assert len(r.cells) == ncols  # every data row matches the header column count
+
+
+@pytest.mark.parametrize(
+    ("cpu_percent", "expected"),
+    [
+        (12.3, " 12.3"),  # < 1000 → one decimal, as before
+        (999.9, "999.9"),  # last value that still fits with a decimal
+        (1384.7, " 1385"),  # >= 1000 → integer form (rounded, as v4), column stays 5 wide
+        (12345.6, "12346"),
+    ],
+)
+def test_cpu_percent_drops_decimal_above_1000(fields, cpu_percent, expected):
+    """A process spread over many cores must not widen the CPU% column."""
+    payload = {"data": [_proc(pid=1, cpu_percent=cpu_percent)], "_levels": {}}
+    cell = render(payload, fields)[1].cells[CPU_COL]
+    assert cell.text == expected
+    assert len(cell.text) == 5  # never overflows the 5-wide column

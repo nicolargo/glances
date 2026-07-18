@@ -190,29 +190,18 @@ def test_render_title_role_default_when_ok(mem_fields):
     assert rows[0].cells[0].bold is True
 
 
-def test_render_title_role_warning_when_percent_warning(mem_fields):
-    """percent at WARNING (prominent) → title coloured WARNING + bold."""
-    payload = {
-        "total": 1024,
-        "percent": 80.0,
-        "active": 256,
-        "_levels": {"percent": {"level": "warning", "prominent": True}},
-    }
-    rows = render(payload, mem_fields)
-    assert rows[0].cells[0].color == ColorRole.WARNING
-    assert rows[0].cells[0].bold is True
-
-
-def test_render_title_role_critical_when_percent_critical(mem_fields):
-    """percent at CRITICAL → title red + bold."""
+@pytest.mark.parametrize("level", ["warning", "critical"])
+def test_render_title_never_escalates(mem_fields, level):
+    """v4 parity: the MEM title is always HEADER — only the VALUE carries the alert."""
     payload = {
         "total": 1024,
         "percent": 95.0,
         "active": 256,
-        "_levels": {"percent": {"level": "critical", "prominent": True}},
+        "_levels": {"percent": {"level": level, "prominent": True}},
     }
     rows = render(payload, mem_fields)
-    assert rows[0].cells[0].color == ColorRole.CRITICAL
+    assert rows[0].cells[0].color == ColorRole.HEADER
+    assert rows[0].cells[0].bold is True
 
 
 def test_render_pulls_short_name_from_schema(mem_payload_linux):

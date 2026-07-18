@@ -36,7 +36,7 @@ from __future__ import annotations
 from typing import Any
 
 from glances.globals import to_fahrenheit
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
 from glances.outputs.glances_unicode import unicode_message
 
 _NAME_MAX_WIDTH = 19
@@ -94,7 +94,7 @@ def _value_text(row: dict[str, Any], fahrenheit: bool) -> str:
 
 
 def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | None = None, view=None) -> list[Row]:
-    header = Row(cells=[Cell(text="SENSORS".ljust(_NAME_MAX_WIDTH), color=title_role(payload), bold=True)])
+    header = Row(cells=[Cell(text="SENSORS".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True)])
     rows: list[Row] = [header]
 
     if not isinstance(payload, dict):

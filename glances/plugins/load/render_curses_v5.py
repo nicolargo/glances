@@ -39,7 +39,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
 
 # Fixed widths.
 _LOAD_LABEL_WIDTH = 6  # "15 min" = 6 chars
@@ -80,7 +80,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
     # and produced a visible 1-char overhang.
     # Title colour reflects the worst prominent alert level in the payload.
     header_cells: list[Cell] = [
-        Cell(text="LOAD".ljust(_LOAD_LABEL_WIDTH), color=title_role(payload), bold=True),
+        Cell(text="LOAD".ljust(_LOAD_LABEL_WIDTH), color=ColorRole.HEADER, bold=True),
     ]
     cores = payload.get("cpucore")
     if isinstance(cores, (int, float)) and cores > 0:

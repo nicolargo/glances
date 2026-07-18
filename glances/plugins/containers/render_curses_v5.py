@@ -19,7 +19,7 @@ from __future__ import annotations
 from typing import Any
 
 from glances.globals import auto_unit
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
 
 # Header → the GLOBAL process sort key (view["sort_key"], dynamic/auto-resolved),
 # processlist-aligned. MEM maps to memory_percent because the process sort-key
@@ -59,18 +59,18 @@ def _header_cell(
 
 
 def _build_header_row(
-    disable: set[str], *, show_engine: bool, show_pod: bool, name_w: int, sort_key: str | None, title_color: ColorRole
+    disable: set[str], *, show_engine: bool, show_pod: bool, name_w: int, sort_key: str | None
 ) -> Row:
     def hdr(label: str, width: int, *, ljust: bool = False, color: ColorRole = ColorRole.HEADER) -> Cell:
         return _header_cell(label, width, ljust=ljust, color=color, sort_key=sort_key)
 
     h: list[Cell] = []
     if show_engine:
-        h.append(hdr("Engine", 6, ljust=True, color=title_color))
+        h.append(hdr("Engine", 6, ljust=True))
     if show_pod:
         h.append(hdr("Pod", 12, ljust=True))
     if "name" not in disable:
-        h.append(hdr("CONTAINER", name_w, ljust=True, color=title_color if not show_engine else ColorRole.HEADER))
+        h.append(hdr("CONTAINER", name_w, ljust=True))
     if "status" not in disable:
         h.append(hdr("Status", 10))
     if "uptime" not in disable:
@@ -187,11 +187,7 @@ def render(
 
     show_engine = len({i.get("engine") for i in items}) > 1
     show_pod = any(i.get("pod_name") for i in items)
-    title_color = title_role(payload)
-
-    header = _build_header_row(
-        disable, show_engine=show_engine, show_pod=show_pod, name_w=name_w, sort_key=sort_key, title_color=title_color
-    )
+    header = _build_header_row(disable, show_engine=show_engine, show_pod=show_pod, name_w=name_w, sort_key=sort_key)
     rows: list[Row] = [header]
     rows.extend(
         _build_data_row(

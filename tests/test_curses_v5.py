@@ -1045,8 +1045,11 @@ def test_tui_v5_help_shows_color_binding(fake_store, fake_alerts, fake_config):
 
     flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
     assert "Color binding:" in flat
-    for sample in ("OK", "CAREFUL", "WARNING", "CRITICAL", "Title", "Sort", "Alert"):
+    for sample in ("OK", "CAREFUL", "WARNING", "CRITICAL", "Title", "Sort"):
         assert sample in flat
+    # The four severities appear twice: plain, then as the highlighted badge.
+    assert flat.count("'CRITICAL'") == 2
+    assert "an event is ongoing" in flat
 
 
 def test_tui_v5_help_color_rows_use_real_attributes(fake_store, fake_alerts, fake_config):
@@ -1056,13 +1059,29 @@ def test_tui_v5_help_color_rows_use_real_attributes(fake_store, fake_alerts, fak
     from glances.outputs.curses_renderer_v5 import ColorRole
 
     tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
-    levels, decorations = tui._help_color_rows()
+    levels, prominent, decorations = tui._help_color_rows()
     by_text = {c.text: c for c in levels.cells}
     assert by_text["OK"].color is ColorRole.OK
     assert by_text["CRITICAL"].color is ColorRole.CRITICAL
+    # The plain severity row must NOT be highlighted — it is the counterpart
+    # the `prominent` row is meant to contrast with.
+    assert all(c.prominent is False for c in levels.cells)
     deco = {c.text: c for c in decorations.cells}
     assert deco["Sort"].underline is True
-    assert deco["Alert"].prominent is True
+
+
+def test_tui_v5_help_documents_the_prominent_badge(fake_store, fake_alerts, fake_config):
+    """The legend carries a row showing every severity as a highlighted badge,
+    so the `prominent` decoration is discoverable rather than folk knowledge."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import ColorRole
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    _, prominent, _ = tui._help_color_rows()
+    samples = {c.text: c for c in prominent.cells if c.prominent}
+    assert set(samples) == {"OK", "CAREFUL", "WARNING", "CRITICAL"}
+    assert samples["OK"].color is ColorRole.OK
+    assert samples["CRITICAL"].color is ColorRole.CRITICAL
 
 
 def test_tui_v5_paint_help_clamps_scroll_and_shows_footer(fake_store, fake_alerts, fake_config):
@@ -1760,3 +1779,146 @@ def test_fit_header_progressively_degrades(fake_store, fake_alerts, fake_config)
     # Level 3 — uptime dropped too (only the hostname survives).
     f3 = tui._build_fitted_frame(w_sys_short)
     assert [b.name for b in f3.header] == ["system"]
+
+
+def test_attr_for_prominent_badge_is_bold():
+    """The prominent badge is always bold — on an 8-colour terminal that is
+    what promotes the light-gray foreground (colour 7) to true white."""
+    import curses
+
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole
+    from glances.outputs.glances_curses_v5 import _attr_for
+
+    cell = Cell(text="92.0", color=ColorRole.CRITICAL, prominent=True)
+    assert _attr_for(cell) & curses.A_BOLD
+
+
+def _badge_pairs(monkeypatch, colors: int) -> dict:
+    """Run `_init_colors` against a fake curses and return {role: (fg, bg)}."""
+    import curses
+
+    calls: dict[int, tuple[int, int]] = {}
+    monkeypatch.setattr(curses, "has_colors", lambda: True)
+    monkeypatch.setattr(curses, "start_color", lambda: None)
+    monkeypatch.setattr(curses, "use_default_colors", lambda: None)
+    monkeypatch.setattr(curses, "COLORS", colors, raising=False)
+    monkeypatch.setattr(curses, "init_pair", lambda n, fg, bg: calls.__setitem__(n, (fg, bg)))
+    monkeypatch.setattr(curses, "color_pair", lambda n: n)
+    monkeypatch.setattr("glances.outputs.glances_curses_v5._COLOR_PAIRS", {})
+    monkeypatch.setattr("glances.outputs.glances_curses_v5._COLOR_PAIRS_REVERSE", {})
+
+    from glances.outputs.glances_curses_v5 import _init_colors
+
+    _init_colors()
+
+    from glances.outputs.glances_curses_v5 import _COLOR_PAIRS_REVERSE as reverse
+
+    return {role: calls[pair] for role, pair in reverse.items()}
+
+
+def test_init_colors_badge_uses_theme_proof_cube_colours(monkeypatch):
+    """The badge must paint itself in ABSOLUTE cube colours (>= 16).
+
+    Themes redefine ANSI 0-15, so a badge built on them has unknowable
+    contrast: under Catppuccin Mocha, ANSI red is the light pink #f38ba8 and
+    white-on-red collapses to ~2:1. Indices 16-255 are spec-fixed, keeping the
+    badge >= 11:1 whatever the theme. Foreground 16 rather than 0 because
+    A_BOLD brightens 0-7 into mid-gray on many terminals.
+    """
+    from glances.outputs.curses_renderer_v5 import ColorRole
+
+    fg_bg = _badge_pairs(monkeypatch, 256)
+
+    assert fg_bg == {
+        ColorRole.OK: (16, 120),
+        ColorRole.CAREFUL: (16, 117),
+        ColorRole.WARNING: (16, 183),
+        ColorRole.CRITICAL: (16, 210),
+    }
+    assert all(bg >= 16 for _, bg in fg_bg.values())  # never a themed ANSI slot
+
+
+def test_init_colors_badge_falls_back_on_16_colour_terminals(monkeypatch):
+    """Below 256 colours there is no absolute palette — fall back to ANSI
+    without crashing, picking the foreground by DEFAULT xterm luminance."""
+    import curses
+
+    from glances.outputs.curses_renderer_v5 import ColorRole
+
+    fg_bg = _badge_pairs(monkeypatch, 16)
+
+    # Green is the only light background in the default palette.
+    assert fg_bg[ColorRole.OK] == (curses.COLOR_BLACK, curses.COLOR_GREEN)
+    # The dark ones get true white (15), not the light-gray colour 7.
+    assert fg_bg[ColorRole.CRITICAL] == (15, curses.COLOR_RED)
+
+
+def _header_color(monkeypatch, colors: int, theme: str = "dark") -> int:
+    """Run `_init_colors` against a fake curses and return the HEADER fg."""
+    import curses
+
+    from glances.outputs.curses_renderer_v5 import ColorRole
+
+    calls: dict[int, tuple[int, int]] = {}
+    monkeypatch.setattr(curses, "has_colors", lambda: True)
+    monkeypatch.setattr(curses, "start_color", lambda: None)
+    monkeypatch.setattr(curses, "use_default_colors", lambda: None)
+    monkeypatch.setattr(curses, "COLORS", colors, raising=False)
+    monkeypatch.setattr(curses, "init_pair", lambda n, fg, bg: calls.__setitem__(n, (fg, bg)))
+    monkeypatch.setattr(curses, "color_pair", lambda n: n)
+    monkeypatch.setattr("glances.outputs.glances_curses_v5._COLOR_PAIRS", {})
+    monkeypatch.setattr("glances.outputs.glances_curses_v5._COLOR_PAIRS_REVERSE", {})
+
+    from glances.outputs.glances_curses_v5 import _init_colors
+
+    _init_colors(theme)
+
+    from glances.outputs.glances_curses_v5 import _COLOR_PAIRS as fg_pairs
+
+    return calls[fg_pairs[ColorRole.HEADER]][0]
+
+
+def test_init_colors_header_default_theme_is_unchanged(monkeypatch):
+    """The default MUST stay v4's bold white — every existing deployment
+    renders it, and `theme` exists to add an option, not to move the default."""
+    import curses
+
+    assert _header_color(monkeypatch, 256) == curses.COLOR_WHITE
+    assert _header_color(monkeypatch, 16) == curses.COLOR_WHITE
+
+
+def test_init_colors_header_light_theme_is_dark_grey(monkeypatch):
+    """`theme=light` mirrors the default for a white background: ~13:1 instead
+    of the ~1.2:1 bold white lands at. Cube index, so no theme redefines it."""
+    import curses
+
+    assert _header_color(monkeypatch, 256, "light") == 236  # #303030
+    assert _header_color(monkeypatch, 256, "light") >= 16  # never a themable ANSI slot
+    assert _header_color(monkeypatch, 16, "light") == curses.COLOR_BLACK  # fallback
+
+
+def test_init_colors_header_unknown_theme_falls_back_to_dark(monkeypatch):
+    """An unrecognised `theme=` value must not break the TUI — treat it as dark."""
+    import curses
+
+    assert _header_color(monkeypatch, 256, "solarized-mocha") == curses.COLOR_WHITE
+
+
+def test_tui_v5_reads_theme_from_config(fake_store, fake_alerts):
+    """`[outputs] theme` reaches `_init_colors`, normalised (case/whitespace)."""
+    from unittest.mock import MagicMock
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    cfg = MagicMock()
+    cfg.get.side_effect = lambda section, key, default=None: "  LIGHT  " if key == "theme" else default
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, cfg)
+    assert tui._theme == "light"
+
+
+def test_tui_v5_theme_defaults_to_dark(fake_store, fake_alerts, fake_config):
+    """No config key → dark, so an unconfigured user keeps the majority case."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._theme == "dark"

@@ -23,7 +23,7 @@ from __future__ import annotations
 from typing import Any
 
 from glances.globals import to_fahrenheit
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
 
 _HEADER_MAX = 17
 
@@ -109,7 +109,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
     levels = payload.get("_levels") if isinstance(payload.get("_levels"), dict) else {}
     view = view or {}
 
-    header = Row(cells=[Cell(text=_build_header(cards), color=title_role(payload), bold=True)])
+    header = Row(cells=[Cell(text=_build_header(cards), color=ColorRole.HEADER, bold=True)])
     rows: list[Row] = [header]
 
     if len(cards) == 1 or view.get("meangpu"):

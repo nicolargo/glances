@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
 
 _NAME_MAX_WIDTH = 26
 _VALUE_COL_WIDTH = 7
@@ -57,8 +57,8 @@ def _level_role(levels: dict[str, Any], ssid: str) -> tuple[ColorRole, bool]:
 def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | None = None, view=None) -> list[Row]:
     header = Row(
         cells=[
-            Cell(text="WIFI".ljust(_NAME_MAX_WIDTH), color=title_role(payload), bold=True),
-            Cell(text="dBm".rjust(_VALUE_COL_WIDTH), color=title_role(payload), bold=True),
+            Cell(text="WIFI".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
+            Cell(text="dBm".rjust(_VALUE_COL_WIDTH), color=ColorRole.HEADER, bold=True),
         ]
     )
     rows: list[Row] = [header]

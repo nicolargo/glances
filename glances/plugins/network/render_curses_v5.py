@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
 
 # Hardcoded for G1 — must match the v5 left sidebar max width.
 # Painter caps the sidebar at 34 chars (`_left_sidebar_max_width=34`,
@@ -91,7 +91,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
     """Render the network plugin's TUI block — mirrors v4 ``network.msg_curse``."""
     header_row = Row(
         cells=[
-            Cell(text="NETWORK".ljust(_NAME_MAX_WIDTH), color=title_role(payload), bold=True),
+            Cell(text="NETWORK".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
             Cell(text="Rx/s".rjust(_RATE_COL_WIDTH), color=ColorRole.HEADER, bold=True),
             Cell(text="Tx/s".rjust(_RATE_COL_WIDTH), color=ColorRole.HEADER, bold=True),
         ]

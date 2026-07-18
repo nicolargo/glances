@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import Any
 
 from glances.globals import to_fahrenheit
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
 
 _HEADER_MAX = 17
 _RANGE_WIDTH = 14
@@ -64,7 +64,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
     npu_id = npu.get("npu_id")
 
     rows: list[Row] = [
-        Row(cells=[Cell(text=str(npu.get("name") or "NPU")[:_HEADER_MAX], color=title_role(payload), bold=True)])
+        Row(cells=[Cell(text=str(npu.get("name") or "NPU")[:_HEADER_MAX], color=ColorRole.HEADER, bold=True)])
     ]
 
     # Row 2: load% (or freq% fallback) + right-justified current/max freq range.

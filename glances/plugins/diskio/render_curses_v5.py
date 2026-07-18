@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, title_role
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
 
 # Block width capped at the v5 left-sidebar maximum (34 chars).
 #     name (_NAME_MAX_WIDTH) + 1 + rx (7) + 1 + wx (7) = name + 16
@@ -81,7 +81,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
     """Render the diskio plugin's TUI block — mirrors v4 ``diskio.msg_curse``."""
     header_row = Row(
         cells=[
-            Cell(text="DISK I/O".ljust(_NAME_MAX_WIDTH), color=title_role(payload), bold=True),
+            Cell(text="DISK I/O".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
             Cell(text="R/s".rjust(_RATE_COL_WIDTH), color=ColorRole.HEADER, bold=True),
             Cell(text="W/s".rjust(_RATE_COL_WIDTH), color=ColorRole.HEADER, bold=True),
         ]

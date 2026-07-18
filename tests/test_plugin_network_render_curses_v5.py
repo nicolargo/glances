@@ -253,8 +253,8 @@ def test_render_title_role_header_when_no_prominent_alert(network_payload, netwo
     assert title.bold is True
 
 
-def test_render_title_role_escalates_on_critical(network_fields):
-    """A critical+prominent rate anywhere bumps the title color."""
+def test_render_title_never_escalates_on_critical(network_fields):
+    """v4 parity: the title is always TITLE/HEADER — only the VALUE carries the alert."""
     payload = {
         "data": [
             {"interface_name": "eth0", "bytes_recv": 9e6, "bytes_sent": 1e6, "is_up": True},
@@ -264,5 +264,5 @@ def test_render_title_role_escalates_on_critical(network_fields):
         },
     }
     rows = render(payload, network_fields)
-    assert rows[0].cells[0].color == ColorRole.CRITICAL
+    assert rows[0].cells[0].color == ColorRole.HEADER
     assert rows[0].cells[0].bold is True

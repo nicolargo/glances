@@ -28,7 +28,7 @@ from __future__ import annotations
 from typing import Any
 
 from glances.globals import auto_unit
-from glances.outputs.curses_renderer_v5 import Cell, Row, title_role
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
 from glances.plugins.smart import LARGE_VALUE_KEYS
 
 _NAME_COL_WIDTH = 25
@@ -58,7 +58,7 @@ def _attr_value_text(attr: dict[str, Any]) -> str:
 
 
 def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | None = None, view=None) -> list[Row]:
-    header = Row(cells=[Cell(text="SMART disks".ljust(_NAME_COL_WIDTH), color=title_role(payload), bold=True)])
+    header = Row(cells=[Cell(text="SMART disks".ljust(_NAME_COL_WIDTH), color=ColorRole.HEADER, bold=True)])
     rows: list[Row] = [header]
 
     if not isinstance(payload, dict):

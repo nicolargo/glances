@@ -87,6 +87,11 @@ than a second one concerning the user interface:
     #left_menu=network,wifi,connections,ports,diskio,fs,irq,folders,raid,smart,sensors,now
     # Limit the number of processes to display (in the WebUI)
     max_processes_display=25
+    # Plugin title colour in the Curses interface, tuned for your terminal
+    # background. "dark" (default) is bold white, suited to the dark
+    # backgrounds most terminals use; "light" is a dark grey for a white
+    # background. No single colour is legible on both, hence the switch.
+    #theme=light
     # Options for WebUI
     #------------------
     # Set URL prefix for the WebUI and the API

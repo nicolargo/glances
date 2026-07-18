@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, _cell_for_field, field_label, title_role
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, _cell_for_field, field_label
 
 # Value cells need a stable floor because their content can shrink
 # cycle-to-cycle (e.g. "5.0%" vs "100.0%"). Label cells don't — labels
@@ -102,7 +102,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], view
     # Line 1: title + percent (+ active pair only when col-2 survives).
     # Title colour reflects the worst prominent alert level in the payload.
     line1: list[Cell] = [
-        Cell(text="MEM", color=title_role(payload), bold=True),
+        Cell(text="MEM", color=ColorRole.HEADER, bold=True),
         _cell_for_field("percent", payload.get("percent"), fields_desc.get("percent", {}), payload),
     ]
     if n_cols >= 2:

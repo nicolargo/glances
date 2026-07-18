@@ -160,11 +160,12 @@ def test_render_title_role_header_when_no_prominent_alert(fs_payload, fs_fields)
     assert title.bold is True
 
 
-def test_render_title_role_escalates_on_critical(fs_fields):
+def test_render_title_never_escalates_on_critical(fs_fields):
+    """v4 parity: the title is always TITLE/HEADER — only the VALUE carries the alert."""
     payload = {
         "data": [{"mnt_point": "/", "size": 100, "used": 95, "free": 5, "percent": 95.0}],
         "_levels": {"/": {"percent": {"level": "critical", "prominent": True}}},
     }
     rows = render(payload, fs_fields)
-    assert rows[0].cells[0].color == ColorRole.CRITICAL
+    assert rows[0].cells[0].color == ColorRole.HEADER
     assert rows[0].cells[0].bold is True

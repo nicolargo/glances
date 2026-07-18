@@ -196,6 +196,11 @@ class TuiV5(threading.Thread):
         # row blank instead, so the vertical rhythm of the layout is
         # preserved (v4 collapses the row; v5 keeps a blank line).
         self._separator_enabled = bool(self.config.get("outputs", "separator", True))
+        # Plugin-title colour, see `_init_colors`. ``dark`` (default) is a
+        # light amber tuned for the dark backgrounds most terminals use;
+        # ``light`` swaps to a dark amber for white backgrounds. A single
+        # colour cannot clear 4.6:1 on both, hence the key.
+        self._theme = str(self.config.get("outputs", "theme", "dark")).strip().lower()
         self._stop_event = threading.Event()
         # User-toggled view options (percpu / short-name / programs),
         # driven by the hotkey dispatch table. The process sort key is
@@ -336,7 +341,7 @@ class TuiV5(threading.Thread):
             logger.warning("TUI v5 crashed: %s", e)
 
     def _loop(self, stdscr) -> None:
-        _init_colors()
+        _init_colors(self._theme)
         cursor_was_hidden = False
         try:
             curses.curs_set(0)
@@ -939,15 +944,26 @@ class TuiV5(threading.Thread):
                 Cell(text="= stat severity (vs thresholds)"),
             ]
         )
+        # Same four levels as `levels`, rendered as the highlighted badge so
+        # the user can tell the two apart side by side. The `Alert` sample
+        # lives here rather than in `decorations` — it IS this decoration.
+        prominent = Row(
+            cells=[
+                Cell(text="OK", color=ColorRole.OK, prominent=True),
+                Cell(text="CAREFUL", color=ColorRole.CAREFUL, prominent=True),
+                Cell(text="WARNING", color=ColorRole.WARNING, prominent=True),
+                Cell(text="CRITICAL", color=ColorRole.CRITICAL, prominent=True),
+                Cell(text="= same, highlighted: an event is ongoing"),
+            ]
+        )
         decorations = Row(
             cells=[
                 Cell(text="Title", color=ColorRole.HEADER),
                 Cell(text="Sort", color=ColorRole.DEFAULT, bold=True, underline=True),
-                Cell(text="Alert", color=ColorRole.CRITICAL, prominent=True),
-                Cell(text="= section title / active sort column / ongoing alert"),
+                Cell(text="= section title / active sort column"),
             ]
         )
-        return [levels, decorations]
+        return [levels, prominent, decorations]
 
     def _help_visual_rows(self, max_x: int) -> tuple[list[tuple[Row, Row | None]], int]:
         """Assemble the full scrollable help document as ``(left, right)`` rows.
@@ -1060,7 +1076,7 @@ class TuiV5(threading.Thread):
 _COLOR_PAIRS_REVERSE: dict[ColorRole, int] = {}
 
 
-def _init_colors() -> None:
+def _init_colors(theme: str = "dark") -> None:
     try:
         if not curses.has_colors():
             return
@@ -1069,16 +1085,29 @@ def _init_colors() -> None:
             curses.use_default_colors()
         except curses.error:
             pass
+        colors = getattr(curses, "COLORS", 8)
+        # Plugin titles. A foreground readable on BOTH a black and a white
+        # background peaks at 4.58:1 (equal-contrast luminance L=0.179), so
+        # no single value serves both. The shade is therefore a user choice:
+        #   dark  (default) COLOR_WHITE, bold — v4's TITLE decoration, and
+        #                   what every existing deployment already renders.
+        #   light           grey 236 #303030 — ~13:1 on white, the mirror
+        #                   image of bold-white-on-dark. A cube index, so no
+        #                   terminal theme can redefine it.
+        if theme == "light":
+            header_color = 236 if colors >= 256 else curses.COLOR_BLACK
+        else:
+            header_color = curses.COLOR_WHITE
         # Foreground pairs (used by default for coloured text on the
-        # terminal's native background).
+        # terminal's native background). These four keep the terminal's own
+        # ANSI palette on purpose: they paint on the terminal's background,
+        # and a theme calibrates its palette to be readable on it.
         pairs = [
             (ColorRole.OK, curses.COLOR_GREEN),
             (ColorRole.CAREFUL, curses.COLOR_BLUE),
             (ColorRole.WARNING, curses.COLOR_MAGENTA),
             (ColorRole.CRITICAL, curses.COLOR_RED),
-            # v4 fidelity: plugin titles use the TITLE decoration which is
-            # bold + default-text (white-ish on dark terminals).
-            (ColorRole.HEADER, curses.COLOR_WHITE),
+            (ColorRole.HEADER, header_color),
         ]
         for i, (role, color) in enumerate(pairs, start=1):
             try:
@@ -1088,20 +1117,45 @@ def _init_colors() -> None:
             _COLOR_PAIRS[role] = curses.color_pair(i)
         _COLOR_PAIRS[ColorRole.DEFAULT] = curses.color_pair(0)
 
-        # Reverse pairs — explicit "white fg on coloured bg" (v4 parity).
-        # Using A_REVERSE alone would inherit the terminal's default
-        # foreground for the swapped fg, often a mid-gray that is hard to
-        # read on a magenta/red background. Defining a separate pair
-        # guarantees a white foreground.
-        reverse_pairs = [
-            (ColorRole.OK, curses.COLOR_GREEN),
-            (ColorRole.CAREFUL, curses.COLOR_BLUE),
-            (ColorRole.WARNING, curses.COLOR_MAGENTA),
-            (ColorRole.CRITICAL, curses.COLOR_RED),
-        ]
-        for j, (role, bg) in enumerate(reverse_pairs, start=len(pairs) + 1):
+        # Reverse pairs — the filled "badge" used by prominent cells (v4
+        # ``*_LOG`` decoration parity). A_REVERSE alone would inherit the
+        # terminal's default foreground, so each pair is defined explicitly.
+        #
+        # The badge paints its own background, so it must NOT rely on ANSI
+        # colours 0-15: themes (Catppuccin, Solarized, Gruvbox, Tokyo Night…)
+        # redefine those, and their luminance is unknowable without querying
+        # the terminal. Under Catppuccin Mocha, ANSI "red" is #f38ba8 — a
+        # light pink — so white-on-red collapses to ~2:1.
+        #
+        # Cube indices 16-255 are fixed by the spec and left alone by those
+        # themes. Painting the badge in absolute colours makes its contrast
+        # deterministic whatever the theme AND whatever the terminal
+        # background: black on a light cube colour, >= 11:1 on every level.
+        # Foreground 16 (not 0) is deliberate — A_BOLD brightens colours 0-7
+        # on many terminals, which would turn black into mid-gray.
+        if colors >= 256:
+            reverse_pairs = [
+                (ColorRole.OK, 16, 120),  # #87ffaf  ~16.8:1
+                (ColorRole.CAREFUL, 16, 117),  # #87d7ff  ~13.6:1
+                (ColorRole.WARNING, 16, 183),  # #d7afff  ~11.4:1
+                (ColorRole.CRITICAL, 16, 210),  # #ffafaf  ~12.0:1
+            ]
+        else:
+            # No absolute palette available. Best effort against the DEFAULT
+            # xterm luminance: green is its only light background. On a
+            # 16-colour terminal running a themed palette this stays
+            # imperfect — that case needs an OSC 4 query we deliberately
+            # avoid (fragile under tmux, and a startup risk).
+            white = 15 if colors >= 16 else curses.COLOR_WHITE
+            reverse_pairs = [
+                (ColorRole.OK, curses.COLOR_BLACK, curses.COLOR_GREEN),
+                (ColorRole.CAREFUL, white, curses.COLOR_BLUE),
+                (ColorRole.WARNING, white, curses.COLOR_MAGENTA),
+                (ColorRole.CRITICAL, white, curses.COLOR_RED),
+            ]
+        for j, (role, fg, bg) in enumerate(reverse_pairs, start=len(pairs) + 1):
             try:
-                curses.init_pair(j, curses.COLOR_WHITE, bg)
+                curses.init_pair(j, fg, bg)
             except curses.error:
                 # Terminal can't allocate the pair (very limited palettes).
                 # Fall back to plain reverse so we don't crash.
@@ -1128,6 +1182,10 @@ def _attr_for(cell: Cell) -> int:
         attr = _COLOR_PAIRS_REVERSE.get(cell.color)
         if attr is None:
             attr = _COLOR_PAIRS.get(cell.color, 0) | curses.A_REVERSE
+        # Bold the badge: on an 8-colour terminal this is what promotes the
+        # light-gray foreground to true white; elsewhere it just thickens the
+        # glyphs, which helps on a saturated background either way.
+        attr |= curses.A_BOLD
     else:
         attr = _COLOR_PAIRS.get(cell.color, 0)
 

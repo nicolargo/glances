@@ -190,7 +190,8 @@ def test_render_title_role_default_when_ok(memswap_payload, memswap_fields):
     assert rows[0].cells[0].bold is True
 
 
-def test_render_title_role_warning_escalates(memswap_fields):
+def test_render_title_never_escalates(memswap_fields):
+    """v4 parity: the SWAP title is always HEADER — only the VALUE carries the alert."""
     payload = {
         "total": 1024,
         "used": 800,
@@ -199,7 +200,7 @@ def test_render_title_role_warning_escalates(memswap_fields):
         "_levels": {"percent": {"level": "warning", "prominent": True}},
     }
     rows = render(payload, memswap_fields)
-    assert rows[0].cells[0].color == ColorRole.WARNING
+    assert rows[0].cells[0].color == ColorRole.HEADER
     assert rows[0].cells[0].bold is True
 
 
