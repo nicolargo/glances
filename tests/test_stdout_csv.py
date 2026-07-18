@@ -92,9 +92,7 @@ def test_list_plugin_interface_reappears_with_partial_fields():
     start = [_iface_full('eth0', 1, 2), _iface_full('wlan0', 3, 4)]
     header = csv.build_header('network', None, start)
     # wlan0 returns with only the non-rate fields present
-    data = csv.build_data(
-        'network', None, [_iface_full('eth0', 5, 6), _iface_partial('wlan0', 7, 8)]
-    )
+    data = csv.build_data('network', None, [_iface_full('eth0', 5, 6), _iface_partial('wlan0', 7, 8)])
     assert _ncols(data) == _ncols(header)
     # the 7 missing wlan0 fields become N/A
     assert data.count('N/A') == 7
