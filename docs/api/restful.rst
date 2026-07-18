@@ -1945,6 +1945,11 @@ Get all Glances stats::
     # curl http://localhost:61208/api/4/all
     Return a very big dictionary with all stats
 
+Get all Glances stats encoded with msgpack (binary, ~25% smaller than JSON)::
+
+    # curl http://localhost:61208/api/4/all/msgpack
+    Return the same dictionary as /all, serialized with msgpack
+
 Note: Update is done automatically every time /all or /<plugin> is called.
 
 GET stats of a specific process

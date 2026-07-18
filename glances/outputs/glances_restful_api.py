@@ -38,6 +38,14 @@ try:
 except ImportError:
     MCP_AVAILABLE = False
     GlancesMcpServer = None
+# msgspec import with fallback (optional, used by the /all/msgpack endpoint)
+try:
+    import msgspec
+
+    MSGSPEC_AVAILABLE = True
+except ImportError:
+    MSGSPEC_AVAILABLE = False
+    msgspec = None
 
 from glances.plugins.plugin.dag import get_plugin_dependencies
 from glances.processes import glances_processes
@@ -51,7 +59,7 @@ try:
     from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.middleware.gzip import GZipMiddleware
-    from fastapi.responses import HTMLResponse, JSONResponse
+    from fastapi.responses import HTMLResponse, JSONResponse, Response
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
     from fastapi.staticfiles import StaticFiles
     from fastapi.templating import Jinja2Templates
@@ -177,6 +185,21 @@ class GlancesJSONResponse(JSONResponse):
 
     def render(self, content: Any) -> bytes:
         return json_dumps(content)
+
+
+class GlancesMsgpackResponse(Response):
+    """
+    Glances msgpack response, a compact binary alternative to GlancesJSONResponse.
+
+    Stats are serialized to the MessagePack format using msgspec. The decoded
+    payload is identical to the JSON one (datetime objects become ISO 8601
+    strings), just more compact on the wire.
+    """
+
+    media_type = "application/msgpack"
+
+    def render(self, content: Any) -> bytes:
+        return msgspec.msgpack.encode(content)
 
 
 class GlancesUvicornServer(uvicorn.Server):
@@ -545,6 +568,7 @@ class GlancesRestfulApi:
             f'{base_path}/args/{{item}}': self._api_args_item,
             f'{base_path}/help': self._api_help,
             f'{base_path}/all': self._api_all,
+            f'{base_path}/all/msgpack': self._api_all_msgpack,
             f'{base_path}/all/limits': self._api_all_limits,
             f'{base_path}/all/views': self._api_all_views,
             f'{base_path}/pluginslist': self._api_plugins,
@@ -951,6 +975,31 @@ class GlancesRestfulApi:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get stats ({str(e)})")
 
         return GlancesJSONResponse(statval)
+
+    def _api_all_msgpack(self):
+        """Glances API RESTful implementation.
+
+        Return a msgpack (binary) representation of all the plugins.
+        This is a compact alternative to the (potentially huge) /all JSON endpoint.
+        HTTP/200 if OK
+        HTTP/404 if stats cannot be retrieved
+        HTTP/501 if the msgspec library is not installed
+        """
+        if not MSGSPEC_AVAILABLE:
+            raise HTTPException(
+                status.HTTP_501_NOT_IMPLEMENTED,
+                "The msgspec library is not installed (pip install msgspec)",
+            )
+
+        # Update the stat
+        self.__update_stats()
+
+        try:
+            statval = self.stats.getAllAsDict()
+        except Exception as e:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get stats ({str(e)})")
+
+        return GlancesMsgpackResponse(statval)
 
     def _api_all_limits(self):
         """Glances API RESTful implementation.

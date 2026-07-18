@@ -333,6 +333,26 @@ class TestGlances(unittest.TestCase):
             self.assertIsInstance(req.json(), dict)
             self.assertIsInstance(req.json()[item], int)
 
+    def test_018_all_msgpack(self):
+        """All stats encoded with msgpack (binary, compact alternative to /all)."""
+        import json
+
+        import msgspec
+
+        method = "all/msgpack"
+        print('INFO: [TEST_018] Get all stats (msgpack encoding)')
+        print(f"HTTP RESTful request: {URL}/{method}")
+        req = self.http_get(f"{URL}/{method}")
+
+        self.assertTrue(req.ok)
+        self.assertEqual(req.headers['Content-Type'], 'application/msgpack')
+        # The body is valid msgpack and decodes to a dict of plugins
+        stats = msgspec.msgpack.decode(req.content)
+        self.assertIsInstance(stats, dict)
+        self.assertIn('cpu', stats)
+        # The msgpack payload must be more compact than the equivalent JSON
+        self.assertLess(len(req.content), len(json.dumps(stats).encode()))
+
     def test_050_start_cors_server(self):
         """Start a second Web server with a wildcard+trusted multi-origin allowlist.
 

@@ -417,6 +417,11 @@ def print_all():
     print(f'    # curl {API_URL}/all')
     print('    Return a very big dictionary with all stats')
     print('')
+    print('Get all Glances stats encoded with msgpack (binary, ~25% smaller than JSON)::')
+    print('')
+    print(f'    # curl {API_URL}/all/msgpack')
+    print('    Return the same dictionary as /all, serialized with msgpack')
+    print('')
     print('Note: Update is done automatically every time /all or /<plugin> is called.')
     print('')
 

@@ -20,6 +20,7 @@ Bugs corrected:
 
 Enhancements:
 
+* Add a new /all/msgpack endpoint in the API #3593
 * Add meter for CPU and MEM of GPU in the Quicklook plugin #1711
 * Add cpu limit to docker, podman and lxd containers #3557
 * GPU Monitoring (ARM / RaspberryPi) #1048
