@@ -130,6 +130,15 @@ class AsyncScheduler:
                 return value
         return -1.0
 
+    def _global_refresh_time(self) -> float:
+        """Resolve `[global] refresh|refresh_time`, falling back to the default.
+
+        Reuses `_config_refresh` so this is the same source of truth used at
+        registration time — no second place defines the global cadence.
+        """
+        glob = self._config_refresh("global")
+        return glob if glob > 0 else _DEFAULT_REFRESH_TIME
+
     # ------------------------------------------------------------ run/stop
 
     async def run_forever(self) -> None:
@@ -175,8 +184,26 @@ class AsyncScheduler:
     # ------------------------------------------------------------ internals
 
     async def _plugin_loop(self, entry: _PluginEntry) -> None:
-        """Per-plugin loop: `update()` → optional alerts ingest → `sleep`, forever."""
+        """Per-plugin loop: `update()` → optional alerts ingest → `sleep`, forever.
+
+        The *first* sleep of each loop uses `min(global_refresh,
+        entry.refresh_time)` instead of `entry.refresh_time`; every
+        subsequent sleep uses the plugin's own `refresh_time` as before.
+        Symptom this fixes: plugins that launch a background scan from
+        `update()` (e.g. `ports`) publish a placeholder payload on their
+        first call (every status still `None`, "Scanning"...) and only fill
+        in real values on the *next* call. With a long per-plugin `refresh`
+        (`[ports] refresh=30`, `60`...) that next call — and the first
+        useful publication — was delayed by the whole interval, so the UI
+        showed nothing for up to a minute. v4 avoided this by
+        continuously re-publishing from a single global loop. Using the
+        global cadence for just the first sleep gets real values on screen
+        within a couple of seconds again, while `min(...)` guarantees a
+        plugin configured *faster* than the global refresh is never slowed
+        down by this.
+        """
         plugin_name = entry.plugin.plugin_name
+        first_cycle = True
         while True:
             try:
                 await entry.plugin.update()
@@ -190,7 +217,12 @@ class AsyncScheduler:
                 except Exception as e:
                     # Defensive: alerts must never tear down the loop either.
                     logger.warning("Alerts ingest failed for %s: %s", plugin_name, e)
-            await asyncio.sleep(entry.refresh_time)
+            if first_cycle:
+                sleep_time = min(self._global_refresh_time(), entry.refresh_time)
+                first_cycle = False
+            else:
+                sleep_time = entry.refresh_time
+            await asyncio.sleep(sleep_time)
 
 
 class _PluginEntry:

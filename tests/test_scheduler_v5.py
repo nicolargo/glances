@@ -410,3 +410,90 @@ async def test_scheduler_without_alerts_does_not_call_anything(store, config):
     await run_task
 
     assert store.get("fast") is not None
+
+
+# ---------------------------------------------------------- first-cycle sleep
+
+# Captured once, at import time, before any test monkeypatches
+# `glances.scheduler_v5.asyncio.sleep` — that patch targets the *shared*
+# `asyncio` module object (scheduler_v5's `asyncio` import is not a copy),
+# so anything that re-read `asyncio.sleep` after patching would pick up the
+# fake instead of a real sleep.
+_real_sleep = asyncio.sleep
+
+
+def _record_sleeps(monkeypatch) -> list[float]:
+    """Patch `asyncio.sleep` as seen by scheduler_v5 to record durations
+    instead of actually waiting for them, so the plugin loop advances
+    through many cycles almost instantly. Returns the list that gets
+    appended to on every call, in call order."""
+    recorded: list[float] = []
+
+    async def fake_sleep(delay: float) -> None:
+        recorded.append(delay)
+        await _real_sleep(0)  # yield to the loop without actually waiting
+
+    monkeypatch.setattr("glances.scheduler_v5.asyncio.sleep", fake_sleep)
+    return recorded
+
+
+async def _run_until(scheduler: AsyncScheduler, recorded: list[float], minimum: int) -> None:
+    """Start `scheduler`, poll (via the real sleep) until at least
+    `minimum` fake-sleep calls have been recorded, then stop it."""
+    run_task = asyncio.create_task(scheduler.run_forever())
+    for _ in range(200):
+        if len(recorded) >= minimum:
+            break
+        await _real_sleep(0.001)
+    await scheduler.stop()
+    await run_task
+
+
+async def test_first_sleep_is_global_refresh_then_plugin_refresh(store, tmp_path, monkeypatch):
+    """Timeline from the bug report: [global] refresh=2, [slow] refresh=60.
+    The first sleep must be the global cadence (2s) so the plugin's second
+    `update()` — the first with real values — happens quickly; every sleep
+    after that reverts to the plugin's own `refresh` (60s)."""
+    config = _config_with_ini(tmp_path, monkeypatch, "[global]\nrefresh = 2\n[slow]\nrefresh = 60\n")
+    scheduler = AsyncScheduler(store, config)
+    plugin = SlowPlugin(store, config)
+    scheduler.register(plugin)
+    assert scheduler._entries[0].refresh_time == 60.0  # registration order untouched
+
+    recorded = _record_sleeps(monkeypatch)
+    await _run_until(scheduler, recorded, minimum=3)
+
+    assert recorded[0] == 2.0  # first sleep: min(global=2, plugin=60)
+    assert recorded[1] == 60.0  # steady state: back to the plugin's own refresh
+    assert recorded[2] == 60.0
+
+
+async def test_first_sleep_not_slowed_when_plugin_faster_than_global(store, tmp_path, monkeypatch):
+    """A plugin configured FASTER than the global cadence must never be
+    slowed down by the first-cycle rule: min(global=10, plugin=1) == 1."""
+    config = _config_with_ini(tmp_path, monkeypatch, "[global]\nrefresh = 10\n[fast]\nrefresh = 1\n")
+    scheduler = AsyncScheduler(store, config)
+    plugin = FastPlugin(store, config)
+    scheduler.register(plugin)
+    assert scheduler._entries[0].refresh_time == 1.0
+
+    recorded = _record_sleeps(monkeypatch)
+    await _run_until(scheduler, recorded, minimum=2)
+
+    assert recorded[0] == 1.0
+    assert recorded[1] == 1.0
+
+
+async def test_steady_state_sleep_still_equals_plugin_refresh_time(store, config, monkeypatch):
+    """Existing behaviour preserved: with no per-plugin/global config at
+    play (explicit `refresh_time=`), every sleep — including repeated
+    cycles well past the first — still equals the plugin's own
+    `refresh_time`, exactly as before this fix."""
+    scheduler = AsyncScheduler(store, config)
+    plugin = SlowPlugin(store, config)
+    scheduler.register(plugin, refresh_time=0.01)
+
+    recorded = _record_sleeps(monkeypatch)
+    await _run_until(scheduler, recorded, minimum=5)
+
+    assert all(delay == 0.01 for delay in recorded)
