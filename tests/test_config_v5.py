@@ -459,3 +459,29 @@ def test_percent_values_are_not_interpolated(env: Path) -> None:
     write(etc_path(env), f"[global]\nstrftime_format = {raw}\n")
     config = GlancesConfigV5()
     assert config.get("global", "strftime_format", "") == raw
+
+
+# ============================================================================
+# get_value() — no-default passthrough (v4 untyped compatibility)
+# ============================================================================
+
+
+def test_get_value_without_default_returns_none_when_absent(env: Path) -> None:
+    assert GlancesConfigV5().get_value("folders", "folder_1_path") is None
+
+
+def test_get_value_without_default_returns_raw_string_when_present(env: Path) -> None:
+    write(xdg_path(env), "[folders]\nfolder_1_path = /tmp\n")
+    assert GlancesConfigV5().get_value("folders", "folder_1_path") == "/tmp"
+
+
+def test_get_value_explicit_none_default_also_passes_through(env: Path) -> None:
+    write(xdg_path(env), "[folders]\nfolder_1_careful = 2500\n")
+    assert GlancesConfigV5().get_value("folders", "folder_1_careful", None) == "2500"
+
+
+def test_get_value_with_non_none_default_still_coerces(env: Path) -> None:
+    # Unchanged boundary: an explicit, non-None default still routes
+    # through get() for typed coercion — locks in test_get_value_alias's
+    # existing guarantee against this change.
+    assert GlancesConfigV5().get_value("global", "refresh_time", 0) == 2

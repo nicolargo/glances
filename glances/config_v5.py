@@ -217,8 +217,22 @@ class GlancesConfigV5:
             return default
         return self._coerce(raw, type(default))
 
-    def get_value(self, section: str, option: str, default: T) -> T:
-        """v4 compatibility alias for get()."""
+    def get_value(self, section: str, option: str, default: T = None) -> T:  # type: ignore[assignment]
+        """v4 compatibility alias for get().
+
+        Unlike `get()`, a caller may omit `default` entirely — mirroring
+        v4's `GlancesConfig.get_value(section, option, default=None)`,
+        which several verbatim-reused v4 helper classes call without a
+        third argument (e.g. `glances/folder_list.py::FolderList.
+        __set_folder_list` reads `folder_N_path` with no default). When
+        `default` is left at `None`, no type coercion is applied — the
+        raw configparser string (or `None` if the option is absent) is
+        returned as-is, matching v4's untyped passthrough. Passing an
+        explicit non-None default is unchanged: it still delegates to
+        `get()` for typed coercion.
+        """
+        if default is None:
+            return self._merged.get(section, {}).get(option)  # type: ignore[return-value]
         return self.get(section, option, default)
 
     @staticmethod
