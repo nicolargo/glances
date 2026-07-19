@@ -171,6 +171,27 @@ def test_plugin_refresh_beats_global(store, tmp_path, monkeypatch):
     assert scheduler._entries[0].refresh_time == 10.0
 
 
+def test_register_uses_sensors_default_refresh_with_no_config_file(store, config):
+    """No user config file at all — DEFAULTS in config_v5.py must still give
+    `sensors` its intended 10s cadence rather than the global 2s fallback.
+    This is the actual regression the DEFAULTS entries fix: a personal
+    config predating the `[sensors] refresh=10` key otherwise silently
+    polls sensors (144ms/cycle) at the 2s global rate."""
+
+    class SensorsPlugin(GlancesPluginBase[dict]):
+        plugin_name = "sensors"
+        IS_COLLECTION = False
+        fields_description = {"value": {"description": "v", "unit": "number"}}
+
+        async def _grab_stats(self) -> dict:
+            return {"value": 1}
+
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(SensorsPlugin(store, config))
+
+    assert scheduler._entries[0].refresh_time == 10.0
+
+
 def test_register_falls_back_to_default(store, config):
     scheduler = AsyncScheduler(store, config)
     plugin = FastPlugin(store, config)

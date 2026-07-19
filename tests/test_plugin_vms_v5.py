@@ -94,10 +94,11 @@ def test_fields_description(store, config):
 # ---------------------------------------------------------- disabled by default
 
 
-@pytest.mark.asyncio
-async def test_disabled_by_default_returns_empty(store, config):
-    p = PluginModel(store, config)
-    assert await p._grab_stats() == []
+def test_disabled_by_default(config):
+    # v4 ships `[vms] disable=True`. The gate is generic:
+    # `main_v5.discover_plugins()` does not even instantiate the plugin.
+    assert PluginModel.DISABLED_BY_DEFAULT is True
+    assert PluginModel.is_disabled(config) is True
 
 
 # ---------------------------------------------------------- engine merge

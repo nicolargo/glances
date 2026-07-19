@@ -240,17 +240,19 @@ def setup_logging(debug: bool) -> None:
 # --------------------------------------------------------------- discovery
 
 
-def discover_plugins(store: StatsStoreV5, config: GlancesConfigV5) -> list[GlancesPluginBase]:
-    """Auto-discover every concrete v5 plugin under ``glances.plugins.*``.
+def discover_plugin_classes() -> list[tuple[str, type[GlancesPluginBase]]]:
+    """Return every concrete v5 ``PluginModel`` class, unfiltered.
 
     Looks for ``glances.plugins.<name>.model_v5`` modules carrying a
     ``PluginModel`` class that subclasses ``GlancesPluginBase``. Defensive
-    against broken modules: any failure logs a WARNING and skips. An
-    **empty registry is a valid state** — see ``MEMORY.md`` (issue #3548,
-    runtime plugin toggling via REST).
+    against broken modules: any failure logs a WARNING and skips.
+
+    Split out of ``discover_plugins()`` so that the class catalogue stays
+    available independently of what is currently instantiated — the entry
+    point a future runtime toggle (issue #3548) needs to bring a disabled
+    plugin up without restarting the process.
     """
-    plugins: list[GlancesPluginBase] = []
-    seen: set[str] = set()
+    classes: list[tuple[str, type[GlancesPluginBase]]] = []
 
     for module_info in pkgutil.iter_modules(_plugins_pkg.__path__):
         if not module_info.ispkg:
@@ -268,6 +270,30 @@ def discover_plugins(store: StatsStoreV5, config: GlancesConfigV5) -> list[Glanc
 
         cls = getattr(module, "PluginModel", None)
         if cls is None or not isinstance(cls, type) or not issubclass(cls, GlancesPluginBase):
+            continue
+
+        classes.append((full_name, cls))
+
+    return classes
+
+
+def discover_plugins(store: StatsStoreV5, config: GlancesConfigV5) -> list[GlancesPluginBase]:
+    """Instantiate every discovered v5 plugin that is not disabled.
+
+    A plugin whose ``[<plugin_name>] disable`` resolves to true is NOT
+    instantiated at all: some plugins do real work in ``__init__``
+    (``ports`` builds its scan list and starts a background thread), so
+    gating inside ``_grab_stats()`` would be too late. An **empty registry
+    is a valid state** — see ``MEMORY.md`` (issue #3548, runtime plugin
+    toggling via REST); ``discover_plugin_classes()`` keeps the full
+    catalogue reachable for a later re-enable.
+    """
+    plugins: list[GlancesPluginBase] = []
+    seen: set[str] = set()
+
+    for full_name, cls in discover_plugin_classes():
+        if cls.is_disabled(config):
+            logger.debug("Plugin discovery: %s disabled by config — not instantiated", cls.plugin_name or full_name)
             continue
 
         try:

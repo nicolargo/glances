@@ -20,8 +20,10 @@ Two independent sources are collected each cycle:
 - The Netfilter conntrack counters under `/proc/sys/net/netfilter/`.
 
 Disabled by default (`[connections] disable=True` ships in
-`conf/glances.conf`) because `psutil.net_connections()` is expensive on a
-host with a large socket table.
+`conf/glances.conf`, mirrored by `DISABLED_BY_DEFAULT = True`) because
+`psutil.net_connections()` is expensive on a host with a large socket
+table. A disabled plugin is not instantiated by
+`main_v5.discover_plugins()`.
 
 Two non-obvious points a future "cleanup" could otherwise undo:
 
@@ -58,6 +60,8 @@ class PluginModel(GlancesPluginBase[dict]):
     plugin_name: ClassVar[str] = "connections"
     IS_COLLECTION: ClassVar[bool] = False
     EMITS_ALERTS: ClassVar[bool] = True
+    # Mirrors v4 `[connections] disable=True`: off unless the operator opts in.
+    DISABLED_BY_DEFAULT: ClassVar[bool] = True
 
     status_list: ClassVar[list[str]] = [psutil.CONN_LISTEN, psutil.CONN_ESTABLISHED]
     initiated_states: ClassVar[list[str]] = [psutil.CONN_SYN_SENT, psutil.CONN_SYN_RECV]
@@ -125,11 +129,6 @@ class PluginModel(GlancesPluginBase[dict]):
         },
     }
 
-    def _is_enabled(self) -> bool:
-        # Mirror v4 [connections] disable=True default (CPU-heavy).
-        raw = self.config.get("connections", "disable", "True")
-        return str(raw).strip().lower() in ("false", "0", "no")
-
     def _collect_net_connections(self, stats: dict[str, Any]) -> bool:
         """Fill the connection-state counters. Return False if unavailable.
 
@@ -182,6 +181,4 @@ class PluginModel(GlancesPluginBase[dict]):
         return stats
 
     async def _grab_stats(self) -> dict:
-        if not self._is_enabled():
-            return {}
         return await asyncio.to_thread(self._collect)

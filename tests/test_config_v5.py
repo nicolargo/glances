@@ -87,6 +87,40 @@ def test_defaults_section_present(env: Path) -> None:
     assert GlancesConfigV5().has_section("global")
 
 
+@pytest.mark.parametrize(
+    ("section", "expected"),
+    [
+        ("ip", 60),
+        ("fs", 60),
+        ("folders", 60),
+        ("sensors", 10),
+        ("ports", 30),
+    ],
+)
+def test_per_plugin_refresh_defaults(env: Path, section: str, expected: int) -> None:
+    """Verbatim from conf/glances.conf `[<section>] refresh=`. Without these,
+    a personal config predating these keys silently falls back to the
+    global 2s cadence for every plugin (the CPU regression this fixes)."""
+    assert GlancesConfigV5().get(section, "refresh", -1) == expected
+
+
+@pytest.mark.parametrize(
+    ("section", "default"),
+    [
+        ("ip", 60),
+        ("fs", 60),
+        ("folders", 60),
+        ("sensors", 10),
+        ("ports", 30),
+    ],
+)
+def test_per_plugin_refresh_default_overridden_by_config_file(env: Path, section: str, default: int) -> None:
+    """A user who HAS the key in their own config must still win over DEFAULTS."""
+    override = default + 5
+    write(xdg_path(env), f"[{section}]\nrefresh = {override}\n")
+    assert GlancesConfigV5().get(section, "refresh", -1) == override
+
+
 # ============================================================================
 # Layered file overlay
 # ============================================================================

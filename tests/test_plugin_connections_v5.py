@@ -95,7 +95,6 @@ def test_initiated_and_terminated_states_are_distinct():
 
 async def test_terminated_computed_from_terminated_states_not_initiated(store, config, monkeypatch):
     plugin = PluginModel(store, config)
-    monkeypatch.setattr(plugin, "_is_enabled", lambda: True)
     conns = [
         FakeConn(psutil.CONN_LISTEN),
         FakeConn(psutil.CONN_LISTEN),
@@ -117,11 +116,11 @@ async def test_terminated_computed_from_terminated_states_not_initiated(store, c
 # ---------------------------------------------------------- disabled by default
 
 
-async def test_disabled_by_default_returns_empty(store, config):
-    plugin = PluginModel(store, config)
-    with patch("glances.plugins.connections.model_v5.psutil.net_connections") as mock_nc:
-        assert await plugin._grab_stats() == {}
-    mock_nc.assert_not_called()
+def test_disabled_by_default(config):
+    # v4 ships `[connections] disable=True`. The gate is generic:
+    # `main_v5.discover_plugins()` does not even instantiate the plugin.
+    assert PluginModel.DISABLED_BY_DEFAULT is True
+    assert PluginModel.is_disabled(config) is True
 
 
 async def test_enabled_via_config_collects(tmp_path, monkeypatch, store):

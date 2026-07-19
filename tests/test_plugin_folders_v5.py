@@ -199,3 +199,56 @@ def test_levels_indexed_by_path(store, config):
     lv = _levels(p, [_item(path="/a", size=1), _item(path="/b", size=2)])
     assert set(lv) == {"/a", "/b"}
     assert lv["/a"]["size"]["prominent"] is False
+
+
+# ------------------------------------------------------ per-folder refresh timer
+
+
+def test_refresh_timer_gates_the_folder_walk(tmp_path, monkeypatch):
+    """`folder_N_refresh` must actually skip the expensive walk.
+
+    Regression test for the broken index test in `FolderList.update()`
+    (`i in self.timer_folders` compared an int index against a list of
+    `Timer` objects, so it was always False and `folder_size()` ran on
+    every cycle). `folder_size` is spied on rather than timed, so the
+    test is deterministic.
+    """
+    watched = tmp_path / "watched"
+    watched.mkdir()
+    config = _cfg_with(
+        tmp_path,
+        monkeypatch,
+        f"""
+        [folders]
+        disable=False
+        folder_1_path={watched}
+        folder_1_refresh=60
+        """,
+    )
+
+    calls: list[str] = []
+
+    def _spy(path):
+        calls.append(path)
+        return (4096, 0)
+
+    monkeypatch.setattr("glances.folder_list.folder_size", _spy)
+
+    folders = FolderList(config)
+
+    # First cycle: always walks, so a value is available immediately.
+    folders.update()
+    assert len(calls) == 1
+
+    # Second cycle, timer not elapsed: the walk must be skipped.
+    folders.update()
+    assert len(calls) == 1
+
+    # Timer elapsed -> exactly one more walk...
+    folders.timer_folders[0].target = 0
+    folders.update()
+    assert len(calls) == 2
+
+    # ...and the timer was reset by that walk, so the next cycle skips again.
+    folders.update()
+    assert len(calls) == 2

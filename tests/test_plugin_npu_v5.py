@@ -76,9 +76,6 @@ def test_fields_watched():
 @pytest.mark.asyncio
 async def test_grab_stats_collects_available_cards(store, config, monkeypatch):
     p = PluginModel(store, config)
-    # Plugin is default-disabled (mirrors v4 [npu] disable=True); enable it so
-    # the collection path is exercised here.
-    monkeypatch.setattr(p, "_is_enabled", lambda: True)
     p._backends = [_FakeCard(_npu("intel_1")), _FakeCard(_npu("amd_1"), available=False)]
     out = await p._grab_stats()
     assert [c["npu_id"] for c in out] == ["intel_1"]
@@ -87,7 +84,6 @@ async def test_grab_stats_collects_available_cards(store, config, monkeypatch):
 @pytest.mark.asyncio
 async def test_grab_stats_disables_card_on_error(store, config, monkeypatch):
     p = PluginModel(store, config)
-    monkeypatch.setattr(p, "_is_enabled", lambda: True)
     boom = _BoomCard(_npu("rockship_1"))
     p._backends = [boom]
     out = await p._grab_stats()
@@ -95,15 +91,9 @@ async def test_grab_stats_disables_card_on_error(store, config, monkeypatch):
     assert boom.disabled is True
 
 
-def test_npu_disabled_by_default(store, config):
-    # Mirror v4 [npu] disable=True — no user config present here.
-    p = PluginModel(store, config)
-    assert p._is_enabled() is False
-
-
-@pytest.mark.asyncio
-async def test_grab_stats_empty_when_disabled(store, config):
-    p = PluginModel(store, config)
-    p._backends = [_FakeCard(_npu("intel_1"))]
-    # default disabled -> collects nothing even with an available card
-    assert await p._grab_stats() == []
+def test_npu_disabled_by_default(config):
+    # Mirror v4 [npu] disable=True — no user config present here. The gate
+    # is generic: `main_v5.discover_plugins()` does not even instantiate a
+    # plugin whose `is_disabled()` is True.
+    assert PluginModel.DISABLED_BY_DEFAULT is True
+    assert PluginModel.is_disabled(config) is True

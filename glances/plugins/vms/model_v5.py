@@ -16,9 +16,10 @@ in ``asyncio.to_thread``. Both engines are constructed unconditionally
 ``update()``, returning ``('', [])`` when its binary is absent.
 
 **Default-disabled**: v4 ships `[vms] disable=True`. This plugin mirrors
-that — with no explicit `[vms] disable=False` in the user config it
-collects and publishes nothing. The plugin is still discovered so it can
-be enabled without code changes.
+that via `DISABLED_BY_DEFAULT = True` — without an explicit
+`[vms] disable=False` it is not even instantiated by
+`main_v5.discover_plugins()`. The class stays discoverable, so it can be
+enabled without code changes.
 
 No alerts: ``EMITS_ALERTS = False`` — no field is declared ``watched``.
 """
@@ -76,6 +77,8 @@ class PluginModel(GlancesPluginBase[list]):
     plugin_name: ClassVar[str] = "vms"
     IS_COLLECTION: ClassVar[bool] = True
     EMITS_ALERTS: ClassVar[bool] = False
+    # Mirrors v4 `[vms] disable=True`: off unless the operator opts in.
+    DISABLED_BY_DEFAULT: ClassVar[bool] = True
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "name": {"description": "VM name.", "unit": "string", "primary_key": True},
@@ -105,11 +108,6 @@ class PluginModel(GlancesPluginBase[list]):
         }
         self._max_name_size = int(self.config.get("vms", "max_name_size", _DEFAULT_MAX_NAME_SIZE))
 
-    def _is_enabled(self) -> bool:
-        # Mirror v4 [vms] disable=True default (see npu/model_v5.py).
-        raw = self.config.get("vms", "disable", "True")
-        return str(raw).strip().lower() in ("false", "0", "no")
-
     def _all_tag(self) -> bool:
         raw = self.config.get("vms", "all", "False")
         return str(raw).strip().lower() in ("true", "1", "yes")
@@ -134,8 +132,6 @@ class PluginModel(GlancesPluginBase[list]):
         return stats
 
     async def _grab_stats(self) -> list:
-        if not self._is_enabled():
-            return []
         return await asyncio.to_thread(self._collect)
 
     def _add_metadata(self) -> None:

@@ -37,6 +37,7 @@ from glances.main_v5 import (
     assemble,
     build_parser,
     cli_set_password,
+    discover_plugin_classes,
     discover_plugins,
     main,
     serve,
@@ -144,6 +145,64 @@ def test_discover_plugins_empty_when_no_modules(config, monkeypatch):
     monkeypatch.setattr("glances.main_v5._plugins_pkg", _FakePkg)
     plugins = discover_plugins(store, config)
     assert plugins == []
+
+
+# ------------------------------------------------- discover_plugins / disable
+
+
+def _config_with(tmp_path, monkeypatch, body: str) -> GlancesConfigV5:
+    xdg_conf = tmp_path / "xdg" / "glances" / "glances.conf"
+    xdg_conf.parent.mkdir(parents=True, exist_ok=True)
+    xdg_conf.write_text(body)
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "no-system.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    return GlancesConfigV5()
+
+
+def test_discover_plugins_skips_disabled_plugin(tmp_path, monkeypatch):
+    """`[<plugin>] disable=True` must keep the plugin from being built at all.
+
+    Not merely from collecting: `ports` builds its scan list and starts a
+    background thread in `__init__`, so gating inside `_grab_stats()`
+    would be too late.
+    """
+    cfg = _config_with(tmp_path, monkeypatch, "[folders]\ndisable=True\n[ports]\ndisable=True\n")
+    names = {p.plugin_name for p in discover_plugins(StatsStoreV5(), cfg)}
+    assert "folders" not in names
+    assert "ports" not in names
+    # ...while the rest of the registry is untouched.
+    assert "cpu" in names
+
+
+def test_discover_plugins_keeps_enabled_plugin(tmp_path, monkeypatch):
+    cfg = _config_with(tmp_path, monkeypatch, "[folders]\ndisable=False\n[ports]\ndisable=False\n")
+    names = {p.plugin_name for p in discover_plugins(StatsStoreV5(), cfg)}
+    assert {"folders", "ports"}.issubset(names)
+
+
+def test_shipped_defaults_resolve_as_expected(config):
+    """No user config at all -> each plugin's own default applies."""
+    names = {p.plugin_name for p in discover_plugins(StatsStoreV5(), config)}
+    # Ship disabled (v4 `[<plugin>] disable=True`).
+    assert names.isdisjoint({"connections", "npu", "vms"})
+    # Ship enabled.
+    assert {"folders", "ports", "cpu"}.issubset(names)
+
+
+def test_is_disabled_reads_the_config_key(tmp_path, monkeypatch):
+    from glances.plugins.connections.model_v5 import PluginModel as Connections
+    from glances.plugins.folders.model_v5 import PluginModel as Folders
+
+    cfg = _config_with(tmp_path, monkeypatch, "[connections]\ndisable=False\n[folders]\ndisable=True\n")
+    assert Connections.is_disabled(cfg) is False
+    assert Folders.is_disabled(cfg) is True
+
+
+def test_discover_plugin_classes_lists_disabled_plugins_too(config):
+    """The class catalogue must stay complete: issue #3548 (runtime toggle)
+    needs a way to instantiate a plugin that was disabled at startup."""
+    catalogue = {cls.plugin_name for _, cls in discover_plugin_classes()}
+    assert {"connections", "npu", "vms", "folders", "ports"}.issubset(catalogue)
 
 
 def test_discover_plugins_skips_broken_module(config, monkeypatch, caplog):

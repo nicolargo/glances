@@ -92,8 +92,26 @@ class GlancesPluginBase(Generic[T], ABC):
     read by ``main_v5.assemble`` when it builds the TUI registry; it does
     not affect REST registration (every discovered plugin is served)."""
 
+    DISABLED_BY_DEFAULT: ClassVar[bool] = False
+    """Value of ``[<plugin_name>] disable`` assumed when the key is absent.
+
+    Mirrors the per-plugin default shipped in ``conf/glances.conf``: most
+    plugins ship ``disable=False``, a few CPU-heavy or opt-in ones ship
+    ``disable=True`` (``connections``, ``npu``, ``vms``). Read by
+    ``is_disabled()``."""
+
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {}
     """Per-field schema. See architecture §3.2."""
+
+    @classmethod
+    def is_disabled(cls, config: GlancesConfigV5) -> bool:
+        """Return True when ``[<plugin_name>] disable`` resolves to true.
+
+        Classmethod on purpose: ``main_v5.discover_plugins()`` calls it
+        BEFORE instantiating the plugin, so that a disabled plugin never
+        pays its construction cost (``ports`` builds its scan list and
+        starts a scanner thread in ``__init__``)."""
+        return bool(config.get(cls.plugin_name, "disable", cls.DISABLED_BY_DEFAULT))
 
     # ----------------------------------------------------------- construction
 
