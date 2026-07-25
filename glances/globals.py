@@ -761,6 +761,8 @@ def get_ip_address(ipv6=False):
                         ip_address = addr.address
                         ip_netmask = addr.netmask
                         break
+            if ip_address:
+                break
 
     return ip_address, ip_netmask
 

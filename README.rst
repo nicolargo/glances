@@ -240,6 +240,8 @@ access them by their name:
 
 For a complete example of how to use Glances as a library, have a look to the `PythonApi`_.
 
+If you do not want to remember all thoses options, @yottajunaid has created a simple launcher_ for Linux.
+
 Documentation 📜
 ================
 
@@ -686,3 +688,4 @@ Please give us a star on `GitHub`_ if you like this project.
 .. _FAQ: https://github.com/nicolargo/glances/blob/develop/docs/faq.rst
 .. _Discussions: https://github.com/nicolargo/glances/discussions
 .. _contributors: https://github.com/nicolargo/glances/graphs/contributors
+.. _launcher: https://github.com/yottajunaid/glances-launcher
