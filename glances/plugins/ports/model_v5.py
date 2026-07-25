@@ -37,6 +37,7 @@ from typing import Any, ClassVar
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.plugins.ports import ThreadScanner
 from glances.ports_list import GlancesPortsList
+from glances.timer import Timer
 from glances.web_list import GlancesWebList
 
 logger = logging.getLogger(__name__)
@@ -50,6 +51,15 @@ class PluginModel(GlancesPluginBase[list]):
     # v4 runs `get_p_alert(log=False)`: the level colours the TUI cell but is
     # never written to the event history and never dispatches an action.
     EMITS_ALERTS: ClassVar[bool] = False
+    # Publish the scan-list snapshot on the fast global cadence, NOT on
+    # `[ports] refresh`. The background `ThreadScanner` fills the list
+    # incrementally (URLs are scanned LAST, after every port's mandatory
+    # `time.sleep(1)`), so a snapshot published only every `[ports] refresh`
+    # seconds freezes half-scanned items ("Scanning") for a whole interval.
+    # v4 avoided this by reading the live list every display tick; we mirror
+    # that by republishing cheaply every cycle while throttling the actual
+    # scan below (self._scan_timer). See base SCHEDULE_AT_GLOBAL_REFRESH.
+    SCHEDULE_AT_GLOBAL_REFRESH: ClassVar[bool] = True
 
     # HTTP status codes v4 treats as healthy for a web item.
     _WEB_OK_CODES: ClassVar[tuple[int, ...]] = (200, 301, 302)
@@ -92,8 +102,35 @@ class PluginModel(GlancesPluginBase[list]):
         )
 
         # The single background scanner sweeping the whole list. Relaunched by
-        # `_grab_stats()` only when dead — v4 `update()` semantics.
+        # `_grab_stats()` only when dead AND the scan timer has fired.
         self._thread: ThreadScanner | None = None
+
+        # Throttle the (heavy) scan to `[ports] refresh`, decoupled from the
+        # fast publication cadence — this is v4's `refresh_timer`/`get_refresh`.
+        # `Timer(0)` is irrelevant here: the first sweep is launched
+        # unconditionally (thread is None), which then arms the timer.
+        self._scan_interval: float = self._resolve_scan_interval(config)
+        self._scan_timer: Timer = Timer(self._scan_interval)
+
+    def _resolve_scan_interval(self, config) -> float:
+        """Seconds between two full scans, from `[ports] refresh` (or the
+        `refresh_time` alias), else 60 (v4 `GlancesPortsList._default_refresh`).
+
+        The scan runs on this configured cadence while the display is refreshed
+        on the global cadence (SCHEDULE_AT_GLOBAL_REFRESH). Config DEFAULTS
+        always ship `[ports] refresh` (30), so the key is effectively always
+        present; the `60` tail only guards a config with that default stripped.
+        A `-1.0` float default is used (not `None`) so the value is coerced to
+        float rather than routed through the untyped `get_value` passthrough.
+        """
+        for key in ("refresh", "refresh_time"):
+            try:
+                value = float(config.get(self.plugin_name, key, -1.0))
+            except (TypeError, ValueError):
+                continue
+            if value > 0:
+                return value
+        return 60.0
 
     async def _grab_stats(self) -> list:
         """Return the current scan results; relaunch the scanner if it is dead.
@@ -106,6 +143,13 @@ class PluginModel(GlancesPluginBase[list]):
         so far; items not yet reached keep `status = None` and render as
         `Scanning`.
 
+        This runs on the fast GLOBAL cadence (SCHEDULE_AT_GLOBAL_REFRESH), so
+        the snapshot tracks the scan's progress within a couple of seconds —
+        v4's live-list read. The heavy scan itself is throttled to
+        `[ports] refresh`: a dead scanner is only relaunched once the scan
+        timer has fired. The very first sweep launches unconditionally so real
+        values appear immediately.
+
         The snapshot is a per-item COPY: the base pipeline replaces item dicts
         in `_remove_parameters()`, and the scanner must keep owning the
         originals.
@@ -114,9 +158,10 @@ class PluginModel(GlancesPluginBase[list]):
             # Nothing configured — empty payload, no thread. Sweeping an empty
             # list every cycle would be pure waste.
             return []
-        if self._thread is None or not self._thread.is_alive():
+        if self._thread is None or (not self._thread.is_alive() and self._scan_timer.finished()):
             self._thread = ThreadScanner(self._scan_list)
             self._thread.start()
+            self._scan_timer.reset(self._scan_interval)
         return [dict(item) for item in self._scan_list]
 
     def stop(self) -> None:
@@ -143,12 +188,19 @@ class PluginModel(GlancesPluginBase[list]):
     # rejected as speculative — `ports` would be its only caller.
 
     @staticmethod
-    def _port_level(item: dict[str, Any]) -> str | None:
-        """Level for a port-scan item. Mirrors v4 `get_conds_if_port`."""
+    def _port_level(item: dict[str, Any]) -> str:
+        """Level for a port-scan item. Mirrors v4 `get_conds_if_port`.
+
+        A healthy port (open, RTT within threshold) resolves to `"ok"`, NOT
+        `None`: v4's `get_default_ret_value` returns `'OK'`, and `'OK'` is
+        `COLOR_GREEN` in the curses colour map — the reachable-host value is
+        painted green. Returning `None`/no-level here would drop it to the
+        DEFAULT (uncoloured) role, which is the bug it used to have.
+        """
         status = item.get("status")
         if status is None:
             return "careful"  # not scanned yet → rendered as `Scanning`
-        level: str | None = None
+        level = "ok"
         # `False == 0` in Python: this single test covers both the ICMP
         # (`status = False`) and the TCP (`status = False`) timeout paths.
         if status == 0:
@@ -160,15 +212,18 @@ class PluginModel(GlancesPluginBase[list]):
         return level
 
     @staticmethod
-    def _web_level(item: dict[str, Any]) -> str | None:
+    def _web_level(item: dict[str, Any]) -> str:
         """Level for a web item. Mirrors v4 `get_conds_if_url`, except that a
         `None` status resolves to `careful` instead of `critical` (design §5.3):
         v4's last-truthy-wins painted every URL red for the whole first refresh
-        window, before any scan had run."""
+        window, before any scan had run.
+
+        A healthy URL (OK HTTP code, response within threshold) resolves to
+        `"ok"` — v4's `'OK'` = green (see `_port_level`)."""
         status = item.get("status")
         if status is None:
             return "careful"  # not scanned yet → rendered as `Scanning`
-        level: str | None = None
+        level = "ok"
         # Covers a bad HTTP code AND the literal string "Error" written by
         # `ThreadScanner._web_scan` when `requests` raises.
         if status not in PluginModel._WEB_OK_CODES:
@@ -190,9 +245,9 @@ class PluginModel(GlancesPluginBase[list]):
         first and merge.
 
         Shape (collection): `{indice: {"status": {"level": …, "prominent": False}}}`.
-        Items that resolve to no level get NO entry at all — the renderer then
-        falls back to `ColorRole.DEFAULT`, mirroring v4's `'OK'` return value
-        which carries no decoration.
+        Every scannable item gets an entry — including the healthy `"ok"`
+        level, which the renderer paints green (v4's `'OK'` decoration). Only
+        an item with neither `url` nor `host` is skipped (it cannot be scanned).
         """
         self._levels = {}
         if not isinstance(self._stats, list):
@@ -208,8 +263,6 @@ class PluginModel(GlancesPluginBase[list]):
             elif "host" in item:
                 level = self._port_level(item)
             else:
-                continue
-            if level is None:
                 continue
             # `prominent = False`: v4 colours the status text only, never the
             # background.

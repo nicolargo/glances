@@ -94,7 +94,15 @@ class AsyncScheduler:
         if any(entry.plugin is plugin for entry in self._entries):
             raise ValueError(f"Plugin {plugin.plugin_name!r} is already registered")
 
-        rt = self._resolve_refresh_time(plugin.plugin_name, refresh_time)
+        if refresh_time is None and plugin.SCHEDULE_AT_GLOBAL_REFRESH:
+            # This plugin's `[<plugin>] refresh` throttles its own background
+            # source poll, NOT its publication cadence (e.g. `ports`, whose
+            # ThreadScanner fills the scan list asynchronously). It must be
+            # published at the fast global cadence so the TUI reflects the
+            # scan's progress promptly. See GlancesPluginBase.SCHEDULE_AT_GLOBAL_REFRESH.
+            rt = self._global_refresh_time()
+        else:
+            rt = self._resolve_refresh_time(plugin.plugin_name, refresh_time)
         if rt <= 0:
             raise ValueError(f"refresh_time for {plugin.plugin_name!r} must be > 0, got {rt}")
 

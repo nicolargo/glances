@@ -171,6 +171,30 @@ def test_plugin_refresh_beats_global(store, tmp_path, monkeypatch):
     assert scheduler._entries[0].refresh_time == 10.0
 
 
+class GlobalCadencePlugin(FastPlugin):
+    """A plugin whose `[<plugin>] refresh` throttles its own background source,
+    so it must be POLLED at the global cadence (e.g. `ports`)."""
+
+    plugin_name = "fast"  # reuse the `[fast]` section
+    SCHEDULE_AT_GLOBAL_REFRESH = True
+
+
+def test_schedule_at_global_refresh_ignores_plugin_refresh(store, tmp_path, monkeypatch):
+    # `[fast] refresh = 30` would normally win, but the flag forces the global.
+    config = _config_with_ini(tmp_path, monkeypatch, "[global]\nrefresh = 3\n[fast]\nrefresh = 30\n")
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(GlobalCadencePlugin(store, config))
+    assert scheduler._entries[0].refresh_time == 3.0
+
+
+def test_schedule_at_global_refresh_still_honours_explicit_arg(store, tmp_path, monkeypatch):
+    # An explicit refresh_time= must still win over the flag (test-rig escape hatch).
+    config = _config_with_ini(tmp_path, monkeypatch, "[global]\nrefresh = 3\n")
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(GlobalCadencePlugin(store, config), refresh_time=9.0)
+    assert scheduler._entries[0].refresh_time == 9.0
+
+
 def test_register_uses_sensors_default_refresh_with_no_config_file(store, config):
     """No user config file at all — DEFAULTS in config_v5.py must still give
     `sensors` its intended 10s cadence rather than the global 2s fallback.

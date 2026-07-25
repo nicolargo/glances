@@ -92,6 +92,22 @@ class GlancesPluginBase(Generic[T], ABC):
     read by ``main_v5.assemble`` when it builds the TUI registry; it does
     not affect REST registration (every discovered plugin is served)."""
 
+    SCHEDULE_AT_GLOBAL_REFRESH: ClassVar[bool] = False
+    """Poll this plugin at the GLOBAL refresh cadence, ignoring ``[<plugin>] refresh``.
+
+    Default False: a plugin is polled at its own ``[<plugin>] refresh`` (the
+    ``update()`` call *is* both the source read and the store publication, so
+    one cadence is correct).
+
+    Set True only for a plugin whose data source mutates ASYNCHRONOUSLY between
+    its own ticks — where ``[<plugin>] refresh`` means "how often to poll the
+    source" rather than "how often to publish". Such a plugin must publish its
+    current snapshot on the fast display cadence (so the TUI reflects the
+    source's progress promptly) while throttling the heavy source poll itself.
+    ``ports`` is the sole case: its ``ThreadScanner`` fills the scan list
+    incrementally in the background, and republishing that list is trivially
+    cheap. Read by ``AsyncScheduler.register()``."""
+
     DISABLED_BY_DEFAULT: ClassVar[bool] = False
     """Value of ``[<plugin_name>] disable`` assumed when the key is absent.
 
