@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Any
 
 from glances import __version__
 from glances.outputs.curses_renderer_v5 import (
+    HEADER_SLOT_RIGHT,
     Cell,
     ColorRole,
     Frame,
@@ -66,16 +67,19 @@ _DEGRADE_STEPS: list[tuple[str, Any]] = [
     ("hide_gpu", True),  # (g) hide gpu block (last resort)
 ]
 
-# Header line (system … ip … uptime) progressive degradation, applied
+# Header line (system … ip … uptime … now) progressive degradation, applied
 # independently of the TOP row when the terminal is too narrow to show all
-# three blocks. Cumulative, in the maintainer-specified order: first drop the
-# system OS-info string, then hide ip, then hide uptime. v4 parity degrades
-# only the OS-info drop (`display_system_optional`); the ip/uptime hides refine
-# it for very narrow terminals.
+# four blocks. Cumulative, in the maintainer-specified order: `now` is the least
+# prioritary block so it goes first — which brings the banner back to exactly
+# the v4 `system … ip … uptime` layout — then the system OS-info string, then
+# ip, then uptime. v4 parity degrades only the OS-info drop
+# (`display_system_optional`); the other hides refine it for very narrow
+# terminals.
 _HEADER_DEGRADE_STEPS: list[tuple[str, Any]] = [
-    ("hide_os_info", True),  # (1) drop the system OS-info string
-    ("hide_ip", True),  # (2) hide the ip block
-    ("hide_uptime", True),  # (3) hide the uptime block (last resort)
+    ("hide_now", True),  # (1) hide the now block (least priority)
+    ("hide_os_info", True),  # (2) drop the system OS-info string
+    ("hide_ip", True),  # (3) hide the ip block
+    ("hide_uptime", True),  # (4) hide the uptime block (last resort)
 ]
 
 
@@ -512,11 +516,12 @@ class TuiV5(threading.Thread):
         return sum(widths) + (len(widths) - 1) * self._TOP_GAP_MIN <= max_x
 
     def _header_fits(self, frame: Frame, max_x: int) -> bool:
-        """True iff the header row (system … ip … uptime) fits ``max_x``.
+        """True iff the header row (system … ip … uptime … now) fits ``max_x``.
 
-        Mirrors ``_paint_header``'s layout: the packed blocks plus one
-        ``_HEADER_GAP`` between each must be within ``max_x``. An empty or
-        single-block header trivially fits.
+        Mirrors ``_paint_header``'s layout: the blocks plus one ``_HEADER_GAP``
+        between each must be within ``max_x`` — the same requirement whether a
+        block is packed left or right-aligned. An empty or single-block header
+        trivially fits.
         """
         widths = [b.width for b in frame.header]
         if len(widths) <= 1:
@@ -547,11 +552,11 @@ class TuiV5(threading.Thread):
         return self._fit_proclist_width(view, frame, max_x)
 
     def _fit_header(self, view: dict[str, Any], frame: Frame, max_x: int) -> Frame:
-        """Degrade the header row (system … ip … uptime) until it fits ``max_x``.
+        """Degrade the header row (system … ip … uptime … now) until it fits ``max_x``.
 
         Independent of the TOP-row degrade above: measures the real header
         block widths and applies the cumulative ``_HEADER_DEGRADE_STEPS``
-        (drop OS info → hide ip → hide uptime) until ``_header_fits``. Wide
+        (hide now → drop OS info → hide ip → hide uptime) until ``_header_fits``. Wide
         terminals take the early return (no extra rebuild); the header and TOP
         degrade flags coexist in the same ``view``.
         """
@@ -662,7 +667,7 @@ class TuiV5(threading.Thread):
     def _paint(self, stdscr, frame: Frame) -> None:
         """Lay out the frame on the terminal, mirroring v4:
 
-        header line        (hostname/OS ............ Uptime)  row 0
+        header line        (hostname/OS ...... Uptime  Now)  row 0
         <separator line>
         top blocks         (cpu | mem | load | ...)  side-by-side
         <separator line>
@@ -711,44 +716,54 @@ class TuiV5(threading.Thread):
         natural = max(natural + 2, 23)
         return min(natural, 34, max(1, max_x // 2))
 
-    # Horizontal gap between header blocks packed on the left (v4 parity:
-    # `space_between_column = 3` between the system and ip blocks).
+    # Horizontal gap between two adjacent header blocks, in either alignment
+    # group (v4 parity: `space_between_column = 3` between system and ip).
     _HEADER_GAP = 3
 
     def _paint_header(self, stdscr, blocks: list[PluginBlock], y0: int, max_x: int) -> int:
-        """Paint the header line (v4 parity): first block flush-left, last
-        block flush-right, and any middle block(s) packed left-to-right after
-        the first (v4 paints `system … ip … uptime` this way, `glances_curses.py`
-        `__display_top`). Returns the header height (0 when empty, else the
-        tallest block painted — normally 1).
+        """Paint the header line (v4 parity): the blocks of `HEADER_SLOT_LEFT`
+        packed from the left edge, the blocks of `HEADER_SLOT_RIGHT`
+        right-aligned as one group (v4 paints `system … ip … uptime` this way,
+        `glances_curses.py` `__display_top`; v5 appends `now` at the far right).
+        Returns the header height (0 when empty, else the tallest block
+        painted — normally 1).
 
-        The middle-block packing is generic (not ip-specific): the header slot
-        order is owned by `HEADER_SLOT`; this painter just lays out whatever
-        blocks it is handed without overlapping them.
+        The layout is generic (not ip- or now-specific): slot membership and
+        order are owned by `HEADER_SLOT_*`; this painter just lays out whatever
+        blocks it is handed without overlapping them. With a single right-group
+        block the geometry reduces to the plain flush-right case.
         """
         if not blocks:
             return 0
+        left_blocks = [b for b in blocks if b.name not in HEADER_SLOT_RIGHT]
+        right_blocks = [b for b in blocks if b.name in HEADER_SLOT_RIGHT]
         height = 0
-        first = blocks[0]
-        self._paint_block(stdscr, first, y0, 0, max_x, fit_to_term=False)
-        height = max(height, first.height)
-        # Middle blocks (e.g. ip): packed after the first block, each separated
-        # by `_HEADER_GAP`. Stop if we run past the right edge.
-        x = first.width
-        for block in blocks[1:-1]:
-            x += self._HEADER_GAP
+        # Left group: packed from x=0, each block separated by `_HEADER_GAP`.
+        # Stop if we run past the right edge.
+        x = 0
+        for i, block in enumerate(left_blocks):
+            if i:
+                x += self._HEADER_GAP
             if x >= max_x:
                 break
             self._paint_block(stdscr, block, y0, x, max(1, max_x - x), fit_to_term=False)
             height = max(height, block.height)
             x += block.width
-        if len(blocks) > 1:
-            last = blocks[-1]
-            # Flush-right, but never overlap the left-packed blocks.
-            right_x = max(x + 1, max_x - last.width)
-            if right_x < max_x:
-                self._paint_block(stdscr, last, y0, right_x, max(1, max_x - right_x), fit_to_term=False)
-                height = max(height, last.height)
+        if not right_blocks:
+            return height
+        # Right group: right-aligned as a whole, but never overlapping the
+        # left-packed blocks. `x` is 0 when the left group is empty, in which
+        # case the group is free to start at the natural right-aligned offset.
+        group_width = sum(b.width for b in right_blocks) + (len(right_blocks) - 1) * self._HEADER_GAP
+        right_x = max_x - group_width
+        if left_blocks:
+            right_x = max(x + 1, right_x)
+        for block in right_blocks:
+            if right_x >= max_x:
+                break
+            self._paint_block(stdscr, block, y0, right_x, max(1, max_x - right_x), fit_to_term=False)
+            height = max(height, block.height)
+            right_x += block.width + self._HEADER_GAP
         return height
 
     def _paint_top_row(self, stdscr, blocks: list[PluginBlock], y0: int, max_x: int) -> int:

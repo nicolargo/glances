@@ -52,7 +52,12 @@ logger = logging.getLogger(__name__)
 # `glances/outputs/glances_curses.py`). Plugin names not in any list
 # default to LEFT (same fallback as v4). Configurable via [outputs] later.
 
-HEADER_SLOT: tuple[str, ...] = ("system", "ip", "uptime")
+# The header slot is split in two alignment groups: the LEFT group is packed
+# from the left edge, the RIGHT group is painted right-aligned as a whole (see
+# `glances_curses_v5._paint_header`). `now` closes the banner on the far right.
+HEADER_SLOT_LEFT: tuple[str, ...] = ("system", "ip")
+HEADER_SLOT_RIGHT: tuple[str, ...] = ("uptime", "now")
+HEADER_SLOT: tuple[str, ...] = HEADER_SLOT_LEFT + HEADER_SLOT_RIGHT
 TOP_SLOT: tuple[str, ...] = ("quicklook", "cpu", "percpu", "npu", "gpu", "mem", "memswap", "load")
 LEFT_SLOT: tuple[str, ...] = (
     "network",
@@ -66,7 +71,6 @@ LEFT_SLOT: tuple[str, ...] = (
     "raid",
     "smart",
     "sensors",
-    "now",
 )
 RIGHT_SLOT: tuple[str, ...] = (
     "vms",
@@ -713,8 +717,11 @@ def build_frame(
             continue
         if view and view.get("hide_gpu") and plugin_name == "gpu":
             continue
-        # Header line progressive degradation (system … ip … uptime): when the
-        # terminal is too narrow the ip then the uptime block is dropped.
+        # Header line progressive degradation (system … ip … uptime … now): when
+        # the terminal is too narrow the now, then the ip, then the uptime block
+        # is dropped.
+        if view and view.get("hide_now") and plugin_name == "now":
+            continue
         if view and view.get("hide_ip") and plugin_name == "ip":
             continue
         if view and view.get("hide_uptime") and plugin_name == "uptime":

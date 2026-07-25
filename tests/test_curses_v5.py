@@ -1254,6 +1254,76 @@ def test_paint_header_packs_middle_block_between_first_and_last(fake_store, fake
     assert any(y == 0 and x == uptime_x and "Uptime" in text for (y, x, text) in calls)
 
 
+def test_paint_header_right_aligns_uptime_and_now_as_a_group(fake_store, fake_alerts, fake_config):
+    """Header with 4 blocks: `system`/`ip` packed left, `uptime`/`now`
+    right-aligned as one group with `now` flush against the right edge.
+    """
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole, PluginBlock, Row
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    system = PluginBlock(name="system", rows=[Row(cells=[Cell(text="myhost Ubuntu")])])
+    ip = PluginBlock(
+        name="ip",
+        rows=[Row(cells=[Cell(text="IP", color=ColorRole.HEADER), Cell(text="192.168.1.10/24")])],
+    )
+    uptime = PluginBlock(name="uptime", rows=[Row(cells=[Cell(text="Uptime: 3d04h")])])
+    now = PluginBlock(name="now", rows=[Row(cells=[Cell(text="2026-07-25 11:30:00")])])
+
+    fake_stdscr = MagicMock()
+    max_x = 120
+    height = tui._paint_header(fake_stdscr, [system, ip, uptime, now], y0=0, max_x=max_x)
+
+    assert height == 1
+    calls = [(c.args[0], c.args[1], c.args[2]) for c in fake_stdscr.addstr.call_args_list]
+    now_x = max_x - now.width
+    uptime_x = now_x - tui._HEADER_GAP - uptime.width
+
+    # Left group.
+    assert any(y == 0 and x == 0 and "myhost" in text for (y, x, text) in calls)
+    assert any(
+        y == 0 and system.width < x < uptime_x and ("IP" in text or "192.168.1.10" in text) for (y, x, text) in calls
+    )
+    # Right group: uptime then now, now's right edge exactly at max_x.
+    assert any(y == 0 and x == uptime_x and "Uptime" in text for (y, x, text) in calls)
+    assert any(y == 0 and x == now_x and "2026-07-25 11:30:00" in text for (y, x, text) in calls)
+
+
+def test_paint_header_right_group_never_overlaps_the_left_group(fake_store, fake_alerts, fake_config):
+    """On a terminal too narrow for both groups the right group is pushed past
+    the left-packed blocks rather than painted over them."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Cell, PluginBlock, Row
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+    system = PluginBlock(name="system", rows=[Row(cells=[Cell(text="myhost Ubuntu 24.04 LTS 64bit")])])
+    uptime = PluginBlock(name="uptime", rows=[Row(cells=[Cell(text="Uptime: 3d04h")])])
+    now = PluginBlock(name="now", rows=[Row(cells=[Cell(text="2026-07-25 11:30:00")])])
+
+    fake_stdscr = MagicMock()
+    max_x = 40  # smaller than system.width + uptime.width + gap + now.width
+    tui._paint_header(fake_stdscr, [system, uptime, now], y0=0, max_x=max_x)
+
+    calls = [(c.args[0], c.args[1], c.args[2]) for c in fake_stdscr.addstr.call_args_list]
+    painted_x = [x for (y, x, text) in calls if y == 0 and "Uptime" in text]
+    assert painted_x, "uptime must still be painted"
+    assert all(x > system.width for x in painted_x)
+
+
 def test_paint_header_empty_returns_zero(fake_store, fake_alerts, fake_config):
     from glances.outputs import glances_curses_v5 as tui_mod
 
@@ -1779,6 +1849,54 @@ def test_fit_header_progressively_degrades(fake_store, fake_alerts, fake_config)
     # Level 3 — uptime dropped too (only the hostname survives).
     f3 = tui._build_fitted_frame(w_sys_short)
     assert [b.name for b in f3.header] == ["system"]
+
+
+def test_now_is_the_first_header_block_dropped(fake_store, fake_alerts, fake_config):
+    """`now` is the least prioritary header block: as soon as the terminal is
+    too narrow for the four blocks it goes first, leaving the v4
+    `system … ip … uptime` banner (OS-info included) intact."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    fake_store.as_dict.return_value = {
+        "system": {"hostname": "host", "hr_name": "Ubuntu 24.04 64bit / Linux 6.17", "_levels": {}},
+        "ip": {"address": "192.168.1.100", "mask_cidr": 24, "_levels": {}},
+        "uptime": {"seconds": 3600, "_levels": {}},
+        "now": {"custom": "2026-07-25 11:30:00 CEST", "iso": "2026-07-25T11:30:00+02:00", "_levels": {}},
+    }
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("system", False), ("ip", False), ("uptime", False), ("now", False)],
+        fields_by_plugin={
+            "system": {"hostname": {"unit": "string"}, "hr_name": {"unit": "string"}},
+            "ip": {"address": {"unit": "string"}, "mask_cidr": {"unit": "number"}},
+            "uptime": {"seconds": {"unit": "seconds"}},
+            "now": {"custom": {"unit": "string"}, "iso": {"unit": "string"}},
+        },
+        refresh_interval=0.01,
+    )
+    gap = tui_mod.TuiV5._HEADER_GAP
+
+    # Wide terminal: the four blocks, now last.
+    wide = tui._build_fitted_frame(1000)
+    assert [b.name for b in wide.header] == ["system", "ip", "uptime", "now"]
+    w = {b.name: b.width for b in wide.header}
+
+    # One char short of the full banner → `now` is dropped, nothing else.
+    narrow = tui._build_fitted_frame(w["system"] + gap + w["ip"] + gap + w["uptime"] + gap + w["now"] - 1)
+    assert [b.name for b in narrow.header] == ["system", "ip", "uptime"]
+    system_text = " ".join(c.text for r in next(b for b in narrow.header if b.name == "system").rows for c in r.cells)
+    assert "Ubuntu" in system_text  # OS-info still there: degraded one notch only
+
+
+def test_hide_now_is_the_first_header_cascade_step():
+    from glances.outputs.glances_curses_v5 import _HEADER_DEGRADE_STEPS
+
+    keys = [k for k, _ in _HEADER_DEGRADE_STEPS]
+    assert keys[0] == "hide_now"
+    # Ordering contract: uptime stays the last resort.
+    assert keys[-1] == "hide_uptime"
 
 
 def test_attr_for_prominent_badge_is_bold():

@@ -1135,7 +1135,7 @@ def test_slot_for_header_plugins():
 def test_header_slot_orders_ip_between_system_and_uptime():
     from glances.outputs.curses_renderer_v5 import HEADER_SLOT
 
-    assert HEADER_SLOT == ("system", "ip", "uptime")
+    assert HEADER_SLOT[:3] == ("system", "ip", "uptime")
     assert slot_for("ip") == "header"
 
 
@@ -1245,6 +1245,64 @@ def test_build_frame_header_order_system_ip_uptime():
         registry=registry,
         alerts_history=[],
     )
+    assert [b.name for b in frame.header] == ["system", "ip", "uptime"]
+
+
+# ----------------------------------------------------- now = far-right header block
+
+
+def _header_with_now_snapshot():
+    snapshot = {
+        "now": {"custom": "2026-07-25 11:30:00 CEST", "iso": "2026-07-25T11:30:00+02:00", "_levels": {}},
+        "uptime": {"seconds": 3600, "_levels": {}},
+        "ip": {"address": "192.168.1.10", "mask_cidr": 24, "_levels": {}},
+        "system": {"hostname": "h", "hr_name": "Ubuntu", "_levels": {}},
+    }
+    fields = {
+        "now": {"custom": {"unit": "string"}, "iso": {"unit": "string"}},
+        "uptime": {"seconds": {"unit": "seconds"}},
+        "ip": {"address": {"unit": "string"}, "mask_cidr": {"unit": "number"}},
+        "system": {"hostname": {"unit": "string"}, "hr_name": {"unit": "string"}},
+    }
+    # Deliberately out of order — HEADER_SLOT.index must enforce the order.
+    registry = [("now", False), ("uptime", False), ("ip", False), ("system", False)]
+    return snapshot, fields, registry
+
+
+def test_now_is_routed_to_the_header_slot():
+    """`now` moved out of the left sidebar into the header (v4 divergence:
+    v4 bottom-aligns it in the left column)."""
+    from glances.outputs.curses_renderer_v5 import LEFT_SLOT, slot_for
+
+    assert slot_for("now") == "header"
+    assert "now" not in LEFT_SLOT
+
+
+def test_header_slot_is_the_concatenation_of_both_alignment_groups():
+    """Guards against the two group tuples drifting from the flat one."""
+    from glances.outputs.curses_renderer_v5 import HEADER_SLOT, HEADER_SLOT_LEFT, HEADER_SLOT_RIGHT
+
+    assert HEADER_SLOT == HEADER_SLOT_LEFT + HEADER_SLOT_RIGHT
+    assert HEADER_SLOT_RIGHT[-1] == "now"  # far right of the banner
+
+
+def test_build_frame_header_order_puts_now_last():
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    snapshot, fields, registry = _header_with_now_snapshot()
+    frame = build_frame(snapshot, fields, registry, alerts_history=[], view={})
+    assert [b.name for b in frame.header] == ["system", "ip", "uptime", "now"]
+    # It must NOT leak back into the sidebar.
+    assert "now" not in [b.name for b in frame.top + frame.left + frame.right]
+
+
+def test_build_frame_hide_now_flag_drops_now_block():
+    """Progressive header degradation level 1: `hide_now` removes the now block
+    and brings the banner back to the v4 `system … ip … uptime` layout."""
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    snapshot, fields, registry = _header_with_now_snapshot()
+    frame = build_frame(snapshot, fields, registry, alerts_history=[], view={"hide_now": True})
     assert [b.name for b in frame.header] == ["system", "ip", "uptime"]
 
 
