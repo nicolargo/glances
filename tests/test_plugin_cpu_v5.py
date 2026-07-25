@@ -147,19 +147,24 @@ def test_steal_is_watched_non_prominent_with_strict_thresholds(store, config):
     assert schema["default_thresholds"]["critical"] == 30.0
 
 
-def test_ctx_switches_is_rate_watched_with_absolute_thresholds(store, config):
-    """``ctx_switches`` is watched with **absolute** thresholds (not per-core).
+def test_ctx_switches_is_rate_watched_with_per_core_thresholds(store, config):
+    """``ctx_switches`` is watched with **per-core** thresholds.
 
-    Diverges from v4 doc (``50000 * cpucore``) — the v4 fallback chain
-    silently never resolves the default, so v4 ships effectively no
-    threshold. v5 ships a real system-wide scheduler-pressure signal.
+    V4-compatible: v4 calls ``get_alert(..., maximum=100 * cpucore)``,
+    which compares ``rate / cpucore`` against the configured value.
+    Defaults follow the ``50000 * cpucore`` reference of
+    ``conf/glances.conf``, scaled by 0.5 / 0.75 / 1.
     """
     schema = PluginModel(store, config)._fields["ctx_switches"]
     assert schema["rate"] is True
     assert schema["watched"] is True
     assert schema["prominent"] is False
-    assert "normalize_by" not in schema
-    assert schema["default_thresholds"] == {"careful": 30000.0, "warning": 50000.0, "critical": 100000.0}
+    assert schema["normalize_by"] == "cpucore"
+    assert schema["default_thresholds"] == {
+        "careful": 50000.0 * 0.5,
+        "warning": 50000.0 * 0.75,
+        "critical": 50000.0,
+    }
 
 
 def test_interrupts_and_soft_interrupts_and_syscalls_are_rate_only(store, config):
@@ -256,11 +261,11 @@ async def test_steal_strict_thresholds(store, config):
     assert store.get("cpu")["_levels"]["steal"] == {"level": "warning", "prominent": False}
 
 
-async def test_ctx_switches_level_uses_absolute_thresholds(store, config, monkeypatch):
-    """Absolute thresholds (10k/15k/20k) — no per-core normalisation.
+async def test_ctx_switches_level_scales_with_core_count(store, config, monkeypatch):
+    """Thresholds scale with the logical core count (v4 semantics).
 
-    `ctx_switches` is a system-wide scheduler-pressure signal; the core
-    count does not factor in.
+    With 4 cores the defaults are 100_000 / 150_000 / 200_000 in absolute
+    rate; 160_000/s lands between warning and critical.
     """
     plugin = PluginModel(store, config)
 
@@ -272,19 +277,19 @@ async def test_ctx_switches_level_uses_absolute_thresholds(store, config, monkey
     with _patch_sampler(stats=_stats(ctx=0), cpu_count=4):
         await plugin.update()
 
-    fake_now[0] = 101.0  # +1 s — ctx rate = 51_000/s → warning (≥50_000, <100_000)
-    with _patch_sampler(stats=_stats(ctx=51_000), cpu_count=4):
+    fake_now[0] = 101.0  # +1 s — 160_000/s over 4 cores = 40_000/core → warning
+    with _patch_sampler(stats=_stats(ctx=160_000), cpu_count=4):
         await plugin.update()
 
     payload = store.get("cpu")
-    assert payload["ctx_switches"] == 51_000.0
+    assert payload["ctx_switches"] == 160_000.0
     assert payload["_levels"]["ctx_switches"] == {"level": "warning", "prominent": False}
 
 
-async def test_ctx_switches_level_ok_at_typical_desktop_rate(store, config, monkeypatch):
-    """Typical desktop ctx rate (~4k/s) must stay at level ``ok`` — regression
-    guard against the Phase 1.2 default that produced spurious CRITICAL on
-    every idle desktop because thresholds were normalised by cpucore.
+async def test_ctx_switches_same_rate_is_ok_on_a_bigger_machine(store, config, monkeypatch):
+    """Same absolute rate, twice the cores → half the per-core pressure.
+
+    160_000/s over 8 cores = 20_000/core, below careful (25_000).
     """
     plugin = PluginModel(store, config)
 
@@ -296,7 +301,28 @@ async def test_ctx_switches_level_ok_at_typical_desktop_rate(store, config, monk
     with _patch_sampler(stats=_stats(ctx=0), cpu_count=8):
         await plugin.update()
 
-    fake_now[0] = 101.0  # +1 s — ctx rate = 4_000/s, well below careful=10_000
+    fake_now[0] = 101.0
+    with _patch_sampler(stats=_stats(ctx=160_000), cpu_count=8):
+        await plugin.update()
+
+    assert store.get("cpu")["_levels"]["ctx_switches"]["level"] == "ok"
+
+
+async def test_ctx_switches_level_ok_at_typical_desktop_rate(store, config, monkeypatch):
+    """Typical desktop ctx rate (~4k/s) must stay at level ``ok`` — regression
+    guard against defaults low enough to alert on an idle desktop.
+    """
+    plugin = PluginModel(store, config)
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    with _patch_sampler(stats=_stats(ctx=0), cpu_count=8):
+        await plugin.update()
+
+    fake_now[0] = 101.0  # +1 s — ctx rate = 4_000/s = 500/core, well below careful=25_000
     with _patch_sampler(stats=_stats(ctx=4_000), cpu_count=8):
         await plugin.update()
 
