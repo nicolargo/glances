@@ -144,6 +144,9 @@ class Export(GlancesExport):
                 creation_list.append('key_id TEXT NOT NULL')
                 segmented_by.extend(['hostname_id', 'key_id'])  # Segment by hostname and key
                 for key, value in plugin_stats[0].items():
+                    # The 'key' field is already exported as key_id, do not duplicate it
+                    if key == 'key':
+                        continue
                     creation_list.append(f"{key} {convert_types[type(value).__name__]} NULL")
                 # Create the values list (it is a list of list to have a single datamodel for all the plugins)
                 for plugin_item in plugin_stats:
@@ -151,8 +154,8 @@ class Export(GlancesExport):
                     item_list.append(datetime.now(timezone.utc))  # Add the current time (insertion time)
                     item_list.append(self.hostname)  # Add the hostname
                     item_list.append(plugin_item.get('key'))
-                    item_list.extend([self.normalize(value) for value in plugin_item.values()])
-                    values_list.append(item_list[:-1])
+                    item_list.extend([self.normalize(value) for key, value in plugin_item.items() if key != 'key'])
+                    values_list.append(item_list)
             else:
                 continue
 
