@@ -13,8 +13,9 @@ import json
 
 import pytest
 
+from glances.config import Config
 from glances.globals import LINUX
-from glances.plugins.sensors import GlancesGrabSensors
+from glances.plugins.sensors import GlancesGrabSensors, SensorsPlugin
 
 
 @pytest.fixture
@@ -321,3 +322,66 @@ class TestSensorsPluginAlerts:
             if label in views and 'value' in views[label]:
                 if sensor['value']:  # Only check if value is not empty
                     assert 'decoration' in views[label]['value']
+
+
+class TestSensorsPluginConfigThresholds:
+    """Test that core temperature thresholds set in the config file are used (see #3627)."""
+
+    @staticmethod
+    def build_plugin(tmp_path, sensors_section):
+        """Return a sensors plugin configured with the given [sensors] section."""
+        config_file = tmp_path / 'glances.conf'
+        config_file.write_text('[sensors]\ndisable=False\n' + sensors_section, encoding='utf-8')
+        return SensorsPlugin(args=None, config=Config(config_dir=str(config_file)))
+
+    @staticmethod
+    def decoration(plugin, value, label='Tctl', system_high=None, system_critical=None):
+        """Return the view decoration for a single fake core temperature reading."""
+        plugin.stats = [
+            {
+                'label': label,
+                'unit': 'C',
+                'value': value,
+                'warning': system_high,
+                'critical': system_critical,
+                'type': 'temperature_core',
+                'key': 'label',
+            }
+        ]
+        plugin.update_views()
+        return plugin.get_views(item=label, key='value', option='decoration')
+
+    @pytest.mark.parametrize(
+        ('sensors_section', 'expected'),
+        [
+            ('temperature_core_careful=60\n', 'CAREFUL'),
+            ('temperature_core_warning=90\n', 'WARNING'),
+            ('temperature_core_critical=95\n', 'CRITICAL'),
+            ('temperature_core_careful=60\ntemperature_core_warning=90\n', 'WARNING'),
+        ],
+    )
+    def test_partial_type_thresholds_are_used(self, tmp_path, sensors_section, expected):
+        """A sensor type threshold is used even when the other levels are not defined."""
+        plugin = self.build_plugin(tmp_path, sensors_section)
+        assert self.decoration(plugin, 95).startswith(expected)
+
+    def test_partial_sensor_thresholds_are_used(self, tmp_path):
+        """A per sensor threshold is used even when no critical level is defined."""
+        plugin = self.build_plugin(tmp_path, 'temperature_core_tctl_warning=90\n')
+        assert self.decoration(plugin, 95).startswith('WARNING')
+
+    def test_config_thresholds_overwrite_system_ones(self, tmp_path):
+        """The config threshold, not the system one, gives the alert level."""
+        plugin = self.build_plugin(tmp_path, 'temperature_core_warning=90\n')
+        # The system would already warn at 70C, the configuration only at 90C
+        assert self.decoration(plugin, 80, system_high=70, system_critical=100).startswith('OK')
+
+    def test_system_thresholds_are_used_when_not_configured(self, tmp_path):
+        """Without any threshold in the config file, the system ones are used."""
+        plugin = self.build_plugin(tmp_path, '')
+        assert self.decoration(plugin, 95, system_high=70, system_critical=100).startswith('WARNING')
+
+    def test_no_threshold_at_all_is_not_decorated(self, tmp_path):
+        """Sensors without config and system thresholds are not decorated."""
+        plugin = self.build_plugin(tmp_path, '')
+        assert self.decoration(plugin, 95) == 'DEFAULT'
