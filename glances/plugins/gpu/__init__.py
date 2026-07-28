@@ -332,7 +332,7 @@ class GpuPlugin(GlancesPluginModel):
                 )
             if gpu_stats.get('mem') is not None:
                 mem_msg = self._format_value(gpu_stats.get('mem'))
-                msg += f' mem {mem_msg}'
+                msg = f' mem {mem_msg}'
                 ret.append(
                     self.curse_add_line(
                         msg,
