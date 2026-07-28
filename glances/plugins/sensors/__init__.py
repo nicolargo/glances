@@ -189,6 +189,14 @@ class SensorsPlugin(GlancesPluginModel):
 
         return stats
 
+    def __has_user_thresholds(self, stat_name):
+        """Return True if the user defined at least one threshold for the given stat_name.
+
+        All the criticality levels are checked because the user is free to define only
+        some of them (for example a warning without a critical). See #3627.
+        """
+        return any(self.is_limit(level, stat_name=stat_name) for level in ('careful', 'warning', 'critical'))
+
     def __get_system_thresholds(self, sensor):
         """Return the alert level thanks to the system thresholds.
         Note: Only Warning (aka High) and Critical thresholds are used. Careful is not available.
@@ -216,10 +224,10 @@ class SensorsPlugin(GlancesPluginModel):
                 continue
             # Alert processing
             if i['type'] == sensors_definition.get('cpu_temp').get('type'):
-                if self.is_limit('critical', stat_name=i['type'] + '_' + i['label']):
+                if self.__has_user_thresholds(i['type'] + '_' + i['label']):
                     # Get thresholds for the specific sensor in the glances.conf file (see #2058)
                     alert = self.get_alert(current=i['value'], header=i['label'], action_key=i['type'])
-                elif self.is_limit('critical', stat_name=i['type']):
+                elif self.__has_user_thresholds(i['type']):
                     # Get thresholds for the sensor type in the glances.conf file (see #3049)
                     alert = self.get_alert(current=i['value'], header=i['type'])
                 else:
