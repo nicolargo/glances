@@ -138,7 +138,7 @@ class PortsPlugin(GlancesPluginModel):
     def get_conds_if_url(self, web):
         return {
             'CAREFUL': web['status'] is None,
-            'CRITICAL': web['status'] not in [200, 301, 302],
+            'CRITICAL': web['status'] is not None and web['status'] not in [200, 301, 302],
             'WARNING': web['rtt_warning'] is not None and web['elapsed'] > web['rtt_warning'],
         }
 
@@ -162,9 +162,13 @@ class PortsPlugin(GlancesPluginModel):
         return ret
 
     def get_default_ret_value(self, conds):
-        ret_as_dict_val = {'ret': key for key, cond in conds.items() if cond}
+        # Resolve by severity, not by dict insertion order: several conditions
+        # can match at once and the most severe one has to win.
+        for level in ('CRITICAL', 'WARNING', 'CAREFUL'):
+            if conds.get(level):
+                return level
 
-        return ret_as_dict_val.get('ret', 'OK')
+        return 'OK'
 
     def set_status_if_host(self, p):
         if p['host'] is None:
