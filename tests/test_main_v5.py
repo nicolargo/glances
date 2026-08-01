@@ -280,6 +280,31 @@ def test_cli_set_password_keyboard_interrupt(monkeypatch, capsys):
 # ----------------------------------------------------------- assemble
 
 
+def test_disable_config_exec_defaults_to_false():
+    assert build_parser().parse_args([]).disable_config_exec is False
+
+
+def test_disable_config_exec_flag_parses():
+    assert build_parser().parse_args(["--disable-config-exec"]).disable_config_exec is True
+
+
+def test_disable_config_exec_flag_hardens_the_shell_action(config):
+    """CVE-2026-68519: the flag must reach the on-alert action commands.
+
+    Checked through `assemble()` (not the parser) because the flag travels via
+    the config overlay — the same mechanism as `--api-doc` / `--enable-mcp`.
+    """
+    args = build_parser().parse_args(["-s", "--disable-config-exec"])
+    _, scheduler, _, _, _tui = assemble(args, config)
+    assert scheduler.alerts.actions["action"].allow_shell() is False
+
+
+def test_shell_action_allows_the_shell_without_the_flag(config):
+    args = build_parser().parse_args(["-s"])
+    _, scheduler, _, _, _tui = assemble(args, config)
+    assert scheduler.alerts.actions["action"].allow_shell() is True
+
+
 def test_assemble_resolves_bind_and_port_from_cli(config):
     args = build_parser().parse_args(["-s", "--bind", "0.0.0.0", "--port", "1234"])
     app, scheduler, host, port, _tui = assemble(args, config)

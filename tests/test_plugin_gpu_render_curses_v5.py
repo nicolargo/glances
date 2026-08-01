@@ -77,3 +77,13 @@ def test_fahrenheit_temperature():
 def test_none_values_render_na():
     rows = render(_payload([_card(mem=None, proc=None, temp=None)]))
     assert "N/A" in _flat(rows)
+
+
+def test_multi_mode_none_values_render_na():
+    # #3631: an unavailable metric must be displayed as N/A, not hidden — hiding
+    # it drops a cell and misaligns the rows of heterogeneous cards.
+    cards = [_card("nvidia0", "Tesla", proc=30, mem=40), _card("intel0", "Intel", proc=None, mem=None)]
+    rows = render(_payload(cards))
+    assert "N/A" in _flat(rows)
+    # Every card row carries the same cell count: name + proc + mem.
+    assert [len(r.cells) for r in rows[1:]] == [3, 3]

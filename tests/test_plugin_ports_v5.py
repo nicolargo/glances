@@ -396,11 +396,13 @@ def test_web_level_slow_response_is_warning(store_with, config_with):
     assert _levels_for(store_with, config_with, [item])["web_1"]["status"]["level"] == "warning"
 
 
-def test_web_level_warning_outranks_critical_v4_precedence(store_with, config_with):
-    # v4 `get_default_ret_value` keeps the LAST truthy condition: a 500 that is
-    # ALSO slower than rtt_warning resolves to WARNING, not CRITICAL.
+def test_web_level_critical_outranks_warning(store_with, config_with):
+    # #3632: several conditions can match at once and the MOST SEVERE has to win.
+    # A 500 that is ALSO slower than rtt_warning is critical — v4's
+    # `get_default_ret_value` used to keep the last truthy condition and
+    # downgraded it to warning.
     item = {"indice": "web_1", "url": "http://x", "status": 500, "elapsed": 4.0, "rtt_warning": 3.0}
-    assert _levels_for(store_with, config_with, [item])["web_1"]["status"]["level"] == "warning"
+    assert _levels_for(store_with, config_with, [item])["web_1"]["status"]["level"] == "critical"
 
 
 def test_web_level_ok_codes_are_ok(store_with, config_with):

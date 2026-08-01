@@ -186,6 +186,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Display network rate in bytes per second (default: bits per second).",
     )
     parser.add_argument(
+        "--disable-config-exec",
+        dest="disable_config_exec",
+        action="store_true",
+        default=False,
+        help="Disable shell operator interpretation (&&, |, >) in the on-alert action "
+        "commands read from glances.conf (recommended for system services).",
+    )
+    parser.add_argument(
         "--set-password",
         action="store_true",
         help="Generate a PBKDF2 password hash interactively and print it to stdout. Does NOT modify glances.conf.",
@@ -375,7 +383,14 @@ def assemble(
     always built — they are shared by both modes.
     """
     store = StatsStoreV5()
-    actions = discover_actions("glances.actions_v5")
+    if args.disable_config_exec:
+        # Flip the hardening gate via the same overlay mechanism used for
+        # api_doc / enable_mcp. Applied before the actions are built, and
+        # outside the `--server` branch: the flag must hold in TUI mode too.
+        # One-way: the CLI can only harden, never relax a config that already
+        # sets the key (CVE-2026-68519).
+        config._merged.setdefault("global", {})["disable_config_exec"] = True
+    actions = discover_actions("glances.actions_v5", config)
     # Wire the process engine so the alert pipeline can drive the dynamic
     # process auto-sort (v4 parity) — the sort key follows the dominant
     # active alert (MEM → memory_percent, CPU iowait → io_counters).

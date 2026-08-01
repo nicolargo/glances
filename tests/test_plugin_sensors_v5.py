@@ -365,6 +365,31 @@ def test_careful_tier_from_config(tmp_path, monkeypatch, store):
     assert _levels(p, [_temp_row("Core 0", 40)])["Core 0"]["value"]["level"] == "ok"
 
 
+def test_per_type_config_warning_only_is_honoured(tmp_path, monkeypatch, store):
+    """#3627: a config tier is selected as soon as ANY level is defined — the
+    user is free to set a warning without a critical."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\ntemperature_core_warning=60\n")
+    p = PluginModel(store, config)
+    assert _levels(p, [_temp_row("Core 0", 65)])["Core 0"]["value"]["level"] == "warning"
+    assert _levels(p, [_temp_row("Core 0", 55)])["Core 0"]["value"]["level"] == "ok"
+
+
+def test_per_sensor_config_careful_only_is_honoured(tmp_path, monkeypatch, store):
+    """#3627: same for a per-sensor tier holding only a careful level."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\ntemperature_core_core 0_careful=40\n")
+    p = PluginModel(store, config)
+    assert _levels(p, [_temp_row("Core 0", 50)])["Core 0"]["value"]["level"] == "careful"
+
+
+def test_config_warning_only_does_not_borrow_the_hardware_critical(tmp_path, monkeypatch, store):
+    """#3627 must not break the coherent-tier rule: a config tier that wins on
+    `warning` owns EVERY level — the hardware critical must stay ignored."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\ntemperature_core_warning=60\n")
+    p = PluginModel(store, config)
+    lv = _levels(p, [_temp_row("Core 0", 95, warning=80, critical=90)])
+    assert lv["Core 0"]["value"]["level"] == "warning"  # not "critical"
+
+
 def test_hardware_tier_has_no_careful(store, config):
     """Hardware thresholds carry only warning/critical — no careful tier."""
     lv = _levels(p=PluginModel(store, config), rows=[_temp_row("Core 0", 55, warning=80, critical=90)])

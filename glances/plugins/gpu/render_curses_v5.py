@@ -92,10 +92,10 @@ def _multi_rows(cards: list[dict[str, Any]], levels: dict[str, Any]) -> list[Row
     for card in cards:
         gpu_id = card.get("gpu_id")
         cells = [Cell(text="{:<7}".format(str(card.get("name") or "")[0:9]))]
-        if card.get("proc") is not None:
-            cells.append(Cell(text=f" {_format_value(card.get('proc'))}", color=_level_role(levels, gpu_id, "proc")))
-        if card.get("mem") is not None:
-            cells.append(Cell(text=f" mem {_format_value(card.get('mem'))}", color=_level_role(levels, gpu_id, "mem")))
+        # #3631: an unavailable sensor is displayed as N/A, not hidden — hiding it
+        # drops a cell and misaligns the rows of heterogeneous cards.
+        cells.append(Cell(text=f" {_format_value(card.get('proc'))}", color=_level_role(levels, gpu_id, "proc")))
+        cells.append(Cell(text=f" mem {_format_value(card.get('mem'))}", color=_level_role(levels, gpu_id, "mem")))
         rows.append(Row(cells=cells))
     return rows
 

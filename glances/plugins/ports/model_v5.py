@@ -200,16 +200,16 @@ class PluginModel(GlancesPluginBase[list]):
         status = item.get("status")
         if status is None:
             return "careful"  # not scanned yet → rendered as `Scanning`
-        level = "ok"
+        # Resolve by severity, not by evaluation order (#3632): several
+        # conditions can match at once and the most severe one has to win.
         # `False == 0` in Python: this single test covers both the ICMP
         # (`status = False`) and the TCP (`status = False`) timeout paths.
         if status == 0:
-            level = "critical"
+            return "critical"
         rtt_warning = item.get("rtt_warning")
-        # v4 keeps the LAST truthy condition, so WARNING outranks CRITICAL.
         if isinstance(status, (int, float)) and rtt_warning is not None and status > rtt_warning:
-            level = "warning"
-        return level
+            return "warning"
+        return "ok"
 
     @staticmethod
     def _web_level(item: dict[str, Any]) -> str:
@@ -223,17 +223,17 @@ class PluginModel(GlancesPluginBase[list]):
         status = item.get("status")
         if status is None:
             return "careful"  # not scanned yet → rendered as `Scanning`
-        level = "ok"
+        # Resolve by severity, not by evaluation order (#3632): a URL that is
+        # BOTH failing and slow is critical, not warning.
         # Covers a bad HTTP code AND the literal string "Error" written by
         # `ThreadScanner._web_scan` when `requests` raises.
         if status not in PluginModel._WEB_OK_CODES:
-            level = "critical"
+            return "critical"
         rtt_warning = item.get("rtt_warning")
         elapsed = item.get("elapsed")
-        # v4 keeps the LAST truthy condition, so WARNING outranks CRITICAL.
         if rtt_warning is not None and elapsed is not None and elapsed > rtt_warning:
-            level = "warning"
-        return level
+            return "warning"
+        return "ok"
 
     def _derived_parameters(self) -> None:
         """Compute `_levels` for both item kinds.

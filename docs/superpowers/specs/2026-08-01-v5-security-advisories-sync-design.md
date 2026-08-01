@@ -51,20 +51,37 @@ url = https://admin:s3cr3t@influx.example.com
 is returned verbatim. `SECRET_KEYS` also lacks `username`, `user` and
 `login`, which v4 added in the same commit.
 
-### 2.2 GHSA-59fj-m2j6-hcxh — v5 has a gap
+### 2.2 GHSA-59fj-m2j6-hcxh — gap closed (CVE-2026-68519 port)
 
 v4 gates the on-alert action command line behind `--disable-config-exec`:
 `GlancesActions.allow_operators()` feeds `secure_popen(..., allow_operators=)`,
 so a hardened deployment stops `secure_popen` from interpreting `&&`, `|`,
 `>`, `>>` in a command line read from `glances.conf`.
 
-v5 has no equivalent: `ShellAction.execute()` always calls
-`asyncio.create_subprocess_shell()`, and `disable_config_exec` does not
+v5 had no equivalent: `ShellAction.execute()` always called
+`asyncio.create_subprocess_shell()`, and `disable_config_exec` did not
 exist anywhere under `glances/*_v5*` or `glances/actions_v5/`.
 
-Decision: **port an equivalent gate** in the actions/amps cycle — when the
-gate is on, config-sourced action commands execute through an explicit
-argument list (`shell=False`), never a shell.
+Decision (**implemented**): port an equivalent gate — when the gate is on,
+config-sourced action commands execute through an explicit argument list,
+never a shell. As shipped:
+
+- `main_v5.build_parser()` declares `--disable-config-exec`;
+- `main_v5.assemble()` overlays `[global] disable_config_exec = True` before
+  the actions are built, outside the `--server` branch so the flag holds in
+  TUI mode too. One-way: the CLI can only harden, never relax;
+- `GlancesActionBase.__init__(config=None)` and `discover_actions(package,
+  config)` carry the config down to the actions;
+- `ShellAction.allow_shell()` reads the key and, when False, `execute()`
+  runs `create_subprocess_exec(*shlex.split(command))`.
+
+Note the v4 second surface — backtick substitution in config *values*
+(`glances/config.py` `re_pattern` + `system_exec`) — needs no port:
+`GlancesConfigV5` never executes anything (CVE-2026-33641, resolved by
+architecture). Only the action-command surface existed in v5.
+
+The AMP commands are the remaining v4 surface behind the same flag; they
+land with the amps port, which has its own cycle.
 
 ### 2.3 GHSA-73wf-9vmv-5pv9 and GHSA-qcpp-8x79-hhp3 — covered by a different mechanism
 
@@ -197,8 +214,9 @@ status, and gains:
 ## 4. Non-goals
 
 - No change to `webserver_v5.py` — §2.4 shows the code is already correct.
-- No change to `actions_v5/` — the gate of §2.2 belongs to the actions/amps
-  cycle, not this one.
+- No change to `actions_v5/` — the gate of §2.2 belonged to the actions/amps
+  cycle, not this one. (Shipped since, in the 4.5.6 backport cycle — §2.2
+  records what was actually implemented.)
 - No `NEWS.rst` entry (maintainer-owned, release time).
 - No re-audit of the advisories already listed in §8.
 

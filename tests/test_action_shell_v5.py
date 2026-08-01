@@ -201,6 +201,68 @@ async def test_template_render_error_is_logged_and_skips_exec(shell_action, capl
     assert "template render failed" in caplog.text
 
 
+# ------------------------------------------------- --disable-config-exec
+#
+# CVE-2026-68519: the hardening flag must cover the on-alert action commands,
+# which are read from the same glances.conf as the AMP commands. The injection
+# vector is already closed by shlex.quote(); what the flag adds is that the
+# operator's OWN config line can no longer chain, pipe or redirect.
+
+
+def test_default_config_exec_is_allowed(shell_action):
+    """Conservative default: no config, no flag -> shell execution as before."""
+    assert shell_action.allow_shell() is True
+
+
+def test_flag_disables_shell(config_with):
+    action = ShellAction(config_with({"global": {"disable_config_exec": "true"}}))
+    assert action.allow_shell() is False
+
+
+async def test_disabled_runs_without_a_shell(config_with):
+    action = ShellAction(config_with({"global": {"disable_config_exec": "true"}}))
+    with (
+        patch(
+            "glances.actions_v5.shell.asyncio.create_subprocess_exec",
+            new=AsyncMock(return_value=_FakeProcess()),
+        ) as mock_exec,
+        patch("glances.actions_v5.shell.asyncio.create_subprocess_shell", new=AsyncMock()) as mock_shell,
+    ):
+        await action.execute("mem", "warning", {"percent": 75.0}, "echo {{percent}}")
+    mock_shell.assert_not_awaited()
+    mock_exec.assert_awaited_once()
+    # argv form: the template is split into a single process' arguments.
+    assert list(mock_exec.await_args.args) == ["echo", "75.0"]
+
+
+async def test_disabled_makes_operators_literal(config_with, tmp_path):
+    """The operator in the operator's OWN config line is not interpreted."""
+    sentinel = tmp_path / "pwned"
+    action = ShellAction(config_with({"global": {"disable_config_exec": "true"}}))
+    await action.execute("mem", "warning", {}, f"echo hello > {sentinel}")
+    assert not sentinel.exists()
+
+
+async def test_enabled_still_interprets_operators(config_with, tmp_path):
+    """Non-regression: the default behaviour is unchanged."""
+    sentinel = tmp_path / "written"
+    action = ShellAction(config_with({"global": {}}))
+    await action.execute("mem", "warning", {}, f"echo hello > {sentinel}")
+    assert sentinel.exists()
+
+
+async def test_disabled_unsplittable_command_is_logged_and_skipped(config_with, caplog):
+    """An unbalanced quote makes shlex.split raise — log, never execute."""
+    action = ShellAction(config_with({"global": {"disable_config_exec": "true"}}))
+    with (
+        patch("glances.actions_v5.shell.asyncio.create_subprocess_exec", new=AsyncMock()) as mock_exec,
+        caplog.at_level(logging.WARNING),
+    ):
+        await action.execute("mem", "warning", {}, "echo 'unbalanced")
+    mock_exec.assert_not_awaited()
+    assert "cannot be split" in caplog.text
+
+
 async def test_repeat_flag_passed_through(shell_action):
     """`repeat=True` is honoured by the action signature (logged on failure)."""
     fake_proc = _FakeProcess(returncode=1, stderr=b"oops")

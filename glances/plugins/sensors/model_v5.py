@@ -297,9 +297,9 @@ class PluginModel(GlancesPluginBase[list]):
         current = (100 - value) if sensor_type == _BATTERY else value
 
         careful, warning, critical = self._resolve_thresholds(sensor_type, label, row)
-        if critical is None:
+        if critical is None and warning is None and careful is None:
             return None  # no threshold source -> DEFAULT (no colour, no alert)
-        if current >= critical:
+        if critical is not None and current >= critical:
             return "critical"
         if warning is not None and current >= warning:
             return "warning"
@@ -312,12 +312,16 @@ class PluginModel(GlancesPluginBase[list]):
     ) -> tuple[float | None, float | None, float | None]:
         """Resolve (careful, warning, critical) from one coherent tier (v4 parity).
 
-        v4 `update_views`/`get_alert` selects ONE tier by the presence of a
-        *critical* limit — per-sensor (#2058), else per-type (#3049), else
-        the hardware row — and reads ALL levels (careful/warning/critical)
-        from that same tier. It never mixes (e.g. config critical + hardware
-        warning). Mirror that: the first tier whose critical is set wins for
-        every level. The hardware tier has no `careful` (psutil exposes only
+        v4 `update_views`/`get_alert` selects ONE tier — per-sensor (#2058),
+        else per-type (#3049), else the hardware row — and reads ALL levels
+        (careful/warning/critical) from that same tier. It never mixes (e.g.
+        config critical + hardware warning). Mirror that: the first tier with
+        at least one level set wins for every level. A config tier is selected
+        on ANY of its three levels (#3627): the user is free to define only a
+        warning, or only a careful. The hardware tier stays gated on `critical`
+        alone — v4 `__get_system_thresholds` returns DEFAULT without it.
+
+        The hardware tier has no `careful` (psutil exposes only
         high/critical), so careful is only ever supplied by a config tier —
         this preserves the shipped default `[sensors] temperature_core_careful`.
 
@@ -327,23 +331,28 @@ class PluginModel(GlancesPluginBase[list]):
         `temperature_core_core 0_critical` key.
         """
         # Tier 1: per-sensor config (#2058).
-        ps_critical = self._conf_value(f"{sensor_type}_{label}_critical")
-        if ps_critical is not None:
-            return (
-                self._conf_value(f"{sensor_type}_{label}_careful"),
-                self._conf_value(f"{sensor_type}_{label}_warning"),
-                ps_critical,
-            )
+        per_sensor = self._conf_tier(f"{sensor_type}_{label}")
+        if any(level is not None for level in per_sensor):
+            return per_sensor
         # Tier 2: per-type config (#3049).
-        pt_critical = self._conf_value(f"{sensor_type}_critical")
-        if pt_critical is not None:
-            return (
-                self._conf_value(f"{sensor_type}_careful"),
-                self._conf_value(f"{sensor_type}_warning"),
-                pt_critical,
-            )
+        per_type = self._conf_tier(sensor_type)
+        if any(level is not None for level in per_type):
+            return per_type
         # Tier 3: hardware system thresholds carried on the row (no careful).
-        return None, _as_float(row.get("warning")), _as_float(row.get("critical"))
+        # v4 `__get_system_thresholds` returns DEFAULT when the row has no
+        # critical, so the hardware tier is all-or-nothing on `critical`.
+        hw_critical = _as_float(row.get("critical"))
+        if hw_critical is None:
+            return None, None, None
+        return None, _as_float(row.get("warning")), hw_critical
+
+    def _conf_tier(self, prefix: str) -> tuple[float | None, float | None, float | None]:
+        """Read the (careful, warning, critical) triplet of one config tier."""
+        return (
+            self._conf_value(f"{prefix}_careful"),
+            self._conf_value(f"{prefix}_warning"),
+            self._conf_value(f"{prefix}_critical"),
+        )
 
     def _conf_value(self, key: str) -> float | None:
         """Read a `[sensors]` threshold key (lower-cased) as float, else None."""

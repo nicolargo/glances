@@ -30,7 +30,7 @@ import importlib.util
 import logging
 import pkgutil
 from abc import ABC, abstractmethod
-from typing import ClassVar
+from typing import Any, ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -46,9 +46,12 @@ class GlancesActionBase(ABC):
     cause `is_available()` to return False and the action to be skipped at
     discovery time (with a WARNING log) — Glances always starts."""
 
-    def __init__(self) -> None:
+    def __init__(self, config: Any = None) -> None:
         if not self.action_name:
             raise ValueError(f"{type(self).__name__} must declare a non-empty action_name")
+        # `GlancesConfigV5`, or None when the action is built outside the CLI
+        # (tests, ad-hoc use). Actions that need no config simply ignore it.
+        self.config = config
 
     def is_available(self) -> bool:
         """True iff every module listed in `requires` is importable.
@@ -93,8 +96,11 @@ class GlancesActionBase(ABC):
         """
 
 
-def discover_actions(package: str = "glances.actions_v5") -> dict[str, GlancesActionBase]:
+def discover_actions(package: str = "glances.actions_v5", config: Any = None) -> dict[str, GlancesActionBase]:
     """Walk `package`, instantiate every concrete `GlancesActionBase` subclass.
+
+    `config` is forwarded to every action constructor — an action may need it
+    to honour a global switch (e.g. `shell` and `--disable-config-exec`).
 
     Returns a `{action_name: instance}` registry. Modules whose import fails
     are logged at WARNING and skipped — Glances always starts. Subclasses
@@ -131,7 +137,7 @@ def discover_actions(package: str = "glances.actions_v5") -> dict[str, GlancesAc
                 continue
 
             try:
-                instance = cls()
+                instance = cls(config)
             except Exception as e:
                 logger.warning("Skipping action %s: instantiation failed (%s)", cls.__name__, e)
                 continue
