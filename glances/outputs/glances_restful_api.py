@@ -17,6 +17,7 @@ from typing import Annotated, Any
 from urllib.parse import urljoin
 
 from glances import __apiversion__, __version__
+from glances.config import secure_option
 from glances.events_list import glances_events
 from glances.globals import json_dumps
 from glances.logger import logger
@@ -1349,6 +1350,8 @@ class GlancesRestfulApi:
     _ALWAYS_REDACTED_ARGS = frozenset({'password'})
 
     # Args keys redacted when no authentication is configured
+    # Note: keys matching the shared sensitive pattern (password, token, username...)
+    # are redacted by secure_option(), only the ones it can not express are listed here.
     _SENSITIVE_ARGS = frozenset(
         {
             'password',
@@ -1365,12 +1368,15 @@ class GlancesRestfulApi:
 
         - password hash is always redacted (even for authenticated users)
         - other sensitive fields are redacted when no authentication is configured
+        - credentials embedded in an URL value are redacted when no authentication
+          is configured
         """
         args_json = vars(self.args).copy()
         if not self.args.password:
             for key in self._SENSITIVE_ARGS:
                 if key in args_json:
                     args_json[key] = '********'
+            args_json = {key: secure_option(key, value) for key, value in args_json.items()}
         else:
             for key in self._ALWAYS_REDACTED_ARGS:
                 if key in args_json and args_json[key]:
