@@ -23,7 +23,7 @@ from unittest.mock import patch
 
 import pytest
 
-from glances.actions import GlancesActions, _sanitize_mustache_dict
+from glances.actions import GlancesActions, _sanitize_mustache_dict, _sanitize_value
 from glances.secure import secure_popen
 
 # Skip the whole module on Windows where echo -n behaves differently
@@ -100,10 +100,41 @@ class TestSanitizeMustacheDict:
         safe = _sanitize_mustache_dict(d)
         assert safe['is_up'] is True
 
-    def test_preserves_list_values(self):
+    def test_preserves_list_of_numbers(self):
+        # Numeric list elements are not strings: left unchanged.
         d = {'ports': [80, 443], 'name': 'safe'}
         safe = _sanitize_mustache_dict(d)
         assert safe['ports'] == [80, 443]
+
+    def test_strips_operators_in_nested_list(self):
+        # GHSA-73wf-9vmv-5pv9: process cmdline is a list of attacker argv.
+        d = {'cmdline': ['x', '|touch /tmp/evil', '#']}
+        safe = _sanitize_mustache_dict(d)
+        assert '|' not in ''.join(safe['cmdline'])
+        assert safe['cmdline'] == ['x', ' touch /tmp/evil', '#']
+
+    def test_strips_operators_in_nested_dict(self):
+        d = {'meta': {'k': 'a|b && c > d'}}
+        safe = _sanitize_mustache_dict(d)
+        for op in ('|', '&&', '>'):
+            assert op not in safe['meta']['k']
+
+    def test_strips_operators_in_deeply_nested(self):
+        d = {'outer': {'inner': ['ok', 'evil|rm -rf /']}}
+        safe = _sanitize_mustache_dict(d)
+        assert '|' not in safe['outer']['inner'][1]
+
+    def test_preserves_tuple_type(self):
+        d = {'args': ('a', 'b|c')}
+        safe = _sanitize_mustache_dict(d)
+        assert isinstance(safe['args'], tuple)
+        assert '|' not in safe['args'][1]
+
+    def test_sanitize_value_passthrough_non_string(self):
+        assert _sanitize_value(95) == 95
+        assert _sanitize_value(3.14) == 3.14
+        assert _sanitize_value(True) is True
+        assert _sanitize_value(None) is None
 
     def test_clean_string_unchanged(self):
         d = {'name': 'my-web-server', 'mnt_point': '/data/disk1'}
@@ -172,6 +203,22 @@ class TestCommandInjectionPrevention:
         }
         safe = _sanitize_mustache_dict(mustache_dict)
         assert '>>' not in safe['name']
+
+    def test_lone_ampersand_is_stripped(self):
+        """GHSA-qcpp-8x79-hhp3: a single '&' (not '&&') must also be neutralised,
+        otherwise two adjacent unescaped variables can rejoin it into '&&'."""
+        safe = _sanitize_mustache_dict({'name': 'evilproc&'})
+        assert '&' not in safe['name']
+        assert safe['name'] == 'evilproc '
+
+    def test_cross_field_ampersand_reconstruction_blocked(self):
+        """GHSA-qcpp-8x79-hhp3: a trailing '&' in one value and a leading '&' in
+        the next must not reconstruct a real '&&' when rendered back to back."""
+        d = {'a': 'evilproc&', 'b': '& touch /tmp/evil'}
+        safe = _sanitize_mustache_dict(d)
+        # Concatenation of two unescaped variables (chevron {{{a}}}{{{b}}}).
+        rendered = safe['a'] + safe['b']
+        assert '&&' not in rendered
 
 
 # ---------------------------------------------------------------------------
@@ -321,6 +368,37 @@ class TestActionsRunIntegration:
             called_cmd = mock_popen.call_args[0][0]
             assert '&&' in called_cmd
 
+    def test_run_sanitizes_cmdline_section(self, actions):
+        """GHSA-73wf-9vmv-5pv9: a pipe in the process cmdline list (rendered via
+        a Mustache section) must not survive into secure_popen."""
+        with patch('glances.actions.secure_popen') as mock_popen:
+            mock_popen.return_value = ''
+            actions.run(
+                'processlist',
+                'CRITICAL',
+                ['echo ALERT {{#cmdline}}{{.}} {{/cmdline}}'],
+                repeat=False,
+                mustache_dict={'cmdline': ['x', '|touch /tmp/evil', '#']},
+            )
+            called_cmd = mock_popen.call_args[0][0]
+            assert '|' not in called_cmd
+            assert 'touch /tmp/evil' in called_cmd  # text preserved, pipe removed
+
+    def test_run_blocks_cross_field_ampersand_chain(self, actions):
+        """GHSA-qcpp-8x79-hhp3: two adjacent unescaped variables whose values
+        end/begin with '&' must not reconstruct a real '&&' command chain."""
+        with patch('glances.actions.secure_popen') as mock_popen:
+            mock_popen.return_value = ''
+            actions.run(
+                'processlist',
+                'CRITICAL',
+                ['logger p={{{name}}}{{{cmdline}}}'],
+                repeat=False,
+                mustache_dict={'name': 'evilproc&', 'cmdline': '& touch /tmp/evil'},
+            )
+            called_cmd = mock_popen.call_args[0][0]
+            assert '&&' not in called_cmd
+
     def test_run_does_not_execute_when_already_triggered(self, actions):
         """Same criticality should not re-trigger if repeat=False."""
         actions.set('cpu', 'CRITICAL')
@@ -344,3 +422,91 @@ class TestActionsRunIntegration:
             mustache_dict={},
         )
         assert result is True
+
+
+# ---------------------------------------------------------------------------
+# Tests – --disable-config-exec on the on-alert action path
+# ---------------------------------------------------------------------------
+
+
+class _Args:
+    """Minimal args stub carrying only disable_config_exec."""
+
+    def __init__(self, disable_config_exec):
+        self.disable_config_exec = disable_config_exec
+
+
+class TestActionsDisableConfigExec:
+    """GHSA-59fj-m2j6-hcxh: --disable-config-exec must also disable shell
+    operators (&&, |, >) in config-defined on-alert action commands, not only
+    in AMP commands.
+    """
+
+    def _make_actions(self, args):
+        a = GlancesActions(args=args)
+        # Force the start timer to be finished so actions can run immediately
+        a.start_timer = type('FakeTimer', (), {'finished': lambda self: True})()
+        return a
+
+    def test_allow_operators_true_when_no_args(self):
+        assert GlancesActions().allow_operators() is True
+
+    def test_allow_operators_true_when_flag_absent(self):
+        assert GlancesActions(args=object()).allow_operators() is True
+
+    def test_allow_operators_false_when_disabled(self):
+        assert GlancesActions(args=_Args(True)).allow_operators() is False
+
+    def test_allow_operators_true_when_enabled(self):
+        assert GlancesActions(args=_Args(False)).allow_operators() is True
+
+    def test_run_passes_allow_operators_false_when_disabled(self):
+        """With --disable-config-exec, secure_popen must be called with
+        allow_operators=False so operators in the command are not interpreted."""
+        actions = self._make_actions(_Args(True))
+        with patch('glances.actions.secure_popen') as mock_popen:
+            mock_popen.return_value = ''
+            actions.run(
+                'cpu',
+                'CRITICAL',
+                ['echo MARKER > /tmp/poc_marker'],
+                repeat=False,
+                mustache_dict={},
+            )
+            assert mock_popen.call_args.kwargs['allow_operators'] is False
+
+    def test_run_passes_allow_operators_true_by_default(self):
+        """Without the flag, the historical behavior (operators interpreted) is
+        preserved for backward compatibility."""
+        actions = self._make_actions(_Args(False))
+        with patch('glances.actions.secure_popen') as mock_popen:
+            mock_popen.return_value = ''
+            actions.run(
+                'cpu',
+                'CRITICAL',
+                ['echo MARKER > /tmp/poc_marker'],
+                repeat=False,
+                mustache_dict={},
+            )
+            assert mock_popen.call_args.kwargs['allow_operators'] is True
+
+    def test_run_disabled_does_not_write_redirect_file(self):
+        """End-to-end: the '>' redirect must not create a file when the flag is
+        set (this is the concrete PoC from the advisory)."""
+        with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as f:
+            marker = f.name
+        os.unlink(marker)  # remove so we can detect a spurious re-creation
+        try:
+            actions = self._make_actions(_Args(True))
+            actions.run(
+                'cpu',
+                'CRITICAL',
+                [f'echo -n MARKER > {marker}'],
+                repeat=False,
+                mustache_dict={},
+            )
+            # allow_operators=False => '>' is a literal argument, no file written
+            assert not os.path.exists(marker)
+        finally:
+            if os.path.exists(marker):
+                os.unlink(marker)
