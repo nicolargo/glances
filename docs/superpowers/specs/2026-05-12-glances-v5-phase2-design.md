@@ -67,7 +67,7 @@ Migration ordered by increasing complexity, per
 | **G4 — Hardware / system** | sensors, gpu, npu, wifi, ip, raid, smart, **quicklook GPU addendum** | 7 + addendum | 2 (G4A: sensors+gpu+npu+quicklook GPU / G4B: raid+smart+wifi+ip+SSRF) |
 | **G5 — Process** | processcount, processlist, programlist | 3 | 1–2 (G5A: processcount + processlist / G5B: programlist — split only if G5A hits the line budget) |
 | **G6 — External integrations** | containers, vms, amps, folders, connections, ports, irq, cloud, mpp | 9 | 3 (G6A: containers+vms / G6B: ports+connections+amps+folders / G6C: irq+cloud+mpp) |
-| **G7 — Alert presentation plugin** | alert (reads `alerts.get_history()` / `/api/5/alert`) | 1 | 1 |
+| **G7 — Alert presentation** | alert block (reads `alerts.get_history()` / `/api/5/alert`) — **not a plugin port**, see §4.1 | 0 plugins | 1–2 |
 
 **Total: ~10–11 PRs**, sequential on `develop-v5`.
 
@@ -81,10 +81,22 @@ Migration ordered by increasing complexity, per
   change in `NEWS.rst` at 5.0.0.
 - **`profiler`** — **Removed in v5.** Not migrated. Documented in `NEWS.rst`.
   The v4 `glances/plugins/profiler/` directory stays until Phase 4 cleanup.
-- **`alert`** (G7) — Presentation-only in v5: reads `alerts.get_history()`
-  (already in `alerts_v5.py`) and exposes it via `/api/5/alert` (already
-  implemented in Phase 1.6). Its `model_v5.py` is thin — likely a dict view
-  with TUI integration. Scope to be confirmed at G7 start.
+- **`alert`** (G7) — **Scope confirmed 2026-08-01**; design doc:
+  `docs/superpowers/specs/2026-08-01-glances-v5-g7-alert-design.md`.
+  Correction to the original assumption: there is **no `model_v5.py` to
+  write**. v5 never had an `alert` plugin — `alerts_v5.py` feeds
+  `/api/5/alert` directly, and `curses_renderer_v5.py::render_alert_block()`
+  synthesizes the TUI block, appended unconditionally to the MAIN column.
+  G7 is therefore a **redesign of an existing v5 surface**, not a migration:
+  no `fields_description`, no scheduler registration, no `_grab_stats`, and
+  the §5 per-PR template does not apply verbatim.
+  One decision remains open at G7 start (design §4.1): the redesign's
+  `MAX`/`AVG`/`MIN`/`TOP PROCESSES`/`×N` columns require an **episode**
+  event model that `alerts_v5.py` does not have (it records level
+  *transitions*, not episodes). Either G7 stays presentation-only and ships
+  without those columns, or it grows engine work on the module every
+  plugin's alerts flow through. Recommendation in the design doc:
+  presentation-only in G7, episode aggregation deferred to Phase 2.X.
 - **`ip`** (G4B) — Includes **CVE-2026-35587 SSRF mitigation** in the same
   PR: validate URL scheme (`http`/`https` only); reject loopback / link-local
   / RFC1918 / cloud metadata IPs unless `public_api_allow_internal=true`;
@@ -252,7 +264,8 @@ Strategy: **caractérisation v4 + renderer hints**.
 | `processlist` perf regression (G5) | Mandatory perf check at G5. If > 20% regression, study a shared sampler or TTL cache; do not merge until under threshold. |
 | CVE-2026-35587 SSRF in `ip` | Mitigation co-shipped in G4B. PR description must list which checks are wired. Reviewed against §8 of the architecture document. |
 | Weekly `develop → develop-v5` merge conflicts | Rebase systematique at PR start. Conflicts on `glances/outputs/glances_curses.py` (v4) vs `glances_curses_v5.py` are unlikely since they're separate files. |
-| `alert` v4 plugin ≠ `alerts_v5.py` engine | G7 plugin `alert` is a presentation layer reading `alerts.get_history()`. Scope confirmed at G7 start, not now. |
+| `alert` v4 plugin ≠ `alerts_v5.py` engine | Confirmed 2026-08-01: v5 has no `alert` plugin at all, and the block is already rendered. G7 redesigns it in place — see §4.1 and the G7 design doc. |
+| G7 scope creep into `alerts_v5.py` | The redesign's numeric columns need an episode model the engine lacks. Design §4.1 gates this explicitly: presentation-only closes Phase 2, engine aggregation is a Phase 2.X follow-up with a blocking perf check (ingest runs per watched field per plugin per cycle). Do not start G7 before that decision is recorded. |
 | Tests v4 break when `help` / `profiler` are absent in v5 registry | Soft removal: v4 files stay until Phase 4 cleanup. `test_plugin_help.py` and `test_plugin_profiler.py` remain green because they exercise the v4 code untouched. |
 | TUI parity perceived as subjective | Reviewer ownership documented in `SKILL-plugin.md`. If side-by-side screenshots are inconclusive, the reviewer asks for a text-fixture diff (escape hatch in §7). |
 
