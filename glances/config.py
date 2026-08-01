@@ -238,17 +238,7 @@ class Config:
         self.set_default_cwc('cpu', 'user')
         self.set_default_cwc('cpu', 'system')
         self.set_default_cwc('cpu', 'steal')
-        # By default I/O wait should be lower than 1/number of CPU cores
-        iowait_bottleneck = (1.0 / multiprocessing.cpu_count()) * 100.0
-        self.set_default_cwc(
-            'cpu',
-            'iowait',
-            [
-                str(iowait_bottleneck - (iowait_bottleneck * 0.20)),
-                str(iowait_bottleneck - (iowait_bottleneck * 0.10)),
-                str(iowait_bottleneck),
-            ],
-        )
+        self.set_default_cwc('cpu', 'iowait')
         # Context switches bottleneck identification #1212
         ctx_switches_bottleneck = (500000 * 0.10) * multiprocessing.cpu_count()
         self.set_default_cwc(
