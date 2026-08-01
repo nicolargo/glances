@@ -3,30 +3,6 @@
 ==============================================================================
 
 =============
-Version 4.5.6
-=============
-
-Bugs corrected:
-
-* Alert level decided by dict ordering: a failing+slow URL is downgraded to WARNING, an unscanned URL reports CRITICAL #3632
-* GPU plugin duplicates card name and omits N/A for unavailable metrics in multi-GPU #3631
-* GPU plugin duplicates the utilisation value and paints it with the memory colour in multi-GPU #3630
-* IP plugin displays wrong interface: outer loop in get_ip_address() never breaks #3617
-* VideoCore (v3d) memory shows ~93% on Raspberry Pi 5 with gpu_mem=4M — misleading denominator from drm-total-memory #3611
-* CSV export: --stdout-csv data rows desync from header when network interfaces change count at runtime #3606
-* Glances Network plugin with mismatched schema not logging in TimescaleDB export #3592
-
-Security patches:
-
-* as_dict_secure() Value-Level Bypass Leaks Credentials in URL Values via /api/4/config - CVE-2026-68520
-* --disable-config-exec does not cover on-alert action commands - CVE-2026-68519
-* Command injection bypass of action-template sanitizer via cross-field shell-operator reconstruction - CVE-2026-68518
-* Incomplete fix of CVE-2026-32608: action-template sanitizer is bypassed by nested stat values - CVE-2026-62982
-* REST API CORS Credentials Guard Uses Exact-Match Instead of Membership Test - CVE-2026-68517
-
-Thanks to all the contributors for this version:
-
-=============
 Version 4.5.5
 =============
 
