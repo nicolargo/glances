@@ -354,6 +354,31 @@ def secret_config(env: Path) -> GlancesConfigV5:
         [snmp]
         snmp_community = public
         snmp_authkey = mykey
+
+        [cpu]
+        user_careful = 50
+        user_warning = 70
+    """,
+    )
+    return GlancesConfigV5()
+
+
+@pytest.fixture
+def url_config(env: Path) -> GlancesConfigV5:
+    write(
+        etc_path(env),
+        """
+        [influxdb]
+        url = https://admin:s3cr3t@influx.example.com/write?db=glances
+        host = influx.example.com
+
+        [smtp]
+        username = bob
+        login = bob
+        from = glances@example.com
+
+        [outputs]
+        port = 61208
     """,
     )
     return GlancesConfigV5()
@@ -383,7 +408,22 @@ def test_preserves_non_secret(secret_config: GlancesConfigV5) -> None:
     d = secret_config.as_dict_secure()
     assert d["influxdb"]["host"] == "localhost"
     assert d["influxdb"]["port"] == "8086"
-    assert d["smtp"]["user"] == "bob"
+
+
+def test_redacts_bare_user_key(secret_config: GlancesConfigV5) -> None:
+    """A standalone `user` option is a credential — CVE-2026-68520."""
+    assert secret_config.as_dict_secure()["smtp"]["user"] == "***"
+
+
+def test_preserves_user_prefixed_thresholds(secret_config: GlancesConfigV5) -> None:
+    """`user_careful` / `user_warning` are thresholds, not credentials.
+
+    Guards the reason `user` lives in SECRET_KEYS_EXACT and not in the
+    substring-matched SECRET_KEYS.
+    """
+    d = secret_config.as_dict_secure()
+    assert d["cpu"]["user_careful"] == "50"
+    assert d["cpu"]["user_warning"] == "70"
 
 
 def test_includes_all_sections(secret_config: GlancesConfigV5) -> None:
@@ -395,6 +435,41 @@ def test_includes_all_sections(secret_config: GlancesConfigV5) -> None:
 def test_as_dict_unmodified(secret_config: GlancesConfigV5) -> None:
     # as_dict() returns the raw data without redaction.
     assert secret_config.as_dict()["influxdb"]["password"] == "secret123"
+
+
+# ============================================================================
+# as_dict_secure() — value-level redaction (CVE-2026-68520)
+# ============================================================================
+
+
+def test_redacts_credentials_embedded_in_url_value(url_config: GlancesConfigV5) -> None:
+    """An innocuous key name must not let a URL credential leak."""
+    url = url_config.as_dict_secure()["influxdb"]["url"]
+    assert url == "https://***@influx.example.com/write?db=glances"
+    assert "s3cr3t" not in url
+    assert "admin" not in url
+
+
+def test_preserves_url_without_credentials(url_config: GlancesConfigV5) -> None:
+    assert url_config.as_dict_secure()["influxdb"]["host"] == "influx.example.com"
+
+
+def test_preserves_at_sign_outside_url_authority(url_config: GlancesConfigV5) -> None:
+    """A bare '@' with no `://` before it is not a credential separator."""
+    assert url_config.as_dict_secure()["smtp"]["from"] == "glances@example.com"
+
+
+def test_redacts_username_and_login_keys(url_config: GlancesConfigV5) -> None:
+    d = url_config.as_dict_secure()
+    assert d["smtp"]["username"] == "***"
+    assert d["smtp"]["login"] == "***"
+
+
+def test_secure_value_passes_through_non_string() -> None:
+    """Ports, flags and refresh rates cannot carry a credential."""
+    assert GlancesConfigV5._secure_value("refresh", 10) == 10
+    assert GlancesConfigV5._secure_value("enable", True) is True
+    assert GlancesConfigV5._secure_value("missing", None) is None
 
 
 # ============================================================================

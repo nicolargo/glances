@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -102,6 +103,60 @@ async def test_shell_metacharacters_are_quoted_to_defeat_injection(shell_action)
     # shlex.quote wraps it in single quotes — the `;` cannot start a new command.
     assert "'foo; rm -rf /'" in cmd
     assert cmd.startswith("logger ")
+
+
+async def test_nested_list_value_reaches_shell_as_single_token(shell_action, tmp_path):
+    """A nested (list) context value cannot smuggle a shell operator.
+
+    v4 fixed this by recursing its operator-stripping sanitizer into lists
+    (GHSA-73wf-9vmv-5pv9). v5 uses a different mechanism — `shlex.quote(str(v))`
+    quotes the whole stringified list as one token — so the class of bypass
+    cannot occur. This locks that property in.
+    """
+    sentinel = tmp_path / "pwned"
+    # `cmdline` is the argv list an attacker can set on their own process.
+    malicious_cmdline = ["python", "-c", f"x && touch {sentinel}"]
+    with patch(
+        "glances.actions_v5.shell.asyncio.create_subprocess_shell",
+        new=AsyncMock(return_value=_FakeProcess()),
+    ) as mock_exec:
+        await shell_action.execute("processlist", "warning", {"cmdline": malicious_cmdline}, "logger {{cmdline}}")
+    cmd = mock_exec.await_args.args[0]
+    # Actually run the rendered command line; the `&&` must stay inside the
+    # single-quoted token and never chain a second command.
+    proc = await asyncio.create_subprocess_shell(
+        cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
+    )
+    await proc.communicate()
+    assert not sentinel.exists()
+
+
+async def test_adjacent_unescaped_variables_cannot_reconstruct_operator(shell_action, tmp_path):
+    """Two adjacent variables whose values touch cannot form `&&`.
+
+    v4 added a lone `&` to its operator blocklist because per-field
+    sanitization left `{{{a}}}{{{b}}}` able to join a trailing and leading `&`
+    into a real `&&` across the boundary (GHSA-qcpp-8x79-hhp3). v5's
+    `shlex.quote` closes/opens a quote at every boundary, so the joined text is
+    a single literal word. Uses triple braces (unescaped) — the worst case.
+    """
+    sentinel = tmp_path / "pwned"
+    with patch(
+        "glances.actions_v5.shell.asyncio.create_subprocess_shell",
+        new=AsyncMock(return_value=_FakeProcess()),
+    ) as mock_exec:
+        await shell_action.execute(
+            "processlist",
+            "warning",
+            {"a": "foo&", "b": f"&touch {sentinel} #"},
+            "logger {{{a}}}{{{b}}}",
+        )
+    cmd = mock_exec.await_args.args[0]
+    proc = await asyncio.create_subprocess_shell(
+        cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
+    )
+    await proc.communicate()
+    assert not sentinel.exists()
 
 
 async def test_returncode_non_zero_is_logged(shell_action, caplog):

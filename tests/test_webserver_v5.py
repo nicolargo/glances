@@ -248,6 +248,23 @@ def test_cors_wildcard_with_credentials_downgrades(config_factory, store, caplog
     assert r.headers.get("access-control-allow-credentials") is None
 
 
+def test_cors_multi_origin_allowlist_with_wildcard_downgrades(config_factory, store, caplog):
+    """A multi-entry allowlist containing '*' must still trip the credentials guard.
+
+    v4's guard used exact list equality (`cors_origins == ["*"]`), which a
+    multi-origin allowlist like `*,https://trusted` slipped past
+    (GHSA-fp27-88fp-2phg). v5's `_wire_cors` uses a membership test; this
+    locks that in.
+    """
+    config = config_factory(cors_origins="*,https://trusted.example", cors_allow_credentials="true")
+    with caplog.at_level(logging.WARNING):
+        app = build_app(config=config, store=store)
+    assert any("CORS spec" in rec.message or "CVE-2026-32610" in rec.message for rec in caplog.records)
+    with TestClient(app) as client:
+        r = client.get("/status", headers={"Origin": "https://trusted.example"})
+    assert r.headers.get("access-control-allow-credentials") is None
+
+
 def test_cors_absent_by_default(config_factory, store):
     config = config_factory()
     app = build_app(config=config, store=store)

@@ -89,6 +89,9 @@ of truth; this skill mirrors it.
 - `Carry forward` — same fix mechanism as v4, ported into the v5 module structure
 - `Resolved by architecture` — vulnerability does not exist in v5 because the affected component or feature was removed
 - `New v5 mitigation` — additional v5-specific work required beyond what v4 shipped
+- `Covered by a different v5 mechanism` — the bug class cannot occur in v5 because v5 uses a different technique than the v4 fix; a regression test locking the property in is mandatory
+
+_Table below last synced 2026-08-01. Source of truth is architecture §8._
 
 | CVE | Severity | Mitigation in v5 | v5 status |
 |---|---|---|---|
@@ -107,6 +110,11 @@ of truth; this skill mirrors it.
 | **CVE-2026-34839** | high | REST API CORS hardening — same mechanism as CVE-2026-32610 applied to `/api/5/*`. `cors_origins` enforced; wildcard + credentials downgrades to no-credentials. | Carry forward (Phase 1.5 ✅) |
 | **CVE-2026-35587** | high | SSRF in IP plugin via `public_api`. v5 plugin migration must validate the URL scheme (allow `http`/`https` only), reject loopback / link-local / RFC1918 / cloud metadata IPs unless explicitly opted in via `public_api_allow_internal=true`, and **never** send `public_username`/`public_password` to a hostname not on an allowlist. | New v5 mitigation (Phase 2 — `ip` plugin migration) |
 | **CVE-2026-35588** | medium | Parameterized CQL in Cassandra export. `keyspace`, `table`, `replication_factor` validated against an allowlist regex (`^[A-Za-z][A-Za-z0-9_]*$`) before being interpolated into DDL. Same family as CVE-2026-32611 / CVE-2026-30930. | Carry forward (Phase 3 — Cassandra) |
+| **CVE-2026-68520** | high | `as_dict_secure()` value-level bypass. v5 `config_v5.as_dict_secure()` scrubs URL userinfo (`scheme://user:pass@host`) in every string value via `_URL_CREDENTIALS_RE`, and redacts `username` / `user` / `login` key names (`user` / `login` via exact match so `user_careful` / `user_warning` thresholds stay visible). A future `/api/5/args` must reuse `_secure_value()`. | Carry forward (Phase 0.2, extended 2026-08-01 ✅) |
+| **GHSA-73wf-9vmv-5pv9** | high | Incomplete fix of CVE-2026-32608 (nested list/dict values). v5 `ShellAction` pre-quotes every value with `shlex.quote(str(value))`, so a stringified list is one token — v4's operator-stripping sanitizer is not used. | Covered by a different v5 mechanism |
+| **GHSA-qcpp-8x79-hhp3** | high | Incomplete fix of CVE-2026-32608 (operator reconstruction across adjacent `{{{a}}}{{{b}}}`). v5 `shlex.quote` closes/reopens a quote at every boundary → single literal word. | Covered by a different v5 mechanism |
+| **GHSA-59fj-m2j6-hcxh** | high | Incomplete fix of CVE-2026-53925: `--disable-config-exec` did not cover on-alert action commands. **Open gap in v5** — `ShellAction` always shells out and no `disable_config_exec` gate exists. Port an equivalent gate in the actions/amps cycle. | Carry forward (AMP / actions port — open gap) |
+| **GHSA-fp27-88fp-2phg** | high | CORS credentials guard used exact-match (`== ["*"]`) instead of membership; a multi-origin allowlist containing `*` bypassed it. v5 `_wire_cors` already uses `any(o == "*" for o in origins)`. | Carry forward (Phase 1.5 ✅) |
 
 ### Watching — unpublished advisories
 
@@ -131,9 +139,19 @@ Used by the unauthenticated REST API endpoints (`/api/5/config`,
 `glances/config_v5.py` (Phase 0.2). See `SKILL-config.md` for the full
 list of redacted key fragments and the conditional access pattern.
 
+Redaction is **value-level as well as key-level** (CVE-2026-68520):
+`as_dict_secure()` scrubs credentials embedded in URL values
+(`scheme://user:pass@host`) even when the key name looks innocuous, via
+`_URL_CREDENTIALS_RE`. Key names `username` / `user` / `login` are also
+redacted (`user` / `login` matched exactly so the `user_careful` /
+`user_warning` CPU-load thresholds stay visible).
+
 The same redaction discipline applies **anywhere** the API may be
 consumed unauthenticated — not just `/api/5/config`. When adding a new
 endpoint, ask: "could this leak a credential to an anonymous caller?".
+**`/api/5/args`** (not yet implemented in v5) must route its payload
+through the same `GlancesConfigV5._secure_value()` before returning it to
+an unauthenticated caller.
 
 ## CORS — `glances/webserver_v5.py::_wire_cors`
 
@@ -232,6 +250,7 @@ Output: downloadable `.md` audit report. Release blocker for `5.0.0`.
 ## What's deferred
 
 - **`glances-v5 --set-password` CLI** — Phase 1.7 (regenerate hash for `[outputs] password`).
+- **`--disable-config-exec` equivalent gate for `ShellAction`** (GHSA-59fj-m2j6-hcxh) — actions/amps port. When on, config-sourced action commands run through an explicit arg list (`shell=False`), never a shell. Open gap: v5 has no such gate today.
 - **Rate limiting middleware** (`rate_limit_per_minute`, `rate_limit_burst`) — Phase 2+.
 - **IP plugin SSRF mitigation** (CVE-2026-35587) — Phase 2 (`ip` plugin migration). New v5 mitigation, not present in v4.
 - **Curses escape sanitization in alerts** (GHSA-mcm7-fmh3-v6v3 — draft) — Phase 2 (alerts plugin / curses TUI)

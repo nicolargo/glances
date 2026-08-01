@@ -47,12 +47,19 @@ from __future__ import annotations
 import configparser
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+
+# Credentials embedded in the authority part of an URL value
+# (``scheme://user:password@host``) — CVE-2026-68520. The lookbehind anchors
+# on ``://`` so only a real URL authority is scrubbed; a value that merely
+# contains an '@' is left untouched.
+_URL_CREDENTIALS_RE = re.compile(r"(?<=://)[^/?#@\s]+@")
 
 
 def _coerce_bool(raw: str) -> bool:
@@ -121,7 +128,18 @@ class GlancesConfigV5:
         "snmp_user",
         "snmp_authkey",
         "snmp_privkey",
+        "username",
         "uri",  # may embed credentials inline (CVE-2026-32633)
+    }
+
+    # Exact match (case-insensitive) on the option name — CVE-2026-68520.
+    # These cannot join SECRET_KEYS: that set is matched as a substring, so
+    # "user" would also redact the `user_careful` / `user_warning` CPU and
+    # load thresholds, which are not credentials. Exact match reproduces the
+    # intent of the v4 `\buser\b` pattern.
+    SECRET_KEYS_EXACT: set[str] = {
+        "user",
+        "login",
     }
 
     SECRET_REDACTED: str = "***"
@@ -291,16 +309,35 @@ class GlancesConfigV5:
         return {s: dict(opts) for s, opts in self._merged.items()}
 
     def as_dict_secure(self) -> dict[str, dict[str, Any]]:
+        """Return the merged config with secrets redacted, for unauthenticated callers.
+
+        - A secret-like option name is redacted entirely (CVE-2026-32609).
+        - Credentials embedded in an URL value are redacted even when the
+          option name looks innocuous (CVE-2026-68520).
+        """
         result: dict[str, dict[str, Any]] = {}
         for section, options in self._merged.items():
-            result[section] = {
-                key: (self.SECRET_REDACTED if self._is_secret_key(key) else value) for key, value in options.items()
-            }
+            result[section] = {key: self._secure_value(key, value) for key, value in options.items()}
         return result
+
+    @classmethod
+    def _secure_value(cls, key: str, value: Any) -> Any:
+        """Redact a single option: whole value on a secret key, else URL credentials.
+
+        A non-string value (boolean flag, port, refresh rate) cannot carry a
+        credential and is returned unchanged — CVE-2026-68520.
+        """
+        if cls._is_secret_key(key):
+            return cls.SECRET_REDACTED
+        if not isinstance(value, str):
+            return value
+        return _URL_CREDENTIALS_RE.sub(f"{cls.SECRET_REDACTED}@", value)
 
     @classmethod
     def _is_secret_key(cls, key: str) -> bool:
         key_lower = key.lower()
+        if key_lower in cls.SECRET_KEYS_EXACT:
+            return True
         return any(token in key_lower for token in cls.SECRET_KEYS)
 
     # ---------------------------------------------------------------- reload
