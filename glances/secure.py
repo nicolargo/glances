@@ -80,21 +80,22 @@ def __secure_popen(cmd):
         stdout_redirect = None
 
     sub_cmd_stdin = None
-    p_last = None
+    p_list = []
     # Split by pipe '|'
     for sub_cmd in cmd.split('|'):
         # Split by space character, but do no split spaces within quotes (remove surrounding quotes, though)
         sub_cmd_split = __split_args(sub_cmd)
         p = Popen(sub_cmd_split, shell=False, stdin=sub_cmd_stdin, stdout=PIPE, stderr=PIPE)
-        if p_last is not None:
-            # Allow p_last to receive a SIGPIPE if p exits.
-            p_last.stdout.close()
-            p_last.kill()
-            p_last.wait()
-        p_last = p
+        if p_list:
+            # Allow the previous process to receive a SIGPIPE if p exits.
+            p_list[-1].stdout.close()
+        p_list.append(p)
         sub_cmd_stdin = p.stdout
 
-    p_ret = p_last.communicate()
+    p_ret = p_list[-1].communicate()
+    # Reap the upstream processes of the pipeline (they exited on their own)
+    for p in p_list[:-1]:
+        p.wait()
 
     if nativestr(p_ret[1]) == '':
         # No error
