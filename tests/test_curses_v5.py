@@ -151,6 +151,46 @@ def test_paint_sidebar_advances_y_by_block_height_plus_one_blank_line(fake_store
     assert all(y != 7 for y, _ in rows_painted)
 
 
+def test_paint_sidebar_skips_zero_row_block(fake_store, fake_alerts, fake_config):
+    """Regression: a zero-row block (e.g. ``amps`` when every ``[amp_*]``
+    section is disabled — every shipped default) used to still cost one
+    blank line via the unconditional ``y += min(block.height, max_h) + 1``.
+    That left a stray blank line between ``processcount`` and
+    ``processlist`` on every default install. A block with no rows must be
+    skipped entirely: it neither paints nor advances ``y``.
+    """
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Cell, PluginBlock, Row
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+
+    block_a = PluginBlock(
+        name="processcount",
+        rows=[Row(cells=[Cell(text="PROCESSCOUNT")])],
+    )  # height = 1
+    block_empty = PluginBlock(name="amps", rows=[])  # height = 0 — must be skipped
+    block_b = PluginBlock(
+        name="processlist",
+        rows=[Row(cells=[Cell(text="PROCESSLIST")])],
+    )  # height = 1
+
+    fake_stdscr = MagicMock()
+    tui._paint_sidebar(fake_stdscr, [block_a, block_empty, block_b], y0=5, x0=0, width=34, height=20)
+
+    rows_painted = [(call.args[0], call.args[2]) for call in fake_stdscr.addstr.call_args_list]
+    ys = sorted({y for y, _ in rows_painted})
+    # Block A at y=5. No line reserved for the empty block: block B follows
+    # directly at y=5+1+1=7 (one blank separator line), not y=8 or beyond.
+    assert ys == [5, 7], f"unexpected y-coordinates: {ys}"
+
+
 def test_tui_v5_quit_on_q_key(monkeypatch, fake_store, fake_alerts, fake_config):
     """Pressing 'q' triggers stop()."""
     from glances.outputs import glances_curses_v5 as tui_mod

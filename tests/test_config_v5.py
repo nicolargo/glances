@@ -594,3 +594,42 @@ def test_get_value_with_non_none_default_still_coerces(env: Path) -> None:
     # through get() for typed coercion — locks in test_get_value_alias's
     # existing guarantee against this change.
     assert GlancesConfigV5().get_value("global", "refresh_time", 0) == 2
+
+
+# ============================================================================
+# v4-compatibility accessors used by verbatim-reused v4 code (GlancesAmp)
+# ============================================================================
+
+
+def test_items_returns_section_pairs(env: Path) -> None:
+    write(xdg_path(env), "[amp_foo]\nenable = true\nrefresh = 3\n")
+    items = dict(GlancesConfigV5().items("amp_foo"))
+    assert items == {"enable": "true", "refresh": "3"}
+
+
+def test_items_missing_section_returns_empty_list(env: Path) -> None:
+    assert GlancesConfigV5().items("amp_does_not_exist") == []
+
+
+def test_get_float_value_reads_a_number(env: Path) -> None:
+    write(xdg_path(env), "[amp_foo]\nrefresh = 3\n")
+    assert GlancesConfigV5().get_float_value("amp_foo", "refresh") == 3.0
+
+
+def test_get_float_value_missing_option_returns_default(env: Path) -> None:
+    write(xdg_path(env), "[amp_foo]\nrefresh = 3\n")
+    assert GlancesConfigV5().get_float_value("amp_foo", "countmin", 7) == 7.0
+
+
+def test_get_float_value_missing_section_returns_default(env: Path) -> None:
+    assert GlancesConfigV5().get_float_value("nope", "nope", 1.5) == 1.5
+
+
+def test_get_float_value_raises_on_non_numeric_value(env: Path) -> None:
+    """Load-bearing: GlancesAmp.load_config() routes every string and
+    comma-list config value through the `except ValueError` branch. If this
+    returned the default instead of raising, `regex=`, `command=` and
+    `enable=` would all silently become 0.0 and every AMP would break."""
+    write(xdg_path(env), "[amp_foo]\nregex = .*python.*\n")
+    with pytest.raises(ValueError):
+        GlancesConfigV5().get_float_value("amp_foo", "regex")

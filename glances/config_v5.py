@@ -273,6 +273,25 @@ class GlancesConfigV5:
             return self._merged.get(section, {}).get(option)  # type: ignore[return-value]
         return self.get(section, option, default)
 
+    def get_float_value(self, section: str, option: str, default: float = 0.0) -> float:
+        """v4 compatibility accessor — mirrors `GlancesConfig.get_float_value`.
+
+        Returns `float(default)` when the option is ABSENT, and `float(raw)`
+        when it is present. A present-but-non-numeric value therefore raises
+        `ValueError`, exactly like v4's `ConfigParser.getfloat`.
+
+        That exception is load-bearing, not incidental:
+        `GlancesAmp.load_config()` (reused verbatim from v4) calls this method
+        on EVERY key of an `[amp_*]` section and relies on `ValueError` to
+        route the string and comma-list values (`regex`, `command`, `enable`,
+        `one_line`, …) to its fallback branch. Swallowing it and returning the
+        default would coerce all of them to 0.0 and silently break every AMP.
+        """
+        raw = self._merged.get(section, {}).get(option)
+        if raw is None:
+            return float(default)
+        return float(raw)
+
     @staticmethod
     def _coerce(raw: Any, target_type: type) -> Any:
         # Native types in DEFAULTS flow through unchanged.
@@ -304,6 +323,16 @@ class GlancesConfigV5:
         introspect which keys exist without forcing them through
         ``as_dict()`` (which deep-copies)."""
         return list(self._merged.get(section, {}).keys())
+
+    def items(self, section: str) -> list[tuple[str, Any]]:
+        """Return the `(option, value)` pairs of `section` (empty if absent).
+
+        v4 compatibility accessor: `GlancesAmp.load_config()` iterates
+        `config.items(amp_section)` to discover an AMP's keys, which are
+        arbitrary (`status_url`, `systemctl_cmd`, any user-defined option)
+        and therefore cannot be enumerated statically.
+        """
+        return list(self._merged.get(section, {}).items())
 
     def as_dict(self) -> dict[str, dict[str, Any]]:
         return {s: dict(opts) for s, opts in self._merged.items()}

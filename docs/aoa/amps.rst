@@ -143,6 +143,30 @@ Note: with ``--disable-config-exec`` set, AMP commands that rely on these
 operators stop working. Move such logic into a dedicated shell script and
 point the ``command`` option to that script instead.
 
+An AMP command that hangs blocks that AMP indefinitely. The optional
+``timeout`` key bounds it:
+
+.. code-block:: ini
+
+    [amp_dropbox]
+    enable=true
+    regex=.*dropbox.*
+    refresh=3
+    command=dropbox status
+    timeout=10
+
+Without the key there is no timeout, which is the historical behaviour. Note
+that with ``&&``-chained commands the timeout applies to each sub-command, not
+to the chain as a whole.
+
+A hung AMP command without ``timeout`` does not just stall that one AMP: AMP
+commands run in the interpreter's shared worker-thread pool, which is also
+used by other parts of Glances. Enough AMPs stuck on a command that never
+returns can starve that pool and delay unrelated plugins. Setting
+``timeout=`` is recommended for any AMP command that touches a network
+resource, a remote mount, or a daemon socket — anything that can block
+indefinitely rather than fail fast.
+
 Embedded AMP
 ------------
 

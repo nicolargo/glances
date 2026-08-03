@@ -827,6 +827,11 @@ class TuiV5(threading.Thread):
         y = y0
         end_y = y0 + height
         for block in blocks:
+            # A zero-row block (e.g. `amps` with every `[amp_*]` section
+            # disabled) must not cost a blank line — v4 parity
+            # (`glances_curses.py:1230` returns 0 for an empty plugin).
+            if not block.rows:
+                continue
             if y >= end_y:
                 break
             max_h = end_y - y
