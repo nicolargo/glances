@@ -179,8 +179,6 @@
                         <td v-show="!getDisableStats().includes('cpu_times')" scope="row" class="">
                             {{ process.timeforhuman }}
                         </td>
-                        <td v-if="process.timeplus == '?'" v-show="!getDisableStats().includes('cpu_times')" scope="row"
-                            class="">?</td>
                         <td v-show="!getDisableStats().includes('num_threads')" scope="row" class="">
                             {{ process.num_threads == -1 ? '?' : process.num_threads }}
                         </td>
@@ -563,9 +561,22 @@ export default {
 			);
 		},
 		limit() {
-			return this.config.outputs !== undefined
-				? this.config.outputs.max_processes_display
-				: undefined;
+			if (this.config.processlist !== undefined && this.config.processlist.max !== undefined && this.config.processlist.max !== null) {
+				return parseInt(this.config.processlist.max, 10);
+			}
+			if (this.config.outputs !== undefined && this.config.outputs.max_processes_display !== undefined && this.config.outputs.max_processes_display !== null) {
+				return parseInt(this.config.outputs.max_processes_display, 10);
+			}
+			if (this.data.stats !== undefined && this.data.stats.processcount !== undefined && this.data.stats.processcount.max !== undefined) {
+				return parseInt(this.data.stats.processcount.max, 10);
+			}
+			if (this.args !== undefined && this.args.max_processes !== undefined && this.args.max_processes !== null) {
+				return parseInt(this.args.max_processes, 10);
+			}
+			if (this.args !== undefined && this.args.process_max !== undefined && this.args.process_max !== null) {
+				return parseInt(this.args.process_max, 10);
+			}
+			return undefined;
 		},
 		focus() {
 			return this.args !== undefined &&
