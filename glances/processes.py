@@ -174,10 +174,12 @@ class GlancesProcesses:
         """Update the global process count from the current processes list"""
         # Update the maximum process ID (pid) number
         self.processcount['pid_max'] = self.pid_max
-        # For each key in the processcount dict
+        # For each status key in the processcount dict
         # count the number of processes with the same status
-        for k in list(self.processcount.keys()):
-            self.processcount[k] = len(list(filter(lambda v: v.get('status', '?') is k, plist)))
+        # Note: only the status keys should be counted, the other ones
+        # ('pid_max', 'thread' and 'total') are computed separately (see issue #3637)
+        for k in ('running', 'sleeping'):
+            self.processcount[k] = len(list(filter(lambda v: v.get('status', '?') == k, plist)))
         # Compute thread
         try:
             self.processcount['thread'] = sum(i['num_threads'] for i in plist if i['num_threads'] is not None)
