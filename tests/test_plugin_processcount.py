@@ -305,3 +305,22 @@ class TestProcessesUpdateProcesscount:
         assert processes.processcount['sleeping'] == 1
         assert processes.processcount['total'] == 3
         assert processes.processcount['thread'] == 6
+
+
+class TestProcessesCount:
+    """Test GlancesProcesses.processes_count (see issue #3221)."""
+
+    @pytest.fixture
+    def processes(self):
+        """Return a standalone GlancesProcesses instance."""
+        return GlancesProcesses()
+
+    def test_processes_count_none_max_processes(self, processes):
+        """processes_count must not crash when max_processes is None (client/server mode)."""
+        processes.max_processes = None
+        assert processes.processes_count == 0  # nosec B101
+
+    def test_processes_count_does_not_raise_with_max_processes(self, processes):
+        """processes_count returns an int (no crash) when max_processes is set."""
+        processes.max_processes = 50
+        assert isinstance(processes.processes_count, int)  # nosec B101
