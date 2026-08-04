@@ -10,8 +10,11 @@
 """Tests for the ProcessCount plugin."""
 
 import json
+from unittest.mock import PropertyMock, patch
 
 import pytest
+
+from glances.processes import GlancesProcesses
 
 
 @pytest.fixture
@@ -272,3 +275,33 @@ class TestProcesscountPluginPidMax:
     def test_pid_max_description(self, processcount_plugin):
         """Test that pid_max has a description."""
         assert 'description' in processcount_plugin.fields_description['pid_max']
+
+
+class TestProcessesUpdateProcesscount:
+    """Test GlancesProcesses.update_processcount (see issue #3637)."""
+
+    @pytest.fixture
+    def processes(self):
+        """Return a standalone GlancesProcesses instance."""
+        return GlancesProcesses()
+
+    def test_pid_max_is_not_overwritten_by_the_status_count(self, processes):
+        """Test that pid_max keeps the system value and is not reset to 0."""
+        with patch.object(GlancesProcesses, 'pid_max', new_callable=PropertyMock) as pid_max:
+            pid_max.return_value = 4194304
+            processes.update_processcount([{'status': 'sleeping', 'num_threads': 1}])
+        assert processes.processcount['pid_max'] == 4194304
+
+    def test_status_count_uses_equality(self, processes):
+        """Test that the status count does not rely on the string interning."""
+        plist = [
+            # Build a non interned 'running' string
+            {'status': ''.join(['run', 'ning']), 'num_threads': 1},
+            {'status': 'sleeping', 'num_threads': 2},
+            {'status': 'disk-sleep', 'num_threads': 3},
+        ]
+        processes.update_processcount(plist)
+        assert processes.processcount['running'] == 1
+        assert processes.processcount['sleeping'] == 1
+        assert processes.processcount['total'] == 3
+        assert processes.processcount['thread'] == 6
