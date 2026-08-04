@@ -111,7 +111,7 @@ for the general OSS security philosophy (4 rules).
 - [ ] New configuration keys are documented
 - [ ] Breaking changes are identified and documented
 - [ ] The PR targets the correct branch
-- [ ] Code should be formated and linted (make lint && make format)
+- [ ] Pre-commit hooks pass (`make pre-commit` — supersedes `make lint && make format`)
 
 #### Glances-specific output formats
 
