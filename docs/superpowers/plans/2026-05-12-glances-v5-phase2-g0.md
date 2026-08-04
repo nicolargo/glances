@@ -821,10 +821,28 @@ def test_render_alert_footer_shows_recent_events():
     from glances.outputs.curses_renderer_v5 import render_alert_footer
 
     history = [
-        {"ts": "2026-05-12T10:00:00+00:00", "plugin": "mem", "key": None, "field": "percent",
-         "level": "warning", "previous_level": "ok", "value": 73.0, "prominent": True, "hostname": "h"},
-        {"ts": "2026-05-12T10:01:00+00:00", "plugin": "network", "key": "eth0", "field": "bytes_recv",
-         "level": "critical", "previous_level": "warning", "value": 9e7, "prominent": True, "hostname": "h"},
+        {
+            "ts": "2026-05-12T10:00:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 73.0,
+            "prominent": True,
+            "hostname": "h",
+        },
+        {
+            "ts": "2026-05-12T10:01:00+00:00",
+            "plugin": "network",
+            "key": "eth0",
+            "field": "bytes_recv",
+            "level": "critical",
+            "previous_level": "warning",
+            "value": 9e7,
+            "prominent": True,
+            "hostname": "h",
+        },
     ]
     rows = render_alert_footer(history, limit=10)
     assert len(rows) == 1 + 2  # header + 2 events
@@ -837,8 +855,17 @@ def test_render_alert_footer_truncates_to_limit():
     from glances.outputs.curses_renderer_v5 import render_alert_footer
 
     history = [
-        {"ts": f"2026-05-12T10:0{i}:00+00:00", "plugin": "mem", "key": None, "field": "percent",
-         "level": "warning", "previous_level": "ok", "value": 73.0, "prominent": True, "hostname": "h"}
+        {
+            "ts": f"2026-05-12T10:0{i}:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 73.0,
+            "prominent": True,
+            "hostname": "h",
+        }
         for i in range(5)
     ]
     rows = render_alert_footer(history, limit=3)
@@ -994,12 +1021,14 @@ def render_alert_footer(history: list[dict[str, Any]], limit: int = 10) -> list[
         prominent = bool(evt.get("prominent", False))
         role = _LEVEL_TO_ROLE.get(new_level, ColorRole.DEFAULT)
         rows.append(
-            Row(cells=[
-                Cell(text=ts),
-                Cell(text=target),
-                Cell(text=field_name),
-                Cell(text=f"{previous} → {new_level}", color=role, prominent=prominent),
-            ])
+            Row(
+                cells=[
+                    Cell(text=ts),
+                    Cell(text=target),
+                    Cell(text=field_name),
+                    Cell(text=f"{previous} → {new_level}", color=role, prominent=prominent),
+                ]
+            )
         )
     return rows
 
@@ -1136,9 +1165,7 @@ def test_tui_v5_can_start_and_stop_without_curses(monkeypatch, fake_store, fake_
     monkeypatch.setattr(tui_mod, "_safe_curses_wrapper", lambda fn: fn(fake_stdscr))
 
     fake_registry = [("mem", False)]
-    fake_fields = {"mem": {
-        "percent": {"unit": "percent", "label": "MEM", "watched": True, "prominent": True}
-    }}
+    fake_fields = {"mem": {"percent": {"unit": "percent", "label": "MEM", "watched": True, "prominent": True}}}
 
     tui = tui_mod.TuiV5(
         store=fake_store,
@@ -1173,13 +1200,15 @@ def test_tui_v5_calls_addstr_for_rendered_cells(monkeypatch, fake_store, fake_al
     monkeypatch.setattr(tui_mod, "_safe_curses_wrapper", record_wrapper)
 
     registry = [("mem", False)]
-    fields = {"mem": {
-        "percent": {"unit": "percent", "label": "MEM", "watched": True, "prominent": True}
-    }}
+    fields = {"mem": {"percent": {"unit": "percent", "label": "MEM", "watched": True, "prominent": True}}}
 
     tui = tui_mod.TuiV5(
-        store=fake_store, alerts=fake_alerts, config=fake_config,
-        registry=registry, fields_by_plugin=fields, refresh_interval=0.01,
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=registry,
+        fields_by_plugin=fields,
+        refresh_interval=0.01,
     )
     tui.start()
     time.sleep(0.05)
@@ -1204,8 +1233,11 @@ def test_tui_v5_quit_on_q_key(monkeypatch, fake_store, fake_alerts, fake_config)
     monkeypatch.setattr(tui_mod, "_safe_curses_wrapper", lambda fn: fn(fake_stdscr))
 
     tui = tui_mod.TuiV5(
-        store=fake_store, alerts=fake_alerts, config=fake_config,
-        registry=[("mem", False)], fields_by_plugin={"mem": {}},
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("mem", False)],
+        fields_by_plugin={"mem": {}},
         refresh_interval=0.01,
     )
     tui.start()
@@ -1477,8 +1509,13 @@ def test_assemble_builds_tui_when_enabled(monkeypatch):
 
     cfg = GlancesConfigV5()
     args = argparse.Namespace(
-        config_path=None, bind=None, port=None, api_doc=None,
-        debug=False, set_password=False, no_tui=False,
+        config_path=None,
+        bind=None,
+        port=None,
+        api_doc=None,
+        debug=False,
+        set_password=False,
+        no_tui=False,
     )
     app, scheduler, host, port, tui = assemble(args, cfg)
     assert tui is not None
@@ -1493,8 +1530,13 @@ def test_assemble_skips_tui_when_no_tui(monkeypatch):
 
     cfg = GlancesConfigV5()
     args = argparse.Namespace(
-        config_path=None, bind=None, port=None, api_doc=None,
-        debug=False, set_password=False, no_tui=True,
+        config_path=None,
+        bind=None,
+        port=None,
+        api_doc=None,
+        debug=False,
+        set_password=False,
+        no_tui=True,
     )
     app, scheduler, host, port, tui = assemble(args, cfg)
     assert tui is None

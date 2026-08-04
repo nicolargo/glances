@@ -71,9 +71,9 @@ def test_cpu_cols_2_drops_third_column(cpu_payload_linux, cpu_fields):
 def test_cpu_cols_1_keeps_only_first_column(cpu_payload_linux, cpu_fields):
     one = render(cpu_payload_linux, cpu_fields, view={"cpu_cols": 1})
     text = "\n".join("".join(c.text for c in r.cells) for r in one)
-    assert "user" in text          # col1 stays
-    assert "irq" not in text        # col2 gone
-    assert "interrupts" not in text # col3 gone
+    assert "user" in text  # col1 stays
+    assert "irq" not in text  # col2 gone
+    assert "interrupts" not in text  # col3 gone
     assert "CPU" in text and "%" in text  # title + total stay
 
 
@@ -148,8 +148,10 @@ def test_bars_justify_to_header_width(_payload):
     # With a header present, every bar row width == header row width (justified).
     p = _payload(cpu_name="Chip", cpu_hz_current=2_000_000_000, cpu_hz=3_000_000_000)
     rows = render(p, FIELDS)
+
     def w(r):  # painter width = text + (non-glue separators)
         return sum(len(c.text) for c in r.cells) + sum(1 for i, c in enumerate(r.cells) if i > 0 and not c.glue)
+
     header_w = w(rows[0])
     bar_ws = [w(r) for r in rows[1:]]
     assert bar_ws and all(bw == header_w for bw in bar_ws)
@@ -159,8 +161,13 @@ def test_freq_only_is_narrower_than_named(_payload):
     p = _payload(cpu_name="A Very Long CPU Brand Name X", cpu_hz_current=2_000_000_000, cpu_hz=3_000_000_000)
     named = render(p, FIELDS)
     freq = render(p, FIELDS, view={"quicklook_freq_only": True})
+
     def block_w(rows):
-        return max(sum(len(c.text) for c in r.cells) + sum(1 for i, c in enumerate(r.cells) if i > 0 and not c.glue) for r in rows)
+        return max(
+            sum(len(c.text) for c in r.cells) + sum(1 for i, c in enumerate(r.cells) if i > 0 and not c.glue)
+            for r in rows
+        )
+
     assert block_w(freq) < block_w(named)
 ```
 
@@ -186,6 +193,7 @@ def test_freq_only_is_narrower_than_named(_payload):
 ```python
 def test_hide_quicklook_skips_block():
     from glances.outputs.curses_renderer_v5 import build_frame
+
     registry = [("quicklook", False), ("cpu", False), ("mem", False)]
     store = {n: {"_levels": {}} for n, _ in registry}
     fields = {n: {} for n, _ in registry}
@@ -196,6 +204,7 @@ def test_hide_quicklook_skips_block():
 
 def test_hide_memswap_skips_block():
     from glances.outputs.curses_renderer_v5 import build_frame
+
     registry = [("quicklook", False), ("memswap", False), ("cpu", False)]
     store = {n: {"_levels": {}} for n, _ in registry}
     fields = {n: {} for n, _ in registry}
@@ -231,9 +240,14 @@ The painter computes the minimal degradation that makes the TOP row fit, then pa
 # Ordered degradation steps (a→f) — exported for the test + the loop.
 def test_degrade_steps_order():
     from glances.outputs.glances_curses_v5 import _DEGRADE_STEPS
+
     assert _DEGRADE_STEPS == [
-        ("mem_cols", 1), ("cpu_cols", 2), ("cpu_cols", 1),
-        ("quicklook_freq_only", True), ("hide_quicklook", True), ("hide_memswap", True),
+        ("mem_cols", 1),
+        ("cpu_cols", 2),
+        ("cpu_cols", 1),
+        ("quicklook_freq_only", True),
+        ("hide_quicklook", True),
+        ("hide_memswap", True),
     ]
 
 
@@ -262,12 +276,12 @@ def test_narrow_terminal_drops_load_never(make_tui_with_top):
 # Ordered cascade (a→f). Each entry mutates the view; applied one at a time
 # until the TOP row fits. cpu_cols=1 subsumes the col-3 drop.
 _DEGRADE_STEPS: list[tuple[str, Any]] = [
-    ("mem_cols", 1),            # (a)
-    ("cpu_cols", 2),            # (b)
-    ("cpu_cols", 1),            # (c)
+    ("mem_cols", 1),  # (a)
+    ("cpu_cols", 2),  # (b)
+    ("cpu_cols", 1),  # (c)
     ("quicklook_freq_only", True),  # (d)
-    ("hide_quicklook", True),   # (e)
-    ("hide_memswap", True),     # (f)
+    ("hide_quicklook", True),  # (e)
+    ("hide_memswap", True),  # (f)
 ]
 
 

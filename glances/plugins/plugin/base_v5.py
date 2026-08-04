@@ -546,6 +546,135 @@ class GlancesPluginBase(Generic[T], ABC):
                             break
         return out
 
+    def get_limits(self) -> dict[str, Any]:
+        """Return this plugin's **effective** thresholds, keyed by field name.
+
+        Effective = the plugin's config section layered over each field's
+        ``default_thresholds`` — what drives ``_levels`` for plugins that go
+        through the base class's watched-field resolution (see Known
+        limitation below). Consumed by the REST ``/api/5/<plugin>/limits``
+        route and by the MCP ``glances://limits`` resource, which share this
+        single source of truth.
+
+        Computed on demand rather than cached: thresholds derive from
+        config + schema, not from psutil, so this answers correctly before
+        the scheduler's first cycle. A cache filled by ``_derived_parameters``
+        would be empty at cycle 0.
+
+        Shape — numeric fields at the top level, categorical fields grouped
+        under ``_categorical`` because their form is inverted (level → set
+        of values instead of level → number), per-item overrides grouped
+        under ``_per_item`` (see ``_per_item_limits()``)::
+
+            {"percent": {"careful": 50.0, "warning": 70.0},
+             "_categorical": {"status": {"ok": ["R", "S"]}},
+             "_per_item": {"eth0": {"rx": {"warning": 60.0}}}}
+
+        ``_categorical`` and ``_per_item`` are each omitted when empty.
+        Underscore-prefixed keys cannot collide with a field name:
+        ``_remove_parameters`` strips every ``_*`` key from stats, so no
+        declared field starts with one.
+
+        Known limitation: six plugins — ``sensors``, ``wifi``, ``folders``,
+        ``raid``, ``ports``, ``amps`` — override ``_derived_parameters()``
+        and compute ``_levels`` outside the base class's watched-field path
+        that this method walks. For those plugins, ``get_limits()`` returns
+        ``{}`` even when the operator's config carries thresholds that are
+        genuinely active and driving colours. Fixing this would require a
+        per-plugin ``get_limits()`` override hook — a deliberate follow-up,
+        not implemented here.
+
+        Security (design §7): the key space read here is closed and
+        code-controlled — field names come from ``fields_description``,
+        levels from the threshold ladder. No arbitrary config key can reach
+        the payload, which is what keeps ``*_action`` templates out of it.
+        """
+        out: dict[str, Any] = {}
+        categorical: dict[str, dict[str, list[str]]] = {}
+
+        for field_name, entry in self._precompute_plugin_thresholds().items():
+            # Dispatch on the output key, not on schema["threshold_type"] —
+            # _precompute_plugin_thresholds owns that mapping.
+            if "thresholds" in entry:
+                out[field_name] = dict(entry["thresholds"])
+            elif "mapping" in entry:
+                # read_thresholds_categorical returns sets, which json cannot
+                # serialise. Sorted lists also make the payload deterministic.
+                categorical[field_name] = {level: sorted(values) for level, values in entry["mapping"].items()}
+
+        if categorical:
+            out["_categorical"] = categorical
+
+        per_item = self._per_item_limits()
+        if per_item:
+            out["_per_item"] = per_item
+
+        return out
+
+    def _per_item_limits(self) -> dict[str, dict[str, dict[str, float]]]:
+        """Resolve per-item threshold overrides for a collection plugin.
+
+        Returns ``{pk_value: {field_name: {level: value}}}``, restricted to
+        items currently published in the store and to fields whose resolved
+        thresholds actually differ from the plugin-level ones.
+
+        ``_scan_pk_override_fields()`` is empty on any deployment without
+        ``<pk>_<field>_<level>`` keys — the overwhelming majority — which
+        short-circuits this method entirely. That guard is what keeps
+        ``/limits`` cheap on processlist (500+ items).
+
+        Categorical fields are skipped: a per-primary-key categorical
+        override (e.g. a per-PID process status set) has no sensible use
+        case, and including it would fork the ``_per_item`` payload shape.
+
+        Known limitation (design §4.3): an override configured for an item
+        absent from the store at call time — a downed interface, a stopped
+        container — is not reported.
+        """
+        if not self.IS_COLLECTION or self._primary_key is None:
+            return {}
+
+        override_fields = self._scan_pk_override_fields()
+        if not override_fields:
+            return {}
+
+        payload = self.store.get(self.plugin_name)
+        if not isinstance(payload, dict):
+            return {}
+        stats = payload.get("data")
+        if not isinstance(stats, list):
+            return {}
+
+        plugin_level = self._precompute_plugin_thresholds()
+        schema_by_name = dict(self._watched_fields)
+
+        out: dict[str, dict[str, dict[str, float]]] = {}
+        for item in stats:
+            if not isinstance(item, dict):
+                continue
+            pk_value = item.get(self._primary_key)
+            if pk_value is None:
+                continue
+            per_field: dict[str, dict[str, float]] = {}
+            for field_name in override_fields:
+                schema = schema_by_name.get(field_name)
+                if schema is None or schema.get("threshold_type") == "categorical":
+                    continue
+                thresholds = read_thresholds(
+                    self.config,
+                    self.plugin_name,
+                    field=self._threshold_key(field_name, schema),
+                    pk_value=str(pk_value),
+                    defaults=schema.get("default_thresholds"),
+                    strict=bool(schema.get("strict_thresholds", False)),
+                )
+                baseline = plugin_level.get(field_name, {}).get("thresholds", {})
+                if thresholds and thresholds != baseline:
+                    per_field[field_name] = thresholds
+            if per_field:
+                out[str(pk_value)] = per_field
+        return out
+
     def _compute_levels_for_item(
         self,
         item: dict[str, Any],

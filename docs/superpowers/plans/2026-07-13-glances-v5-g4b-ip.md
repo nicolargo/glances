@@ -287,72 +287,74 @@ The helper itself is already written in Task 1 (kept in the same module so it sh
 - [ ] Extend `glances/plugins/ip/model_v5.py`. Replace the Task-1 `_grab_stats` body and add the fetch/merge methods:
 
 ```python
-    async def _grab_stats(self) -> dict:
-        stats = await asyncio.to_thread(self._grab_private)
-        if self.public_disabled:
-            return stats
-        now = self._monotonic()
-        due = self._last_public_fetch_ts is None or (now - self._last_public_fetch_ts) >= self.public_refresh_interval
-        if due:
-            self._public_cache = await asyncio.to_thread(self._fetch_public_ip_info)
-            self._last_public_fetch_ts = now
-        self._merge_public(stats, self._public_cache)
+async def _grab_stats(self) -> dict:
+    stats = await asyncio.to_thread(self._grab_private)
+    if self.public_disabled:
         return stats
+    now = self._monotonic()
+    due = self._last_public_fetch_ts is None or (now - self._last_public_fetch_ts) >= self.public_refresh_interval
+    if due:
+        self._public_cache = await asyncio.to_thread(self._fetch_public_ip_info)
+        self._last_public_fetch_ts = now
+    self._merge_public(stats, self._public_cache)
+    return stats
 
-    # ------------------------------------------------------------- public IP
 
-    def _fetch_public_ip_info(self) -> dict[str, Any]:
-        """Fetch public-IP JSON from the configured API — SSRF-gated.
+# ------------------------------------------------------------- public IP
 
-        Runs in a worker thread (getaddrinfo + urlopen are blocking). A
-        blocked host returns {} (public IP left empty) and logs once; a
-        network error keeps the last good cache (v4 parity).
-        """
-        if not _public_api_allowed(self.public_api, self.allow_internal):
-            if not self._blocked_logged:
-                logger.warning(
-                    "IP plugin - public_api %s resolves to a forbidden internal/loopback address; "
-                    "public IP disabled. Set [ip] public_api_allow_internal=true to override (see docs).",
-                    self.public_api,
-                )
-                self._blocked_logged = True
-            return {}
-        try:
-            if self.public_username and self.public_password:
-                response = urlopen_auth(
-                    self.public_api, self.public_username, self.public_password, _FETCH_TIMEOUT
-                ).read()
-            else:
-                response = urlopen(Request(self.public_api), timeout=_FETCH_TIMEOUT).read()
-            return json_loads(response)
-        except Exception as e:  # noqa: BLE001 — network/parse failure must not crash the cycle
-            logger.debug("IP plugin - cannot get public IP info from %s (%s)", self.public_api, e)
-            return self._public_cache
 
-    def _merge_public(self, stats: dict[str, Any], info: dict[str, Any]) -> None:
-        """Merge the public-IP fields into the scalar stats dict.
+def _fetch_public_ip_info(self) -> dict[str, Any]:
+    """Fetch public-IP JSON from the configured API — SSRF-gated.
 
-        No masking here — the `--hide-public-info` flag is a TUI display
-        preference applied by the renderer (see Task 5). The field carrying
-        the address is the configured `public_field` (defaults to 'ip',
-        matching the shipped conf and v4's literal extraction key).
-        """
-        if not info:
-            return
-        field = self.public_field[0] if self.public_field else "ip"
-        address = info.get(field, "")
-        if not address:
-            return
-        stats["public_address"] = address
-        stats["public_info_human"] = self._public_info_for_human(info)
+    Runs in a worker thread (getaddrinfo + urlopen are blocking). A
+    blocked host returns {} (public IP left empty) and logs once; a
+    network error keeps the last good cache (v4 parity).
+    """
+    if not _public_api_allowed(self.public_api, self.allow_internal):
+        if not self._blocked_logged:
+            logger.warning(
+                "IP plugin - public_api %s resolves to a forbidden internal/loopback address; "
+                "public IP disabled. Set [ip] public_api_allow_internal=true to override (see docs).",
+                self.public_api,
+            )
+            self._blocked_logged = True
+        return {}
+    try:
+        if self.public_username and self.public_password:
+            response = urlopen_auth(self.public_api, self.public_username, self.public_password, _FETCH_TIMEOUT).read()
+        else:
+            response = urlopen(Request(self.public_api), timeout=_FETCH_TIMEOUT).read()
+        return json_loads(response)
+    except Exception as e:  # noqa: BLE001 — network/parse failure must not crash the cycle
+        logger.debug("IP plugin - cannot get public IP info from %s (%s)", self.public_api, e)
+        return self._public_cache
 
-    def _public_info_for_human(self, info: dict[str, Any]) -> str:
-        if not info or not self.public_template:
-            return ""
-        try:
-            return self.public_template.format(**info)
-        except (KeyError, IndexError):
-            return ""
+
+def _merge_public(self, stats: dict[str, Any], info: dict[str, Any]) -> None:
+    """Merge the public-IP fields into the scalar stats dict.
+
+    No masking here — the `--hide-public-info` flag is a TUI display
+    preference applied by the renderer (see Task 5). The field carrying
+    the address is the configured `public_field` (defaults to 'ip',
+    matching the shipped conf and v4's literal extraction key).
+    """
+    if not info:
+        return
+    field = self.public_field[0] if self.public_field else "ip"
+    address = info.get(field, "")
+    if not address:
+        return
+    stats["public_address"] = address
+    stats["public_info_human"] = self._public_info_for_human(info)
+
+
+def _public_info_for_human(self, info: dict[str, Any]) -> str:
+    if not info or not self.public_template:
+        return ""
+    try:
+        return self.public_template.format(**info)
+    except (KeyError, IndexError):
+        return ""
 ```
 
 - [ ] Run (PASS): `.venv/bin/python -m pytest tests/test_plugin_ip_v5.py -v` (whole model+SSRF suite).

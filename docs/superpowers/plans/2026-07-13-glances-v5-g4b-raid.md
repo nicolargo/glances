@@ -326,36 +326,37 @@ Expect: FAIL (`NotImplementedError`).
 In `glances/plugins/raid/model_v5.py`, replace the placeholder `_grab_stats` with:
 
 ```python
-    async def _grab_stats(self) -> list:
-        return await asyncio.to_thread(self._collect)
+async def _grab_stats(self) -> list:
+    return await asyncio.to_thread(self._collect)
 
-    @staticmethod
-    def _collect() -> list:
-        """Synchronous grab (runs in a worker thread).
 
-        Wraps the v4 pymdstat grabber. Guarded twice:
-        - `MdStat is None` (import failed) -> empty collection.
-        - any runtime failure (no /proc/mdstat, parse error) -> empty
-          collection; the base class keeps the last good stats.
+@staticmethod
+def _collect() -> list:
+    """Synchronous grab (runs in a worker thread).
 
-        The v4 grabber returns a dict keyed by array name; we inject that
-        key as the `name` primary-key field and return a flat list.
-        """
-        if MdStat is None:
-            return []
-        try:
-            arrays = MdStat().get_stats()["arrays"]
-        except Exception as exc:  # noqa: BLE001 — any grab failure -> empty, keep last good
-            logger.debug("raid: grab failed: %s", exc)
-            return []
-        out: list[dict[str, Any]] = []
-        for name, array in arrays.items():
-            if not isinstance(array, dict):
-                continue
-            row = dict(array)
-            row["name"] = name
-            out.append(row)
-        return out
+    Wraps the v4 pymdstat grabber. Guarded twice:
+    - `MdStat is None` (import failed) -> empty collection.
+    - any runtime failure (no /proc/mdstat, parse error) -> empty
+      collection; the base class keeps the last good stats.
+
+    The v4 grabber returns a dict keyed by array name; we inject that
+    key as the `name` primary-key field and return a flat list.
+    """
+    if MdStat is None:
+        return []
+    try:
+        arrays = MdStat().get_stats()["arrays"]
+    except Exception as exc:  # noqa: BLE001 — any grab failure -> empty, keep last good
+        logger.debug("raid: grab failed: %s", exc)
+        return []
+    out: list[dict[str, Any]] = []
+    for name, array in arrays.items():
+        if not isinstance(array, dict):
+            continue
+        row = dict(array)
+        row["name"] = name
+        out.append(row)
+    return out
 ```
 
 - [ ] **Step 4: Run the tests (expect PASS)**
@@ -473,49 +474,50 @@ In `glances/plugins/raid/model_v5.py`, add these two methods to `PluginModel`
 (after `_collect`):
 
 ```python
-    def _derived_parameters(self) -> None:
-        """Compute per-array alert levels (mirrors v4 `raid_alert`).
+def _derived_parameters(self) -> None:
+    """Compute per-array alert levels (mirrors v4 `raid_alert`).
 
-        Overrides the base watched-field walk entirely — RAID's level is a
-        bespoke ladder keyed on the (non-watched) `status` field so the
-        renderer and the alert engine share one index. `prominent: False`
-        → coloured text, no background highlight (sensors parity).
-        """
-        self._levels = {}
-        if not isinstance(self._stats, list):
-            return
-        for item in self._stats:
-            if not isinstance(item, dict):
-                continue
-            name = item.get("name")
-            if name is None:
-                continue
-            level = self._array_level(item)
-            if level is None:
-                continue
-            self._levels[str(name)] = {"status": {"level": level, "prominent": False}}
+    Overrides the base watched-field walk entirely — RAID's level is a
+    bespoke ladder keyed on the (non-watched) `status` field so the
+    renderer and the alert engine share one index. `prominent: False`
+    → coloured text, no background highlight (sensors parity).
+    """
+    self._levels = {}
+    if not isinstance(self._stats, list):
+        return
+    for item in self._stats:
+        if not isinstance(item, dict):
+            continue
+        name = item.get("name")
+        if name is None:
+            continue
+        level = self._array_level(item)
+        if level is None:
+            continue
+        self._levels[str(name)] = {"status": {"level": level, "prominent": False}}
 
-    @staticmethod
-    def _array_level(item: dict) -> str | None:
-        """RAID alert ladder (v4 `raid_alert` parity).
 
-        raid0 (no redundancy) -> ok; inactive -> critical; missing disk
-        counts -> None (DEFAULT, no colour/alert); fewer used than
-        available disks -> warning (degraded); else ok.
-        """
-        array_type = item.get("type")
-        status = item.get("status")
-        used = item.get("used")
-        available = item.get("available")
-        if array_type == "raid0":
-            return "ok"
-        if status == "inactive":
-            return "critical"
-        if used is None or available is None:
-            return None
-        if used < available:
-            return "warning"
+@staticmethod
+def _array_level(item: dict) -> str | None:
+    """RAID alert ladder (v4 `raid_alert` parity).
+
+    raid0 (no redundancy) -> ok; inactive -> critical; missing disk
+    counts -> None (DEFAULT, no colour/alert); fewer used than
+    available disks -> warning (degraded); else ok.
+    """
+    array_type = item.get("type")
+    status = item.get("status")
+    used = item.get("used")
+    available = item.get("available")
+    if array_type == "raid0":
         return "ok"
+    if status == "inactive":
+        return "critical"
+    if used is None or available is None:
+        return None
+    if used < available:
+        return "warning"
+    return "ok"
 ```
 
 - [ ] **Step 4: Run the tests (expect PASS)**
@@ -897,24 +899,19 @@ Then, immediately before the `for` loop's closing (after the main-row
 `if/elif/else` block that appends the array row), add the sub-line logic:
 
 ```python
-        # Inactive: list the component disks under a status sub-line.
-        if status == "inactive":
-            rows.append(Row(cells=[Cell(text=f"└─ Status {status}", color=role, prominent=prominent)]))
-            component_names = sorted(components.keys())
-            for i, component in enumerate(component_names):
-                tree_char = "└─" if i == len(component_names) - 1 else "├─"
-                rows.append(Row(cells=[Cell(text=f"   {tree_char} disk {components[component]}: {component}")]))
+# Inactive: list the component disks under a status sub-line.
+if status == "inactive":
+    rows.append(Row(cells=[Cell(text=f"└─ Status {status}", color=role, prominent=prominent)]))
+    component_names = sorted(components.keys())
+    for i, component in enumerate(component_names):
+        tree_char = "└─" if i == len(component_names) - 1 else "├─"
+        rows.append(Row(cells=[Cell(text=f"   {tree_char} disk {components[component]}: {component}")]))
 
-        # Degraded: non-raid0 array with fewer used than available disks.
-        if (
-            array_type != "raid0"
-            and used is not None
-            and available is not None
-            and used < available
-        ):
-            rows.append(Row(cells=[Cell(text="└─ Degraded mode", color=role, prominent=prominent)]))
-            if len(config) < 17:
-                rows.append(Row(cells=[Cell(text=f"   └─ {config.replace('_', 'A')}")]))
+# Degraded: non-raid0 array with fewer used than available disks.
+if array_type != "raid0" and used is not None and available is not None and used < available:
+    rows.append(Row(cells=[Cell(text="└─ Degraded mode", color=role, prominent=prominent)]))
+    if len(config) < 17:
+        rows.append(Row(cells=[Cell(text=f"   └─ {config.replace('_', 'A')}")]))
 ```
 
 > Both sub-line blocks are `if` (not `elif`) — v4 parity: an inactive array

@@ -21,10 +21,12 @@ Route inventory:
 | ``/api/5/token``              | POST   | Basic → ``JWTHandler``       |
 | ``/api/5/pluginslist``        | GET    | ``app.state.plugins`` keys   |
 | ``/api/5/all``                | GET    | ``store.as_dict()``          |
+| ``/api/5/all/limits``         | GET    | per-plugin ``get_limits()``  |
 | ``/api/5/alert``              | GET    | ``alerts.get_history()``     |
 | ``/api/5/config``             | GET    | ``config.as_dict_secure()``  |
 | ``/api/5/<plugin>``           | GET    | ``store.get(plugin)`` (``_levels`` included) |
 | ``/api/5/<plugin>/info``      | GET    | ``plugin.fields_description``|
+| ``/api/5/<plugin>/limits``    | GET    | ``plugin.get_limits()``      |
 
 A plugin that has registered but has not yet produced stats (scheduler
 cycle 0) returns ``200 null`` — not an error, just a transient. Clients
@@ -119,6 +121,19 @@ def build_router() -> APIRouter:
     async def all_stats(request: Request) -> dict[str, Any]:
         return request.app.state.store.as_dict()
 
+    @router.get("/all/limits")
+    async def all_limits(request: Request) -> dict[str, Any]:
+        # Declared BEFORE /{plugin_name}/limits: FastAPI matches in
+        # declaration order, so the dynamic route would otherwise swallow
+        # `all` as a plugin name. _RESERVED_NAMES is the belt, this is the
+        # braces.
+        out: dict[str, Any] = {}
+        for name, plugin in _plugins(request).items():
+            limits = plugin.get_limits()
+            if limits:
+                out[name] = limits
+        return out
+
     @router.get("/alert")
     async def alert_history(request: Request) -> list[dict[str, Any]]:
         alerts = request.app.state.alerts
@@ -134,6 +149,11 @@ def build_router() -> APIRouter:
     async def plugin_info(plugin_name: str, request: Request) -> dict[str, Any]:
         plugin = _resolve_plugin(request, plugin_name)
         return plugin.fields_description
+
+    @router.get("/{plugin_name}/limits")
+    async def plugin_limits(plugin_name: str, request: Request) -> dict[str, Any]:
+        plugin = _resolve_plugin(request, plugin_name)
+        return plugin.get_limits()
 
     @router.get("/{plugin_name}")
     async def plugin_payload(plugin_name: str, request: Request):

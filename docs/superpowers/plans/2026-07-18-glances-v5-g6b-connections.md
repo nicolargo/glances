@@ -91,8 +91,7 @@ fields_description: ClassVar[dict[str, dict[str, Any]]] = {
     },
     "terminated": {
         "description": (
-            "Number of TCP connections terminated (FIN_WAIT1, FIN_WAIT2, TIME_WAIT, "
-            "CLOSE, CLOSE_WAIT, LAST_ACK)."
+            "Number of TCP connections terminated (FIN_WAIT1, FIN_WAIT2, TIME_WAIT, CLOSE, CLOSE_WAIT, LAST_ACK)."
         ),
         "unit": "number",
     },
@@ -248,6 +247,7 @@ Steps:
           assert await plugin._grab_stats() == {}
       mock_nc.assert_not_called()
 
+
   async def test_enabled_via_config_collects(tmp_path, monkeypatch, store):
       config = _config_with(tmp_path, monkeypatch, "[connections]\ndisable=False\n")
       plugin = PluginModel(store, config)
@@ -262,9 +262,7 @@ Steps:
       config = _config_with(tmp_path, monkeypatch, "[connections]\ndisable=False\n")
       plugin = PluginModel(store, config)
 
-      with patch(
-          "glances.plugins.connections.model_v5.psutil.net_connections", side_effect=OSError("boom")
-      ) as mock_nc:
+      with patch("glances.plugins.connections.model_v5.psutil.net_connections", side_effect=OSError("boom")) as mock_nc:
           stats1 = await plugin._grab_stats()
       assert stats1["net_connections_enabled"] is False
       assert "LISTEN" not in stats1
@@ -281,6 +279,7 @@ Steps:
       assert mock_nc2.call_count == 1
       assert stats2["net_connections_enabled"] is True
       assert stats2["LISTEN"] == 1
+
 
   async def test_nf_conntrack_failure_is_retried_next_cycle(tmp_path, monkeypatch, store):
       """The real-world case: the nf_conntrack module is loaded AFTER
@@ -306,6 +305,7 @@ Steps:
       assert stats2["nf_conntrack_count"] == 10.0
       assert stats2["nf_conntrack_percent"] == 10.0
 
+
   def test_enabled_flags_are_not_instance_state(store, config):
       """Structural guard: the flags must live only in the payload, never
       on the instance — an attribute is how a latch would creep back in."""
@@ -327,6 +327,7 @@ Steps:
           stats = await plugin._grab_stats()  # must not raise
       assert stats["nf_conntrack_enabled"] is False
       assert "nf_conntrack_percent" not in stats
+
 
   async def test_nf_conntrack_max_zero_no_crash_no_percent(tmp_path, monkeypatch, store):
       config = _config_with(tmp_path, monkeypatch, "[connections]\ndisable=False\n")
@@ -370,6 +371,7 @@ Steps:
       entry = store.get("connections")["_levels"]["nf_conntrack_percent"]
       assert entry["level"] == expected_level
       assert entry["prominent"] is True
+
 
   async def test_only_nf_conntrack_percent_is_levelled(tmp_path, monkeypatch, store):
       config = _config_with(tmp_path, monkeypatch, "[connections]\ndisable=False\n")
@@ -483,7 +485,9 @@ def _stat_row(label: str, value: Any, color: ColorRole = ColorRole.DEFAULT) -> R
     return Row(cells=[Cell(text=label), Cell(text=str(value).rjust(value_width), color=color)])
 
 
-def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | None = None, view: dict | None = None) -> list[Row]:
+def render(
+    payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | None = None, view: dict | None = None
+) -> list[Row]:
     if not isinstance(payload, dict) or not payload:
         return []
 

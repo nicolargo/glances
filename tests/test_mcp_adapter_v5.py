@@ -171,7 +171,8 @@ def test_collection_plugin_view_get_raw_returns_list(adapter, store_with_data):
 
 
 def test_plugin_view_get_limits_aggregates_default_thresholds(adapter):
-    """get_limits walks fields_description for `default_thresholds`."""
+    """get_limits delegates to GlancesPluginBase.get_limits(), which layers
+    config over each field's `default_thresholds`."""
     limits = adapter.get_plugin("cpu").get_limits()
     # `total` has thresholds; `user` does not. Only `total` keys present.
     assert "total" in limits
@@ -247,3 +248,54 @@ def test_alert_view_get_limits_is_empty(adapter):
 
 def test_get_plugin_none_when_name_is_empty_string(adapter):
     assert adapter.get_plugin("") is None
+
+
+# ---------------------------------------------------------------- limits
+
+
+class _ConfigurableStub(GlancesPluginBase[dict]):
+    """Scalar plugin whose thresholds can be overridden from config."""
+
+    plugin_name: ClassVar[str] = "configurable"
+    IS_COLLECTION: ClassVar[bool] = False
+
+    fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        "total": {
+            "unit": "percent",
+            "watched": True,
+            "watch_direction": "high",
+            "default_thresholds": {"careful": 50.0, "warning": 70.0, "critical": 90.0},
+        },
+    }
+
+    async def _grab_stats(self) -> dict:
+        return {"total": 1.0}
+
+
+def test_get_all_limits_reflects_a_config_override(store_with, config_with):
+    """Regression guard: the adapter used to aggregate `default_thresholds`
+    straight from the schema, so `glances://limits` reported the shipped
+    default even when the operator had overridden it."""
+    config = config_with({"configurable": {"total_warning": "42"}})
+    store = store_with()
+    plugin = _ConfigurableStub(store, config)
+    adapter = McpStatsAdapter(store=store, plugins=[plugin])
+    assert adapter.getAllLimitsAsDict()["configurable"]["total"]["warning"] == 42.0
+
+
+def test_get_plugin_limits_reflects_a_config_override(store_with, config_with):
+    config = config_with({"configurable": {"total_critical": "99"}})
+    store = store_with()
+    plugin = _ConfigurableStub(store, config)
+    adapter = McpStatsAdapter(store=store, plugins=[plugin])
+    view = adapter.get_plugin("configurable")
+    assert view is not None
+    assert view.get_limits()["total"]["critical"] == 99.0
+
+
+def test_synthetic_alert_plugin_has_no_limits(store_with, config_with):
+    store = store_with()
+    adapter = McpStatsAdapter(store=store, plugins=[])
+    view = adapter.get_plugin("alert")
+    assert view is not None
+    assert view.get_limits() == {}

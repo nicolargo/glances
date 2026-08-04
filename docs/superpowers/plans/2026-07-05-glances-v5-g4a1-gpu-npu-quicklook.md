@@ -500,13 +500,9 @@ def _multi_rows(cards: list[dict[str, Any]], levels: dict[str, Any]) -> list[Row
         gpu_id = card.get("gpu_id")
         cells = [Cell(text="{:<7}".format(str(card.get("name") or "")[0:9]))]
         if card.get("proc") is not None:
-            cells.append(
-                Cell(text=f" {_format_value(card.get('proc'))}", color=_level_role(levels, gpu_id, "proc"))
-            )
+            cells.append(Cell(text=f" {_format_value(card.get('proc'))}", color=_level_role(levels, gpu_id, "proc")))
         if card.get("mem") is not None:
-            cells.append(
-                Cell(text=f" mem {_format_value(card.get('mem'))}", color=_level_role(levels, gpu_id, "mem"))
-            )
+            cells.append(Cell(text=f" mem {_format_value(card.get('mem'))}", color=_level_role(levels, gpu_id, "mem")))
         rows.append(Row(cells=cells))
     return rows
 
@@ -581,7 +577,7 @@ Add to `tests/test_curses_v5.py` (mirror the existing view-seeding tests; use th
 
 ```python
 def test_build_view_seeds_meangpu_and_fahrenheit():
-    tui = _make_tui(meangpu=True, fahrenheit=True)   # _make_tui: existing helper in this file
+    tui = _make_tui(meangpu=True, fahrenheit=True)  # _make_tui: existing helper in this file
     view = tui._build_view(200)
     assert view["meangpu"] is True
     assert view["fahrenheit"] is True
@@ -625,8 +621,8 @@ In `glances/main_v5.py`, next to the existing `--percpu` argument, add:
 In `assemble(...)`, where `TuiV5(... full_quicklook=..., percpu=...)` is built (line ~399), add:
 
 ```python
-        meangpu=getattr(args, "meangpu", False),
-        fahrenheit=getattr(args, "fahrenheit", False),
+meangpu = (getattr(args, "meangpu", False),)
+fahrenheit = (getattr(args, "fahrenheit", False),)
 ```
 
 In `glances/outputs/glances_curses_v5.py`, extend `TuiV5.__init__` signature (mirror the `full_quicklook`/`percpu` params at line ~166) with `meangpu: bool = False, fahrenheit: bool = False`, and store:
@@ -1180,10 +1176,13 @@ Add to `tests/test_plugin_quicklook_v5.py`:
 @pytest.mark.asyncio
 async def test_gpu_means_from_store(store, config, monkeypatch):
     """quicklook computes gpu_mem/gpu_proc as the mean of the gpu plugin's cards."""
-    await store.set("gpu", [
-        {"gpu_id": "n0", "mem": 40, "proc": 20},
-        {"gpu_id": "n1", "mem": 60, "proc": 40},
-    ])
+    await store.set(
+        "gpu",
+        [
+            {"gpu_id": "n0", "mem": 40, "proc": 20},
+            {"gpu_id": "n1", "mem": 60, "proc": 40},
+        ],
+    )
     p = PluginModel(store, config)
 
     import glances.plugins.quicklook.model_v5 as mod

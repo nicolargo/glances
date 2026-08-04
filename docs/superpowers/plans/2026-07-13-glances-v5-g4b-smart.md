@@ -311,37 +311,38 @@ import glances.plugins.smart as smart_module
 - [ ] Replace the placeholder `_grab_stats` in `model_v5.py` with the full grabber + reshape:
 
 ```python
-    async def _grab_stats(self) -> list:
-        """Grab SMART data (root-gated, pySMART-guarded) and reshape.
+async def _grab_stats(self) -> list:
+    """Grab SMART data (root-gated, pySMART-guarded) and reshape.
 
-        Mirrors v4 `update()`: non-root disables the plugin (→ empty), a
-        missing pySMART import disables it (→ empty). Otherwise the v4 helper
-        runs in a worker thread and each device is reshaped for v5.
-        """
-        if not is_admin():
-            # v4 calls `disable(args, "smart")` when not admin; here we simply
-            # yield an empty collection (base keeps it valid).
-            return []
-        if smart_v4.import_error_tag:
-            return []
-        devices = await asyncio.to_thread(smart_v4.get_smart_data, self._hide_attributes)
-        return [self._reshape(dev) for dev in devices if isinstance(dev, dict)]
+    Mirrors v4 `update()`: non-root disables the plugin (→ empty), a
+    missing pySMART import disables it (→ empty). Otherwise the v4 helper
+    runs in a worker thread and each device is reshaped for v5.
+    """
+    if not is_admin():
+        # v4 calls `disable(args, "smart")` when not admin; here we simply
+        # yield an empty collection (base keeps it valid).
+        return []
+    if smart_v4.import_error_tag:
+        return []
+    devices = await asyncio.to_thread(smart_v4.get_smart_data, self._hide_attributes)
+    return [self._reshape(dev) for dev in devices if isinstance(dev, dict)]
 
-    @staticmethod
-    def _reshape(device: dict) -> dict:
-        """Flatten a v4 numeric-keyed device dict into the v5 shape.
 
-        `{'DeviceName': str, <num>: attr, …}` -> `{"name": str, "attributes": [attr, …]}`.
-        Attribute keys are sorted by their v4 numeric id (`sorted(key=int)`);
-        non-numeric keys (#2904) keep insertion order.
-        """
-        name = device.get("DeviceName", "")
-        keys = [k for k in device if k != "DeviceName"]
-        try:
-            keys = sorted(keys, key=int)
-        except (TypeError, ValueError):
-            pass  # #2904 — some keys are not numeric; keep insertion order.
-        return {"name": name, "attributes": [device[k] for k in keys]}
+@staticmethod
+def _reshape(device: dict) -> dict:
+    """Flatten a v4 numeric-keyed device dict into the v5 shape.
+
+    `{'DeviceName': str, <num>: attr, …}` -> `{"name": str, "attributes": [attr, …]}`.
+    Attribute keys are sorted by their v4 numeric id (`sorted(key=int)`);
+    non-numeric keys (#2904) keep insertion order.
+    """
+    name = device.get("DeviceName", "")
+    keys = [k for k in device if k != "DeviceName"]
+    try:
+        keys = sorted(keys, key=int)
+    except (TypeError, ValueError):
+        pass  # #2904 — some keys are not numeric; keep insertion order.
+    return {"name": name, "attributes": [device[k] for k in keys]}
 ```
 
 - [ ] Run (expect PASS):

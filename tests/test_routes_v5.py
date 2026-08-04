@@ -384,3 +384,108 @@ def test_register_plugin_rejects_duplicate(config_factory, store):
     register_plugin(app, plugin)
     with pytest.raises(ValueError, match="already registered"):
         register_plugin(app, plugin)
+
+
+# ------------------------------------------------------- /limits
+
+
+class FakeLimitsPlugin(GlancesPluginBase[dict]):
+    """Scalar plugin carrying thresholds, for the /limits routes."""
+
+    plugin_name: ClassVar[str] = "fakelimits"
+    IS_COLLECTION: ClassVar[bool] = False
+    fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        "percent": {
+            "description": "Usage percentage.",
+            "unit": "percent",
+            "watched": True,
+            "watch_direction": "high",
+            "default_thresholds": {"careful": 50.0, "warning": 70.0, "critical": 90.0},
+        },
+    }
+
+    async def _grab_stats(self) -> dict:
+        return {"percent": 42.0}
+
+
+def test_plugin_limits_returns_thresholds(config_factory, store):
+    config = config_factory()
+    plugin = FakeLimitsPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/fakelimits/limits")
+    assert r.status_code == 200
+    assert r.json() == {"percent": {"careful": 50.0, "warning": 70.0, "critical": 90.0}}
+
+
+def test_plugin_limits_answers_before_the_first_cycle(config_factory, store):
+    """No _populate() call: thresholds come from config + schema, so unlike
+    /api/5/<plugin> this route never returns null at cycle 0."""
+    config = config_factory()
+    plugin = FakeLimitsPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/fakelimits/limits")
+    assert r.status_code == 200
+    assert r.json()["percent"]["warning"] == 70.0
+
+
+def test_plugin_limits_empty_dict_when_no_watched_field(config_factory, store):
+    config = config_factory()
+    plugin = FakeScalarPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/fakescalar/limits")
+    assert r.status_code == 200
+    assert r.json() == {}
+
+
+def test_plugin_limits_404_on_unknown_plugin(config_factory, store):
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        r = client.get("/api/5/nosuchplugin/limits")
+    assert r.status_code == 404
+
+
+def test_plugin_limits_404_on_reserved_name(config_factory, store):
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        r = client.get("/api/5/config/limits")
+    assert r.status_code == 404
+
+
+def test_all_limits_is_not_captured_by_the_dynamic_route(config_factory, store):
+    """Route-ordering guard: /all/limits must be declared before
+    /{plugin_name}/limits, otherwise `all` is read as a plugin name."""
+    config = config_factory()
+    plugin = FakeLimitsPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/all/limits")
+    assert r.status_code == 200
+    body = r.json()
+    assert "fakelimits" in body
+    assert body["fakelimits"]["percent"]["critical"] == 90.0
+
+
+def test_all_limits_omits_plugins_without_thresholds(config_factory, store):
+    config = config_factory()
+    with_limits = FakeLimitsPlugin(store, config)
+    without_limits = FakeScalarPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[with_limits, without_limits])
+    with TestClient(app) as client:
+        r = client.get("/api/5/all/limits")
+    body = r.json()
+    assert "fakelimits" in body
+    assert "fakescalar" not in body
+
+
+def test_limits_routes_require_auth_when_password_is_set(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"))
+    plugin = FakeLimitsPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        assert client.get("/api/5/all/limits").status_code == 401
+        assert client.get("/api/5/fakelimits/limits").status_code == 401
+        ok = client.get("/api/5/fakelimits/limits", headers=_basic_header("glances", "hunter2"))
+    assert ok.status_code == 200

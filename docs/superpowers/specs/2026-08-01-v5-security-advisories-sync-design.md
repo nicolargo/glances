@@ -34,10 +34,7 @@ verdict.
 the **option name** only:
 
 ```python
-result[section] = {
-    key: (self.SECRET_REDACTED if self._is_secret_key(key) else value)
-    for key, value in options.items()
-}
+result[section] = {key: (self.SECRET_REDACTED if self._is_secret_key(key) else value) for key, value in options.items()}
 ```
 
 A credential embedded in a **value** survives. `/api/5/config` is reachable

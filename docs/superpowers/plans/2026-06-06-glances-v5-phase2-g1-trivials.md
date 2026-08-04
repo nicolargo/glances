@@ -339,8 +339,12 @@ def test_paint_header_places_first_left_and_last_right(fake_store, fake_alerts, 
     from glances.outputs.curses_renderer_v5 import Cell, PluginBlock, Row
 
     tui = tui_mod.TuiV5(
-        store=fake_store, alerts=fake_alerts, config=fake_config,
-        registry=[], fields_by_plugin={}, refresh_interval=0.01,
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
     )
     left = PluginBlock(name="system", rows=[Row(cells=[Cell(text="myhost Ubuntu")])])
     right = PluginBlock(name="uptime", rows=[Row(cells=[Cell(text="Uptime: 3d04h")])])
@@ -361,8 +365,12 @@ def test_paint_header_empty_returns_zero(fake_store, fake_alerts, fake_config):
     from glances.outputs import glances_curses_v5 as tui_mod
 
     tui = tui_mod.TuiV5(
-        store=fake_store, alerts=fake_alerts, config=fake_config,
-        registry=[], fields_by_plugin={}, refresh_interval=0.01,
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
     )
     assert tui._paint_header(MagicMock(), [], y0=0, max_x=80) == 0
 
@@ -373,8 +381,12 @@ def test_paint_shifts_top_row_below_header(fake_store, fake_alerts, fake_config)
     from glances.outputs.curses_renderer_v5 import Cell, Frame, PluginBlock, Row
 
     tui = tui_mod.TuiV5(
-        store=fake_store, alerts=fake_alerts, config=fake_config,
-        registry=[], fields_by_plugin={}, refresh_interval=0.01,
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
     )
     frame = Frame(
         header=[PluginBlock(name="system", rows=[Row(cells=[Cell(text="myhost")])])],
@@ -539,8 +551,9 @@ def test_plugin_identity(store, config):
 async def test_update_writes_seconds_since_boot(store, config):
     plugin = PluginModel(store, config)
     # boot_time = now - 3600 → uptime ≈ 3600 s.
-    with patch("glances.plugins.uptime.model_v5.time.time", return_value=1_000_000.0), patch(
-        "glances.plugins.uptime.model_v5.psutil.boot_time", return_value=1_000_000.0 - 3600
+    with (
+        patch("glances.plugins.uptime.model_v5.time.time", return_value=1_000_000.0),
+        patch("glances.plugins.uptime.model_v5.psutil.boot_time", return_value=1_000_000.0 - 3600),
     ):
         await plugin.update()
     payload = store.get("uptime")
@@ -550,8 +563,9 @@ async def test_update_writes_seconds_since_boot(store, config):
 
 async def test_seconds_is_exportable(store, config):
     plugin = PluginModel(store, config)
-    with patch("glances.plugins.uptime.model_v5.time.time", return_value=1_000_000.0), patch(
-        "glances.plugins.uptime.model_v5.psutil.boot_time", return_value=1_000_000.0 - 120
+    with (
+        patch("glances.plugins.uptime.model_v5.time.time", return_value=1_000_000.0),
+        patch("glances.plugins.uptime.model_v5.psutil.boot_time", return_value=1_000_000.0 - 120),
     ):
         await plugin.update()
     exported = plugin.get_export()
@@ -777,9 +791,7 @@ async def test_update_collects_linux_system_info(store, config, monkeypatch):
     monkeypatch.setattr("glances.plugins.system.model_v5.platform.node", lambda: "myhost")
     monkeypatch.setattr("glances.plugins.system.model_v5.platform.architecture", lambda: ("64bit", ""))
     monkeypatch.setattr("glances.plugins.system.model_v5.platform.release", lambda: "6.8.0-generic")
-    monkeypatch.setattr(
-        "glances.plugins.system.model_v5._linux_distro", lambda: "Ubuntu 24.04"
-    )
+    monkeypatch.setattr("glances.plugins.system.model_v5._linux_distro", lambda: "Ubuntu 24.04")
     plugin = PluginModel(store, config)
     await plugin.update()
     payload = store.get("system")

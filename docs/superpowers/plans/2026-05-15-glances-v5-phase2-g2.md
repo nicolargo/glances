@@ -60,7 +60,8 @@ Each Task = 1 commit. The visual smoke is end-of-plan only (no UI changes here).
 - [ ] **Step 1: Add `-s` / `--server`.**
   ```python
   parser.add_argument(
-      "-s", "--server",
+      "-s",
+      "--server",
       dest="server",
       action="store_true",
       help="Run as a REST API server (FastAPI on bind_address:port). Headless — no curses TUI.",
@@ -130,9 +131,10 @@ dedicated plan rather than being smuggled into G2.
 def assemble(args, config):
     plugins = discover_plugins(...)
     scheduler = AsyncScheduler(...)
-    app = build_app(config, ...)              # always built
+    app = build_app(config, ...)  # always built
     tui = TuiV5(...) if not args.no_tui else None
     return app, scheduler, host, port, tui
+
 
 async def serve(app, scheduler, host, port, tui):
     if tui is not None:
@@ -143,7 +145,8 @@ async def serve(app, scheduler, host, port, tui):
         await asyncio.gather(server.serve(), scheduler.run())
     finally:
         if tui is not None:
-            tui.stop(); tui.join(timeout=2.0)
+            tui.stop()
+            tui.join(timeout=2.0)
 ```
 
 **Target shape (mode-dispatched):**
@@ -153,12 +156,13 @@ def assemble(args, config):
     plugins = discover_plugins(...)
     scheduler = AsyncScheduler(...)
     if args.server:
-        app = build_app(config, ...)          # only when REST requested
-        tui = None                             # -s is headless (alignment #1)
+        app = build_app(config, ...)  # only when REST requested
+        tui = None  # -s is headless (alignment #1)
     else:
-        app = None                             # default: no FastAPI app
+        app = None  # default: no FastAPI app
         tui = TuiV5(...) if not args.no_tui else None
     return app, scheduler, host, port, tui
+
 
 async def serve(args, app, scheduler, host, port, tui):
     if not args.server:
@@ -166,10 +170,11 @@ async def serve(args, app, scheduler, host, port, tui):
         if tui is not None:
             tui.start()
         try:
-            await scheduler.run()              # awaits SIGINT
+            await scheduler.run()  # awaits SIGINT
         finally:
             if tui is not None:
-                tui.stop(); tui.join(timeout=2.0)
+                tui.stop()
+                tui.join(timeout=2.0)
         return
 
     # Server mode: scheduler + uvicorn, no TUI.

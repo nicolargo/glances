@@ -204,10 +204,10 @@ The `update()` method structure is derived directly from the [arena prototype](h
 async def update(self) -> None:
     # Orchestration pipeline. Implemented in base class. Never overridden.
     try:
-        self._stats_previous = self._stats          # 1. save previous cycle for rate computation
-        await self._grab_stats()                    # 2. collect raw data (psutil via asyncio.to_thread)
-        self._add_metadata()                        # 3. add time_since_update and other metadata
-        self._transform()                           # 4. transformation pipeline (see below)
+        self._stats_previous = self._stats  # 1. save previous cycle for rate computation
+        await self._grab_stats()  # 2. collect raw data (psutil via asyncio.to_thread)
+        self._add_metadata()  # 3. add time_since_update and other metadata
+        self._transform()  # 4. transformation pipeline (see below)
         await self.store.set(self.plugin_name, self._stats)  # 5. write to StatsStore
     except Exception as e:
         logger.warning("Plugin %s update failed: %s", self.plugin_name, e)
@@ -313,9 +313,9 @@ The nested shape — chosen over a flat string for v5 — keeps every consumer s
     "total": 16000000000,
     # ...
     "_levels": {
-        "percent":      {"level": "warning", "prominent": True},
-        "swap_percent": {"level": "ok",      "prominent": False},
-    }
+        "percent": {"level": "warning", "prominent": True},
+        "swap_percent": {"level": "ok", "prominent": False},
+    },
 }
 ```
 
@@ -325,18 +325,18 @@ The nested shape — chosen over a flat string for v5 — keeps every consumer s
 {
     "data": [
         {"interface_name": "eth0", "rx": 1200, "tx": 300},
-        {"interface_name": "lo",   "rx": 0,    "tx": 0},
+        {"interface_name": "lo", "rx": 0, "tx": 0},
     ],
-    "_levels": {                        # indexed by primary key, not inline
+    "_levels": {  # indexed by primary key, not inline
         "eth0": {
             "rx": {"level": "warning", "prominent": True},
-            "tx": {"level": "ok",      "prominent": True},
+            "tx": {"level": "ok", "prominent": True},
         },
-        "lo":   {
-            "rx": {"level": "ok",      "prominent": True},
-            "tx": {"level": "ok",      "prominent": True},
+        "lo": {
+            "rx": {"level": "ok", "prominent": True},
+            "tx": {"level": "ok", "prominent": True},
         },
-    }
+    },
 }
 ```
 
@@ -354,15 +354,15 @@ Primary key is declared in `fields_description` with `"primary_key": True` on th
 **Alert event shape** (Phase 1.4):
 ```python
 {
-    "ts":             "2026-05-04T12:34:56+00:00",  # ISO 8601, UTC
-    "plugin":         "network",
-    "key":            "eth0",                       # pk_value for collections; None for scalars
-    "field":          "bytes_recv",
-    "level":          "warning",                    # ok | careful | warning | critical
-    "previous_level": "ok",                         # transition source
-    "value":          53125000.0,
-    "prominent":      True,                         # copied from fields_description
-    "hostname":       "myhost",                     # server hostname (client/server scope)
+    "ts": "2026-05-04T12:34:56+00:00",  # ISO 8601, UTC
+    "plugin": "network",
+    "key": "eth0",  # pk_value for collections; None for scalars
+    "field": "bytes_recv",
+    "level": "warning",  # ok | careful | warning | critical
+    "previous_level": "ok",  # transition source
+    "value": 53125000.0,
+    "prominent": True,  # copied from fields_description
+    "hostname": "myhost",  # server hostname (client/server scope)
 }
 ```
 
@@ -463,18 +463,18 @@ glances/actions/
 **GlancesActionBase contract:**
 ```python
 class GlancesActionBase(ABC):
-    action_name: str = ""       # key suffix in glances.conf
-    requires: list[str] = []    # optional Python dependencies
+    action_name: str = ""  # key suffix in glances.conf
+    requires: list[str] = []  # optional Python dependencies
 
-    def is_available(self) -> bool: ...   # False if requires missing
+    def is_available(self) -> bool: ...  # False if requires missing
 
     @abstractmethod
     async def execute(
         self,
         plugin_name: str,
-        level: str,             # "careful" | "warning" | "critical"
-        context: dict,          # get_export() + built-in vars (see below)
-        action_value: str,      # raw value from glances.conf
+        level: str,  # "careful" | "warning" | "critical"
+        context: dict,  # get_export() + built-in vars (see below)
+        action_value: str,  # raw value from glances.conf
         repeat: bool = False,
     ) -> None: ...
 ```
@@ -522,8 +522,9 @@ class WebhookAction(GlancesActionBase):
 
     Config: [mem] critical_webhook=https://hooks.example.com/alert
     """
+
     action_name = "webhook"
-    requires = []   # httpx is already a core v5 dependency
+    requires = []  # httpx is already a core v5 dependency
 
     async def execute(self, plugin_name, level, context, action_value, repeat=False):
         url = chevron.render(action_value, context)
@@ -605,8 +606,10 @@ Plugins import the singleton and consume it from `_grab_stats`:
 ```python
 from glances.cpu_sampler_v5 import sampler
 
+
 class PluginModel(GlancesPluginBase[dict]):
     plugin_name = "cpu"
+
     async def _grab_stats(self) -> dict:
         agg = await sampler.get_aggregate()
         ...
@@ -771,6 +774,8 @@ Routes live in `glances/routes_v5.py` as a single `APIRouter(prefix="/api/5")`, 
 | `/api/5/token` | POST | Basic (route-level) | `app.state.jwt_handler` | Exempt from the global Auth middleware (listed in `UNAUTH_PATHS`). Returns `{access_token, token_type:"bearer", expires_in}`. 404 if `[outputs] password` is unset. |
 | `/api/5/pluginslist` | GET | per-config | `app.state.plugins` keys | Sorted plugin-name list. |
 | `/api/5/all` | GET | per-config | `store.as_dict()` | Every plugin's payload in a single dict. Plugins that have never written are absent. |
+| `/api/5/all/limits` | GET | per-config | per-plugin `get_limits()` | Effective thresholds for every registered plugin. Plugins with no watched field are omitted. |
+| `/api/5/<plugin>/limits` | GET | per-config | `plugin.get_limits()` | Effective thresholds — config layered over `default_thresholds`. `200 {}` when the plugin has no watched field, or for the 6 plugins that override `_derived_parameters()` (`sensors`, `wifi`, `folders`, `raid`, `ports`, `amps`) even when thresholds are active; `404` if not registered. Never subject to cycle-0 `null`: thresholds come from config + schema. See `docs/superpowers/specs/2026-08-03-glances-v5-limits-routes-design.md`. |
 | `/api/5/alert` | GET | per-config | `alerts.get_history()` | Returns the ring buffer. 404 if `alerts is None`. |
 | `/api/5/config` | GET | per-config | `config.as_dict_secure()` | Redacted via `as_dict_secure()` — CVE-2026-32609 / 30928. |
 | `/api/5/<plugin>` | GET | per-config | `store.get(plugin)` | Raw payload **with `_levels`**. `200 null` if the plugin is registered but has not yet published (scheduler cycle 0). `404` if the plugin is not registered. |
@@ -949,15 +954,11 @@ def get_export(self) -> dict | list:
     data = self.store.get(self.plugin_name, {})
     if isinstance(data, dict):
         return {
-            k: v for k, v in data.items()
-            if not k.startswith('_')
-            and self._fields.get(k, {}).get('exportable', True)
+            k: v for k, v in data.items() if not k.startswith('_') and self._fields.get(k, {}).get('exportable', True)
         }
     # list plugin
     return [
-        {k: v for k, v in item.items()
-         if not k.startswith('_')
-         and self._fields.get(k, {}).get('exportable', True)}
+        {k: v for k, v in item.items() if not k.startswith('_') and self._fields.get(k, {}).get('exportable', True)}
         for item in data.get('data', [])
     ]
 ```
@@ -1191,8 +1192,8 @@ adapter automatically picks them up via the dynamic registry.
 | `glances://stats` | `StatsStoreV5.as_dict()` | ✅ |
 | `glances://stats/{plugin}` | `StatsStoreV5.get(plugin)` | ✅ for ported plugins; `ValueError("Plugin not found")` otherwise |
 | `glances://stats/{plugin}/history` | _(no history buffer yet)_ | ⚠ returns `{}` + WARN log (once per plugin) |
-| `glances://limits` | aggregated `plugin._fields[*].default_thresholds` | ✅ |
-| `glances://limits/{plugin}` | per-plugin field thresholds | ✅ |
+| `glances://limits` | `plugin.get_limits()` — effective thresholds (config over schema defaults) | ✅ |
+| `glances://limits/{plugin}` | idem, per plugin | ✅ |
 | Prompt `system_health_summary` | cpu, mem, memswap, load, fs, network | partial (memswap, fs absent → empty dicts) |
 | Prompt `alert_analysis` | `GlancesAlerts.get_history()` | ✅ (v5-native schema, see §11.5) |
 | Prompt `top_processes_report` | processlist | ⚠ processlist not ported — empty list |
@@ -1220,7 +1221,7 @@ event shape**:
 {
     "ts": "2026-05-15T13:54:09.123",
     "plugin": "cpu",
-    "key": None,                # primary-key value for collection plugins
+    "key": None,  # primary-key value for collection plugins
     "field": "total",
     "level": "warning",
     "previous_level": "ok",

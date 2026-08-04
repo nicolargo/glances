@@ -266,7 +266,11 @@ Append to `tests/test_plugin_sensors_v5.py`:
 @pytest.mark.asyncio
 async def test_grab_stats_merges_all_types(store, config, monkeypatch):
     p = PluginModel(store, config)
-    monkeypatch.setattr(p._grab_temp_core, "update", lambda: [{"label": "Core 0", "unit": "C", "value": 42, "warning": 80, "critical": 90}])
+    monkeypatch.setattr(
+        p._grab_temp_core,
+        "update",
+        lambda: [{"label": "Core 0", "unit": "C", "value": 42, "warning": 80, "critical": 90}],
+    )
     monkeypatch.setattr(p._grab_fan, "update", lambda: [{"label": "fan1", "unit": "R", "value": 1200}])
     monkeypatch.setattr(p._grab_hdd, "get", lambda: [{"label": "sda", "unit": "C", "value": 35}])
 
@@ -361,7 +365,10 @@ def _cfg_with(tmp_path, monkeypatch, body: str) -> GlancesConfigV5:
 def test_alias_relabels(tmp_path, monkeypatch, store):
     config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nalias=core 0:CPU Package\n")
     p = PluginModel(store, config)
-    out = _expand(p, [{"label": "Core 0", "unit": "C", "value": 42, "warning": None, "critical": None, "type": "temperature_core"}])
+    out = _expand(
+        p,
+        [{"label": "Core 0", "unit": "C", "value": 42, "warning": None, "critical": None, "type": "temperature_core"}],
+    )
     assert out[0]["label"] == "CPU Package"
 ```
 
@@ -384,92 +391,97 @@ from glances.globals import natural_keys, split_esc
 Add methods to `PluginModel` (after `_grab_stats`):
 
 ```python
-    # ------------------------------------------------- transform: alias + fold
+# ------------------------------------------------- transform: alias + fold
 
-    def _expand_parameters(self) -> None:
-        """Apply aliases, then the per-type mean fold, then sort.
 
-        Runs after the base hide/show filter (which matches the raw
-        label) and before _derived_parameters (which computes levels on
-        the final display labels). Mirrors v4 __transform_sensors ordering.
-        """
-        if not isinstance(self._stats, list):
-            return
-        self._apply_aliases(self._stats)
-        self._stats = self._apply_mean_fold(self._stats)
-        self._stats.sort(key=lambda r: natural_keys(str(r.get("label", ""))))
+def _expand_parameters(self) -> None:
+    """Apply aliases, then the per-type mean fold, then sort.
 
-    def _read_aliases(self) -> dict[str, str]:
-        """Parse `[sensors] alias=<label>:<name>,...` into a lower-keyed map."""
-        raw = self.config.get("sensors", "alias", "")
-        if not raw:
-            return {}
-        aliases: dict[str, str] = {}
-        for pair in str(raw).split(","):
-            parts = split_esc(pair.strip(), ":")
-            if len(parts) >= 2 and parts[0]:
-                aliases[parts[0].strip().lower()] = parts[1].strip()
-        return aliases
+    Runs after the base hide/show filter (which matches the raw
+    label) and before _derived_parameters (which computes levels on
+    the final display labels). Mirrors v4 __transform_sensors ordering.
+    """
+    if not isinstance(self._stats, list):
+        return
+    self._apply_aliases(self._stats)
+    self._stats = self._apply_mean_fold(self._stats)
+    self._stats.sort(key=lambda r: natural_keys(str(r.get("label", ""))))
 
-    def _apply_aliases(self, rows: list) -> None:
-        aliases = self._read_aliases()
-        if not aliases:
-            return
-        for row in rows:
-            label = str(row.get("label", ""))
-            alias = aliases.get(label.lower())
-            if alias:
-                row["label"] = alias
 
-    def _apply_mean_fold(self, rows: list) -> list:
-        """Fold same-prefix sensors of each enabled type into `<prefix> (mean)`.
+def _read_aliases(self) -> dict[str, str]:
+    """Parse `[sensors] alias=<label>:<name>,...` into a lower-keyed map."""
+    raw = self.config.get("sensors", "alias", "")
+    if not raw:
+        return {}
+    aliases: dict[str, str] = {}
+    for pair in str(raw).split(","):
+        parts = split_esc(pair.strip(), ":")
+        if len(parts) >= 2 and parts[0]:
+            aliases[parts[0].strip().lower()] = parts[1].strip()
+    return aliases
 
-        A type is folded only if `[sensors] <type>_mean=true`. Within that
-        type, rows sharing a label prefix (label minus its trailing number)
-        with >= 2 numeric members collapse to one row: value = round(mean),
-        other fields copied from the first matched row. Non-numeric values
-        (ERR/SLP/UNK) and singletons pass through unchanged.
-        """
-        result: list = []
-        # Partition rows by type, preserving non-folded types verbatim.
-        by_type: dict[str, list] = {}
-        for row in rows:
-            by_type.setdefault(str(row.get("type", "")), []).append(row)
 
-        for sensor_type, type_rows in by_type.items():
-            if not self.config.get("sensors", f"{sensor_type}_mean", False):
-                result.extend(type_rows)
-                continue
-            result.extend(self._fold_group(type_rows))
-        return result
+def _apply_aliases(self, rows: list) -> None:
+    aliases = self._read_aliases()
+    if not aliases:
+        return
+    for row in rows:
+        label = str(row.get("label", ""))
+        alias = aliases.get(label.lower())
+        if alias:
+            row["label"] = alias
 
-    @staticmethod
-    def _fold_group(type_rows: list) -> list:
-        """Group one type's rows by prefix; fold groups of >= 2 numeric members."""
-        groups: dict[str, list] = {}
-        order: list[str] = []
-        for row in type_rows:
-            prefix = _label_prefix(str(row.get("label", "")))
-            if prefix not in groups:
-                groups[prefix] = []
-                order.append(prefix)
-            groups[prefix].append(row)
 
-        out: list = []
-        for prefix in order:
-            members = groups[prefix]
-            numeric = [r for r in members if isinstance(r.get("value"), (int, float))]
-            if len(numeric) >= 2:
-                mean_value = int(sum(r["value"] for r in numeric) / len(numeric) + 0.5)
-                base = dict(numeric[0])
-                base["label"] = f"{prefix} (mean)"
-                base["value"] = mean_value
-                out.append(base)
-                # Non-numeric members of the same prefix pass through.
-                out.extend(r for r in members if not isinstance(r.get("value"), (int, float)))
-            else:
-                out.extend(members)
-        return out
+def _apply_mean_fold(self, rows: list) -> list:
+    """Fold same-prefix sensors of each enabled type into `<prefix> (mean)`.
+
+    A type is folded only if `[sensors] <type>_mean=true`. Within that
+    type, rows sharing a label prefix (label minus its trailing number)
+    with >= 2 numeric members collapse to one row: value = round(mean),
+    other fields copied from the first matched row. Non-numeric values
+    (ERR/SLP/UNK) and singletons pass through unchanged.
+    """
+    result: list = []
+    # Partition rows by type, preserving non-folded types verbatim.
+    by_type: dict[str, list] = {}
+    for row in rows:
+        by_type.setdefault(str(row.get("type", "")), []).append(row)
+
+    for sensor_type, type_rows in by_type.items():
+        if not self.config.get("sensors", f"{sensor_type}_mean", False):
+            result.extend(type_rows)
+            continue
+        result.extend(self._fold_group(type_rows))
+    return result
+
+
+@staticmethod
+def _fold_group(type_rows: list) -> list:
+    """Group one type's rows by prefix; fold groups of >= 2 numeric members."""
+    groups: dict[str, list] = {}
+    order: list[str] = []
+    for row in type_rows:
+        prefix = _label_prefix(str(row.get("label", "")))
+        if prefix not in groups:
+            groups[prefix] = []
+            order.append(prefix)
+        groups[prefix].append(row)
+
+    out: list = []
+    for prefix in order:
+        members = groups[prefix]
+        numeric = [r for r in members if isinstance(r.get("value"), (int, float))]
+        if len(numeric) >= 2:
+            mean_value = int(sum(r["value"] for r in numeric) / len(numeric) + 0.5)
+            base = dict(numeric[0])
+            base["label"] = f"{prefix} (mean)"
+            base["value"] = mean_value
+            out.append(base)
+            # Non-numeric members of the same prefix pass through.
+            out.extend(r for r in members if not isinstance(r.get("value"), (int, float)))
+        else:
+            out.extend(members)
+    return out
 ```
 
 Add the module-level prefix helper (after the type constants):
@@ -591,7 +603,14 @@ def _levels(p, rows):
 
 
 def _temp_row(label, value, warning=None, critical=None):
-    return {"label": label, "unit": "C", "value": value, "warning": warning, "critical": critical, "type": "temperature_core"}
+    return {
+        "label": label,
+        "unit": "C",
+        "value": value,
+        "warning": warning,
+        "critical": critical,
+        "type": "temperature_core",
+    }
 
 
 def test_level_from_hardware_threshold(store, config):
@@ -623,7 +642,8 @@ def test_per_type_config_beats_hardware(tmp_path, monkeypatch, store):
 
 def test_per_sensor_config_beats_per_type(tmp_path, monkeypatch, store):
     config = _cfg_with(
-        tmp_path, monkeypatch,
+        tmp_path,
+        monkeypatch,
         "[sensors]\ntemperature_core_critical=70\ntemperature_core_core 0_critical=99\n",
     )
     p = PluginModel(store, config)
@@ -635,7 +655,15 @@ def test_per_sensor_config_beats_per_type(tmp_path, monkeypatch, store):
 def test_battery_alerts_on_inverse(tmp_path, monkeypatch, store):
     config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nbattery_critical=80\n")
     p = PluginModel(store, config)
-    row = {"label": "Battery", "unit": "%", "value": 10, "warning": None, "critical": None, "type": "battery", "status": "Discharging"}
+    row = {
+        "label": "Battery",
+        "unit": "%",
+        "value": 10,
+        "warning": None,
+        "critical": None,
+        "type": "battery",
+        "status": "Discharging",
+    }
     lv = _levels(p, [row])
     # 100 - 10 = 90 >= config critical 80 -> critical (low battery).
     assert lv["Battery"]["value"]["level"] == "critical"
@@ -656,63 +684,66 @@ Expected: FAIL — the base `_derived_parameters` computes no level for
 Add to `PluginModel` (after the fold methods):
 
 ```python
-    # -------------------------------------------------- transform: alert levels
+# -------------------------------------------------- transform: alert levels
 
-    def _derived_parameters(self) -> None:
-        """Compute per-row alert levels with v4 precedence.
 
-        Per row: per-sensor config (#2058) -> per-type config (#3049) ->
-        hardware warning/critical -> no level. Battery compares on
-        (100 - value) so a low charge alerts. Result:
-        `_levels = {label: {"value": {"level", "prominent"}}}`.
-        """
-        self._levels = {}
-        if not isinstance(self._stats, list):
-            return
-        for row in self._stats:
-            level = self._resolve_level(row)
-            if level is None:
-                continue
-            self._levels[str(row.get("label", ""))] = {"value": {"level": level, "prominent": True}}
+def _derived_parameters(self) -> None:
+    """Compute per-row alert levels with v4 precedence.
 
-    def _resolve_level(self, row: dict) -> str | None:
-        value = row.get("value")
-        if not isinstance(value, (int, float)):
-            return None  # ERR/SLP/UNK/NOS — no numeric comparison
-        sensor_type = str(row.get("type", ""))
-        label = str(row.get("label", ""))
-        current = (100 - value) if sensor_type == _BATTERY else value
+    Per row: per-sensor config (#2058) -> per-type config (#3049) ->
+    hardware warning/critical -> no level. Battery compares on
+    (100 - value) so a low charge alerts. Result:
+    `_levels = {label: {"value": {"level", "prominent"}}}`.
+    """
+    self._levels = {}
+    if not isinstance(self._stats, list):
+        return
+    for row in self._stats:
+        level = self._resolve_level(row)
+        if level is None:
+            continue
+        self._levels[str(row.get("label", ""))] = {"value": {"level": level, "prominent": True}}
 
-        critical = self._conf_threshold(sensor_type, label, "critical")
-        warning = self._conf_threshold(sensor_type, label, "warning")
-        if critical is None:
-            critical = _as_float(row.get("critical"))
-        if warning is None:
-            warning = _as_float(row.get("warning"))
 
-        if critical is None:
-            return None  # no threshold source -> DEFAULT (no colour, no alert)
-        if current >= critical:
-            return "critical"
-        if warning is not None and current >= warning:
-            return "warning"
-        return "ok"
+def _resolve_level(self, row: dict) -> str | None:
+    value = row.get("value")
+    if not isinstance(value, (int, float)):
+        return None  # ERR/SLP/UNK/NOS — no numeric comparison
+    sensor_type = str(row.get("type", ""))
+    label = str(row.get("label", ""))
+    current = (100 - value) if sensor_type == _BATTERY else value
 
-    def _conf_threshold(self, sensor_type: str, label: str, level: str) -> float | None:
-        """Read config thresholds: per-sensor (#2058) then per-type (#3049).
+    critical = self._conf_threshold(sensor_type, label, "critical")
+    warning = self._conf_threshold(sensor_type, label, "warning")
+    if critical is None:
+        critical = _as_float(row.get("critical"))
+    if warning is None:
+        warning = _as_float(row.get("warning"))
 
-        Config option names are stored lower-cased (ConfigParser
-        optionxform), so the composed keys are lower-cased before lookup —
-        otherwise a mixed-case label (`Core 0`) never matches the stored
-        `temperature_core_core 0_critical` key.
-        """
-        per_sensor = self.config.get("sensors", f"{sensor_type}_{label}_{level}".lower(), "")
-        if per_sensor != "":
-            return _as_float(per_sensor)
-        per_type = self.config.get("sensors", f"{sensor_type}_{level}".lower(), "")
-        if per_type != "":
-            return _as_float(per_type)
-        return None
+    if critical is None:
+        return None  # no threshold source -> DEFAULT (no colour, no alert)
+    if current >= critical:
+        return "critical"
+    if warning is not None and current >= warning:
+        return "warning"
+    return "ok"
+
+
+def _conf_threshold(self, sensor_type: str, label: str, level: str) -> float | None:
+    """Read config thresholds: per-sensor (#2058) then per-type (#3049).
+
+    Config option names are stored lower-cased (ConfigParser
+    optionxform), so the composed keys are lower-cased before lookup —
+    otherwise a mixed-case label (`Core 0`) never matches the stored
+    `temperature_core_core 0_critical` key.
+    """
+    per_sensor = self.config.get("sensors", f"{sensor_type}_{label}_{level}".lower(), "")
+    if per_sensor != "":
+        return _as_float(per_sensor)
+    per_type = self.config.get("sensors", f"{sensor_type}_{level}".lower(), "")
+    if per_type != "":
+        return _as_float(per_type)
+    return None
 ```
 
 Add the module-level float coercion helper (near `_label_prefix`):

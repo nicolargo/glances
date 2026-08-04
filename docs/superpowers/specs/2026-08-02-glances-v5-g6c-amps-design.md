@@ -100,9 +100,9 @@ contract is frozen, not the orchestrator.
 that `GlancesConfigV5` does not implement:
 
 ```python
-for param, _ in config.items(amp_section):          # AttributeError
+for param, _ in config.items(amp_section):  # AttributeError
     try:
-        self.configs[param] = config.get_float_value(amp_section, param)   # AttributeError
+        self.configs[param] = config.get_float_value(amp_section, param)  # AttributeError
     except ValueError:
         self.configs[param] = config.get_value(amp_section, param).split(',')
 ```

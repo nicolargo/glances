@@ -170,7 +170,18 @@ def test_identity(store_with, config_with):
 def test_fields_present(store_with, config_with):
     p = _mk(store_with, config_with)
     fd = p.fields_description
-    for key in ("indice", "description", "host", "port", "url", "status", "elapsed", "rtt_warning", "timeout", "refresh"):
+    for key in (
+        "indice",
+        "description",
+        "host",
+        "port",
+        "url",
+        "status",
+        "elapsed",
+        "rtt_warning",
+        "timeout",
+        "refresh",
+    ):
         assert key in fd, key
     assert fd["indice"].get("primary_key") is True
 
@@ -550,45 +561,46 @@ Add the thread handle at the end of `__init__` (after `self._scan_list = ...`):
 Replace the placeholder `_grab_stats` with:
 
 ```python
-    async def _grab_stats(self) -> list:
-        """Return the current scan results; relaunch the scanner if it is dead.
+async def _grab_stats(self) -> list:
+    """Return the current scan results; relaunch the scanner if it is dead.
 
-        NON-BLOCKING by construction (design §4): this coroutine never awaits
-        the scan. `ThreadScanner.run()` sweeps the list in its own thread —
-        including the accepted hardcoded `time.sleep(1)` between ICMP probes —
-        and writes `status` / `elapsed` straight into the live dicts. Each
-        cycle we simply publish a snapshot of whatever the scanner has produced
-        so far; items not yet reached keep `status = None` and render as
-        `Scanning`.
+    NON-BLOCKING by construction (design §4): this coroutine never awaits
+    the scan. `ThreadScanner.run()` sweeps the list in its own thread —
+    including the accepted hardcoded `time.sleep(1)` between ICMP probes —
+    and writes `status` / `elapsed` straight into the live dicts. Each
+    cycle we simply publish a snapshot of whatever the scanner has produced
+    so far; items not yet reached keep `status = None` and render as
+    `Scanning`.
 
-        The snapshot is a per-item COPY: the base pipeline replaces item dicts
-        in `_remove_parameters()`, and the scanner must keep owning the
-        originals.
-        """
-        if not self._scan_list:
-            # Nothing configured — empty payload, no thread. Sweeping an empty
-            # list every cycle would be pure waste.
-            return []
-        if self._thread is None or not self._thread.is_alive():
-            self._thread = ThreadScanner(self._scan_list)
-            self._thread.start()
-        return [dict(item) for item in self._scan_list]
+    The snapshot is a per-item COPY: the base pipeline replaces item dicts
+    in `_remove_parameters()`, and the scanner must keep owning the
+    originals.
+    """
+    if not self._scan_list:
+        # Nothing configured — empty payload, no thread. Sweeping an empty
+        # list every cycle would be pure waste.
+        return []
+    if self._thread is None or not self._thread.is_alive():
+        self._thread = ThreadScanner(self._scan_list)
+        self._thread.start()
+    return [dict(item) for item in self._scan_list]
 
-    def stop(self) -> None:
-        """Stop the background scanner (base teardown hook).
 
-        The base `stop()` is synchronous; `GlancesScheduler.stop()` offloads it
-        via `asyncio.to_thread`, so a blocking teardown here cannot stall the
-        event loop (same contract as `containers`). Must be safe to call even
-        if the plugin never produced stats.
-        """
-        if self._thread is None:
-            return
-        try:
-            self._thread.stop()
-        except Exception as e:
-            logger.warning("ports: stopping the scanner thread failed: %s", e)
-        self._thread = None
+def stop(self) -> None:
+    """Stop the background scanner (base teardown hook).
+
+    The base `stop()` is synchronous; `GlancesScheduler.stop()` offloads it
+    via `asyncio.to_thread`, so a blocking teardown here cannot stall the
+    event loop (same contract as `containers`). Must be safe to call even
+    if the plugin never produced stats.
+    """
+    if self._thread is None:
+        return
+    try:
+        self._thread.stop()
+    except Exception as e:
+        logger.warning("ports: stopping the scanner thread failed: %s", e)
+    self._thread = None
 ```
 
 - [ ] **Step 4: Run — expect PASS**
@@ -653,6 +665,7 @@ def _levels_for(store_with, config_with, items):
 
 # --- port kind ------------------------------------------------------------
 
+
 def test_port_level_none_status_is_careful(store_with, config_with):
     item = {"indice": "port_1", "host": "h", "port": 80, "status": None, "rtt_warning": 1.0}
     assert _levels_for(store_with, config_with, [item])["port_1"]["status"]["level"] == "careful"
@@ -686,6 +699,7 @@ def test_port_level_without_rtt_warning_has_no_entry(store_with, config_with):
 
 
 # --- web kind -------------------------------------------------------------
+
 
 def test_web_level_none_status_is_careful(store_with, config_with):
     # Deliberate deviation from v4 (see plan reconciliation note 4): v4's
@@ -729,6 +743,7 @@ def test_web_level_ok_codes_have_no_entry(store_with, config_with):
 
 
 # --- both kinds in one list ----------------------------------------------
+
 
 def test_both_kinds_are_levelled_in_the_same_list(store_with, config_with):
     items = [
@@ -791,80 +806,83 @@ In `glances/plugins/ports/model_v5.py`, add the class constant just after `EMITS
 Then append these three methods to `PluginModel` (after `stop()`):
 
 ```python
-    # ------------------------------------------------------------- levels
-    #
-    # BESPOKE, on purpose: `base_v5.py` is NOT modified by G6B (design §5.3).
-    # `status` is a heterogeneous union whose level depends on the value's TYPE
-    # as much as its magnitude, so neither the base's numeric ladder nor its
-    # categorical mapping applies. A generic threshold hook was considered and
-    # rejected as speculative — `ports` would be its only caller.
+# ------------------------------------------------------------- levels
+#
+# BESPOKE, on purpose: `base_v5.py` is NOT modified by G6B (design §5.3).
+# `status` is a heterogeneous union whose level depends on the value's TYPE
+# as much as its magnitude, so neither the base's numeric ladder nor its
+# categorical mapping applies. A generic threshold hook was considered and
+# rejected as speculative — `ports` would be its only caller.
 
-    @staticmethod
-    def _port_level(item: dict[str, Any]) -> str | None:
-        """Level for a port-scan item. Mirrors v4 `get_conds_if_port`."""
-        status = item.get("status")
-        if status is None:
-            return "careful"  # not scanned yet → rendered as `Scanning`
-        level: str | None = None
-        # `False == 0` in Python: this single test covers both the ICMP
-        # (`status = False`) and the TCP (`status = False`) timeout paths.
-        if status == 0:
-            level = "critical"
-        rtt_warning = item.get("rtt_warning")
-        # v4 keeps the LAST truthy condition, so WARNING outranks CRITICAL.
-        if isinstance(status, (int, float)) and rtt_warning is not None and status > rtt_warning:
-            level = "warning"
-        return level
 
-    @staticmethod
-    def _web_level(item: dict[str, Any]) -> str | None:
-        """Level for a web item. Mirrors v4 `get_conds_if_url`, except that a
-        `None` status resolves to `careful` instead of `critical` (design §5.3):
-        v4's last-truthy-wins painted every URL red for the whole first refresh
-        window, before any scan had run."""
-        status = item.get("status")
-        if status is None:
-            return "careful"  # not scanned yet → rendered as `Scanning`
-        level: str | None = None
-        # Covers a bad HTTP code AND the literal string "Error" written by
-        # `ThreadScanner._web_scan` when `requests` raises.
-        if status not in PluginModel._WEB_OK_CODES:
-            level = "critical"
-        rtt_warning = item.get("rtt_warning")
-        elapsed = item.get("elapsed")
-        # v4 keeps the LAST truthy condition, so WARNING outranks CRITICAL.
-        if rtt_warning is not None and elapsed is not None and elapsed > rtt_warning:
-            level = "warning"
-        return level
+@staticmethod
+def _port_level(item: dict[str, Any]) -> str | None:
+    """Level for a port-scan item. Mirrors v4 `get_conds_if_port`."""
+    status = item.get("status")
+    if status is None:
+        return "careful"  # not scanned yet → rendered as `Scanning`
+    level: str | None = None
+    # `False == 0` in Python: this single test covers both the ICMP
+    # (`status = False`) and the TCP (`status = False`) timeout paths.
+    if status == 0:
+        level = "critical"
+    rtt_warning = item.get("rtt_warning")
+    # v4 keeps the LAST truthy condition, so WARNING outranks CRITICAL.
+    if isinstance(status, (int, float)) and rtt_warning is not None and status > rtt_warning:
+        level = "warning"
+    return level
 
-    def _derived_parameters(self) -> None:
-        """Compute `_levels` for both item kinds.
 
-        Shape (collection): `{indice: {"status": {"level": …, "prominent": False}}}`.
-        Items that resolve to no level get NO entry at all — the renderer then
-        falls back to `ColorRole.DEFAULT`, mirroring v4's `'OK'` return value
-        which carries no decoration.
-        """
-        self._levels = {}
-        if not isinstance(self._stats, list):
-            return
-        for item in self._stats:
-            if not isinstance(item, dict):
-                continue
-            indice = item.get("indice")
-            if indice is None:
-                continue
-            if "url" in item:
-                level = self._web_level(item)
-            elif "host" in item:
-                level = self._port_level(item)
-            else:
-                continue
-            if level is None:
-                continue
-            # `prominent = False`: v4 colours the status text only, never the
-            # background.
-            self._levels[indice] = {"status": {"level": level, "prominent": False}}
+@staticmethod
+def _web_level(item: dict[str, Any]) -> str | None:
+    """Level for a web item. Mirrors v4 `get_conds_if_url`, except that a
+    `None` status resolves to `careful` instead of `critical` (design §5.3):
+    v4's last-truthy-wins painted every URL red for the whole first refresh
+    window, before any scan had run."""
+    status = item.get("status")
+    if status is None:
+        return "careful"  # not scanned yet → rendered as `Scanning`
+    level: str | None = None
+    # Covers a bad HTTP code AND the literal string "Error" written by
+    # `ThreadScanner._web_scan` when `requests` raises.
+    if status not in PluginModel._WEB_OK_CODES:
+        level = "critical"
+    rtt_warning = item.get("rtt_warning")
+    elapsed = item.get("elapsed")
+    # v4 keeps the LAST truthy condition, so WARNING outranks CRITICAL.
+    if rtt_warning is not None and elapsed is not None and elapsed > rtt_warning:
+        level = "warning"
+    return level
+
+
+def _derived_parameters(self) -> None:
+    """Compute `_levels` for both item kinds.
+
+    Shape (collection): `{indice: {"status": {"level": …, "prominent": False}}}`.
+    Items that resolve to no level get NO entry at all — the renderer then
+    falls back to `ColorRole.DEFAULT`, mirroring v4's `'OK'` return value
+    which carries no decoration.
+    """
+    self._levels = {}
+    if not isinstance(self._stats, list):
+        return
+    for item in self._stats:
+        if not isinstance(item, dict):
+            continue
+        indice = item.get("indice")
+        if indice is None:
+            continue
+        if "url" in item:
+            level = self._web_level(item)
+        elif "host" in item:
+            level = self._port_level(item)
+        else:
+            continue
+        if level is None:
+            continue
+        # `prominent = False`: v4 colours the status text only, never the
+        # background.
+        self._levels[indice] = {"status": {"level": level, "prominent": False}}
 ```
 
 - [ ] **Step 4: Run — expect PASS**
@@ -957,6 +975,7 @@ def test_missing_data_key_returns_empty():
 
 # --- NO TITLE ROW guard ---------------------------------------------------
 
+
 def test_no_title_row_deliberate_do_not_fix():
     """`ports` sits directly under `network` in LEFT_SLOT; the two belong to the
     same functional domain and read as one continuous block. The absent title is
@@ -964,8 +983,14 @@ def test_no_title_row_deliberate_do_not_fix():
     reviewer cannot silently "align ports with the other LEFT plugins"."""
     data = [
         {"indice": "port_1", "host": "h", "port": 80, "description": "Home Box", "status": 0.012, "rtt_warning": None},
-        {"indice": "web_1", "url": "http://x", "description": "My Blog", "status": 200, "elapsed": 0.1,
-         "rtt_warning": None},
+        {
+            "indice": "web_1",
+            "url": "http://x",
+            "description": "My Blog",
+            "status": 200,
+            "elapsed": 0.1,
+            "rtt_warning": None,
+        },
     ]
     rows = render(_payload(data))
     # Exactly one row per item — no title, no column header.
@@ -978,6 +1003,7 @@ def test_no_title_row_deliberate_do_not_fix():
 
 
 # --- port-kind status strings --------------------------------------------
+
 
 def test_port_status_scanning():
     data = [{"indice": "port_1", "host": "h", "port": 80, "description": "Home Box", "status": None}]
@@ -1013,6 +1039,7 @@ def test_port_status_none_host():
 
 # --- web-kind status strings ---------------------------------------------
 
+
 def test_web_status_code():
     data = [{"indice": "web_1", "url": "http://x", "description": "My Blog", "status": 404, "elapsed": 0.1}]
     assert _status_text(render(_payload(data))[0]) == "Code 404"
@@ -1029,6 +1056,7 @@ def test_web_status_error_string():
 
 
 # --- layout ---------------------------------------------------------------
+
 
 def test_description_is_left_aligned_and_padded():
     data = [{"indice": "port_1", "host": "h", "port": 80, "description": "Box", "status": 0}]
@@ -1072,6 +1100,7 @@ def test_item_with_neither_host_nor_url_is_skipped():
 
 
 # --- colours --------------------------------------------------------------
+
 
 def test_port_status_cell_coloured_from_levels():
     data = [{"indice": "port_1", "host": "h", "port": 80, "description": "Box", "status": 0}]

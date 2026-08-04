@@ -392,9 +392,7 @@ class PluginModel(GlancesPluginBase[dict]):
 
         try:
             cores = await sampler.get_per_core()
-            out["percpu"] = [
-                {"cpu_number": i, "total": round(100.0 - float(c.idle), 1)} for i, c in enumerate(cores)
-            ]
+            out["percpu"] = [{"cpu_number": i, "total": round(100.0 - float(c.idle), 1)} for i, c in enumerate(cores)]
         except (OSError, RuntimeError, AttributeError):
             pass
 
@@ -596,7 +594,9 @@ def _bar_cells(label: str, percent: Any, role: ColorRole, width: int) -> list[Ce
     ]
 
 
-def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], view: dict[str, Any] | None = None) -> list[Row]:
+def render(
+    payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], view: dict[str, Any] | None = None
+) -> list[Row]:
     """Render the quicklook plugin's TUI block — mirrors v4 `quicklook.msg_curse`."""
     if not payload:
         return [Row(cells=[Cell(text="CPU", color=ColorRole.HEADER, bold=True)])]
@@ -927,9 +927,7 @@ Near the top of `glances/outputs/curses_renderer_v5.py` (with the other slot con
 # takes the full width. EXACT v4 parity: `enable_fullquicklook`
 # (glances/outputs/glances_curses.py:455) disables cpu/npu/mpp/gpu/mem/memswap
 # only — `load` and `percpu` stay visible.
-_FULL_QUICKLOOK_HIDDEN: frozenset[str] = frozenset(
-    {"cpu", "npu", "mpp", "gpu", "mem", "memswap"}
-)
+_FULL_QUICKLOOK_HIDDEN: frozenset[str] = frozenset({"cpu", "npu", "mpp", "gpu", "mem", "memswap"})
 ```
 
 Inside `build_frame`, at the very start of the `for plugin_name, is_collection in registry:` loop body, add:

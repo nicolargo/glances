@@ -45,11 +45,11 @@ explicitly.
 ```python
 config = GlancesConfigV5()
 
-refresh: int   = config.get("global",  "refresh_time", 2)
-api_doc: bool  = config.get("outputs", "api_doc", True)
-hosts:  list   = config.get("outputs", "webui_allowed_hosts", [])
-host:   str    = config.get("influxdb", "host", "localhost")
-ratio:  float  = config.get("foo", "ratio", 1.0)
+refresh: int = config.get("global", "refresh_time", 2)
+api_doc: bool = config.get("outputs", "api_doc", True)
+hosts: list = config.get("outputs", "webui_allowed_hosts", [])
+host: str = config.get("influxdb", "host", "localhost")
+ratio: float = config.get("foo", "ratio", 1.0)
 ```
 
 Supported types: `str`, `int`, `float`, `bool`, `list[str]`. `dict` is not
@@ -97,8 +97,8 @@ uri
 The match is intentionally permissive — over-redact rather than under-redact.
 
 ```python
-config.as_dict()           # {"influxdb": {"password": "secret123"}}
-config.as_dict_secure()    # {"influxdb": {"password": "***"}}
+config.as_dict()  # {"influxdb": {"password": "secret123"}}
+config.as_dict_secure()  # {"influxdb": {"password": "***"}}
 ```
 
 ## Hot-reload
@@ -109,7 +109,7 @@ hook only — there is no automatic polling.
 ```python
 config = GlancesConfigV5(cli_config_path="/path/to/conf")
 # ... user edits the file ...
-config.reload()   # picks up the changes
+config.reload()  # picks up the changes
 ```
 
 > **TODO Phase 4** — add an `mtime` polling task (every 5 s) that calls

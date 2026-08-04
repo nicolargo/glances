@@ -50,18 +50,19 @@ class WebhookAction(GlancesActionBase):
     Config: [mem] critical_webhook=https://hooks.example.com/alert
     """
 
-    action_name = "webhook"   # → key suffix in glances.conf
-    requires = []             # → optional Python module names
+    action_name = "webhook"  # → key suffix in glances.conf
+    requires = []  # → optional Python module names
 
     async def execute(
         self,
         plugin_name: str,
-        level: str,           # "careful" | "warning" | "critical"
-        context: dict,        # plugin.get_export() + built-in vars
-        action_value: str,    # raw value from glances.conf
-        repeat: bool = False, # True if the alert is repeating
+        level: str,  # "careful" | "warning" | "critical"
+        context: dict,  # plugin.get_export() + built-in vars
+        action_value: str,  # raw value from glances.conf
+        repeat: bool = False,  # True if the alert is repeating
     ) -> None:
-        import httpx          # lazy import — already a v5 core dep
+        import httpx  # lazy import — already a v5 core dep
+
         async with httpx.AsyncClient() as client:
             await client.post(action_value, json=context, timeout=5.0)
 ```
@@ -83,6 +84,7 @@ class AppriseAction(GlancesActionBase):
 
     async def execute(self, plugin_name, level, context, action_value, repeat=False):
         import apprise
+
         ...
 ```
 

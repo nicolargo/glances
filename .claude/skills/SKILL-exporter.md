@@ -53,8 +53,7 @@ async support) must be wrapped with `asyncio.to_thread()`.
 class GlancesExportBase(ABC):
     export_name: ClassVar[str] = ""
 
-    def __init__(self, config: GlancesConfigV5, store: StatsStoreV5) -> None:
-        ...
+    def __init__(self, config: GlancesConfigV5, store: StatsStoreV5) -> None: ...
 
     @abstractmethod
     async def update(self, plugins: list[GlancesPluginBase]) -> None:

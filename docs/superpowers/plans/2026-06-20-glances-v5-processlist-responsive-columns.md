@@ -36,16 +36,20 @@ Columns never dropped: CPU%, MEM%, R/s, W/s, Command.
 ```python
 from glances.plugins.processlist.render_curses_v5 import render
 
+
 def _row_text(row):
     return " ".join(c.text for c in row.cells)  # header labels are the reliable signal
 
+
 def _has_col(rows, label):
     return any(label in c.text for c in rows[0].cells)  # rows[0] = header
+
 
 def test_wide_keeps_all_columns(proc_payload, proc_fields):
     rows = render(proc_payload, proc_fields, view={"proclist_width": 400})
     for label in ("CPU%", "MEM%", "VIRT", "RES", "PID", "USER", "THR", "NI", "S", "TIME+", "R/s", "W/s", "Command"):
         assert _has_col(rows, label)
+
 
 def test_no_width_keeps_all_columns(proc_payload, proc_fields):
     # Backward compatible: no proclist_width → all columns (today's behaviour).
@@ -53,12 +57,14 @@ def test_no_width_keeps_all_columns(proc_payload, proc_fields):
     wide = render(proc_payload, proc_fields, view={"proclist_width": 400})
     assert full == wide
 
+
 def test_narrow_drops_in_order_virt_first(proc_payload, proc_fields):
     # Width chosen so exactly VIRT must go for Command to reach 8 cols.
     rows = render(proc_payload, proc_fields, view={"proclist_width": 70})
-    assert not _has_col(rows, "VIRT")      # (a) dropped first
-    assert _has_col(rows, "RES")            # (c) still present at this width
+    assert not _has_col(rows, "VIRT")  # (a) dropped first
+    assert _has_col(rows, "RES")  # (c) still present at this width
     assert _has_col(rows, "Command")
+
 
 def test_very_narrow_drops_cascade(proc_payload, proc_fields):
     rows = render(proc_payload, proc_fields, view={"proclist_width": 30})
@@ -68,6 +74,7 @@ def test_very_narrow_drops_cascade(proc_payload, proc_fields):
     for kept in ("CPU%", "MEM%", "Command"):
         assert _has_col(rows, kept)
 
+
 def test_command_gets_at_least_8_when_possible(proc_payload, proc_fields):
     # After dropping, the non-command fixed width must leave >=8 for Command.
     width = 70
@@ -76,6 +83,7 @@ def test_command_gets_at_least_8_when_possible(proc_payload, proc_fields):
     non_cmd = [c for c in header.cells if "Command" not in c.text]
     used = sum(len(c.text) for c in non_cmd) + (len(header.cells) - 1)  # separators
     assert width - used >= 8
+
 
 def test_header_and_rows_drop_consistently(proc_payload, proc_fields):
     rows = render(proc_payload, proc_fields, view={"proclist_width": 70})
@@ -99,9 +107,18 @@ def test_header_and_rows_drop_consistently(proc_payload, proc_fields):
     ```python
     def _visible_fixed_keys(available_width: int, pid_width: int) -> list[str]:
         widths = {
-            "CPU%": _W_CPU, "MEM%": _W_MEM, "VIRT": _W_VIRT, "RES": _W_RES,
-            "PID": pid_width, "USER": _W_USER, "THR": _W_THR, "NI": _W_NI,
-            "S": _W_STATUS, "TIME+": _W_TIME, "R/s": _W_IO, "W/s": _W_IO,
+            "CPU%": _W_CPU,
+            "MEM%": _W_MEM,
+            "VIRT": _W_VIRT,
+            "RES": _W_RES,
+            "PID": pid_width,
+            "USER": _W_USER,
+            "THR": _W_THR,
+            "NI": _W_NI,
+            "S": _W_STATUS,
+            "TIME+": _W_TIME,
+            "R/s": _W_IO,
+            "W/s": _W_IO,
         }
         active = list(_FIXED_COL_KEYS)
 
@@ -137,7 +154,7 @@ def test_header_and_rows_drop_consistently(proc_payload, proc_fields):
 ```python
 def test_proclist_width_passed_and_narrows_columns(make_tui_with_body):
     tui = make_tui_with_body()
-    frame = tui._build_fitted_frame(max_x=95)   # narrow → right sidebar small
+    frame = tui._build_fitted_frame(max_x=95)  # narrow → right sidebar small
     proc = next(b for b in frame.right if b.name == "processlist")
     header = proc.rows[0]
     # At this width some columns must have been dropped (fewer than the full 13).

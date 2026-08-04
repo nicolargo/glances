@@ -124,9 +124,10 @@ Pattern:
 from fastapi.testclient import TestClient
 from glances.webserver_v5 import build_app, register_plugin
 
+
 def test_my_route(config, store):
     plugin = FakePlugin(store, config)
-    asyncio.run(plugin.update())                    # populate the store
+    asyncio.run(plugin.update())  # populate the store
     app = build_app(config=config, store=store)
     register_plugin(app, plugin)
     with TestClient(app) as client:

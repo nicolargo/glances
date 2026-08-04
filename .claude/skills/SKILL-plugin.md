@@ -66,15 +66,12 @@ class NetworkPlugin(GlancesPluginBase[list]):
             "primary_key": True,
         },
         "rx": {"description": "Bytes received.", "unit": "bytespers"},
-        "tx": {"description": "Bytes sent.",     "unit": "bytespers"},
+        "tx": {"description": "Bytes sent.", "unit": "bytespers"},
     }
 
     async def _grab_stats(self) -> list:
         counters = await asyncio.to_thread(psutil.net_io_counters, pernic=True)
-        return [
-            {"interface_name": iface, "rx": c.bytes_recv, "tx": c.bytes_sent}
-            for iface, c in counters.items()
-        ]
+        return [{"interface_name": iface, "rx": c.bytes_recv, "tx": c.bytes_sent} for iface, c in counters.items()]
 ```
 
 ## The `update()` pipeline (architecture §3.1)
@@ -324,6 +321,7 @@ The module exports a pure `render` function:
 
 ```python
 from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
+
 
 def render(payload: dict, fields_desc: dict) -> list[Row]:
     """Build the plugin's TUI block from its current StatsStore payload."""

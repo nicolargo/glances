@@ -103,6 +103,7 @@ Model body (self-gate mirrors `npu`; `_collect` mirrors v4 `update_local`; `_add
 ```python
 _DEFAULT_MAX_NAME_SIZE = 20
 
+
 class PluginModel(GlancesPluginBase[list]):
     plugin_name: ClassVar[str] = "vms"
     IS_COLLECTION: ClassVar[bool] = True

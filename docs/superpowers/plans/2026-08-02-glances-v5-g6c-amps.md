@@ -430,9 +430,7 @@ In `glances/amps/amp.py`, immediately after the `refresh()` method, add:
 `glances/amps/default/__init__.py` — replace the `secure_popen` call:
 
 ```python
-            self.set_result(
-                secure_popen(res, allow_operators=self.allow_operators(), timeout=self.timeout()).rstrip()
-            )
+self.set_result(secure_popen(res, allow_operators=self.allow_operators(), timeout=self.timeout()).rstrip())
 ```
 
 `glances/amps/systemv/__init__.py` — replace the `secure_popen` call:
@@ -919,7 +917,13 @@ Append to `tests/test_amps_list_v5.py` (add `import asyncio`, `import threading`
 # update cycle
 # ---------------------------------------------------------------------------
 
-_PROC_PYTHON = {"pid": 11, "name": "python3", "cmdline": ["python3", "app.py"], "cpu_percent": 1.0, "memory_percent": 2.0}
+_PROC_PYTHON = {
+    "pid": 11,
+    "name": "python3",
+    "cmdline": ["python3", "app.py"],
+    "cpu_percent": 1.0,
+    "memory_percent": 2.0,
+}
 _PROC_NGINX = {"pid": 22, "name": "nginx", "cmdline": ["/usr/sbin/nginx"], "cpu_percent": 3.0, "memory_percent": 4.0}
 
 
@@ -954,7 +958,9 @@ async def test_count_reflects_the_matching_processes(cfg, procs):
 
 
 async def test_cmdline_is_searched_too(cfg, procs):
-    procs([{"pid": 1, "name": "sh", "cmdline": ["/usr/bin/foo", "--daemon"], "cpu_percent": 0.0, "memory_percent": 0.0}])
+    procs(
+        [{"pid": 1, "name": "sh", "cmdline": ["/usr/bin/foo", "--daemon"], "cpu_percent": 0.0, "memory_percent": 0.0}]
+    )
     amps = AmpsListV5(cfg("[amp_foo]\nenable=true\nregex=.*foo.*\nrefresh=3\n"))
     await amps.update()
     await _settle(amps)
@@ -999,9 +1005,7 @@ async def test_no_match_without_countmin_leaves_the_result_alone(cfg, procs):
 async def test_no_match_does_not_run_the_command(cfg, procs):
     """v4 does not call update() on the no-match branch — nor do we."""
     procs([_PROC_NGINX])
-    amps = AmpsListV5(
-        cfg("[amp_python]\nenable=true\nregex=.*python.*\nrefresh=3\ncommand=echo ran\n")
-    )
+    amps = AmpsListV5(cfg("[amp_python]\nenable=true\nregex=.*python.*\nrefresh=3\ncommand=echo ran\n"))
     await amps.update()
     await _settle(amps)
     assert amps._amps["python"].result() is None
@@ -1146,107 +1150,111 @@ In `glances/amps_list_v5.py`, add `asyncio` to the imports, add the `glances_pro
 then append to the class:
 
 ```python
-    # -------------------------------------------------------------- update
+# -------------------------------------------------------------- update
 
-    async def update(self) -> list[GlancesAmp]:
-        """Run one orchestration cycle and return every loaded AMP.
 
-        Never awaits an AMP's own work: a due AMP is offloaded to a worker
-        thread and this coroutine returns immediately with whatever results
-        the AMPs have produced so far. Mirrors `AmpsList.update()` branch for
-        branch, with two deliberate differences (design §5.2): the process
-        count is computed inline instead of inside a spawned thread, and an
-        AMP whose previous run is still in flight is skipped.
-        """
-        processlist = self._get_processlist()
+async def update(self) -> list[GlancesAmp]:
+    """Run one orchestration cycle and return every loaded AMP.
 
-        for name, amp in self._amps.items():
-            if not amp.enable():
-                continue
+    Never awaits an AMP's own work: a due AMP is offloaded to a worker
+    thread and this coroutine returns immediately with whatever results
+    the AMPs have produced so far. Mirrors `AmpsList.update()` branch for
+    branch, with two deliberate differences (design §5.2): the process
+    count is computed inline instead of inside a spawned thread, and an
+    AMP whose previous run is still in flight is skipped.
+    """
+    processlist = self._get_processlist()
 
-            pattern = self._regex.get(name)
-            if pattern is None:
-                # No regex configured: run every `refresh` seconds regardless
-                # of any process, and never display a count (issue #1690).
-                amp.set_count(0)
-                self._maybe_run(name, amp, [])
-                continue
+    for name, amp in self._amps.items():
+        if not amp.enable():
+            continue
 
-            matching = self._match(pattern, processlist)
-            amp.set_count(len(matching))
+        pattern = self._regex.get(name)
+        if pattern is None:
+            # No regex configured: run every `refresh` seconds regardless
+            # of any process, and never display a count (issue #1690).
+            amp.set_count(0)
+            self._maybe_run(name, amp, [])
+            continue
 
-            if matching:
-                self._maybe_run(name, amp, matching)
-                continue
+        matching = self._match(pattern, processlist)
+        amp.set_count(len(matching))
 
-            # No match: v4 does NOT run the AMP on this branch. It only
-            # surfaces the absence when the operator asked for a minimum.
-            count_min = amp.count_min()
-            if count_min is not None and count_min > 0:
-                amp.set_result("No running process")
+        if matching:
+            self._maybe_run(name, amp, matching)
+            continue
 
-        return list(self._amps.values())
+        # No match: v4 does NOT run the AMP on this branch. It only
+        # surfaces the absence when the operator asked for a minimum.
+        count_min = amp.count_min()
+        if count_min is not None and count_min > 0:
+            amp.set_result("No running process")
 
-    def _get_processlist(self) -> list[dict[str, Any]]:
-        """Read the shared process engine. Read-only — refreshing it is
-        `processcount`'s job, exactly as in v4."""
-        try:
-            raw = glances_processes.get_list()
-        except Exception as e:
-            logger.debug("AMPS: cannot read the process list (%s)", e)
-            return []
-        return raw if isinstance(raw, list) else []
+    return list(self._amps.values())
 
-    @staticmethod
-    def _match(pattern: re.Pattern[str], processlist: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Processes matching `pattern`, projected to what AMPs consume.
 
-        Searches both `name` and the joined `cmdline` (kernel threads have no
-        cmdline — see issue #1261). Returns an empty list when the process
-        dicts are malformed; v4 raises `UnboundLocalError` there.
-        """
-        try:
-            return [
-                {"pid": p["pid"], "cpu_percent": p["cpu_percent"], "memory_percent": p["memory_percent"]}
-                for p in processlist
-                if pattern.search(p["name"])
-                or ((cmdline := p.get("cmdline")) and pattern.search(" ".join(cmdline)))
-            ]
-        except (TypeError, KeyError) as e:
-            logger.debug("AMPS: cannot build the AMP process list (%s)", e)
-            return []
+def _get_processlist(self) -> list[dict[str, Any]]:
+    """Read the shared process engine. Read-only — refreshing it is
+    `processcount`'s job, exactly as in v4."""
+    try:
+        raw = glances_processes.get_list()
+    except Exception as e:
+        logger.debug("AMPS: cannot read the process list (%s)", e)
+        return []
+    return raw if isinstance(raw, list) else []
 
-    def _maybe_run(self, name: str, amp: GlancesAmp, matching: list[dict[str, Any]]) -> None:
-        """Offload `amp.update(matching)` to a thread if it is due and idle.
 
-        ORDER MATTERS: the in-flight check comes first because
-        `should_update()` re-arms and resets the AMP's timer as a side effect
-        (glances/amps/amp.py:149-160). Checking it first and then bailing out
-        on the in-flight guard would silently consume that tick and double the
-        AMP's effective period.
+@staticmethod
+def _match(pattern: re.Pattern[str], processlist: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Processes matching `pattern`, projected to what AMPs consume.
 
-        `amp.update()` is called directly rather than `update_wrapper()`: the
-        count and the timer are decided here now. `update()` is the method the
-        AMP contract requires a script to implement; `update_wrapper()` is v4
-        plumbing that no AMP overrides.
-        """
-        if name in self._inflight:
-            logger.debug("AMP %s: previous run still in flight — skipping this cycle", name)
-            return
-        if not amp.should_update():
-            return
+    Searches both `name` and the joined `cmdline` (kernel threads have no
+    cmdline — see issue #1261). Returns an empty list when the process
+    dicts are malformed; v4 raises `UnboundLocalError` there.
+    """
+    try:
+        return [
+            {"pid": p["pid"], "cpu_percent": p["cpu_percent"], "memory_percent": p["memory_percent"]}
+            for p in processlist
+            if pattern.search(p["name"]) or ((cmdline := p.get("cmdline")) and pattern.search(" ".join(cmdline)))
+        ]
+    except (TypeError, KeyError) as e:
+        logger.debug("AMPS: cannot build the AMP process list (%s)", e)
+        return []
 
-        task = asyncio.create_task(asyncio.to_thread(amp.update, matching))
-        self._inflight[name] = task
-        task.add_done_callback(lambda t, n=name: self._on_run_done(n, t))
 
-    def _on_run_done(self, name: str, task: asyncio.Task) -> None:
-        self._inflight.pop(name, None)
-        if task.cancelled():
-            return
-        exception = task.exception()
-        if exception is not None:
-            logger.warning("AMP %s: update failed (%s)", name, exception)
+def _maybe_run(self, name: str, amp: GlancesAmp, matching: list[dict[str, Any]]) -> None:
+    """Offload `amp.update(matching)` to a thread if it is due and idle.
+
+    ORDER MATTERS: the in-flight check comes first because
+    `should_update()` re-arms and resets the AMP's timer as a side effect
+    (glances/amps/amp.py:149-160). Checking it first and then bailing out
+    on the in-flight guard would silently consume that tick and double the
+    AMP's effective period.
+
+    `amp.update()` is called directly rather than `update_wrapper()`: the
+    count and the timer are decided here now. `update()` is the method the
+    AMP contract requires a script to implement; `update_wrapper()` is v4
+    plumbing that no AMP overrides.
+    """
+    if name in self._inflight:
+        logger.debug("AMP %s: previous run still in flight — skipping this cycle", name)
+        return
+    if not amp.should_update():
+        return
+
+    task = asyncio.create_task(asyncio.to_thread(amp.update, matching))
+    self._inflight[name] = task
+    task.add_done_callback(lambda t, n=name: self._on_run_done(n, t))
+
+
+def _on_run_done(self, name: str, task: asyncio.Task) -> None:
+    self._inflight.pop(name, None)
+    if task.cancelled():
+        return
+    exception = task.exception()
+    if exception is not None:
+        logger.warning("AMP %s: update failed (%s)", name, exception)
 ```
 
 - [ ] **Step 4: Run the tests to verify they pass**
@@ -1391,14 +1399,14 @@ async def test_regex_field_is_true_when_configured(store, cfg, procs):
 @pytest.mark.parametrize(
     ("count", "count_min", "count_max", "expected"),
     [
-        (2, None, None, "ok"),          # nothing configured -> always ok
-        (2, 1, 3, "ok"),                # inside the band
-        (5, 1, 3, "warning"),           # above countmax
-        (1, 2, 3, "warning"),           # below countmin, but still running
-        (0, None, None, "ok"),          # no countmin configured
-        (0, 0, None, "ok"),             # countmin explicitly 0
-        (0, 1, None, "critical"),       # required but absent
-        (None, 1, 2, None),             # unreachable in practice, no level
+        (2, None, None, "ok"),  # nothing configured -> always ok
+        (2, 1, 3, "ok"),  # inside the band
+        (5, 1, 3, "warning"),  # above countmax
+        (1, 2, 3, "warning"),  # below countmin, but still running
+        (0, None, None, "ok"),  # no countmin configured
+        (0, 0, None, "ok"),  # countmin explicitly 0
+        (0, 1, None, "critical"),  # required but absent
+        (None, 1, 2, None),  # unreachable in practice, no level
     ],
 )
 def test_count_level_ladder(count, count_min, count_max, expected):
@@ -1646,7 +1654,9 @@ def test_count_column_is_blank_without_a_regex():
 
 
 def test_multiline_result_repeats_neither_name_nor_count():
-    rows = render(_payload([{"name": "Systemd", "result": "Services\nactive: 3\nfailed: 1", "count": 1, "regex": True}]))
+    rows = render(
+        _payload([{"name": "Systemd", "result": "Services\nactive: 3\nfailed: 1", "count": 1, "regex": True}])
+    )
     assert len(rows) == 3
     assert [c.text.strip() for c in rows[0].cells] == ["Systemd", "1", "Services"]
     assert [c.text.strip() for c in rows[1].cells] == ["", "", "active: 3"]

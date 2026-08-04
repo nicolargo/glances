@@ -47,8 +47,7 @@ Read before designing anything. Line references are `develop-v5` at
   `_build_event()` (`alerts_v5.py:453`):
 
   ```python
-  {"ts", "plugin", "key", "field", "level", "previous_level",
-   "value", "prominent", "is_initial", "hostname"}
+  {"ts", "plugin", "key", "field", "level", "previous_level", "value", "prominent", "is_initial", "hostname"}
   ```
 
 - `get_history()` returns it as a list, most-recent-**last**.
@@ -340,9 +339,26 @@ transitions and becomes a list of **incident records**, one per
 `(plugin, key, field)` occurrence, mutated in place while open:
 
 ```python
-{"ts", "plugin", "key", "field", "level", "previous_level", "value",
- "prominent", "is_initial", "hostname",          # unchanged, additive below
- "begin", "end", "max", "avg", "min", "count", "episodes", "top"}
+{
+    "ts",
+    "plugin",
+    "key",
+    "field",
+    "level",
+    "previous_level",
+    "value",
+    "prominent",
+    "is_initial",
+    "hostname",  # unchanged, additive below
+    "begin",
+    "end",
+    "max",
+    "avg",
+    "min",
+    "count",
+    "episodes",
+    "top",
+}
 ```
 
 Constraints on the plans pass:

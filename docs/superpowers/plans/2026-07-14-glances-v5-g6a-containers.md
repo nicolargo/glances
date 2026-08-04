@@ -254,9 +254,7 @@ def test_threshold_field_alias_resolves_prefixed_keys(store_with, config_with):
 
 
 def test_threshold_field_alias_resolves_per_pk_override(store_with, config_with):
-    config = config_with(
-        {"alias_collection": {"cpu_warning": "70", "web_cpu_warning": "10"}}
-    )
+    config = config_with({"alias_collection": {"cpu_warning": "70", "web_cpu_warning": "10"}})
     plugin = _AliasCollection(store_with(), config)
     plugin._stats = [{"name": "web", "cpu_percent": 15.0}]
     plugin._derived_parameters()
@@ -495,10 +493,27 @@ def test_fields_present(store_with, config_with):
     p = _mk(store_with, config_with)
     fd = p.fields_description
     for key in (
-        "name", "id", "image", "status", "created", "command",
-        "cpu_percent", "cpu_limit", "memory_usage", "memory_usage_no_cache",
-        "memory_limit", "memory_percent", "io_rx", "io_wx", "network_rx", "network_tx",
-        "ports", "uptime", "engine", "pod_name", "pod_id",
+        "name",
+        "id",
+        "image",
+        "status",
+        "created",
+        "command",
+        "cpu_percent",
+        "cpu_limit",
+        "memory_usage",
+        "memory_usage_no_cache",
+        "memory_limit",
+        "memory_percent",
+        "io_rx",
+        "io_wx",
+        "network_rx",
+        "network_tx",
+        "ports",
+        "uptime",
+        "engine",
+        "pod_name",
+        "pod_id",
     ):
         assert key in fd, key
     assert fd["name"].get("primary_key") is True
@@ -591,8 +606,14 @@ class PluginModel(GlancesPluginBase[list]):
             "threshold_field": "cpu",
         },
         "cpu_limit": {"description": "Container CPU limit.", "unit": "number"},
-        "memory_usage": {"description": "Container memory usage (v4 export value: usage − cache when present). Feeds export/REST.", "unit": "byte"},
-        "memory_usage_no_cache": {"description": "Container memory usage minus inactive_file. TUI display value.", "unit": "byte"},
+        "memory_usage": {
+            "description": "Container memory usage (v4 export value: usage − cache when present). Feeds export/REST.",
+            "unit": "byte",
+        },
+        "memory_usage_no_cache": {
+            "description": "Container memory usage minus inactive_file. TUI display value.",
+            "unit": "byte",
+        },
         "memory_inactive_file": {"description": "Container memory inactive file.", "unit": "byte"},
         "memory_limit": {"description": "Container memory limit.", "unit": "byte"},
         "memory_percent": {
@@ -671,23 +692,28 @@ def _model_with_watchers(store_with, config_with, watchers, section=None):
 async def test_grab_merges_engines_and_injects_engine_field(store_with, config_with):
     # memory_usage=250 simulates the engine's v4 export value (usage−cache);
     # the nested memory dict drives the no-cache + percent surfaces.
-    d = {"name": "web", "key": "name", "memory_usage": 250,
-         "memory": {"usage": 300, "inactive_file": 100, "limit": 1000}}
+    d = {
+        "name": "web",
+        "key": "name",
+        "memory_usage": 250,
+        "memory": {"usage": 300, "inactive_file": 100, "limit": 1000},
+    }
     p = _model_with_watchers(store_with, config_with, {"docker": _FakeWatcher([d])})
     out = await p._grab_stats()
     assert len(out) == 1
     assert out[0]["engine"] == "docker"
     # Three memory surfaces:
-    assert out[0]["memory_usage"] == 250           # export (v4 value, untouched)
+    assert out[0]["memory_usage"] == 250  # export (v4 value, untouched)
     assert out[0]["memory_usage_no_cache"] == 200  # display (usage − inactive_file)
-    assert out[0]["memory_percent"] == 20.0        # alert  (200 / 1000 * 100)
+    assert out[0]["memory_percent"] == 20.0  # alert  (200 / 1000 * 100)
 
 
 @pytest.mark.asyncio
 async def test_grab_partial_failure_keeps_other_engine(store_with, config_with):
     ok = {"name": "web", "memory": {}}
     p = _model_with_watchers(
-        store_with, config_with,
+        store_with,
+        config_with,
         {"bad": _FakeWatcher([], raises=True), "docker": _FakeWatcher([ok])},
     )
     out = await p._grab_stats()
@@ -757,143 +783,155 @@ _DEFAULT_PODMAN_SOCK = "unix:///run/user/1000/podman/podman.sock"
 Add to the class (after `fields_description`):
 
 ```python
-    def __init__(self, store, config) -> None:
-        super().__init__(store, config)
+def __init__(self, store, config) -> None:
+    super().__init__(store, config)
 
-        # Reuse the v4 engines verbatim (Option A). Each construction is
-        # guarded so a broken engine leaves the others (and an empty plugin)
-        # valid.
-        self.watchers: dict[str, ContainersExtension] = {}
-        if not disable_plugin_docker:
-            self._try_add_watcher("docker", lambda: DockerExtension())
-        if not disable_plugin_podman:
-            self._try_add_watcher("podman", lambda: PodmanExtension(podman_sock=self._podman_sock()))
-        if not disable_plugin_lxd:
-            self._try_add_watcher("lxd", lambda: LxdExtension(poll_interval=self._poll_interval()))
+    # Reuse the v4 engines verbatim (Option A). Each construction is
+    # guarded so a broken engine leaves the others (and an empty plugin)
+    # valid.
+    self.watchers: dict[str, ContainersExtension] = {}
+    if not disable_plugin_docker:
+        self._try_add_watcher("docker", lambda: DockerExtension())
+    if not disable_plugin_podman:
+        self._try_add_watcher("podman", lambda: PodmanExtension(podman_sock=self._podman_sock()))
+    if not disable_plugin_lxd:
+        self._try_add_watcher("lxd", lambda: LxdExtension(poll_interval=self._poll_interval()))
 
-        # Static config surfaced to the renderer via metadata each cycle.
-        raw_disable = self.config.get(self.plugin_name, "disable_stats", "")
-        self._disable_stats: list[str] = (
-            [s.strip() for s in raw_disable.split(",") if s.strip()] if isinstance(raw_disable, str) else list(raw_disable or [])
+    # Static config surfaced to the renderer via metadata each cycle.
+    raw_disable = self.config.get(self.plugin_name, "disable_stats", "")
+    self._disable_stats: list[str] = (
+        [s.strip() for s in raw_disable.split(",") if s.strip()]
+        if isinstance(raw_disable, str)
+        else list(raw_disable or [])
+    )
+    try:
+        self._max_name_size = int(self.config.get(self.plugin_name, "max_name_size", 20))
+    except (TypeError, ValueError):
+        self._max_name_size = 20
+
+
+def _try_add_watcher(self, engine: str, factory) -> None:
+    try:
+        self.watchers[engine] = factory()
+    except Exception as e:
+        logger.warning("containers: engine %s unavailable (%s) — skipped", engine, e)
+
+
+def _podman_sock(self) -> str:
+    sock = self.config.get(self.plugin_name, "podman_sock", "")
+    if isinstance(sock, (list, tuple)):
+        sock = sock[0] if sock else ""
+    return str(sock) if sock else _DEFAULT_PODMAN_SOCK
+
+
+def _poll_interval(self) -> float:
+    val = self.config.get(self.plugin_name, "refresh", -1.0)
+    try:
+        val = float(val)
+    except (TypeError, ValueError):
+        val = -1.0
+    return val if val > 0 else 2.0
+
+
+def _all_tag(self) -> bool:
+    val = self.config.get(self.plugin_name, "all", False)
+    return str(val).lower() == "true"
+
+
+def _update_watchers(self) -> list:
+    """v4 flatten/merge/inject-engine/reconcile-memory/sort pipeline.
+
+    Blocking (reads engine snapshots); always called via to_thread.
+    show/hide filtering is left to the base ``_filter_collection`` on the
+    ``name`` primary key — not re-implemented here.
+    """
+    all_tag = self._all_tag()
+    items: list[dict[str, Any]] = []
+    for engine, watcher in self.watchers.items():
+        try:
+            _version, containers = watcher.update(all_tag=all_tag)
+        except Exception as e:
+            logger.warning("containers: engine %s update failed: %s", engine, e)
+            continue
+        for c in containers:
+            c["engine"] = engine
+            self._reconcile_memory(c)
+            items.append(c)
+    return self._sort(items)
+
+
+@staticmethod
+def _reconcile_memory(container: dict[str, Any]) -> None:
+    """Compute the three memory surfaces from the engine's nested
+    ``memory`` dict (design §6.1, three-surface decision):
+
+    - ``memory_usage``          — LEFT UNTOUCHED (v4 export value set by
+      the engine's ``generate_stats``). Feeds export / REST.
+    - ``memory_usage_no_cache`` — ``usage − inactive_file``. Feeds the
+      TUI MEM column (display).
+    - ``memory_percent``        — ``memory_usage_no_cache / limit * 100``.
+      Feeds alerting (thresholds, ``threshold_field="mem"``).
+    """
+    mem = container.get("memory") or {}
+    if "usage" not in mem:
+        return
+    usage_no_cache = mem["usage"] - mem.get("inactive_file", 0)
+    container["memory_usage_no_cache"] = usage_no_cache
+    container["memory_inactive_file"] = mem.get("inactive_file")
+    limit = mem.get("limit")
+    container["memory_percent"] = (usage_no_cache / limit * 100.0) if limit else None
+
+
+@staticmethod
+def _sort(stats: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Faithful reimplementation of v4 ``sort_docker_stats`` — sort by the
+    process engine's active sort key so containers track the process sort.
+
+    ``glances_processes.sort_key`` is read fresh every cycle (dynamic
+    default preserved: ``auto`` resolves to cpu/mem per load before the
+    getter returns — never hardcode a static key). The map resolves the
+    dynamically-selected key to a container column; the fallback tuple is
+    only the column mapping for genuinely unmapped keys, not a static
+    sort key."""
+    sort_by, sort_by_secondary = {
+        "memory_percent": ("memory_usage", "cpu_percent"),
+        "name": ("name", "cpu_percent"),
+    }.get(glances_processes.sort_key, ("cpu_percent", "memory_usage"))
+    try:
+        return sort_stats_processes(
+            stats,
+            sorted_by=sort_by,
+            sorted_by_secondary=sort_by_secondary,
+            reverse=glances_processes.sort_key != "name",
         )
-        try:
-            self._max_name_size = int(self.config.get(self.plugin_name, "max_name_size", 20))
-        except (TypeError, ValueError):
-            self._max_name_size = 20
+    except Exception as e:
+        logger.debug("containers: sort failed: %s", e)
+        return stats
 
-    def _try_add_watcher(self, engine: str, factory) -> None:
+
+async def _grab_stats(self) -> list:
+    if not self.watchers:
+        return []
+    try:
+        return await asyncio.to_thread(self._update_watchers)
+    except Exception as e:
+        logger.warning("containers: grab failed: %s", e)
+        return []
+
+
+def _add_metadata(self) -> None:
+    super()._add_metadata()
+    # Static [containers] config the renderer needs (it has no config access).
+    self._metadata["disable_stats"] = self._disable_stats
+    self._metadata["max_name_size"] = self._max_name_size
+
+
+def stop(self) -> None:
+    for engine, watcher in self.watchers.items():
         try:
-            self.watchers[engine] = factory()
+            watcher.stop()
         except Exception as e:
-            logger.warning("containers: engine %s unavailable (%s) — skipped", engine, e)
-
-    def _podman_sock(self) -> str:
-        sock = self.config.get(self.plugin_name, "podman_sock", "")
-        if isinstance(sock, (list, tuple)):
-            sock = sock[0] if sock else ""
-        return str(sock) if sock else _DEFAULT_PODMAN_SOCK
-
-    def _poll_interval(self) -> float:
-        val = self.config.get(self.plugin_name, "refresh", -1.0)
-        try:
-            val = float(val)
-        except (TypeError, ValueError):
-            val = -1.0
-        return val if val > 0 else 2.0
-
-    def _all_tag(self) -> bool:
-        val = self.config.get(self.plugin_name, "all", False)
-        return str(val).lower() == "true"
-
-    def _update_watchers(self) -> list:
-        """v4 flatten/merge/inject-engine/reconcile-memory/sort pipeline.
-
-        Blocking (reads engine snapshots); always called via to_thread.
-        show/hide filtering is left to the base ``_filter_collection`` on the
-        ``name`` primary key — not re-implemented here.
-        """
-        all_tag = self._all_tag()
-        items: list[dict[str, Any]] = []
-        for engine, watcher in self.watchers.items():
-            try:
-                _version, containers = watcher.update(all_tag=all_tag)
-            except Exception as e:
-                logger.warning("containers: engine %s update failed: %s", engine, e)
-                continue
-            for c in containers:
-                c["engine"] = engine
-                self._reconcile_memory(c)
-                items.append(c)
-        return self._sort(items)
-
-    @staticmethod
-    def _reconcile_memory(container: dict[str, Any]) -> None:
-        """Compute the three memory surfaces from the engine's nested
-        ``memory`` dict (design §6.1, three-surface decision):
-
-        - ``memory_usage``          — LEFT UNTOUCHED (v4 export value set by
-          the engine's ``generate_stats``). Feeds export / REST.
-        - ``memory_usage_no_cache`` — ``usage − inactive_file``. Feeds the
-          TUI MEM column (display).
-        - ``memory_percent``        — ``memory_usage_no_cache / limit * 100``.
-          Feeds alerting (thresholds, ``threshold_field="mem"``).
-        """
-        mem = container.get("memory") or {}
-        if "usage" not in mem:
-            return
-        usage_no_cache = mem["usage"] - mem.get("inactive_file", 0)
-        container["memory_usage_no_cache"] = usage_no_cache
-        container["memory_inactive_file"] = mem.get("inactive_file")
-        limit = mem.get("limit")
-        container["memory_percent"] = (usage_no_cache / limit * 100.0) if limit else None
-
-    @staticmethod
-    def _sort(stats: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Faithful reimplementation of v4 ``sort_docker_stats`` — sort by the
-        process engine's active sort key so containers track the process sort.
-
-        ``glances_processes.sort_key`` is read fresh every cycle (dynamic
-        default preserved: ``auto`` resolves to cpu/mem per load before the
-        getter returns — never hardcode a static key). The map resolves the
-        dynamically-selected key to a container column; the fallback tuple is
-        only the column mapping for genuinely unmapped keys, not a static
-        sort key."""
-        sort_by, sort_by_secondary = {
-            "memory_percent": ("memory_usage", "cpu_percent"),
-            "name": ("name", "cpu_percent"),
-        }.get(glances_processes.sort_key, ("cpu_percent", "memory_usage"))
-        try:
-            return sort_stats_processes(
-                stats,
-                sorted_by=sort_by,
-                sorted_by_secondary=sort_by_secondary,
-                reverse=glances_processes.sort_key != "name",
-            )
-        except Exception as e:
-            logger.debug("containers: sort failed: %s", e)
-            return stats
-
-    async def _grab_stats(self) -> list:
-        if not self.watchers:
-            return []
-        try:
-            return await asyncio.to_thread(self._update_watchers)
-        except Exception as e:
-            logger.warning("containers: grab failed: %s", e)
-            return []
-
-    def _add_metadata(self) -> None:
-        super()._add_metadata()
-        # Static [containers] config the renderer needs (it has no config access).
-        self._metadata["disable_stats"] = self._disable_stats
-        self._metadata["max_name_size"] = self._max_name_size
-
-    def stop(self) -> None:
-        for engine, watcher in self.watchers.items():
-            try:
-                watcher.stop()
-            except Exception as e:
-                logger.warning("containers: stop(%s) failed: %s", engine, e)
+            logger.warning("containers: stop(%s) failed: %s", engine, e)
 ```
 
 Remove the placeholder `_grab_stats` from Task 4. Keep `logger` defined once.
@@ -967,8 +1005,18 @@ def test_empty_data_returns_empty():
 
 
 def test_header_and_one_row():
-    data = [{"name": "web", "engine": "docker", "status": "running", "uptime": "1h",
-             "cpu_percent": 12.0, "memory_usage_no_cache": 200, "memory_limit": 1000, "ports": ""}]
+    data = [
+        {
+            "name": "web",
+            "engine": "docker",
+            "status": "running",
+            "uptime": "1h",
+            "cpu_percent": 12.0,
+            "memory_usage_no_cache": 200,
+            "memory_limit": 1000,
+            "ports": "",
+        }
+    ]
     rows = render(_payload(data), None, {"sort_key": None, "byte": False})
     assert len(rows) == 2  # header + 1
     header = _texts(rows[0])
@@ -1013,8 +1061,10 @@ def test_disable_stats_hides_column():
 
 def test_engine_column_only_when_multiple_engines():
     one = [{"name": "a", "engine": "docker", "status": "running"}]
-    two = [{"name": "a", "engine": "docker", "status": "running"},
-           {"name": "b", "engine": "podman", "status": "running"}]
+    two = [
+        {"name": "a", "engine": "docker", "status": "running"},
+        {"name": "b", "engine": "podman", "status": "running"},
+    ]
     assert "Engine" not in _texts(render(_payload(one), None, {})[0])
     assert "Engine" in _texts(render(_payload(two), None, {})[0])
 
@@ -1035,8 +1085,9 @@ def test_sort_underline_on_cpu():
 
 def test_sort_underline_on_mem_maps_to_memory_percent():
     # Process sort key `memory_percent` underlines the MEM header (processlist-aligned).
-    data = [{"name": "web", "engine": "docker", "status": "running",
-             "memory_usage_no_cache": 100, "memory_limit": 1000}]
+    data = [
+        {"name": "web", "engine": "docker", "status": "running", "memory_usage_no_cache": 100, "memory_limit": 1000}
+    ]
     rows = render(_payload(data), None, {"sort_key": "memory_percent"})
     mem_hdr = [c for c in rows[0].cells if c.text.strip() == "MEM"]
     assert mem_hdr and mem_hdr[0].underline is True
@@ -1113,8 +1164,9 @@ def _level_role(level_entry: Any) -> tuple[ColorRole, bool]:
     return (ColorRole.DEFAULT, False)
 
 
-def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | None = None,
-           view: dict[str, Any] | None = None) -> list[Row]:
+def render(
+    payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | None = None, view: dict[str, Any] | None = None
+) -> list[Row]:
     items: list[dict[str, Any]] = []
     if isinstance(payload, dict):
         raw = payload.get("data")
@@ -1138,8 +1190,9 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
 
     def hdr(label: str, width: int, *, ljust: bool = False, color: ColorRole = ColorRole.HEADER) -> Cell:
         text = f"{label:<{width}}" if ljust else f"{label:>{width}}"
-        return Cell(text=text, color=color, bold=True,
-                    underline=bool(sort_key) and _HEADER_SORT_KEY.get(label) == sort_key)
+        return Cell(
+            text=text, color=color, bold=True, underline=bool(sort_key) and _HEADER_SORT_KEY.get(label) == sort_key
+        )
 
     # ---- header row
     h: list[Cell] = []

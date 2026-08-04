@@ -42,9 +42,9 @@ cumulatively by `_fit_header` until `_header_fits(frame, max_x)` holds:
 
 ```python
 _HEADER_DEGRADE_STEPS = [
-    ("hide_os_info", True),   # (1) drop the system OS-info string
-    ("hide_ip", True),        # (2) hide the ip block
-    ("hide_uptime", True),    # (3) hide the uptime block (last resort)
+    ("hide_os_info", True),  # (1) drop the system OS-info string
+    ("hide_ip", True),  # (2) hide the ip block
+    ("hide_uptime", True),  # (3) hide the uptime block (last resort)
 ]
 ```
 
@@ -59,8 +59,8 @@ The header slot becomes two explicit groups. The renderer stays the single
 source of truth for slot membership and order; the painter only consumes it.
 
 ```python
-HEADER_SLOT_LEFT:  tuple[str, ...] = ("system", "ip")
-HEADER_SLOT_RIGHT: tuple[str, ...] = ("uptime", "now")   # painted right-aligned
+HEADER_SLOT_LEFT: tuple[str, ...] = ("system", "ip")
+HEADER_SLOT_RIGHT: tuple[str, ...] = ("uptime", "now")  # painted right-aligned
 HEADER_SLOT = HEADER_SLOT_LEFT + HEADER_SLOT_RIGHT
 ```
 
@@ -121,10 +121,10 @@ right-aligned, or split between the two groups.
 
 ```python
 _HEADER_DEGRADE_STEPS = [
-    ("hide_now", True),       # (1) drop the current date — least priority
-    ("hide_os_info", True),   # (2) drop the system OS-info string
-    ("hide_ip", True),        # (3) hide the ip block
-    ("hide_uptime", True),    # (4) hide the uptime block (last resort)
+    ("hide_now", True),  # (1) drop the current date — least priority
+    ("hide_os_info", True),  # (2) drop the system OS-info string
+    ("hide_ip", True),  # (3) hide the ip block
+    ("hide_uptime", True),  # (4) hide the uptime block (last resort)
 ]
 ```
 

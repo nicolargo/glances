@@ -76,13 +76,13 @@ class McpPluginView:
         self,
         plugin_name: str,
         store: StatsStoreV5 | None,
-        schema: dict[str, dict[str, Any]] | None,
         synthetic_payload: Any | None = None,
+        plugin: GlancesPluginBase | None = None,
     ) -> None:
         self._plugin_name = plugin_name
         self._store = store
-        self._schema = schema or {}
         self._synthetic_payload = synthetic_payload
+        self._plugin = plugin
 
     def get_raw(self) -> dict[str, Any] | list[dict[str, Any]]:
         """Return the latest payload for this plugin.
@@ -113,21 +113,22 @@ class McpPluginView:
             _HISTORY_WARN_SEEN.add(self._plugin_name)
         return {}
 
-    def get_limits(self) -> dict[str, dict[str, float]]:
-        """Aggregate ``default_thresholds`` from every field with one.
+    def get_limits(self) -> dict[str, Any]:
+        """Return the plugin's **effective** thresholds.
 
-        The result is keyed by field name (e.g. ``"total"`` →
-        ``{"careful": 50, "warning": 70, "critical": 90}``), matching
-        the structure v4 plugins expose. Fields without thresholds are
-        omitted (consistent with v4's behaviour when ``_limits`` is
-        empty for a field).
+        Delegates to ``GlancesPluginBase.get_limits()`` so that MCP and the
+        REST ``/api/5/<plugin>/limits`` route share one source of truth.
+        This class previously aggregated ``default_thresholds`` straight
+        from the field schema, which ignored the operator's config — the
+        ``glances://limits`` resource reported shipped defaults even when a
+        threshold had been overridden.
+
+        Synthetic plugins (``alert``) have no backing plugin object and
+        carry no thresholds.
         """
-        out: dict[str, dict[str, float]] = {}
-        for field_name, schema in self._schema.items():
-            thresholds = schema.get("default_thresholds")
-            if isinstance(thresholds, dict) and thresholds:
-                out[field_name] = dict(thresholds)
-        return out
+        if self._plugin is None:
+            return {}
+        return self._plugin.get_limits()
 
 
 class McpStatsAdapter:
@@ -163,15 +164,15 @@ class McpStatsAdapter:
         """Return a snapshot of every plugin's current payload."""
         return self._store.as_dict()
 
-    def getAllLimitsAsDict(self) -> dict[str, dict[str, dict[str, float]]]:  # noqa: N802
+    def getAllLimitsAsDict(self) -> dict[str, dict[str, Any]]:  # noqa: N802
         """Aggregate thresholds across every real plugin.
 
         Synthetic plugins (``alert``) carry no thresholds and are
         therefore omitted.
         """
-        out: dict[str, dict[str, dict[str, float]]] = {}
+        out: dict[str, dict[str, Any]] = {}
         for name, plugin in self._by_name.items():
-            view = McpPluginView(plugin_name=name, store=self._store, schema=plugin._fields)
+            view = McpPluginView(plugin_name=name, store=self._store, plugin=plugin)
             limits = view.get_limits()
             if limits:
                 out[name] = limits
@@ -190,13 +191,12 @@ class McpStatsAdapter:
             return McpPluginView(
                 plugin_name="alert",
                 store=None,
-                schema={},
                 synthetic_payload=self._alerts_payload,
             )
         plugin = self._by_name.get(name)
         if plugin is None:
             return None
-        return McpPluginView(plugin_name=name, store=self._store, schema=plugin._fields)
+        return McpPluginView(plugin_name=name, store=self._store, plugin=plugin)
 
     # ------------------------------------------------------------------ internals
 
