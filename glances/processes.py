@@ -681,11 +681,9 @@ class GlancesProcesses:
                 self.set_max_values(k, max(values_list))
 
     def remove_non_running_procs(self, processlist):
-        pids_running = [p['pid'] for p in processlist]
-        pids_cached = list(self.processlist_cache.keys()).copy()
-        for pid in pids_cached:
-            if pid not in pids_running:
-                self.processlist_cache.pop(pid, None)
+        pids_running = {p['pid'] for p in processlist}
+        for pid in [pid for pid in self.processlist_cache if pid not in pids_running]:
+            self.processlist_cache.pop(pid, None)
 
     def update_list(self, processlist):
         """Return the process list after filtering and transformation (namedtuple to dict)."""
