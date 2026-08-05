@@ -377,7 +377,7 @@ Enhancements:
 
 Bugs corrected:
 
-* [MACOS] Glances not showing Processes on MacOS #3100
+* [MACOS] Glances not showing Processes on macOS #3100
 * Last dev build broke Homepage API calls ? only 1 widget still working #3322
 * Cloud plugin always generate communication with 169.254.169.254, even if the plugin is disabled #3316
 * API response delay (3+ minutes) when VMs are running #3317
@@ -1029,7 +1029,7 @@ Bugs corrected:
 
 * Correct issue (error message) concerning the Cloud plugin - Related to #2392
 * InfluxDB2 export doesn't process folders correctly - missing key #2327
-* Index error when displaying programs on MacOS #2360
+* Index error when displaying programs on macOS #2360
 * Dissociate 2 sensors with exactly the same names #2280
 * All times displayed in UTC - Container not using TZ/localtime (Docker) #2278
 * It is not possible to return API data for a particular mount point (FS plugin) #1162
@@ -2587,7 +2587,7 @@ Version 1.7.2
 Version 1.7.1
 =============
 
-* Fix IoWait error on FreeBSD / Mac OS
+* Fix IoWait error on FreeBSD / Mac OS X
 * HDDTemp module is now Python v3 compatible
 * Don't warn a process is not running if countmin=0
 * Add PyPI badge on the README.rst

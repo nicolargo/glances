@@ -420,7 +420,7 @@ It will start a Glances server with WebUI.
 Brew: The missing package manager
 ---------------------------------
 
-For Linux and Mac OS, it is also possible to install Glances with `Brew`_:
+For Linux and macOS, it is also possible to install Glances with `Brew`_:
 
 .. code-block:: console
 
@@ -477,7 +477,7 @@ To install Glances from Ports:
 macOS
 -----
 
-MacOS users can install Glances using ``Homebrew`` or ``MacPorts``.
+macOS users can install Glances using ``Homebrew`` or ``MacPorts``.
 
 Homebrew
 ````````
