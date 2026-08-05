@@ -115,13 +115,25 @@ class PluginModel(GlancesPluginBase[list]):
 
     def __init__(self, store: Any, config: Any) -> None:
         super().__init__(store, config)
-        # Build the grab classes once (v4 parity: constructed at init).
+        # The grab classes are built on the first collection, not here.
+        # v4 constructs them at init, but v5 calls `__init__` on the
+        # synchronous startup path — before the TUI paints its first frame —
+        # and `GlancesGrabSensors.__init__` probes the hardware
+        # (`psutil.sensors_temperatures()`, ~230 ms on a laptop). `_collect()`
+        # already runs in a worker thread, which is where that cost belongs.
+        self._grabbers_built = False
+
+    def _build_grabbers(self) -> None:
+        """Construct the four sub-grabbers. Idempotent — first call wins."""
+        if self._grabbers_built:
+            return
         self._grab_temp_core = GlancesGrabSensors(sensors_definition["cpu_temp"])
         self._grab_fan = GlancesGrabSensors(sensors_definition["fan_speed"])
         host = self.config.get("sensors", "host", "127.0.0.1")
         port = self.config.get("sensors", "port", 7634)
         self._grab_hdd = GlancesGrabHDDTemp(host=host, port=port)
         self._grab_bat = GlancesGrabBat()
+        self._grabbers_built = True
 
     def _collect(self) -> list:
         """Synchronous collection (runs in a worker thread).
@@ -130,6 +142,7 @@ class PluginModel(GlancesPluginBase[list]):
         drop the others (mirrors the v4 ThreadPoolExecutor per-future
         try/except).
         """
+        self._build_grabbers()
         out: list[dict[str, Any]] = []
         out.extend(self._grab_typed(self._grab_temp_core.update, _TEMP_CORE))
         out.extend(self._grab_typed(self._grab_fan.update, _FAN_SPEED))

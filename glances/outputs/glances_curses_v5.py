@@ -169,6 +169,13 @@ class TuiV5(threading.Thread):
     # Upper bound on a single blocking ``getch`` so an external ``stop()`` is
     # honoured promptly even when the next scheduled repaint is far off.
     _MAX_GETCH_BLOCK = 0.25
+    # Poll interval used *only* during the startup catch-up window (see
+    # ``_startup_catchup_over``). Short enough that the first data-bearing
+    # frame lands within a couple of frames of the plugins publishing.
+    _STARTUP_POLL_INTERVAL = 0.15
+    # Hard ceiling on the startup catch-up window, so a plugin whose
+    # ``update()`` never succeeds cannot keep the fast polling alive forever.
+    _STARTUP_CATCHUP_TIMEOUT = 5.0
 
     def __init__(
         self,
@@ -378,11 +385,23 @@ class TuiV5(threading.Thread):
             # Seed so the first keypress is eligible for an instant repaint.
             last_change_paint = now - self._MIN_KEY_REPAINT_INTERVAL
             dirty = False
+            # Startup catch-up: the frame just painted was built *before* the
+            # scheduler ran a single plugin update, so it carries headers and
+            # no stats. Until every displayed plugin has published (or the
+            # timeout fires) poll the store's publication counter and repaint
+            # the moment data lands — otherwise that empty frame would be held
+            # for a whole ``refresh_interval``. Closed for good afterwards:
+            # steady-state cadence is unchanged.
+            last_revision = self.store.revision
+            startup_deadline = now + max(self._STARTUP_CATCHUP_TIMEOUT, 2 * self.refresh_interval)
+            in_startup = not self._startup_catchup_over(now, startup_deadline)
             while not self._stop_event.is_set():
                 now = time.monotonic()
                 next_regular = last_paint + self.refresh_interval
                 next_change = last_change_paint + self._MIN_KEY_REPAINT_INTERVAL if dirty else float("inf")
                 block = max(0.0, min(min(next_regular, next_change) - now, self._MAX_GETCH_BLOCK))
+                if in_startup:
+                    block = min(block, self._STARTUP_POLL_INTERVAL)
                 stdscr.timeout(int(block * 1000))
 
                 key = stdscr.getch()
@@ -417,12 +436,16 @@ class TuiV5(threading.Thread):
                 # (a capped block may expire before the next paint is due).
                 now = time.monotonic()
                 regular_due, change_due = self._repaint_decision(now, last_paint, last_change_paint, dirty)
-                if regular_due or change_due:
+                data_due = in_startup and self.store.revision != last_revision
+                if regular_due or change_due or data_due:
+                    last_revision = self.store.revision
                     self._repaint(stdscr)
                     last_paint = now
                     if change_due:
                         last_change_paint = now
                     dirty = False
+                if in_startup and self._startup_catchup_over(now, startup_deadline):
+                    in_startup = False
         finally:
             # `curses.endwin()` doesn't reliably restore cursor visibility
             # on every terminal — if we hid it, restore it ourselves so the
@@ -432,6 +455,19 @@ class TuiV5(threading.Thread):
                     curses.curs_set(1)
                 except curses.error:
                     pass
+
+    def _startup_catchup_over(self, now: float, deadline: float) -> bool:
+        """Return True when the startup catch-up window must close.
+
+        It closes as soon as every plugin the TUI displays has published at
+        least once, or on ``deadline`` — a plugin whose ``update()`` keeps
+        failing (or a platform where it yields nothing) must not keep the fast
+        polling alive for the whole session.
+        """
+        if now >= deadline:
+            return True
+        published = set(self.store.keys())
+        return all(name in published for name, _ in self.registry)
 
     def _repaint_decision(
         self, now: float, last_paint: float, last_change_paint: float, dirty: bool

@@ -143,6 +143,46 @@ async def test_set_does_not_mutate_previous_reference(store: StatsStoreV5) -> No
     assert store.get("cpu") == {"total": 2.0}
 
 
+# --------------------------------------------------------------- revision
+
+
+def test_revision_starts_at_zero(store: StatsStoreV5) -> None:
+    assert store.revision == 0
+
+
+async def test_revision_increments_on_each_set(store: StatsStoreV5) -> None:
+    await store.set("cpu", {"total": 1.0})
+    assert store.revision == 1
+    await store.set("mem", {"total": 2.0})
+    assert store.revision == 2
+
+
+async def test_revision_increments_even_when_value_is_identical(store: StatsStoreV5) -> None:
+    """A republication with the same payload is still a publication — the TUI
+    startup catch-up must be able to see it (e.g. `ports` re-publishing while
+    its background scan progresses)."""
+    payload = {"total": 1.0}
+    await store.set("cpu", payload)
+    await store.set("cpu", payload)
+    assert store.revision == 2
+
+
+async def test_revision_not_incremented_by_rejected_set(store: StatsStoreV5) -> None:
+    with pytest.raises(TypeError):
+        await store.set("cpu", "not-a-dict")  # type: ignore[arg-type]
+    assert store.revision == 0
+
+
+async def test_revision_read_is_lockless(store: StatsStoreV5) -> None:
+    """`revision` is polled by the TUI thread — it must never take the lock."""
+    await store._lock.acquire()
+    try:
+        value = await asyncio.wait_for(asyncio.to_thread(lambda: store.revision), timeout=1.0)
+        assert value == 0
+    finally:
+        store._lock.release()
+
+
 # --------------------------------------------------------------- type guard
 
 

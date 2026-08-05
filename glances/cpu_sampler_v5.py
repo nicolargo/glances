@@ -23,14 +23,25 @@ enough to be transparent at the default `refresh_time = 2 s`, long
 enough to absorb cycles fired in the same scheduler tick.
 
 Each sub-sample has its own `asyncio.Lock` so two parallel plugin
-updates can't trigger two psutil calls for the same sub-sample — while a
-slow startup recovery on one path (the ~1 s per-core settle) never
-serialises the fast aggregate/counters paths.
+updates can't trigger two psutil calls for the same sub-sample.
+
+Percentages are derived from our own `psutil.cpu_times()` snapshots rather
+than from `psutil.cpu_times_percent()`. psutil scales a sample with
+``100.0 / max(1, all_delta)``, where ``all_delta`` is the summed CPU time of
+the window — expressed in *seconds* on Linux, not in ticks as that ``max(1,
+…)`` assumes. With ``percpu=True`` the sum covers a single core, so any
+window shorter than one second is under-scaled linearly (a 0.5 s window
+reports half the real values) and psutil only becomes trustworthy after a
+full second. That is what forced the old blocking one-second sample on the
+first `quicklook` / `percpu` update, and it also silently under-reported the
+system-wide value at startup on 1–2 vCPU hosts (there ``all_delta`` is
+``ncpu × window``). Computing the deltas here removes both problems: the
+result is exact from a ~0.2 s window and nothing ever blocks.
 
 Public API (consumed by `cpu/model_v5.py` and `percpu/model_v5.py`):
 
-- ``await sampler.get_aggregate()``  -> psutil cpu_times_percent (system-wide)
-- ``await sampler.get_per_core()``   -> list[psutil cpu_times_percent] (per core)
+- ``await sampler.get_aggregate()``  -> CPU time percentages (system-wide)
+- ``await sampler.get_per_core()``   -> list of CPU time percentages (per core)
 - ``await sampler.get_stats()``      -> psutil cpu_stats (counters)
 - ``sampler.cpu_count``               -> int (logical core count, cached forever)
 
@@ -41,35 +52,20 @@ instantiate `CpuSamplerV5` directly with their own TTL.
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from typing import Any
 
 import psutil
 
+logger = logging.getLogger(__name__)
+
 DEFAULT_TTL_SECONDS = 1.0
 
-# Blocking interval used to recover a settled *aggregate* sample at startup.
-# psutil's ``cpu_times_percent(interval=0.0)`` only yields a meaningful value
-# once a prior call sits far enough in the past to produce a real delta. On
-# the first call(s) — and under startup contention — that delta is missing and
-# psutil returns an all-zeros sample, which the cpu plugin maps to ``idle=0``
-# → ``total=100 %`` (the spurious "100 % CPU spike" seen for the first one or
-# two refreshes). Empirically the aggregate sample settles (its fields sum to
-# ~100 %) after ~0.1 s of real elapsed time, so a single short *blocking*
-# sample over that window is settled by construction. It runs in a worker
-# thread, so the asyncio event loop is never blocked.
-_AGGREGATE_SETTLE_INTERVAL = 0.1
-
-# Blocking interval used to recover a settled *per-core* sample at startup.
-# Per-core ``cpu_times_percent`` settles ~10× slower than the system-wide
-# aggregate: each core's fields only sum to ~100 % after ~1 s of real elapsed
-# time (vs ~0.1 s for the aggregate). Below that the cores read all-zeros and
-# the percpu plugin renders every core at ``total=100 %`` — a spike that
-# otherwise lingers for several refreshes at startup. A single blocking sample
-# over this longer window is settled by construction (worker thread → the event
-# loop is not blocked). The per-core sampler holds its own lock (see
-# ``__init__``) so this longer call never delays the fast aggregate path.
-_PER_CORE_SETTLE_INTERVAL = 1.0
+# Fields Linux already accounts for inside `user` / `nice`. psutil subtracts
+# them from the window total (`psutil._cpu_tot_time`); so do we, or every
+# other field comes out under-scaled on a host running VMs.
+_GUEST_FIELDS = ("guest", "guest_nice")
 
 
 class CpuSamplerV5:
@@ -79,9 +75,8 @@ class CpuSamplerV5:
         self._ttl = ttl
         # One lock per sub-sample (aggregate / per-core / counters). They guard
         # independent psutil calls and independent cached state, so a slow
-        # recovery on one path (e.g. the ~1 s per-core settle at startup) must
-        # not serialise the others. Each lock still prevents two concurrent
-        # callers from duplicating the *same* psutil sub-sample.
+        # path must not serialise the others. Each lock still prevents two
+        # concurrent callers from duplicating the *same* psutil sub-sample.
         self._aggregate_lock = asyncio.Lock()
         self._per_core_lock = asyncio.Lock()
         self._stats_lock = asyncio.Lock()
@@ -97,77 +92,122 @@ class CpuSamplerV5:
 
         self._cpu_count: int | None = None
 
+        # Cumulative `cpu_times` snapshots anchoring the next delta window.
+        self._prev_aggregate_times: Any | None = None
+        self._prev_per_core_times: list[Any] | None = None
+        self._prime()
+
+    def _prime(self) -> None:
+        """Anchor both delta baselines at construction time.
+
+        v4 does the same at import time (``cpu_percent.CpuPercent.__init__``
+        takes a first sample and discards it): by the time the first plugin
+        update runs, a real window has already elapsed, so the very first
+        frame carries true values instead of a placeholder.
+
+        Guarded: a platform where ``cpu_times`` raises must not break the
+        import of this module and take the cpu / percpu / quicklook plugins
+        down with it. Without a baseline the first sample falls back to the
+        idle placeholder and the one after it is exact.
+        """
+        try:
+            self._prev_aggregate_times = psutil.cpu_times()
+            self._prev_per_core_times = psutil.cpu_times(percpu=True)
+        except Exception as e:
+            logger.debug("CPU sampler: cannot prime the delta baseline (%s)", e)
+
     # ----------------------------------------------------------- helpers
 
     def _is_fresh(self, ts: float) -> bool:
         return ts > 0 and (time.monotonic() - ts) < self._ttl
 
-    # ----------------------------------------------------------- aggregate
+    @staticmethod
+    def _percent_from_deltas(previous: Any, current: Any) -> Any | None:
+        """Percentages over the ``[previous, current]`` window.
+
+        Same semantics as ``psutil.cpu_times_percent`` — negative deltas
+        trimmed to zero (CPU times can go backwards, psutil issues #392 /
+        #645 / #1210), guest time excluded from the total on Linux, each
+        field clamped to ``[0, 100]`` and rounded to one decimal — minus the
+        ``max(1, all_delta)`` clamp that makes psutil wrong below a one-second
+        window (see the module docstring).
+
+        Returns ``None`` when the window holds no measurable CPU time, so the
+        caller can decide what to serve instead of publishing a bogus sample.
+        """
+        fields = current._fields
+        deltas = [max(0.0, getattr(current, f) - getattr(previous, f)) for f in fields]
+        total = sum(deltas)
+        if psutil.LINUX:
+            total -= sum(deltas[fields.index(f)] for f in _GUEST_FIELDS if f in fields)
+        if total <= 0:
+            return None
+        scale = 100.0 / total
+        return current.__class__(*(min(max(0.0, round(d * scale, 1)), 100.0) for d in deltas))
 
     @staticmethod
-    def _is_unsettled(sample: Any) -> bool:
-        """Detect a psutil sample taken before its baseline is built.
+    def _idle_sample(template: Any) -> Any:
+        """A fully-idle sample shaped like ``template``.
 
-        ``psutil.cpu_times_percent(interval=0.0)`` returns ``0.0`` for
-        every field on the very first call (no anchor). The next few
-        calls — until enough wall time has elapsed since the anchor —
-        return partial samples that don't sum to ~100% (typical
-        signature: ``idle≈1.0, every other field == 0.0``). Cache-ing
-        such a sample would propagate the "100% CPU spike" for a full
-        TTL window after startup.
-
-        Heuristic: a settled cpu_times_percent sample sums to roughly
-        100%. Below 50% means no real baseline yet.
+        Only used when no usable window exists yet — no baseline, or two
+        snapshots taken inside the same clock tick. Reporting *idle* is the
+        safe default here: the all-zeros sample psutil returns in that
+        situation has ``idle=0``, which the cpu plugin renders as
+        ``total=100 %`` — the spurious startup spike.
         """
-        names = ("user", "system", "idle", "nice", "iowait", "irq", "softirq", "steal", "guest", "dpc")
-        total = 0.0
-        for n in names:
-            v = getattr(sample, n, 0.0)
-            if isinstance(v, (int, float)):
-                total += float(v)
-        return total < 50.0
+        return template.__class__(*(100.0 if f == "idle" else 0.0 for f in template._fields))
 
-    async def _fetch_aggregate(self, percpu: bool = False) -> Any:
-        """Pull a psutil sample; if it looks unsettled (no usable baseline
-        yet, typical at startup), recover with a guaranteed-settled sample.
-        Caller is responsible for holding the relevant sub-sample lock."""
-        result = await asyncio.to_thread(psutil.cpu_times_percent, interval=0.0, percpu=percpu)
-        first = result[0] if (percpu and result) else result
-        if first is None or not self._is_unsettled(first):
-            return result
-
-        if not percpu:
-            # Aggregate: a single short *blocking* sample measures the delta
-            # over a real window (``_AGGREGATE_SETTLE_INTERVAL``) and is
-            # settled by construction — no all-zeros artifact, no ``total=100``
-            # spike. Runs in a worker thread, so the event loop is not blocked.
-            return await asyncio.to_thread(psutil.cpu_times_percent, interval=_AGGREGATE_SETTLE_INTERVAL, percpu=percpu)
-
-        # Per-core: same recovery as the aggregate, but over the longer
-        # ``_PER_CORE_SETTLE_INTERVAL`` window that per-core sampling needs to
-        # settle. One blocking sample is settled by construction — no all-zeros
-        # artifact, no every-core ``total=100`` spike at startup.
-        return await asyncio.to_thread(psutil.cpu_times_percent, interval=_PER_CORE_SETTLE_INTERVAL, percpu=percpu)
+    # ----------------------------------------------------------- aggregate
 
     async def get_aggregate(self) -> Any:
-        """System-wide ``cpu_times_percent`` (cached over ``ttl``)."""
+        """System-wide CPU time percentages (cached over ``ttl``)."""
         async with self._aggregate_lock:
             if self._is_fresh(self._aggregate_ts) and self._aggregate is not None:
                 return self._aggregate
-            self._aggregate = await self._fetch_aggregate(percpu=False)
+            current = await asyncio.to_thread(psutil.cpu_times)
+            percent = None
+            if self._prev_aggregate_times is not None:
+                percent = self._percent_from_deltas(self._prev_aggregate_times, current)
+            self._prev_aggregate_times = current
+            if percent is None:
+                percent = self._aggregate if self._aggregate is not None else self._idle_sample(current)
+            self._aggregate = percent
             self._aggregate_ts = time.monotonic()
             return self._aggregate
 
     # ----------------------------------------------------------- per-core
 
     async def get_per_core(self) -> list[Any]:
-        """Per-core ``cpu_times_percent`` (cached over ``ttl``)."""
+        """Per-core CPU time percentages (cached over ``ttl``)."""
         async with self._per_core_lock:
             if self._is_fresh(self._per_core_ts) and self._per_core:
                 return self._per_core
-            self._per_core = await self._fetch_aggregate(percpu=True)
+            current = await asyncio.to_thread(psutil.cpu_times, percpu=True)
+            percent = self._per_core_from_deltas(self._prev_per_core_times, current)
+            self._prev_per_core_times = current
+            if percent is None:
+                percent = self._per_core or [self._idle_sample(core) for core in current]
+            self._per_core = percent
             self._per_core_ts = time.monotonic()
             return self._per_core
+
+    @classmethod
+    def _per_core_from_deltas(cls, previous: list[Any] | None, current: list[Any]) -> list[Any] | None:
+        """Per-core version of ``_percent_from_deltas``.
+
+        A core count change (CPU hotplug, a container cpuset resize) makes the
+        two snapshots non-comparable — reprime rather than zip mismatched
+        lists onto the wrong cores.
+        """
+        if previous is None or len(previous) != len(current):
+            return None
+        out = []
+        for prev_core, cur_core in zip(previous, current):
+            percent = cls._percent_from_deltas(prev_core, cur_core)
+            if percent is None:
+                return None
+            out.append(percent)
+        return out
 
     # ----------------------------------------------------------- counters
 

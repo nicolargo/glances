@@ -25,7 +25,11 @@ plugin. Architecture decision §1.3:
   to acquire the lock.
 
 Pub/sub and `subscribe()` are intentionally not provided — they will be
-added when a real consumer needs them, not before (no dead code).
+added when a real consumer needs them, not before (no dead code). A
+monotonic `revision` counter *is* provided: the curses TUI polls it during
+its startup catch-up window so the first data-bearing frame is painted as
+soon as the plugins publish, instead of one full refresh cycle later. It is
+a plain `int` read without the lock, same contract as `get()`.
 """
 
 from __future__ import annotations
@@ -44,6 +48,7 @@ class StatsStoreV5:
     def __init__(self) -> None:
         self._data: dict[str, PluginData] = {}
         self._lock = asyncio.Lock()
+        self._revision: int = 0
 
     async def set(self, plugin_name: str, data: PluginData) -> None:
         """Replace the stored value for `plugin_name`.
@@ -55,6 +60,21 @@ class StatsStoreV5:
             raise TypeError(f"StatsStoreV5 only accepts dict or list, got {type(data).__name__}")
         async with self._lock:
             self._data[plugin_name] = data
+            # Bumped on every accepted publication, including a republication
+            # of an identical payload: a consumer watching for "did anything
+            # land?" must see re-publications too (e.g. `ports` publishing a
+            # placeholder, then the real scan result).
+            self._revision += 1
+
+    @property
+    def revision(self) -> int:
+        """Monotonic publication counter, incremented by every accepted `set()`.
+
+        Lockless, like `get()` — a plain `int` read is atomic under the GIL.
+        Consumers must compare against a previously captured value rather than
+        interpret the number itself.
+        """
+        return self._revision
 
     def get(self, plugin_name: str, default: T = None) -> PluginData | T:
         """Return the stored value for `plugin_name`, or `default` if absent.

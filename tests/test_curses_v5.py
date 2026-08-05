@@ -845,6 +845,171 @@ def test_tui_v5_repaint_decision_regular_cadence(fake_store, fake_alerts, fake_c
     assert regular_due is False
 
 
+# ------------------------------------------------------- startup catch-up
+
+
+class _CatchupStore:
+    """Minimal stand-in exposing exactly what the TUI consumes from the store:
+    `revision`, `keys()` and `as_dict()`. Starts empty, like the real store
+    does while the scheduler has not run a single plugin update yet."""
+
+    _PAYLOAD = {
+        "total": 16_000_000_000,
+        "available": 8_000_000_000,
+        "percent": 72.0,
+    }
+
+    def __init__(self) -> None:
+        self._published: dict[str, dict] = {}
+        self._revision = 0
+
+    @property
+    def revision(self) -> int:
+        return self._revision
+
+    def keys(self) -> list[str]:
+        return list(self._published)
+
+    def as_dict(self) -> dict:
+        return dict(self._published)
+
+    def publish(self, name: str) -> None:
+        self._published[name] = dict(self._PAYLOAD)
+        self._revision += 1
+
+
+class _FakeScreen:
+    """`getch` never returns a key; it drives the loop and fires callbacks at
+    chosen iterations so a test can make data land at a precise moment."""
+
+    def __init__(self, stop_event, at_iteration: dict, max_polls: int = 30) -> None:
+        self._stop = stop_event
+        self._at = at_iteration
+        self._max = max_polls
+        self.calls = 0
+        self.blocks: list[float] = []
+
+    def timeout(self, ms: int) -> None:
+        self.blocks.append(ms / 1000.0)
+
+    def getch(self) -> int:
+        self.calls += 1
+        time.sleep(0.01)
+        cb = self._at.get(self.calls)
+        if cb is not None:
+            cb()
+        if self.calls >= self._max:
+            self._stop.set()
+        return -1
+
+    def getmaxyx(self) -> tuple[int, int]:
+        return (50, 200)
+
+    def refresh(self) -> None:
+        pass
+
+
+def _make_catchup_tui(tui_mod, store, fake_alerts, fake_config, registry, refresh_interval=30.0):
+    return tui_mod.TuiV5(
+        store=store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=registry,
+        fields_by_plugin={name: {} for name, _ in registry},
+        refresh_interval=refresh_interval,
+    )
+
+
+def test_tui_v5_startup_catchup_over_when_every_registry_plugin_published(fake_alerts, fake_config):
+    """The catch-up window closes as soon as every displayed plugin published."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    store = _CatchupStore()
+    tui = _make_catchup_tui(tui_mod, store, fake_alerts, fake_config, [("mem", False), ("cpu", False)])
+
+    assert tui._startup_catchup_over(now=0.0, deadline=100.0) is False
+    store.publish("mem")
+    assert tui._startup_catchup_over(now=0.0, deadline=100.0) is False
+    store.publish("cpu")
+    assert tui._startup_catchup_over(now=0.0, deadline=100.0) is True
+
+
+def test_tui_v5_startup_catchup_over_on_deadline(fake_alerts, fake_config):
+    """A plugin that never publishes (permanently failing `update()`) must not
+    keep the fast startup polling alive forever."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    store = _CatchupStore()
+    tui = _make_catchup_tui(tui_mod, store, fake_alerts, fake_config, [("mem", False)])
+
+    assert tui._startup_catchup_over(now=99.0, deadline=100.0) is False
+    assert tui._startup_catchup_over(now=100.0, deadline=100.0) is True
+
+
+def test_tui_v5_repaints_as_soon_as_plugins_publish_at_startup(monkeypatch, fake_alerts, fake_config):
+    """Regression: the first frame is painted before the scheduler has run, so
+    it carries no stats. Without the catch-up window the TUI held that empty
+    frame for a full `refresh_interval` — first stats landed ~2 s late."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    monkeypatch.setattr(tui_mod, "_init_colors", lambda theme: None)
+    store = _CatchupStore()
+    tui = _make_catchup_tui(tui_mod, store, fake_alerts, fake_config, [("mem", False)])
+
+    paints: list[float] = []
+    monkeypatch.setattr(tui, "_repaint", lambda scr: paints.append(time.monotonic()))
+
+    screen = _FakeScreen(tui._stop_event, at_iteration={1: lambda: store.publish("mem")})
+    tui._loop(screen)
+
+    # Initial (empty) frame + one triggered by the publication.
+    assert len(paints) == 2
+    # Repainted promptly, nowhere near the 30 s regular cadence.
+    assert paints[1] - paints[0] < 1.0
+
+
+def test_tui_v5_no_extra_repaint_once_startup_catchup_closed(monkeypatch, fake_alerts, fake_config):
+    """Steady state is untouched: after the window closes, a new publication
+    does NOT force a repaint — the regular cadence stays in charge."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    monkeypatch.setattr(tui_mod, "_init_colors", lambda theme: None)
+    store = _CatchupStore()
+    tui = _make_catchup_tui(tui_mod, store, fake_alerts, fake_config, [("mem", False)])
+
+    paints: list[float] = []
+    monkeypatch.setattr(tui, "_repaint", lambda scr: paints.append(time.monotonic()))
+
+    screen = _FakeScreen(
+        tui._stop_event,
+        at_iteration={
+            1: lambda: store.publish("mem"),  # closes the window
+            5: lambda: store.publish("mem"),  # republication, window already closed
+            9: lambda: store.publish("mem"),
+        },
+    )
+    tui._loop(screen)
+
+    assert len(paints) == 2  # initial + the single catch-up repaint
+
+
+def test_tui_v5_startup_polling_stops_after_catchup(monkeypatch, fake_alerts, fake_config):
+    """The fast startup poll must not survive the window — once closed, the
+    `getch` block returns to the normal `_MAX_GETCH_BLOCK` ceiling."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    monkeypatch.setattr(tui_mod, "_init_colors", lambda theme: None)
+    store = _CatchupStore()
+    tui = _make_catchup_tui(tui_mod, store, fake_alerts, fake_config, [("mem", False)])
+    monkeypatch.setattr(tui, "_repaint", lambda scr: None)
+
+    screen = _FakeScreen(tui._stop_event, at_iteration={1: lambda: store.publish("mem")}, max_polls=6)
+    tui._loop(screen)
+
+    assert screen.blocks[0] == pytest.approx(tui._STARTUP_POLL_INTERVAL)
+    assert screen.blocks[-1] == pytest.approx(tui._MAX_GETCH_BLOCK)
+
+
 def test_tui_v5_live_sort_reorders_by_engine_key(monkeypatch, fake_store, fake_alerts, fake_config):
     """`_apply_live_sort` reorders process data by the engine's current key so
     a sort hotkey is reflected on the next repaint (not the next engine tick)."""

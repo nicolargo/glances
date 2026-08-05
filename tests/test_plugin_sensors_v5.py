@@ -48,9 +48,58 @@ def test_fields_description_flags():
         assert fd[key].get("watched", False) is False
 
 
+class _FakeGrabber:
+    """Stand-in for every sub-grabber: records its construction, collects nothing."""
+
+    built: list = []
+
+    def __init__(self, *args, **kwargs):
+        type(self).built.append(args)
+
+    def update(self):
+        return []
+
+    def get(self):
+        return []
+
+
+@pytest.fixture
+def fake_grabbers(monkeypatch):
+    from glances.plugins.sensors import model_v5
+
+    _FakeGrabber.built = []
+    for name in ("GlancesGrabSensors", "GlancesGrabHDDTemp", "GlancesGrabBat"):
+        monkeypatch.setattr(model_v5, name, _FakeGrabber)
+    return _FakeGrabber
+
+
+def test_grabbers_are_not_built_at_init(store, config, fake_grabbers):
+    """Constructing the plugin must not probe the hardware. `__init__` runs on
+    the synchronous startup path, before the TUI paints its first frame, and
+    building the temperature grabber alone calls `psutil.sensors_temperatures()`
+    (~230 ms on a laptop). That cost belongs in `_collect()`, which already runs
+    in a worker thread."""
+    PluginModel(store, config)
+    assert fake_grabbers.built == []
+
+
+def test_grabbers_are_built_on_first_collect(store, config, fake_grabbers):
+    p = PluginModel(store, config)
+    p._collect()
+    assert len(fake_grabbers.built) == 4  # cpu temp, fan, hddtemp, battery
+
+
+def test_grabbers_are_built_only_once(store, config, fake_grabbers):
+    p = PluginModel(store, config)
+    p._collect()
+    p._collect()
+    assert len(fake_grabbers.built) == 4
+
+
 @pytest.mark.asyncio
 async def test_grab_stats_merges_all_types(store, config, monkeypatch):
     p = PluginModel(store, config)
+    p._build_grabbers()  # lazily built on first collect — realise them to patch
     monkeypatch.setattr(
         p._grab_temp_core,
         "update",
@@ -78,6 +127,7 @@ async def test_grab_stats_merges_all_types(store, config, monkeypatch):
 @pytest.mark.asyncio
 async def test_grab_stats_survives_one_grabber_failure(store, config, monkeypatch):
     p = PluginModel(store, config)
+    p._build_grabbers()  # lazily built on first collect — realise them to patch
 
     def _boom():
         raise OSError("boom")
