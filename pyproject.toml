@@ -98,7 +98,7 @@ export = [
 ]
 gpu = ["nvidia-ml-py"]
 graph = ["pygal"]
-mcp = ["mcp>=1.0.0"]
+mcp = ["mcp>=1.0.0,<2"]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART"]
