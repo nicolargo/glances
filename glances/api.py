@@ -35,7 +35,9 @@ class GlancesAPI:
         # Init the stats of all plugins in order to ensure that rate are computed
         self._stats.update()
 
-    @weak_lru_cache(maxsize=1, ttl=ttl)
+    # maxsize has to exceed the number of plugins: callers walk several of them in a row,
+    # so a smaller cache would evict every entry before it could ever be reused.
+    @weak_lru_cache(maxsize=128, ttl=ttl)
     def __getattr__(self, item):
         """Fallback to the stats object for any missing attributes."""
         if item in self._stats.getPluginsList():

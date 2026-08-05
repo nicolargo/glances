@@ -25,6 +25,7 @@ import re
 import socket
 import subprocess
 import sys
+import time
 import weakref
 from collections import OrderedDict
 from configparser import ConfigParser, NoOptionError, NoSectionError
@@ -554,13 +555,16 @@ def folder_size(path, errno=0):
 
 
 def _get_ttl_hash(ttl):
-    """A simple (dummy) function to return a hash based on the current second.
-    TODO: Implement a real TTL mechanism.
+    """Return a value that stays constant for ttl seconds, then changes.
+
+    Used as part of an lru_cache key, so that an entry stops being reused once it is older
+    than ttl. Buckets are aligned to a monotonic clock: an entry created just before a
+    boundary lives less than the full ttl, which is the price of expiring through the cache
+    key instead of storing a timestamp per entry.
     """
     if ttl is None:
         return 0
-    now = datetime.now()
-    return now.second
+    return int(time.monotonic() / ttl)
 
 
 def weak_lru_cache(maxsize=1, typed=False, ttl=None):

@@ -311,9 +311,11 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         for p in self.getPluginsList(enable=False):
             self._plugins[p].load_limits(config)
 
-    # It's a weak cache to avoid updating the same plugin too often
+    # It's a weak cache to avoid updating the same plugin too often.
+    # maxsize has to exceed the number of plugins: this is called once per plugin in a row,
+    # so a smaller cache would evict every entry before it could ever be reused.
     # Note: the function always return None
-    @weak_lru_cache(ttl=1)
+    @weak_lru_cache(maxsize=128, ttl=1)
     def update_plugin(self, p):
         """Update stats, history and views for the given plugin name p"""
         self._plugins[p].update()
