@@ -1,3 +1,4 @@
+import curses
 from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock
 
@@ -169,3 +170,46 @@ class TestDisplayTopHelpers:
 
         assert result_widths == plugin_widths  # nosec B101
         assert result_stats_width == 0  # nosec B101
+
+
+class TestCursorDisable:
+    """Test cursor disabling in client/server mode (see issue #3221)."""
+
+    @pytest.fixture
+    def screen(self, glancescreen):
+        """Extend the lightweight screen with cursor-related state."""
+        glancescreen.args.disable_cursor = True
+        glancescreen.args.cursor_process_name_position = 3
+        glancescreen.args.arrow_keys_sort = False
+        return glancescreen
+
+    def _dispatch(self, screen, key):
+        """Invoke the dispatch table with a given pressed key."""
+        screen.pressedkey = key
+        screen.catch_other_actions_maybe_return_to_browser(return_to_browser=False)
+
+    def test_process_name_left_is_noop_when_cursor_disabled(self, screen):
+        """Left arrow must not scroll the process name when cursor is disabled."""
+        self._dispatch(screen, curses.KEY_LEFT)
+        assert screen.args.cursor_process_name_position == 3  # nosec B101
+
+    def test_process_name_right_is_noop_when_cursor_disabled(self, screen):
+        """Right arrow must not scroll the process name when cursor is disabled."""
+        self._dispatch(screen, curses.KEY_RIGHT)
+        assert screen.args.cursor_process_name_position == 3  # nosec B101
+
+    def test_process_name_right_advances_when_cursor_enabled(self, glancescreen):
+        """When cursor is enabled, right arrow advances the name position."""
+        glancescreen.args.disable_cursor = False
+        glancescreen.args.cursor_process_name_position = 3
+        glancescreen.args.arrow_keys_sort = False
+        self._dispatch(glancescreen, curses.KEY_RIGHT)
+        assert glancescreen.args.cursor_process_name_position == 4  # nosec B101
+
+    def test_process_name_left_decrements_when_cursor_enabled(self, glancescreen):
+        """When cursor is enabled, left arrow decrements the name position."""
+        glancescreen.args.disable_cursor = False
+        glancescreen.args.cursor_process_name_position = 3
+        glancescreen.args.arrow_keys_sort = False
+        self._dispatch(glancescreen, curses.KEY_LEFT)
+        assert glancescreen.args.cursor_process_name_position == 2  # nosec B101
