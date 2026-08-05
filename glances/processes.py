@@ -242,6 +242,11 @@ class GlancesProcesses:
     @property
     def processes_count(self):
         """Get the current number of processes showed in the UI."""
+        # Defensive guard: when _max_processes is not set (e.g. client/server
+        # mode before the display class assigns it), return 0 instead of
+        # raising TypeError. See issue #3221.
+        if self._max_processes is None:
+            return 0
         return min(self._max_processes - 2, glances_processes.processcount['total'] - 1)
 
     @property
