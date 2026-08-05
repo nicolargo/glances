@@ -413,7 +413,7 @@ It is also possible to use a simple Docker compose file (see in ./docker-compose
 .. code-block:: console
 
     cd ./docker-compose
-    docker-compose up
+    docker compose up
 
 It will start a Glances server with WebUI.
 
