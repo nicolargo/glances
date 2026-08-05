@@ -21,6 +21,11 @@ Reads hardware encoder/decoder/jpeg engine stats from:
 └── jpegd/              # JPEG decoder node
 
 Tested on: Rockchip RV1126B-P
+
+Glances never writes to ``/proc``. The kernel only reports engine load once
+``/proc/mpp_service/load_interval`` is non-zero, which the operator must set
+themselves — see ``docs/aoa/mpp.rst``. Until then this card correctly
+reports no engines.
 """
 
 import os
@@ -36,9 +41,6 @@ _ENGINE_TYPES = {
     'jpegd': 'jpeg',
 }
 
-# Desired load_interval in milliseconds
-_LOAD_INTERVAL_MS = 1000
-
 
 class RockchipMPP:
     """Rockchip MPP card class."""
@@ -48,7 +50,6 @@ class RockchipMPP:
         self.mpp_root_folder = mpp_root_folder
         self.proc_path = os.path.join(self.mpp_root_folder, 'proc', 'mpp_service')
         self._available = os.path.isdir(self.proc_path)
-        self._load_interval_set = False
 
         logger.debug(f"Rockchip MPP proc path: {self.proc_path} (available: {self._available})")
 
@@ -62,22 +63,6 @@ class RockchipMPP:
 
     def exit(self):
         """Close Rockchip MPP class."""
-
-    def _ensure_load_interval(self):
-        """Set load_interval if not already set, so /proc/mpp_service/load returns data."""
-        if self._load_interval_set:
-            return
-        interval_path = os.path.join(self.proc_path, 'load_interval')
-        try:
-            with open(interval_path) as f:
-                current = int(f.read().strip())
-            if current == 0:
-                with open(interval_path, 'w') as f:
-                    f.write(str(_LOAD_INTERVAL_MS))
-                logger.debug(f"Rockchip MPP: set load_interval to {_LOAD_INTERVAL_MS}ms")
-            self._load_interval_set = True
-        except (OSError, ValueError) as e:
-            logger.debug(f"Rockchip MPP: could not set load_interval: {e}")
 
     def _read_file(self, path: str) -> str | None:
         """Safely read a file and return its content stripped."""
@@ -96,8 +81,6 @@ class RockchipMPP:
         """
         if not self._available:
             return []
-
-        self._ensure_load_interval()
 
         # Parse per-engine load
         engines = self._parse_load()

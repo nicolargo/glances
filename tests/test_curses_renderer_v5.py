@@ -1306,6 +1306,82 @@ def test_build_frame_hide_now_flag_drops_now_block():
     assert [b.name for b in frame.header] == ["system", "ip", "uptime"]
 
 
+def test_build_frame_skips_empty_scalar_blocks():
+    """Regression: empty scalar blocks (e.g., cloud with no metadata) must not
+    reach the painter. A block with zero rows reserves layout space (_HEADER_GAP)
+    for a banner that never paints, creating visible double-spacing. `cloud` is
+    registered in HEADER_SLOT_RIGHT but returns empty rows on non-cloud hosts.
+    This test verifies such a block is skipped during frame construction, so the
+    final header layout is identical to the baseline without cloud."""
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    # Baseline: system, ip, uptime, now (no cloud).
+    snapshot_baseline = {
+        "now": {"custom": "2026-07-25 11:30:00 CEST", "iso": "2026-07-25T11:30:00+02:00", "_levels": {}},
+        "uptime": {"seconds": 3600, "_levels": {}},
+        "ip": {"address": "192.168.1.10", "mask_cidr": 24, "_levels": {}},
+        "system": {"hostname": "h", "hr_name": "Ubuntu", "_levels": {}},
+    }
+    fields_baseline = {
+        "now": {"custom": {"unit": "string"}, "iso": {"unit": "string"}},
+        "uptime": {"seconds": {"unit": "seconds"}},
+        "ip": {"address": {"unit": "string"}, "mask_cidr": {"unit": "number"}},
+        "system": {"hostname": {"unit": "string"}, "hr_name": {"unit": "string"}},
+    }
+    registry_baseline = [("now", False), ("uptime", False), ("ip", False), ("system", False)]
+    frame_baseline = build_frame(snapshot_baseline, fields_baseline, registry_baseline, alerts_history=[], view={})
+
+    # Same baseline, but add cloud with empty payload (off-cloud host).
+    snapshot_with_cloud = {
+        **snapshot_baseline,
+        "cloud": {},  # Empty: no metadata (scalar plugin with no payload).
+    }
+    fields_with_cloud = {
+        **fields_baseline,
+        "cloud": {"platform": {"unit": "string"}},  # Minimal fields descriptor.
+    }
+    registry_with_cloud = [
+        ("now", False),
+        ("uptime", False),
+        ("ip", False),
+        ("system", False),
+        ("cloud", False),  # Scalar, not collection.
+    ]
+    frame_with_cloud = build_frame(
+        snapshot_with_cloud, fields_with_cloud, registry_with_cloud, alerts_history=[], view={}
+    )
+
+    # The header should be identical in both cases: cloud's empty rows mean it
+    # is skipped, so frame.header should have the same blocks and order.
+    assert [b.name for b in frame_baseline.header] == [b.name for b in frame_with_cloud.header]
+    assert [b.name for b in frame_baseline.header] == ["system", "ip", "uptime", "now"]
+    assert "cloud" not in [b.name for b in frame_with_cloud.header]
+
+
+def test_build_frame_skips_zero_row_top_block():
+    """The zero-row skip (`if not rows: continue`) is general, not
+    header-only: a TOP-slot block that renders no rows (e.g. `npu` whose
+    first item is malformed) must not reach `frame.top` either, so it
+    never charges the top row an inter-block gap for nothing."""
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    # Baseline: cpu + mem only.
+    snapshot_baseline = {"cpu": {"total": 4.5}, "mem": {"percent": 50.0}}
+    registry_baseline = [("cpu", False), ("mem", False)]
+    frame_baseline = build_frame(snapshot_baseline, {}, registry_baseline, alerts_history=[], view={})
+
+    # Same baseline, but with an `npu` collection whose only item is not a
+    # dict — the data list is non-empty (so the generic collection guard
+    # does not skip it), yet the custom renderer returns zero rows.
+    snapshot_with_npu = {**snapshot_baseline, "npu": {"data": ["not-a-dict"]}}
+    registry_with_npu = [*registry_baseline, ("npu", True)]
+    frame_with_npu = build_frame(snapshot_with_npu, {}, registry_with_npu, alerts_history=[], view={})
+
+    assert [b.name for b in frame_baseline.top] == [b.name for b in frame_with_npu.top]
+    assert [b.name for b in frame_baseline.top] == ["cpu", "mem"]
+    assert "npu" not in [b.name for b in frame_with_npu.top]
+
+
 # --------------------------------------------------------------- hide_* skip guards
 
 

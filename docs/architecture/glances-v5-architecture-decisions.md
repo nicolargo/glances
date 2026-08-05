@@ -904,6 +904,7 @@ The audit produces a downloadable `.md` report (per the contribution guidelines)
 
 - Implemented with **httpx async**. Supports both Bearer token and Basic Auth, matching whatever the target server requires.
 - Credentials read from `glances.conf [passwords]` keyed by hostname, same as the v4 client.
+- **OPEN — reopen this choice at the start of Phase 3.** As of G6C every v5 plugin that speaks HTTP uses `requests` behind `asyncio.to_thread` (`ports`, `containers`, `cloud`, the `nginx` AMP); `httpx` is still only a transitive dependency of FastAPI's `TestClient` and no v5 code imports it. The remote client is the first workload where async HTTP genuinely pays (N servers polled every cycle), but adopting `httpx` for it means shipping two HTTP clients unless `requests` can be removed from the graph — which the reused v4 Docker engine and the `nginx` AMP currently prevent. Decide deliberately, with that picture, before writing the remote client. See `docs/superpowers/specs/2026-08-04-glances-v5-g6c-design.md` §4.1b.
 
 **Timeout:**
 - Global default configurable in `glances.conf`:

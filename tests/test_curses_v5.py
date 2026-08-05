@@ -1930,11 +1930,63 @@ def test_now_is_the_first_header_block_dropped(fake_store, fake_alerts, fake_con
     assert "Ubuntu" in system_text  # OS-info still there: degraded one notch only
 
 
-def test_hide_now_is_the_first_header_cascade_step():
+def test_cloud_is_dropped_before_now_ip_and_uptime(fake_store, fake_alerts, fake_config):
+    """`cloud` is opt-in: it must be the first block sacrificed under width
+    pressure, so enabling it never costs the user information (ip, uptime,
+    now) that was already on screen before cloud was turned on."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    fake_store.as_dict.return_value = {
+        "system": {"hostname": "host", "hr_name": "Ubuntu 24.04 64bit / Linux 6.17", "_levels": {}},
+        "ip": {"address": "192.168.1.100", "mask_cidr": 24, "_levels": {}},
+        "uptime": {"seconds": 3600, "_levels": {}},
+        "cloud": {"platform": "OpenStack", "type": "gold", "name": "my-vm", "region": "eu-west-1a", "_levels": {}},
+        "now": {"custom": "2026-07-25 11:30:00 CEST", "iso": "2026-07-25T11:30:00+02:00", "_levels": {}},
+    }
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[
+            ("system", False),
+            ("ip", False),
+            ("uptime", False),
+            ("cloud", False),
+            ("now", False),
+        ],
+        fields_by_plugin={
+            "system": {"hostname": {"unit": "string"}, "hr_name": {"unit": "string"}},
+            "ip": {"address": {"unit": "string"}, "mask_cidr": {"unit": "number"}},
+            "uptime": {"seconds": {"unit": "seconds"}},
+            "cloud": {"platform": {"unit": "string"}},
+            "now": {"custom": {"unit": "string"}, "iso": {"unit": "string"}},
+        },
+        refresh_interval=0.01,
+    )
+    gap = tui_mod.TuiV5._HEADER_GAP
+
+    # Wide terminal: all five blocks, cloud between uptime and now.
+    wide = tui._build_fitted_frame(1000)
+    assert [b.name for b in wide.header] == ["system", "ip", "uptime", "cloud", "now"]
+    w = {b.name: b.width for b in wide.header}
+
+    # One char short of the full banner → cloud is dropped first, `now`
+    # (and everything before it) survives untouched.
+    narrow = tui._build_fitted_frame(
+        w["system"] + gap + w["ip"] + gap + w["uptime"] + gap + w["cloud"] + gap + w["now"] - 1
+    )
+    assert [b.name for b in narrow.header] == ["system", "ip", "uptime", "now"]
+
+
+def test_hide_cloud_is_the_first_header_cascade_step():
+    """`cloud` is opt-in: turning it on must never degrade information that
+    was already on screen, so it is sacrificed before everything else —
+    including `now`, the next-least-prioritary block."""
     from glances.outputs.glances_curses_v5 import _HEADER_DEGRADE_STEPS
 
     keys = [k for k, _ in _HEADER_DEGRADE_STEPS]
-    assert keys[0] == "hide_now"
+    assert keys[0] == "hide_cloud"
+    assert keys[1] == "hide_now"
     # Ordering contract: uptime stays the last resort.
     assert keys[-1] == "hide_uptime"
 

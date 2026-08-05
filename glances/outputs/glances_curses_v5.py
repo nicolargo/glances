@@ -67,16 +67,19 @@ _DEGRADE_STEPS: list[tuple[str, Any]] = [
     ("hide_gpu", True),  # (g) hide gpu block (last resort)
 ]
 
-# Header line (system … ip … uptime … now) progressive degradation, applied
-# independently of the TOP row when the terminal is too narrow to show all
-# four blocks. Cumulative, in the maintainer-specified order: `now` is the least
-# prioritary block so it goes first — which brings the banner back to exactly
-# the v4 `system … ip … uptime` layout — then the system OS-info string, then
-# ip, then uptime. v4 parity degrades only the OS-info drop
-# (`display_system_optional`); the other hides refine it for very narrow
-# terminals.
+# Header line (system … ip … uptime … cloud … now) progressive degradation,
+# applied independently of the TOP row when the terminal is too narrow to
+# show all blocks. Cumulative, in the maintainer-specified order: `cloud` is
+# an opt-in block, so it must be the *first* one sacrificed — enabling it must
+# never degrade information (ip, uptime, now) that was already on screen
+# before it was turned on. After that, `now` is the least prioritary block —
+# which brings the banner back to exactly the v4 `system … ip … uptime`
+# layout — then the system OS-info string, then ip, then uptime. v4 parity
+# degrades only the OS-info drop (`display_system_optional`); the other hides
+# refine it for very narrow terminals.
 _HEADER_DEGRADE_STEPS: list[tuple[str, Any]] = [
-    ("hide_now", True),  # (1) hide the now block (least priority)
+    ("hide_cloud", True),  # (0) hide the opt-in cloud block (first to go)
+    ("hide_now", True),  # (1) hide the now block
     ("hide_os_info", True),  # (2) drop the system OS-info string
     ("hide_ip", True),  # (3) hide the ip block
     ("hide_uptime", True),  # (4) hide the uptime block (last resort)
@@ -556,9 +559,10 @@ class TuiV5(threading.Thread):
 
         Independent of the TOP-row degrade above: measures the real header
         block widths and applies the cumulative ``_HEADER_DEGRADE_STEPS``
-        (hide now → drop OS info → hide ip → hide uptime) until ``_header_fits``. Wide
-        terminals take the early return (no extra rebuild); the header and TOP
-        degrade flags coexist in the same ``view``.
+        (hide cloud → hide now → drop OS info → hide ip → hide uptime) until
+        ``_header_fits``. Wide terminals take the early return (no extra
+        rebuild); the header and TOP degrade flags coexist in the same
+        ``view``.
         """
         if self._header_fits(frame, max_x):
             return frame

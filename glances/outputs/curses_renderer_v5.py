@@ -56,9 +56,9 @@ logger = logging.getLogger(__name__)
 # from the left edge, the RIGHT group is painted right-aligned as a whole (see
 # `glances_curses_v5._paint_header`). `now` closes the banner on the far right.
 HEADER_SLOT_LEFT: tuple[str, ...] = ("system", "ip")
-HEADER_SLOT_RIGHT: tuple[str, ...] = ("uptime", "now")
+HEADER_SLOT_RIGHT: tuple[str, ...] = ("uptime", "cloud", "now")
 HEADER_SLOT: tuple[str, ...] = HEADER_SLOT_LEFT + HEADER_SLOT_RIGHT
-TOP_SLOT: tuple[str, ...] = ("quicklook", "cpu", "percpu", "npu", "gpu", "mem", "memswap", "load")
+TOP_SLOT: tuple[str, ...] = ("quicklook", "cpu", "percpu", "npu", "mpp", "gpu", "mem", "memswap", "load")
 LEFT_SLOT: tuple[str, ...] = (
     "network",
     "ports",
@@ -717,9 +717,11 @@ def build_frame(
             continue
         if view and view.get("hide_gpu") and plugin_name == "gpu":
             continue
-        # Header line progressive degradation (system … ip … uptime … now): when
-        # the terminal is too narrow the now, then the ip, then the uptime block
-        # is dropped.
+        # Header line progressive degradation (system … ip … uptime … cloud …
+        # now): when the terminal is too narrow, cloud (opt-in, so sacrificed
+        # first) then now, then the ip, then the uptime block is dropped.
+        if view and view.get("hide_cloud") and plugin_name == "cloud":
+            continue
         if view and view.get("hide_now") and plugin_name == "now":
             continue
         if view and view.get("hide_ip") and plugin_name == "ip":
@@ -758,6 +760,14 @@ def build_frame(
             rows = render_collection_plugin(plugin_name, payload, fields_desc)
         else:
             rows = render_scalar_plugin(plugin_name, payload, fields_desc)
+
+        # Skip empty blocks: any block with zero rows has nothing to paint and
+        # must not reserve layout space (gap accounting in _paint_header et al).
+        # This covers scalar plugins like `cloud` that may render nothing despite
+        # a non-empty payload (e.g. cloud on a non-cloud host → {}). Catches top
+        # and sidebar slots too, future-proofing against other plugins.
+        if not rows:
+            continue
 
         block = PluginBlock(name=plugin_name, rows=rows)
         slot = slot_for(plugin_name)
