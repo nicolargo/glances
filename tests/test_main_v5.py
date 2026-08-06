@@ -28,6 +28,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import subprocess
+import sys
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -420,7 +422,7 @@ def test_serve_stops_scheduler_after_uvicorn_returns(config):
     args = build_parser().parse_args(["-s"])
     app, scheduler, host, port, tui = assemble(args, config)
 
-    with patch("glances.main_v5.uvicorn.Server") as MockServer:
+    with patch("uvicorn.Server") as MockServer:
         instance = MockServer.return_value
         instance.serve = AsyncMock(return_value=None)
         # Replace the loops so the test doesn't run real psutil-driven
@@ -445,13 +447,30 @@ def test_serve_tui_mode_does_not_instantiate_uvicorn(config):
     scheduler.run_forever = AsyncMock(return_value=None)  # type: ignore[method-assign]
     scheduler.stop = AsyncMock(return_value=None)  # type: ignore[method-assign]
 
-    with patch("glances.main_v5.uvicorn.Server") as MockServer:
+    with patch("uvicorn.Server") as MockServer:
         asyncio.run(serve(args, app, scheduler, host, port, tui))
         # The bind-no-socket contract: uvicorn.Server must never be
         # instantiated in TUI mode — otherwise it could open a port.
         MockServer.assert_not_called()
 
     scheduler.stop.assert_awaited()
+
+
+def test_importing_main_v5_does_not_pull_the_web_stack():
+    """The web stack must stay behind a lazy import.
+
+    `uvicorn` and `glances.webserver_v5` are only reachable from the
+    ``args.server`` branches. Importing them at module level cost the TUI
+    ~10.8 MB of RSS and ~0.2s of startup CPU for code it never runs.
+    Checked in a subprocess: another test in this session may already have
+    imported FastAPI, which would mask the regression here.
+    """
+    code = (
+        "import glances.main_v5, sys;"
+        "print(sorted(m for m in ('fastapi', 'pydantic', 'starlette', 'uvicorn') if m in sys.modules))"
+    )
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
+    assert result.stdout.strip() == "[]"
 
 
 # ----------------------------------------------------------- main

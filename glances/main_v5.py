@@ -49,8 +49,6 @@ import signal
 import sys
 from typing import TYPE_CHECKING
 
-import uvicorn
-
 import glances.plugins as _plugins_pkg
 from glances.actions_v5 import discover_actions
 from glances.alerts_v5 import GlancesAlerts
@@ -59,7 +57,6 @@ from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.scheduler_v5 import AsyncScheduler
 from glances.security_v5 import hash_password, verify_password
 from glances.stats_store_v5 import StatsStoreV5
-from glances.webserver_v5 import attach_mcp, build_app, register_plugin
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
@@ -422,6 +419,10 @@ def assemble(
     if args.server:
         # REST API mode: build the FastAPI app. The TUI is not started —
         # ``-s`` is headless per G2 design alignment point 1.
+        # Local import — pulling FastAPI/pydantic in costs ~9 MB of RSS and
+        # ~0.14s of CPU, and the TUI mode below never touches any of it.
+        from glances.webserver_v5 import attach_mcp, build_app, register_plugin
+
         if args.api_doc is not None:
             config._merged.setdefault("outputs", {})["api_doc"] = bool(args.api_doc)
         if args.enable_mcp:
@@ -513,6 +514,10 @@ async def serve(
     try:
         if args.server:
             assert app is not None, "assemble() must return a FastAPI app when args.server is True"
+            # Local import, same reason as `build_app` in `assemble()`: the
+            # TUI mode below binds no socket and must not pay for uvicorn.
+            import uvicorn
+
             uvi_config = uvicorn.Config(
                 app,
                 host=host,

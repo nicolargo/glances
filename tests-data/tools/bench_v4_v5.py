@@ -161,10 +161,20 @@ def run_round(module, config, args):
 
     slope, _ = statistics.linear_regression(elapsed, rss_mb)
     # The background load is what the rest of the system burned during the round.
-    background = statistics.median(system_pct) - statistics.median(cpu_pct)
+    background = statistics.fmean(system_pct) - statistics.fmean(cpu_pct)
 
     return {
-        "cpu_median": statistics.median(cpu_pct),
+        # Mean, not median: v4 does all its work in a single burst every
+        # refresh, so at 1Hz its samples are strictly bimodal (an idle
+        # second, then a second holding the whole cycle) with nothing in
+        # between. The median then lands on the cliff between the two
+        # populations and only reflects the phase between the sampler and
+        # the refresh loop -- it swung from 2.0 to 3.5 %core across
+        # identical rounds while the mean stayed at 5.26. The mean over the
+        # window is exactly total CPU / elapsed, which is what we want.
+        # p95 below keeps the burstiness visible, since that is a real
+        # difference between the two architectures.
+        "cpu_mean": statistics.fmean(cpu_pct),
         "cpu_p95": percentile(cpu_pct, 0.95),
         "rss_mean": statistics.fmean(rss_mb),
         "rss_max": max(rss_mb),
@@ -176,7 +186,7 @@ def run_round(module, config, args):
 
 
 ROWS = (
-    ("CPU  %core   median", "cpu_median", "{:.2f}", True),
+    ("CPU  %core   mean", "cpu_mean", "{:.2f}", True),
     ("CPU  %core   p95", "cpu_p95", "{:.2f}", True),
     ("RSS  MB      mean", "rss_mean", "{:.1f}", True),
     ("RSS  MB      max", "rss_max", "{:.1f}", True),
