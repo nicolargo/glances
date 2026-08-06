@@ -120,7 +120,7 @@ class ConnectionsPlugin(GlancesPluginModel):
             initiated += stats[s]
         stats['initiated'] = initiated
         terminated = 0
-        for s in self.initiated_states:
+        for s in self.terminated_states:
             stats[s] = len([c for c in net_connections if c.status == s])
             terminated += stats[s]
         stats['terminated'] = terminated

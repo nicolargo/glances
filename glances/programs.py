@@ -6,8 +6,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-from collections import Counter
-
 # from glances.logger import logger
 
 # This constant defines the list of available processes sort key
@@ -37,14 +35,27 @@ def create_program_dict(p):
     }
 
 
+def sum_field_dict(total, addition):
+    """Add addition into total field by field.
+
+    Counter() is not usable here: adding two Counters drops every key whose sum is not
+    positive, so a program whose iowait or children_user happens to total 0.0 would lose
+    that key and end up with a different set of fields than the processes it aggregates.
+    """
+    merged = dict(total or {})
+    for field, value in (addition or {}).items():
+        merged[field] = merged.get(field, 0) + value
+    return merged
+
+
 def update_program_dict(program, p):
     """Update an existing entry in the dict (existing program)"""
     # some values can be None, e.g. macOS system processes
     program['num_threads'] += p['num_threads'] or 0
     program['cpu_percent'] += p['cpu_percent'] or 0
     program['memory_percent'] += p['memory_percent'] or 0
-    program['cpu_times'] = dict(Counter(program['cpu_times'] or {}) + Counter(p['cpu_times'] or {}))
-    program['memory_info'] = dict(Counter(program['memory_info'] or {}) + Counter(p['memory_info'] or {}))
+    program['cpu_times'] = sum_field_dict(program['cpu_times'], p['cpu_times'])
+    program['memory_info'] = sum_field_dict(program['memory_info'], p['memory_info'])
 
     program['io_counters'] += p['io_counters']
     program['childrens'].append(p['pid'])

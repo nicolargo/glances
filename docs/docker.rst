@@ -236,7 +236,7 @@ Include the `--gpus` flag with the `docker run` command.
 ..
 
 
-With `docker-compose`
+With `docker compose`
 ^^^^^^^^^^^^^^^^^^^^^
 Include the `deploy` section in compose file as specified below in the example service definition.
 
