@@ -62,6 +62,10 @@ class PluginModel(GlancesPluginBase[dict]):
     EMITS_ALERTS: ClassVar[bool] = True
     # Mirrors v4 `[connections] disable=True`: off unless the operator opts in.
     DISABLED_BY_DEFAULT: ClassVar[bool] = True
+    # `psutil.net_connections()` costs ~27ms with only ~40 sockets and scales
+    # with the socket table — a busy server pays far more. An operator who
+    # opts in should not get it at the 2s global rate by default.
+    DEFAULT_REFRESH_TIME: ClassVar[float | None] = 10.0
 
     status_list: ClassVar[list[str]] = [psutil.CONN_LISTEN, psutil.CONN_ESTABLISHED]
     initiated_states: ClassVar[list[str]] = [psutil.CONN_SYN_SENT, psutil.CONN_SYN_RECV]

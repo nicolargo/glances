@@ -51,6 +51,10 @@ class PluginModel(GlancesPluginBase[list]):
     # v4 runs `get_p_alert(log=False)`: the level colours the TUI cell but is
     # never written to the event history and never dispatches an action.
     EMITS_ALERTS: ClassVar[bool] = False
+    # Interval between two full scans. NOT the publication cadence — see
+    # SCHEDULE_AT_GLOBAL_REFRESH below; consumed by `_resolve_scan_interval`,
+    # not by the scheduler.
+    DEFAULT_REFRESH_TIME: ClassVar[float | None] = 30.0
     # Publish the scan-list snapshot on the fast global cadence, NOT on
     # `[ports] refresh`. The background `ThreadScanner` fills the list
     # incrementally (URLs are scanned LAST, after every port's mandatory
@@ -114,12 +118,12 @@ class PluginModel(GlancesPluginBase[list]):
 
     def _resolve_scan_interval(self, config) -> float:
         """Seconds between two full scans, from `[ports] refresh` (or the
-        `refresh_time` alias), else 60 (v4 `GlancesPortsList._default_refresh`).
+        `refresh_time` alias), else `DEFAULT_REFRESH_TIME` (30).
 
         The scan runs on this configured cadence while the display is refreshed
-        on the global cadence (SCHEDULE_AT_GLOBAL_REFRESH). Config DEFAULTS
-        always ship `[ports] refresh` (30), so the key is effectively always
-        present; the `60` tail only guards a config with that default stripped.
+        on the global cadence (SCHEDULE_AT_GLOBAL_REFRESH). This plugin resolves
+        its own cadence because the scheduler deliberately ignores it — hence
+        the class default is read here rather than in `AsyncScheduler`.
         A `-1.0` float default is used (not `None`) so the value is coerced to
         float rather than routed through the untyped `get_value` passthrough.
         """
@@ -130,7 +134,7 @@ class PluginModel(GlancesPluginBase[list]):
                 continue
             if value > 0:
                 return value
-        return 60.0
+        return float(self.DEFAULT_REFRESH_TIME or 60.0)
 
     async def _grab_stats(self) -> list:
         """Return the current scan results; relaunch the scanner if it is dead.

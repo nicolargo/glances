@@ -33,6 +33,8 @@ class PluginModel(GlancesPluginBase[dict]):
     plugin_name: ClassVar[str] = "core"
     IS_COLLECTION: ClassVar[bool] = False
     DISPLAY_IN_TUI: ClassVar[bool] = False
+    # The CPU core count is fixed for the life of the process.
+    DEFAULT_REFRESH_TIME: ClassVar[float | None] = 60.0
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "phys": {

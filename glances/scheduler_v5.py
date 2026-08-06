@@ -85,8 +85,9 @@ class AsyncScheduler:
         Precedence for `refresh_time`:
         1. Explicit `refresh_time=` argument
         2. `[<plugin_name>] refresh` (v4 key) or `refresh_time` (alias)
-        3. `[global] refresh` (v4 key) or `refresh_time` (alias)
-        4. `_DEFAULT_REFRESH_TIME` (2.0s)
+        3. `plugin.DEFAULT_REFRESH_TIME` (the plugin's own intended cadence)
+        4. `[global] refresh` (v4 key) or `refresh_time` (alias)
+        5. `_DEFAULT_REFRESH_TIME` (2.0s)
         """
         if self._running:
             raise RuntimeError("Cannot register a plugin while the scheduler is running")
@@ -102,13 +103,24 @@ class AsyncScheduler:
             # scan's progress promptly. See GlancesPluginBase.SCHEDULE_AT_GLOBAL_REFRESH.
             rt = self._global_refresh_time()
         else:
-            rt = self._resolve_refresh_time(plugin.plugin_name, refresh_time)
+            # getattr: test rigs register duck-typed fakes that do not derive
+            # from GlancesPluginBase (mirrors alerts_v5's EMITS_ALERTS read).
+            rt = self._resolve_refresh_time(
+                plugin.plugin_name,
+                refresh_time,
+                getattr(plugin, "DEFAULT_REFRESH_TIME", None),
+            )
         if rt <= 0:
             raise ValueError(f"refresh_time for {plugin.plugin_name!r} must be > 0, got {rt}")
 
         self._entries.append(_PluginEntry(plugin=plugin, refresh_time=rt))
 
-    def _resolve_refresh_time(self, plugin_name: str, explicit: float | None) -> float:
+    def _resolve_refresh_time(
+        self,
+        plugin_name: str,
+        explicit: float | None,
+        plugin_default: float | None = None,
+    ) -> float:
         if explicit is not None:
             return float(explicit)
         # Per-plugin section then global, each honouring the documented v4
@@ -121,6 +133,13 @@ class AsyncScheduler:
         per_plugin = self._config_refresh(plugin_name)
         if per_plugin > 0:
             return per_plugin
+        # The plugin's own intended cadence, ahead of the global fallback.
+        # Keeps an expensive plugin (sensors: 145ms/cycle) off the 2s global
+        # rate for a user whose config has no `[<plugin>] refresh` key,
+        # without a central list of per-plugin values to maintain.
+        # See GlancesPluginBase.DEFAULT_REFRESH_TIME.
+        if plugin_default is not None and plugin_default > 0:
+            return float(plugin_default)
         glob = self._config_refresh("global")
         if glob > 0:
             return glob

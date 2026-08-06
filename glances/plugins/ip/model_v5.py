@@ -104,6 +104,9 @@ class PluginModel(GlancesPluginBase[dict]):
     # ip never raises alerts (v4 has no ip colouring/thresholds). No field
     # is watched, so `_levels` stays empty regardless — False documents intent.
     EMITS_ALERTS: ClassVar[bool] = False
+    # IP addresses change rarely. The public IP lookup is throttled
+    # separately by `public_refresh_interval` (300s).
+    DEFAULT_REFRESH_TIME: ClassVar[float | None] = 60.0
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "address": {"description": "Private IP address.", "unit": "string"},

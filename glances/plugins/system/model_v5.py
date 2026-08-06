@@ -68,6 +68,9 @@ class PluginModel(GlancesPluginBase[dict]):
 
     plugin_name: ClassVar[str] = "system"
     IS_COLLECTION: ClassVar[bool] = False
+    # Hostname / OS / distribution do not change while the process runs, yet
+    # `_collect()` re-reads /etc/os-release every cycle (~15ms of wall time).
+    DEFAULT_REFRESH_TIME: ClassVar[float | None] = 60.0
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "os_name": {"description": "Operating system name.", "unit": "string"},

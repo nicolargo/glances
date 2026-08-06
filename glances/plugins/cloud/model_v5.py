@@ -98,6 +98,9 @@ class PluginModel(GlancesPluginBase[dict]):
     EMITS_ALERTS: ClassVar[bool] = False
     # Mirrors v4 `[cloud] disable=True`.
     DISABLED_BY_DEFAULT: ClassVar[bool] = True
+    # Cloud metadata API calls are slow. The probe is one-shot and cached
+    # anyway, so this only bounds the retry after a failed first attempt.
+    DEFAULT_REFRESH_TIME: ClassVar[float | None] = 120.0
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "platform": {"description": "Cloud platform name (e.g. OpenStack).", "unit": "string"},

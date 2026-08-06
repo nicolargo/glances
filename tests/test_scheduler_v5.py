@@ -195,25 +195,90 @@ def test_schedule_at_global_refresh_still_honours_explicit_arg(store, tmp_path, 
     assert scheduler._entries[0].refresh_time == 9.0
 
 
-def test_register_uses_sensors_default_refresh_with_no_config_file(store, config):
-    """No user config file at all — DEFAULTS in config_v5.py must still give
-    `sensors` its intended 10s cadence rather than the global 2s fallback.
-    This is the actual regression the DEFAULTS entries fix: a personal
-    config predating the `[sensors] refresh=10` key otherwise silently
-    polls sensors (144ms/cycle) at the 2s global rate."""
+# ------------------------------------------------- DEFAULT_REFRESH_TIME
 
-    class SensorsPlugin(GlancesPluginBase[dict]):
-        plugin_name = "sensors"
-        IS_COLLECTION = False
-        fields_description = {"value": {"description": "v", "unit": "number"}}
 
-        async def _grab_stats(self) -> dict:
-            return {"value": 1}
+class SlowByDefaultPlugin(GlancesPluginBase[dict]):
+    """A plugin declaring its own intended cadence, like `sensors` (30s)."""
 
+    plugin_name = "fast"  # reuse the `[fast]` section in the ini helpers
+    IS_COLLECTION = False
+    DEFAULT_REFRESH_TIME = 30.0
+    fields_description = {"value": {"description": "v", "unit": "number"}}
+
+    async def _grab_stats(self) -> dict:
+        return {"value": 1}
+
+
+def test_plugin_default_refresh_time_beats_global(store, tmp_path, monkeypatch):
+    """A plugin declaring DEFAULT_REFRESH_TIME must not collapse to the global
+    cadence. This is the whole point of the attribute: an expensive plugin
+    keeps its intended cadence for a user whose personal config has no
+    `[<plugin>] refresh` key (sensors costs 145ms/cycle — at the 2s global
+    rate that is 7.2% of a core instead of 0.48%)."""
+    config = _config_with_ini(tmp_path, monkeypatch, "[global]\nrefresh = 2\n")
     scheduler = AsyncScheduler(store, config)
-    scheduler.register(SensorsPlugin(store, config))
+    scheduler.register(SlowByDefaultPlugin(store, config))
+    assert scheduler._entries[0].refresh_time == 30.0
 
-    assert scheduler._entries[0].refresh_time == 10.0
+
+def test_plugin_default_refresh_time_used_with_no_config_file(store, config):
+    """No config file at all — the class attribute still applies."""
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(SlowByDefaultPlugin(store, config))
+    assert scheduler._entries[0].refresh_time == 30.0
+
+
+def test_config_section_beats_plugin_default_refresh_time(store, tmp_path, monkeypatch):
+    """The user's explicit `[<plugin>] refresh` always wins over the class
+    default — that is what makes this a non-breaking change."""
+    config = _config_with_ini(tmp_path, monkeypatch, "[fast]\nrefresh = 5\n")
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(SlowByDefaultPlugin(store, config))
+    assert scheduler._entries[0].refresh_time == 5.0
+
+
+def test_explicit_arg_beats_plugin_default_refresh_time(store, config):
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(SlowByDefaultPlugin(store, config), refresh_time=1.5)
+    assert scheduler._entries[0].refresh_time == 1.5
+
+
+def test_schedule_at_global_refresh_beats_plugin_default_refresh_time(store, tmp_path, monkeypatch):
+    """`ports` declares DEFAULT_REFRESH_TIME=30 for its own scan throttle, but
+    must still be POLLED at the global cadence — the flag wins."""
+
+    class GlobalCadenceWithDefault(SlowByDefaultPlugin):
+        SCHEDULE_AT_GLOBAL_REFRESH = True
+
+    config = _config_with_ini(tmp_path, monkeypatch, "[global]\nrefresh = 3\n")
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(GlobalCadenceWithDefault(store, config))
+    assert scheduler._entries[0].refresh_time == 3.0
+
+
+def test_shipped_plugin_default_refresh_times():
+    """Guard the actual values against silent drift. These are the cadences
+    the shipped conf documents; they now live on the plugin classes."""
+    from glances.main_v5 import discover_plugin_classes
+
+    expected = {
+        "sensors": 30.0,
+        "fs": 30.0,
+        "folders": 60.0,
+        "ip": 60.0,
+        "cloud": 120.0,
+        "connections": 10.0,
+        "system": 60.0,
+        "core": 60.0,
+        "ports": 30.0,
+    }
+    found = {
+        cls.plugin_name: cls.DEFAULT_REFRESH_TIME
+        for _, cls in discover_plugin_classes()
+        if cls.DEFAULT_REFRESH_TIME is not None
+    }
+    assert found == expected
 
 
 def test_register_falls_back_to_default(store, config):

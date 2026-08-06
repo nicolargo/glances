@@ -67,6 +67,11 @@ class PluginModel(GlancesPluginBase[list]):
 
     plugin_name: ClassVar[str] = "sensors"
     IS_COLLECTION: ClassVar[bool] = True
+    # The single most expensive plugin per call: ~145ms of CPU, of which
+    # ~95% is `read()` on sysfs (I2C/ACPI latency) — nothing is optimisable
+    # in Python, only the cadence is. Temperatures have a thermal inertia of
+    # tens of seconds, so 30s loses nothing an operator can perceive.
+    DEFAULT_REFRESH_TIME: ClassVar[float | None] = 30.0
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "label": {

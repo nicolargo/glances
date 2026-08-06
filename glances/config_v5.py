@@ -90,26 +90,12 @@ class GlancesConfigV5:
         "outputs": {
             "api_doc": True,
         },
-        # Per-plugin refresh cadence, verbatim from the shipped conf/glances.conf
-        # `refresh` keys. Without these, a user whose personal config predates
-        # a given key falls back to `[global] refresh_time` (2s) for every
-        # plugin, silently defeating the shipped conf's intended cadence
-        # (e.g. sensors polled at 2s instead of the intended 10s).
-        "ip": {
-            "refresh": 60,
-        },
-        "fs": {
-            "refresh": 60,
-        },
-        "folders": {
-            "refresh": 60,
-        },
-        "sensors": {
-            "refresh": 10,
-        },
-        "ports": {
-            "refresh": 30,
-        },
+        # NOTE: per-plugin `refresh` cadences are deliberately NOT listed here.
+        # They live on the plugin classes as
+        # `GlancesPluginBase.DEFAULT_REFRESH_TIME`, so adding a plugin never
+        # requires editing this central dict. A user's `[<plugin>] refresh`
+        # still wins over the class value — see
+        # `AsyncScheduler._resolve_refresh_time`.
     }
 
     # Substring match (case-insensitive) on the option name. Any option whose

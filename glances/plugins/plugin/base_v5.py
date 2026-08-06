@@ -108,6 +108,30 @@ class GlancesPluginBase(Generic[T], ABC):
     incrementally in the background, and republishing that list is trivially
     cheap. Read by ``AsyncScheduler.register()``."""
 
+    DEFAULT_REFRESH_TIME: ClassVar[float | None] = None
+    """This plugin's intended polling cadence, in seconds, when no config sets it.
+
+    Default ``None``: the plugin is polled at ``[global] refresh`` (2s). Set a
+    value on plugins that are expensive to collect or whose data changes
+    slowly, so the cadence travels with the plugin instead of depending on a
+    key being present in the user's ``glances.conf``.
+
+    Resolution order (``AsyncScheduler._resolve_refresh_time``)::
+
+        refresh_time= argument
+          → [<plugin_name>] refresh | refresh_time
+          → DEFAULT_REFRESH_TIME
+          → [global] refresh | refresh_time
+          → 2.0
+
+    A user's explicit ``[<plugin>] refresh`` therefore always wins — declaring
+    a value here can never override a configured deployment.
+
+    Plugins with ``SCHEDULE_AT_GLOBAL_REFRESH`` are polled at the global
+    cadence regardless; for them this attribute is the default of the *source*
+    poll they throttle themselves (``ports`` reads it in
+    ``_resolve_scan_interval``)."""
+
     DISABLED_BY_DEFAULT: ClassVar[bool] = False
     """Value of ``[<plugin_name>] disable`` assumed when the key is absent.
 

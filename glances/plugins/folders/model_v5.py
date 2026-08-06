@@ -51,6 +51,9 @@ class PluginModel(GlancesPluginBase[list]):
     plugin_name: ClassVar[str] = "folders"
     IS_COLLECTION: ClassVar[bool] = True
     EMITS_ALERTS: ClassVar[bool] = True  # v4 calls glances_events.add() on every non-OK level.
+    # `folder_size()` walks the whole directory tree. Can be overridden per
+    # folder with `folder_<nb>_refresh`.
+    DEFAULT_REFRESH_TIME: ClassVar[float | None] = 60.0
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "path": {"description": "Absolute path.", "unit": "string", "primary_key": True},
