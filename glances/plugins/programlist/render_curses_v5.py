@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, row_budget
 from glances.plugins.processlist.render_curses_v5 import (
     _HEADER_SORT_KEY,
     _W_CPU,
@@ -106,7 +106,7 @@ def render(
     ]
     rows: list[Row] = [Row(cells=header_cells)]
 
-    for item in items[:_MAX_ROWS]:
+    for item in items[: row_budget(view, "programlist", _MAX_ROWS)]:
         name = item.get("name")
         item_levels = levels_index.get(name) if isinstance(levels_index, dict) else None
         item_levels = item_levels if isinstance(item_levels, dict) else {}

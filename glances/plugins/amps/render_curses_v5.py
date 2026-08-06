@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, row_budget
 
 # v4 formats the AMP name with `{:<16}` and the count with `{:<4}`.
 _NAME_COL_WIDTH = 16
@@ -94,4 +94,13 @@ def render(
                 )
             )
             first = False
+
+    budget = row_budget(view, "amps", None)
+    if isinstance(budget, int) and 0 < budget < len(rows):
+        # Last step of the vertical cascade: a verbose AMP must not push the
+        # process list off the screen. The marker consumes the last budgeted
+        # line, so `budget` rows are emitted in total.
+        hidden = len(rows) - (budget - 1)
+        rows = rows[: budget - 1]
+        rows.append(Row(cells=[Cell(text=f"… +{hidden} lines", color=ColorRole.HEADER)]))
     return rows

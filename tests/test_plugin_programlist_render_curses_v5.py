@@ -192,3 +192,25 @@ def test_render_nprocs_underscore_when_unparsable(fields):
     p = _program(name="x", nice="_")
     rows = render({"data": [p], "_levels": {}}, fields)
     assert "?" in rows[1].cells[NICE_COL].text
+
+
+# ---------------------------------------------------------- row_budget (vertical fit)
+
+
+def _many_programs(n):
+    return {"data": [_program(name=f"prog{i}") for i in range(n)], "_levels": {}}
+
+
+def test_row_budget_caps_the_number_of_programs(fields):
+    rows = render(_many_programs(50), fields, view={"row_budget": {"programlist": 7}})
+    assert len(rows) == 1 + 7
+
+
+def test_row_budget_above_the_default_shows_more_than_twenty(fields):
+    rows = render(_many_programs(50), fields, view={"row_budget": {"programlist": 45}})
+    assert len(rows) == 1 + 45
+
+
+def test_without_row_budget_the_default_cap_still_applies(fields):
+    rows = render(_many_programs(50), fields)
+    assert len(rows) == 1 + 20

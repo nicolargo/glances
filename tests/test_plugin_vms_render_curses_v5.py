@@ -145,3 +145,46 @@ def test_no_view_no_underline():
     rows = render(_payload([_vm()]))
     header = rows[0].cells
     assert all(c.underline is False for c in header)
+
+
+def _many_vms(n):
+    return [_vm(name=f"vm{i}") for i in range(n)]
+
+
+def test_row_budget_truncates_the_vm_list():
+    rows = render(_payload(_many_vms(12)), {}, view={"row_budget": {"vms": 3}})
+    assert len(rows) == 1 + 3
+
+
+def test_truncated_list_shows_a_counter_in_the_name_header():
+    rows = render(_payload(_many_vms(12)), {}, view={"row_budget": {"vms": 3}})
+    assert "Name 3/12" in _flat([rows[0]])
+
+
+def test_untruncated_list_keeps_the_bare_header_label():
+    rows = render(_payload(_many_vms(2)), {}, view={"row_budget": {"vms": 10}})
+    assert "/" not in _flat([rows[0]]).split("Status")[0]
+
+
+def test_zero_budget_hides_the_block_entirely():
+    assert render(_payload(_many_vms(12)), {}, view={"row_budget": {"vms": 0}}) == []
+
+
+def test_without_row_budget_all_vms_are_rendered():
+    rows = render(_payload(_many_vms(12)), {})
+    assert len(rows) == 1 + 12
+
+
+def test_counter_widens_the_name_column_so_data_rows_stay_aligned():
+    rows = render(_payload([_vm(name="a") for _ in range(12)]), {}, view={"row_budget": {"vms": 3}})
+    name_index = 0  # pas de colonne Engine avec un seul moteur
+    assert len(rows[0].cells[name_index].text) == len(rows[1].cells[name_index].text)
+
+
+def test_sort_underline_survives_the_truncation_counter():
+    rows = render(
+        _payload(_many_vms(12)),
+        {},
+        view={"row_budget": {"vms": 3}, "sort_key": "name"},
+    )
+    assert rows[0].cells[0].underline is True

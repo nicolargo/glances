@@ -84,3 +84,41 @@ def test_continuation_rows_are_not_coloured():
     )
     assert rows[0].cells[0].color is ColorRole.CRITICAL
     assert rows[1].cells[0].color is ColorRole.DEFAULT
+
+
+def _verbose_amp(n_lines):
+    return _payload(
+        [
+            {
+                "name": "myamp",
+                "regex": None,
+                "count": None,
+                "result": "\n".join(f"line {i}" for i in range(n_lines)),
+            }
+        ]
+    )
+
+
+def test_amps_without_budget_render_every_line():
+    """Non-regression: the 'render every AMP line' guarantee by default."""
+    rows = render(_verbose_amp(30), {})
+    assert len(rows) == 30
+
+
+def test_amps_budget_truncates_and_appends_a_marker():
+    rows = render(_verbose_amp(30), {}, view={"row_budget": {"amps": 5}})
+    assert len(rows) == 5
+    last = "".join(c.text for c in rows[-1].cells)
+    assert "+26 lines" in last  # 30 rendered - 4 kept
+
+
+def test_amps_budget_larger_than_the_content_is_a_no_op():
+    rows = render(_verbose_amp(3), {}, view={"row_budget": {"amps": 10}})
+    assert len(rows) == 3
+    assert "+" not in "".join(c.text for c in rows[-1].cells)
+
+
+def test_amps_budget_of_one_is_the_marker_alone():
+    rows = render(_verbose_amp(30), {}, view={"row_budget": {"amps": 1}})
+    assert len(rows) == 1
+    assert "+30 lines" in "".join(c.text for c in rows[0].cells)

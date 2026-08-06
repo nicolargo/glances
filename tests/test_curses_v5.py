@@ -2297,3 +2297,198 @@ def test_tui_v5_theme_defaults_to_dark(fake_store, fake_alerts, fake_config):
 
     tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
     assert tui._theme == "dark"
+
+
+# ------------------------------------------- RIGHT column vertical fit (body geometry)
+
+
+def _tui_with(store, alerts, config, registry, fields):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    return tui_mod.TuiV5(
+        store=store,
+        alerts=alerts,
+        config=config,
+        registry=registry,
+        fields_by_plugin=fields,
+        refresh_interval=0.01,
+    )
+
+
+def test_body_geometry_matches_what_paint_computes(fake_store, fake_alerts, fake_config):
+    """The fitter and the painter must share EXACTLY the same geometry."""
+    from glances.outputs.curses_renderer_v5 import Cell, Frame, PluginBlock, Row
+
+    tui = _tui_with(fake_store, fake_alerts, fake_config, [], {})
+    frame = Frame()
+    frame.header.append(PluginBlock(name="system", rows=[Row(cells=[Cell(text="host")])]))
+    frame.top.append(PluginBlock(name="cpu", rows=[Row(cells=[Cell(text="CPU")]) for _ in range(4)]))
+
+    body_y0, body_height = tui._body_geometry(frame, 40)
+    # header(1) + sep(1) + top(4) + sep(1)
+    assert body_y0 == 7
+    assert body_height == 33
+
+
+def test_body_geometry_without_header_or_top(fake_store, fake_alerts, fake_config):
+    from glances.outputs.curses_renderer_v5 import Frame
+
+    tui = _tui_with(fake_store, fake_alerts, fake_config, [], {})
+    assert tui._body_geometry(Frame(), 24) == (0, 24)
+
+
+def test_tall_terminal_shows_more_than_twenty_processes(fake_alerts, fake_config):
+    """Main rule: the processlist fills the terminal vertically."""
+    from unittest.mock import MagicMock
+
+    procs = [
+        {
+            "pid": 100 + i,
+            "name": f"p{i}",
+            "cmdline": [f"p{i}"],
+            "cpu_percent": 1.0,
+            "memory_percent": 1.0,
+            "username": "root",
+            "num_threads": 1,
+            "nice": 0,
+            "status": "S",
+            "memory_info": {"vms": 1024, "rss": 512},
+        }
+        for i in range(300)
+    ]
+    store = MagicMock()
+    store.as_dict.return_value = {"processlist": {"data": procs, "_levels": {}}}
+
+    tui = _tui_with(store, fake_alerts, fake_config, [("processlist", True)], {"processlist": {}})
+    frame = tui._build_fitted_frame(200, 80)
+    block = [b for b in frame.right if b.name == "processlist"][0]
+    assert block.height > 21
+
+
+def test_short_terminal_keeps_the_alert_block_visible(fake_alerts, fake_config):
+    """Fixed regression: the alert block must no longer be squeezed out."""
+    from unittest.mock import MagicMock
+
+    procs = [
+        {
+            "pid": 100 + i,
+            "name": f"p{i}",
+            "cmdline": [f"p{i}"],
+            "cpu_percent": 1.0,
+            "memory_percent": 1.0,
+            "username": "root",
+            "num_threads": 1,
+            "nice": 0,
+            "status": "S",
+            "memory_info": {"vms": 1024, "rss": 512},
+        }
+        for i in range(300)
+    ]
+    store = MagicMock()
+    store.as_dict.return_value = {"processlist": {"data": procs, "_levels": {}}}
+    fake_alerts.get_history.return_value = [
+        {
+            "ts": f"2026-08-05T10:{i:02d}:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "warning",
+            "previous_level": "ok",
+        }
+        for i in range(20)
+    ]
+
+    tui = _tui_with(store, fake_alerts, fake_config, [("processlist", True)], {"processlist": {}})
+    frame = tui._build_fitted_frame(200, 24)
+    _, body_height = tui._body_geometry(frame, 24)
+
+    total = sum(b.height for b in frame.right if b.rows)
+    total += max(0, len([b for b in frame.right if b.rows]) - 1)
+    assert total <= body_height, "the right column overflows the body"
+    assert any(b.name == "alert" and b.rows for b in frame.right)
+
+
+@pytest.mark.parametrize(
+    ("max_x", "expect_degradation"),
+    [(200, False), (120, True)],
+    ids=["wide-early-return", "narrow-after-degradation"],
+)
+def test_right_column_never_overflows_across_heights(fake_alerts, fake_config, max_x, expect_degradation):
+    """Invariant: whatever the height, the plan fits inside the body.
+
+    Parametrised over the TWO return paths of ``_build_fitted_frame``: the wide
+    terminal takes the early return (the TOP row already fits), the narrow one
+    only returns after the horizontal degradation cascade has run. The vertical
+    fit must hold on both, since the body height it budgets against depends on
+    the TOP-row height the cascade is free to change.
+    """
+    from unittest.mock import MagicMock
+
+    procs = [
+        {
+            "pid": 100 + i,
+            "name": f"p{i}",
+            "cmdline": [f"p{i}"],
+            "cpu_percent": 1.0,
+            "memory_percent": 1.0,
+            "username": "root",
+            "num_threads": 1,
+            "nice": 0,
+            "status": "S",
+            "memory_info": {"vms": 1024, "rss": 512},
+        }
+        for i in range(300)
+    ]
+    containers = [
+        {
+            "name": f"ctr{i}",
+            "status": "running",
+            "cpu_percent": 1.0,
+            "memory_usage_no_cache": 1024,
+            "memory_limit": 4096,
+        }
+        for i in range(25)
+    ]
+    store = MagicMock()
+    store.as_dict.return_value = {
+        "processlist": {"data": procs, "_levels": {}},
+        "containers": {"data": containers, "_levels": {}, "disable_stats": []},
+        **{name: dict(p) for name, p in _TOP_PAYLOADS.items()},
+    }
+    fake_alerts.get_history.return_value = []
+
+    tui = _tui_with(
+        store,
+        fake_alerts,
+        fake_config,
+        [
+            ("quicklook", False),
+            ("cpu", False),
+            ("mem", False),
+            ("memswap", False),
+            ("load", False),
+            ("processlist", True),
+            ("containers", True),
+        ],
+        {"processlist": {}, "containers": {}, **{name: dict(f) for name, f in _TOP_FIELDS.items()}},
+    )
+
+    # Which return path does ``_build_fitted_frame`` take at this width? The
+    # early one iff the natural TOP row already fits (mirrors ``_top_fits``).
+    natural = tui._build_frame(max_x=max_x)
+    nat_w = [b.width for b in natural.top]
+    assert nat_w, "the registry must produce a real TOP row"
+    overflows = sum(nat_w) + max(0, len(nat_w) - 1) * tui._TOP_GAP_MIN > max_x
+    assert overflows is expect_degradation, f"max_x={max_x} does not exercise the intended return path"
+
+    # The TOP row eats rows off the top, so sweep ``max_y`` relative to it and
+    # cover the very same body heights (12→80) on both paths.
+    offset, _ = tui._body_geometry(tui._build_fitted_frame(max_x, 200), 200)
+    for body in range(12, 81):
+        max_y = body + offset
+        frame = tui._build_fitted_frame(max_x, max_y)
+        _, body_height = tui._body_geometry(frame, max_y)
+        assert body_height == body, f"unexpected body height at max_y={max_y}"
+        visible = [b for b in frame.right if b.rows]
+        total = sum(b.height for b in visible) + max(0, len(visible) - 1)
+        assert total <= body_height, f"overflow at max_y={max_y}: {total} > {body_height}"

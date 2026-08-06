@@ -547,3 +547,27 @@ def test_cpu_percent_drops_decimal_above_1000(fields, cpu_percent, expected):
     cell = render(payload, fields)[1].cells[CPU_COL]
     assert cell.text == expected
     assert len(cell.text) == 5  # never overflows the 5-wide column
+
+
+# ---------------------------------------------------------- row_budget (vertical fit)
+
+
+def _many_procs(n):
+    return {"data": [_proc(pid=1000 + i, name=f"proc{i}") for i in range(n)], "_levels": {}}
+
+
+def test_row_budget_caps_the_number_of_processes(fields):
+    rows = render(_many_procs(50), fields, view={"row_budget": {"processlist": 7}})
+    assert len(rows) == 1 + 7  # en-tête + 7 processus
+
+
+def test_row_budget_above_the_default_shows_more_than_twenty(fields):
+    """La règle principale : sur un terminal haut on dépasse _MAX_ROWS."""
+    rows = render(_many_procs(50), fields, view={"row_budget": {"processlist": 45}})
+    assert len(rows) == 1 + 45
+
+
+def test_without_row_budget_the_default_cap_still_applies(fields):
+    """Non-régression : sans budget, la sortie est celle d'aujourd'hui."""
+    rows = render(_many_procs(50), fields)
+    assert len(rows) == 1 + 20

@@ -40,6 +40,7 @@ from glances.outputs.curses_renderer_v5 import (
     PluginBlock,
     Row,
     build_frame,
+    plan_right_column,
 )
 from glances.processes import glances_processes, sort_stats
 
@@ -491,8 +492,8 @@ class TuiV5(threading.Thread):
         if self._view.show_help:
             self._paint_help(stdscr)
         else:
-            _, max_x = stdscr.getmaxyx()
-            frame = self._build_fitted_frame(max_x)
+            max_y, max_x = stdscr.getmaxyx()
+            frame = self._build_fitted_frame(max_x, max_y)
             self._paint(stdscr, frame)
         stdscr.refresh()
 
@@ -567,7 +568,7 @@ class TuiV5(threading.Thread):
             return True
         return sum(widths) + (len(widths) - 1) * self._HEADER_GAP <= max_x
 
-    def _build_fitted_frame(self, max_x: int) -> Frame:
+    def _build_fitted_frame(self, max_x: int, max_y: int | None = None) -> Frame:
         """Build the frame, degrading the TOP row (a→f) until it fits ``max_x``.
 
         Measure-driven (not threshold-driven): rebuilds the pure, cheap frame
@@ -576,19 +577,27 @@ class TuiV5(threading.Thread):
         take the early return (one ``build_frame`` call, byte-identical output).
         Full-quicklook mode already owns the whole width via its own
         sibling-hiding, so it is exempt from the cascade.
+
+        The vertical fit (``_fit_right_column``) runs LAST, on both return
+        paths: the body height it budgets against depends on the TOP row
+        height, which the horizontal cascade above is free to change.
+        ``max_y is None`` skips it entirely (headless callers that only care
+        about the width fit).
         """
         view = self._build_view(max_x)
         frame = self._frame_for_view(view)
         if self._full_quicklook or self._top_fits(frame, max_x):
             frame = self._fit_header(view, frame, max_x)
-            return self._fit_proclist_width(view, frame, max_x)
+            frame = self._fit_proclist_width(view, frame, max_x)
+            return frame if max_y is None else self._fit_right_column(view, frame, max_y)
         for key, val in _DEGRADE_STEPS:
             view[key] = val
             frame = self._frame_for_view(view)
             if self._top_fits(frame, max_x):
                 break
         frame = self._fit_header(view, frame, max_x)
-        return self._fit_proclist_width(view, frame, max_x)
+        frame = self._fit_proclist_width(view, frame, max_x)
+        return frame if max_y is None else self._fit_right_column(view, frame, max_y)
 
     def _fit_header(self, view: dict[str, Any], frame: Frame, max_x: int) -> Frame:
         """Degrade the header row (system … ip … uptime … now) until it fits ``max_x``.
@@ -629,6 +638,58 @@ class TuiV5(threading.Thread):
             view["proclist_width"] = right_width
             frame = self._frame_for_view(view)
         return frame
+
+    # RIGHT-column blocks whose height the vertical budget controls. Anything
+    # else in the column (currently `processcount`) is non-elastic.
+    _ELASTIC_RIGHT = frozenset({"vms", "containers", "processlist", "programlist", "alert", "amps"})
+
+    def _fit_right_column(self, view: dict[str, Any], frame: Frame, max_y: int) -> Frame:
+        """Give each RIGHT-column block the number of rows the terminal height
+        allows, then rebuild once if that changes anything.
+
+        Mirrors ``_fit_proclist_width`` on the vertical axis: the plan is
+        computed by the pure ``plan_right_column`` solver from the real item
+        counts (``PluginBlock.data_count``), so a single rebuild settles it.
+        """
+        _, body_height = self._body_geometry(frame, max_y)
+        if body_height <= 0:
+            return frame
+
+        by_name = {b.name: b for b in frame.right}
+
+        def count(name: str) -> int:
+            block = by_name.get(name)
+            return block.data_count or 0 if block else 0
+
+        # processlist and programlist are mutually exclusive — exactly one is
+        # in the frame at any time (see `_frame_for_view`).
+        n_processes = count("processlist") or count("programlist")
+        plan = plan_right_column(
+            body_height=body_height,
+            static_heights={b.name: b.height for b in frame.right if b.name not in self._ELASTIC_RIGHT},
+            amps_height=by_name["amps"].height if "amps" in by_name else 0,
+            n_vms=count("vms"),
+            n_containers=count("containers"),
+            n_processes=n_processes,
+            n_alerts=count("alert"),
+        )
+
+        current = view.get("row_budget") or {}
+
+        # Compare the EFFECTIVE row counts, not the raw quotas: a quota above
+        # the item count renders exactly the same block, and rebuilding for
+        # that would cost one extra frame on every single cycle.
+        def effective(budget: dict[str, int], name: str) -> int:
+            available = count(name) if name != "amps" else (by_name["amps"].height if "amps" in by_name else 0)
+            quota = budget.get(name)
+            return available if quota is None else min(available, quota)
+
+        names = set(plan) | set(current)
+        if all(effective(plan, n) == effective(current, n) for n in names):
+            return frame
+
+        view["row_budget"] = plan
+        return self._frame_for_view(view)
 
     # Process collections re-sorted live in the TUI so a sort hotkey takes
     # effect on the next repaint rather than on the engine's next update.
@@ -677,6 +738,18 @@ class TuiV5(threading.Thread):
     # TOP-slot column. Full mode widens them to (almost) the whole terminal.
     _QUICKLOOK_COMPACT_WIDTH = 38
 
+    # Pre-fit row budget: a cost bound only. The vertical fit pass replaces it
+    # with the exact, height-driven budget — but without it the first frame of
+    # every cycle would render every process and every container just to throw
+    # the rows away.
+    _PREFIT_ROW_BUDGET = {
+        "vms": 10,
+        "containers": 10,
+        "processlist": 20,
+        "programlist": 20,
+        "alert": 10,
+    }
+
     def _build_view(self, max_x: int) -> dict[str, Any]:
         """Assemble the per-cycle ``view`` dict passed to ``build_frame``.
 
@@ -694,6 +767,7 @@ class TuiV5(threading.Thread):
         view["byte"] = self._byte
         # Full mode: bars span (almost) the whole width; compact: a column.
         view["quicklook_width"] = max(20, max_x - 8) if self._full_quicklook else self._QUICKLOOK_COMPACT_WIDTH
+        view["row_budget"] = dict(self._PREFIT_ROW_BUDGET)
         return view
 
     # ----------------------------------------------------------- paint
@@ -703,6 +777,25 @@ class TuiV5(threading.Thread):
     # Minimum gap between two adjacent top-row blocks when the terminal
     # is too narrow to distribute extra space — fallback only.
     _TOP_GAP_MIN = 1
+
+    def _body_geometry(self, frame: Frame, max_y: int) -> tuple[int, int]:
+        """Return ``(body_y0, body_height)`` — the region below the top row.
+
+        Single source of truth shared by the painter and by the vertical fit
+        pass: the RIGHT column budget is computed against the very same
+        height the painter will honour.
+
+        Note: it measures DECLARED block heights, while ``_paint_header`` and
+        ``_paint_top_row`` return PAINTED heights. The two diverge only when a
+        header or top block is skipped for lack of width, and the error
+        direction is safe: the body then starts lower than it had to, leaving a
+        blank band — never an overlap.
+        """
+        header_height = max((b.height for b in frame.header), default=0)
+        y = header_height + (1 if header_height else 0)
+        top_height = max((b.height for b in frame.top), default=0)
+        y += top_height + (1 if top_height else 0)
+        return (y, max(0, max_y - y))
 
     def _paint(self, stdscr, frame: Frame) -> None:
         """Lay out the frame on the terminal, mirroring v4:
@@ -731,13 +824,13 @@ class TuiV5(threading.Thread):
         top_height = self._paint_top_row(stdscr, frame.top, top_y0, max_x)
 
         # 2. Separator under the top row (if any top content was painted).
-        body_y0 = top_y0 + top_height
-        if top_height > 0 and body_y0 < max_y:
-            self._paint_separator(stdscr, body_y0, 0, max_x)
-            body_y0 += 1
+        if top_height > 0 and top_y0 + top_height < max_y:
+            self._paint_separator(stdscr, top_y0 + top_height, 0, max_x)
 
-        # 3. Below the top row: left + right sidebars side-by-side.
-        body_height = max(0, max_y - body_y0)
+        # 3. Below the top row: left + right sidebars side-by-side. The
+        # geometry comes from `_body_geometry` so the painter and the vertical
+        # fit pass can never disagree on the available height.
+        body_y0, body_height = self._body_geometry(frame, max_y)
         if body_height > 0:
             left_width = self._sidebar_split(frame, max_x)
             right_x = left_width + self._SIDEBAR_SEPARATOR_GAP
@@ -941,7 +1034,7 @@ class TuiV5(threading.Thread):
         if not self._separator_enabled:
             return
         try:
-            stdscr.addstr(y, x0, self._SEPARATOR_CHAR * max(0, width - 1))
+            stdscr.addstr(y, x0, self._SEPARATOR_CHAR * max(0, width))
         except curses.error:
             pass
 

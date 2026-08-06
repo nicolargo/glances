@@ -19,7 +19,7 @@ from __future__ import annotations
 from typing import Any
 
 from glances.globals import auto_unit
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, row_budget
 
 # Header → the GLOBAL process sort key (view["sort_key"], dynamic/auto-resolved),
 # processlist-aligned. MEM maps to memory_percent because the process sort-key
@@ -59,7 +59,13 @@ def _header_cell(
 
 
 def _build_header_row(
-    disable: set[str], *, show_engine: bool, show_pod: bool, name_w: int, sort_key: str | None
+    disable: set[str],
+    *,
+    show_engine: bool,
+    show_pod: bool,
+    name_w: int,
+    sort_key: str | None,
+    name_label: str = "CONTAINER",
 ) -> Row:
     def hdr(label: str, width: int, *, ljust: bool = False, color: ColorRole = ColorRole.HEADER) -> Cell:
         return _header_cell(label, width, ljust=ljust, color=color, sort_key=sort_key)
@@ -70,7 +76,10 @@ def _build_header_row(
     if show_pod:
         h.append(hdr("Pod", 12, ljust=True))
     if "name" not in disable:
-        h.append(hdr("CONTAINER", name_w, ljust=True))
+        # The sort underline is resolved on the CANONICAL label: `name_label` may
+        # carry a truncation counter ("CONTAINER 7/25"), which is not a table key.
+        name_underline = bool(sort_key) and _HEADER_SORT_KEY.get("CONTAINER") == sort_key
+        h.append(Cell(text=f"{name_label:<{name_w}}", color=ColorRole.HEADER, bold=True, underline=name_underline))
     if "status" not in disable:
         h.append(hdr("Status", 10))
     if "uptime" not in disable:
@@ -187,7 +196,29 @@ def render(
 
     show_engine = len({i.get("engine") for i in items}) > 1
     show_pod = any(i.get("pod_name") for i in items)
-    header = _build_header_row(disable, show_engine=show_engine, show_pod=show_pod, name_w=name_w, sort_key=sort_key)
+
+    total = len(items)
+    budget = row_budget(view, "containers", None)
+    if isinstance(budget, int):
+        if budget <= 0:
+            # Step g of the vertical cascade: the block is dropped entirely.
+            return []
+        items = items[:budget]
+    truncated = len(items) < total
+    # The counter replaces the bare label when the list is cut. `name_w` stays
+    # computed on the FULL list so the column does not jump width from one
+    # cycle to the next, and is only widened when the counter needs it.
+    name_label = f"CONTAINER {len(items)}/{total}" if truncated else "CONTAINER"
+    name_w = max(name_w, len(name_label))
+
+    header = _build_header_row(
+        disable,
+        show_engine=show_engine,
+        show_pod=show_pod,
+        name_w=name_w,
+        sort_key=sort_key,
+        name_label=name_label,
+    )
     rows: list[Row] = [header]
     rows.extend(
         _build_data_row(

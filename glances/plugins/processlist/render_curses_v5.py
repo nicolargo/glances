@@ -47,7 +47,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, row_budget
 
 # Column widths (v4 parity — see ``processlist.layout_header``/``layout_stat``).
 _W_CPU = 5
@@ -404,7 +404,10 @@ def render(
     header_cells = _filter_fixed(header_fixed) + [_header("Command", len("Command"))]
     rows: list[Row] = [Row(cells=header_cells)]
 
-    for item in items[:_MAX_ROWS]:
+    # `_MAX_ROWS` is the nominal fallback; the TUI publishes a height-driven
+    # budget in `view["row_budget"]` which may be lower (short terminal) or
+    # higher (tall terminal — the list fills the screen).
+    for item in items[: row_budget(view, "processlist", _MAX_ROWS)]:
         pid = item.get("pid")
         pid_levels = levels_index.get(pid) if isinstance(levels_index, dict) else None
         pid_levels = pid_levels if isinstance(pid_levels, dict) else {}

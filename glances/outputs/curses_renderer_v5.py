@@ -157,6 +157,10 @@ class PluginBlock:
 
     name: str
     rows: list[Row] = field(default_factory=list)
+    # Number of items available in the payload BEFORE the renderer applied
+    # any row budget — the RIGHT-column solver needs the real count, which a
+    # truncated block no longer reveals. None for scalar plugins.
+    data_count: int | None = None
 
     @property
     def height(self) -> int:
@@ -559,7 +563,9 @@ def render_alert_block(
     # uses the same same-day cutoff.
     now_local = (now or datetime.now(tz=timezone.utc)).astimezone()
 
-    recent = list(reversed(history[-limit:]))
+    # `history[-0:]` returns the WHOLE list — the cascade's "header only" step
+    # (limit == 0) must short-circuit rather than rely on the slice.
+    recent = list(reversed(history[-limit:])) if limit > 0 else []
     for evt in recent:
         ts = _format_alert_time(str(evt.get("ts", "")), now=now_local)
         plugin = str(evt.get("plugin", ""))
@@ -598,6 +604,188 @@ def render_alert_block(
             )
         )
     return rows
+
+
+# ------------------------------------------------- RIGHT column vertical budget
+#
+# The RIGHT column adapts to the terminal height the way the TOP row adapts to
+# its width. `plan_right_column` is pure: it turns an available height into a
+# per-plugin row budget, published as `view["row_budget"]` and consumed by the
+# renderers. See docs/superpowers/specs/2026-08-05-tui-v5-right-column-vertical-fit-design.md
+
+# Nominal budgets, in DATA rows (the block's own header row is not counted).
+# These reproduce the historical behaviour: 20 processes, 10 alerts.
+_NOMINAL_WORKLOADS = 10
+_NOMINAL_ALERTS = 10
+_NOMINAL_PROCESSES = 20
+# Growth ceiling for the shared vms+containers budget on a tall terminal.
+_MAX_WORKLOADS = 20
+
+
+def row_budget(view: dict[str, Any] | None, plugin_name: str, default: int | None) -> int | None:
+    """Max number of DATA rows `plugin_name` may emit this cycle.
+
+    Every key counts DATA rows — the block's own header row is excluded — EXCEPT
+    `amps`, which has no header row: its budget counts all its rows, truncation
+    marker included.
+
+    Reads `view["row_budget"]`, published by the TUI's vertical fit pass.
+    Returns `default` when the view carries no budget (export, tests, direct
+    renderer calls) so those paths keep their historical output.
+    """
+    budget = (view or {}).get("row_budget")
+    if not isinstance(budget, dict):
+        return default
+    value = budget.get(plugin_name)
+    return value if isinstance(value, int) else default
+
+
+def _split_workloads(quota: int, n_vms: int, n_containers: int) -> tuple[int, int]:
+    """Split the shared workload budget between `vms` and `containers`.
+
+    Max-min fairness: each block first gets an equal share, then whatever a
+    block does not use is handed to the other one. A sparsely populated block
+    is therefore never squeezed out by a crowded one (2 VMs + 30 containers
+    shows both VMs). An odd leftover is offered to `vms` first, matching the
+    RIGHT_SLOT order.
+    """
+    share = quota // 2
+    vms = min(n_vms, share)
+    containers = min(n_containers, share)
+    leftover = quota - vms - containers
+    if leftover > 0:
+        take = min(leftover, n_vms - vms)
+        vms += take
+        leftover -= take
+    if leftover > 0:
+        containers += min(leftover, n_containers - containers)
+    return (vms, containers)
+
+
+# Shrink ladder, applied in order until the layout fits (design §4.4).
+# `None` marks the special "truncate amps to whatever is left" step.
+_SHRINK_STEPS: tuple[tuple[str, int | None], ...] = (
+    ("workloads", 5),  # a
+    ("alerts", 5),  # b
+    ("processes", 10),  # c
+    ("workloads", 3),  # d
+    ("alerts", 3),  # e
+    ("processes", 5),  # f
+    ("workloads", 0),  # g — block hidden entirely
+    ("alerts", 0),  # h — header only
+    ("processes", 3),  # i
+    ("amps", None),  # j — truncated to what remains, "+N lines" marker
+    ("processes", 1),  # k — beyond this, curses clips
+)
+
+
+def plan_right_column(
+    *,
+    body_height: int,
+    static_heights: dict[str, int],
+    amps_height: int,
+    n_vms: int,
+    n_containers: int,
+    n_processes: int,
+    n_alerts: int,
+) -> dict[str, int]:
+    """Return the RIGHT column row budget for the available `body_height`.
+
+    Pure and analytic — no frame rebuild is needed to evaluate a candidate
+    layout, because every elastic block costs exactly one line per data row
+    plus one header row.
+
+    Args:
+        body_height: rows available below the top row separator.
+        static_heights: heights of the non-elastic RIGHT blocks that are
+            present (currently only `processcount`, always 1 row).
+        amps_height: natural height of the amps block, 0 when absent.
+        n_vms / n_containers / n_processes / n_alerts: item counts available
+            in the payloads (`PluginBlock.data_count`).
+
+    Returns:
+        `{plugin: max data rows}`. `amps` is present only when the ladder had
+        to truncate it (step j); its budget counts ALL its rows, marker
+        included.
+
+    On BOTH branches the process block ends up absorbing the slack: it is the
+    elastic block that fills the terminal (design R4). On the shrink branch the
+    ladder's process steps (c, f, i, k) are therefore temporary concessions —
+    once the layout fits, the rows the ladder freed beyond the deficit are
+    refunded to the processes. `workloads` and `alerts` keep the value the
+    ladder left them at, so the ladder's meaning is preserved for those two.
+    """
+    state = {
+        "workloads": _NOMINAL_WORKLOADS,
+        "alerts": _NOMINAL_ALERTS,
+        "processes": _NOMINAL_PROCESSES,
+        "amps": amps_height,
+    }
+
+    def cost(candidate: dict[str, int]) -> int:
+        """Rows occupied by `candidate` — mirrors `_paint_sidebar`: the sum of
+        the visible block heights plus one blank line between blocks."""
+        vms_q, containers_q = _split_workloads(candidate["workloads"], n_vms, n_containers)
+        heights: list[int] = []
+        if n_vms and vms_q:
+            heights.append(1 + vms_q)
+        if n_containers and containers_q:
+            heights.append(1 + containers_q)
+        heights.extend(h for h in static_heights.values() if h)
+        if candidate["amps"]:
+            heights.append(candidate["amps"])
+        if n_processes:
+            heights.append(1 + min(n_processes, candidate["processes"]))
+        # The alert block is always emitted, if only as a header line.
+        heights.append(1 + min(n_alerts, candidate["alerts"]))
+        return sum(heights) + max(0, len(heights) - 1)
+
+    def grow_processes() -> None:
+        """Hand every remaining free row to the process block, one at a time,
+        so the result provably fills the terminal without overflowing it. A
+        no-op when the layout already overflows (exhausted ladder)."""
+        while state["processes"] < n_processes and cost({**state, "processes": state["processes"] + 1}) <= body_height:
+            state["processes"] += 1
+
+    if cost(state) <= body_height:
+        # Growth: workloads first (step A), then processes absorb the rest
+        # (step B). One row at a time so the result provably fills the
+        # terminal without overflowing it.
+        while (
+            state["workloads"] < _MAX_WORKLOADS and cost({**state, "workloads": state["workloads"] + 1}) <= body_height
+        ):
+            state["workloads"] += 1
+        grow_processes()
+    else:
+        for key, value in _SHRINK_STEPS:
+            if key == "amps":
+                if not state["amps"]:
+                    continue
+                # Truncate to what remains, keeping at least the marker line.
+                deficit = cost(state) - body_height
+                state["amps"] = max(1, state["amps"] - deficit)
+            else:
+                if value >= state[key]:
+                    continue
+                state[key] = value
+            if cost(state) <= body_height:
+                break
+        # The step that made the layout fit usually freed more than the
+        # deficit; refund that slack to the processes rather than leaving
+        # blank rows at the bottom of the column.
+        grow_processes()
+
+    vms_q, containers_q = _split_workloads(state["workloads"], n_vms, n_containers)
+    budget = {
+        "vms": vms_q,
+        "containers": containers_q,
+        "processlist": state["processes"],
+        "programlist": state["processes"],
+        "alert": state["alerts"],
+    }
+    if state["amps"] != amps_height:
+        budget["amps"] = state["amps"]
+    return budget
 
 
 # --------------------------------------------------------------- frame
@@ -769,7 +957,12 @@ def build_frame(
         if not rows:
             continue
 
-        block = PluginBlock(name=plugin_name, rows=rows)
+        raw_data = payload.get("data") if isinstance(payload, dict) else None
+        block = PluginBlock(
+            name=plugin_name,
+            rows=rows,
+            data_count=len(raw_data) if isinstance(raw_data, list) else None,
+        )
         slot = slot_for(plugin_name)
         if slot == "header":
             frame.header.append(block)
@@ -793,7 +986,12 @@ def build_frame(
     frame.right.append(
         PluginBlock(
             name="alert",
-            rows=render_alert_block(alerts_history, limit=alerts_limit, is_initializing=alerts_initializing),
+            rows=render_alert_block(
+                alerts_history,
+                limit=row_budget(view, "alert", alerts_limit),
+                is_initializing=alerts_initializing,
+            ),
+            data_count=len(alerts_history),
         )
     )
     return frame

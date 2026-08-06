@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 from glances.outputs.curses_renderer_v5 import (
+    _MAX_WORKLOADS,
+    _NOMINAL_PROCESSES,
     Cell,
     ColorRole,
     Frame,
     PluginBlock,
     Row,
     _reset_plugin_renderer_cache,
+    _split_workloads,
     build_frame,
+    plan_right_column,
     render_alert_block,
     render_collection_plugin,
     render_scalar_plugin,
@@ -1430,3 +1434,352 @@ def test_build_frame_hides_gpu_when_flagged():
     hidden = build_frame(snapshot, fields, registry, [], view={"hide_gpu": True})
     assert "gpu" in [b.name for b in shown.top]
     assert "gpu" not in [b.name for b in hidden.top]
+
+
+def test_data_count_is_none_for_scalar_plugin():
+    """A scalar plugin has no `data` list — data_count stays None."""
+    frame = build_frame(
+        store_snapshot={"uptime": {"seconds": 42}},
+        fields_by_plugin={"uptime": {"seconds": {"unit": "second", "label": "Uptime"}}},
+        registry=[("uptime", False)],
+        alerts_history=[],
+    )
+    blocks = [b for b in frame.header + frame.top + frame.left + frame.right if b.name == "uptime"]
+    assert blocks, "uptime block missing"
+    assert blocks[0].data_count is None
+
+
+def test_data_count_counts_collection_items():
+    """A collection plugin exposes its FULL item count, even when the
+    renderer truncates the rows it emits."""
+    data = [{"name": f"c{i}", "status": "running"} for i in range(25)]
+    frame = build_frame(
+        store_snapshot={"containers": {"data": data, "_levels": {}, "disable_stats": []}},
+        fields_by_plugin={"containers": {}},
+        registry=[("containers", True)],
+        alerts_history=[],
+    )
+    blocks = [b for b in frame.right if b.name == "containers"]
+    assert blocks, "containers block missing"
+    assert blocks[0].data_count == 25
+
+
+def test_data_count_on_alert_block_is_history_length():
+    """The synthesized alert block carries the history length."""
+    history = [
+        {
+            "ts": "2026-08-05T10:00:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "warning",
+            "previous_level": "ok",
+        }
+        for _ in range(17)
+    ]
+    frame = build_frame(
+        store_snapshot={},
+        fields_by_plugin={},
+        registry=[],
+        alerts_history=history,
+    )
+    alert_blocks = [b for b in frame.right if b.name == "alert"]
+    assert alert_blocks[0].data_count == 17
+
+
+# --------------------------------------------------------------- plan_right_column
+
+
+def test_split_workloads_leftover_goes_to_the_other_block():
+    """3 VMs + 20 containers, budget 10 → les 3 VMs tiennent, containers prend le reste."""
+    assert _split_workloads(10, 3, 20) == (3, 7)
+
+
+def test_split_workloads_equal_demand_splits_evenly():
+    assert _split_workloads(10, 12, 12) == (5, 5)
+
+
+def test_split_workloads_single_block_takes_everything():
+    assert _split_workloads(10, 0, 30) == (0, 10)
+    assert _split_workloads(10, 30, 0) == (10, 0)
+
+
+def test_split_workloads_never_exceeds_demand():
+    assert _split_workloads(10, 2, 3) == (2, 3)
+
+
+def test_split_workloads_odd_leftover_goes_to_vms_first():
+    """Biais documenté : le reliquat impair est proposé d'abord à `vms`
+    (ordre de RIGHT_SLOT)."""
+    assert _split_workloads(5, 10, 10) == (3, 2)
+
+
+def test_split_workloads_zero_quota_hides_both():
+    assert _split_workloads(0, 5, 5) == (0, 0)
+
+
+def _plan(body_height, **overrides):
+    """Solveur avec un décor réaliste : 1 ligne processcount, pas d'AMP,
+    4 VMs, 30 containers, 400 processus, 40 alertes."""
+    kwargs = {
+        "body_height": body_height,
+        "static_heights": {"processcount": 1},
+        "amps_height": 0,
+        "n_vms": 4,
+        "n_containers": 30,
+        "n_processes": 400,
+        "n_alerts": 40,
+    }
+    kwargs.update(overrides)
+    return plan_right_column(**kwargs)
+
+
+def _cost(plan, *, n_vms=4, n_containers=30, n_processes=400, n_alerts=40, static=1, amps=0):
+    """Hauteur réellement occupée par un plan — miroir de _paint_sidebar :
+    somme des hauteurs des blocs visibles + une ligne vide entre blocs."""
+    heights = []
+    if n_vms and plan["vms"]:
+        heights.append(1 + min(n_vms, plan["vms"]))
+    if n_containers and plan["containers"]:
+        heights.append(1 + min(n_containers, plan["containers"]))
+    if static:
+        heights.append(static)
+    amps_rows = plan.get("amps", amps)
+    if amps_rows:
+        heights.append(amps_rows)
+    if n_processes:
+        heights.append(1 + min(n_processes, plan["processlist"]))
+    heights.append(1 + min(n_alerts, plan["alert"]))
+    return sum(heights) + max(0, len(heights) - 1)
+
+
+def test_plan_nominal_on_a_comfortable_terminal():
+    """Assez de place → valeurs nominales, sauf les workloads qui regagnent
+    la seule ligne de mou disponible (palier de croissance A) : le coût au
+    palier nominal est 49 (< 50), et l'unique ligne de surplus va aux
+    workloads avant que les processus n'en voient la couleur (palier A avant
+    B, cf. `test_plan_workloads_grow_before_processes`)."""
+    plan = _plan(50)
+    assert plan["vms"] + plan["containers"] == 11
+    assert plan["alert"] == 10
+    assert plan["processlist"] >= _NOMINAL_PROCESSES
+
+
+def test_plan_processes_absorb_all_the_surplus():
+    """Le seul bloc élastique remplit le terminal, sans le dépasser."""
+    plan = _plan(60)
+    assert _cost(plan) <= 60
+    grown = dict(plan, processlist=plan["processlist"] + 1)
+    assert _cost(grown) > 60, "une ligne de plus aurait encore tenu"
+
+
+def test_plan_workloads_grow_before_processes():
+    """Palier A avant B : sur un terminal haut les workloads regagnent de la
+    place avant que la processlist n'avale tout."""
+    plan = _plan(90)
+    assert plan["vms"] + plan["containers"] == _MAX_WORKLOADS
+
+
+def test_plan_workloads_never_exceed_the_growth_ceiling():
+    plan = _plan(400)
+    assert plan["vms"] + plan["containers"] == _MAX_WORKLOADS
+
+
+def _first_height_where(predicate):
+    """Plus grande hauteur (en descendant) où `predicate(plan)` devient vrai.
+
+    Balayer plutôt que coder en dur une hauteur rend les tests robustes au
+    décor : c'est bien l'ORDRE des paliers qui est vérifié, pas une valeur
+    arithmétique fragile.
+    """
+    for height in range(80, 0, -1):
+        if predicate(_plan(height)):
+            return height
+    return None
+
+
+def test_plan_shrink_ladder_follows_the_documented_order():
+    """Les paliers a→k se déclenchent dans l'ordre du spec, jamais l'inverse.
+
+    Seuls les paliers workloads (a, d, g) et alertes (b, e, h) sont observables
+    par un quota : les paliers processus (c, f, i, k) ne sont que des
+    concessions temporaires, remboursées juste après par la croissance
+    (cf. `test_plan_processes_always_absorb_the_slack`).
+    """
+    steps = {
+        "a": lambda p: p["vms"] + p["containers"] <= 5,
+        "b": lambda p: p["alert"] <= 5,
+        "d": lambda p: p["vms"] + p["containers"] <= 3,
+        "e": lambda p: p["alert"] <= 3,
+        "g": lambda p: p["vms"] + p["containers"] == 0,
+        "h": lambda p: p["alert"] == 0,
+    }
+    heights = {name: _first_height_where(pred) for name, pred in steps.items()}
+    assert all(h is not None for h in heights.values()), heights
+    ordered = [heights[name] for name in "abdegh"]
+    # Hauteurs décroissantes : un palier ne peut pas se déclencher avant celui
+    # qui le précède dans la cascade.
+    assert ordered == sorted(ordered, reverse=True), heights
+
+
+def test_plan_processes_always_absorb_the_slack():
+    """Contrat R4 sur les DEUX branches : à chaque hauteur, le nombre de
+    processus est le plus grand qui tienne encore — une ligne de plus
+    déborderait, sauf si tous les processus sont déjà affichés."""
+    for height in range(80, 0, -1):
+        plan = _plan(height)
+        if plan["processlist"] >= 400:
+            continue
+        grown = dict(plan, processlist=plan["processlist"] + 1)
+        assert _cost(grown) > height, f"une ligne de processus de plus tenait encore à body_height={height}"
+
+
+def test_plan_step_a_shrinks_workloads_alone():
+    """Juste sous le seuil nominal, SEULS les workloads reculent : les alertes
+    restent au nominal et les processus ne perdent rien (ils récupèrent même
+    les lignes que le palier a libérées en trop)."""
+    height = _first_height_where(lambda p: p["vms"] + p["containers"] < 10)
+    plan = _plan(height)
+    assert plan["vms"] + plan["containers"] == 5
+    assert plan["alert"] == 10
+    assert plan["processlist"] >= 20
+
+
+def test_plan_cascade_is_monotonic():
+    """Réduire la hauteur ne peut jamais augmenter le quota d'un bloc que la
+    cascade fait reculer définitivement (workloads, alertes), et le plan tient
+    toujours dans la hauteur disponible tant qu'on n'a pas épuisé la cascade.
+
+    Les processus, eux, ne sont PAS monotones : quand un palier libère plus que
+    le déficit, ils récupèrent le surplus, donc leur quota peut remonter d'une
+    hauteur à la suivante (cf. `test_plan_processes_always_absorb_the_slack`).
+    """
+    previous = None
+    for height in range(60, 14, -1):
+        plan = _plan(height)
+        assert _cost(plan) <= height, f"plan déborde à body_height={height}"
+        if previous is not None:
+            assert plan["vms"] + plan["containers"] <= previous["workloads"]
+            assert plan["alert"] <= previous["alert"]
+        previous = {
+            "workloads": plan["vms"] + plan["containers"],
+            "alert": plan["alert"],
+        }
+
+
+def test_plan_step_g_hides_workloads_entirely():
+    plan = _plan(12)
+    assert plan["vms"] == 0
+    assert plan["containers"] == 0
+
+
+def test_plan_step_h_leaves_alert_header_only():
+    plan = _plan(10)
+    assert plan["alert"] == 0
+
+
+def test_plan_keeps_five_processes_until_the_alert_block_is_a_header():
+    """Le plancher 5 processus est plus fort que les alertes : il ne tombe
+    qu'une fois workloads masqués (g) et alertes réduites à l'en-tête (h)."""
+    plan = _plan(11)
+    assert plan["processlist"] >= 5
+
+
+def test_plan_breaks_the_process_floor_only_at_the_very_end():
+    plan = _plan(7)
+    assert plan["processlist"] < 5
+    assert plan["processlist"] >= 1
+
+
+def test_plan_never_returns_zero_processes():
+    plan = _plan(1)
+    assert plan["processlist"] == 1
+
+
+def test_plan_step_j_truncates_amps_before_the_last_process_step():
+    """Un AMP bavard est rogné plutôt que de faire disparaître la
+    processlist."""
+    plan = _plan(14, amps_height=30, n_vms=0, n_containers=0)
+    assert plan.get("amps") is not None
+    assert plan["amps"] < 30
+    assert plan["processlist"] >= 1
+
+
+def test_plan_leaves_amps_untouched_when_they_fit():
+    plan = _plan(60, amps_height=3)
+    assert "amps" not in plan
+
+
+def test_plan_absent_blocks_free_room_for_processes():
+    """Sans containers ni VMs, les paliers a/d/g sont des no-op : la place
+    qu'ils auraient prise revient à la processlist."""
+    with_workloads = _plan(40)
+    without = _plan(40, n_vms=0, n_containers=0)
+    assert without["vms"] == 0
+    assert without["containers"] == 0
+    assert without["processlist"] > with_workloads["processlist"]
+
+
+def test_plan_programlist_mirrors_processlist():
+    """Les deux vues sont mutuellement exclusives et partagent le budget."""
+    plan = _plan(40)
+    assert plan["programlist"] == plan["processlist"]
+
+
+def test_plan_on_a_degenerate_height_does_not_crash():
+    for height in (0, -5):
+        plan = plan_right_column(
+            body_height=height,
+            static_heights={},
+            amps_height=0,
+            n_vms=0,
+            n_containers=0,
+            n_processes=10,
+            n_alerts=0,
+        )
+        assert plan["processlist"] >= 1
+
+
+def _alert_history(n):
+    return [
+        {
+            "ts": f"2026-08-05T10:{i:02d}:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "warning",
+            "previous_level": "ok",
+        }
+        for i in range(n)
+    ]
+
+
+def test_alert_limit_zero_renders_the_header_only():
+    """Piège : `history[-0:]` renvoie TOUT l'historique. Le palier h doit
+    court-circuiter explicitement."""
+    rows = render_alert_block(_alert_history(27), limit=0)
+    assert len(rows) == 1
+    assert "27 total" in "".join(c.text for c in rows[0].cells)
+
+
+def test_alert_limit_is_read_from_the_row_budget():
+    frame = build_frame(
+        store_snapshot={},
+        fields_by_plugin={},
+        registry=[],
+        alerts_history=_alert_history(27),
+        view={"row_budget": {"alert": 4}},
+    )
+    alert_block = [b for b in frame.right if b.name == "alert"][0]
+    assert len(alert_block.rows) == 1 + 4
+
+
+def test_alert_without_row_budget_keeps_the_default_limit():
+    frame = build_frame(
+        store_snapshot={},
+        fields_by_plugin={},
+        registry=[],
+        alerts_history=_alert_history(27),
+    )
+    alert_block = [b for b in frame.right if b.name == "alert"][0]
+    assert len(alert_block.rows) == 1 + 10

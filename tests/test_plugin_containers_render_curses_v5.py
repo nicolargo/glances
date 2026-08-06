@@ -136,3 +136,62 @@ def test_net_bits_vs_bytes():
     byts = render(_payload(data), None, {"byte": True})
     # bits multiply by 8 → different rendered Rx text
     assert _texts(bits[1]) != _texts(byts[1])
+
+
+def _many(n):
+    return [
+        {
+            "name": f"ctr{i}",
+            "status": "running",
+            "cpu_percent": 1.0,
+            "memory_usage_no_cache": 1024,
+            "memory_limit": 4096,
+        }
+        for i in range(n)
+    ]
+
+
+def test_row_budget_truncates_the_container_list():
+    rows = render(_payload(_many(25)), {}, view={"row_budget": {"containers": 7}})
+    assert len(rows) == 1 + 7
+
+
+def test_truncated_list_shows_a_counter_in_the_name_header():
+    rows = render(_payload(_many(25)), {}, view={"row_budget": {"containers": 7}})
+    assert "CONTAINER 7/25" in _texts(rows[0])
+
+
+def test_untruncated_list_keeps_the_bare_header_label():
+    rows = render(_payload(_many(5)), {}, view={"row_budget": {"containers": 10}})
+    header = _texts(rows[0])
+    assert "CONTAINER" in header
+    assert "/" not in header.split("Status")[0]
+
+
+def test_zero_budget_hides_the_block_entirely():
+    assert render(_payload(_many(25)), {}, view={"row_budget": {"containers": 0}}) == []
+
+
+def test_without_row_budget_all_containers_are_rendered():
+    """Non-régression : appel direct sans view → sortie inchangée."""
+    rows = render(_payload(_many(25)), {})
+    assert len(rows) == 1 + 25
+
+
+def test_counter_widens_the_name_column_so_data_rows_stay_aligned():
+    """Un compteur plus long que le nom le plus long ne doit pas décaler les
+    colonnes suivantes : la cellule de nom garde la même largeur en en-tête
+    et en données."""
+    data = [{"name": "a", "status": "running"} for _ in range(25)]
+    rows = render(_payload(data), {}, view={"row_budget": {"containers": 7}})
+    assert rows[0].cells[0].text.startswith("CONTAINER 7/25")
+    assert len(rows[0].cells[0].text) == len(rows[1].cells[0].text)
+
+
+def test_sort_underline_survives_the_truncation_counter():
+    rows = render(
+        _payload(_many(25)),
+        {},
+        view={"row_budget": {"containers": 7}, "sort_key": "name"},
+    )
+    assert rows[0].cells[0].underline is True

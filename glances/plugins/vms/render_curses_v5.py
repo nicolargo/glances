@@ -31,7 +31,7 @@ from __future__ import annotations
 from typing import Any
 
 from glances.globals import auto_unit
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, row_budget
 
 _DEFAULT_MAX_NAME_SIZE = 20
 _STATUS_WIDTH = 10
@@ -71,11 +71,22 @@ def _header(label: str, width: int, *, ljust: bool = False, sort_key: str | None
     return Cell(text=text, color=ColorRole.HEADER, bold=True, underline=underline)
 
 
-def _build_header_row(*, show_engine: bool, engine_w: int, name_w: int, show_load: bool, sort_key: str | None) -> Row:
+def _build_header_row(
+    *,
+    show_engine: bool,
+    engine_w: int,
+    name_w: int,
+    show_load: bool,
+    sort_key: str | None,
+    name_label: str = "Name",
+) -> Row:
     cells: list[Cell] = []
     if show_engine:
         cells.append(_header("Engine", engine_w, ljust=True, sort_key=sort_key))
-    cells.append(_header("Name", name_w, ljust=True, sort_key=sort_key))
+    # The sort underline is resolved on the CANONICAL label: `name_label` may
+    # carry a truncation counter ("Name 3/12"), which is not a table key.
+    name_underline = bool(sort_key) and _HEADER_SORT_FIELD.get("Name") == sort_key
+    cells.append(Cell(text=name_label.ljust(name_w), color=ColorRole.HEADER, bold=True, underline=name_underline))
     cells.append(_header("Status", _STATUS_WIDTH, sort_key=sort_key))
     cells.append(_header("Core", _CORE_WIDTH, sort_key=sort_key))
     cells.append(_header("CPU%", _CPU_WIDTH, sort_key=sort_key))
@@ -133,8 +144,23 @@ def render(
         engine_w = max(_ENGINE_MIN_WIDTH, max((len(str(i.get("engine", ""))) for i in items), default=0))
     show_load = items[0].get("load_1min") is not None
 
+    total = len(items)
+    budget = row_budget(view, "vms", None)
+    if isinstance(budget, int):
+        if budget <= 0:
+            return []
+        items = items[:budget]
+    truncated = len(items) < total
+    name_label = f"Name {len(items)}/{total}" if truncated else "Name"
+    name_w = max(name_w, len(name_label))
+
     header_row = _build_header_row(
-        show_engine=show_engine, engine_w=engine_w, name_w=name_w, show_load=show_load, sort_key=sort_key
+        show_engine=show_engine,
+        engine_w=engine_w,
+        name_w=name_w,
+        show_load=show_load,
+        sort_key=sort_key,
+        name_label=name_label,
     )
     data_rows = [
         _build_data_row(vm, show_engine=show_engine, engine_w=engine_w, name_w=name_w, show_load=show_load)
