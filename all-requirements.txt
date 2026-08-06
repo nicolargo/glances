@@ -167,8 +167,6 @@ pydantic-settings==2.14.2
     # via mcp
 pygal==3.1.3
     # via glances
-pyinstrument==5.1.3
-    # via glances
 pyjwt==2.13.0
     # via
     #   ibm-cloud-sdk-core
