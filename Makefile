@@ -227,6 +227,9 @@ memory-profiling: ## Profile memory usage
 	$(UV_RUN) run mprof plot --output $(OUT_DIR)/glances-memory-profiling-without-history.png
 	rm -f $(PROFILE)
 
+bench-v4-v5: ## Compare the CPU and memory footprint of Glances v4 and v5 (~7 mins)
+	$(UV_RUN) run python tests-data/tools/bench_v4_v5.py -C $(CONF)
+
 # Trivy installation: https://aquasecurity.github.io/trivy/latest/getting-started/installation/
 trivy: ## Run Trivy to find vulnerabilities
 	$(UV_RUN) run trivy fs ./glances/
