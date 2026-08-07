@@ -53,8 +53,68 @@ fields_unit_type = {
 }
 
 
+class LazyViews(dict):
+    """Views for a list-of-dicts plugin, built per key on first access.
+
+    processlist can hold tens of thousands of items while the UI shows a few dozen rows, and
+    in curses mode nothing reads the views at all, so building them up front is pure waste.
+    Anything that reads the whole object goes through get_views(), which materialises it
+    first, so consumers still see a plain and complete dict.
+    """
+
+    def __init__(self, plugin, raw, key_field):
+        super().__init__()
+        self._plugin = plugin
+        self._items = {item[key_field]: item for item in raw}
+
+    def _build(self, key):
+        item = self._items[key]  # a genuinely unknown key raises KeyError, as a dict would
+        return {field: self._plugin._build_view_for_field(key=key, field=field) for field in item}
+
+    def __missing__(self, key):
+        built = self._build(key)
+        super().__setitem__(key, built)
+        return built
+
+    # Membership is deliberately left as dict's own: it reports what has been built, not what
+    # could be. _build_view_for_field() asks whether a previous view exists before indexing
+    # into it, and answering "yes" for an entry that is only about to be created sends it
+    # straight back in here.
+
+    def materialize(self):
+        """Build every remaining view and return self as a fully populated dict."""
+        for key in self._items:
+            if not super().__contains__(key):
+                super().__setitem__(key, self._build(key))
+        return self
+
+    def __iter__(self):
+        self.materialize()
+        return super().__iter__()
+
+    def __len__(self):
+        self.materialize()
+        return super().__len__()
+
+    def keys(self):
+        self.materialize()
+        return super().keys()
+
+    def values(self):
+        self.materialize()
+        return super().values()
+
+    def items(self):
+        self.materialize()
+        return super().items()
+
+
 class GlancesPluginModel:
     """Main class for Glances plugin model."""
+
+    # Build the per-item views on demand instead of up front. Only worth it for plugins whose
+    # item count is large and unrelated to how many rows the UI shows.
+    lazy_views = False
 
     def __init__(self, args=None, config=None, items_history_list=None, stats_init_value={}, fields_description=None):
         """Init the plugin of plugins model class.
@@ -669,6 +729,13 @@ class GlancesPluginModel:
         """
         ret = {}
 
+        # hide_zero makes _build_view_for_field() read the previous self.views, which a lazy
+        # container cannot provide: it is itself self.views by then, so the lookup would
+        # recurse into the entry being built. Fall back to building everything up front.
+        if self.lazy_views and not self.hide_zero and isinstance(self.get_raw(), list) and self.get_key() is not None:
+            self.views = LazyViews(self, self.get_raw(), self.get_key())
+            return self.views
+
         if self.get_raw() is not None and isinstance(self.get_raw(), list) and self.get_key() is not None:
             # Stats are stored in a list of dict (ex: DISKIO, NETWORK, FS...)
             for i in self.get_raw():
@@ -706,6 +773,9 @@ class GlancesPluginModel:
             item_views = self.views
         else:
             item_views = self.views[item]
+        if isinstance(item_views, LazyViews):
+            # The caller gets the object itself, so hand out a fully built one.
+            item_views = item_views.materialize()
         if key is None:
             return item_views
         if key not in item_views:
