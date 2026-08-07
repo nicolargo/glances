@@ -25,7 +25,7 @@ dependencies = [
   "shtab; platform_system != 'Windows'",
   "jinja2",
 ]
-description = "A cross-platform curses-based monitoring tool"
+description = "An all-in-one system monitoring tool"
 dynamic = ["version"]
 keywords = ["cli", "curses", "monitoring", "system"]
 license = "LGPL-3.0-only"

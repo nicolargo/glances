@@ -85,7 +85,7 @@ add new plugins or exports modules.
 Usage 👋
 ========
 
-For the standalone mode, just run:
+For the standalone (TUI) mode, just run:
 
 .. code-block:: console
 
@@ -93,7 +93,7 @@ For the standalone mode, just run:
 
 .. image:: ./docs/_static/glances-summary.png
 
-For the Web server mode, run:
+For the Web server mode (WebUI), run:
 
 .. code-block:: console
 
@@ -171,15 +171,6 @@ Results look like this:
 
 For the record, Glances also have a XML-RPC client/server mode, run the following command on the server:
 
-.. code-block:: console
-
-    $ glances -s
-
-and this one on the client:
-
-.. code-block:: console
-
-    $ glances -c <ip>
 
 Use Glances as a Python library 📚
 ==================================

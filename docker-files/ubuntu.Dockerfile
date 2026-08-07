@@ -16,17 +16,24 @@ ARG PYTHON_VERSION=3.14
 FROM ubuntu:${IMAGE_VERSION} AS base
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
+RUN <<EOR
+# Upgrade the system
+apt-get update
+
+# Install the minimal set of packages
+apt-get install -y --no-install-recommends \
     python3 \
     curl \
     lm-sensors \
-    # wireless-tools \
+    wireless-tools \
     smartmontools \
     net-tools \
-    tzdata \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+    tzdata
+
+# Clean the system
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+EOR
 
 ##############################################################################
 # BUILD Stages
@@ -36,12 +43,13 @@ FROM base AS build
 ARG PYTHON_VERSION
 ARG DEBIAN_FRONTEND=noninteractive
 
+RUN <<EOR
 # Upgrade the system
-RUN apt-get update \
-  && apt-get upgrade -y
+apt-get update
+apt-get upgrade -y
 
-# Install build-time dependencies
-RUN apt-get install -y --no-install-recommends \
+# Install deps
+apt-get install -y --no-install-recommends \
     python3-dev \
     python3-venv \
     python3-pip \
@@ -50,9 +58,12 @@ RUN apt-get install -y --no-install-recommends \
     musl-dev \
     build-essential
 
-RUN apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+# Clean the system
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+EOR
 
+# Install build-time dependencies
 RUN python3 -m venv --without-pip venv
 
 COPY pyproject.toml docker-requirements.txt all-requirements.txt ./
@@ -119,12 +130,14 @@ COPY --from=buildMinimal /venv /venv
 FROM release AS full
 ARG PYTHON_VERSION
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
+RUN <<EOR
+apt-get update
+apt-get install -y --no-install-recommends \
     libzmq5 \
     libvirt-clients \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+EOR
 
 COPY --from=buildfull /venv /venv
 

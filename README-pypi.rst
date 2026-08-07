@@ -23,7 +23,7 @@ add new plugins or exports modules.
 Usage 👋
 ========
 
-For the standalone mode, just run:
+For the standalone (TUI) mode, just run:
 
 .. code-block:: console
 
@@ -31,7 +31,7 @@ For the standalone mode, just run:
 
 .. image:: https://github.com/nicolargo/glances/raw/refs/heads/master/docs/_static/glances-responsive-webdesign.png
 
-For the Web server mode, run:
+For the Web server mode (WebUI), run:
 
 .. code-block:: console
 
@@ -42,6 +42,12 @@ and enter the URL ``http://<ip>:61208`` in your favorite web browser.
 In this mode, a HTTP/Restful API is exposed, see document `RestfulApi`_ for more details.
 
 .. image:: https://github.com/nicolargo/glances/raw/refs/heads/master/docs/_static/screenshot-web.png
+
+To also expose a `MCP (Model Context Protocol)`_ server (for AI assistants), add ``--enable-mcp``:
+
+.. code-block:: console
+
+    $ glances -w --enable-mcp
 
 For the client/server mode (remote monitoring through XML-RPC), run the following command on the server:
 
@@ -181,22 +187,10 @@ Gateway to other services 🌐
 
 Glances can export stats to:
 
-- ``CSV`` file
-- ``JSON`` file
-- ``InfluxDB`` server
-- ``Cassandra`` server
-- ``CouchDB`` server
-- ``OpenTSDB`` server
-- ``Prometheus`` server
-- ``StatsD`` server
-- ``ElasticSearch`` server
-- ``PostgreSQL/TimeScale`` server
-- ``RabbitMQ/ActiveMQ`` broker
-- ``ZeroMQ`` broker
-- ``Kafka`` broker
-- ``Riemann`` server
-- ``Graphite`` server
-- ``RESTful`` endpoint
+- files: ``CSV`` and ``JSON``
+- databases:  ``InfluxDB``, ``ElasticSearch``, ``PostgreSQL/TimeScale``, ``Cassandra``, ``ClickHouse``, ``CouchDB``, ``OpenTSDB``, ``Prometheus``, ``StatsD``, ``Riemann`` and ``Graphite``
+- brokers: ``RabbitMQ/ActiveMQ``, ``NATS``, ``ZeroMQ`` and ``Kafka``
+- others: ``RESTful`` endpoint
 
 Installation 🚀
 ===============
@@ -208,14 +202,14 @@ PyPI: Pip, the standard way
 
 Glances is on ``PyPI``. By using PyPI, you will be using the latest stable version.
 
-To install Glances, simply use the ``pip`` command line.
-
-Warning: on modern Linux operating systems, you may have an externally-managed-environment
-error message when you try to use ``pip``. In this case, go to the the PipX section below.
+To install Glances, simply use the ``pip`` command line in an virtual environment.
 
 .. code-block:: console
 
-    pip install --user glances
+    cd ~
+    python3 -m venv ~/.venv
+    source ~/.venv/bin/activate
+    pip install glances
 
 *Note*: Python headers are required to install `psutil`_, a Glances
 dependency. For example, on Debian/Ubuntu **the simplest** is
@@ -224,17 +218,18 @@ the *python-dev* package and gcc (*python-devel* on Fedora/CentOS/RHEL).
 For Windows, just install psutil from the binary installation file.
 
 By default, Glances is installed **without** the Web interface dependencies.
+
 To install it, use the following command:
 
 .. code-block:: console
 
-    pip install --user 'glances[web]'
+    pip install 'glances[web]'
 
 For a full installation (with all features, see features list bellow):
 
 .. code-block:: console
 
-    pip install --user 'glances[all]'
+    pip install 'glances[all]'
 
 Features list:
 
@@ -247,6 +242,7 @@ Features list:
 - gpu: install dependencies for GPU plugin
 - graph: install dependencies for graph export
 - ip: install dependencies for IP public option
+- mcp: install dependencies for the MCP server (AI assistant integration)
 - raid: install dependencies for RAID plugin
 - sensors: install dependencies for sensors plugin
 - smart: install dependencies for smart plugin
@@ -259,27 +255,37 @@ To upgrade Glances to the latest version:
 
 .. code-block:: console
 
-    pip install --user --upgrade glances
+    pip install --upgrade glances
 
 The current develop branch is published to the test.pypi.org package index.
 If you want to test the develop version (could be instable), enter:
 
 .. code-block:: console
 
-    pip install --user -i https://test.pypi.org/simple/ Glances
+    pip install -i https://test.pypi.org/simple/ Glances
 
 PyPI: PipX, the alternative way
 -------------------------------
 
-Install PipX on your system (apt install pipx on Ubuntu).
+Install PipX on your system. For example on Ubuntu/Debian:
 
-Install Glances (with all features):
+.. code-block:: console
+
+    sudo apt install pipx
+
+Then install Glances (with all features):
 
 .. code-block:: console
 
     pipx install 'glances[all]'
 
 The glances script will be installed in the ~/.local/bin folder.
+
+To upgrade Glances to the latest version:
+
+.. code-block:: console
+
+    pipx upgrade glances
 
 Shell tab completion 🔍
 =======================
@@ -321,15 +327,18 @@ Extra dependencies:
 - ``batinfo`` (for battery monitoring)
 - ``bernhard`` (for the Riemann export module)
 - ``cassandra-driver`` (for the Cassandra export module)
+- ``clickhouse-connect`` (for the ClickHouse export module)
 - ``chevron`` (for the action script feature)
 - ``docker`` (for the Containers Docker monitoring support)
 - ``elasticsearch`` (for the Elastic Search export module)
 - ``FastAPI`` and ``Uvicorn`` (for Web server mode)
+- ``mcp`` (for the MCP server — AI assistant integration)
 - ``graphitesender`` (For the Graphite export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB version 1 export module)
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
 - ``kafka-python`` (for the Kafka export module)
+- ``nats-py`` (for the NATS export module)
 - ``nvidia-ml-py`` (for the GPU plugin)
 - ``pycouchdb`` (for the CouchDB export module)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
@@ -358,17 +367,18 @@ or just say "thank you" by:
 
 - sponsor me using one-time or monthly tier Github sponsors_ page
 - send me some pieces of bitcoin: 185KN9FCix3svJYp7JQM7hRMfSKyeaJR4X
-- buy me a gift on my wishlist_ page
 
 Any and all contributions are greatly appreciated.
 
 Authors and Contributors 🔥
 ===========================
 
-Nicolas Hennion (@nicolargo) <nicolas@nicolargo.com>
+Glances has been created by Nicolas Hennion (@nicolargo) <nicolas@nicolargo.com>
 
 .. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
     :target: https://twitter.com/nicolargo
+
+and developed by a wonderfull contributors_ community.
 
 License 📜
 ==========
@@ -382,5 +392,7 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
 .. _PythonApi: https://glances.readthedocs.io/en/develop/api/python.html
 .. _RestfulApi: https://glances.readthedocs.io/en/develop/api/restful.html
+.. _McpApi: https://glances.readthedocs.io/en/develop/api/mcp.html
+.. _`MCP (Model Context Protocol)`: https://modelcontextprotocol.io
 .. _FAQ: https://github.com/nicolargo/glances/blob/develop/docs/faq.rst
 .. _Discussions: https://github.com/nicolargo/glances/discussions
