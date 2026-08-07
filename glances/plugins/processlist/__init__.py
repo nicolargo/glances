@@ -122,6 +122,9 @@ class ProcesslistPlugin(GlancesPluginModel):
     stats is a list
     """
 
+    # True between a refresh and the first read of the views, see update_views()
+    _views_pending = False
+
     # Default list of processes stats to be grabbed / displayed
     # Can be altered by glances_processes.disable_stats
     enable_stats = [
@@ -258,6 +261,34 @@ class ProcesslistPlugin(GlancesPluginModel):
         self.stats = stats
 
         return self.stats
+
+    def update_views(self):
+        """Note that the views are out of date, without building them.
+
+        The list holds every process on the machine, while the UI shows a few dozen rows and
+        msg_curse() builds its own decorations rather than reading the views. Only the API
+        asks for them, so building them on every refresh is work nobody collects.
+        """
+        self._views_pending = True
+        self.views = {}
+        return self.views
+
+    def get_views(self, item=None, key=None, option=None):
+        """Build the views if the last refresh left them pending, then answer as usual."""
+        if self._views_pending:
+            self._views_pending = False
+            super().update_views()
+        return super().get_views(item=item, key=key, option=option)
+
+    def set_views(self, input_views):
+        """Views handed to us replace whatever a pending build would have produced."""
+        self._views_pending = False
+        super().set_views(input_views)
+
+    def reset_views(self):
+        """A reset must stay reset; without this the next read would rebuild them."""
+        self._views_pending = False
+        super().reset_views()
 
     def get_api(self):
         """Return the sorted processes list for the API."""
