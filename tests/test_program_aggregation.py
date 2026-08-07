@@ -27,6 +27,7 @@ def make_process(pid, name):
 def processes():
     p = GlancesProcesses()
     p.processlist = [make_process(1, 'worker'), make_process(2, 'worker'), make_process(3, 'other')]
+    p.processlist[2]['cpu_percent'] = 99.0  # 'other' sorts ahead of 'worker' by CPU
     return p
 
 
@@ -43,9 +44,15 @@ def test_aggregation_is_rebuilt_when_the_list_is_replaced(processes):
     assert {p['name'] for p in second} == {'worker', 'newcomer'}
 
 
-def test_aggregation_is_rebuilt_after_a_sort(processes):
-    first = processes.get_list(as_programs=True)
-    assert processes.get_list(sorted=True, as_programs=True) is not first
+def test_aggregation_follows_a_re_sort(processes):
+    """Sorting replaces the process list, so the programs must be aggregated again in the
+    new order rather than served from the previous call."""
+    assert [p['name'] for p in processes.get_list(as_programs=True)] == ['worker', 'other']
+
+    processes.set_sort_key('cpu_percent', auto=False)
+    resorted = processes.get_list(sorted=True, as_programs=True)
+
+    assert [p['name'] for p in resorted] == ['other', 'worker']
 
 
 def test_aggregation_content(processes):

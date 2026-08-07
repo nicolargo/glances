@@ -74,7 +74,7 @@ class GlancesProcesses:
         self.processlist = []
         self.reset_processcount()
 
-        # Programs aggregated from processlist, kept until the list itself is replaced
+        # Aggregation of processlist, valid while _programs_source is still the current list
         self._programs = []
         self._programs_source = None
 
@@ -721,12 +721,9 @@ class GlancesProcesses:
         return self.processlist
 
     def _get_programs(self):
-        """Aggregate the processes into programs, reusing the result until the list changes.
-
-        processes_to_programs() walks every process, while the list itself is only rebuilt by
-        update(). Callers ask for it far more often than that, so without this the aggregation
-        is redone from scratch on every refresh of the UI. Both update() and a re-sort replace
-        the list object, which is what invalidates the cache here.
+        """Callers ask for the programs far more often than update() rebuilds the process
+        list, and walking every process each time is the bulk of the programlist refresh.
+        Both update() and a re-sort replace the list object, which is the invalidation.
         """
         if self._programs_source is not self.processlist:
             self._programs = processes_to_programs(self.processlist)
