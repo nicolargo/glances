@@ -17,6 +17,8 @@ ARG PYTHON_VERSION=3.14
 FROM alpine:${IMAGE_VERSION} AS base
 
 RUN <<EOR
+set -e
+
 # Upgrade the system
 apk update
 apk upgrade --no-cache
@@ -26,7 +28,6 @@ apk add --no-cache \
   python3 \
   curl \
   lm-sensors \
-  wireless-tools \
   smartmontools \
   iputils \
   tzdata

@@ -17,6 +17,8 @@ FROM ubuntu:${IMAGE_VERSION} AS base
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN <<EOR
+set -e
+
 # Upgrade the system
 apt-get update
 
@@ -25,7 +27,6 @@ apt-get install -y --no-install-recommends \
     python3 \
     curl \
     lm-sensors \
-    wireless-tools \
     smartmontools \
     net-tools \
     tzdata
@@ -44,6 +45,8 @@ ARG PYTHON_VERSION
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN <<EOR
+set -e
+
 # Upgrade the system
 apt-get update
 apt-get upgrade -y
@@ -131,10 +134,14 @@ FROM release AS full
 ARG PYTHON_VERSION
 
 RUN <<EOR
+set -e
+
 apt-get update
 apt-get install -y --no-install-recommends \
     libzmq5 \
-    libvirt-clients \
+    libvirt-clients
+
+# Clean the system
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 EOR
