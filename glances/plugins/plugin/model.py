@@ -56,10 +56,6 @@ fields_unit_type = {
 class GlancesPluginModel:
     """Main class for Glances plugin model."""
 
-    # Defer building the views until something reads them. Worth it for a plugin holding far
-    # more items than the UI draws, whose own rendering does not consult them.
-    lazy_views = False
-
     def __init__(self, args=None, config=None, items_history_list=None, stats_init_value={}, fields_description=None):
         """Init the plugin of plugins model class.
 
@@ -121,8 +117,6 @@ class GlancesPluginModel:
 
         # Init the views
         self.views = {}
-        # Set by update_views() when the build is deferred; consumed by get_views()
-        self._views_source = None
 
         # Hide stats if all the hide_zero_fields has never been != 0
         # Default is False, always display stats
@@ -672,41 +666,24 @@ class GlancesPluginModel:
                 'additional': False,      >>> Is the stat provide additional information
                 'splittable': False,      >>> Is the stat can be cut (like process lon name)
                 'hidden': False}          >>> Is the stats should be hidden in the UI
-
-        A plugin with lazy_views set leaves the views empty here and builds them in
-        get_views(), so read them through that rather than off the attribute.
         """
-        raw = self.get_raw()
-
-        # hide_zero is excluded: it carries the hidden flag over from the previous views,
-        # which a deferred build no longer has.
-        if self.lazy_views and not self.hide_zero:
-            self._views_source = raw
-            self.views = {}
-        else:
-            self._views_source = None
-            self.views = self._build_views(raw)
-
-        return self.views
-
-    def _build_views(self, raw):
-        """self.views still holds the previous views here; hide_zero reads them to keep a
-        field hidden once it has been hidden."""
         ret = {}
 
-        if raw is not None and isinstance(raw, list) and self.get_key() is not None:
+        if self.get_raw() is not None and isinstance(self.get_raw(), list) and self.get_key() is not None:
             # Stats are stored in a list of dict (ex: DISKIO, NETWORK, FS...)
-            for i in raw:
+            for i in self.get_raw():
                 key = i[self.get_key()]
                 ret[key] = {}
                 for field in listkeys(i):
                     ret[key][field] = self._build_view_for_field(key=key, field=field)
-        elif isinstance(raw, dict) and raw is not None:
+        elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
-            for field in listkeys(raw):
+            for field in listkeys(self.get_raw()):
                 ret[field] = self._build_view_for_field(key=None, field=field)
 
-        return ret
+        self.views = ret
+
+        return self.views
 
     def set_views(self, input_views):
         """Set the views to input_views."""
@@ -725,10 +702,6 @@ class GlancesPluginModel:
 
         Specify item if the stats are stored in a dict of dict (ex: NETWORK, FS...)
         """
-        if self._views_source is not None:
-            # First read since the last refresh: this is where a lazy plugin pays.
-            self.views = self._build_views(self._views_source)
-            self._views_source = None
         if item is None:
             item_views = self.views
         else:

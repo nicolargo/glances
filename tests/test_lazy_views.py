@@ -32,12 +32,11 @@ def plugin(glances_stats):
     singleton and break every later test that reads it.
     """
     p = glances_stats.get_plugin('processlist')
-    saved = (p.stats, p.views, getattr(p, '_views_source', None), p.hide_zero, p.hide_zero_fields)
+    saved = (p.stats, p.views, getattr(p, '_views_pending', False))
     p.stats = [make_process(pid) for pid in range(10)]
     yield p
-    p.stats, p.views, p.hide_zero, p.hide_zero_fields = saved[0], saved[1], saved[3], saved[4]
-    if hasattr(p, '_views_source'):
-        p._views_source = saved[2]
+    p.stats, p.views, pending = saved
+    p._views_pending = pending
 
 
 def test_refresh_builds_nothing(plugin):
@@ -63,10 +62,14 @@ def test_json_contains_every_process(plugin):
     assert len(json.loads(plugin.get_json_views())) == 10
 
 
-def test_hide_zero_builds_eagerly(plugin):
-    """hide_zero carries the hidden flag over from the previous views, which a deferred
-    build no longer has."""
-    plugin.hide_zero = True
-    plugin.hide_zero_fields = ['cpu_percent']
+def test_reset_stays_reset(plugin):
+    """Without clearing the pending flag the next read would rebuild what was reset."""
     plugin.update_views()
-    assert len(plugin.views) == 10
+    plugin.reset_views()
+    assert plugin.get_views() == {}
+
+
+def test_set_views_is_not_overwritten(plugin):
+    plugin.update_views()
+    plugin.set_views({'given': 'by the server'})
+    assert plugin.get_views() == {'given': 'by the server'}
