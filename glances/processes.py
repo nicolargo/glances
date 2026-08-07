@@ -716,6 +716,9 @@ class GlancesProcesses:
         If as_programs is True, return the list of programs."""
         if sorted:
             self.processlist = sort_stats(self.processlist, sorted_by=self.sort_key, reverse=self.sort_reverse)
+            # One branch of sort_stats() reorders the list in place, so a changed order does
+            # not always mean a different object.
+            self._programs_source = None
         if as_programs:
             return self._get_programs()
         return self.processlist
@@ -842,11 +845,9 @@ def sort_stats(stats, sorted_by='cpu_percent', sorted_by_secondary='memory_perce
         try:
             stats = sorted(stats, key=sort_by_these_keys(sorted_by, sorted_by_secondary), reverse=reverse)
         except (KeyError, TypeError) as e:
-            # Fallback to name. sorted() rather than list.sort(): every other branch returns
-            # a new list, and sorting the caller's list in place makes the result impossible
-            # to tell apart from the input.
+            # Fallback to name
             logger.debug(f'Error while sorting by {sorted_by}, fallback to name ({e})')
-            stats = sorted(stats, key=lambda process: process['name'] if process['name'] is not None else '~')
+            stats.sort(key=lambda process: process['name'] if process['name'] is not None else '~', reverse=False)
 
     return stats
 

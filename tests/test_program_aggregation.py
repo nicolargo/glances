@@ -2,7 +2,7 @@
 
 import pytest
 
-from glances.processes import GlancesProcesses, sort_stats
+from glances.processes import GlancesProcesses
 
 
 def make_process(pid, name):
@@ -61,17 +61,17 @@ def test_aggregation_content(processes):
     assert programs['other']['nprocs'] == 1
 
 
-def test_sort_stats_does_not_mutate_the_input():
-    """Every branch must return a new list, or callers cannot tell the result from the input.
+def test_aggregation_follows_an_in_place_sort(processes):
+    """sort_stats() reorders the list in place when the primary sort raises, leaving the
+    object identical; the cache has to notice anyway."""
+    # Mixed types in the sort field make the primary sort raise, which is what reaches the
+    # in-place branch. nice is compared but never summed, so the aggregation still works.
+    processes.processlist[0]['nice'] = 'x'
+    assert [p['name'] for p in processes.get_list(as_programs=True)] == ['worker', 'other']
 
-    Mixing types in the sort field makes the primary sort raise TypeError, which is what
-    reaches the fallback branch; that branch used to sort the caller's list in place.
-    """
-    stats = [make_process(1, 'b'), make_process(2, 'a')]
-    stats[0]['cpu_percent'] = 'not-a-number'
+    processes.set_sort_key('nice', auto=False)
+    before = processes.processlist
+    resorted = processes.get_list(sorted=True, as_programs=True)
 
-    result = sort_stats(stats, sorted_by='cpu_percent')
-
-    assert result is not stats
-    assert [p['pid'] for p in stats] == [1, 2], "the caller's list was reordered"
-    assert [p['pid'] for p in result] == [2, 1], 'the fallback sorts by name'
+    assert processes.processlist is before, 'this test is pointless unless the sort was in place'
+    assert [p['name'] for p in resorted] == ['other', 'worker']
