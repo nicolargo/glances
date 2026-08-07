@@ -169,4 +169,6 @@ jobs:
             # from source and the job times out. tests/test_core.py does not need
             # them.
             python3 -m pip install --break-system-packages -r requirements.txt
+            # Request is needed for conftest.py
+            python3 -m pip install --break-system-packages requests
             python3 -m pytest ./tests/test_core.py
