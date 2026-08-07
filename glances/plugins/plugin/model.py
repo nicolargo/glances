@@ -680,7 +680,7 @@ class GlancesPluginModel:
 
         # hide_zero is excluded: it carries the hidden flag over from the previous views,
         # which a deferred build no longer has.
-        if self.lazy_views and not self.hide_zero and isinstance(raw, list) and self.get_key() is not None:
+        if self.lazy_views and not self.hide_zero:
             self._views_source = raw
             self.views = {}
         else:
