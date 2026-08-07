@@ -74,6 +74,10 @@ class GlancesProcesses:
         self.processlist = []
         self.reset_processcount()
 
+        # Aggregation of processlist, valid while _programs_source is still the current list
+        self._programs = []
+        self._programs_source = None
+
         # Cache is a dict with key=pid and value = dict of cached value
         self.processlist_cache = {}
 
@@ -712,9 +716,22 @@ class GlancesProcesses:
         If as_programs is True, return the list of programs."""
         if sorted:
             self.processlist = sort_stats(self.processlist, sorted_by=self.sort_key, reverse=self.sort_reverse)
+            # One branch of sort_stats() reorders the list in place, so a changed order does
+            # not always mean a different object.
+            self._programs_source = None
         if as_programs:
-            return processes_to_programs(self.processlist)
+            return self._get_programs()
         return self.processlist
+
+    def _get_programs(self):
+        """Callers ask for the programs far more often than update() rebuilds the process
+        list, and walking every process each time is the bulk of the programlist refresh.
+        Both update() and a re-sort replace the list object, which is the invalidation.
+        """
+        if self._programs_source is not self.processlist:
+            self._programs = processes_to_programs(self.processlist)
+            self._programs_source = self.processlist
+        return self._programs
 
     def get_export(self):
         """Return the processlist for export."""
