@@ -1,11 +1,8 @@
 """Tests for the lazily built process views."""
 
 import json
-from unittest import mock
 
 import pytest
-
-from glances.plugins.processlist import ProcesslistPlugin
 
 
 def make_process(pid):
@@ -28,10 +25,19 @@ def make_process(pid):
 
 
 @pytest.fixture
-def plugin():
-    p = ProcesslistPlugin(args=mock.Mock(time=2), config=None)
+def plugin(glances_stats):
+    """The shared processlist plugin, fed a fixed list and put back afterwards.
+
+    Building a plugin here instead would write Mock attributes into the glances_processes
+    singleton and break every later test that reads it.
+    """
+    p = glances_stats.get_plugin('processlist')
+    saved = (p.stats, p.views, getattr(p, '_views_source', None), p.hide_zero, p.hide_zero_fields)
     p.stats = [make_process(pid) for pid in range(10)]
-    return p
+    yield p
+    p.stats, p.views, p.hide_zero, p.hide_zero_fields = saved[0], saved[1], saved[3], saved[4]
+    if hasattr(p, '_views_source'):
+        p._views_source = saved[2]
 
 
 def test_refresh_builds_nothing(plugin):

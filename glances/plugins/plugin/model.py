@@ -672,16 +672,21 @@ class GlancesPluginModel:
                 'additional': False,      >>> Is the stat provide additional information
                 'splittable': False,      >>> Is the stat can be cut (like process lon name)
                 'hidden': False}          >>> Is the stats should be hidden in the UI
+
+        A plugin with lazy_views set leaves the views empty here and builds them in
+        get_views(), so read them through that rather than off the attribute.
         """
+        raw = self.get_raw()
+
         # hide_zero is excluded: it carries the hidden flag over from the previous views,
         # which a deferred build no longer has.
-        if self.lazy_views and not self.hide_zero and isinstance(self.get_raw(), list) and self.get_key() is not None:
-            self._views_source = self.get_raw()
+        if self.lazy_views and not self.hide_zero and isinstance(raw, list) and self.get_key() is not None:
+            self._views_source = raw
             self.views = {}
-            return self.views
+        else:
+            self._views_source = None
+            self.views = self._build_views(raw)
 
-        self._views_source = None
-        self.views = self._build_views(self.get_raw())
         return self.views
 
     def _build_views(self, raw):
