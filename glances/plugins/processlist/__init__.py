@@ -122,8 +122,8 @@ class ProcesslistPlugin(GlancesPluginModel):
     stats is a list
     """
 
-    # The list holds every process on the machine while the UI shows a few dozen rows, and
-    # the curses output never reads the views at all. Build them on demand.
+    # Every process on the machine, against a few dozen rows on screen; msg_curse() builds its
+    # own decorations and never looks at the views.
     lazy_views = True
 
     # Default list of processes stats to be grabbed / displayed

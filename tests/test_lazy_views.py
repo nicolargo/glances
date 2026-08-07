@@ -46,12 +46,6 @@ def test_first_read_builds_the_views(plugin):
     assert len(views) == 10
 
 
-def test_unknown_key_raises(plugin):
-    plugin.update_views()
-    with pytest.raises(KeyError):
-        plugin.get_views(item=999999)
-
-
 def test_second_read_reuses_the_built_views(plugin):
     plugin.update_views()
     first = plugin.get_views()

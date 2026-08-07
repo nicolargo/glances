@@ -56,8 +56,8 @@ fields_unit_type = {
 class GlancesPluginModel:
     """Main class for Glances plugin model."""
 
-    # Build the per-item views on demand instead of up front. Only worth it for plugins whose
-    # item count is large and unrelated to how many rows the UI shows.
+    # Defer building the views until something reads them. Worth it for a plugin holding far
+    # more items than the UI draws, whose own rendering does not consult them.
     lazy_views = False
 
     def __init__(self, args=None, config=None, items_history_list=None, stats_init_value={}, fields_description=None):
@@ -121,7 +121,7 @@ class GlancesPluginModel:
 
         # Init the views
         self.views = {}
-        # Stats whose views have not been built yet (see update_views)
+        # Set by update_views() when the build is deferred; consumed by get_views()
         self._views_source = None
 
         # Hide stats if all the hide_zero_fields has never been != 0
@@ -673,10 +673,8 @@ class GlancesPluginModel:
                 'splittable': False,      >>> Is the stat can be cut (like process lon name)
                 'hidden': False}          >>> Is the stats should be hidden in the UI
         """
-        # A lazy plugin holds far more items than the UI shows and nothing reads its views
-        # while drawing, so remember the stats and let get_views() do the work if it is ever
-        # asked for. hide_zero is excluded: it carries the hidden flag over from the previous
-        # views, which are gone by the time a deferred build runs.
+        # hide_zero is excluded: it carries the hidden flag over from the previous views,
+        # which a deferred build no longer has.
         if self.lazy_views and not self.hide_zero and isinstance(self.get_raw(), list) and self.get_key() is not None:
             self._views_source = self.get_raw()
             self.views = {}
@@ -687,8 +685,8 @@ class GlancesPluginModel:
         return self.views
 
     def _build_views(self, raw):
-        """Build the views for raw stats. Reads self.views, which still holds the previous
-        views at this point; hide_zero relies on that to keep a field hidden."""
+        """self.views still holds the previous views here; hide_zero reads them to keep a
+        field hidden once it has been hidden."""
         ret = {}
 
         if raw is not None and isinstance(raw, list) and self.get_key() is not None:
