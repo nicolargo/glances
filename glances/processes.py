@@ -74,6 +74,10 @@ class GlancesProcesses:
         self.processlist = []
         self.reset_processcount()
 
+        # Programs aggregated from processlist, kept until the list itself is replaced
+        self._programs = []
+        self._programs_source = None
+
         # Cache is a dict with key=pid and value = dict of cached value
         self.processlist_cache = {}
 
@@ -713,8 +717,21 @@ class GlancesProcesses:
         if sorted:
             self.processlist = sort_stats(self.processlist, sorted_by=self.sort_key, reverse=self.sort_reverse)
         if as_programs:
-            return processes_to_programs(self.processlist)
+            return self._get_programs()
         return self.processlist
+
+    def _get_programs(self):
+        """Aggregate the processes into programs, reusing the result until the list changes.
+
+        processes_to_programs() walks every process, while the list itself is only rebuilt by
+        update(). Callers ask for it far more often than that, so without this the aggregation
+        is redone from scratch on every refresh of the UI. Both update() and a re-sort replace
+        the list object, which is what invalidates the cache here.
+        """
+        if self._programs_source is not self.processlist:
+            self._programs = processes_to_programs(self.processlist)
+            self._programs_source = self.processlist
+        return self._programs
 
     def get_export(self):
         """Return the processlist for export."""
@@ -828,9 +845,11 @@ def sort_stats(stats, sorted_by='cpu_percent', sorted_by_secondary='memory_perce
         try:
             stats = sorted(stats, key=sort_by_these_keys(sorted_by, sorted_by_secondary), reverse=reverse)
         except (KeyError, TypeError) as e:
-            # Fallback to name
+            # Fallback to name. sorted() rather than list.sort(): every other branch returns
+            # a new list, and sorting the caller's list in place makes the result impossible
+            # to tell apart from the input.
             logger.debug(f'Error while sorting by {sorted_by}, fallback to name ({e})')
-            stats.sort(key=lambda process: process['name'] if process['name'] is not None else '~', reverse=False)
+            stats = sorted(stats, key=lambda process: process['name'] if process['name'] is not None else '~')
 
     return stats
 
