@@ -32,7 +32,7 @@
 	},
 	"overrides": {
 		"eslint": {
-			"ajv": "8.18.0"
+			"ajv": "^6.12.6"
 		},
 		"minimatch": "10.2.4",
 		"serialize-javascript": "7.0.5",
