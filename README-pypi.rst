@@ -396,3 +396,5 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _`MCP (Model Context Protocol)`: https://modelcontextprotocol.io
 .. _FAQ: https://github.com/nicolargo/glances/blob/develop/docs/faq.rst
 .. _Discussions: https://github.com/nicolargo/glances/discussions
+.. _contributors: https://github.com/nicolargo/glances/graphs/contributors
+
