@@ -5,7 +5,6 @@ from unittest import mock
 
 import pytest
 
-from glances.plugins.plugin.model import LazyViews
 from glances.plugins.processlist import ProcesslistPlugin
 
 
@@ -35,35 +34,28 @@ def plugin():
     return p
 
 
-def built_count(views):
-    """How many entries exist without asking the lazy container to build more."""
-    return dict.__len__(views)
-
-
-def test_views_are_lazy_by_default(plugin):
+def test_refresh_builds_nothing(plugin):
     plugin.update_views()
-    assert isinstance(plugin.views, LazyViews)
-    assert built_count(plugin.views) == 0
+    assert plugin.views == {}
 
 
-def test_reading_one_key_builds_only_that_key(plugin):
+def test_first_read_builds_the_views(plugin):
     plugin.update_views()
-    view = plugin.views[4]
-    assert view['cpu_percent']['decoration'] is not None
-    assert built_count(plugin.views) == 1
+    views = plugin.get_views()
+    assert views[4]['cpu_percent']['decoration'] is not None
+    assert len(views) == 10
 
 
 def test_unknown_key_raises(plugin):
     plugin.update_views()
     with pytest.raises(KeyError):
-        plugin.views[999999]
+        plugin.get_views(item=999999)
 
 
-def test_get_views_materializes_everything(plugin):
+def test_second_read_reuses_the_built_views(plugin):
     plugin.update_views()
-    views = plugin.get_views()
-    assert len(views) == 10
-    assert built_count(views) == 10
+    first = plugin.get_views()
+    assert plugin.get_views() is first
 
 
 def test_json_contains_every_process(plugin):
@@ -71,10 +63,10 @@ def test_json_contains_every_process(plugin):
     assert len(json.loads(plugin.get_json_views())) == 10
 
 
-def test_hide_zero_falls_back_to_eager_views(plugin):
-    """hide_zero reads the previous view of a key, which a lazy container cannot provide."""
+def test_hide_zero_builds_eagerly(plugin):
+    """hide_zero carries the hidden flag over from the previous views, which a deferred
+    build no longer has."""
     plugin.hide_zero = True
     plugin.hide_zero_fields = ['cpu_percent']
     plugin.update_views()
-    assert not isinstance(plugin.views, LazyViews)
     assert len(plugin.views) == 10
