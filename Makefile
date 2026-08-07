@@ -319,10 +319,8 @@ docker-ubuntu: $(ubuntu_images) ## Generate local docker images (Ubuntu)
 
 docker-alpine-full: ## Generate local docker image (Alpine full)
 docker-alpine-minimal: ## Generate local docker image (Alpine minimal)
-docker-alpine-dev: ## Generate local docker image (Alpine dev)
 docker-ubuntu-full: ## Generate local docker image (Ubuntu full)
 docker-ubuntu-minimal: ## Generate local docker image (Ubuntu minimal)
-docker-ubuntu-dev: ## Generate local docker image (Ubuntu dev)
 
 trivy-docker: ## Run Trivy to find vulnerabilities in Docker images
 	$(UV_RUN) run trivy image glances:local-alpine-full
