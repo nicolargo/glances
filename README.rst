@@ -399,14 +399,30 @@ Run the container in *Web server mode* (and MCP server):
 
 For a full list of options, see the Glances `Docker`_ documentation page.
 
-It is also possible to use a simple Docker compose file (see in ./docker-compose/docker-compose.yml):
+Docker compose: Yet Another Cloudy Way
+--------------------------------------
+
+It is also possible to use a simple Docker compose file to:
+
+- run the Web (Rest API and WebUI) and the MCP server (see in ./docker-compose/docker-compose.yml):
 
 .. code-block:: console
 
-    cd ./docker-compose
+    mkdir -p ~/glances-compose
+    cd ~/glances-compose
+    wget https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docker-compose/docker-compose.yml
+    wget https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docker-compose/glances.conf
     docker compose up
 
-It will start a Glances server with WebUI.
+- or run the terminal client (TUI):
+
+.. code-block:: console
+
+    mkdir -p ~/glances-compose
+    cd ~/glances-compose
+    wget https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docker-compose/docker-compose-tui.yml
+    wget https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docker-compose/glances.conf
+    docker compose -f ./docker-compose-tui.yml run glances
 
 Brew: The missing package manager
 ---------------------------------
@@ -422,7 +438,7 @@ GNU/Linux package
 
 `Glances` is available on many Linux distributions, so you should be
 able to install it using your favorite package manager. Nevetheless,
-i do not recommend it. Be aware that when you use this method the operating
+**i do not recommend it**. Be aware that when you use this method the operating
 system `package`_ for `Glances` may not be the latest version and only basics
 plugins are enabled.
 
@@ -526,26 +542,10 @@ To install Glances from source:
 
 *Note*: Python headers are required to install psutil.
 
-Chef
-----
-
-An awesome ``Chef`` cookbook is available to monitor your infrastructure:
-https://supermarket.chef.io/cookbooks/glances (thanks to Antoine Rouyer)
-
-Puppet
-------
-
-You can install Glances using ``Puppet``: https://github.com/rverchere/puppet-glances
-
-Ansible
--------
-
-A Glances ``Ansible`` role is available: https://galaxy.ansible.com/zaxos/glances-ansible-role/
-
 Shell tab completion 🔍
 =======================
 
-Glances 4.3.2 and higher includes shell tab autocompletion thanks to the --print-completion option.
+Glances includes shell tab autocompletion thanks to the --print-completion option.
 
 For example, on a Linux operating system with bash shell:
 
