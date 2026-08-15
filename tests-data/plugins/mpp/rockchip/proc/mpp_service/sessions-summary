@@ -1,0 +1,11 @@
+session: pid=388 index=69
+ device: 22140100.rkvdec
+ flags:  00000001 CODEC
+ codec_type: 9
+ trans_in:   0 trans_out:  0
+
+session: pid=388 index=71
+ device: 21f40000.rkvenc
+ flags:  00000001 CODEC
+ codec_type: 7
+ trans_in:   0 trans_out:  0

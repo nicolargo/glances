@@ -1,0 +1,112 @@
+# This pipeline aims at building Glances Docker images
+
+name: build_docker
+
+env:
+  DEFAULT_DOCKER_IMAGE: nicolargo/glances
+  PUSH_BRANCH: ${{ 'refs/heads/develop' == github.ref || startsWith(github.ref, 'refs/tags/v') }}
+  # Alpine image platform: https://hub.docker.com/_/alpine
+  # linux/arm/v6,linux/arm/v7 do not work (timeout during the build)
+  DOCKER_PLATFORMS: linux/amd64,linux/arm64/v8
+  # Ubuntu image platforms list: https://hub.docker.com/_/ubuntu
+  # linux/arm/v7 do not work (Cargo/Rust not available)
+  DOCKER_PLATFORMS_UBUNTU: linux/amd64,linux/arm64/v8
+
+on:
+  workflow_call:
+    secrets:
+      DOCKER_USERNAME:
+        description: 'Docker Hub username'
+        required: true
+      DOCKER_TOKEN:
+        description: 'Docker Hub token'
+        required: true
+
+jobs:
+
+  create_docker_images_list:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    outputs:
+      tags: ${{ steps.config.outputs.tags }}
+    steps:
+      - name: Determine image tags
+        id: config
+        shell: bash
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            TAG_ARRAY="[{ \"target\": \"minimal\", \"tag\": \"${VERSION}\" },"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"minimal\", \"tag\": \"latest\" },"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"${VERSION}-full\" },"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"latest-full\" }]"
+          elif [[ $GITHUB_REF == refs/heads/develop ]]; then
+            TAG_ARRAY="[{ \"target\": \"dev\", \"tag\": \"dev\" }]"
+          else
+            TAG_ARRAY="[]"
+          fi
+
+          echo "Tags to build: $TAG_ARRAY"
+          echo "tags=$TAG_ARRAY" >> $GITHUB_OUTPUT
+
+  build_docker_images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    needs:
+      - create_docker_images_list
+    if: needs.create_docker_images_list.outputs.tags != '[]'
+    strategy:
+      fail-fast: false
+      max-parallel: 2       
+      matrix:
+        os: ['alpine', 'ubuntu']
+        tag: ${{ fromJson(needs.create_docker_images_list.outputs.tags) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Retrieve Repository Docker metadata
+        id: docker_meta
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+        with:
+          images: ${{ env.DEFAULT_DOCKER_IMAGE }}
+          labels: |
+            org.opencontainers.image.url=https://nicolargo.github.io/glances/
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+        with:
+          version: latest
+
+      - name: Login to DockerHub
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        if: ${{ env.PUSH_BRANCH == 'true' }}
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          push: ${{ env.PUSH_BRANCH == 'true' }}
+          tags: "${{ env.DEFAULT_DOCKER_IMAGE }}:${{ matrix.os != 'alpine' && format('{0}-', matrix.os) || '' }}${{ matrix.tag.tag }}"
+          build-args: |
+            CHANGING_ARG=${{ github.sha }}
+          context: .
+          file: "docker-files/${{ matrix.os }}.Dockerfile"
+          platforms: ${{ matrix.os != 'ubuntu' && env.DOCKER_PLATFORMS || env.DOCKER_PLATFORMS_UBUNTU }}
+          target: ${{ matrix.tag.target }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+          # GHA default behaviour overwrites last build cache. Causes alpine and ubuntu cache to overwrite each other.
+          # Use `scope` with the os name to prevent that
+          cache-from: 'type=gha,scope=${{ matrix.os }}'
+          cache-to: 'type=gha,mode=max,scope=${{ matrix.os }}'

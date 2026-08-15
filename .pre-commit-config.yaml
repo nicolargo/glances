@@ -1,0 +1,105 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
+    hooks:
+      - id: gitleaks
+        name: "🔒 security · Detect hardcoded secrets"
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.4
+    hooks:
+    - id: ruff-format
+      name: "🐍 python · Formatter with Ruff"
+      types_or: [ python, pyi ]
+      args: [ --target-version, py310, --config, './pyproject.toml' ]
+    - id: ruff-check
+      name: "🐍 python · Linter with Ruff"
+      types_or: [ python, pyi ]
+      args: [ --fix, --target-version, py310, --config, './pyproject.toml' ]
+
+  # - repo: https://github.com/RobertCraigie/pyright-python
+  #   rev: v1.1.391
+  #   hooks:
+  #     - id: pyright
+  #       name: "🐍 python · Check types"
+
+  # - repo: https://github.com/biomejs/pre-commit
+  #   rev: "v2.3.7"
+  #   hooks:
+  #     - id: biome-check
+  #       name: "🟨 javascript · Lint, format, and safe fixes with Biome"
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.35.0
+    hooks:
+      - id: check-github-workflows
+        name: "🐙 github-actions · Validate gh workflow files"
+        args: ["--verbose"]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        name: "🐚 shell · Lint shell scripts"
+
+  - repo: https://github.com/openstack/bashate
+    rev: 2.1.1
+    hooks:
+      - id: bashate
+        name: "🐚 shell · Check shell script code style"
+        entry: bashate --error E* --ignore=E006
+
+  # - repo: https://github.com/mrtazz/checkmake.git
+  #   rev: 0.2.2
+  #   hooks:
+  #     - id: checkmake
+  #       name: "🐮 Makefile · Lint Makefile"
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-executables-have-shebangs
+        name: "📁 filesystem/⚙️ exec · Verify shebang presence"
+      - id: check-shebang-scripts-are-executable
+        name: "📁 filesystem/⚙️ exec · Verify script permissions"
+      - id: check-case-conflict
+        name: "📁 filesystem/📝 names · Check case sensitivity"
+      - id: destroyed-symlinks
+        name: "📁 filesystem/🔗 symlink · Detect broken symlinks"
+      - id: check-merge-conflict
+        name: "🌳 git · Detect conflict markers"
+      - id: forbid-new-submodules
+        name: "🌳 git · Prevent submodule creation"
+      # - id: no-commit-to-branch
+      #   name: "🌳 git · Protect main branches"
+      #   args: ["--branch", "main", "--branch", "master"]
+      - id: check-added-large-files
+        name: "🌳 git · Block large file commits"
+        args: ['--maxkb=5000']
+      - id: check-ast
+        name: "🐍 python/🔍 quality · Validate Python AST"
+      - id: check-docstring-first
+        name: "🐍 python/📝 style · Enforce docstring at top"
+      - id: check-json
+        name: "📄 formats/json · Validate JSON files"
+      - id: check-toml
+        name: "📄 formats/toml · Validate TOML files"
+      - id: check-yaml
+        name: "📄 formats/yaml · Validate YAML syntax"
+      - id: debug-statements
+        name: "🐍 python/🪲 debug · Detect debug statements"
+      - id: detect-private-key
+        name: "🔐 security · Detect private keys"
+      - id: mixed-line-ending
+        name: "📄 text/↩️ newline · Normalize line endings"
+      - id: requirements-txt-fixer
+        name: "🐍 python/📦 deps · Sort requirements.txt"
+
+  - repo: local
+    hooks:
+      - id: find-duplicate-lines
+        name: "❗️local script · Find duplicate lines at the end of file"
+        entry: bash tests-data/tools/find-duplicate-lines.sh
+        language: system
+        types: [python]
+        pass_filenames: false

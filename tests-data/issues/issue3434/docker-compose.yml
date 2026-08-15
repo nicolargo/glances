@@ -1,0 +1,21 @@
+services:
+  glances:
+    container_name: glances
+    image: glances:local-alpine-minimal
+    restart: always
+    ports:
+      - "61208:61208"
+    environment:
+      - GLANCES_OPT=-w --password
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Uncomment the below line if you want glances to display host OS detail instead of container's
+      # - /etc/os-release:/etc/os-release:ro
+    pid: host
+    secrets:
+      - source: glances_password
+        target: /root/.config/glances/glances.pwd
+
+secrets:
+  glances_password:
+    file: /home/nicolargo/.config/glances/glances.pwd

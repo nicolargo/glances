@@ -1,0 +1,144 @@
+#
+# Glances - An eye on your system
+#
+# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+#
+
+"""Glances unitary tests suite fixtures.
+
+This module provides pytest fixtures for testing Glances plugins and components.
+
+For WebUI tests, the following are required:
+- chromedriver command line (example on Ubuntu system):
+  $ sudo apt install chromium-chromedriver
+- The chromedriver command line should be in your path (/usr/bin)
+"""
+
+import logging
+import shlex
+import socket
+import subprocess
+import sys
+import time
+from unittest.mock import patch
+
+import pytest
+import requests
+
+from glances.main import GlancesMain
+from glances.stats import GlancesStats
+
+# Optional imports for WebUI testing
+try:
+    from selenium import webdriver
+    from selenium.webdriver import ChromeOptions
+    from selenium.webdriver.chrome.service import Service as ChromeService
+    from webdriver_manager.chrome import ChromeDriverManager
+
+    SELENIUM_AVAILABLE = True
+except ImportError:
+    SELENIUM_AVAILABLE = False
+
+SERVER_PORT = 61234
+URL = f"http://localhost:{SERVER_PORT}"
+# Maximum time to wait for the Glances web server to be ready to answer
+SERVER_STARTUP_TIMEOUT = 15
+
+
+@pytest.fixture(scope="session")
+def logger():
+    return logging.getLogger(__name__)
+
+
+@pytest.fixture(scope="session")
+def glances_stats():
+    testargs = ["glances", "-C", "./conf/glances.conf"]
+    with patch('sys.argv', testargs):
+        core = GlancesMain()
+    stats = GlancesStats(config=core.get_config(), args=core.get_args())
+    yield stats
+    stats.end()
+
+
+@pytest.fixture(scope="module")
+def glances_stats_no_history():
+    testargs = ["glances", "-C", "./conf/glances.conf"]
+    with patch('sys.argv', testargs):
+        core = GlancesMain()
+    args = core.get_args()
+    args.time = 1
+    args.cached_time = 1
+    args.disable_history = True
+    stats = GlancesStats(config=core.get_config(), args=args)
+    yield stats
+    stats.end()
+
+
+def _fail_if_port_is_used(port):
+    """Fail the tests if the given TCP port is already bound.
+
+    Without this check, the web server started by the fixture silently dies with
+    an 'address already in use' error and the tests run against the process
+    already listening on the port (a stale Glances instance, most of the time).
+    """
+    with socket.socket() as sock:
+        sock.settimeout(1)
+        if sock.connect_ex(("localhost", port)) == 0:
+            pytest.fail(
+                f"Port {port} is already in use, the Glances web server can not start. "
+                "Kill the process listening on this port (a stale Glances instance ?) and retry."
+            )
+
+
+def _wait_for_webserver(pid, timeout=SERVER_STARTUP_TIMEOUT):
+    """Wait for the Glances web server to answer on its health check end point."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if pid.poll() is not None:
+            pytest.fail(f"Glances web server exited during startup with return code {pid.returncode}")
+        try:
+            if requests.get(f"{URL}/api/4/status", timeout=1).status_code == 200:
+                return
+        except requests.exceptions.RequestException:
+            pass
+        time.sleep(0.5)
+    pid.terminate()
+    pytest.fail(f"Glances web server did not answer within {timeout} seconds")
+
+
+@pytest.fixture(scope="session")
+def glances_webserver():
+    _fail_if_port_is_used(SERVER_PORT)
+    cmdline = sys.executable
+    cmdline += f" -m glances -B 0.0.0.0 -w --browser -p {SERVER_PORT} -C ./conf/glances.conf"
+    args = shlex.split(cmdline)
+    pid = subprocess.Popen(args)
+    _wait_for_webserver(pid)
+    yield pid
+    pid.terminate()
+    time.sleep(1)
+
+
+@pytest.fixture(scope="session")
+def web_browser():
+    """Init Chrome browser for WebUI testing.
+
+    Requires selenium and webdriver-manager packages.
+    """
+    if not SELENIUM_AVAILABLE:
+        pytest.skip("selenium not installed - skipping WebUI tests")
+
+    opt = ChromeOptions()
+    opt.add_argument("--headless")
+    opt.add_argument("--start-maximized")
+    srv = ChromeService(ChromeDriverManager().install())
+    driver = webdriver.Chrome(options=opt, service=srv)
+
+    # Yield the WebDriver instance
+    driver.implicitly_wait(10)
+    yield driver
+
+    # Close the WebDriver instance
+    driver.quit()

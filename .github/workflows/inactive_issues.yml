@@ -1,0 +1,25 @@
+name: Label inactive issues
+on:
+  schedule:
+    - cron: "30 1 * * *"
+
+permissions: {}
+
+jobs:
+  close-issues:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10
+        with:
+          days-before-issue-stale: 90
+          days-before-issue-close: -1
+          stale-issue-label: "inactive"
+          stale-issue-message: "This issue is stale because it has been open for 3 months with no activity."
+          close-issue-message: "This issue was closed because it has been inactive for 30 days since being marked as stale."
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+          repo-token: ${{ secrets.GITHUB_TOKEN }}

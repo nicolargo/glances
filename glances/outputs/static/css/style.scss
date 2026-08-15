@@ -1,0 +1,487 @@
+// Glances theme
+
+$glances-bg: #000;
+$glances-fg: #CCC;
+$glances-link-hover-color: #57cb6a;
+$glances-fonts: "Lucida Sans Typewriter","Lucida Console",Monaco,"Bitstream Vera Sans Mono",monospace;
+$glances-fonts-size: 14px;
+
+// Define colors and fonts
+
+// https://getbootstrap.com/docs/5.3/customize/css-variables/#root-variables
+:root,[data-bs-theme=dark] {
+    --bs-body-bg: $glances-bg;
+    --bs-body-color: $glances-fg;
+    --bs-body-font-size: $glances-fonts-size;
+}
+
+body {
+    background-color: $glances-bg;
+    color: $glances-fg;
+    font-family: $glances-fonts;
+    font-size: $glances-fonts-size;
+    overflow: hidden;
+}
+
+.title {
+    font-weight: bold;
+}
+.highlight {
+    font-weight: bold !important;
+    color: #5D4062 !important;
+}
+.ok, .status, .process {
+    color: #3E7B04 !important;
+}
+.ok_log {
+    background-color: #3E7B04 !important;
+    color: white !important;
+}
+.max {
+    color: #3E7B04 !important;
+    font-weight: bold !important;
+}
+.careful {
+    color: #295183 !important;
+    font-weight: bold !important;
+}
+.careful_log {
+    background-color: #295183 !important;
+    color: white !important;
+    font-weight: bold !important;
+}
+.warning, .nice {
+    color: #5D4062 !important;
+    font-weight: bold !important;
+}
+.warning_log {
+    background-color: #5D4062 !important;
+    color: white !important;
+    font-weight: bold !important;
+}
+.critical {
+    color: #A30000 !important;
+    font-weight: bold !important;
+}
+.critical_log {
+    background-color: #A30000 !important;
+    color: white !important;
+    font-weight: bold !important;
+}
+.error {
+    color: #EE6600 !important;
+    font-weight: bold !important;
+}
+.error_log {
+    background-color: #EE6600 !important;
+    color: white !important;
+    font-weight: bold !important;
+}
+
+// Layout
+
+.container-fluid {
+    margin-left: 0px;
+    margin-right: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.header {
+    height: 30px;
+}
+
+.header-small {
+    height: 50px;
+}
+
+.header-small > div:nth-child(1) > section:nth-child(1) {
+    margin-bottom: 0em;
+}
+
+.top-min {
+    height: 100px;
+}
+
+.top-max {
+    height: 180px;
+}
+
+.sidebar-min {
+    overflow-y: auto;
+    height: calc(100vh - 30px - 100px);
+}
+
+.sidebar-max {
+    overflow-y: auto;
+    height: calc(100vh - 30px - 180px);
+}
+
+.inline {
+    display: inline-block;
+}
+
+// Table
+
+.table {
+    margin-bottom: 0px;
+}
+
+.margin-top {
+    margin-top: 0.5em;
+}
+
+.margin-bottom {
+    margin-bottom: 0.5em;
+}
+
+.table-sm > :not(caption) > * > * {
+    padding-top: 0em;
+    padding-right: 0.25rem;
+    padding-bottom: 0em;
+    padding-left: 0.25rem;
+}
+
+.sort {
+    font-weight: bold;
+    color: white;
+}
+
+.sortable {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#browser .table-hover tbody tr:hover td {
+    background: $glances-link-hover-color;
+}
+
+// Plugins
+
+.plugin {
+    margin-bottom: 1em;
+}
+
+.button {
+    color: #99CCFF;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid #99CCFF;
+    padding: 1px 5px;
+    border-radius: 5px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.button:hover {
+    background: rgba(183, 214, 255, 0.30);
+    border-color: #B0D0FF;
+    color: #B0D0FF;
+}
+
+.button:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 8px rgba(153, 204, 255, 0.5);
+}
+
+.frequency {
+    display: inline-block;
+    width: 8em;
+}
+
+#system {
+    span {
+        padding-left: 10px;
+    }
+    span:nth-child(1) {
+        padding-left: 0px;
+    }
+}
+
+#ip {
+    span {
+        padding-left: 10px;
+    }
+}
+
+#quicklook {
+    span {
+        padding: 0;
+        margin: 0;
+        padding-left: 10px;
+    }
+    span:nth-child(1) {
+        padding-left: 0px;
+    }
+    * > th, td {
+        margin: 0;
+        padding: 0;
+    }
+    * > th:nth-child(1), td:nth-child(1) {
+        width: 4em;
+    }
+    * > th:nth-last-child(1), td:nth-last-child(1) {
+        width: 4em;
+    }
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+    .progress {
+        min-width: 100px;
+        background-color: #000;
+        height: 1.5em;
+        border-radius: 0px;
+        text-align: right;
+    }
+    .progress-bar-ok {
+        background-color: #3E7B04;
+
+    }
+    .progress-bar-careful {
+        background-color: #295183;
+    }
+    .progress-bar-warning {
+        background-color: #5D4062;
+    }
+    .progress-bar-critical {
+        background-color: #A30000;
+    }
+    .cpu-name {
+        white-space: nowrap;
+        overflow: hidden;
+        width: 100%;
+        text-overflow: ellipsis;
+    }
+}
+
+#cpu {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#npu {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#mpp {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#gpu {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#mem {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#memswap {
+    * > td span {
+        display: inline-block;
+        width: 4em;
+    }
+}
+
+#load {
+    * > td span {
+        display: inline-block;
+        width: 3em;
+    }
+}
+
+#vms {
+    span {
+        padding-left: 10px;
+    }
+    span:nth-child(1) {
+        padding-left: 0px;
+    }
+    .table {
+        margin-bottom: 1em;
+    }
+    * > th:not(:last-child), td:not(:last-child) {
+        width: 5em;
+    }
+    * > td:nth-child(2) {
+        width: 15em;
+    }
+    * > td:nth-child(3) {
+        width: 6em;
+    }
+    * > td:nth-child(6) {
+        text-align: right;
+    }
+    * > td:nth-child(8) {
+        width: 10em;
+    }
+    * > td:nth-child(7), td:nth-child(8), td:nth-child(9) {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+#containers {
+    span {
+        padding-left: 10px;
+    }
+    span:nth-child(1) {
+        padding-left: 0px;
+    }
+    .table {
+        margin-bottom: 1em;
+    }
+    // Default column size
+    * > td:not(:last-child) {
+        width: 5em;
+    }
+    * > td:nth-child(1) {
+        width: 10em;
+    }
+    * > td:nth-child(2), td:nth-child(3) {
+        width: 15em;
+    }
+    * > td:nth-child(3) {
+        white-space: nowrap;
+        overflow: hidden;
+    }
+    // Status
+    * > td:nth-child(4) {
+        width: 6em;
+    }
+    * > td:nth-child(5) {
+        width: 10em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    // Some column are align to the right
+    * > td:nth-child(7), td:nth-child(9), td:nth-child(11) {
+        text-align: right;
+    }
+    // Command
+    * > td:nth-child(13) {
+        text-align: left;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+#processcount {
+    span {
+        padding-left: 10px;
+    }
+    span:nth-child(1) {
+        padding-left: 0px;
+    }
+    margin-bottom: 0px;
+}
+
+#amps {
+    .process-result {
+        max-width: 300px;
+        overflow: hidden;
+        white-space: pre-wrap;
+        padding-left: 10px;
+        text-overflow: ellipsis;
+    }
+    .table {
+        margin-bottom: 1em;
+    }
+    * > td:nth-child(8) {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+#processlist div.extendedstats {
+        margin-bottom: 1em;
+        margin-top: 1em;
+}
+
+#processlist div.extendedstats div span:not(:last-child) {
+        margin-right: 1em;
+}
+
+#processlist {
+    overflow-y: auto;
+    max-height: calc(100vh - 420px);
+    margin-top: 0.5em;
+
+    .table {
+        margin-bottom: 1em;
+    }
+
+    .table-hover tbody tr:hover td {
+        background: $glances-link-hover-color;
+    }
+
+    // Default column size
+    * > td:nth-child(-n+12) {
+        width: 5em;
+    }
+    // Some column are align to the right
+    * > td:nth-child(5), td:nth-child(7), td:nth-child(9), td:nth-child(11) {
+        text-align: right;
+    }
+    // Process user
+    * > td:nth-child(6) {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    // Time
+    * > td:nth-child(7) {
+        width: 6em;
+    }
+    // Nice and Status
+    * > td:nth-child(9), td:nth-child(10) {
+        width: 2em;
+    }
+    // Process name & Command line
+    * > td:nth-child(13), td:nth-child(14) {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+
+#alerts {
+    span {
+        padding-left: 10px;
+    }
+    span:nth-child(1) {
+        padding-left: 0px;
+    }
+    * > td:nth-child(1) {
+        width: 20em;
+    }
+}
+
+// Central Glances Browser
+
+#browser {
+    table {
+        margin-top: 1em;
+    }
+}

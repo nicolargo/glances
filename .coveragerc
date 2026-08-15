@@ -1,0 +1,29 @@
+[report]
+
+include =
+    *glances*
+
+omit =
+    glances/outputs/*
+    glances/exports/*
+    glances/compat.py
+    glances/autodiscover.py
+    glances/client_browser.py
+    glances/config.py
+    glances/history.py
+    glances/monitored_list.py
+    glances/outdated.py
+    glances/password*.py
+    glances/snmp.py
+    glances/static_list.py
+
+exclude_lines =
+    pragma: no cover
+    if PY3:
+    if __name__ == .__main__.:
+    if sys.platform.startswith
+    except ImportError:
+    raise NotImplementedError
+    if WINDOWS
+    if MACOS
+    if BSD

@@ -1,0 +1,974 @@
+'\" t
+.\" Man page generated from reStructuredText
+.\" by the Docutils 0.22.4 manpage writer.
+.
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.TH "GLANCES" "1" "Aug 01, 2026" "4.5.6" "Glances"
+.SH NAME
+glances \- An eye on your system
+.SH SYNOPSIS
+.sp
+\fBglances\fP [OPTIONS]
+.SH DESCRIPTION
+.sp
+\fBglances\fP is a cross\-platform curses\-based monitoring tool that aims
+to present a maximum of information in a minimum of space, ideally fitting
+in a classic 80x24 terminal or larger for more details. It can adapt
+dynamically to the displayed information depending on the terminal size.
+It can also work in client/server mode.
+Remote monitoring can be performed via a terminal or web interface.
+.sp
+\fBglances\fP is written in Python and uses the \fIpsutil\fP library to get
+information from your system.
+.SH OPTIONS
+.SH COMMAND-LINE OPTIONS
+.INDENT 0.0
+.TP
+.B \-h, \-\-help
+show this help message and exit
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-V, \-\-version
+show the program’s version number and exit
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-d, \-\-debug
+enable debug mode
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-print\-completion
+generate shell tab completion scripts for Glances CLI
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-C CONF_FILE, \-\-config CONF_FILE
+path to the configuration file
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-P PLUGIN_DIRECTORY, \-\-plugins PLUGIN_DIRECTORY
+path to a directory containing additional plugins
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-modules\-list
+display modules (plugins & exports) list and exit
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-plugin PLUGIN
+disable PLUGIN (comma\-separated list)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-enable\-plugin PLUGIN
+enable PLUGIN (comma\-separated list)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-stdout PLUGINS_STATS
+display stats to stdout (comma\-separated list of plugins/plugins.attribute)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export EXPORT
+enable EXPORT module (comma\-separated list)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-csv\-file EXPORT_CSV_FILE
+file path for CSV exporter
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-json\-file EXPORT_JSON_FILE
+file path for JSON exporter
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-process
+disable process module (reduce Glances CPU consumption)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-webui
+disable the Web UI (only the RESTful API will respond)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-light, \-\-enable\-light
+light mode for Curses UI (disable all but the top menu)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-0, \-\-disable\-irix
+task’s CPU usage will be divided by the total number of CPUs
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-1, \-\-percpu
+start Glances in per CPU mode
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-2, \-\-disable\-left\-sidebar
+disable network, disk I/O, FS and sensors modules
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-3, \-\-disable\-quicklook
+disable quick look module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-4, \-\-full\-quicklook
+disable all but quick look and load
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-5, \-\-disable\-top
+disable top menu (QuickLook, CPU, MEM, SWAP, and LOAD)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-6, \-\-meangpu
+start Glances in mean GPU mode
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-bold
+disable bold mode in the terminal
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-bg
+disable background colors in the terminal
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-enable\-process\-extended
+enable extended stats on top process
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-c CLIENT, \-\-client CLIENT
+connect to a Glances server by IPv4/IPv6 address, hostname or hostname:port
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-s, \-\-server
+run Glances in server mode
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-browser
+start TUI Central Glances Browser
+use –browser \-w to start WebUI Central Glances Browser
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-autodiscover
+disable autodiscover feature
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-p PORT, \-\-port PORT
+define the client/server TCP port [default: 61209]
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-B BIND_ADDRESS, \-\-bind BIND_ADDRESS
+bind server to the given IPv4/IPv6 address or hostname
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-username
+define a client/server username
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-password
+define a client/server password
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-snmp\-community SNMP_COMMUNITY
+SNMP community
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-snmp\-port SNMP_PORT
+SNMP port
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-snmp\-version SNMP_VERSION
+SNMP version (1, 2c or 3)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-snmp\-user SNMP_USER
+SNMP username (only for SNMPv3)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-snmp\-auth SNMP_AUTH
+SNMP authentication key (only for SNMPv3)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-snmp\-force
+force SNMP mode
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-t TIME, \-\-time TIME
+set refresh time in seconds [default: 3 sec]
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-w, \-\-webserver
+run Glances in web server mode (FastAPI lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-enable\-mcp
+enable the MCP (Model Context Protocol) server alongside the web server
+(\fBmcp\fP package needed, see MCP (Model Context Protocol) server \%<#\:api-mcp>)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-mcp\-path MCP_PATH
+set the MCP server mount path [default: /mcp]
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-cached\-time CACHED_TIME
+set the server cache time [default: 1 sec]
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-open\-web\-browser
+try to open the Web UI in the default Web browser
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-q, \-\-quiet
+do not display the curses interface
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-f PROCESS_FILTER, \-\-process\-filter PROCESS_FILTER
+set the process filter pattern (regular expression)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-process\-short\-name
+force short name for processes name
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-hide\-kernel\-threads
+hide kernel threads in the process list (not available on Windows)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-b, \-\-byte
+display network rate in bytes per second
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-diskio\-show\-ramfs
+show RAM FS in the DiskIO plugin
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-diskio\-iops
+show I/O per second in the DiskIO plugin
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-fahrenheit
+display temperature in Fahrenheit (default is Celsius)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-fs\-free\-space
+display FS free space instead of used
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-theme\-white
+optimize display colors for a white background
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-check\-update
+disable online Glances version check
+.UNINDENT
+.SH INTERACTIVE COMMANDS
+.sp
+The following commands (key pressed) are supported while in Glances:
+.INDENT 0.0
+.TP
+.B \fBENTER\fP
+Set the process filter
+.sp
+\fBNote:\fP
+.INDENT 7.0
+.INDENT 3.5
+On macOS please use \fBCTRL\-H\fP to delete filter.
+.UNINDENT
+.UNINDENT
+.sp
+The filter is a regular expression pattern:
+.INDENT 7.0
+.IP \(bu 2
+\fBgnome\fP: matches all processes starting with the \fBgnome\fP
+string
+.IP \(bu 2
+\fB\&.*gnome.*\fP: matches all processes containing the \fBgnome\fP
+string
+.UNINDENT
+.TP
+.B \fBa\fP
+Sort process list automatically
+.INDENT 7.0
+.IP \(bu 2
+If CPU \fB>70%\fP, sort processes by CPU usage
+.IP \(bu 2
+If MEM \fB>70%\fP, sort processes by MEM usage
+.IP \(bu 2
+If CPU iowait \fB>60%\fP, sort processes by I/O read and write
+.UNINDENT
+.TP
+.B \fBA\fP
+Enable/disable the Application Monitoring Process
+.TP
+.B \fBb\fP
+Switch between bit/s or Byte/s for network I/O
+.TP
+.B \fBB\fP
+View disk I/O counters per second
+.TP
+.B \fBc\fP
+Sort processes by CPU usage
+.TP
+.B \fBC\fP
+Enable/disable cloud stats
+.TP
+.B \fBd\fP
+Show/hide disk I/O stats
+.TP
+.B \fBD\fP
+Enable/disable Docker stats
+.TP
+.B \fBe\fP
+Enable/disable top extended stats
+.TP
+.B \fBE\fP
+Erase the current process filter
+.TP
+.B \fBf\fP
+Show/hide file system and folder monitoring stats
+.TP
+.B \fBF\fP
+Switch between file system used and free space
+.TP
+.B \fBg\fP
+Generate graphs for current history
+.TP
+.B \fBG\fP
+Enable/disable GPU stats
+.TP
+.B \fBh\fP
+Show/hide the help screen
+.TP
+.B \fBi\fP
+Sort processes by I/O rate
+.TP
+.B \fBI\fP
+Show/hide IP module
+.TP
+.B \fB+\fP
+Increase selected process nice level / Lower the priority (need right) \- Only in standalone mode.
+.TP
+.B \fB\-\fP
+Decrease selected process nice level / Higher the priority (need right) \- Only in standalone mode.
+.TP
+.B \fBk\fP
+Kill selected process (need right) \- Only in standalone mode.
+.TP
+.B \fBK\fP
+Show/hide TCP connections
+.TP
+.B \fBl\fP
+Show/hide log messages
+.TP
+.B \fBm\fP
+Sort processes by MEM usage
+.TP
+.B \fBM\fP
+Reset processes summary min/max
+.TP
+.B \fBn\fP
+Show/hide network stats
+.TP
+.B \fBN\fP
+Show/hide current time
+.TP
+.B \fBp\fP
+Sort processes by name
+.TP
+.B \fBP\fP
+Enable/Disable ports stats
+.TP
+.B \fBq|ESC|CTRL\-C\fP
+Quit the current Glances session
+.TP
+.B \fBQ\fP
+Show/hide IRQ module
+.TP
+.B \fBr\fP
+Reset history
+.TP
+.B \fBR\fP
+Show/hide RAID plugin
+.TP
+.B \fBs\fP
+Show/hide sensors plugin
+.TP
+.B \fBS\fP
+Enable/disable spark lines
+.TP
+.B \fBt\fP
+Sort process by CPU times (TIME+)
+.TP
+.B \fBT\fP
+View network I/O as a combination
+.TP
+.B \fBu\fP
+Sort processes by USER
+.TP
+.B \fBU\fP
+View cumulative network I/O
+.TP
+.B \fBV\fP
+Show/hide VMS plugin
+.TP
+.B \fBw\fP
+Delete finished warning log messages
+.TP
+.B \fBW\fP
+Show/hide Wifi module
+.TP
+.B \fBx\fP
+Delete finished warning and critical log messages
+.TP
+.B \fBz\fP
+Show/hide processes stats
+.TP
+.B \fB0\fP
+Enable/disable Irix/Solaris mode
+.sp
+The task’s CPU usage will be divided by the total number of CPUs
+.TP
+.B \fB1\fP
+Switch between global CPU and per\-CPU stats
+.TP
+.B \fB2\fP
+Enable/disable the left sidebar
+.TP
+.B \fB3\fP
+Enable/disable the quick look module
+.TP
+.B \fB4\fP
+Enable/disable all but quick look and load module
+.TP
+.B \fB5\fP
+Enable/disable the top menu (QuickLook, CPU, MEM, SWAP, and LOAD)
+.TP
+.B \fB6\fP
+Enable/disable mean GPU mode
+.TP
+.B \fB9\fP
+Switch UI theme between black and white
+.TP
+.B \fB/\fP
+Switch between process command line or command name
+.TP
+.B \fBF5\fP or \fBCTRL\-R\fP
+Refresh user interface
+.TP
+.B \fBSHIFT\-LEFT\fP
+Navigation left through the process sort
+.TP
+.B \fBSHIFT\-RIGHT\fP
+Navigation right through the process sort
+.TP
+.B \fBLEFT\fP
+Navigation left through the process name
+.TP
+.B \fBRIGHT\fP
+Navigation right through the process name
+.TP
+.B \fBUP\fP
+Up in the processes list
+.TP
+.B \fBDOWN\fP
+Down in the processes list
+.UNINDENT
+.sp
+In the Glances client browser (accessible through the \fB\-\-browser\fP
+command line argument):
+.INDENT 0.0
+.TP
+.B \fBENTER\fP
+Run the selected server
+.TP
+.B \fBUP\fP
+Up in the servers list
+.TP
+.B \fBDOWN\fP
+Down in the servers list
+.TP
+.B \fBq|ESC\fP
+Quit Glances
+.UNINDENT
+.SH CONFIGURATION
+.sp
+No configuration file is mandatory to use Glances.
+.sp
+Furthermore, a configuration file is needed to access more settings.
+.SH LOCATION
+.sp
+\fBNote:\fP
+.INDENT 0.0
+.INDENT 3.5
+A template is available in the \fB/usr{,/local}/share/doc/glances\fP
+(Unix\-like) directory or directly on GitHub \%<https://\:raw\:.githubusercontent\:.com/\:nicolargo/\:glances/\:master/\:conf/\:glances\:.conf>\&.
+.UNINDENT
+.UNINDENT
+.sp
+You can place your \fBglances.conf\fP file in the following locations:
+.TS
+box center;
+l|l.
+T{
+\fBLinux\fP, \fBSunOS\fP
+T}	T{
+~/.config/glances/, /etc/glances/, /usr/share/doc/glances/
+T}
+_
+T{
+\fB*BSD\fP
+T}	T{
+~/.config/glances/, /usr/local/etc/glances/, /usr/share/doc/glances/
+T}
+_
+T{
+\fBmacOS\fP
+T}	T{
+~/.config/glances/, ~/Library/Application Support/glances/, /usr/local/etc/glances/, /usr/share/doc/glances/
+T}
+_
+T{
+\fBWindows\fP
+T}	T{
+%APPDATA%\eglances\eglances.conf
+T}
+_
+T{
+\fBAll\fP
+T}	T{
+.INDENT 0.0
+.IP \(bu 2
+<venv_root_folder>/share/doc/glances/
+.UNINDENT
+T}
+.TE
+.INDENT 0.0
+.IP \(bu 2
+On Windows XP, \fB%APPDATA%\fP is: \fBC:\eDocuments and Settings\e<USERNAME>\eApplication Data\fP\&.
+.IP \(bu 2
+On Windows Vista and later: \fBC:\eUsers\e<USERNAME>\eAppData\eRoaming\fP\&.
+.UNINDENT
+.sp
+User\-specific options override system\-wide options, and options given on
+the command line overrides both.
+.SH SYNTAX
+.sp
+Glances read configuration files in the \fIini\fP syntax.
+.sp
+A first section (called global) is available:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.EX
+[global]
+# Refresh rate (default is a minimum of 2 seconds)
+# Can be overwritten by the \-t <sec> option
+# It is also possible to overwrite it in each plugin section
+refresh=2
+# Should Glances check if a newer version is available on PyPI ?
+check_update=true
+# History size (maximum number of values)
+# Default is 1200 values (~1h with the default refresh rate)
+history_size=1200
+# Set the way Glances should display the date (default is %Y\-%m\-%d %H:%M:%S %Z)
+#strftime_format=\(dq%Y\-%m\-%d %H:%M:%S %Z\(dq
+# Define external directory for loading additional plugins
+# The layout follows the glances standard for plugin definitions
+#plugin_dir=/home/user/dev/plugins
+.EE
+.UNINDENT
+.UNINDENT
+.sp
+than a second one concerning the user interface:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.EX
+[outputs]
+# Options for all UIs
+#\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+# Separator in the Curses and WebUI interface (between top and others plugins)
+separator=True
+# Set the the Curses and WebUI interface left menu plugin list (comma\-separated)
+#left_menu=network,wifi,connections,ports,diskio,fs,irq,folders,raid,smart,sensors,now
+# Limit the number of processes to display (in the WebUI)
+max_processes_display=25
+# Options for WebUI
+#\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+# Set URL prefix for the WebUI and the API
+# Example: url_prefix=/glances/ => http://localhost/glances/
+# Note: The final / is mandatory
+# Default is no prefix (/)
+#url_prefix=/glances/
+# Set root path for WebUI statics files
+# Why ? On Debian system, WebUI statics files are not provided.
+# You can download it in a specific folder
+# thanks to https://github.com/nicolargo/glances/issues/2021
+# then configure this folder with the webui_root_path key
+# Default is folder where glances_restful_api.py is hosted
+#webui_root_path=
+# CORS options
+# Comma separated list of origins that should be permitted to make cross\-origin requests.
+# Default is *
+#cors_origins=*
+# Indicate that cookies should be supported for cross\-origin requests.
+# Default is True
+#cors_credentials=True
+# Comma separated list of HTTP methods that should be allowed for cross\-origin requests.
+# Default is *
+#cors_methods=*
+# Comma separated list of HTTP request headers that should be supported for cross\-origin requests.
+# Default is *
+#cors_headers=*
+# Define SSL files (keyfile_password is optional)
+#ssl_keyfile=./glances.local+3\-key.pem
+#ssl_keyfile_password=kfp
+#ssl_certfile=./glances.local+3.pem
+.EE
+.UNINDENT
+.UNINDENT
+.sp
+Each plugin, export module, and application monitoring process (AMP) can
+have a section. Below is an example for the CPU plugin:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.EX
+[cpu]
+disable=False
+refresh=3
+user_careful=50
+user_warning=70
+user_critical=90
+iowait_careful=50
+iowait_warning=70
+iowait_critical=90
+system_careful=50
+system_warning=70
+system_critical=90
+steal_careful=50
+steal_warning=70
+steal_critical=90
+.EE
+.UNINDENT
+.UNINDENT
+.sp
+an InfluxDB export module:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.EX
+[influxdb]
+# Configuration for the \-\-export influxdb option
+# https://influxdb.com/
+host=localhost
+port=8086
+user=root
+password=root
+db=glances
+prefix=localhost
+#tags=foo:bar,spam:eggs
+.EE
+.UNINDENT
+.UNINDENT
+.sp
+or a Nginx AMP:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.EX
+[amp_nginx]
+# Nginx status page should be enabled (https://easyengine.io/tutorials/nginx/status\-page/)
+enable=true
+regex=\e/usr\e/sbin\e/nginx
+refresh=60
+one_line=false
+status_url=http://localhost/nginx_status
+.EE
+.UNINDENT
+.UNINDENT
+.sp
+With Glances 3.0 or higher, you can use dynamic configuration values
+by utilizing system commands. For example, if you want to set the prefix
+of an InfluxDB export to the current hostname, use:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.EX
+[influxdb]
+\&...
+prefix=\(gahostname\(ga
+.EE
+.UNINDENT
+.UNINDENT
+.sp
+Or if you want to add the Operating System name as a tag:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.EX
+[influxdb]
+\&...
+tags=system:\(gauname \-a\(ga
+.EE
+.UNINDENT
+.UNINDENT
+.SH LOGGING
+.sp
+Glances logs all of its internal messages to a log file.
+.sp
+\fBDEBUG\fP messages can be logged using the \fB\-d\fP option on the command
+line.
+.sp
+The location of the Glances log file depends on your operating system. You can
+display the full path of the Glances log file using the \fBglances \-V\fP
+command line.
+.sp
+The file is automatically rotated when its size exceeds 1 MB.
+.sp
+If you want to use another system path or change the log message, you
+can use your logger configuration. First of all, you have to create
+a \fBglances.json\fP file with, for example, the following content (JSON
+format):
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.EX
+{
+    \(dqversion\(dq: 1,
+    \(dqdisable_existing_loggers\(dq: \(dqFalse\(dq,
+    \(dqroot\(dq: {
+        \(dqlevel\(dq: \(dqINFO\(dq,
+        \(dqhandlers\(dq: [\(dqfile\(dq, \(dqconsole\(dq]
+    },
+    \(dqformatters\(dq: {
+        \(dqstandard\(dq: {
+            \(dqformat\(dq: \(dq%(asctime)s \-\- %(levelname)s \-\- %(message)s\(dq
+        },
+        \(dqshort\(dq: {
+            \(dqformat\(dq: \(dq%(levelname)s: %(message)s\(dq
+        },
+        \(dqfree\(dq: {
+            \(dqformat\(dq: \(dq%(message)s\(dq
+        }
+    },
+    \(dqhandlers\(dq: {
+        \(dqfile\(dq: {
+            \(dqlevel\(dq: \(dqDEBUG\(dq,
+            \(dqclass\(dq: \(dqlogging.handlers.RotatingFileHandler\(dq,
+            \(dqformatter\(dq: \(dqstandard\(dq,
+            \(dqfilename\(dq: \(dq/var/tmp/glances.log\(dq
+        },
+        \(dqconsole\(dq: {
+            \(dqlevel\(dq: \(dqCRITICAL\(dq,
+            \(dqclass\(dq: \(dqlogging.StreamHandler\(dq,
+            \(dqformatter\(dq: \(dqfree\(dq
+        }
+    },
+    \(dqloggers\(dq: {
+        \(dqdebug\(dq: {
+            \(dqhandlers\(dq: [\(dqfile\(dq, \(dqconsole\(dq],
+            \(dqlevel\(dq: \(dqDEBUG\(dq
+        },
+        \(dqverbose\(dq: {
+            \(dqhandlers\(dq: [\(dqfile\(dq, \(dqconsole\(dq],
+            \(dqlevel\(dq: \(dqINFO\(dq
+        },
+        \(dqstandard\(dq: {
+            \(dqhandlers\(dq: [\(dqfile\(dq],
+            \(dqlevel\(dq: \(dqINFO\(dq
+        },
+        \(dqrequests\(dq: {
+            \(dqhandlers\(dq: [\(dqfile\(dq, \(dqconsole\(dq],
+            \(dqlevel\(dq: \(dqERROR\(dq
+        },
+        \(dqelasticsearch\(dq: {
+            \(dqhandlers\(dq: [\(dqfile\(dq, \(dqconsole\(dq],
+            \(dqlevel\(dq: \(dqERROR\(dq
+        },
+        \(dqelasticsearch.trace\(dq: {
+            \(dqhandlers\(dq: [\(dqfile\(dq, \(dqconsole\(dq],
+            \(dqlevel\(dq: \(dqERROR\(dq
+        }
+    }
+}
+.EE
+.UNINDENT
+.UNINDENT
+.sp
+and start Glances using the following command line:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.EX
+LOG_CFG=<path>/glances.json glances
+.EE
+.UNINDENT
+.UNINDENT
+.sp
+\fBNote:\fP
+.INDENT 0.0
+.INDENT 3.5
+Replace \fB<path>\fP with the directory where your \fBglances.json\fP file
+is hosted.
+.UNINDENT
+.UNINDENT
+.SH EXAMPLES
+.sp
+Monitor local machine, also called standalone mode,
+with the Text\-based user interface (TUI):
+.INDENT 0.0
+.INDENT 3.5
+$ glances
+.UNINDENT
+.UNINDENT
+.sp
+To monitor the local machine with the Web user interface (WebUI),
+, run the following command line:
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-w
+.UNINDENT
+.UNINDENT
+.sp
+then, open a Web Browser to the provided URL.
+.sp
+Monitor local machine and export stats to a CSV file:
+.INDENT 0.0
+.INDENT 3.5
+$ glances –export csv –export\-csv\-file /tmp/glances.csv
+.UNINDENT
+.UNINDENT
+.sp
+Monitor local machine and export stats to an InfluxDB server with 5s
+refresh time (also possible to export to OpenTSDB, Cassandra, Statsd,
+ElasticSearch, RabbitMQ, and Riemann):
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-t 5 –export influxdb
+.UNINDENT
+.UNINDENT
+.sp
+It is also possible to export stats to multiple endpoints:
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-t 5 –export influxdb,statsd,csv
+.UNINDENT
+.UNINDENT
+.sp
+Start a Glances server (server mode):
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-s
+.UNINDENT
+.UNINDENT
+.sp
+Connect Glances to a Glances server (client mode):
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-c <ip_server>
+.UNINDENT
+.UNINDENT
+.sp
+Connect to a Glances server and export stats to a StatsD server:
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-c <ip_server> –export statsd
+.UNINDENT
+.UNINDENT
+.sp
+Start the TUI Central Glances Browser:
+.INDENT 0.0
+.INDENT 3.5
+$ glances –browser
+.UNINDENT
+.UNINDENT
+.sp
+Start the WebUI Central Glances Browser (new in Glances 4.3 or higher):
+.INDENT 0.0
+.INDENT 3.5
+$ glances –browser \-w
+.UNINDENT
+.UNINDENT
+.sp
+If you do not want to see the local Glances Web Server in the browser list please use –disable\-autodiscover option.
+.SH AUTHOR
+.sp
+Nicolas Hennion aka Nicolargo <\%<contact@\:nicolargo\:.com>>
+.SH Copyright
+2026, Nicolas Hennion
+.\" End of generated man page.

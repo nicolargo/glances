@@ -1,0 +1,22 @@
+# Ignore everything
+*
+
+# Include only code files
+!/glances/**/*.py
+
+# Include WebUI files (remove when webui moved to seperate package)
+!/glances/outputs/static
+
+# Include Requirements files
+!/all-requirements.txt
+!/docker-requirements.txt
+
+# Include Config file
+!/docker-compose/glances.conf
+!/docker-files/docker-logger.json
+
+# Include Binary file
+!/docker-bin.sh
+
+# Include TOML file
+!/pyproject.toml

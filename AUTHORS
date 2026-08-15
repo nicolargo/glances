@@ -1,0 +1,73 @@
+==========
+Developers
+==========
+
+Nicolas Hennion (aka) Nicolargo
+http://blog.nicolargo.com
+https://twitter.com/nicolargo
+https://github.com/nicolargo
+nicolashennion@gmail.com
+PGP Fingerprint: A0D9 628F 5A83 A879 48EA  B1FE BA43 C11F 2C8B 4347
+PGP Public key:  gpg --keyserver pgp.mit.edu --recv-keys 0xba43c11f2c8b4347
+
+RazCrimson (maintainer of the Glances project)
+https://github.com/RazCrimson
+
+Ariel Otibili (aka) ariel-anieli (for the huge work on code quality)
+https://github.com/ariel-anieli
+
+Alessio Sergi (aka) Al3hex (thanks you for the great job on this project)
+https://twitter.com/al3hex
+https://github.com/asergi
+
+Floran Brutel (aka) notFloran (maintainer of the Web User Interface)
+https://github.com/notFloran
+
+fr4nc0is (maintainer of the Web User Interface)
+https://github.com/fr4nc0is
+
+Brandon Philips (aka) Philips
+http://ifup.org/
+https://github.com/philips
+
+Jon Renner (aka) Jrenner
+https://github.com/jrenner
+
+Maxime Desbrus (aka) Desbma
+https://github.com/desbma
+
+Nicolas Hart (aka) NclsHart (for the Web user interface)
+https://github.com/nclsHart
+
+Sylvain Mouquet (aka) SylvainMouquet (for the Web user interface)
+http://github.com/sylvainmouquet
+
+Erik Eriksson (aka) Molobrakos (for the MQTT plugin and various PR)
+https://www.linkedin.com/in/error-errorsson/
+
+=========
+Packagers
+=========
+
+林博仁(Buo-ren Lin) Lin-Buo-Ren for the Snap package
+https://lin-buo-ren.github.io/
+https://snapcraft.io/glances/releases
+
+Daniel Echeverry and Sebastien Badia for the Debian package
+https://tracker.debian.org/pkg/glances
+
+Philip Lacroix and Nicolas Kovacs for the Slackware (SlackBuild) package
+
+gasol.wu@gmail.com for the FreeBSD port
+
+Frederic Aoustin (https://github.com/fraoustin) and Nicolas Bourges (installer) for the Windows port
+
+Aljaž Srebrnič for the MacPorts package
+http://www.macports.org/ports.php?by=name&substr=glances
+
+John Kirkham for the conda package (at conda-forge)
+https://github.com/conda-forge/glances-feedstock
+
+Rui Chen for the Homebrew package
+https://chenrui.dev/
+https://formulae.brew.sh/formula/glances

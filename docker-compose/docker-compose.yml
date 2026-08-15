@@ -1,0 +1,66 @@
+services:
+  glances:
+    # See all images tags here: https://hub.docker.com/r/nicolargo/glances/tags
+    image: nicolargo/glances:latest-full
+    restart: always
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:61208/api/4/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    pid: "host"
+    network_mode: "host"
+
+    read_only: true
+    privileged: false
+    # Uncomment next line for SATA or NVME smartctl monitoring
+    # cap_add:
+      # Uncomment next line for SATA smartctl monitoring
+      # - SYS_RAWIO
+      # Uncomment next line for NVME smartctl monitoring
+      # - SYS_ADMIN
+    # devices:
+    #   - "/dev/nvme0"
+
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      # Uncomment for qemu/libvirt/kvm support with modular libvirt daemons
+      # - "/var/run/libvirt/virtqemud-sock:/var/run/libvirt/libvirt-sock:ro"
+      # OR monolithic libvirt daemon
+      # - "/var/run/libvirt/libvirt-sock:/var/run/libvirt/libvirt-sock:ro"
+      - "/run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro"
+      - "./glances.conf:/glances/conf/glances.conf"
+      # Uncomment for proper distro information in upper panel.
+#     # Works only for distros that do have this file (most of distros do).
+#      - "/etc/os-release:/etc/os-release:ro"
+
+    tmpfs:
+      - /tmp
+
+    environment:
+      - GLANCES_OPT=-C /glances/conf/glances.conf -w --enable-mcp --enable-plugin smart
+      # Please set to your local timezone (or use local ${TZ} environment variable if set on your host)
+      - TZ=Europe/Paris
+      - PYTHONPYCACHEPREFIX=/tmp/py_caches
+
+#     # Uncomment for GPU compatibility (Nvidia) inside the container
+#     deploy:
+#       resources:
+#         reservations:
+#           devices:
+#             - driver: nvidia
+#               count: 1
+#               capabilities: [gpu]
+
+    # Uncomment to protect Glances WebUI by a login/password (add --password to GLANCES_OPT)
+    # secrets:
+    #   - source: glances_password
+    #     target: /root/.config/glances/<login>.pwd
+
+# secrets:
+#   glances_password:
+#     file: ./secrets/glances_password
