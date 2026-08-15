@@ -257,18 +257,21 @@ class TestFsPluginMsgCurse:
     def test_msg_curse_returns_list(self, fs_plugin):
         """Test that msg_curse returns a list."""
         fs_plugin.update()
+        fs_plugin.update_views()
         msg = fs_plugin.msg_curse(max_width=80)
         assert isinstance(msg, list)
 
     def test_msg_curse_empty_without_max_width(self, fs_plugin):
         """Test that msg_curse returns empty without max_width."""
         fs_plugin.update()
+        fs_plugin.update_views()
         msg = fs_plugin.msg_curse()
         assert isinstance(msg, list)
 
     def test_msg_curse_with_max_width(self, fs_plugin):
         """Test that msg_curse works with max_width."""
         fs_plugin.update()
+        fs_plugin.update_views()
         msg = fs_plugin.msg_curse(max_width=80)
         assert isinstance(msg, list)
 
