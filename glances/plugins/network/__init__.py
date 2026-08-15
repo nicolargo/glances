@@ -233,7 +233,7 @@ class NetworkPlugin(GlancesPluginModel):
             self.views[i[self.get_key()]]['bytes_recv']['decoration'] = alert_rx
             self.views[i[self.get_key()]]['bytes_recv_rate_per_sec']['decoration'] = alert_rx
             self.views[i[self.get_key()]]['bytes_sent']['decoration'] = alert_tx
-            self.views[i[self.get_key()]]['bytes_sent_rate_per_sec']['decoration'] = alert_rx
+            self.views[i[self.get_key()]]['bytes_sent_rate_per_sec']['decoration'] = alert_tx
 
     def _msg_curse_header(self, args, name_max_width):
         """Return the header curse lines."""
