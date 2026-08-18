@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from glances.outputs.curses_renderer_v5 import (
     _MAX_WORKLOADS,
     _NOMINAL_PROCESSES,
@@ -10,6 +12,9 @@ from glances.outputs.curses_renderer_v5 import (
     Frame,
     PluginBlock,
     Row,
+    _alert_block_height,
+    _derive_incidents,
+    _humanise_target,
     _reset_plugin_renderer_cache,
     _split_workloads,
     build_frame,
@@ -332,84 +337,45 @@ def test_render_collection_skips_filtered_items_handled_upstream():
 # --------------------------------------------------------------- alert block
 
 
-def test_render_alert_block_shows_recent_events():
-    history = [
-        {
-            "ts": "2026-05-12T10:00:00+00:00",
-            "plugin": "mem",
-            "key": None,
-            "field": "percent",
-            "level": "warning",
-            "previous_level": "ok",
-            "value": 73.0,
-            "prominent": True,
-            "hostname": "h",
-        },
-        {
-            "ts": "2026-05-12T10:01:00+00:00",
-            "plugin": "network",
-            "key": "eth0",
-            "field": "bytes_recv",
-            "level": "critical",
-            "previous_level": "warning",
-            "value": 9e7,
-            "prominent": True,
-            "hostname": "h",
-        },
-    ]
-    rows = render_alert_block(history, limit=10)
-    assert len(rows) == 1 + 2
-    flat = " ".join(c.text for row in rows for c in row.cells)
-    assert "mem" in flat
-    assert "eth0" in flat
-
-
-def test_render_alert_block_truncates_to_limit():
-    history = [
-        {
-            "ts": f"2026-05-12T10:0{i}:00+00:00",
-            "plugin": "mem",
-            "key": None,
-            "field": "percent",
-            "level": "warning",
-            "previous_level": "ok",
-            "value": 73.0,
-            "prominent": True,
-            "hostname": "h",
-        }
-        for i in range(5)
-    ]
-    rows = render_alert_block(history, limit=3)
-    assert len(rows) == 4
-
-
 def test_render_alert_block_handles_empty_history():
     rows = render_alert_block([], limit=10)
     assert len(rows) >= 1
 
 
 def test_render_alert_block_empty_history_shows_no_alert_detected_when_settled():
-    """Settled (initializing=False), empty history → a single header line
+    """Settled (initializing=False), empty history → a single line
     ``ALERT (no alert detected)``. No separate placeholder row, no
-    ``0 ongoing / 0 total`` count."""
+    ``0 ongoing / 0 total`` count.
+
+    Only the state fragment is green — the all-clear signal. ``ALERT`` stays
+    HEADER, like the ``ALERTS`` prefix of the populated title, so the line
+    still reads as a block heading."""
     rows = render_alert_block([], limit=10, is_initializing=False)
     assert len(rows) == 1
-    cell = rows[0].cells[0]
-    assert cell.text == "ALERT (no alert detected)"
-    assert cell.color == ColorRole.HEADER
-    assert "initializing" not in cell.text
-    assert "ongoing" not in cell.text
+    assert _line(rows[0]) == "ALERT (no alert detected)"
+    assert [(c.text, c.color) for c in rows[0].cells] == [
+        ("ALERT ", ColorRole.HEADER),
+        ("(no alert detected)", ColorRole.OK),
+    ]
+    assert "initializing" not in _line(rows[0])
+    assert "ongoing" not in _line(rows[0])
 
 
 def test_render_alert_block_empty_history_shows_initializing_during_warmup():
-    """is_initializing=True (warmup), empty history → a single header line
-    ``ALERT (initializing)`` so the user knows alerts can't have fired yet."""
+    """is_initializing=True (warmup), empty history → a single line
+    ``ALERT (initializing)`` so the user knows alerts can't have fired yet.
+
+    The state fragment is neutral, NOT green: warmup is not an all-clear.
+    Claiming a healthy system before the engine can even fire would be a lie."""
     rows = render_alert_block([], limit=10, is_initializing=True)
     assert len(rows) == 1
-    cell = rows[0].cells[0]
-    assert cell.text == "ALERT (initializing)"
-    assert cell.color == ColorRole.HEADER
-    assert "no alert detected" not in cell.text
+    assert _line(rows[0]) == "ALERT (initializing)"
+    assert [(c.text, c.color) for c in rows[0].cells] == [
+        ("ALERT ", ColorRole.HEADER),
+        ("(initializing)", ColorRole.DEFAULT),
+    ]
+    assert not any(c.color == ColorRole.OK for c in rows[0].cells)
+    assert "no alert detected" not in _line(rows[0])
 
 
 def test_format_alert_time_same_day_returns_hms_local():
@@ -427,19 +393,21 @@ def test_format_alert_time_same_day_returns_hms_local():
     assert result[2] == ":" and result[5] == ":"
 
 
-def test_format_alert_time_other_day_includes_date():
-    """Event from another day → date prefix included."""
+def test_format_alert_time_other_day_returns_month_day_within_8_columns():
+    """Another day → `MM-DD`, not the old 14-char `MM-DD HH:MM:SS`.
+
+    Approved divergence (design §6.2): the fixed grid gives TIME 8 columns and
+    the DURATION column now carries the age (`2d04h`), so the full timestamp
+    is redundant.
+    """
     from datetime import datetime, timezone
 
     from glances.outputs.curses_renderer_v5 import _format_alert_time
 
-    ts = "2026-05-13T12:00:00+00:00"  # 2 days ago
-    now_utc = datetime(2026, 5, 15, 14, 0, 0, tzinfo=timezone.utc)
-    result = _format_alert_time(ts, now=now_utc)
-    # Must include date — at least "05-13" or "05/13" depending on style.
-    assert "05" in result and "13" in result
-    # And the time component is still present.
-    assert ":" in result
+    now_utc = datetime(2026, 8, 16, 12, 0, 0, tzinfo=timezone.utc)
+    result = _format_alert_time("2026-08-14T09:30:00+00:00", now=now_utc)
+    assert len(result) <= 8
+    assert result == "08-14"
 
 
 def test_format_alert_time_naive_utc_is_handled():
@@ -465,42 +433,112 @@ def test_format_alert_time_malformed_falls_back():
     assert isinstance(result, str)
 
 
-def test_format_alert_duration_elapsed():
-    """Elapsed time since the transition, formatted H:MM:SS, no microseconds."""
+def test_format_duration_compact_seconds():
+    from glances.outputs.curses_renderer_v5 import _format_duration_compact
+
+    assert _format_duration_compact(0) == "0s"
+    assert _format_duration_compact(43) == "43s"
+    assert _format_duration_compact(59.9) == "59s"
+
+
+def test_format_duration_compact_minutes():
+    from glances.outputs.curses_renderer_v5 import _format_duration_compact
+
+    assert _format_duration_compact(60) == "1m00s"
+    assert _format_duration_compact(178) == "2m58s"
+
+
+def test_format_duration_compact_hours():
+    from glances.outputs.curses_renderer_v5 import _format_duration_compact
+
+    assert _format_duration_compact(3600) == "1h00m"
+    assert _format_duration_compact(4380) == "1h13m"
+
+
+def test_format_duration_compact_days():
+    from glances.outputs.curses_renderer_v5 import _format_duration_compact
+
+    assert _format_duration_compact(86400) == "1d00h"
+    assert _format_duration_compact(187200) == "2d04h"
+
+
+def test_format_duration_compact_never_exceeds_eight_columns():
+    """The DURATION column is 8 wide; nothing plausible may overflow it."""
+    from glances.outputs.curses_renderer_v5 import _format_duration_compact
+
+    assert len(_format_duration_compact(999 * 86400)) <= 8
+
+
+def test_incident_duration_ongoing_measures_from_begin_to_now():
     from datetime import datetime, timezone
 
-    from glances.outputs.curses_renderer_v5 import _format_alert_duration
+    from glances.outputs.curses_renderer_v5 import _incident_duration
 
-    ts = "2026-05-15T08:00:00+00:00"
-    now = datetime(2026, 5, 15, 8, 5, 30, 500000, tzinfo=timezone.utc)
-    assert _format_alert_duration(ts, now=now) == "0:05:30"
+    now = datetime(2026, 8, 16, 10, 3, 0, tzinfo=timezone.utc)
+    incident = {"begin": "2026-08-16T10:00:00+00:00", "end": None, "ongoing": True, "partial": False}
+    assert _incident_duration(incident, now=now) == "3m00s"
 
 
-def test_format_alert_duration_naive_ts_assumed_utc():
-    """A naive ISO timestamp (as emitted by _build_event) is treated as UTC."""
+def test_incident_duration_closed_measures_begin_to_end():
+    """A resolved incident freezes its duration — it must not keep ticking."""
     from datetime import datetime, timezone
 
-    from glances.outputs.curses_renderer_v5 import _format_alert_duration
+    from glances.outputs.curses_renderer_v5 import _incident_duration
 
-    now = datetime(2026, 5, 15, 8, 1, 0, tzinfo=timezone.utc)
-    assert _format_alert_duration("2026-05-15T08:00:00", now=now) == "0:01:00"
+    now = datetime(2026, 8, 16, 23, 0, 0, tzinfo=timezone.utc)
+    incident = {
+        "begin": "2026-08-16T10:00:00+00:00",
+        "end": "2026-08-16T10:00:43+00:00",
+        "ongoing": False,
+        "partial": False,
+    }
+    assert _incident_duration(incident, now=now) == "43s"
 
 
-def test_format_alert_duration_malformed_returns_none():
-    """Unparseable timestamp → None so the caller drops the duration."""
-    from glances.outputs.curses_renderer_v5 import _format_alert_duration
-
-    assert _format_alert_duration("not-a-timestamp") is None
-
-
-def test_format_alert_duration_future_returns_none():
-    """Clock skew (ts in the future) → None rather than a negative duration."""
+def test_incident_duration_partial_is_prefixed_with_a_lower_bound_marker():
+    """Opener evicted → the duration is a floor, and says so."""
     from datetime import datetime, timezone
 
-    from glances.outputs.curses_renderer_v5 import _format_alert_duration
+    from glances.outputs.curses_renderer_v5 import _incident_duration
 
-    now = datetime(2026, 5, 15, 8, 0, 0, tzinfo=timezone.utc)
-    assert _format_alert_duration("2026-05-15T08:05:00+00:00", now=now) is None
+    now = datetime(2026, 8, 16, 10, 3, 0, tzinfo=timezone.utc)
+    incident = {"begin": "2026-08-16T10:00:00+00:00", "end": None, "ongoing": True, "partial": True}
+    assert _incident_duration(incident, now=now) == ">3m00s"
+
+
+def test_incident_duration_unknown_begin_returns_none():
+    from glances.outputs.curses_renderer_v5 import _incident_duration
+
+    incident = {"begin": None, "end": None, "ongoing": True, "partial": True}
+    assert _incident_duration(incident) is None
+
+
+def test_incident_duration_malformed_begin_returns_none():
+    from glances.outputs.curses_renderer_v5 import _incident_duration
+
+    incident = {"begin": "not-a-timestamp", "end": None, "ongoing": True, "partial": False}
+    assert _incident_duration(incident) is None
+
+
+def test_incident_duration_future_begin_returns_none():
+    """Clock skew must not print a negative duration."""
+    from datetime import datetime, timezone
+
+    from glances.outputs.curses_renderer_v5 import _incident_duration
+
+    now = datetime(2026, 8, 16, 10, 0, 0, tzinfo=timezone.utc)
+    incident = {"begin": "2026-08-16T11:00:00+00:00", "end": None, "ongoing": True, "partial": False}
+    assert _incident_duration(incident, now=now) is None
+
+
+def test_incident_duration_naive_begin_assumed_utc():
+    from datetime import datetime, timezone
+
+    from glances.outputs.curses_renderer_v5 import _incident_duration
+
+    now = datetime(2026, 8, 16, 10, 1, 0, tzinfo=timezone.utc)
+    incident = {"begin": "2026-08-16T10:00:00", "end": None, "ongoing": True, "partial": False}
+    assert _incident_duration(incident, now=now) == "1m00s"
 
 
 def test_render_alert_block_uses_local_time_for_events():
@@ -555,97 +593,8 @@ def test_render_alert_block_nonempty_history_ignores_initializing_flag():
     rows = render_alert_block(history, limit=10, is_initializing=True)
     flat = " ".join(c.text for row in rows for c in row.cells)
     assert "initializing" not in flat
-    assert "careful" in flat
-
-
-def test_render_alert_block_header_uses_new_ongoing_total_format():
-    """Header is ``ALERT (<n> ongoing / <m> total)``."""
-    history = [
-        # Ongoing: warning, no resolution after.
-        {
-            "ts": "2026-05-15T08:00:00+00:00",
-            "plugin": "mem",
-            "key": None,
-            "field": "percent",
-            "level": "warning",
-            "previous_level": "careful",
-            "is_initial": False,
-            "prominent": True,
-            "value": 75.0,
-            "hostname": "h",
-        },
-        # Resolved: warning → ok.
-        {
-            "ts": "2026-05-15T09:00:00+00:00",
-            "plugin": "cpu",
-            "key": None,
-            "field": "total",
-            "level": "ok",
-            "previous_level": "warning",
-            "is_initial": False,
-            "prominent": True,
-            "value": 30.0,
-            "hostname": "h",
-        },
-    ]
-    rows = render_alert_block(history, limit=10)
-    header = rows[0].cells[0].text
-    assert "ALERT" in header
-    assert "1 ongoing" in header
-    assert "2 total" in header
-
-
-def test_render_alert_block_ongoing_event_carries_marker():
-    """Latest event per (plugin, key, field) with non-ok level is marked
-    ongoing, with the elapsed duration since its transition."""
-    from datetime import datetime, timezone
-
-    history = [
-        {
-            "ts": "2026-05-15T08:00:00+00:00",
-            "plugin": "mem",
-            "key": None,
-            "field": "percent",
-            "level": "careful",
-            "previous_level": "ok",
-            "is_initial": True,
-            "prominent": True,
-            "value": 60.0,
-            "hostname": "h",
-        },
-    ]
-    # Fixed "now" = 1h 23m 45s after the transition → deterministic duration.
-    now = datetime(2026, 5, 15, 9, 23, 45, tzinfo=timezone.utc)
-    rows = render_alert_block(history, limit=10, now=now)
-    flat = " ".join(c.text for row in rows for c in row.cells)
-    assert "ongoing for 1:23:45" in flat
-
-
-def test_render_alert_block_resolution_event_not_marked_ongoing():
-    """``warning → ok`` is a resolution. Not ongoing."""
-    history = [
-        {
-            "ts": "2026-05-15T08:00:00+00:00",
-            "plugin": "mem",
-            "key": None,
-            "field": "percent",
-            "level": "ok",
-            "previous_level": "warning",
-            "is_initial": False,
-            "prominent": True,
-            "value": 30.0,
-            "hostname": "h",
-        },
-    ]
-    rows = render_alert_block(history, limit=10)
-    # Check only data rows (the header carries the ongoing/total counts and
-    # would match the substring otherwise).
-    data_flat = " ".join(c.text for row in rows[1:] for c in row.cells)
-    assert "ongoing" not in data_flat
-    # Header reflects "0 ongoing / 1 total".
-    header = rows[0].cells[0].text
-    assert "0 ongoing" in header
-    assert "1 total" in header
+    # The LEVEL cell renders the level upper-cased (design §6.2).
+    assert "CAREFUL" in flat
 
 
 def test_render_alert_block_only_latest_per_tuple_is_ongoing():
@@ -680,58 +629,621 @@ def test_render_alert_block_only_latest_per_tuple_is_ongoing():
         },
     ]
     rows = render_alert_block(history, limit=10)
-    data_flat = " ".join(c.text for row in rows[1:] for c in row.cells)
-    # Neither data row is ongoing — resolved.
-    assert "ongoing" not in data_flat
-    header = rows[0].cells[0].text
-    assert "0 ongoing" in header
+    # One resolved incident, one row, resolved glyph — the real thing this
+    # test claims to check (the header's "0 ongoing" substring was true by
+    # construction and bit nothing on its own).
+    assert len(rows) == 3
+    assert rows[2].cells[0].text == "○"
+    # The title is several glued cells now, so read the painted line.
+    assert "0 ongoing" in _line(rows[0])
 
 
-def test_render_alert_block_initial_state_omits_arrow():
-    """is_initial=True events render as the bare level (no `ok → ...` arrow)."""
+def _evt(ts, plugin, field, level, previous="ok", key=None, prominent=False, is_initial=False):
+    """Minimal alert event, shaped like GlancesAlerts._build_event's output."""
+    return {
+        "ts": ts,
+        "plugin": plugin,
+        "key": key,
+        "field": field,
+        "level": level,
+        "previous_level": previous,
+        "value": 1.0,
+        "prominent": prominent,
+        "is_initial": is_initial,
+        "hostname": "h",
+    }
+
+
+def _line(row):
+    """Paint one Row the way PluginBlock.width measures it: one space between
+    cells unless the cell is glued."""
+    out = ""
+    for i, cell in enumerate(row.cells):
+        if i and not cell.glue:
+            out += " "
+        out += cell.text
+    return out
+
+
+# Chronological, like the engine's deque: fs alerts and recovers, then
+# containers and cpu alert and stay active.
+_GRID_HISTORY = [
+    _evt("2026-08-16T13:58:40+00:00", "fs", "percent", "warning", key="/"),
+    _evt("2026-08-16T13:59:23+00:00", "fs", "percent", "ok", previous="warning", key="/"),
+    _evt("2026-08-16T14:01:03+00:00", "containers", "mem_usage", "warning", key="nginx"),
+    _evt("2026-08-16T14:02:11+00:00", "cpu", "total", "critical"),
+]
+_GRID_ONGOING = {
+    ("cpu", None, "total"): "critical",
+    ("containers", "nginx", "mem_usage"): "warning",
+}
+_GRID_NOW = datetime(2026, 8, 16, 14, 5, 9, tzinfo=timezone.utc)
+
+
+def test_render_alert_block_full_grid_columns_are_aligned():
+    """Every row lands TIME at 2, DURATION ending at 19, TARGET at 22."""
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    data = [_line(r) for r in rows[2:]]
+    assert data, "expected data rows below the title and column header"
+    for line in data:
+        assert line[1] == " "
+        assert line[10:12] == "  "
+        assert line[20:22] == "  "
+    assert len({len(line) for line in data}) == 1
+
+
+def test_render_alert_block_ongoing_rows_come_first():
+    """§5.3 — a resolved incident must never push an ongoing one out of view."""
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    data = [_line(r) for r in rows[2:]]
+    assert "Cpu total" in data[0]
+    assert "Containers nginx mem usage" in data[1]
+    # `percent` is a generic field name and is dropped — `Fs /` says it all.
+    assert "Fs /" in data[2]
+
+
+def test_render_alert_block_resolved_incident_takes_one_row_not_two():
+    """§5.4 — the `→ ok` transition resolves a row, it does not add one."""
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    assert len(rows) == 2 + 3  # title + column header + 3 incidents (4 events)
+
+
+def test_render_alert_block_glyphs_distinguish_ongoing_from_resolved():
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    glyphs = [r.cells[0].text for r in rows[2:]]
+    assert glyphs == ["●", "●", "○"]
+
+
+def test_render_alert_block_ascii_fallback_emits_no_unicode():
+    """--disable-unicode → the whole block is pure ASCII (§6.5)."""
+    rows = render_alert_block(
+        _GRID_HISTORY,
+        limit=10,
+        now=_GRID_NOW,
+        ongoing=_GRID_ONGOING,
+        width=61,
+        unicode_ok=False,
+    )
+    painted = "\n".join(_line(r) for r in rows)
+    assert painted.isascii()
+    assert [r.cells[0].text for r in rows[2:]] == ["*", "*", "-"]
+
+
+def test_render_alert_block_glyph_carries_the_level_colour():
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    assert rows[2].cells[0].color == ColorRole.CRITICAL
+    assert rows[3].cells[0].color == ColorRole.WARNING
+
+
+def test_render_alert_block_resolved_level_is_neutral_but_glyph_keeps_its_colour():
+    """Colour in the LEVEL column means "still happening".
+
+    A resolved incident's level text goes neutral so the eye lands on the
+    active rows, but its glyph keeps the level colour so the severity it
+    reached stays readable. Rows are [ongoing cpu, ongoing containers,
+    resolved fs] — cells are [glyph, TIME, DURATION, TARGET, LEVEL].
+    """
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    ongoing_row, resolved_row = rows[2], rows[4]
+
+    assert ongoing_row.cells[0].text == "●"
+    assert ongoing_row.cells[-1].text.strip() == "CRITICAL"
+    assert ongoing_row.cells[-1].color == ColorRole.CRITICAL
+
+    assert resolved_row.cells[0].text == "○"
+    assert resolved_row.cells[-1].text.strip() == "WARNING"
+    assert resolved_row.cells[-1].color == ColorRole.DEFAULT
+    # The glyph is the survivor: past severity must not be erased.
+    assert resolved_row.cells[0].color == ColorRole.WARNING
+
+
+def test_humanise_target_reads_as_prose_not_as_an_identifier():
+    """The TARGET column addresses an operator, not a parser."""
+    assert _humanise_target("cpu", None, "system") == "Cpu system"
+    assert _humanise_target("containers", "nginx", "mem_usage") == "Containers nginx mem usage"
+    assert _humanise_target("network", "eth0", "bytes_recv") == "Network eth0 bytes recv"
+
+
+def test_humanise_target_drops_a_generic_field_name():
+    """`value` and `percent` identify nothing — the plugin and key already do."""
+    assert _humanise_target("sensors", "i915 0", "value") == "Sensors i915 0"
+    assert _humanise_target("fs", "/", "percent") == "Fs /"
+    # No key either: the plugin name alone is the whole target.
+    assert _humanise_target("mem", None, "percent") == "Mem"
+
+
+def test_humanise_target_matches_generic_names_whole_not_as_a_suffix():
+    """A field merely ENDING in a generic word keeps every part of its name.
+
+    Substring matching here would silently turn `memory_usage_percent` into
+    something indistinguishable from a plain percentage.
+    """
+    assert _humanise_target("containers", "web", "memory_usage_percent") == "Containers web memory usage percent"
+    assert _humanise_target("gpu", "0", "mem_value") == "Gpu 0 mem value"
+
+
+def test_humanise_target_capitalises_only_the_plugin_name():
+    """No acronym table — `gpu` renders as `Gpu`, deliberately. Keys are kept
+    verbatim: a mountpoint or container name is already human-readable, and
+    rewriting it would misreport what the engine watched."""
+    assert _humanise_target("gpu", None, "proc") == "Gpu proc"
+    assert _humanise_target("fs", "/var/lib/DOCKER", "used") == "Fs /var/lib/DOCKER used"
+    assert _humanise_target("sensors", "Core 0", "value") == "Sensors Core 0"
+
+
+def test_humanise_target_survives_degenerate_input():
+    """The renderer must not crash on a malformed incident."""
+    assert _humanise_target("cpu", None, "") == "Cpu"
+    assert _humanise_target("cpu", "", "system") == "Cpu system"
+    assert _humanise_target("", None, "system") == "system"
+
+
+def test_render_alert_block_duration_cell_is_exact():
+    """End-to-end duration wiring: the row-level tests only checked the
+    DURATION region was non-empty, which would still pass if `end` were used
+    where `begin` belongs, or the wrong `now` reached the renderer. Pin the
+    exact value: `cpu.total` opened at 14:02:11, `_GRID_NOW` is 14:05:09 →
+    2m58s elapsed — cells are [glyph, TIME, DURATION, TARGET, LEVEL]."""
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    assert rows[2].cells[2].text.strip() == "2m58s"
+
+
+def test_render_alert_block_partial_incident_duration_has_lower_bound_marker():
+    """`is_initial`'s only remaining observable effect is the `partial` flag
+    (§5.6, since arrows are gone) — this is covered at `_derive_incidents`
+    unit level already, but never end-to-end through the renderer."""
+    history = [_evt("2026-08-16T14:00:00+00:00", "cpu", "total", "critical", previous="warning")]
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing={("cpu", None, "total"): "critical"}, width=61)
+    assert rows[2].cells[2].text.strip().startswith(">")
+
+
+def test_render_alert_block_title_counts_ongoing_and_resolved():
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    title = _line(rows[0])
+    assert title.startswith("ALERTS")
+    assert "2 ongoing" in title
+    assert "1 resolved" in title
+    assert rows[0].cells[0].color == ColorRole.HEADER
+
+
+def test_render_alert_block_title_is_never_level_coloured():
+    """Standing TUI rule: a block title is never ESCALATED by an alert level.
+
+    The ongoing-count fragment may be `ok` (green, all clear) or `default`;
+    neither is an escalation. What must never happen is a title element
+    turning careful/warning/critical because something fired — the alert lives
+    on the value, not on the heading.
+    """
+    escalations = {ColorRole.CAREFUL, ColorRole.WARNING, ColorRole.CRITICAL}
+    for history, ongoing in ((_GRID_HISTORY, _GRID_ONGOING), (_GRID_HISTORY, {})):
+        rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=61)
+        assert not any(c.color in escalations for c in rows[0].cells)
+        # The column-header row is a heading too: always HEADER, no exceptions.
+        assert all(c.color == ColorRole.HEADER for c in rows[1].cells)
+
+
+def test_render_alert_block_title_count_is_green_only_when_nothing_is_ongoing():
+    """The ongoing-count fragment is the block's at-a-glance state signal."""
+    quiet = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing={}, width=61)
+    busy = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+
+    def count_cell(rows):
+        return next(c for c in rows[0].cells if "ongoing" in c.text)
+
+    assert "0 ongoing" in count_cell(quiet).text
+    assert count_cell(quiet).color == ColorRole.OK
+    assert "2 ongoing" in count_cell(busy).text
+    assert count_cell(busy).color == ColorRole.DEFAULT
+    # `ALERTS` and the trailing rule stay HEADER in both states, so the block
+    # still reads as a titled block rather than a coloured banner.
+    for rows in (quiet, busy):
+        assert rows[0].cells[0].text.startswith("ALERTS")
+        assert rows[0].cells[0].color == ColorRole.HEADER
+        assert rows[0].cells[-1].color == ColorRole.HEADER
+
+
+def test_render_alert_block_title_text_is_unchanged_by_the_cell_split():
+    """Splitting the title into glued cells must not shift a single column.
+
+    Without `glue` the painter would insert a separator between every
+    fragment; this pins the rendered text across the whole degradation ladder,
+    including the cross-cell hard truncation at the bottom.
+    """
+    expected = {
+        61: "ALERTS  2 ongoing · 1 resolved " + "─" * 30,
+        43: "ALERTS  2 ongoing · 1 resolved " + "─" * 12,
+        31: "ALERTS  2 ongoing · 1 resolved",
+        30: "ALERTS  2 ongoing · 1 resolved",
+        29: "ALERTS  2 ongoing",
+        17: "ALERTS  2 ongoing",
+        12: "ALERTS  2 on",
+    }
+    for width, text in expected.items():
+        rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=width)
+        assert _line(rows[0]) == text, f"width={width}"
+
+
+def test_render_alert_block_title_degrades_instead_of_cutting_mid_word():
+    """§6.3 — the title shortens rule-first, then drops the `resolved`
+    clause; it must never hard-truncate mid-word while a cleaner
+    degradation step is available."""
+    full = _line(render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=96)[0])
+    assert full.startswith("ALERTS  2 ongoing · 1 resolved")  # full title, width to spare
+
+    title = _line(render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=24)[0])
+    assert title == "ALERTS  2 ongoing"
+    assert "resolved" not in title
+    assert not title.endswith(" ")
+
+    narrower = _line(render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=20)[0])
+    assert narrower == "ALERTS  2 ongoing"
+
+
+def test_render_alert_block_drops_level_below_43_columns():
+    """§6.3 first step — TARGET has a 12-column floor."""
+    wide = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=43)
+    narrow = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=42)
+    assert "CRITICAL" in _line(wide[2])
+    assert "CRITICAL" not in _line(narrow[2])
+
+
+def test_render_alert_block_drops_duration_below_34_columns():
+    """§6.3 second step."""
+    wide = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=34)
+    narrow = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=33)
+    assert _line(wide[2])[12:20].strip()
+    assert "Cpu total" in _line(narrow[2])
+    assert len(_line(narrow[2])) <= 33
+
+
+def test_render_alert_block_never_exceeds_the_given_width():
+    """§11 — no emitted row may overflow the block at any tested width."""
+    for width in (96, 61, 43, 34, 30, 24):
+        rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=width)
+        for row in rows:
+            assert len(_line(row)) <= width, f"overflow at width={width}"
+
+
+def test_alert_block_height_matches_render_alert_block_row_count():
+    """`_alert_block_height` is the planner's cost mirror of
+    `render_alert_block` — if they ever disagree the RIGHT column overflows
+    and silently clips its bottom row (a real bug found and fixed during
+    G7 execution). Assert the invariant directly, across the three regimes
+    the height function distinguishes."""
+    # Regime 1: no incidents at all.
+    rows = render_alert_block([], limit=10, now=_GRID_NOW, ongoing={}, width=61)
+    assert len(rows) == _alert_block_height(0, 10)
+
+    # Regime 2: incidents exist but the quota is zero.
+    rows = render_alert_block(_GRID_HISTORY, limit=0, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    n_incidents = len(_derive_incidents(_GRID_HISTORY, _GRID_ONGOING))
+    assert len(rows) == _alert_block_height(n_incidents, 0)
+
+    # Regime 3: quota smaller than the incident count.
+    rows = render_alert_block(_GRID_HISTORY, limit=2, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    assert len(rows) == _alert_block_height(n_incidents, 2)
+
+
+def test_render_alert_block_truncates_target_with_an_ellipsis():
+    """58-character target in a 30-column TARGET cell → cut, and visibly so.
+
+    `memory_usage_percent` merely ENDS in a generic word, so humanising keeps
+    every part of it — the target stays far too long for the column."""
     history = [
-        {
-            "ts": "2026-05-15T14:00:00+00:00",
-            "plugin": "mem",
-            "key": None,
-            "field": "percent",
-            "level": "careful",
-            "previous_level": "ok",
-            "value": 60.0,
-            "prominent": True,
-            "is_initial": True,
-            "hostname": "h",
-        },
+        _evt(
+            "2026-08-16T14:00:00+00:00",
+            "containers",
+            "memory_usage_percent",
+            "warning",
+            key="a-very-long-container-name",
+        )
     ]
-    rows = render_alert_block(history, limit=10)
-    flat = " ".join(c.text for row in rows for c in row.cells)
-    # The arrow is for real transitions only.
-    assert "→" not in flat
-    # The level itself must still appear so operators see the steady state.
-    assert "careful" in flat
+    ongoing = {("containers", "a-very-long-container-name", "memory_usage_percent"): "warning"}
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=61)
+    # cells: glyph, TIME, DURATION, TARGET, LEVEL
+    target_cell = rows[2].cells[3]
+    assert len(target_cell.text) == 30
+    assert target_cell.text.endswith("…")
+    assert len(_line(rows[2])) == 61
 
 
-def test_render_alert_block_transition_keeps_arrow():
-    """is_initial=False (or absent) events render as `previous → new` (v5 default)."""
+def test_render_alert_block_ascii_truncation_uses_a_dot():
+    """ASCII mode must not leak `…` through the truncation path."""
     history = [
-        {
-            "ts": "2026-05-15T14:01:00+00:00",
-            "plugin": "mem",
-            "key": None,
-            "field": "percent",
-            "level": "warning",
-            "previous_level": "careful",
-            "value": 75.0,
-            "prominent": True,
-            "is_initial": False,
-            "hostname": "h",
-        },
+        _evt(
+            "2026-08-16T14:00:00+00:00",
+            "containers",
+            "memory_usage_percent",
+            "warning",
+            key="a-very-long-container-name",
+        )
     ]
-    rows = render_alert_block(history, limit=10)
-    flat = " ".join(c.text for row in rows for c in row.cells)
-    assert "→" in flat
-    assert "careful" in flat
-    assert "warning" in flat
+    ongoing = {("containers", "a-very-long-container-name", "memory_usage_percent"): "warning"}
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=61, unicode_ok=False)
+    target_cell = rows[2].cells[3]
+    assert target_cell.text.endswith(".")
+    assert _line(rows[2]).isascii()
+
+
+def test_render_alert_block_forwards_prominent_onto_the_level_cell():
+    """§11 — the G6B defect class must not reappear."""
+    history = [_evt("2026-08-16T14:00:00+00:00", "cpu", "total", "critical", prominent=True)]
+    rows = render_alert_block(
+        history,
+        limit=10,
+        now=_GRID_NOW,
+        ongoing={("cpu", None, "total"): "critical"},
+        width=61,
+    )
+    assert rows[2].cells[-1].prominent is True
+
+
+def test_render_alert_block_forwards_prominent_onto_the_glyph_when_level_is_dropped():
+    """Narrow terminal: `prominent` moves rather than disappearing."""
+    history = [_evt("2026-08-16T14:00:00+00:00", "cpu", "total", "critical", prominent=True)]
+    rows = render_alert_block(
+        history,
+        limit=10,
+        now=_GRID_NOW,
+        ongoing={("cpu", None, "total"): "critical"},
+        width=36,
+    )
+    assert rows[2].cells[0].prominent is True
+
+
+def test_render_alert_block_shows_no_transition_arrow():
+    """§3.1.2 — the level text no longer duplicates the colour, and there is
+    no `previous → level` sentence any more."""
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    painted = "\n".join(_line(r) for r in rows)
+    assert "→" not in painted
+    assert "ongoing for" not in painted
+
+
+def test_render_alert_block_limit_counts_incidents_not_events():
+    """`limit` is a DATA-row budget; two events of one incident cost one row."""
+    rows = render_alert_block(_GRID_HISTORY, limit=2, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    assert len(rows) == 2 + 2
+
+
+def test_render_alert_block_limit_zero_emits_the_title_only():
+    """The vertical shrink ladder's step (h) — header only."""
+    rows = render_alert_block(_GRID_HISTORY, limit=0, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    assert len(rows) == 1
+    assert _line(rows[0]).startswith("ALERTS")
+
+
+def test_render_alert_block_without_width_still_aligns():
+    """Export / direct calls pass no width: pad TARGET to its natural maximum
+    rather than degrading."""
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING)
+    data = [_line(r) for r in rows[2:]]
+    assert len({len(line) for line in data}) == 1
+
+
+def test_render_alert_block_fully_evicted_ongoing_alert_is_still_shown():
+    """The reason `ongoing` exists at all (§5.6)."""
+    rows = render_alert_block(
+        [],
+        limit=10,
+        now=_GRID_NOW,
+        ongoing={("cpu", None, "total"): "critical"},
+        width=61,
+    )
+    painted = "\n".join(_line(r) for r in rows)
+    assert "Cpu total" in painted
+    assert "--:--:--" in painted
+
+
+def test_render_alert_block_empty_history_and_no_ongoing_still_collapses():
+    """§11 — the single-line collapse survives the redesign."""
+    rows = render_alert_block([], limit=10, is_initializing=False, ongoing={}, width=61)
+    assert len(rows) == 1
+    assert _line(rows[0]) == "ALERT (no alert detected)"
+
+
+def test_derive_incidents_single_open_incident():
+    """One entry transition, still active → one ongoing incident."""
+    history = [_evt("2026-08-16T10:00:00+00:00", "mem", "percent", "warning")]
+    ongoing = {("mem", None, "percent"): "warning"}
+    incidents = _derive_incidents(history, ongoing)
+    assert len(incidents) == 1
+    inc = incidents[0]
+    assert inc["plugin"] == "mem"
+    assert inc["field"] == "percent"
+    assert inc["level"] == "warning"
+    assert inc["begin"] == "2026-08-16T10:00:00+00:00"
+    assert inc["end"] is None
+    assert inc["ongoing"] is True
+    assert inc["partial"] is False
+
+
+def test_derive_incidents_escalation_keeps_one_row_at_max_level():
+    """warning → critical is ONE incident whose level is the peak reached."""
+    history = [
+        _evt("2026-08-16T10:00:00+00:00", "cpu", "total", "warning"),
+        _evt("2026-08-16T10:02:00+00:00", "cpu", "total", "critical", previous="warning"),
+    ]
+    incidents = _derive_incidents(history, {("cpu", None, "total"): "critical"})
+    assert len(incidents) == 1
+    assert incidents[0]["level"] == "critical"
+    assert incidents[0]["begin"] == "2026-08-16T10:00:00+00:00"
+
+
+def test_derive_incidents_deescalation_keeps_the_peak_level():
+    """critical → warning, still active: the journal keeps CRITICAL (v4 parity §2.6)."""
+    history = [
+        _evt("2026-08-16T10:00:00+00:00", "cpu", "total", "critical"),
+        _evt("2026-08-16T10:05:00+00:00", "cpu", "total", "warning", previous="critical"),
+    ]
+    incidents = _derive_incidents(history, {("cpu", None, "total"): "warning"})
+    assert len(incidents) == 1
+    assert incidents[0]["level"] == "critical"
+    assert incidents[0]["ongoing"] is True
+
+
+def test_derive_incidents_resolution_closes_the_row_instead_of_adding_one():
+    """The `→ ok` transition must NOT occupy a row of its own (§5.4)."""
+    history = [
+        _evt("2026-08-16T10:00:00+00:00", "mem", "percent", "warning"),
+        _evt("2026-08-16T10:03:00+00:00", "mem", "percent", "ok", previous="warning"),
+    ]
+    incidents = _derive_incidents(history, {})
+    assert len(incidents) == 1
+    assert incidents[0]["ongoing"] is False
+    assert incidents[0]["begin"] == "2026-08-16T10:00:00+00:00"
+    assert incidents[0]["end"] == "2026-08-16T10:03:00+00:00"
+
+
+def test_derive_incidents_unpaired_ok_produces_no_incident():
+    """A bare `→ ok` whose opener aged out of the ring buffer closes nothing
+    — there is no open incident to pop, so it produces ZERO incidents, not a
+    visible "resolved, unknown start" row. Real, user-visible behaviour: the
+    block collapses to `ALERT (no alert detected)` for this history — a
+    pre-existing render_alert_block test built exactly this fixture and
+    expected a visible resolved row before the incident model existed; that
+    assumption no longer holds and nothing else pinned the new one."""
+    history = [_evt("2026-08-16T10:05:00+00:00", "mem", "percent", "ok", previous="warning")]
+    incidents = _derive_incidents(history, {})
+    assert incidents == []
+
+
+def test_derive_incidents_same_tuple_twice_gives_two_rows():
+    """One row per INCIDENT, not per tuple: alert, recover, alert again = 2."""
+    history = [
+        _evt("2026-08-16T10:00:00+00:00", "mem", "percent", "warning"),
+        _evt("2026-08-16T10:03:00+00:00", "mem", "percent", "ok", previous="warning"),
+        _evt("2026-08-16T10:10:00+00:00", "mem", "percent", "warning"),
+    ]
+    incidents = _derive_incidents(history, {("mem", None, "percent"): "warning"})
+    assert len(incidents) == 2
+    assert [i["ongoing"] for i in incidents] == [True, False]
+    assert incidents[0]["begin"] == "2026-08-16T10:10:00+00:00"
+    assert incidents[1]["end"] == "2026-08-16T10:03:00+00:00"
+
+
+def test_derive_incidents_evicted_opener_is_marked_partial():
+    """First surviving event has previous_level != ok → the incident started earlier."""
+    history = [
+        _evt("2026-08-16T10:02:00+00:00", "cpu", "total", "critical", previous="warning"),
+    ]
+    incidents = _derive_incidents(history, {("cpu", None, "total"): "critical"})
+    assert len(incidents) == 1
+    assert incidents[0]["partial"] is True
+    assert incidents[0]["begin"] == "2026-08-16T10:02:00+00:00"
+
+
+def test_derive_incidents_is_initial_is_not_partial():
+    """An `is_initial` event IS the start — Glances just found the system already hot.
+
+    `previous="warning"` here is defensive-only: the real engine only ever sets
+    `is_initial=True` together with `previous_level="ok"` (`_reconcile` sets it
+    on the first commit out of the default `committed_level="ok"`), but using
+    that combination would leave `is_initial` untested since `previous != "ok"`
+    would already be `False` on its own.
+    """
+    history = [
+        _evt("2026-08-16T10:00:00+00:00", "cpu", "total", "critical", previous="warning", is_initial=True),
+    ]
+    incidents = _derive_incidents(history, {("cpu", None, "total"): "critical"})
+    assert incidents[0]["partial"] is False
+
+
+def test_derive_incidents_fully_evicted_ongoing_tuple_is_synthesized():
+    """Engine says active, history has nothing → still a row, with no begin."""
+    incidents = _derive_incidents([], {("cpu", None, "total"): "critical"})
+    assert len(incidents) == 1
+    inc = incidents[0]
+    assert inc["plugin"] == "cpu"
+    assert inc["field"] == "total"
+    assert inc["level"] == "critical"
+    assert inc["begin"] is None
+    assert inc["ongoing"] is True
+    assert inc["partial"] is True
+
+
+def test_derive_incidents_history_says_open_but_engine_says_recovered():
+    """Defensive: the engine is the authority, so the incident is closed."""
+    history = [_evt("2026-08-16T10:00:00+00:00", "mem", "percent", "warning")]
+    incidents = _derive_incidents(history, {})
+    assert incidents[0]["ongoing"] is False
+    assert incidents[0]["end"] is None
+
+
+def test_derive_incidents_ongoing_level_wins_when_higher_than_history():
+    """Engine escalated but the escalation event was evicted → show the engine's level."""
+    history = [_evt("2026-08-16T10:00:00+00:00", "cpu", "total", "warning")]
+    incidents = _derive_incidents(history, {("cpu", None, "total"): "critical"})
+    assert incidents[0]["level"] == "critical"
+
+
+def test_derive_incidents_sorts_ongoing_first_then_newest_first():
+    """§5.3: a long-running ongoing incident must not sink below newer resolved ones."""
+    history = [
+        _evt("2026-08-16T09:00:00+00:00", "cpu", "total", "critical"),
+        _evt("2026-08-16T10:00:00+00:00", "mem", "percent", "warning"),
+        _evt("2026-08-16T10:01:00+00:00", "mem", "percent", "ok", previous="warning"),
+        _evt("2026-08-16T11:00:00+00:00", "fs", "percent", "warning", key="/"),
+        _evt("2026-08-16T11:01:00+00:00", "fs", "percent", "ok", previous="warning", key="/"),
+    ]
+    incidents = _derive_incidents(history, {("cpu", None, "total"): "critical"})
+    assert [(i["plugin"], i["ongoing"]) for i in incidents] == [
+        ("cpu", True),
+        ("fs", False),
+        ("mem", False),
+    ]
+
+
+def test_derive_incidents_keeps_prominent_if_any_transition_had_it():
+    """`prominent` must survive the collapse — the G6B defect class (§11)."""
+    history = [
+        _evt("2026-08-16T10:00:00+00:00", "cpu", "total", "warning", prominent=True),
+        _evt("2026-08-16T10:02:00+00:00", "cpu", "total", "critical", previous="warning", prominent=False),
+    ]
+    incidents = _derive_incidents(history, {("cpu", None, "total"): "critical"})
+    assert incidents[0]["prominent"] is True
+
+
+def test_derive_incidents_distinguishes_keys_of_the_same_plugin():
+    """fs[/] and fs[/home] are different tuples, hence different incidents."""
+    history = [
+        _evt("2026-08-16T10:00:00+00:00", "fs", "percent", "warning", key="/"),
+        _evt("2026-08-16T10:01:00+00:00", "fs", "percent", "warning", key="/home"),
+    ]
+    incidents = _derive_incidents(
+        history,
+        {("fs", "/", "percent"): "warning", ("fs", "/home", "percent"): "warning"},
+    )
+    assert len(incidents) == 2
+    assert {i["key"] for i in incidents} == {"/", "/home"}
+
+
+def test_derive_incidents_no_ongoing_argument_defaults_to_history_only():
+    """`ongoing=None` → derive purely from the history (export / direct calls)."""
+    history = [_evt("2026-08-16T10:00:00+00:00", "mem", "percent", "warning")]
+    incidents = _derive_incidents(history)
+    assert len(incidents) == 1
+    assert incidents[0]["ongoing"] is True
 
 
 # --------------------------------------------------------------- frame builder
@@ -833,7 +1345,7 @@ def test_build_frame_alert_block_carries_history():
     frame = build_frame({}, {}, [], alerts_history=history)
     alert_block = frame.right[0]
     flat = " ".join(c.text for row in alert_block.rows for c in row.cells)
-    assert "mem" in flat
+    assert "Mem" in flat
 
 
 def test_build_frame_orders_top_slot_per_v4_list():
@@ -1464,8 +1976,13 @@ def test_data_count_counts_collection_items():
     assert blocks[0].data_count == 25
 
 
-def test_data_count_on_alert_block_is_history_length():
-    """The synthesized alert block carries the history length."""
+def test_data_count_on_alert_block_is_incident_count_not_history_length():
+    """The synthesized alert block carries the INCIDENT count, not the raw
+    event count — `plan_right_column` sizes the block off `data_count`, and
+    the block now renders one row per incident, not one row per event.
+
+    17 events sharing one `(plugin, key, field)` tuple collapse into a
+    single open incident (§5.4) — so `data_count` must be 1, not 17."""
     history = [
         {
             "ts": "2026-08-05T10:00:00+00:00",
@@ -1477,6 +1994,20 @@ def test_data_count_on_alert_block_is_history_length():
         }
         for _ in range(17)
     ]
+    frame = build_frame(
+        store_snapshot={},
+        fields_by_plugin={},
+        registry=[],
+        alerts_history=history,
+    )
+    alert_blocks = [b for b in frame.right if b.name == "alert"]
+    assert alert_blocks[0].data_count == 1
+
+
+def test_data_count_on_alert_block_counts_distinct_incidents():
+    """17 DISTINCT `(plugin, key, field)` tuples → 17 incidents, one row
+    each — `data_count` follows the incident count up in this direction too."""
+    history = _alert_history(17)
     frame = build_frame(
         store_snapshot={},
         fields_by_plugin={},
@@ -1549,17 +2080,18 @@ def _cost(plan, *, n_vms=4, n_containers=30, n_processes=400, n_alerts=40, stati
         heights.append(amps_rows)
     if n_processes:
         heights.append(1 + min(n_processes, plan["processlist"]))
-    heights.append(1 + min(n_alerts, plan["alert"]))
+    heights.append(_alert_block_height(n_alerts, plan["alert"]))
     return sum(heights) + max(0, len(heights) - 1)
 
 
 def test_plan_nominal_on_a_comfortable_terminal():
     """Assez de place → valeurs nominales, sauf les workloads qui regagnent
     la seule ligne de mou disponible (palier de croissance A) : le coût au
-    palier nominal est 49 (< 50), et l'unique ligne de surplus va aux
-    workloads avant que les processus n'en voient la couleur (palier A avant
-    B, cf. `test_plan_workloads_grow_before_processes`)."""
-    plan = _plan(50)
+    palier nominal est 50 (< 51) — l'alerte compte deux lignes d'en-tête,
+    titre + en-têtes de colonnes (`_alert_block_height`) — et l'unique ligne
+    de surplus va aux workloads avant que les processus n'en voient la
+    couleur (palier A avant B, cf. `test_plan_workloads_grow_before_processes`)."""
+    plan = _plan(51)
     assert plan["vms"] + plan["containers"] == 11
     assert plan["alert"] == 10
     assert plan["processlist"] >= _NOMINAL_PROCESSES
@@ -1741,11 +2273,13 @@ def test_plan_on_a_degenerate_height_does_not_crash():
 
 
 def _alert_history(n):
+    # Distinct `key` per event so each opens its own incident (§5.4) — a
+    # repeated `(plugin, key, field)` tuple would collapse into one.
     return [
         {
             "ts": f"2026-08-05T10:{i:02d}:00+00:00",
             "plugin": "cpu",
-            "key": None,
+            "key": f"core{i}",
             "field": "total",
             "level": "warning",
             "previous_level": "ok",
@@ -1759,7 +2293,7 @@ def test_alert_limit_zero_renders_the_header_only():
     court-circuiter explicitement."""
     rows = render_alert_block(_alert_history(27), limit=0)
     assert len(rows) == 1
-    assert "27 total" in "".join(c.text for c in rows[0].cells)
+    assert "ALERTS" in "".join(c.text for c in rows[0].cells)
 
 
 def test_alert_limit_is_read_from_the_row_budget():
@@ -1771,7 +2305,8 @@ def test_alert_limit_is_read_from_the_row_budget():
         view={"row_budget": {"alert": 4}},
     )
     alert_block = [b for b in frame.right if b.name == "alert"][0]
-    assert len(alert_block.rows) == 1 + 4
+    # title + column header + 4 data rows.
+    assert len(alert_block.rows) == 2 + 4
 
 
 def test_alert_without_row_budget_keeps_the_default_limit():
@@ -1782,4 +2317,5 @@ def test_alert_without_row_budget_keeps_the_default_limit():
         alerts_history=_alert_history(27),
     )
     alert_block = [b for b in frame.right if b.name == "alert"][0]
-    assert len(alert_block.rows) == 1 + 10
+    # title + column header + 10 data rows (the default limit).
+    assert len(alert_block.rows) == 2 + 10

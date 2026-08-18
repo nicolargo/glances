@@ -34,6 +34,7 @@ def fake_store():
 def fake_alerts():
     alerts = MagicMock()
     alerts.get_history.return_value = []
+    alerts.get_ongoing.return_value = {}
     return alerts
 
 
@@ -644,6 +645,29 @@ def test_build_view_byte_defaults_false(fake_store, fake_alerts, fake_config):
     assert tui._byte is False
     view = tui._build_view(max_x=200)
     assert view["byte"] is False
+
+
+def test_build_view_allows_unicode_by_default(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._build_view(max_x=100)["unicode"] is True
+
+
+def test_build_view_forbids_unicode_when_disable_unicode_is_set(fake_store, fake_alerts, fake_config):
+    """--disable-unicode must reach the renderers, v4 parity."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("mem", False)],
+        fields_by_plugin={"mem": {}},
+        refresh_interval=0.01,
+        disable_unicode=True,
+    )
+    assert tui._build_view(max_x=100)["unicode"] is False
 
 
 def test_tui_v5_full_quicklook_hides_siblings_end_to_end(fake_store, fake_alerts, fake_config):
@@ -1781,6 +1805,7 @@ def make_tui_with_top(fake_alerts, fake_config):
         store.as_dict.return_value = {name: dict(p) for name, p in _TOP_PAYLOADS.items()}
         alerts = MagicMock()
         alerts.get_history.return_value = []
+        alerts.get_ongoing.return_value = {}
         alerts.is_initializing.return_value = False
         return tui_mod.TuiV5(
             store=store,
@@ -1866,7 +1891,7 @@ def test_extreme_narrow_keeps_protected_blocks(make_tui_with_top):
 #
 # The processlist block is painted in the RIGHT sidebar at
 # ``right_width = max_x - left_width - _SIDEBAR_SEPARATOR_GAP``. ``TuiV5``
-# computes that width and feeds it to the renderer as ``view["proclist_width"]``
+# computes that width and feeds it to the renderer as ``view["right_width"]``
 # so it can drop low-priority columns to keep ``Command`` readable. A wide
 # terminal leaves enough room for all 13 columns; a narrow one forces a drop.
 # A realistic processlist payload + at least one LEFT plugin (network) make the
@@ -1954,6 +1979,7 @@ def make_tui_with_body(fake_alerts, fake_config):
         store.as_dict.return_value = {name: dict(p) for name, p in _BODY_PAYLOADS.items()}
         alerts = MagicMock()
         alerts.get_history.return_value = []
+        alerts.get_ongoing.return_value = {}
         alerts.is_initializing.return_value = False
         return tui_mod.TuiV5(
             store=store,
@@ -1970,7 +1996,7 @@ def make_tui_with_body(fake_alerts, fake_config):
     return _factory
 
 
-def test_proclist_width_passed_and_narrows_columns(make_tui_with_body):
+def test_right_width_passed_and_narrows_columns(make_tui_with_body):
     """A narrow terminal: the right sidebar is small, so the processlist
     renderer drops columns (fewer than the full 13 header cells) while always
     keeping ``Command``."""
@@ -1989,6 +2015,125 @@ def test_wide_terminal_keeps_all_proclist_columns(make_tui_with_body):
     frame = tui._build_fitted_frame(max_x=400)
     proc = next(b for b in frame.right if b.name == "processlist")
     assert len(proc.rows[0].cells) == 13
+
+
+def test_right_width_is_published_even_without_a_processlist_block(fake_alerts, fake_config):
+    """The alert block always exists in the RIGHT column, so the width hint
+    must not be gated on a processlist block being present."""
+    from unittest.mock import MagicMock
+
+    store = MagicMock()
+    store.as_dict.return_value = {}
+    alerts = MagicMock()
+    alerts.get_history.return_value = []
+    alerts.is_initializing.return_value = False
+    alerts.get_ongoing.return_value = {}
+    tui = _tui_with(store, alerts, fake_config, [], {})
+
+    frame = tui._build_fitted_frame(max_x=100, max_y=40)
+    assert [b.name for b in frame.right] == ["alert"]  # no processlist block present
+    view = tui._build_view(100)
+    tui._fit_right_width(view, frame, 100)
+    assert isinstance(view["right_width"], int)
+    assert view["right_width"] > 0
+
+
+def test_right_width_is_not_published_when_the_right_column_is_empty(fake_alerts, fake_config):
+    from unittest.mock import MagicMock
+
+    from glances.outputs.curses_renderer_v5 import Frame
+
+    store = MagicMock()
+    store.as_dict.return_value = {}
+    tui = _tui_with(store, fake_alerts, fake_config, [], {})
+    view = tui._build_view(100)
+    empty = Frame(header=[], top=[], left=[], right=[])
+    tui._fit_right_width(view, empty, 100)
+    assert "right_width" not in view
+
+
+def test_only_right_width_key_is_published(make_tui_with_body):
+    """One mechanism, one name — the retired processlist-only key is gone.
+
+    Built from two literal fragments (rather than the name itself) so this
+    regression test does not itself reintroduce the retired key into the
+    codebase."""
+    tui = make_tui_with_body()
+    view = tui._build_view(100)
+    frame = tui._build_fitted_frame(max_x=100, max_y=40)
+    tui._fit_right_width(view, frame, 100)
+    retired_key = "proclist" + "_width"
+    assert retired_key not in view
+    assert view["right_width"] > 0
+
+
+def test_alert_block_still_renders_last_in_the_right_column(make_tui_with_body):
+    """§11 — moving the append before the sort must not move the block."""
+    tui = make_tui_with_body()
+    frame = tui._build_fitted_frame(max_x=120, max_y=45)
+    assert frame.right[-1].name == "alert"
+
+
+def test_alert_block_is_appended_exactly_once(make_tui_with_body):
+    tui = make_tui_with_body()
+    frame = tui._build_fitted_frame(max_x=120, max_y=45)
+    assert [b.name for b in frame.right].count("alert") == 1
+
+
+def test_alert_block_never_overflows_the_right_column(make_tui_with_body):
+    """No emitted row exceeds the painted block width, at any terminal size.
+
+    ``make_tui_with_body``'s default alerts stub is empty history / no
+    ongoing alerts, which collapses the block to the 1-row placeholder and
+    never exercises the grid at all. Give it 20 ongoing (fully-evicted, no
+    matching history) incidents so the grid genuinely renders, and compare
+    against the real painted width (``view["right_width"]``), not ``max_x``
+    — the alert block is only one of several blocks sharing the row.
+    """
+    tui = make_tui_with_body()
+    tui.alerts.get_history.return_value = []
+    tui.alerts.get_ongoing.return_value = {("cpu", f"core{i}", "total"): "warning" for i in range(20)}
+    for max_x in (80, 96, 120, 200):
+        view = tui._build_view(max_x)
+        frame = tui._build_fitted_frame(max_x=max_x, max_y=45)
+        frame = tui._fit_right_width(view, frame, max_x)
+        block = next(b for b in frame.right if b.name == "alert")
+        assert len(block.rows) > 1, "grid did not actually render"
+        assert block.width <= view["right_width"]
+
+
+def test_right_width_rebuild_fires_every_repaint_not_just_on_resize(make_tui_with_body, monkeypatch):
+    """Pins CURRENT behaviour — does not endorse it.
+
+    ``_build_view`` never seeds a prior ``right_width`` into the view it
+    returns, so ``_fit_right_width``'s "did the value change" check is always
+    true and its extra ``build_frame`` call fires on EVERY repaint, even at
+    an unchanged width — unlike ``_fit_right_column``'s cached
+    ``row_budget``, which short-circuits once the plan stops changing. If
+    width caching is added later to close this gap, the call counts below
+    will drop and this test must be updated deliberately, not silently."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = make_tui_with_body()
+    calls = []
+    original_build_frame = tui_mod.build_frame
+
+    def spy(*args, **kwargs):
+        calls.append(1)
+        return original_build_frame(*args, **kwargs)
+
+    monkeypatch.setattr(tui_mod, "build_frame", spy)
+
+    tui._build_fitted_frame(max_x=95)
+    first_frame_calls = len(calls)
+    calls.clear()
+    tui._build_fitted_frame(max_x=95)  # same width again — no resize
+    second_frame_calls = len(calls)
+
+    # Both frames pay the extra rebuild — the count does NOT drop to 1 on the
+    # second, unchanged-width call. This is the exact defect the review found.
+    assert first_frame_calls == 2
+    assert second_frame_calls == 2
 
 
 def test_hide_gpu_is_last_cascade_step():
@@ -2455,7 +2600,24 @@ def test_right_column_never_overflows_across_heights(fake_alerts, fake_config, m
         "containers": {"data": containers, "_levels": {}, "disable_stats": []},
         **{name: dict(p) for name, p in _TOP_PAYLOADS.items()},
     }
-    fake_alerts.get_history.return_value = []
+    # A populated, still-ongoing alert history — not `[]` — so the grid
+    # actually renders (title + column-header + incident rows) at every
+    # swept height, instead of collapsing to the single-row "no alert"
+    # line. Distinct `field`s so each event opens its own incident
+    # (`_derive_incidents` groups by `(plugin, key, field)`).
+    alert_history = [
+        {
+            "ts": f"2026-08-05T10:{i:02d}:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": f"metric{i}",
+            "level": "warning",
+            "previous_level": "ok",
+        }
+        for i in range(30)
+    ]
+    fake_alerts.get_history.return_value = alert_history
+    fake_alerts.get_ongoing.return_value = {("cpu", None, f"metric{i}"): "warning" for i in range(30)}
 
     tui = _tui_with(
         store,

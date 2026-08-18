@@ -1,10 +1,36 @@
 # Glances v5 — G7 design (alert presentation)
 
-**Date:** 2026-08-01
+**Date:** 2026-08-01, revised 2026-08-16
 **Phase:** 2, group **G7** (order G0→G1→G2→G3→G4A→G4B→G5→G6A→G6B→G6C→**G7**)
-**Status:** design — **not approved**. Two decisions block the plans pass: §4.1
-(scope: presentation-only vs engine enrichment) and §10.1 (top processes).
-**Predecessor:** G6C (amps + irq + cloud + mpp) — must land first.
+**Status:** design — **approved** (2026-08-16). §4.1 is decided (option **C**),
+which makes §10.1 moot for this cycle. §5.6 (incident model), §6.2/§6.3 (the
+[A] grid), §6.5 (unicode), §8, §9 and §10.3 are resolved below. Ready for the
+plans pass.
+**Predecessor:** G6C (amps + irq + cloud + mpp) — **landed** (`f40067c5`).
+
+## 0. Revision log — 2026-08-16
+
+Terminology, fixed once: this document says **MAIN column** where the code
+says `frame.right` / `RIGHT_SLOT`. They are the same thing.
+
+The `develop-v5` state of §2 was read at `80167a35`. Two things moved since,
+both from the right-column vertical-fit work (`55e68387`):
+
+**0.1** — `alerts_limit` is no longer dead surface. It feeds
+`row_budget(view, "alert", alerts_limit)` (`curses_renderer_v5.py:991`) and
+acts as the fallback used when `view["row_budget"]` is absent (export, tests,
+direct renderer calls). The effective cap is the dynamic budget, whose
+nominal is `_NOMINAL_ALERTS = 10`. This retires §8 point 2 — see §8.
+
+**0.2** — Line references in §2 have drifted (`render_alert_block` is now
+`:521`). They are indicative; re-read before editing.
+
+Still true as written: `[alerts]` is **absent** from `conf/glances.conf`, and
+`glances_curses_v5.py:529` still does not pass `alerts_limit`.
+
+One assumption in §6.5 turned out to be **false** and is resolved there: the
+v5 renderer has no unicode flag, and no `render_curses_v5.py` emits a single
+non-ASCII character today.
 
 ## 1. Goal & scope
 
@@ -107,9 +133,8 @@ finished event shorter than the threshold*; v5 `min_duration_seconds`
 *debounces a transition before it commits*. Same intent (suppress flapping),
 different mechanism, different observable behaviour.
 
-The renderer's `alerts_limit` parameter (`:681`, default 10) is **never
-passed** by `glances_curses_v5.py:489-495`, so the block cap is hardcoded at
-10 with no config path.
+The renderer's `alerts_limit` parameter (default 10) is still never passed by
+`glances_curses_v5.py`, but it is no longer a hardcoded cap — see §0.1.
 
 ### 2.5 Key bindings
 
@@ -176,7 +201,7 @@ None of those five columns can be rendered from the current v5 event dict.
 So G7 cannot be presentation-only *and* deliver the redesign. That is the
 decision below.
 
-### 4.1 DECISION REQUIRED — G7 scope
+### 4.1 DECIDED (2026-08-16) — G7 scope = option **C**
 
 | Option | Delivers | Cost | Consequence |
 |---|---|---|---|
@@ -184,13 +209,19 @@ decision below.
 | **B — engine + presentation** | the full §6 grid | episode aggregation in `alerts_v5.py` + renderer, 2–3 plans, breaks `/api/5/alert` | Delivers the design. Enlarges G7 well beyond "presentation-only" and touches the one module every plugin's alerts flow through — regression surface is the whole product, not one plugin. |
 | **C — A now, B as a Phase 2.X follow-up** | A's scope, with §5.5/§7 kept as the recorded target | A's cost now | Ships the legibility fix inside Phase 2 without putting `alerts_v5.py` on the Phase 2 critical path. |
 
-**Recommendation: C.** The engine work is genuinely valuable but it is not
-plugin migration, and Phase 2's goal is v4 feature parity for local
-monitoring. Landing B inside the final Phase 2 slot puts a rewrite of the
-shared alert engine between the branch and the end of the phase.
+**Decision: C.** The engine work is genuinely valuable but it is not plugin
+migration, and Phase 2's goal is v4 feature parity for local monitoring.
+Landing B inside the final Phase 2 slot puts a rewrite of the shared alert
+engine between the branch and the end of the phase.
 
-Everything below marked **[B]** applies only if B or the follow-up half of C
-is approved. Everything marked **[A]** is in scope under all three options.
+Everything marked **[B]** is therefore deferred to Phase 2.X and is recorded
+here as the target, not as work to execute now. Everything marked **[A]** is
+G7 scope.
+
+One qualification on "renderer only": §5.6 adds a **read-only** accessor to
+`alerts_v5.py`. It reads existing state, writes nothing, is not on the ingest
+path, and changes neither the event shape nor `/api/5/alert`. It is not the
+episode model of B.
 
 ## 5. Decisions
 
@@ -211,16 +242,17 @@ narrowing the terminal degrades gracefully. See §6.
 Two-key sort `(is_finished, -begin)`. Ongoing first, reverse-chronological
 within each group. Fixes 3.1.5.
 
-Under **[A]** "is_finished" is derived exactly as the current renderer
-derives *ongoing* (§2.2): latest event per `(plugin, key, field)` with a
-non-`ok` level.
+"is_finished" is derived per §5.6, from `get_ongoing()` — **not** from the
+current renderer's "latest event per tuple" heuristic (§2.2), which cannot
+see an incident whose transitions have aged out of the history.
 
 ### 5.4 One row per incident — **[A]**
 
-A `→ ok` transition must not occupy its own row. It resolves the row already
-present for its tuple, flipping its glyph and freezing its duration. This is
-the §3.1.6 fix and it is achievable without engine work: the renderer already
-groups by tuple.
+A `→ ok` transition must not occupy its own row. It closes the incident
+already open for its tuple, flipping its glyph and freezing its duration.
+This is the §3.1.6 fix. Note the distinction §5.6 makes precise: one row per
+**incident**, not one row per tuple — a tuple that alerted, recovered and
+alerted again contributes two rows.
 
 ### 5.5 Episode model and `×N` — **[B]**
 
@@ -235,6 +267,65 @@ default. That default cannot be carried into v5: v5 has never coalesced, so
 enabling it by default would silently merge events that deployments and the
 REST API currently see as distinct.
 
+### 5.6 Incident derivation — **[A]**
+
+§5.3 and §5.4 both need a notion of *incident* that the engine does not
+store. Under [A] the incident is **derived at render time** and never
+persisted. This section is the contract; it replaces the renderer's current
+"latest event per tuple" heuristic (§2.2).
+
+**Two inputs, two roles.**
+
+1. `GlancesAlerts.get_ongoing()` — **new, read-only**. Returns
+   `{(plugin, key, field): committed_level}` restricted to entries whose
+   `committed_level != "ok"`, derived from `self._state` (§2.1). It is the
+   authority on *what is active right now*.
+2. `get_history()` — unchanged. Supplies the *chronology*: when each incident
+   opened, and which levels it went through.
+
+Why both: `_state` is unbounded, the history `deque` is not. An incident that
+is still active but whose transitions have aged out of the 200-event ring is
+invisible in today's block — which is exactly the failure mode §3.1.5 sets
+out to fix. Deriving "ongoing" from the history alone would leave that hole
+open.
+
+`get_ongoing()` is plumbed to the renderer as an `alerts_ongoing` parameter
+of `build_frame`, symmetric with `alerts_history`.
+
+**Segmentation.** Walk the history chronologically. For each
+`(plugin, key, field)` tuple: an incident **opens** on the first transition
+to a non-`ok` level while no incident is open for that tuple, and **closes**
+on the transition to `ok`. `begin` is the opening transition's `ts`; `end` is
+the closing transition's `ts`. A tuple may therefore contribute several rows
+— one per incident, not one per tuple. Intermediate escalations
+(`warning → critical`) mutate the open incident; they never open a new one.
+
+**Level shown = the maximum reached during the incident**, i.e.
+`max(levels of the incident's transitions, committed_level if still open)`.
+This is v4 parity (§2.6, monotonic `state`). Accepted consequence: an
+incident that de-escalated from `critical` to `warning` and is still active
+keeps showing `CRITICAL` in the block while the owning plugin's cell shows
+the warning colour. The block is a journal of what happened, not a gauge of
+where we are (§5.1).
+
+**Accepted loss:** `previous → level` is no longer displayed. That is the
+§3.1.2 fix, and it means an escalation is visible only through the final
+level. `is_initial` consequently needs no special case — no row shows an
+arrow any more, so the §11 guarantee holds by construction.
+
+**Reconciliation, when `get_ongoing()` and the history disagree.** The
+authority is `get_ongoing()`; the history only degrades what can be shown:
+
+| Case | Rendered |
+|---|---|
+| Opening transition present | exact `begin`, exact duration |
+| Tuple ongoing, opening transition evicted, later ones survive | duration prefixed `>`, measured from the oldest surviving transition |
+| Tuple ongoing, all transitions evicted | `TIME` = `--:--:--`, duration blank, level = `committed_level` |
+| Closed incident | never reconciled — the history is complete for it by definition |
+
+The empty-history early return of §2.2 stays as-is: a commit always produces
+an event, so an empty history implies an empty `get_ongoing()`.
+
 ## 6. TUI rendering specification — **[A]** unless noted
 
 ### 6.1 Width budget — corrected for v5
@@ -244,57 +335,144 @@ block lives in the MAIN column, whose width is
 `terminal_width − LEFT_SIDEBAR (34) − separator`. A 96-column terminal gives
 the block ~61 columns, not 96. **Every threshold in §6.3 is a block width.**
 
-### 6.2 Column grid
+**Where the width comes from.** §3.1.4 is real: `render_alert_block` receives
+no width. The RIGHT column already computes exactly this number —
+`_fit_proclist_width` (`glances_curses_v5.py:621`) publishes
+`right_width = max_x − left_width − _SIDEBAR_SEPARATOR_GAP` as
+`view["proclist_width"]`, and rebuilds once when it changes.
 
-Zero-based offsets within the block, at full width:
+G7 generalises it rather than adding a second mechanism: rename the key to
+`view["right_width"]` and widen the guard from "a processlist block exists"
+to "the right column is non-empty", since the alert block is always present.
+One call site to adjust in `processlist/render_curses_v5.py:356`. Pure
+rename, no behaviour change: the rebuild still fires only when the value
+actually changes (first frame, resize).
 
-| Offset | Width | Content | Align | Scope |
-|---|---|---|---|---|
-| 0 | 1 | State glyph | — | A |
-| 2 | 8 | Start time `HH:MM:SS` | left | A |
-| 12 | 8 | Duration | right | A |
-| 22 | 9 | Source (`plugin[key]`) + `×N` | left / `×N` right | A (`×N` = B) |
-| 31 | 7 | `MAX` | right | **B** |
-| 40 | 7 | `AVG` | right | **B** |
-| 49 | 7 | `MIN` | right | **B** |
-| 58 | rest | Top processes | left, `…` on truncation | **B** |
+### 6.2 Column grid — **[A]**, the grid G7 ships
 
-Under **[A]** the columns after `Source` are the `field` name and the level
-text; the numeric block and top-process column are absent, so the full-width
-grid ends around offset 45.
+Zero-based offsets within a block of width `W`:
 
-Header row, same offsets:
+| Offset | Width | Content | Align |
+|---|---|---|---|
+| 0 | 1 | State glyph | — |
+| 2 | 8 | `TIME` | left |
+| 12 | 8 | `DURATION` | right |
+| 22 | elastic | `TARGET` = `plugin[key].field`, `…` on truncation | left |
+| `W − 8` | 8 | `LEVEL` | right |
+
+`TARGET` takes whatever is left: `W − 22 − 1 − 8` with `LEVEL` present,
+`W − 22` without.
 
 ```
-  TIME      DURATION  SOURCE       MAX     AVG     MIN  TOP PROCESSES
+ALERTS  2 ongoing · 3 resolved ─────────────────────────
+  TIME      DURATION  TARGET                      LEVEL
+● 14:02:11     2m58s  Cpu total                 CRITICAL
+● 14:01:03     4m06s  Containers nginx mem usa…  WARNING
+○ 13:58:40       43s  Fs /                       WARNING
 ```
+
+Source and field are one column, not two. Both have wildly variable width in
+practice (`cpu` vs `containers[nginx]`, `total` vs
+`bytes_sent_rate_per_sec`); fixing them separately means either heavy
+truncation or broken alignment — the §3.1.1 defect this grid exists to fix.
+Merged, every column but one is fixed, so the block aligns at any width.
+
+**`TARGET` is prose, not an identifier (revised 2026-08-18).** It was first
+specified as the raw `plugin[key].field` triple. That reads as something to
+paste into a query, not as something to understand at a glance, so it is now
+humanised by `_humanise_target`:
+
+| Incident | Rendered |
+|---|---|
+| `cpu` / — / `system` | `Cpu system` |
+| `sensors` / `i915 0` / `value` | `Sensors i915 0` |
+| `fs` / `/` / `percent` | `Fs /` |
+| `containers` / `nginx` / `mem_usage` | `Containers nginx mem usage` |
+
+Rules: only the plugin name is capitalised, and only its first letter — there
+is deliberately no acronym table, so `gpu` renders `Gpu`. The key is kept
+verbatim: mountpoints, device names and container names are already
+human-readable, and rewriting them would misreport what the engine watched.
+Underscores in the field become spaces.
+
+A field whose **whole** name is in `_ALERT_GENERIC_FIELDS` (`value`,
+`percent`) is dropped — the plugin and key already say what the alert is
+about. The match is on the entire name, never a suffix, so
+`memory_usage_percent` keeps every word. That list is closed and grounded on
+the fields that can actually raise an alert; widening it erases information
+from a row, so it does not grow without redoing that check.
+
+Deliberately NOT done: threading `fields_by_plugin` into `render_alert_block`
+to use `field_label()`. No plugin schema in the codebase populates `label`, so
+the lookup would return the raw field name for every field that matters here.
+
+`TIME` stays 8 columns wide: `HH:MM:SS` for an event from today, `MM-DD`
+otherwise. **Divergence from current v5 behaviour** — `_format_alert_time`
+returns 14 characters for an older event, which no fixed grid can absorb.
+The information it carried is now covered by `DURATION` (`2d04h`).
+
+### 6.2b Column grid — **[B]**, the Phase 2.X target
+
+Recorded so Phase 2.X does not re-litigate it. The [B] columns are
+**inserted into the §6.2 grid**, between `TARGET` and `LEVEL`, so the
+migration adds columns without moving the ones already shipped:
+
+| Order | Width | Content | Align |
+|---|---|---|---|
+| … | … | glyph, `TIME`, `DURATION` as §6.2 | |
+| 4 | elastic | `TARGET` + `×N` | left / `×N` right |
+| 5 | 7 | `MAX` | right |
+| 6 | 7 | `AVG` | right |
+| 7 | 7 | `MIN` | right |
+| 8 | rest | Top processes | left, `…` on truncation |
+| 9 | 8 | `LEVEL` | right |
+
+`×N` renders only when `episodes > 1` (§5.5), i.e. never at the default.
+
+### 6.2c Title row and the empty case — **[A]**
 
 Block title row, replacing `ALERT (n ongoing / m total)`:
 
 ```
-ALERTS  2 ongoing · 4 resolved ──────────────
+ALERTS  2 ongoing · 3 resolved ──────────────
 ```
+
+`ongoing` is `len(get_ongoing())`; `resolved` counts the **closed incidents**
+derived from the whole history (§5.6), not the events in it and not only the
+rows displayed.
 
 The empty-history collapse of §2.2 (`ALERT (initializing)` /
 `ALERT (no alert detected)`) is **existing behaviour and must be preserved** —
 it is not a placeholder to be replaced by an empty grid.
 
-### 6.3 Width degradation
+The column header row (`  TIME      DURATION  TARGET …`) is a second
+non-data row. `row_budget`'s contract excludes *the* header row, singular.
+Confirm in plans that emitting two non-data rows does not break the vertical
+fit's accounting; if it does, fold the column labels into the title row
+rather than changing the budget contract.
 
-Columns are dropped right to left. Glyph, `TIME` and `SOURCE` are never
-dropped; `MAX` is never dropped when present.
+### 6.3 Width degradation — **[A]**
 
-| Block width | Rendered up to |
+Columns are dropped right to left. Glyph, `TIME` and `TARGET` are never
+dropped — they are the minimum that still identifies an alert.
+
+`TARGET` has a floor of 12 columns; a step is taken as soon as the next
+column down would starve it below that.
+
+| Block width `W` | Rendered |
 |---|---|
-| ≥ 96 | full |
-| 78–95 | `TOP PROCESSES` truncated to `width − 58`, `…` suffix |
-| 62–77 | `TOP PROCESSES` dropped |
-| 47–61 | `MIN` dropped |
-| 38–46 | `AVG` dropped |
-| < 38 | `DURATION` dropped |
+| ≥ 43 | full grid, `TARGET` = `W − 31` |
+| 34 ≤ `W` < 43 | `LEVEL` dropped, `TARGET` = `W − 22` |
+| < 34 | `DURATION` dropped, `TARGET` = `W − 12` |
+
+Dropping `LEVEL` first is only acceptable because the glyph carries the level
+colour (§6.5) — below 43 columns the block degrades to colour-only severity.
 
 The title row shortens in the same order: separator dashes first, then the
 `resolved` counter.
+
+Under **[B]** the ladder gains its own steps above 43 (top processes
+truncated, then dropped, then `MIN`, then `AVG`), leaving §6.3 as the tail.
 
 ### 6.4 Duration format
 
@@ -318,21 +496,80 @@ glyph carries that state, which is what frees the column.
 | Glyph (ASCII) | `*` | `-` |
 | Glyph colour | level | level |
 | `MAX` colour **[B]** | level | level |
-| `SOURCE` | default | dimmed |
-| `TIME`, `DURATION`, `AVG`, `MIN`, `TOP` | dimmed | dimmed |
+| `TARGET`, `TIME`, `DURATION` | default | default |
+| `LEVEL` | level | **default** |
 
-ASCII fallback must reuse the existing global unicode flag; **no new option**.
-Confirm during plans that such a flag exists in the v5 renderer — if it does
-not, the ASCII variant is an open question, not an assumption.
+**Revised 2026-08-18: colour in the `LEVEL` column means "still happening".**
+It first carried the level colour for resolved incidents too, which left the
+whole block coloured end to end and drowned the active rows among the settled
+ones. A resolved incident's level text is now `DEFAULT`; its **glyph keeps the
+level colour**, so the severity it reached stays readable. That split is
+deliberate — the glyph answers "how bad was it", the level colour answers "is
+it still going".
 
-Per the standing TUI rule: the block title is always `ColorRole.HEADER` and
-is never escalated by a level. The alert lives on the value.
+**Correction (2026-08-16): no dimming.** Earlier revisions of this table
+called for dimmed cells. `ColorRole` (`curses_renderer_v5.py:110`) offers
+`DEFAULT / OK / CAREFUL / WARNING / CRITICAL / HEADER` and nothing else — a
+dim attribute does not exist in the v5 renderer, and adding one means new
+colour-pair infrastructure, which is out of G7 scope. Severity is carried by
+the glyph colour and the `LEVEL` cell; ongoing versus resolved is carried by
+the glyph shape. Revisit only if a `DIM` role is introduced for other
+reasons.
+
+`prominent` is forwarded onto the `LEVEL` cell. When `LEVEL` is dropped by
+§6.3, it moves onto the glyph cell so the flag is never silently lost — the
+G6B defect class named in §11.
+
+**Unicode — resolved (2026-08-16).** The assumption that a global unicode
+flag exists in the v5 renderer is **false**: there is none, and no
+`render_curses_v5.py` emits a non-ASCII character today. `●`/`○` and the
+title-row rule `─` would be the first.
+
+Decision: **mirror v4** — Unicode by default, ASCII (`*`, `-`, `-`) when
+`--disable-unicode` is passed. `args.disable_unicode` already exists
+(`main.py:658`) and reaches `main_v5`; what is missing is publishing it into
+`view` and reading it in the renderer, ~5 lines. This is still "no new
+option" as §6.5 required, and it establishes in v5 the mechanism v4 has in
+`glances/outputs/glances_unicode.py` — the next screen that wants a glyph
+will need it. Rendering Unicode unconditionally was rejected: it silently
+breaks a documented v4 option on restricted terminals.
+
+G7 wires the flag; it does **not** port `glances_unicode.py`. Only the alert
+block consumes it for now.
+
+**The title's state signal — revised 2026-08-18.** The standing TUI rule was
+written as "the block title is always `ColorRole.HEADER`". Its *purpose* is
+that an alert must never escalate a heading — the alert lives on the value.
+The rule is therefore restated in the form that actually carries that intent:
+
+> No element of a block title may ever carry an alert level colour
+> (`careful` / `warning` / `critical`).
+
+That leaves room for the block's one at-a-glance state signal, which the
+"always HEADER" phrasing forbade for no benefit: the title is emitted as
+glued cells, and the **ongoing-count fragment alone** is coloured — `OK`
+(green) when `n_ongoing == 0`, `DEFAULT` otherwise. `ALERTS`, the `resolved`
+clause and the trailing rule stay `HEADER`, so the block still reads as a
+titled block rather than a coloured banner. Green is reassurance, not
+escalation.
+
+The empty-history collapse of §2.2 is split the same way, for the same
+reason: `ALERT ` keeps `HEADER`, and only the parenthesised state fragment is
+coloured. `(no alert detected)` is `OK` — a settled engine with nothing to
+report *is* the all-clear. `(initializing)` stays `DEFAULT`: warmup is not an
+all-clear, and colouring it green would claim a healthy system before the
+engine can fire at all.
+
+Because the title is now several cells, `glue=True` on every fragment after
+the first is load-bearing: without it the painter inserts a separator and the
+rendered title shifts. §6.3's degradation ladder is unchanged but now cuts
+across cells at its hard-truncation step.
 
 ## 7. Data model — **[B]**
 
-Only if B is approved. Retargeted from the original v4 proposal
-(`GlancesEvent.episodes`), which does not apply: there is no `GlancesEvent`
-in v5.
+Deferred to Phase 2.X by the §4.1 decision. Recorded, not executed in G7.
+Retargeted from the original v4 proposal (`GlancesEvent.episodes`), which
+does not apply: there is no `GlancesEvent` in v5.
 
 The v5 change is to `alerts_v5.py`: the history stops being a log of
 transitions and becomes a list of **incident records**, one per
@@ -376,13 +613,19 @@ Constraints on the plans pass:
 
 ## 8. Configuration
 
-**[A]** — no new key. Two existing gaps to close in the same slot:
+**[A]** — no new key. One gap to close in this slot:
 
 1. Add the `[alerts]` section to `conf/glances.conf` with its three real keys
-   (§2.4), commented at their current defaults so behaviour is unchanged.
-   They are undocumented today.
-2. Wire `alerts_limit` to config instead of the hardcoded 10 (§2.4), or
-   delete the parameter. A parameter no caller passes is dead surface.
+   (§2.4), **commented** at their current defaults so no existing deployment
+   changes behaviour. They are undocumented today. Same treatment in
+   `docs/config.rst`.
+
+Point 2 of the original §8 — "wire `alerts_limit` to config or delete it" —
+is **withdrawn** (§0.1). The parameter is no longer dead surface: it is the
+fallback used when `view["row_budget"]` is absent. The real knob is
+`_NOMINAL_ALERTS`, which belongs to the right-column vertical-fit design, not
+to G7. Adding an `[alerts]` row-cap key on top of the vertical budget would
+give the block two competing height authorities.
 
 **[B]** — one new key, coalescing window, default `0` = disabled (§5.5).
 
@@ -396,16 +639,19 @@ ever done anything in v5.
 
 The real question is whether a clear action is warranted at all. The history
 is a bounded `deque`; it self-trims. Under §5.4 a resolved incident already
-collapses into one row. **Default position: no new key in G7.** Bind `x` to
-"clear resolved" only if the plans pass shows the block still saturating with
-resolved rows under §5.4.
+collapses into one row, and under §5.3 ongoing incidents are pinned above
+resolved ones, so a saturated block drops resolved rows first — which is the
+right thing to lose.
+
+**Decided (2026-08-16): no new key binding in G7.** Revisit only if the block
+is observed saturating with resolved rows in practice.
 
 Any binding added must also be added to `_HOTKEYS` with its `group` / `desc`
 so the `h` help overlay stays complete.
 
 ## 10. Open questions
 
-### 10.1 Top processes on `warning` events — **[B]**, DECISION REQUIRED
+### 10.1 Top processes on `warning` events — **[B]**, deferred with §7
 
 v4 accumulates `top_dict` only when `state == "CRITICAL"` and resets it
 otherwise, so a v4 `WARNING` event always renders an empty `TOP` column, and
@@ -418,9 +664,23 @@ but it costs one process-sort per warning incident per cycle on the hot path
 (§7), for every plugin — v5 has no `alert`-plugin-local place to put that
 cost. **Quantify before deciding.**
 
-This question is moot under option A.
+Moot for G7 under the §4.1 decision. It becomes blocking again the moment
+Phase 2.X starts.
 
-### 10.2 Vertical budget of the MAIN column — out of scope, blocking final tuning
+### 10.2 Vertical budget of the MAIN column — **largely answered since**
+
+Superseded in part by the right-column vertical fit that landed in
+`55e68387`
+(`docs/superpowers/specs/2026-08-05-tui-v5-right-column-vertical-fit-design.md`):
+`plan_right_column` now turns the available height into a per-block row
+budget, the alert block is in `_ELASTIC_RIGHT`, its nominal is
+`_NOMINAL_ALERTS = 10`, and the shrink ladder gives it explicit steps
+(10 → 5 → 3 → header only). The questions below are therefore **answered**
+for the budget itself; what remains open for G7 is only whether the pinning
+of §5.3 makes the shrink ladder's behaviour undesirable, which the plans pass
+should check but not redesign.
+
+Original wording kept for the record:
 
 The alert block shares the MAIN column with `containers`, `vms`,
 `processcount`, `processlist`, `programlist` and (after G6C) `amps`. Each
@@ -441,10 +701,14 @@ To settle in a dedicated plan, not in G7:
 Until settled, the block keeps its 10-row cap and §6 assumes it renders
 whatever height it is given.
 
-### 10.3 Does the `"alert"` entry in `RIGHT_SLOT` stay?
+### 10.3 Does the `"alert"` entry in `RIGHT_SLOT` stay? — **decided**
 
-It is inert today (§2.2). Either remove it as dead surface, or make the
-append respect it. Decide in plans; do not leave both mechanisms.
+It stays, and becomes the single mechanism: move the `frame.right.append(...)`
+of the synthesized block to **before** the slot sort
+(`curses_renderer_v5.py:982`). `"alert"` is already last in `RIGHT_SLOT`, so
+the rendered order is unchanged and the duplicate mechanism disappears. The
+alternative — deleting the `RIGHT_SLOT` entry — was rejected because
+`slot_for("alert")` and `row_budget(view, "alert", …)` both key on that name.
 
 ## 11. Non-regression checklist
 
@@ -456,13 +720,21 @@ Applied before merge, in addition to the standard checklist:
 - [ ] Warmup and `is_initializing()` placeholders still render exactly as in
       §2.2, including the single-line collapse on empty history.
 - [ ] `min_duration_seconds` debounce untouched. **[A]**
-- [ ] `is_initial` events still render a bare level, never a `→` arrow.
+- [ ] `is_initial` events never render a `→` arrow — holds by construction
+      under §5.6, but assert it.
 - [ ] `prominent` is still forwarded onto the level cell — the G6B defect
       class (a renderer silently dropping `prominent`) must not reappear.
-- [ ] `GET /api/5/alert` payload is a superset of the current payload.
-- [ ] The block still renders last in the MAIN column and still collapses to
+- [ ] `GET /api/5/alert` payload is **byte-identical**, not merely a superset:
+      §5.6 adds no field. (The superset wording applies to **[B]** only.)
+- [ ] `get_ongoing()` writes nothing and is not called from the ingest path.
+- [ ] The block still renders last in the RIGHT column and still collapses to
       one line when the history is empty.
 - [ ] No emitted row exceeds the block width at any tested width.
+- [ ] `--disable-unicode` produces a pure-ASCII block.
+- [ ] The `view["proclist_width"]` → `view["right_width"]` rename leaves the
+      processlist responsive columns byte-identical at every tested width.
+- [ ] The vertical shrink ladder still degrades the block as designed
+      (10 → 5 → 3 → header only) with incident rows instead of event rows.
 - [ ] No new dependency.
 - [ ] **[B]** perf check on the ingest path, all plugins, blocking at +20%.
 
@@ -477,16 +749,29 @@ Applied before merge, in addition to the standard checklist:
 
 ## 13. Plan decomposition (after §4.1 is decided)
 
-Under the recommended option C:
+Under the decided option C:
 
-- **Plan 1 — alert block rendering** — §5.1–5.4, §6, §8.1–8.2, §10.3.
-  Renderer + tests + `conf/glances.conf` + `docs/`. Golden-output tests at
-  several block widths; no `alerts_v5.py` change.
-- **Plan 2 — Phase 2.X, engine episodes** — §5.5, §7, §10.1, plus the §6
-  columns marked **[B]**. Gated on a perf measurement, and on the API break
-  being acceptable at that point in the release cycle.
+- **Plan 1 — alert block rendering.** §5.1–5.4, §5.6, §6, §8.1, §10.3.
+  Closes G7 **and** Phase 2 on its own. Touches:
+  - `alerts_v5.py` — `get_ongoing()` only, read-only (§5.6).
+  - `curses_renderer_v5.py` — incident derivation, grid, degradation,
+    duration format, glyphs, `alerts_ongoing` parameter, append-before-sort.
+  - `glances_curses_v5.py` — pass `alerts_ongoing`, publish the unicode flag,
+    generalise `_fit_proclist_width` → `right_width`.
+  - `processlist/render_curses_v5.py` — the `right_width` rename, one line.
+  - `conf/glances.conf` + `docs/` — the `[alerts]` section.
+  - Tests: golden output at block widths 96 / 61 / 43 / 30 / 24; segmentation
+    (single incident, escalation, several incidents on one tuple, evicted
+    opener, fully evicted ongoing tuple, `is_initial`); ASCII fallback;
+    `/api/5/alert` unchanged.
 
-Under option A, Plan 1 alone closes G7 and Phase 2.
+  Sequencing note for the plans pass: the `right_width` rename and the
+  unicode plumbing are independent of the alert grid and can land as their
+  own steps first, keeping the grid change reviewable on its own.
+
+- **Plan 2 — Phase 2.X, engine episodes.** §5.5, §6.2b, §7, §10.1. Gated on a
+  perf measurement of the ingest path and on the `/api/5/alert` break being
+  acceptable at that point in the release cycle. Not part of Phase 2.
 
 ## 14. Release-note material (maintainer, release-time only)
 
@@ -496,6 +781,11 @@ Not an execution step. Recorded here so it is not lost:
   degradation on narrow terminals.
 - Ongoing alerts pinned to the top; a resolved alert updates its row instead
   of adding one.
+- The level transition (`warning → critical`) is no longer displayed; the row
+  shows the highest level the incident reached.
+- An alert older than today shows `MM-DD` instead of the full
+  `MM-DD HH:MM:SS` timestamp; its age is now carried by the duration column.
+- The block honours `--disable-unicode` (first v5 screen to do so).
 - `[alerts]` configuration section documented in `glances.conf` for the first
   time; key names differ from v4's `[alert]` section
   (`min_duration_seconds` / `history_size` / `warmup_cycles` vs

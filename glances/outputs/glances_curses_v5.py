@@ -193,6 +193,7 @@ class TuiV5(threading.Thread):
         fahrenheit: bool = False,
         hide_public_info: bool = False,
         byte: bool = False,
+        disable_unicode: bool = False,
     ) -> None:
         super().__init__(name="glances-tui-v5", daemon=True)
         self.store = store
@@ -237,6 +238,11 @@ class TuiV5(threading.Thread):
         # Network I/O unit for the containers renderer, seeded from --byte.
         # False (default) = bits, matching the v4 default.
         self._byte = bool(byte)
+        # v4 parity for `--disable-unicode`: when set, renderers must emit
+        # pure ASCII. v5 emitted no non-ASCII character at all until the
+        # alert block's state glyphs (design §6.5), so this is the first
+        # consumer — published as `view["unicode"]` (True = glyphs allowed).
+        self._unicode = not bool(disable_unicode)
         # Vertical scroll offset of the help overlay (rows). Reset to 0 each
         # time the overlay is opened; clamped to the content in ``_paint_help``
         # (which is the only place that knows the terminal height).
@@ -526,11 +532,13 @@ class TuiV5(threading.Thread):
         # empty history" — the alert block shows different placeholders for
         # the two cases.
         initializing = self.alerts.is_initializing() if self.alerts is not None else False
+        ongoing = self.alerts.get_ongoing() if self.alerts is not None else {}
         frame = build_frame(
             store_snapshot=snapshot,
             fields_by_plugin=self.fields_by_plugin,
             registry=self.registry,
             alerts_history=history,
+            alerts_ongoing=ongoing,
             alerts_initializing=initializing,
             view=view,
         )
@@ -588,7 +596,7 @@ class TuiV5(threading.Thread):
         frame = self._frame_for_view(view)
         if self._full_quicklook or self._top_fits(frame, max_x):
             frame = self._fit_header(view, frame, max_x)
-            frame = self._fit_proclist_width(view, frame, max_x)
+            frame = self._fit_right_width(view, frame, max_x)
             return frame if max_y is None else self._fit_right_column(view, frame, max_y)
         for key, val in _DEGRADE_STEPS:
             view[key] = val
@@ -596,7 +604,7 @@ class TuiV5(threading.Thread):
             if self._top_fits(frame, max_x):
                 break
         frame = self._fit_header(view, frame, max_x)
-        frame = self._fit_proclist_width(view, frame, max_x)
+        frame = self._fit_right_width(view, frame, max_x)
         return frame if max_y is None else self._fit_right_column(view, frame, max_y)
 
     def _fit_header(self, view: dict[str, Any], frame: Frame, max_x: int) -> Frame:
@@ -618,24 +626,30 @@ class TuiV5(threading.Thread):
                 break
         return frame
 
-    def _fit_proclist_width(self, view: dict[str, Any], frame: Frame, max_x: int) -> Frame:
-        """Tell the processlist renderer the width it will be painted at.
+    def _fit_right_width(self, view: dict[str, Any], frame: Frame, max_x: int) -> Frame:
+        """Tell the RIGHT-column renderers the width they will be painted at.
 
-        The processlist lives in the RIGHT sidebar, painted at
+        The right sidebar is painted at
         ``right_width = max_x - left_width - _SIDEBAR_SEPARATOR_GAP`` (mirrors
-        ``_paint``). Feeding that as ``view["proclist_width"]`` lets the renderer
-        drop low-priority columns to keep ``Command`` readable. ``left_width``
-        depends only on ``frame.left`` natural widths — NOT on processlist's own
-        columns — so a single extra rebuild settles the width. No-op (and no
-        rebuild) when no processlist block is present, so wide terminals and
-        the rest of the layout are unaffected.
+        ``_paint``). Feeding that as ``view["right_width"]`` lets the
+        processlist drop low-priority columns to keep ``Command`` readable,
+        and lets the alert block pick a grid that fits (design §6.1).
+
+        ``left_width`` depends only on ``frame.left`` natural widths — NOT on
+        any right-column renderer's own columns. ``_build_view`` never seeds a
+        prior ``right_width``, so the comparison below is always a change and
+        this extra rebuild fires on every repaint, not just on resize — it is
+        cheap and pure (idempotent), but unlike ``_fit_right_column`` it does
+        not short-circuit on an unchanged value. Seeding a cached width into
+        ``view`` the way ``row_budget`` is seeded (see ``_PREFIT_ROW_BUDGET``)
+        is what would let it do so.
         """
-        if not any(b.name == "processlist" for b in frame.right):
+        if not frame.right:
             return frame
         left_width = self._sidebar_split(frame, max_x)
         right_width = max(0, max_x - left_width - self._SIDEBAR_SEPARATOR_GAP)
-        if right_width and view.get("proclist_width") != right_width:
-            view["proclist_width"] = right_width
+        if right_width and view.get("right_width") != right_width:
+            view["right_width"] = right_width
             frame = self._frame_for_view(view)
         return frame
 
@@ -647,7 +661,7 @@ class TuiV5(threading.Thread):
         """Give each RIGHT-column block the number of rows the terminal height
         allows, then rebuild once if that changes anything.
 
-        Mirrors ``_fit_proclist_width`` on the vertical axis: the plan is
+        Mirrors ``_fit_right_width`` on the vertical axis: the plan is
         computed by the pure ``plan_right_column`` solver from the real item
         counts (``PluginBlock.data_count``), so a single rebuild settles it.
         """
@@ -765,6 +779,7 @@ class TuiV5(threading.Thread):
         view["fahrenheit"] = self._fahrenheit
         view["hide_public_info"] = self._hide_public_info
         view["byte"] = self._byte
+        view["unicode"] = self._unicode
         # Full mode: bars span (almost) the whole width; compact: a column.
         view["quicklook_width"] = max(20, max_x - 8) if self._full_quicklook else self._QUICKLOOK_COMPACT_WIDTH
         view["row_budget"] = dict(self._PREFIT_ROW_BUDGET)

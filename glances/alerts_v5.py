@@ -145,6 +145,28 @@ class GlancesAlerts:
         """Return the alert history as a list (most-recent-last)."""
         return list(self._history)
 
+    def get_ongoing(self) -> dict[tuple[str, str | None, str], str]:
+        """Return the currently non-``ok`` committed levels, keyed by tuple.
+
+        A read-only view over ``_state``. Unlike ``get_history()`` — a bounded
+        ring buffer — ``_state`` keeps one entry per watched
+        ``(plugin, key, field)`` for the lifetime of the process, so an alert
+        that has been active long enough for its transitions to age out of the
+        history is still reported here.
+
+        The TUI uses this as the authority on what is active; the history only
+        supplies the chronology (when an incident opened, which levels it went
+        through). Returns a fresh dict — callers may mutate it freely.
+
+        Never called from the ingest path, and it writes nothing: the alert
+        engine's observable behaviour is unchanged by its existence.
+        """
+        return {
+            state_key: state.committed_level
+            for state_key, state in self._state.items()
+            if state.committed_level != "ok"
+        }
+
     def is_initializing(self) -> bool:
         """Return ``True`` only while the alert engine *cannot have produced any
         event yet* — i.e. no plugin has finished its warmup window. Concretely,

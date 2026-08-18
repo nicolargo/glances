@@ -464,8 +464,8 @@ def test_render_fixed_columns_align_across_rows(payload, fields):
 #
 # The renderer drops fixed columns (order a→h: VIRT, TIME+, RES, USER, PID,
 # THR, S, NI) until the flexible ``Command`` column has at least 8 chars,
-# based on ``view["proclist_width"]``. CPU%, MEM%, R/s, W/s and Command are
-# never dropped. Absent ``proclist_width`` keeps every column.
+# based on ``view["right_width"]``. CPU%, MEM%, R/s, W/s and Command are
+# never dropped. Absent ``right_width`` keeps every column.
 
 ALL_LABELS = ("CPU%", "MEM%", "VIRT", "RES", "PID", "USER", "THR", "NI", "S", "TIME+", "R/s", "W/s", "Command")
 
@@ -478,28 +478,28 @@ def _has_col(rows, label):
 
 
 def test_wide_keeps_all_columns(payload, fields):
-    rows = render(payload, fields, view={"proclist_width": 400})
+    rows = render(payload, fields, view={"right_width": 400})
     for label in ALL_LABELS:
         assert _has_col(rows, label), label
 
 
 def test_no_width_keeps_all_columns(payload, fields):
-    # Backward compatible: no proclist_width → all columns (today's behaviour).
+    # Backward compatible: no right_width → all columns (today's behaviour).
     full = render(payload, fields)
-    wide = render(payload, fields, view={"proclist_width": 400})
+    wide = render(payload, fields, view={"right_width": 400})
     assert full == wide
 
 
 def test_narrow_drops_in_order_virt_first(payload, fields):
     # Width chosen so VIRT (a) must go but RES (c) is still present.
-    rows = render(payload, fields, view={"proclist_width": 64})
+    rows = render(payload, fields, view={"right_width": 64})
     assert not _has_col(rows, "VIRT")  # (a) dropped first
     assert _has_col(rows, "RES")  # (c) still present at this width
     assert _has_col(rows, "Command")
 
 
 def test_very_narrow_drops_cascade(payload, fields):
-    rows = render(payload, fields, view={"proclist_width": 30})
+    rows = render(payload, fields, view={"right_width": 30})
     # By this width VIRT/TIME+/RES/USER at least are gone; never CPU%/MEM%/Command.
     for gone in ("VIRT", "TIME+", "RES", "USER"):
         assert not _has_col(rows, gone), gone
@@ -510,7 +510,7 @@ def test_very_narrow_drops_cascade(payload, fields):
 def test_command_gets_at_least_8_when_possible(payload, fields):
     # After dropping, the non-command fixed width must leave >=8 for Command.
     width = 64
-    rows = render(payload, fields, view={"proclist_width": width})
+    rows = render(payload, fields, view={"right_width": width})
     header = rows[0]
     non_cmd = [c for c in header.cells if "Command" not in c.text]
     used = sum(len(c.text) for c in non_cmd) + (len(header.cells) - 1)  # separators
@@ -526,7 +526,7 @@ def test_header_and_rows_drop_consistently(fields):
         "data": [_proc(pid=1, cmdline=[], name="kt1"), _proc(pid=2, cmdline=[], name="kt2")],
         "_levels": {},
     }
-    rows = render(payload, fields, view={"proclist_width": 64})
+    rows = render(payload, fields, view={"right_width": 64})
     ncols = len(rows[0].cells)
     for r in rows[1:]:
         assert len(r.cells) == ncols  # every data row matches the header column count

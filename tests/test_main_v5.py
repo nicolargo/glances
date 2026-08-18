@@ -529,6 +529,39 @@ def test_assemble_skips_tui_when_no_tui(config):
     assert tui is None
 
 
+def _tui_args(**overrides):
+    """Build an args namespace for assemble(), seeded from the real parser.
+
+    ``--disable-unicode`` is not a v5 parser flag (it lives on v4's parser,
+    glances/main.py:658, and reaches v5 via getattr) so it cannot be set
+    through parse_args — it is set directly as an attribute override.
+    """
+    args = build_parser().parse_args([])
+    for key, value in overrides.items():
+        setattr(args, key, value)
+    return args
+
+
+def test_assemble_forwards_disable_unicode_to_the_tui(config, monkeypatch):
+    """`--disable-unicode` reaches the TUI, otherwise the alert glyphs ignore it.
+
+    ``_TuiV5`` is a *local* import inside ``assemble()`` (curses is only
+    needed for the TUI branch), so the patch target is the real class in
+    ``glances_curses_v5`` — patching a ``glances.main_v5._TuiV5`` module
+    attribute would not reach the local binding.
+    """
+    captured = {}
+
+    class _FakeTui:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    monkeypatch.setattr("glances.outputs.glances_curses_v5.TuiV5", _FakeTui)
+    args = _tui_args(disable_unicode=True)
+    assemble(args, config)
+    assert captured["disable_unicode"] is True
+
+
 def test_assemble_registry_excludes_non_display_plugins(config, monkeypatch):
     """The TUI registry skips plugins with DISPLAY_IN_TUI=False; REST keeps all."""
     from glances.plugins.plugin.base_v5 import GlancesPluginBase

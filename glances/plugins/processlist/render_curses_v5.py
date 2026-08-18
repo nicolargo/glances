@@ -63,7 +63,7 @@ _W_IO = 5
 _W_PID_DEFAULT = 7
 _MAX_ROWS = 20
 
-# Responsive columns (see view["proclist_width"]). When the painted width is
+# Responsive columns (see view["right_width"]). When the painted width is
 # too narrow for the flexible ``Command`` column to show at least
 # ``_MIN_COMMAND_WIDTH`` characters, the lowest-priority fixed columns are
 # dropped one at a time, in ``_DROP_ORDER`` (maintainer spec a→h), until
@@ -305,7 +305,7 @@ def _visible_fixed_keys(available_width: int, pid_width: int) -> list[str]:
     Drops columns in ``_DROP_ORDER`` (a→h) until the flexible ``Command``
     column has at least ``_MIN_COMMAND_WIDTH`` characters (or all droppable
     columns are gone). ``available_width`` is the painted processlist width
-    (``view["proclist_width"]``); ``pid_width`` is the dynamic PID column
+    (``view["right_width"]``); ``pid_width`` is the dynamic PID column
     width. ``CPU%``/``MEM%``/``R/s``/``W/s`` are never dropped.
     """
     widths = {
@@ -353,7 +353,7 @@ def render(
     """
     sort_key = (view or {}).get("sort_key")
     short_name = (view or {}).get("process_short_name", True)
-    available = (view or {}).get("proclist_width")
+    available = (view or {}).get("right_width")
 
     def _header(label: str, width: int, *, ljust: bool = False, color: ColorRole = ColorRole.HEADER) -> Cell:
         text = label.ljust(width) if ljust else label.rjust(width)
@@ -378,7 +378,7 @@ def render(
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
 
     # Responsive columns: which of the 12 fixed columns are visible. Absent
-    # ``proclist_width`` (export / tests / non-int) → keep all 12 (byte-identical
+    # ``right_width`` (export / tests / non-int) → keep all 12 (byte-identical
     # to the historical output, locked by ``test_no_width_keeps_all_columns``).
     active = _visible_fixed_keys(available, pid_width) if isinstance(available, int) else list(_FIXED_COL_KEYS)
     active_set = set(active)

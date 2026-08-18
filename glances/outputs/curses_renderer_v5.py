@@ -38,7 +38,7 @@ import inspect
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -469,9 +469,10 @@ def _format_alert_time(ts: str, now: datetime | None = None) -> str:
     """Convert an ISO-8601 timestamp (UTC, as emitted by `GlancesAlerts._build_event`)
     to a short local-time string.
 
-    Same-day events: ``HH:MM:SS`` (8 chars). Older events: ``MM-DD HH:MM:SS``
-    (14 chars) — date prefix so operators can tell when an alert that has
-    been hanging around for a day or more actually fired.
+    Same-day events: ``HH:MM:SS``. Events from any other day: ``MM-DD``. Both
+    forms stay within 8 columns, the width the alert grid gives the TIME
+    column — the full timestamp used to include the hour, but the grid's
+    DURATION column now carries the age, so it was redundant.
 
     Naive timestamps (no tz suffix) are assumed UTC — matches what
     ``_build_event`` produces. Unparseable input falls back to the raw
@@ -487,35 +488,272 @@ def _format_alert_time(ts: str, now: datetime | None = None) -> str:
     now_local = (now or datetime.now(tz=timezone.utc)).astimezone()
     if local_dt.date() == now_local.date():
         return local_dt.strftime("%H:%M:%S")
-    return local_dt.strftime("%m-%d %H:%M:%S")
+    # Another day: `MM-DD` keeps the column at 8 characters. The full
+    # timestamp used to be printed here, but the grid's DURATION column now
+    # carries the age (design §6.2), so the hour is redundant.
+    return local_dt.strftime("%m-%d")
 
 
-def _format_alert_duration(ts: str, now: datetime | None = None) -> str | None:
-    """Elapsed time since ``ts`` (the ongoing event's transition), as ``H:MM:SS``.
+def _format_duration_compact(seconds: float) -> str:
+    """Elapsed time in at most 8 columns (design §6.4).
 
-    Used to tell operators how long an alert has been active. Mirrors the v4
-    finished-event duration format (``str(end - begin)``) but measured against
-    "now" for a still-ongoing alert. Sub-second precision is dropped so the
-    value is stable across refreshes.
-
-    Returns ``None`` when ``ts`` is unparseable or lies in the future (clock
-    skew) — the caller then omits the duration rather than showing a bogus or
-    negative value. Never raises: the renderer must not crash on a malformed
-    event.
+    ``43s`` / ``2m58s`` / ``1h13m`` / ``2d04h``. Replaces ``str(timedelta)``,
+    whose ``0:02:04`` reads as a clock rather than an elapsed time and whose
+    width is unpredictable. Sub-second precision is dropped so the value does
+    not jitter between refreshes.
     """
+    total = int(max(0.0, seconds))
+    if total < 60:
+        return f"{total}s"
+    if total < 3600:
+        return f"{total // 60}m{total % 60:02d}s"
+    if total < 86400:
+        return f"{total // 3600}h{(total % 3600) // 60:02d}m"
+    return f"{total // 86400}d{(total % 86400) // 3600:02d}h"
+
+
+def _incident_duration(incident: dict[str, Any], now: datetime | None = None) -> str | None:
+    """Rendered duration of one incident, or ``None`` when it cannot be known.
+
+    Ongoing incidents measure from ``begin`` to now; resolved ones from
+    ``begin`` to ``end``, so a resolved row freezes instead of ticking. A
+    ``partial`` incident — one whose opening transition has aged out of the
+    history — is prefixed ``>`` because its duration is a lower bound.
+
+    Returns ``None`` for an unknown, malformed or future ``begin`` (clock
+    skew): the caller then leaves the column blank rather than printing
+    something false. Never raises — the renderer must not crash on a
+    malformed event.
+    """
+    begin_raw = incident.get("begin")
+    if not begin_raw:
+        return None
     try:
-        dt = datetime.fromisoformat(ts)
+        begin = datetime.fromisoformat(str(begin_raw))
     except (ValueError, TypeError):
         return None
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    now_utc = now or datetime.now(tz=timezone.utc)
-    elapsed = now_utc - dt
-    if elapsed.total_seconds() < 0:
+    if begin.tzinfo is None:
+        begin = begin.replace(tzinfo=timezone.utc)
+
+    end_raw = incident.get("end")
+    end: datetime | None = None
+    if end_raw:
+        try:
+            end = datetime.fromisoformat(str(end_raw))
+        except (ValueError, TypeError):
+            end = None
+        if end is not None and end.tzinfo is None:
+            end = end.replace(tzinfo=timezone.utc)
+    if end is None:
+        end = now or datetime.now(tz=timezone.utc)
+
+    elapsed = (end - begin).total_seconds()
+    if elapsed < 0:
         return None
-    # Drop microseconds: str(timedelta) would otherwise append ``.NNNNNN`` and
-    # make the value jitter every frame.
-    return str(timedelta(seconds=int(elapsed.total_seconds())))
+    text = _format_duration_compact(elapsed)
+    return f">{text}" if incident.get("partial") else text
+
+
+# Severity ranking, used to keep an incident's level monotonic: once an
+# incident has reached `critical` it keeps reporting `critical` even if it
+# later de-escalates. v4 parity — `GlancesEvent.update()` assigns `state`
+# only on CRITICAL (design §2.6).
+_LEVEL_ORDER: dict[str, int] = {"ok": 0, "careful": 1, "warning": 2, "critical": 3}
+
+
+def _derive_incidents(
+    history: list[dict[str, Any]],
+    ongoing: dict[tuple[str, Any, str], str] | None = None,
+) -> list[dict[str, Any]]:
+    """Collapse a transition log into incidents (design §5.6).
+
+    The alert engine records level *transitions*; the block shows *incidents*.
+    An incident opens on the first transition to a non-``ok`` level for a
+    ``(plugin, key, field)`` tuple and closes on its transition back to
+    ``ok``. Escalations mutate the open incident, they never open a new one —
+    that is the "one row per incident" rule (§5.4).
+
+    ``ongoing`` is ``GlancesAlerts.get_ongoing()``. It is the AUTHORITY on
+    what is still active: the history is a bounded ring buffer, so an alert
+    can outlive its own transitions. Passing ``None`` falls back to deriving
+    "ongoing" from the history alone, which is what direct callers (export,
+    tests) want.
+
+    Returns incidents already sorted: ongoing first, newest first within each
+    group (§5.3), so a long-running alert cannot sink out of the visible
+    window behind newer resolved ones.
+    """
+    open_by_tuple: dict[tuple[str, Any, str], dict[str, Any]] = {}
+    incidents: list[dict[str, Any]] = []
+
+    for evt in history:
+        state_key = (str(evt.get("plugin", "")), evt.get("key"), str(evt.get("field", "")))
+        level = str(evt.get("level", ""))
+        ts = str(evt.get("ts", "")) or None
+        if level == "ok":
+            closed = open_by_tuple.pop(state_key, None)
+            if closed is not None:
+                closed["end"] = ts
+                closed["ongoing"] = False
+            continue
+        incident = open_by_tuple.get(state_key)
+        if incident is None:
+            # A first surviving transition that did not come from `ok` means
+            # the opening transition has been evicted from the ring buffer:
+            # `begin` is then a lower bound, not the real start. An
+            # `is_initial` event is exempt — it IS the start, Glances simply
+            # found the system already in that state at boot.
+            previous = str(evt.get("previous_level", "ok"))
+            partial = previous != "ok" and not bool(evt.get("is_initial", False))
+            incident = {
+                "plugin": state_key[0],
+                "key": state_key[1],
+                "field": state_key[2],
+                "level": level,
+                "begin": ts,
+                "end": None,
+                "ongoing": True,
+                "partial": partial,
+                "prominent": bool(evt.get("prominent", False)),
+            }
+            open_by_tuple[state_key] = incident
+            incidents.append(incident)
+            continue
+        if _LEVEL_ORDER.get(level, 0) > _LEVEL_ORDER.get(incident["level"], 0):
+            incident["level"] = level
+        incident["prominent"] = incident["prominent"] or bool(evt.get("prominent", False))
+
+    if ongoing is not None:
+        for state_key, incident in open_by_tuple.items():
+            committed = ongoing.get(state_key)
+            if committed is None:
+                # The engine says recovered but no `→ ok` event survives.
+                # Trust the engine and close the incident with an unknown end.
+                incident["ongoing"] = False
+            elif _LEVEL_ORDER.get(committed, 0) > _LEVEL_ORDER.get(incident["level"], 0):
+                incident["level"] = committed
+        # Tuples the engine reports active but the history no longer covers at
+        # all. Without this the block would silently drop a live alert.
+        for state_key, committed in ongoing.items():
+            if state_key in open_by_tuple:
+                continue
+            incidents.append(
+                {
+                    "plugin": state_key[0],
+                    "key": state_key[1],
+                    "field": state_key[2],
+                    "level": committed,
+                    "begin": None,
+                    "end": None,
+                    "ongoing": True,
+                    "partial": True,
+                    "prominent": False,
+                }
+            )
+
+    # Two stable passes: chronological within a group, then ongoing on top.
+    incidents.sort(key=lambda i: i["begin"] or "", reverse=True)
+    incidents.sort(key=lambda i: 0 if i["ongoing"] else 1)
+    return incidents
+
+
+# Alert grid geometry (design §6.2). The painter puts one space between
+# adjacent cells, so the TIME and DURATION cells carry one trailing pad
+# column each to land the spec's offsets (TIME at 2, DURATION at 12,
+# TARGET at 22).
+_ALERT_W_GLYPH = 1
+_ALERT_W_TIME = 8
+_ALERT_W_DURATION = 8
+_ALERT_W_LEVEL = 8
+_ALERT_MIN_TARGET = 12
+# Block width at or above which the LEVEL / DURATION columns still fit
+# without starving TARGET below its floor.
+_ALERT_W_WITH_LEVEL = 31 + _ALERT_MIN_TARGET  # 43
+_ALERT_W_WITH_DURATION = 22 + _ALERT_MIN_TARGET  # 34
+_ALERT_GLYPHS = {
+    True: {True: "●", False: "*"},  # ongoing
+    False: {True: "○", False: "-"},  # resolved
+}
+_ALERT_TIME_UNKNOWN = "--:--:--"
+# Field names that identify nothing on their own — the plugin (and its key)
+# already says what the alert is about, so `sensors[i915 0].value` reads better
+# as `Sensors i915 0`. Matched on the WHOLE field name, never as a suffix, so
+# `memory_usage_percent` keeps its `percent`.
+#
+# Closed list, grounded on the fields that can actually raise an alert:
+# cpu.system/user/total, fs[…].percent, mem.percent, memswap.percent,
+# network[…].bytes_*, gpu/npu percentages, sensors[…].value. Do not widen it
+# without redoing that check — every name added here silently erases
+# information from a row.
+_ALERT_GENERIC_FIELDS = frozenset({"value", "percent"})
+
+
+def _fit_text(text: str, width: int, *, right: bool = False, ellipsis: str = "") -> str:
+    """Pad or truncate ``text`` to exactly ``width`` columns.
+
+    ``ellipsis`` — when non-empty — replaces the tail of a cut string so a
+    truncated target reads as truncated. The caller passes ``…`` or ``.``
+    depending on ``unicode_ok``; it is a parameter rather than a constant
+    precisely so ASCII mode cannot leak a non-ASCII character.
+
+    Guarantees the return value is exactly ``width`` long — the grid depends
+    on it.
+    """
+    if width <= 0:
+        return ""
+    if len(text) > width:
+        cut = width - len(ellipsis)
+        text = text[:cut] + ellipsis if ellipsis and cut > 0 else text[:width]
+    return text.rjust(width) if right else text.ljust(width)
+
+
+def _humanise_target(plugin: Any, key: Any, field: Any) -> str:
+    """Render an incident's target for a human reader rather than a parser.
+
+    ::
+
+        cpu        / None     / system     -> "Cpu system"
+        sensors    / "i915 0" / value      -> "Sensors i915 0"
+        fs         / "/"      / percent    -> "Fs /"
+        containers / "nginx"  / mem_usage  -> "Containers nginx mem usage"
+
+    Only the plugin name is capitalised, and only its first letter: there is no
+    acronym table, so ``gpu`` renders as ``Gpu``. The key is kept verbatim —
+    device names, mountpoints and container names are already human-readable
+    and rewriting them would be lying about what the engine watched.
+
+    A field whose whole name is in `_ALERT_GENERIC_FIELDS` is dropped: it adds
+    a column's worth of width and no information.
+    """
+    parts: list[str] = []
+    plugin_name = str(plugin)
+    if plugin_name:
+        parts.append(plugin_name[:1].upper() + plugin_name[1:])
+    if key is not None:
+        key_text = str(key).strip()
+        if key_text:
+            parts.append(key_text)
+    field_name = str(field)
+    if field_name and field_name not in _ALERT_GENERIC_FIELDS:
+        parts.append(field_name.replace("_", " "))
+    return " ".join(parts)
+
+
+def _alert_block_height(n_incidents: int, quota: int) -> int:
+    """Row cost of the alert block — kept in lock-step with what
+    `render_alert_block` actually emits, so `plan_right_column.cost()` never
+    drifts from the painter (design §5, §10).
+
+    Mirrors `render_alert_block`'s own collapse rules exactly:
+    - no incidents at all → the single-line ``ALERT (...)`` collapse (§11);
+    - ``quota <= 0`` → the shrink ladder's "header only" step (h) — title row
+      alone, regardless of how many incidents exist;
+    - otherwise → title row + column-header row + up to ``quota`` incident
+      rows.
+    """
+    if n_incidents <= 0 or quota <= 0:
+        return 1
+    return 2 + min(n_incidents, quota)
 
 
 def render_alert_block(
@@ -523,86 +761,185 @@ def render_alert_block(
     limit: int = 10,
     is_initializing: bool = False,
     now: datetime | None = None,
+    ongoing: dict[tuple[str, Any, str], str] | None = None,
+    width: int | None = None,
+    unicode_ok: bool = True,
+    incidents: list[dict[str, Any]] | None = None,
 ) -> list[Row]:
-    """Render the alert history (vertical list, most recent at top).
+    """Render the alert history as an aligned incident grid (design §6).
 
-    Header row: ``ALERTS (n)``. Then up to ``limit`` event rows showing
-    timestamp, plugin/key, field, transition (previous → new).
+    The block is a JOURNAL, not a gauge: it answers "what happened", never
+    "where are we now" — the owning plugin already shows the live value
+    (§5.1). One row per incident, ongoing ones pinned above resolved ones.
 
-    Empty history — a single header-styled line, no separate placeholder row
-    and no ``0 ongoing / 0 total`` count:
-    - ``is_initializing=True``: ``ALERT (initializing)`` — the alert engine is
-      still inside its per-plugin warmup window so no event can have fired yet.
-    - ``is_initializing=False``: ``ALERT (no alert detected)`` — the engine is
-      settled and has produced nothing of interest.
+    Args:
+        history: output of ``GlancesAlerts.get_history()``.
+        limit: DATA-row budget (the title and column-header rows are extra).
+            ``0`` emits the title alone — the vertical shrink ladder's
+            "header only" step.
+        is_initializing: ``GlancesAlerts.is_initializing()``.
+        now: reference instant, so every row of a frame agrees.
+        ongoing: ``GlancesAlerts.get_ongoing()`` — the authority on what is
+            still active. ``None`` derives it from the history alone.
+        width: painted block width (``view["right_width"]``). ``None`` keeps
+            the full grid and sizes TARGET to its natural maximum, which is
+            what export and direct callers want.
+        unicode_ok: ``False`` under ``--disable-unicode`` — ASCII glyphs and
+            an ASCII title rule (§6.5).
+        incidents: pre-derived incidents (``_derive_incidents(history,
+            ongoing)``). Callers that already derived the incidents for this
+            frame — ``build_frame``, so ``PluginBlock.data_count`` counts the
+            exact same list this function renders, never a second derivation
+            that could drift from it — pass them here to skip re-deriving.
+            ``None`` (direct callers, tests, export) derives from ``history``
+            and ``ongoing`` as before.
+
+    Empty history AND nothing ongoing collapses to a single header-styled
+    line, exactly as before the redesign:
+    - ``is_initializing=True``  → ``ALERT (initializing)``
+    - ``is_initializing=False`` → ``ALERT (no alert detected)``
     """
-    if not history:
-        label = "ALERT (initializing)" if is_initializing else "ALERT (no alert detected)"
-        return [Row(cells=[Cell(text=label, color=ColorRole.HEADER)])]
-
-    # Identify ongoing alerts. "Ongoing" = the most-recent event for a
-    # given (plugin, key, field) tuple has a non-ok level. Older events
-    # for the same tuple are not ongoing even if their own level was
-    # non-ok — they have been superseded.
-    latest_per_tuple: dict[tuple[str, Any, str], dict[str, Any]] = {}
-    for evt in history:
-        latest_per_tuple[(str(evt.get("plugin", "")), evt.get("key"), str(evt.get("field", "")))] = evt
-    ongoing_event_ids: set[int] = {id(evt) for evt in latest_per_tuple.values() if str(evt.get("level", "")) != "ok"}
-    n_ongoing = len(ongoing_event_ids)
-    n_total = len(history)
-
-    rows: list[Row] = [
-        Row(
-            cells=[
-                Cell(text=f"ALERT ({n_ongoing} ongoing / {n_total} total)", color=ColorRole.HEADER),
-            ]
-        )
-    ]
-
-    # Compute the reference "now" once so every event in the same frame
-    # uses the same same-day cutoff.
-    now_local = (now or datetime.now(tz=timezone.utc)).astimezone()
-
-    # `history[-0:]` returns the WHOLE list — the cascade's "header only" step
-    # (limit == 0) must short-circuit rather than rely on the slice.
-    recent = list(reversed(history[-limit:])) if limit > 0 else []
-    for evt in recent:
-        ts = _format_alert_time(str(evt.get("ts", "")), now=now_local)
-        plugin = str(evt.get("plugin", ""))
-        key = evt.get("key")
-        target = f"{plugin}[{key}]" if key is not None else plugin
-        field_name = str(evt.get("field", ""))
-        previous = str(evt.get("previous_level", ""))
-        new_level = str(evt.get("level", ""))
-        prominent = bool(evt.get("prominent", False))
-        is_initial = bool(evt.get("is_initial", False))
-        is_ongoing = id(evt) in ongoing_event_ids
-        # Initial state observed at startup: show the bare level instead of
-        # ``ok → <level>`` since no transition actually happened — Glances
-        # just discovered the system was already in this state.
-        level_text = new_level if is_initial else f"{previous} → {new_level}"
-        if is_ongoing:
-            # Suffix the level cell with a visible marker so operators can
-            # spot the active alerts at a glance. The "ongoing" marker only
-            # decorates the most-recent event per (plugin, key, field) tuple
-            # — older non-ok events for the same target have been
-            # superseded and are not ongoing any more. Append how long the
-            # alert has been active (elapsed since its transition) so the
-            # operator sees the severity of a long-running condition; the
-            # duration is omitted if the timestamp is unparseable.
-            duration = _format_alert_duration(str(evt.get("ts", "")), now=now_local)
-            level_text = f"{level_text} (ongoing for {duration})" if duration else f"{level_text} (ongoing)"
-        role = _LEVEL_TO_ROLE.get(new_level, ColorRole.DEFAULT)
-        rows.append(
+    if incidents is None:
+        incidents = _derive_incidents(history, ongoing)
+    if not incidents:
+        # Only the state fragment is coloured; `ALERT` stays HEADER, exactly
+        # like the `ALERTS` prefix of the populated title. Green is the
+        # "all clear" signal — nothing has ever fired. Warmup is not an
+        # all-clear (an alert simply cannot have fired yet), so it stays
+        # neutral rather than claiming a healthy system.
+        if is_initializing:
+            state, state_role = "(initializing)", ColorRole.DEFAULT
+        else:
+            state, state_role = "(no alert detected)", ColorRole.OK
+        # Glued, so the painted line is unchanged: `ALERT (no alert detected)`.
+        return [
             Row(
                 cells=[
-                    Cell(text=ts),
-                    Cell(text=target),
-                    Cell(text=field_name),
-                    Cell(text=level_text, color=role, prominent=prominent),
+                    Cell(text="ALERT ", color=ColorRole.HEADER),
+                    Cell(text=state, color=state_role, glue=True),
                 ]
             )
+        ]
+
+    now_local = (now or datetime.now(tz=timezone.utc)).astimezone()
+    n_ongoing = sum(1 for i in incidents if i["ongoing"])
+    n_resolved = len(incidents) - n_ongoing
+
+    # Which columns fit. TARGET is the only elastic one and never drops.
+    show_level = width is None or width >= _ALERT_W_WITH_LEVEL
+    show_duration = width is None or width >= _ALERT_W_WITH_DURATION
+
+    visible = incidents[:limit] if limit > 0 else []
+
+    def target_of(incident: dict[str, Any]) -> str:
+        return _humanise_target(incident["plugin"], incident["key"], incident["field"])
+
+    if width is None:
+        target_width = max((len(target_of(i)) for i in visible), default=_ALERT_MIN_TARGET)
+        target_width = max(target_width, _ALERT_MIN_TARGET)
+    elif show_level:
+        target_width = width - (_ALERT_W_WITH_LEVEL - _ALERT_MIN_TARGET)
+    elif show_duration:
+        target_width = width - (_ALERT_W_WITH_DURATION - _ALERT_MIN_TARGET)
+    else:
+        target_width = width - _ALERT_MIN_TARGET
+    target_width = max(0, target_width)
+
+    # Title shortens in the same order as the columns (design §6.3): the
+    # trailing rule goes first, then the `resolved` clause, and only the
+    # `ongoing` count survives to a hard truncation.
+    # The title is split into glued cells so only the ongoing-count fragment
+    # carries state: green when nothing is active, default otherwise. `ALERTS`
+    # and the rule stay HEADER, so the block still reads as a titled block.
+    # This does NOT break the standing rule that a title is never escalated by
+    # an alert level — `ok` and `default` are reassurance, not escalation; no
+    # title cell may ever carry careful/warning/critical (design §6.5).
+    # Glued cells mean the painter inserts no separator, so the rendered text
+    # is identical to the single-cell version it replaces.
+    separator = "·" if unicode_ok else "-"
+    rule_char = "─" if unicode_ok else "-"
+    count_role = ColorRole.OK if n_ongoing == 0 else ColorRole.DEFAULT
+    prefix = "ALERTS  "
+    count = f"{n_ongoing} ongoing"
+    resolved = f" {separator} {n_resolved} resolved"
+    base_len = len(prefix) + len(count)
+    full_len = base_len + len(resolved)
+
+    segments: list[tuple[str, ColorRole]] = [(prefix, ColorRole.HEADER), (count, count_role)]
+    if width is None or width >= full_len:
+        segments.append((resolved, ColorRole.HEADER))
+        # The rule needs a separating space of its own before it fits.
+        if width is not None and width > full_len + 1:
+            segments.append((" " + rule_char * (width - full_len - 1), ColorRole.HEADER))
+    elif width < base_len:
+        # Last resort: cut across the segments, keeping the ongoing count as
+        # long as anything survives.
+        truncated: list[tuple[str, ColorRole]] = []
+        remaining = width
+        for text, role in segments:
+            if remaining <= 0:
+                break
+            truncated.append((text[:remaining], role))
+            remaining -= len(truncated[-1][0])
+        segments = truncated
+
+    title_cells = [
+        Cell(text=text, color=role, glue=index > 0)
+        for index, (text, role) in enumerate(seg for seg in segments if seg[0])
+    ]
+    rows: list[Row] = [Row(cells=title_cells or [Cell(text="", color=ColorRole.HEADER)])]
+
+    if not visible:
+        return rows
+
+    header_cells = [Cell(text=" " * _ALERT_W_GLYPH, color=ColorRole.HEADER, bold=True)]
+    header_cells.append(Cell(text=_fit_text("TIME", _ALERT_W_TIME + 1), color=ColorRole.HEADER, bold=True))
+    if show_duration:
+        header_cells.append(
+            Cell(text=_fit_text("DURATION", _ALERT_W_DURATION, right=True) + " ", color=ColorRole.HEADER, bold=True)
         )
+    header_cells.append(Cell(text=_fit_text("TARGET", target_width), color=ColorRole.HEADER, bold=True))
+    if show_level:
+        header_cells.append(
+            Cell(text=_fit_text("LEVEL", _ALERT_W_LEVEL, right=True), color=ColorRole.HEADER, bold=True)
+        )
+    rows.append(Row(cells=header_cells))
+
+    for incident in visible:
+        is_ongoing = bool(incident["ongoing"])
+        level = str(incident["level"])
+        role = _LEVEL_TO_ROLE.get(level, ColorRole.DEFAULT)
+        prominent = bool(incident["prominent"])
+        begin = incident["begin"]
+        ts_text = _format_alert_time(str(begin), now=now_local) if begin else _ALERT_TIME_UNKNOWN
+        duration = _incident_duration(incident, now=now_local) or ""
+
+        cells = [
+            Cell(
+                text=_ALERT_GLYPHS[is_ongoing][unicode_ok],
+                color=role,
+                # When LEVEL is dropped the glyph is the only cell left that
+                # can carry `prominent` — never silently lose the flag.
+                prominent=prominent and not show_level,
+            ),
+            Cell(text=_fit_text(ts_text, _ALERT_W_TIME + 1)),
+        ]
+        if show_duration:
+            cells.append(Cell(text=_fit_text(duration, _ALERT_W_DURATION, right=True) + " "))
+        cells.append(Cell(text=_fit_text(target_of(incident), target_width, ellipsis="…" if unicode_ok else ".")))
+        if show_level:
+            cells.append(
+                Cell(
+                    text=_fit_text(level.upper(), _ALERT_W_LEVEL, right=True),
+                    # A resolved incident goes neutral here so colour in this
+                    # column means "still happening". Its glyph keeps the level
+                    # colour, so the severity it reached stays readable.
+                    color=role if is_ongoing else ColorRole.DEFAULT,
+                    prominent=prominent,
+                )
+            )
+        rows.append(Row(cells=cells))
+
     return rows
 
 
@@ -693,15 +1030,19 @@ def plan_right_column(
 
     Pure and analytic — no frame rebuild is needed to evaluate a candidate
     layout, because every elastic block costs exactly one line per data row
-    plus one header row.
+    plus one header row — except `alerts`, which carries a second, fixed
+    column-header row on top of its own header (see `_alert_block_height`).
 
     Args:
         body_height: rows available below the top row separator.
         static_heights: heights of the non-elastic RIGHT blocks that are
             present (currently only `processcount`, always 1 row).
         amps_height: natural height of the amps block, 0 when absent.
-        n_vms / n_containers / n_processes / n_alerts: item counts available
-            in the payloads (`PluginBlock.data_count`).
+        n_vms / n_containers / n_processes: item counts available in the
+            payloads (`PluginBlock.data_count`).
+        n_alerts: incident count available (`PluginBlock.data_count` of the
+            synthesized `alert` block — one per incident, not one per raw
+            history event).
 
     Returns:
         `{plugin: max data rows}`. `amps` is present only when the ladder had
@@ -736,8 +1077,11 @@ def plan_right_column(
             heights.append(candidate["amps"])
         if n_processes:
             heights.append(1 + min(n_processes, candidate["processes"]))
-        # The alert block is always emitted, if only as a header line.
-        heights.append(1 + min(n_alerts, candidate["alerts"]))
+        # The alert block is always emitted, if only as a header line. Its
+        # height is title + column-header + data rows, not title + data rows
+        # (`_alert_block_height` mirrors `render_alert_block`'s own collapse
+        # rules exactly — see design §5, §10).
+        heights.append(_alert_block_height(n_alerts, candidate["alerts"]))
         return sum(heights) + max(0, len(heights) - 1)
 
     def grow_processes() -> None:
@@ -868,6 +1212,7 @@ def build_frame(
     alerts_history: list[dict[str, Any]],
     alerts_limit: int = 10,
     alerts_initializing: bool = False,
+    alerts_ongoing: dict[tuple[str, Any, str], str] | None = None,
     view: dict[str, Any] | None = None,
 ) -> Frame:
     """Assemble a complete TUI Frame following v4's slot layout.
@@ -880,7 +1225,11 @@ def build_frame(
             collection) — the slot (top / left / right) is derived from
             the plugin name via `slot_for()`.
         alerts_history: output of `GlancesAlerts.get_history()`.
-        alerts_limit: cap on the number of events rendered in the alert block.
+        alerts_limit: DATA-row budget for the alert block (the title and
+            column-header rows are extra) — the block is incident-based, not
+            event-based.
+        alerts_ongoing: output of `GlancesAlerts.get_ongoing()` — the
+            authority on which alerts are still active (design §5.6).
 
     Per-plugin renderer:
         If `glances.plugins.<name>.render_curses_v5` exists and exposes a
@@ -973,16 +1322,16 @@ def build_frame(
         else:
             frame.left.append(block)
 
-    # v4 fidelity: enforce the slot-declared order, not the discovery
-    # order (which is alphabetical and would give cpu/load/mem instead
-    # of cpu/mem/load in the top row).
-    frame.header.sort(key=lambda b: HEADER_SLOT.index(b.name) if b.name in HEADER_SLOT else len(HEADER_SLOT))
-    frame.top.sort(key=lambda b: TOP_SLOT.index(b.name) if b.name in TOP_SLOT else len(TOP_SLOT))
-    frame.left.sort(key=lambda b: LEFT_SLOT.index(b.name) if b.name in LEFT_SLOT else len(LEFT_SLOT))
-    frame.right.sort(key=lambda b: RIGHT_SLOT.index(b.name) if b.name in RIGHT_SLOT else len(RIGHT_SLOT))
-
     # Synthesize the alerts block in the RIGHT slot (mirrors v4's `alert`
-    # plugin in `_right_sidebar`).
+    # plugin in `_right_sidebar`). Appended BEFORE the sort so `RIGHT_SLOT`
+    # is the single source of placement (design §10.3) — `"alert"` is last
+    # in the tuple, so it still renders at the bottom of the column.
+    #
+    # Incidents are derived exactly ONCE per frame here and handed to
+    # `render_alert_block`, so `data_count` — consumed by `plan_right_column`
+    # as `n_alerts` — counts the very same list the block renders, never a
+    # second, independently derived list that could drift from it.
+    alert_incidents = _derive_incidents(alerts_history, alerts_ongoing)
     frame.right.append(
         PluginBlock(
             name="alert",
@@ -990,8 +1339,20 @@ def build_frame(
                 alerts_history,
                 limit=row_budget(view, "alert", alerts_limit),
                 is_initializing=alerts_initializing,
+                ongoing=alerts_ongoing,
+                width=(view or {}).get("right_width"),
+                unicode_ok=bool((view or {}).get("unicode", True)),
+                incidents=alert_incidents,
             ),
-            data_count=len(alerts_history),
+            data_count=len(alert_incidents),
         )
     )
+
+    # v4 fidelity: enforce the slot-declared order, not the discovery
+    # order (which is alphabetical and would give cpu/load/mem instead
+    # of cpu/mem/load in the top row).
+    frame.header.sort(key=lambda b: HEADER_SLOT.index(b.name) if b.name in HEADER_SLOT else len(HEADER_SLOT))
+    frame.top.sort(key=lambda b: TOP_SLOT.index(b.name) if b.name in TOP_SLOT else len(TOP_SLOT))
+    frame.left.sort(key=lambda b: LEFT_SLOT.index(b.name) if b.name in LEFT_SLOT else len(LEFT_SLOT))
+    frame.right.sort(key=lambda b: RIGHT_SLOT.index(b.name) if b.name in RIGHT_SLOT else len(RIGHT_SLOT))
     return frame

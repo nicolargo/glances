@@ -22,7 +22,7 @@ from typing import Any
 import pytest
 
 from glances.actions_v5.action_base import GlancesActionBase
-from glances.alerts_v5 import GlancesAlerts
+from glances.alerts_v5 import GlancesAlerts, _AlertState
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.stats_store_v5 import StatsStoreV5
@@ -1009,3 +1009,58 @@ async def test_auto_sort_noop_without_engine(tmp_path, monkeypatch, store):
     mem = _MemPlugin(store, config)
     await _run_with_levels(mem, alerts, {"percent": {"level": "critical", "prominent": True}})
     assert len(alerts.get_history()) == 1
+
+
+# ---------------------------------------------------------- get_ongoing
+
+
+def test_get_ongoing_is_empty_before_any_alert(config):
+    """No committed non-ok level → no ongoing entry."""
+    alerts = GlancesAlerts(config)
+    assert alerts.get_ongoing() == {}
+
+
+def test_get_ongoing_reports_committed_non_ok_levels(config):
+    """A committed warning shows up keyed by (plugin, key, field)."""
+    alerts = GlancesAlerts(config)
+    alerts._state[("mem", None, "percent")] = _AlertState(committed_level="warning", has_committed=True)
+    assert alerts.get_ongoing() == {("mem", None, "percent"): "warning"}
+
+
+def test_get_ongoing_omits_ok_tuples(config):
+    """Recovered tuples are dropped, not reported with level 'ok'."""
+    alerts = GlancesAlerts(config)
+    alerts._state[("mem", None, "percent")] = _AlertState(committed_level="ok", has_committed=True)
+    alerts._state[("fs", "/", "percent")] = _AlertState(committed_level="critical", has_committed=True)
+    assert alerts.get_ongoing() == {("fs", "/", "percent"): "critical"}
+
+
+def test_get_ongoing_survives_history_eviction(config):
+    """The whole point: an active alert whose events aged out is still reported.
+
+    `_state` is unbounded while `_history` is a bounded deque, so clearing the
+    history must not change what `get_ongoing()` reports.
+    """
+    alerts = GlancesAlerts(config)
+    alerts._state[("cpu", None, "total")] = _AlertState(committed_level="critical", has_committed=True)
+    alerts._history.clear()
+    assert alerts.get_ongoing() == {("cpu", None, "total"): "critical"}
+
+
+def test_get_ongoing_does_not_mutate_state(config):
+    """Read-only: calling it twice yields equal results and leaves _state alone."""
+    alerts = GlancesAlerts(config)
+    alerts._state[("mem", None, "percent")] = _AlertState(committed_level="warning", has_committed=True)
+    before = dict(alerts._state)
+    first = alerts.get_ongoing()
+    second = alerts.get_ongoing()
+    assert first == second
+    assert alerts._state == before
+
+
+def test_get_ongoing_returns_a_copy(config):
+    """Mutating the returned dict must not corrupt the engine."""
+    alerts = GlancesAlerts(config)
+    alerts._state[("mem", None, "percent")] = _AlertState(committed_level="warning", has_committed=True)
+    alerts.get_ongoing()[("bogus", None, "x")] = "critical"
+    assert ("bogus", None, "x") not in alerts._state

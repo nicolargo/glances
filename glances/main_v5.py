@@ -478,6 +478,7 @@ def assemble(
             fahrenheit=getattr(args, "fahrenheit", False),
             hide_public_info=getattr(args, "hide_public_info", False),
             byte=getattr(args, "byte", False),
+            disable_unicode=getattr(args, "disable_unicode", False),
         )
 
     return app, scheduler, host, int(port), tui

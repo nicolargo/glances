@@ -617,3 +617,24 @@ def test_get_float_value_raises_on_non_numeric_value(env: Path) -> None:
     write(xdg_path(env), "[amp_foo]\nregex = .*python.*\n")
     with pytest.raises(ValueError):
         GlancesConfigV5().get_float_value("amp_foo", "regex")
+
+
+# ============================================================================
+# Shipped conf/glances.conf — [alerts] section is documented (design §8.1)
+# ============================================================================
+
+
+def test_shipped_conf_documents_the_alerts_section():
+    """The three [alerts] keys must be present and COMMENTED, so the shipped
+    file documents them without changing any default (design §8.1)."""
+    from pathlib import Path
+
+    text = Path("conf/glances.conf").read_text(encoding="utf-8")
+    assert "[alerts]" in text
+    # Scoped to the [alerts] section itself: `history_size` is also a
+    # pre-existing, legitimately-active key in [global] (unrelated stats
+    # history), so a whole-file substring check would false-positive on it.
+    alerts_section = text.split("[alerts]", 1)[1].split("\n[", 1)[0]
+    for key in ("min_duration_seconds", "history_size", "warmup_cycles"):
+        assert f"#{key}=" in alerts_section, f"{key} must be documented, commented out"
+        assert f"\n{key}=" not in alerts_section, f"{key} must NOT be active by default"

@@ -678,28 +678,31 @@ arguments. Top-20 rows, engine sort hardcoded to `cpu_percent` desc,
 no extended view, no programs aggregation, no filter UI — these
 come back with the v5 argv/config plumbing in G5.)
 
-### Responsive columns (`view["proclist_width"]`)
+### Responsive columns (`view["right_width"]`)
 
 v5-specific behaviour with no v4 helper equivalent: the processlist lives in
 the RIGHT sidebar, and on a narrow terminal the full 12-fixed-column prefix
 crowds out the flexible `Command` column. The renderer drops low-priority
 fixed columns until `Command` is readable again.
 
-**The `view["proclist_width"]` contract:** the painter tells the renderer the
+**The `view["right_width"]` contract:** the painter tells the renderer the
 exact width it will be painted at — the right-sidebar paint width. It is
-seeded by `TuiV5._fit_proclist_width` (`glances/outputs/glances_curses_v5.py`)
+seeded by `TuiV5._fit_right_width` (`glances/outputs/glances_curses_v5.py`)
 as:
 
 ```
-view["proclist_width"] = max_x - _sidebar_split(frame, max_x) - _SIDEBAR_SEPARATOR_GAP
+view["right_width"] = max_x - _sidebar_split(frame, max_x) - _SIDEBAR_SEPARATOR_GAP
 ```
 
 This mirrors the `_paint` geometry exactly (`right_x = left_width +
 _SIDEBAR_SEPARATOR_GAP`). `left_width` depends only on `frame.left` natural
 widths — never on processlist's own columns — so one extra rebuild settles the
-value (no oscillation). `_fit_proclist_width` is a no-op (and skips the
-rebuild) when no processlist block is present, so the rest of the layout and
-wide terminals are unaffected.
+value (no oscillation). `_fit_right_width` is a no-op only when the right
+column is empty (`not frame.right`) — it is not processlist-gated, so it also
+feeds the alert block's grid selection. `_build_view` builds a fresh `view`
+dict every frame and never seeds a prior `right_width`, so the comparison is
+always a change and this extra rebuild fires on every repaint, not just on
+resize — it does not short-circuit like `_fit_right_column` does.
 
 **Drop cascade (`_DROP_ORDER`, a→h):** columns are dropped one at a time, in
 this fixed maintainer-spec order, until `Command` fits:
@@ -730,7 +733,7 @@ with the widest PID).
 the same `active_set` (`_filter_fixed`). So the header and the rows always drop
 the *same* columns and stay aligned.
 
-**Default (no width) keeps all columns:** when `view["proclist_width"]` is
+**Default (no width) keeps all columns:** when `view["right_width"]` is
 absent or not an `int` (export, tests, callers that pass no `view`), the
 renderer keeps all 12 fixed columns — byte-identical to the historical output
 (locked by `test_no_width_keeps_all_columns`). No regression for non-TUI
@@ -738,7 +741,7 @@ consumers.
 
 **Measure-driven, not threshold-driven:** the visible set is computed from the
 *real* right-sidebar width, not a hard-coded column-count breakpoint. Crucially
-`_fit_proclist_width` runs at **both** `_build_fitted_frame` return points — the
+`_fit_right_width` runs at **both** `_build_fitted_frame` return points — the
 early return (TOP row already fits, wide terminal) and the post-cascade return
 — so the processlist is fitted to its sidebar width even when the TOP row never
 needed degrading.
@@ -746,7 +749,7 @@ needed degrading.
 ✅ **v5 renderer:** `glances/plugins/processlist/render_curses_v5.py`
 (`_DROP_ORDER`, `_FIXED_COL_KEYS`, `_MIN_COMMAND_WIDTH`,
 `_visible_fixed_keys`, `_filter_fixed`). Width seeded by
-`glances/outputs/glances_curses_v5.py::_fit_proclist_width`.
+`glances/outputs/glances_curses_v5.py::_fit_right_width`.
 
 ---
 
