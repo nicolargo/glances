@@ -28,6 +28,8 @@ def build_fetcher(networks, old_stats=None):
 
 
 class TestDockerNetworkStatsAggregation:
+    """Test the Docker network stats aggregation across container interfaces."""
+
     def test_single_interface(self):
         """A single interface keeps the values it had before the aggregation change."""
         fetcher = build_fetcher({'eth0': {'rx_bytes': 100, 'tx_bytes': 200}})
@@ -61,14 +63,18 @@ class TestDockerNetworkStatsAggregation:
 
 
 class TestDockerNetworkStatsNoData:
+    """Test the Docker network stats when no usable interface is reported."""
+
     def test_host_network_returns_none(self):
         """--network host containers have no networks key at all."""
         assert build_fetcher(None)._get_network_stats() is None
 
     def test_empty_networks_returns_none(self):
+        """An empty networks dict yields no stats."""
         assert build_fetcher({})._get_network_stats() is None
 
     def test_all_interfaces_malformed_returns_none(self):
+        """Every interface missing a counter yields no stats."""
         assert build_fetcher({'eth0': {'rx_bytes': 100}})._get_network_stats() is None
 
     def test_one_malformed_among_two_keeps_the_valid_one(self):
@@ -85,7 +91,10 @@ class TestDockerNetworkStatsNoData:
 
 
 class TestDockerNetworkStatsRates:
+    """Test the Docker network stats rate computation."""
+
     def test_rates_use_the_summed_counters(self):
+        """Rates are computed from the summed counters, not from a single interface."""
         fetcher = build_fetcher(
             {
                 'eth0': {'rx_bytes': 100, 'tx_bytes': 200},
@@ -99,6 +108,7 @@ class TestDockerNetworkStatsRates:
         assert 'time_since_update' in stats
 
     def test_first_sample_has_no_rate_keys(self):
+        """Without previous stats there is nothing to compute a rate from."""
         fetcher = build_fetcher({'eth0': {'rx_bytes': 100, 'tx_bytes': 200}})
         stats = fetcher._get_network_stats()
         assert 'rx' not in stats
