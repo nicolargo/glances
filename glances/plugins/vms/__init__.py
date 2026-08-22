@@ -100,7 +100,11 @@ class VmsPlugin(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super().__init__(
-            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
+            args=args,
+            config=config,
+            items_history_list=items_history_list,
+            stats_init_value=[],
+            fields_description=fields_description,
         )
 
         # The plugin can be disabled using: args.disable_vm

@@ -187,13 +187,13 @@ def get_smart_data(hide_attributes):
 class SmartPlugin(GlancesPluginModel):
     """Glances' HDD SMART plugin."""
 
-    def __init__(self, args=None, config=None, stats_init_value=[]):
+    def __init__(self, args=None, config=None):
         """Init the plugin."""
         if not is_admin() and args:
             disable(args, "smart")
             logger.debug("Current user is not admin, HDD SMART plugin disabled.")
 
-        super().__init__(args=args, config=config)
+        super().__init__(args=args, config=config, stats_init_value=[])
 
         self.display_curse = True
         self.hide_attributes = self._parse_hide_attributes(config)
