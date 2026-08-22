@@ -1275,7 +1275,7 @@ class GlancesPluginModel:
         """
 
         def wrapper(self, *args, **kw):
-            if self.is_enabled() and (self.refresh_timer.finished() or self.stats == self.get_init_value):
+            if self.is_enabled() and (self.refresh_timer.finished() or self.stats == self.get_init_value()):
                 # Run the method
                 ret = fct(self, *args, **kw)
                 # Reset the timer
