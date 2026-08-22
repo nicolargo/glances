@@ -290,7 +290,8 @@ class SensorsPlugin(GlancesPluginModel):
                 )
             else:
                 if (
-                    args.fahrenheit
+                    args
+                    and args.fahrenheit
                     and i['type'] != sensors_definition.get('battery').get('type')
                     and i['type'] != sensors_definition.get('fan_speed').get('type')
                 ):
