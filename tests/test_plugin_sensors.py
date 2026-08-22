@@ -10,6 +10,7 @@
 """Tests for the Sensors plugin."""
 
 import json
+from unittest.mock import patch
 
 import pytest
 
@@ -179,6 +180,7 @@ class TestSensorsPluginMsgCurse:
     def test_msg_curse_returns_list(self, sensors_plugin):
         """Test that msg_curse returns a list."""
         sensors_plugin.update()
+        sensors_plugin.update_views()
         msg = sensors_plugin.msg_curse(max_width=80)
         assert isinstance(msg, list)
 
@@ -187,6 +189,25 @@ class TestSensorsPluginMsgCurse:
         sensors_plugin.update()
         msg = sensors_plugin.msg_curse()
         assert isinstance(msg, list)
+
+    def test_msg_curse_without_args(self, sensors_plugin):
+        """Test that msg_curse does not crash when args is None."""
+        stats = [
+            {
+                'label': 'CPU',
+                'unit': 'C',
+                'value': 42,
+                'warning': 60,
+                'critical': 80,
+                'type': 'temperature_core',
+                'key': 'label',
+            }
+        ]
+        with patch.object(sensors_plugin, 'stats', stats):
+            sensors_plugin.update_views()
+            msg = sensors_plugin.msg_curse(max_width=80)
+        assert isinstance(msg, list)
+        assert any('42C' in m['msg'] for m in msg)
 
 
 class TestSensorsPluginExport:
