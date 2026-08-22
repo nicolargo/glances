@@ -8,7 +8,6 @@ Version 4.5.6
 
 Bugs corrected:
 
-* Container network stats now aggregate all the container interfaces instead of eth0 only #3669
 * Alert level decided by dict ordering: a failing+slow URL is downgraded to WARNING, an unscanned URL reports CRITICAL #3632
 * GPU plugin duplicates card name and omits N/A for unavailable metrics in multi-GPU #3631
 * GPU plugin duplicates the utilisation value and paints it with the memory colour in multi-GPU #3630
