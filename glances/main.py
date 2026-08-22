@@ -828,6 +828,9 @@ Examples of use:
             args.password = self.password
 
     def init_ui_mode(self, args):
+        # Display free filesystem space when requested from the configuration file
+        args.fs_free_space = args.fs_free_space or self.config.get_bool_value('fs', 'free_space', default=False)
+
         # Manage light mode
         if getattr(args, 'enable_light', False):
             logger.info("Light mode is on")

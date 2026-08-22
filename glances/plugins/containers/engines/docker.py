@@ -169,15 +169,25 @@ class DockerStatsFetcher:
             rx: Number of bytes received
             tx: Number of bytes transmitted
         """
-        eth0_stats = self._streamer.stats.get('networks', {}).get('eth0')
+        interfaces_stats = self._streamer.stats.get('networks') or {}
 
         # Checks for net_stats & mandatory fields
-        if not eth0_stats or any(field not in eth0_stats for field in ['rx_bytes', 'tx_bytes']):
+        # Note: a container can be attached to several networks (eth0, eth1...)
+        # so all the interfaces should be aggregated (issue #3669)
+        valid_interfaces = [
+            interface_stats
+            for interface_name, interface_stats in interfaces_stats.items()
+            if interface_name != 'lo' and all(field in interface_stats for field in ['rx_bytes', 'tx_bytes'])
+        ]
+        if not valid_interfaces:
             self._log_debug("Missing Network usage fields")
             return None
 
-        # Read the rx/tx stats (in bytes)
-        stats = {'cumulative_rx': eth0_stats["rx_bytes"], 'cumulative_tx': eth0_stats["tx_bytes"]}
+        # Read the rx/tx stats (in bytes), summed over all the container interfaces
+        stats = {
+            'cumulative_rx': sum(interface_stats['rx_bytes'] for interface_stats in valid_interfaces),
+            'cumulative_tx': sum(interface_stats['tx_bytes'] for interface_stats in valid_interfaces),
+        }
 
         # Using previous stats to calculate rates
         old_network_stats = self._old_computed_stats.get("network")
