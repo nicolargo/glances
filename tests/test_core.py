@@ -471,7 +471,7 @@ class TestGlances(unittest.TestCase):
         if not is_admin():
             print("INFO: Not admin, SMART list should be empty")
             assert len(stats_grab) == 0
-        elif stats_grab == {}:
+        elif stats_grab == []:
             print("INFO: Admin but SMART list is empty")
             assert len(stats_grab) == 0
         else:
