@@ -15,7 +15,7 @@ row + one row per VM, MAIN (RIGHT) column, full width. No alerts
 
 Columns: Engine (only with >1 distinct engine), Name (``max_name_size``),
 Status, Core, CPU% (``cpu_time`` — the per-second rate the base already
-computed; absent on the first cycle → placeholder), MEM/MAX (glued into
+computed; ``None`` on the first cycle → placeholder), MEM/MAX (glued into
 one cell — v4 underlines only the ``MEM`` sub-cell, here MEM and MAX share
 a single ``Cell`` so the underline spans both; cosmetic, intentional
 simplification), LOAD 1/5/15min (only when ``load_1min`` is not None on

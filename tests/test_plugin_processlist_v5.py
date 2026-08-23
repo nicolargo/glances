@@ -290,3 +290,60 @@ async def test_nice_escalating_categorical_thresholds(tmp_path, monkeypatch, sto
     assert levels[1]["nice"]["level"] == "careful"
     assert levels[2]["nice"]["level"] == "warning"
     assert levels[3]["nice"]["level"] == "critical"
+
+
+# ---------------------------------------------------------- export gate (issue #794)
+
+
+async def test_get_export_empty_by_default(store, config):
+    """v4 parity: nothing is exported unless `[processlist] export` is set."""
+    plugin = PluginModel(store, config)
+    procs = [_proc(pid=1, name="python3"), _proc(pid=2, name="bash")]
+    with patch("glances.plugins.processlist.model_v5.glances_processes.get_list", return_value=procs):
+        await plugin.update()
+    assert plugin.get_export() == []
+
+
+async def test_get_export_does_not_affect_get_stats(store, config):
+    """The gate only touches get_export() — get_stats()/the TUI stay full."""
+    plugin = PluginModel(store, config)
+    procs = [_proc(pid=1, name="python3"), _proc(pid=2, name="bash")]
+    with patch("glances.plugins.processlist.model_v5.glances_processes.get_list", return_value=procs):
+        await plugin.update()
+    assert plugin.get_export() == []
+    assert len(plugin.get_stats()["data"]) == 2
+
+
+async def test_get_export_filters_by_name_when_configured(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[processlist]\nexport=python.*\n")
+    plugin = PluginModel(store, config)
+    procs = [_proc(pid=1, name="python3"), _proc(pid=2, name="bash", cmdline=["bash"])]
+    with patch("glances.plugins.processlist.model_v5.glances_processes.get_list", return_value=procs):
+        await plugin.update()
+    exported = plugin.get_export()
+    assert [p["pid"] for p in exported] == [1]
+
+
+async def test_get_export_filters_by_cmdline_when_configured(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[processlist]\nexport=.*myscript.*\n")
+    plugin = PluginModel(store, config)
+    procs = [
+        _proc(pid=1, name="python3", cmdline=["python3", "myscript.py"]),
+        _proc(pid=2, name="bash", cmdline=["bash"]),
+    ]
+    with patch("glances.plugins.processlist.model_v5.glances_processes.get_list", return_value=procs):
+        await plugin.update()
+    exported = plugin.get_export()
+    assert [p["pid"] for p in exported] == [1]
+
+
+async def test_get_export_invalid_regex_ignored_with_warning(tmp_path, monkeypatch, store, caplog):
+    config = _config_with(tmp_path, monkeypatch, "[processlist]\nexport=[invalid(\n")
+    with caplog.at_level("WARNING"):
+        plugin = PluginModel(store, config)
+    assert any("invalid" in rec.message.lower() for rec in caplog.records)
+    procs = [_proc(pid=1, name="python3")]
+    with patch("glances.plugins.processlist.model_v5.glances_processes.get_list", return_value=procs):
+        await plugin.update()
+    # No usable pattern survived compilation → export stays empty (v4-safe default).
+    assert plugin.get_export() == []

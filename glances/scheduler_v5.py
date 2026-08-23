@@ -34,13 +34,25 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from glances.alerts_v5 import GlancesAlerts
     from glances.config_v5 import GlancesConfigV5
+    from glances.exports.export_base_v5 import GlancesExportBase
     from glances.plugins.plugin.base_v5 import GlancesPluginBase
     from glances.stats_store_v5 import StatsStoreV5
 
 logger = logging.getLogger(__name__)
 
 # Hard-coded fallback used only if `[global] refresh_time` is absent from
-# the config. Matches the v4 default.
+# the config. Matches the v4 default. A copy of this constant also lives in
+# glances.exports.export_base_v5 — kept as a separate copy on purpose, not
+# for import cost (main_v5.py now imports glances.exports and
+# glances.exports.export_base_v5 unconditionally in every mode, ~0.5ms
+# total, so that's no longer a reason not to import here). The real reason:
+# layering. This scheduler is core/lower-level and the export subsystem
+# already depends on IT (`resolve_export_refresh()` takes the scheduler's
+# resolved global refresh as a parameter) — a module-top import the other
+# way, just to fetch a literal `2.0`, would add a static dependency in the
+# wrong direction for no benefit. `_export_refresh_time()` below still does
+# a local, function-scoped import of `resolve_export_refresh` itself,
+# because that one is an actual cross-module call, not a bare constant.
 _DEFAULT_REFRESH_TIME = 2.0
 
 
@@ -72,6 +84,7 @@ class AsyncScheduler:
         self._entries: list[_PluginEntry] = []
         self._tasks: list[asyncio.Task[None]] = []
         self._running: bool = False
+        self._exporters: list[GlancesExportBase] = []
 
     # ------------------------------------------------------------ register
 
@@ -114,6 +127,17 @@ class AsyncScheduler:
             raise ValueError(f"refresh_time for {plugin.plugin_name!r} must be > 0, got {rt}")
 
         self._entries.append(_PluginEntry(plugin=plugin, refresh_time=rt))
+
+    def register_exporter(self, exporter: GlancesExportBase) -> None:
+        """Register an export module. Its loop starts with `run_forever()`.
+
+        Unlike plugins, exporters share ONE loop and ONE cadence
+        (`[export] refresh`): a backend write is a batch operation, and
+        staggering it per plugin would multiply round-trips for no gain.
+        """
+        if self._running:
+            raise RuntimeError("Cannot register an exporter while the scheduler is running")
+        self._exporters.append(exporter)
 
     def _resolve_refresh_time(
         self,
@@ -166,6 +190,13 @@ class AsyncScheduler:
         glob = self._config_refresh("global")
         return glob if glob > 0 else _DEFAULT_REFRESH_TIME
 
+    def _export_refresh_time(self) -> float:
+        """Cadence of the export loop. Delegates to the export layer so the
+        exporters and the loop never read `[export] refresh` differently."""
+        from glances.exports.export_base_v5 import resolve_export_refresh
+
+        return resolve_export_refresh(self.config, self._global_refresh_time())
+
     # ------------------------------------------------------------ run/stop
 
     async def run_forever(self) -> None:
@@ -182,6 +213,8 @@ class AsyncScheduler:
 
         self._running = True
         self._tasks = [asyncio.create_task(self._plugin_loop(entry)) for entry in self._entries]
+        if self._exporters:
+            self._tasks.append(asyncio.create_task(self._export_loop()))
         try:
             # return_exceptions=True so a single task raising does not
             # propagate out of gather and tear the rest down.
@@ -207,6 +240,15 @@ class AsyncScheduler:
                 await asyncio.to_thread(entry.plugin.stop)
             except Exception as e:
                 logger.warning("Scheduler: stop() of %s failed: %s", entry.plugin.plugin_name, e)
+        for exporter in self._exporters:
+            try:
+                await asyncio.to_thread(exporter.exit)
+            except Exception as e:
+                logger.warning(
+                    "Scheduler: exit() of export %s failed: %s",
+                    exporter.export_name or type(exporter).__name__,
+                    e,
+                )
 
     # ------------------------------------------------------------ internals
 
@@ -249,6 +291,37 @@ class AsyncScheduler:
                 first_cycle = False
             else:
                 sleep_time = entry.refresh_time
+            await asyncio.sleep(sleep_time)
+
+    async def _export_loop(self) -> None:
+        """Single loop driving every registered exporter, forever.
+
+        One `to_thread` handoff per exporter per tick — never per plugin.
+        Every exporter here is blocking (file IO, HTTP clients), and a
+        handoff costs ~307 µs, so 34 plugins × N exporters per tick would
+        dominate the cycle.
+
+        An exporter that raises is logged and kept: a backend that is
+        momentarily down must not cost the operator their other exports,
+        nor silently stop exporting once it comes back.
+
+        The export interval is resolved ONCE, here, before the loop starts
+        — not on every tick. `_export_refresh_time()` reaches
+        `resolve_export_refresh()`, which logs a WARNING whenever
+        `[export] refresh` is clamped up to the global refresh; resolving
+        it every tick would repeat that warning on every export cycle
+        (e.g. ~43000 times a day at `[export] refresh=1` / `[global]
+        refresh=2`). Mirrors `_plugin_loop()`, which resolves its interval
+        once at `register()` rather than on every iteration.
+        """
+        sleep_time = self._export_refresh_time()
+        while True:
+            plugins = [entry.plugin for entry in self._entries]
+            for exporter in self._exporters:
+                try:
+                    await asyncio.to_thread(exporter.update, plugins)
+                except Exception as e:
+                    logger.warning("Export %s failed: %s", exporter.export_name or type(exporter).__name__, e)
             await asyncio.sleep(sleep_time)
 
 

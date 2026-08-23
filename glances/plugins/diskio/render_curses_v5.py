@@ -19,8 +19,8 @@ Replicates v4 ``diskio.msg_curse()`` default mode (R/s + W/s):
 - Rate cells display ``auto_unit(bytes_per_sec)`` WITHOUT a trailing
   ``/s`` — the header carries the per-second semantic, saving column
   width (v4 parity).
-- Disks with no rate yet (cycle 1) are skipped — avoids a startup wall
-  of ``-`` placeholders.
+- Disks with no rate yet (cycle 1, value ``None``) are skipped — avoids
+  a startup wall of ``-`` placeholders.
 - Long disk names are tail-truncated with a leading underscore.
 
 TODO(G4+): plumb args so ``--diskio-iops`` (IOR/s + IOW/s) and
@@ -100,8 +100,8 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
     for item in sorted(items, key=lambda it: str(it.get("disk_name", ""))):
         if not isinstance(item, dict):
             continue
-        # Skip disks with no rate yet — cycle 1 strips read_bytes/write_bytes.
-        if "read_bytes" not in item or "write_bytes" not in item:
+        # Skip disks with no rate yet — cycle 1 sets read_bytes/write_bytes to None.
+        if item.get("read_bytes") is None or item.get("write_bytes") is None:
             continue
 
         name = str(item.get("disk_name") or "")

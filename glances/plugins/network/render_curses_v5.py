@@ -114,9 +114,9 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         # v4 fidelity: skip interfaces in the down state (issue #765).
         if item.get("is_up") is False:
             continue
-        # Skip first-cycle interfaces — rate fields are absent until the
+        # Skip first-cycle interfaces — rate fields are None until the
         # base class has two samples (cf. `_transform_gauge`).
-        if "bytes_recv" not in item or "bytes_sent" not in item:
+        if item.get("bytes_recv") is None or item.get("bytes_sent") is None:
             continue
 
         name = str(item.get("interface_name") or "")

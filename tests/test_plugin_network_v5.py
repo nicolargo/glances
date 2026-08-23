@@ -165,7 +165,7 @@ async def test_bytes_speed_rate_per_sec_is_zero_for_unknown_speed(store, config)
     assert store.get("network")["data"][0]["bytes_speed_rate_per_sec"] == 0.0
 
 
-async def test_first_cycle_strips_all_rate_fields(store, config):
+async def test_first_cycle_rate_fields_are_none(store, config):
     plugin = PluginModel(store, config)
     with _patch_psutil(
         io_counters={"eth0": _io(rx=1000, tx=500, errin=10, errout=5, dropin=2, dropout=1)},
@@ -174,7 +174,8 @@ async def test_first_cycle_strips_all_rate_fields(store, config):
         await plugin.update()
     item = store.get("network")["data"][0]
     for name in ("bytes_recv", "bytes_sent", "errors_in", "errors_out", "dropped_in", "dropped_out"):
-        assert name not in item, name
+        assert name in item, name
+        assert item[name] is None, name
 
 
 async def test_second_cycle_computes_per_interface_rates(store, config, monkeypatch):
@@ -359,8 +360,8 @@ async def test_show_keeps_only_matching_interfaces(tmp_path, monkeypatch, store)
     assert names == ["eth0", "eth1"]
 
 
-async def test_appearing_interface_has_no_rate_first_cycle(store, config, monkeypatch):
-    """A new interface mid-flight has its rates absent on its first cycle."""
+async def test_appearing_interface_has_none_rate_first_cycle(store, config, monkeypatch):
+    """A new interface mid-flight has its rates set to None on its first cycle."""
     plugin = PluginModel(store, config)
     now = _fake_now(monkeypatch)
 
@@ -379,7 +380,8 @@ async def test_appearing_interface_has_no_rate_first_cycle(store, config, monkey
 
     items = {item["interface_name"]: item for item in store.get("network")["data"]}
     assert items["eth0"]["bytes_recv"] == 1000.0
-    assert "bytes_recv" not in items["wlan0"]
+    assert "bytes_recv" in items["wlan0"]
+    assert items["wlan0"]["bytes_recv"] is None
 
 
 async def test_get_export_strips_internals_and_returns_list(store, config):

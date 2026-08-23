@@ -164,7 +164,7 @@ def render(
             line1_cells += [Cell(text=""), Cell(text="")]
     # Line-1 col-3 pair (ctx_sw) — only when column 3 survives.
     if n_cols >= 3:
-        if "ctx_switches" in payload:
+        if payload.get("ctx_switches") is not None:
             line1_cells += [
                 Cell(text=field_label(fields_desc.get("ctx_switches", {}), "ctx_switches", prefer_short=True)),
                 _ctx_sw_value_cell(payload, fields_desc, "ctx_switches"),
@@ -189,13 +189,13 @@ def render(
     #   line 3: soft_interrupts (Linux) or ctx_switches (Windows)
     #   line 4: guest (Linux) or syscalls (non-Linux/non-macOS)
     col3_keys_labels: list[tuple[str, str]] = [_kl("interrupts")]
-    if "soft_interrupts" in payload:
+    if payload.get("soft_interrupts") is not None:
         col3_keys_labels.append(_kl("soft_interrupts"))
     else:
         col3_keys_labels.append(_kl("ctx_switches"))
     if "guest" in payload:
         col3_keys_labels.append(_kl("guest"))
-    elif "syscalls" in payload:
+    elif payload.get("syscalls") is not None:
         col3_keys_labels.append(_kl("syscalls"))
     else:
         col3_keys_labels.append(("", ""))

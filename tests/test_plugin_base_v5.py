@@ -439,8 +439,8 @@ async def test_normalize_by_skips_level_when_divisor_is_missing_or_zero(store, c
 # ---------------------------------------------------------- _transform_gauge (rate)
 
 
-async def test_rate_field_absent_on_first_cycle(store, config):
-    """First cycle has no _raw_previous — rate fields are stripped."""
+async def test_rate_field_none_on_first_cycle(store, config):
+    """First cycle has no _raw_previous — rate fields are kept, set to None."""
 
     class Counter(FakeScalarPlugin):
         fields_description = {
@@ -450,7 +450,8 @@ async def test_rate_field_absent_on_first_cycle(store, config):
     plugin = Counter(store, config, payload={"ctx_switches": 10_000})
     await plugin.update()
     payload = store.get("fakescalar")
-    assert "ctx_switches" not in payload  # absent on first cycle
+    assert "ctx_switches" in payload
+    assert payload["ctx_switches"] is None  # kept, not computable yet
 
 
 async def test_rate_field_computed_on_second_cycle(store, config, monkeypatch):
@@ -474,7 +475,7 @@ async def test_rate_field_computed_on_second_cycle(store, config, monkeypatch):
 
     monkeypatch.setattr(base_module.time, "monotonic", fake_monotonic)
 
-    await plugin.update()  # first cycle, ctx_switches stripped, _raw_previous = {ctx_switches: 10_000}
+    await plugin.update()  # first cycle, ctx_switches = None, _raw_previous = {ctx_switches: 10_000}
 
     fake_now[0] = 102.0  # +2 s
     plugin._payload = {"ctx_switches": 10_500}
@@ -590,12 +591,12 @@ class _CounterCollection(FakeCollectionPlugin):
     }
 
 
-async def test_collection_rate_absent_on_first_cycle(store, config):
-    """First cycle: no _raw_previous, all per-item rate fields stripped."""
+async def test_collection_rate_none_on_first_cycle(store, config):
+    """First cycle: no _raw_previous, all per-item rate fields kept, set to None."""
     plugin = _CounterCollection(store, config, payload=[{"name": "eth0", "rx": 1000}, {"name": "wlan0", "rx": 500}])
     await plugin.update()
     items = store.get("fakecollection")["data"]
-    assert all("rx" not in item for item in items)
+    assert all("rx" in item and item["rx"] is None for item in items)
 
 
 async def test_collection_rate_computed_per_item_on_second_cycle(store, config, monkeypatch):
@@ -607,7 +608,7 @@ async def test_collection_rate_computed_per_item_on_second_cycle(store, config, 
 
     monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
 
-    await plugin.update()  # cycle 1 — rx stripped
+    await plugin.update()  # cycle 1 — rx = None
 
     fake_now[0] = 102.0  # +2 s
     plugin._payload = [{"name": "eth0", "rx": 3000}, {"name": "wlan0", "rx": 800}]
@@ -619,8 +620,8 @@ async def test_collection_rate_computed_per_item_on_second_cycle(store, config, 
     assert items["wlan0"]["rx"] == 150.0
 
 
-async def test_collection_rate_absent_for_newly_appearing_item(store, config, monkeypatch):
-    """An interface that appears between cycles has no rate on its first appearance."""
+async def test_collection_rate_none_for_newly_appearing_item(store, config, monkeypatch):
+    """An interface that appears between cycles has rate = None on its first appearance."""
     plugin = _CounterCollection(store, config, payload=[{"name": "eth0", "rx": 1000}])
 
     fake_now = [100.0]
@@ -636,7 +637,8 @@ async def test_collection_rate_absent_for_newly_appearing_item(store, config, mo
 
     items = {item["name"]: item for item in store.get("fakecollection")["data"]}
     assert items["eth0"]["rx"] == 500.0  # rate computed
-    assert "rx" not in items["wlan0"]  # absent — first appearance
+    assert "rx" in items["wlan0"]
+    assert items["wlan0"]["rx"] is None  # first appearance — not computable yet
 
 
 async def test_collection_disappearing_item_does_not_poison_others(store, config, monkeypatch):

@@ -60,14 +60,14 @@ def test_grab_stats_returns_cumulative_counters(store_with, config_with):
     assert next(r for r in stats if r["irq_line"] == "8_rtc0")["irq_rate"] == 10
 
 
-def test_first_cycle_publishes_items_without_a_rate_field(store_with, config_with):
+def test_first_cycle_publishes_items_with_rate_field_none(store_with, config_with):
     store = store_with()
     plugin = PluginModel(store, config_with({}))
     plugin._read_proc = lambda: PROC_INTERRUPTS
     asyncio.run(plugin.update())
     items = store.get("irq")["data"]
     assert items, "items must be published on cycle 1"
-    assert all("irq_rate" not in i for i in items), "no previous sample yet"
+    assert all("irq_rate" in i and i["irq_rate"] is None for i in items), "no previous sample yet"
 
 
 def test_second_cycle_computes_a_per_second_rate(store_with, config_with):
@@ -86,22 +86,50 @@ def test_second_cycle_computes_a_per_second_rate(store_with, config_with):
     assert rtc0["irq_rate"] != 2000, "a raw delta means the rate machinery was bypassed"
 
 
-def test_sorted_by_rate_descending_and_capped_at_five(store_with, config_with):
+def test_all_lines_published_not_just_top_five(store_with, config_with):
+    """Divergence from v4: the model publishes every line (ranking moved to the
+    TUI renderer) so exporters get the complete series."""
+    store = store_with()
+    plugin = PluginModel(store, config_with({}))
+    content = "           CPU0\n" + "".join(f"{i}:  {i * 100}  IO-APIC {i}-edge dev{i}\n" for i in range(1, 9))
+    plugin._read_proc = lambda: content
+    asyncio.run(plugin.update())
+    items = store.get("irq")["data"]
+    assert len(items) == 8, "all 8 lines must be published, not just the busiest 5"
+    assert {i["irq_line"] for i in items} == {f"{n}_dev{n}" for n in range(1, 9)}
+
+
+def test_item_order_is_stable_across_cycles_even_as_rates_change(store_with, config_with):
+    """Protects the CSV export: `build_export()` walks the list in order to emit
+    columns, so the item ORDER — not just the item set — must not depend on the
+    (constantly changing) rate, or the exported header churns every cycle."""
     store = store_with()
     plugin = PluginModel(store, config_with({}))
     first = "           CPU0\n" + "".join(f"{i}:  0  IO-APIC {i}-edge dev{i}\n" for i in range(1, 9))
     plugin._read_proc = lambda: first
     asyncio.run(plugin.update())
-    # Give each line a distinct increment so the ordering is unambiguous.
-    second = "           CPU0\n" + "".join(f"{i}:  {i * 100}  IO-APIC {i}-edge dev{i}\n" for i in range(1, 9))
+    order_cycle_1 = [i["irq_line"] for i in store.get("irq")["data"]]
+
+    # Reverse the rate ranking entirely: if ordering still depended on rate,
+    # the item order below would be the exact reverse of cycle 1's.
+    second = "           CPU0\n" + "".join(f"{i}:  {(9 - i) * 100}  IO-APIC {i}-edge dev{i}\n" for i in range(1, 9))
     plugin._read_proc = lambda: second
     asyncio.run(plugin.update())
-    items = store.get("irq")["data"]
-    assert len(items) == 5, "v4 caps the collection at the top 5"
-    rates = [i["irq_rate"] for i in items]
-    assert rates == sorted(rates, reverse=True)
-    # The five busiest lines are 8..4.
-    assert [i["irq_line"] for i in items] == [f"{n}_dev{n}" for n in (8, 7, 6, 5, 4)]
+    order_cycle_2 = [i["irq_line"] for i in store.get("irq")["data"]]
+
+    assert order_cycle_1 == order_cycle_2, "column order must be stable across cycles"
+    assert order_cycle_1 == sorted(order_cycle_1), "order follows the primary key (irq_line)"
+
+
+def test_get_export_returns_every_line(store_with, config_with):
+    store = store_with()
+    plugin = PluginModel(store, config_with({}))
+    content = "           CPU0\n" + "".join(f"{i}:  {i * 100}  IO-APIC {i}-edge dev{i}\n" for i in range(1, 9))
+    plugin._read_proc = lambda: content
+    asyncio.run(plugin.update())
+    exported = plugin.get_export()
+    assert len(exported) == 8, "get_export() must not be capped at 5 either"
+    assert {e["irq_line"] for e in exported} == {f"{n}_dev{n}" for n in range(1, 9)}
 
 
 def test_missing_proc_file_yields_empty_collection(store_with, config_with):
@@ -209,3 +237,25 @@ def test_render_skips_non_dict_items_in_data():
     irq_lines = ["".join(c.text for c in rows[i].cells) for i in range(1, len(rows))]
     assert "1_i8042" in irq_lines[0]
     assert "LOC" in irq_lines[1]
+
+
+def test_render_ranks_and_caps_at_top_five():
+    """The model now publishes every line; the renderer must do the top-5
+    ranking that v4/the old model used to do, and a `None` rate (an item's
+    first cycle) must sort last rather than raising."""
+    payload = {
+        "data": [
+            {"irq_line": "a", "irq_rate": 10.0},
+            {"irq_line": "b", "irq_rate": 50.0},
+            {"irq_line": "c", "irq_rate": None},
+            {"irq_line": "d", "irq_rate": 30.0},
+            {"irq_line": "e", "irq_rate": 20.0},
+            {"irq_line": "f", "irq_rate": 40.0},
+            {"irq_line": "g", "irq_rate": 5.0},
+        ]
+    }
+    rows = render(payload, _FIELDS)
+    assert len(rows) == 6, "header + exactly 5 rows, even though 7 lines were published"
+    rendered_lines = [row.cells[0].text.strip() for row in rows[1:]]
+    # Highest 5 rates: b(50), f(40), d(30), e(20), a(10). c(None) and g(5) excluded.
+    assert rendered_lines == ["b", "f", "d", "e", "a"]

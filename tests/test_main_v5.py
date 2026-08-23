@@ -36,6 +36,7 @@ import pytest
 
 from glances.config_v5 import GlancesConfigV5
 from glances.main_v5 import (
+    apply_plugin_flags,
     assemble,
     build_parser,
     cli_set_password,
@@ -614,3 +615,118 @@ def test_assemble_tui_registry_shows_displayables_hides_rest_only(config):
         assert name in registry_names
     for name in ("core", "version", "psutilversion"):
         assert name not in registry_names
+
+
+# ------------------------------------------------------ apply_plugin_flags
+
+
+def test_apply_plugin_flags_disable_sets_overlay(config):
+    args = build_parser().parse_args(["--disable-plugin", "cpu,mem"])
+    apply_plugin_flags(args, config)
+    assert config._merged["cpu"]["disable"] is True
+    assert config._merged["mem"]["disable"] is True
+    # exactly those two — nothing else got a 'disable' key written.
+    for section, opts in config._merged.items():
+        if section not in ("cpu", "mem"):
+            assert "disable" not in opts
+
+
+def test_apply_plugin_flags_enable_flips_disabled_by_default(config):
+    args = build_parser().parse_args(["--enable-plugin", "npu"])
+    apply_plugin_flags(args, config)
+    assert config._merged["npu"]["disable"] is False
+
+
+def test_apply_plugin_flags_enable_wins_on_conflict(config):
+    args = build_parser().parse_args(["--disable-plugin", "cpu", "--enable-plugin", "cpu"])
+    apply_plugin_flags(args, config)
+    assert config._merged["cpu"]["disable"] is False
+
+
+def test_apply_plugin_flags_disable_all_enable_cpu_leaves_only_cpu(config):
+    args = build_parser().parse_args(["--disable-plugin", "all", "--enable-plugin", "cpu"])
+    apply_plugin_flags(args, config)
+    names = {p.plugin_name for p in discover_plugins(StatsStoreV5(), config)}
+    assert names == {"cpu"}
+
+
+def test_apply_plugin_flags_disable_all_without_enable_exits_2(config):
+    args = build_parser().parse_args(["--disable-plugin", "all"])
+    with pytest.raises(SystemExit) as excinfo:
+        apply_plugin_flags(args, config)
+    assert excinfo.value.code == 2
+
+
+def test_apply_plugin_flags_unknown_disable_name_exits_2_untouched(config):
+    args = build_parser().parse_args(["--disable-plugin", "cpu,bogusplugin"])
+    with pytest.raises(SystemExit) as excinfo:
+        apply_plugin_flags(args, config)
+    assert excinfo.value.code == 2
+    # Nothing applied before the exit — validation happens for both lists first.
+    assert config._merged.get("cpu", {}).get("disable") is None
+
+
+def test_apply_plugin_flags_unknown_enable_name_exits_2(config):
+    args = build_parser().parse_args(["--enable-plugin", "cpuu"])
+    with pytest.raises(SystemExit) as excinfo:
+        apply_plugin_flags(args, config)
+    assert excinfo.value.code == 2
+
+
+def test_apply_plugin_flags_disabling_processcount_disables_processlist(config):
+    args = build_parser().parse_args(["--disable-plugin", "processcount"])
+    apply_plugin_flags(args, config)
+    assert config._merged["processcount"]["disable"] is True
+    assert config._merged["processlist"]["disable"] is True
+
+
+def test_apply_plugin_flags_enabling_processlist_forces_processcount_enabled(config):
+    args = build_parser().parse_args(["--enable-plugin", "processlist"])
+    apply_plugin_flags(args, config)
+    assert config._merged["processlist"]["disable"] is False
+    assert config._merged["processcount"]["disable"] is False
+
+
+def test_apply_plugin_flags_absent_flags_leave_overlay_untouched(config):
+    args = build_parser().parse_args([])
+    apply_plugin_flags(args, config)
+    for opts in config._merged.values():
+        assert "disable" not in opts
+
+
+# --------------------------------------------- apply_plugin_flags: 'all' coupling (FIX 3)
+
+
+def test_apply_plugin_flags_disable_all_enable_processlist(config):
+    """'all' + --enable-plugin processlist must actually enable processlist.
+
+    Regression: the coupling branch used to key off processcount's
+    'all'-expanded disable=True and re-disable processlist AFTER the enable
+    pass, no matter what the user asked for.
+    """
+    args = build_parser().parse_args(["--disable-plugin", "all", "--enable-plugin", "processlist"])
+    apply_plugin_flags(args, config)
+    assert config._merged["processcount"]["disable"] is False
+    assert config._merged["processlist"]["disable"] is False
+    # programlist was not explicitly enabled — stays disabled from the 'all' expansion.
+    assert config._merged["programlist"]["disable"] is True
+
+
+def test_apply_plugin_flags_disable_all_enable_programlist(config):
+    args = build_parser().parse_args(["--disable-plugin", "all", "--enable-plugin", "programlist"])
+    apply_plugin_flags(args, config)
+    assert config._merged["processcount"]["disable"] is False
+    assert config._merged["programlist"]["disable"] is False
+    assert config._merged["processlist"]["disable"] is True
+
+
+def test_apply_plugin_flags_explicit_processcount_disable_still_cascades(config):
+    """An explicit (non-'all') --disable-plugin processcount still cascades to processlist.
+
+    Same scenario as ``test_apply_plugin_flags_disabling_processcount_disables_processlist``
+    above — kept here too as one of the four FIX 3 cases the task asks to cover explicitly.
+    """
+    args = build_parser().parse_args(["--disable-plugin", "processcount"])
+    apply_plugin_flags(args, config)
+    assert config._merged["processcount"]["disable"] is True
+    assert config._merged["processlist"]["disable"] is True

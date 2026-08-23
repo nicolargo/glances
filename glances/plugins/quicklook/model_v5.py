@@ -114,6 +114,7 @@ class PluginModel(GlancesPluginBase[dict]):
 
     plugin_name: ClassVar[str] = "quicklook"
     IS_COLLECTION: ClassVar[bool] = False
+    EXPORTABLE = False
     # Quicklook re-exposes cpu/mem/swap/load with the standard percent ladder
     # so its bars colour like the dedicated plugins — but those signals are
     # ALREADY watched by the cpu/mem/memswap/load plugins. Ingesting quicklook

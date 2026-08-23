@@ -239,7 +239,7 @@ The `_transform()` method is itself a pipeline of four ordered steps, all implem
 | `prominent` | `bool` | When `True`, the field is rendered with **background highlight** in the TUI/WebUI and every level transition is tagged `prominent: True` in the alert event feed. When `False`, only the font color changes and the event is tagged `prominent: False`. Replaces v4 `_log` flag. Defaults to `True` for watched fields (a watched field is meant to be visible by default). |
 | `default_thresholds` | `dict` | Default alert thresholds (`careful`, `warning`, `critical`). Replaces v4 flat threshold keys. Overridable per-level via `glances.conf [<plugin>] careful=N` or `<field>_careful=N` for multi-watched plugins. |
 | `normalize_by` | `str` | Optional. Name of another field in the same payload whose value is used as a divisor before threshold comparison: `level = compute_level(value / stats[normalize_by], thresholds, direction)`. Used for per-core normalisation (e.g. `load.min15` divided by `cpucore`) and for percent-of-capacity comparisons (`network.bytes_recv` divided by `bytes_speed_rate_per_sec`). When the divisor is **missing, `None`, or zero**, the level is **skipped** for this field on this item — meaning "no meaningful threshold computable" (e.g. an interface whose link speed is unknown). Thresholds whose result is a ratio in `[0, 1]` (capacity-relative) should declare ratio-valued `default_thresholds` (e.g. `{"careful": 0.7, "warning": 0.8, "critical": 0.9}`). **Note:** `cpu.ctx_switches` is **not** normalised in v5 — system-wide ctx-switch rate is signalled by an absolute threshold (10k/15k/20k) regardless of core count. v4 documents `50000*cpucore` but its `get_limit` fallback chain never resolves the default, so v4 ships effectively no threshold; v5 ships a real one. Documented in NEWS.rst at 5.0.0. |
-| `rate` | `bool` | When `True`, the field is treated as a cumulative counter and converted to a per-second rate by `_transform_gauge` (`(current - previous) / time_since_update`). On the first cycle the field is **absent** from the payload (no previous sample to diff against). Counter wrap or reboot (delta < 0) clamps to `0.0`. |
+| `rate` | `bool` | When `True`, the field is treated as a cumulative counter and converted to a per-second rate by `_transform_gauge` (`(current - previous) / time_since_update`). On the first cycle the field is **present with value `None`** (no previous sample to diff against yet) — `fields_description` is the contract consumers (REST, exporters) rely on, so the field set must stay stable rather than appearing/disappearing across cycles. Counter wrap or reboot (delta < 0) clamps to `0.0`. |
 | `primary_key` | `bool` | Marks the join key for `_levels` indexing in list plugins. |
 | `exportable` | `bool` | Whether the field is included in `get_export()` output. Defaults to `True`. Set to `False` for internal fields (`time_since_update`, etc.). |
 | `format` | `str` | Optional. Explicit Python format string for the renderer (`"%5.1f%%"`, `"%>10s"`). Overrides the default unit-driven formatter. Pure formatting hint — does **not** influence threshold computation, export, or any non-rendering logic. |
@@ -643,8 +643,9 @@ Properties:
   the StatsStore. This matters for the client/server topology: hiding an
   interface on the server hides it for every connected client.
 - **Filtered items have no `_raw_previous` entry** — re-showing an item
-  via config reload starts a fresh rate window (first cycle absent),
-  same as a newly appearing interface.
+  via config reload starts a fresh rate window (rate fields present with
+  value `None` on that first cycle — a stable field set is required by
+  any consumer with a fixed schema), same as a newly appearing interface.
 - **Invalid regexes are logged and skipped** — never raise. A typo in
   the config can't crash a plugin.
 - **One field per plugin must declare `primary_key: True`** — validated
@@ -936,11 +937,18 @@ The audit produces a downloadable `.md` report (per the contribution guidelines)
 - Export is available in **all modes**: standalone, server, and client.
 - In v4, the server was passive (data collected only on client request). In v5, the asyncio scheduler always runs plugins at their `refresh_time` regardless of connected clients — this is a fundamental architectural change required for a responsive REST API. Export and `GlancesAlerts` are lightweight consumers of already-computed StatsStore data; their marginal CPU overhead is small.
 - The primary lever for CPU control in server mode is `refresh_time` per plugin. A headless server with no TUI should use longer refresh intervals.
-- An `export_refresh_time` global option controls how frequently exporters flush data (must be ≥ `refresh_time`):
+- An `[export] refresh` option controls how frequently exporters flush data. A
+  value lower than the global refresh is clamped up to it — exporting faster
+  than the plugins are polled duplicates points without adding information:
   ```ini
-  [exports]
-  refresh_time=10   # export every 10s even if plugins refresh every 2s
+  [export]
+  refresh=10   # export every 10s even if plugins refresh every 2s
   ```
+  Superseded decision: earlier drafts of this section proposed a separate
+  `[exports]` section with a `refresh_time` key. A second section one letter
+  away from the existing `[export]` (which already holds `exclude_fields`) is a
+  configuration trap, and `refresh` is the key name every other section uses.
+  Implemented as `[export] refresh` in G8.
 - **Documentation must warn** that v5 server mode has higher baseline CPU consumption than v4 server mode (always-on scheduler vs. lazy collection). `refresh_time` is the mitigation.
 
 ### 7.2 get_export() — consistent field filtering (issue #3211)
@@ -967,7 +975,14 @@ def get_export(self) -> dict | list:
 ### 7.3 Migration scope
 
 - **All v4 export modules** must be migrated. No exporter omitted.
-- `GlancesExportBase.update()` becomes async. Modules integrate into the main asyncio loop.
+- `GlancesExportBase.update()` stays **synchronous**; the coroutine boundary
+  lives in `AsyncScheduler._export_loop()`, which calls
+  `await asyncio.to_thread(exporter.update, plugins)` once per exporter per
+  tick. Every backend client is blocking (file IO, `influxdb_client`,
+  `prometheus_client`), so an `async def` whose body is entirely blocking would
+  still need a finer-grained `to_thread` for no gain — and one handoff per
+  exporter per tick beats one per plugin per exporter (~307 µs each).
+  Superseded decision: this section previously required an async `update()`.
 - Every migrated exporter replaces direct StatsStore access with `plugin.get_export()`.
 - No new export module added during the v5 migration phase.
 
@@ -1083,7 +1098,7 @@ _Goal: async skeleton running, no plugin migrated yet. All contributor skills wr
 | File | Content |
 |---|---|
 | `.claude/skills/SKILL-plugin.md` | `GlancesPluginBase[T]`, `fields_description` v5 keys, `_transform()`, `get_export()`, async pattern, unit test requirement |
-| `.claude/skills/SKILL-exporter.md` | `GlancesExportBase` async, `get_export()` as the only permitted data access, migration pattern from v4 |
+| `.claude/skills/SKILL-exporter.md` | `GlancesExportBase` (synchronous — see §7.3), `get_export()` as the only permitted data access, migration pattern from v4 |
 | `.claude/skills/SKILL-actions.md` | `GlancesActionBase`, auto-discovery, Mustache context, Apprise optional dependency, webhook example |
 | `.claude/skills/SKILL-security.md` | FastAPI security model, CVE list (§8), `as_dict_secure()`, CORS defaults, startup warnings |
 | `.claude/skills/SKILL-config.md` | Env overlay, typed `get()`, `thresholds` structure, hot-reload safe vs unsafe keys |

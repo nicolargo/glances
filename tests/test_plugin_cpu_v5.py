@@ -206,17 +206,21 @@ async def test_update_drops_undeclared_psutil_fields(store, config):
     assert "some_future_field" not in payload
 
 
-async def test_first_cycle_strips_rate_fields(store, config):
-    """Counter fields (ctx_switches, interrupts, ...) are absent on the first cycle."""
+async def test_first_cycle_rate_fields_are_none(store, config):
+    """Counter fields (ctx_switches, interrupts, ...) are present but None on the first cycle."""
     plugin = PluginModel(store, config)
     with _patch_sampler():
         await plugin.update()
     payload = store.get("cpu")
-    # `rate: True` fields stripped — no previous sample to diff against.
-    assert "ctx_switches" not in payload
-    assert "interrupts" not in payload
-    assert "soft_interrupts" not in payload
-    assert "syscalls" not in payload
+    # `rate: True` fields kept, value None — no previous sample to diff against.
+    assert "ctx_switches" in payload
+    assert payload["ctx_switches"] is None
+    assert "interrupts" in payload
+    assert payload["interrupts"] is None
+    assert "soft_interrupts" in payload
+    assert payload["soft_interrupts"] is None
+    assert "syscalls" in payload
+    assert payload["syscalls"] is None
 
 
 async def test_second_cycle_computes_ctx_switches_rate(store, config, monkeypatch):
@@ -229,7 +233,7 @@ async def test_second_cycle_computes_ctx_switches_rate(store, config, monkeypatc
     monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
 
     with _patch_sampler(stats=_stats(ctx=10_000)):
-        await plugin.update()  # cycle 1 — ctx_switches absent
+        await plugin.update()  # cycle 1 — ctx_switches is None
 
     fake_now[0] = 102.0  # +2 s elapsed
     with _patch_sampler(stats=_stats(ctx=10_500)):

@@ -29,10 +29,13 @@ trigger ``engine.update()``. Mirrors v4 contract.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, ClassVar
 
+from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.processes import glances_processes
+from glances.stats_store_v5 import StatsStoreV5
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +156,34 @@ class PluginModel(GlancesPluginBase[list]):
             "internal": True,
         },
     }
+
+    def __init__(self, store: StatsStoreV5, config: GlancesConfigV5) -> None:
+        super().__init__(store, config)
+        # v4 parity (issue #794): by default NOTHING is exported — a process
+        # list can carry hundreds of columns and blow up flat-schema
+        # exporters (CSV/InfluxDB). Only items matching an operator-set
+        # filter are exported. `[processlist] export` is the same config key
+        # v4 uses; `programlist` reuses this SAME section (see its __init__).
+        self._export_patterns: list[re.Pattern[str]] = self._compile_filter("export", section="processlist")
+
+    def get_export(self) -> list[dict[str, Any]]:
+        """Filtered export view (v4 parity, issue #794).
+
+        Empty (no columns at all) unless `[processlist] export` (or
+        `--export-process-filter`) is configured, in which case only items
+        whose `name` or `cmdline` matches one of the patterns are exported.
+        Never affects `get_stats()` / the REST API / the TUI — those keep
+        showing the full process list.
+        """
+        if not self._export_patterns:
+            return []
+        return [item for item in super().get_export() if self._matches_export(item)]  # type: ignore[return-value]
+
+    def _matches_export(self, item: dict[str, Any]) -> bool:
+        name = str(item.get("name", ""))
+        cmdline = item.get("cmdline")
+        cmdline_str = " ".join(cmdline) if isinstance(cmdline, list) else str(cmdline or "")
+        return any(p.search(name) or p.search(cmdline_str) for p in self._export_patterns)
 
     async def _grab_stats(self) -> list:
         try:

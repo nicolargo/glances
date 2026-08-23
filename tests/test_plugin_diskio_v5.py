@@ -111,15 +111,16 @@ async def test_update_yields_one_entry_per_disk(store, config):
     assert names == ["sda", "sdb"]
 
 
-async def test_first_cycle_strips_rate_fields(store, config):
+async def test_first_cycle_rate_fields_are_none(store, config):
     plugin = PluginModel(store, config)
     iomap = {"sda": _io(rc=10, wc=5, rb=1000, wb=500)}
     with patch("glances.plugins.diskio.model_v5.psutil.disk_io_counters", return_value=iomap):
         await plugin.update()
     item = store.get("diskio")["data"][0]
-    # No baseline yet → rate fields stripped.
+    # No baseline yet → rate fields kept, value None.
     for name in ("read_bytes", "write_bytes", "read_count", "write_count"):
-        assert name not in item, name
+        assert name in item, name
+        assert item[name] is None, name
 
 
 async def test_second_cycle_computes_byte_rates(store, config, monkeypatch):

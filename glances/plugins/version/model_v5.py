@@ -26,6 +26,7 @@ class PluginModel(GlancesPluginBase[dict]):
     plugin_name: ClassVar[str] = "version"
     IS_COLLECTION: ClassVar[bool] = False
     DISPLAY_IN_TUI: ClassVar[bool] = False
+    EXPORTABLE = False
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "version": {"description": "Glances version.", "unit": "string"},

@@ -92,6 +92,18 @@ class GlancesPluginBase(Generic[T], ABC):
     read by ``main_v5.assemble`` when it builds the TUI registry; it does
     not affect REST registration (every discovered plugin is served)."""
 
+    EXPORTABLE: ClassVar[bool] = True
+    """Whether this plugin's stats are handed to the export modules.
+
+    Mirrors v4's ``GlancesExport.non_exportable_plugins`` hard-coded list,
+    inverted into a per-plugin declaration so that adding a plugin never
+    requires editing a central list in the export layer. Read by
+    ``GlancesExportBase.update()``.
+
+    Set False for plugins whose payload is a presentation aggregate rather
+    than a measurement (``quicklook`` re-states cpu/mem/load) or a constant
+    string (``version``, ``psutilversion``)."""
+
     SCHEDULE_AT_GLOBAL_REFRESH: ClassVar[bool] = False
     """Poll this plugin at the GLOBAL refresh cadence, ignoring ``[<plugin>] refresh``.
 
@@ -212,13 +224,16 @@ class GlancesPluginBase(Generic[T], ABC):
             )
         return pks[0]
 
-    def _compile_filter(self, key: str) -> list[re.Pattern[str]]:
-        """Read `[<plugin_name>] <key>=pat1,pat2` and compile each entry as a regex.
+    def _compile_filter(self, key: str, section: str | None = None) -> list[re.Pattern[str]]:
+        """Read `[<section>] <key>=pat1,pat2` and compile each entry as a regex.
 
         Used by collection plugins to filter items by their primary-key value
-        before any transformation. Empty list = no filtering.
+        before any transformation. Empty list = no filtering. ``section``
+        defaults to ``self.plugin_name`` — pass it explicitly for a plugin
+        that reads another plugin's config section (e.g. ``programlist``
+        reusing ``[processlist] export``, v4 parity for issue #794).
         """
-        raw = self.config.get(self.plugin_name, key, [])
+        raw = self.config.get(section or self.plugin_name, key, [])
         if isinstance(raw, str):
             raw = [item.strip() for item in raw.split(",") if item.strip()]
         compiled: list[re.Pattern[str]] = []
@@ -367,12 +382,15 @@ class GlancesPluginBase(Generic[T], ABC):
 
         Behaviour (identical for scalars and collections):
         - First cycle (no `_raw_previous`) or `time_since_update == 0`: the
-          rate field is **removed** from the payload — consumers see it as
-          absent rather than a misleading 0.0 or a raw counter value.
+          rate field is kept in the payload with value `None` — the field
+          set must stay stable and match `fields_description`, which is the
+          contract consumers (REST, exporters) rely on; `None` is still not
+          a misleading 0.0 or a raw counter value.
         - Counter wrap or reboot (delta < 0): clamped to 0.0.
         - Collections: items are matched between cycles by their primary-key
-          value. An item that did not exist last cycle has its rate fields
-          stripped on its first appearance.
+          value. An item appearing for the first time goes through the same
+          path — no previous sample means its rate fields are set to `None`,
+          same as the first cycle.
 
         Override only for non-standard rate computation.
         """
@@ -403,14 +421,14 @@ class GlancesPluginBase(Generic[T], ABC):
             if field_name not in stats:
                 continue
             if elapsed <= 0 or field_name not in prev_raw:
-                # First cycle (or no previous sample for this field) — strip
-                # the field; consumers must accept its absence.
-                del stats[field_name]
+                # First cycle (or no previous sample for this field) — keep
+                # the field, but its rate cannot be computed yet.
+                stats[field_name] = None
                 continue
             try:
                 delta = float(stats[field_name]) - float(prev_raw[field_name])
             except (TypeError, ValueError):
-                del stats[field_name]
+                stats[field_name] = None
                 continue
             stats[field_name] = max(0.0, delta / float(elapsed))
 

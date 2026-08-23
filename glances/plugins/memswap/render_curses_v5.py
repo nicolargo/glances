@@ -23,7 +23,7 @@ Reference layout:
 - Line 1: ``SWAP`` (HEADER) + percent value coloured by ``_levels.percent``.
 - Line 2: ``total`` capacity (used/free intentionally dropped — they are
   redundant with ``percent`` and ``total``).
-- Lines 3-4: ``sin`` / ``sout`` swap I/O rates. Absent until cycle 2 (no
+- Lines 3-4: ``sin`` / ``sout`` swap I/O rates. ``None`` until cycle 2 (no
   baseline) — the renderer shows ``-`` in that case.
 
 V4 displayed ``total``/``used``/``free`` on three lines; v5 trades the

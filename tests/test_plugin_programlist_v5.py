@@ -31,6 +31,16 @@ def config(tmp_path, monkeypatch) -> GlancesConfigV5:
     return GlancesConfigV5()
 
 
+def _config_with(tmp_path, monkeypatch, body: str) -> GlancesConfigV5:
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text(body)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    return GlancesConfigV5()
+
+
 def _program(**overrides):
     """Build a representative engine program dict (processes_to_programs output)."""
     base = {
@@ -154,3 +164,49 @@ async def test_cpu_percent_threshold_triggers_level(store, config):
     levels = store.get("programlist")["_levels"]
     assert levels["hog"]["cpu_percent"]["level"] == "critical"
     assert levels["hog"]["cpu_percent"]["prominent"] is False
+
+
+# ---------------------------------------------------------- export gate (issue #794)
+
+
+async def test_get_export_empty_by_default(store, config):
+    """v4 parity: nothing is exported unless `[processlist] export` is set.
+
+    programlist reuses the SAME `[processlist]` section as processlist —
+    v4 has one export filter covering both views.
+    """
+    plugin = PluginModel(store, config)
+    progs = [_program(name="python3"), _program(name="bash")]
+    with patch("glances.plugins.programlist.model_v5.glances_processes.get_list", return_value=progs):
+        await plugin.update()
+    assert plugin.get_export() == []
+
+
+async def test_get_export_does_not_affect_get_stats(store, config):
+    plugin = PluginModel(store, config)
+    progs = [_program(name="python3"), _program(name="bash")]
+    with patch("glances.plugins.programlist.model_v5.glances_processes.get_list", return_value=progs):
+        await plugin.update()
+    assert plugin.get_export() == []
+    assert len(plugin.get_stats()["data"]) == 2
+
+
+async def test_get_export_filters_by_name_when_configured(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[processlist]\nexport=python.*\n")
+    plugin = PluginModel(store, config)
+    progs = [_program(name="python3"), _program(name="bash", cmdline=["bash"])]
+    with patch("glances.plugins.programlist.model_v5.glances_processes.get_list", return_value=progs):
+        await plugin.update()
+    exported = plugin.get_export()
+    assert [p["name"] for p in exported] == ["python3"]
+
+
+async def test_get_export_invalid_regex_ignored_with_warning(tmp_path, monkeypatch, store, caplog):
+    config = _config_with(tmp_path, monkeypatch, "[processlist]\nexport=[invalid(\n")
+    with caplog.at_level("WARNING"):
+        plugin = PluginModel(store, config)
+    assert any("invalid" in rec.message.lower() for rec in caplog.records)
+    progs = [_program(name="python3")]
+    with patch("glances.plugins.programlist.model_v5.glances_processes.get_list", return_value=progs):
+        await plugin.update()
+    assert plugin.get_export() == []

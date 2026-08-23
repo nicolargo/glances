@@ -203,8 +203,9 @@ async def test_cpu_time_rate_derived(store, tmp_path, monkeypatch):
     p.watchers = {"virsh": _FakeEngine("9.0", [{"name": "vm-b", "status": "running", "cpu_time": 1000}])}
     await p.update()
     item = next(i for i in p.get_stats()["data"] if i["name"] == "vm-b")
-    # First cycle: rate field stripped (no baseline yet).
-    assert "cpu_time" not in item
+    # First cycle: rate field kept, value None (no baseline yet).
+    assert "cpu_time" in item
+    assert item["cpu_time"] is None
 
     fake_now[0] = 102.0
     p.watchers = {"virsh": _FakeEngine("9.0", [{"name": "vm-b", "status": "running", "cpu_time": 3000}])}
@@ -214,13 +215,14 @@ async def test_cpu_time_rate_derived(store, tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_multipass_cpu_time_none_absent(store, tmp_path, monkeypatch):
+async def test_multipass_cpu_time_none_stays_none(store, tmp_path, monkeypatch):
     config = _cfg_with(tmp_path, monkeypatch, "[vms]\ndisable=False\n")
     p = PluginModel(store, config)
     p.watchers = {"multipass": _FakeEngine("1.13", [{"name": "vm-a", "status": "running", "cpu_time": None}])}
     await p.update()
     item = next(i for i in p.get_stats()["data"] if i["name"] == "vm-a")
-    assert "cpu_time" not in item
+    assert "cpu_time" in item
+    assert item["cpu_time"] is None
 
 
 def test_sort_vm_stats_actually_orders():

@@ -234,14 +234,16 @@ async def test_update_handles_no_swap_configured(store, config):
     assert payload is None or payload == {} or payload.get("total") is None
 
 
-async def test_first_cycle_strips_rate_fields(store, config):
-    """sin/sout absent on cycle 1 — no previous sample to diff against."""
+async def test_first_cycle_rate_fields_are_none(store, config):
+    """sin/sout are present but None on cycle 1 — no previous sample to diff against."""
     plugin = PluginModel(store, config)
     with patch("glances.plugins.memswap.model_v5.psutil.swap_memory", return_value=_swap()):
         await plugin.update()
     payload = store.get("memswap")
-    assert "sin" not in payload
-    assert "sout" not in payload
+    assert "sin" in payload
+    assert payload["sin"] is None
+    assert "sout" in payload
+    assert payload["sout"] is None
 
 
 async def test_second_cycle_computes_swap_rates(store, config, monkeypatch):

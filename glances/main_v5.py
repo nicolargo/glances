@@ -49,10 +49,12 @@ import signal
 import sys
 from typing import TYPE_CHECKING
 
+import glances.exports as _exports_pkg
 import glances.plugins as _plugins_pkg
 from glances.actions_v5 import discover_actions
 from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import GlancesConfigV5
+from glances.exports.export_base_v5 import GlancesExportBase
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.scheduler_v5 import AsyncScheduler
 from glances.security_v5 import hash_password, verify_password
@@ -127,6 +129,56 @@ def build_parser() -> argparse.ArgumentParser:
         dest="enable_mcp",
         action="store_true",
         help="Mount the MCP endpoint at /mcp. Requires --server. Off by default.",
+    )
+    parser.add_argument(
+        "--export",
+        dest="export",
+        metavar="<a,b>",
+        help="Enable export modules (comma-separated list, e.g. csv,influxdb2).",
+    )
+    parser.add_argument(
+        "--export-csv-file",
+        dest="export_csv_file",
+        default="./glances.csv",
+        metavar="<path>",
+        help="File path for the CSV exporter (default ./glances.csv).",
+    )
+    parser.add_argument(
+        "--export-csv-overwrite",
+        dest="export_csv_overwrite",
+        action="store_true",
+        help="Overwrite the CSV file instead of appending to it.",
+    )
+    parser.add_argument(
+        "--export-json-file",
+        dest="export_json_file",
+        default="./glances.json",
+        metavar="<path>",
+        help="File path for the JSON exporter (default ./glances.json).",
+    )
+    parser.add_argument(
+        "--export-process-filter",
+        default=None,
+        type=str,
+        dest="export_process_filter",
+        help="set the export process filter (comma-separated list of regular expression)",
+    )
+    parser.add_argument(
+        "--disable-plugin",
+        "--disable-plugins",
+        "--disable",
+        dest="disable_plugin",
+        metavar="<a,b>",
+        help="Disable plugin (comma-separated list or 'all'). If 'all' is used, "
+        "then you need to configure --enable-plugin.",
+    )
+    parser.add_argument(
+        "--enable-plugin",
+        "--enable-plugins",
+        "--enable",
+        dest="enable_plugin",
+        metavar="<a,b>",
+        help="Enable plugin (comma-separated list).",
     )
     parser.add_argument(
         "--quiet",
@@ -320,6 +372,115 @@ def discover_plugins(store: StatsStoreV5, config: GlancesConfigV5) -> list[Glanc
     return plugins
 
 
+def apply_export_flags(args: argparse.Namespace) -> None:
+    """Expand ``--export a,b`` into ``args.export_a = True`` booleans.
+
+    v4 parity (`glances/main.py:755`): each exporter reads its own
+    ``args.export_<name>`` rather than parsing the list itself.
+    """
+    if not getattr(args, "export", None):
+        return
+    for name in args.export.split(","):
+        name = name.strip()
+        if name:
+            setattr(args, f"export_{name}", True)
+
+
+def apply_plugin_flags(args: argparse.Namespace, config: GlancesConfigV5) -> None:
+    """Overlay ``--disable-plugin`` / ``--enable-plugin`` onto the config.
+
+    v4 parity (`glances/main.py:730-770`, ``init_plugins``): v5 does not
+    introduce a new gating mechanism — ``GlancesPluginBase.is_disabled()``
+    already reads ``[<plugin>] disable`` from the merged config, so this
+    writes into the same overlay dict used by ``--disable-config-exec`` /
+    ``--api-doc`` / ``--enable-mcp``.
+
+    Must run BEFORE ``discover_plugins()`` reads the overlay. Deliberate
+    divergence from v4: an unknown plugin name is FATAL here (v4 silently
+    accepted typos and did nothing).
+    """
+    if args.disable_plugin is None and args.enable_plugin is None:
+        return
+
+    known_names = {cls.plugin_name for _, cls in discover_plugin_classes()}
+
+    disable_names = [p.strip() for p in args.disable_plugin.split(",")] if args.disable_plugin else []
+    enable_names = [p.strip() for p in args.enable_plugin.split(",")] if args.enable_plugin else []
+    # Snapshot the EXPLICIT --disable-plugin request before 'all' is expanded
+    # below — the processcount/processlist coupling must key off what the
+    # user actually typed, not off the expanded list (which would otherwise
+    # make 'all' silently drag processcount into the coupling check and
+    # re-disable an explicitly --enable-plugin'd processlist/programlist).
+    explicit_disable_names = set(disable_names)
+
+    # Validate BOTH lists before applying anything, so a typo cannot leave
+    # a half-applied configuration. 'all' is a keyword, not a plugin name.
+    for name in [*disable_names, *enable_names]:
+        if name != "all" and name not in known_names:
+            logger.critical("Unknown plugin %r passed to --disable-plugin/--enable-plugin", name)
+            sys.exit(2)
+
+    if "all" in disable_names:
+        if not args.enable_plugin:
+            logger.critical("'all' key in --disable-plugin needs to be used with --enable-plugin")
+            sys.exit(2)
+        logger.info("'all' key in --disable-plugin, only plugins defined with --enable-plugin will be available")
+        disable_names = list(known_names)
+
+    # Apply disables first, then enables — enable wins on conflict (v4 semantics).
+    for name in disable_names:
+        config._merged.setdefault(name, {})["disable"] = True
+    for name in enable_names:
+        config._merged.setdefault(name, {})["disable"] = False
+
+    # Processlist is updated in processcount (v4 parity, main.py:765-770).
+    # Keyed on the EXPLICIT disable request (not the 'all'-expanded list) so
+    # that '--disable-plugin all --enable-plugin processlist' (or programlist)
+    # does not get processcount's expansion-only disable re-disabling the
+    # plugin the user just asked to enable.
+    if "processcount" in explicit_disable_names and "processcount" not in enable_names:
+        logger.warning("Processcount is disabled, so processlist (updated by processcount) is also disabled")
+        config._merged.setdefault("processlist", {})["disable"] = True
+    elif "processlist" in enable_names or "programlist" in enable_names:
+        config._merged.setdefault("processcount", {})["disable"] = False
+
+
+def discover_exporters(config: GlancesConfigV5, args: argparse.Namespace) -> list[GlancesExportBase]:
+    """Instantiate every exporter the user asked for on the command line.
+
+    Looks for ``glances.exports.glances_<name>.export_v5`` modules carrying
+    an ``Export`` class. A module whose optional client library is missing
+    raises ImportError: that is FATAL when the user asked for it (they
+    passed ``--export influxdb2`` and deserve to know the library is not
+    installed), and invisible when they did not.
+    """
+    exporters: list[GlancesExportBase] = []
+
+    for module_info in pkgutil.iter_modules(_exports_pkg.__path__):
+        if not module_info.ispkg or not module_info.name.startswith("glances_"):
+            continue
+        name = module_info.name[len("glances_") :]
+        if not getattr(args, f"export_{name}", False):
+            continue
+
+        full_name = f"glances.exports.{module_info.name}.export_v5"
+        try:
+            module = importlib.import_module(full_name)
+        except ImportError as e:
+            logger.critical("Export %s requested but unavailable (%s)", name, e)
+            sys.exit(2)
+
+        cls = getattr(module, "Export", None)
+        if cls is None or not isinstance(cls, type) or not issubclass(cls, GlancesExportBase):
+            logger.critical("Export %s: module %s has no usable Export class", name, full_name)
+            sys.exit(2)
+
+        exporters.append(cls(config, args))
+        logger.info("Export module %s enabled", name)
+
+    return exporters
+
+
 # --------------------------------------------------------------- set-password
 
 
@@ -387,6 +548,12 @@ def assemble(
         # One-way: the CLI can only harden, never relax a config that already
         # sets the key (CVE-2026-68519).
         config._merged.setdefault("global", {})["disable_config_exec"] = True
+    if getattr(args, "export_process_filter", None):
+        # Same overlay mechanism as disable_config_exec / api_doc / enable_mcp.
+        # CLI wins over `[processlist] export` from the config file (v4
+        # parity, issue #794). Must run before discover_plugins() below —
+        # processlist/programlist compile this filter in __init__.
+        config._merged.setdefault("processlist", {})["export"] = args.export_process_filter
     actions = discover_actions("glances.actions_v5", config)
     # Wire the process engine so the alert pipeline can drive the dynamic
     # process auto-sort (v4 parity) — the sort key follows the dominant
@@ -395,6 +562,7 @@ def assemble(
 
     alerts = GlancesAlerts(config, actions=actions, process_engine=glances_processes)
 
+    apply_plugin_flags(args, config)
     plugins = discover_plugins(store, config)
     if not plugins:
         # Empty registry is a valid state — see project memory note about
@@ -409,6 +577,10 @@ def assemble(
     scheduler = AsyncScheduler(store, config, alerts=alerts)
     for plugin in plugins:
         scheduler.register(plugin)
+
+    apply_export_flags(args)
+    for exporter in discover_exporters(config, args):
+        scheduler.register_exporter(exporter)
 
     host = args.bind or config.get("outputs", "bind_address", _DEFAULT_BIND_ADDRESS)
     port = args.port or config.get("outputs", "port", _DEFAULT_PORT)

@@ -9,7 +9,18 @@
 """Glances v5 — IRQ plugin (collection, per interrupt line).
 
 Migrated from `glances/plugins/irq/__init__.py`. Linux-only: reads
-`/proc/interrupts` and publishes the busiest five interrupt lines.
+`/proc/interrupts` and publishes every interrupt line, ordered stably by
+`irq_line`.
+
+**Top-5 ranking moved to the renderer (maintainer-approved divergence
+from v4).** v4 sorts by rate and truncates to the busiest 5 lines at the
+data layer, so REST and the TUI agree on what "top" means. Here the full
+series is published instead: a metrics consumer (CSV/InfluxDB/…) wants
+the complete series, not an instantaneous ranking, and a rate-based
+ranking at this layer made the exported column set churn every cycle,
+forcing the CSV exporter to rotate files almost continuously. See
+`_expand_parameters` below and `render_curses_v5.render`, which still
+shows only the busiest 5 in the TUI.
 
 **Rate handling differs from v4 on purpose.** v4 computed the rate by hand
 and shipped a precedence bug (`a - b if b else 0 // elapsed` binds as
@@ -35,10 +46,6 @@ from glances.plugins.plugin.base_v5 import GlancesPluginBase
 logger = logging.getLogger(__name__)
 
 IRQ_FILE = "/proc/interrupts"
-
-# v4 keeps only the busiest lines; the cap lives at the data layer so the
-# REST payload and the TUI agree on what "top" means.
-_TOP_N = 5
 
 
 def parse_interrupts(content: str) -> list[dict[str, Any]]:
@@ -120,16 +127,32 @@ class PluginModel(GlancesPluginBase[list]):
         return await asyncio.to_thread(self._collect)
 
     def _expand_parameters(self) -> None:
-        """Sort by rate and keep the top N.
+        """Publish every IRQ line, ordered stably by primary key.
+
+        **Divergence from v4 (maintainer-approved).** v4's `__init__.py`
+        sorts by rate and truncates to the busiest 5 lines at the data
+        layer, so REST and the TUI agree on what "top" means. Here that
+        cap is removed: a metrics consumer (CSV/InfluxDB/…) wants the
+        complete, stable series, not an instantaneous ranking. The busiest
+        five lines change identity every cycle, so a rate-based ranking at
+        this layer made the exported column set — and therefore its
+        order — churn cycle to cycle, forcing the CSV exporter (whose
+        header is fixed once) to rotate to a new file almost every write.
+
+        Ranking now happens only in the TUI renderer
+        (`render_curses_v5.render`), which still shows the busiest 5.
 
         Runs after `_transform_gauge` (so `irq_rate` is a real rate, not a
         counter) and before `_derived_parameters` — which stays untouched,
         keeping the plugin visible to `/api/5/irq/limits`.
 
-        Items on their first appearance carry no `irq_rate` at all, so they
-        sort last rather than raising.
+        Sorting by rate here would also reintroduce the churn: sort key
+        *values* changing every cycle is one problem, but `build_export()`
+        walks the list in list order to emit columns, so even a stable key
+        *set* with a changing key *order* still rotates the CSV. Sorting
+        by the primary key (`irq_line`) instead keeps both the item set
+        and the item order deterministic across cycles.
         """
-        if not isinstance(self._stats, list):
+        if not isinstance(self._stats, list) or self._primary_key is None:
             return
-        self._stats.sort(key=lambda item: item.get("irq_rate", 0.0), reverse=True)
-        del self._stats[_TOP_N:]
+        self._stats.sort(key=lambda item: item.get(self._primary_key) or "")

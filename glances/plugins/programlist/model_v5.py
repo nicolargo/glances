@@ -31,10 +31,13 @@ UI. The ``j`` hotkey lives in the curses TUI, which shows exactly one of
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, ClassVar
 
+from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.processes import glances_processes
+from glances.stats_store_v5 import StatsStoreV5
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +132,26 @@ class PluginModel(GlancesPluginBase[list]):
             "internal": True,
         },
     }
+
+    def __init__(self, store: StatsStoreV5, config: GlancesConfigV5) -> None:
+        super().__init__(store, config)
+        # v4 parity (issue #794): same gate as `processlist`, reusing the
+        # SAME `[processlist] export` config key/CLI flag — v4 has one
+        # filter for both the per-process and per-program export views, and
+        # measured v4 behaviour is zero columns from BOTH plugins by default.
+        self._export_patterns: list[re.Pattern[str]] = self._compile_filter("export", section="processlist")
+
+    def get_export(self) -> list[dict[str, Any]]:
+        """Filtered export view (v4 parity, issue #794). See `processlist.get_export()`."""
+        if not self._export_patterns:
+            return []
+        return [item for item in super().get_export() if self._matches_export(item)]  # type: ignore[return-value]
+
+    def _matches_export(self, item: dict[str, Any]) -> bool:
+        name = str(item.get("name", ""))
+        cmdline = item.get("cmdline")
+        cmdline_str = " ".join(cmdline) if isinstance(cmdline, list) else str(cmdline or "")
+        return any(p.search(name) or p.search(cmdline_str) for p in self._export_patterns)
 
     async def _grab_stats(self) -> list:
         try:
