@@ -384,6 +384,82 @@ class TestGlances(unittest.TestCase):
 
         print('INFO: cpu_num display formatting tests passed')
 
+    def test_010b_processes_nice_windows_labels(self):
+        """Check the Windows priority-class labels in the NI column (issue #3672)."""
+        print('INFO: [TEST_010b] Check nice display on Windows')
+        from unittest.mock import Mock, patch
+
+        from glances.plugins import processlist as processlist_module
+        from glances.plugins.processlist import ProcesslistPlugin, display_nice
+
+        # psutil reports these six Win32 priority classes; asserted against the constants
+        # rather than repeating the numbers, so a psutil change fails here instead of
+        # silently rendering a raw value again.
+        if WINDOWS:
+            import psutil
+
+            self.assertEqual(
+                {
+                    psutil.REALTIME_PRIORITY_CLASS: 'RT',
+                    psutil.HIGH_PRIORITY_CLASS: 'Hi',
+                    psutil.ABOVE_NORMAL_PRIORITY_CLASS: 'AN',
+                    psutil.NORMAL_PRIORITY_CLASS: 'No',
+                    psutil.BELOW_NORMAL_PRIORITY_CLASS: 'BN',
+                    psutil.IDLE_PRIORITY_CLASS: 'Lo',
+                },
+                processlist_module.WINDOWS_NICE_LABELS,
+            )
+
+        # display_nice is platform-gated, so both branches are exercised on every OS.
+        with patch.object(processlist_module, 'WINDOWS', True):
+            for value, expected in (
+                (256, 'RT'),
+                (128, 'Hi'),
+                (32768, 'AN'),
+                (32, 'No'),
+                (16384, 'BN'),
+                (64, 'Lo'),
+            ):
+                self.assertEqual(display_nice(value), expected)
+            # An unmapped class stays visible as a number rather than disappearing.
+            self.assertEqual(display_nice(99), 99)
+            self.assertEqual(display_nice('?'), '?')
+
+        with patch.object(processlist_module, 'WINDOWS', False):
+            # POSIX nice values are already meaningful and must not be relabelled, and 32
+            # is an ordinary nice value there rather than NORMAL_PRIORITY_CLASS.
+            self.assertEqual(display_nice(0), 0)
+            self.assertEqual(display_nice(-20), -20)
+            self.assertEqual(display_nice(32), 32)
+
+        plugin = ProcesslistPlugin()
+        args = Mock()
+
+        with patch.object(processlist_module, 'WINDOWS', True):
+            result = plugin._get_process_curses_nice({'nice': 32768}, False, args)
+            self.assertEqual(result.get('msg'), ' AN ')
+
+        with patch.object(processlist_module, 'WINDOWS', False):
+            result = plugin._get_process_curses_nice({'nice': 0}, False, args)
+            self.assertEqual(result.get('msg'), '  0 ')
+
+        # The label is display-only: get_nice_alert still receives the raw value, because
+        # the nice_* limits in glances.conf are POSIX numbers that no label can match.
+        with (
+            patch.object(processlist_module, 'WINDOWS', True),
+            patch.object(ProcesslistPlugin, 'get_nice_alert', return_value='DEFAULT') as alert,
+        ):
+            plugin._get_process_curses_nice({'nice': 32768}, False, args)
+            alert.assert_called_once_with(32768)
+
+        # None and a missing key keep rendering '?' on both platforms.
+        for windows in (True, False):
+            with patch.object(processlist_module, 'WINDOWS', windows):
+                self.assertEqual(plugin._get_process_curses_nice({'nice': None}, False, args).get('msg'), '  ? ')
+                self.assertEqual(plugin._get_process_curses_nice({}, False, args).get('msg'), '  ? ')
+
+        print('INFO: nice display formatting tests passed')
+
     def test_011_folders(self):
         """Check File System plugin."""
         # stats_to_check = [ ]
