@@ -1002,6 +1002,15 @@ class ProcesslistPlugin(GlancesPluginModel):
                 continue
             if sub_key is None:
                 ret += p[key]
+            elif isinstance(p[key], (list, tuple)):
+                # `sub_key` is an index here, not a key: `io_counters` is the list
+                # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
+                # (see glances/processes.py). `sub_key in p[key]` asked whether the
+                # list *contains the number* 0/1/2/3, so a process doing real IO was
+                # skipped and one whose counters happened to hold that literal was
+                # summed instead.
+                if isinstance(sub_key, int) and -len(p[key]) <= sub_key < len(p[key]):
+                    ret += p[key][sub_key]
             elif sub_key in p[key]:
                 ret += p[key][sub_key]
 
