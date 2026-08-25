@@ -9,9 +9,9 @@
                         <td v-if="args.disable_quicklook" scope="col">total</td>
                         <td scope="col">user</td>
                         <td scope="col">system</td>
-                        <td scope="col">idle</td>
-                        <td scope="col">iowait</td>
-                        <td scope="col">steel</td>
+                        <td v-show="hasStat('idle')" scope="col">idle</td>
+                        <td v-show="hasStat('iowait')" scope="col">iowait</td>
+                        <td v-show="hasStat('steal')" scope="col">steal</td>
                     </tr>
                 </thead>
                 <tbody>
@@ -20,10 +20,10 @@
                         <td v-if="args.disable_quicklook" scope="col">{{ percpu.total }}%</td>
                         <td scope="col" :class="getUserAlert(percpu)">{{ percpu.user }}%</td>
                         <td scope="col" :class="getSystemAlert(percpu)">{{ percpu.system }}%</td>
-                        <td v-show="percpu.idle != undefined" scope="col">{{ percpu.idle }}%</td>
-                        <td v-show="percpu.iowait != undefined" scope="col" :class="getIOWaitAlert(percpu)">{{
+                        <td v-show="hasStat('idle')" scope="col">{{ percpu.idle }}%</td>
+                        <td v-show="hasStat('iowait')" scope="col" :class="getIOWaitAlert(percpu)">{{
                             percpu.iowait }}%</td>
-                        <td v-show="percpu.steal != undefined" scope="col">{{ percpu.steal }}%</td>
+                        <td v-show="hasStat('steal')" scope="col">{{ percpu.steal }}%</td>
                     </tr>
                 </tbody>
             </table>
@@ -59,6 +59,13 @@ export default {
 		},
 	},
 	methods: {
+		// psutil reports a different set of CPU times per OS: no iowait or steal
+		// on Windows and macOS, no dpc/interrupt on Linux. Gating the header on
+		// the same answer as the value keeps the two in step -- and asking the
+		// whole table rather than one row keeps every row the same width.
+		hasStat(name) {
+			return (this.percpuStats || []).some((cpu) => cpu[name] != undefined);
+		},
 		getUserAlert(cpu) {
 			return GlancesHelper.getAlert("percpu", "percpu_user_", cpu.user);
 		},
@@ -66,7 +73,7 @@ export default {
 			return GlancesHelper.getAlert("percpu", "percpu_system_", cpu.system);
 		},
 		getIOWaitAlert(cpu) {
-			return GlancesHelper.getAlert("percpu", "percpu_iowait_", cpu.system);
+			return GlancesHelper.getAlert("percpu", "percpu_iowait_", cpu.iowait);
 		},
 	},
 };
