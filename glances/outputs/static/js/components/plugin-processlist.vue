@@ -183,7 +183,7 @@
                             {{ process.num_threads == -1 ? '?' : process.num_threads }}
                         </td>
                         <td v-show="!getDisableStats().includes('nice')" scope="row" :class="{ nice: process.isNice }">
-                            {{ $filters.exclamation(process.nice) }}
+                            {{ $filters.exclamation(process.niceLabel) }}
                         </td>
                         <td v-show="!getDisableStats().includes('status')" scope="row"
                             :class="{ status: process.status == 'R' }">
@@ -362,7 +362,7 @@
                             {{ process.num_threads == -1 ? '?' : process.num_threads }}
                         </td>
                         <td v-show="!getDisableStats().includes('nice')" scope="row" :class="{ nice: process.isNice }">
-                            {{ $filters.exclamation(process.nice) }}
+                            {{ $filters.exclamation(process.niceLabel) }}
                         </td>
                         <td v-show="!getDisableStats().includes('status')" scope="row"
                             :class="{ status: process.status == 'R' }">
@@ -404,6 +404,27 @@ import {
 } from "../filters.js";
 import { GlancesHelper } from "../services.js";
 import { store } from "../store.js";
+
+// Windows has no nice value: the API forwards the psutil priority class, and two of
+// those constants are five digits. They overflow the NI column and misreport the
+// process priority to anyone reading it as a nice level (#3672). Same table and same
+// labels as `nice_to_str` in glances/plugins/processlist/__init__.py -- an unknown
+// class is left as its number rather than blanked.
+const WINDOWS_PRIORITY_LABELS = {
+	256: "RT", // REALTIME_PRIORITY_CLASS
+	128: "Hi", // HIGH_PRIORITY_CLASS
+	32768: "AN", // ABOVE_NORMAL_PRIORITY_CLASS
+	32: "No", // NORMAL_PRIORITY_CLASS
+	16384: "BN", // BELOW_NORMAL_PRIORITY_CLASS
+	64: "Lo", // IDLE_PRIORITY_CLASS
+};
+
+function niceLabel(nice, isWindows) {
+	if (!isWindows || nice === undefined || nice === null) {
+		return nice;
+	}
+	return WINDOWS_PRIORITY_LABELS[nice] ?? nice;
+}
 
 export default {
 	props: {
@@ -529,6 +550,7 @@ export default {
 					process.nice !== undefined &&
 					((isWindows && process.nice != 32) ||
 						(!isWindows && process.nice != 0));
+				process.niceLabel = niceLabel(process.nice, isWindows);
 
 				if (Array.isArray(process.cmdline)) {
 					process.cmdline = process.cmdline.join(" ").replace(/\n/g, " ");
@@ -653,6 +675,7 @@ export default {
 				process.nice !== undefined &&
 				((isWindows && process.nice != 32) ||
 					(!isWindows && process.nice != 0));
+			process.niceLabel = niceLabel(process.nice, isWindows);
 
 			if (Array.isArray(process.cmdline)) {
 				process.name =

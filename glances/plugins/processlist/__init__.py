@@ -19,6 +19,33 @@ from glances.plugins.core import CorePlugin
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.processes import glances_processes, sort_stats
 
+# Windows has no nice value: psutil reports the process priority class, and two of
+# those constants are five digits. The NI column is three characters wide, so
+# `32768` and `16384` overflowed it and pushed every column to their right out of
+# alignment (#3672). Show the two-letter label Windows itself uses; the raw value is
+# still what the alert thresholds see.
+WINDOWS_PRIORITY_LABELS = {
+    256: 'RT',  # REALTIME_PRIORITY_CLASS
+    128: 'Hi',  # HIGH_PRIORITY_CLASS
+    32768: 'AN',  # ABOVE_NORMAL_PRIORITY_CLASS
+    32: 'No',  # NORMAL_PRIORITY_CLASS
+    16384: 'BN',  # BELOW_NORMAL_PRIORITY_CLASS
+    64: 'Lo',  # IDLE_PRIORITY_CLASS
+}
+
+
+def nice_to_str(nice):
+    """Return what the NI column should show for *nice*.
+
+    Unchanged off Windows, and unchanged for a Windows value that is not one of the
+    documented classes -- an unknown class stays visible as its number rather than
+    being blanked, so a value psutil starts returning is not silently swallowed.
+    """
+    if not WINDOWS:
+        return nice
+    return WINDOWS_PRIORITY_LABELS.get(nice, nice)
+
+
 # Fields description
 # description: human readable description
 # short_name: shortname to use un UI
@@ -456,7 +483,9 @@ class ProcesslistPlugin(GlancesPluginModel):
             nice = p['nice']
             if nice is None:
                 nice = '?'
-            msg = self.layout_stat['nice'].format(nice)
+            msg = self.layout_stat['nice'].format(nice_to_str(nice))
+            # The alert still reads the raw value: the thresholds in the config file
+            # are numbers, and a label would never match one.
             ret = self.curse_add_line(msg, decoration=self.get_nice_alert(nice))
         else:
             msg = self.layout_header['nice'].format('?')
