@@ -12,6 +12,7 @@ I am your father...
 """
 
 import re
+from math import isfinite
 
 from glances.globals import NoOptionError, NoSectionError, json_dumps
 from glances.logger import logger
@@ -172,9 +173,10 @@ class GlancesExport:
         FIELD_TO_TAG = ["name", "cmdline", "type"]
         # Some fields should be converted to string in order to avoid type mismatch in InfluxDB
         # Example: the 'result' field of the AMP plugin can be a string or a number depending on the AMP implementation.
-        # In this case, we convert it to a string and create another field with the same name but with a suffix (_float)
-        # to keep the original value.
-        # See #3419 for more details.
+        # In this case, we convert it to a string and, when the value is numeric,
+        # publish it a second time under a '<name>_float' field so it stays
+        # queryable as a number.
+        # See #3419 and #3423 for more details.
         FIELD_TO_STRING = ["result"]
 
         # Build initial dict by crossing columns and point
@@ -196,6 +198,9 @@ class GlancesExport:
                 fields = data_dict
             # Transform to InfluxDB data model
             # https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_reference/
+            # Companion fields are collected here and merged after the walk: a
+            # dict cannot grow while it is being iterated.
+            float_fields = {}
             for k in fields:
                 #  Do not export empty (None) value
                 if fields[k] is None:
@@ -211,7 +216,15 @@ class GlancesExport:
                         pass
                 # Convert some fields to string to avoid type mismatch in InfluxDB
                 if k in FIELD_TO_STRING:
+                    # Keep the numeric value under a name that is always a float,
+                    # so an AMP that reports a number stays graphable. Only when
+                    # the value really parsed as one - a string result has no
+                    # number to publish. NaN and inf are left out: InfluxDB
+                    # rejects them, and one would fail the whole write.
+                    if isinstance(fields[k], float) and isfinite(fields[k]):
+                        float_fields[f'{k}_float'] = fields[k]
                     fields[k] = str(fields[k])
+            fields.update(float_fields)
             # Manage tags
             tags = self.parse_tags(self.tags)
             # Add the hostname as a tag
