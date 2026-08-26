@@ -189,11 +189,22 @@ class DiskioPlugin(GlancesPluginModel):
             # if not i.get('read_bytes_rate_per_sec') or not i.get('write_bytes_rate_per_sec'):
             #     continue
 
-            # Decorate the bitrate with the configuration file
-            alert_rx = self.get_alert(i['read_bytes'], header='rx', action_key=disk_real_name)
-            alert_tx = self.get_alert(i['write_bytes'], header='tx', action_key=disk_real_name)
-            self.views[i[self.get_key()]]['read_bytes']['decoration'] = alert_rx
-            self.views[i[self.get_key()]]['write_bytes']['decoration'] = alert_tx
+            # Decorate the bitrate with the configuration file.
+            # The thresholds describe a bitrate, so they are measured against the rate and
+            # not against read_bytes/write_bytes, which are lifetime counters: those only
+            # grow, so any configured threshold latched on and stayed there. Same shape as
+            # the network plugin, which alerts on bytes_recv_rate_per_sec.
+            alert_rx = self.get_alert(i.get('read_bytes_rate_per_sec') or 0, header='rx', action_key=disk_real_name)
+            alert_tx = self.get_alert(i.get('write_bytes_rate_per_sec') or 0, header='tx', action_key=disk_real_name)
+            # Published on both keys because the two interfaces read different ones: the TUI
+            # asks for read_bytes while printing the rate, the WebUI asks for
+            # read_bytes_rate_per_sec, which nothing decorated. The rate view only exists
+            # once there is a timespan to divide by, so it is set when present.
+            disk_views = self.views[i[self.get_key()]]
+            for field, alert in (('read_bytes', alert_rx), ('write_bytes', alert_tx)):
+                disk_views[field]['decoration'] = alert
+                if f'{field}_rate_per_sec' in disk_views:
+                    disk_views[f'{field}_rate_per_sec']['decoration'] = alert
 
             # Decorate the latency with the configuration file
             # Try to get the read/write latency for the current disk
