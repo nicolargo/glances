@@ -419,6 +419,81 @@ class TestGlances(unittest.TestCase):
         # An index past the end is skipped rather than raising IndexError.
         plugin.stats = [{'io_counters': [1, 2]}]
         self.assertEqual(plugin._sum_stats('io_counters', 4), 0)
+    def test_010b_processes_nice_windows_labels(self):
+        """Check the Windows priority-class labels in the NI column (issue #3672)."""
+        print('INFO: [TEST_010b] Check nice display on Windows')
+        from unittest.mock import Mock, patch
+
+        from glances.plugins import processlist as processlist_module
+        from glances.plugins.processlist import ProcesslistPlugin, display_nice
+
+        # psutil reports these six Win32 priority classes; asserted against the constants
+        # rather than repeating the numbers, so a psutil change fails here instead of
+        # silently rendering a raw value again.
+        if WINDOWS:
+            import psutil
+
+            self.assertEqual(
+                {
+                    psutil.REALTIME_PRIORITY_CLASS: 'RT',
+                    psutil.HIGH_PRIORITY_CLASS: 'Hi',
+                    psutil.ABOVE_NORMAL_PRIORITY_CLASS: 'AN',
+                    psutil.NORMAL_PRIORITY_CLASS: 'No',
+                    psutil.BELOW_NORMAL_PRIORITY_CLASS: 'BN',
+                    psutil.IDLE_PRIORITY_CLASS: 'Lo',
+                },
+                processlist_module.WINDOWS_NICE_LABELS,
+            )
+
+        # display_nice is platform-gated, so both branches are exercised on every OS.
+        with patch.object(processlist_module, 'WINDOWS', True):
+            for value, expected in (
+                (256, 'RT'),
+                (128, 'Hi'),
+                (32768, 'AN'),
+                (32, 'No'),
+                (16384, 'BN'),
+                (64, 'Lo'),
+            ):
+                self.assertEqual(display_nice(value), expected)
+            # An unmapped class stays visible as a number rather than disappearing.
+            self.assertEqual(display_nice(99), 99)
+            self.assertEqual(display_nice('?'), '?')
+
+        with patch.object(processlist_module, 'WINDOWS', False):
+            # POSIX nice values are already meaningful and must not be relabelled, and 32
+            # is an ordinary nice value there rather than NORMAL_PRIORITY_CLASS.
+            self.assertEqual(display_nice(0), 0)
+            self.assertEqual(display_nice(-20), -20)
+            self.assertEqual(display_nice(32), 32)
+
+        plugin = ProcesslistPlugin()
+        args = Mock()
+
+        with patch.object(processlist_module, 'WINDOWS', True):
+            result = plugin._get_process_curses_nice({'nice': 32768}, False, args)
+            self.assertEqual(result.get('msg'), ' AN ')
+
+        with patch.object(processlist_module, 'WINDOWS', False):
+            result = plugin._get_process_curses_nice({'nice': 0}, False, args)
+            self.assertEqual(result.get('msg'), '  0 ')
+
+        # The label is display-only: get_nice_alert still receives the raw value, because
+        # the nice_* limits in glances.conf are POSIX numbers that no label can match.
+        with (
+            patch.object(processlist_module, 'WINDOWS', True),
+            patch.object(ProcesslistPlugin, 'get_nice_alert', return_value='DEFAULT') as alert,
+        ):
+            plugin._get_process_curses_nice({'nice': 32768}, False, args)
+            alert.assert_called_once_with(32768)
+
+        # None and a missing key keep rendering '?' on both platforms.
+        for windows in (True, False):
+            with patch.object(processlist_module, 'WINDOWS', windows):
+                self.assertEqual(plugin._get_process_curses_nice({'nice': None}, False, args).get('msg'), '  ? ')
+                self.assertEqual(plugin._get_process_curses_nice({}, False, args).get('msg'), '  ? ')
+
+        print('INFO: nice display formatting tests passed')
 
     def test_011_folders(self):
         """Check File System plugin."""
@@ -604,6 +679,26 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(gf.is_filtered({'username': 'nicolargo'}))
         self.assertFalse(gf.is_filtered({'username': 'notme'}))
         self.assertFalse(gf.is_filtered({'notuser': 'nicolargo'}))
+        # The regex may itself contain a colon: a Windows path is the common case,
+        # and every absolute one has a drive colon. Splitting on every colon kept only
+        # the fragment before the second one -- and silently, because that fragment
+        # usually still compiles, so the filter matched nothing and reported nothing.
+        gf.filter = 'cmdline:C:/Program Files/.*'
+        self.assertEqual(gf.filter, 'C:/Program Files/.*')
+        self.assertEqual(gf.filter_key, 'cmdline')
+        self.assertTrue(gf.is_filtered({'cmdline': 'C:/Program Files/app.exe'}))
+        self.assertFalse(gf.is_filtered({'cmdline': 'D:/Other/app.exe'}))
+        # Same shape without a path, so the case is not Windows-only.
+        gf.filter = 'name:foo:bar'
+        self.assertEqual(gf.filter, 'foo:bar')
+        self.assertEqual(gf.filter_key, 'name')
+        self.assertTrue(gf.is_filtered({'name': 'foo:bar'}))
+        # A backslash is a regex escape, not a separator escape: `split_esc` would
+        # strip it and mangle the pattern, which is why plain maxsplit is the right
+        # tool here.
+        gf.filter = r'cmdline:C:\\Windows\\.*'
+        self.assertEqual(gf.filter, r'C:\\Windows\\.*')
+        self.assertTrue(gf.is_filtered({'cmdline': r'C:\Windows\system32'}))
         gfl = GlancesFilterList()
         gfl.filter = '.*python.*,username:nicolargo'
         self.assertTrue(gfl.is_filtered({'name': 'python is in the place'}))
