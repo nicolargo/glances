@@ -11,7 +11,8 @@
 
 import pytest
 
-from glances.plugins.ports import PortsPlugin
+import glances.plugins.ports as ports_mod
+from glances.plugins.ports import PortsPlugin, ThreadScanner
 
 
 @pytest.fixture
@@ -65,3 +66,56 @@ class TestPortsPluginAlertLevel:
         """Test that a reachable and fast URL is OK."""
         conds = ports_plugin.get_conds_if_url(web_scan(200))
         assert ports_plugin.get_default_ret_value(conds) == 'OK'
+
+
+@pytest.fixture
+def scanner():
+    """Return a ThreadScanner instance without running its full init."""
+    return ThreadScanner.__new__(ThreadScanner)
+
+
+class TestIcmpPingCommand:
+    """Test the ping command line built for an ICMP (port 0) check."""
+
+    @pytest.fixture
+    def ping_cmd(self, scanner, monkeypatch):
+        """Return the ping command line built on the given platform."""
+
+        def build(platform, timeout=3):
+            recorded = {}
+
+            def fake_check_call(cmd, **kwargs):
+                recorded['cmd'] = cmd
+                return 0
+
+            for name in ('WINDOWS', 'MACOS', 'BSD'):
+                monkeypatch.setattr(ports_mod, name, name == platform)
+            monkeypatch.setattr(ports_mod.subprocess, 'check_call', fake_check_call)
+            monkeypatch.setattr(ThreadScanner, '_resolv_name', lambda self, host: host)
+            scanner._port_scan_icmp({'host': 'example.net', 'port': 0, 'timeout': timeout})
+            return recorded['cmd']
+
+        return build
+
+    def test_windows_timeout_is_expressed_in_milliseconds(self, ping_cmd):
+        """Windows ping -w is a per-reply timeout in ms, so 3s must be sent as 3000."""
+        assert ping_cmd('WINDOWS') == ['ping', '-n', '1', '-w', '3000', 'example.net']
+
+    def test_linux_timeout_stays_in_seconds(self, ping_cmd):
+        """Linux ping -W is in seconds, so the value is passed through."""
+        assert ping_cmd('LINUX') == ['ping', '-c', '1', '-W', '3', 'example.net']
+
+    def test_macos_timeout_stays_in_seconds(self, ping_cmd):
+        """macOS and BSD ping -t is in seconds, so the value is passed through."""
+        assert ping_cmd('MACOS') == ['ping', '-c', '1', '-t', '3', 'example.net']
+
+    def test_timeout_is_not_sent_through_the_name_resolver(self, scanner, monkeypatch):
+        """The timeout is a number of seconds, not a hostname to look up."""
+        resolved = []
+
+        for name in ('WINDOWS', 'MACOS', 'BSD'):
+            monkeypatch.setattr(ports_mod, name, False)
+        monkeypatch.setattr(ports_mod.subprocess, 'check_call', lambda cmd, **kwargs: 0)
+        monkeypatch.setattr(ThreadScanner, '_resolv_name', lambda self, host: resolved.append(host) or host)
+        scanner._port_scan_icmp({'host': 'example.net', 'port': 0, 'timeout': 3})
+        assert resolved == ['example.net']

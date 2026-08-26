@@ -347,13 +347,17 @@ class ThreadScanner(threading.Thread):
         if WINDOWS:
             timeout_opt = '-w'
             count_opt = '-n'
+            # Windows ping takes the reply timeout in milliseconds
+            timeout_value = str(int(float(port['timeout']) * 1000))
         elif MACOS or BSD:
             timeout_opt = '-t'
             count_opt = '-c'
+            timeout_value = str(port['timeout'])
         else:
             # Linux and co...
             timeout_opt = '-W'
             count_opt = '-c'
+            timeout_value = str(port['timeout'])
         # Build the command line
         # Note: Only string are allowed
         cmd = [
@@ -361,7 +365,7 @@ class ThreadScanner(threading.Thread):
             count_opt,
             '1',
             timeout_opt,
-            str(self._resolv_name(port['timeout'])),
+            timeout_value,
             self._resolv_name(port['host']),
         ]
         fnull = open(os.devnull, 'w')
