@@ -644,6 +644,26 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(gf.is_filtered({'username': 'nicolargo'}))
         self.assertFalse(gf.is_filtered({'username': 'notme'}))
         self.assertFalse(gf.is_filtered({'notuser': 'nicolargo'}))
+        # The regex may itself contain a colon: a Windows path is the common case,
+        # and every absolute one has a drive colon. Splitting on every colon kept only
+        # the fragment before the second one -- and silently, because that fragment
+        # usually still compiles, so the filter matched nothing and reported nothing.
+        gf.filter = 'cmdline:C:/Program Files/.*'
+        self.assertEqual(gf.filter, 'C:/Program Files/.*')
+        self.assertEqual(gf.filter_key, 'cmdline')
+        self.assertTrue(gf.is_filtered({'cmdline': 'C:/Program Files/app.exe'}))
+        self.assertFalse(gf.is_filtered({'cmdline': 'D:/Other/app.exe'}))
+        # Same shape without a path, so the case is not Windows-only.
+        gf.filter = 'name:foo:bar'
+        self.assertEqual(gf.filter, 'foo:bar')
+        self.assertEqual(gf.filter_key, 'name')
+        self.assertTrue(gf.is_filtered({'name': 'foo:bar'}))
+        # A backslash is a regex escape, not a separator escape: `split_esc` would
+        # strip it and mangle the pattern, which is why plain maxsplit is the right
+        # tool here.
+        gf.filter = r'cmdline:C:\\Windows\\.*'
+        self.assertEqual(gf.filter, r'C:\\Windows\\.*')
+        self.assertTrue(gf.is_filtered({'cmdline': r'C:\Windows\system32'}))
         gfl = GlancesFilterList()
         gfl.filter = '.*python.*,username:nicolargo'
         self.assertTrue(gfl.is_filtered({'name': 'python is in the place'}))

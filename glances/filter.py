@@ -110,7 +110,11 @@ class GlancesFilter:
             self._filter = None
             self._filter_key = None
         else:
-            new_filter = value.split(':')
+            # Split once: everything after the first colon is the regex. Splitting on
+            # every colon dropped the rest, and the truncation is silent because the
+            # leading fragment usually still compiles -- `cmdline:C:\Program Files\.*`
+            # became the pattern `C`, which matches nothing and raises nothing.
+            new_filter = value.split(':', 1)
             if len(new_filter) == 1:
                 self._filter = new_filter[0]
                 self._filter_key = None
