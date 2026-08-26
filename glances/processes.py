@@ -795,12 +795,18 @@ def sort_by_these_keys(first, second):
     return lambda process: (weighted(process.get(first)), weighted(process.get(second)))
 
 
+# A row whose value is missing sorts as zero rather than raising. sort_stats catches the
+# exception and falls back to cpu_percent for the *whole* list, so one such row silently
+# reorders every other one while the header still reads TIME or IOR/IOW.
 def _sort_io_counters(process, sorted_by='io_counters', sorted_by_secondary='memory_percent'):
     """Specific case for io_counters
 
     :return: Sum of io_r + io_w
     """
-    return process[sorted_by][0] - process[sorted_by][2] + process[sorted_by][1] - process[sorted_by][3]
+    counters = process.get(sorted_by) or []
+    # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
+    read, write, read_old, write_old = (list(counters) + [0, 0, 0, 0])[:4]
+    return read - read_old + write - write_old
 
 
 def _sort_cpu_times(process, sorted_by='cpu_times', sorted_by_secondary='memory_percent'):
@@ -811,7 +817,8 @@ def _sort_cpu_times(process, sorted_by='cpu_times', sorted_by_secondary='memory_
     see (https://github.com/giampaolo/psutil/issues/1339)
     The following implementation takes user and system time into account
     """
-    return process[sorted_by]['user'] + process[sorted_by]['system']
+    times = process.get(sorted_by) or {}
+    return times.get('user', 0) + times.get('system', 0)
 
 
 def _sort_lambda(sorted_by='cpu_percent', sorted_by_secondary='memory_percent'):
