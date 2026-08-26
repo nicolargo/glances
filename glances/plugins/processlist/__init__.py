@@ -19,6 +19,31 @@ from glances.plugins.core import CorePlugin
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.processes import glances_processes, sort_stats
 
+# Windows has no nice ladder: psutil reports the Win32 priority *class*, whose values are
+# neither ordered nor small (32 is normal, 32768 is above normal), so the raw number is
+# both meaningless as a nice value and too wide for the 3-character NI column. Show the
+# same short labels Windows itself uses. See issue #3672.
+WINDOWS_NICE_LABELS = {
+    256: 'RT',  # REALTIME_PRIORITY_CLASS
+    128: 'Hi',  # HIGH_PRIORITY_CLASS
+    32768: 'AN',  # ABOVE_NORMAL_PRIORITY_CLASS
+    32: 'No',  # NORMAL_PRIORITY_CLASS
+    16384: 'BN',  # BELOW_NORMAL_PRIORITY_CLASS
+    64: 'Lo',  # IDLE_PRIORITY_CLASS
+}
+
+
+def display_nice(nice):
+    """Return the nice value as it should be displayed.
+
+    Only the rendering changes: an unmapped value falls through to itself, so a priority
+    class Windows adds later stays visible as a number instead of disappearing.
+    """
+    if WINDOWS:
+        return WINDOWS_NICE_LABELS.get(nice, nice)
+    return nice
+
+
 # Fields description
 # description: human readable description
 # short_name: shortname to use un UI
@@ -456,7 +481,9 @@ class ProcesslistPlugin(GlancesPluginModel):
             nice = p['nice']
             if nice is None:
                 nice = '?'
-            msg = self.layout_stat['nice'].format(nice)
+            msg = self.layout_stat['nice'].format(display_nice(nice))
+            # The alert keeps the raw value on purpose: the nice_* limits in glances.conf
+            # are POSIX nice numbers, so matching a label against them would silence them.
             ret = self.curse_add_line(msg, decoration=self.get_nice_alert(nice))
         else:
             msg = self.layout_header['nice'].format('?')

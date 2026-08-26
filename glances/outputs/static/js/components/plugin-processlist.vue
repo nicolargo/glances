@@ -183,7 +183,7 @@
                             {{ process.num_threads == -1 ? '?' : process.num_threads }}
                         </td>
                         <td v-show="!getDisableStats().includes('nice')" scope="row" :class="{ nice: process.isNice }">
-                            {{ $filters.exclamation(process.nice) }}
+                            {{ $filters.exclamation(process.niceDisplay) }}
                         </td>
                         <td v-show="!getDisableStats().includes('status')" scope="row"
                             :class="{ status: process.status == 'R' }">
@@ -362,7 +362,7 @@
                             {{ process.num_threads == -1 ? '?' : process.num_threads }}
                         </td>
                         <td v-show="!getDisableStats().includes('nice')" scope="row" :class="{ nice: process.isNice }">
-                            {{ $filters.exclamation(process.nice) }}
+                            {{ $filters.exclamation(process.niceDisplay) }}
                         </td>
                         <td v-show="!getDisableStats().includes('status')" scope="row"
                             :class="{ status: process.status == 'R' }">
@@ -404,6 +404,28 @@ import {
 } from "../filters.js";
 import { GlancesHelper } from "../services.js";
 import { store } from "../store.js";
+
+// Windows has no nice ladder: the API carries the Win32 priority *class*, whose values
+// are neither ordered nor small (32 is normal, 32768 is above normal). Show the same
+// short labels Windows itself uses, matching the TUI. See issue #3672.
+const WINDOWS_NICE_LABELS = {
+	256: "RT", // REALTIME_PRIORITY_CLASS
+	128: "Hi", // HIGH_PRIORITY_CLASS
+	32768: "AN", // ABOVE_NORMAL_PRIORITY_CLASS
+	32: "No", // NORMAL_PRIORITY_CLASS
+	16384: "BN", // BELOW_NORMAL_PRIORITY_CLASS
+	64: "Lo", // IDLE_PRIORITY_CLASS
+};
+
+// Only the rendering changes: an unmapped value falls through to itself, so a priority
+// class Windows adds later stays visible as a number instead of disappearing.
+export function displayNice(nice, isWindows) {
+	if (!isWindows) {
+		return nice;
+	}
+	const label = WINDOWS_NICE_LABELS[nice];
+	return label === undefined ? nice : label;
+}
 
 export default {
 	props: {
@@ -529,6 +551,7 @@ export default {
 					process.nice !== undefined &&
 					((isWindows && process.nice != 32) ||
 						(!isWindows && process.nice != 0));
+				process.niceDisplay = displayNice(process.nice, isWindows);
 
 				if (Array.isArray(process.cmdline)) {
 					process.cmdline = process.cmdline.join(" ").replace(/\n/g, " ");
@@ -653,6 +676,7 @@ export default {
 				process.nice !== undefined &&
 				((isWindows && process.nice != 32) ||
 					(!isWindows && process.nice != 0));
+			process.niceDisplay = displayNice(process.nice, isWindows);
 
 			if (Array.isArray(process.cmdline)) {
 				process.name =
