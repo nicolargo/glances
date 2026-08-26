@@ -43,13 +43,11 @@ NO_IO_COUNTERS = (0, 0, 0, 0, 0)
 
 
 def sum_io_counters(total, addition):
-    """Add addition into total slot by slot.
-
-    `+=` concatenates these lists rather than adding them, so a program reported only its
-    first process's disk IO - and, because the program borrowed that process's own list,
-    every aggregation extended it in place. The last slot is a flag rather than a total:
-    processlist displays a rate only when it is exactly 1, so it is OR-ed, not added.
-    """
+    """Add addition into total slot by slot."""
+    # `+=` concatenates these lists rather than adding them, so a program reported only its
+    # first process's disk IO - and, because the program borrowed that process's own list,
+    # every aggregation extended it in place. The last slot is a flag rather than a total:
+    # processlist displays a rate only when it is exactly 1, so it is OR-ed, not added.
     total = total or NO_IO_COUNTERS
     addition = addition or NO_IO_COUNTERS
     summed = [a + b for a, b in zip(total[:IO_COUNTERS_TAG], addition[:IO_COUNTERS_TAG])]
