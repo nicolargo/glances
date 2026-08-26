@@ -211,7 +211,7 @@ class PercpuPlugin(GlancesPluginModel):
                 return_.append(self.curse_add_line('CPU* '))
 
             for stat in header:
-                percpu_stats = [i[stat] for i in percpu_list[0 : self.max_cpu_display]]
+                percpu_stats = [i[stat] for i in percpu_list[self.max_cpu_display :]]
                 cpu_stat = sum(percpu_stats) / len(percpu_stats)
                 try:
                     msg = f'{cpu_stat:6.1f}%'
