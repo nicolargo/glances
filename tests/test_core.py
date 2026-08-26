@@ -384,6 +384,41 @@ class TestGlances(unittest.TestCase):
 
         print('INFO: cpu_num display formatting tests passed')
 
+    def test_010c_processlist_sum_stats_indexes_lists(self):
+        """The filtered process-list IO totals summed almost nothing.
+
+        `_sum_stats('io_counters', 0)` means "index 0 of the counters list", but the
+        guard was `sub_key in p[key]` -- a value-membership test on a list. A process
+        doing real IO was skipped, and one whose counters happened to contain the
+        literal 0/1/2/3 was summed instead, so the R/s and W/s row was not merely
+        zero but arbitrary. The VIRT/RES totals beside it were right because
+        `memory_info` is a mapping.
+        """
+        print('INFO: [TEST_010c] Check processlist sum of IO counters')
+        from glances.plugins.processlist import ProcesslistPlugin
+
+        plugin = ProcesslistPlugin.__new__(ProcesslistPlugin)
+        # io_counters is [read, write, read_old, write_old, io_tag].
+        plugin.stats = [
+            {'io_counters': [5000, 700, 2000, 300, 1], 'memory_info': {'rss': 10, 'vms': 20}},
+            {'io_counters': [3000, 400, 1000, 200, 1], 'memory_info': {'rss': 30, 'vms': 40}},
+        ]
+
+        self.assertEqual(plugin._sum_stats('io_counters', 0), 8000)
+        self.assertEqual(plugin._sum_stats('io_counters', sub_key=1), 1100)
+        self.assertEqual(plugin._sum_stats('io_counters', sub_key=2), 3000)
+        self.assertEqual(plugin._sum_stats('io_counters', sub_key=3), 500)
+        # A mapping sub_key must keep working unchanged.
+        self.assertEqual(plugin._sum_stats('memory_info', sub_key='rss'), 40)
+        self.assertEqual(plugin._sum_stats('memory_info', sub_key='absent'), 0)
+
+        # The counters list holding the literal index must no longer be what decides.
+        plugin.stats = [{'io_counters': [5000, 700, 0, 300, 1]}]
+        self.assertEqual(plugin._sum_stats('io_counters', 0), 5000)
+
+        # An index past the end is skipped rather than raising IndexError.
+        plugin.stats = [{'io_counters': [1, 2]}]
+        self.assertEqual(plugin._sum_stats('io_counters', 4), 0)
     def test_010b_processes_nice_windows_labels(self):
         """Check the Windows priority-class labels in the NI column (issue #3672)."""
         print('INFO: [TEST_010b] Check nice display on Windows')
