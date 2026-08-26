@@ -406,3 +406,53 @@ class TestSensorsPluginConfigThresholds:
         """Sensors without config and system thresholds are not decorated."""
         plugin = self.build_plugin(tmp_path, '')
         assert self.decoration(plugin, 95) == 'DEFAULT'
+
+
+class TestSensorsPluginZeroValueAlert:
+    """A sensor reading exactly zero must still be alerted on."""
+
+    @staticmethod
+    def build_plugin(tmp_path, sensors_section=''):
+        """Return a sensors plugin configured with the given [sensors] section."""
+        config_file = tmp_path / 'glances.conf'
+        config_file.write_text('[sensors]\ndisable=False\n' + sensors_section, encoding='utf-8')
+        return SensorsPlugin(args=None, config=Config(config_dir=str(config_file)))
+
+    @staticmethod
+    def decoration(plugin, value, sensor_type='battery', unit='%', label='BAT0'):
+        """Return the view decoration for a single fake sensor reading."""
+        plugin.stats = [{'label': label, 'unit': unit, 'value': value, 'type': sensor_type, 'key': 'label'}]
+        plugin.update_views()
+        return plugin.get_views(item=label, key='value', option='decoration')
+
+    # Battery is alerted on 100 - value, so a flat battery is the most severe
+    # reading there is. It used to be dropped by a `if not value` guard, which
+    # is also true for a legitimate 0, leaving 0% less decorated than 1%.
+    @pytest.mark.parametrize(
+        ('percent', 'expected'),
+        [(40, 'OK'), (30, 'CAREFUL'), (20, 'WARNING'), (10, 'CRITICAL'), (1, 'CRITICAL'), (0, 'CRITICAL')],
+    )
+    def test_battery_alert_covers_zero_percent(self, tmp_path, percent, expected):
+        """An empty battery is CRITICAL, like the values just above it."""
+        plugin = self.build_plugin(tmp_path, 'battery_careful=70\nbattery_warning=80\nbattery_critical=90\n')
+        assert self.decoration(plugin, percent).startswith(expected)
+
+    def test_absent_battery_is_still_skipped(self, tmp_path):
+        """No battery is reported as an empty list and must not be decorated."""
+        plugin = self.build_plugin(tmp_path, 'battery_careful=70\n')
+        plugin.stats = [{'label': 'BAT0', 'unit': '%', 'value': [], 'type': 'battery', 'key': 'label'}]
+        plugin.update_views()
+        # The base update_views() seeds every field with DEFAULT, so an untouched
+        # DEFAULT is what "the alert code skipped this sensor" looks like. It also
+        # guards the skip itself: the battery branch computes 100 - value, which
+        # raises TypeError on a list.
+        assert plugin.views['BAT0']['value']['decoration'] == 'DEFAULT'
+
+    def test_zero_fan_speed_is_alerted(self, tmp_path):
+        """A stopped fan reads 0 RPM and must reach the alert code.
+
+        OK rather than DEFAULT is the whole assertion: DEFAULT is what the
+        view holds when the alert code never ran for this sensor.
+        """
+        plugin = self.build_plugin(tmp_path, 'fan_speed_careful=100\n')
+        assert self.decoration(plugin, 0, sensor_type='fan_speed', unit='R', label='fan1') == 'OK'

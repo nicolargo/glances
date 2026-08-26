@@ -220,7 +220,10 @@ class SensorsPlugin(GlancesPluginModel):
         # Add specifics information
         # Alert
         for i in self.stats:
-            if not i['value']:
+            # Skip a sensor with no reading, but not one reading zero: a battery
+            # at 0% is alerted on 100 - value, so it is the most critical case
+            # there is, and 'not 0' would drop it out of the alert entirely.
+            if not i['value'] and i['value'] != 0:
                 continue
             # Alert processing
             if i['type'] == sensors_definition.get('cpu_temp').get('type'):
