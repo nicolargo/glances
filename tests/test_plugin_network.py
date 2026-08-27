@@ -323,3 +323,64 @@ class TestNetworkPluginAlerts:
             if iface_name in views and 'bytes_recv' in views[iface_name]:
                 # Check that decoration exists for rate fields
                 assert 'decoration' in views[iface_name]['bytes_recv']
+
+
+class TestNetworkPluginZeroRateAlerts:
+    """A rate of exactly 0 in one direction must not suppress the other.
+
+    `update_views` skipped the whole interface when either direction measured
+    0 bytes/s, so a saturated uplink went undecorated whenever the downlink
+    happened to be idle -- and vice versa for a receive-only interface.
+    """
+
+    #: 1 Gbps, in bits, which is what the `speed` field carries.
+    LINK_SPEED_BPS = 1_000_000_000
+
+    #: 120 MB/s == 960 Mbps == 96% of the link above.
+    SATURATED_BYTES_PER_SEC = 120_000_000
+
+    def _views_for(self, plugin, rx_rate, tx_rate):
+        plugin.stats = [
+            {
+                'interface_name': 'eth0',
+                'alias': None,
+                'bytes_recv': 0,
+                'bytes_sent': 0,
+                'bytes_all': 0,
+                'bytes_recv_rate_per_sec': rx_rate,
+                'bytes_sent_rate_per_sec': tx_rate,
+                'bytes_all_rate_per_sec': rx_rate + tx_rate,
+                'speed': self.LINK_SPEED_BPS,
+                'is_up': True,
+            }
+        ]
+        plugin.update_views()
+        return plugin.get_views()['eth0']
+
+    def test_saturated_tx_is_flagged_while_rx_is_idle(self, network_plugin):
+        """A send-only interface at 96% of link speed must still alert."""
+        views = self._views_for(network_plugin, rx_rate=0, tx_rate=self.SATURATED_BYTES_PER_SEC)
+        assert views['bytes_sent_rate_per_sec']['decoration'] == 'CRITICAL'
+        assert views['bytes_sent']['decoration'] == 'CRITICAL'
+
+    def test_saturated_rx_is_flagged_while_tx_is_idle(self, network_plugin):
+        """The mirror case: a receive-only interface, e.g. a monitor port."""
+        views = self._views_for(network_plugin, rx_rate=self.SATURATED_BYTES_PER_SEC, tx_rate=0)
+        assert views['bytes_recv_rate_per_sec']['decoration'] == 'CRITICAL'
+        assert views['bytes_recv']['decoration'] == 'CRITICAL'
+
+    def test_a_fully_idle_interface_is_ok_not_undecorated(self, network_plugin):
+        """0 in both directions is a real measurement, not a missing one."""
+        views = self._views_for(network_plugin, rx_rate=0, tx_rate=0)
+        assert views['bytes_recv_rate_per_sec']['decoration'] == 'OK'
+        assert views['bytes_sent_rate_per_sec']['decoration'] == 'OK'
+
+    def test_both_directions_busy_still_alert(self, network_plugin):
+        """The path that already worked must keep working."""
+        views = self._views_for(
+            network_plugin,
+            rx_rate=self.SATURATED_BYTES_PER_SEC,
+            tx_rate=self.SATURATED_BYTES_PER_SEC,
+        )
+        assert views['bytes_recv_rate_per_sec']['decoration'] == 'CRITICAL'
+        assert views['bytes_sent_rate_per_sec']['decoration'] == 'CRITICAL'
