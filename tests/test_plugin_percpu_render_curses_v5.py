@@ -145,6 +145,23 @@ def test_render_more_than_max_cpu_display_adds_overflow_row(percpu_fields, monke
     assert labels[-1] == "CPU*"
 
 
+def test_render_overflow_row_averages_the_hidden_cores(percpu_fields, monkeypatch):
+    """The CPU* row summarizes the cores that did NOT fit on screen."""
+    monkeypatch.setattr("sys.platform", "linux")
+    # 6 cores, total = 0, 10, 20, 30, 40, 50. The 4 busiest (50, 40, 30, 20) are
+    # displayed; the CPU* row must average the 2 hidden ones (10, 0) -> 5.0.
+    payload = {
+        "data": [_core(i, total=float(i * 10), user=float(i)) for i in range(6)],
+        "_levels": {},
+    }
+    rows = render(payload, percpu_fields)
+    overflow_row = rows[-1]
+    assert overflow_row.cells[0].text.strip() == "CPU*"
+    assert overflow_row.cells[1].text.strip() == "5.0%"
+    # Same for a non-`total` column: user = 1 and 0 -> 0.5.
+    assert overflow_row.cells[2].text.strip() == "0.5%"
+
+
 def test_render_no_overflow_row_when_exact_max(percpu_payload_4cores, percpu_fields, monkeypatch):
     monkeypatch.setattr("sys.platform", "linux")
     rows = render(percpu_payload_4cores, percpu_fields)

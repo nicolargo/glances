@@ -283,6 +283,39 @@ def test_render_nice_cell_inherits_categorical_level(fields):
     assert rows[1].cells[NICE_COL].color == ColorRole.WARNING
 
 
+def test_render_nice_shows_the_raw_value_on_posix(fields):
+    rows = render({"data": [_proc(pid=1, nice=19)], "_levels": {}}, fields)
+    assert rows[1].cells[NICE_COL].text.strip() == "19"
+
+
+def test_render_nice_shows_windows_priority_class_as_a_label(fields, monkeypatch):
+    """Windows reports the Win32 priority class, not a nice value (#3672)."""
+    monkeypatch.setattr("glances.plugins.processlist.render_curses_v5.WINDOWS", True)
+    # 32768 = ABOVE_NORMAL_PRIORITY_CLASS. Rendered raw it does not fit the
+    # 2-char NI column and comes out truncated to a meaningless "68".
+    rows = render({"data": [_proc(pid=1, nice=32768)], "_levels": {}}, fields)
+    assert rows[1].cells[NICE_COL].text.strip() == "AN"
+
+
+def test_render_nice_keeps_an_unmapped_windows_value_numeric(fields, monkeypatch):
+    """A priority class Windows adds later stays a number instead of vanishing."""
+    monkeypatch.setattr("glances.plugins.processlist.render_curses_v5.WINDOWS", True)
+    rows = render({"data": [_proc(pid=1, nice=7)], "_levels": {}}, fields)
+    assert rows[1].cells[NICE_COL].text.strip() == "7"
+
+
+def test_render_nice_cell_keeps_its_level_colour_on_windows(fields, monkeypatch):
+    """The label is display-only: the alert still comes from the raw value."""
+    monkeypatch.setattr("glances.plugins.processlist.render_curses_v5.WINDOWS", True)
+    payload = {
+        "data": [_proc(pid=1, nice=32768)],
+        "_levels": {1: {"nice": {"level": "warning", "prominent": False}}},
+    }
+    rows = render(payload, fields)
+    assert rows[1].cells[NICE_COL].text.strip() == "AN"
+    assert rows[1].cells[NICE_COL].color == ColorRole.WARNING
+
+
 def test_render_status_default_color_without_level(fields):
     rows = render({"data": [_proc(pid=1)], "_levels": {}}, fields)
     assert rows[1].cells[STATUS_COL].color == ColorRole.DEFAULT

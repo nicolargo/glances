@@ -21,9 +21,8 @@ Reference layout (Linux, quicklook disabled, 4 cores):
 
 When more than ``_DEFAULT_MAX_CPU_DISPLAY`` cores exist, the top-N by
 ``total`` are shown plus a synthetic ``CPU*`` row carrying the mean of
-the displayed cores' stats (bug-for-bug with v4
-``summarize_all_cpus_not_displayed``: the mean is computed over the
-displayed cores, not the hidden ones).
+the stats of the cores that did NOT fit on screen (v4
+``summarize_all_cpus_not_displayed``).
 
 For G1 we assume quicklook is disabled (no quicklook plugin in v5 yet),
 so the ``CPU`` title + ``total`` column are always present.
@@ -149,12 +148,12 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         rows.append(_build_data_row(_cpu_label(item.get("cpu_number")), item, headers))
 
     if overflow:
-        # v4 bug-for-bug parity: the "CPU*" row averages the **displayed**
-        # cores, not the hidden overflow (see v4
-        # ``summarize_all_cpus_not_displayed``).
+        # The "CPU*" row averages the cores that did NOT fit on screen — the
+        # displayed ones already have a row of their own. Matches quicklook's
+        # ``_msg_per_cpu`` and v4 ``summarize_all_cpus_not_displayed`` (#3687).
         means: dict[str, Any] = {}
         for stat in headers:
-            vals = [float(it.get(stat) or 0.0) for it in displayed]
+            vals = [float(it.get(stat) or 0.0) for it in overflow]
             means[stat] = sum(vals) / len(vals) if vals else 0.0
         rows.append(_build_data_row("CPU*", means, headers))
 

@@ -25,7 +25,8 @@ Columns:
 - ``PID``             — right-aligned, width follows widest PID in payload.
 - ``USER``            — truncated with a trailing ``+`` marker.
 - ``THR``             — number of threads.
-- ``NI``              — nice value (categorical alert when configured).
+- ``NI``              — nice value (categorical alert when configured);
+  under Windows, the Win32 priority class shown as a label.
 - ``S``               — single-letter status (categorical alert when configured).
 - ``TIME+``           — cumulative CPU time (``cpu_times.user + cpu_times.system``).
   Format mirrors v4: ``MM:SS`` under 1h, ``Hh{MM:SS}`` between 1h and 99h,
@@ -47,6 +48,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from glances.globals import WINDOWS
 from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, row_budget
 
 # Column widths (v4 parity — see ``processlist.layout_header``/``layout_stat``).
@@ -62,6 +64,19 @@ _W_TIME = 8
 _W_IO = 5
 _W_PID_DEFAULT = 7
 _MAX_ROWS = 20
+
+# Win32 priority classes, shown in the NI column under Windows (see
+# ``_format_nice``). Kept here rather than imported from the v4 plugin so the
+# v5 render layer stays independent of it; the labels are 2 chars, so they fit
+# ``_W_NI`` as is.
+_WINDOWS_NICE_LABELS = {
+    256: "RT",  # REALTIME_PRIORITY_CLASS
+    128: "Hi",  # HIGH_PRIORITY_CLASS
+    32768: "AN",  # ABOVE_NORMAL_PRIORITY_CLASS
+    32: "No",  # NORMAL_PRIORITY_CLASS
+    16384: "BN",  # BELOW_NORMAL_PRIORITY_CLASS
+    64: "Lo",  # IDLE_PRIORITY_CLASS
+}
 
 # Responsive columns (see view["right_width"]). When the painted width is
 # too narrow for the flexible ``Command`` column to show at least
@@ -116,6 +131,27 @@ def _format_int(value: Any, width: int, *, signed: bool = False) -> str:
         return "?".rjust(width)
     formatted = f"{ival:>+{width}d}" if signed else f"{ival:>{width}d}"
     return formatted[-width:].rjust(width)
+
+
+def _format_nice(value: Any) -> str:
+    """Format the NI column, mapping the Win32 priority classes to labels.
+
+    Windows has no nice ladder: psutil reports the priority *class*, whose
+    values are neither ordered nor small (32 is normal, 32768 is above
+    normal), so the raw number is both meaningless as a nice value and too
+    wide for the column — it came out truncated to its last 2 digits. Show
+    the same short labels Windows itself uses (v4 ``display_nice``, #3672).
+    An unmapped value falls through to the number, so a priority class
+    Windows adds later stays visible.
+
+    Display only: the level driving the cell colour is computed upstream on
+    the raw value, since the ``nice_*`` limits are POSIX nice numbers.
+    """
+    if WINDOWS:
+        label = _WINDOWS_NICE_LABELS.get(value)
+        if label is not None:
+            return label.rjust(_W_NI)
+    return _format_int(value, _W_NI, signed=False)
 
 
 def _format_username(value: Any) -> str:
@@ -415,7 +451,7 @@ def render(
         r_rate, r_unknown = _io_rate(item, read=True)
         w_rate, w_unknown = _io_rate(item, read=False)
         status_letter = str(item.get("status") or "?")[:1].rjust(_W_STATUS)
-        nice_text = _format_int(item.get("nice"), _W_NI, signed=False)
+        nice_text = _format_nice(item.get("nice"))
 
         fixed_cells = [
             _percent_cell(item.get("cpu_percent"), pid_levels.get("cpu_percent"), _W_CPU),
