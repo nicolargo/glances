@@ -220,7 +220,13 @@ class SensorsPlugin(GlancesPluginModel):
         # Add specifics information
         # Alert
         for i in self.stats:
-            if not i['value']:
+            # A reading of 0 is a reading: a battery at 0% and a stopped fan are the
+            # states that most need an alert, and `not i['value']` swallowed both along
+            # with the absent ones. Test for a usable number instead. Sensors reporting a
+            # placeholder (no battery -> [], hddtemp -> b'ERR'/b'SLP'/...) keep the
+            # DEFAULT decoration the parent update_views() already gave them, and the
+            # battery branch below no longer subtracts from a non-number.
+            if not isinstance(i['value'], (int, float)):
                 continue
             # Alert processing
             if i['type'] == sensors_definition.get('cpu_temp').get('type'):

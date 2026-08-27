@@ -11,6 +11,7 @@
 
 from types import SimpleNamespace
 
+from glances.plugins.containers import ContainersPlugin
 from glances.plugins.containers.engines.docker import DockerStatsFetcher
 
 
@@ -114,3 +115,55 @@ class TestDockerNetworkStatsRates:
         assert 'rx' not in stats
         assert 'tx' not in stats
         assert 'time_since_update' not in stats
+
+
+class TestContainersTitle:
+    """The title line is built by appending fragments to one list.
+
+    `build_title` ended with the "(served by X)" append sitting outside its
+    own `if`, so when several engines are present — the one case where that
+    branch is skipped — the previous fragment was appended a second time.
+    """
+
+    @staticmethod
+    def title(stats, show_engine_name, sort_key='cpu_percent'):
+        plugin = ContainersPlugin.__new__(ContainersPlugin)
+        plugin.curse_add_line = lambda msg, *args, **kwargs: {'msg': msg}
+        plugin.curse_new_line = lambda: {'msg': '\n'}
+        plugin.stats = stats
+        plugin.views = {'show_engine_name': show_engine_name}
+        plugin.sort_key = sort_key
+        return ''.join(line['msg'] for line in plugin.build_title([]) if line['msg'] != '\n')
+
+    def test_several_engines_do_not_repeat_the_sort_fragment(self):
+        stats = [{'engine': 'docker'}, {'engine': 'podman'}]
+        assert self.title(stats, show_engine_name=True) == 'CONTAINERS 2 sorted by CPU consumption'
+
+    def test_several_engines_with_one_container_do_not_repeat_the_title(self):
+        assert self.title([{'engine': 'podman'}], show_engine_name=True) == 'CONTAINERS'
+
+    def test_one_engine_still_names_it(self):
+        stats = [{'engine': 'docker'}, {'engine': 'docker'}]
+        assert self.title(stats, show_engine_name=False) == (
+            'CONTAINERS 2 sorted by CPU consumption (served by docker)'
+        )
+
+    def test_one_engine_one_container(self):
+        assert self.title([{'engine': 'docker'}], show_engine_name=False) == ('CONTAINERS (served by docker)')
+
+    def test_the_sort_key_is_named_in_the_title(self):
+        stats = [{'engine': 'docker'}, {'engine': 'docker'}]
+        assert 'memory consumption' in self.title(stats, show_engine_name=False, sort_key='memory_usage')
+        assert 'container name' in self.title(stats, show_engine_name=False, sort_key='name')
+
+    def test_no_fragment_appears_twice(self):
+        for stats, show in (
+            ([{'engine': 'docker'}, {'engine': 'podman'}], True),
+            ([{'engine': 'podman'}], True),
+            ([{'engine': 'docker'}, {'engine': 'docker'}], False),
+            ([{'engine': 'docker'}], False),
+        ):
+            title = self.title(stats, show_engine_name=show)
+            assert title.count('CONTAINERS') == 1, title
+            assert title.count('sorted by') <= 1, title
+            assert title.count('served by') <= 1, title

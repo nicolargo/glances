@@ -22,7 +22,8 @@ def create_program_dict(p):
         'memory_percent': p['memory_percent'] or 0,
         'cpu_times': p['cpu_times'] or {},
         'memory_info': p['memory_info'] or {},
-        'io_counters': p['io_counters'] or {},
+        # A copy: the program must not borrow - and then grow - the process's own list.
+        'io_counters': list(p['io_counters'] or NO_IO_COUNTERS),
         'childrens': [p['pid']],
         # Others keys are not used
         # but should be set to be compliant with the existing process_list
@@ -33,6 +34,24 @@ def create_program_dict(p):
         'nice': p['nice'],
         'status': p['status'],
     }
+
+
+# io_counters is a fixed list, not a mapping:
+# [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
+IO_COUNTERS_TAG = 4
+NO_IO_COUNTERS = (0, 0, 0, 0, 0)
+
+
+def sum_io_counters(total, addition):
+    """Add addition into total slot by slot."""
+    # `+=` concatenates these lists rather than adding them, so a program reported only its
+    # first process's disk IO - and, because the program borrowed that process's own list,
+    # every aggregation extended it in place. The last slot is a flag rather than a total:
+    # processlist displays a rate only when it is exactly 1, so it is OR-ed, not added.
+    total = total or NO_IO_COUNTERS
+    addition = addition or NO_IO_COUNTERS
+    summed = [a + b for a, b in zip(total[:IO_COUNTERS_TAG], addition[:IO_COUNTERS_TAG])]
+    return summed + [max(total[IO_COUNTERS_TAG], addition[IO_COUNTERS_TAG])]
 
 
 def sum_field_dict(total, addition):
@@ -57,7 +76,7 @@ def update_program_dict(program, p):
     program['cpu_times'] = sum_field_dict(program['cpu_times'], p['cpu_times'])
     program['memory_info'] = sum_field_dict(program['memory_info'], p['memory_info'])
 
-    program['io_counters'] += p['io_counters']
+    program['io_counters'] = sum_io_counters(program['io_counters'], p['io_counters'])
     program['childrens'].append(p['pid'])
     # If all the subprocess has the same value, display it
     program['username'] = p.get('username', '_') if p.get('username') == program['username'] else '_'
