@@ -9,17 +9,17 @@
                     </td>
                     <template v-if="port.host">
                         <td scope="row" class="text-end" :class="getPortDecoration(port)">
-                            <span v-if="port.status == 'null'">Scanning</span>
-                            <span v-else-if="port.status == 'false'">Timeout</span>
-                            <span v-else-if="port.status == 'true'">Open</span>
+                            <span v-if="port.status === null">Scanning</span>
+                            <span v-else-if="port.status === true">Open</span>
+                            <span v-else-if="port.status === false">Timeout</span>
                             <span v-else>{{ $filters.number(port.status * 1000.0, 0) }}ms</span>
                         </td>
                     </template>
                     <template v-if="port.url">
-                        <td scope="row" class="text-end" :class="getPortDecoration(port)">
-                            <span v-if="port.status == 'null'">Scanning</span>
-                            <span v-else-if="port.status == 'Error'">Error</span>
-                            <span v-else>Code {{ port.status }}</span>
+                        <td scope="row" class="text-end" :class="getWebDecoration(port)">
+                            <span v-if="port.status === null">Scanning</span>
+                            <span v-else-if="typeof port.status === 'number'">Code {{ port.status }}</span>
+                            <span v-else>{{ port.status }}</span>
                         </td>
                     </template>
                 </tr>
