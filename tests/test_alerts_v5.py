@@ -1064,3 +1064,67 @@ def test_get_ongoing_returns_a_copy(config):
     alerts._state[("mem", None, "percent")] = _AlertState(committed_level="warning", has_committed=True)
     alerts.get_ongoing()[("bogus", None, "x")] = "critical"
     assert ("bogus", None, "x") not in alerts._state
+
+
+# ---------------------------------------------------- get_ongoing_since
+
+
+async def test_get_ongoing_since_records_the_opening_transition(tmp_path, monkeypatch, store):
+    """The instant an incident opened is kept in `_state`, not only in `_history`."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    opening = alerts.get_history()[0]
+    assert alerts.get_ongoing_since() == {("fakescalar", None, "percent"): opening["ts"]}
+
+
+async def test_get_ongoing_since_is_not_moved_by_an_escalation(tmp_path, monkeypatch, store):
+    """warning → critical is the SAME incident: its start must not jump."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    opening_ts = alerts.get_history()[0]["ts"]
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert len(alerts.get_history()) == 2
+    assert alerts.get_ongoing_since() == {("fakescalar", None, "percent"): opening_ts}
+
+
+async def test_get_ongoing_since_is_cleared_on_recovery(tmp_path, monkeypatch, store):
+    """Back to `ok` closes the incident — nothing is reported as ongoing."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "ok", "prominent": True}})
+    assert alerts.get_ongoing_since() == {}
+
+
+async def test_get_ongoing_since_survives_history_eviction(tmp_path, monkeypatch, store):
+    """The bug this exists for: `_history` is a bounded ring buffer, so the
+    opening event of a long-running alert is evicted by later, unrelated
+    transitions. `_state` must still know when it started."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\nhistory_size=4\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    opening_ts = alerts.get_history()[0]["ts"]
+
+    # Flap an unrelated field until the opening event has aged out.
+    for _ in range(4):
+        await _run_with_levels(
+            plugin,
+            alerts,
+            {"percent": {"level": "warning", "prominent": True}, "total": {"level": "critical", "prominent": False}},
+        )
+        await _run_with_levels(
+            plugin,
+            alerts,
+            {"percent": {"level": "warning", "prominent": True}, "total": {"level": "ok", "prominent": False}},
+        )
+
+    state_key = ("fakescalar", None, "percent")
+    assert all(evt["field"] != "percent" for evt in alerts.get_history())
+    assert alerts.get_ongoing() == {state_key: "warning"}
+    assert alerts.get_ongoing_since() == {state_key: opening_ts}

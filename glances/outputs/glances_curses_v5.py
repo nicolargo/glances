@@ -533,12 +533,17 @@ class TuiV5(threading.Thread):
         # the two cases.
         initializing = self.alerts.is_initializing() if self.alerts is not None else False
         ongoing = self.alerts.get_ongoing() if self.alerts is not None else {}
+        # When each active alert started. `_history` is bounded, so a
+        # long-running alert loses its own opening event; without this the
+        # block renders its start as `--:--:--`.
+        ongoing_since = self.alerts.get_ongoing_since() if self.alerts is not None else {}
         frame = build_frame(
             store_snapshot=snapshot,
             fields_by_plugin=self.fields_by_plugin,
             registry=self.registry,
             alerts_history=history,
             alerts_ongoing=ongoing,
+            alerts_ongoing_since=ongoing_since,
             alerts_initializing=initializing,
             view=view,
         )

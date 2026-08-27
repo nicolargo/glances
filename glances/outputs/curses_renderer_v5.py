@@ -469,8 +469,8 @@ def _format_alert_time(ts: str, now: datetime | None = None) -> str:
     """Convert an ISO-8601 timestamp (UTC, as emitted by `GlancesAlerts._build_event`)
     to a short local-time string.
 
-    Same-day events: ``HH:MM:SS``. Events from any other day: ``MM-DD``. Both
-    forms stay within 8 columns, the width the alert grid gives the TIME
+    Same-day events: ``HH:MM:SS``. Events from any other day: ``YY-MM-DD``.
+    Both forms are exactly 8 columns, the width the alert grid gives the TIME
     column — the full timestamp used to include the hour, but the grid's
     DURATION column now carries the age, so it was redundant.
 
@@ -488,10 +488,12 @@ def _format_alert_time(ts: str, now: datetime | None = None) -> str:
     now_local = (now or datetime.now(tz=timezone.utc)).astimezone()
     if local_dt.date() == now_local.date():
         return local_dt.strftime("%H:%M:%S")
-    # Another day: `MM-DD` keeps the column at 8 characters. The full
-    # timestamp used to be printed here, but the grid's DURATION column now
-    # carries the age (design §6.2), so the hour is redundant.
-    return local_dt.strftime("%m-%d")
+    # Another day: `YY-MM-DD` fills the column exactly, and reads in the same
+    # descending order as the `HH:MM:SS` of the same-day rows — `MM-DD` alone
+    # was ambiguous about the year. The full timestamp used to be printed
+    # here, but the grid's DURATION column now carries the age (design §6.2),
+    # so the hour is redundant.
+    return local_dt.strftime("%y-%m-%d")
 
 
 def _format_duration_compact(seconds: float) -> str:
@@ -564,6 +566,7 @@ _LEVEL_ORDER: dict[str, int] = {"ok": 0, "careful": 1, "warning": 2, "critical":
 def _derive_incidents(
     history: list[dict[str, Any]],
     ongoing: dict[tuple[str, Any, str], str] | None = None,
+    ongoing_since: dict[tuple[str, Any, str], str] | None = None,
 ) -> list[dict[str, Any]]:
     """Collapse a transition log into incidents (design §5.6).
 
@@ -578,6 +581,12 @@ def _derive_incidents(
     can outlive its own transitions. Passing ``None`` falls back to deriving
     "ongoing" from the history alone, which is what direct callers (export,
     tests) want.
+
+    ``ongoing_since`` is ``GlancesAlerts.get_ongoing_since()`` — same keys,
+    and for the same reason the AUTHORITY on when each active incident
+    opened. Without it, an alert whose opening event has aged out of the
+    history has no start at all (rendered ``--:--:--``) or only a lower bound
+    taken from a surviving escalation (rendered ``>2h04m``).
 
     Returns incidents already sorted: ongoing first, newest first within each
     group (§5.3), so a long-running alert cannot sink out of the visible
@@ -650,6 +659,22 @@ def _derive_incidents(
                     "prominent": False,
                 }
             )
+
+    # The engine remembers when every ACTIVE incident opened, even once the
+    # history has evicted the opening event, so its timestamp wins over
+    # whatever the history could reconstruct. That turns a `--:--:--` start
+    # (nothing survived) or a `>` lower bound (only an escalation survived)
+    # back into the real one. Applied before the sort so the ordering uses the
+    # corrected `begin`. Resolved incidents are absent from the map and keep
+    # their history-derived values.
+    if ongoing_since:
+        for incident in incidents:
+            if not incident["ongoing"]:
+                continue
+            since = ongoing_since.get((incident["plugin"], incident["key"], incident["field"]))
+            if since:
+                incident["begin"] = since
+                incident["partial"] = False
 
     # Two stable passes: chronological within a group, then ongoing on top.
     incidents.sort(key=lambda i: i["begin"] or "", reverse=True)
@@ -765,6 +790,7 @@ def render_alert_block(
     width: int | None = None,
     unicode_ok: bool = True,
     incidents: list[dict[str, Any]] | None = None,
+    ongoing_since: dict[tuple[str, Any, str], str] | None = None,
 ) -> list[Row]:
     """Render the alert history as an aligned incident grid (design §6).
 
@@ -793,6 +819,10 @@ def render_alert_block(
             that could drift from it — pass them here to skip re-deriving.
             ``None`` (direct callers, tests, export) derives from ``history``
             and ``ongoing`` as before.
+        ongoing_since: ``GlancesAlerts.get_ongoing_since()`` — when each
+            active incident opened, for the ones the bounded history can no
+            longer date. Ignored when ``incidents`` is passed (the caller
+            already applied it while deriving).
 
     Empty history AND nothing ongoing collapses to a single header-styled
     line, exactly as before the redesign:
@@ -800,7 +830,7 @@ def render_alert_block(
     - ``is_initializing=False`` → ``ALERT (no alert detected)``
     """
     if incidents is None:
-        incidents = _derive_incidents(history, ongoing)
+        incidents = _derive_incidents(history, ongoing, ongoing_since)
     if not incidents:
         # Only the state fragment is coloured; `ALERT` stays HEADER, exactly
         # like the `ALERTS` prefix of the populated title. Green is the
@@ -1213,6 +1243,7 @@ def build_frame(
     alerts_limit: int = 10,
     alerts_initializing: bool = False,
     alerts_ongoing: dict[tuple[str, Any, str], str] | None = None,
+    alerts_ongoing_since: dict[tuple[str, Any, str], str] | None = None,
     view: dict[str, Any] | None = None,
 ) -> Frame:
     """Assemble a complete TUI Frame following v4's slot layout.
@@ -1230,6 +1261,9 @@ def build_frame(
             event-based.
         alerts_ongoing: output of `GlancesAlerts.get_ongoing()` — the
             authority on which alerts are still active (design §5.6).
+        alerts_ongoing_since: output of `GlancesAlerts.get_ongoing_since()` —
+            the authority on when each of them opened, for the incidents the
+            bounded history can no longer date.
 
     Per-plugin renderer:
         If `glances.plugins.<name>.render_curses_v5` exists and exposes a
@@ -1331,7 +1365,7 @@ def build_frame(
     # `render_alert_block`, so `data_count` — consumed by `plan_right_column`
     # as `n_alerts` — counts the very same list the block renders, never a
     # second, independently derived list that could drift from it.
-    alert_incidents = _derive_incidents(alerts_history, alerts_ongoing)
+    alert_incidents = _derive_incidents(alerts_history, alerts_ongoing, alerts_ongoing_since)
     frame.right.append(
         PluginBlock(
             name="alert",

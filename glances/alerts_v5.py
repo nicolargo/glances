@@ -81,6 +81,13 @@ class _AlertState:
     committed_level: str = "ok"
     pending_level: str | None = None
     pending_since: float | None = None
+    # ISO-8601 UTC instant of the transition that took this tuple OUT of
+    # ``ok``; ``None`` while it is ``ok``. Not moved by an escalation — a
+    # ``warning -> critical`` is the same incident. ``_history`` is a bounded
+    # ring buffer, so the opening event of a long-running alert is eventually
+    # evicted by later, unrelated transitions; this field is then the only
+    # surviving record of when that alert actually started.
+    committed_since: str | None = None
     # ``False`` until the very first observation has been processed for this
     # (plugin, key, field). The transition produced by that first observation
     # — if any — carries ``is_initial=True`` so the renderer can show a
@@ -165,6 +172,26 @@ class GlancesAlerts:
             state_key: state.committed_level
             for state_key, state in self._state.items()
             if state.committed_level != "ok"
+        }
+
+    def get_ongoing_since(self) -> dict[tuple[str, str | None, str], str]:
+        """Return when each currently non-``ok`` tuple entered its alert state.
+
+        Companion to :meth:`get_ongoing`, keyed identically and read from the
+        same unbounded ``_state``. Values are ISO-8601 UTC strings, the exact
+        ``ts`` of the opening event.
+
+        Exists because ``get_history()`` is a bounded ring buffer: an alert
+        that stays active long enough sees its own opening event evicted by
+        later transitions, after which the history can no longer say when it
+        began. The TUI would then render its start as ``--:--:--``.
+
+        Read-only, allocates a fresh dict, never called from the ingest path.
+        """
+        return {
+            state_key: state.committed_since
+            for state_key, state in self._state.items()
+            if state.committed_level != "ok" and state.committed_since is not None
         }
 
     def is_initializing(self) -> bool:
@@ -274,6 +301,12 @@ class GlancesAlerts:
                     is_initial=transition.is_initial,
                 )
                 self._history.append(event)
+                # Same timestamp as the event, by construction — the two can
+                # never drift.
+                if transition.new == "ok":
+                    state.committed_since = None
+                elif state.committed_since is None:
+                    state.committed_since = event["ts"]
                 if transition.new != "ok":
                     # Entry into a non-ok level: fire non-repeat actions.
                     self._fire_actions(plugin, key, field_name, transition.new, value, repeat=False)

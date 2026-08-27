@@ -393,12 +393,14 @@ def test_format_alert_time_same_day_returns_hms_local():
     assert result[2] == ":" and result[5] == ":"
 
 
-def test_format_alert_time_other_day_returns_month_day_within_8_columns():
-    """Another day → `MM-DD`, not the old 14-char `MM-DD HH:MM:SS`.
+def test_format_alert_time_other_day_returns_full_date_within_8_columns():
+    """Another day → `YY-MM-DD`, not the old 14-char `MM-DD HH:MM:SS`.
 
     Approved divergence (design §6.2): the fixed grid gives TIME 8 columns and
     the DURATION column now carries the age (`2d04h`), so the full timestamp
-    is redundant.
+    is redundant. The year is kept — `08-14` alone is ambiguous next to the
+    `HH:MM:SS` of the same-day rows, and `YY-MM-DD` reads in the same
+    descending order.
     """
     from datetime import datetime, timezone
 
@@ -406,8 +408,8 @@ def test_format_alert_time_other_day_returns_month_day_within_8_columns():
 
     now_utc = datetime(2026, 8, 16, 12, 0, 0, tzinfo=timezone.utc)
     result = _format_alert_time("2026-08-14T09:30:00+00:00", now=now_utc)
-    assert len(result) <= 8
-    assert result == "08-14"
+    assert len(result) == 8
+    assert result == "26-08-14"
 
 
 def test_format_alert_time_naive_utc_is_handled():
@@ -2319,3 +2321,66 @@ def test_alert_without_row_budget_keeps_the_default_limit():
     alert_block = [b for b in frame.right if b.name == "alert"][0]
     # title + column header + 10 data rows (the default limit).
     assert len(alert_block.rows) == 2 + 10
+
+
+# ------------------------------------------- ongoing_since (history eviction)
+
+
+def test_derive_incidents_uses_ongoing_since_for_a_fully_evicted_alert():
+    """`_history` is bounded: a long-running alert outlives its opening event.
+    The engine's `get_ongoing_since()` is then the only source for `begin`."""
+    incidents = _derive_incidents(
+        [],
+        ongoing={("cpu", None, "total"): "critical"},
+        ongoing_since={("cpu", None, "total"): "2026-08-16T09:00:00+00:00"},
+    )
+    assert len(incidents) == 1
+    assert incidents[0]["begin"] == "2026-08-16T09:00:00+00:00"
+    # The start is known exactly, so the duration is no longer a lower bound.
+    assert incidents[0]["partial"] is False
+
+
+def test_derive_incidents_ongoing_since_overrides_a_partial_begin():
+    """When only an ESCALATION survived the eviction, `begin` is a lower bound
+    (`partial`). The engine knows the real start — it wins."""
+    history = [_evt("2026-08-16T13:00:00+00:00", "mem", "percent", "critical", previous="warning")]
+    incidents = _derive_incidents(
+        history,
+        ongoing={("mem", None, "percent"): "critical"},
+        ongoing_since={("mem", None, "percent"): "2026-08-16T09:00:00+00:00"},
+    )
+    assert len(incidents) == 1
+    assert incidents[0]["begin"] == "2026-08-16T09:00:00+00:00"
+    assert incidents[0]["partial"] is False
+
+
+def test_derive_incidents_ongoing_since_leaves_resolved_incidents_alone():
+    """A resolved incident has no entry in `ongoing_since`; its history-derived
+    `begin` and its `partial` lower bound must survive untouched."""
+    history = [
+        _evt("2026-08-16T13:00:00+00:00", "fs", "percent", "critical", previous="warning", key="/"),
+        _evt("2026-08-16T13:30:00+00:00", "fs", "percent", "ok", previous="critical", key="/"),
+    ]
+    incidents = _derive_incidents(history, ongoing={}, ongoing_since={})
+    assert len(incidents) == 1
+    assert incidents[0]["ongoing"] is False
+    assert incidents[0]["begin"] == "2026-08-16T13:00:00+00:00"
+    assert incidents[0]["partial"] is True
+
+
+def test_render_alert_block_fully_evicted_alert_shows_its_real_start():
+    """End to end: the `--:--:--` regression the engine timestamp fixes."""
+    rows = render_alert_block(
+        [],
+        limit=10,
+        now=_GRID_NOW,
+        ongoing={("cpu", None, "total"): "critical"},
+        ongoing_since={("cpu", None, "total"): "2026-08-16T09:00:00+00:00"},
+        width=61,
+    )
+    painted = "\n".join(_line(r) for r in rows)
+    assert "Cpu total" in painted
+    assert "--:--:--" not in painted
+    # 5h05m of alert, and no `>` lower-bound marker.
+    assert "5h05m" in painted
+    assert ">" not in painted

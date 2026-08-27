@@ -35,6 +35,7 @@ def fake_alerts():
     alerts = MagicMock()
     alerts.get_history.return_value = []
     alerts.get_ongoing.return_value = {}
+    alerts.get_ongoing_since.return_value = {}
     return alerts
 
 
@@ -1806,6 +1807,7 @@ def make_tui_with_top(fake_alerts, fake_config):
         alerts = MagicMock()
         alerts.get_history.return_value = []
         alerts.get_ongoing.return_value = {}
+        alerts.get_ongoing_since.return_value = {}
         alerts.is_initializing.return_value = False
         return tui_mod.TuiV5(
             store=store,
@@ -1980,6 +1982,7 @@ def make_tui_with_body(fake_alerts, fake_config):
         alerts = MagicMock()
         alerts.get_history.return_value = []
         alerts.get_ongoing.return_value = {}
+        alerts.get_ongoing_since.return_value = {}
         alerts.is_initializing.return_value = False
         return tui_mod.TuiV5(
             store=store,
@@ -2028,6 +2031,7 @@ def test_right_width_is_published_even_without_a_processlist_block(fake_alerts, 
     alerts.get_history.return_value = []
     alerts.is_initializing.return_value = False
     alerts.get_ongoing.return_value = {}
+    alerts.get_ongoing_since.return_value = {}
     tui = _tui_with(store, alerts, fake_config, [], {})
 
     frame = tui._build_fitted_frame(max_x=100, max_y=40)
@@ -2093,6 +2097,7 @@ def test_alert_block_never_overflows_the_right_column(make_tui_with_body):
     tui = make_tui_with_body()
     tui.alerts.get_history.return_value = []
     tui.alerts.get_ongoing.return_value = {("cpu", f"core{i}", "total"): "warning" for i in range(20)}
+    tui.alerts.get_ongoing_since.return_value = {}
     for max_x in (80, 96, 120, 200):
         view = tui._build_view(max_x)
         frame = tui._build_fitted_frame(max_x=max_x, max_y=45)
@@ -2618,6 +2623,7 @@ def test_right_column_never_overflows_across_heights(fake_alerts, fake_config, m
     ]
     fake_alerts.get_history.return_value = alert_history
     fake_alerts.get_ongoing.return_value = {("cpu", None, f"metric{i}"): "warning" for i in range(30)}
+    fake_alerts.get_ongoing_since.return_value = {}
 
     tui = _tui_with(
         store,
