@@ -109,9 +109,17 @@ class QuicklookPlugin(GlancesPluginModel):
 
         # Define the stats list
         self.stats_list = self.get_conf_value('list', default=self.DEFAULT_STATS_LIST)
-        if not set(self.stats_list).issubset(self.AVAILABLE_STATS_LIST):
-            logger.warning(f'Quicklook plugin: Invalid stats list: {self.stats_list}')
-            self.stats_list = self.AVAILABLE_STATS_LIST
+        # A misconfigured list falls back to the DEFAULT, not to everything available.
+        # Falling back to AVAILABLE_STATS_LIST answered a config mistake by showing MORE
+        # than the user asked for, and the two GPU entries in it flip the gpu_stats
+        # polling flags below — so a typo silently started polling the GPU.
+        unknown = [stat for stat in self.stats_list if stat not in self.AVAILABLE_STATS_LIST]
+        if unknown:
+            logger.warning(
+                f'Quicklook plugin: unknown stats in the list: {unknown} '
+                f'(available: {self.AVAILABLE_STATS_LIST}), falling back to {self.DEFAULT_STATS_LIST}'
+            )
+            self.stats_list = self.DEFAULT_STATS_LIST
         if "gpu_mem" in self.stats_list:
             gpu_stats.get_gpu_mem = True
         if "gpu_proc" in self.stats_list:
