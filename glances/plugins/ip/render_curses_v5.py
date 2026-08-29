@@ -14,9 +14,15 @@ painter inserts a single space between cells. The `--hide-public-info`
 CLI flag (surfaced via `view['hide_public_info']`, like `--fahrenheit`)
 masks the public address `a.b.c.d` -> `a.b.*.*` at display time.
 
+`view['hide_ip_location']` is a different thing: it is the header line's
+narrow-terminal degradation (see `glances_curses_v5._HEADER_DEGRADE_STEPS`)
+dropping the geolocation string built from `[ip] public_template` — the
+addresses themselves stay.
+
 Note: v5 `Cell` has no per-segment `optional` flag (v4 used `optional=True`
-to drop segments on narrow terminals); narrow-terminal handling is via
-block clipping at paint time. Empty public fields are simply omitted.
+to drop every segment at once below 100 columns); the header cascade names
+the segment it sacrifices instead, and whatever still overflows is clipped
+at paint time. Empty public fields are simply omitted.
 """
 
 from __future__ import annotations
@@ -54,8 +60,10 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
             shown = _hide_ip(public_address) if hide_public else public_address
             cells.append(Cell(text="Pub", color=ColorRole.HEADER))
             cells.append(Cell(text=str(shown)))
+            # Geolocation is the widest, least essential segment of the
+            # banner: it is the first thing the header cascade drops.
             info = payload.get("public_info_human")
-            if info:
+            if info and not view.get("hide_ip_location"):
                 cells.append(Cell(text=str(info)))
     except (UnicodeEncodeError, KeyError):
         pass

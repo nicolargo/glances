@@ -73,17 +73,23 @@ _DEGRADE_STEPS: list[tuple[str, Any]] = [
 # show all blocks. Cumulative, in the maintainer-specified order: `cloud` is
 # an opt-in block, so it must be the *first* one sacrificed — enabling it must
 # never degrade information (ip, uptime, now) that was already on screen
-# before it was turned on. After that, `now` is the least prioritary block —
-# which brings the banner back to exactly the v4 `system … ip … uptime`
-# layout — then the system OS-info string, then ip, then uptime. v4 parity
-# degrades only the OS-info drop (`display_system_optional`); the other hides
-# refine it for very narrow terminals.
+# before it was turned on. The next two steps shrink a block rather than hide
+# one, cheapest content first: the ip geolocation string (built from
+# `[ip] public_template` — the widest, least essential segment of the banner,
+# and the addresses themselves survive it), then the system OS/kernel string
+# (static host metadata: distro, arch, kernel release, so it is worth less
+# under width pressure than any live metric). Only then are whole blocks
+# hidden: `now`, whose removal brings the banner back to exactly the v4
+# `system … ip … uptime` layout, then ip, then uptime. v4 parity degrades only
+# the OS-info drop (`display_system_optional`); the other steps refine it for
+# very narrow terminals.
 _HEADER_DEGRADE_STEPS: list[tuple[str, Any]] = [
     ("hide_cloud", True),  # (0) hide the opt-in cloud block (first to go)
-    ("hide_now", True),  # (1) hide the now block
-    ("hide_os_info", True),  # (2) drop the system OS-info string
-    ("hide_ip", True),  # (3) hide the ip block
-    ("hide_uptime", True),  # (4) hide the uptime block (last resort)
+    ("hide_ip_location", True),  # (1) drop the ip geolocation string
+    ("hide_os_info", True),  # (2) drop the system OS/kernel string
+    ("hide_now", True),  # (3) hide the now block
+    ("hide_ip", True),  # (4) hide the ip block
+    ("hide_uptime", True),  # (5) hide the uptime block (last resort)
 ]
 
 
@@ -617,10 +623,10 @@ class TuiV5(threading.Thread):
 
         Independent of the TOP-row degrade above: measures the real header
         block widths and applies the cumulative ``_HEADER_DEGRADE_STEPS``
-        (hide cloud → hide now → drop OS info → hide ip → hide uptime) until
-        ``_header_fits``. Wide terminals take the early return (no extra
-        rebuild); the header and TOP degrade flags coexist in the same
-        ``view``.
+        (hide cloud → drop ip location → drop OS info → hide now → hide ip →
+        hide uptime) until ``_header_fits``. Wide terminals take the early
+        return (no extra rebuild); the header and TOP degrade flags coexist in
+        the same ``view``.
         """
         if self._header_fits(frame, max_x):
             return frame

@@ -2206,10 +2206,11 @@ def test_fit_header_progressively_degrades(fake_store, fake_alerts, fake_config)
     assert [b.name for b in f3.header] == ["system"]
 
 
-def test_now_is_the_first_header_block_dropped(fake_store, fake_alerts, fake_config):
-    """`now` is the least prioritary header block: as soon as the terminal is
-    too narrow for the four blocks it goes first, leaving the v4
-    `system … ip … uptime` banner (OS-info included) intact."""
+def test_os_info_is_dropped_before_the_now_block(fake_store, fake_alerts, fake_config):
+    """The system OS/kernel string is static host metadata, so it is shrunk
+    away before any live block is hidden: the first notch of width pressure
+    costs the OS-info, not `now`. `now` only goes at the next notch, which
+    brings the banner back to the v4 `system … ip … uptime` layout."""
     from glances.outputs import glances_curses_v5 as tui_mod
 
     fake_store.as_dict.return_value = {
@@ -2238,11 +2239,82 @@ def test_now_is_the_first_header_block_dropped(fake_store, fake_alerts, fake_con
     assert [b.name for b in wide.header] == ["system", "ip", "uptime", "now"]
     w = {b.name: b.width for b in wide.header}
 
-    # One char short of the full banner → `now` is dropped, nothing else.
+    # Short-system width (hostname only) via the hide_os_info view.
+    short_view = {**tui._build_view(1000), "hide_os_info": True}
+    w_sys_short = next(b.width for b in tui._frame_for_view(short_view).header if b.name == "system")
+
+    # One char short of the full banner → the OS-info is dropped, the four
+    # blocks all survive.
     narrow = tui._build_fitted_frame(w["system"] + gap + w["ip"] + gap + w["uptime"] + gap + w["now"] - 1)
-    assert [b.name for b in narrow.header] == ["system", "ip", "uptime"]
+    assert [b.name for b in narrow.header] == ["system", "ip", "uptime", "now"]
     system_text = " ".join(c.text for r in next(b for b in narrow.header if b.name == "system").rows for c in r.cells)
-    assert "Ubuntu" in system_text  # OS-info still there: degraded one notch only
+    assert "Ubuntu" not in system_text
+
+    # One notch further → `now` goes, leaving the v4 banner (hostname only).
+    narrower = tui._build_fitted_frame(w_sys_short + gap + w["ip"] + gap + w["uptime"] + gap + w["now"] - 1)
+    assert [b.name for b in narrower.header] == ["system", "ip", "uptime"]
+
+
+def test_ip_location_is_dropped_before_the_os_info(fake_store, fake_alerts, fake_config):
+    """The ip geolocation string (`[ip] public_template`) is the very first
+    thing sacrificed after the opt-in cloud block: it is the widest, least
+    essential segment of the banner, and the addresses survive it. The
+    system OS/kernel string only goes at the next notch."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    fake_store.as_dict.return_value = {
+        "system": {"hostname": "host", "hr_name": "Ubuntu 24.04 64bit / Linux 6.17", "_levels": {}},
+        "ip": {
+            "address": "192.168.1.100",
+            "mask_cidr": 24,
+            "public_address": "1.2.3.4",
+            "public_info_human": "Wonderland/Rabbit Hole",
+            "_levels": {},
+        },
+        "uptime": {"seconds": 3600, "_levels": {}},
+    }
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("system", False), ("ip", False), ("uptime", False)],
+        fields_by_plugin={
+            "system": {"hostname": {"unit": "string"}, "hr_name": {"unit": "string"}},
+            "ip": {"address": {"unit": "string"}, "mask_cidr": {"unit": "number"}},
+            "uptime": {"seconds": {"unit": "seconds"}},
+        },
+        refresh_interval=0.01,
+    )
+
+    def _flat(frame, name):
+        block = next(b for b in frame.header if b.name == name)
+        return " ".join(c.text for r in block.rows for c in r.cells)
+
+    gap = tui_mod.TuiV5._HEADER_GAP
+
+    wide = tui._build_fitted_frame(1000)
+    assert "Wonderland" in _flat(wide, "ip")
+    assert "Ubuntu" in _flat(wide, "system")
+    w = {b.name: b.width for b in wide.header}
+
+    # One char short of the full banner → the geolocation goes, and nothing
+    # else: both addresses and the OS/kernel string are still there.
+    narrow = tui._build_fitted_frame(w["system"] + gap + w["ip"] + gap + w["uptime"] - 1)
+    assert [b.name for b in narrow.header] == ["system", "ip", "uptime"]
+    ip_text = _flat(narrow, "ip")
+    assert "Wonderland" not in ip_text
+    assert "192.168.1.100/24" in ip_text
+    assert "1.2.3.4" in ip_text
+    assert "Ubuntu" in _flat(narrow, "system")
+
+    # Narrow enough that dropping the geolocation is not sufficient → the
+    # OS/kernel string goes next, the ip block still intact.
+    located_view = {**tui._build_view(1000), "hide_ip_location": True}
+    w_ip_short = next(b.width for b in tui._frame_for_view(located_view).header if b.name == "ip")
+    narrower = tui._build_fitted_frame(w["system"] + gap + w_ip_short + gap + w["uptime"] - 1)
+    assert [b.name for b in narrower.header] == ["system", "ip", "uptime"]
+    assert "Ubuntu" not in _flat(narrower, "system")
+    assert "1.2.3.4" in _flat(narrower, "ip")
 
 
 def test_cloud_is_dropped_before_now_ip_and_uptime(fake_store, fake_alerts, fake_config):
@@ -2295,15 +2367,18 @@ def test_cloud_is_dropped_before_now_ip_and_uptime(fake_store, fake_alerts, fake
 
 def test_hide_cloud_is_the_first_header_cascade_step():
     """`cloud` is opt-in: turning it on must never degrade information that
-    was already on screen, so it is sacrificed before everything else —
-    including `now`, the next-least-prioritary block."""
+    was already on screen, so it is sacrificed before everything else. Then
+    come the two content shrinks — the ip geolocation string, then the system
+    OS/kernel string — because dropping static, non-essential text costs less
+    than hiding a whole live block (`now`, `ip`, `uptime`)."""
     from glances.outputs.glances_curses_v5 import _HEADER_DEGRADE_STEPS
 
     keys = [k for k, _ in _HEADER_DEGRADE_STEPS]
-    assert keys[0] == "hide_cloud"
-    assert keys[1] == "hide_now"
+    assert keys[:4] == ["hide_cloud", "hide_ip_location", "hide_os_info", "hide_now"]
     # Ordering contract: uptime stays the last resort.
     assert keys[-1] == "hide_uptime"
+    # Content shrinks come before every whole-block hide.
+    assert keys.index("hide_ip_location") < keys.index("hide_ip")
 
 
 def test_attr_for_prominent_badge_is_bold():

@@ -25,8 +25,9 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], view
     if not payload or not payload.get("hostname"):
         return []
     cells = [Cell(text=str(payload["hostname"]), color=ColorRole.HEADER)]
-    # The OS-info string is the first thing dropped when the header line is
-    # too narrow (progressive degradation, driven by `view["hide_os_info"]`);
+    # The OS/kernel string is static host metadata, so it is the first thing
+    # dropped once the opt-in cloud block is gone — before any live block is
+    # hidden (progressive degradation, driven by `view["hide_os_info"]`);
     # the hostname is mandatory and always kept.
     hr_name = payload.get("hr_name")
     if hr_name and not (view or {}).get("hide_os_info"):

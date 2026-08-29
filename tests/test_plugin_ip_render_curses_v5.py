@@ -58,6 +58,38 @@ def test_with_public_info_human():
     assert "Wonderland" in flat
 
 
+def test_hide_ip_location_drops_only_the_geolocation():
+    """Header cascade step 1: the geolocation string goes, both addresses stay."""
+    payload = {
+        "address": "192.168.1.10",
+        "mask_cidr": 24,
+        "public_address": "1.2.3.4",
+        "public_info_human": "Wonderland",
+    }
+    flat = _flat(render(payload, None, view={"hide_ip_location": True}))
+    assert "Wonderland" not in flat
+    assert "192.168.1.10/24" in flat
+    assert "1.2.3.4" in flat
+
+
+def test_hide_ip_location_is_independent_of_hide_public_info():
+    """The two flags are orthogonal: `--hide-public-info` masks the public
+    address octets, `hide_ip_location` drops the geolocation string."""
+    payload = {
+        "address": "192.168.1.10",
+        "mask_cidr": 24,
+        "public_address": "1.2.3.4",
+        "public_info_human": "Wonderland",
+    }
+    masked = _flat(render(payload, None, view={"hide_public_info": True}))
+    assert "1.2.*.*" in masked
+    assert "Wonderland" in masked  # geolocation untouched by the CLI flag
+
+    both = _flat(render(payload, None, view={"hide_public_info": True, "hide_ip_location": True}))
+    assert "1.2.*.*" in both
+    assert "Wonderland" not in both
+
+
 def test_public_absent_no_pub_segment():
     rows = render({"address": "192.168.1.10", "mask_cidr": 24})
     flat = _flat(rows)

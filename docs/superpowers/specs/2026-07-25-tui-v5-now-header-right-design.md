@@ -3,6 +3,9 @@
 - **Date**: 2026-07-25
 - **Branch**: `develop-v5`
 - **Scope**: TUI v5 layout only (no engine, no REST, no Web UI change)
+- **Amended**: 2026-08-29 — the degradation order of §3.4 no longer holds as
+  written (two steps added, one reordered); see §3.4 for the current cascade
+  and why it changed.
 
 ## 1. Problem
 
@@ -117,7 +120,8 @@ right-aligned, or split between the two groups.
 
 ### 3.4 Display priority on narrow terminals
 
-`now` is the least prioritary header block — dropped first:
+**As designed on 2026-07-25** — `now` is the least prioritary header block,
+dropped first:
 
 ```python
 _HEADER_DEGRADE_STEPS = [
@@ -131,6 +135,53 @@ _HEADER_DEGRADE_STEPS = [
 Consequence: as soon as the terminal is too narrow for the four blocks, the
 banner degrades to exactly today's `system … ip … uptime` layout. Constrained
 terminals see **no** regression from this change.
+
+#### Amendment — 2026-08-29 (current cascade)
+
+The order above has since been revised twice. The list in
+`glances/outputs/glances_curses_v5.py` now reads:
+
+```python
+_HEADER_DEGRADE_STEPS = [
+    ("hide_cloud", True),  # (0) hide the opt-in cloud block (first to go)
+    ("hide_ip_location", True),  # (1) drop the ip geolocation string
+    ("hide_os_info", True),  # (2) drop the system OS/kernel string
+    ("hide_now", True),  # (3) hide the now block
+    ("hide_ip", True),  # (4) hide the ip block
+    ("hide_uptime", True),  # (5) hide the uptime block (last resort)
+]
+```
+
+Three changes to the 2026-07-25 order:
+
+1. **`hide_cloud` prepended** (G6C, 2026-08-04). `cloud` is opt-in, so
+   enabling it must never cost the user information that was already on
+   screen before it was turned on — it has to be the first block sacrificed.
+2. **`hide_ip_location` inserted at step 1** (2026-08-29). The geolocation
+   string built from `[ip] public_template` (`public_info_human`) is the
+   widest and least essential segment of the banner, and dropping it leaves
+   both the private and the public address in place.
+3. **`hide_os_info` promoted above `hide_now`** (2026-08-29). The system
+   OS/kernel string (`hr_name` =
+   `{linux_distro} {platform} / {os_name} {os_version}`) is *static host
+   metadata*: it never changes while the process runs, so under width
+   pressure it is worth less than any live block.
+
+The governing principle behind (2) and (3): **shrink a block's content before
+hiding a whole block.** Steps 1-2 trim static, non-essential text inside
+`ip` and `system`; only from step 3 on does a whole block disappear.
+
+Consequence for §3.4's original claim: the first notch of degradation on a
+four-block banner no longer restores the `system … ip … uptime` layout — it
+keeps all four blocks and trims their content instead. `now` still goes
+before `ip` and `uptime`, so the "constrained terminals see no regression"
+property of the original design is preserved.
+
+**Flag naming**: `hide_ip_location` is deliberately NOT called
+`hide_public_info` — that name is already taken by the `--hide-public-info`
+CLI flag, which masks the public address octets (`a.b.c.d` -> `a.b.*.*`) and
+is orthogonal to this cascade. Both are read by
+`glances/plugins/ip/render_curses_v5.py`.
 
 ### 3.5 `now` renderer — drop the fixed padding
 
@@ -155,7 +206,7 @@ REST-only. Module docstring updated: header block, far right.
 | File | Change |
 |---|---|
 | `glances/outputs/curses_renderer_v5.py` | `HEADER_SLOT_LEFT` / `HEADER_SLOT_RIGHT` / `HEADER_SLOT`; `"now"` removed from `LEFT_SLOT`; `hide_now` filter in `build_frame`; docstrings |
-| `glances/outputs/glances_curses_v5.py` | `_paint_header` right-aligned tail group; `hide_now` first in `_HEADER_DEGRADE_STEPS`; docstrings |
+| `glances/outputs/glances_curses_v5.py` | `_paint_header` right-aligned tail group; `hide_now` added to `_HEADER_DEGRADE_STEPS` (first at the time — see the §3.4 amendment for its current rank); docstrings |
 | `glances/plugins/now/render_curses_v5.py` | drop `_NOW_PAD`; docstring |
 | `tests/test_curses_renderer_v5.py` | slot routing + `hide_now` filter tests |
 | `tests/test_curses_v5.py` | 4-block painter test + degrade-order test |
@@ -183,6 +234,13 @@ New / updated tests:
    (the `max(left_end + 1, …)` guard holds).
 6. `_fit_header` on a terminal too narrow for four blocks hides `now` first —
    `uptime`, `ip` and the OS info are still present in the resulting frame.
+   *(Amended 2026-08-29: the first notches now trim content — ip geolocation,
+   then OS info — and keep all four blocks; `now` goes only afterwards.
+   Pinned by `test_ip_location_is_dropped_before_the_os_info`,
+   `test_os_info_is_dropped_before_the_now_block` and
+   `test_hide_cloud_is_the_first_header_cascade_step` in
+   `tests/test_curses_v5.py`, plus the two `hide_ip_location` renderer tests
+   in `tests/test_plugin_ip_render_curses_v5.py`.)*
 7. `now` renderer returns the raw `custom` string with no trailing padding;
    empty payload still yields no rows.
 
@@ -193,7 +251,8 @@ regression guards and the full `tests/` suite
 Manual smoke check: `glances` (v5 TUI) on a wide terminal → date at the far
 right of the banner, nothing left in the sidebar where it used to be; shrink
 the terminal progressively → the date disappears first, then the OS info,
-then the IP, then the uptime.
+then the IP, then the uptime. *(Amended 2026-08-29: the expected sequence is
+now cloud → ip geolocation → OS info → date → IP → uptime.)*
 
 ## 6. v4 divergence to log
 

@@ -1328,7 +1328,9 @@ def build_frame(
             continue
         # Header line progressive degradation (system … ip … uptime … cloud …
         # now): when the terminal is too narrow, cloud (opt-in, so sacrificed
-        # first) then now, then the ip, then the uptime block is dropped.
+        # first) is dropped, then two content shrinks handled by the plugins'
+        # own renderers (`hide_ip_location`, then `hide_os_info`), then the
+        # now, ip and uptime blocks.
         if view and view.get("hide_cloud") and plugin_name == "cloud":
             continue
         if view and view.get("hide_now") and plugin_name == "now":
