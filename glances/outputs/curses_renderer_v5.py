@@ -161,6 +161,10 @@ class PluginBlock:
     # any row budget — the RIGHT-column solver needs the real count, which a
     # truncated block no longer reveals. None for scalar plugins.
     data_count: int | None = None
+    # Items the vertical fit pass must keep visible whatever the height costs
+    # the other blocks. Only `alert` sets it (its active incidents); every
+    # other block leaves it at 0 and stays fully elastic.
+    data_pinned: int = 0
 
     @property
     def height(self) -> int:
@@ -1045,6 +1049,13 @@ _SHRINK_STEPS: tuple[tuple[str, int | None], ...] = (
     ("processes", 1),  # k — beyond this, curses clips
 )
 
+# Terminal steps, reached ONLY when an alert is still active and the ladder
+# above could not free enough rows (see `plan_right_column`):
+#   l — processes 0: the block vanishes, header included.
+#   m — the alert floor itself gives way, one row at a time.
+# Without an active alert they never fire, so a host with a quiet alert block
+# keeps the exact historical cascade.
+
 
 def plan_right_column(
     *,
@@ -1055,6 +1066,7 @@ def plan_right_column(
     n_containers: int,
     n_processes: int,
     n_alerts: int,
+    n_ongoing: int = 0,
 ) -> dict[str, int]:
     """Return the RIGHT column row budget for the available `body_height`.
 
@@ -1073,6 +1085,15 @@ def plan_right_column(
         n_alerts: incident count available (`PluginBlock.data_count` of the
             synthesized `alert` block — one per incident, not one per raw
             history event).
+        n_ongoing: how many of those incidents are still ACTIVE
+            (`PluginBlock.data_pinned`). An active alert must stay visible at
+            the expense of everything else, so `min(n_ongoing,
+            _NOMINAL_ALERTS)` is a floor the shrink ladder's alert steps
+            (b, e, h) may not cross, and two terminal steps are unlocked to
+            honour it (l, m — see `_SHRINK_STEPS`). Incidents are sorted
+            ongoing-first by `_derive_incidents`, so a quota at or above this
+            floor provably shows every active one. `0` (the default, and every
+            host with a quiet alert block) leaves the cascade untouched.
 
     Returns:
         `{plugin: max data rows}`. `amps` is present only when the ladder had
@@ -1092,6 +1113,10 @@ def plan_right_column(
         "processes": _NOMINAL_PROCESSES,
         "amps": amps_height,
     }
+    # Rows the alert block may never give up while the cascade still has
+    # anything else to take. Capped by the nominal, which is also the maximum
+    # number of alert lines the block ever paints.
+    floor_alerts = min(max(0, n_ongoing), _NOMINAL_ALERTS)
 
     def cost(candidate: dict[str, int]) -> int:
         """Rows occupied by `candidate` — mirrors `_paint_sidebar`: the sum of
@@ -1105,7 +1130,9 @@ def plan_right_column(
         heights.extend(h for h in static_heights.values() if h)
         if candidate["amps"]:
             heights.append(candidate["amps"])
-        if n_processes:
+        # A zero quota hides the block outright, header included (step l) —
+        # mirroring `_paint_sidebar`, which skips a block with no rows.
+        if n_processes and candidate["processes"]:
             heights.append(1 + min(n_processes, candidate["processes"]))
         # The alert block is always emitted, if only as a header line. Its
         # height is title + column-header + data rows, not title + data rows
@@ -1139,11 +1166,22 @@ def plan_right_column(
                 deficit = cost(state) - body_height
                 state["amps"] = max(1, state["amps"] - deficit)
             else:
+                if key == "alerts":
+                    value = max(value, floor_alerts)
                 if value >= state[key]:
                     continue
                 state[key] = value
             if cost(state) <= body_height:
                 break
+        if floor_alerts and cost(state) > body_height:
+            # The floor made steps b/e/h no-ops and what is left did not
+            # cover the deficit. Step l: drop the process block entirely.
+            state["processes"] = 0
+            # Step m: nothing else remains to take, so the floor itself gives
+            # way — one row at a time, so the block keeps as many active
+            # alerts as the terminal can physically hold.
+            while state["alerts"] > 0 and cost(state) > body_height:
+                state["alerts"] -= 1
         # The step that made the layout fit usually freed more than the
         # deficit; refund that slack to the processes rather than leaving
         # blank rows at the bottom of the column.
@@ -1379,6 +1417,7 @@ def build_frame(
                 incidents=alert_incidents,
             ),
             data_count=len(alert_incidents),
+            data_pinned=sum(1 for i in alert_incidents if i["ongoing"]),
         )
     )
 

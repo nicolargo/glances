@@ -42,8 +42,9 @@ manque ; elle s'étend quand il y a du surplus.
 |---|---|---|
 | R1 | AMPs | Toutes les lignes affichées. Rognés **uniquement** au dernier palier de la cascade, pour garantir qu'il reste toujours au moins un processus visible. |
 | R2 | Workloads (`vms` + `containers`) | Budget **commun** — pas 10 chacun. Nominal 10 lignes, extensible à 20 sur écran haut. Compteur de troncature dans l'en-tête. |
-| R3 | Alertes | Nominal 10, les plus récentes en tête. Aucun marqueur (le compteur est déjà dans `ALERT (n ongoing / n total)`). Le mécanisme existe déjà (`alerts_limit`) ; seule sa valeur devient dynamique. |
-| R4 | Processus | Bloc élastique : absorbe tout le surplus. Plancher **5**, rompu seulement aux paliers `i` et `k`. |
+| R3 | Alertes | Nominal 10 — également le **maximum**, le bloc ne croît jamais au-delà (les 2 lignes d'en-tête sont en supplément). Les plus récentes en tête. Aucun marqueur (le compteur est déjà dans `ALERT (n ongoing / n total)`). Le mécanisme existe déjà (`alerts_limit`) ; seule sa valeur devient dynamique. |
+| R6 | Alertes **actives** | Une alerte encore active est **toujours** visible, au détriment de tout le reste. `min(n_ongoing, 10)` est un plancher que les paliers `b`/`e`/`h` ne peuvent pas franchir, et les paliers terminaux `l`/`m` sont débloqués pour l'honorer. Sans alerte active le plancher vaut 0 et la cascade est inchangée. |
+| R4 | Processus | Bloc élastique : absorbe tout le surplus. Plancher **5**, rompu seulement aux paliers `i` et `k` — et jusqu'à la disparition complète du bloc au palier `l`, lorsqu'une alerte active réclame la place (R6). |
 | R5 | Répartition vms/containers | Équité max-min : part égale, puis le reliquat inutilisé est reversé à l'autre. |
 
 ## 4. Architecture
@@ -136,6 +137,7 @@ def plan_right_column(
     n_containers: int,
     n_processes: int,
     n_alerts: int,
+    n_ongoing: int = 0,        # alertes encore actives (R6) — `PluginBlock.data_pinned`
 ) -> dict[str, int]:
 ```
 
@@ -152,7 +154,7 @@ total = Σ hauteur(bloc visible) + (nb_blocs_visibles − 1)
 
 hauteur(containers)   = 1 + min(n, quota)     # 0 si quota == 0 → bloc absent
 hauteur(vms)          = 1 + min(n, quota)     # 0 si quota == 0 → bloc absent
-hauteur(processlist)  = 1 + min(n, quota)
+hauteur(processlist)  = 1 + min(n, quota)     # 0 si quota == 0 → bloc absent (palier l)
 hauteur(alert)        = 1 + min(n, quota)     # 1 si quota == 0 → en-tête seul
 hauteur(processcount) = 1                     # jamais rogné
 hauteur(amps)         = naturelle, sauf palier j
@@ -181,10 +183,27 @@ tienne dans `body_height` :
 | c | processus 20 → 10 | | i | processus 5 → 3 |
 | d | workloads 5 → 3 | | j | amps → reste, marqueur `+N` |
 | e | alertes 5 → 3 | | k | processus 3 → 1 |
-| f | processus 10 → 5 | | | *au-delà : curses clippe* |
+| f | processus 10 → 5 | | | |
 
 Un palier visant un bloc absent est un no-op : on passe au suivant sans
-consommer de « tour ».
+consommer de « tour ». Les paliers `b`, `e` et `h` sont bornés par le plancher
+`min(n_ongoing, 10)` (R6) : avec 10 alertes actives ils deviennent tous des
+no-op et la cascade ne peut plus prendre que dans les workloads, les AMP et
+les processus.
+
+**Paliers terminaux**, atteints **uniquement** si une alerte est encore active
+et que la cascade ci-dessus n'a pas suffi :
+
+| | Palier | Effet |
+|---|---|---|
+| l | processus → 0 | bloc masqué, en-tête comprise |
+| m | plancher alertes → 0, une ligne à la fois | dernier recours absolu |
+
+Ces deux paliers donnent une **garantie dure** : dès 3 lignes de corps
+(`processcount` + ligne vide + en-tête alerte), le plan tient toujours dans
+`body_height` et le peintre ne tronque plus jamais la colonne. Sans alerte
+active ils ne se déclenchent pas : la cascade s'arrête au palier `k` et,
+au-delà, curses clippe comme auparavant.
 
 **Répartition du quota workloads** (R5, équité max-min) :
 

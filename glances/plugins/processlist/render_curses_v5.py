@@ -410,6 +410,12 @@ def render(
             if items:
                 pid_width = _pid_width(items)
 
+    budget = row_budget(view, "processlist", _MAX_ROWS)
+    if isinstance(budget, int) and budget <= 0:
+        # Step l of the vertical cascade: an active alert needs the room, so
+        # the block goes entirely — header included (parity with `containers`).
+        return []
+
     raw_levels = payload.get("_levels") if isinstance(payload, dict) else None
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
 
@@ -443,7 +449,7 @@ def render(
     # `_MAX_ROWS` is the nominal fallback; the TUI publishes a height-driven
     # budget in `view["row_budget"]` which may be lower (short terminal) or
     # higher (tall terminal — the list fills the screen).
-    for item in items[: row_budget(view, "processlist", _MAX_ROWS)]:
+    for item in items[:budget]:
         pid = item.get("pid")
         pid_levels = levels_index.get(pid) if isinstance(levels_index, dict) else None
         pid_levels = pid_levels if isinstance(pid_levels, dict) else {}

@@ -604,3 +604,9 @@ def test_without_row_budget_the_default_cap_still_applies(fields):
     """Non-régression : sans budget, la sortie est celle d'aujourd'hui."""
     rows = render(_many_procs(50), fields)
     assert len(rows) == 1 + 20
+
+
+def test_row_budget_zero_hides_the_block_entirely(fields):
+    """Palier l de la cascade verticale : une alerte active a besoin de la
+    place, la processlist disparaît en-tête comprise (parité `containers`)."""
+    assert render(_many_procs(50), fields, view={"row_budget": {"processlist": 0}}) == []

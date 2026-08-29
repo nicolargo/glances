@@ -214,3 +214,8 @@ def test_row_budget_above_the_default_shows_more_than_twenty(fields):
 def test_without_row_budget_the_default_cap_still_applies(fields):
     rows = render(_many_programs(50), fields)
     assert len(rows) == 1 + 20
+
+
+def test_row_budget_zero_hides_the_block_entirely(fields):
+    """Palier l de la cascade verticale : le bloc disparaît en-tête comprise."""
+    assert render(_many_programs(50), fields, view={"row_budget": {"programlist": 0}}) == []

@@ -86,6 +86,12 @@ def render(
         if isinstance(raw_items, list):
             items = [i for i in raw_items if isinstance(i, dict)]
 
+    budget = row_budget(view, "programlist", _MAX_ROWS)
+    if isinstance(budget, int) and budget <= 0:
+        # Step l of the vertical cascade: an active alert needs the room, so
+        # the block goes entirely — header included (parity with `containers`).
+        return []
+
     raw_levels = payload.get("_levels") if isinstance(payload, dict) else None
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
 
@@ -106,7 +112,7 @@ def render(
     ]
     rows: list[Row] = [Row(cells=header_cells)]
 
-    for item in items[: row_budget(view, "programlist", _MAX_ROWS)]:
+    for item in items[:budget]:
         name = item.get("name")
         item_levels = levels_index.get(name) if isinstance(levels_index, dict) else None
         item_levels = item_levels if isinstance(item_levels, dict) else {}

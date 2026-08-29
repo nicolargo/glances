@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from glances.outputs.curses_renderer_v5 import (
     _MAX_WORKLOADS,
+    _NOMINAL_ALERTS,
     _NOMINAL_PROCESSES,
     Cell,
     ColorRole,
@@ -2080,7 +2081,7 @@ def _cost(plan, *, n_vms=4, n_containers=30, n_processes=400, n_alerts=40, stati
     amps_rows = plan.get("amps", amps)
     if amps_rows:
         heights.append(amps_rows)
-    if n_processes:
+    if n_processes and plan["processlist"]:
         heights.append(1 + min(n_processes, plan["processlist"]))
     heights.append(_alert_block_height(n_alerts, plan["alert"]))
     return sum(heights) + max(0, len(heights) - 1)
@@ -2274,6 +2275,83 @@ def test_plan_on_a_degenerate_height_does_not_crash():
         assert plan["processlist"] >= 1
 
 
+def test_plan_floor_keeps_active_alerts_visible():
+    """Une alerte ACTIVE est toujours affichée : les paliers b/e/h ne peuvent
+    pas descendre le quota sous le nombre d'alertes en cours.
+
+    Borne basse à 7 : c'est le coût plancher de 3 alertes une fois tout le
+    reste masqué (processcount 1 + ligne vide 1 + bloc alerte 2+3). En dessous
+    la géométrie l'interdit et le palier m reprend la main
+    (cf. `test_plan_reduces_active_alerts_only_once_everything_else_is_gone`).
+    """
+    for height in range(60, 6, -1):
+        plan = _plan(height, n_ongoing=3)
+        assert plan["alert"] >= 3, f"une alerte active a été coupée à body_height={height}"
+
+
+def test_plan_floor_is_capped_at_the_nominal_maximum():
+    """Le plancher ne peut pas dépasser le plafond de 10 lignes d'alertes."""
+    plan = _plan(60, n_ongoing=25)
+    assert plan["alert"] == _NOMINAL_ALERTS
+
+
+def test_plan_floor_takes_the_rows_from_the_other_blocks():
+    """« Au détriment du reste » : à la hauteur où la cascade réduisait les
+    alertes, ce sont désormais les workloads et les processus qui paient."""
+    height = 10
+    without = _plan(height)
+    active = _plan(height, n_ongoing=4)
+    assert without["alert"] == 0
+    assert active["alert"] == 4
+    assert active["vms"] + active["containers"] == 0
+    assert active["processlist"] < without["processlist"]
+
+
+def test_plan_hides_the_process_block_for_an_active_alert():
+    """Palier l : la processlist disparaît entièrement (en-tête comprise)
+    plutôt que de rogner une alerte active.
+
+    14 lignes = exactement le coût de processcount (1) + ligne vide (1) + le
+    bloc alerte complet (2 en-têtes + 10 lignes). Un seul processus coûterait
+    3 lignes de plus (ligne vide + en-tête + la ligne) : il saute.
+    """
+    plan = _plan(14, n_ongoing=10)
+    assert plan["processlist"] == 0
+    assert plan["alert"] == 10
+
+
+def test_plan_new_steps_are_inert_without_active_alerts():
+    """Conservatisme : sans alerte active, les paliers l/m ne se déclenchent
+    jamais et la cascade historique s'arrête au palier k (1 processus)."""
+    for height in range(80, 0, -1):
+        assert _plan(height)["processlist"] >= 1, f"palier l déclenché à tort à body_height={height}"
+
+
+def test_plan_reduces_active_alerts_only_once_everything_else_is_gone():
+    """Palier m : le plancher ne cède qu'après la disparition des workloads,
+    des AMP et de la processlist."""
+    plan = _plan(6, n_ongoing=10, amps_height=4)
+    assert plan["alert"] < 10
+    assert plan["vms"] + plan["containers"] == 0
+    assert plan["processlist"] == 0
+    assert plan["amps"] == 1
+
+
+def test_plan_always_fits_when_alerts_are_active():
+    """Garantie dure : dès qu'une alerte est active, le plan tient TOUJOURS
+    dans la hauteur disponible, à partir de 3 lignes (processcount + ligne
+    vide + en-tête alerte).
+
+    `n_ongoing=0` est exclu volontairement : sans alerte active les paliers
+    l/m restent inertes et la cascade historique peut encore déborder, ce que
+    le peintre tronque (cf. `test_plan_new_steps_are_inert_without_active_alerts`).
+    """
+    for height in range(3, 61):
+        for n_ongoing in range(1, 16):
+            plan = _plan(height, n_ongoing=n_ongoing)
+            assert _cost(plan) <= height, f"plan déborde à body_height={height}, n_ongoing={n_ongoing}"
+
+
 def _alert_history(n):
     # Distinct `key` per event so each opens its own incident (§5.4) — a
     # repeated `(plugin, key, field)` tuple would collapse into one.
@@ -2384,3 +2462,37 @@ def test_render_alert_block_fully_evicted_alert_shows_its_real_start():
     # 5h05m of alert, and no `>` lower-bound marker.
     assert "5h05m" in painted
     assert ">" not in painted
+
+
+def test_data_pinned_on_alert_block_counts_only_the_active_incidents():
+    """`plan_right_column` a besoin du nombre d'alertes ACTIVES pour son
+    plancher : le bloc le publie via `data_pinned`, dérivé de la même liste
+    d'incidents que `data_count` (donc jamais désynchronisé).
+
+    3 incidents ouverts, 2 déjà résolus → 5 incidents, 3 épinglés."""
+    history = _alert_history(3) + [
+        {
+            "ts": "2026-08-05T11:00:00+00:00",
+            "plugin": "mem",
+            "key": f"m{i}",
+            "field": "percent",
+            "level": level,
+            "previous_level": previous,
+        }
+        for i in range(2)
+        for level, previous in (("warning", "ok"), ("ok", "warning"))
+    ]
+    frame = build_frame(
+        store_snapshot={},
+        fields_by_plugin={},
+        registry=[],
+        alerts_history=history,
+    )
+    alert = next(b for b in frame.right if b.name == "alert")
+    assert alert.data_count == 5
+    assert alert.data_pinned == 3
+
+
+def test_data_pinned_defaults_to_zero_for_ordinary_blocks():
+    """Seul le bloc alerte épingle des lignes ; tout le reste vaut 0."""
+    assert PluginBlock(name="cpu").data_pinned == 0

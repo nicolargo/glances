@@ -691,6 +691,7 @@ class TuiV5(threading.Thread):
             n_containers=count("containers"),
             n_processes=n_processes,
             n_alerts=count("alert"),
+            n_ongoing=by_name["alert"].data_pinned if "alert" in by_name else 0,
         )
 
         current = view.get("row_budget") or {}

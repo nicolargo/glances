@@ -2660,3 +2660,54 @@ def test_right_column_never_overflows_across_heights(fake_alerts, fake_config, m
         visible = [b for b in frame.right if b.rows]
         total = sum(b.height for b in visible) + max(0, len(visible) - 1)
         assert total <= body_height, f"overflow at max_y={max_y}: {total} > {body_height}"
+
+
+# ------------------------------------------- plancher « alertes actives »
+
+
+def _with_ongoing(tui, n):
+    """Donne à la TUI `n` alertes ACTIVES entièrement évincées de
+    l'historique — l'`ongoing` du moteur fait autorité (`_derive_incidents`)."""
+    tui.alerts.get_history.return_value = []
+    tui.alerts.get_ongoing.return_value = {("cpu", f"core{i}", "total"): "warning" for i in range(n)}
+    tui.alerts.get_ongoing_since.return_value = {}
+    return tui
+
+
+def test_active_alerts_all_stay_visible_on_a_short_terminal(make_tui_with_body):
+    """Le bout-en-bout de la demande : 6 alertes actives, du terminal
+    confortable au terminal très court — les 6 restent affichées.
+
+    Balayer les hauteurs plutôt qu'en figer une : à 20 lignes la cascade
+    d'origine laissait déjà passer 6 alertes, le test aurait été vacant.
+    """
+    tui = _with_ongoing(make_tui_with_body(), 6)
+    for max_y in range(24, 9, -1):
+        frame = tui._build_fitted_frame(max_x=200, max_y=max_y)
+        alert = next(b for b in frame.right if b.name == "alert")
+        # 2 lignes d'en-tête (titre + en-têtes de colonnes) + 1 par alerte.
+        assert len(alert.rows) == 2 + 6, f"une alerte active a été coupée à max_y={max_y}"
+
+
+def test_process_block_vanishes_before_an_active_alert(make_tui_with_body):
+    """Palier l de bout en bout : à 10 lignes, la processlist disparaît
+    entièrement plutôt que de rogner une des 6 alertes actives.
+
+    Un renderer qui ne produit aucune ligne voit son bloc écarté par
+    `build_frame` (« skip empty blocks »), donc le bloc quitte carrément la
+    frame — il ne reste pas sous la forme d'un bloc vide.
+    """
+    tui = _with_ongoing(make_tui_with_body(), 6)
+    frame = tui._build_fitted_frame(max_x=200, max_y=10)
+    alert = next(b for b in frame.right if b.name == "alert")
+    assert len(alert.rows) == 2 + 6
+    assert [b.name for b in frame.right] == ["alert"]
+
+
+def test_quiet_alert_block_leaves_the_process_list_alone(make_tui_with_body):
+    """Non-régression : sans alerte active, le même terminal court garde la
+    cascade historique et la processlist ne disparaît jamais."""
+    tui = make_tui_with_body()
+    frame = tui._build_fitted_frame(max_x=200, max_y=10)
+    proc = next(b for b in frame.right if b.name == "processlist")
+    assert len(proc.rows) >= 2, "la processlist a été masquée sans alerte active"
