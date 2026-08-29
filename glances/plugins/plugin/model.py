@@ -742,7 +742,14 @@ class GlancesPluginModel:
                 try:
                     self._limits[limit] = config.get_float_value(self.plugin_name, level)
                 except ValueError:
-                    self._limits[limit] = config.get_value(self.plugin_name, level).split(",")
+                    # Strip each item: `list=cpu, mem, load` is how a comma-separated
+                    # value is normally written, and glances.conf writes it that way in
+                    # its own comments. A bare split kept the spaces, so ' mem' matched
+                    # nothing and plugins that validate their list against a set of
+                    # known names silently rejected a config the user got right.
+                    self._limits[limit] = [
+                        item.strip() for item in config.get_value(self.plugin_name, level).split(",")
+                    ]
                 logger.debug(f"Load limit: {limit} = {self._limits[limit]}")
 
         return True
