@@ -391,12 +391,24 @@ class ThreadScanner(threading.Thread):
         """Scan the (TCP) port structure (dict) and update the status key."""
         ret = None
 
-        # Create and configure the scanning socket
+        # Create and configure the scanning socket.
+        #
+        # The timeout belongs to this socket, not to the process:
+        # socket.setdefaulttimeout() is global and was never restored, so once
+        # a port had been scanned every socket built afterwards anywhere in
+        # Glances silently inherited the last scanned port's timeout.
+        #
+        # Returning here also matters: if the socket cannot be created, the
+        # code below used to run anyway and _socket was unbound, so the
+        # connect_ex raised UnboundLocalError into the "Error while scanning
+        # port" handler and the finally clause then raised it again, this time
+        # with nothing to catch it.
         try:
-            socket.setdefaulttimeout(port['timeout'])
             _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            _socket.settimeout(port['timeout'])
         except Exception as e:
             logger.debug(f"{self.plugin_name}: Error while creating scanning socket ({e})")
+            return ret
 
         # Scan port
         ip = self._resolv_name(port['host'])

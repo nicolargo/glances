@@ -9,6 +9,8 @@
 
 """Tests for the Ports plugin."""
 
+import socket
+
 import pytest
 
 import glances.plugins.ports as ports_mod
@@ -119,3 +121,74 @@ class TestIcmpPingCommand:
         monkeypatch.setattr(ThreadScanner, '_resolv_name', lambda self, host: resolved.append(host) or host)
         scanner._port_scan_icmp({'host': 'example.net', 'port': 0, 'timeout': 3})
         assert resolved == ['example.net']
+
+
+class TestTcpScanSocket:
+    """Test that a TCP scan configures its own socket and cleans up after itself."""
+
+    @pytest.fixture
+    def tcp_port(self):
+        """Return a port entry pointing at the discard port, which nothing listens on."""
+        return {'host': '127.0.0.1', 'port': 9, 'timeout': 3, 'status': None, 'indice': 'port_0'}
+
+    def test_the_timeout_is_set_on_the_scanning_socket(self, scanner, tcp_port, monkeypatch):
+        """The scan must configure the socket it actually uses."""
+        seen = {}
+        real_socket = socket.socket
+
+        def spy(*args, **kwargs):
+            sock = real_socket(*args, **kwargs)
+            seen['sock'] = sock
+            return sock
+
+        monkeypatch.setattr(ports_mod.socket, 'socket', spy)
+        monkeypatch.setattr(ThreadScanner, '_resolv_name', lambda self, host: host)
+        scanner._port_scan_tcp(tcp_port)
+
+        assert seen['sock'].gettimeout() == 3
+
+    def test_scanning_does_not_change_the_process_wide_default_timeout(self, scanner, tcp_port, monkeypatch):
+        """A port scan must not reconfigure sockets it does not own.
+
+        socket.setdefaulttimeout() applies to every socket created afterwards
+        in the process -- exporters, the hddtemp grabber, anything that does
+        not set a timeout of its own -- and nothing here ever restored it.
+        """
+        monkeypatch.setattr(ThreadScanner, '_resolv_name', lambda self, host: host)
+        # Pin the starting point. The default is process-wide, so an earlier
+        # scan in the same session would otherwise have already set it and this
+        # test would pass against the very state it exists to forbid.
+        previous = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(None)
+        try:
+            scanner._port_scan_tcp(tcp_port)
+
+            assert socket.getdefaulttimeout() is None
+            unrelated = socket.socket()
+            try:
+                assert unrelated.gettimeout() is None
+            finally:
+                unrelated.close()
+        finally:
+            socket.setdefaulttimeout(previous)
+
+    def test_a_socket_that_cannot_be_created_is_reported_not_raised(self, scanner, tcp_port, monkeypatch):
+        """A failed socket creation must not escape as an UnboundLocalError."""
+
+        def refuse(*args, **kwargs):
+            raise OSError("no file descriptors available")
+
+        monkeypatch.setattr(ports_mod.socket, 'socket', refuse)
+        monkeypatch.setattr(ThreadScanner, '_resolv_name', lambda self, host: host)
+        # Set by ThreadScanner.__init__; the fixture skips it, and the failure
+        # path logs with it.
+        scanner.plugin_name = 'ports'
+
+        assert scanner._port_scan_tcp(tcp_port) is None
+
+    def test_a_closed_port_is_still_reported_offline(self, scanner, tcp_port, monkeypatch):
+        """The scan result itself must be unchanged by how the timeout is set."""
+        monkeypatch.setattr(ThreadScanner, '_resolv_name', lambda self, host: host)
+        scanner._port_scan_tcp(tcp_port)
+
+        assert tcp_port['status'] is False
