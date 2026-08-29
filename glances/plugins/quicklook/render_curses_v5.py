@@ -54,8 +54,9 @@ _BRACKETS_WIDTH = 2
 # 2 (brackets) + 8 (bar) = 15.
 _MIN_BAR_TOTAL = _LABEL_WIDTH + _BRACKETS_WIDTH + 8
 
-# Stats shown as bars, in v4 order. GPU means appended (auto-shown when the
-# gpu plugin publishes cards — see quicklook/model_v5._add_gpu_means).
+# Fallback bar selection, used only when the payload carries no `stats_list`
+# (which the model fills from `[quicklook] list`). Kept GPU-inclusive so a
+# payload without the field still shows everything it carries.
 _BAR_KEYS = ("cpu", "mem", "load", "gpu_mem", "gpu_proc")
 
 # 4-char display labels (the bar label cell is padded to 4). Keeps the
@@ -81,9 +82,9 @@ def _bar_width(view: dict[str, Any] | None) -> int:
     return _DEFAULT_BAR_WIDTH
 
 
-def _bar_cells(label: str, percent: Any, role: ColorRole, width: int) -> list[Cell]:
+def _bar_cells(label: str, percent: Any, role: ColorRole, width: int, bar_char: str = "|") -> list[Cell]:
     """`LABEL [||||      45.0%]` as label + bracket + bar + bracket cells."""
-    bar = Bar(width, bar_char="|")
+    bar = Bar(width, bar_char=bar_char)
     try:
         bar.percent = float(percent)
     except (TypeError, ValueError):
@@ -157,19 +158,25 @@ def render(
         # Compact mode, no header to justify against -> today's default.
         width = _DEFAULT_BAR_WIDTH
 
-    for key in _BAR_KEYS:
+    # `[quicklook] list` drives both the selection and the order; the model
+    # publishes it as an internal field. `_BAR_KEYS` is the fallback for a
+    # payload that predates the field (a remote v5 server, say).
+    bar_keys = payload.get("stats_list") or _BAR_KEYS
+    bar_char = payload.get("bar_char") or "|"
+
+    for key in bar_keys:
         if key == "cpu" and view and view.get("percpu") and isinstance(payload.get("percpu"), list):
-            rows.extend(_per_cpu_rows(payload, width))
+            rows.extend(_per_cpu_rows(payload, width, bar_char))
             continue
         if key not in payload or payload.get(key) is None:
             continue
         label = _BAR_LABEL.get(key, key.upper())
-        rows.append(Row(cells=_bar_cells(label, payload[key], _role_for(payload, key), width)))
+        rows.append(Row(cells=_bar_cells(label, payload[key], _role_for(payload, key), width, bar_char)))
 
     return rows or [Row(cells=[Cell(text="CPU", color=ColorRole.HEADER, bold=True)])]
 
 
-def _per_cpu_rows(payload: dict[str, Any], width: int) -> list[Row]:
+def _per_cpu_rows(payload: dict[str, Any], width: int, bar_char: str = "|") -> list[Row]:
     """Top-N per-core bars + a CPU* mean row (v4 `_msg_per_cpu`)."""
     cores = [c for c in payload.get("percpu", []) if isinstance(c, dict)]
     rows: list[Row] = []
@@ -186,7 +193,7 @@ def _per_cpu_rows(payload: dict[str, Any], width: int) -> list[Row]:
     for core in displayed:
         cid = core.get("cpu_number", 0)
         label = f"CPU{cid}" if isinstance(cid, int) and cid < 10 else f"{cid:>4}"
-        rows.append(Row(cells=_bar_cells(label, core.get("total"), role, width)))
+        rows.append(Row(cells=_bar_cells(label, core.get("total"), role, width, bar_char)))
 
     overflow = ordered[_DEFAULT_MAX_CPU_DISPLAY:]
     if overflow:
@@ -194,6 +201,6 @@ def _per_cpu_rows(payload: dict[str, Any], width: int) -> list[Row]:
         # the "CPU*" row averages the HIDDEN (overflow) cores, not the displayed ones.
         vals = [float(c.get("total") or 0.0) for c in overflow]
         mean = sum(vals) / len(vals)
-        rows.append(Row(cells=_bar_cells("CPU*", mean, role, width)))
+        rows.append(Row(cells=_bar_cells("CPU*", mean, role, width, bar_char)))
 
     return rows

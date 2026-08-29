@@ -257,6 +257,31 @@ def test_limits_for_splits_non_numeric_values_on_commas():
     assert exporter._limits_for(plugin)["fakescalar_status_ok"] == ["R", "S", "D"]
 
 
+def test_limits_for_strips_whitespace_around_split_items():
+    """`status_ok=R, S, D` is how a comma-separated value is normally written.
+
+    v5 mirror of the v4 `load_limits` fix (PR #3700): a bare split kept the
+    spaces, so the exported limit carried `' S'` and `' D'` into InfluxDB,
+    MongoDB, MQTT and friends.
+    """
+    config = make_config({"fakescalar": {"status_ok": "R, S, D"}})
+    store = StatsStoreV5()
+    plugin = FakeScalarPlugin(store, config)
+    exporter = FakeExport(config, args=None)
+
+    assert exporter._limits_for(plugin)["fakescalar_status_ok"] == ["R", "S", "D"]
+
+
+def test_limits_for_keeps_spaces_inside_an_item():
+    """Only the edges are trimmed — `alias=sda1:System Disk` must survive."""
+    config = make_config({"fakescalar": {"alias": "sda1:System Disk, sdb1:Backup Disk"}})
+    store = StatsStoreV5()
+    plugin = FakeScalarPlugin(store, config)
+    exporter = FakeExport(config, args=None)
+
+    assert exporter._limits_for(plugin)["fakescalar_alias"] == ["sda1:System Disk", "sdb1:Backup Disk"]
+
+
 def test_limits_for_never_exports_action_templates():
     """Security divergence from v4 — design §5.4.
 

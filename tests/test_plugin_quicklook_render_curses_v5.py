@@ -179,3 +179,53 @@ def test_no_gpu_bars_when_absent():
     rows = render(_payload(), FIELDS)
     text = "\n".join(_text(r) for r in rows)
     assert "GMEM" not in text
+
+
+class TestStatsListDrivesTheBars:
+    """`stats_list` comes from `[quicklook] list` via the model payload."""
+
+    def test_only_the_listed_stats_are_drawn(self):
+        rows = render(_payload(stats_list=["cpu", "swap"]), FIELDS)
+        text = "\n".join(_text(r) for r in rows)
+        assert "CPU" in text
+        assert "SWAP" in text
+        assert "MEM" not in text
+        assert "LOAD" not in text
+
+    def test_swap_is_reachable(self):
+        """v4 offers `swap` in the list; v5 froze a tuple that omitted it."""
+        rows = render(_payload(stats_list=["swap"]), FIELDS)
+        assert "SWAP" in _text(rows[0])
+
+    def test_the_configured_order_is_the_drawn_order(self):
+        rows = render(_payload(stats_list=["load", "mem", "cpu"]), FIELDS)
+        assert [_text(r).split()[0] for r in rows] == ["LOAD", "MEM", "CPU"]
+
+    def test_gpu_is_not_drawn_unless_listed(self):
+        """v4 parity: the GPU means stay in the payload (REST) but off the TUI."""
+        payload = _payload(stats_list=["cpu"], gpu_mem=38.0, gpu_proc=55.0)
+        text = "\n".join(_text(r) for r in render(payload, FIELDS))
+        assert "GMEM" not in text
+        assert "GPU " not in text
+
+    def test_gpu_is_drawn_when_listed(self):
+        payload = _payload(stats_list=["cpu", "gpu_mem", "gpu_proc"], gpu_mem=38.0, gpu_proc=55.0)
+        text = "\n".join(_text(r) for r in render(payload, FIELDS))
+        assert "GMEM" in text
+        assert "GPU" in text
+
+    def test_a_missing_stats_list_keeps_the_builtin_order(self):
+        """Defensive: a payload without the field (older store) still renders."""
+        rows = render(_payload(), FIELDS)
+        assert [_text(r).split()[0] for r in rows] == ["CPU", "MEM", "LOAD"]
+
+
+class TestBarChar:
+    def test_the_configured_char_fills_the_bar(self):
+        rows = render(_payload(stats_list=["cpu"], bar_char="#"), FIELDS)
+        assert "#" in _text(rows[0])
+        assert "|" not in _text(rows[0])
+
+    def test_the_default_char_is_a_pipe(self):
+        rows = render(_payload(stats_list=["cpu"]), FIELDS)
+        assert "|" in _text(rows[0])

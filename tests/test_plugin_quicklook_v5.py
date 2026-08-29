@@ -33,6 +33,17 @@ def config(tmp_path, monkeypatch) -> GlancesConfigV5:
     return GlancesConfigV5()
 
 
+def _cfg_with(tmp_path, monkeypatch, body: str) -> GlancesConfigV5:
+    """Real config object built from a `[quicklook]` section body."""
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text(body)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    return GlancesConfigV5()
+
+
 def test_plugin_identity(store, config):
     p = PluginModel(store, config)
     assert p.plugin_name == "quicklook"
@@ -215,3 +226,82 @@ def test_gpu_fields_declared_watched():
     for key in ("gpu_mem", "gpu_proc"):
         assert fd[key]["watched"] is True
         assert fd[key]["unit"] == "percent"
+
+
+class TestStatsList:
+    """`[quicklook] list` — v4 parity (glances/plugins/quicklook/__init__.py:110)."""
+
+    def test_default_is_cpu_mem_load(self, tmp_path, monkeypatch, store):
+        # Isolated config on purpose: the module-level `config` fixture only
+        # redirects SYSTEM_CONFIG_PATH, so the developer's real
+        # ~/.config/glances/glances.conf still leaks into it.
+        cfg = _cfg_with(tmp_path, monkeypatch, "")
+        assert PluginModel(store, cfg).stats_list == ["cpu", "mem", "load"]
+
+    def test_a_plain_list_is_honoured(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nlist=cpu,swap\n")
+        assert PluginModel(store, cfg).stats_list == ["cpu", "swap"]
+
+    def test_config_order_is_preserved(self, tmp_path, monkeypatch, store):
+        """v4 loops over the configured list, so the config drives bar order."""
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nlist=load,mem,cpu\n")
+        assert PluginModel(store, cfg).stats_list == ["load", "mem", "cpu"]
+
+    @pytest.mark.parametrize("value", ["cpu, mem, load", " cpu , mem , load ", "cpu,\tmem,\tload"])
+    def test_whitespace_around_items_is_ignored(self, tmp_path, monkeypatch, store, value):
+        cfg = _cfg_with(tmp_path, monkeypatch, f"[quicklook]\nlist={value}\n")
+        assert PluginModel(store, cfg).stats_list == ["cpu", "mem", "load"]
+
+    def test_a_typo_falls_back_to_the_default_not_to_everything(self, tmp_path, monkeypatch, store):
+        """PR #3700 semantics: a config mistake must not display MORE than asked."""
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nlist=cpu,mem,typo\n")
+        assert PluginModel(store, cfg).stats_list == PluginModel.DEFAULT_STATS_LIST
+
+    def test_an_empty_list_falls_back_to_the_default(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nlist=\n")
+        assert PluginModel(store, cfg).stats_list == PluginModel.DEFAULT_STATS_LIST
+
+    def test_gpu_is_opt_in(self, tmp_path, monkeypatch, store):
+        """v4 parity: no GPU bar unless the user lists it."""
+        assert "gpu_mem" not in PluginModel.DEFAULT_STATS_LIST
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nlist=cpu,gpu_mem,gpu_proc\n")
+        assert PluginModel(store, cfg).stats_list == ["cpu", "gpu_mem", "gpu_proc"]
+
+
+class TestBarChar:
+    """`[quicklook] bar_char` — v4 parity (`get_conf_value('bar_char', default=['|'])[0]`)."""
+
+    def test_default_is_a_pipe(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "")
+        assert PluginModel(store, cfg).bar_char == "|"
+
+    def test_a_configured_char_is_used(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nbar_char=#\n")
+        assert PluginModel(store, cfg).bar_char == "#"
+
+    def test_only_the_first_item_is_kept(self, tmp_path, monkeypatch, store):
+        """v4 reads the value as a list and takes `[0]` — not the first character."""
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nbar_char=#,@\n")
+        assert PluginModel(store, cfg).bar_char == "#"
+
+    def test_an_empty_value_falls_back_to_the_default(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nbar_char=\n")
+        assert PluginModel(store, cfg).bar_char == "|"
+
+
+class TestRenderSupportFields:
+    """The selection reaches the custom renderer through the payload."""
+
+    @pytest.mark.asyncio
+    async def test_grab_publishes_stats_list_and_bar_char(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nlist=cpu,swap\nbar_char=#\n")
+        p = PluginModel(store, cfg)
+        out = await p._grab_stats()
+        assert out["stats_list"] == ["cpu", "swap"]
+        assert out["bar_char"] == "#"
+
+    def test_they_are_internal_and_never_watched(self):
+        fd = PluginModel.fields_description
+        for key in ("stats_list", "bar_char"):
+            assert fd[key].get("internal") is True
+            assert fd[key].get("watched", False) is False

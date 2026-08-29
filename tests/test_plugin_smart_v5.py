@@ -110,6 +110,17 @@ async def test_grab_passes_hide_attributes_to_helper(tmp_path, monkeypatch, stor
     assert captured["hide"] == ["Self-tests", "Errors"]
 
 
+def test_hide_attributes_ignores_whitespace_around_items(tmp_path, monkeypatch, store):
+    """`hide_attributes=Self-tests, Errors` is how the value is normally written.
+
+    The key is read outside `_compile_filter`, so nothing stripped it: the
+    second attribute stayed visible, silently. Same defect class as the v4
+    `load_limits` fix (PR #3700), which did not reach this key in either branch.
+    """
+    config = _cfg_with(tmp_path, monkeypatch, "[smart]\nhide_attributes=Self-tests, Errors\n")
+    assert PluginModel(store, config)._hide_attributes == ["Self-tests", "Errors"]
+
+
 @pytest.mark.asyncio
 async def test_grab_empty_when_not_root(store, config, monkeypatch):
     p = PluginModel(store, config)

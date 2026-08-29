@@ -38,6 +38,7 @@ from typing import Any, ClassVar
 import psutil
 
 from glances.cpu_sampler_v5 import sampler
+from glances.logger import logger
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 
 # Standard Glances percent ladder (matches v4 quicklook cpu/mem/load alerts).
@@ -121,6 +122,17 @@ class PluginModel(GlancesPluginBase[dict]):
     # too would double every aggregate alert. Keep colouring, skip the alerts
     # pipeline. See ``GlancesPluginBase.EMITS_ALERTS``.
     EMITS_ALERTS: ClassVar[bool] = False
+
+    # `[quicklook] list` — which bars the TUI draws, in the configured order.
+    # v4 values verbatim (glances/plugins/quicklook/__init__.py:92-93). The list
+    # is DISPLAY-only: collection stays unconditional, so the payload, the REST
+    # API and the history are identical whatever the user selects. That is what
+    # makes strict v4 display parity free here — v5 dropped v4's global
+    # `gpu_stats.get_gpu_*` polling flags, so listing a GPU stat no longer turns
+    # any hardware polling on, and omitting it no longer turns any off.
+    AVAILABLE_STATS_LIST: ClassVar[list[str]] = ["cpu", "mem", "swap", "load", "gpu_mem", "gpu_proc"]
+    DEFAULT_STATS_LIST: ClassVar[list[str]] = ["cpu", "mem", "load"]
+    DEFAULT_BAR_CHAR: ClassVar[str] = "|"
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "cpu": {
@@ -207,7 +219,56 @@ class PluginModel(GlancesPluginBase[dict]):
             "internal": True,
             "watched": False,
         },
+        "stats_list": {
+            "description": "Stats displayed as bars, in display order ([quicklook] list).",
+            "unit": "string",
+            "internal": True,
+            "watched": False,
+        },
+        "bar_char": {
+            "description": "Character used to fill the bars ([quicklook] bar_char).",
+            "unit": "string",
+            "internal": True,
+            "watched": False,
+        },
     }
+
+    def __init__(self, store: Any, config: Any) -> None:
+        super().__init__(store, config)
+        self.stats_list = self._read_stats_list()
+        self.bar_char = self._read_bar_char()
+
+    def _read_stats_list(self) -> list[str]:
+        """Parse `[quicklook] list=cpu,mem,load` (v4 `__init__.py:110-121`).
+
+        `config.get()` coerces to the default's type, so the list arrives
+        already split and stripped (`config_v5._coerce_list`).
+        """
+        stats_list = self.config.get("quicklook", "list", self.DEFAULT_STATS_LIST)
+        unknown = [stat for stat in stats_list if stat not in self.AVAILABLE_STATS_LIST]
+        if unknown or not stats_list:
+            # A misconfigured list falls back to the DEFAULT, not to everything
+            # available — answering a config mistake by displaying MORE than was
+            # asked for is what v4 did until PR #3700.
+            if unknown:
+                logger.warning(
+                    "Quicklook plugin: unknown stats in the list: %s (available: %s), falling back to %s",
+                    unknown,
+                    self.AVAILABLE_STATS_LIST,
+                    self.DEFAULT_STATS_LIST,
+                )
+            return list(self.DEFAULT_STATS_LIST)
+        return stats_list
+
+    def _read_bar_char(self) -> str:
+        """Parse `[quicklook] bar_char=|` (v4 `get_conf_value('bar_char', default=['|'])[0]`).
+
+        v4 reads the value as a list and keeps its first ITEM, so `bar_char=#,@`
+        yields '#'. A multi-character item is passed through unchanged, exactly
+        as in v4 — `Bar` repeats it per cell, which overflows the bar width.
+        """
+        chars = self.config.get("quicklook", "bar_char", [self.DEFAULT_BAR_CHAR])
+        return chars[0] if chars else self.DEFAULT_BAR_CHAR
 
     async def _grab_stats(self) -> dict:
         out: dict[str, Any] = {}
@@ -226,6 +287,10 @@ class PluginModel(GlancesPluginBase[dict]):
 
         out.update(await asyncio.to_thread(_collect_sync))
         self._add_gpu_means(out)
+        # Display settings ride along as internal fields — the custom
+        # render_curses_v5.render() has no other way to reach the config.
+        out["stats_list"] = self.stats_list
+        out["bar_char"] = self.bar_char
         return out
 
     def _add_gpu_means(self, out: dict[str, Any]) -> None:

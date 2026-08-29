@@ -66,7 +66,9 @@ class PluginModel(GlancesPluginBase[list]):
         if not raw:
             return []
         logger.info("Following SMART attributes will not be displayed: %s", raw)
-        return str(raw).split(",")
+        # Strip each item: the key is read outside `_compile_filter`, so nothing else
+        # trims it and `hide_attributes=Self-tests, Errors` left ' Errors' visible.
+        return [item.strip() for item in str(raw).split(",")]
 
     async def _grab_stats(self) -> list:
         """Grab SMART data (root-gated, pySMART-guarded) and reshape.

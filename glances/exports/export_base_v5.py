@@ -360,7 +360,11 @@ class GlancesExportBase(ABC):
                 limits[name] = self.config.get_float_value(plugin.plugin_name, option)
             except ValueError:
                 raw = self.config.get_value(plugin.plugin_name, option)
-                limits[name] = str(raw).split(",")
+                # Strip each item, like v4 `load_limits` (PR #3700): `status_ok=R, S, D`
+                # is how a comma-separated value is normally written, and a bare split
+                # exported ' S' and ' D' to the backend. Only the edges are trimmed, so
+                # a value like `alias=sda1:System Disk` keeps its internal spaces.
+                limits[name] = [item.strip() for item in str(raw).split(",")]
 
         self._limits_cache[plugin.plugin_name] = limits
         return limits

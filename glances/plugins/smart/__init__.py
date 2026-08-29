@@ -204,7 +204,10 @@ class SmartPlugin(GlancesPluginModel):
         hide_attr_str = smart_config.get('hide_attributes', '')
         if hide_attr_str:
             logger.info(f'Following SMART attributes will not be displayed: {hide_attr_str}')
-            return hide_attr_str.split(',')
+            # Strip each item: this key is read from config.as_dict(), not through
+            # load_limits, so the PR #3700 strip never reached it and an attribute
+            # written as `Self-tests, Errors` stayed visible.
+            return [attr.strip() for attr in hide_attr_str.split(',')]
         return []
 
     @property
