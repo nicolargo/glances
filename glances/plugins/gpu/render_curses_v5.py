@@ -16,6 +16,7 @@ Mirrors v4 `gpu.msg_curse()`:
     temperature:       55C
 
 Multi mode (>1 GPU, not meangpu): one row per GPU — `name[:9]  proc  mem N`.
+The `mem` column is dropped when no card reports memory (narrower plugin).
 """
 
 from __future__ import annotations
@@ -88,14 +89,18 @@ def _summary_rows(cards: list[dict[str, Any]], levels: dict[str, Any], fahrenhei
 
 
 def _multi_rows(cards: list[dict[str, Any]], levels: dict[str, Any]) -> list[Row]:
+    # #3631: an unavailable sensor is displayed as N/A, not hidden — hiding it per
+    # card drops a cell and misaligns the rows of heterogeneous cards. The mem
+    # column is dropped only when no card reports it: every row stays aligned and
+    # the plugin gets narrower.
+    show_mem = any(card.get("mem") is not None for card in cards)
     rows: list[Row] = []
     for card in cards:
         gpu_id = card.get("gpu_id")
         cells = [Cell(text="{:<7}".format(str(card.get("name") or "")[0:9]))]
-        # #3631: an unavailable sensor is displayed as N/A, not hidden — hiding it
-        # drops a cell and misaligns the rows of heterogeneous cards.
         cells.append(Cell(text=f" {_format_value(card.get('proc'))}", color=_level_role(levels, gpu_id, "proc")))
-        cells.append(Cell(text=f" mem {_format_value(card.get('mem'))}", color=_level_role(levels, gpu_id, "mem")))
+        if show_mem:
+            cells.append(Cell(text=f" mem {_format_value(card.get('mem'))}", color=_level_role(levels, gpu_id, "mem")))
         rows.append(Row(cells=cells))
     return rows
 

@@ -87,3 +87,13 @@ def test_multi_mode_none_values_render_na():
     assert "N/A" in _flat(rows)
     # Every card row carries the same cell count: name + proc + mem.
     assert [len(r.cells) for r in rows[1:]] == [3, 3]
+
+
+def test_multi_mode_mem_column_hidden_when_no_card_reports_it():
+    # #3631 keeps a per-card N/A, but when *no* card reports memory the whole
+    # column is dropped to narrow the plugin.
+    cards = [_card("arm0", "Mali", proc=30, mem=None), _card("arm1", "Mali", proc=10, mem=None)]
+    rows = render(_payload(cards))
+    flat = _flat(rows)
+    assert "mem" not in flat
+    assert [len(r.cells) for r in rows[1:]] == [2, 2]
