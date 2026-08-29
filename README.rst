@@ -655,10 +655,6 @@ More stars ! 🌟
 
 Please give us a star on `GitHub`_ if you like this project.
 
-.. image:: https://api.star-history.com/chart?repos=glances/glances&type=date&legend=top-left&sealed_token=fDYhEEI5i4F77a1xvKZvOi-cTheXdaS-iHUmJREY1ELoVneJJUfknA7JCH7AC_ySW4bcCFlENvP1qxTMoQHhQ3KgtVlo2IsnmJjlWH4WvCOAGDVIu0x9u7-7Iq4GAzGbuRcWDpz6MkrU2oReok7TYYPNh_ywUJmktRwbDdLIVlnbIdESIYtazT6IJPtN
-    :alt: Star History Chart
-    :target: https://www.star-history.com/?repos=glances%2Fglances&type=date&legend=top-left
-
 .. _psutil: https://github.com/giampaolo/psutil
 .. _Brew: https://formulae.brew.sh/formula/glances
 .. _Python: https://www.python.org/getit/
