@@ -702,7 +702,7 @@ export default {
 			return GlancesHelper.getAlert(
 				"processlist",
 				"processlist_mem_",
-				process.cpu_percent,
+				process.memory_percent,
 			);
 		},
 		getDisableStats() {
