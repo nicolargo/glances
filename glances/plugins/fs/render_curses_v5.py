@@ -105,7 +105,8 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
                     Cell(text=_format_mnt_point(mnt)),
                     _used_cell(item.get("used"), percent_entry),
                     _total_cell(item.get("size")),
-                ]
+                ],
+                item_start=True,
             )
         )
 

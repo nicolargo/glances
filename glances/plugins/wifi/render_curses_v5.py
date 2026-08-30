@@ -89,7 +89,8 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
                 cells=[
                     Cell(text=_format_name(str(ssid))),
                     Cell(text=f"{quality_level:.0f}".rjust(_VALUE_COL_WIDTH), color=role, prominent=prominent),
-                ]
+                ],
+                item_start=True,
             )
         )
     return rows

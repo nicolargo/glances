@@ -76,3 +76,12 @@ def test_row_fits_left_sidebar_budget():
             assert len(r.cells[0].text) + 1 + len(r.cells[1].text) <= _LEFT_SIDEBAR_MAX_WIDTH
         else:
             assert len(r.cells[0].text) <= _LEFT_SIDEBAR_MAX_WIDTH
+
+
+def test_only_the_device_row_is_marked():
+    """smart emits one row per attribute; the counter must count DEVICES."""
+    dev = {"name": "/dev/sda", "attributes": [_attr("Power_On_Hours"), _attr("Temperature")]}
+    rows = render(_payload([dev, {"name": "/dev/sdb", "attributes": [_attr("Reallocated")]}]))
+    assert rows[0].item_start is False  # header
+    assert sum(r.item_start for r in rows) == 2
+    assert len(rows) == 6  # header + (sda + 2 attrs) + (sdb + 1 attr)

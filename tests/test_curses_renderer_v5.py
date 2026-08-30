@@ -24,6 +24,7 @@ from glances.outputs.curses_renderer_v5 import (
     render_collection_plugin,
     render_scalar_plugin,
     slot_for,
+    with_truncation_counter,
 )
 
 # --------------------------------------------------------------- dataclasses
@@ -2496,3 +2497,47 @@ def test_data_pinned_on_alert_block_counts_only_the_active_incidents():
 def test_data_pinned_defaults_to_zero_for_ordinary_blocks():
     """Seul le bloc alerte épingle des lignes ; tout le reste vaut 0."""
     assert PluginBlock(name="cpu").data_pinned == 0
+
+
+# --------------------------------------------- truncation counter (N/M)
+
+
+def test_row_item_start_defaults_to_false():
+    assert Row(cells=[Cell("eth0")]).item_start is False
+
+
+def test_with_truncation_counter_appends_ratio_to_first_cell():
+    header = Row(cells=[Cell(text="SENSORS".ljust(19), color=ColorRole.HEADER, bold=True)])
+    out = with_truncation_counter(header, shown=5, total=7)
+    assert out.cells[0].text == "SENSORS 5/7".ljust(19)
+
+
+def test_with_truncation_counter_keeps_cell_attributes():
+    header = Row(cells=[Cell(text="SENSORS".ljust(19), color=ColorRole.HEADER, bold=True)])
+    out = with_truncation_counter(header, shown=5, total=7)
+    assert out.cells[0].color == ColorRole.HEADER
+    assert out.cells[0].bold is True
+
+
+def test_with_truncation_counter_leaves_other_cells_untouched():
+    header = Row(cells=[Cell(text="NETWORK".ljust(18)), Cell(text="Rx/s"), Cell(text="Tx/s")])
+    out = with_truncation_counter(header, shown=2, total=9)
+    assert [c.text for c in out.cells[1:]] == ["Rx/s", "Tx/s"]
+
+
+def test_with_truncation_counter_does_not_mutate_the_source_row():
+    header = Row(cells=[Cell(text="SENSORS".ljust(19))])
+    with_truncation_counter(header, shown=5, total=7)
+    assert header.cells[0].text == "SENSORS".ljust(19)
+
+
+def test_with_truncation_counter_grows_past_the_column_width_when_needed():
+    # A narrow label + a big ratio must never be clipped: the counter wins.
+    header = Row(cells=[Cell(text="IRQ".ljust(4))])
+    out = with_truncation_counter(header, shown=3, total=1024)
+    assert out.cells[0].text == "IRQ 3/1024"
+
+
+def test_with_truncation_counter_on_an_empty_row_is_a_noop():
+    row = Row(cells=[])
+    assert with_truncation_counter(row, shown=1, total=2) is row

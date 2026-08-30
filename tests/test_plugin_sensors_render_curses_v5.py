@@ -133,3 +133,15 @@ def test_fahrenheit_skips_battery():
     flat = _flat(rows)
     assert "80" in flat  # battery % unchanged
     assert "F" not in flat  # not converted to Fahrenheit
+
+
+def test_item_rows_are_marked_for_the_truncation_counter():
+    rows = render(_payload([_sensor("Core 0", 42), _sensor("Core 1", 43)]))
+    assert rows[0].item_start is False  # header
+    assert sum(r.item_start for r in rows) == 2
+
+
+def test_skipped_sensors_are_not_counted():
+    """A sensor dropped by the renderer must not inflate the counter's total."""
+    rows = render(_payload([_sensor("Core 0", 42), _sensor("BAT0", [], type="battery")]))
+    assert sum(r.item_start for r in rows) == 1

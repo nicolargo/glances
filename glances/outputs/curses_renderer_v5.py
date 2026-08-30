@@ -37,7 +37,7 @@ import importlib
 import inspect
 import logging
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
@@ -145,6 +145,12 @@ class Cell:
 @dataclass
 class Row:
     cells: list[Cell] = field(default_factory=list)
+    # True on the FIRST row of a list item. A block whose renderer marks its
+    # item rows opts in to the truncation counter ("SENSORS 5/7"): the painter
+    # counts the marked rows that survived the cut. Multi-row items (raid's
+    # `└─ Degraded mode` sub-lines, smart's per-attribute rows) mark only their
+    # head row, so the count stays a count of ITEMS, not of lines.
+    item_start: bool = False
 
 
 @dataclass
@@ -1009,6 +1015,27 @@ def row_budget(view: dict[str, Any] | None, plugin_name: str, default: int | Non
         return default
     value = budget.get(plugin_name)
     return value if isinstance(value, int) else default
+
+
+def with_truncation_counter(row: Row, shown: int, total: int) -> Row:
+    """Return a copy of `row` whose first cell carries a `shown/total` counter.
+
+    Used on a block's header row when the painter could not fit every item
+    ("SENSORS" → "SENSORS 5/7"). The counter is padded back to the header
+    cell's original width so the value columns to its right do not shift; a
+    counter wider than that column is left to overflow rather than clipped
+    (the ratio matters more than one row of alignment).
+
+    Pure: the source row and its cells are never mutated.
+    """
+    if not row.cells:
+        return row
+    first = row.cells[0]
+    label = f"{first.text.rstrip()} {shown}/{total}"
+    return Row(
+        cells=[replace(first, text=label.ljust(len(first.text))), *row.cells[1:]],
+        item_start=row.item_start,
+    )
 
 
 def _split_workloads(quota: int, n_vms: int, n_containers: int) -> tuple[int, int]:

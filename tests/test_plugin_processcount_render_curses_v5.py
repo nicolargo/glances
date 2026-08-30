@@ -126,3 +126,40 @@ def test_render_sort_indicator_unknown_key_falls_back_to_raw(payload, fields):
     rows = render(payload, fields, view={"programs": False, "auto_sort": False, "sort_key": "weird_key"})
     flat = " ".join(c.text for c in rows[0].cells)
     assert "Threads sorted by weird_key" in flat
+
+
+# ------------------------------------- truncation counter (TASKS N/M)
+
+
+def _flat(rows):
+    return "".join(c.text for c in rows[0].cells)
+
+
+def test_tasks_carries_the_counter_when_the_process_list_is_cut(payload, fields):
+    """The process list has no title cell of its own; the TASKS line — where
+    the total already lives — carries the `shown/total` ratio."""
+    view = {"row_budget": {"processlist": 30}}
+    assert _flat(render(payload, fields, view=view)).startswith("TASKS 30/215")
+
+
+def test_tasks_keeps_the_bare_total_when_the_whole_list_fits(payload, fields):
+    view = {"row_budget": {"processlist": 400}}
+    assert _flat(render(payload, fields, view=view)).startswith("TASKS 215 ")
+
+
+def test_tasks_keeps_the_bare_total_without_a_budget(payload, fields):
+    assert _flat(render(payload, fields, view={})).startswith("TASKS 215 ")
+
+
+def test_tasks_has_no_counter_in_programs_view(payload, fields):
+    """`total` counts PROCESSES; in programs view the list shows programs, so
+    the ratio would compare two different things."""
+    view = {"programs": True, "row_budget": {"programlist": 30}}
+    assert _flat(render(payload, fields, view=view)).startswith("TASKS 215 ")
+
+
+def test_tasks_counter_leaves_the_rest_of_the_line_untouched(payload, fields):
+    view = {"row_budget": {"processlist": 30}}
+    flat = _flat(render(payload, fields, view=view))
+    assert "(1452 thr)" in flat
+    assert "3 run" in flat

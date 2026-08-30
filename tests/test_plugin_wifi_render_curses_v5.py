@@ -90,3 +90,15 @@ def test_row_fits_left_sidebar_budget():
     label_cell, value_cell = rows[1].cells
     assert len(label_cell.text) == _NAME_MAX_WIDTH  # truncated, not overflowing
     assert len(label_cell.text) + 1 + len(value_cell.text) <= _LEFT_SIDEBAR_MAX_WIDTH
+
+
+def test_item_rows_are_marked_for_the_truncation_counter():
+    rows = render(_payload([_wifi("wlan0", -50, -60), _wifi("wlan1", -40, -55)]))
+    assert rows[0].item_start is False  # header
+    assert sum(r.item_start for r in rows) == 2
+
+
+def test_skipped_items_are_not_counted():
+    """A skipped SSID must not inflate the counter's total."""
+    rows = render(_payload([_wifi("wlan0", -50, -60), _wifi("", -40, -55)]))
+    assert sum(r.item_start for r in rows) == 1

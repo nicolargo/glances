@@ -2786,3 +2786,156 @@ def test_quiet_alert_block_leaves_the_process_list_alone(make_tui_with_body):
     frame = tui._build_fitted_frame(max_x=200, max_y=10)
     proc = next(b for b in frame.right if b.name == "processlist")
     assert len(proc.rows) >= 2, "la processlist a été masquée sans alerte active"
+
+
+# ------------------------------------------- truncation counter (N/M)
+
+
+def _sensors_block(n_items: int):
+    """A SENSORS-shaped block: one header row + `n_items` marked item rows."""
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole, PluginBlock, Row
+
+    rows = [Row(cells=[Cell(text="SENSORS".ljust(19), color=ColorRole.HEADER, bold=True)])]
+    rows += [Row(cells=[Cell(text=f"temp{i}".ljust(19)), Cell(text="42C")], item_start=True) for i in range(n_items)]
+    return PluginBlock(name="sensors", rows=rows)
+
+
+def _tui(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    return tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+    )
+
+
+def test_paint_sidebar_adds_a_counter_when_a_list_block_is_cut(fake_store, fake_alerts, fake_config):
+    tui = _tui(fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    # 7 sensors + header = 8 rows, but only 6 lines of room → 5 items shown.
+    tui._paint_sidebar(fake_stdscr, [_sensors_block(7)], y0=0, x0=0, width=34, height=6)
+
+    painted = [call.args[2] for call in fake_stdscr.addstr.call_args_list]
+    assert painted[0] == "SENSORS 5/7".ljust(19)
+
+
+def test_paint_sidebar_leaves_the_header_alone_when_everything_fits(fake_store, fake_alerts, fake_config):
+    tui = _tui(fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    tui._paint_sidebar(fake_stdscr, [_sensors_block(7)], y0=0, x0=0, width=34, height=20)
+
+    painted = [call.args[2] for call in fake_stdscr.addstr.call_args_list]
+    assert painted[0] == "SENSORS".ljust(19)
+
+
+def test_paint_sidebar_drops_a_list_block_that_cannot_show_one_item(fake_store, fake_alerts, fake_config):
+    """A lonely "SENSORS 0/7" header carries no information — drop the block."""
+    tui = _tui(fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    tui._paint_sidebar(fake_stdscr, [_sensors_block(7)], y0=0, x0=0, width=34, height=1)
+
+    assert fake_stdscr.addstr.call_args_list == []
+
+
+def test_paint_sidebar_keeps_a_list_block_showing_a_single_item(fake_store, fake_alerts, fake_config):
+    """One item is worth showing; the drop must not eat the 1/7 case."""
+    tui = _tui(fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    tui._paint_sidebar(fake_stdscr, [_sensors_block(7)], y0=0, x0=0, width=34, height=2)
+
+    painted = [call.args[2] for call in fake_stdscr.addstr.call_args_list]
+    assert painted[0] == "SENSORS 1/7".ljust(19)
+
+
+def test_paint_sidebar_offers_the_freed_line_to_the_next_block(fake_store, fake_alerts, fake_config):
+    """Dropping a block must not burn its line: `y` does not advance."""
+    from glances.outputs.curses_renderer_v5 import Cell, PluginBlock, Row
+
+    scalar = PluginBlock(name="connections", rows=[Row(cells=[Cell(text="TCP CONNECTIONS")])])
+
+    tui = _tui(fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    tui._paint_sidebar(fake_stdscr, [_sensors_block(7), scalar], y0=0, x0=0, width=34, height=1)
+
+    painted = [(call.args[0], call.args[2]) for call in fake_stdscr.addstr.call_args_list]
+    assert painted == [(0, "TCP CONNECTIONS")]
+
+
+def test_paint_sidebar_never_drops_a_block_without_marked_items(fake_store, fake_alerts, fake_config):
+    """The drop is opt-in like the counter: an unmarked block keeps its
+    historical output, header-only cut included."""
+    from glances.outputs.curses_renderer_v5 import Cell, PluginBlock, Row
+
+    rows = [Row(cells=[Cell(text="TCP CONNECTIONS")])] + [Row(cells=[Cell(text=f"line{i}")]) for i in range(5)]
+
+    tui = _tui(fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    tui._paint_sidebar(fake_stdscr, [PluginBlock(name="connections", rows=rows)], y0=0, x0=0, width=34, height=1)
+
+    painted = [call.args[2] for call in fake_stdscr.addstr.call_args_list]
+    assert painted == ["TCP CONNECTIONS"]
+
+
+def test_paint_sidebar_counts_items_not_lines_for_multi_row_items(fake_store, fake_alerts, fake_config):
+    """raid/smart emit several lines per item; only the head row is marked."""
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole, PluginBlock, Row
+
+    rows = [Row(cells=[Cell(text="RAID disks".ljust(18), color=ColorRole.HEADER, bold=True)])]
+    for i in range(3):
+        rows.append(Row(cells=[Cell(text=f"md{i}".ljust(18))], item_start=True))
+        rows.append(Row(cells=[Cell(text="└─ Degraded mode")]))
+    block = PluginBlock(name="raid", rows=rows)
+
+    tui = _tui(fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    # 4 lines: header + md0 + its sub-line + md1 → 2 of the 3 arrays shown.
+    tui._paint_sidebar(fake_stdscr, [block], y0=0, x0=0, width=34, height=4)
+
+    painted = [call.args[2] for call in fake_stdscr.addstr.call_args_list]
+    assert painted[0] == "RAID disks 2/3".ljust(18)
+
+
+def test_paint_sidebar_does_not_touch_blocks_without_marked_items(fake_store, fake_alerts, fake_config):
+    """A block that never marks an item row (connections, scalar plugins)
+    keeps its historical output even when cut."""
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole, PluginBlock, Row
+
+    rows = [Row(cells=[Cell(text="TCP CONNECTIONS", color=ColorRole.HEADER, bold=True)])]
+    rows += [Row(cells=[Cell(text=f"line{i}")]) for i in range(5)]
+    block = PluginBlock(name="connections", rows=rows)
+
+    tui = _tui(fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    tui._paint_sidebar(fake_stdscr, [block], y0=0, x0=0, width=34, height=3)
+
+    painted = [call.args[2] for call in fake_stdscr.addstr.call_args_list]
+    assert painted[0] == "TCP CONNECTIONS"
+
+
+def test_paint_sidebar_does_not_mutate_the_block(fake_store, fake_alerts, fake_config):
+    block = _sensors_block(7)
+    tui = _tui(fake_store, fake_alerts, fake_config)
+    tui._paint_sidebar(MagicMock(), [block], y0=0, x0=0, width=34, height=6)
+
+    assert block.rows[0].cells[0].text == "SENSORS".ljust(19)
+
+
+def test_paint_sidebar_skips_the_counter_on_a_block_with_no_header_row(fake_store, fake_alerts, fake_config):
+    """`ports` is deliberately title-less (it reads as a continuation of
+    `network`). Marking its items must never turn its first DATA row into a
+    counter — with no header there is nowhere to put one."""
+    from glances.outputs.curses_renderer_v5 import Cell, PluginBlock, Row
+
+    rows = [Row(cells=[Cell(text=f"host{i}".ljust(18)), Cell(text="12ms")], item_start=True) for i in range(5)]
+    block = PluginBlock(name="ports", rows=rows)
+
+    tui = _tui(fake_store, fake_alerts, fake_config)
+    fake_stdscr = MagicMock()
+    tui._paint_sidebar(fake_stdscr, [block], y0=0, x0=0, width=34, height=2)
+
+    painted = [call.args[2] for call in fake_stdscr.addstr.call_args_list]
+    assert painted[0] == "host0".ljust(18)

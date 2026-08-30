@@ -117,7 +117,8 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
                     Cell(text=_format_disk_name(name)),
                     _rate_cell(item.get("read_bytes"), disk_levels.get("read_bytes", {})),
                     _rate_cell(item.get("write_bytes"), disk_levels.get("write_bytes", {})),
-                ]
+                ],
+                item_start=True,
             )
         )
 

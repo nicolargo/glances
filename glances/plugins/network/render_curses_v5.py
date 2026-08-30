@@ -130,7 +130,8 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
                     Cell(text=_format_if_name(name)),
                     _rate_cell(item.get("bytes_recv"), if_levels.get("bytes_recv", {})),
                     _rate_cell(item.get("bytes_sent"), if_levels.get("bytes_sent", {})),
-                ]
+                ],
+                item_start=True,
             )
         )
 

@@ -71,7 +71,8 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
                 cells=[
                     Cell(text=irq_line),
                     Cell(text=_rate_text(item.get("irq_rate"))),
-                ]
+                ],
+                item_start=True,
             )
         )
     return rows

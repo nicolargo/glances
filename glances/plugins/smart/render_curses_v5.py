@@ -71,7 +71,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
         if not isinstance(device, dict):
             continue
         name = str(device.get("name", ""))
-        rows.append(Row(cells=[Cell(text=name[:_LEFT_SIDEBAR_MAX_WIDTH])]))
+        rows.append(Row(cells=[Cell(text=name[:_LEFT_SIDEBAR_MAX_WIDTH])], item_start=True))
         for attr in device.get("attributes", []):
             if not isinstance(attr, dict):
                 continue

@@ -121,7 +121,8 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
                 cells=[
                     Cell(text=_format_label(str(row.get("label", "")))),
                     Cell(text=value_text, color=role, prominent=prominent),
-                ]
+                ],
+                item_start=True,
             )
         )
     return rows

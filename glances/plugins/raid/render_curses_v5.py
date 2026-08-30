@@ -101,7 +101,8 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
                         Cell(text=_format_name(array_type, name)),
                         Cell(text=str(len(components)).rjust(_USED_COL_WIDTH), color=role, prominent=prominent),
                         Cell(text="-".rjust(_AVAIL_COL_WIDTH), color=role, prominent=prominent),
-                    ]
+                    ],
+                    item_start=True,
                 )
             )
         elif status == "active":
@@ -111,12 +112,13 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
                         Cell(text=_format_name(array_type, name)),
                         Cell(text=str(used).rjust(_USED_COL_WIDTH), color=role, prominent=prominent),
                         Cell(text=str(available).rjust(_AVAIL_COL_WIDTH), color=role, prominent=prominent),
-                    ]
+                    ],
+                    item_start=True,
                 )
             )
         else:
             # inactive / unknown status: name-only row (sub-lines follow — Task 5).
-            rows.append(Row(cells=[Cell(text=_format_name(array_type, name))]))
+            rows.append(Row(cells=[Cell(text=_format_name(array_type, name))], item_start=True))
 
         # Inactive: list the component disks under a status sub-line.
         if status == "inactive":

@@ -27,7 +27,7 @@ import logging
 import threading
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import zip_longest
 from typing import TYPE_CHECKING, Any
 
@@ -41,6 +41,7 @@ from glances.outputs.curses_renderer_v5 import (
     Row,
     build_frame,
     plan_right_column,
+    with_truncation_counter,
 )
 from glances.processes import glances_processes, sort_stats
 
@@ -995,7 +996,12 @@ class TuiV5(threading.Thread):
             if y >= end_y:
                 break
             max_h = end_y - y
-            self._paint_block(stdscr, block, y, x0, width, fit_to_term=True, max_height=max_h)
+            painted = self._sidebar_block(block, max_h)
+            if painted is None:
+                # Dropped for lack of room. Leave `y` where it is: the line it
+                # would have wasted on a lonely header goes to the next block.
+                continue
+            self._paint_block(stdscr, painted, y, x0, width, fit_to_term=True, max_height=max_h)
             # Advance by the number of rows actually painted (capped to the
             # remaining vertical room) plus one blank line. `_paint_block`
             # returns the width painted, not the height — using `block.height`
@@ -1003,6 +1009,35 @@ class TuiV5(threading.Thread):
             # the row width was added to `y` (visible as a large empty band
             # between two sidebar blocks).
             y += min(block.height, max_h) + 1
+
+    @staticmethod
+    def _sidebar_block(block: PluginBlock, max_h: int) -> PluginBlock | None:
+        """Return `block` as it must be painted in `max_h` rows, or None to drop it.
+
+        The LEFT sidebar has no vertical fit pass: a block that outgrows the
+        remaining room is simply cut at `max_h` by `_paint_block`, silently
+        hiding items. A block whose renderer marks its item rows
+        (``Row.item_start``) gets the count folded into its header cell —
+        "SENSORS 5/7" — so the cut is visible, and is dropped outright when not
+        one item survives the cut ("SENSORS 0/18" is a header carrying no
+        information). Blocks with no marked row (scalar plugins,
+        `connections`) are returned untouched, cut included.
+
+        RIGHT-column blocks never reach the cut: they truncate themselves
+        against `row_budget` and build their own counter (containers, vms).
+        """
+        if block.height <= max_h:
+            return block
+        total = sum(1 for r in block.rows if r.item_start)
+        # No marked row, or no header row to host the counter (`ports` is
+        # deliberately title-less — it reads as a continuation of `network`).
+        if not total or block.rows[0].item_start:
+            return block
+        shown = sum(1 for r in block.rows[:max_h] if r.item_start)
+        if not shown:
+            return None
+        header, *rest = block.rows
+        return replace(block, rows=[with_truncation_counter(header, shown, total), *rest])
 
     def _paint_block(
         self,

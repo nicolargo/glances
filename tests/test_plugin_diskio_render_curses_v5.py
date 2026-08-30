@@ -187,3 +187,9 @@ def test_render_title_role_header_when_no_alert(diskio_payload, diskio_fields):
     title = rows[0].cells[0]
     assert title.color == ColorRole.HEADER
     assert title.bold is True
+
+
+def test_item_rows_are_marked_for_the_truncation_counter(diskio_payload, diskio_fields):
+    rows = render(diskio_payload, diskio_fields)
+    assert rows[0].item_start is False  # header
+    assert sum(r.item_start for r in rows) == len(diskio_payload["data"])

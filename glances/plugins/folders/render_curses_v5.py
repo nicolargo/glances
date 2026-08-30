@@ -103,5 +103,5 @@ def render(
         path = str(item.get("path") or "")
         item_levels = levels_index.get(path)
         size_level = item_levels.get("size", {}) if isinstance(item_levels, dict) else {}
-        rows.append(Row(cells=[Cell(text=_format_path(path)), _size_cell(item, size_level)]))
+        rows.append(Row(cells=[Cell(text=_format_path(path)), _size_cell(item, size_level)], item_start=True))
     return rows

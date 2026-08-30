@@ -266,3 +266,9 @@ def test_render_title_never_escalates_on_critical(network_fields):
     rows = render(payload, network_fields)
     assert rows[0].cells[0].color == ColorRole.HEADER
     assert rows[0].cells[0].bold is True
+
+
+def test_item_rows_are_marked_for_the_truncation_counter(network_payload, network_fields):
+    rows = render(network_payload, network_fields)
+    assert rows[0].item_start is False  # header
+    assert sum(r.item_start for r in rows) == len(network_payload["data"])

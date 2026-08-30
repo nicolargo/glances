@@ -155,3 +155,9 @@ def test_render_works_with_one_positional_arg():
     # A bare render(payload) call must work — fields_desc/view both default.
     rows = render(_payload([_folder()]))
     assert rows
+
+
+def test_item_rows_are_marked_for_the_truncation_counter():
+    rows = render(_payload([_folder("/tmp"), _folder("/home")]))
+    assert rows[0].item_start is False  # title
+    assert sum(r.item_start for r in rows) == 2

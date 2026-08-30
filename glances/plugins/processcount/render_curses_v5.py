@@ -30,8 +30,29 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, row_budget
 from glances.processes import sort_for_human
+
+
+def _count_text(total: int, view: dict[str, Any] | None) -> str:
+    """``215`` or, when the process list below is cut short, ``30/215``.
+
+    ``processlist`` has no title cell of its own (its header row is
+    ``CPU% MEM% VIRT …``), so the truncation counter lives here — on the very
+    line that already carries the total. The number of rows the list gets is
+    the vertical fit pass' ``row_budget``, the same value the list itself
+    reads.
+
+    Not applied in the programs view: ``total`` counts PROCESSES while the
+    list below shows programs, so the ratio would compare two different
+    things.
+    """
+    if not view or view.get("programs"):
+        return str(total)
+    budget = row_budget(view, "processlist", None)
+    if not isinstance(budget, int) or budget >= total:
+        return str(total)
+    return f"{budget}/{total}"
 
 
 def _sort_indicator_cell(view: dict[str, Any]) -> Cell | None:
@@ -65,7 +86,7 @@ def render(
         return [Row(cells=[Cell(text="TASKS", color=ColorRole.HEADER, bold=True)])]
 
     cells: list[Cell] = [Cell(text="TASKS", color=ColorRole.HEADER, bold=True)]
-    cells.append(Cell(text=f" {int(total)}"))
+    cells.append(Cell(text=f" {_count_text(int(total), view)}"))
 
     thread = payload.get("thread")
     if thread is not None:

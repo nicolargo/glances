@@ -147,3 +147,12 @@ def test_healthy_array_has_no_sub_lines():
     flat = _flat(rows)
     assert "Degraded mode" not in flat
     assert "Status" not in flat
+
+
+def test_only_the_head_row_of_each_array_is_marked():
+    """raid emits sub-lines per array; the counter must count ARRAYS."""
+    degraded = _array("md0", used=1, available=2, config="U_")
+    rows = render(_payload([degraded, _array("md1")]))
+    assert rows[0].item_start is False  # header
+    assert sum(r.item_start for r in rows) == 2
+    assert len(rows) > 3  # sub-lines are present but unmarked
