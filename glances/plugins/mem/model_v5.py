@@ -52,6 +52,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "watch_direction": "high",
             "prominent": True,
             "default_thresholds": {"careful": 50.0, "warning": 70.0, "critical": 90.0},
+            "top_processes_sort": "memory_percent",
         },
         "used": {
             "description": (

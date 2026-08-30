@@ -39,7 +39,7 @@ import asyncio
 import logging
 import socket
 import time
-from collections import deque
+from collections import Counter, deque
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -48,6 +48,7 @@ from typing import Any
 from glances.actions_v5.action_base import GlancesActionBase
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
+from glances.processes import sort_stats
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,27 @@ _DEFAULT_WARMUP_CYCLES = 3
 # it never enters the alert history or the footer list. Mirrors v4, whose
 # logs record WARNING/CRITICAL only.
 _ALERTABLE_LEVELS = frozenset({"warning", "critical"})
+
+# Top-process capture depth: sample the N highest processes each cycle, keep
+# the M most frequently sampled names. v4 values, deliberately hard-coded —
+# see spec §5.3, no config key.
+_TOP_PROCESSES_SAMPLE = 6
+_TOP_PROCESSES_KEEP = 3
+
+# `top_counter` accumulates for the incident's whole lifetime (spec §3
+# decision 2 - never reset, not even on critical -> warning), so a
+# long-running incident with a churning process name (e.g. `kworker/u16:3`
+# spawned fresh each cycle) grows the dict by one key per cycle forever.
+# Cap the number of DISTINCT KEYS, not a sliding window over time: 6 names
+# are sampled per cycle (`_TOP_PROCESSES_SAMPLE`), so reaching 128 distinct
+# names takes 20+ cycles of *complete* churn (zero name overlap between
+# cycles). A genuinely persistent process is by construction always among
+# the most-common entries, so trimming down to the 32 most common - more
+# than 10x the 3 that are ever read via `most_common(_TOP_PROCESSES_KEEP)`
+# - discards only long-tail one-shot names and cannot disturb the reported
+# top 3.
+_TOP_COUNTER_MAX_KEYS = 128
+_TOP_COUNTER_TRIM_TO = 32
 
 
 def _alert_level(level: str) -> str:
@@ -94,6 +116,14 @@ class _AlertState:
     # steady-state level instead of a misleading "ok → <level>" arrow when
     # Glances starts while the system is already in a non-ok state.
     has_committed: bool = False
+    # Top-process accumulation, live only while the incident is open.
+    # `top_event` is a REFERENCE to the dict this incident's opening event
+    # put in `_history`; rewriting it in place is how v4's GlancesEvent
+    # behaves, and it is what keeps `GET /api/5/alert` current on an
+    # incident that is still running. All three are None while `ok`.
+    top_counter: Counter[str] | None = None
+    top_sort: str | None = None
+    top_event: dict[str, Any] | None = None
 
 
 @dataclass
@@ -194,6 +224,61 @@ class GlancesAlerts:
             if state.committed_level != "ok" and state.committed_since is not None
         }
 
+    def get_ongoing_top(self) -> dict[tuple[str, str | None, str], dict[str, Any]]:
+        """Return the accumulated top processes of each active incident.
+
+        Companion to :meth:`get_ongoing_since`, keyed identically and read
+        from the same unbounded ``_state``. Values are
+        ``{"top": [names], "top_sort": <sort key>}``.
+
+        Reads ``top_event["top"]`` — the list `_accumulate_top` already
+        computed and wrote this cycle — rather than recomputing
+        ``top_counter.most_common(...)``. This is deliberate, not an
+        optimisation to undo: the TUI runs as its own OS
+        ``threading.Thread`` (see ``glances_curses_v5.py``) and calls this
+        method from its repaint path while the asyncio loop may
+        concurrently be running ``_accumulate_top``, which mutates
+        ``top_counter`` in place. ``Counter.most_common()`` delegates to
+        ``heapq.nlargest``, pure Python and therefore preemptible by the
+        GIL mid-iteration; a process name never seen before changes the
+        dict's SIZE while the other thread iterates it, raising
+        ``RuntimeError: dictionary changed size during iteration`` — and
+        the TUI's repaint loop has no per-iteration guard, so that
+        exception kills the TUI thread for the rest of the process's
+        life. ``top_event["top"]`` is instead a single atomic dict lookup:
+        each cycle assigns a brand-new list object (never mutated in
+        place), so there is nothing for a second thread to race with.
+
+        For the same reason, ``state.top_event`` is read into a local ONCE
+        and re-tested from that local — never re-read from ``state`` — so a
+        concurrent ``_release_top`` (the incident resolving between the
+        guard and the ``.get("top")`` call) cannot flip it to ``None``
+        in between and raise ``AttributeError``.
+
+        Exists for the same reason as ``get_ongoing_since``: ``get_history()``
+        is a bounded ring buffer, so a long-running incident eventually loses
+        the opening event that carries its ``top``. Tuples with nothing
+        accumulated (no process engine, process plugins disabled, field not
+        annotated, or the opening event's sample was empty this cycle) are
+        omitted rather than reported with an empty list.
+
+        Read-only, never called from the ingest path. Allocates a fresh
+        result dict, but the ``top`` list inside each value is the SAME
+        list object stored on the history event (not a copy) — the current
+        consumer (``_derive_incidents``) copies it before use, so this is
+        safe today, but a future caller must not mutate it in place.
+        """
+        result: dict[tuple[str, str | None, str], dict[str, Any]] = {}
+        for state_key, state in self._state.items():
+            event = state.top_event
+            if state.committed_level == "ok" or event is None or state.top_sort is None:
+                continue
+            names = event.get("top")
+            if not names:
+                continue
+            result[state_key] = {"top": names, "top_sort": state.top_sort}
+        return result
+
     def is_initializing(self) -> bool:
         """Return ``True`` only while the alert engine *cannot have produced any
         event yet* — i.e. no plugin has finished its warmup window. Concretely,
@@ -266,6 +351,10 @@ class GlancesAlerts:
         if not isinstance(levels, dict):
             return
 
+        # Sorted process lists for this cycle, keyed by sort key. Built
+        # lazily: no active alert on an annotated field means no sort at all.
+        top_cache: dict[str, list[dict[str, Any]]] = {}
+
         for key, field_name, observed_level, value, prominent in self._observations(plugin, payload, levels):
             state_key = (plugin.plugin_name, key, field_name)
             state = self._state.setdefault(state_key, _AlertState())
@@ -305,8 +394,13 @@ class GlancesAlerts:
                 # never drift.
                 if transition.new == "ok":
                     state.committed_since = None
+                    # The incident is over: freeze whatever was accumulated.
+                    self._release_top(state)
                 elif state.committed_since is None:
+                    # This transition OPENS the incident (an escalation leaves
+                    # `committed_since` set and must not restart the capture).
                     state.committed_since = event["ts"]
+                    self._open_top(state, self._top_sort_key(plugin, field_name), event)
                 if transition.new != "ok":
                     # Entry into a non-ok level: fire non-repeat actions.
                     self._fire_actions(plugin, key, field_name, transition.new, value, repeat=False)
@@ -315,6 +409,7 @@ class GlancesAlerts:
             # while the committed level is non-ok, including the cycle of
             # the entry transition (v4-aligned behaviour).
             if state.committed_level != "ok":
+                self._accumulate_top(state, top_cache)
                 self._fire_actions(plugin, key, field_name, state.committed_level, value, repeat=True)
 
         # Dynamic process auto-sort (v4 parity) — recomputed from the full
@@ -363,6 +458,97 @@ class GlancesAlerts:
             engine.set_sort_key(self._auto_sort_key(), auto=True)
         except Exception as e:  # pragma: no cover — defensive
             logger.debug("auto-sort update failed: %s", e)
+
+    # ---------------------------------------------------- top processes
+
+    @staticmethod
+    def _top_sort_key(plugin: GlancesPluginBase, field_name: str) -> str | None:
+        """The field's declared process sort key, or None if it has none.
+
+        Read from `fields_description` rather than from a table here, so a
+        plugin opts in without `alerts_v5` knowing it exists (spec §4).
+        """
+        schema = type(plugin).fields_description.get(field_name, {})
+        key = schema.get("top_processes_sort")
+        return key if isinstance(key, str) and key else None
+
+    def _open_top(self, state: _AlertState, sort_key: str | None, event: dict[str, Any]) -> None:
+        """Start accumulating for an incident that just opened."""
+        if sort_key is None:
+            return
+        state.top_counter = Counter()
+        state.top_sort = sort_key
+        state.top_event = event
+
+    @staticmethod
+    def _release_top(state: _AlertState) -> None:
+        """Stop accumulating; the last value stays frozen in the opening event."""
+        state.top_counter = None
+        state.top_sort = None
+        state.top_event = None
+
+    def _sample_processes(self, sort_key: str) -> list[dict[str, Any]]:
+        """The `_TOP_PROCESSES_SAMPLE` highest processes for `sort_key`.
+
+        Empty when no engine is wired or the process plugins are disabled —
+        the caller then writes nothing at all, so the payload key stays
+        absent rather than becoming an empty list.
+        """
+        engine = self._process_engine
+        if engine is None:
+            return []
+        try:
+            procs = engine.get_list()
+        except Exception as e:  # pragma: no cover - defensive
+            logger.debug("top-process sampling failed: %s", e)
+            return []
+        if not procs:
+            return []
+        # `list(procs)`: `GlancesProcesses.get_list()` returns `processlist`
+        # BY REFERENCE, and one branch of `sort_stats` sorts its argument IN
+        # PLACE. The engine's own in-place caller invalidates a cache right
+        # after sorting; we have no such hook, so we must not mutate its list.
+        return sort_stats(list(procs), sort_key)[:_TOP_PROCESSES_SAMPLE]
+
+    def _accumulate_top(self, state: _AlertState, cache: dict[str, list[dict[str, Any]]]) -> None:
+        """One cycle of accumulation, then rewrite the opening event in place.
+
+        `cache` is per-`ingest_plugin`-call, so the process list is sorted at
+        most once per distinct sort key per cycle — and not at all while no
+        annotated field is in alert.
+        """
+        if state.top_event is None or state.top_sort is None or state.top_counter is None:
+            return
+        sampled = cache.get(state.top_sort)
+        if sampled is None:
+            sampled = self._sample_processes(state.top_sort)
+            cache[state.top_sort] = sampled
+        if not sampled:
+            return
+        for proc in sampled:
+            name = proc.get("name")
+            if name:
+                state.top_counter[str(name)] += 1
+        # Bound the distinct-key count (see `_TOP_COUNTER_MAX_KEYS` above).
+        # Single `len()` check so the common case (well under the cap) pays
+        # almost nothing; only exceeding it pays for the rebuild. Rebinding
+        # `state.top_counter` to a NEW `Counter` (rather than mutating the
+        # existing one in place, e.g. via repeated `del`) is safe under the
+        # threading model documented on `get_ongoing_top()`: that method
+        # deliberately never reads `top_counter` — only the frozen
+        # `top_event["top"]` list written below — specifically so the TUI
+        # thread never iterates this dict concurrently with this coroutine
+        # mutating it. If a future change makes `get_ongoing_top` read
+        # `top_counter` directly, this rebind (or any mutation here) would
+        # reintroduce that same "dictionary changed size during iteration"
+        # race.
+        if len(state.top_counter) > _TOP_COUNTER_MAX_KEYS:
+            state.top_counter = Counter(dict(state.top_counter.most_common(_TOP_COUNTER_TRIM_TO)))
+        # `most_common` is v4's `sorted(..., reverse=True)[0:3]`: Counter
+        # keeps insertion order and the sort is stable, so ties break
+        # identically — in O(n) instead of O(n log n).
+        state.top_event["top"] = [name for name, _ in state.top_counter.most_common(_TOP_PROCESSES_KEEP)]
+        state.top_event["top_sort"] = state.top_sort
 
     # ----------------------------------------------------- min duration override
 

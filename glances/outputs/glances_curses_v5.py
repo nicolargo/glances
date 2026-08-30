@@ -544,6 +544,10 @@ class TuiV5(threading.Thread):
         # long-running alert loses its own opening event; without this the
         # block renders its start as `--:--:--`.
         ongoing_since = self.alerts.get_ongoing_since() if self.alerts is not None else {}
+        # The accumulated top processes of each active alert. Same
+        # ring-buffer argument as `ongoing_since`: the engine outlives the
+        # history entry that carries them.
+        ongoing_top = self.alerts.get_ongoing_top() if self.alerts is not None else {}
         frame = build_frame(
             store_snapshot=snapshot,
             fields_by_plugin=self.fields_by_plugin,
@@ -551,6 +555,7 @@ class TuiV5(threading.Thread):
             alerts_history=history,
             alerts_ongoing=ongoing,
             alerts_ongoing_since=ongoing_since,
+            alerts_ongoing_top=ongoing_top,
             alerts_initializing=initializing,
             view=view,
         )

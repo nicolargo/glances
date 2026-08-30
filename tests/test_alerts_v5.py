@@ -17,12 +17,13 @@ plugins, min_duration_seconds per-plugin override.
 from __future__ import annotations
 
 import logging
+from collections import Counter
 from typing import Any
 
 import pytest
 
 from glances.actions_v5.action_base import GlancesActionBase
-from glances.alerts_v5 import GlancesAlerts, _AlertState
+from glances.alerts_v5 import _TOP_COUNTER_MAX_KEYS, GlancesAlerts, _AlertState
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.stats_store_v5 import StatsStoreV5
@@ -1128,3 +1129,457 @@ async def test_get_ongoing_since_survives_history_eviction(tmp_path, monkeypatch
     assert all(evt["field"] != "percent" for evt in alerts.get_history())
     assert alerts.get_ongoing() == {state_key: "warning"}
     assert alerts.get_ongoing_since() == {state_key: opening_ts}
+
+
+# ---------------------------------------------------------- top processes: allowlist
+
+
+def test_top_processes_sort_allowlist_is_exactly_five_fields():
+    """Spec §4 — only the aggregate signals a user reacts to are annotated.
+
+    Annotating cpu.system/user/steal alongside cpu.total would produce three
+    near-identical rows for one episode of CPU pressure; load.min5 alongside
+    load.min15 would double every load incident.
+    """
+    from glances.plugins.cpu.model_v5 import PluginModel as CpuModel
+    from glances.plugins.load.model_v5 import PluginModel as LoadModel
+    from glances.plugins.mem.model_v5 import PluginModel as MemModel
+    from glances.plugins.memswap.model_v5 import PluginModel as SwapModel
+
+    declared = {
+        (model.plugin_name, field): schema["top_processes_sort"]
+        for model in (CpuModel, LoadModel, MemModel, SwapModel)
+        for field, schema in model.fields_description.items()
+        if "top_processes_sort" in schema
+    }
+    assert declared == {
+        ("cpu", "total"): "cpu_percent",
+        ("cpu", "iowait"): "io_counters",
+        ("mem", "percent"): "memory_percent",
+        ("memswap", "percent"): "memory_percent",
+        ("load", "min15"): "cpu_percent",
+    }
+
+
+class _FakeTopProcessEngine:
+    """Duck-typed stand-in for `glances.processes.glances_processes`."""
+
+    auto_sort = False
+
+    def __init__(self, procs=None):
+        self.procs = list(procs or [])
+        self.get_list_calls = 0
+
+    def get_list(self):
+        self.get_list_calls += 1
+        return list(self.procs)
+
+    def set_sort_key(self, key, auto=False):  # pragma: no cover - auto_sort is False
+        pass
+
+
+class _FakeTopPlugin(_FakeScalarPlugin):
+    """Scalar plugin whose `percent` field opts into top-process capture."""
+
+    plugin_name = "faketop"
+    fields_description = {
+        "percent": {"description": "p", "unit": "percent", "top_processes_sort": "cpu_percent"},
+        "total": {"description": "t", "unit": "bytes"},
+    }
+
+
+def _proc(name, cpu):
+    return {"name": name, "cpu_percent": cpu, "memory_percent": 0.0}
+
+
+def _procs(*names):
+    """Processes in descending cpu_percent order, highest first."""
+    return [_proc(name, 100.0 - index) for index, name in enumerate(names)]
+
+
+@pytest.mark.asyncio
+async def test_top_processes_favour_persistence_over_the_current_cycle(tmp_path, monkeypatch, store):
+    """Spec §5.3 — the top 3 are the most FREQUENT names across the incident,
+    not the current cycle's highest consumers."""
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("p1", "p2", "p3", "p4", "p5", "p6", "p7"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    # p7 becomes the cycle's #1, but p1/p2 have now been seen twice.
+    engine.procs = _procs("p7", "p1", "p2", "p8", "p9", "p10")
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+
+    opening = alerts.get_history()[0]
+    assert opening["top"] == ["p1", "p2", "p3"]
+    assert opening["top_sort"] == "cpu_percent"
+
+
+@pytest.mark.asyncio
+async def test_top_processes_survive_de_escalation(tmp_path, monkeypatch, store):
+    """Spec §3 decision 2 — critical -> warning must NOT wipe the accumulator."""
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("a", "b", "c", "d", "e", "f"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+
+    state = alerts._state[("faketop", None, "percent")]
+    assert sum(state.top_counter.values()) == 18  # 3 cycles x 6 sampled
+    # The accumulator still points at the OPENING event, not the escalation.
+    assert alerts.get_history()[0]["top"] == ["a", "b", "c"]
+
+
+@pytest.mark.asyncio
+async def test_only_the_opening_event_carries_the_top(tmp_path, monkeypatch, store):
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("a", "b", "c"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+
+    history = alerts.get_history()
+    assert "top" in history[0]
+    assert "top" not in history[1]
+
+
+@pytest.mark.asyncio
+async def test_closing_an_incident_freezes_the_top(tmp_path, monkeypatch, store):
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("a", "b", "c"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    frozen = list(alerts.get_history()[0]["top"])
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "ok", "prominent": True}})
+    engine.procs = _procs("z1", "z2", "z3")
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "ok", "prominent": True}})
+
+    state = alerts._state[("faketop", None, "percent")]
+    assert state.top_counter is None
+    assert state.top_event is None
+    assert alerts.get_history()[0]["top"] == frozen
+
+
+@pytest.mark.asyncio
+async def test_field_without_sort_key_never_gets_a_top(tmp_path, monkeypatch, store):
+    """Spec §4 — an fs/sensors-style alert must not carry a meaningless top."""
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("a", "b", "c"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeScalarPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+
+    opening = alerts.get_history()[0]
+    assert "top" not in opening
+    assert "top_sort" not in opening
+
+
+@pytest.mark.asyncio
+async def test_empty_process_list_writes_no_top_key(tmp_path, monkeypatch, store):
+    """Process plugins disabled -> the key is ABSENT, not an empty list."""
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    alerts = GlancesAlerts(cfg, process_engine=_FakeTopProcessEngine([]))
+    plugin = _FakeTopPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+
+    assert "top" not in alerts.get_history()[0]
+
+
+@pytest.mark.asyncio
+async def test_no_process_engine_is_a_no_op(tmp_path, monkeypatch, store):
+    """Default construction (tests, headless rigs) must not raise."""
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    alerts = GlancesAlerts(cfg)
+    plugin = _FakeTopPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+
+    assert "top" not in alerts.get_history()[0]
+
+
+@pytest.mark.asyncio
+async def test_get_ongoing_top_reports_active_incidents_only(tmp_path, monkeypatch, store):
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("a", "b", "c"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    assert alerts.get_ongoing_top() == {
+        ("faketop", None, "percent"): {"top": ["a", "b", "c"], "top_sort": "cpu_percent"}
+    }
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "ok", "prominent": True}})
+    assert alerts.get_ongoing_top() == {}
+
+
+@pytest.mark.asyncio
+async def test_get_ongoing_top_is_read_only_and_returns_a_fresh_dict(tmp_path, monkeypatch, store):
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("a", "b", "c"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+
+    first = alerts.get_ongoing_top()
+    first.clear()
+    assert alerts.get_ongoing_top()  # mutating the copy left the engine alone
+
+
+@pytest.mark.asyncio
+async def test_get_ongoing_top_skips_incidents_with_nothing_accumulated(tmp_path, monkeypatch, store):
+    """An annotated field with an empty process list must not appear."""
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    alerts = GlancesAlerts(cfg, process_engine=_FakeTopProcessEngine([]))
+    plugin = _FakeTopPlugin(store, cfg)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+
+    assert alerts.get_ongoing_top() == {}
+
+
+@pytest.mark.asyncio
+async def test_get_ongoing_top_reads_the_event_not_the_live_counter(tmp_path, monkeypatch, store):
+    """Regression test for the cross-thread race.
+
+    The TUI calls `get_ongoing_top()` from its own `threading.Thread` while
+    the asyncio loop may concurrently be mutating `top_counter` inside
+    `_accumulate_top`. `Counter.most_common()` iterates the live dict and
+    is not safe to call from a second thread while it changes size, so
+    `get_ongoing_top()` must read the list `_accumulate_top` already wrote
+    to `top_event["top"]` instead. Prove it directly: replace
+    `top_counter` with a sentinel that raises on any access, and show
+    `get_ongoing_top()` neither touches it nor raises, and returns exactly
+    the opening event's frozen `top` list.
+    """
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("a", "b", "c"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+
+    state_key = ("faketop", None, "percent")
+    state = alerts._state[state_key]
+    opening_event = alerts.get_history()[0]
+
+    class _BoomCounter:
+        """Raises the moment anything reads it — proves it is never touched."""
+
+        def most_common(self, n):
+            raise AssertionError("get_ongoing_top() must not call most_common() on the live Counter")
+
+        def __iter__(self):
+            raise AssertionError("get_ongoing_top() must not iterate the live Counter")
+
+    state.top_counter = _BoomCounter()
+
+    result = alerts.get_ongoing_top()
+
+    assert result == {state_key: {"top": opening_event["top"], "top_sort": "cpu_percent"}}
+    assert result[state_key]["top"] is opening_event["top"]
+
+
+class _FakeMultiTopPlugin(_FakeScalarPlugin):
+    """Scalar plugin with two fields sharing the same `top_processes_sort` key.
+
+    Used to exercise the per-ingest-call memoisation: both fields alerting
+    in the same cycle must sample the process list exactly once, not once
+    per field.
+    """
+
+    plugin_name = "fakemultitop"
+    fields_description = {
+        "percent": {"description": "p", "unit": "percent", "top_processes_sort": "cpu_percent"},
+        "peak": {"description": "pk", "unit": "percent", "top_processes_sort": "cpu_percent"},
+    }
+
+
+@pytest.mark.asyncio
+async def test_top_processes_sort_is_memoised_per_ingest_call(tmp_path, monkeypatch, store):
+    """Spec §9 invariant 1 — at most one `get_list()` (hence one `sort_stats()`)
+    per distinct sort key per `ingest_plugin()` call, even with two annotated
+    fields both alerting on the same sort key in the same cycle."""
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("a", "b", "c"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeMultiTopPlugin(store, cfg)
+
+    await _run_with_levels(
+        plugin,
+        alerts,
+        {
+            "percent": {"level": "warning", "prominent": True},
+            "peak": {"level": "warning", "prominent": True},
+        },
+    )
+
+    assert engine.get_list_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_top_processes_no_active_alert_costs_zero_get_list_calls(tmp_path, monkeypatch, store):
+    """Spec §9 invariant 2 — the quiet path (no active alert on an annotated
+    field) must not touch the process engine at all."""
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("a", "b", "c"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "ok", "prominent": True}})
+
+    assert engine.get_list_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_reopening_an_incident_starts_a_fresh_top(tmp_path, monkeypatch, store):
+    """Spec §5.2 — the same (plugin, key, field) tuple can alert again after
+    resolving. The new incident must rebind `top_event` to its OWN opening
+    event and start a fresh Counter: the old event's top stays frozen, and
+    the new one carries only the new processes."""
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("a", "b", "c"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    first_opening = alerts.get_history()[0]
+    assert first_opening["top"] == ["a", "b", "c"]
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "ok", "prominent": True}})
+
+    engine.procs = _procs("x", "y", "z")
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    second_opening = alerts.get_history()[-1]
+
+    assert second_opening is not first_opening
+    assert second_opening["top"] == ["x", "y", "z"]
+    # The first incident's opening event is untouched by the new incident.
+    assert first_opening["top"] == ["a", "b", "c"]
+
+
+class _FakeTopProcessEngineByReference:
+    """Like `_FakeTopProcessEngine`, but `get_list()` returns the internal
+    list BY REFERENCE — as the real `GlancesProcesses.get_list()` does.
+
+    `_FakeTopProcessEngine.get_list()` already returns `list(self.procs)`
+    (a copy), which hides a missing `list(...)` copy in `_sample_processes`:
+    with that double, every existing test above passes whether or not
+    `_sample_processes` copies before calling `sort_stats`. This double
+    exists solely to pin that copy — see
+    `test_sample_processes_copies_before_sort_stats_in_place_fallback`.
+    """
+
+    auto_sort = False
+
+    def __init__(self, procs):
+        self.procs = procs
+
+    def get_list(self):
+        return self.procs
+
+    def set_sort_key(self, key, auto=False):  # pragma: no cover - auto_sort is False
+        pass
+
+
+@pytest.mark.asyncio
+async def test_sample_processes_copies_before_sort_stats_in_place_fallback(tmp_path, monkeypatch, store):
+    """Pin the `list(...)` defensive copy in `_sample_processes`.
+
+    `sort_stats`'s standard-sort branch falls back to an IN-PLACE
+    `list.sort()` (by name) when the primary comparison raises `TypeError`
+    — here, an incomparable `cpu_percent` across two processes (a `str` vs
+    a `float`). `GlancesProcesses.get_list()` returns its internal
+    `processlist` BY REFERENCE, so without `_sample_processes`'s
+    `list(procs)` copy, that in-place fallback sort would reorder the
+    engine's own live process list as a side effect of alert ingestion.
+
+    `_FakeTopProcessEngine` (used by every other test in this file) already
+    returns a copy from `get_list()`, which would hide a missing `list(...)`
+    in `_sample_processes` — hence `_FakeTopProcessEngineByReference` here.
+    """
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    procs = [
+        {"name": "b_proc", "cpu_percent": "not-a-number", "memory_percent": 0.0},
+        {"name": "a_proc", "cpu_percent": 42.0, "memory_percent": 0.0},
+    ]
+    original_order = [p["name"] for p in procs]
+    engine = _FakeTopProcessEngineByReference(procs)
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+
+    # The engine's OWN list must be untouched by ingestion — proves
+    # `_sample_processes` handed `sort_stats` a copy, not its live list.
+    assert [p["name"] for p in engine.procs] == original_order
+
+
+@pytest.mark.asyncio
+async def test_top_counter_is_bounded_under_sustained_churn(tmp_path, monkeypatch, store):
+    """`top_counter` accumulates for the whole incident and is never reset
+    (spec §3 decision 2), so a field with high per-cycle name churn (e.g. a
+    kernel worker whose name includes a counter, like `kworker/u16:3`) would
+    otherwise grow the dict by one key per cycle forever. Drive an incident
+    through 30 cycles of TOTAL churn — 6 brand-new names every cycle, never
+    repeated, 180 distinct names overall — comfortably past
+    `_TOP_COUNTER_MAX_KEYS` (128), and assert the dict is genuinely bounded."""
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("seed0", "seed1", "seed2", "seed3", "seed4", "seed5"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    for cycle in range(30):
+        engine.procs = _procs(*(f"churn{cycle}-{i}" for i in range(6)))
+        await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+
+    state = alerts._state[("faketop", None, "percent")]
+    assert isinstance(state.top_counter, Counter)
+    assert len(state.top_counter) <= _TOP_COUNTER_MAX_KEYS
+
+
+@pytest.mark.asyncio
+async def test_persistent_process_survives_trimming_and_stays_first(tmp_path, monkeypatch, store):
+    """The fix must not break the feature it protects: a process sampled in
+    EVERY cycle is by construction always the most frequent name, so trimming
+    to the most-common keys can never evict it, however much one-shot churn
+    surrounds it.
+
+    This is the discriminating case: `persistent` is also the FIRST key ever
+    inserted into the Counter (cycle 0's sample puts it first). A naive trim
+    that drops by INSERTION ORDER instead of by frequency (e.g. an
+    OrderedDict-style "keep the last N inserted, drop the oldest") would
+    evict `persistent` at the very first trim, since it is the oldest key —
+    the opposite of what "most persistent" is supposed to mean. Only a
+    frequency-based trim (`Counter.most_common`) keeps it.
+    """
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("persistent", "c0-0", "c0-1", "c0-2", "c0-3", "c0-4"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+
+    total_cycles = 40
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    for cycle in range(1, total_cycles):
+        churn = (f"c{cycle}-{i}" for i in range(5))
+        # "persistent" sorts first every cycle (highest cpu_percent) so it is
+        # always among the `_TOP_PROCESSES_SAMPLE` names sampled.
+        engine.procs = _procs("persistent", *churn)
+        await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+
+    state = alerts._state[("faketop", None, "percent")]
+    # 40 cycles x 5 new churn names/cycle = 200 distinct churn names, well
+    # past the cap — trimming must have happened at least once.
+    assert len(state.top_counter) <= _TOP_COUNTER_MAX_KEYS
+    assert state.top_counter["persistent"] == total_cycles
+    assert alerts.get_history()[0]["top"][0] == "persistent"

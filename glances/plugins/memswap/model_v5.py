@@ -67,6 +67,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "watch_direction": "high",
             "prominent": True,
             "default_thresholds": _DEFAULT_PERCENT_THRESHOLDS,
+            "top_processes_sort": "memory_percent",
         },
         "sin": {
             "description": (

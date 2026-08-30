@@ -83,6 +83,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "prominent": True,
             "default_thresholds": _DEFAULT_THRESHOLDS,
             "normalize_by": "cpucore",
+            "top_processes_sort": "cpu_percent",
         },
         "cpucore": {
             "description": "Total number of logical CPU cores.",

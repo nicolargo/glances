@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from glances.outputs.curses_renderer_v5 import (
+    _ALERT_MIN_TARGET,
+    _ALERT_MIN_TOP,
     _MAX_WORKLOADS,
     _NOMINAL_ALERTS,
     _NOMINAL_PROCESSES,
@@ -2541,3 +2543,241 @@ def test_with_truncation_counter_grows_past_the_column_width_when_needed():
 def test_with_truncation_counter_on_an_empty_row_is_a_noop():
     row = Row(cells=[])
     assert with_truncation_counter(row, shown=1, total=2) is row
+
+
+def _evt_top(*args, top=None, top_sort=None, **kwargs):
+    """`_evt` plus the top-process keys, which only annotated fields carry."""
+    event = _evt(*args, **kwargs)
+    if top is not None:
+        event["top"] = list(top)
+        event["top_sort"] = top_sort
+    return event
+
+
+def test_derive_incidents_carries_top_from_the_opening_event():
+    history = [
+        _evt_top(
+            "2026-08-16T14:02:11+00:00", "cpu", "total", "warning", top=["python3", "chrome"], top_sort="cpu_percent"
+        ),
+        _evt("2026-08-16T14:03:11+00:00", "cpu", "total", "critical", previous="warning"),
+    ]
+    incidents = _derive_incidents(history)
+    assert len(incidents) == 1
+    assert incidents[0]["top"] == ["python3", "chrome"]
+    assert incidents[0]["top_sort"] == "cpu_percent"
+
+
+def test_derive_incidents_defaults_top_to_an_empty_list():
+    incidents = _derive_incidents([_evt("2026-08-16T14:02:11+00:00", "fs", "percent", "warning", key="/")])
+    assert incidents[0]["top"] == []
+    assert incidents[0]["top_sort"] is None
+
+
+def test_derive_incidents_ongoing_top_overrides_the_history():
+    """The engine is the authority for an active incident (spec §5.4)."""
+    history = [
+        _evt_top("2026-08-16T14:02:11+00:00", "cpu", "total", "warning", top=["stale"], top_sort="cpu_percent"),
+    ]
+    ongoing = {("cpu", None, "total"): "warning"}
+    ongoing_top = {("cpu", None, "total"): {"top": ["fresh", "node"], "top_sort": "cpu_percent"}}
+    incidents = _derive_incidents(history, ongoing, None, ongoing_top)
+    assert incidents[0]["top"] == ["fresh", "node"]
+
+
+def test_derive_incidents_ongoing_top_does_not_touch_resolved_incidents():
+    history = [
+        _evt_top("2026-08-16T14:02:11+00:00", "cpu", "total", "warning", top=["frozen"], top_sort="cpu_percent"),
+        _evt("2026-08-16T14:04:11+00:00", "cpu", "total", "ok", previous="warning"),
+    ]
+    ongoing_top = {("cpu", None, "total"): {"top": ["nope"], "top_sort": "cpu_percent"}}
+    incidents = _derive_incidents(history, {}, None, ongoing_top)
+    assert incidents[0]["ongoing"] is False
+    assert incidents[0]["top"] == ["frozen"]
+
+
+def test_derive_incidents_synthesized_incident_gets_its_top_from_the_engine():
+    """An incident whose events all aged out of the ring buffer."""
+    ongoing = {("mem", None, "percent"): "critical"}
+    ongoing_top = {("mem", None, "percent"): {"top": ["chrome"], "top_sort": "memory_percent"}}
+    incidents = _derive_incidents([], ongoing, None, ongoing_top)
+    assert incidents[0]["top"] == ["chrome"]
+    assert incidents[0]["top_sort"] == "memory_percent"
+
+
+_TOP_HISTORY = [
+    _evt_top(
+        "2026-08-16T14:02:11+00:00",
+        "cpu",
+        "total",
+        "critical",
+        top=["python3", "chrome", "node"],
+        top_sort="cpu_percent",
+    ),
+]
+_TOP_ONGOING = {("cpu", None, "total"): "critical"}
+
+
+def test_alert_grid_top_column_sits_between_target_and_level():
+    rows = render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=80)
+    header = _line(rows[1])
+    assert header.index("TARGET") < header.index("TOP PROCESSES") < header.index("LEVEL")
+    data = rows[2]
+    assert data.cells[-1].text.strip() == "CRITICAL"
+    assert data.cells[-2].text.strip() == "python3, chrome, node"
+
+
+def test_alert_grid_top_column_drops_first_when_narrow():
+    """66 is the threshold; 65 keeps today's exact column set."""
+    wide = _line(render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=66)[1])
+    narrow = _line(render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=65)[1])
+    assert "TOP PROCESSES" in wide
+    assert "TOP PROCESSES" not in narrow
+    assert "LEVEL" in narrow and "DURATION" in narrow
+
+
+def test_alert_grid_without_any_top_is_byte_identical_to_before():
+    """The regression contract: a history with no `top` key must render
+    exactly as it did before this feature existed."""
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=80)
+    assert "TOP" not in _line(rows[1])
+    for row in rows[2:]:
+        assert row.cells[-1].text.strip() in {"CRITICAL", "WARNING"}
+
+
+def test_alert_grid_pads_incidents_that_have_no_top():
+    history = _TOP_HISTORY + [
+        _evt("2026-08-16T14:01:03+00:00", "fs", "percent", "warning", key="/"),
+    ]
+    ongoing = dict(_TOP_ONGOING)
+    ongoing[("fs", "/", "percent")] = "warning"
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=80)
+    data = [_line(r) for r in rows[2:]]
+    assert len(data) == 2
+    assert len({len(line) for line in data}) == 1
+
+
+def test_alert_grid_truncates_a_long_top_with_the_ascii_ellipsis():
+    history = [
+        _evt_top(
+            "2026-08-16T14:02:11+00:00",
+            "cpu",
+            "total",
+            "critical",
+            top=["systemd-journald", "containerd-shim", "postgres"],
+            top_sort="cpu_percent",
+        ),
+    ]
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=80, unicode_ok=False)
+    top_cell = rows[2].cells[-2]
+    # TOP is now the elastic column (it absorbs the slack TARGET used to take,
+    # design update: TOP repositioned) — at width=80 with a 9-char target that
+    # is 36, not a fixed 22 — and the joined top-3 text still overflows it.
+    assert len(top_cell.text) == 36
+    assert top_cell.text.rstrip().endswith(".")
+    assert top_cell.text.isascii()
+
+
+def test_alert_grid_width_none_sizes_top_to_its_content():
+    rows = render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING)
+    assert rows[2].cells[-2].text == "python3, chrome, node"
+
+
+def test_render_alert_block_forwards_ongoing_top():
+    rows = render_alert_block(
+        _TOP_HISTORY,
+        limit=10,
+        now=_GRID_NOW,
+        ongoing=_TOP_ONGOING,
+        width=80,
+        ongoing_top={("cpu", None, "total"): {"top": ["fresh"], "top_sort": "cpu_percent"}},
+    )
+    assert rows[2].cells[-2].text.strip() == "fresh"
+
+
+def test_build_frame_passes_ongoing_top_to_the_alert_block():
+    frame = build_frame(
+        store_snapshot={},
+        fields_by_plugin={},
+        registry=[],
+        alerts_history=_TOP_HISTORY,
+        alerts_ongoing=_TOP_ONGOING,
+        alerts_ongoing_top={("cpu", None, "total"): {"top": ["fresh"], "top_sort": "cpu_percent"}},
+        view={"right_width": 80, "unicode": True},
+    )
+    alert_block = next(b for b in frame.right if b.name == "alert")
+    assert any("fresh" in _line(row) for row in alert_block.rows)
+
+
+# --------------------------------------------------------- TOP repositioned
+
+
+def test_alert_grid_top_starts_right_after_target_at_wide_width():
+    """The maintainer's actual complaint: at a wide width, TOP must sit right
+    after TARGET's own content, not be pushed to a fixed offset far to the
+    right by an elastic TARGET column."""
+    rows = render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=120)
+    line = _line(rows[2])
+    target_text, top_text = "Cpu total", "python3, chrome, node"
+    target_end = line.index(target_text) + len(target_text)
+    top_start = line.index(top_text)
+    # A few columns of TARGET-floor padding plus the painter's separator —
+    # not the ~60-column gap the old elastic-TARGET layout produced.
+    assert 0 < top_start - target_end <= 6
+
+
+def test_alert_grid_top_width_boundary_at_66_matches_pair_arithmetic():
+    """width=66 is the exact TOP threshold; pair = 66 - 32 = 34, split as
+    TARGET floor (12) + TOP floor (22) — the worked example from the spec."""
+    rows = render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=66)
+    header = rows[1]
+    assert [c.text.strip() for c in header.cells] == ["", "TIME", "DURATION", "TARGET", "TOP PROCESSES", "LEVEL"]
+    target_cell, top_cell = rows[2].cells[3], rows[2].cells[4]
+    assert len(target_cell.text) == _ALERT_MIN_TARGET == 12
+    assert len(top_cell.text) == _ALERT_MIN_TOP == 22
+    assert len(target_cell.text) + len(top_cell.text) == 66 - 32
+    assert len(line := _line(rows[2])) == 66 and line  # exact width, no overflow
+
+
+def test_alert_grid_differing_target_lengths_still_align():
+    history = [
+        _evt_top("2026-08-16T14:00:00+00:00", "cpu", "total", "critical", top=["python3"], top_sort="cpu_percent"),
+        _evt_top(
+            "2026-08-16T14:01:00+00:00",
+            "containers",
+            "mem_usage",
+            "warning",
+            key="a-very-long-container-name-indeed",
+            top=["node"],
+            top_sort="mem_usage",
+        ),
+    ]
+    ongoing = {
+        ("cpu", None, "total"): "critical",
+        ("containers", "a-very-long-container-name-indeed", "mem_usage"): "warning",
+    }
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=80)
+    data = [_line(r) for r in rows[2:]]
+    assert len(data) == 2
+    assert len({len(line) for line in data}) == 1
+    assert len(data[0]) == 80
+
+
+def test_alert_grid_long_target_truncates_without_starving_top_below_its_floor():
+    history = [
+        _evt_top(
+            "2026-08-16T14:00:00+00:00",
+            "containers",
+            "memory_usage_percent",
+            "warning",
+            key="a-very-long-container-name",
+            top=["python3", "chrome", "node"],
+            top_sort="memory_percent",
+        )
+    ]
+    ongoing = {("containers", "a-very-long-container-name", "memory_usage_percent"): "warning"}
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=66)
+    target_cell, top_cell = rows[2].cells[3], rows[2].cells[4]
+    assert len(target_cell.text) == _ALERT_MIN_TARGET
+    assert target_cell.text.endswith("…")
+    assert len(top_cell.text) == _ALERT_MIN_TOP
+    assert len(_line(rows[2])) == 66

@@ -72,6 +72,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "watch_direction": "high",
             "prominent": True,
             "default_thresholds": _DEFAULT_PERCENT_THRESHOLDS,
+            "top_processes_sort": "cpu_percent",
         },
         "system": {
             "description": (
@@ -104,6 +105,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "watch_direction": "high",
             "prominent": True,
             "default_thresholds": _DEFAULT_PERCENT_THRESHOLDS,
+            "top_processes_sort": "io_counters",
         },
         "dpc": {
             "description": "(Windows) Percent time spent servicing deferred procedure calls (DPCs).",

@@ -267,6 +267,37 @@ def test_alert_returns_history(config_factory, store):
     assert body == [fake_event]
 
 
+def test_alert_route_exposes_top_processes(config_factory, store):
+    """`/api/5/alert` returns `get_history()` verbatim, so the top-process
+    keys added by the alert engine reach the API with no route change."""
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    # Inject a fake event directly into the ring buffer, same as
+    # test_alert_returns_history, but carrying the top-process keys an
+    # opening event on the field allowlist would hold.
+    fake_event = {
+        "ts": "2026-05-12T10:00:00+00:00",
+        "plugin": "cpu",
+        "key": None,
+        "field": "total",
+        "level": "warning",
+        "previous_level": "ok",
+        "value": 92.0,
+        "prominent": True,
+        "hostname": "test-host",
+        "top": ["python3", "chrome", "node"],
+        "top_sort": "cpu_percent",
+    }
+    alerts._history.append(fake_event)
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert")
+    assert r.status_code == 200
+    payload = r.json()
+    assert payload[0]["top"] == ["python3", "chrome", "node"]
+    assert payload[0]["top_sort"] == "cpu_percent"
+
+
 def test_alert_empty_history(config_factory, store):
     config = config_factory()
     alerts = GlancesAlerts(config)
