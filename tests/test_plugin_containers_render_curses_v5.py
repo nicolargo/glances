@@ -195,3 +195,149 @@ def test_sort_underline_survives_the_truncation_counter():
         view={"row_budget": {"containers": 7}, "sort_key": "name"},
     )
     assert rows[0].cells[0].underline is True
+
+
+# --------------------------------------------------------- responsive columns
+#
+# Largeur naturelle de la ligne pour `_rich()` (un seul moteur, pas de pod) :
+# name_w vaut 9 — le nom "web" est plus court que le libellé "CONTAINER", qui
+# fixe donc le plancher de la colonne. L'échelle des seuils est alors :
+#
+#     toutes colonnes                113
+#     - command  (8 + 1 sép.)        104
+#     - ports    (16 + 1)             87
+#     - /MAX     (8 + 1)              78
+#     - diskio   (14 + 2)             62
+#     - networkio(14 + 2)             46
+#     - uptime   (10 + 1)             35
+#     - status   (10 + 1)             24  <- plancher CONTAINER + CPU% + MEM
+#
+# Chaque test vise une largeur strictement à l'intérieur d'un palier.
+
+
+def _labels(row):
+    """En-têtes de colonnes, dépadées, dans l'ordre d'affichage."""
+    return [c.text.strip() for c in row.cells]
+
+
+def _rich(name="web", engine="docker", **extra):
+    c = {
+        "name": name,
+        "engine": engine,
+        "status": "running",
+        "uptime": "1h",
+        "cpu_percent": 12.0,
+        "memory_usage_no_cache": 200,
+        "memory_limit": 1000,
+        "io_rx": 1024,
+        "io_wx": 2048,
+        "network_rx": 512,
+        "network_tx": 256,
+        "ports": "8080",
+        "command": "/usr/bin/glances",
+    }
+    c.update(extra)
+    return c
+
+
+def test_no_right_width_keeps_all_columns():
+    """Non-régression : sans `right_width` (export, REST, appels directs), la
+    sortie est strictement celle d'avant les colonnes responsives."""
+    rows = render(_payload([_rich()]), {}, view={})
+    assert _labels(rows[0]) == [
+        "CONTAINER",
+        "Status",
+        "Uptime",
+        "CPU%",
+        "MEM",
+        "/MAX",
+        "IOR/s",
+        "IOW/s",
+        "Rx/s",
+        "Tx/s",
+        "Ports",
+        "Command",
+    ]
+
+
+def test_wide_right_width_keeps_all_columns():
+    rows = render(_payload([_rich()]), {}, view={"right_width": 200})
+    assert "Command" in _labels(rows[0])
+    assert "Ports" in _labels(rows[0])
+
+
+def test_command_is_dropped_first():
+    rows = render(_payload([_rich()]), {}, view={"right_width": 110})
+    labels = _labels(rows[0])
+    assert "Command" not in labels
+    assert "Ports" in labels
+
+
+def test_ports_is_dropped_after_command():
+    rows = render(_payload([_rich()]), {}, view={"right_width": 95})
+    labels = _labels(rows[0])
+    assert "Ports" not in labels
+    assert "/MAX" in labels
+
+
+def test_mem_max_is_dropped_but_mem_is_kept():
+    rows = render(_payload([_rich()]), {}, view={"right_width": 80})
+    labels = _labels(rows[0])
+    assert "/MAX" not in labels
+    assert "MEM" in labels
+    assert "IOR/s" in labels
+
+
+def test_diskio_columns_drop_as_a_pair():
+    rows = render(_payload([_rich()]), {}, view={"right_width": 70})
+    labels = _labels(rows[0])
+    assert "IOR/s" not in labels and "IOW/s" not in labels
+    assert "Rx/s" in labels and "Tx/s" in labels
+
+
+def test_networkio_columns_drop_as_a_pair():
+    rows = render(_payload([_rich()]), {}, view={"right_width": 50})
+    labels = _labels(rows[0])
+    assert "Rx/s" not in labels and "Tx/s" not in labels
+    assert "Uptime" in labels
+
+
+def test_uptime_is_dropped_before_status():
+    rows = render(_payload([_rich()]), {}, view={"right_width": 40})
+    labels = _labels(rows[0])
+    assert "Uptime" not in labels
+    assert "Status" in labels
+
+
+def test_identity_columns_survive_the_narrowest_width():
+    rows = render(_payload([_rich()]), {}, view={"right_width": 10})
+    assert _labels(rows[0]) == ["CONTAINER", "CPU%", "MEM"]
+
+
+def test_pod_is_dropped_before_engine():
+    """Ligne naturelle = 133 (113 + Engine 7 + Pod 13) ; à 90 on a droppé
+    command/ports//MAX (98) puis Pod (85), Engine survit."""
+    data = [
+        _rich(name="web", engine="docker", pod_id="pod1", pod_name="p"),
+        _rich(name="db", engine="podman", pod_id="pod1", pod_name="p"),
+    ]
+    rows = render(_payload(data), {}, view={"right_width": 90})
+    labels = _labels(rows[0])
+    assert "Pod" not in labels
+    assert "Engine" in labels
+
+
+def test_column_disabled_by_config_frees_room_for_a_lower_priority_one():
+    """`disable_stats` retire la colonne du calcul de largeur : à 100 colonnes,
+    Ports désactivé ramène la ligne à 96 et laisse Command, droppée sinon."""
+    control = render(_payload([_rich()]), {}, view={"right_width": 100})
+    assert "Command" not in _labels(control[0])
+    rows = render(_payload([_rich()], disable_stats=["ports"]), {}, view={"right_width": 100})
+    assert "Command" in _labels(rows[0])
+
+
+def test_header_and_data_rows_stay_cell_aligned_after_drops():
+    rows = render(_payload([_rich()]), {}, view={"right_width": 70})
+    assert len(rows[0].cells) == len(rows[1].cells)
+    for header_cell, data_cell in zip(rows[0].cells, rows[1].cells):
+        assert len(header_cell.text) == len(data_cell.text)

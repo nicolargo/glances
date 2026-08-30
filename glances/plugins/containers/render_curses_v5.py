@@ -10,8 +10,9 @@
 
 Mirror of v4 ``containers.msg_curse``. Header row + one row per container,
 MAIN-column full width. Columns are gated by ``[containers] disable_stats``
-(surfaced via payload metadata) and by the data (Engine only with >1 engine,
-Pod only when a pod is present).
+(surfaced via payload metadata), by the data (Engine only with >1 engine,
+Pod only when a pod is present), and by the painted width (see
+``_hidden_columns``).
 """
 
 from __future__ import annotations
@@ -41,6 +42,68 @@ _STATUS_ROLE: dict[str, ColorRole] = {
 }
 
 
+# Responsive columns (see ``view["right_width"]``). Same mechanism as the
+# processlist renderer: when the painted width cannot hold the natural row,
+# the lowest-priority columns are dropped one at a time, in ``_DROP_ORDER``,
+# until the row fits — or the order is exhausted and the painter clips, as it
+# already did before. Never dropped: CONTAINER, CPU%, MEM.
+#
+# ``command`` is the FIRST victim, unlike processlist where it is the
+# protected flexible tail: in containers the identity is the NAME, and the
+# container command is the least informative column of the row.
+#
+# ``engine``, ``pod`` and ``memory_max`` are display-only keys extending the
+# ``[containers] disable_stats`` vocabulary (name/status/uptime/cpu/mem/
+# diskio/networkio/ports/command) without colliding with it, so a single
+# ``hidden`` set gates every column.
+_MIN_COMMAND_WIDTH = 8
+_DROP_ORDER = ["command", "ports", "memory_max", "pod", "engine", "diskio", "networkio", "uptime", "status"]
+
+# key -> (painted cells, total width of those cells). The cell count matters
+# because the painter inserts one space between two consecutive cells; the
+# IO and network pairs are single keys so a half-pair can never be shown.
+_COL_GEOMETRY: dict[str, tuple[int, int]] = {
+    "engine": (1, 6),
+    "pod": (1, 12),
+    "status": (1, 10),
+    "uptime": (1, 10),
+    "cpu": (1, 6),
+    "mem": (1, 7),
+    "memory_max": (1, 8),
+    "diskio": (2, 14),
+    "networkio": (2, 14),
+    "ports": (1, 16),
+    "command": (1, _MIN_COMMAND_WIDTH),
+}
+
+
+def _hidden_columns(available: int, hidden: set[str], name_w: int) -> set[str]:
+    """Return the columns to hide so the row fits within ``available``.
+
+    Starts from ``hidden`` — the config ``disable_stats`` plus the columns the
+    data makes irrelevant — and adds ``_DROP_ORDER`` entries until the natural
+    row width fits. ``name`` / ``cpu`` / ``mem`` are absent from the order and
+    therefore always survive. ``command`` is counted at ``_MIN_COMMAND_WIDTH``
+    since its data cell is unbounded.
+    """
+    dropped = set(hidden)
+
+    def row_width() -> int:
+        cells = 0 if "name" in dropped else 1
+        width = 0 if "name" in dropped else name_w
+        for key, (n_cells, w) in _COL_GEOMETRY.items():
+            if key not in dropped:
+                cells += n_cells
+                width += w
+        return width + max(0, cells - 1)
+
+    for key in _DROP_ORDER:
+        if row_width() <= available:
+            break
+        dropped.add(key)
+    return dropped
+
+
 def _status_role(status: str) -> ColorRole:
     return _STATUS_ROLE.get(status, ColorRole.DEFAULT)
 
@@ -63,6 +126,7 @@ def _build_header_row(
     *,
     show_engine: bool,
     show_pod: bool,
+    show_mem_max: bool,
     name_w: int,
     sort_key: str | None,
     name_label: str = "CONTAINER",
@@ -88,7 +152,8 @@ def _build_header_row(
         h.append(hdr("CPU%", 6))
     if "mem" not in disable:
         h.append(hdr("MEM", 7))
-        h.append(Cell(text=f"/{'MAX':<7}", color=ColorRole.HEADER, bold=True))
+        if show_mem_max:
+            h.append(Cell(text=f"/{'MAX':<7}", color=ColorRole.HEADER, bold=True))
     if "diskio" not in disable:
         h.append(hdr("IOR/s", 7))
         h.append(hdr("IOW/s", 7, ljust=True))
@@ -114,7 +179,7 @@ def _name_status_uptime_cells(c: dict[str, Any], disable: set[str], name_w: int)
     return cells
 
 
-def _cpu_mem_cells(c: dict[str, Any], disable: set[str], item_levels: dict[str, Any]) -> list[Cell]:
+def _cpu_mem_cells(c: dict[str, Any], disable: set[str], item_levels: dict[str, Any], show_mem_max: bool) -> list[Cell]:
     cells: list[Cell] = []
     if "cpu" not in disable:
         cpu = c.get("cpu_percent")
@@ -128,8 +193,9 @@ def _cpu_mem_cells(c: dict[str, Any], disable: set[str], item_levels: dict[str, 
         role, prom = _level_role(item_levels.get("memory_percent"))
         mtext = f"{auto_unit(usage):>7}" if isinstance(usage, (int, float)) else f"{'_':>7}"
         cells.append(Cell(text=mtext, color=role, prominent=prom))
-        ltext = f"/{auto_unit(limit):<7}" if isinstance(limit, (int, float)) else f"/{'_':<7}"
-        cells.append(Cell(text=ltext))
+        if show_mem_max:
+            ltext = f"/{auto_unit(limit):<7}" if isinstance(limit, (int, float)) else f"/{'_':<7}"
+            cells.append(Cell(text=ltext))
     return cells
 
 
@@ -156,6 +222,7 @@ def _build_data_row(
     *,
     show_engine: bool,
     show_pod: bool,
+    show_mem_max: bool,
     name_w: int,
     to_bit: int,
     net_unit: str,
@@ -167,7 +234,7 @@ def _build_data_row(
     if show_pod:
         cells.append(Cell(text=f"{str(c.get('pod_id') or '-'):<12}"))
     cells.extend(_name_status_uptime_cells(c, disable, name_w))
-    cells.extend(_cpu_mem_cells(c, disable, item_levels))
+    cells.extend(_cpu_mem_cells(c, disable, item_levels, show_mem_max))
     cells.extend(_io_net_ports_command_cells(c, disable, to_bit, net_unit))
     return Row(cells=cells)
 
@@ -211,10 +278,30 @@ def render(
     name_label = f"CONTAINER {len(items)}/{total}" if truncated else "CONTAINER"
     name_w = max(name_w, len(name_label))
 
+    # Responsive columns. Computed AFTER the truncation counter, since the
+    # counter is what fixes the final `name_w` the fit has to budget against.
+    # Absent / non-int `right_width` (export, REST, direct callers, tests) →
+    # nothing is dropped and the output is byte-identical to the historical
+    # one, pinned by `test_no_right_width_keeps_all_columns`.
+    hidden = set(disable)
+    if "mem" in hidden:
+        hidden.add("memory_max")
+    if not show_engine:
+        hidden.add("engine")
+    if not show_pod:
+        hidden.add("pod")
+    available = view.get("right_width")
+    if isinstance(available, int):
+        hidden = _hidden_columns(available, hidden, name_w)
+    show_engine = "engine" not in hidden
+    show_pod = "pod" not in hidden
+    show_mem_max = "memory_max" not in hidden
+
     header = _build_header_row(
-        disable,
+        hidden,
         show_engine=show_engine,
         show_pod=show_pod,
+        show_mem_max=show_mem_max,
         name_w=name_w,
         sort_key=sort_key,
         name_label=name_label,
@@ -223,10 +310,11 @@ def render(
     rows.extend(
         _build_data_row(
             c,
-            disable,
+            hidden,
             levels,
             show_engine=show_engine,
             show_pod=show_pod,
+            show_mem_max=show_mem_max,
             name_w=name_w,
             to_bit=to_bit,
             net_unit=net_unit,
