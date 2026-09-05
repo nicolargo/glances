@@ -8,6 +8,8 @@
 
 """Manage on alert actions."""
 
+from functools import partial
+
 from glances.logger import logger
 from glances.secure import secure_popen
 from glances.timer import Timer
@@ -17,8 +19,12 @@ try:
 except ImportError:
     logger.debug("Chevron library not found (action scripts won't work)")
     chevron_tag = False
+    # An empty tuple never matches in an except clause
+    _TEMPLATE_ERRORS = ()
 else:
     chevron_tag = True
+    # Raised when a Mustache tag is not closed within the argument it starts in
+    _TEMPLATE_ERRORS = (chevron.ChevronError,)
 
 # Characters that secure_popen interprets as shell operators.
 # Mustache-rendered values must not contain these to prevent command injection.
@@ -140,21 +146,32 @@ class GlancesActions:
             )
         )
 
+        # Expand the {{mustache}} fields *after* secure_popen has tokenized the
+        # command line, never before: the template comes from glances.conf and
+        # is trusted, the stat values it interpolates are not. Pre-rendering let
+        # a value that contains a quote or a space break out of its argument and
+        # inject new ones into the invoked process (GHSA-56xw-p9qm-r437).
+        if chevron_tag:
+            # Sanitize mustache values to prevent shell operator injection
+            safe_dict = _sanitize_mustache_dict(mustache_dict)
+            render = partial(chevron.render, data=safe_dict)
+        else:
+            render = None
+
         # Run all actions in background
         for cmd in commands:
-            # Replace {{arg}} by the dict one (Thk to {Mustache})
-            if chevron_tag:
-                # Sanitize mustache values to prevent shell operator injection
-                safe_dict = _sanitize_mustache_dict(mustache_dict)
-                cmd_full = chevron.render(cmd, safe_dict)
-            else:
-                cmd_full = cmd
-            # Execute the action
-            logger.info(f"Action triggered for {stat_name} ({criticality}): {cmd_full}")
+            # Execute the action (cmd is the template: the rendered values are
+            # substituted per argument, inside secure_popen)
+            logger.info(f"Action triggered for {stat_name} ({criticality}): {cmd}")
             try:
-                ret = secure_popen(cmd_full, allow_operators=self.allow_operators())
+                ret = secure_popen(cmd, allow_operators=self.allow_operators(), render=render)
             except OSError as e:
                 logger.error(f"Action error for {stat_name} ({criticality}): {e}")
+            except _TEMPLATE_ERRORS as e:
+                # A Mustache section spanning two arguments cannot be rendered
+                # per argument. Refuse to run rather than fall back to rendering
+                # the whole line, which would reopen the injection.
+                logger.error(f"Action template error for {stat_name} ({criticality}): {e}")
             else:
                 logger.debug(f"Action result for {stat_name} ({criticality}): {ret}")
 
