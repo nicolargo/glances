@@ -45,7 +45,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from glances.alerts_v5 import GlancesAlerts
     from glances.plugins.plugin.base_v5 import GlancesPluginBase
-    from glances.stats_store_v5 import StatsStoreV5
 
 logger = logging.getLogger(__name__)
 
@@ -75,27 +74,30 @@ class McpPluginView:
     def __init__(
         self,
         plugin_name: str,
-        store: StatsStoreV5 | None,
         synthetic_payload: Any | None = None,
         plugin: GlancesPluginBase | None = None,
     ) -> None:
         self._plugin_name = plugin_name
-        self._store = store
         self._synthetic_payload = synthetic_payload
         self._plugin = plugin
 
     def get_raw(self) -> dict[str, Any] | list[dict[str, Any]]:
         """Return the latest payload for this plugin.
 
-        Synthetic plugins (e.g. ``alert``) bypass the store and return a
+        Read through the plugin's filtered view, not the store: an MCP client
+        is a consumer like any other, and leaving it on the raw payload would
+        recreate the very inconsistency issue #3211 is about — fields declared
+        ``exportable: False`` reaching a client that the exporters correctly
+        withhold them from.
+
+        Synthetic plugins (e.g. ``alert``) have no backing plugin and return a
         caller-supplied payload (an alerts list in that case).
         """
         if self._synthetic_payload is not None:
             return self._synthetic_payload() if callable(self._synthetic_payload) else self._synthetic_payload
-        if self._store is None:
+        if self._plugin is None:
             return {}
-        value = self._store.get(self._plugin_name)
-        return value if value is not None else {}
+        return self._plugin.get_api_payload()
 
     def get_raw_history(self, item: str | None = None, nb: int = 0) -> dict[str, list[Any]] | list:
         """Return time-series history — **empty in v5** (see module docstring).
@@ -146,11 +148,11 @@ class McpStatsAdapter:
 
     def __init__(
         self,
-        store: StatsStoreV5,
         plugins: list[GlancesPluginBase],
         alerts: GlancesAlerts | None = None,
     ) -> None:
-        self._store = store
+        # No store reference on purpose: since issue #3211 every payload this
+        # facade serves comes from the plugin's own filtered view.
         self._alerts = alerts
         self._by_name: dict[str, GlancesPluginBase] = {p.plugin_name: p for p in plugins}
 
@@ -161,8 +163,8 @@ class McpStatsAdapter:
         return list(self._by_name.keys()) + list(self.SYNTHETIC_PLUGIN_NAMES)
 
     def getAllAsDict(self) -> dict[str, Any]:  # noqa: N802
-        """Return a snapshot of every plugin's current payload."""
-        return self._store.as_dict()
+        """Return a snapshot of every plugin's filtered payload (issue #3211)."""
+        return {name: plugin.get_api_payload() for name, plugin in self._by_name.items()}
 
     def getAllLimitsAsDict(self) -> dict[str, dict[str, Any]]:  # noqa: N802
         """Aggregate thresholds across every real plugin.
@@ -172,7 +174,7 @@ class McpStatsAdapter:
         """
         out: dict[str, dict[str, Any]] = {}
         for name, plugin in self._by_name.items():
-            view = McpPluginView(plugin_name=name, store=self._store, plugin=plugin)
+            view = McpPluginView(plugin_name=name, plugin=plugin)
             limits = view.get_limits()
             if limits:
                 out[name] = limits
@@ -188,15 +190,11 @@ class McpStatsAdapter:
         if not name:
             return None
         if name == "alert":
-            return McpPluginView(
-                plugin_name="alert",
-                store=None,
-                synthetic_payload=self._alerts_payload,
-            )
+            return McpPluginView(plugin_name="alert", synthetic_payload=self._alerts_payload)
         plugin = self._by_name.get(name)
         if plugin is None:
             return None
-        return McpPluginView(plugin_name=name, store=self._store, plugin=plugin)
+        return McpPluginView(plugin_name=name, plugin=plugin)
 
     # ------------------------------------------------------------------ internals
 

@@ -69,6 +69,7 @@ def test_fields_description(store, cfg):
     assert set(p.fields_description) == {
         "name",
         "result",
+        "result_float",
         "refresh",
         "timer",
         "count",
@@ -132,3 +133,45 @@ async def test_levels_are_keyed_by_amp_name(store, cfg, procs):
     levels = store.get("amps", {})["_levels"]
     assert levels["Python"]["count"]["level"] == "critical"
     assert levels["Python"]["count"]["prominent"] is False
+
+
+# ------------------------------------------------------- result_float (#3423)
+
+
+async def test_result_float_carries_the_number(store, cfg, procs):
+    """A numeric AMP result must reach InfluxDB as a number (issue #3423)."""
+    procs([])
+    p = PluginModel(store, cfg("[amp_queue]\nenable=true\nrefresh=30\ncommand=echo 42\n"))
+    await p.update()
+    await _settle(p)
+    await p.update()
+
+    item = store.get("amps", {})["data"][0]
+
+    assert item["result"].strip() == "42"
+    assert item["result_float"] == 42.0
+
+
+async def test_result_float_is_none_for_text(store, cfg, procs):
+    """A text result contributes no numeric series rather than a misleading 0.0."""
+    procs([])
+    p = PluginModel(store, cfg("[amp_conntrack]\nenable=true\nrefresh=30\ncommand=echo tracked\n"))
+    await p.update()
+    await _settle(p)
+    await p.update()
+
+    item = store.get("amps", {})["data"][0]
+
+    assert item["result"].strip() == "tracked"
+    assert item["result_float"] is None
+
+
+def test_as_float_helper():
+    from glances.plugins.amps.model_v5 import _as_float
+
+    assert _as_float("42\n") == 42.0
+    assert _as_float(7) == 7.0
+    assert _as_float("3.5") == 3.5
+    assert _as_float("tracked") is None
+    assert _as_float(None) is None
+    assert _as_float("") is None

@@ -78,6 +78,7 @@ class _NetStub(GlancesPluginBase[list]):
             "prominent": True,
             "default_thresholds": {"careful": 0.7, "warning": 0.8, "critical": 0.9},
         },
+        "secret": {"unit": "string", "exportable": False},
     }
 
     async def _grab_stats(self) -> list:
@@ -95,7 +96,19 @@ def config(tmp_path, monkeypatch) -> GlancesConfigV5:
 def store_with_data(config) -> StatsStoreV5:
     store = StatsStoreV5()
     asyncio.run(store.set("cpu", {"total": 12.5, "user": 8.0}))
-    asyncio.run(store.set("network", [{"interface_name": "eth0", "bytes_recv": 100.0}]))
+    # Envelope shape, as written by GlancesPluginBase._build_store_payload():
+    # a collection plugin stores {"data": [...], "_levels": {...}, metadata}.
+    # It never stores a bare list -- verified against the real plugin set.
+    asyncio.run(
+        store.set(
+            "network",
+            {
+                "data": [{"interface_name": "eth0", "bytes_recv": 100.0, "secret": "hunter2"}],
+                "time_since_update": 2.0,
+                "_levels": {},
+            },
+        )
+    )
     return store
 
 
@@ -111,7 +124,7 @@ def alerts(config) -> GlancesAlerts:
 
 @pytest.fixture
 def adapter(store_with_data, plugins, alerts) -> McpStatsAdapter:
-    return McpStatsAdapter(store=store_with_data, plugins=plugins, alerts=alerts)
+    return McpStatsAdapter(plugins=plugins, alerts=alerts)
 
 
 # ---------------------------------------------------------------- plugin enumeration
@@ -126,11 +139,14 @@ def test_get_plugins_list_returns_registered_names(adapter):
     assert "alert" in names
 
 
-def test_get_all_as_dict_returns_store_snapshot(adapter, store_with_data):
-    """getAllAsDict mirrors StatsStoreV5.as_dict()."""
+def test_get_all_as_dict_returns_every_plugin_payload(adapter, store_with_data):
+    """getAllAsDict serves each plugin's filtered view (issue #3211), keyed by
+    plugin name. It used to mirror StatsStoreV5.as_dict(), which handed MCP
+    clients the raw payload including fields the exporters withhold."""
     all_stats = adapter.getAllAsDict()
+
     assert all_stats["cpu"] == store_with_data.get("cpu")
-    assert all_stats["network"] == store_with_data.get("network")
+    assert all_stats["network"]["data"] == [{"interface_name": "eth0", "bytes_recv": 100.0}]
 
 
 # ---------------------------------------------------------------- get_plugin / get_raw
@@ -160,11 +176,18 @@ def test_plugin_view_get_raw_returns_store_value(adapter, store_with_data):
     assert raw == store_with_data.get("cpu")
 
 
-def test_collection_plugin_view_get_raw_returns_list(adapter, store_with_data):
+def test_collection_plugin_view_get_raw_returns_the_envelope(adapter, store_with_data):
+    """A collection plugin's payload is the `{"data": [...]}` envelope, not a
+    bare list: that is what _build_store_payload() writes and what the REST API
+    serves. This test previously asserted a list, which the fixture produced by
+    writing the store directly -- a shape no plugin can actually publish."""
     view = adapter.get_plugin("network")
+
     raw = view.get_raw()
-    assert raw == store_with_data.get("network")
-    assert isinstance(raw, list)
+
+    assert isinstance(raw, dict)
+    assert raw["data"] == [{"interface_name": "eth0", "bytes_recv": 100.0}]
+    assert "_levels" in raw
 
 
 # ---------------------------------------------------------------- limits
@@ -279,7 +302,7 @@ def test_get_all_limits_reflects_a_config_override(store_with, config_with):
     config = config_with({"configurable": {"total_warning": "42"}})
     store = store_with()
     plugin = _ConfigurableStub(store, config)
-    adapter = McpStatsAdapter(store=store, plugins=[plugin])
+    adapter = McpStatsAdapter(plugins=[plugin])
     assert adapter.getAllLimitsAsDict()["configurable"]["total"]["warning"] == 42.0
 
 
@@ -287,15 +310,48 @@ def test_get_plugin_limits_reflects_a_config_override(store_with, config_with):
     config = config_with({"configurable": {"total_critical": "99"}})
     store = store_with()
     plugin = _ConfigurableStub(store, config)
-    adapter = McpStatsAdapter(store=store, plugins=[plugin])
+    adapter = McpStatsAdapter(plugins=[plugin])
     view = adapter.get_plugin("configurable")
     assert view is not None
     assert view.get_limits()["total"]["critical"] == 99.0
 
 
-def test_synthetic_alert_plugin_has_no_limits(store_with, config_with):
-    store = store_with()
-    adapter = McpStatsAdapter(store=store, plugins=[])
+def test_synthetic_alert_plugin_has_no_limits():
+    adapter = McpStatsAdapter(plugins=[])
     view = adapter.get_plugin("alert")
     assert view is not None
     assert view.get_limits() == {}
+
+
+# ------------------------------------------------- export filter (issue #3211)
+
+
+def test_mcp_plugin_view_drops_non_exportable_fields(adapter, store_with_data):
+    """An MCP client is a consumer like any other: leaving it on the raw store
+    payload recreated exactly the inconsistency #3211 is about."""
+    assert any("secret" in i for i in store_with_data.get("network")["data"]), "guard: the fixture must publish it"
+
+    raw = adapter.get_plugin("network").get_raw()
+
+    assert all("secret" not in item for item in raw["data"])
+    assert "_levels" in raw
+
+
+def test_mcp_all_drops_non_exportable_fields(adapter):
+    payload = adapter.getAllAsDict()
+
+    assert all("secret" not in item for item in payload["network"]["data"])
+
+
+def test_mcp_synthetic_plugin_still_bypasses_the_filter(adapter):
+    """`alert` has no real plugin behind it — it must keep working."""
+    payload = adapter.get_plugin("alert").get_raw()
+
+    assert isinstance(payload, list)
+
+
+def test_mcp_no_longer_reads_the_store(adapter):
+    """Structural guard for #3211: the facade holds no store reference at all,
+    so no future edit can quietly reintroduce a raw read."""
+    assert not hasattr(adapter, "_store")
+    assert not hasattr(adapter.get_plugin("network"), "_store")

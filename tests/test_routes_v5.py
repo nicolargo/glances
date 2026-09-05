@@ -50,10 +50,11 @@ class FakeScalarPlugin(GlancesPluginBase[dict]):
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "percent": {"description": "Usage percentage.", "unit": "percent"},
         "total": {"description": "Total.", "unit": "bytes"},
+        "secret": {"description": "Not for export.", "unit": "string", "exportable": False},
     }
 
     async def _grab_stats(self) -> dict:
-        return {"percent": 42.0, "total": 1024}
+        return {"percent": 42.0, "total": 1024, "secret": "hunter2"}
 
 
 class FakeCollectionPlugin(GlancesPluginBase[list]):
@@ -62,10 +63,14 @@ class FakeCollectionPlugin(GlancesPluginBase[list]):
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "name": {"description": "Item name.", "unit": "string", "primary_key": True},
         "rx": {"description": "Received bytes.", "unit": "bytes"},
+        "secret": {"description": "Not for export.", "unit": "string", "exportable": False},
     }
 
     async def _grab_stats(self) -> list:
-        return [{"name": "eth0", "rx": 100}, {"name": "lo", "rx": 0}]
+        return [
+            {"name": "eth0", "rx": 100, "secret": "hunter2"},
+            {"name": "lo", "rx": 0, "secret": "hunter2"},
+        ]
 
 
 # ------------------------------------------------------- fixtures
@@ -520,3 +525,100 @@ def test_limits_routes_require_auth_when_password_is_set(config_factory, store):
         assert client.get("/api/5/fakelimits/limits").status_code == 401
         ok = client.get("/api/5/fakelimits/limits", headers=_basic_header("glances", "hunter2"))
     assert ok.status_code == 200
+
+
+# ------------------------------------------------- export filter (issue #3211)
+#
+# The routes used to hand back the RAW store payload, so a field declared
+# `exportable: False` reached every unauthenticated HTTP client while the
+# exporters correctly dropped it. Both handlers now go through
+# `plugin.get_api_payload()`.
+
+
+def test_plugin_payload_drops_non_exportable_fields(config_factory, store):
+    config = config_factory()
+    plugin = FakeScalarPlugin(store, config)
+    _populate(store, plugin)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+
+    assert "secret" in store.get("fakescalar"), "guard: the fixture must publish it"
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/fakescalar").json()
+
+    assert "secret" not in payload
+    assert payload["percent"] == 42.0
+
+
+def test_plugin_payload_projects_each_collection_item(config_factory, store):
+    config = config_factory()
+    plugin = FakeCollectionPlugin(store, config)
+    _populate(store, plugin)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/fakecollection").json()
+
+    assert payload["data"], "fixture must produce at least one item"
+    for item in payload["data"]:
+        assert "secret" not in item
+        assert "rx" in item
+
+
+def test_all_drops_non_exportable_fields(config_factory, store):
+    config = config_factory()
+    scalar = FakeScalarPlugin(store, config)
+    collection = FakeCollectionPlugin(store, config)
+    _populate(store, scalar)
+    _populate(store, collection)
+    app = _make_app_with_plugins(config, store, plugins=[scalar, collection])
+
+    with TestClient(app) as client:
+        body = client.get("/api/5/all").json()
+
+    assert "secret" not in body["fakescalar"]
+    assert all("secret" not in i for i in body["fakecollection"]["data"])
+    # `_levels` is what a UI colours cells from -- the API keeps it.
+    assert "_levels" in body["fakescalar"]
+
+
+def test_api_keeps_time_since_update(config_factory, store):
+    """Regression guard. `time_since_update` is declared `exportable: False`
+    (it is not a metric), so filtering the API on `exportable` alone would
+    strip it from every endpoint. The WebUI divides counters by it to get
+    rates -- see `plugin-cpu.vue` (ctx_switches) and `plugin-processlist.vue`
+    (per-process IO). Dropping it renders those values as NaN.
+    """
+    config = config_factory()
+    plugin = FakeScalarPlugin(store, config)
+    _populate(store, plugin)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/fakescalar").json()
+        body = client.get("/api/5/all").json()
+
+    assert "time_since_update" in payload
+    assert "time_since_update" in body["fakescalar"]
+    # ... but it must still never reach an exporter.
+    assert "time_since_update" not in plugin.get_export()
+
+
+def test_all_still_excludes_a_collection_plugin_that_never_published(config_factory, store):
+    """A collection plugin's envelope is built by get_api_payload(); without an
+    emptiness guard it would answer `{"data": []}` before its first cycle and
+    appear in /all a cycle too early."""
+    config = config_factory()
+    scalar = FakeScalarPlugin(store, config)
+    collection = FakeCollectionPlugin(store, config)
+    _populate(store, scalar)  # collection deliberately NOT updated
+    app = _make_app_with_plugins(config, store, plugins=[scalar, collection])
+
+    with TestClient(app) as client:
+        body = client.get("/api/5/all").json()
+        single = client.get("/api/5/fakecollection")
+
+    assert "fakescalar" in body
+    assert "fakecollection" not in body
+    assert single.status_code == 200
+    assert single.json() is None

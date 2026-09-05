@@ -830,3 +830,90 @@ def test_display_in_tui_can_be_overridden():
             return {}
 
     assert _Hidden.DISPLAY_IN_TUI is False
+
+
+# ------------------------------------------------------------ get_api_payload
+#
+# issue #3211 -- the REST API and the MCP adapter used to serve get_stats(),
+# the RAW store payload, so a field declared `exportable: False` reached every
+# unauthenticated HTTP client while the exporters correctly dropped it.
+# get_api_payload() closes that gap WITHOUT hiding `_levels`, which the WebUI
+# colours cells from.
+#
+# Every test below passes an explicit `payload=` carrying `internal_only`:
+# both fakes DECLARE that field but neither `_grab_stats()` produces it by
+# default, so an assertion on its absence would pass whatever the code did.
+
+
+@pytest.mark.asyncio
+async def test_get_api_payload_drops_non_exportable_fields_of_a_scalar(config):
+    store = StatsStoreV5()
+    plugin = FakeScalarPlugin(store, config, payload={"percent": 50.0, "total": 1024, "internal_only": "secret"})
+    await plugin.update()
+
+    assert "internal_only" in store.get("fakescalar"), "guard: the fixture must publish it"
+
+    payload = plugin.get_api_payload()
+
+    assert "internal_only" not in payload
+    assert payload["percent"] == 50.0
+
+
+@pytest.mark.asyncio
+async def test_get_api_payload_drops_non_exportable_fields_of_every_collection_item(config):
+    store = StatsStoreV5()
+    plugin = FakeCollectionPlugin(
+        store,
+        config,
+        payload=[
+            {"name": "eth0", "rx": 10, "internal_only": "secret"},
+            {"name": "eth1", "rx": 20, "internal_only": "secret"},
+        ],
+    )
+    await plugin.update()
+
+    assert any("internal_only" in i for i in store.get("fakecollection")["data"]), "guard: the fixture must publish it"
+
+    payload = plugin.get_api_payload()
+
+    assert payload["data"], "fixture must produce at least one item"
+    for item in payload["data"]:
+        assert "internal_only" not in item
+        assert "rx" in item
+
+
+@pytest.mark.asyncio
+async def test_get_api_payload_keeps_levels(config):
+    """The whole point of a third view: exporters must not see `_levels`,
+    the WebUI must."""
+    store = StatsStoreV5()
+    plugin = FakeScalarPlugin(store, config)
+    await plugin.update()
+
+    assert "_levels" in store.get("fakescalar"), "guard: the store must carry it"
+
+    assert "_levels" in plugin.get_api_payload()
+    assert "_levels" not in plugin.get_export()
+
+
+@pytest.mark.asyncio
+async def test_get_api_payload_is_always_a_dict_for_a_collection(config):
+    """Unlike get_export(), which returns a bare list: the API keeps the
+    envelope its clients already know."""
+    store = StatsStoreV5()
+    plugin = FakeCollectionPlugin(store, config)
+    await plugin.update()
+
+    payload = plugin.get_api_payload()
+
+    assert isinstance(payload, dict)
+    assert isinstance(payload["data"], list)
+    assert isinstance(plugin.get_export(), list)
+
+
+@pytest.mark.asyncio
+async def test_get_api_payload_is_empty_before_the_first_cycle(config):
+    store = StatsStoreV5()
+    plugin = FakeScalarPlugin(store, config)
+
+    assert plugin.get_api_payload() == {}

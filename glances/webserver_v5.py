@@ -200,7 +200,7 @@ def attach_mcp(
 
     from glances.outputs.mcp_adapter_v5 import KNOWN_V5_MISSING_PLUGINS, McpStatsAdapter
 
-    adapter = McpStatsAdapter(store=store, plugins=plugins, alerts=alerts)
+    adapter = McpStatsAdapter(plugins=plugins, alerts=alerts)
     # ``GlancesMcpServer`` stores ``args`` but never reads it (cf. v4 module).
     # An empty namespace keeps the constructor happy without leaking v4 CLI shape.
     mcp_server = GlancesMcpServer(stats=adapter, args=SimpleNamespace(), config=config)

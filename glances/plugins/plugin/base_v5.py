@@ -894,8 +894,58 @@ class GlancesPluginBase(Generic[T], ABC):
 
         if self.IS_COLLECTION:
             items = payload.get("data", [])
-            return [self._project_exportable(item) for item in items]
-        return self._project_exportable(payload)
+            return [self._project(item, keep_internal=False) for item in items]
+        return self._project(payload, keep_internal=False)
 
-    def _project_exportable(self, d: dict[str, Any]) -> dict[str, Any]:
-        return {k: v for k, v in d.items() if not k.startswith("_") and self._fields.get(k, {}).get("exportable", True)}
+    def get_api_payload(self) -> dict[str, Any]:
+        """Filtered view for the REST API and the MCP adapter (issue #3211).
+
+        Drops fields declared `exportable: False`; KEEPS `_levels`, which is
+        what a UI colours cells from.
+
+        Always returns a dict, unlike `get_export()`, which returns a bare
+        list for collection plugins: the API serves the payload shape its
+        clients already know, envelope included.
+        """
+        payload = self.store.get(self.plugin_name, {})
+        if not isinstance(payload, dict) or not payload:
+            # Empty == the plugin has registered but has not published yet
+            # (scheduler cycle 0). Returning {} keeps that distinguishable:
+            # projecting it instead would hand a collection plugin back a
+            # `{"data": []}` envelope, which reads as "published, nothing to
+            # show" and would put it in /api/5/all a cycle too early.
+            return {}
+
+        out = self._project(payload, keep_internal=True)
+        if self.IS_COLLECTION:
+            # `data` is not a declared field, so the envelope projection above
+            # passes the list through untouched. Each item must be projected on
+            # its own or every non-exportable field survives.
+            out["data"] = [self._project(item, keep_internal=True) for item in payload.get("data", [])]
+        return out
+
+    def _project(self, d: dict[str, Any], *, keep_internal: bool) -> dict[str, Any]:
+        """Filter one payload dict for a consumer.
+
+        `keep_internal=False` (exporters): drop every `_*` key and every field
+        declared `exportable: False`.
+        `keep_internal=True` (REST, MCP): additionally keep `_*` keys and
+        fields declared `internal: True`.
+
+        `internal` and `exportable` are independent flags. A field marked
+        `internal: True` is not a metric worth shipping to a time-series
+        backend, but Glances' own clients need it: `time_since_update` is the
+        divisor the WebUI uses to turn counters into rates
+        (`plugin-cpu.vue`, `plugin-processlist.vue`). Filtering the API purely
+        on `exportable` would strip it from every endpoint and leave those
+        views dividing by undefined.
+
+        One helper, two views, so the REST and export projections cannot drift
+        apart (issue #3211).
+        """
+        return {
+            k: v
+            for k, v in d.items()
+            if (keep_internal and (k.startswith("_") or self._fields.get(k, {}).get("internal", False)))
+            or (not k.startswith("_") and self._fields.get(k, {}).get("exportable", True))
+        }

@@ -28,6 +28,25 @@ from glances.amps_list_v5 import AmpsListV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 
 
+def _as_float(value: Any) -> float | None:
+    """Return `value` as a float, or None when it is not numeric.
+
+    v4's InfluxDB normaliser coerces `result` to a string because an AMP may
+    return either text or a number (#3419), and its comment promises a
+    companion `_float` field that its code never creates. This is that field
+    (#3423) -- declared on the plugin, so it reaches every exporter and the
+    REST API rather than only InfluxDB.
+
+    None rather than 0.0 for a text result: `normalize_for_influxdb()` drops
+    None fields, so a text-only AMP contributes no numeric series instead of a
+    misleading zero.
+    """
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 class PluginModel(GlancesPluginBase[list]):
     """Application Monitoring Processes (collection, primary key ``name``)."""
 
@@ -46,6 +65,10 @@ class PluginModel(GlancesPluginBase[list]):
         # capitalises it (`[amp_dropbox]` -> `Dropbox`). v4 parity.
         "name": {"description": "AMP name.", "unit": "string", "primary_key": True},
         "result": {"description": "AMP result (a string, possibly multi-line).", "unit": "string"},
+        "result_float": {
+            "description": "Numeric value of `result` when it parses as a number, else None.",
+            "unit": "number",
+        },
         "refresh": {"description": "AMP refresh interval.", "unit": "second"},
         "timer": {"description": "Time until next refresh.", "unit": "second"},
         "count": {"description": "Number of matching processes.", "unit": "number"},
@@ -64,6 +87,7 @@ class PluginModel(GlancesPluginBase[list]):
             {
                 "name": amp.NAME,
                 "result": amp.result(),
+                "result_float": _as_float(amp.result()),
                 "refresh": amp.refresh(),
                 "timer": amp.time_until_refresh(),
                 "count": amp.count(),

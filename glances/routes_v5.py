@@ -20,11 +20,11 @@ Route inventory:
 |-------------------------------|--------|------------------------------|
 | ``/api/5/token``              | POST   | Basic → ``JWTHandler``       |
 | ``/api/5/pluginslist``        | GET    | ``app.state.plugins`` keys   |
-| ``/api/5/all``                | GET    | ``store.as_dict()``          |
+| ``/api/5/all``                | GET    | per-plugin ``get_api_payload()`` |
 | ``/api/5/all/limits``         | GET    | per-plugin ``get_limits()``  |
 | ``/api/5/alert``              | GET    | ``alerts.get_history()``     |
 | ``/api/5/config``             | GET    | ``config.as_dict_secure()``  |
-| ``/api/5/<plugin>``           | GET    | ``store.get(plugin)`` (``_levels`` included) |
+| ``/api/5/<plugin>``           | GET    | ``plugin.get_api_payload()`` (``_levels`` included) |
 | ``/api/5/<plugin>/info``      | GET    | ``plugin.fields_description``|
 | ``/api/5/<plugin>/limits``    | GET    | ``plugin.get_limits()``      |
 
@@ -119,7 +119,17 @@ def build_router() -> APIRouter:
 
     @router.get("/all")
     async def all_stats(request: Request) -> dict[str, Any]:
-        return request.app.state.store.as_dict()
+        # Registry read, not a store read: `/all` must apply each plugin's
+        # export filter (issue #3211), which only the plugin can do.
+        # Empty payloads are SKIPPED, preserving the existing contract that a
+        # registered-but-never-updated plugin is absent from `/all` rather
+        # than present with an empty body.
+        out: dict[str, Any] = {}
+        for name, plugin in _plugins(request).items():
+            payload = plugin.get_api_payload()
+            if payload:
+                out[name] = payload
+        return out
 
     @router.get("/all/limits")
     async def all_limits(request: Request) -> dict[str, Any]:
@@ -164,8 +174,10 @@ def build_router() -> APIRouter:
         # (scheduler cycle 0). Return a bare JSON ``null`` so clients can
         # distinguish "unknown plugin" (404) from "data not yet available"
         # without surfacing a transient as an error.
-        payload = request.app.state.store.get(plugin_name)
-        if payload is None:
+        # get_api_payload() returns {} where the store returned None, so the
+        # cycle-0 guard tests emptiness. The `null` body is unchanged.
+        payload = plugins[plugin_name].get_api_payload()
+        if not payload:
             return JSONResponse(content=None)
         return payload
 
