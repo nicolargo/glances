@@ -24,6 +24,7 @@ Route inventory:
 | ``/api/5/all/limits``         | GET    | per-plugin ``get_limits()``  |
 | ``/api/5/alert``              | GET    | ``alerts.get_history()``     |
 | ``/api/5/config``             | GET    | ``config.as_dict_secure()``  |
+| ``/api/5/args``               | GET    | ``app.state.args``, redacted |
 | ``/api/5/<plugin>``           | GET    | ``plugin.get_api_payload()`` (``_levels`` included) |
 | ``/api/5/<plugin>/info``      | GET    | ``plugin.fields_description``|
 | ``/api/5/<plugin>/limits``    | GET    | ``plugin.get_limits()``      |
@@ -42,13 +43,17 @@ from __future__ import annotations
 
 import hmac
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
+from glances.config_v5 import GlancesConfigV5
 from glances.security_v5 import verify_password
+
+if TYPE_CHECKING:
+    import argparse
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +61,13 @@ logger = logging.getLogger(__name__)
 # capture. FastAPI matches routes in declaration order, so listing static
 # routes first is enough, but this set documents the reservation explicitly
 # and guards against rename mistakes in test fixtures.
-_RESERVED_NAMES: frozenset[str] = frozenset({"token", "pluginslist", "all", "alert", "config"})
+_RESERVED_NAMES: frozenset[str] = frozenset({"token", "pluginslist", "all", "alert", "config", "args"})
+
+# Argument names that are sensitive beyond what GlancesConfigV5._secure_value()
+# catches. `config_path` is a filesystem path: it discloses the local username
+# and the directory layout, which the config CONTENTS served by /api/5/config
+# do not. v4 redacts its equivalent (`conf_file`) the same way.
+_SENSITIVE_ARGS: frozenset[str] = frozenset({"config_path"})
 
 # ``HTTPBasic(auto_error=False)`` lets us emit our own 401 with the correct
 # ``WWW-Authenticate`` header. ``auto_error=True`` short-circuits before the
@@ -155,6 +166,11 @@ def build_router() -> APIRouter:
     async def config_dump(request: Request) -> dict[str, Any]:
         return request.app.state.config.as_dict_secure()
 
+    @router.get("/args")
+    async def args_dump(request: Request) -> dict[str, Any]:
+        """Return the CLI argument namespace, redacted (issue #1527 / CVE-2026-68520)."""
+        return _redact_args(getattr(request.app.state, "args", None))
+
     @router.get("/{plugin_name}/info")
     async def plugin_info(plugin_name: str, request: Request) -> dict[str, Any]:
         plugin = _resolve_plugin(request, plugin_name)
@@ -192,6 +208,35 @@ def _plugins(request: Request) -> dict[str, Any]:
     if not isinstance(plugins, dict):
         return {}
     return plugins
+
+
+def _redact_args(args: argparse.Namespace | None) -> dict[str, Any]:
+    """Return the CLI argument namespace with sensitive values redacted.
+
+    Module-level rather than a closure inside `build_router()`: that factory
+    was already at ruff's complexity ceiling, so every route added inside it
+    pushes it over.
+
+    Redaction is UNCONDITIONAL, matching `/api/5/config` above: v5 applies
+    no auth branch there either.
+
+    `config_path` is redacted (see `_SENSITIVE_ARGS`) even though `/config`
+    already serves the merged configuration's *contents* to unauthenticated
+    callers: the file *path* discloses the local username and directory
+    layout, which the contents do not. v4 redacts its equivalent
+    (`conf_file`) for the same reason.
+
+    `_secure_value()` is reused rather than reimplemented: CVE-2026-68520
+    was a value-level bypass (a credential inside a URL), and a second
+    redactor is a second place to get it wrong.
+    """
+    if args is None:
+        return {}
+    secure = GlancesConfigV5._secure_value
+    return {
+        key: GlancesConfigV5.SECRET_REDACTED if key in _SENSITIVE_ARGS else secure(key, value)
+        for key, value in vars(args).items()
+    }
 
 
 def _resolve_plugin(request: Request, plugin_name: str):

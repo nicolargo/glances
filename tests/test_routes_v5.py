@@ -27,6 +27,7 @@ Coverage:
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import base64
 from typing import Any, ClassVar
@@ -622,3 +623,131 @@ def test_all_still_excludes_a_collection_plugin_that_never_published(config_fact
     assert "fakecollection" not in body
     assert single.status_code == 200
     assert single.json() is None
+
+
+# ------------------------------------------------------------------ /args
+
+
+def _make_app_with_args(config, store, args):
+    """build_app() with an args namespace attached, for the /args route."""
+    from glances.webserver_v5 import build_app
+
+    return build_app(config=config, store=store, alerts=None, args=args)
+
+
+def test_args_returns_the_argument_namespace(config_factory, store):
+    config = config_factory()
+    args = argparse.Namespace(port=61208, bind="127.0.0.1", server=True)
+    app = _make_app_with_args(config, store, args)
+
+    with TestClient(app) as client:
+        response = client.get("/api/5/args")
+
+    assert response.status_code == 200
+    assert response.json() == {"port": 61208, "bind": "127.0.0.1", "server": True}
+
+
+def test_args_redacts_credentials_embedded_in_a_value(config_factory, store):
+    """CVE-2026-68520 is a VALUE-level bypass: a credential inside a URL
+    survives any key-name check. Asserted on the value, not on a key name."""
+    config = config_factory()
+    args = argparse.Namespace(export_url="http://alice:s3cr3t@influx.example:8086")
+    app = _make_app_with_args(config, store, args)
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/args").json()
+
+    assert "s3cr3t" not in payload["export_url"]
+    assert "alice" not in payload["export_url"]
+    assert "influx.example" in payload["export_url"]
+
+
+def test_args_redacts_a_secret_key_name(config_factory, store):
+    config = config_factory()
+    args = argparse.Namespace(some_token="abcdef", port=61208)
+    app = _make_app_with_args(config, store, args)
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/args").json()
+
+    assert payload["some_token"] == "***"
+    assert payload["port"] == 61208
+
+
+def test_args_returns_an_empty_dict_when_no_namespace_was_supplied(config_factory, store):
+    """build_app() is called without args by several tests and by any future
+    embedder. The route must answer, not raise."""
+    config = config_factory()
+    app = _make_app_with_args(config, store, None)
+
+    with TestClient(app) as client:
+        response = client.get("/api/5/args")
+
+    assert response.status_code == 200
+    assert response.json() == {}
+
+
+def test_args_redacts_the_config_file_path(config_factory, store):
+    """The config file PATH discloses the local username and directory layout,
+    which the config CONTENTS served by /api/5/config do not. v4 redacts its
+    equivalent (`conf_file`); `_secure_value()` alone does not catch it."""
+    config = config_factory()
+    args = argparse.Namespace(config_path="/home/alice/.config/glances/glances.conf")
+    app = _make_app_with_args(config, store, args)
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/args").json()
+
+    assert payload["config_path"] == "***"
+    assert "alice" not in payload["config_path"]
+
+
+def test_args_matches_the_real_v5_argument_set(config_factory, store):
+    """Freeze the key set. Adding a CLI option fails this test on purpose, so
+    its author has to decide whether the new argument is sensitive (spec 4.3).
+
+    `set_password` comes back as "***" because `_secure_value()` matches
+    "password" as a SUBSTRING of the key name and returns before its
+    non-string check. It is a boolean flag, not a credential. This is the
+    "over-redact rather than under-redact" behaviour the shared helper
+    documents; do NOT special-case it here -- the helper is shared with
+    /api/5/config and must not be loosened for cosmetics.
+    """
+    from glances.main_v5 import build_parser
+
+    config = config_factory()
+    args = build_parser().parse_args(["-s"])
+    app = _make_app_with_args(config, store, args)
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/args").json()
+
+    assert set(payload) == {
+        "api_doc",
+        "bind",
+        "byte",
+        "config_path",
+        "debug",
+        "disable_config_exec",
+        "disable_plugin",
+        "disable_webui",
+        "enable_mcp",
+        "enable_plugin",
+        "export",
+        "export_csv_file",
+        "export_csv_overwrite",
+        "export_json_file",
+        "export_process_filter",
+        "fahrenheit",
+        "full_quicklook",
+        "hide_public_info",
+        "meangpu",
+        "no_tui",
+        "percpu",
+        "port",
+        "server",
+        "set_password",
+    }
+    assert payload["set_password"] == "***"
+    assert payload["config_path"] == "***"
+    assert payload["server"] is True

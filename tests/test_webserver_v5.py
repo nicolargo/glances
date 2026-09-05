@@ -26,8 +26,13 @@ Coverage:
 
 from __future__ import annotations
 
+import argparse
 import base64
+import json
 import logging
+import shutil
+import subprocess
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -438,3 +443,175 @@ def test_attach_mcp_logs_when_package_missing(config_factory, store, monkeypatch
 
 async def _ok_handler():
     return {"ok": True}
+
+
+# ------------------------------------------------------- WebUI serving (G9-1)
+
+
+def _args(**overrides):
+    base = {"disable_webui": False}
+    base.update(overrides)
+    return argparse.Namespace(**base)
+
+
+def test_index_is_served_when_the_webui_is_enabled(config_factory, store):
+    app = build_app(config=config_factory(), store=store, args=_args())
+
+    with TestClient(app) as client:
+        response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert "glances5.js" in response.text
+
+
+def test_static_directory_is_mounted(config_factory, store):
+    """Asserted against the v4 bundle, which is committed in public/ --
+    glances5.js does not exist until Task 3."""
+    app = build_app(config=config_factory(), store=store, args=_args())
+
+    with TestClient(app) as client:
+        response = client.get("/static/glances.js")
+
+    assert response.status_code == 200
+
+
+def test_disable_webui_unregisters_both_routes(config_factory, store):
+    """Assert on the route table, not on a 404: a 404 can come from anywhere,
+    and a disabled WebUI must not leave the asset directory reachable."""
+    app = build_app(config=config_factory(), store=store, args=_args(disable_webui=True))
+
+    paths = {getattr(route, "path", None) for route in app.routes}
+    assert "/" not in paths
+    assert "/static" not in paths
+
+    with TestClient(app) as client:
+        assert client.get("/").status_code == 404
+        assert client.get("/static/glances.js").status_code == 404
+
+
+def test_webui_is_absent_when_no_args_namespace_is_supplied(config_factory, store):
+    """build_app() without args is the embedder / unit-test path. It must not
+    start serving a UI by accident."""
+    app = build_app(config=config_factory(), store=store)
+
+    paths = {getattr(route, "path", None) for route in app.routes}
+    assert "/" not in paths
+
+
+def test_index_requires_authentication_when_a_password_is_configured(config_factory, store):
+    """UNAUTH_PATHS is {"/status", "/healthz", "/api/5/token"}, so the WebUI
+    is behind auth -- v4 parity. Pinned so a future UNAUTH_PATHS edit cannot
+    expose it silently."""
+    config = config_factory(password=hash_password("hunter2"))
+    app = build_app(config=config, store=store, args=_args())
+
+    with TestClient(app) as client:
+        assert client.get("/").status_code == 401
+        assert client.get("/", headers=_basic_header("glances", "hunter2")).status_code == 200
+
+
+def test_cors_policy_applies_to_the_index(config_factory, store):
+    """Spec 5 claims `/` inherits the CORS wiring. A new route silently
+    falling outside a middleware is how these protections rot, so verify it
+    rather than assume it."""
+    config = config_factory(cors_origins="https://trusted.example")
+    app = build_app(config=config, store=store, args=_args())
+
+    with TestClient(app) as client:
+        allowed = client.get("/", headers={"Origin": "https://trusted.example"})
+        denied = client.get("/", headers={"Origin": "https://evil.example"})
+
+    assert allowed.headers.get("access-control-allow-origin") == "https://trusted.example"
+    assert "access-control-allow-origin" not in denied.headers
+
+
+def test_trusted_host_middleware_applies_to_the_index(config_factory, store):
+    """TrustedHostMiddleware is the outermost middleware, so a new route
+    inherits DNS-rebinding protection. Verify rather than assume."""
+    config = config_factory(webui_allowed_hosts="trusted.example")
+    app = build_app(config=config, store=store, args=_args())
+
+    with TestClient(app) as client:
+        assert client.get("/", headers={"Host": "evil.example"}).status_code == 400
+        assert client.get("/", headers={"Host": "trusted.example"}).status_code == 200
+
+
+def test_webui_missing_assets_warns_and_falls_back_to_rest_only(config_factory, store, monkeypatch, tmp_path, caplog):
+    """A source checkout or a trimmed package with no `npm run build` must
+    still serve the REST API: the missing-assets guard in _wire_webui() logs
+    a WARNING and skips the WebUI routes instead of crashing build_app()."""
+    from glances import webserver_v5
+
+    missing = tmp_path / "does-not-exist"
+    monkeypatch.setattr(webserver_v5, "_STATIC_PATH", missing / "public")
+    monkeypatch.setattr(webserver_v5, "_TEMPLATE_PATH", missing / "templates")
+
+    with caplog.at_level(logging.WARNING):
+        app = build_app(config=config_factory(), store=store, args=_args())
+
+    assert any("WebUI assets not found" in r.message for r in caplog.records)
+
+    paths = {getattr(route, "path", None) for route in app.routes}
+    assert "/" not in paths
+    assert "/static" not in paths
+
+    with TestClient(app) as client:
+        assert client.get("/status").status_code == 200
+
+
+def test_the_v5_bundle_is_served(config_factory, store):
+    """The bundle is a build artifact. If this fails with 404, run
+    `npm run build` in glances/outputs/static/ before looking anywhere else."""
+    app = build_app(config=config_factory(), store=store, args=_args())
+
+    with TestClient(app) as client:
+        response = client.get("/static/glances5.js")
+
+    assert response.status_code == 200
+    assert len(response.content) > 0
+
+
+_BUNDLE_PATH = Path(__file__).parent.parent / "glances" / "outputs" / "static" / "public" / "glances5.js"
+_RENDER_PROBE_PATH = Path(__file__).parent / "fixtures" / "webui_render_probe.js"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_v5_bundle_actually_renders_an_element():
+    """Guards against a silent, all-tests-green blank page.
+
+    `import { createApp } from "vue"` resolves to Vue's runtime-only build
+    unless webpack aliases it to the compiler-included build. A component
+    that only supplies a string `template:` (as app_v5.js does) then gets
+    `render = NOOP` -- in production mode the dev warning for this is
+    compiled out, so nothing is logged and nothing throws. The mount target
+    ends up holding a single, silently-empty comment node instead of real
+    markup.
+
+    Every HTTP-level test in this file (e.g. test_the_v5_bundle_is_served)
+    only checks that the bundle is served with a non-empty body -- a bundle
+    that renders nothing passes all of them. This test instead runs the
+    actual bundle against a minimal DOM stub and asserts that the `#app`
+    mount target ends up containing a real ELEMENT node, not just Vue's
+    empty-render comment placeholder -- the distinction Finding 1 hinged on.
+    """
+    if not _BUNDLE_PATH.exists():
+        pytest.fail(f"{_BUNDLE_PATH} is missing -- run `npm run build` in glances/outputs/static/")
+
+    result = subprocess.run(
+        ["node", str(_RENDER_PROBE_PATH), str(_BUNDLE_PATH)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, f"render probe crashed:\n{result.stderr}"
+
+    payload = json.loads(result.stdout)
+    # nodeType 1 == ELEMENT_NODE, 8 == COMMENT_NODE (the runtime-only-Vue
+    # failure mode). Assert the concrete element, not just "has children":
+    # a broken build also has exactly one child -- an empty comment.
+    assert payload["nodeType"] == 1, (
+        f"expected an ELEMENT_NODE under #app, got nodeType={payload['nodeType']!r} "
+        f"(tagName={payload['tagName']!r}) -- the Vue template rendered nothing"
+    )
+    assert payload["tagName"] == "MAIN"

@@ -119,10 +119,16 @@ def build_parser() -> argparse.ArgumentParser:
         dest="server",
         action="store_true",
         help=(
-            "Run as a REST API server (FastAPI on bind_address:port). Headless — "
-            "no curses TUI. Without this flag, Glances runs in TUI mode and does not "
-            "bind any TCP socket."
+            "Run as a REST API server (FastAPI on bind_address:port) and serve the "
+            "Web UI. Headless — no curses TUI. Without this flag, Glances runs in "
+            "TUI mode and does not bind any TCP socket. Use --disable-webui for a "
+            "headless REST-only deployment."
         ),
+    )
+    parser.add_argument(
+        "--disable-webui",
+        action="store_true",
+        help="Serve the REST API without the Web UI (requires --server).",
     )
     parser.add_argument(
         "--enable-mcp",
@@ -602,7 +608,7 @@ def assemble(
             # `attach_mcp` reads `[outputs] enable_mcp` from the merged config
             # — no need to pass the flag explicitly through the call chain.
             config._merged.setdefault("outputs", {})["enable_mcp"] = True
-        app = build_app(config=config, store=store, alerts=alerts)
+        app = build_app(config=config, store=store, alerts=alerts, args=args)
         for plugin in plugins:
             register_plugin(app, plugin)
         # Plugin registry is now populated — mount /mcp if the gate is on.

@@ -40,10 +40,12 @@ import binascii
 import contextlib
 import hmac
 import logging
-from typing import Any
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
@@ -53,6 +55,9 @@ from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.routes_v5 import build_router
 from glances.security_v5 import JWTHandler, verify_password
 from glances.stats_store_v5 import StatsStoreV5
+
+if TYPE_CHECKING:
+    import argparse
 
 logger = logging.getLogger(__name__)
 
@@ -76,12 +81,21 @@ _DEFAULT_USERNAME = "glances"
 # Default JWT token lifetime in minutes — matches v4.
 _DEFAULT_JWT_EXPIRE_MINUTES = 60
 
+# WebUI assets. `public/` holds the webpack output and is committed; the
+# templates directory holds the root documents. Both are package data, not
+# user-writable paths -- a UI served from a config-specified directory would
+# be an arbitrary-file-read surface.
+_WEBUI_ROOT = Path(__file__).parent / "outputs" / "static"
+_STATIC_PATH = _WEBUI_ROOT / "public"
+_TEMPLATE_PATH = _WEBUI_ROOT / "templates"
+
 
 def build_app(
     *,
     config: GlancesConfigV5,
     store: StatsStoreV5,
     alerts: GlancesAlerts | None = None,
+    args: argparse.Namespace | None = None,
 ) -> FastAPI:
     """Build the v5 FastAPI app with security middlewares wired in.
 
@@ -90,8 +104,8 @@ def build_app(
     - serves Swagger UI at ``/docs`` and ReDoc at ``/redoc`` unless
       ``[outputs] api_doc=false``
     - applies, from outer to inner: TrustedHost → CORS → Auth
-    - exposes ``config``, ``store``, ``alerts``, ``jwt_handler`` via
-      ``app.state``
+    - exposes ``config``, ``store``, ``alerts``, ``args``, ``jwt_handler``
+      via ``app.state``
 
     The scheduler is *not* started here — Phase 1.7 wires that into the CLI
     entrypoint. Routes for ``/api/5/<plugin>`` and ``/api/5/alert`` land in
@@ -113,6 +127,7 @@ def build_app(
     app.state.config = config
     app.state.store = store
     app.state.alerts = alerts
+    app.state.args = args
     app.state.jwt_handler = None  # set by _wire_auth() when password is configured
     # Populated by ``register_plugin(app, plugin)`` — used by /pluginslist
     # and /<plugin>/info. Routes that only need the store payload do not
@@ -126,6 +141,9 @@ def build_app(
 
     _register_health_endpoints(app)
     app.include_router(build_router())
+
+    if args is not None and not getattr(args, "disable_webui", False):
+        _wire_webui(app)
 
     if not _auth_is_configured(config):
         logger.warning(
@@ -223,6 +241,47 @@ def attach_mcp(
         "See docs/architecture/glances-v5-architecture-decisions.md §11."
     )
     return True
+
+
+# ---------------------------------------------------------- WebUI
+
+
+def _wire_webui(app: FastAPI) -> None:
+    """Mount the WebUI assets and the root document.
+
+    No route-collision guard is needed: the v5 router carries
+    ``prefix="/api/5"``, so its dynamic ``/{plugin_name}`` handler lives at
+    ``/api/5/{plugin_name}`` and cannot capture ``/`` or ``/static/*``. This
+    differs from v4, where the same handler sits nearer the root.
+
+    Both surfaces inherit the existing middleware stack unchanged:
+    TrustedHost (outermost, so it sees every route) and Auth (``/`` is not in
+    ``UNAUTH_PATHS``, so a configured password protects the UI as it does in
+    v4). Nothing security-related is added here, and nothing may be bypassed.
+
+    No Jinja2: v4 templates its index only to interpolate ``url_prefix`` and
+    ``refresh_time``. v5 has no ``url_prefix``, and the refresh rate is
+    already reachable as ``[global] refresh`` through ``/api/5/config``.
+    """
+    index = _TEMPLATE_PATH / "index_v5.html"
+    if not _STATIC_PATH.is_dir() or not index.is_file():
+        # Source checkout with no build, or a trimmed package. The REST API
+        # must still come up: a missing UI is not a reason to refuse to serve
+        # stats. Warn loudly enough to be actionable.
+        logger.warning(
+            "WebUI assets not found (%s). Serving the REST API only — run `npm run build` in %s.",
+            _STATIC_PATH,
+            _WEBUI_ROOT,
+        )
+        return
+
+    app.mount("/static", StaticFiles(directory=_STATIC_PATH), name="static")
+
+    @app.get("/", response_class=FileResponse, include_in_schema=False)
+    async def index_page() -> FileResponse:
+        return FileResponse(index, media_type="text/html")
+
+    logger.info("Glances Web User Interface enabled at /")
 
 
 # ---------------------------------------------------------- middlewares
