@@ -3,7 +3,7 @@
 Sensors
 =======
 
-*Availability: Linux*
+*Availability: Linux, Windows (temperatures, through LibreHardwareMonitor)*
 
 .. image:: ../_static/sensors.png
 
@@ -12,6 +12,21 @@ Glances can display the sensors information using ``psutil``,
 - motherboard and CPU temperatures
 - hard disk temperature
 - battery capacity
+
+On Windows, ``psutil`` does not provide temperatures. Glances can grab
+them from the `LibreHardwareMonitor
+<https://github.com/LibreHardwareMonitor/LibreHardwareMonitor>`_ web
+server instead. Run LibreHardwareMonitor, enable the *Remote Web Server*
+option (default port 8085) and (re)start Glances. The web server address
+can be changed in the configuration file under the
+``[librehardwaremonitor]`` section:
+
+.. code-block:: ini
+
+    [librehardwaremonitor]
+    # Define LibreHardwareMonitor web server IP and port (default is 127.0.0.1 and 8085 (TCP))
+    host=127.0.0.1
+    port=8085
 
 Limit values and sensors alias names can be defined in the configuration
 file under the ``[sensors]`` section.
