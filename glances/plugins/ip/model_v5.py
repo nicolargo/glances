@@ -9,12 +9,13 @@
 """Glances v5 — ip plugin (scalar private + public IP).
 
 Migrated from `glances/plugins/ip/__init__.py`. The private IP is grabbed
-via `get_ip_address()` (psutil, first up non-`lo` AF_INET interface). The
-public IP is fetched by an **in-model cadenced** call (replacing v4's
-standalone `threading.Thread`): every `public_refresh_interval` seconds a
-GUARDED fetch runs in `asyncio.to_thread`; between refreshes the cached
-value is reused. `gateway` is declared in the schema but never populated
-(v4 parity). SNMP input is dropped (architecture §10).
+via `get_ip_address()` (source address of the default route, falling back
+to the psutil interface scan -- see #3465). The public IP is fetched by an
+**in-model cadenced** call (replacing v4's standalone `threading.Thread`):
+every `public_refresh_interval` seconds a GUARDED fetch runs in
+`asyncio.to_thread`; between refreshes the cached value is reused.
+`gateway` is declared in the schema but never populated (v4 parity). SNMP
+input is dropped (architecture §10).
 
 CVE-2026-35587 SSRF mitigation is enforced by `_public_api_allowed`
 (scheme allowlist + DNS-resolved internal-IP rejection); credentials are
