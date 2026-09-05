@@ -38,7 +38,8 @@ export default {
 			return (Array.isArray(this.stats) ? this.stats : []).map((data) => {
 				const name = data.DeviceName;
 				const details = Object.entries(data)
-					.filter(([key]) => key !== "DeviceName")
+					// 'key' holds the name of the identifier field, not an attribute (see #3704)
+					.filter(([key]) => !["DeviceName", "key"].includes(key))
 					.sort(([, a], [, b]) =>
 						a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
 					)
