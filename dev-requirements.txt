@@ -23,6 +23,8 @@ attrs==26.1.0
     #   trio
 babel==2.18.0
     # via sphinx
+backports-asyncio-runner==1.2.0 ; python_full_version < '3.11'
+    # via pytest-asyncio
 boltons==21.0.0
     # via
     #   face
@@ -271,6 +273,8 @@ pyright==1.1.411
 pysocks==1.7.1
     # via urllib3
 pytest==9.1.1
+    # via pytest-asyncio
+pytest-asyncio==1.4.0
 python-dateutil==2.9.0.post0
     # via matplotlib
 python-debian==1.1.1
@@ -405,6 +409,7 @@ typing-extensions==4.16.0
     #   pydantic-core
     #   pyjwt
     #   pyright
+    #   pytest-asyncio
     #   referencing
     #   selenium
     #   semgrep
