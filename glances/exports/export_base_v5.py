@@ -262,9 +262,19 @@ class GlancesExportBase(ABC):
                 }
             else:
                 fields = data_dict
+            # A field with no value is not a measurement. v4 never met this
+            # case -- its rate fields were DELETED on the first cycle; v5 keeps
+            # them present with the value None, and roughly 46 optional fields
+            # (unset thresholds, GPU sensors the hardware does not report, AMP
+            # count bounds) stay None for the whole run. All three client
+            # libraries skip a None field at serialisation anyway, but InfluxDB
+            # 1.x then emits a tags-only line with no field at all, which the
+            # server rejects and which costs that plugin its whole cycle. Drop
+            # them here so the three exporters behave identically.
+            fields = {k: v for k, v in fields.items() if v is not None}
+            if not fields:
+                continue
             for k in fields:
-                if fields[k] is None:
-                    continue
                 try:
                     fields[k] = float(fields[k])
                 except (TypeError, ValueError):

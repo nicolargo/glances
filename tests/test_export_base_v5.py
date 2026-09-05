@@ -434,3 +434,81 @@ async def test_update_output_carries_stats_limits_and_key():
     assert row["eth0.rx"] == 10
     assert row["eth0.key"] == "name"
     assert row["eth0.fakecollection_rx_careful"] == 60.0
+
+
+# ------------------------------------------------------- normalize_for_influxdb
+
+
+def make_influx_exporter() -> FakeExport:
+    """A FakeExport with the two attributes normalize_for_influxdb() reads."""
+    exporter = FakeExport(make_config({}), args=None)
+    exporter.tags = "src:glances"
+    exporter.hostname = "testhost"
+    return exporter
+
+
+def test_normalize_for_influxdb_builds_one_measurement_for_a_scalar_plugin():
+    exporter = make_influx_exporter()
+
+    ret = exporter.normalize_for_influxdb("cpu", ["total", "user"], [15.7, 4.2])
+
+    assert ret == [
+        {
+            "measurement": "cpu",
+            "tags": {"src": "glances", "hostname": "testhost"},
+            "fields": {"total": 15.7, "user": 4.2},
+        }
+    ]
+
+
+def test_normalize_for_influxdb_splits_a_collection_on_the_key_column():
+    """issue1871 -- a `<x>.key` column marks `<x>` as a measurement identity."""
+    exporter = make_influx_exporter()
+
+    ret = exporter.normalize_for_influxdb(
+        "network",
+        ["eth0.key", "eth0.interface_name", "eth0.rx", "lo.key", "lo.interface_name", "lo.rx"],
+        ["interface_name", "eth0", 10, "interface_name", "lo", 20],
+    )
+
+    assert [m["tags"]["interface_name"] for m in ret] == ["eth0", "lo"]
+    assert [m["fields"]["rx"] for m in ret] == [10.0, 20.0]
+    # The field NAMED by `key` becomes a tag and is popped; `key` itself stays
+    # a field, carrying the name of that column. Surprising, but iso-v4
+    # (glances/exports/export.py:221-226) -- dashboards may select on it.
+    assert [m["fields"]["key"] for m in ret] == ["interface_name", "interface_name"]
+    assert all("interface_name" not in m["fields"] for m in ret)
+
+
+def test_normalize_for_influxdb_drops_fields_left_at_none():
+    """v5 keeps a rate field present with the value None on the first cycle,
+    and roughly 46 optional fields (unset thresholds, unreported GPU sensors)
+    stay None for the whole run. A field with no value is not a measurement."""
+    exporter = make_influx_exporter()
+
+    ret = exporter.normalize_for_influxdb("network", ["speed", "bytes_recv"], [1000.0, None])
+
+    assert ret[0]["fields"] == {"speed": 1000.0}
+    assert "bytes_recv" not in ret[0]["fields"]
+
+
+def test_normalize_for_influxdb_skips_a_measurement_with_no_field_left():
+    """InfluxDB 1.x serialises a field-less point as a tags-only line, which
+    the server rejects -- costing that plugin its whole cycle. 2.x and 3.x
+    serialise it to an empty string. Neither is useful: skip it here."""
+    exporter = make_influx_exporter()
+
+    ret = exporter.normalize_for_influxdb("gpu", ["fan_speed", "temperature"], [None, None])
+
+    assert ret == []
+
+
+def test_normalize_for_influxdb_does_not_mutate_the_caller_s_values():
+    """The `measurement is None` branch used to alias `data_dict` and convert
+    in place. Nothing depends on that today, but the aliasing is a trap."""
+    exporter = make_influx_exporter()
+    points = [15.7, None]
+
+    exporter.normalize_for_influxdb("cpu", ["total", "idle"], points)
+
+    assert points == [15.7, None]
