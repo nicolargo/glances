@@ -419,6 +419,7 @@ class TestGlances(unittest.TestCase):
         # An index past the end is skipped rather than raising IndexError.
         plugin.stats = [{'io_counters': [1, 2]}]
         self.assertEqual(plugin._sum_stats('io_counters', 4), 0)
+
     def test_010b_processes_nice_windows_labels(self):
         """Check the Windows priority-class labels in the NI column (issue #3672)."""
         print('INFO: [TEST_010b] Check nice display on Windows')
