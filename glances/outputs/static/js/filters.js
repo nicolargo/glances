@@ -54,8 +54,15 @@ export function bytes(bytes, low_precision) {
 	return bytes.toFixed(0);
 }
 
+// `null` and not just `undefined`: the API sends JSON, and a process whose value
+// the OS will not report arrives as `null`. Vue renders `null` as an empty
+// string, so those rows showed a blank cell while the TUI showed `?` for the
+// same process.
+//
+// Explicit comparisons rather than a falsy test: `0` is a real nice value on
+// every POSIX system and must render as `0`, not `?`.
 export function exclamation(input) {
-	if (input === undefined || input === "") {
+	if (input === undefined || input === null || input === "") {
 		return "?";
 	}
 	return input;

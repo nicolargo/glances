@@ -143,16 +143,26 @@ class WifiPlugin(GlancesPluginModel):
 
         :returns: string -- Signal alert
         """
-        ret = 'OK'
+        critical = self.get_limit('critical', stat_name=self.plugin_name)
+        warning = self.get_limit('warning', stat_name=self.plugin_name)
+        careful = self.get_limit('careful', stat_name=self.plugin_name)
+
+        # Each threshold is tested on its own. Chaining them meant the first
+        # undefined level raised TypeError against None and dropped the whole
+        # result to DEFAULT, so a config setting only 'careful' lost its alert
+        # entirely. GlancesPluginModel.get_alert already guards each level this
+        # way; `is not None` is used here because these limits are negative dBm
+        # values, where a plain truthiness test would discard a 0 threshold.
+        ret = 'DEFAULT' if critical is None and warning is None and careful is None else 'OK'
         try:
-            if value <= self.get_limit('critical', stat_name=self.plugin_name):
+            if critical is not None and value <= critical:
                 ret = 'CRITICAL'
-            elif value <= self.get_limit('warning', stat_name=self.plugin_name):
+            elif warning is not None and value <= warning:
                 ret = 'WARNING'
-            elif value <= self.get_limit('careful', stat_name=self.plugin_name):
+            elif careful is not None and value <= careful:
                 ret = 'CAREFUL'
-        except (TypeError, KeyError):
-            # Catch TypeError for issue1373
+        except TypeError:
+            # A non-numeric signal level (issue #1373) is not comparable at all.
             ret = 'DEFAULT'
 
         return ret

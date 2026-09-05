@@ -17,6 +17,7 @@ import base64
 import errno
 import functools
 import importlib
+import ipaddress
 import multiprocessing
 import os
 import platform
@@ -470,9 +471,9 @@ def auto_unit(number, low_precision=False, min_symbol='K', none_symbol='-'):
         value = float(number) / prefix[symbol]
         if value > 1:
             decimal_precision = 0
-            if value < 10:
+            if value <= 9.995:
                 decimal_precision = 2
-            elif value < 100:
+            elif value < 99.95:
                 decimal_precision = 1
             if low_precision:
                 if symbol in 'MK':
@@ -744,14 +745,50 @@ def split_esc(input_string, sep=None, maxsplit=-1, esc='\\'):
 
 
 def get_ip_address(ipv6=False):
-    """Get current IP address and netmask as a tuple."""
+    """Get current IP address and netmask as a tuple.
+
+    The address the OS routing table selects for default-route traffic is
+    preferred, so that virtual bridge interfaces (docker0, vmnet...) cannot
+    shadow the real one (see #3465). If no default route is available, fall
+    back to the first up, non-loopback interface carrying an address of the
+    requested family.
+    """
     family = socket.AF_INET6 if ipv6 else socket.AF_INET
 
-    # Get IP address
-    stats = psutil.net_if_stats()
     addrs = psutil.net_if_addrs()
 
+    # Ask the kernel which source address it would use for default-route
+    # traffic. connect() on a SOCK_DGRAM socket sends no packet: it only
+    # resolves the route, honouring metrics, policy routing and per-route
+    # source hints. The probe address is from the documentation range
+    # (RFC 5737 / RFC 3849) and is never actually contacted.
     ip_address = None
+    try:
+        with socket.socket(family, socket.SOCK_DGRAM) as sock:
+            sock.connect(('2001:db8::1' if ipv6 else '192.0.2.1', 53))
+            candidate = sock.getsockname()[0]
+        # On hosts that locally blackhole documentation/bogon ranges via the
+        # loopback, the probe can resolve to a loopback source: only trust a
+        # real, routable address (also protects the zeroconf bind address in
+        # servers_list_dynamic.py from ever becoming 127.0.0.1).
+        parsed = ipaddress.ip_address(candidate.split('%')[0])
+        if not (parsed.is_loopback or parsed.is_unspecified):
+            ip_address = candidate
+    except (OSError, ValueError):
+        # No default route for this family: fall back to interface scan
+        ip_address = None
+
+    if ip_address:
+        for interface_addrs in addrs.values():
+            for addr in interface_addrs:
+                if addr.family == family and addr.address.split('%')[0] == ip_address.split('%')[0]:
+                    return ip_address, addr.netmask
+        # Routed address not listed by psutil: still correct, just no netmask
+        # (ip_to_cidr() in the IP plugin handles a None netmask, see #1528)
+        return ip_address, None
+
+    # Fallback: first up, non-loopback interface with an address of the family
+    stats = psutil.net_if_stats()
     ip_netmask = None
     for interface, stat in stats.items():
         if stat.isup and interface != 'lo':
@@ -761,6 +798,8 @@ def get_ip_address(ipv6=False):
                         ip_address = addr.address
                         ip_netmask = addr.netmask
                         break
+            if ip_address:
+                break
 
     return ip_address, ip_netmask
 

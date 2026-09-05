@@ -10,6 +10,7 @@
 """Tests for the FileSystem plugin."""
 
 import json
+from types import SimpleNamespace
 
 import pytest
 
@@ -256,18 +257,21 @@ class TestFsPluginMsgCurse:
     def test_msg_curse_returns_list(self, fs_plugin):
         """Test that msg_curse returns a list."""
         fs_plugin.update()
+        fs_plugin.update_views()
         msg = fs_plugin.msg_curse(max_width=80)
         assert isinstance(msg, list)
 
     def test_msg_curse_empty_without_max_width(self, fs_plugin):
         """Test that msg_curse returns empty without max_width."""
         fs_plugin.update()
+        fs_plugin.update_views()
         msg = fs_plugin.msg_curse()
         assert isinstance(msg, list)
 
     def test_msg_curse_with_max_width(self, fs_plugin):
         """Test that msg_curse works with max_width."""
         fs_plugin.update()
+        fs_plugin.update_views()
         msg = fs_plugin.msg_curse(max_width=80)
         assert isinstance(msg, list)
 
@@ -297,6 +301,21 @@ class TestFsPluginAlias:
         for fs in stats:
             if 'alias' in fs:
                 assert fs['alias'] is None or isinstance(fs['alias'], str)
+
+    def test_alias_matches_mixed_case_mount_point(self, fs_plugin, monkeypatch):
+        """Test that aliases match mount points even when the path contains uppercase characters."""
+        partition = SimpleNamespace(device='/dev/disk7s1', mountpoint='/Volumes/SSD', fstype='apfs', opts='rw')
+        usage = SimpleNamespace(total=100, used=20, free=80, percent=20.0)
+
+        monkeypatch.setattr(fs_plugin, 'get_disk_partitions', lambda fetch_all=False: [partition])
+        monkeypatch.setattr('glances.plugins.fs.get_disk_usage', lambda fs: usage)
+
+        fs_plugin._limits['fs_alias'] = ['/Volumes/SSD:SSD']
+        fs_plugin.alias = fs_plugin.read_alias()
+
+        stats = fs_plugin.update_local()
+
+        assert stats[0]['alias'] == 'SSD'
 
 
 class TestFsPluginDiskPartitions:

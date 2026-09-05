@@ -4,39 +4,40 @@
 		"@fontsource/jetbrains-mono": "^5.2.8",
 		"bootstrap": "^5.3.8",
 		"favico.js": "^0.3.10",
-		"hotkeys-js": "^4.0.3",
+		"hotkeys-js": "^4.0.7",
 		"lodash": "^4.18.1",
-		"sanitize-html": "^2.17.3",
-		"vue": "^3.5.13"
+		"sanitize-html": "^2.17.7",
+		"vue": "^3.5.42"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
 		"@vue/compiler-sfc": "^3.5.13",
 		"copy-webpack-plugin": "^14.0.0",
-		"css-loader": "^7.1.4",
+		"css-loader": "^7.1.5",
 		"del": "^8.0.1",
-		"eslint": "^10.2.1",
+		"eslint": "^10.10.0",
 		"eslint-config-prettier": "^10.1.8",
-		"eslint-plugin-vue": "^10.8.0",
-		"globals": "^17.5.0",
-		"html-webpack-plugin": "^5.6.7",
-		"less": "^4.6.4",
-		"less-loader": "^12.3.2",
-		"sass": "^1.99.0",
-		"sass-loader": "^16.0.7",
+		"eslint-plugin-vue": "^10.10.0",
+		"globals": "^17.12.0",
+		"html-webpack-plugin": "^5.6.8",
+		"less": "^4.9.1",
+		"less-loader": "^12.3.3",
+		"sass": "^1.104.0",
+		"sass-loader": "^16.0.8",
 		"style-loader": "^4.0.0",
-		"typescript-eslint": "^8.59.0",
+		"terser-webpack-plugin": "^5.6.1",
+		"typescript-eslint": "^8.69.0",
 		"vue-loader": "^17.4.2",
-		"webpack": "^5.106.2",
-		"webpack-cli": "^7.0.2",
-		"webpack-dev-server": "^5.2.3"
+		"webpack": "^5.110.3",
+		"webpack-cli": "^7.2.3",
+		"webpack-dev-server": "^5.2.6"
 	},
 	"overrides": {
 		"eslint": {
-			"ajv": "8.18.0"
+			"ajv": "^6.12.6"
 		},
 		"minimatch": "10.2.4",
-		"serialize-javascript": "7.0.3",
+		"serialize-javascript": "7.0.5",
 		"@typescript-eslint/typescript-estree": {
 			"minimatch": "10.2.4"
 		}

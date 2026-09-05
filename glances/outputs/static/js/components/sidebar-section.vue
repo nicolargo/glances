@@ -216,17 +216,21 @@ export default {
 			return ports.map((p, i) => {
 				let display, deco;
 				if (p.port != null) {
-					// TCP port — status is RTT in seconds, convert to ms
+					// TCP port — the API sends null while scanning, false on timeout,
+					// true when the port is open but no RTT was measured, and the RTT
+					// in seconds otherwise. Anything else would render as "1000ms".
 					if (p.status === null) { deco = 'careful'; display = '?'; }
 					else if (p.status === false) { deco = 'critical'; display = 'Timeout'; }
+					else if (p.status === true) { deco = 'ok'; display = 'Open'; }
 					else if (p.rtt_warning && p.status > p.rtt_warning) { deco = 'warning'; display = (p.status * 1000).toFixed(0) + 'ms'; }
 					else { deco = 'ok'; display = (p.status * 1000).toFixed(0) + 'ms'; }
 				} else if (p.url != null) {
 					// Web URL
 					if (p.status === null) { deco = 'careful'; display = '?'; }
-					else if (![200, 301, 302].includes(p.status)) { deco = 'critical'; display = p.status; }
+					else if (typeof p.status !== 'number') { deco = 'critical'; display = p.status; }
+					else if (![200, 301, 302].includes(p.status)) { deco = 'critical'; display = 'Code ' + p.status; }
 					else if (p.rtt_warning && p.elapsed > p.rtt_warning) { deco = 'warning'; display = p.elapsed?.toFixed(0) + 'ms'; }
-					else { deco = 'ok'; display = p.status; }
+					else { deco = 'ok'; display = 'Code ' + p.status; }
 				} else {
 					return null;
 				}

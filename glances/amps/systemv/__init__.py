@@ -57,7 +57,7 @@ class Amp(GlancesAmp):
         logger.debug('{}: Update stats using service {}'.format(self.NAME, self.get('service_cmd')))
         try:
             # res = check_output(self.get('service_cmd').split(), stderr=STDOUT).decode('utf-8')
-            res = secure_popen(self.get('service_cmd'))
+            res = secure_popen(self.get('service_cmd'), allow_operators=self.allow_operators())
         except Exception as e:
             logger.debug(f'{self.NAME}: Error while executing service ({e})')
         else:

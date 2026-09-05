@@ -384,6 +384,117 @@ class TestGlances(unittest.TestCase):
 
         print('INFO: cpu_num display formatting tests passed')
 
+    def test_010c_processlist_sum_stats_indexes_lists(self):
+        """The filtered process-list IO totals summed almost nothing.
+
+        `_sum_stats('io_counters', 0)` means "index 0 of the counters list", but the
+        guard was `sub_key in p[key]` -- a value-membership test on a list. A process
+        doing real IO was skipped, and one whose counters happened to contain the
+        literal 0/1/2/3 was summed instead, so the R/s and W/s row was not merely
+        zero but arbitrary. The VIRT/RES totals beside it were right because
+        `memory_info` is a mapping.
+        """
+        print('INFO: [TEST_010c] Check processlist sum of IO counters')
+        from glances.plugins.processlist import ProcesslistPlugin
+
+        plugin = ProcesslistPlugin.__new__(ProcesslistPlugin)
+        # io_counters is [read, write, read_old, write_old, io_tag].
+        plugin.stats = [
+            {'io_counters': [5000, 700, 2000, 300, 1], 'memory_info': {'rss': 10, 'vms': 20}},
+            {'io_counters': [3000, 400, 1000, 200, 1], 'memory_info': {'rss': 30, 'vms': 40}},
+        ]
+
+        self.assertEqual(plugin._sum_stats('io_counters', 0), 8000)
+        self.assertEqual(plugin._sum_stats('io_counters', sub_key=1), 1100)
+        self.assertEqual(plugin._sum_stats('io_counters', sub_key=2), 3000)
+        self.assertEqual(plugin._sum_stats('io_counters', sub_key=3), 500)
+        # A mapping sub_key must keep working unchanged.
+        self.assertEqual(plugin._sum_stats('memory_info', sub_key='rss'), 40)
+        self.assertEqual(plugin._sum_stats('memory_info', sub_key='absent'), 0)
+
+        # The counters list holding the literal index must no longer be what decides.
+        plugin.stats = [{'io_counters': [5000, 700, 0, 300, 1]}]
+        self.assertEqual(plugin._sum_stats('io_counters', 0), 5000)
+
+        # An index past the end is skipped rather than raising IndexError.
+        plugin.stats = [{'io_counters': [1, 2]}]
+        self.assertEqual(plugin._sum_stats('io_counters', 4), 0)
+    def test_010b_processes_nice_windows_labels(self):
+        """Check the Windows priority-class labels in the NI column (issue #3672)."""
+        print('INFO: [TEST_010b] Check nice display on Windows')
+        from unittest.mock import Mock, patch
+
+        from glances.plugins import processlist as processlist_module
+        from glances.plugins.processlist import ProcesslistPlugin, display_nice
+
+        # psutil reports these six Win32 priority classes; asserted against the constants
+        # rather than repeating the numbers, so a psutil change fails here instead of
+        # silently rendering a raw value again.
+        if WINDOWS:
+            import psutil
+
+            self.assertEqual(
+                {
+                    psutil.REALTIME_PRIORITY_CLASS: 'RT',
+                    psutil.HIGH_PRIORITY_CLASS: 'Hi',
+                    psutil.ABOVE_NORMAL_PRIORITY_CLASS: 'AN',
+                    psutil.NORMAL_PRIORITY_CLASS: 'No',
+                    psutil.BELOW_NORMAL_PRIORITY_CLASS: 'BN',
+                    psutil.IDLE_PRIORITY_CLASS: 'Lo',
+                },
+                processlist_module.WINDOWS_NICE_LABELS,
+            )
+
+        # display_nice is platform-gated, so both branches are exercised on every OS.
+        with patch.object(processlist_module, 'WINDOWS', True):
+            for value, expected in (
+                (256, 'RT'),
+                (128, 'Hi'),
+                (32768, 'AN'),
+                (32, 'No'),
+                (16384, 'BN'),
+                (64, 'Lo'),
+            ):
+                self.assertEqual(display_nice(value), expected)
+            # An unmapped class stays visible as a number rather than disappearing.
+            self.assertEqual(display_nice(99), 99)
+            self.assertEqual(display_nice('?'), '?')
+
+        with patch.object(processlist_module, 'WINDOWS', False):
+            # POSIX nice values are already meaningful and must not be relabelled, and 32
+            # is an ordinary nice value there rather than NORMAL_PRIORITY_CLASS.
+            self.assertEqual(display_nice(0), 0)
+            self.assertEqual(display_nice(-20), -20)
+            self.assertEqual(display_nice(32), 32)
+
+        plugin = ProcesslistPlugin()
+        args = Mock()
+
+        with patch.object(processlist_module, 'WINDOWS', True):
+            result = plugin._get_process_curses_nice({'nice': 32768}, False, args)
+            self.assertEqual(result.get('msg'), ' AN ')
+
+        with patch.object(processlist_module, 'WINDOWS', False):
+            result = plugin._get_process_curses_nice({'nice': 0}, False, args)
+            self.assertEqual(result.get('msg'), '  0 ')
+
+        # The label is display-only: get_nice_alert still receives the raw value, because
+        # the nice_* limits in glances.conf are POSIX numbers that no label can match.
+        with (
+            patch.object(processlist_module, 'WINDOWS', True),
+            patch.object(ProcesslistPlugin, 'get_nice_alert', return_value='DEFAULT') as alert,
+        ):
+            plugin._get_process_curses_nice({'nice': 32768}, False, args)
+            alert.assert_called_once_with(32768)
+
+        # None and a missing key keep rendering '?' on both platforms.
+        for windows in (True, False):
+            with patch.object(processlist_module, 'WINDOWS', windows):
+                self.assertEqual(plugin._get_process_curses_nice({'nice': None}, False, args).get('msg'), '  ? ')
+                self.assertEqual(plugin._get_process_curses_nice({}, False, args).get('msg'), '  ? ')
+
+        print('INFO: nice display formatting tests passed')
+
     def test_011_folders(self):
         """Check File System plugin."""
         # stats_to_check = [ ]
@@ -471,7 +582,7 @@ class TestGlances(unittest.TestCase):
         if not is_admin():
             print("INFO: Not admin, SMART list should be empty")
             assert len(stats_grab) == 0
-        elif stats_grab == {}:
+        elif stats_grab == []:
             print("INFO: Admin but SMART list is empty")
             assert len(stats_grab) == 0
         else:
@@ -568,6 +679,26 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(gf.is_filtered({'username': 'nicolargo'}))
         self.assertFalse(gf.is_filtered({'username': 'notme'}))
         self.assertFalse(gf.is_filtered({'notuser': 'nicolargo'}))
+        # The regex may itself contain a colon: a Windows path is the common case,
+        # and every absolute one has a drive colon. Splitting on every colon kept only
+        # the fragment before the second one -- and silently, because that fragment
+        # usually still compiles, so the filter matched nothing and reported nothing.
+        gf.filter = 'cmdline:C:/Program Files/.*'
+        self.assertEqual(gf.filter, 'C:/Program Files/.*')
+        self.assertEqual(gf.filter_key, 'cmdline')
+        self.assertTrue(gf.is_filtered({'cmdline': 'C:/Program Files/app.exe'}))
+        self.assertFalse(gf.is_filtered({'cmdline': 'D:/Other/app.exe'}))
+        # Same shape without a path, so the case is not Windows-only.
+        gf.filter = 'name:foo:bar'
+        self.assertEqual(gf.filter, 'foo:bar')
+        self.assertEqual(gf.filter_key, 'name')
+        self.assertTrue(gf.is_filtered({'name': 'foo:bar'}))
+        # A backslash is a regex escape, not a separator escape: `split_esc` would
+        # strip it and mangle the pattern, which is why plain maxsplit is the right
+        # tool here.
+        gf.filter = r'cmdline:C:\\Windows\\.*'
+        self.assertEqual(gf.filter, r'C:\\Windows\\.*')
+        self.assertTrue(gf.is_filtered({'cmdline': r'C:\Windows\system32'}))
         gfl = GlancesFilterList()
         gfl.filter = '.*python.*,username:nicolargo'
         self.assertTrue(gfl.is_filtered({'name': 'python is in the place'}))
@@ -779,6 +910,30 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(auto_unit(1073741824, low_precision=True), '1024M')
         self.assertEqual(auto_unit(1181116006), '1.10G')
         self.assertEqual(auto_unit(1181116006, low_precision=True), '1.1G')
+        # Edge cases:
+        m = 2**20
+        g = 2**30
+        self.assertEqual(auto_unit(9.9 * m), '9.90M')
+        self.assertEqual(auto_unit(9.99 * m), '9.99M')
+        self.assertEqual(auto_unit(9.991 * m), '9.99M')
+        self.assertEqual(auto_unit(9.994 * m), '9.99M')
+        self.assertEqual(auto_unit(9.995 * m), '9.99M')
+        self.assertEqual(auto_unit(10 * m), '10.0M')
+        self.assertEqual(auto_unit(99 * m), '99.0M')
+        self.assertEqual(auto_unit(99.9 * m), '99.9M')
+        self.assertEqual(auto_unit(99.91 * m), '99.9M')
+        self.assertEqual(auto_unit(99.94 * m), '99.9M')
+        self.assertEqual(auto_unit(100 * m), '100M')
+        # Special cases that used to overflow and misalign columns
+        self.assertEqual(auto_unit(9.996 * m), '10.0M')  # was 10.00M
+        self.assertEqual(auto_unit(9.999 * m), '10.0M')  # was 10.00M
+        self.assertEqual(auto_unit(99.95 * m), '100M')  # was 100.0M
+        self.assertEqual(auto_unit(99.96 * m), '100M')  # was 100.0M
+        self.assertEqual(auto_unit(99.99 * m), '100M')  # was 100.0M
+        self.assertEqual(auto_unit(10 * m - 1), '10.0M')  # was 10.00M
+        self.assertEqual(auto_unit(100 * m - 1), '100M')  # was 100.0M
+        self.assertEqual(auto_unit(10 * g - 1), '10.0G')  # was 10.00G
+        self.assertEqual(auto_unit(100 * g - 1), '100G')  # was 100.0G
 
     def test_094_thresholds(self):
         """Test thresholds classes"""

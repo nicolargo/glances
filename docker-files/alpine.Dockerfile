@@ -9,26 +9,29 @@
 # WARNING: the Alpine image version and Python version should be set.
 # Alpine 3.18 tag is a link to the latest 3.18.x version.
 # Be aware that if you change the Alpine version, you may have to change the Python version.
-ARG IMAGE_VERSION=3.23
-ARG PYTHON_VERSION=3.12
+ARG IMAGE_VERSION=3.24
+ARG PYTHON_VERSION=3.14
 
 ##############################################################################
 # Base layer to be used for building dependencies and the release images
 FROM alpine:${IMAGE_VERSION} AS base
 
+RUN <<EOR
+set -e
+
 # Upgrade the system
-RUN apk update \
-  && apk upgrade --no-cache
+apk update
+apk upgrade --no-cache
 
 # Install the minimal set of packages
-RUN apk add --no-cache \
+apk add --no-cache \
   python3 \
   curl \
   lm-sensors \
-  wireless-tools \
   smartmontools \
   iputils \
   tzdata
+EOR
 
 ##############################################################################
 # BUILD Stages

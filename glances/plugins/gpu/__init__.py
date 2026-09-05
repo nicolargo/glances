@@ -21,6 +21,7 @@ Quick test:
 - In a terminal: vblank_mode=0 glxgears
 """
 
+import glances.gpu_percent as gpu_avg_stats
 from glances.globals import to_fahrenheit
 from glances.logger import logger
 from glances.plugins.gpu.cards.amd import AmdGPU
@@ -193,6 +194,17 @@ class GpuPlugin(GlancesPluginModel):
         #         "fan_speed": 75,
         #     },
         # ]
+        if gpu_avg_stats.get_gpu_mem:
+            avg_mem = self._get_mean("mem")
+            if avg_mem is None:
+                avg_mem = 0
+            gpu_avg_stats.gpu_mem = avg_mem
+
+        if gpu_avg_stats.get_gpu_proc:
+            avg_proc = self._get_mean("proc")
+            if avg_proc is None:
+                avg_proc = 0
+            gpu_avg_stats.gpu_proc = avg_proc
 
         # Update the stats
         self.stats = stats
@@ -307,26 +319,21 @@ class GpuPlugin(GlancesPluginModel):
             ret.append(self.curse_new_line())
             # id_msg = '{:7}'.format(gpu_stats['gpu_id'])
             id_msg = '{:7}'.format(gpu_stats['name'][0:9])
-            msg = f'{id_msg}'
-            ret.append(self.curse_add_line(msg))
-            if gpu_stats.get('proc') is not None:
-                proc_msg = self._format_value(gpu_stats.get('proc'))
-                msg = f' {proc_msg}'
-                ret.append(
-                    self.curse_add_line(
-                        msg,
-                        self.get_views(item=gpu_stats[self.get_key()], key='proc', option='decoration'),
-                    )
+            ret.append(self.curse_add_line(f'{id_msg}'))
+            # Each metric is a standalone segment: it carries its own decoration and must not
+            # re-emit the previous one. An unavailable sensor is displayed as N/A, not hidden.
+            ret.append(
+                self.curse_add_line(
+                    f" {self._format_value(gpu_stats.get('proc'))}",
+                    self.get_views(item=gpu_stats[self.get_key()], key='proc', option='decoration'),
                 )
-            if gpu_stats.get('mem') is not None:
-                mem_msg = self._format_value(gpu_stats.get('mem'))
-                msg += f' mem {mem_msg}'
-                ret.append(
-                    self.curse_add_line(
-                        msg,
-                        self.get_views(item=gpu_stats[self.get_key()], key='mem', option='decoration'),
-                    )
+            )
+            ret.append(
+                self.curse_add_line(
+                    f" mem {self._format_value(gpu_stats.get('mem'))}",
+                    self.get_views(item=gpu_stats[self.get_key()], key='mem', option='decoration'),
                 )
+            )
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""

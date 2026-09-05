@@ -17,6 +17,7 @@ from typing import Annotated, Any
 from urllib.parse import urljoin
 
 from glances import __apiversion__, __version__
+from glances.config import secure_option
 from glances.events_list import glances_events
 from glances.globals import json_dumps
 from glances.logger import logger
@@ -295,7 +296,11 @@ class GlancesRestfulApi:
 
         # Reject the insecure wildcard + credentials combination,
         # even if the user explicitly sets cors_credentials=True in their config.
-        if cors_origins == ["*"] and cors_credentials:
+        # Use a membership test (not exact list equality): Starlette's
+        # CORSMiddleware treats any allowlist that *contains* "*" as "allow all
+        # origins", so a multi-entry list like ["*", "https://trusted"] must be
+        # caught here too (GHSA-fp27-88fp-2phg). Mirrors glances/server.py.
+        if "*" in cors_origins and cors_credentials:
             logger.warning(
                 "CORS: allow_origins=['*'] combined with allow_credentials=True is insecure. "
                 "Disabling credentials. Set explicit cors_origins to enable credentialed requests."
@@ -321,6 +326,8 @@ class GlancesRestfulApi:
             logger.info(f"TrustedHostMiddleware enabled (allowed hosts: {self.webui_allowed_hosts})")
 
         # FastAPI Define routes
+        # Status endpoint router (no authentication required) - health check
+        self._app.include_router(self._status_router())
         # Token endpoint router (no authentication required) - must be added first
         if self.args.password and self._jwt_handler is not None:
             self._app.include_router(self._token_router())
@@ -493,6 +500,19 @@ class GlancesRestfulApi:
         router.add_api_route(f'{base_path}/token', self._api_token, methods=['POST'], dependencies=[])
         return router
 
+    def _status_router(self) -> APIRouter:
+        """Define a router for the status endpoint (no authentication required).
+
+        The /status endpoint is used for health checks and must remain reachable
+        even when --password is set, so that container probes like Docker
+        HEALTHCHECK do not get a 401.
+        """
+        base_path = f'/api/{self.API_VERSION}'
+        router = APIRouter(prefix=self.url_prefix)
+        router.add_api_route(f'{base_path}/status', self._api_status, methods=['HEAD'])
+        router.add_api_route(f'{base_path}/status', self._api_status, methods=['GET'])
+        return router
+
     def _router(self) -> APIRouter:
         """Define a custom router for Glances path."""
         base_path = f'/api/{self.API_VERSION}'
@@ -507,9 +527,6 @@ class GlancesRestfulApi:
         # REST API route definition
         # ==========================
 
-        # HEAD
-        router.add_api_route(f'{base_path}/status', self._api_status, methods=['HEAD'])
-
         # POST
         router.add_api_route(f'{base_path}/events/clear/warning', self._events_clear_warning, methods=['POST'])
         router.add_api_route(f'{base_path}/events/clear/all', self._events_clear_all, methods=['POST'])
@@ -521,7 +538,6 @@ class GlancesRestfulApi:
         )
 
         # GET
-        router.add_api_route(f'{base_path}/status', self._api_status, methods=['GET'])
         route_mapping = {
             f'{base_path}/config': self._api_config,
             f'{base_path}/config/{{section}}': self._api_config_section,
@@ -560,7 +576,11 @@ class GlancesRestfulApi:
 
         # Security warnings
         cors_origins = self.config.get_list_value('outputs', 'cors_origins', default=["*"])
-        if not self.args.password and cors_origins == ["*"]:
+        # Membership test (not exact list equality): a multi-entry allowlist
+        # containing "*" is still treated as "allow all origins" by Starlette,
+        # so the unauthenticated+permissive-CORS warning must fire for it too
+        # (GHSA-fp27-88fp-2phg). Mirrors the XML-RPC warning in glances/server.py.
+        if not self.args.password and "*" in cors_origins:
             warn_lines = [
                 "WARNING: Glances web server is running without authentication and with permissive",
                 "         CORS (Access-Control-Allow-Origin: *). Any web page reachable from your",
@@ -1330,6 +1350,8 @@ class GlancesRestfulApi:
     _ALWAYS_REDACTED_ARGS = frozenset({'password'})
 
     # Args keys redacted when no authentication is configured
+    # Note: keys matching the shared sensitive pattern (password, token, username...)
+    # are redacted by secure_option(), only the ones it can not express are listed here.
     _SENSITIVE_ARGS = frozenset(
         {
             'password',
@@ -1346,12 +1368,15 @@ class GlancesRestfulApi:
 
         - password hash is always redacted (even for authenticated users)
         - other sensitive fields are redacted when no authentication is configured
+        - credentials embedded in an URL value are redacted when no authentication
+          is configured
         """
         args_json = vars(self.args).copy()
         if not self.args.password:
             for key in self._SENSITIVE_ARGS:
                 if key in args_json:
                     args_json[key] = '********'
+            args_json = {key: secure_option(key, value) for key, value in args_json.items()}
         else:
             for key in self._ALWAYS_REDACTED_ARGS:
                 if key in args_json and args_json[key]:

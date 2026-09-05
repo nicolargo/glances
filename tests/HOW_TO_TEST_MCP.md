@@ -73,6 +73,7 @@ from pydantic import AnyUrl
 
 MCP_SSE = "http://localhost:61208/mcp/sse"
 
+
 async def demo():
     async with sse_client(MCP_SSE) as (read, write):
         async with ClientSession(read, write) as session:
@@ -113,6 +114,7 @@ async def demo():
             # Top-5 processes report
             procs = await session.get_prompt("top_processes_report", arguments={"nb": "5"})
             print("Processes:", procs.messages[0].content.text[:200])
+
 
 asyncio.run(demo())
 ```
@@ -238,6 +240,7 @@ Connect with Basic Auth:
 
 ```python
 import base64
+
 creds = base64.b64encode(b"myuser:mypassword").decode()
 headers = {"Authorization": f"Basic {creds}"}
 

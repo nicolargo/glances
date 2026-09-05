@@ -3,10 +3,86 @@
 ==============================================================================
 
 =============
+Version 4.5.6
+=============
+
+Bugs corrected:
+
+* Alert level decided by dict ordering: a failing+slow URL is downgraded to WARNING, an unscanned URL reports CRITICAL #3632
+* GPU plugin duplicates card name and omits N/A for unavailable metrics in multi-GPU #3631
+* GPU plugin duplicates the utilisation value and paints it with the memory colour in multi-GPU #3630
+* IP plugin displays wrong interface: outer loop in get_ip_address() never breaks #3617
+* VideoCore (v3d) memory shows ~93% on Raspberry Pi 5 with gpu_mem=4M — misleading denominator from drm-total-memory #3611
+* CSV export: --stdout-csv data rows desync from header when network interfaces change count at runtime #3606
+* Glances Network plugin with mismatched schema not logging in TimescaleDB export #3592
+
+Security patches:
+
+* as_dict_secure() Value-Level Bypass Leaks Credentials in URL Values via /api/4/config - CVE-2026-68520
+* --disable-config-exec does not cover on-alert action commands - CVE-2026-68519
+* Command injection bypass of action-template sanitizer via cross-field shell-operator reconstruction - CVE-2026-68518
+* Incomplete fix of CVE-2026-32608: action-template sanitizer is bypassed by nested stat values - CVE-2026-62982
+* REST API CORS Credentials Guard Uses Exact-Match Instead of Membership Test - CVE-2026-68517
+
+Thanks to all the contributors for this version: yogendrarau, Gabriel Changamire, Sanjay Santhanam,
+William Wu, Martin Ďurana and Noa Levi.
+
+=============
+Version 4.5.5
+=============
+
+Bugs corrected:
+
+* /api/4/containers stays ~4-5s with ~60 Docker containers #3559
+* Crash when using --sparkline #3547
+* VMs section does not show LOAD 1/5/15min values #3535
+* Fix AMD GPU detection for multi-digit DRM card numbers #3578
+* Keep auto_unit within limits, so columns stay aligned #3558
+* Rest status check shouldn't require auth #3544
+* Logging configuration to use boolean value #3536
+* Fix filesystem aliases for mixed-case mount points #3532
+* Regression in Disk I/O reporting #3546
+
+Enhancements:
+
+* Add meter for CPU and MEM of GPU in the Quicklook plugin #1711
+* Add cpu limit to docker, podman and lxd containers #3557
+* GPU Monitoring (ARM / RaspberryPi) #1048
+* GPU plugin: display proc and temperature on NVIDIA Jetson (Tegra) integrated #3580
+
+Security patches:
+
+* Arbitrary file write and command execution in AMP command configuration - Correct CVE-2026-53925
+* XML-RPC Server Missing Host Header Validation Enables DNS Rebinding Attack - Correct CVE-2026-46611
+* XML-RPC Multi-Origin CORS Configuration Silently Falls Back to Wildcard - Correct CVE-2026-46608
+* Insecure Pickle Deserialization in Version Cache Leads to Arbitrary Code Execution - Correct CVE-2026-46607
+* Command Injection via KVM/QEMU VM Domain Names in virsh.py - Correct CVE-2026-46606
+
+Continious integration, refactoring and documentation:
+
+* Add top 10 slowest plugins summary at end of --issue output #3572
+* Update documentation for hide/show #3546
+* Refactor: Improve load_additional_plugins Maintainability, Safety, and Plugin Discovery #3561
+* Refactor: Reduce Cyclomatic complexity of __display_top Issue #3549
+* Refactor: Reduce Cyclomatic complexity of display_popup() #3542
+* Refactor: Compute spacing
+* Refactor: handle quicklook required for display²
+* Refactor: Get plugin Width & get stats summary
+* Add unit test to containers/docker plugin
+
+Packaging:
+
+* Glances Alpine Docker images are now based on Alpine 3.24
+* Glances Ubuntu Docker images are now based on Ubuntu 26.04
+
+Thanks to all the contributors for this version: 20086080, cswaltzinger, Sergio LIVI,
+Adi, Ariel Eli, Gabriel St. Angel, Jack Harper, Tarrailt, William Wu, Yan and lawrence3699.
+
+=============
 Version 4.5.4
 =============
 
-Bug corrected:
+Bugs corrected:
 
 * Cannot set warning/critical temperature for a specific sensor #3525
 * Memory percentage and used displayed as negative numbers #3358
@@ -37,7 +113,7 @@ duriantaco, Julio César Suástegui, Paul and morimori-dev.
 Version 4.5.3
 =============
 
-Bug corrected:
+Bugs corrected:
 
 * Internal Server Error (Web Server Mode) #3502
 * Container plugin crashes with docker.errors.NullResource on Podman pod infra containers #3498
@@ -68,7 +144,7 @@ Ofek Gabay, Steve Kowalik, Tanishq Shah, Mithun M.
 Version 4.5.2
 =============
 
-Bug corrected:
+Bugs corrected:
 
 * System display error on "little" terminal #3469
 
@@ -145,7 +221,7 @@ Thanks to @psyberck for the UI patch and @DhiyaneshGeek / @restriction for CVEs 
 Version 4.5.1
 =============
 
-Bug corrected:
+Bugs corrected:
 
 * DiskIO plugin crashes Glances on OpenBSD (regression from 4.5.0.5) #3452
 * DiskIO plugin does not handle empty args in msg_curse() #3429
@@ -269,7 +345,7 @@ Special thanks to:
 Version 4.4.1
 =============
 
-Bug corrected:
+Bugs corrected:
 
 * Restful API issue after a while (stats are no more updated) #3333
 
@@ -299,9 +375,9 @@ Enhancements:
 * Remove .keys() from loops over dicts #3253
 * Remove iterator helpers #3252
 
-Bug corrected:
+Bugs corrected:
 
-* [MACOS] Glances not showing Processes on MacOS #3100
+* [MACOS] Glances not showing Processes on macOS #3100
 * Last dev build broke Homepage API calls ? only 1 widget still working #3322
 * Cloud plugin always generate communication with 169.254.169.254, even if the plugin is disabled #3316
 * API response delay (3+ minutes) when VMs are running #3317
@@ -358,7 +434,7 @@ Special thanks to:
 Version 4.3.3
 =============
 
-Bug corrected:
+Bugs corrected:
 
 * Something in 4.3.2 broke the home assistant add-on for Glances #3238
 
@@ -384,7 +460,7 @@ Enhancements:
 * Implement a basic memory cache with TTL for API call (set to ~1 second) #3202
 * Add container inactive_file & limit to InfluxDB2 export #3206
 
-Bug corrected:
+Bugs corrected:
 
 * [GPU] AMD Plugin: Operation not permitted #3125
 * Container memory stats not displayed #3142
@@ -422,7 +498,7 @@ Enhancements:
 * Replace netifaces by netifaces-plus dependencies #3053
 * Replace docker by containers in glances-grafana-flux.json #3118
 
-Bug corrected:
+Bugs corrected:
 
 * default_config_dir: Fix config path to include glances/ directory #3106
 * Cannot set warning/critical temperature for a specific sensor needs test #3102
@@ -444,7 +520,7 @@ Special thanks to:
 Version 4.3.0.8
 ===============
 
-Bug corrected:
+Bugs corrected:
 
 * IP plugin broken with Netifaces2 #3076
 * WebUI if is notresponsive on mobile #3059 (second run)
@@ -453,7 +529,7 @@ Bug corrected:
 Version 4.3.0.7
 ===============
 
-Bug corrected:
+Bugs corrected:
 
 * WebUI if is notresponsive on mobile #3059
 
@@ -461,7 +537,7 @@ Bug corrected:
 Version 4.3.0.6
 ===============
 
-Bug corrected:
+Bugs corrected:
 
 *  Browser mode do not working with the sensors plugin #3069
 *  netifaces is deprecated, use netifaces-plus or netifaces2 #3055
@@ -474,7 +550,7 @@ Continuous integration and documentation:
 Version 4.3.0.5
 ===============
 
-Bug corrected:
+Bugs corrected:
 
 *  WebUI errors in 4.3.0.4 on iPad Air (and Browser with low resolution) #3057
 
@@ -510,7 +586,7 @@ Enhancements:
 
 * Replace netifaces by netifaces-plus #3053
 
-Bug corrected:
+Bugs corrected:
 
 * CONTAINERS section missing in 4.3.0 WebUI #3052
 
@@ -532,7 +608,7 @@ Enhancements:
 * Change the default path for graph export to /tmp/glances
 * Improve CCS of WebUI #3024
 
-Bug corrected:
+Bugs corrected:
 
 * Thresholds not displayed in the WebUI for the DiskIO plugin #1498
 * FS module alias configuration do not taken into account everytime #3010
@@ -570,7 +646,7 @@ Enhancements:
 * [WEBUI] Came back to default Black Theme / Reduce font size #2993
 * Improve hide_zero option #2958
 
-Bug corrected:
+Bugs corrected:
 
 * Possible memory leak #2976
 * Docker/Podman shoud not flood log file with ERROR if containers list can not be retreived #2994
@@ -605,7 +681,7 @@ Enhancements:
 * Add retain to availability topic in MQTT plugin #2974
 * Make fields labelled in Green easier to see #2882
 
-Bug corrected:
+Bugs corrected:
 
 * In TUI, when processes are filtered, column are not aligned #2980
 * Can't kill process. Standalone, Ubuntu 24.04 #2942
@@ -658,7 +734,7 @@ Special thanks to:
 Version 4.1.2
 ===============
 
-Bug corrected:
+Bugs corrected:
 
 * AttributeError: 'CpuPercent' object has no attribute 'cpu_percent' #2859
 
@@ -666,7 +742,7 @@ Bug corrected:
 Version 4.1.1
 ===============
 
-Bug corrected:
+Bugs corrected:
 
 * Sensors data is not exported using InfluxDB2 exporter #2856
 
@@ -680,7 +756,7 @@ Enhancements:
 * PsUtil 6+ no longer check PID reused #2755
 * Add support for automatically hiding network interfaces that are down or that don't have any IP addresses #2799
 
-Bug corrected:
+Bugs corrected:
 
 * API: Network module is disabled but appears in endpoint "all" #2815
 * API is not compatible with requests containing special/encoding char #2820
@@ -837,7 +913,7 @@ Enhancements:
 * Replace Bottle by FastAPI #2181
 * Replace py3nvml with nvidia-ml-py #2688
 
-Bug corrected:
+Bugs corrected:
 
 * Crash when reading timezone for generating alert #2659
 * Newline in container command corrupts display / hides container #2733
@@ -929,7 +1005,7 @@ Bugs corrected:
 Version 3.4.0.1
 ===============
 
-Bug corrected:
+Bugs corrected:
 
 * 3.4.0 crash on startupwith minimal deps #2401
 
@@ -949,11 +1025,11 @@ Enhancements:
 * Correct clear-text logging of sensitive information (security alert #29)
 * Use of a broken or weak cryptographic hashing algorithm (SHA256) on password storage #2175
 
-Bug corrected:
+Bugs corrected:
 
 * Correct issue (error message) concerning the Cloud plugin - Related to #2392
 * InfluxDB2 export doesn't process folders correctly - missing key #2327
-* Index error when displaying programs on MacOS #2360
+* Index error when displaying programs on macOS #2360
 * Dissociate 2 sensors with exactly the same names #2280
 * All times displayed in UTC - Container not using TZ/localtime (Docker) #2278
 * It is not possible to return API data for a particular mount point (FS plugin) #1162
@@ -1012,7 +1088,7 @@ Version 3.3.1.1
 
 Hard patch on the master branch.
 
-Bug corrected:
+Bugs corrected:
 
 * "ModuleNotFoundError: No module named 'ujson'" #2246
 * Remove surrounding quotes for quoted command arguments #2247 (related to #2239)
@@ -1027,7 +1103,7 @@ Enhancements:
 * Refactor some loop in the processes function
 * Replace json by ujson #2201
 
-Bug corrected:
+Bugs corrected:
 
 * Unable to see docker related information #2180
 * CSV export dependent on sort order for docker container cpu #2156
@@ -1093,7 +1169,7 @@ The following Docker images (nicolargo/glances) are availables:
 Version 3.3.0.2
 ===============
 
-Bug corrected:
+Bugs corrected:
 * Password files in same configuration dir in effect #2143
 * Fail to load config file on Python 3.10 #2176
 
@@ -1121,7 +1197,7 @@ Enhancements:
 * Remove the static exportable_plugins list from glances_export.py #1556
 * Limiting data exported for economic storage #1443
 
-Bug corrected:
+Bugs corrected:
 
 * glances.conf FS hide not applying #1666
 * AMP: regex with special chars #2152
@@ -1172,7 +1248,7 @@ Enhancements:
 * Refactor top menu of the curse interface
 * Improve Irix display for the load plugin
 
-Bug corrected:
+Bugs corrected:
 
 * In the sensor plugin thresholds in the configuration file should overwrite system ones #2058
 * Drive names truncated in Web UI #2055
@@ -1211,7 +1287,7 @@ Enhancement requests:
 * Optionally disable public ip #2030
 * Update public ip at intervals #2029
 
-Bug corrected:
+Bugs corrected:
 
 * Unitary tests should run loopback interface #2051
 * Add python-datutil dep for Focker plugin #2045
@@ -1676,14 +1752,14 @@ Others:
 Version 3.0.2
 =============
 
-Bug corrected:
+Bugs corrected:
 
 * Glances IO Errorno 22 - Invalid argument #1326
 
 Version 3.0.1
 =============
 
-Bug corrected:
+Bugs corrected:
 
 *  AMPs error if no output are provided by the system call #1314
 
@@ -2511,7 +2587,7 @@ Version 1.7.2
 Version 1.7.1
 =============
 
-* Fix IoWait error on FreeBSD / Mac OS
+* Fix IoWait error on FreeBSD / Mac OS X
 * HDDTemp module is now Python v3 compatible
 * Don't warn a process is not running if countmin=0
 * Add PyPI badge on the README.rst

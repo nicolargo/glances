@@ -254,6 +254,12 @@ automatically rejected:
     combination is detected. This prevents a class of cross-site data theft
     attacks where any website could read your monitoring data.
 
+The same ``cors_origins`` key also applies to the legacy XML-RPC server
+(``glances -s``): when multiple origins are listed, each request's ``Origin``
+header is compared against the allowlist and reflected only if it is an exact
+match (``Vary: Origin`` is set). The default ``*`` keeps the wildcard
+behaviour for backward compatibility.
+
 When Glances is started without authentication or without host filtering,
 warning messages are displayed at startup to remind you of the risks.
 

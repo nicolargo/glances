@@ -742,7 +742,14 @@ class GlancesPluginModel:
                 try:
                     self._limits[limit] = config.get_float_value(self.plugin_name, level)
                 except ValueError:
-                    self._limits[limit] = config.get_value(self.plugin_name, level).split(",")
+                    # Strip each item: `list=cpu, mem, load` is how a comma-separated
+                    # value is normally written, and glances.conf writes it that way in
+                    # its own comments. A bare split kept the spaces, so ' mem' matched
+                    # nothing and plugins that validate their list against a set of
+                    # known names silently rejected a config the user got right.
+                    self._limits[limit] = [
+                        item.strip() for item in config.get_value(self.plugin_name, level).split(",")
+                    ]
                 logger.debug(f"Load limit: {limit} = {self._limits[limit]}")
 
         return True
@@ -1072,7 +1079,9 @@ class GlancesPluginModel:
         return {}
 
     def has_alias(self, header):
-        """Return the alias name for the relative header it it exists otherwise None."""
+        """Return the alias name for the relative header if it exists, otherwise None."""
+        if isinstance(header, str):
+            header = header.lower()
         return self.alias.get(header, None)
 
     def msg_curse(self, args=None, max_width=None):
@@ -1273,7 +1282,7 @@ class GlancesPluginModel:
         """
 
         def wrapper(self, *args, **kw):
-            if self.is_enabled() and (self.refresh_timer.finished() or self.stats == self.get_init_value):
+            if self.is_enabled() and (self.refresh_timer.finished() or self.stats == self.get_init_value()):
                 # Run the method
                 ret = fct(self, *args, **kw)
                 # Reset the timer

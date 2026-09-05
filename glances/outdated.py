@@ -10,7 +10,6 @@
 
 import json
 import os
-import pickle
 import threading
 from datetime import datetime, timedelta
 
@@ -112,13 +111,23 @@ class Outdated:
         return Version(self.latest_version()) > Version(self.installed_version())
 
     def _load_cache(self):
-        """Load cache file and return cached data"""
+        """Load cache file and return cached data.
+
+        The cache is stored as JSON. Any unreadable, malformed, or
+        legacy-format (e.g. pre-4.5.6 pickle) file is treated as a cache
+        miss — the caller will then refresh the data from PyPI.
+        """
         # If the cached file exist, read-it
         max_refresh_date = timedelta(days=7)
         cached_data = {}
         try:
-            with open(self.cache_file, 'rb') as f:
-                cached_data = pickle.load(f)
+            with open(self.cache_file, encoding='utf-8') as f:
+                raw = json.load(f)
+            cached_data = {
+                'installed_version': raw['installed_version'],
+                'latest_version': raw['latest_version'],
+                'refresh_date': datetime.fromisoformat(raw['refresh_date']),
+            }
         except Exception as e:
             logger.debug(f"Cannot read version from cache file: {self.cache_file} ({e})")
         else:
@@ -134,14 +143,26 @@ class Outdated:
         return cached_data
 
     def _save_cache(self):
-        """Save data to the cache file."""
+        """Save data to the cache file as JSON.
+
+        JSON is used instead of pickle because the cache file lives at a
+        predictable, user-writable path. Pickle would allow code execution
+        on load if the file were replaced by an attacker (CVE-2026-46607).
+        """
         # Create the cache directory
         safe_makedirs(self.cache_dir)
 
         # Create/overwrite the cache file
         try:
-            with open(self.cache_file, 'wb') as f:
-                pickle.dump(self.data, f)
+            with open(self.cache_file, 'w', encoding='utf-8') as f:
+                json.dump(
+                    {
+                        'installed_version': self.data['installed_version'],
+                        'latest_version': self.data['latest_version'],
+                        'refresh_date': self.data['refresh_date'].isoformat(),
+                    },
+                    f,
+                )
         except Exception as e:
             logger.error(f"Cannot write version to cache file {self.cache_file} ({e})")
 

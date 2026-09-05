@@ -120,7 +120,7 @@ class ConnectionsPlugin(GlancesPluginModel):
             initiated += stats[s]
         stats['initiated'] = initiated
         terminated = 0
-        for s in self.initiated_states:
+        for s in self.terminated_states:
             stats[s] = len([c for c in net_connections if c.status == s])
             terminated += stats[s]
         stats['terminated'] = terminated
@@ -182,7 +182,9 @@ class ConnectionsPlugin(GlancesPluginModel):
         try:
             # Alert and log
             if self.stats['nf_conntrack_enabled']:
-                self.views['nf_conntrack_percent']['decoration'] = self.get_alert(header='nf_conntrack_percent')
+                self.views['nf_conntrack_percent']['decoration'] = self.get_alert(
+                    self.stats['nf_conntrack_percent'], header='nf_conntrack_percent'
+                )
         except KeyError:
             # try/except mandatory for Windows compatibility (no conntrack stats)
             pass

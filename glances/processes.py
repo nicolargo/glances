@@ -74,6 +74,10 @@ class GlancesProcesses:
         self.processlist = []
         self.reset_processcount()
 
+        # Aggregation of processlist, valid while _programs_source is still the current list
+        self._programs = []
+        self._programs_source = None
+
         # Cache is a dict with key=pid and value = dict of cached value
         self.processlist_cache = {}
 
@@ -174,10 +178,12 @@ class GlancesProcesses:
         """Update the global process count from the current processes list"""
         # Update the maximum process ID (pid) number
         self.processcount['pid_max'] = self.pid_max
-        # For each key in the processcount dict
+        # For each status key in the processcount dict
         # count the number of processes with the same status
-        for k in list(self.processcount.keys()):
-            self.processcount[k] = len(list(filter(lambda v: v.get('status', '?') is k, plist)))
+        # Note: only the status keys should be counted, the other ones
+        # ('pid_max', 'thread' and 'total') are computed separately (see issue #3637)
+        for k in ('running', 'sleeping'):
+            self.processcount[k] = len(list(filter(lambda v: v.get('status', '?') == k, plist)))
         # Compute thread
         try:
             self.processcount['thread'] = sum(i['num_threads'] for i in plist if i['num_threads'] is not None)
@@ -240,6 +246,11 @@ class GlancesProcesses:
     @property
     def processes_count(self):
         """Get the current number of processes showed in the UI."""
+        # Defensive guard: when _max_processes is not set (e.g. client/server
+        # mode before the display class assigns it), return 0 instead of
+        # raising TypeError. See issue #3221.
+        if self._max_processes is None:
+            return 0
         return min(self._max_processes - 2, glances_processes.processcount['total'] - 1)
 
     @property
@@ -674,11 +685,9 @@ class GlancesProcesses:
                 self.set_max_values(k, max(values_list))
 
     def remove_non_running_procs(self, processlist):
-        pids_running = [p['pid'] for p in processlist]
-        pids_cached = list(self.processlist_cache.keys()).copy()
-        for pid in pids_cached:
-            if pid not in pids_running:
-                self.processlist_cache.pop(pid, None)
+        pids_running = {p['pid'] for p in processlist}
+        for pid in [pid for pid in self.processlist_cache if pid not in pids_running]:
+            self.processlist_cache.pop(pid, None)
 
     def update_list(self, processlist):
         """Return the process list after filtering and transformation (namedtuple to dict)."""
@@ -707,9 +716,22 @@ class GlancesProcesses:
         If as_programs is True, return the list of programs."""
         if sorted:
             self.processlist = sort_stats(self.processlist, sorted_by=self.sort_key, reverse=self.sort_reverse)
+            # One branch of sort_stats() reorders the list in place, so a changed order does
+            # not always mean a different object.
+            self._programs_source = None
         if as_programs:
-            return processes_to_programs(self.processlist)
+            return self._get_programs()
         return self.processlist
+
+    def _get_programs(self):
+        """Callers ask for the programs far more often than update() rebuilds the process
+        list, and walking every process each time is the bulk of the programlist refresh.
+        Both update() and a re-sort replace the list object, which is the invalidation.
+        """
+        if self._programs_source is not self.processlist:
+            self._programs = processes_to_programs(self.processlist)
+            self._programs_source = self.processlist
+        return self._programs
 
     def get_export(self):
         """Return the processlist for export."""
@@ -773,12 +795,18 @@ def sort_by_these_keys(first, second):
     return lambda process: (weighted(process.get(first)), weighted(process.get(second)))
 
 
+# A row whose value is missing sorts as zero rather than raising. sort_stats catches the
+# exception and falls back to cpu_percent for the *whole* list, so one such row silently
+# reorders every other one while the header still reads TIME or IOR/IOW.
 def _sort_io_counters(process, sorted_by='io_counters', sorted_by_secondary='memory_percent'):
     """Specific case for io_counters
 
     :return: Sum of io_r + io_w
     """
-    return process[sorted_by][0] - process[sorted_by][2] + process[sorted_by][1] - process[sorted_by][3]
+    counters = process.get(sorted_by) or []
+    # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
+    read, write, read_old, write_old = (list(counters) + [0, 0, 0, 0])[:4]
+    return read - read_old + write - write_old
 
 
 def _sort_cpu_times(process, sorted_by='cpu_times', sorted_by_secondary='memory_percent'):
@@ -789,7 +817,8 @@ def _sort_cpu_times(process, sorted_by='cpu_times', sorted_by_secondary='memory_
     see (https://github.com/giampaolo/psutil/issues/1339)
     The following implementation takes user and system time into account
     """
-    return process[sorted_by]['user'] + process[sorted_by]['system']
+    times = process.get(sorted_by) or {}
+    return times.get('user', 0) + times.get('system', 0)
 
 
 def _sort_lambda(sorted_by='cpu_percent', sorted_by_secondary='memory_percent'):

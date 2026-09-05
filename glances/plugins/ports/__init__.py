@@ -138,7 +138,7 @@ class PortsPlugin(GlancesPluginModel):
     def get_conds_if_url(self, web):
         return {
             'CAREFUL': web['status'] is None,
-            'CRITICAL': web['status'] not in [200, 301, 302],
+            'CRITICAL': web['status'] is not None and web['status'] not in [200, 301, 302],
             'WARNING': web['rtt_warning'] is not None and web['elapsed'] > web['rtt_warning'],
         }
 
@@ -162,9 +162,13 @@ class PortsPlugin(GlancesPluginModel):
         return ret
 
     def get_default_ret_value(self, conds):
-        ret_as_dict_val = {'ret': key for key, cond in conds.items() if cond}
+        # Resolve by severity, not by dict insertion order: several conditions
+        # can match at once and the most severe one has to win.
+        for level in ('CRITICAL', 'WARNING', 'CAREFUL'):
+            if conds.get(level):
+                return level
 
-        return ret_as_dict_val.get('ret', 'OK')
+        return 'OK'
 
     def set_status_if_host(self, p):
         if p['host'] is None:
@@ -343,13 +347,17 @@ class ThreadScanner(threading.Thread):
         if WINDOWS:
             timeout_opt = '-w'
             count_opt = '-n'
+            # Windows ping takes the reply timeout in milliseconds
+            timeout_value = str(int(float(port['timeout']) * 1000))
         elif MACOS or BSD:
             timeout_opt = '-t'
             count_opt = '-c'
+            timeout_value = str(port['timeout'])
         else:
             # Linux and co...
             timeout_opt = '-W'
             count_opt = '-c'
+            timeout_value = str(port['timeout'])
         # Build the command line
         # Note: Only string are allowed
         cmd = [
@@ -357,7 +365,7 @@ class ThreadScanner(threading.Thread):
             count_opt,
             '1',
             timeout_opt,
-            str(self._resolv_name(port['timeout'])),
+            timeout_value,
             self._resolv_name(port['host']),
         ]
         fnull = open(os.devnull, 'w')
@@ -383,12 +391,24 @@ class ThreadScanner(threading.Thread):
         """Scan the (TCP) port structure (dict) and update the status key."""
         ret = None
 
-        # Create and configure the scanning socket
+        # Create and configure the scanning socket.
+        #
+        # The timeout belongs to this socket, not to the process:
+        # socket.setdefaulttimeout() is global and was never restored, so once
+        # a port had been scanned every socket built afterwards anywhere in
+        # Glances silently inherited the last scanned port's timeout.
+        #
+        # Returning here also matters: if the socket cannot be created, the
+        # code below used to run anyway and _socket was unbound, so the
+        # connect_ex raised UnboundLocalError into the "Error while scanning
+        # port" handler and the finally clause then raised it again, this time
+        # with nothing to catch it.
         try:
-            socket.setdefaulttimeout(port['timeout'])
             _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            _socket.settimeout(port['timeout'])
         except Exception as e:
             logger.debug(f"{self.plugin_name}: Error while creating scanning socket ({e})")
+            return ret
 
         # Scan port
         ip = self._resolv_name(port['host'])

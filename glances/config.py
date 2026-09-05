@@ -25,10 +25,29 @@ _SECURE_BLOCKED_SECTIONS = frozenset(
 )
 
 # Key name patterns redacted in any section
+# Note: `\buser\b` only matches a standalone `user` key, so the CPU/load
+# `user_careful`, `user_warning`... thresholds stay visible (they are not credentials).
 _SECURE_SENSITIVE_KEY_RE = re.compile(
-    r"password|token|secret|api_key|apikey|ssl_keyfile",
+    r"password|token|secret|api_key|apikey|ssl_keyfile|username|\buser\b|login",
     re.IGNORECASE,
 )
+
+# Credentials embedded in an URL value (scheme://user:password@host)
+_SECURE_URL_CREDENTIALS_RE = re.compile(r"(?<=://)[^/?#@\s]+@")
+
+
+def secure_option(key, value):
+    """Return the sanitised value of a configuration option or a command line argument.
+
+    A sensitive key is fully redacted, otherwise only the credentials
+    embedded in an URL value are redacted. Non string values (boolean flags,
+    ports, refresh rates...) can not carry a credential and are returned as is.
+    """
+    if not isinstance(value, str):
+        return value
+    if _SECURE_SENSITIVE_KEY_RE.search(key):
+        return "********"
+    return _SECURE_URL_CREDENTIALS_RE.sub("********@", value)
 
 
 def user_config_dir():
@@ -219,17 +238,7 @@ class Config:
         self.set_default_cwc('cpu', 'user')
         self.set_default_cwc('cpu', 'system')
         self.set_default_cwc('cpu', 'steal')
-        # By default I/O wait should be lower than 1/number of CPU cores
-        iowait_bottleneck = (1.0 / multiprocessing.cpu_count()) * 100.0
-        self.set_default_cwc(
-            'cpu',
-            'iowait',
-            [
-                str(iowait_bottleneck - (iowait_bottleneck * 0.20)),
-                str(iowait_bottleneck - (iowait_bottleneck * 0.10)),
-                str(iowait_bottleneck),
-            ],
-        )
+        self.set_default_cwc('cpu', 'iowait')
         # Context switches bottleneck identification #1212
         ctx_switches_bottleneck = (500000 * 0.10) * multiprocessing.cpu_count()
         self.set_default_cwc(
@@ -306,14 +315,13 @@ class Config:
         Intended for unauthenticated API access.
         - Blocked sections are omitted entirely.
         - Sensitive keys in remaining sections are replaced by '********'.
+        - Credentials embedded in an URL value are replaced by '********'.
         """
         sanitized = {}
         for section, options in self.as_dict().items():
             if section in _SECURE_BLOCKED_SECTIONS:
                 continue
-            sanitized[section] = {
-                key: "********" if _SECURE_SENSITIVE_KEY_RE.search(key) else value for key, value in options.items()
-            }
+            sanitized[section] = {key: secure_option(key, value) for key, value in options.items()}
         return sanitized
 
     def sections(self):

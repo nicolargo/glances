@@ -15,6 +15,7 @@ The system information message can be configured in the configuration file
 (for the moment, it only work for the Curses interface):
 
 .. code-block:: ini
+
     [system]
     # System information to display (a string where {key} will be replaced by the value) in the Curses interface
     # Available dynamics information are: hostname, os_name, os_version, os_arch, linux_distro, platform

@@ -85,7 +85,7 @@ add new plugins or exports modules.
 Usage 👋
 ========
 
-For the standalone mode, just run:
+For the standalone (TUI) mode, just run:
 
 .. code-block:: console
 
@@ -93,7 +93,7 @@ For the standalone mode, just run:
 
 .. image:: ./docs/_static/glances-summary.png
 
-For the Web server mode, run:
+For the Web server mode (WebUI), run:
 
 .. code-block:: console
 
@@ -171,15 +171,6 @@ Results look like this:
 
 For the record, Glances also have a XML-RPC client/server mode, run the following command on the server:
 
-.. code-block:: console
-
-    $ glances -s
-
-and this one on the client:
-
-.. code-block:: console
-
-    $ glances -c <ip>
 
 Use Glances as a Python library 📚
 ==================================
@@ -239,6 +230,8 @@ access them by their name:
      'time_since_update': 0.3504955768585205}
 
 For a complete example of how to use Glances as a library, have a look to the `PythonApi`_.
+
+If you do not want to remember all thoses options, @yottajunaid has created a simple launcher_ for Linux.
 
 Documentation 📜
 ================
@@ -398,27 +391,43 @@ variable setting parameters for the glances startup command):
 
 Where $HOME/.config/glances/glances.conf is a local directory containing your glances.conf file.
 
-Run the container in *Web server mode*:
+Run the container in *Web server mode* (and MCP server):
 
 .. code-block:: console
 
-    docker run -d --restart="always" -p 61208-61209:61208-61209 -e TZ="${TZ}" -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host nicolargo/glances:latest-full
+    docker run -d --restart="always" -p 61208-61209:61208-61209 -e TZ="${TZ}" -e GLANCES_OPT="-w --enable-mcp" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host nicolargo/glances:latest-full
 
 For a full list of options, see the Glances `Docker`_ documentation page.
 
-It is also possible to use a simple Docker compose file (see in ./docker-compose/docker-compose.yml):
+Docker compose: Yet Another Cloudy Way
+--------------------------------------
+
+It is also possible to use a simple Docker compose file to:
+
+- run the Web (Rest API and WebUI) and the MCP server (see in ./docker-compose/docker-compose.yml):
 
 .. code-block:: console
 
-    cd ./docker-compose
-    docker-compose up
+    mkdir -p ~/glances-compose
+    cd ~/glances-compose
+    wget https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docker-compose/docker-compose.yml
+    wget https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docker-compose/glances.conf
+    docker compose up
 
-It will start a Glances server with WebUI.
+- or run the terminal client (TUI):
+
+.. code-block:: console
+
+    mkdir -p ~/glances-compose
+    cd ~/glances-compose
+    wget https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docker-compose/docker-compose-tui.yml
+    wget https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docker-compose/glances.conf
+    docker compose -f ./docker-compose-tui.yml run glances
 
 Brew: The missing package manager
 ---------------------------------
 
-For Linux and Mac OS, it is also possible to install Glances with `Brew`_:
+For Linux and macOS, it is also possible to install Glances with `Brew`_:
 
 .. code-block:: console
 
@@ -429,15 +438,15 @@ GNU/Linux package
 
 `Glances` is available on many Linux distributions, so you should be
 able to install it using your favorite package manager. Nevetheless,
-i do not recommend it. Be aware that when you use this method the operating
+**i do not recommend it**. Be aware that when you use this method the operating
 system `package`_ for `Glances` may not be the latest version and only basics
 plugins are enabled.
 
 Note: The Debian package (and all other Debian-based distributions) do
 not include anymore the JS statics files used by the Web interface
-(see ``issue2021``). If you want to add it to your Glances installation,
-follow the instructions: ``issue2021comment``. In Glances version 4 and
-higher, the path to the statics file is configurable (see ``issue2612``).
+(see `issue 2021 <https://github.com/nicolargo/glances/issues/2021>`_). If you want to add it to your Glances installation,
+follow the instructions `here: <https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157>`_. In Glances version 4 and
+higher, the path to the statics file is configurable (see `issue 2621 <https://github.com/nicolargo/glances/issues/2612>`_).
 
 FreeBSD
 -------
@@ -475,7 +484,7 @@ To install Glances from Ports:
 macOS
 -----
 
-MacOS users can install Glances using ``Homebrew`` or ``MacPorts``.
+macOS users can install Glances using ``Homebrew`` or ``MacPorts``.
 
 Homebrew
 ````````
@@ -533,26 +542,10 @@ To install Glances from source:
 
 *Note*: Python headers are required to install psutil.
 
-Chef
-----
-
-An awesome ``Chef`` cookbook is available to monitor your infrastructure:
-https://supermarket.chef.io/cookbooks/glances (thanks to Antoine Rouyer)
-
-Puppet
-------
-
-You can install Glances using ``Puppet``: https://github.com/rverchere/puppet-glances
-
-Ansible
--------
-
-A Glances ``Ansible`` role is available: https://galaxy.ansible.com/zaxos/glances-ansible-role/
-
 Shell tab completion 🔍
 =======================
 
-Glances 4.3.2 and higher includes shell tab autocompletion thanks to the --print-completion option.
+Glances includes shell tab autocompletion thanks to the --print-completion option.
 
 For example, on a Linux operating system with bash shell:
 
@@ -662,10 +655,6 @@ More stars ! 🌟
 
 Please give us a star on `GitHub`_ if you like this project.
 
-.. image:: https://api.star-history.com/svg?repos=nicolargo/glances&type=Date
-    :target: https://www.star-history.com/#nicolargo/glances&Date
-    :alt: Star history
-
 .. _psutil: https://github.com/giampaolo/psutil
 .. _Brew: https://formulae.brew.sh/formula/glances
 .. _Python: https://www.python.org/getit/
@@ -686,3 +675,4 @@ Please give us a star on `GitHub`_ if you like this project.
 .. _FAQ: https://github.com/nicolargo/glances/blob/develop/docs/faq.rst
 .. _Discussions: https://github.com/nicolargo/glances/discussions
 .. _contributors: https://github.com/nicolargo/glances/graphs/contributors
+.. _launcher: https://github.com/yottajunaid/glances-launcher

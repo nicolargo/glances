@@ -109,6 +109,17 @@ class GlancesAmp:
             return self.configs[key]
         return None
 
+    def allow_operators(self):
+        """Return False when config-sourced command operators must be disabled.
+
+        Mirrors --disable-config-exec: when the user hardened config-driven
+        command execution, the AMP `command` / `service_cmd` values must not let
+        secure_popen interpret the shell operators (&&, |, >). Otherwise an
+        attacker able to edit glances.conf could chain commands or write to an
+        arbitrary file via the redirection operator (GHSA-3vwc-qwhc-3mj7).
+        """
+        return not getattr(self.args, 'disable_config_exec', False)
+
     def enable(self):
         """Return True|False if the AMP is enabled in the configuration file (enable=true|false)."""
         ret = self.get('enable')

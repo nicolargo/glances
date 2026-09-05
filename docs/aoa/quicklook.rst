@@ -4,7 +4,7 @@ Quick Look
 ==========
 
 The ``quicklook`` plugin is only displayed on wide screen and proposes a
-bar view for cpu, memory, swap and load (this list is configurable).
+bar view for cpu, memory, swap, load and gpu (this list is configurable).
 
 In the terminal interface, click on ``3`` to enable/disable it.
 
@@ -34,7 +34,7 @@ user interface.
 
     [quicklook]
     # Stats list (default is cpu,mem,load)
-    # Available stats are: cpu,mem,load,swap
+    # Available stats are: cpu,mem,load,swap,gpu_proc,gpu_mem
     list=cpu,mem,load
     # Graphical percentage char used in the terminal user interface (default is |)
     bar_char=|

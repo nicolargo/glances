@@ -66,7 +66,7 @@ class Amp(GlancesAmp):
         # Run command(s)
         # Comma separated commands can be executed
         try:
-            self.set_result(secure_popen(res).rstrip())
+            self.set_result(secure_popen(res, allow_operators=self.allow_operators()).rstrip())
         except Exception as e:
             self.set_result(e.output)
         return self.result()

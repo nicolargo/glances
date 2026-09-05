@@ -30,6 +30,7 @@ Table of Contents
    quickstart
    cmds
    config
+   fetch
    aoa/index
    gw/index
    api/python

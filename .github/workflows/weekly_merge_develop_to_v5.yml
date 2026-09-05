@@ -1,0 +1,137 @@
+# Weekly automated merge from develop into develop-v5.
+# - Clean merge: pushed directly to develop-v5.
+# - Conflict: opens a draft PR + tracking issue, assigned to @nicolargo.
+# - Nothing new: silent exit.
+# Phase 0.1.1 of the v5 migration plan.
+
+name: weekly-merge-develop-to-v5
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # every Monday at 06:00 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: weekly-merge-develop-to-v5
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    name: Merge develop into develop-v5
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout develop-v5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: develop-v5
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch develop
+        run: git fetch origin develop
+
+      - name: Skip if nothing new
+        id: check
+        run: |
+          if git merge-base --is-ancestor origin/develop HEAD; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Nothing new to merge from develop."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Attempt merge
+        if: steps.check.outputs.skip != 'true'
+        id: merge
+        run: |
+          set +e
+          DATE=$(date -u +%Y-%m-%d)
+          git merge --no-ff --no-edit \
+            -m "chore(v5): weekly merge from develop (${DATE})" \
+            origin/develop
+          if [ $? -eq 0 ]; then
+            echo "status=clean" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=conflict" >> "$GITHUB_OUTPUT"
+            git diff --name-only --diff-filter=U > /tmp/conflicts.txt
+          fi
+          exit 0
+
+      - name: Push clean merge
+        if: steps.merge.outputs.status == 'clean'
+        run: git push origin develop-v5
+
+      - name: Push conflict branch
+        if: steps.merge.outputs.status == 'conflict'
+        id: conflict_branch
+        run: |
+          BRANCH="auto/merge-develop-$(date -u +%Y-%m-%d)-${{ github.run_id }}"
+          git add -A
+          git commit -m "chore(v5): weekly merge from develop — UNRESOLVED CONFLICTS"
+          git checkout -b "$BRANCH"
+          git push origin "$BRANCH"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Open draft PR for conflict resolution
+        if: steps.merge.outputs.status == 'conflict'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ steps.conflict_branch.outputs.branch }}"
+          DATE=$(date -u +%Y-%m-%d)
+          {
+            echo "Automated merge \`develop → develop-v5\` produced conflicts."
+            echo
+            echo "**Conflicted files:**"
+            sed 's/^/- `/; s/$/`/' /tmp/conflicts.txt
+            echo
+            echo "**Resolve locally:**"
+            echo '```'
+            echo "git fetch origin"
+            echo "git checkout ${BRANCH}"
+            echo "# resolve conflict markers"
+            echo "git add -A && git commit"
+            echo "git push origin ${BRANCH}"
+            echo '```'
+            echo
+            echo "Then merge this PR into \`develop-v5\` and close the related issue."
+          } > /tmp/pr_body.md
+          gh pr create \
+            --base develop-v5 \
+            --head "$BRANCH" \
+            --title "chore(v5): weekly merge from develop — conflicts (${DATE})" \
+            --body-file /tmp/pr_body.md \
+            --draft \
+            --assignee nicolargo
+
+      - name: Open tracking issue
+        if: steps.merge.outputs.status == 'conflict'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ steps.conflict_branch.outputs.branch }}"
+          DATE=$(date -u +%Y-%m-%d)
+          {
+            echo "Weekly merge \`develop → develop-v5\` failed with conflicts on ${DATE}."
+            echo
+            echo "Resolve via the draft PR for branch \`${BRANCH}\`."
+            echo
+            echo "Conflicted files:"
+            sed 's/^/- `/; s/$/`/' /tmp/conflicts.txt
+          } > /tmp/issue_body.md
+          gh issue create \
+            --title "Weekly merge develop → develop-v5 conflicted (${DATE})" \
+            --body-file /tmp/issue_body.md \
+            --assignee nicolargo

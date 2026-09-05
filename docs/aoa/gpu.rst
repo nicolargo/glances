@@ -5,6 +5,8 @@ GPU
 
 For the moment, following GPU are supported:
 - NVidia (thanks to the `nvidia-ml-py`_ library)
+- NVidia Jetson / Tegra integrated GPU (NVML reports the device but not its
+  telemetry, so usage and temperature are read from Tegra sysfs)
 - AMD (only on Linux Operating system with kernel 5.14 or higher)
 - Intel (only on Linux Operating system)
 - ARM (only on Linux Operating system with kernel 6.0 or higher;

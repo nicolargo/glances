@@ -37,6 +37,18 @@ Filtering is based on regular expression. Please be sure that your regular
 expression works as expected. You can use an online tool like `regex101`_ in
 order to test your regular expression.
 
+.. note::
+
+    When a disk has an ``alias`` defined, the ``hide`` and ``show`` patterns
+    are evaluated against **both** the original device name and its alias,
+    and the disk is hidden (or shown) if **either** matches. This means a
+    "negative-lookahead" allow-list pattern such as
+    ``hide=^(?!(?:nvme[0-9]+n[0-9]+$|sd[a-z]+$)).*`` will inadvertently match
+    aliases that do not follow the device naming scheme (e.g. ``my_data_disk``)
+    and therefore hide every aliased disk. Prefer ``show=`` for allow-list
+    semantics, or write explicit ``hide=`` patterns that target the names you
+    actually want to exclude.
+
 It is also possible to define thesholds for latency and bytes read and write per second:
 
 .. code-block:: ini

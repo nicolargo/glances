@@ -24,9 +24,8 @@ dependencies = [
   "windows-curses; platform_system == 'Windows'",
   "shtab; platform_system != 'Windows'",
   "jinja2",
-  "pyinstrument>=5.1.2",
 ]
-description = "A cross-platform curses-based monitoring tool"
+description = "An all-in-one system monitoring tool"
 dynamic = ["version"]
 keywords = ["cli", "curses", "monitoring", "system"]
 license = "LGPL-3.0-only"
@@ -98,7 +97,7 @@ export = [
 ]
 gpu = ["nvidia-ml-py"]
 graph = ["pygal"]
-mcp = ["mcp>=1.0.0"]
+mcp = ["mcp>=1.0.0,<2"]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART"]

@@ -19,6 +19,31 @@ from glances.plugins.core import CorePlugin
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.processes import glances_processes, sort_stats
 
+# Windows has no nice ladder: psutil reports the Win32 priority *class*, whose values are
+# neither ordered nor small (32 is normal, 32768 is above normal), so the raw number is
+# both meaningless as a nice value and too wide for the 3-character NI column. Show the
+# same short labels Windows itself uses. See issue #3672.
+WINDOWS_NICE_LABELS = {
+    256: 'RT',  # REALTIME_PRIORITY_CLASS
+    128: 'Hi',  # HIGH_PRIORITY_CLASS
+    32768: 'AN',  # ABOVE_NORMAL_PRIORITY_CLASS
+    32: 'No',  # NORMAL_PRIORITY_CLASS
+    16384: 'BN',  # BELOW_NORMAL_PRIORITY_CLASS
+    64: 'Lo',  # IDLE_PRIORITY_CLASS
+}
+
+
+def display_nice(nice):
+    """Return the nice value as it should be displayed.
+
+    Only the rendering changes: an unmapped value falls through to itself, so a priority
+    class Windows adds later stays visible as a number instead of disappearing.
+    """
+    if WINDOWS:
+        return WINDOWS_NICE_LABELS.get(nice, nice)
+    return nice
+
+
 # Fields description
 # description: human readable description
 # short_name: shortname to use un UI
@@ -121,6 +146,9 @@ class ProcesslistPlugin(GlancesPluginModel):
 
     stats is a list
     """
+
+    # True between a refresh and the first read of the views, see update_views()
+    _views_pending = False
 
     # Default list of processes stats to be grabbed / displayed
     # Can be altered by glances_processes.disable_stats
@@ -258,6 +286,34 @@ class ProcesslistPlugin(GlancesPluginModel):
         self.stats = stats
 
         return self.stats
+
+    def update_views(self):
+        """Note that the views are out of date, without building them.
+
+        The list holds every process on the machine, while the UI shows a few dozen rows and
+        msg_curse() builds its own decorations rather than reading the views. Only the API
+        asks for them, so building them on every refresh is work nobody collects.
+        """
+        self._views_pending = True
+        self.views = {}
+        return self.views
+
+    def get_views(self, item=None, key=None, option=None):
+        """Build the views if the last refresh left them pending, then answer as usual."""
+        if self._views_pending:
+            self._views_pending = False
+            super().update_views()
+        return super().get_views(item=item, key=key, option=option)
+
+    def set_views(self, input_views):
+        """Views handed to us replace whatever a pending build would have produced."""
+        self._views_pending = False
+        super().set_views(input_views)
+
+    def reset_views(self):
+        """A reset must stay reset; without this the next read would rebuild them."""
+        self._views_pending = False
+        super().reset_views()
 
     def get_api(self):
         """Return the sorted processes list for the API."""
@@ -425,7 +481,9 @@ class ProcesslistPlugin(GlancesPluginModel):
             nice = p['nice']
             if nice is None:
                 nice = '?'
-            msg = self.layout_stat['nice'].format(nice)
+            msg = self.layout_stat['nice'].format(display_nice(nice))
+            # The alert keeps the raw value on purpose: the nice_* limits in glances.conf
+            # are POSIX nice numbers, so matching a label against them would silence them.
             ret = self.curse_add_line(msg, decoration=self.get_nice_alert(nice))
         else:
             msg = self.layout_header['nice'].format('?')
@@ -971,6 +1029,15 @@ class ProcesslistPlugin(GlancesPluginModel):
                 continue
             if sub_key is None:
                 ret += p[key]
+            elif isinstance(p[key], (list, tuple)):
+                # `sub_key` is an index here, not a key: `io_counters` is the list
+                # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
+                # (see glances/processes.py). `sub_key in p[key]` asked whether the
+                # list *contains the number* 0/1/2/3, so a process doing real IO was
+                # skipped and one whose counters happened to hold that literal was
+                # summed instead.
+                if isinstance(sub_key, int) and -len(p[key]) <= sub_key < len(p[key]):
+                    ret += p[key][sub_key]
             elif sub_key in p[key]:
                 ret += p[key][sub_key]
 

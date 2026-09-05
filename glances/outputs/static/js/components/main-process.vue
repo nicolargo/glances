@@ -135,7 +135,7 @@
 						<th class="col-virt">VIRT</th>
 						<th class="col-res">RES</th>
 						<th class="col-pid">PID</th>
-						<th class="col-ni" v-if="!data.isWindows">NI</th>
+						<th class="col-ni">NI</th>
 						<th class="col-s">S</th>
 						<th class="col-ior" :class="{ 'sort-active': isSort('io_counters') }" @click="setSort('io_counters')">IOR/s</th>
 						<th class="col-iow">IOW/s</th>
@@ -158,7 +158,7 @@
 						<td>{{ proc.vms }}</td>
 						<td>{{ proc.rss }}</td>
 						<td style="color:var(--fg3)">{{ proc.pid }}</td>
-						<td v-if="!data.isWindows" style="color:var(--fg3)">{{ proc.nice }}</td>
+						<td style="color:var(--fg3)">{{ proc.nice }}</td>
 						<td><span class="proc-status" :class="proc.status">{{ proc.status }}</span></td>
 						<td style="color:var(--fg3)">{{ proc.ioRead }}</td>
 						<td style="color:var(--fg3)">{{ proc.ioWrite }}</td>
@@ -182,6 +182,28 @@ import { GlancesHelper } from "../services.js";
 const REVERSE_COLUMNS = new Set([
 	'cpu_percent', 'memory_percent', 'io_counters', 'num_threads',
 ]);
+
+// Windows has no nice ladder: the API carries the Win32 priority *class*, whose values
+// are neither ordered nor small (32 is normal, 32768 is above normal). Show the same
+// short labels Windows itself uses, matching the TUI. See issue #3672.
+const WINDOWS_NICE_LABELS = {
+	256: 'RT', // REALTIME_PRIORITY_CLASS
+	128: 'Hi', // HIGH_PRIORITY_CLASS
+	32768: 'AN', // ABOVE_NORMAL_PRIORITY_CLASS
+	32: 'No', // NORMAL_PRIORITY_CLASS
+	16384: 'BN', // BELOW_NORMAL_PRIORITY_CLASS
+	64: 'Lo', // IDLE_PRIORITY_CLASS
+};
+
+// Only the rendering changes: an unmapped value falls through to itself, so a priority
+// class Windows adds later stays visible as a number instead of disappearing.
+export function displayNice(nice, isWindows) {
+	if (!isWindows) {
+		return nice;
+	}
+	const label = WINDOWS_NICE_LABELS[nice];
+	return label === undefined ? nice : label;
+}
 
 export default {
 	props: { data: { type: Object } },
@@ -226,8 +248,21 @@ export default {
 
 		// ── PROCESS LIST ──
 		limit() {
-			const cfgMax = this.config.outputs?.max_processes_display;
-			return cfgMax ? parseInt(cfgMax) : 50;
+			// Same order as the v4 WebUI: the plugin section wins over the global
+			// output setting, then what the API reports, then the CLI arguments.
+			const candidates = [
+				this.config.processlist?.max,
+				this.config.outputs?.max_processes_display,
+				this.data?.stats?.processcount?.max,
+				this.args.max_processes,
+				this.args.process_max,
+			];
+			for (const value of candidates) {
+				if (value !== undefined && value !== null) {
+					return parseInt(value, 10);
+				}
+			}
+			return 50;
 		},
 		processList() {
 			const isPrograms = this.args.programs;
@@ -237,6 +272,7 @@ export default {
 			const cores = this.data?.stats?.core?.log || 1;
 			const isIrix = !this.args.disable_irix;
 			const isShort = this.args.process_short_name;
+			const isWindows = this.data?.isWindows;
 			const fmt = this.$filters.bytes;
 			const fmtTd = this.$filters.timedelta;
 
@@ -331,7 +367,7 @@ export default {
 					memClass,
 					vms: fmt(memVirt),
 					rss: fmt(memRes),
-					nice: p.nice ?? '',
+					nice: displayNice(p.nice, isWindows) ?? '?',
 					status: p.status || 'S',
 					ioRead,
 					ioWrite,
@@ -354,7 +390,7 @@ export default {
 			const fmt = this.$filters.bytes;
 			return list.slice(0, 10).map(v => {
 				const status = v.status || 'unknown';
-				const statusClass = status === 'Running' || status === 'running' ? 'ok' : 'critical';
+				const statusClass = this.getVmStatusClass(status);
 				return {
 					id: v.id || v.name,
 					name: v.name || '',
@@ -385,6 +421,18 @@ export default {
 				containerSortDir = 'desc';
 			} else if (sortCol === 'memory_percent') {
 				containerSortKey = c => c.memory?.usage || 0;
+				containerSortDir = 'desc';
+			} else if (sortCol === 'io_rx' || sortCol === 'io_counters') {
+				containerSortKey = c => c.io_rx || 0;
+				containerSortDir = 'desc';
+			} else if (sortCol === 'io_wx') {
+				containerSortKey = c => c.io_wx || 0;
+				containerSortDir = 'desc';
+			} else if (sortCol === 'network_rx') {
+				containerSortKey = c => c.network_rx || 0;
+				containerSortDir = 'desc';
+			} else if (sortCol === 'network_tx') {
+				containerSortKey = c => c.network_tx || 0;
 				containerSortDir = 'desc';
 			} else if (sortCol === 'name') {
 				containerSortKey = c => (c.name || '').toLowerCase();
@@ -421,15 +469,7 @@ export default {
 			const list = this.data?.stats?.amps || [];
 			const nl2br = this.$filters.nl2br;
 			return list.filter(p => p.result !== null).map(p => {
-				let deco = 'ok';
-				if (p.count > 0) {
-					if ((p.countmin !== null && p.count < p.countmin) ||
-						(p.countmax !== null && p.count > p.countmax)) {
-						deco = 'careful';
-					}
-				} else {
-					deco = p.countmin === null ? 'ok' : 'critical';
-				}
+				const deco = this.getAmpDecoration(p);
 				return {
 					name: p.name,
 					count: p.count,
@@ -476,6 +516,35 @@ export default {
 					this.extendedProc = null;
 					this.pinnedPid = null;
 				});
+		},
+		// Mirrors AmpsPlugin.get_alert() in glances/plugins/amps/__init__.py,
+		// which is the authority: an unset bound defaults to the observed count,
+		// an out-of-range count is WARNING (not CAREFUL), and a configured
+		// minimum of 0 means a count of 0 is fine.
+		getAmpDecoration(process) {
+			const count = process.count;
+			const countMin = process.countmin;
+			const countMax = process.countmax;
+
+			if (count > 0) {
+				const min = countMin === null ? count : Number(countMin);
+				const max = countMax === null ? count : Number(countMax);
+				return min <= count && count <= max ? 'ok' : 'warning';
+			}
+
+			return countMin === null || Number(countMin) === 0 ? 'ok' : 'critical';
+		},
+		// Mirrors VmsPlugin.vm_alert() in glances/plugins/vms/__init__.py,
+		// which is the authority — the TUI calls it directly. Statuses follow
+		// multipass' instance states.
+		getVmStatusClass(status) {
+			if (status === 'running') {
+				return 'ok';
+			}
+			if (['starting', 'restarting', 'delayed shutdown'].includes(status)) {
+				return 'warning';
+			}
+			return 'info';
 		},
 		getCpuClass(val) {
 			const alert = GlancesHelper.getAlert('processlist', 'processlist_cpu_', val, 100);

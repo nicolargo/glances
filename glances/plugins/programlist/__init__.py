@@ -175,69 +175,51 @@ class ProgramlistPlugin(ProcesslistPlugin):
         msg = self.layout_stat['nprocs'].format(p['nprocs'])
         return self.curse_add_line(msg)
 
-    def _msg_curse_header(self, ret, process_sort_key, args=None):
-        """Build the header and add it to the ret dict."""
-        sort_style = 'SORT'
+    def _cpu_header_msg(self, args):
+        """Return the CPU column header, depending on Irix mode and the number of cores."""
+        if args.disable_irix and 0 < self.nb_log_core < 10:
+            return self.layout_header['cpu'].format('CPU%/' + str(self.nb_log_core))
+        if args.disable_irix and self.nb_log_core:
+            return self.layout_header['cpu'].format('CPU%/C')
+        return self.layout_header['cpu'].format('CPU%')
 
-        display_stats = [i for i in self.enable_stats if i not in glances_processes.disable_stats]
+    def _header_columns(self, args):
+        """Return the ordered list of header columns as (stat, msg, sort_key, options) tuples.
 
-        if 'cpu_percent' in display_stats:
-            if args.disable_irix and 0 < self.nb_log_core < 10:
-                msg = self.layout_header['cpu'].format('CPU%/' + str(self.nb_log_core))
-            elif args.disable_irix and self.nb_log_core != 0:
-                msg = self.layout_header['cpu'].format('CPU%/C')
-            else:
-                msg = self.layout_header['cpu'].format('CPU%')
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
-
-        if 'memory_percent' in display_stats:
-            msg = self.layout_header['mem'].format('MEM%')
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
-        if 'memory_info' in display_stats:
-            msg = self.layout_header['virt'].format('VIRT')
-            ret.append(self.curse_add_line(msg, optional=True))
-            msg = self.layout_header['res'].format('RES')
-            ret.append(self.curse_add_line(msg, optional=True))
-        if 'nprocs' in display_stats:
-            msg = self.layout_header['nprocs'].format('NPROCS')
-            ret.append(self.curse_add_line(msg))
-        if 'username' in display_stats:
-            msg = self.layout_header['user'].format('USER')
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
-        if 'cpu_times' in display_stats:
-            msg = self.layout_header['time'].format('TIME+')
-            ret.append(
-                self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_times' else 'DEFAULT', optional=True)
-            )
-        if 'num_threads' in display_stats:
-            msg = self.layout_header['thread'].format('THR')
-            ret.append(self.curse_add_line(msg))
-        if 'nice' in display_stats:
-            msg = self.layout_header['nice'].format('NI')
-            ret.append(self.curse_add_line(msg))
-        if 'status' in display_stats:
-            msg = self.layout_header['status'].format('S')
-            ret.append(self.curse_add_line(msg))
-        if 'io_counters' in display_stats:
-            msg = self.layout_header['ior'].format('R/s')
-            ret.append(
-                self.curse_add_line(
-                    msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
-                )
-            )
-            msg = self.layout_header['iow'].format('W/s')
-            ret.append(
-                self.curse_add_line(
-                    msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True
-                )
-            )
+        A stat may appear more than once (one tuple per displayed column).
+        sort_key is the process_sort_key that highlights the column, or None if not sortable.
+        options are extra keyword arguments passed to curse_add_line.
+        """
         if args.is_standalone and not args.disable_cursor:
             shortkey = "('k' to kill)"
         else:
             shortkey = ""
-        if 'cmdline' in display_stats:
-            msg = self.layout_header['command'].format("Programs", shortkey)
-            ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
+        io_options = {'optional': True, 'additional': True}
+        return [
+            ('cpu_percent', self._cpu_header_msg(args), 'cpu_percent', {}),
+            ('memory_percent', self.layout_header['mem'].format('MEM%'), 'memory_percent', {}),
+            ('memory_info', self.layout_header['virt'].format('VIRT'), None, {'optional': True}),
+            ('memory_info', self.layout_header['res'].format('RES'), None, {'optional': True}),
+            ('nprocs', self.layout_header['nprocs'].format('NPROCS'), None, {}),
+            ('username', self.layout_header['user'].format('USER'), 'username', {}),
+            ('cpu_times', self.layout_header['time'].format('TIME+'), 'cpu_times', {'optional': True}),
+            ('num_threads', self.layout_header['thread'].format('THR'), None, {}),
+            ('nice', self.layout_header['nice'].format('NI'), None, {}),
+            ('status', self.layout_header['status'].format('S'), None, {}),
+            ('io_counters', self.layout_header['ior'].format('R/s'), 'io_counters', io_options),
+            ('io_counters', self.layout_header['iow'].format('W/s'), 'io_counters', io_options),
+            ('cmdline', self.layout_header['command'].format("Programs", shortkey), 'name', {}),
+        ]
+
+    def _msg_curse_header(self, ret, process_sort_key, args=None):
+        """Build the header and add it to the ret dict."""
+        display_stats = [i for i in self.enable_stats if i not in glances_processes.disable_stats]
+
+        for stat, msg, sort_key, options in self._header_columns(args):
+            if stat not in display_stats:
+                continue
+            decoration = 'SORT' if sort_key is not None and process_sort_key == sort_key else 'DEFAULT'
+            ret.append(self.curse_add_line(msg, decoration, **options))
 
     def _msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):
         """

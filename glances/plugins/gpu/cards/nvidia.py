@@ -13,6 +13,7 @@ import sys
 
 from glances.globals import nativestr
 from glances.logger import logger
+from glances.plugins.gpu.cards import tegra
 
 NVML_LIB = 'libnvidia-ml.so.1'
 
@@ -83,6 +84,14 @@ class NvidiaGPU:
             device_stats['temperature'] = get_temperature(device_handle)
             # Fan speed in %
             device_stats['fan_speed'] = get_fan_speed(device_handle)
+            # Tegra (Jetson) fallback: NVML enumerates the integrated GPU and
+            # returns its name, but reports NVML_ERROR_NOT_SUPPORTED for the
+            # telemetry queries above. Fill the gaps from Tegra sysfs nodes.
+            if tegra.is_tegra(device_stats['name']):
+                if device_stats['proc'] is None:
+                    device_stats['proc'] = tegra.get_proc()
+                if device_stats['temperature'] is None:
+                    device_stats['temperature'] = tegra.get_temperature()
             stats.append(device_stats)
 
         return stats

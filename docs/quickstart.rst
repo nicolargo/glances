@@ -89,6 +89,30 @@ available network interfaces) and TCP port is ``61209``.
 
 In client/server mode, limits are set by the server side.
 
+Security — DNS rebinding protection (XML-RPC)
+'''''''''''''''''''''''''''''''''''''''''''''
+
+By default the XML-RPC server accepts requests with any value of the HTTP
+``Host`` header. A malicious web page can exploit DNS rebinding to read the
+server's response from a victim's browser
+(`CVE-2026-46611 <https://github.com/nicolargo/glances/security/advisories/GHSA-w856-8p3r-p338>`_).
+
+**Enable Host validation** by setting ``xmlrpc_allowed_hosts`` in the
+``[outputs]`` section of ``glances.conf``:
+
+.. code-block:: ini
+
+    [outputs]
+    xmlrpc_allowed_hosts=localhost,127.0.0.1,myserver.example.com
+
+When set, requests whose ``Host`` header does not match any of the listed
+patterns are rejected with ``400 Bad Request``. Wildcards follow Python
+``fnmatch`` rules — for example ``*.example.com`` matches ``foo.example.com``
+but not ``example.com`` itself.
+
+For any deployment on a non-loopback interface, always set
+``xmlrpc_allowed_hosts``. A startup warning is emitted when it is absent.
+
 Central Glances Browser
 ^^^^^^^^^^^^^^^^^^^^^^^
 

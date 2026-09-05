@@ -10,11 +10,13 @@
 """Tests for the Sensors plugin."""
 
 import json
+from unittest.mock import patch
 
 import pytest
 
+from glances.config import Config
 from glances.globals import LINUX
-from glances.plugins.sensors import GlancesGrabSensors
+from glances.plugins.sensors import GlancesGrabSensors, SensorsPlugin
 
 
 @pytest.fixture
@@ -178,6 +180,7 @@ class TestSensorsPluginMsgCurse:
     def test_msg_curse_returns_list(self, sensors_plugin):
         """Test that msg_curse returns a list."""
         sensors_plugin.update()
+        sensors_plugin.update_views()
         msg = sensors_plugin.msg_curse(max_width=80)
         assert isinstance(msg, list)
 
@@ -186,6 +189,25 @@ class TestSensorsPluginMsgCurse:
         sensors_plugin.update()
         msg = sensors_plugin.msg_curse()
         assert isinstance(msg, list)
+
+    def test_msg_curse_without_args(self, sensors_plugin):
+        """Test that msg_curse does not crash when args is None."""
+        stats = [
+            {
+                'label': 'CPU',
+                'unit': 'C',
+                'value': 42,
+                'warning': 60,
+                'critical': 80,
+                'type': 'temperature_core',
+                'key': 'label',
+            }
+        ]
+        with patch.object(sensors_plugin, 'stats', stats):
+            sensors_plugin.update_views()
+            msg = sensors_plugin.msg_curse(max_width=80)
+        assert isinstance(msg, list)
+        assert any('42C' in m['msg'] for m in msg)
 
 
 class TestSensorsPluginExport:
@@ -321,3 +343,125 @@ class TestSensorsPluginAlerts:
             if label in views and 'value' in views[label]:
                 if sensor['value']:  # Only check if value is not empty
                     assert 'decoration' in views[label]['value']
+
+
+class TestSensorsPluginConfigThresholds:
+    """Test that core temperature thresholds set in the config file are used (see #3627)."""
+
+    @staticmethod
+    def build_plugin(tmp_path, sensors_section):
+        """Return a sensors plugin configured with the given [sensors] section."""
+        config_file = tmp_path / 'glances.conf'
+        config_file.write_text('[sensors]\ndisable=False\n' + sensors_section, encoding='utf-8')
+        return SensorsPlugin(args=None, config=Config(config_dir=str(config_file)))
+
+    @staticmethod
+    def decoration(plugin, value, label='Tctl', system_high=None, system_critical=None):
+        """Return the view decoration for a single fake core temperature reading."""
+        plugin.stats = [
+            {
+                'label': label,
+                'unit': 'C',
+                'value': value,
+                'warning': system_high,
+                'critical': system_critical,
+                'type': 'temperature_core',
+                'key': 'label',
+            }
+        ]
+        plugin.update_views()
+        return plugin.get_views(item=label, key='value', option='decoration')
+
+    @pytest.mark.parametrize(
+        ('sensors_section', 'expected'),
+        [
+            ('temperature_core_careful=60\n', 'CAREFUL'),
+            ('temperature_core_warning=90\n', 'WARNING'),
+            ('temperature_core_critical=95\n', 'CRITICAL'),
+            ('temperature_core_careful=60\ntemperature_core_warning=90\n', 'WARNING'),
+        ],
+    )
+    def test_partial_type_thresholds_are_used(self, tmp_path, sensors_section, expected):
+        """A sensor type threshold is used even when the other levels are not defined."""
+        plugin = self.build_plugin(tmp_path, sensors_section)
+        assert self.decoration(plugin, 95).startswith(expected)
+
+    def test_partial_sensor_thresholds_are_used(self, tmp_path):
+        """A per sensor threshold is used even when no critical level is defined."""
+        plugin = self.build_plugin(tmp_path, 'temperature_core_tctl_warning=90\n')
+        assert self.decoration(plugin, 95).startswith('WARNING')
+
+    def test_config_thresholds_overwrite_system_ones(self, tmp_path):
+        """The config threshold, not the system one, gives the alert level."""
+        plugin = self.build_plugin(tmp_path, 'temperature_core_warning=90\n')
+        # The system would already warn at 70C, the configuration only at 90C
+        assert self.decoration(plugin, 80, system_high=70, system_critical=100).startswith('OK')
+
+    def test_system_thresholds_are_used_when_not_configured(self, tmp_path):
+        """Without any threshold in the config file, the system ones are used."""
+        plugin = self.build_plugin(tmp_path, '')
+        assert self.decoration(plugin, 95, system_high=70, system_critical=100).startswith('WARNING')
+
+    def test_no_threshold_at_all_is_not_decorated(self, tmp_path):
+        """Sensors without config and system thresholds are not decorated."""
+        plugin = self.build_plugin(tmp_path, '')
+        assert self.decoration(plugin, 95) == 'DEFAULT'
+
+
+class TestSensorsPluginZeroValue:
+    """A reading of 0 is a reading and must still be evaluated."""
+
+    LIMITS = {
+        'sensors_battery_careful': 70,
+        'sensors_battery_warning': 80,
+        'sensors_battery_critical': 90,
+        'sensors_fan_speed_careful': 60,
+        'sensors_fan_speed_warning': 70,
+        'sensors_fan_speed_critical': 80,
+    }
+
+    @staticmethod
+    def build_plugin(stats, limits):
+        from unittest.mock import MagicMock
+
+        plugin = SensorsPlugin(args=MagicMock(), config=None)
+        plugin._limits = dict(limits)
+        plugin.stats = stats
+        plugin.update_views()
+        return plugin
+
+    @classmethod
+    def decoration(cls, value, sensor_type, limits=None):
+        stats = [{'label': 'S', 'value': value, 'unit': '%', 'key': 'label', 'type': sensor_type}]
+        plugin = cls.build_plugin(stats, limits if limits is not None else cls.LIMITS)
+        return plugin.get_views(item='S', key='value', option='decoration')
+
+    def test_battery_at_zero_percent_is_critical(self):
+        # The battery alert is computed on 100 - value, so an empty battery is the
+        # most critical reading there is. `not i['value']` skipped it outright while
+        # 3% — a strictly better state — was flagged CRITICAL.
+        assert self.decoration(0, 'battery') == 'CRITICAL'
+
+    def test_battery_at_zero_is_not_less_alarming_than_a_small_charge(self):
+        for charge in (1, 3, 9):
+            assert self.decoration(0, 'battery') == self.decoration(charge, 'battery')
+
+    def test_stopped_fan_is_evaluated_rather_than_skipped(self):
+        # A stopped fan must go through the thresholds like any other reading; what
+        # the configured thresholds then say about it is a separate question.
+        assert self.decoration(0, 'fan_speed') != 'DEFAULT'
+
+    def test_absent_sensor_is_still_skipped(self):
+        # No battery detected is reported as an empty list, not as a number.
+        assert self.decoration([], 'battery') == 'DEFAULT'
+        assert self.decoration(None, 'battery') == 'DEFAULT'
+
+    def test_placeholder_reading_does_not_raise(self):
+        # hddtemp-style placeholders are not numbers; the battery branch subtracts
+        # from the value, so they must not reach it.
+        assert self.decoration(b'ERR', 'battery') == 'DEFAULT'
+        assert self.decoration(b'SLP', 'fan_speed') == 'DEFAULT'
+
+    def test_nonzero_readings_are_unaffected(self):
+        assert self.decoration(95, 'fan_speed') == 'CRITICAL'
+        assert self.decoration(50, 'fan_speed') == 'OK'

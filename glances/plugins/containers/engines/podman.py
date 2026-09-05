@@ -11,6 +11,8 @@ import time
 from datetime import datetime
 from typing import Any
 
+import psutil
+
 from glances.globals import nativestr, pretty_date, replace_special_chars, string_value_to_float
 from glances.logger import logger
 from glances.stats_streamer import ThreadedIterableStreamer
@@ -32,6 +34,12 @@ class PodmanContainerStatsFetcher:
 
     def __init__(self, container):
         self._container = container
+
+        # Full inspection to get limits (see issue #1152: List API doesn't include HostConfig)
+        try:
+            self._inspect_data = self._container.inspect()
+        except Exception:
+            self._inspect_data = {}
 
         # Previous stats are stored in the self._old_computed_stats variable
         # We store time data to enable rate calculations to avoid complexity for consumers of the APIs exposed.
@@ -85,6 +93,19 @@ class PodmanContainerStatsFetcher:
 
         try:
             stats["cpu"]["total"] = api_stats["CPU"]
+            # CPU limit
+            host_config = self._inspect_data.get('HostConfig')
+            nano_cpus = host_config.get('NanoCpus', 0)
+            if nano_cpus > 0:
+                stats['cpu']['limit'] = nano_cpus / 1e9
+            else:
+                cpu_quota = host_config.get('CpuQuota', 0)
+                cpu_period = host_config.get('CpuPeriod', 0)
+                if cpu_quota > 0 and cpu_period > 0:
+                    stats['cpu']['limit'] = cpu_quota / cpu_period
+                else:
+                    # Fallback to the number of available cores
+                    stats['cpu']['limit'] = float(psutil.cpu_count())
 
             stats["memory"]["usage"] = api_stats["MemUsage"]
             stats["memory"]["limit"] = api_stats["MemLimit"]
@@ -135,7 +156,10 @@ class PodmanPodStatsFetcher:
         # Threaded Streamer
         # Temporary patch to get podman extension working
         stats_iterable = (pod_manager.stats(decode=True) for _ in iter(int, 1))
-        self._streamer = ThreadedIterableStreamer(stats_iterable, initial_stream_value={}, sleep_duration=2)
+        # WARNING: Podman API doesn't specify the rate at which stats are sent, so we set it to 1 second
+        # to avoid overloading the system with stats calculations. With a lot of pods, this can cause some
+        # delay in stats display but it is better than overloading the system.
+        self._streamer = ThreadedIterableStreamer(stats_iterable, initial_stream_value={}, sleep_duration=1)
 
     def _log_debug(self, msg, exception=None):
         logger.debug(f"containers (Podman): Pod Manager - {msg} ({exception})")
@@ -271,6 +295,10 @@ class PodmanExtension:
         self.pods_stats_fetcher = None
         self.container_stats_fetchers = {}
 
+        # Issue #3559: cache the (immutable) image tags per container id to avoid
+        # one inspect_image API call per container on every refresh.
+        self.image_cache = {}
+
         self.connect()
 
     def connect(self):
@@ -330,13 +358,18 @@ class PodmanExtension:
                 self.container_stats_fetchers[container.id] = PodmanContainerStatsFetcher(container)
 
         # Stop threads for non-existing containers
-        absent_containers = set(self.container_stats_fetchers.keys()) - {c.id for c in containers}
+        current_ids = {c.id for c in containers}
+        absent_containers = set(self.container_stats_fetchers.keys()) - current_ids
         for container_id in absent_containers:
             # Stop the StatsFetcher
             logger.debug(f"{self.ext_name} plugin - Stop thread for old container {container_id[:12]}")
             self.container_stats_fetchers[container_id].stop()
             # Delete the StatsFetcher from the dict
             del self.container_stats_fetchers[container_id]
+
+        # Drop image cache entries for non-existing containers (issue #3559)
+        for container_id in set(self.image_cache) - current_ids:
+            del self.image_cache[container_id]
 
         # Get stats for all containers
         container_stats = [self.generate_stats(container) for container in containers]
@@ -354,13 +387,26 @@ class PodmanExtension:
         """Return the key of the list."""
         return "name"
 
+    def _get_image(self, container):
+        """Return the container image tags, cached per container id (issue #3559).
+
+        `container.image` performs an inspect_image API call. The image of a container
+        is immutable for its lifetime, so the result is cached to avoid one synchronous
+        API call per container on every refresh.
+        """
+        if container.id not in self.image_cache:
+            # Access container.image only once (it triggers an inspect_image API call)
+            tags = container.image.tags
+            self.image_cache[container.id] = ",".join(tags if tags else [])
+        return self.image_cache[container.id]
+
     def generate_stats(self, container) -> dict[str, Any]:
         # Init the stats for the current container
         stats = {
             "key": self.key,
             "name": nativestr(container.name),
             "id": container.id,
-            "image": ",".join(container.image.tags if container.image.tags else []),
+            "image": self._get_image(container),
             "status": container.attrs["State"],
             "created": container.attrs["Created"],
             "command": container.attrs.get("Command") or [],
@@ -384,6 +430,7 @@ class PodmanExtension:
 
         # Additional fields
         stats["cpu_percent"] = stats["cpu"].get("total")
+        stats["cpu_limit"] = stats["cpu"].get("limit")
         stats["memory_usage"] = stats["memory"].get("usage")
         if stats["memory"].get("cache") is not None:
             stats["memory_usage"] -= stats["memory"]["cache"]

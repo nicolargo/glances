@@ -7,23 +7,29 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Tests for the GPU plugin (ARM backend)."""
+"""Tests for the GPU plugin (ARM and Tegra backends)."""
 
 import pytest
 
 from glances.globals import LINUX
+from glances.plugins.gpu.cards import tegra
 from glances.plugins.gpu.cards.arm import (
     ArmGPU,
     aggregate_fdinfo,
     compute_mem_percent,
     get_device_list,
     get_device_name,
+    get_mem_capacity_bytes,
     parse_fdinfo,
 )
 
 ARM_TEST_DATA_ROOT = './tests-data/plugins/gpu/arm'
 ARM_DRM_ROOT = f'{ARM_TEST_DATA_ROOT}/sys/class/drm'
 ARM_PROC_ROOT = f'{ARM_TEST_DATA_ROOT}/proc'
+
+TEGRA_TEST_DATA_ROOT = './tests-data/plugins/gpu/tegra'
+TEGRA_GPU_FOLDER = f'{TEGRA_TEST_DATA_ROOT}/sys/devices/platform/gpu.0'
+TEGRA_THERMAL_ROOT = f'{TEGRA_TEST_DATA_ROOT}/sys/class/thermal'
 
 
 @pytest.fixture
@@ -106,12 +112,54 @@ class TestArmComputeHelpers:
         snapshot = {'mem_total_bytes': 100, 'mem_used_bytes': 500}
         assert compute_mem_percent(snapshot) == 100
 
+    def test_compute_mem_percent_capacity_denominator(self):
+        # capacity_bytes (CmaTotal/MemTotal) overrides the fdinfo drm-total.
+        snapshot = {'mem_total_bytes': 100, 'mem_used_bytes': 500}
+        assert compute_mem_percent(snapshot, capacity_bytes=1000) == 50
+
+    def test_compute_mem_percent_capacity_clamped(self):
+        # used > capacity -> v3d spilled past the CMA pool; clamp to 100.
+        snapshot = {'mem_total_bytes': 100, 'mem_used_bytes': 500}
+        assert compute_mem_percent(snapshot, capacity_bytes=100) == 100
+
     def test_get_device_name_known(self):
         assert get_device_name('panthor') == 'Mali (Panthor)'
         assert get_device_name('msm') == 'Adreno (msm)'
 
     def test_get_device_name_unknown(self):
         assert get_device_name('unknown-driver-xyz') == 'ARM GPU'
+
+
+class TestArmMemCapacity:
+    """Denominator cascade for GPU mem% (issue #3611). Mocks /proc/meminfo."""
+
+    def _write_meminfo(self, tmp_path, content):
+        path = tmp_path / 'meminfo'
+        path.write_text(content)
+        return str(path)
+
+    def test_cma_total_present(self, tmp_path):
+        # CmaTotal > 0 -> denominator is CmaTotal (in bytes: kB * 1024).
+        path = self._write_meminfo(
+            tmp_path,
+            "MemTotal:        8192000 kB\nCmaTotal:         262144 kB\n",
+        )
+        assert get_mem_capacity_bytes(path) == 262144 * 1024
+
+    def test_cma_total_zero_falls_back_to_mem_total(self, tmp_path):
+        path = self._write_meminfo(
+            tmp_path,
+            "MemTotal:        8192000 kB\nCmaTotal:              0 kB\n",
+        )
+        assert get_mem_capacity_bytes(path) == 8192000 * 1024
+
+    def test_cma_total_absent_falls_back_to_mem_total(self, tmp_path):
+        path = self._write_meminfo(tmp_path, "MemTotal:        8192000 kB\n")
+        assert get_mem_capacity_bytes(path) == 8192000 * 1024
+
+    def test_meminfo_unreadable_returns_none(self, tmp_path):
+        # Non-Linux / restricted container -> None -> caller keeps legacy path.
+        assert get_mem_capacity_bytes(str(tmp_path / 'does-not-exist')) is None
 
 
 @pytest.mark.skipif(not LINUX, reason="ARM GPU backend is Linux-only")
@@ -144,7 +192,9 @@ class TestArmBackendDiscovery:
         assert stats[0]['fan_speed'] is None
 
     def test_mem_aggregated_from_fdinfo(self, arm_backend):
-        # Two clients: 1024 + 512 KiB used over 2048 + 1024 KiB total = 50%
+        # Numerator: 1024 + 512 = 1536 KiB resident (from fdinfo).
+        # Denominator: CmaTotal = 3072 KiB (from the proc/meminfo fixture, #3611).
+        # -> 1536 / 3072 = 50%
         stats = arm_backend.get_device_stats()
         assert stats[0]['mem'] == 50
 
@@ -198,6 +248,36 @@ class TestArmAggregation:
         assert bucket['engine_total_ns'] == 9_500_000
         assert bucket['mem_total_bytes'] == 3072 * 1024
         assert bucket['mem_used_bytes'] == 1536 * 1024
+
+
+# Tegra (Jetson) sysfs fallback tests against committed fixtures.
+class TestTegraBackend:
+    def test_is_tegra_by_name(self):
+        # NVML reports names such as "Orin (nvgpu)" on Jetson.
+        assert tegra.is_tegra('Orin (nvgpu)') is True  # nosec B101
+        assert tegra.is_tegra('NVIDIA Tegra Xavier (nvgpu)') is True  # nosec B101
+
+    def test_is_tegra_rejects_discrete(self):
+        # A discrete GPU name with no Tegra sysfs node must not trigger.
+        assert tegra.is_tegra('NVIDIA GeForce RTX 4090', gpu_device_folder='/nope') is False  # nosec B101
+
+    def test_is_tegra_by_sysfs(self):
+        assert tegra.is_tegra(None, gpu_device_folder=TEGRA_GPU_FOLDER) is True  # nosec B101
+        assert tegra.is_tegra(None, gpu_device_folder='/this/does/not/exist') is False  # nosec B101
+
+    def test_proc_permille_to_percent(self):
+        # Fixture load node holds 774 per-mille -> 77 %.
+        assert tegra.get_proc(gpu_device_folder=TEGRA_GPU_FOLDER) == 77  # nosec B101
+
+    def test_proc_missing_node(self):
+        assert tegra.get_proc(gpu_device_folder='/this/does/not/exist') is None  # nosec B101
+
+    def test_temperature_picks_gpu_thermal_zone(self):
+        # Must select the gpu-thermal zone (51312 -> 51 C), not cpu/soc zones.
+        assert tegra.get_temperature(thermal_root=TEGRA_THERMAL_ROOT) == 51  # nosec B101
+
+    def test_temperature_missing_root(self):
+        assert tegra.get_temperature(thermal_root='/this/does/not/exist') is None  # nosec B101
 
 
 class TestGpuPluginIntegration:

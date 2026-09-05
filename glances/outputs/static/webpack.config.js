@@ -21,6 +21,9 @@ module.exports = (_, env) => {
 			publicPath: isProd ? "/static/" : "/",
 			clean: true,
 		},
+		optimization: {
+			minimizer: [new TerserWebpackPlugin({ extractComments: false })],
+		},
 		devtool: isProd ? false : "eval-source-map",
 		performance: {
 			hints: false,
@@ -81,7 +84,6 @@ module.exports = (_, env) => {
 					template: "./templates/index.html",
 					inject: false,
 				}),
-			isProd && new TerserWebpackPlugin({ extractComments: false }),
 			new VueLoaderPlugin(),
 		].filter(Boolean),
 		devServer: {

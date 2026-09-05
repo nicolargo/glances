@@ -189,6 +189,14 @@ class SensorsPlugin(GlancesPluginModel):
 
         return stats
 
+    def __has_user_thresholds(self, stat_name):
+        """Return True if the user defined at least one threshold for the given stat_name.
+
+        All the criticality levels are checked because the user is free to define only
+        some of them (for example a warning without a critical). See #3627.
+        """
+        return any(self.is_limit(level, stat_name=stat_name) for level in ('careful', 'warning', 'critical'))
+
     def __get_system_thresholds(self, sensor):
         """Return the alert level thanks to the system thresholds.
         Note: Only Warning (aka High) and Critical thresholds are used. Careful is not available.
@@ -212,14 +220,20 @@ class SensorsPlugin(GlancesPluginModel):
         # Add specifics information
         # Alert
         for i in self.stats:
-            if not i['value']:
+            # A reading of 0 is a reading: a battery at 0% and a stopped fan are the
+            # states that most need an alert, and `not i['value']` swallowed both along
+            # with the absent ones. Test for a usable number instead. Sensors reporting a
+            # placeholder (no battery -> [], hddtemp -> b'ERR'/b'SLP'/...) keep the
+            # DEFAULT decoration the parent update_views() already gave them, and the
+            # battery branch below no longer subtracts from a non-number.
+            if not isinstance(i['value'], (int, float)):
                 continue
             # Alert processing
             if i['type'] == sensors_definition.get('cpu_temp').get('type'):
-                if self.is_limit('critical', stat_name=i['type'] + '_' + i['label']):
+                if self.__has_user_thresholds(i['type'] + '_' + i['label']):
                     # Get thresholds for the specific sensor in the glances.conf file (see #2058)
                     alert = self.get_alert(current=i['value'], header=i['label'], action_key=i['type'])
-                elif self.is_limit('critical', stat_name=i['type']):
+                elif self.__has_user_thresholds(i['type']):
                     # Get thresholds for the sensor type in the glances.conf file (see #3049)
                     alert = self.get_alert(current=i['value'], header=i['type'])
                 else:
@@ -282,7 +296,8 @@ class SensorsPlugin(GlancesPluginModel):
                 )
             else:
                 if (
-                    args.fahrenheit
+                    args
+                    and args.fahrenheit
                     and i['type'] != sensors_definition.get('battery').get('type')
                     and i['type'] != sensors_definition.get('fan_speed').get('type')
                 ):
