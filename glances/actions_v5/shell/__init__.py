@@ -9,8 +9,8 @@
 
 """Glances v5 — Shell action (concrete `GlancesActionBase`).
 
-Executes a shell command on alert. Migrates the v4 `_action` /
-`_action_repeat` behaviour.
+Executes a command on alert. Migrates the v4 `_action` / `_action_repeat`
+behaviour.
 
 Config key suffixes (in any plugin section), with the 3-level precedence
 resolved by `GlancesAlerts`:
@@ -20,40 +20,52 @@ resolved by `GlancesAlerts`:
 - ``<field>_<level>_action[_repeat]``             # field-specific
 - ``<key>_<field>_<level>_action[_repeat]``       # per-item (collection plugins)
 
-The template uses Mustache syntax (rendered by `chevron`). Context
-values are **shell-quoted with `shlex.quote()` before substitution** so
-that user-influenced metric strings (process names, container names,
-interface names, …) cannot inject shell commands — CVE-2026-32608.
+The command line uses Mustache syntax (rendered by `chevron`) and is executed
+by `secure_popen`, the same tokenizer as v4 and the AMPs.
 
-`--disable-config-exec` (CVE-2026-68519) additionally drops the shell
-altogether: the rendered command is split with `shlex.split()` and run as
-a single process, so the shell operators written in the operator's *own*
-`glances.conf` line (`&&`, `|`, `>`, …) are never interpreted. This
-mirrors v4 `secure_popen(..., allow_operators=False)`.
+Security — order of operations
+------------------------------
+`secure_popen` splits the command line into arguments **first**, then renders
+each argument. The template comes from `glances.conf` and is trusted; the stat
+values it interpolates (process names, container names, mount points, …) are
+not. Because the argument boundaries are already fixed when a value is
+expanded, that value can neither open nor close a quote, introduce whitespace
+nor forge an operator: it always lands in exactly one argument
+(GHSA-56xw-p9qm-r437).
+
+Rendering first and lexing afterwards is what made every earlier mitigation on
+this subsystem incomplete. Quoting the values before rendering does not work
+either: chevron's default `{{var}}` syntax HTML-escapes `" < > &`, so it
+rewrites the very quotes an escaper emits.
+
+`--disable-config-exec` maps to `secure_popen(allow_operators=False)`: the
+operators written in the operator's *own* `glances.conf` line (`&&`, `|`, `>`)
+are then passed verbatim as literal arguments instead of being interpreted.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
-import shlex
+from functools import partial
 from typing import Any, ClassVar
 
 import chevron
 
 from glances.actions_v5.action_base import GlancesActionBase
+from glances.secure import secure_popen
 
 logger = logging.getLogger(__name__)
 
 
 class ShellAction(GlancesActionBase):
-    """Run a shell command on alert."""
+    """Run a command on alert."""
 
     action_name: ClassVar[str] = "action"
     # chevron is a core Glances dependency — no extra requires.
     requires: ClassVar[list[str]] = []
 
-    def allow_shell(self) -> bool:
+    def allow_operators(self) -> bool:
         """False when `--disable-config-exec` hardened config-driven execution.
 
         The command lines are read from the same `glances.conf` as the AMP
@@ -74,14 +86,20 @@ class ShellAction(GlancesActionBase):
         action_value: str,
         repeat: bool = False,
     ) -> None:
-        # Pre-quote every context value so that interpolation produces
-        # shell-safe text. Numbers and simple identifiers pass through
-        # unchanged; strings with metacharacters get single-quoted.
-        safe_context = {key: shlex.quote(str(value)) for key, value in context.items()}
-
+        # `action_value` is handed over as the raw template: secure_popen
+        # tokenizes it and only then expands each argument (see module
+        # docstring). `secure_popen` is blocking, hence the thread handoff.
         try:
-            command = chevron.render(action_value, safe_context)
-        except Exception as e:
+            ret = await asyncio.to_thread(
+                secure_popen,
+                action_value,
+                allow_operators=self.allow_operators(),
+                render=partial(chevron.render, data=context),
+            )
+        except chevron.ChevronError as e:
+            # A Mustache section spanning two arguments cannot be rendered per
+            # argument. Refuse to run rather than fall back to rendering the
+            # whole line, which would reopen the injection.
             logger.warning(
                 "Shell action: template render failed (plugin=%s, level=%s, template=%r): %s",
                 plugin_name,
@@ -90,55 +108,23 @@ class ShellAction(GlancesActionBase):
                 e,
             )
             return
-
-        allow_shell = self.allow_shell()
-        if not allow_shell:
-            try:
-                argv = shlex.split(command)
-            except ValueError as e:
-                logger.warning(
-                    "Shell action: command cannot be split (plugin=%s, level=%s, command=%r): %s",
-                    plugin_name,
-                    level,
-                    command,
-                    e,
-                )
-                return
-            if not argv:
-                return
-
-        try:
-            if allow_shell:
-                proc = await asyncio.create_subprocess_shell(
-                    command,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-            else:
-                proc = await asyncio.create_subprocess_exec(
-                    *argv,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-            _, stderr = await proc.communicate()
-        except Exception as e:
+        except OSError as e:
             logger.warning(
-                "Shell action: execution failed (plugin=%s, level=%s, command=%r): %s",
+                "Shell action: execution failed (plugin=%s, level=%s, template=%r): %s",
                 plugin_name,
                 level,
-                command,
+                action_value,
                 e,
             )
             return
 
-        if proc.returncode != 0:
-            err_text = stderr.decode("utf-8", errors="replace").strip()
-            logger.warning(
-                "Shell action: non-zero exit (plugin=%s, level=%s, repeat=%s, command=%r, returncode=%d, stderr=%s)",
-                plugin_name,
-                level,
-                repeat,
-                command,
-                proc.returncode,
-                err_text,
-            )
+        # secure_popen returns the command output, or its stderr when the
+        # command wrote any — the return code is not available through it.
+        logger.debug(
+            "Shell action: result (plugin=%s, level=%s, repeat=%s, template=%r): %s",
+            plugin_name,
+            level,
+            repeat,
+            action_value,
+            ret,
+        )

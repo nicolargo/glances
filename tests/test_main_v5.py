@@ -299,13 +299,13 @@ def test_disable_config_exec_flag_hardens_the_shell_action(config):
     """
     args = build_parser().parse_args(["-s", "--disable-config-exec"])
     _, scheduler, _, _, _tui = assemble(args, config)
-    assert scheduler.alerts.actions["action"].allow_shell() is False
+    assert scheduler.alerts.actions["action"].allow_operators() is False
 
 
-def test_shell_action_allows_the_shell_without_the_flag(config):
+def test_shell_action_allows_operators_without_the_flag(config):
     args = build_parser().parse_args(["-s"])
     _, scheduler, _, _, _tui = assemble(args, config)
-    assert scheduler.alerts.actions["action"].allow_shell() is True
+    assert scheduler.alerts.actions["action"].allow_operators() is True
 
 
 def test_assemble_resolves_bind_and_port_from_cli(config):

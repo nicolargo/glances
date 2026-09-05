@@ -15,11 +15,13 @@ Tests cover:
 - Non-string values are preserved unchanged
 - The sanitization integrates correctly with GlancesActions.run()
 - secure_popen basic functionality
+- Mustache fields land in exactly one argv slot (GHSA-56xw-p9qm-r437)
 """
 
 import os
+import shutil
 import tempfile
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -255,6 +257,39 @@ class TestSecurePopen:
 # ---------------------------------------------------------------------------
 
 
+class _FakeProcess:
+    """Minimal Popen stand-in: no output, no exit status."""
+
+    def __init__(self):
+        self.stdout = MagicMock()
+
+    def communicate(self, timeout=None):
+        return (b'', b'')
+
+    def wait(self, timeout=None):
+        return 0
+
+
+def _run_capture_argv(actions, stat_name, criticality, commands, mustache_dict):
+    """Run the actions and return the argv of every process that was spawned.
+
+    Popen is patched inside glances.secure, so the assertions bear on what is
+    really handed to the OS. Asserting on the string passed to secure_popen is
+    no longer meaningful: that string is the (trusted) template, the untrusted
+    values are expanded per argument further down (GHSA-56xw-p9qm-r437).
+    """
+    argv_list = []
+
+    def fake_popen(argv, **kwargs):
+        argv_list.append(argv)
+        return _FakeProcess()
+
+    with patch('glances.secure.Popen', side_effect=fake_popen):
+        actions.run(stat_name, criticality, commands, repeat=False, mustache_dict=mustache_dict)
+
+    return argv_list
+
+
 class TestActionsRunIntegration:
     """Verify that GlancesActions.run() uses sanitized mustache values."""
 
@@ -279,125 +314,97 @@ class TestActionsRunIntegration:
 
     def test_run_sanitizes_pipe_in_mustache(self, actions):
         """Pipe in mustache value must not create a real pipe."""
-        with patch('glances.actions.secure_popen') as mock_popen:
-            mock_popen.return_value = ''
-            actions.run(
-                'cpu',
-                'CRITICAL',
-                ['echo {{name}}'],
-                repeat=False,
-                mustache_dict={'name': 'evil|rm -rf /'},
-            )
-            # The command passed to secure_popen should have | replaced
-            called_cmd = mock_popen.call_args[0][0]
-            assert '|' not in called_cmd
-            assert 'evil' in called_cmd
-            assert 'rm -rf /' in called_cmd  # text preserved, pipe removed
+        argv_list = _run_capture_argv(actions, 'cpu', 'CRITICAL', ['echo {{name}}'], {'name': 'evil|rm -rf /'})
+        # A single process, and the whole value in a single argument
+        assert len(argv_list) == 1
+        assert len(argv_list[0]) == 2
+        assert argv_list[0][0] == 'echo'
+        assert '|' not in argv_list[0][1]
+        assert 'rm -rf /' in argv_list[0][1]  # text preserved, pipe removed
 
     def test_run_sanitizes_chain_in_mustache(self, actions):
         """&& in mustache value must not chain commands."""
-        with patch('glances.actions.secure_popen') as mock_popen:
-            mock_popen.return_value = ''
-            actions.run(
-                'containers',
-                'WARNING',
-                ['echo {{name}}'],
-                repeat=False,
-                mustache_dict={'name': 'web && cat /etc/passwd'},
-            )
-            called_cmd = mock_popen.call_args[0][0]
-            assert '&&' not in called_cmd
+        argv_list = _run_capture_argv(
+            actions, 'containers', 'WARNING', ['echo {{name}}'], {'name': 'web && cat /etc/passwd'}
+        )
+        assert len(argv_list) == 1
+        assert len(argv_list[0]) == 2
+        assert '&&' not in argv_list[0][1]
 
     def test_run_sanitizes_redirect_in_mustache(self, actions):
         """> in mustache value must not redirect output."""
-        with patch('glances.actions.secure_popen') as mock_popen:
-            mock_popen.return_value = ''
-            actions.run(
-                'fs',
-                'CRITICAL',
-                ['echo {{mnt_point}}'],
-                repeat=False,
-                mustache_dict={'mnt_point': '/data > /etc/crontab'},
-            )
-            called_cmd = mock_popen.call_args[0][0]
-            assert '>' not in called_cmd
+        argv_list = _run_capture_argv(
+            actions, 'fs', 'CRITICAL', ['echo {{mnt_point}}'], {'mnt_point': '/data > /etc/crontab'}
+        )
+        assert len(argv_list) == 1
+        assert len(argv_list[0]) == 2
+        assert '>' not in argv_list[0][1]
 
     def test_run_preserves_template_operators(self, actions):
         """Operators in the template itself (not in values) must be preserved."""
-        with patch('glances.actions.secure_popen') as mock_popen:
-            mock_popen.return_value = ''
-            # The template has a pipe, but the mustache value is clean
-            actions.run(
-                'cpu',
-                'CRITICAL',
-                ['echo {{name}} | grep something'],
-                repeat=False,
-                mustache_dict={'name': 'safe-process'},
-            )
-            called_cmd = mock_popen.call_args[0][0]
-            # Template pipe is preserved
-            assert '|' in called_cmd
-            assert 'grep something' in called_cmd
+        # The template has a pipe, but the mustache value is clean
+        argv_list = _run_capture_argv(
+            actions, 'cpu', 'CRITICAL', ['echo {{name}} | grep something'], {'name': 'safe-process'}
+        )
+        # Template pipe is preserved: two processes in a pipeline
+        assert argv_list == [['echo', 'safe-process'], ['grep', 'something']]
 
     def test_run_preserves_template_redirect(self, actions):
         """Redirect in the template itself must be preserved."""
-        with patch('glances.actions.secure_popen') as mock_popen:
-            mock_popen.return_value = ''
+        with tempfile.NamedTemporaryFile(suffix='.log', delete=False) as f:
+            tmpfile = f.name
+        try:
             actions.run(
                 'fs',
                 'WARNING',
-                ['echo {{mnt_point}} > /tmp/alert.log'],
+                [f'echo -n {{{{mnt_point}}}} > {tmpfile}'],
                 repeat=False,
                 mustache_dict={'mnt_point': '/data/disk1'},
             )
-            called_cmd = mock_popen.call_args[0][0]
-            assert '>' in called_cmd
-            assert '/tmp/alert.log' in called_cmd
+            with open(tmpfile) as f:
+                assert f.read() == '/data/disk1'
+        finally:
+            os.unlink(tmpfile)
 
     def test_run_preserves_template_chain(self, actions):
         """&& in the template itself must be preserved."""
-        with patch('glances.actions.secure_popen') as mock_popen:
-            mock_popen.return_value = ''
-            actions.run(
-                'cpu',
-                'CRITICAL',
-                ['echo {{name}} && echo done'],
-                repeat=False,
-                mustache_dict={'name': 'safe-process'},
-            )
-            called_cmd = mock_popen.call_args[0][0]
-            assert '&&' in called_cmd
+        argv_list = _run_capture_argv(
+            actions, 'cpu', 'CRITICAL', ['echo {{name}} && echo done'], {'name': 'safe-process'}
+        )
+        assert argv_list == [['echo', 'safe-process'], ['echo', 'done']]
 
     def test_run_sanitizes_cmdline_section(self, actions):
         """GHSA-73wf-9vmv-5pv9: a pipe in the process cmdline list (rendered via
-        a Mustache section) must not survive into secure_popen."""
-        with patch('glances.actions.secure_popen') as mock_popen:
-            mock_popen.return_value = ''
-            actions.run(
-                'processlist',
-                'CRITICAL',
-                ['echo ALERT {{#cmdline}}{{.}} {{/cmdline}}'],
-                repeat=False,
-                mustache_dict={'cmdline': ['x', '|touch /tmp/evil', '#']},
-            )
-            called_cmd = mock_popen.call_args[0][0]
-            assert '|' not in called_cmd
-            assert 'touch /tmp/evil' in called_cmd  # text preserved, pipe removed
+        a Mustache section) must not create a real pipe."""
+        argv_list = _run_capture_argv(
+            actions,
+            'processlist',
+            'CRITICAL',
+            # The section must be closed within the argument it opens in
+            ['echo ALERT {{#cmdline}}{{.}},{{/cmdline}}'],
+            {'cmdline': ['x', '|touch /tmp/evil', '#']},
+        )
+        assert len(argv_list) == 1
+        assert argv_list[0][:2] == ['echo', 'ALERT']
+        # The whole section renders into a single argument
+        assert len(argv_list[0]) == 3
+        assert '|' not in argv_list[0][2]
+        assert 'touch /tmp/evil' in argv_list[0][2]  # text preserved, pipe removed
 
     def test_run_blocks_cross_field_ampersand_chain(self, actions):
         """GHSA-qcpp-8x79-hhp3: two adjacent unescaped variables whose values
         end/begin with '&' must not reconstruct a real '&&' command chain."""
-        with patch('glances.actions.secure_popen') as mock_popen:
-            mock_popen.return_value = ''
-            actions.run(
-                'processlist',
-                'CRITICAL',
-                ['logger p={{{name}}}{{{cmdline}}}'],
-                repeat=False,
-                mustache_dict={'name': 'evilproc&', 'cmdline': '& touch /tmp/evil'},
-            )
-            called_cmd = mock_popen.call_args[0][0]
-            assert '&&' not in called_cmd
+        argv_list = _run_capture_argv(
+            actions,
+            'processlist',
+            'CRITICAL',
+            ['logger p={{{name}}}{{{cmdline}}}'],
+            {'name': 'evilproc&', 'cmdline': '& touch /tmp/evil'},
+        )
+        # A single process, and both values in the same single argument
+        assert len(argv_list) == 1
+        assert len(argv_list[0]) == 2
+        assert '&&' not in argv_list[0][1]
 
     def test_run_does_not_execute_when_already_triggered(self, actions):
         """Same criticality should not re-trigger if repeat=False."""
@@ -510,3 +517,204 @@ class TestActionsDisableConfigExec:
         finally:
             if os.path.exists(marker):
                 os.unlink(marker)
+
+
+# ---------------------------------------------------------------------------
+# Tests – argument injection through Mustache values (GHSA-56xw-p9qm-r437)
+# ---------------------------------------------------------------------------
+
+# The reported payload: a literal single quote closes the quoted Mustache field
+# early, then three fully attacker-controlled argv tokens follow.
+_POC_VALUE = "/mnt/usb/x' --evil-flag /etc/passwd http://attacker.example/leak 'y"
+
+
+class TestActionsArgumentInjection:
+    """GHSA-56xw-p9qm-r437 (CWE-88): a Mustache field always lands in exactly
+    one argv slot.
+
+    The root cause was the order of operations: the command line was rendered
+    first, then re-lexed by secure_popen, so a value could open or close a
+    quote, introduce whitespace or shift the argument boundaries. Rendering now
+    happens per argument, after the split, which makes that structurally
+    impossible whatever the value contains.
+    """
+
+    def _make_actions(self, args=None):
+        a = GlancesActions(args=args) if args is not None else GlancesActions()
+        # Force the start timer to be finished so actions can run immediately
+        a.start_timer = type('FakeTimer', (), {'finished': lambda self: True})()
+        return a
+
+    def test_poc_single_quoted_field_stays_one_argument(self):
+        """The advisory PoC: no argv token may be injected."""
+        argv_list = _run_capture_argv(
+            self._make_actions(),
+            'fs_percent',
+            'critical',
+            ["argv_logger.py '{{mnt_point}}' {{percent}}"],
+            {'mnt_point': _POC_VALUE, 'percent': '92'},
+        )
+        assert argv_list == [['argv_logger.py', _POC_VALUE, '92']]
+
+    def test_unquoted_field_with_spaces_stays_one_argument(self):
+        """The pattern documented in docs/aoa/actions.rst is unquoted, and a
+        plain space in the value was enough to inject argv tokens: no quote
+        character is needed to exploit the original defect."""
+        value = '/mnt/x --evil-flag /etc/passwd'
+        argv_list = _run_capture_argv(
+            self._make_actions(),
+            'fs_percent',
+            'critical',
+            ['argv_logger.py {{mnt_point}} {{percent}}'],
+            {'mnt_point': value, 'percent': '92'},
+        )
+        assert argv_list == [['argv_logger.py', value, '92']]
+
+    def test_double_quoted_field_stays_one_argument(self):
+        """The shipped conf/glances.conf examples quote their fields."""
+        argv_list = _run_capture_argv(
+            self._make_actions(),
+            'fs_percent',
+            'critical',
+            ['argv_logger.py "{{mnt_point}}" {{percent}}'],
+            {'mnt_point': _POC_VALUE, 'percent': '92'},
+        )
+        assert argv_list == [['argv_logger.py', _POC_VALUE, '92']]
+
+    def test_triple_mustache_stays_one_argument(self):
+        """The raw (unescaped) form bypasses chevron's HTML escaping."""
+        argv_list = _run_capture_argv(
+            self._make_actions(),
+            'fs_percent',
+            'critical',
+            ['argv_logger.py {{{mnt_point}}} {{percent}}'],
+            {'mnt_point': _POC_VALUE, 'percent': '92'},
+        )
+        assert argv_list == [['argv_logger.py', _POC_VALUE, '92']]
+
+    def test_ampersand_mustache_stays_one_argument(self):
+        """{{&var}} is the other unescaped form."""
+        argv_list = _run_capture_argv(
+            self._make_actions(),
+            'fs_percent',
+            'critical',
+            ['argv_logger.py {{&mnt_point}} {{percent}}'],
+            {'mnt_point': _POC_VALUE, 'percent': '92'},
+        )
+        assert argv_list == [['argv_logger.py', _POC_VALUE, '92']]
+
+    def test_empty_value_yields_an_empty_argument(self):
+        """A field rendering to an empty string must keep its argv slot, so
+        that emptying a value cannot shift the positional arguments of the
+        invoked script."""
+        argv_list = _run_capture_argv(
+            self._make_actions(),
+            'fs_percent',
+            'critical',
+            ['argv_logger.py {{mnt_point}} {{percent}}'],
+            {'mnt_point': '', 'percent': '92'},
+        )
+        assert argv_list == [['argv_logger.py', '', '92']]
+
+    def test_protection_holds_with_disable_config_exec(self):
+        """--disable-config-exec routes through __run_argv(), which uses the
+        same tokenizer and must be protected too."""
+        argv_list = _run_capture_argv(
+            self._make_actions(_Args(True)),
+            'fs_percent',
+            'critical',
+            ["argv_logger.py '{{mnt_point}}' {{percent}}"],
+            {'mnt_point': _POC_VALUE, 'percent': '92'},
+        )
+        assert argv_list == [['argv_logger.py', _POC_VALUE, '92']]
+
+    def test_section_within_one_argument_is_rendered(self):
+        """A Mustache section that opens and closes inside the same argument
+        keeps working, and renders into that single argument."""
+        argv_list = _run_capture_argv(
+            self._make_actions(),
+            'processlist',
+            'CRITICAL',
+            ['argv_logger.py {{#cmdline}}{{.}},{{/cmdline}}'],
+            {'cmdline': ['a b', "c'd"]},
+        )
+        assert argv_list == [['argv_logger.py', "a b,c'd,"]]
+
+    def test_section_spanning_two_arguments_is_refused(self, caplog):
+        """A section split across an argument boundary cannot be rendered per
+        argument. Refuse to run rather than fall back to rendering the whole
+        line, which would reopen the injection."""
+        argv_list = _run_capture_argv(
+            self._make_actions(),
+            'processlist',
+            'CRITICAL',
+            ['argv_logger.py {{#cmdline}}{{.}} {{/cmdline}}'],
+            {'cmdline': ['x', 'y']},
+        )
+        assert argv_list == []
+        assert 'Action template error' in caplog.text
+
+    def test_templated_redirect_target_is_expanded(self):
+        """The redirection target may itself carry a Mustache field."""
+        tmpdir = tempfile.mkdtemp()
+        try:
+            self._make_actions().run(
+                'fs',
+                'critical',
+                ['echo -n ALERT > ' + os.path.join(tmpdir, 'gl_{{name}}.alert')],
+                repeat=False,
+                mustache_dict={'name': 'disk1'},
+            )
+            assert os.listdir(tmpdir) == ['gl_disk1.alert']
+        finally:
+            shutil.rmtree(tmpdir)
+
+
+class TestSecurePopenRender:
+    """secure_popen(render=...) confines a rendered value to one argument.
+
+    These bear on glances.secure alone: the protection must not depend on
+    _sanitize_mustache_dict(), which is kept only as defence in depth.
+    """
+
+    @staticmethod
+    def _render(value):
+        """A render callable that expands the single field '{{v}}'."""
+        return lambda arg: arg.replace('{{v}}', value)
+
+    def _capture(self, cmd, value, **kwargs):
+        argv_list = []
+
+        def fake_popen(argv, **kw):
+            argv_list.append(argv)
+            return _FakeProcess()
+
+        with patch('glances.secure.Popen', side_effect=fake_popen):
+            secure_popen(cmd, render=self._render(value), **kwargs)
+
+        return argv_list
+
+    def test_operators_in_the_value_are_never_interpreted(self):
+        """Even unsanitized, a value cannot chain, pipe or redirect: the
+        operators are split off the template before the value exists."""
+        value = "a && b | c > /tmp/evil"
+        assert self._capture('echo {{v}}', value) == [['echo', value]]
+
+    def test_quotes_in_the_value_cannot_break_out(self):
+        assert self._capture("echo '{{v}}'", _POC_VALUE) == [['echo', _POC_VALUE]]
+
+    def test_whitespace_in_the_value_cannot_split(self):
+        assert self._capture('echo {{v}}', 'one two three') == [['echo', 'one two three']]
+
+    def test_render_is_not_applied_when_omitted(self):
+        """Callers that pass no render (AMP, virsh, multipass) are unchanged."""
+        argv_list = []
+
+        def fake_popen(argv, **kw):
+            argv_list.append(argv)
+            return _FakeProcess()
+
+        with patch('glances.secure.Popen', side_effect=fake_popen):
+            secure_popen('echo {{v}}')
+
+        assert argv_list == [['echo', '{{v}}']]
