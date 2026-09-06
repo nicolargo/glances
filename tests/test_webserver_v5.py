@@ -594,6 +594,26 @@ def test_the_v5_bundle_actually_renders_an_element():
     actual bundle against a minimal DOM stub and asserts that the `#app`
     mount target ends up containing a real ELEMENT node, not just Vue's
     empty-render comment placeholder -- the distinction Finding 1 hinged on.
+
+    G9-2's AppShell also renders a bare `<main>`, so a `tagName == "MAIN"`
+    check alone would pass against a stub as blank as G9-1's -- e.g. a
+    `createApp({ template: "<main></main>" })`. Assert markup that only the
+    real shell (header + plugin area + footer) produces and that a blank
+    page cannot satisfy: the `gl-app` class and both a HEADER and a FOOTER
+    descendant.
+
+    The fixture's `fetch` stub answers `api/5/alert` with twelve events in the
+    real `_build_event()` shape (glances/alerts_v5.py:706-716), oldest first
+    -- matching get_history()'s documented most-recent-LAST contract
+    (glances/alerts_v5.py:181). Assert the footer actually renders them --
+    identified by plugin AND field, not just the bare level, so a fallback to
+    a field that does not exist cannot pass unnoticed -- AND that it keeps the
+    ten MOST RECENT, newest first: a single-alert stub could not catch
+    AppShell using `history.slice(0, 10)` (the ten OLDEST) instead of the
+    correct `history.slice(-10).reverse()`, which is exactly the bug that
+    shipped in the previous fix round. This is exactly the shape the G9-1
+    blank page took: an untested corner of an otherwise-green test suite --
+    and the corner turned out deeper than the first probe fix realised.
     """
     if not _BUNDLE_PATH.exists():
         pytest.fail(f"{_BUNDLE_PATH} is missing -- run `npm run build` in glances/outputs/static/")
@@ -605,6 +625,12 @@ def test_the_v5_bundle_actually_renders_an_element():
         timeout=30,
     )
     assert result.returncode == 0, f"render probe crashed:\n{result.stderr}"
+    # A thrown exception inside AppShell's async mounted() hook (e.g. a
+    # sandbox missing a global it calls) does not necessarily flip the exit
+    # code -- it can land as stderr noise on an otherwise-green run. Assert
+    # stderr is empty so a broken lifecycle hook cannot hide behind a
+    # passing returncode again.
+    assert result.stderr == "", f"render probe printed to stderr:\n{result.stderr}"
 
     payload = json.loads(result.stdout)
     # nodeType 1 == ELEMENT_NODE, 8 == COMMENT_NODE (the runtime-only-Vue
@@ -615,3 +641,179 @@ def test_the_v5_bundle_actually_renders_an_element():
         f"(tagName={payload['tagName']!r}) -- the Vue template rendered nothing"
     )
     assert payload["tagName"] == "MAIN"
+    assert payload["hasClass"], "expected the root <main> to carry class 'gl-app'"
+    assert payload["hasHeader"], "expected a <header> descendant of the app shell"
+    assert payload["hasFooter"], "expected a <footer> descendant of the app shell"
+    # The stub's api/5/alert fixture carries plugin="pluginN", field="total"
+    # for N in 0..11, oldest (0) first -- get_history()'s documented order.
+    # A footer that renders only the level (e.g. a fallback to a
+    # non-existent `description` field) would show "critical" with no
+    # plugin/field at all -- assert both are present for the regression
+    # from fix round 1.
+    footer_text = payload["footerText"] or ""
+    assert "plugin11" in footer_text and "total" in footer_text, (
+        f"expected the footer to identify the alert by plugin and field, got {footer_text!r}"
+    )
+    # The two OLDEST alerts must have been dropped (only 10 of 12 shown) --
+    # `history.slice(0, 10)` would keep these and drop the newest two
+    # instead, which is the regression from fix round 2. Match "pluginN "
+    # (with the trailing space before " total"), not a bare substring:
+    # "plugin1" is also a substring of "plugin10" and "plugin11".
+    assert "plugin0 " not in footer_text and "plugin1 " not in footer_text, (
+        f"expected the two oldest alerts dropped, got {footer_text!r}"
+    )
+    # Newest first: plugin11 (most recent) must render before plugin2
+    # (oldest of the ten kept) -- a `slice(-10)` without `.reverse()` would
+    # still keep the right ten alerts but in oldest-first order.
+    assert footer_text.index("plugin11") < footer_text.index("plugin2"), (
+        f"expected newest-first order, got {footer_text!r}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_registry_renders_every_registered_plugin():
+    """Proves plugins/index.js is wired up end to end, not just importable.
+
+    G9-3 replaced AppShell's four hardcoded per-plugin surfaces (import,
+    components map, spec list, template tag) with a loop over
+    `PLUGINS` from `plugins/index.js`. A regression here would not be a
+    missing import -- the bundle would still build -- it would be a loop
+    that silently renders zero, or only one, of the registered plugins.
+
+    Each plugin component renders an <article class="gl-plugin"> with an
+    <h2> naming it (PluginMem.vue -> "MEM", PluginNetwork.vue ->
+    "NETWORK"). Assert both are present, not just "some markup exists":
+    a loop that iterates only `PLUGINS[0]` would still produce one
+    gl-plugin article and could pass a weaker assertion.
+    """
+    if not _BUNDLE_PATH.exists():
+        pytest.fail(f"{_BUNDLE_PATH} is missing -- run `npm run build` in glances/outputs/static/")
+
+    result = subprocess.run(
+        ["node", str(_RENDER_PROBE_PATH), str(_BUNDLE_PATH)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, f"render probe crashed:\n{result.stderr}"
+    assert result.stderr == "", f"render probe printed to stderr:\n{result.stderr}"
+
+    payload = json.loads(result.stdout)
+    assert payload["pluginHeaders"] == ["MEM", "NETWORK"], (
+        f"expected both registered plugins to render, got {payload['pluginHeaders']!r}"
+    )
+
+
+# --------------------------------------------------------- mem TUI parity (G9-3 Task 5)
+
+
+def _run_render_probe(scenario: str) -> dict:
+    if not _BUNDLE_PATH.exists():
+        pytest.fail(f"{_BUNDLE_PATH} is missing -- run `npm run build` in glances/outputs/static/")
+
+    result = subprocess.run(
+        ["node", str(_RENDER_PROBE_PATH), str(_BUNDLE_PATH), scenario],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, f"render probe crashed:\n{result.stderr}"
+    assert result.stderr == "", f"render probe printed to stderr:\n{result.stderr}"
+    return json.loads(result.stdout)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_mem_renders_all_eight_statistics_with_avail():
+    """`render_curses_v5.py`'s reference block (module docstring, lines
+    16-28) is eight (label, value) pairs: percent, total, avail, free,
+    active, inactive, buffers, cached. The probe's `api/5/all` stub answers
+    with the `mem-with-available` fixture -- a full psutil-shaped payload
+    that HAS `available` -- so this asserts every one of the eight
+    formatted values actually reaches the DOM, and that the avail/used
+    switch shows `avail`: the fixture's `used` field carries a DIFFERENT
+    value (9.0G) than `available` (8.0G) specifically so a component that
+    rendered `used` instead, or both, could not pass unnoticed.
+    """
+    payload = _run_render_probe("mem-with-available")
+    mem_text = payload["pluginText"].get("MEM", "")
+
+    for expected in ("53.2%", "16.0G", "8.0G", "2.0G", "5.0G", "4.0G", "100.0M", "3.0G"):
+        assert expected in mem_text, f"expected {expected!r} in the MEM plugin text, got {mem_text!r}"
+    assert "avail" in mem_text, f"expected the 'avail' label in the MEM plugin text, got {mem_text!r}"
+    assert "9.0G" not in mem_text, f"expected 'used' (9.0G) NOT shown when 'available' is present: {mem_text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_mem_shows_used_when_available_is_absent():
+    """Avail/used switch, other side: the `mem-no-available` fixture omits
+    `available` entirely (e.g. a BSD without it), so the component must fall
+    back to showing `used` -- and the `avail` label must not appear at all.
+    """
+    payload = _run_render_probe("mem-no-available")
+    mem_text = payload["pluginText"].get("MEM", "")
+
+    for expected in ("53.2%", "16.0G", "9.0G", "2.0G", "5.0G", "4.0G", "100.0M", "3.0G"):
+        assert expected in mem_text, f"expected {expected!r} in the MEM plugin text, got {mem_text!r}"
+    assert "avail" not in mem_text, f"expected no 'avail' label when 'available' is absent: {mem_text!r}"
+
+
+# ------------------------------------------------- network TUI parity (labels)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_network_column_headers_are_the_tui_strings():
+    """The WebUI's network column headers must be the TUI's, not field names.
+
+    `PluginNetwork.vue` resolves every header through `labelFor()`, i.e. from
+    `/api/5/<plugin>/info` = `NetworkPluginModel.fields_description`. With no
+    `short_name` declared there the headers degrade to `interface_name` /
+    `bytes_recv` / `bytes_sent`, while the TUI block
+    (`glances/plugins/network/render_curses_v5.py`) reads `NETWORK` / `Rx/s`
+    / `Tx/s` -- i.e. the WebUI would move AWAY from TUI parity.
+
+    The probe's `/info` stub is keyed by plugin name and carries the network
+    schema's own short_names, so this observes the RESOLVED headers: with the
+    mem schema answering every `/info` (as it did before this fix) the
+    assertion below fails on field names.
+    """
+    payload = _run_render_probe("network")
+    headers = payload["pluginColumnHeaders"].get("NETWORK")
+
+    assert headers == ["interface", "Rx/s", "Tx/s"], f"expected the TUI's network headers, got {headers!r}"
+
+
+def test_network_schema_declares_the_tui_short_names():
+    """Pin the schema the WebUI's network headers resolve from.
+
+    `test_network_column_headers_are_the_tui_strings` renders through the
+    probe, whose `/info` stub is a hand-copied mirror of this schema -- so it
+    passes even if `short_name` is dropped from the real plugin. This asserts
+    the source instead: drop a `short_name` here and the WebUI silently falls
+    back to field names (`labelFor()` degrades to the field name by design),
+    with no other test noticing.
+    """
+    from glances.plugins.network.model_v5 import PluginModel
+
+    fields = PluginModel.fields_description
+    assert fields["interface_name"]["short_name"] == "interface"
+    assert fields["bytes_recv"]["short_name"] == "Rx/s"
+    assert fields["bytes_sent"]["short_name"] == "Tx/s"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_network_rate_columns_are_marked_numeric():
+    """The two rate columns must carry `.gl-num`, the interface one must not.
+
+    `.gl-num` right-aligns, fixes the digit width and floors the column at
+    9ch -- the width `formatRate()` can never exceed -- so a rate going from
+    "1.2K/s" to "10.2M/s" between two ticks stops resizing the column. This
+    observes the rendered <th> class lists, so it fails if the `numeric` flag
+    is dropped from the descriptor or the binding stops reaching the header.
+    """
+    payload = _run_render_probe("network")
+    classes = payload["pluginColumnClasses"].get("NETWORK")
+
+    assert classes is not None, "no NETWORK column classes rendered"
+    assert "gl-num" not in classes[0], f"the interface column must not be numeric, got {classes[0]!r}"
+    for i in (1, 2):
+        assert "gl-num" in classes[i], f"expected the rate column {i} to carry gl-num, got {classes[i]!r}"

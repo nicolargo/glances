@@ -58,13 +58,23 @@ class PluginModel(GlancesPluginBase[list]):
     IS_COLLECTION: ClassVar[bool] = True
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        # `short_name` is the compact UI label (short_name → label → field
+        # name, cf. `field_label()` in curses_renderer_v5.py). The strings
+        # match the TUI block rendered by `render_curses_v5.render()`, whose
+        # header is hardcoded as NETWORK / Rx/s / Tx/s — the WebUI resolves
+        # its column headers from this schema instead of hardcoding them.
+        # The interface column is `interface` rather than the TUI's
+        # `NETWORK`: in the TUI that first header cell doubles as the block
+        # title, which the WebUI already renders separately as <h2>NETWORK.
         "interface_name": {
             "description": "Network interface name.",
+            "short_name": "interface",
             "unit": "string",
             "primary_key": True,
         },
         "bytes_recv": {
             "description": "Bytes received per second.",
+            "short_name": "Rx/s",
             "unit": "bytespers",
             "rate": True,
             "watched": True,
@@ -75,6 +85,7 @@ class PluginModel(GlancesPluginBase[list]):
         },
         "bytes_sent": {
             "description": "Bytes sent per second.",
+            "short_name": "Tx/s",
             "unit": "bytespers",
             "rate": True,
             "watched": True,

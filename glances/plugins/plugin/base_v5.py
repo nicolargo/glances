@@ -900,8 +900,8 @@ class GlancesPluginBase(Generic[T], ABC):
     def get_api_payload(self) -> dict[str, Any]:
         """Filtered view for the REST API and the MCP adapter (issue #3211).
 
-        Drops fields declared `exportable: False`; KEEPS `_levels`, which is
-        what a UI colours cells from.
+        Drops fields declared `exportable: False`; KEEPS `_levels` and `_key`,
+        which is what a UI colours cells from and walks `_levels` with.
 
         Always returns a dict, unlike `get_export()`, which returns a bare
         list for collection plugins: the API serves the payload shape its
@@ -922,6 +922,14 @@ class GlancesPluginBase(Generic[T], ABC):
             # passes the list through untouched. Each item must be projected on
             # its own or every non-exportable field survives.
             out["data"] = [self._project(item, keep_internal=True) for item in payload.get("data", [])]
+            # The primary key's NAME. `_levels` is keyed by its VALUE, so a
+            # consumer that does not know the name cannot walk it without
+            # hardcoding the field — which is what 32 WebUI components would
+            # otherwise each do. Underscore-prefixed like `_levels`: it is
+            # metadata about the payload, not a metric, and `_project()`
+            # therefore keeps it out of the export view.
+            if self._primary_key:
+                out["_key"] = self._primary_key
         return out
 
     def _project(self, d: dict[str, Any], *, keep_internal: bool) -> dict[str, Any]:

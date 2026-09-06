@@ -917,3 +917,51 @@ async def test_get_api_payload_is_empty_before_the_first_cycle(config):
     plugin = FakeScalarPlugin(store, config)
 
     assert plugin.get_api_payload() == {}
+
+
+# ------------------------------------------------------------------ _key
+
+
+@pytest.mark.asyncio
+async def test_api_payload_publishes_the_primary_key_name_for_a_collection(config):
+    """`_levels` for a collection is keyed by the primary key's VALUE. Without
+    the key's NAME in the payload, every WebUI component has to hardcode it —
+    32 copies of a rule that should live in one place."""
+    store = StatsStoreV5()
+    plugin = FakeCollectionPlugin(store, config)
+    await plugin.update()
+
+    payload = plugin.get_api_payload()
+
+    assert payload["_key"] == "name"
+    # The value it names really does index _levels.
+    assert set(payload["_levels"]) <= {item[payload["_key"]] for item in payload["data"]}
+
+
+@pytest.mark.asyncio
+async def test_api_payload_omits_the_key_for_a_scalar(config):
+    store = StatsStoreV5()
+    plugin = FakeScalarPlugin(store, config)
+    await plugin.update()
+
+    assert "_key" not in plugin.get_api_payload()
+
+
+@pytest.mark.asyncio
+async def test_export_view_is_unchanged_by_the_key(config):
+    """`_key` is an API-view concept. Exporters must not see it: the export
+    layer already injects its own `key` field with different semantics."""
+    store = StatsStoreV5()
+    plugin = FakeCollectionPlugin(store, config)
+    await plugin.update()
+
+    for item in plugin.get_export():
+        assert "_key" not in item
+
+
+@pytest.mark.asyncio
+async def test_api_payload_is_still_empty_before_the_first_cycle(config):
+    store = StatsStoreV5()
+    plugin = FakeCollectionPlugin(store, config)
+
+    assert plugin.get_api_payload() == {}

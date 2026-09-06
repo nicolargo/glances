@@ -120,24 +120,71 @@ module.exports = (_, env) => {
 		entry: {
 			glances5: "./js/app_v5.js",
 		},
-		output: { ...outputBase, clean: false },
+		// index_v5.html loads the bundle as "static/glances5.js" -- the path
+		// the Python server mounts it on. In dev the bundle lives in the dev
+		// server's memory, so it has to be published under the same prefix or
+		// the served page 404s on its only <script>. Production is untouched.
+		output: { ...outputBase, clean: false, publicPath: isProd ? outputBase.publicPath : "/static/" },
 		optimization,
 		devtool,
 		performance,
-		// createApp() from "vue" resolves to Vue's runtime-only build by
-		// default (no template compiler), which silently sets render to a
-		// no-op for a component that uses `template:` -- production mode
-		// compiles out the dev warning, so the page just renders blank.
-		// This alias is v5-only: v4's bundles must stay byte-identical.
-		resolve: { alias: { vue: "vue/dist/vue.esm-bundler.js" } },
-		// No CopyWebpackPlugin (favicon) or HtmlWebpackPlugin here: both
-		// belong to the v4 build and would either duplicate work (favicon)
-		// or overwrite v4's generated index.html in dev mode. The Vue
-		// feature-flag defines are the only thing app_v5.js's dependency
-		// graph (createApp from "vue") actually needs; vue-loader and its
-		// plugin are added back by G9-2, which is the first change to
-		// introduce a .vue component.
-		plugins: [vueDefines],
+		// No `resolve.alias` to vue/dist/vue.esm-bundler.js: every v5
+		// component is a single-file component compiled by vue-loader at
+		// build time, so no `template:` string survives into the bundle and
+		// Vue's runtime-only build (the default resolution of "vue") is
+		// enough. The full build shipped a template compiler the bundle never
+		// called, in a single module terser cannot tree-shake: dropping the
+		// alias took glances5.js from 190 KB to 77 KB.
+		// No CopyWebpackPlugin (favicon) here: it belongs to the v4 build
+		// and would duplicate the work. The Vue feature-flag defines are the
+		// only thing app_v5.js's dependency graph (createApp from "vue")
+		// actually needs; vue-loader and its plugin are added back by G9-2,
+		// which is the first change to introduce a .vue component.
+		module: {
+			rules: [
+				{
+					test: /\.vue$/i,
+					loader: "vue-loader",
+				},
+				{
+					test: /\.css$/i,
+					use: [{ loader: "style-loader" }, { loader: "css-loader" }],
+				},
+			],
+		},
+		// vue-loader and its plugin come back with this group: G9-1 removed
+		// them as dead config because no .vue file existed yet.
+		plugins: [
+			vueDefines,
+			// Dev-only, like v4's: without it the v5 dev server has no
+			// index.html of its own to serve at `/`. The dev server keeps it
+			// in memory, so public/ is untouched.
+			!isProd &&
+				new HtmlWebpackPlugin({
+					template: "./templates/index_v5.html",
+					inject: false,
+				}),
+			new VueLoaderPlugin(),
+		].filter(Boolean),
+		// G9-1 left `npm start` serving v4 only: webpack-dev-server picks the
+		// config carrying `devServer`, which was v4Config's. Without this,
+		// G9-3..N develop 32 components with no hot reload -- a tax paid 32
+		// times. A distinct port lets both dev servers run side by side.
+		devServer: {
+			client: { overlay: false },
+			host: "0.0.0.0",
+			port: PORT + 1,
+			hot: true,
+			// Without this every fetch("api/5/...") from the dev server hits
+			// the dev server itself and 404s. Array form: the object form
+			// webpack-dev-server 4 took is silently ignored by 5.
+			proxy: [
+				{
+					context: ["/api"],
+					target: "http://0.0.0.0:61208",
+				},
+			],
+		},
 	};
 
 	return [v4Config, v5Config];

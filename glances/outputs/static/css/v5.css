@@ -1,0 +1,115 @@
+/* Glances v5 WebUI — design tokens.
+ *
+ * A theme is ONE block of custom-property values. `dark` is the default
+ * (bare :root, matching `[outputs] theme=dark`); `light` overrides it.
+ * Adding a third theme means adding a block here — never editing a
+ * component. See the design spec, section 5.
+ *
+ * Tier hues are web-native, not the TUI's ANSI ones: blue-for-careful and
+ * magenta-for-warning come from the terminal's 8-colour palette. Only ONE
+ * hue actually changes — warning goes magenta -> amber; ok/careful/critical
+ * keep their meaning and roughly their look.
+ */
+
+:root {
+  --gl-bg: #15181c;
+  --gl-surface: #1d2126;
+  --gl-fg: #e8eaed;
+  --gl-muted: #99a1ab;
+  --gl-border: #2c3239;
+
+  --gl-level-ok: #57c08a;
+  --gl-level-careful: #5aa9e6;
+  --gl-level-warning: #e0a63c;
+  --gl-level-critical: #e8695c;
+  --gl-prominent-bg: #2a313a;
+
+  --gl-font: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --gl-size-sm: 0.78rem;
+  --gl-size-base: 0.88rem;
+  --gl-size-lg: 1.05rem;
+  --gl-weight-normal: 400;
+  --gl-weight-bold: 600;
+  --gl-gap: 0.5rem;
+}
+
+:root[data-theme="light"] {
+  --gl-bg: #ffffff;
+  --gl-surface: #f4f6f8;
+  --gl-fg: #1b1f23;
+  --gl-muted: #5a636d;
+  --gl-border: #d5dae0;
+
+  --gl-level-ok: #1a7f4b;
+  --gl-level-careful: #1667a8;
+  --gl-level-warning: #97650a;
+  --gl-level-critical: #b3261e;
+  --gl-prominent-bg: #e6eaef;
+}
+
+body {
+  margin: 0;
+  background: var(--gl-bg);
+  color: var(--gl-fg);
+  font-family: var(--gl-font);
+  font-size: var(--gl-size-base);
+}
+
+/* Tier classes. `prominent` adds a BACKGROUND, never a different hue --
+ * spec 5.1 R3: colour is never the only signal, because contrast cannot be
+ * guaranteed for a user-written theme. */
+.gl-level-ok { color: var(--gl-level-ok); }
+.gl-level-careful { color: var(--gl-level-careful); }
+.gl-level-warning { color: var(--gl-level-warning); }
+.gl-level-critical { color: var(--gl-level-critical); }
+.gl-prominent { background: var(--gl-prominent-bg); }
+
+/* Titles and column headers are NEVER given a tier colour -- ported verbatim
+ * from the TUI contract (glances/outputs/curses_renderer_v5.py:126-129): an
+ * alert is signalled on the VALUE only. */
+.gl-header {
+  color: var(--gl-muted);
+  font-weight: var(--gl-weight-bold);
+}
+
+/* Loading/empty placeholder text ("loading…", "no interface", "No alert").
+ * Global, not component-scoped: `<style scoped>` compiles to
+ * `.gl-muted[data-v-XXXX]`, which never matches across the different scope
+ * ids each plugin component gets. */
+.gl-muted {
+  color: var(--gl-muted);
+}
+
+/* Two side-by-side columns of (label, value) pairs -- the TUI-parity stat
+ * block shape (mem is the first user, see render_curses_v5.py). Global for
+ * the same reason as .gl-muted above: a scoped copy would only ever match
+ * the one component that declared it, so a second plugin reusing this shape
+ * could not share it. */
+.gl-stat-grid {
+  display: flex;
+  gap: calc(var(--gl-gap) * 3);
+}
+.gl-stat-grid dl {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: var(--gl-gap);
+  margin: 0;
+}
+.gl-stat-grid dd {
+  margin: 0;
+  text-align: right;
+}
+
+/* Numeric table column: right-aligned, fixed-width digits, and wide enough
+ * that the column never resizes. `formatRate()` tops out at 9 characters
+ * ("1023.9G/s"), so a 9ch floor means a value going from "1.2K/s" to
+ * "10.2M/s" between two ticks reflows nothing -- the table stops twitching
+ * on every refresh. `tabular-nums` fixes the remaining jitter, where digits
+ * of different widths shift the text inside a cell that is already stable.
+ * Global for the same reason as .gl-muted above: every collection component
+ * with a numeric column reuses it. */
+.gl-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  min-width: 9ch;
+}
