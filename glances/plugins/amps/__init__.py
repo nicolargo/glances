@@ -20,6 +20,7 @@ from glances.plugins.plugin.model import GlancesPluginModel
 fields_description = {
     'name': {'description': 'AMP name.'},
     'result': {'description': 'AMP result (a string).'},
+    'result_float': {'description': 'AMP result as a float, when numeric.'},
     'refresh': {'description': 'AMP refresh interval.', 'unit': 'second'},
     'timer': {'description': 'Time until next refresh.', 'unit': 'second'},
     'count': {'description': 'Number of matching processes.', 'unit': 'number'},
@@ -56,11 +57,17 @@ class AmpsPlugin(GlancesPluginModel):
 
         if self.input_method == 'local':
             for v in self.glances_amps.update().values():
+                result = v.result()
+                try:
+                    result_float = float(result)
+                except (TypeError, ValueError):
+                    result_float = None
                 stats.append(
                     {
                         'key': self.get_key(),
                         'name': v.NAME,
-                        'result': v.result(),
+                        'result': result,
+                        'result_float': result_float,
                         'refresh': v.refresh(),
                         'timer': v.time_until_refresh(),
                         'count': v.count(),

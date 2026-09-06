@@ -172,8 +172,7 @@ class GlancesExport:
         FIELD_TO_TAG = ["name", "cmdline", "type"]
         # Some fields should be converted to string in order to avoid type mismatch in InfluxDB
         # Example: the 'result' field of the AMP plugin can be a string or a number depending on the AMP implementation.
-        # In this case, we convert it to a string and create another field with the same name but with a suffix (_float)
-        # to keep the original value.
+        # In this case, we keep it as a string. The AMP plugin exposes numeric results separately as result_float.
         # See #3419 for more details.
         FIELD_TO_STRING = ["result"]
 

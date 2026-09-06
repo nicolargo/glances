@@ -16,6 +16,10 @@ Bugs corrected:
 * CSV export: --stdout-csv data rows desync from header when network interfaces change count at runtime #3606
 * Glances Network plugin with mismatched schema not logging in TimescaleDB export #3592
 
+Enhancements:
+
+* Add a type-stable ``result_float`` field for numeric AMP results #3423
+
 Security patches:
 
 * as_dict_secure() Value-Level Bypass Leaks Credentials in URL Values via /api/4/config - CVE-2026-68520
