@@ -28,6 +28,7 @@ class FakeContainer:
         self.id = cid
         self.name = f"name-{cid}"
         self.attrs = {
+            "Names": [f"/name-{cid}"],
             "State": {"Status": status},
             "Created": "2026-01-01T00:00:00Z",
             "Config": {"Entrypoint": None, "Cmd": ["sh"]},
@@ -49,7 +50,7 @@ class FakeContainer:
         self.reload_count += 1
 
 
-def make_extension(containers):
+def make_extension(containers, exclude_stats=None):
     """Build a DockerExtension without connecting to a real daemon."""
     ext = docker_engine.DockerExtension.__new__(docker_engine.DockerExtension)
     ext.disable = False
@@ -57,6 +58,7 @@ def make_extension(containers):
     ext.ext_name = "containers (Docker)"
     ext.stats_fetchers = {}
     ext.image_cache = {}
+    ext.exclude_stats = exclude_stats or (lambda name: False)
     ext.client = MagicMock()
     ext.client.containers.list.return_value = containers
     return ext
@@ -113,6 +115,39 @@ def test_image_cache_evicts_removed_containers():
         ext.client.containers.list.return_value = [FakeContainer("a")]
         ext.update(all_tag=True)
     assert set(ext.image_cache) == {"a"}
+
+
+def test_excluded_container_is_never_inspected_or_streamed():
+    """An excluded container must not open an inspect request or stats stream."""
+    included = FakeContainer("included")
+    excluded = FakeContainer("excluded")
+    excluded.name = None
+    ext = make_extension([included, excluded], exclude_stats=lambda name: name == "name-excluded")
+
+    with patch.object(docker_engine, "DockerStatsFetcher", MagicMock()) as fetcher:
+        _, stats = ext.update(all_tag=True)
+
+    assert included.reload_count == 1
+    assert excluded.reload_count == 0
+    fetcher.assert_called_once_with(included)
+    assert [container["id"] for container in stats] == ["included"]
+
+
+def test_newly_excluded_container_stops_its_existing_fetcher():
+    """Reloading no_stats must use the existing absent-container cleanup path."""
+    included = FakeContainer("included")
+    excluded = FakeContainer("excluded")
+    excluded_names = set()
+    ext = make_extension([included, excluded], exclude_stats=lambda name: name in excluded_names)
+
+    with patch.object(docker_engine, "DockerStatsFetcher", MagicMock()):
+        ext.update(all_tag=True)
+        old_fetcher = ext.stats_fetchers[excluded.id]
+        excluded_names.add("name-excluded")
+        ext.update(all_tag=True)
+
+    old_fetcher.stop.assert_called_once_with()
+    assert excluded.id not in ext.stats_fetchers
 
 
 if __name__ == "__main__":

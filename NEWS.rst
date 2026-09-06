@@ -6,6 +6,10 @@
 Version 4.5.6
 =============
 
+Enhancements:
+
+* Allow excluding Docker containers from stats collection #3703
+
 Bugs corrected:
 
 * Alert level decided by dict ordering: a failing+slow URL is downgraded to WARNING, an unscanned URL reports CRITICAL #3632

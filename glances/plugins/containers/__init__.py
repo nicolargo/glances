@@ -8,6 +8,7 @@
 
 """Containers plugin."""
 
+import re
 from copy import deepcopy
 from functools import partial, reduce
 from itertools import chain
@@ -167,7 +168,7 @@ class ContainersPlugin(GlancesPluginModel):
 
         # Init the Docker API
         if not disable_plugin_docker:
-            self.watchers['docker'] = DockerExtension()
+            self.watchers['docker'] = DockerExtension(exclude_stats=self.is_no_stats)
 
         # Init the Podman API
         if not disable_plugin_podman:
@@ -239,6 +240,10 @@ class ContainersPlugin(GlancesPluginModel):
         if not all_tag:
             return False
         return all_tag[0].lower() == 'true'
+
+    def is_no_stats(self, container_name: str) -> bool:
+        """Return whether stats collection is disabled for a container name."""
+        return any(re.fullmatch(pattern, container_name, re.I) for pattern in self.get_conf_value('no_stats'))
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator

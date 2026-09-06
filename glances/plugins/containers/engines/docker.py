@@ -9,6 +9,7 @@
 """Docker Extension unit for Glances' Containers plugin."""
 
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
@@ -242,7 +243,7 @@ class DockerExtension:
 
     CONTAINER_ACTIVE_STATUS = ['running', 'healthy', 'paused']
 
-    def __init__(self):
+    def __init__(self, exclude_stats: Callable[[str], bool] | None = None):
         self.disable = disable_plugin_docker
         if self.disable:
             raise Exception("Missing libs required to run Docker Extension (Containers) ")
@@ -252,6 +253,7 @@ class DockerExtension:
         self.client = None
         self.ext_name = "containers (Docker)"
         self.stats_fetchers = {}
+        self.exclude_stats = exclude_stats or (lambda name: False)
 
         # Issue #3559: cache the (immutable) image tags per container id to avoid
         # one inspect_image API call per container on every refresh.
@@ -304,6 +306,15 @@ class DockerExtension:
             else:
                 logger.debug(f"{self.ext_name} plugin - Can't get containers list ({e})")
             return version_stats, []
+
+        # Exclude containers before inspect and stats stream creation (issue #3703).
+        # Sparse Docker summaries expose names through attrs['Names']; container.name
+        # is unavailable until reload() performs the inspect we want to avoid.
+        def is_stats_excluded(container):
+            names = container.attrs.get('Names') or []
+            return any(self.exclude_stats(nativestr(name).lstrip('/')) for name in names)
+
+        containers = [container for container in containers if not is_stats_excluded(container)]
 
         # Inspect the containers concurrently to populate their attributes (issue #3559)
         containers = self._inspect_concurrently(containers)

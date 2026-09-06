@@ -167,3 +167,13 @@ class TestContainersTitle:
             assert title.count('CONTAINERS') == 1, title
             assert title.count('sorted by') <= 1, title
             assert title.count('served by') <= 1, title
+
+
+def test_no_stats_matches_container_names_as_case_insensitive_regexes():
+    plugin = ContainersPlugin.__new__(ContainersPlugin)
+    plugin.plugin_name = 'containers'
+    plugin._limits = {'containers_no_stats': ['transmission_.*', 'backup']}
+
+    assert plugin.is_no_stats('Transmission_WireGuard')
+    assert plugin.is_no_stats('BACKUP')
+    assert not plugin.is_no_stats('database')
