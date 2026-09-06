@@ -1431,7 +1431,7 @@ class GlancesTextbox(Textbox):
         if ch == 10:  # Enter
             return 0
         if ch == 127:  # Back
-            return 8
+            ch = 8
         return super().do_command(ch)
 
 
