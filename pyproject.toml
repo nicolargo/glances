@@ -105,6 +105,7 @@ snmp = ["pysnmp-lextudio<6.2.0"]
 sparklines = ["sparklines"]
 web = [
   "fastapi>=0.82.0",
+  "msgpack",
   "python-jose[cryptography]>=3.3.0",
   "requests",
   "uvicorn",

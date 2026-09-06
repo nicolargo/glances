@@ -13,6 +13,7 @@ import os
 import socket
 import sys
 import webbrowser
+from datetime import datetime
 from typing import Annotated, Any
 from urllib.parse import urljoin
 
@@ -49,10 +50,11 @@ from glances.timer import Timer
 
 # FastAPI import
 try:
+    import msgpack
     from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.middleware.gzip import GZipMiddleware
-    from fastapi.responses import HTMLResponse, JSONResponse
+    from fastapi.responses import HTMLResponse, JSONResponse, Response
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
     from fastapi.staticfiles import StaticFiles
     from fastapi.templating import Jinja2Templates
@@ -178,6 +180,21 @@ class GlancesJSONResponse(JSONResponse):
 
     def render(self, content: Any) -> bytes:
         return json_dumps(content)
+
+
+class GlancesMsgpackResponse(Response):
+    """Encode Glances API responses with MessagePack."""
+
+    media_type = 'application/msgpack'
+
+    def render(self, content: Any) -> bytes:
+        return msgpack.packb(content, default=self._default, use_bin_type=True)
+
+    @staticmethod
+    def _default(value: Any):
+        if isinstance(value, datetime):
+            return value.isoformat()
+        raise TypeError(f'Unsupported type: {type(value).__name__}')
 
 
 class GlancesUvicornServer(uvicorn.Server):
@@ -538,6 +555,12 @@ class GlancesRestfulApi:
         )
 
         # GET
+        router.add_api_route(
+            f'{base_path}/all/msgpack',
+            self._api_all_msgpack,
+            methods=['GET'],
+            response_class=GlancesMsgpackResponse,
+        )
         route_mapping = {
             f'{base_path}/config': self._api_config,
             f'{base_path}/config/{{section}}': self._api_config_section,
@@ -931,16 +954,8 @@ class GlancesRestfulApi:
         servers = self.servers_list.get_servers_list() if self.servers_list else []
         return GlancesJSONResponse([self._sanitize_server(s) for s in servers])
 
-    # Comment this solve an issue on Home Assistant See #3238
-    def _api_all(self):
-        """Glances API RESTful implementation.
-
-        Return the JSON representation of all the plugins
-        HTTP/200 if OK
-        HTTP/400 if plugin is not found
-        HTTP/404 if others error
-        """
-
+    def _get_all_stats(self):
+        """Update and return the raw stats for all plugins."""
         # Update the stat
         self.__update_stats()
 
@@ -951,7 +966,28 @@ class GlancesRestfulApi:
         except Exception as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Cannot get stats ({str(e)})")
 
-        return GlancesJSONResponse(statval)
+        return statval
+
+    # Comment this solve an issue on Home Assistant See #3238
+    def _api_all(self):
+        """Glances API RESTful implementation.
+
+        Return the JSON representation of all the plugins
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        return GlancesJSONResponse(self._get_all_stats())
+
+    def _api_all_msgpack(self):
+        """Glances API RESTful implementation.
+
+        Return the MessagePack representation of all the plugins
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        return GlancesMsgpackResponse(self._get_all_stats())
 
     def _api_all_limits(self):
         """Glances API RESTful implementation.

@@ -118,7 +118,9 @@ markupsafe==3.0.3
 mcp==1.29.0
     # via glances
 msgpack==1.2.2
-    # via influxdb
+    # via
+    #   glances
+    #   influxdb
 nats-py==2.15.0
     # via glances
 nvidia-ml-py==13.610.43

@@ -6,6 +6,10 @@
 Version 4.5.6
 =============
 
+Enhancements:
+
+* Add a MessagePack endpoint for all REST API stats #3593
+
 Bugs corrected:
 
 * Alert level decided by dict ordering: a failing+slow URL is downgraded to WARNING, an unscanned URL reports CRITICAL #3632

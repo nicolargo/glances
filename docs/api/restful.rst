@@ -1781,6 +1781,11 @@ Get all Glances stats::
     # curl http://localhost:61208/api/4/all
     Return a very big dictionary with all stats
 
+Get all Glances stats encoded with MessagePack::
+
+    # curl http://localhost:61208/api/4/all/msgpack --output glances.msgpack
+    Return the same dictionary encoded as application/msgpack
+
 Note: Update is done automatically every time /all or /<plugin> is called.
 
 GET stats of a specific process
@@ -2110,4 +2115,3 @@ Limits/thresholds for the cpu plugin::
      "cpu_user_log": ["False"],
      "cpu_user_warning": 70.0,
      "history_size": 1200.0}
-

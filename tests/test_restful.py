@@ -17,6 +17,7 @@ import time
 import types
 import unittest
 
+import msgpack
 import requests
 
 from glances import __version__
@@ -101,6 +102,16 @@ class TestGlances(unittest.TestCase):
             counter_second_call_result < counter_first_call_result,
             "The second call should be cached (faster than the first one)",
         )
+
+    def test_001_all_msgpack(self):
+        """All stats encoded with MessagePack."""
+        req = self.http_get(f"{URL}/all/msgpack")
+
+        self.assertTrue(req.ok)
+        self.assertEqual(req.headers['Content-Type'], 'application/msgpack')
+        stats = msgpack.unpackb(req.content, raw=False)
+        self.assertIsInstance(stats, dict)
+        self.assertIn('cpu', stats)
 
     def test_002_pluginslist(self):
         """Plugins list."""

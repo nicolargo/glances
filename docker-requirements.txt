@@ -67,6 +67,8 @@ markupsafe==3.0.3
     # via jinja2
 mcp==1.29.0
     # via glances
+msgpack==1.2.2
+    # via glances
 packaging==26.3
     # via glances
 podman==5.8.0
