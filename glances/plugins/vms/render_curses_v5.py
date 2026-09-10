@@ -10,16 +10,19 @@
 
 Mirror of v4 ``vms.msg_curse`` (``glances/plugins/vms/__init__.py``,
 ``msg_curse``/``vm_alert``/``sort_vm_stats``). Title row + column-header
-row + one row per VM, MAIN (RIGHT) column, full width. No alerts
-(``EMITS_ALERTS = False`` — the payload carries no ``_levels``).
+row + one row per VM, MAIN (RIGHT) column, full width. CPU%, MEM and LOAD
+are coloured from the payload's ``_levels`` (``EMITS_ALERTS = True``,
+port of v4 f8657a0a) — the status cell keeps its own ``_status_role``
+mapping, untouched by ``_levels``.
 
 Columns: Engine (only with >1 distinct engine), Name (``max_name_size``),
 Status, Core, CPU% (``cpu_time`` — the per-second rate the base already
 computed; ``None`` on the first cycle → placeholder), MEM/MAX (glued into
 one cell — v4 underlines only the ``MEM`` sub-cell, here MEM and MAX share
-a single ``Cell`` so the underline spans both; cosmetic, intentional
-simplification), LOAD 1/5/15min (only when ``load_1min`` is not None on
-the first VM — v4 parity), Release.
+a single ``Cell`` so the underline (and, now, the ``memory_percent``
+colour) spans both; cosmetic, intentional simplification), LOAD 1/5/15min
+(only when ``load_1min`` is not None on the first VM — v4 parity;
+coloured as one glued cell from the ``load_1min`` level), Release.
 
 Sort-column underline follows ``view["sort_key"]`` — the GLOBAL process
 sort key (processlist-aligned, dynamic/auto-resolved), NOT a key read
@@ -31,7 +34,7 @@ from __future__ import annotations
 from typing import Any
 
 from glances.globals import auto_unit
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, row_budget
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, row_budget
 
 _DEFAULT_MAX_NAME_SIZE = 20
 _STATUS_WIDTH = 10
@@ -59,6 +62,12 @@ _STATUS_ROLE: dict[str, ColorRole] = {
 
 def _status_role(status: Any) -> ColorRole:
     return _STATUS_ROLE.get(str(status or "").lower(), ColorRole.DEFAULT)
+
+
+def _level_role(level_entry: Any) -> tuple[ColorRole, bool]:
+    if isinstance(level_entry, dict):
+        return (_LEVEL_TO_ROLE.get(level_entry.get("level"), ColorRole.DEFAULT), bool(level_entry.get("prominent")))
+    return (ColorRole.DEFAULT, False)
 
 
 def _fmt(value: Any) -> str:
@@ -99,7 +108,9 @@ def _build_header_row(
     return Row(cells=cells)
 
 
-def _build_data_row(vm: dict[str, Any], *, show_engine: bool, engine_w: int, name_w: int, show_load: bool) -> Row:
+def _build_data_row(
+    vm: dict[str, Any], *, show_engine: bool, engine_w: int, name_w: int, show_load: bool, item_levels: dict[str, Any]
+) -> Row:
     cells: list[Cell] = []
     if show_engine:
         cells.append(Cell(text=str(vm.get("engine", "")).ljust(engine_w)))
@@ -107,14 +118,19 @@ def _build_data_row(vm: dict[str, Any], *, show_engine: bool, engine_w: int, nam
     status = vm.get("status")
     cells.append(Cell(text=str(status or "")[:_STATUS_WIDTH].rjust(_STATUS_WIDTH), color=_status_role(status)))
     cells.append(Cell(text=_fmt(vm.get("cpu_count")).rjust(_CORE_WIDTH)))
-    cells.append(Cell(text=_fmt(vm.get("cpu_time")).rjust(_CPU_WIDTH)))
+    cpu_role, cpu_prom = _level_role(item_levels.get("cpu_time"))
+    cells.append(Cell(text=_fmt(vm.get("cpu_time")).rjust(_CPU_WIDTH), color=cpu_role, prominent=cpu_prom))
     mem_text = f"{auto_unit(vm.get('memory_usage')):>{_MEM_WIDTH}}/{auto_unit(vm.get('memory_total')):<{_MEM_WIDTH}}"
-    cells.append(Cell(text=mem_text))
+    mem_role, mem_prom = _level_role(item_levels.get("memory_percent"))
+    cells.append(Cell(text=mem_text, color=mem_role, prominent=mem_prom))
     if show_load:
         try:
-            cells.append(Cell(text=f"{vm['load_1min']:>5.1f}/{vm['load_5min']:>5.1f}/{vm['load_15min']:>5.1f}"))
+            load_text = f"{vm['load_1min']:>5.1f}/{vm['load_5min']:>5.1f}/{vm['load_15min']:>5.1f}"
         except (KeyError, TypeError):
             pass
+        else:
+            load_role, load_prom = _level_role(item_levels.get("load_1min"))
+            cells.append(Cell(text=load_text, color=load_role, prominent=load_prom))
     cells.append(Cell(text=str(vm["release"]) if vm.get("release") is not None else "-"))
     return Row(cells=cells)
 
@@ -136,6 +152,7 @@ def render(
 
     sort_key = (view or {}).get("sort_key")
     max_name_size = payload.get("max_name_size", _DEFAULT_MAX_NAME_SIZE)
+    levels = payload.get("_levels") if isinstance(payload.get("_levels"), dict) else {}
 
     show_engine = len({str(i.get("engine", "")) for i in items}) > 1
     name_w = min(int(max_name_size), max((len(str(i.get("name", ""))) for i in items), default=max_name_size))
@@ -163,7 +180,14 @@ def render(
         name_label=name_label,
     )
     data_rows = [
-        _build_data_row(vm, show_engine=show_engine, engine_w=engine_w, name_w=name_w, show_load=show_load)
+        _build_data_row(
+            vm,
+            show_engine=show_engine,
+            engine_w=engine_w,
+            name_w=name_w,
+            show_load=show_load,
+            item_levels=levels.get(vm.get("name"), {}),
+        )
         for vm in items
     ]
     return [header_row, *data_rows]

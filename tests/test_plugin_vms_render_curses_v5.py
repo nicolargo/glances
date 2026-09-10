@@ -188,3 +188,49 @@ def test_sort_underline_survives_the_truncation_counter():
         view={"row_budget": {"vms": 3}, "sort_key": "name"},
     )
     assert rows[0].cells[0].underline is True
+
+
+# ---------------------------------------------------------- _levels colouring (v4 f8657a0a)
+
+
+def test_cpu_cell_coloured_from_levels():
+    payload = _payload([_vm(cpu_time=95.0)])
+    payload["_levels"] = {"vm-a": {"cpu_time": {"level": "critical", "prominent": False}}}
+    rows = render(payload)
+    cpu_cell = next(c for c in rows[1].cells if c.text.strip() == "95.0")
+    assert cpu_cell.color == ColorRole.CRITICAL
+
+
+def test_mem_cell_coloured_from_levels():
+    payload = _payload([_vm(memory_usage=3000, memory_total=5000)])
+    payload["_levels"] = {"vm-a": {"memory_percent": {"level": "warning", "prominent": False}}}
+    rows = render(payload)
+    mem_cell = next(c for c in rows[1].cells if "/" in c.text)
+    assert mem_cell.color == ColorRole.WARNING
+
+
+def test_load_cell_coloured_from_levels():
+    payload = _payload([_vm(load_1min=150.0, load_5min=100.0, load_15min=50.0)])
+    payload["_levels"] = {"vm-a": {"load_1min": {"level": "critical", "prominent": False}}}
+    rows = render(payload)
+    load_cell = next(c for c in rows[1].cells if "150.0" in c.text)
+    assert load_cell.color == ColorRole.CRITICAL
+
+
+def test_unconfigured_install_renders_default_coloured_cells():
+    # No thresholds configured (shipped default) -> no `_levels` at all: the
+    # table must still render, with every value cell DEFAULT-coloured.
+    rows = render(_payload([_vm(cpu_time=95.0)]))
+    cpu_cell = next(c for c in rows[1].cells if c.text.strip() == "95.0")
+    mem_cell = next(c for c in rows[1].cells if "/" in c.text)
+    assert cpu_cell.color == ColorRole.DEFAULT
+    assert mem_cell.color == ColorRole.DEFAULT
+
+
+def test_status_cell_colour_untouched_by_levels():
+    # The status cell keeps its own _status_role mapping, independent of _levels.
+    payload = _payload([_vm(status="running")])
+    payload["_levels"] = {"vm-a": {"cpu_time": {"level": "critical", "prominent": False}}}
+    rows = render(payload)
+    status_cell = [c for c in rows[1].cells if "running" in c.text][0]
+    assert status_cell.color == ColorRole.OK

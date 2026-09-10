@@ -229,3 +229,59 @@ class TestBarChar:
     def test_the_default_char_is_a_pipe(self):
         rows = render(_payload(stats_list=["cpu"]), FIELDS)
         assert "|" in _text(rows[0])
+
+
+class TestPercpuOwnLevel:
+    """v4 26a9fe96 — a core's bar is coloured from its OWN level, not the
+    aggregate `cpu` level (the regression: a core at 95% painted 'ok' because
+    the aggregate `cpu` level was 'ok')."""
+
+    def test_a_hot_core_is_critical_while_the_aggregate_cpu_is_ok(self):
+        payload = _payload(
+            percpu=[
+                {"cpu_number": 0, "total": 95.0, "level": "critical"},
+                {"cpu_number": 1, "total": 1.0, "level": "ok"},
+            ],
+            percpu_other=None,
+            max_cpu_display=4,
+            _levels={"cpu": {"level": "ok", "prominent": True}},
+        )
+        rows = render(payload, FIELDS, view={"percpu": True})
+        cpu0 = next(r for r in rows if _text(r).startswith("CPU0"))
+        cpu1 = next(r for r in rows if _text(r).startswith("CPU1"))
+        bar_cell = cpu0.cells[2]  # [label, "[", bar, "]"]
+        assert bar_cell.color == ColorRole.CRITICAL
+        assert cpu1.cells[2].color == ColorRole.OK
+
+    def test_the_star_row_takes_percpu_others_role_and_value(self):
+        cores = [{"cpu_number": i, "total": 0.0, "level": "ok"} for i in range(8)]
+        payload = _payload(
+            percpu=cores,
+            percpu_other={"total": 10.5, "level": "warning"},
+            max_cpu_display=4,
+        )
+        rows = render(payload, FIELDS, view={"percpu": True})
+        star = next(r for r in rows if _text(r).startswith("CPU*"))
+        assert star.cells[2].color == ColorRole.WARNING
+        assert "10.5%" in _text(star)
+
+    def test_payload_max_cpu_display_drives_the_cut(self):
+        cores = [{"cpu_number": i, "total": float(i), "level": "ok"} for i in range(5)]
+        payload = _payload(percpu=cores, percpu_other={"total": 0.0, "level": "ok"}, max_cpu_display=2)
+        rows = render(payload, FIELDS, view={"percpu": True})
+        text = "\n".join(_text(r) for r in rows)
+        assert "CPU4" in text and "CPU3" in text  # the 2 highest totals
+        assert "CPU2" not in text
+        assert "CPU*" in text
+
+    def test_an_older_payload_without_level_or_percpu_other_still_renders(self):
+        """Defensive fallback: no per-core `level`, no `percpu_other`, no
+        `max_cpu_display` — behaves like before the fix (aggregate role)."""
+        cores = [{"cpu_number": i, "total": float(i * 7 % 100)} for i in range(8)]
+        payload = _payload(percpu=cores, _levels={"cpu": {"level": "warning", "prominent": True}})
+        rows = render(payload, FIELDS, view={"percpu": True})
+        text = "\n".join(_text(r) for r in rows)
+        assert "CPU*" in text
+        assert text.count("CPU") == 5  # 4 cores + CPU*, _DEFAULT_MAX_CPU_DISPLAY fallback
+        first_bar_row = next(r for r in rows if _text(r).startswith("CPU"))
+        assert first_bar_row.cells[2].color == ColorRole.WARNING

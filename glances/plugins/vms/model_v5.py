@@ -21,7 +21,11 @@ that via `DISABLED_BY_DEFAULT = True` — without an explicit
 `main_v5.discover_plugins()`. The class stays discoverable, so it can be
 enabled without code changes.
 
-No alerts: ``EMITS_ALERTS = False`` — no field is declared ``watched``.
+Alerts: ``EMITS_ALERTS = True`` — ``cpu_time``, ``memory_percent`` and
+``load_1min`` are watched fields, coloured (and alerted) from ``[vms]``
+thresholds. The shipped config ships those keys commented out, so a
+default install stays uncoloured until the operator opts in (v4 parity,
+port of f8657a0a).
 """
 
 from __future__ import annotations
@@ -76,7 +80,7 @@ class PluginModel(GlancesPluginBase[list]):
 
     plugin_name: ClassVar[str] = "vms"
     IS_COLLECTION: ClassVar[bool] = True
-    EMITS_ALERTS: ClassVar[bool] = False
+    EMITS_ALERTS: ClassVar[bool] = True
     # Mirrors v4 `[vms] disable=True`: off unless the operator opts in.
     DISABLED_BY_DEFAULT: ClassVar[bool] = True
 
@@ -86,10 +90,33 @@ class PluginModel(GlancesPluginBase[list]):
         "release": {"description": "VM release.", "unit": "string"},
         "status": {"description": "VM status.", "unit": "string"},
         "cpu_count": {"description": "VM CPU count.", "unit": "number"},
-        "cpu_time": {"description": "VM CPU time (per-second rate).", "unit": "percent", "rate": True},
+        "cpu_time": {
+            "description": "VM CPU time (per-second rate).",
+            "unit": "percent",
+            "rate": True,
+            "watched": True,
+            "watch_direction": "high",
+            "prominent": False,
+            "threshold_field": "cpu",
+        },
         "memory_usage": {"description": "VM memory usage.", "unit": "byte"},
         "memory_total": {"description": "VM memory total.", "unit": "byte"},
-        "load_1min": {"description": "VM load, last 1 min (None if unsupported by the engine).", "unit": "float"},
+        "memory_percent": {
+            "description": "VM memory usage as a percentage of its own memory_total.",
+            "unit": "percent",
+            "watched": True,
+            "watch_direction": "high",
+            "prominent": False,
+            "threshold_field": "mem",
+        },
+        "load_1min": {
+            "description": "VM load, last 1 min (None if unsupported by the engine).",
+            "unit": "float",
+            "watched": True,
+            "watch_direction": "high",
+            "prominent": False,
+            "threshold_field": "load",
+        },
         "load_5min": {"description": "VM load, last 5 min (None if unsupported by the engine).", "unit": "float"},
         "load_15min": {"description": "VM load, last 15 min (None if unsupported by the engine).", "unit": "float"},
         "ipv4": {"description": "VM IPv4 address.", "unit": "string"},
@@ -112,6 +139,20 @@ class PluginModel(GlancesPluginBase[list]):
         raw = self.config.get("vms", "all", "False")
         return str(raw).strip().lower() in ("true", "1", "yes")
 
+    @staticmethod
+    def _compute_memory_percent(vm: dict[str, Any]) -> None:
+        """Derive ``memory_percent`` from this VM's own ``memory_usage`` /
+        ``memory_total`` (v4 f8657a0a semantics — a percentage of that VM's
+        own limit, like ``containers``). ``None`` when ``memory_total`` is
+        zero, ``None``, or not a usable number — never a ZeroDivisionError,
+        never a fabricated 0%.
+        """
+        try:
+            total = float(vm.get("memory_total"))
+            vm["memory_percent"] = 100.0 * float(vm.get("memory_usage")) / total if total else None
+        except (TypeError, ValueError):
+            vm["memory_percent"] = None
+
     def _collect(self) -> list:
         stats: list[dict[str, Any]] = []
         all_tag = self._all_tag()
@@ -124,6 +165,7 @@ class PluginModel(GlancesPluginBase[list]):
             for vm in vms:
                 vm["engine"] = engine
                 vm["engine_version"] = version
+                self._compute_memory_percent(vm)
             stats.extend(vms)
         # Pre-sort the list to follow the dynamic process sort key (v4
         # parity). The returned key is not exposed — the renderer underlines

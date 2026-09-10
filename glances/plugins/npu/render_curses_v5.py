@@ -89,11 +89,18 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
         )
     )
 
-    # Row 4: temperature (never watched in v4 — default colour).
+    # Row 4: temperature (watched — v4 20555568).
     temp = npu.get("temperature")
     if temp is not None and view.get("fahrenheit"):
         temp = to_fahrenheit(temp)
     unit = "F" if view.get("fahrenheit") else "C"
-    rows.append(Row(cells=[Cell(text="{:<12}".format("temperature:")), Cell(text=_format_value(temp, unit))]))
+    rows.append(
+        Row(
+            cells=[
+                Cell(text="{:<12}".format("temperature:")),
+                Cell(text=_format_value(temp, unit), color=_level_role(levels, npu_id, "temperature")),
+            ]
+        )
+    )
 
     return rows

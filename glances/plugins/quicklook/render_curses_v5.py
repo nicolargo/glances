@@ -65,8 +65,8 @@ _BAR_KEYS = ("cpu", "mem", "load", "gpu_mem", "gpu_proc")
 _BAR_LABEL = {"gpu_mem": "GMEM", "gpu_proc": "GPU"}
 
 # Per-core: top-N shown, the rest collapsed into a "CPU*" mean row (v4).
-# TODO(G2+): read [percpu] max_cpu_display from config (v4 __init__.py:108);
-# plumb via `view` once the TUI passes it.
+# Fallback cut, used only when the payload carries no `max_cpu_display`
+# (the model publishes it from `[percpu] max_cpu_display`) — an older server.
 _DEFAULT_MAX_CPU_DISPLAY = 4
 
 
@@ -177,30 +177,48 @@ def render(
 
 
 def _per_cpu_rows(payload: dict[str, Any], width: int, bar_char: str = "|") -> list[Row]:
-    """Top-N per-core bars + a CPU* mean row (v4 `_msg_per_cpu`)."""
+    """Top-N per-core bars + a CPU* mean row (v4 `_msg_per_cpu`).
+
+    Each bar is coloured from its own core's `level` (model-computed by
+    `quicklook/model_v5.py::_decorate_percpu`), and the "CPU*" row from
+    `payload["percpu_other"]["level"]` — v4 26a9fe96 fixed both interfaces
+    painting every core with the aggregate `cpu` colour. A payload from an
+    older server (no per-core `level`, no `percpu_other`, no
+    `max_cpu_display`) falls back to the pre-fix behaviour instead of raising.
+    """
     cores = [c for c in payload.get("percpu", []) if isinstance(c, dict)]
     rows: list[Row] = []
     if not cores:
         return rows
 
-    if len(cores) > _DEFAULT_MAX_CPU_DISPLAY:
+    max_display = payload.get("max_cpu_display")
+    if not isinstance(max_display, int):
+        max_display = _DEFAULT_MAX_CPU_DISPLAY
+
+    if len(cores) > max_display:
         ordered = sorted(cores, key=lambda c: float(c.get("total") or 0.0), reverse=True)
     else:
         ordered = cores
 
-    displayed = ordered[:_DEFAULT_MAX_CPU_DISPLAY]
-    role = _role_for(payload, "cpu")
+    fallback_role = _role_for(payload, "cpu")
+    displayed = ordered[:max_display]
     for core in displayed:
         cid = core.get("cpu_number", 0)
         label = f"CPU{cid}" if isinstance(cid, int) and cid < 10 else f"{cid:>4}"
+        role = _LEVEL_TO_ROLE.get(core.get("level"), fallback_role)
         rows.append(Row(cells=_bar_cells(label, core.get("total"), role, width, bar_char)))
 
-    overflow = ordered[_DEFAULT_MAX_CPU_DISPLAY:]
-    if overflow:
-        # v4 Bar-path parity (glances/plugins/quicklook/__init__.py:322-324):
-        # the "CPU*" row averages the HIDDEN (overflow) cores, not the displayed ones.
-        vals = [float(c.get("total") or 0.0) for c in overflow]
-        mean = sum(vals) / len(vals)
-        rows.append(Row(cells=_bar_cells("CPU*", mean, role, width, bar_char)))
+    percpu_other = payload.get("percpu_other")
+    if isinstance(percpu_other, dict):
+        role = _LEVEL_TO_ROLE.get(percpu_other.get("level"), fallback_role)
+        rows.append(Row(cells=_bar_cells("CPU*", percpu_other.get("total"), role, width, bar_char)))
+    else:
+        overflow = ordered[max_display:]
+        if overflow:
+            # v4 Bar-path parity (glances/plugins/quicklook/__init__.py:322-324):
+            # the "CPU*" row averages the HIDDEN (overflow) cores, not the displayed ones.
+            vals = [float(c.get("total") or 0.0) for c in overflow]
+            mean = sum(vals) / len(vals)
+            rows.append(Row(cells=_bar_cells("CPU*", mean, fallback_role, width, bar_char)))
 
     return rows

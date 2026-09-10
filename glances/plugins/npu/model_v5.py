@@ -32,6 +32,8 @@ from glances.plugins.plugin.base_v5 import GlancesPluginBase
 logger = logging.getLogger(__name__)
 
 _PERCENT_THRESHOLDS = {"careful": 50.0, "warning": 70.0, "critical": 90.0}
+# NPU temperature ladder — exact v4 conf/glances.conf [npu] defaults.
+_TEMP_THRESHOLDS = {"careful": 60.0, "warning": 70.0, "critical": 80.0}
 
 
 def _build_backends() -> list:
@@ -89,7 +91,15 @@ class PluginModel(GlancesPluginBase[list]):
         },
         "freq_current": {"description": "NPU current frequency (Hz).", "unit": "hertz", "internal": True},
         "freq_max": {"description": "NPU maximum frequency (Hz).", "unit": "hertz", "internal": True},
-        "temperature": {"description": "NPU temperature.", "unit": "celsius", "internal": True},
+        "temperature": {
+            "description": "NPU temperature.",
+            "short_name": "temperature",
+            "unit": "celsius",
+            "watched": True,
+            "watch_direction": "high",
+            "prominent": False,
+            "default_thresholds": _TEMP_THRESHOLDS,
+        },
         "power": {"description": "NPU power draw.", "unit": "watt", "internal": True},
     }
 

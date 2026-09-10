@@ -25,6 +25,7 @@ def store() -> StatsStoreV5:
 @pytest.fixture
 def config(tmp_path, monkeypatch) -> GlancesConfigV5:
     monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
     return GlancesConfigV5()
 
 
@@ -69,8 +70,39 @@ def test_fields_watched():
     for key in ("load", "freq", "mem"):
         assert fd[key]["watched"] is True
     assert fd["npu_id"].get("primary_key") is True
-    for key in ("freq_current", "freq_max", "temperature", "power", "name"):
+    for key in ("freq_current", "freq_max", "power", "name"):
         assert fd[key].get("internal") is True
+
+
+def test_npu_temperature_thresholds_mirror_v4():
+    # v4 20555568: the temperature both interfaces already ask for must be
+    # watched, with the same 60/70/80 ladder as [gpu].
+    fd = PluginModel.fields_description["temperature"]
+    assert fd["watched"] is True
+    assert fd.get("internal") is not True
+    assert fd["default_thresholds"] == {"careful": 60.0, "warning": 70.0, "critical": 80.0}
+
+
+def test_temperature_level_warning_at_75(store, config):
+    p = PluginModel(store, config)
+    p._stats = [{"npu_id": "intel_1", "temperature": 75}]
+    p._derived_parameters()
+    assert p._levels["intel_1"]["temperature"]["level"] == "warning"
+
+
+def test_temperature_level_ok_at_50(store, config):
+    p = PluginModel(store, config)
+    p._stats = [{"npu_id": "intel_1", "temperature": 50}]
+    p._derived_parameters()
+    assert p._levels["intel_1"]["temperature"]["level"] == "ok"
+
+
+def test_temperature_critical_config_override_wins_over_default(store_with, config_with):
+    config = config_with({"npu": {"temperature_critical": "50"}})
+    p = PluginModel(store_with(), config)
+    p._stats = [{"npu_id": "intel_1", "temperature": 55}]
+    p._derived_parameters()
+    assert p._levels["intel_1"]["temperature"]["level"] == "critical"
 
 
 @pytest.mark.asyncio

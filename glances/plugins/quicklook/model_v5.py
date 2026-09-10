@@ -40,6 +40,7 @@ import psutil
 from glances.cpu_sampler_v5 import sampler
 from glances.logger import logger
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
+from glances.plugins.plugin.thresholds_v5 import compute_level
 
 # Standard Glances percent ladder (matches v4 quicklook cpu/mem/load alerts).
 _PERCENT_THRESHOLDS = {"careful": 50.0, "warning": 70.0, "critical": 90.0}
@@ -184,8 +185,24 @@ class PluginModel(GlancesPluginBase[dict]):
             "default_thresholds": _PERCENT_THRESHOLDS,
         },
         "percpu": {
-            "description": "Per-core CPU usage (list of {cpu_number, total}).",
+            "description": "Per-core CPU usage (list of {cpu_number, total, level}).",
             "unit": "percent",
+            "internal": True,
+            "watched": False,
+        },
+        "percpu_other": {
+            "description": (
+                "Mean + level of the CPU cores hidden by max_cpu_display "
+                "({total, level}), or None when every core is shown."
+            ),
+            "unit": "percent",
+            "internal": True,
+            "watched": False,
+        },
+        "max_cpu_display": {
+            "description": "Number of per-core bars shown before collapsing the rest into percpu_other "
+            "([percpu] max_cpu_display).",
+            "unit": "number",
             "internal": True,
             "watched": False,
         },
@@ -237,6 +254,11 @@ class PluginModel(GlancesPluginBase[dict]):
         super().__init__(store, config)
         self.stats_list = self._read_stats_list()
         self.bar_char = self._read_bar_char()
+        self.max_cpu_display = self._read_max_cpu_display()
+
+    def _read_max_cpu_display(self) -> int:
+        """Parse `[percpu] max_cpu_display=4` (v4 `__init__.py:108`, v4 key/section)."""
+        return self.config.get("percpu", "max_cpu_display", 4)
 
     def _read_stats_list(self) -> list[str]:
         """Parse `[quicklook] list=cpu,mem,load` (v4 `__init__.py:110-121`).
@@ -291,7 +313,55 @@ class PluginModel(GlancesPluginBase[dict]):
         # render_curses_v5.render() has no other way to reach the config.
         out["stats_list"] = self.stats_list
         out["bar_char"] = self.bar_char
+        out["max_cpu_display"] = self.max_cpu_display
         return out
+
+    def _derived_parameters(self) -> None:
+        """Base watched-field levels, then per-core `percpu` decoration.
+
+        v4 26a9fe96: every `--percpu` bar was painted with the AGGREGATE
+        `cpu` field's colour (`views['cpu']['decoration']`), so a core pegged
+        at 100% among idle ones was painted like the average. Each core now
+        gets its own `level`, resolved from the same thresholds as `cpu`
+        (config overrides included) via `_decorate_percpu` below — but
+        outside `_levels`/the watched-field walk, so it never reaches the
+        alert pipeline or the history (`EMITS_ALERTS` stays False; v4 avoided
+        `get_alert()` here for the same reason — every core shares the
+        `quicklook_cpu` stat name with the aggregate).
+        """
+        super()._derived_parameters()
+        self._decorate_percpu()
+
+    def _decorate_percpu(self) -> None:
+        """Add a `level` to each `percpu` item and compute `percpu_other`.
+
+        `percpu_other` mirrors v4 `_build_percpu_decoration`'s 'other' entry:
+        the mean total (+ its level) of the cores left out once the top
+        `max_cpu_display` (by `total`, descending) are kept. `None` when
+        there is nothing to hide.
+        """
+        if not isinstance(self._stats, dict):
+            return
+        percpu = self._stats.get("percpu")
+        if not isinstance(percpu, list) or not percpu:
+            self._stats["percpu_other"] = None
+            return
+
+        cpu_field = self._fields.get("cpu", {})
+        direction = cpu_field.get("watch_direction", "high")
+        thresholds = self._resolve_numeric_thresholds(
+            "cpu", cpu_field, pk_value=None, plugin_thresholds=None, fields_with_pk_overrides=None
+        )
+        for core in percpu:
+            if isinstance(core, dict):
+                core["level"] = compute_level(core.get("total"), thresholds, direction)
+
+        if len(percpu) > self.max_cpu_display:
+            hidden = sorted(percpu, key=lambda c: float(c.get("total") or 0.0), reverse=True)[self.max_cpu_display :]
+            mean = sum(float(c.get("total") or 0.0) for c in hidden) / len(hidden)
+            self._stats["percpu_other"] = {"total": mean, "level": compute_level(mean, thresholds, direction)}
+        else:
+            self._stats["percpu_other"] = None
 
     def _add_gpu_means(self, out: dict[str, Any]) -> None:
         """Average the gpu plugin's per-card proc/mem into gpu_proc/gpu_mem.

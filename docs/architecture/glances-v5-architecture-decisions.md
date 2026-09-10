@@ -1142,6 +1142,33 @@ _Goal: production-ready. Release `5.0.0rc1` then `5.0.0`._
 - Merge `develop-v5 → develop`
 - PyPI, Docker, Snap, Helm packages published
 
+#### v4 feature parity backlog
+
+**Standing rule — every v4 feature is ported to v5.** A v4 feature is dropped or
+changed only when the maintainer has explicitly decided so, and that decision is
+recorded in this document. "Not covered by a group plan yet" never means
+"dropped": it means the gap belongs in the table below until a group owns it.
+
+Gaps known today, none of them owned by a group yet. Found by the v4 → v5
+backport sweep of 2026-09-10 (develop `2bf3aadb`):
+
+| Gap | v4 reference | v5 state | Target |
+|---|---|---|---|
+| `hide_zero` + `hide_threshold_bytes` | `plugins/plugin/model.py` `update_views()`, `[network]` / `[diskio]` config keys | Absent. `base_v5` only implements the regex `show=` / `hide=` item filters (§3.8). | Phase 2.X — generic mechanism in `base_v5`, wired in `network` and `diskio`, plus the WebUI row rule. Three v4 fixes are part of the spec: hide on `>` and not `>=` (v4 `cc5e2bab`), `network` must actually read `hide_threshold_bytes` (v4 `d88f9d98`), and a row stays visible while any of its `hide_zero` fields is (v4 `ff80c903`). |
+| `--process-focus` and the process filter | `glances/processes.py` + `glances/filter.py` — both shared with v5, and already carrying the v4 fixes | Never wired: `main_v5.py` does not push `args` into `glances_processes`, and `processlist/model_v5.py` records "no filter UI (deferred)". | Phase 2.X — wire the CLI args into the shared engine and add the TUI filter key. No engine work needed. |
+| `[percpu] max_cpu_display` ignored by the `percpu` plugin | `percpu/__init__.py:119` and `quicklook/__init__.py:108` — v4 reads the same key from the same `[percpu]` section in both blocks and they stay in sync. | `quicklook/model_v5.py` now honours it (npu/quicklook/vms backport, 2026-09-10), but `percpu/render_curses_v5.py:35-37` still carries the open `TODO(G2+)` and its own `_DEFAULT_MAX_CPU_DISPLAY = 4` (line 48) — a user setting `max_cpu_display=8` sees 8 bars in quicklook and 4 in percpu. | Phase 2.X — apply the pattern quicklook just established: the model reads the config key and publishes it as an `internal` payload field. |
+
+Every backport sweep appends what it finds here (see the sweep method in the
+maintainer notes); the table is the single list of "v4 has it, v5 does not yet".
+
+**Reversed decision — `vms EMITS_ALERTS`.** G6A set `vms EMITS_ALERTS = False`
+(`docs/superpowers/specs/2026-07-14-glances-v5-g6a-design.md`, decision 3) because
+v4's vms alert decorations were dead code at the time. v4 `f8657a0a` (2026-09-08)
+brought them to life, so the premise is gone; v5 now flips `EMITS_ALERTS` to
+`True` for `vms`, mirroring `containers`. Default behaviour is unchanged — the
+shipped `[vms]` threshold keys stay commented, so no threshold resolves, no
+level is computed, and nothing fires.
+
 ---
 
 ## 11. MCP endpoint — Model Context Protocol

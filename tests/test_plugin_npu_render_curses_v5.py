@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+from glances.outputs.curses_renderer_v5 import ColorRole
 from glances.plugins.npu.render_curses_v5 import render
 
 
@@ -75,3 +76,14 @@ def test_temperature_fahrenheit_when_view_flag_set():
     flat = _flat(rows)
     assert "212" in flat  # 100C -> 212F
     assert "F" in flat
+
+
+def test_temperature_critical_level_coloured():
+    # v4 20555568: a critical NPU temperature must be coloured, like gpu already is.
+    rows = render(_payload([_npu(temp=85)], levels={"intel_1": {"temperature": {"level": "critical"}}}))
+    assert rows[3].cells[1].color == ColorRole.CRITICAL
+
+
+def test_temperature_ok_level_coloured():
+    rows = render(_payload([_npu(temp=50)], levels={"intel_1": {"temperature": {"level": "ok"}}}))
+    assert rows[3].cells[1].color == ColorRole.OK

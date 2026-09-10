@@ -305,3 +305,95 @@ class TestRenderSupportFields:
         for key in ("stats_list", "bar_char"):
             assert fd[key].get("internal") is True
             assert fd[key].get("watched", False) is False
+
+
+class TestPercpuLevels:
+    """v4 26a9fe96 — colour each `--percpu` bar by that core's own load.
+
+    Per-core `level` and `percpu_other` are computed in the MODEL against the
+    SAME resolved thresholds as the `cpu` field (config overrides included),
+    without going through `_levels` / the alert pipeline (EMITS_ALERTS stays
+    False for quicklook — see test_quicklook_opts_out_of_alerts).
+    """
+
+    @staticmethod
+    def _patch_cores(monkeypatch, totals: list[float]) -> None:
+        class _Sample:
+            def __init__(self, idle: float) -> None:
+                self.idle = idle
+
+        class _FakeSampler:
+            cpu_count = len(totals)
+
+            async def get_aggregate(self):
+                return _Sample(100.0)  # aggregate value is irrelevant to per-core levels
+
+            async def get_per_core(self):
+                return [_Sample(100.0 - t) for t in totals]
+
+        import glances.plugins.quicklook.model_v5 as mod
+
+        monkeypatch.setattr(mod, "sampler", _FakeSampler())
+        monkeypatch.setattr(mod, "_collect_sync", lambda: {})
+
+    @pytest.mark.asyncio
+    async def test_a_pegged_core_is_critical_while_an_idle_one_is_ok(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "")
+        p = PluginModel(store, cfg)
+        self._patch_cores(monkeypatch, [95.0, 10.0, 5.0, 2.0, 1.0])
+        await p.update()
+        cores = {c["cpu_number"]: c for c in store.get("quicklook")["percpu"]}
+        assert cores[0]["level"] == "critical"
+        assert cores[1]["level"] == "ok"
+
+    @pytest.mark.asyncio
+    async def test_percpu_other_is_the_mean_and_level_of_the_hidden_cores(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "")
+        p = PluginModel(store, cfg)
+        self._patch_cores(monkeypatch, [95.0, 10.0, 5.0, 2.0, 1.0])
+        await p.update()
+        # max_cpu_display=4 (default) keeps the 4 highest [95, 10, 5, 2]; the
+        # single hidden core is the smallest, 1.0.
+        assert store.get("quicklook")["percpu_other"] == {"total": 1.0, "level": "ok"}
+
+    @pytest.mark.asyncio
+    async def test_percpu_other_is_none_at_or_under_max_cpu_display(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "")
+        p = PluginModel(store, cfg)
+        self._patch_cores(monkeypatch, [95.0, 10.0, 5.0, 2.0])
+        await p.update()
+        assert store.get("quicklook")["percpu_other"] is None
+
+    @pytest.mark.asyncio
+    async def test_a_quicklook_critical_override_changes_the_per_core_levels(self, tmp_path, monkeypatch, store):
+        # Default critical=90 would put the 95% core at 'critical'; raising it
+        # to 96 must be honoured per-core, exactly like it is for the
+        # aggregate 'cpu' field.
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\ncritical=96\n")
+        p = PluginModel(store, cfg)
+        self._patch_cores(monkeypatch, [95.0, 10.0, 5.0, 2.0, 1.0])
+        await p.update()
+        cores = {c["cpu_number"]: c for c in store.get("quicklook")["percpu"]}
+        assert cores[0]["level"] == "warning"
+
+    def test_max_cpu_display_defaults_to_4(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "")
+        assert PluginModel(store, cfg).max_cpu_display == 4
+
+    def test_max_cpu_display_is_configurable(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[percpu]\nmax_cpu_display=6\n")
+        assert PluginModel(store, cfg).max_cpu_display == 6
+
+    @pytest.mark.asyncio
+    async def test_max_cpu_display_reaches_the_payload(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[percpu]\nmax_cpu_display=6\n")
+        p = PluginModel(store, cfg)
+        self._patch_cores(monkeypatch, [95.0, 10.0, 5.0, 2.0, 1.0])
+        await p.update()
+        assert store.get("quicklook")["max_cpu_display"] == 6
+
+    def test_percpu_other_and_max_cpu_display_are_internal_and_never_watched(self):
+        fd = PluginModel.fields_description
+        for key in ("percpu_other", "max_cpu_display"):
+            assert fd[key].get("internal") is True
+            assert fd[key].get("watched", False) is False
