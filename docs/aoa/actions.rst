@@ -43,6 +43,7 @@ reached:
     a value holding spaces, quotes or shell operators can neither split
     itself into several arguments nor inject new ones into the invoked
     process.
+<<<<<<< HEAD
 
     Two consequences:
 
@@ -65,6 +66,32 @@ reached:
     chaining only work when you write them in the command line itself.**
     If your action requires operators driven by the stats, write a shell
     script and call it from the action instead.
+=======
+
+    Two consequences:
+
+    - **Quoting a Mustache field is unnecessary.** ``script.sh
+      {{mnt_point}}`` passes a mount point containing spaces as a single
+      argument. Quoting it (``script.sh "{{mnt_point}}"``) is harmless but
+      no longer needed.
+    - **A Mustache section must open and close within the same
+      argument.** ``{{#cmdline}}{{.}},{{/cmdline}}`` is valid;
+      ``{{#cmdline}}{{.}} {{/cmdline}}`` is not, and the action is not
+      executed (an error is logged).
+
+    A field that renders to an empty string still produces an empty
+    argument, so an empty value never shifts the positional arguments of
+    the invoked script.
+
+    Mustache-rendered values are also sanitized as defence in depth: the
+    characters ``&&``, ``|``, ``>`` and ``>>`` are replaced by spaces.
+
+    As a consequence, **shell operators (pipes, redirections, command
+    chaining) cannot be used inside a Mustache value**. They keep working
+    when you write them in the command line itself. If your action
+    requires operators driven by the stats, write a shell script and call
+    it from the action instead.
+>>>>>>> origin/develop
 
 For example, to create a log file containing the total user disk
 space usage for a device and notify by email each time a space trigger

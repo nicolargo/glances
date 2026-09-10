@@ -263,10 +263,17 @@ class _FakeProcess:
     def __init__(self):
         self.stdout = MagicMock()
 
+<<<<<<< HEAD
     def communicate(self, timeout=None):
         return (b'', b'')
 
     def wait(self, timeout=None):
+=======
+    def communicate(self):
+        return (b'', b'')
+
+    def wait(self):
+>>>>>>> origin/develop
         return 0
 
 

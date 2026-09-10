@@ -14,7 +14,11 @@ from subprocess import PIPE, Popen, TimeoutExpired
 from glances.globals import nativestr
 
 
+<<<<<<< HEAD
 def secure_popen(cmd, allow_operators=True, timeout=None, render=None):
+=======
+def secure_popen(cmd, allow_operators=True, render=None):
+>>>>>>> origin/develop
     """A more or less secure way to execute system commands.
 
     By default the following shell-like operators are interpreted:
@@ -28,11 +32,14 @@ def secure_popen(cmd, allow_operators=True, timeout=None, render=None):
         then run as a single process that can neither chain, pipe nor write to
         an arbitrary file. Used for commands coming from the configuration file
         when --disable-config-exec is set (GHSA-3vwc-qwhc-3mj7).
+<<<<<<< HEAD
     :param timeout: when set, kill the command after `timeout` seconds and
         return an error string instead of its output. `None` (the default)
         means no timeout at all — the historical behaviour, unchanged. With
         '&&'-chained commands the timeout applies to EACH sub-command, not to
         the chain as a whole.
+=======
+>>>>>>> origin/develop
     :param render: an optional callable applied to each argument *after* the
         command line has been tokenized. Callers that build a command from a
         trusted template plus untrusted data (the on-alert actions and their
@@ -47,13 +54,21 @@ def secure_popen(cmd, allow_operators=True, timeout=None, render=None):
     if not allow_operators:
         # Run the whole command as a single process: '&&', '|' and '>' are
         # passed verbatim as arguments and never interpreted.
+<<<<<<< HEAD
         return __run_argv(cmd, timeout=timeout, render=render)
+=======
+        return __run_argv(cmd, render)
+>>>>>>> origin/develop
 
     ret = ''
 
     # Split by multiple commands (only '&&' separator is supported)
     for c in cmd.split('&&'):
+<<<<<<< HEAD
         ret += __secure_popen(c, timeout=timeout, render=render)
+=======
+        ret += __secure_popen(c, render)
+>>>>>>> origin/develop
 
     return ret
 
@@ -73,6 +88,7 @@ def __split_args(cmd, render=None):
     return args if render is None else [render(_) for _ in args]
 
 
+<<<<<<< HEAD
 def __communicate(p_list, timeout):
     """Wait for the pipeline to finish, killing it if `timeout` expires.
 
@@ -96,12 +112,22 @@ def __run_argv(cmd, timeout=None, render=None):
     p_ret = __communicate([p], timeout)
     if p_ret is None:
         return f'Glances error: command timeout after {timeout}s ({cmd})'
+=======
+def __run_argv(cmd, render=None):
+    """Execute cmd as a single process, without interpreting any operator."""
+    p = Popen(__split_args(cmd, render), shell=False, stdin=None, stdout=PIPE, stderr=PIPE)
+    p_ret = p.communicate()
+>>>>>>> origin/develop
     if nativestr(p_ret[1]) == '':
         return nativestr(p_ret[0])
     return nativestr(p_ret[1])
 
 
+<<<<<<< HEAD
 def __secure_popen(cmd, timeout=None, render=None):
+=======
+def __secure_popen(cmd, render=None):
+>>>>>>> origin/develop
     """A more or less secure way to execute system command
 
     Manage redirection (>) and pipes (|)
