@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from glances.outputs.curses_renderer_v5 import ColorRole
+from glances.plugins.network.model_v5 import PluginModel
 from glances.plugins.network.render_curses_v5 import render
 
 
@@ -12,9 +13,21 @@ from glances.plugins.network.render_curses_v5 import render
 def network_fields():
     """Minimal subset of the network fields_description schema."""
     return {
-        "interface_name": {"unit": "string", "primary_key": True},
-        "bytes_recv": {"unit": "bytespers", "rate": True, "watched": True, "prominent": True},
-        "bytes_sent": {"unit": "bytespers", "rate": True, "watched": True, "prominent": True},
+        "interface_name": {"unit": "string", "short_name": "interface", "primary_key": True},
+        "bytes_recv": {
+            "unit": "bytespers",
+            "short_name": "Rx/s",
+            "rate": True,
+            "watched": True,
+            "prominent": True,
+        },
+        "bytes_sent": {
+            "unit": "bytespers",
+            "short_name": "Tx/s",
+            "rate": True,
+            "watched": True,
+            "prominent": True,
+        },
         "errors_in": {"unit": "number", "rate": True},
         "errors_out": {"unit": "number", "rate": True},
         "is_up": {"unit": "bool"},
@@ -78,6 +91,18 @@ def test_render_first_row_is_network_header(network_payload, network_fields):
     assert "NETWORK" in first
     assert "Rx/s" in first
     assert "Tx/s" in first
+
+
+def test_header_short_names_match_the_shipped_schema(network_fields):
+    """Pin the fixture's header labels to `model_v5.fields_description`.
+
+    `render()` resolves its value-column headers through `field_label()`, so a
+    fixture whose `short_name` drifted from the shipped schema would keep
+    asserting `Rx/s` while the real TUI printed something else.
+    """
+    real = PluginModel.fields_description
+    for key in ("bytes_recv", "bytes_sent"):
+        assert network_fields[key]["short_name"] == real[key]["short_name"]
 
 
 def test_render_one_row_per_interface_plus_header(network_payload, network_fields):

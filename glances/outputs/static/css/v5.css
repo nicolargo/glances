@@ -80,6 +80,15 @@ body {
   color: var(--gl-muted);
 }
 
+/* Plugin title row: the <h2> and the one value that belongs beside it
+ * (mem's percent, load's core count). Global, like .gl-stat-grid: every
+ * plugin with a title-line value reuses it. */
+.gl-plugin-title {
+  display: flex;
+  gap: var(--gl-gap);
+  align-items: baseline;
+}
+
 /* Two side-by-side columns of (label, value) pairs -- the TUI-parity stat
  * block shape (mem is the first user, see render_curses_v5.py). Global for
  * the same reason as .gl-muted above: a scoped copy would only ever match
@@ -95,9 +104,15 @@ body {
   column-gap: var(--gl-gap);
   margin: 0;
 }
+/* `tabular-nums` and NOT `.gl-num`: a scalar grid needs jitter-free digits,
+ * but not .gl-num's 9ch floor -- that floor is sized for formatRate()'s worst
+ * case ("1023.9G/s") in a COLLECTION table, and on a <dd> it would stretch
+ * every value column (load's "0.86" in a 9ch cell) and make `mem` and
+ * `memswap`, visual twins sharing this grid, render at different widths. */
 .gl-stat-grid dd {
   margin: 0;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Numeric table column: right-aligned, fixed-width digits, and wide enough

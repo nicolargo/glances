@@ -81,6 +81,28 @@ export async function resolveConfig() {
 	return { refreshSeconds, theme };
 }
 
+let argsCache = null;
+
+export async function resolveArgs() {
+	// The server's CLI arguments -- `--meangpu` and `--fahrenheit` today.
+	// They cannot change while the server runs, so this is fetched once per
+	// page load and cached, exactly like the schema in labels.js.
+	//
+	// NOT merged into resolveConfig(): that reads /api/5/config, and the two
+	// namespaces are genuinely different (the argument namespace carries no
+	// `refresh` key at all -- measured in G9-1).
+	if (argsCache) return argsCache;
+	try {
+		argsCache = await getJson("api/5/args");
+	} catch {
+		// A UI that cannot read the arguments renders in Celsius and lets the
+		// card count decide gpu's layout. That is a degraded view, not a
+		// broken one -- never a reason to blank the page.
+		argsCache = {};
+	}
+	return argsCache;
+}
+
 export async function fetchAll(specs) {
 	// ONE request per tick, not one per plugin. At 34 components and a 2 s
 	// cadence, per-plugin fan-out is 17 req/s per open tab against a loop v4

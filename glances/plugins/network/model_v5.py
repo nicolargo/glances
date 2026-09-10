@@ -60,12 +60,12 @@ class PluginModel(GlancesPluginBase[list]):
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         # `short_name` is the compact UI label (short_name → label → field
         # name, cf. `field_label()` in curses_renderer_v5.py). The strings
-        # match the TUI block rendered by `render_curses_v5.render()`, whose
-        # header is hardcoded as NETWORK / Rx/s / Tx/s — the WebUI resolves
-        # its column headers from this schema instead of hardcoding them.
+        # feed the TUI block rendered by `render_curses_v5.render()` and the
+        # WebUI alike: both resolve their column headers from this schema.
         # The interface column is `interface` rather than the TUI's
         # `NETWORK`: in the TUI that first header cell doubles as the block
-        # title, which the WebUI already renders separately as <h2>NETWORK.
+        # title (a literal in the renderer), which the WebUI already renders
+        # separately as <h2>NETWORK.
         "interface_name": {
             "description": "Network interface name.",
             "short_name": "interface",

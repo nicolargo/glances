@@ -1,6 +1,8 @@
 <template>
 	<article class="gl-plugin">
-		<h2 class="gl-header">NETWORK</h2>
+		<div class="gl-plugin-title">
+			<h2 class="gl-header">NETWORK</h2>
+		</div>
 		<p v-if="error" class="gl-level-critical">{{ error }}</p>
 		<p v-else-if="!payload" class="gl-muted">loading…</p>
 		<p v-else-if="!payload.data.length" class="gl-muted">no interface</p>
@@ -55,6 +57,10 @@ export default {
 		payload: { type: Object, default: null },
 		error: { type: String, default: undefined },
 		labels: { type: Object, default: () => ({}) },
+		// Declared but unused. An undeclared prop becomes a fallthrough
+		// attribute, so without this line the DOM gets
+		// server-args="[object Object]" on the article.
+		serverArgs: { type: Object, default: () => ({}) },
 	},
 	computed: {
 		// A computed, not data(): data() is made deeply reactive, so anything

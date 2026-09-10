@@ -680,11 +680,14 @@ def test_the_registry_renders_every_registered_plugin():
     missing import -- the bundle would still build -- it would be a loop
     that silently renders zero, or only one, of the registered plugins.
 
-    Each plugin component renders an <article class="gl-plugin"> with an
-    <h2> naming it (PluginMem.vue -> "MEM", PluginNetwork.vue ->
-    "NETWORK"). Assert both are present, not just "some markup exists":
-    a loop that iterates only `PLUGINS[0]` would still produce one
-    gl-plugin article and could pass a weaker assertion.
+    Each plugin component renders an <article class="gl-plugin"> carrying
+    its registry name as `data-plugin` (PluginMem.vue -> "mem",
+    PluginNetwork.vue -> "network", PluginLoad.vue -> "load",
+    PluginMemswap.vue -> "memswap", PluginCpu.vue -> "cpu",
+    PluginGpu.vue -> "gpu"). Assert all are
+    present, not just "some markup exists": a loop that iterates only
+    `PLUGINS[0]` would still produce one gl-plugin article and could pass a
+    weaker assertion.
     """
     if not _BUNDLE_PATH.exists():
         pytest.fail(f"{_BUNDLE_PATH} is missing -- run `npm run build` in glances/outputs/static/")
@@ -699,8 +702,8 @@ def test_the_registry_renders_every_registered_plugin():
     assert result.stderr == "", f"render probe printed to stderr:\n{result.stderr}"
 
     payload = json.loads(result.stdout)
-    assert payload["pluginHeaders"] == ["MEM", "NETWORK"], (
-        f"expected both registered plugins to render, got {payload['pluginHeaders']!r}"
+    assert payload["pluginNames"] == ["mem", "network", "load", "memswap", "cpu", "gpu"], (
+        f"expected all registered plugins to render, got {payload['pluginNames']!r}"
     )
 
 
@@ -735,7 +738,7 @@ def test_mem_renders_all_eight_statistics_with_avail():
     rendered `used` instead, or both, could not pass unnoticed.
     """
     payload = _run_render_probe("mem-with-available")
-    mem_text = payload["pluginText"].get("MEM", "")
+    mem_text = payload["pluginText"].get("mem", "")
 
     for expected in ("53.2%", "16.0G", "8.0G", "2.0G", "5.0G", "4.0G", "100.0M", "3.0G"):
         assert expected in mem_text, f"expected {expected!r} in the MEM plugin text, got {mem_text!r}"
@@ -750,7 +753,7 @@ def test_mem_shows_used_when_available_is_absent():
     back to showing `used` -- and the `avail` label must not appear at all.
     """
     payload = _run_render_probe("mem-no-available")
-    mem_text = payload["pluginText"].get("MEM", "")
+    mem_text = payload["pluginText"].get("mem", "")
 
     for expected in ("53.2%", "16.0G", "9.0G", "2.0G", "5.0G", "4.0G", "100.0M", "3.0G"):
         assert expected in mem_text, f"expected {expected!r} in the MEM plugin text, got {mem_text!r}"
@@ -777,7 +780,7 @@ def test_network_column_headers_are_the_tui_strings():
     assertion below fails on field names.
     """
     payload = _run_render_probe("network")
-    headers = payload["pluginColumnHeaders"].get("NETWORK")
+    headers = payload["pluginColumnHeaders"].get("network")
 
     assert headers == ["interface", "Rx/s", "Tx/s"], f"expected the TUI's network headers, got {headers!r}"
 
@@ -801,6 +804,79 @@ def test_network_schema_declares_the_tui_short_names():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_server_args_does_not_leak_into_the_dom_as_an_attribute():
+    """Every component must DECLARE `serverArgs`, even when it ignores it.
+
+    Vue turns an undeclared prop into a fallthrough attribute, so a component
+    missing the declaration renders `server-args="[object Object]"` onto its
+    root <article> -- AppShell.vue binds it as `:server-args`, and Vue keeps
+    that exact kebab-case key on an undeclared attribute, it does not
+    concatenate it to `serverargs`. Verified by actually deleting the prop
+    declaration from PluginMem.vue and observing the probe emit
+    `"server-args"` in `pluginAttrs.mem` before restoring it. This observes
+    the rendered attribute rather than the source, so it fails for a
+    component added later that forgets the line.
+    """
+    payload = _run_render_probe("mem-with-available")
+    # Without this the loop below is vacuous: an empty `pluginAttrs` (a probe
+    # that stopped collecting the attribute, a render that produced no
+    # article) would pass silently. Six is the registry size asserted by
+    # test_the_registry_renders_every_registered_plugin.
+    assert len(payload["pluginAttrs"]) == 6, f"expected all six plugins' attributes, got {payload['pluginAttrs']!r}"
+    for name, attrs in payload["pluginAttrs"].items():
+        assert "server-args" not in attrs, f"{name} leaked serverArgs as an attribute: {attrs!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_every_scalar_grid_renders_its_values_with_the_same_classes():
+    """The five `.gl-stat-grid` plugins must dress their <dd>s identically.
+
+    `.gl-num` is not only alignment: `css/v5.css` floors it at 9ch, a width
+    sized for `formatRate()`'s worst case ("1023.9G/s") in a collection
+    TABLE. On a scalar <dd> that floor stretches every value column -- load's
+    "0.86" in a 9ch cell -- and makes `mem` and `memswap`, visual twins
+    sharing `.gl-stat-grid`, render at different widths. Jitter-free digits
+    come from `font-variant-numeric: tabular-nums` on `.gl-stat-grid dd`
+    instead, which costs no width.
+
+    So the only class a scalar value cell may carry is its tier
+    (`gl-level-*`), and every one of the five must agree. Observed through
+    the rendered class lists, not the component sources: a comment asking the
+    next port to "keep these consistent" is not a test.
+
+    `.gl-num` on the COLLECTION tables is untouched and still asserted by
+    test_network_rate_columns_are_marked_numeric.
+    """
+    payload = _run_render_probe("scalar-grids")
+
+    non_tier = {}
+    for name in ("mem", "load", "memswap", "cpu", "gpu"):
+        classes = payload["pluginValueClasses"].get(name)
+        assert classes, f"{name} rendered no value cells: {payload['pluginValueClasses']!r}"
+        non_tier[name] = sorted({c for cls in classes for c in cls.split() if not c.startswith("gl-level-")})
+
+    assert non_tier == dict.fromkeys(non_tier, []), (
+        f"a scalar value cell carries a non-tier class -- the five grids disagree: {non_tier!r}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_load_renders_the_three_averages_and_the_core_count():
+    """TUI reference (load/render_curses_v5.py docstring): a header carrying
+    LOAD and the core count, then three rows labelled from the schema.
+
+    `cpucore` is `internal: true` -- it is the header's suffix, never a row
+    of its own, so this asserts the label "cpucore" is absent.
+    """
+    payload = _run_render_probe("load")
+    text = payload["pluginText"].get("load", "")
+
+    for expected in ("LOAD", "4core", "1 min", "0.86", "5 min", "0.72", "15 min", "0.80"):
+        assert expected in text, f"expected {expected!r} in the LOAD plugin text, got {text!r}"
+    assert "cpucore" not in text, f"cpucore is internal and must not be a row: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_network_rate_columns_are_marked_numeric():
     """The two rate columns must carry `.gl-num`, the interface one must not.
 
@@ -811,9 +887,309 @@ def test_network_rate_columns_are_marked_numeric():
     is dropped from the descriptor or the binding stops reaching the header.
     """
     payload = _run_render_probe("network")
-    classes = payload["pluginColumnClasses"].get("NETWORK")
+    classes = payload["pluginColumnClasses"].get("network")
 
     assert classes is not None, "no NETWORK column classes rendered"
     assert "gl-num" not in classes[0], f"the interface column must not be numeric, got {classes[0]!r}"
     for i in (1, 2):
         assert "gl-num" in classes[i], f"expected the rate column {i} to carry gl-num, got {classes[i]!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_memswap_renders_total_and_the_paging_rates():
+    """TUI reference (memswap/render_curses_v5.py docstring): SWAP + percent,
+    then total, sin, sout.
+
+    `used` and `free` are deliberately absent: v5 trades that redundant pair
+    (they are derivable from total and percent) for the live paging rates.
+    Asserting their VALUES are absent, not just their labels, is what makes
+    this a parity test rather than a spelling test.
+
+    Note on "0B/s" rather than the docstring's illustrative "0.0K/s": the
+    real formatter (`format_bytespers`/`formatRate`, both base-1024
+    "K/M/G" scaling) never promotes a zero value to "K" -- `sout=0` reads
+    as "0B/s" on both the TUI and the WebUI. Confirmed against
+    `glances.outputs.curses_formatters_v5.format_bytespers(0.0)`, which
+    also returns "0B/s"; the docstring's "0.0K/s" is not literal.
+    """
+    payload = _run_render_probe("memswap")
+    text = payload["pluginText"].get("memswap", "")
+
+    for expected in ("SWAP", "25.0%", "total", "16.0G", "sin", "100.0K/s", "sout", "0B/s"):
+        assert expected in text, f"expected {expected!r} in the SWAP plugin text, got {text!r}"
+    assert "4.0G" not in text, f"`used` must not be rendered: {text!r}"
+    assert "12.0G" not in text, f"`free` must not be rendered: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_memswap_shows_a_dash_for_rates_before_the_second_cycle():
+    """`sin`/`sout` are rate fields: null until a baseline exists, and PRESENT
+    in the payload while null. The component must render "-" for them and
+    still render everything else.
+    """
+    payload = _run_render_probe("memswap-no-rates")
+    text = payload["pluginText"].get("memswap", "")
+
+    assert "16.0G" in text, f"total must still render: {text!r}"
+    assert "-" in text, f"expected the missing marker for the null rates: {text!r}"
+    assert "K/s" not in text, f"no rate should be formatted when both are null: {text!r}"
+
+
+# ------------------------------------------------------- cpu TUI parity (G9-4)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_cpu_renders_the_linux_three_column_grid():
+    """TUI reference (cpu/render_curses_v5.py docstring, lines 17-21)."""
+    payload = _run_render_probe("cpu")
+    text = payload["pluginText"].get("cpu", "")
+
+    for expected in (
+        "CPU",
+        "4.5%",
+        "idle",
+        "95.5%",
+        "ctx_sw",
+        "6.7K",
+        "user",
+        "3.8%",
+        "inter",
+        "3.0K",
+        "system",
+        "0.7%",
+        "sw_int",
+        "1.8K",
+        "iowait",
+        "steal",
+        "guest",
+    ):
+        assert expected in text, f"expected {expected!r} in the CPU plugin text, got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_cpu_title_row_carries_only_the_total_not_idle_or_ctx_sw():
+    """Task 6b: `idle` and `ctx_sw` move out of the title row -- `idle` becomes
+    the first row of column 2, `ctx_sw` the first row of column 3.
+
+    The substring checks in `test_cpu_renders_the_linux_three_column_grid`
+    cannot tell this layout apart from Task 6's (title row carrying `idle`/
+    `ctx_sw` beside `CPU 4.5%`): every string it looks for is present either
+    way, since `pluginText` concatenates the whole article regardless of
+    where each pair sits.
+
+    `textContent` concatenates in DOM order, and the three columns are three
+    sequential <dl> elements after the title. So `user` (column 1's first
+    row) must appear in the text BEFORE `idle` (column 2's first row) in the
+    new layout. In Task 6's layout `idle` sits in the title row, ahead of
+    the grid entirely, so it appears BEFORE `user` -- this assertion fails
+    against that layout, which is the RED step for this task.
+    """
+    payload = _run_render_probe("cpu")
+    text = payload["pluginText"].get("cpu", "")
+
+    assert "user" in text and "idle" in text, f"expected both `user` and `idle` in the CPU text: {text!r}"
+    assert text.index("user") < text.index("idle"), (
+        f"expected `user` (column 1) before `idle` (column 2's first row): {text!r}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_cpu_switches_column_one_and_column_three_on_payload_content():
+    """The TUI branches on payload CONTENT, never on the OS, so the WebUI can
+    reproduce it exactly (cpu/render_curses_v5.py:181-200).
+
+    This fixture has no `user` key (column 1 becomes idle/cpucore/dpc), a
+    null-but-present `soft_interrupts` (column 3 falls back to ctx_switches),
+    and no `guest` key (column 3's last row falls back to syscalls). It fails
+    if the two kinds of check -- key presence vs value -- are collapsed into
+    one.
+    """
+    payload = _run_render_probe("cpu-idle-tag")
+    text = payload["pluginText"].get("cpu", "")
+
+    assert "dpc" in text, f"the idle-tag branch must show dpc: {text!r}"
+    assert "user" not in text, f"no `user` key, so no user row: {text!r}"
+    assert "sw_int" not in text, f"soft_interrupts is null -> ctx_switches instead: {text!r}"
+    assert "syscalls" in text, f"no `guest` key -> syscalls instead: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_cpu_leaves_column_three_short_when_neither_guest_nor_syscalls():
+    """Column 3's last row carries neither `guest` nor `syscalls`.
+
+    `pluginText` cannot distinguish an emitted empty label/value pair from an
+    absent one -- the three `<dl>` are independent grids -- so what is asserted
+    is the absence of both labels while the rest of column 3 still renders.
+    """
+    payload = _run_render_probe("cpu-no-third-row")
+    text = payload["pluginText"].get("cpu", "")
+
+    assert "guest" not in text, f"no guest key: {text!r}"
+    assert "syscalls" not in text, f"syscalls is null: {text!r}"
+    assert "sw_int" in text, f"the rest of column 3 must still render: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_cpu_drops_ctx_switches_when_it_has_no_rate_yet():
+    """`ctx_switches` opens column 3 only when it has a value.
+
+    It is a `rate` field, so it is null-but-present on the first cycle -- the
+    real production state, not an edge case. `soft_interrupts` is populated
+    here, so the column-3 fallback does not bring `ctx_sw` back either and it
+    must not appear anywhere in the block.
+    """
+    payload = _run_render_probe("cpu-ctx-switches-null")
+    text = payload["pluginText"].get("cpu", "")
+
+    assert "ctx_sw" not in text, f"a null ctx_switches must render nowhere: {text!r}"
+    assert "inter" in text, f"the rest of column 3 must still render: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_cpu_keeps_a_null_guest_ahead_of_a_populated_syscalls():
+    """`guest` is chosen on KEY PRESENCE, `syscalls` on VALUE
+    (cpu/render_curses_v5.py:196-199).
+
+    A `guest` that is present but null therefore still wins the last row --
+    shown as the missing marker -- and `syscalls` must not appear even though
+    it carries a value. Every other cpu fixture passes with the two checks
+    collapsed into one; this is the one that does not.
+    """
+    payload = _run_render_probe("cpu-guest-null")
+    text = payload["pluginText"].get("cpu", "")
+
+    assert "guest-" in text, f"a null guest must still render, as the missing marker: {text!r}"
+    assert "syscalls" not in text, f"`guest` is present as a key, so syscalls must not render: {text!r}"
+
+
+# ------------------------------------------------------- gpu TUI parity (G9-4)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_one_card_renders_the_summary_block():
+    """TUI reference (gpu/render_curses_v5.py docstring, lines 13-16): a single
+    card renders the summary block -- its name as the title, then proc, mem and
+    temperature, one row each.
+    """
+    payload = _run_render_probe("gpu-one-card")
+    text = payload["pluginText"].get("gpu", "")
+
+    assert "GeForce RTX 3080" in text, f"the title is the card's name: {text!r}"
+    for expected in ("proc:", "30%", "mem:", "40%", "temperature:", "55C"):
+        assert expected in text, f"expected {expected!r} in the GPU plugin text, got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_several_cards_render_one_row_each_without_temperature():
+    """v4 quirk reproduced on purpose: multi mode shows name + proc + mem, and
+    NO temperature -- unlike summary mode, which shows all three.
+    """
+    payload = _run_render_probe("gpu-three-cards")
+    text = payload["pluginText"].get("gpu", "")
+
+    assert "3 GeForce RTX 3080" in text, f"title counts the cards: {text!r}"
+    for expected in ("30%", "45%", "12%"):
+        assert expected in text, f"expected every card's proc: {text!r}"
+    assert "55C" not in text, f"multi mode shows no temperature: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_meangpu_forces_the_summary_and_the_mean_labels():
+    """`--meangpu` reaches the WebUI through /api/5/args (design spec §5).
+
+    Same three cards as `gpu-three-cards`, which renders the per-card table:
+    the ONLY difference is the args fixture, so the switch to the summary
+    block and to the "mean" labels can only come from the flag.
+    """
+    payload = _run_render_probe("gpu-three-cards-mean")
+    text = payload["pluginText"].get("gpu", "")
+
+    assert "proc mean:" in text, f"meangpu switches the labels: {text!r}"
+    assert "29%" in text, f"the mean of 30/45/12 rounds to 29: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_drops_the_memory_column_only_when_no_card_reports_it():
+    """#3631: an unavailable sensor on ONE card shows N/A rather than being
+    hidden, because hiding it per card misaligns heterogeneous rows. The
+    column disappears only when no card reports memory at all.
+    """
+    payload = _run_render_probe("gpu-no-memory")
+    text = payload["pluginText"].get("gpu", "")
+
+    # `N/A` is what an undropped memory cell renders for a null value
+    # (`gpuValue`), so its absence observes the dropped CELLS directly rather
+    # than the absence of a label -- which would also hold for a component
+    # that never labels the column at all.
+    assert "N/A" not in text, f"no card reports memory -> no mem cells at all: {text!r}"
+    assert "30%" in text and "45%" in text, f"proc must still render: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_keeps_the_memory_cell_of_a_card_that_reports_nothing():
+    """The other half of #3631, and the half the spec section 8.4 actually
+    argues for: a card reporting no memory still shows `N/A`, because hiding
+    the cell per card drops a cell and misaligns heterogeneous rows.
+
+    `gpu-no-memory` (every card null) cannot observe this -- a component that
+    hid the cell per card passes it. This fixture has card 0 at 40% and card 1
+    at null, so only the column-level rule renders an "N/A".
+    """
+    payload = _run_render_probe("gpu-mixed-memory")
+    text = payload["pluginText"].get("gpu", "")
+
+    assert "40%" in text, f"the reporting card's memory must render: {text!r}"
+    assert "N/A" in text, f"the non-reporting card keeps its cell as N/A: {text!r}"
+    assert "30%" in text and "45%" in text, f"both cards' proc must still render: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_with_no_card_renders_nothing_beyond_its_title():
+    """Design spec section 11: a machine with no GPU (or with every backend
+    failing) publishes an empty `data` list, and the plugin then renders its
+    title and nothing else -- no empty table, no "loading…" (the payload
+    arrived, it is just empty).
+    """
+    payload = _run_render_probe("gpu-zero-cards")
+
+    assert payload["pluginText"].get("gpu") == "GPU", (
+        f"expected the bare fallback title, got {payload['pluginText'].get('gpu')!r}"
+    )
+    assert "gpu" not in payload["pluginValueClasses"], (
+        f"no card -> no value cell: {payload['pluginValueClasses'].get('gpu')!r}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_honours_fahrenheit():
+    """`--fahrenheit` also arrives through /api/5/args. Same single card as
+    `gpu-one-card`, which renders 55C: only the args fixture differs.
+    """
+    payload = _run_render_probe("gpu-one-card-fahrenheit")
+    text = payload["pluginText"].get("gpu", "")
+
+    assert "131F" in text, f"55C is 131F: {text!r}"
+    assert "55C" not in text, f"Celsius must not also render: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_summary_colours_from_the_first_card_not_from_the_mean():
+    """v4 quirk reproduced on purpose (gpu/render_curses_v5.py:69, 80): summary
+    mode averages ACROSS the cards but passes `first_id` to `_level_role()`,
+    i.e. it colours from the FIRST card's `_levels`.
+
+    The fixture carries the same three cards as `gpu-three-cards` with card 0
+    critical on `proc` and cards 1 and 2 ok, and `--meangpu` to force the
+    summary. Two thirds of the tiers are ok, so a colour derived from the mean
+    -- or from any card but the first -- cannot come out critical: the
+    assertion distinguishes the quirk from the "fix".
+
+    The tier reaches the DOM only as a `gl-level-*` class, never as text,
+    which is why this reads `pluginValueClasses` rather than `pluginText`.
+    """
+    payload = _run_render_probe("gpu-first-card-colour")
+    classes = payload["pluginValueClasses"].get("gpu")
+
+    assert classes, "no GPU value cells rendered"
+    # Summary order is proc, mem, temperature -- proc is the first <dd>.
+    assert "gl-level-critical" in classes[0], f"the proc cell must take card 0's critical tier, got {classes[0]!r}"

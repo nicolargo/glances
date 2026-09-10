@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, field_label
 
 # Hardcoded for G1 — must match the v5 left sidebar max width.
 # Painter caps the sidebar at 34 chars (`_left_sidebar_max_width=34`,
@@ -89,11 +89,20 @@ def _format_if_name(name: str) -> str:
 
 def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
     """Render the network plugin's TUI block — mirrors v4 ``network.msg_curse``."""
+    # The first header cell is the TUI block title, not a field label — it
+    # stays a literal. The value columns read their labels from the schema
+    # (single source of truth, shared with the WebUI).
     header_row = Row(
         cells=[
             Cell(text="NETWORK".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
-            Cell(text="Rx/s".rjust(_RATE_COL_WIDTH), color=ColorRole.HEADER, bold=True),
-            Cell(text="Tx/s".rjust(_RATE_COL_WIDTH), color=ColorRole.HEADER, bold=True),
+            *(
+                Cell(
+                    text=field_label(fields_desc.get(key, {}), key, prefer_short=True).rjust(_RATE_COL_WIDTH),
+                    color=ColorRole.HEADER,
+                    bold=True,
+                )
+                for key in ("bytes_recv", "bytes_sent")
+            ),
         ]
     )
     rows: list[Row] = [header_row]

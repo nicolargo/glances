@@ -10,9 +10,11 @@
 				:is="plugin.component"
 				v-for="plugin in plugins"
 				:key="plugin.name"
+				:data-plugin="plugin.name"
 				:payload="results[plugin.name]"
 				:error="errors[plugin.name]"
 				:labels="labels[plugin.name] || {}"
+				:server-args="serverArgs"
 			/>
 		</section>
 
@@ -28,7 +30,7 @@
 </template>
 
 <script>
-import { fetchAll, resolveConfig, getJson } from "./api.js";
+import { fetchAll, resolveConfig, resolveArgs, getJson } from "./api.js";
 import { levelClass } from "./levels.js";
 import { resolveLabels } from "./labels.js";
 import { PLUGINS } from "./plugins/index.js";
@@ -40,6 +42,7 @@ export default {
 			results: {},
 			errors: {},
 			labels: {},
+			serverArgs: {},
 			alerts: [],
 			refresh: null,
 			timer: null,
@@ -64,12 +67,14 @@ export default {
 		// spec, section 5. The static template hardcodes "dark" so the page
 		// has a theme before this fetch resolves.
 		document.documentElement.dataset.theme = theme;
-		// The schema never changes at runtime (see labels.js), so labels are
-		// resolved once here rather than on every tick.
-		const entries = await Promise.all(
-			PLUGINS.map(async (p) => [p.name, await resolveLabels(p.name)]),
-		);
-		this.labels = Object.fromEntries(entries);
+		// The schema and the server's CLI arguments both never change at
+		// runtime, so both are resolved once here rather than on every tick.
+		const [labelEntries, serverArgs] = await Promise.all([
+			Promise.all(PLUGINS.map(async (p) => [p.name, await resolveLabels(p.name)])),
+			resolveArgs(),
+		]);
+		this.labels = Object.fromEntries(labelEntries);
+		this.serverArgs = serverArgs;
 		await this.tick();
 		this.timer = setInterval(() => this.tick(), this.refresh * 1000);
 	},

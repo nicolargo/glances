@@ -75,6 +75,7 @@ class PluginModel(GlancesPluginBase[list]):
         },
         "proc": {
             "description": "GPU processor consumption.",
+            "short_name": "proc",
             "unit": "percent",
             "watched": True,
             "watch_direction": "high",
@@ -83,6 +84,7 @@ class PluginModel(GlancesPluginBase[list]):
         },
         "mem": {
             "description": "GPU memory consumption.",
+            "short_name": "mem",
             "unit": "percent",
             "watched": True,
             "watch_direction": "high",
@@ -91,6 +93,7 @@ class PluginModel(GlancesPluginBase[list]):
         },
         "temperature": {
             "description": "GPU temperature.",
+            "short_name": "temperature",
             "unit": "celsius",
             "watched": True,
             "watch_direction": "high",

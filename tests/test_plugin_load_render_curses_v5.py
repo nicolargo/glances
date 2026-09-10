@@ -5,17 +5,27 @@ from __future__ import annotations
 import pytest
 
 from glances.outputs.curses_renderer_v5 import ColorRole
+from glances.plugins.load.model_v5 import PluginModel
 from glances.plugins.load.render_curses_v5 import render
 
 
 @pytest.fixture
 def load_fields():
-    return {
-        "min1": {"unit": "float", "label": "1 min", "watched": True},
-        "min5": {"unit": "float", "label": "5 min", "watched": True, "prominent": True},
-        "min15": {"unit": "float", "label": "15 min", "watched": True, "prominent": True},
-        "cpucore": {"unit": "number", "internal": True},
-    }
+    """The REAL schema, not a hand-written stub.
+
+    Production always passes `PluginModel.fields_description`
+    (`glances/outputs/curses_renderer_v5.py`), whose labels are `short_name`s;
+    the stub this replaced carried `label` instead, so every label assertion
+    exercised `field_label()`'s *fallback* branch rather than the branch
+    production takes. Deleting a `short_name` from the model would then have
+    changed both the TUI and the WebUI (which resolves the same strings from
+    `/api/5/load/info`) with no test failing.
+
+    Only `field_label()` reads this mapping in the load renderer -- the
+    prominence and level decorations come from the payload's `_levels` -- so
+    swapping the stub for the schema changes nothing but the labels.
+    """
+    return PluginModel.fields_description
 
 
 @pytest.fixture

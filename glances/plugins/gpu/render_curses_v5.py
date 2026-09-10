@@ -24,7 +24,7 @@ from __future__ import annotations
 from typing import Any
 
 from glances.globals import to_fahrenheit
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, field_label
 
 _HEADER_MAX = 17
 
@@ -59,15 +59,24 @@ def _level_role(levels: dict[str, Any], gpu_id: Any, field: str) -> ColorRole:
     return _LEVEL_TO_ROLE.get(level, ColorRole.DEFAULT)
 
 
-def _summary_rows(cards: list[dict[str, Any]], levels: dict[str, Any], fahrenheit: bool) -> list[Row]:
+def _summary_rows(
+    cards: list[dict[str, Any]],
+    levels: dict[str, Any],
+    fahrenheit: bool,
+    fields_desc: dict[str, dict[str, Any]],
+) -> list[Row]:
     is_multi = len(cards) > 1
     first_id = cards[0].get("gpu_id")
     rows: list[Row] = []
-    for key, label, label_mean in (("proc", "proc:", "proc mean:"), ("mem", "mem:", "mem mean:")):
+    for key in ("proc", "mem"):
+        # The schema holds ONE word per field; the punctuation and the "mean"
+        # suffix are the renderer's, composed here.
+        word = field_label(fields_desc.get(key, {}), key, prefer_short=True)
+        label = f"{word} mean:" if is_multi else f"{word}:"
         rows.append(
             Row(
                 cells=[
-                    Cell(text=f"{label_mean if is_multi else label:<13}"),
+                    Cell(text=f"{label:<13}"),
                     Cell(text=_format_value(_mean(cards, key)), color=_level_role(levels, first_id, key)),
                 ]
             )
@@ -76,7 +85,12 @@ def _summary_rows(cards: list[dict[str, Any]], levels: dict[str, Any], fahrenhei
     if temp is not None and fahrenheit:
         temp = to_fahrenheit(temp)
     unit = "F" if fahrenheit else "C"
-    temp_label = "temp mean:" if is_multi else "temperature:"
+    # Only the non-mean form comes from the schema. v4 shortens the word in the
+    # mean form ("temperature:" -> "temp mean:"), i.e. the two forms use
+    # DIFFERENT words, and a schema holds one string per field — so the mean
+    # form cannot be composed by suffixing and stays a literal here.
+    temp_word = field_label(fields_desc.get("temperature", {}), "temperature", prefer_short=True)
+    temp_label = "temp mean:" if is_multi else f"{temp_word}:"
     rows.append(
         Row(
             cells=[
@@ -118,7 +132,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
     rows: list[Row] = [header]
 
     if len(cards) == 1 or view.get("meangpu"):
-        rows.extend(_summary_rows(cards, levels, bool(view.get("fahrenheit"))))
+        rows.extend(_summary_rows(cards, levels, bool(view.get("fahrenheit")), fields_desc or {}))
     else:
         rows.extend(_multi_rows(cards, levels))
     return rows

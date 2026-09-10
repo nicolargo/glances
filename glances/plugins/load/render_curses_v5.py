@@ -39,7 +39,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, field_label
 
 # Fixed widths.
 _LOAD_LABEL_WIDTH = 6  # "15 min" = 6 chars
@@ -89,8 +89,11 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         header_cells.append(Cell(text="".rjust(_LOAD_VALUE_WIDTH)))
     rows: list[Row] = [Row(cells=header_cells)]
 
-    # Lines 2-4: "{N min}" + value, per-row label.
-    for key, label in [("min1", "1 min"), ("min5", "5 min"), ("min15", "15 min")]:
+    # Lines 2-4: label from the schema (short_name -> label -> field name),
+    # so the string exists in exactly one place and the WebUI, which resolves
+    # its labels from /api/5/load/info, shows the same one.
+    for key in ("min1", "min5", "min15"):
+        label = field_label(fields_desc.get(key, {}), key, prefer_short=True)
         label_cell = Cell(text=label.ljust(_LOAD_LABEL_WIDTH))
         value_cell = _load_value_cell(payload, key)
         rows.append(Row(cells=[label_cell, value_cell]))

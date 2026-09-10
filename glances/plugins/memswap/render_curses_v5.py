@@ -15,10 +15,10 @@ laid out as a single-column label/value grid, with line 1 carrying the
 
 Reference layout:
 
-    SWAP   25.0%
-    total  16.0G
+    SWAP     25.0%
+    total    16.0G
     sin   100.0K/s
-    sout    0.0K/s
+    sout      0B/s
 
 - Line 1: ``SWAP`` (HEADER) + percent value coloured by ``_levels.percent``.
 - Line 2: ``total`` capacity (used/free intentionally dropped — they are

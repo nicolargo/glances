@@ -61,6 +61,7 @@ class PluginModel(GlancesPluginBase[dict]):
                 "Average number of processes waiting in the run-queue plus those currently executing, over 1 minute."
             ),
             "unit": "float",
+            "short_name": "1 min",
         },
         "min5": {
             "description": (
@@ -72,6 +73,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "prominent": False,
             "default_thresholds": _DEFAULT_THRESHOLDS,
             "normalize_by": "cpucore",
+            "short_name": "5 min",
         },
         "min15": {
             "description": (
@@ -84,6 +86,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "default_thresholds": _DEFAULT_THRESHOLDS,
             "normalize_by": "cpucore",
             "top_processes_sort": "cpu_percent",
+            "short_name": "15 min",
         },
         "cpucore": {
             "description": "Total number of logical CPU cores.",

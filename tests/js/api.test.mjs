@@ -4,6 +4,7 @@ import {
 	getJson,
 	validate,
 	resolveConfig,
+	resolveArgs,
 	fetchAll,
 	DEFAULT_REFRESH_SECONDS,
 	DEFAULT_THEME,
@@ -149,6 +150,19 @@ test("an unreachable /all errors every plugin", async () => {
 	]);
 	assert.equal(results.mem, undefined);
 	assert.match(errors.mem, /HTTP 503/);
+});
+
+test("resolveArgs returns the args object and fetches once", async () => {
+	let calls = 0;
+	globalThis.fetch = async () => {
+		calls += 1;
+		return { ok: true, status: 200, json: async () => ({ meangpu: true, fahrenheit: false }) };
+	};
+	assert.deepEqual(await resolveArgs(), { meangpu: true, fahrenheit: false });
+	// CLI arguments cannot change while the server runs, so a second call
+	// must not hit the network.
+	await resolveArgs();
+	assert.equal(calls, 1);
 });
 
 test("a non-object /all envelope errors every plugin instead of rejecting", async () => {

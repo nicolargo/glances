@@ -11,6 +11,10 @@
 
 import PluginMem from "../PluginMem.vue";
 import PluginNetwork from "../PluginNetwork.vue";
+import PluginLoad from "../PluginLoad.vue";
+import PluginMemswap from "../PluginMemswap.vue";
+import PluginCpu from "../PluginCpu.vue";
+import PluginGpu from "../PluginGpu.vue";
 
 export const PLUGINS = [
 	{
@@ -22,5 +26,25 @@ export const PLUGINS = [
 		name: "network",
 		component: PluginNetwork,
 		spec: { shape: "collection", required: ["interface_name"] },
+	},
+	{
+		name: "load",
+		component: PluginLoad,
+		spec: { shape: "scalar", required: ["min1"] },
+	},
+	{
+		name: "memswap",
+		component: PluginMemswap,
+		spec: { shape: "scalar", required: ["total"] },
+	},
+	{
+		name: "cpu",
+		component: PluginCpu,
+		spec: { shape: "scalar", required: ["total"] },
+	},
+	{
+		name: "gpu",
+		component: PluginGpu,
+		spec: { shape: "collection", required: ["gpu_id"] },
 	},
 ];
