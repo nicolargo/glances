@@ -631,7 +631,7 @@ def exit_after(seconds, default=None):
                 # There is a "dirty" hack:
                 # https://forum.snapcraft.io/t/python-multiprocessing-permission-denied-in-strictly-confined-snap/15518/2
                 # But i prefer to just disable the timeout feature in this case
-                func(*args, **kwargs)
+                return func(*args, **kwargs)
             else:
                 p = ctx_mp_fork.Process(target=handler, args=(q, func, args, kwargs))
                 p.start()

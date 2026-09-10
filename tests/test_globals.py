@@ -9,12 +9,30 @@
 
 """Tests for glances.globals helper functions."""
 
+import errno
 import socket
 from collections import OrderedDict
 from types import SimpleNamespace
+from unittest import TestCase
 from unittest.mock import patch
 
-from glances.globals import get_ip_address
+from glances.globals import exit_after, get_ip_address
+
+
+class TestExitAfter(TestCase):
+    def test_preserves_result_when_queue_is_denied(self):
+        # Strict Snap confinement can prevent creation of the timeout queue.
+        # The synchronous fallback must still return the wrapped function's result.
+        with (
+            patch('glances.globals.LINUX', True),
+            patch('glances.globals.ctx_mp_fork.Queue', side_effect=PermissionError(errno.EACCES, 'Permission denied')),
+        ):
+
+            @exit_after(2, default=None)
+            def calculate_free(total, *, used):
+                return total - used
+
+            self.assertEqual(calculate_free(100, used=40), 60)
 
 
 def _stat(isup=True):

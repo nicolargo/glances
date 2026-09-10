@@ -18,19 +18,19 @@
                         {{ $filters.minSize(disk.alias ? disk.alias : disk.name, 16) }}
                     </td>
                     <td v-show="!args.diskio_iops && !args.diskio_latency" class="text-end w-25"
-                        :class="getDecoration(disk.name, 'write_bytes_rate_per_sec')">
+                        :class="getDecoration(disk.name, 'read_bytes_rate_per_sec')">
                         {{ disk.bitrate.txps }}
                     </td>
                     <td v-show="!args.diskio_iops && !args.diskio_latency" class="text-end w-25"
-                        :class="getDecoration(disk.name, 'read_bytes_rate_per_sec')">
+                        :class="getDecoration(disk.name, 'write_bytes_rate_per_sec')">
                         {{ disk.bitrate.rxps }}
                     </td>
                     <td v-show="args.diskio_latency" class="text-end w-25"
-                        :class="getDecoration(disk.name, 'write_latency')">
+                        :class="getDecoration(disk.name, 'read_latency')">
                         {{ disk.latency.txps }}
                     </td>
                     <td v-show="args.diskio_latency" class="text-end w-25"
-                        :class="getDecoration(disk.name, 'read_latency')">
+                        :class="getDecoration(disk.name, 'write_latency')">
                         {{ disk.latency.rxps }}
                     </td>
                     <td v-show="args.diskio_iops" class="text-end w-25">
@@ -78,6 +78,10 @@ export default {
 						name: diskioData["disk_name"],
 						alias:
 							diskioData["alias"] !== undefined ? diskioData["alias"] : null,
+						// txps/rxps are misleading here: txps holds the READ value and
+						// rxps the WRITE one. Each cell above must take the decoration
+						// of the field it actually prints, not the one its key rhymes
+						// with.
 						bitrate: {
 							txps: bytes(diskioData["read_bytes_rate_per_sec"]),
 							rxps: bytes(diskioData["write_bytes_rate_per_sec"]),
@@ -96,8 +100,11 @@ export default {
 					const readBytesRate = this.view[disk.name]["read_bytes_rate_per_sec"];
 					const writeBytesRate =
 						this.view[disk.name]["write_bytes_rate_per_sec"];
+					// A disk disappears only when every rate it is judged on has never
+					// moved -- the rule msg_curse applies. Requiring both to be visible
+					// instead hid a disk that has only ever been read, or only written.
 					return (
-						(!readBytesRate || readBytesRate.hidden === false) &&
+						(!readBytesRate || readBytesRate.hidden === false) ||
 						(!writeBytesRate || writeBytesRate.hidden === false)
 					);
 				});

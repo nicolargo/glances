@@ -189,6 +189,30 @@ class VmsPlugin(GlancesPluginModel):
             stats.extend(vms)
         return stats
 
+    def _decorate(self, name, field, value, header, maximum=None):
+        """Set one field's decoration from the configured thresholds.
+
+        A missing value needs no guard here: get_alert answers DEFAULT for one,
+        because the percentage it computes raises TypeError and is caught. A VM
+        whose engine reports no load, or whose rate has no previous sample yet,
+        is therefore left uncoloured rather than painted as idle. The base
+        update_views has already created the view, so this only replaces the
+        decoration and leaves optional/hidden as built.
+        """
+        if field not in self.views.get(name, {}):
+            return
+        if maximum is None:
+            alert = self.get_alert(value, header=header, action_key=name)
+            if alert == 'DEFAULT':
+                alert = self.get_alert(value, header=header)
+        else:
+            if not maximum:
+                return
+            alert = self.get_alert(value, maximum=maximum, header=header, action_key=name)
+            if alert == 'DEFAULT':
+                alert = self.get_alert(value, maximum=maximum, header=header)
+        self.views[name][field]['decoration'] = alert
+
     def update_views(self) -> bool:
         """Update stats views."""
         # Call the father's method
@@ -196,6 +220,27 @@ class VmsPlugin(GlancesPluginModel):
 
         if not self.stats:
             return False
+
+        # Thresholds for the columns msg_curse already asks decorations for.
+        # Without these every get_views(..., option='decoration') below returns
+        # 'DEFAULT', so the VM table is the one table in Glances that never
+        # changes colour -- the sibling containers plugin has done this since it
+        # was written.
+        #
+        # Per-VM overrides use the same action_key/fallback shape as containers,
+        # so `vmname_mem_careful=...` works the way `containername_cpu_careful`
+        # already does.
+        for vm in self.stats:
+            name = vm[self.get_key()]
+            # CPU: cpu_time is declared a rate in percent, so the derived
+            # *_rate_per_sec is the comparable number. It is absent on the first
+            # sample and for engines that do not report CPU time.
+            self._decorate(name, 'cpu_time_rate_per_sec', vm.get('cpu_time_rate_per_sec'), header='cpu')
+            # MEM: as a percentage of that VM's own limit, like containers.
+            self._decorate(name, 'memory_usage', vm.get('memory_usage'), header='mem', maximum=vm.get('memory_total'))
+            # LOAD: engines that do not report it leave None (see the field
+            # description), and msg_curse already skips the column in that case.
+            self._decorate(name, 'load_1min', vm.get('load_1min'), header='load')
 
         # Display Engine ?
         show_engine_name = False

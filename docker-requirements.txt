@@ -4,7 +4,7 @@ annotated-doc==0.0.5
     # via fastapi
 annotated-types==0.8.0
     # via pydantic
-anyio==4.15.0
+anyio==4.15.1
     # via
     #   httpx
     #   mcp
@@ -136,7 +136,7 @@ six==1.17.0
     #   ecdsa
     #   glances
     #   python-dateutil
-sse-starlette==3.4.10
+sse-starlette==3.4.11
     # via mcp
 starlette==1.6.0
     # via

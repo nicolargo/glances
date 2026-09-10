@@ -1,7 +1,7 @@
 .. _actions:
 
 Actions
-=======
+========
 
 Glances can trigger actions on events for warning and critical thresholds.
 
@@ -59,12 +59,14 @@ reached:
     argument, so an empty value never shifts the positional arguments of
     the invoked script.
 
-    A shell operator appearing inside a value is inert for the same
-    reason: by the time the value exists, it is part of an argument and
-    can no longer be a separator. **Pipes, redirections and command
-    chaining only work when you write them in the command line itself.**
-    If your action requires operators driven by the stats, write a shell
-    script and call it from the action instead.
+    Mustache-rendered values are also sanitized as defence in depth: the
+    characters ``&&``, ``|``, ``>`` and ``>>`` are replaced by spaces.
+
+    As a consequence, **shell operators (pipes, redirections, command
+    chaining) cannot be used inside a Mustache value**. They keep working
+    when you write them in the command line itself. If your action
+    requires operators driven by the stats, write a shell script and call
+    it from the action instead.
 
 For example, to create a log file containing the total user disk
 space usage for a device and notify by email each time a space trigger

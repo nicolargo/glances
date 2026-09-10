@@ -174,8 +174,11 @@ class NpuPlugin(GlancesPluginModel):
         # Add specifics information
         # Alert
         for i in self.stats:
-            # Init the views for the current GPU
-            self.views[i[self.get_key()]] = {'load': {}, 'freq': {}, 'mem': {}}
+            # Init the views for the current NPU.
+            # This replaces the per-field views the base class just built, so a field
+            # left out here has no view at all: both interfaces then read a decoration
+            # that is never written. That is what happened to temperature.
+            self.views[i[self.get_key()]] = {'load': {}, 'freq': {}, 'mem': {}, 'temperature': {}}
             # Load alert
             if 'load' in i:
                 alert = self.get_alert(i['load'], header='load')
@@ -188,6 +191,12 @@ class NpuPlugin(GlancesPluginModel):
             if 'mem' in i:
                 alert = self.get_alert(i['mem'], header='mem')
                 self.views[i[self.get_key()]]['mem']['decoration'] = alert
+            # Temperature alert
+            # msg_curse and the WebUI both ask for this decoration, and the Intel
+            # driver is the one that reports the reading. Same shape as the GPU plugin.
+            if i.get('temperature') is not None:
+                alert = self.get_alert(i['temperature'], header='temperature')
+                self.views[i[self.get_key()]]['temperature']['decoration'] = alert
 
         return True
 

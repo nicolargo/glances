@@ -6,7 +6,7 @@ annotated-doc==0.0.5
     # via typer
 annotated-types==0.8.0
     # via pydantic
-anyio==4.15.0
+anyio==4.15.1
     # via
     #   httpx
     #   mcp
@@ -93,11 +93,11 @@ exceptiongroup==1.2.2
     #   trio-websocket
 face==26.0.1
     # via glom
-filelock==3.32.5
+filelock==3.32.6
     # via
     #   python-discovery
     #   virtualenv
-fonttools==4.64.0
+fonttools==4.65.0
     # via matplotlib
 glom==25.12.0
     # via semgrep
@@ -175,7 +175,7 @@ numpy==2.4.6 ; python_full_version == '3.11.*'
     # via
     #   contourpy
     #   matplotlib
-numpy==2.5.2 ; python_full_version >= '3.12'
+numpy==2.5.3 ; python_full_version >= '3.12'
     # via
     #   contourpy
     #   matplotlib
@@ -232,7 +232,7 @@ peewee==3.19.0
     # via semgrep
 pillow==12.3.0
     # via matplotlib
-platformdirs==4.11.7
+platformdirs==4.11.8
     # via
     #   textual
     #   virtualenv
@@ -269,7 +269,7 @@ pyjwt==2.13.0
     #   semgrep
 pyparsing==3.3.2
     # via matplotlib
-pyright==1.1.411
+pyright==1.1.414
 pysocks==1.7.1
     # via urllib3
 pytest==9.1.1
@@ -331,7 +331,7 @@ ruamel-yaml==0.19.1
 ruamel-yaml-clib==0.2.15
     # via semgrep
 ruff==0.16.6
-selenium==4.48.0
+selenium==4.49.0
 semantic-version==2.10.0
     # via semgrep
 semgrep==1.176.1
@@ -373,7 +373,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-sse-starlette==3.4.10
+sse-starlette==3.4.11
     # via mcp
 starlette==1.6.0
     # via
@@ -430,7 +430,7 @@ urllib3==2.7.0
     #   semgrep
 uvicorn==0.52.4 ; sys_platform != 'emscripten'
     # via mcp
-virtualenv==21.7.8
+virtualenv==21.7.9
     # via pre-commit
 wcmatch==8.5.2
     # via semgrep

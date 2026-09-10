@@ -706,6 +706,16 @@ class TestGlances(unittest.TestCase):
         self.assertFalse(gfl.is_filtered({'name': 'snake is in the place'}))
         self.assertTrue(gfl.is_filtered({'name': 'snake is in the place', 'username': 'nicolargo'}))
         self.assertFalse(gfl.is_filtered({'name': 'snake is in the place', 'username': 'notme'}))
+        # Setting the filter replaces the list rather than adding to it. glances.conf
+        # is read when the processlist plugin loads and --process-focus is applied
+        # just after, so a setter that appended left both lists live and OR-ed: the
+        # command line could widen the focus set in glances.conf but never narrow it.
+        gfl = GlancesFilterList()
+        gfl.filter = '.*firefox.*'
+        gfl.filter = '.*python.*'
+        self.assertEqual([f.filter for f in gfl.filter], ['.*python.*'])
+        self.assertTrue(gfl.is_filtered({'name': 'python is in the place'}))
+        self.assertFalse(gfl.is_filtered({'name': 'firefox is in the place'}))
 
     def test_021_pretty_date(self):
         """Test pretty_date"""

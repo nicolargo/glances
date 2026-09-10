@@ -38,10 +38,12 @@
                         <td v-show="!getDisableStats().includes('status')" scope="row" :class="getStatusClass(container.status)">
                             {{ container.status }}
                         </td>
-                        <td v-show="!getDisableStats().includes('cpu')" scope="row">
+                        <td v-show="!getDisableStats().includes('cpu')" scope="row"
+                            :class="getDecoration(container.name, 'cpu')">
                             {{ $filters.number(container.cpu_percent, 1) }}
                         </td>
-                        <td v-show="!getDisableStats().includes('mem')" scope="row">
+                        <td v-show="!getDisableStats().includes('mem')" scope="row"
+                            :class="getDecoration(container.name, 'mem')">
                             {{
                                 isNaN(container.memory_usage ?? NaN)
                                     ? '-'
@@ -138,10 +140,12 @@
                         <td v-show="!getDisableStats().includes('uptime')" scope="row">
                             {{ container.uptime }}
                         </td>
-                        <td v-show="!getDisableStats().includes('cpu')" scope="row">
+                        <td v-show="!getDisableStats().includes('cpu')" scope="row"
+                            :class="getDecoration(container.name, 'cpu')">
                             {{ $filters.number(container.cpu_percent, 1) }}
                         </td>
-                        <td v-show="!getDisableStats().includes('mem')" scope="row">
+                        <td v-show="!getDisableStats().includes('mem')" scope="row"
+                            :class="getDecoration(container.name, 'mem')">
                             {{
                                 isNaN(container.memory_usage ?? NaN)
                                     ? '-'
@@ -326,6 +330,20 @@ export default {
 			return (
 				GlancesHelper.getLimit("containers", "containers_disable_stats") || []
 			);
+		},
+		// The server decorates a container's cpu and mem against that
+		// container's own threshold from the config file, falling back to the
+		// global one. Curses reads it; this table did not, so a container over
+		// its limit was red in the terminal and plain black in the browser.
+		getDecoration(containerName, field) {
+			const containerViews = this.views[containerName];
+			if (containerViews == undefined || containerViews[field] == undefined) {
+				// A container seen in stats but not yet in views (they are
+				// published from the same snapshot, but a rename lands in one
+				// first). Leave it undecorated rather than throwing.
+				return;
+			}
+			return containerViews[field].decoration.toLowerCase();
 		},
 		getStatusClass(status) {
 			const lowerStatus = status.toLowerCase();

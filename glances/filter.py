@@ -36,7 +36,14 @@ class GlancesFilterList:
 
     @filter.setter
     def filter(self, value):
-        """Add a comma separated list of filters"""
+        """Set the filter list from a comma separated list of filters"""
+        # The setter is the whole list, not an addition to it, the way
+        # GlancesFilter's is. glances.conf is read when the plugin loads and the
+        # command line is applied just after, so appending left both live and
+        # OR-ed together -- --process-focus could widen the list set in
+        # glances.conf but never narrow it, against the precedence config.rst
+        # documents.
+        self._filter = []
         for f in value.split(','):
             self._add_filter(f)
 

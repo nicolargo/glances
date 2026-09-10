@@ -199,6 +199,53 @@ class QuicklookPlugin(GlancesPluginModel):
         # Define the list of stats to display
         self.views['list'] = self.stats_list
 
+        # A style per core for the --percpu bars.
+        # The cores share the aggregate's thresholds but not its value, so reading
+        # views['cpu'] for every bar painted a core pegged at 100% with the colour
+        # of the average.
+        self.views['percpu_decoration'] = self._build_percpu_decoration()
+
+    def _build_percpu_decoration(self):
+        """Return {cpu_number: style} for every core, plus 'other' for the summary row.
+
+        Both interfaces show at most `max_cpu_display` cores, sorted by load, and add
+        one row averaging the cores they left out; 'other' is that row's style.
+        """
+        percpu = self.stats.get('percpu') or []
+        if not percpu:
+            return {}
+
+        ret = {str(cpu[cpu['key']]): self._decoration_for_percent(cpu['total']) for cpu in percpu}
+        if len(percpu) > self.max_cpu_display:
+            hidden = sorted(percpu, key=lambda cpu: cpu['total'], reverse=True)[self.max_cpu_display :]
+            ret['other'] = self._decoration_for_percent(sum(cpu['total'] for cpu in hidden) / len(hidden))
+
+        return ret
+
+    def _decoration_for_percent(self, percent):
+        """Return the style for a CPU percentage, without get_alert's side effects.
+
+        get_alert() is the usual road, but it also records a threshold that the event
+        list reads (glances.events_list) and can run a configured action, and both are
+        keyed by the stat name alone. Every core shares 'quicklook_cpu' with the
+        aggregate, so sending the cores through get_alert() would leave whichever core
+        went last as the value those two see.
+        """
+        stat_name = self.get_stat_name(header='cpu').lower()
+        critical = self.get_limit('critical', stat_name=stat_name)
+        warning = self.get_limit('warning', stat_name=stat_name)
+        careful = self.get_limit('careful', stat_name=stat_name)
+
+        if critical and percent >= critical:
+            return 'CRITICAL'
+        if warning and percent >= warning:
+            return 'WARNING'
+        if careful and percent >= careful:
+            return 'CAREFUL'
+        if not careful and not warning and not critical:
+            return 'DEFAULT'
+        return 'OK'
+
     def msg_curse(self, args=None, max_width=10):
         """Return the list to display in the UI."""
         # Init the return message
@@ -287,6 +334,8 @@ class QuicklookPlugin(GlancesPluginModel):
         if type(data[key]).__name__ == 'Sparkline':
             raw_cpu = self.get_raw_history(item='percpu', nb=data[key].size)
 
+        percpu_decoration = self.views.get('percpu_decoration', {})
+
         # Manage the maximum number of CPU to display (related to enhancement request #2734)
         if len(self.stats['percpu']) > self.max_cpu_display:
             # If the number of CPU is > max_cpu_display then sort and display top 'n'
@@ -309,7 +358,7 @@ class QuicklookPlugin(GlancesPluginModel):
                 msg = f'{key.upper():3}{cpu_id} '
             else:
                 msg = f'{cpu_id:4} '
-            ret.extend(self._msg_create_line(msg, data[key], key))
+            ret.extend(self._msg_create_line(msg, data[key], key, decoration=percpu_decoration.get(str(cpu_id))))
             ret.append(self.curse_new_line())
 
         # Add a new line with sum of all others CPU
@@ -330,18 +379,22 @@ class QuicklookPlugin(GlancesPluginModel):
                 sum_other.percent = sum([i['total'] for i in percpu_list[self.max_cpu_display :]]) / len(
                     percpu_list[self.max_cpu_display :]
                 )
-            msg = msg = f'{key.upper():3}* '
-            ret.extend(self._msg_create_line(msg, sum_other, key))
+            msg = f'{key.upper():3}* '
+            ret.extend(self._msg_create_line(msg, sum_other, key, decoration=percpu_decoration.get('other')))
             ret.append(self.curse_new_line())
 
         return ret
 
-    def _msg_create_line(self, msg, data, key):
-        """Create a new line to the Quick view."""
+    def _msg_create_line(self, msg, data, key, decoration=None):
+        """Create a new line to the Quick view.
+
+        `decoration` overrides the field's own style, for a bar that shows one core
+        rather than the value views[key] was computed from.
+        """
         return [
             self.curse_add_line(msg),
             self.curse_add_line('[', decoration='BOLD'),
-            self.curse_add_line(data.get(), self.get_views(key=key, option='decoration')),
+            self.curse_add_line(data.get(), decoration or self.get_views(key=key, option='decoration')),
             self.curse_add_line(']', decoration='BOLD'),
             self.curse_add_line('  '),
         ]
