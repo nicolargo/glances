@@ -214,11 +214,6 @@ class TuiV5(threading.Thread):
         # the TUI leaves the server running and the shell prompt blocked
         # until Ctrl-C. None = no-op (used in tests).
         self._on_quit = on_quit
-        # Horizontal rule between sections (header↔top, top↔body). Default
-        # ``─`` (box-drawing). ``[outputs] separator=False`` keeps each rule
-        # row blank instead, so the vertical rhythm of the layout is
-        # preserved (v4 collapses the row; v5 keeps a blank line).
-        self._separator_enabled = bool(self.config.get("outputs", "separator", True))
         # Plugin-title colour, see `_init_colors`. ``dark`` (default) is a
         # light amber tuned for the dark backgrounds most terminals use;
         # ``light`` swaps to a dark amber for white backgrounds. A single
@@ -250,6 +245,14 @@ class TuiV5(threading.Thread):
         # alert block's state glyphs (design §6.5), so this is the first
         # consumer — published as `view["unicode"]` (True = glyphs allowed).
         self._unicode = not bool(disable_unicode)
+        # Horizontal rule between sections (header↔top, top↔body). Default
+        # ``─`` (box-drawing). ``[outputs] separator=False`` keeps each rule
+        # row blank instead, so the vertical rhythm of the layout is
+        # preserved (v4 collapses the row; v5 keeps a blank line).
+        # ``--disable-unicode`` turns it off whatever the file says: ``─`` is
+        # not ASCII, and the command line overrides the configuration file
+        # (v4 main.py "Unicode => No separator", d2836579).
+        self._separator_enabled = self._unicode and bool(self.config.get("outputs", "separator", True))
         # Vertical scroll offset of the help overlay (rows). Reset to 0 each
         # time the overlay is opened; clamped to the content in ``_paint_help``
         # (which is the only place that knows the terminal height).

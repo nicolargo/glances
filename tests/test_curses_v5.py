@@ -1639,6 +1639,33 @@ def test_separator_disabled_paints_nothing(fake_store, fake_alerts):
     fake_stdscr.addstr.assert_not_called()
 
 
+def test_disable_unicode_flag_beats_separator_config(fake_store, fake_alerts):
+    """--disable-unicode → no ─ rule, even with [outputs] separator=True.
+
+    v4 parity (glances/main.py: "Unicode => No separator"); the command line
+    overrides the configuration file (v4 d2836579).
+    """
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    cfg = MagicMock()
+    cfg.get.side_effect = lambda section, key, default=None: (
+        True if (section, key) == ("outputs", "separator") else default
+    )
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=cfg,
+        registry=[],
+        fields_by_plugin={},
+        refresh_interval=0.01,
+        disable_unicode=True,
+    )
+    assert tui._separator_enabled is False
+    fake_stdscr = MagicMock()
+    tui._paint_separator(fake_stdscr, y=3, x0=0, width=20)
+    fake_stdscr.addstr.assert_not_called()
+
+
 def test_separator_disabled_renders_blank_line(fake_store, fake_alerts):
     """[outputs] separator=False → separator rows are blank, layout preserved.
 
