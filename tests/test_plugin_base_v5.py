@@ -789,6 +789,117 @@ async def test_collection_invalid_regex_is_logged_and_ignored(tmp_path, monkeypa
     assert store.get("fakecollection")["data"][0]["name"] == "eth0"
 
 
+# ---------------------------------------------------------- collection: generic alias (design §5.5)
+
+
+async def test_collection_alias_published_when_pk_matches(tmp_path, monkeypatch, store):
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nalias=eth0:WAN Interface\n")
+    plugin = FakeCollectionPlugin(
+        store,
+        config,
+        payload=[{"name": "eth0", "rx": 100}, {"name": "lo", "rx": 0}],
+    )
+    await plugin.update()
+    data = {item["name"]: item for item in store.get("fakecollection")["data"]}
+    assert data["eth0"]["alias"] == "WAN Interface"
+    assert "alias" not in data["lo"]
+
+
+async def test_collection_alias_absent_by_default(store, config):
+    """No `[<plugin>] alias=` key at all — v4 parity, no default behaviour change."""
+    plugin = FakeCollectionPlugin(store, config)
+    await plugin.update()
+    for item in store.get("fakecollection")["data"]:
+        assert "alias" not in item
+
+
+async def test_collection_alias_does_not_rewrite_primary_key(tmp_path, monkeypatch, store):
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nalias=eth0:WAN\n")
+    plugin = FakeCollectionPlugin(store, config, payload=[{"name": "eth0", "rx": 100}])
+    await plugin.update()
+    item = store.get("fakecollection")["data"][0]
+    assert item["name"] == "eth0"
+    assert item["alias"] == "WAN"
+
+
+async def test_collection_malformed_alias_entry_is_logged_and_skipped(tmp_path, monkeypatch, store, caplog):
+    """`alias=eth0` (no `:Name`) is malformed — `_compile_filter()` two
+    methods above logs a warning for a bad regex, so a dropped alias entry
+    must not be silent either (finding 3). The rest of the list still
+    parses."""
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nalias=eth0,lo:LAN\n")
+    with caplog.at_level(logging.WARNING):
+        plugin = FakeCollectionPlugin(
+            store,
+            config,
+            payload=[{"name": "eth0", "rx": 100}, {"name": "lo", "rx": 0}],
+        )
+        await plugin.update()
+    assert "invalid alias entry" in caplog.text
+    assert "eth0" in caplog.text
+    assert "fakecollection" in caplog.text
+    data = {item["name"]: item for item in store.get("fakecollection")["data"]}
+    assert "alias" not in data["eth0"]
+    assert data["lo"]["alias"] == "LAN"
+
+
+async def test_collection_hide_matches_alias_as_well_as_raw_pk(tmp_path, monkeypatch, store):
+    """v4 parity: `hide=<alias>` drops the item even though the raw
+    primary-key value does not match the pattern (`plugin/model.py:1059`)."""
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nalias=eth0:WAN\nhide=WAN\n")
+    plugin = FakeCollectionPlugin(
+        store,
+        config,
+        payload=[{"name": "eth0", "rx": 100}, {"name": "lo", "rx": 0}],
+    )
+    await plugin.update()
+    names = [item["name"] for item in store.get("fakecollection")["data"]]
+    assert names == ["lo"]
+
+
+async def test_collection_show_matches_alias_as_well_as_raw_pk(tmp_path, monkeypatch, store):
+    """v4 parity: `show=<alias>` keeps the item even though the raw
+    primary-key value does not match the pattern (`plugin/model.py:1044`)."""
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nalias=eth0:WAN\nshow=WAN\n")
+    plugin = FakeCollectionPlugin(
+        store,
+        config,
+        payload=[{"name": "eth0", "rx": 100}, {"name": "lo", "rx": 0}],
+    )
+    await plugin.update()
+    names = [item["name"] for item in store.get("fakecollection")["data"]]
+    assert names == ["eth0"]
+
+
+async def test_collection_alias_does_not_affect_levels_keying_or_override(tmp_path, monkeypatch, store):
+    """Configuring an alias for an item must not rename `_levels` keys nor
+    break its `<pk>_<field>_<level>` override — design §5.5: both stay
+    keyed on the raw primary-key value, never the alias."""
+    config = _write_config(
+        tmp_path,
+        monkeypatch,
+        "[fakecollection]\nalias=eth0:WAN\nrx_warning=0.9\neth0_rx_warning=0.5\n",
+    )
+    plugin = _WatchedCollection(
+        store,
+        config,
+        payload=[{"name": "eth0", "rx": 600, "speed": 1000}],  # ratio 0.6
+    )
+    await plugin.update()
+
+    data = store.get("fakecollection")["data"][0]
+    assert data["name"] == "eth0"  # primary key untouched
+    assert data["alias"] == "WAN"
+
+    levels = store.get("fakecollection")["_levels"]
+    assert "eth0" in levels  # keyed by the raw pk value
+    assert "WAN" not in levels
+    # eth0_rx_warning=0.5 (per-item override) wins over the field-wide 0.9
+    # — if alias interfered with override resolution this would read
+    # "careful" instead (falling back to the field-wide/default thresholds).
+    assert levels["eth0"]["rx"]["level"] == "warning"
+
+
 # ---------------------------------------------------------- empty payloads
 
 
@@ -965,3 +1076,361 @@ async def test_api_payload_is_still_empty_before_the_first_cycle(config):
     plugin = FakeCollectionPlugin(store, config)
 
     assert plugin.get_api_payload() == {}
+
+
+# ---------------------------------------------------------- unrecognised threshold keys
+
+
+class FakeNetworkPlugin(GlancesPluginBase[dict]):
+    plugin_name = "fakenetwork"
+    IS_COLLECTION = False
+    fields_description = {
+        "bytes_recv": {"description": "r", "unit": "bytespers", "watched": True},
+    }
+
+    async def _grab_stats(self) -> dict:
+        return {}
+
+
+class FakeFsPlugin(GlancesPluginBase[dict]):
+    plugin_name = "fakefs"
+    IS_COLLECTION = False
+    fields_description = {
+        "percent": {"description": "p", "unit": "percent", "watched": True},
+    }
+
+    async def _grab_stats(self) -> dict:
+        return {}
+
+
+class FakeNoWatchedFieldPlugin(GlancesPluginBase[dict]):
+    plugin_name = "fakenowatch"
+    IS_COLLECTION = False
+    fields_description = {
+        "percent": {"description": "p", "unit": "percent"},
+    }
+
+    async def _grab_stats(self) -> dict:
+        return {}
+
+
+def _threshold_warnings(caplog) -> list[str]:
+    return [r.getMessage() for r in caplog.records if "unrecognised threshold key" in r.getMessage()]
+
+
+def test_stale_v4_threshold_key_warns_with_accepted_names(tmp_path, monkeypatch, store, caplog):
+    config = _write_config(tmp_path, monkeypatch, "[fakenetwork]\nrx_warning=0.7\n")
+    with caplog.at_level(logging.WARNING):
+        FakeNetworkPlugin(store, config)
+    warnings = _threshold_warnings(caplog)
+    assert len(warnings) == 1
+    assert "rx_warning" in warnings[0]
+    assert "bytes_recv" in warnings[0]
+
+
+def test_per_item_override_with_accepted_suffix_does_not_warn(tmp_path, monkeypatch, store, caplog):
+    config = _write_config(tmp_path, monkeypatch, "[fakenetwork]\nwlan0_bytes_recv_warning=0.7\n")
+    with caplog.at_level(logging.WARNING):
+        FakeNetworkPlugin(store, config)
+    assert _threshold_warnings(caplog) == []
+
+
+def test_primary_key_containing_slash_does_not_warn(tmp_path, monkeypatch, store, caplog):
+    config = _write_config(tmp_path, monkeypatch, "[fakefs]\n/home_percent_careful=50\n")
+    with caplog.at_level(logging.WARNING):
+        FakeFsPlugin(store, config)
+    assert _threshold_warnings(caplog) == []
+
+
+def test_bare_level_key_does_not_warn_when_plugin_has_watched_fields(tmp_path, monkeypatch, store, caplog):
+    config = _write_config(tmp_path, monkeypatch, "[fakenetwork]\ncareful=50\n")
+    with caplog.at_level(logging.WARNING):
+        FakeNetworkPlugin(store, config)
+    assert _threshold_warnings(caplog) == []
+
+
+def test_non_threshold_keys_do_not_warn(tmp_path, monkeypatch, store, caplog):
+    config = _write_config(tmp_path, monkeypatch, "[fakenetwork]\nhide_zero=True\nshow=eth.*\n")
+    with caplog.at_level(logging.WARNING):
+        FakeNetworkPlugin(store, config)
+    assert _threshold_warnings(caplog) == []
+
+
+def test_threshold_key_on_plugin_with_no_watched_field_warns(tmp_path, monkeypatch, store, caplog):
+    config = _write_config(tmp_path, monkeypatch, "[fakenowatch]\nwarning=1\n")
+    with caplog.at_level(logging.WARNING):
+        FakeNoWatchedFieldPlugin(store, config)
+    warnings = _threshold_warnings(caplog)
+    assert len(warnings) == 1
+    assert "warning" in warnings[0]
+
+
+def test_warning_message_does_not_render_an_empty_accepted_list(tmp_path, monkeypatch, store, caplog):
+    """A plugin with no watched field has an empty `accepted` set — the
+    message must say so in words, not render `(accepted threshold names: )`
+    (finding 6)."""
+    config = _write_config(tmp_path, monkeypatch, "[fakenowatch]\nwarning=1\n")
+    with caplog.at_level(logging.WARNING):
+        FakeNoWatchedFieldPlugin(store, config)
+    warnings = _threshold_warnings(caplog)
+    assert len(warnings) == 1
+    assert "accepted threshold names: )" not in warnings[0]
+    assert "declares no generic threshold keys" in warnings[0]
+
+
+# ---------------------------------------------------------- _recognises_threshold_key() extension point
+
+
+class FakeSelfResolvingPlugin(GlancesPluginBase[dict]):
+    """A plugin that resolves thresholds itself (like `sensors`), outside the
+    base class's watched-field pipeline, and declares its own key shape via
+    the `_recognises_threshold_key` hook."""
+
+    plugin_name = "fakeselfresolving"
+    IS_COLLECTION = False
+    fields_description = {
+        "value": {"description": "v", "unit": "number", "watched": True},
+    }
+
+    async def _grab_stats(self) -> dict:
+        return {}
+
+    def _recognises_threshold_key(self, remainder: str) -> bool:
+        return remainder == "custom_shape"
+
+
+def test_recognises_threshold_key_hook_suppresses_warning(tmp_path, monkeypatch, store, caplog):
+    config = _write_config(tmp_path, monkeypatch, "[fakeselfresolving]\ncustom_shape_warning=1\n")
+    with caplog.at_level(logging.WARNING):
+        FakeSelfResolvingPlugin(store, config)
+    assert _threshold_warnings(caplog) == []
+
+
+def test_recognises_threshold_key_hook_does_not_blanket_disable_warnings(tmp_path, monkeypatch, store, caplog):
+    """The hook answers per-shape, not per-plugin — a shape it does not
+    recognise must still warn."""
+    config = _write_config(tmp_path, monkeypatch, "[fakeselfresolving]\nnonsense_warning=1\n")
+    with caplog.at_level(logging.WARNING):
+        FakeSelfResolvingPlugin(store, config)
+    warnings = _threshold_warnings(caplog)
+    assert len(warnings) == 1
+    assert "nonsense_warning" in warnings[0]
+
+
+def test_recognises_threshold_key_hook_defaults_to_false(tmp_path, monkeypatch, store, caplog):
+    """A plugin that does not override the hook gets no extra recognition —
+    default behaviour for the overwhelming majority of plugins is unchanged."""
+    config = _write_config(tmp_path, monkeypatch, "[fakenetwork]\ncustom_shape_warning=1\n")
+    with caplog.at_level(logging.WARNING):
+        FakeNetworkPlugin(store, config)
+    warnings = _threshold_warnings(caplog)
+    assert len(warnings) == 1
+    assert "custom_shape_warning" in warnings[0]
+
+
+# ---------------------------------------------------------- shipped conf: zero threshold-key warnings
+
+
+def test_shipped_conf_produces_zero_threshold_warnings():
+    """Permanent regression guard (finding 2): every plugin constructed
+    against the repository's own `conf/glances.conf` must produce zero
+    `unrecognised threshold key` WARNINGs. This is what catches the next
+    threshold rename that forgets to update its example, or the next
+    self-resolving plugin that forgets to override
+    `_recognises_threshold_key()` (as `folders`/`ports` did, finding 1).
+
+    Import-order matters here: importing `glances.main_v5` transitively
+    imports every `glances.plugins.*.model_v5` module, several of which
+    import `glances.logger` for the FIRST time in the process — whose
+    module-level `logging.config.dictConfig()` call reconfigures the ROOT
+    logger's handlers (`glances/logger.py`). A handler attached before
+    that happens (e.g. naively via `caplog`, which attaches to root) is
+    silently dropped — this mistake has already been made twice in this
+    wave. Do the imports FIRST, attach the handler AFTER.
+    """
+    import pathlib
+
+    from glances.config_v5 import GlancesConfigV5
+    from glances.main_v5 import discover_plugin_classes
+    from glances.stats_store_v5 import StatsStoreV5
+
+    plugin_classes = discover_plugin_classes()  # imports every plugins.*.model_v5 module
+    assert plugin_classes  # sanity: discovery actually found something
+
+    records: list[logging.LogRecord] = []
+
+    class _Collector(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            records.append(record)
+
+    target_logger = logging.getLogger("glances.plugins.plugin.base_v5")
+    handler = _Collector(level=logging.WARNING)
+    target_logger.addHandler(handler)
+    try:
+        conf_path = pathlib.Path(__file__).resolve().parent.parent / "conf" / "glances.conf"
+        config = GlancesConfigV5(cli_config_path=str(conf_path))
+        store = StatsStoreV5()
+        for _module_name, cls in plugin_classes:
+            cls(store, config)
+    finally:
+        target_logger.removeHandler(handler)
+
+    warnings = [r.getMessage() for r in records if "unrecognised threshold key" in r.getMessage()]
+    assert warnings == []
+
+
+# ---------------------------------------------------------- hide_zero / hide_threshold_bytes (design §5.1)
+
+
+class _HideZeroCollection(FakeCollectionPlugin):
+    """Collection plugin with two rate fields opted into the hide_zero filter."""
+
+    HIDE_ZERO_FIELDS = ["rx", "tx"]
+    fields_description = {
+        "name": {"description": "n", "unit": "string", "primary_key": True},
+        "rx": {"description": "rx", "unit": "bytespers", "rate": True},
+        "tx": {"description": "tx", "unit": "bytespers", "rate": True},
+    }
+
+
+def _hz_fake_now(monkeypatch) -> list[float]:
+    slot = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: slot[0])
+    return slot
+
+
+def test_hide_zero_config_defaults(store, config):
+    plugin = _HideZeroCollection(store, config)
+    assert plugin.hide_zero is False
+    assert plugin.hide_threshold_bytes == 0
+
+
+def test_hide_zero_config_reads_from_section(tmp_path, monkeypatch, store):
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nhide_zero=True\nhide_threshold_bytes=500\n")
+    plugin = _HideZeroCollection(store, config)
+    assert plugin.hide_zero is True
+    assert plugin.hide_threshold_bytes == 500
+
+
+async def test_hide_zero_noop_for_plugin_without_hide_zero_fields(store, config):
+    """Base default HIDE_ZERO_FIELDS = [] — `hidden` is never added."""
+    plugin = FakeCollectionPlugin(store, config, payload=[{"name": "eth0", "rx": 1024}])
+    await plugin.update()
+    item = store.get("fakecollection")["data"][0]
+    assert "hidden" not in item
+
+
+async def test_hide_zero_off_by_default_publishes_false_and_keeps_item(store, config):
+    """hide_zero defaults to False: `hidden` is always False, item never dropped."""
+    plugin = _HideZeroCollection(store, config, payload=[{"name": "eth0", "rx": 0, "tx": 0}])
+    await plugin.update()
+    data = store.get("fakecollection")["data"]
+    assert len(data) == 1
+    assert data[0]["hidden"] is False
+
+
+async def test_hide_zero_none_rate_stays_hidden(tmp_path, monkeypatch, store):
+    """First cycle: rate fields are None — None never un-hides (design §5.1)."""
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nhide_zero=True\n")
+    plugin = _HideZeroCollection(store, config, payload=[{"name": "eth0", "rx": 1000, "tx": 500}])
+    await plugin.update()
+    item = store.get("fakecollection")["data"][0]
+    assert item["rx"] is None
+    assert item["hidden"] is True
+
+
+async def test_hide_zero_sticky_after_burst_then_back_to_zero(tmp_path, monkeypatch, store):
+    """v4 cc5e2bab: a burst above the threshold un-hides for good."""
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nhide_zero=True\n")
+    plugin = _HideZeroCollection(store, config, payload=[{"name": "eth0", "rx": 0, "tx": 0}])
+    now = _hz_fake_now(monkeypatch)
+
+    await plugin.update()  # cycle 1 — rx/tx None, hidden
+    assert store.get("fakecollection")["data"][0]["hidden"] is True
+
+    now[0] = 101.0
+    plugin._payload = [{"name": "eth0", "rx": 5000, "tx": 0}]  # rx rate 5000 > threshold 0
+    await plugin.update()
+    assert store.get("fakecollection")["data"][0]["hidden"] is False
+
+    now[0] = 102.0
+    plugin._payload = [{"name": "eth0", "rx": 5000, "tx": 0}]  # unchanged counter -> rate 0
+    await plugin.update()
+    assert store.get("fakecollection")["data"][0]["hidden"] is False  # sticky: stays visible
+
+
+async def test_hide_zero_boundary_equal_threshold_does_not_unhide(tmp_path, monkeypatch, store):
+    """v4 cc5e2bab: strict `>`, never `>=`."""
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nhide_zero=True\nhide_threshold_bytes=1000\n")
+    plugin = _HideZeroCollection(store, config, payload=[{"name": "eth0", "rx": 0, "tx": 0}])
+    now = _hz_fake_now(monkeypatch)
+
+    await plugin.update()  # cycle 1 — None
+
+    now[0] = 101.0
+    plugin._payload = [{"name": "eth0", "rx": 1000, "tx": 0}]  # rate == 1000 == threshold
+    await plugin.update()
+    assert store.get("fakecollection")["data"][0]["hidden"] is True
+
+    now[0] = 102.0
+    plugin._payload = [{"name": "eth0", "rx": 2001, "tx": 0}]  # delta 1001 / 1s = 1001 > 1000
+    await plugin.update()
+    assert store.get("fakecollection")["data"][0]["hidden"] is False
+
+
+async def test_hide_zero_row_visible_when_one_field_unhides(tmp_path, monkeypatch, store):
+    """A row stays visible while any of its fields is un-hidden (v4 ff80c903)."""
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nhide_zero=True\n")
+    plugin = _HideZeroCollection(store, config, payload=[{"name": "eth0", "rx": 0, "tx": 0}])
+    now = _hz_fake_now(monkeypatch)
+
+    await plugin.update()
+
+    now[0] = 101.0
+    plugin._payload = [{"name": "eth0", "rx": 500, "tx": 0}]  # rx un-hides, tx stays at 0
+    await plugin.update()
+    assert store.get("fakecollection")["data"][0]["hidden"] is False
+
+
+async def test_hide_zero_resets_when_item_disappears_and_reappears(tmp_path, monkeypatch, store):
+    """Sticky state is rebuilt each cycle from only the items currently present
+    (mirrors v4 `update_views()` rebuilding `self.views` wholesale each cycle,
+    `plugin/model.py:672-686`): an item absent for one cycle loses its
+    accumulated state and starts hidden again if it comes back."""
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nhide_zero=True\n")
+    plugin = _HideZeroCollection(
+        store, config, payload=[{"name": "eth0", "rx": 0, "tx": 0}, {"name": "wlan0", "rx": 0, "tx": 0}]
+    )
+    now = _hz_fake_now(monkeypatch)
+    await plugin.update()  # cycle 1
+
+    now[0] = 101.0
+    plugin._payload = [{"name": "eth0", "rx": 5000, "tx": 0}, {"name": "wlan0", "rx": 0, "tx": 0}]
+    await plugin.update()  # eth0 un-hides
+    eth0 = next(i for i in store.get("fakecollection")["data"] if i["name"] == "eth0")
+    assert eth0["hidden"] is False
+
+    now[0] = 102.0
+    plugin._payload = [{"name": "wlan0", "rx": 0, "tx": 0}]  # eth0 absent for one cycle
+    await plugin.update()
+
+    now[0] = 103.0
+    plugin._payload = [{"name": "eth0", "rx": 5000, "tx": 0}, {"name": "wlan0", "rx": 0, "tx": 0}]
+    await plugin.update()  # eth0 reappears
+    eth0 = next(i for i in store.get("fakecollection")["data"] if i["name"] == "eth0")
+    assert eth0["rx"] is None  # no previous sample either — _raw_previous reset too
+    assert eth0["hidden"] is True  # sticky state reset — starts hidden again
+
+
+async def test_hide_zero_hidden_field_is_internal_and_not_exported(tmp_path, monkeypatch, store):
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nhide_zero=True\n")
+    plugin = _HideZeroCollection(store, config, payload=[{"name": "eth0", "rx": 0, "tx": 0}])
+    await plugin.update()
+
+    exported = plugin.get_export()
+    assert "hidden" not in exported[0]  # exportable: False
+
+    api_payload = plugin.get_api_payload()
+    assert "hidden" in api_payload["data"][0]  # internal: True — REST/MCP still see it

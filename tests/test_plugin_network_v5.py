@@ -11,10 +11,12 @@
 
 from __future__ import annotations
 
+import socket
 from collections import namedtuple
 from contextlib import ExitStack
 from unittest.mock import patch
 
+import psutil
 import pytest
 
 from glances.config_v5 import GlancesConfigV5
@@ -28,6 +30,15 @@ NetIO = namedtuple(
     ["bytes_sent", "bytes_recv", "packets_sent", "packets_recv", "errin", "errout", "dropin", "dropout"],
 )
 NetIfStats = namedtuple("snicstats", ["isup", "duplex", "speed", "mtu", "flags"])
+NetAddr = namedtuple("snicaddr", ["family", "address", "netmask", "broadcast", "ptp"])
+
+
+def _link_addr() -> NetAddr:
+    return NetAddr(family=psutil.AF_LINK, address="aa:bb:cc:dd:ee:ff", netmask=None, broadcast=None, ptp=None)
+
+
+def _ip_addr() -> NetAddr:
+    return NetAddr(family=socket.AF_INET, address="192.0.2.1", netmask="255.255.255.0", broadcast=None, ptp=None)
 
 
 def _io(rx: int = 0, tx: int = 0, errin: int = 0, errout: int = 0, dropin: int = 0, dropout: int = 0) -> NetIO:
@@ -48,11 +59,18 @@ def _stats(isup: bool = True, speed: int = 1000) -> NetIfStats:
     return NetIfStats(isup=isup, duplex=2, speed=speed, mtu=1500, flags="")
 
 
-def _patch_psutil(io_counters: dict, if_stats: dict) -> ExitStack:
-    """Patch psutil.net_io_counters and psutil.net_if_stats with deterministic values."""
+def _patch_psutil(io_counters: dict, if_stats: dict, if_addrs: dict | None = None) -> ExitStack:
+    """Patch psutil.net_io_counters and psutil.net_if_stats with deterministic values.
+
+    ``if_addrs`` is only patched when given — ``hide_no_ip`` (the only
+    consumer of ``psutil.net_if_addrs``) defaults to False, so most tests
+    never need it and must not depend on the real psutil call.
+    """
     stack = ExitStack()
     stack.enter_context(patch("glances.plugins.network.model_v5.psutil.net_io_counters", return_value=io_counters))
     stack.enter_context(patch("glances.plugins.network.model_v5.psutil.net_if_stats", return_value=if_stats))
+    if if_addrs is not None:
+        stack.enter_context(patch("glances.plugins.network.model_v5.psutil.net_if_addrs", return_value=if_addrs))
     return stack
 
 
@@ -360,6 +378,75 @@ async def test_show_keeps_only_matching_interfaces(tmp_path, monkeypatch, store)
     assert names == ["eth0", "eth1"]
 
 
+async def test_hide_no_up_off_by_default_keeps_down_interfaces(store, config):
+    """`[network] hide_no_up` defaults to False — v4 parity, `__init__.py:96`."""
+    plugin = PluginModel(store, config)
+    with _patch_psutil(
+        io_counters={"eth0": _io(), "eth1": _io()},
+        if_stats={"eth0": _stats(isup=True), "eth1": _stats(isup=False)},
+    ):
+        await plugin.update()
+    names = sorted(item["interface_name"] for item in store.get("network")["data"])
+    assert names == ["eth0", "eth1"]
+
+
+async def test_hide_no_up_drops_down_interfaces_when_enabled(tmp_path, monkeypatch, store):
+    """`hide_no_up=True` drops interfaces whose psutil status is not up
+    (v4 `network/__init__.py:165-166`) — the item never reaches the payload."""
+    config = _config_with(tmp_path, monkeypatch, "[network]\nhide_no_up=True\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil(
+        io_counters={"eth0": _io(), "eth1": _io()},
+        if_stats={"eth0": _stats(isup=True), "eth1": _stats(isup=False)},
+    ):
+        await plugin.update()
+    names = [item["interface_name"] for item in store.get("network")["data"]]
+    assert names == ["eth0"]
+
+
+async def test_hide_no_ip_off_by_default_keeps_link_only_interfaces(store, config):
+    """`[network] hide_no_ip` defaults to False — v4 parity, `__init__.py:97`."""
+    plugin = PluginModel(store, config)
+    with _patch_psutil(
+        io_counters={"eth0": _io()},
+        if_stats={"eth0": _stats()},
+        if_addrs={"eth0": [_link_addr()]},
+    ):
+        await plugin.update()
+    names = [item["interface_name"] for item in store.get("network")["data"]]
+    assert names == ["eth0"]
+
+
+async def test_hide_no_ip_drops_link_only_interfaces_when_enabled(tmp_path, monkeypatch, store):
+    """`hide_no_ip=True` drops interfaces with no address of a family other
+    than AF_LINK (v4 `network/__init__.py:167-172`)."""
+    config = _config_with(tmp_path, monkeypatch, "[network]\nhide_no_ip=True\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil(
+        io_counters={"eth0": _io(), "lo": _io()},
+        if_stats={"eth0": _stats(), "lo": _stats()},
+        if_addrs={"eth0": [_link_addr(), _ip_addr()], "lo": [_link_addr()]},
+    ):
+        await plugin.update()
+    names = [item["interface_name"] for item in store.get("network")["data"]]
+    assert names == ["eth0"]
+
+
+async def test_hide_no_ip_drops_interface_absent_from_net_if_addrs(tmp_path, monkeypatch, store):
+    """v4 also drops an interface missing from `net_if_addrs()` entirely
+    (`k in net_addrs` guard, `network/__init__.py:169-171`)."""
+    config = _config_with(tmp_path, monkeypatch, "[network]\nhide_no_ip=True\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil(
+        io_counters={"eth0": _io(), "ghost": _io()},
+        if_stats={"eth0": _stats(), "ghost": _stats()},
+        if_addrs={"eth0": [_ip_addr()]},
+    ):
+        await plugin.update()
+    names = [item["interface_name"] for item in store.get("network")["data"]]
+    assert names == ["eth0"]
+
+
 async def test_appearing_interface_has_none_rate_first_cycle(store, config, monkeypatch):
     """A new interface mid-flight has its rates set to None on its first cycle."""
     plugin = PluginModel(store, config)
@@ -408,3 +495,126 @@ async def test_is_up_flows_through(store, config):
     items = {item["interface_name"]: item for item in store.get("network")["data"]}
     assert items["eth0"]["is_up"] is True
     assert items["wlan0"]["is_up"] is False
+
+
+# ---------------------------------------------------------- alias (design §5.5)
+
+
+async def test_alias_published_for_matching_interface(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[network]\nalias=wlan0:HomeWifi\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil(
+        io_counters={"eth0": _io(), "wlan0": _io()},
+        if_stats={"eth0": _stats(), "wlan0": _stats()},
+    ):
+        await plugin.update()
+    data = {item["interface_name"]: item for item in store.get("network")["data"]}
+    assert data["wlan0"]["alias"] == "HomeWifi"
+    assert "alias" not in data["eth0"]
+
+
+async def test_alias_does_not_break_levels_or_per_item_override(tmp_path, monkeypatch, store):
+    """[network] alias=wlan0:HomeWifi must not rename the primary key, nor
+    change `_levels` keying, nor the per-interface threshold override
+    (design §5.5) — same scenario as
+    `test_per_interface_threshold_overrides_field_wide`, with an alias added."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[network]\nalias=wlan0:HomeWifi\nbytes_recv_warning=0.80\nwlan0_bytes_recv_warning=0.50\n",
+    )
+    plugin = PluginModel(store, config)
+    now = _fake_now(monkeypatch)
+
+    with _patch_psutil(
+        io_counters={"eth0": _io(rx=0), "wlan0": _io(rx=0)},
+        if_stats={"eth0": _stats(speed=1000), "wlan0": _stats(speed=1000)},
+    ):
+        await plugin.update()
+
+    now[0] = 101.0
+    rate = int(0.75 * 62_500_000)
+    with _patch_psutil(
+        io_counters={"eth0": _io(rx=rate), "wlan0": _io(rx=rate)},
+        if_stats={"eth0": _stats(speed=1000), "wlan0": _stats(speed=1000)},
+    ):
+        await plugin.update()
+
+    data = {item["interface_name"]: item for item in store.get("network")["data"]}
+    assert data["wlan0"]["interface_name"] == "wlan0"  # primary key untouched
+    assert data["wlan0"]["alias"] == "HomeWifi"
+    assert "alias" not in data["eth0"]
+
+    levels = store.get("network")["_levels"]
+    assert "wlan0" in levels  # keyed by the raw pk value, not "HomeWifi"
+    assert "HomeWifi" not in levels
+    assert levels["eth0"]["bytes_recv"]["level"] == "careful"
+    assert levels["wlan0"]["bytes_recv"]["level"] == "warning"
+
+
+# ---------------------------------------------------------- hide_zero / hide_threshold_bytes (design §5.1)
+
+
+def test_hide_zero_fields_declared(store, config):
+    assert PluginModel.HIDE_ZERO_FIELDS == ["bytes_recv", "bytes_sent"]
+
+
+async def test_hide_zero_off_by_default_never_hides(store, config, monkeypatch):
+    """`[network] hide_zero` ships False in conf/glances.conf — `hidden` stays False."""
+    plugin = PluginModel(store, config)
+    now = _fake_now(monkeypatch)
+
+    with _patch_psutil(io_counters={"lo": _io(rx=0, tx=0)}, if_stats={"lo": _stats(speed=0)}):
+        await plugin.update()
+
+    now[0] = 101.0
+    with _patch_psutil(io_counters={"lo": _io(rx=0, tx=0)}, if_stats={"lo": _stats(speed=0)}):
+        await plugin.update()
+
+    item = store.get("network")["data"][0]
+    assert item["hidden"] is False
+
+
+async def test_hide_zero_reads_threshold_and_unhides_above_it(tmp_path, monkeypatch, store):
+    """v4 regression d88f9d98: network must actually read hide_threshold_bytes."""
+    config = _config_with(tmp_path, monkeypatch, "[network]\nhide_zero=True\nhide_threshold_bytes=1000\n")
+    plugin = PluginModel(store, config)
+    now = _fake_now(monkeypatch)
+
+    with _patch_psutil(io_counters={"eth0": _io(rx=0, tx=0)}, if_stats={"eth0": _stats(speed=1000)}):
+        await plugin.update()  # cycle 1 — rate None, hidden
+
+    assert store.get("network")["data"][0]["hidden"] is True
+
+    now[0] = 101.0
+    with _patch_psutil(io_counters={"eth0": _io(rx=1000, tx=0)}, if_stats={"eth0": _stats(speed=1000)}):
+        await plugin.update()  # rx rate == 1000 == threshold -> strict '>' -> still hidden
+
+    assert store.get("network")["data"][0]["hidden"] is True
+
+    now[0] = 102.0
+    with _patch_psutil(io_counters={"eth0": _io(rx=3000, tx=0)}, if_stats={"eth0": _stats(speed=1000)}):
+        await plugin.update()  # delta 2000/1s = 2000 > 1000 -> unhide
+
+    assert store.get("network")["data"][0]["hidden"] is False
+
+    now[0] = 103.0
+    with _patch_psutil(io_counters={"eth0": _io(rx=3000, tx=0)}, if_stats={"eth0": _stats(speed=1000)}):
+        await plugin.update()  # rate back to 0 -> sticky: stays visible
+
+    assert store.get("network")["data"][0]["hidden"] is False
+
+
+async def test_hide_zero_row_visible_when_only_one_direction_moves(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[network]\nhide_zero=True\n")
+    plugin = PluginModel(store, config)
+    now = _fake_now(monkeypatch)
+
+    with _patch_psutil(io_counters={"eth0": _io(rx=0, tx=0)}, if_stats={"eth0": _stats(speed=1000)}):
+        await plugin.update()
+
+    now[0] = 101.0
+    with _patch_psutil(io_counters={"eth0": _io(rx=500, tx=0)}, if_stats={"eth0": _stats(speed=1000)}):
+        await plugin.update()  # rx moves, tx stays at 0
+
+    assert store.get("network")["data"][0]["hidden"] is False

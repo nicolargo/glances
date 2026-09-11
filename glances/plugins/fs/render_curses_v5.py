@@ -19,12 +19,15 @@ Reference layout:
 
 - Header: ``FILE SYS`` (HEADER) + ``Used`` + ``Total`` (right-aligned).
 - One row per filesystem, sorted by mountpoint.
-- The ``Used`` cell inherits the percent-threshold color (v4 parity:
-  v4 decorates the ``used`` cell from ``get_alert(used, max=size)``).
+- The ``Used``/``Free`` cell inherits the percent-threshold color (v4
+  parity: v4 decorates that cell from ``get_alert(used, max=size)`` —
+  the decoration key stays ``percent`` regardless of ``free_space``).
 - Long mountpoints are tail-truncated with a leading underscore.
 
-TODO(G4+): plumb max_width / args so ``--fs-free-space`` (display Free
-instead of Used) is honoured. Hardcoded ``Used`` for now.
+``[fs] free_space`` / ``--fs-free-space`` (design §5.4) switch the second
+column from used to free space. The flag rides along as the plugin's
+``free_space`` payload metadata (``fs/model_v5.py::_add_metadata``) — the
+renderer has no other way to reach the config.
 """
 
 from __future__ import annotations
@@ -54,7 +57,7 @@ def _format_mnt_point(mnt: str) -> str:
     return mnt.ljust(_NAME_MAX_WIDTH)
 
 
-def _used_cell(value: Any, level_entry: dict[str, Any]) -> Cell:
+def _value_cell(value: Any, level_entry: dict[str, Any]) -> Cell:
     text = _format_bytes(value).rjust(_USED_COL_WIDTH) if value is not None else "-".rjust(_USED_COL_WIDTH)
     level = level_entry.get("level") if isinstance(level_entry, dict) else None
     role = _LEVEL_TO_ROLE.get(level, ColorRole.DEFAULT)
@@ -69,10 +72,13 @@ def _total_cell(value: Any) -> Cell:
 
 def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
     """Render the fs plugin's TUI block — mirrors v4 ``fs.msg_curse``."""
+    free_space = bool(payload.get("free_space")) if isinstance(payload, dict) else False
+    value_field = "free" if free_space else "used"
+    value_label = "Free" if free_space else "Used"
     header_row = Row(
         cells=[
             Cell(text="FILE SYS".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
-            Cell(text="Used".rjust(_USED_COL_WIDTH), color=ColorRole.HEADER, bold=True),
+            Cell(text=value_label.rjust(_USED_COL_WIDTH), color=ColorRole.HEADER, bold=True),
             Cell(text="Total".rjust(_TOTAL_COL_WIDTH), color=ColorRole.HEADER, bold=True),
         ]
     )
@@ -98,12 +104,16 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
 
         if_levels = levels_index.get(mnt) if isinstance(levels_index, dict) else None
         percent_entry = if_levels.get("percent", {}) if isinstance(if_levels, dict) else {}
+        # `alias` (design §5.5, v4 parity `fs/__init__.py:310`) replaces the
+        # raw mountpoint in the display only — `_levels` above stays keyed
+        # by the raw `mnt`.
+        display_mnt = str(item.get("alias") or mnt)
 
         rows.append(
             Row(
                 cells=[
-                    Cell(text=_format_mnt_point(mnt)),
-                    _used_cell(item.get("used"), percent_entry),
+                    Cell(text=_format_mnt_point(display_mnt)),
+                    _value_cell(item.get(value_field), percent_entry),
                     _total_cell(item.get("size")),
                 ],
                 item_start=True,

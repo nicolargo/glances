@@ -253,6 +253,8 @@ The `_transform()` method is itself a pipeline of four ordered steps, all implem
   1. ``<pk_value>_<field>_<level>``  — per-item, per-field (collection plugins only — e.g. ``wlan0_bytes_recv_warning``).
   2. ``<field>_<level>``             — per-field, all items (e.g. ``bytes_recv_warning``).
   3. ``<level>``                     — applies to any watched field in the plugin section (e.g. ``warning``).
+- **Startup WARNING on an unrecognised threshold key** (parity wave 1, 2026-09-10 — `docs/superpowers/specs/2026-09-10-glances-v5-parity-wave1-design.md` §3). v5 renamed several v4 threshold keys (`[network] rx_*`/`tx_*` → `bytes_recv_*`/`bytes_sent_*`, `[processlist] cpu_*`/`mem_*` → `cpu_percent_*`/`memory_percent_*`, `[fs] <mnt>_careful` → `<mnt>_percent_careful`) without accepting the old spellings — a stale key otherwise stops applying silently. `GlancesPluginBase.__init__` (`base_v5.py::_warn_unknown_threshold_keys`) scans the plugin's config section once at construction: any key shaped like a threshold key (bare `careful`/`warning`/`critical`, or ending in `_careful`/`_warning`/`_critical`) is checked against the accepted names built from `_watched_fields` (the threshold key precedence above), and logged with one WARNING per unrecognised key if it does not match.
+  **Extension point — `GlancesPluginBase._recognises_threshold_key(remainder)`.** A plugin that resolves its own thresholds outside the generic watched-field pipeline (a custom `_derived_parameters()`) owns key shapes the generic `<field>`/`<pk>_<field>` suffix rule cannot express, and **must override this hook** to declare them — otherwise the startup WARNING false-positives on every one of its threshold keys. This happened to `sensors` (`<type>_<level>` and `<type>_<label>_<level>` tiers, resolved in `sensors/model_v5.py::_resolve_thresholds`) before the hook existed; `sensors/model_v5.py::_recognises_threshold_key` now declares both shapes and its keys are recognised. Default `False`: the overwhelming majority of plugins are driven entirely by the base class's watched-field pipeline and have nothing extra to recognise.
 - `_transform()` filters output to declared fields only. Undeclared psutil fields do not reach the StatsStore or the API.
 - Exposed via `GET /api/5/<plugin>/info`.
 
@@ -1142,6 +1144,28 @@ _Goal: production-ready. Release `5.0.0rc1` then `5.0.0`._
 - Merge `develop-v5 → develop`
 - PyPI, Docker, Snap, Helm packages published
 
+#### Phase 2.X — TUI interactive surface (owned group)
+_Goal: close the largest gap the v4 → v5 parity inventory found — the interactive
+curses surface — as its own owned group. No implementation in parity wave 1
+(2026-09-10); scope decision recorded in
+`docs/superpowers/specs/2026-09-10-glances-v5-parity-wave1-design.md` §6._
+
+- **Process management**: selection cursor (`UP`/`DOWN`), `k` kill, `+`/`-` nice,
+  `ENTER`/`E` filter, `e` extended stats, `M` min/max reset.
+- **The 23 per-plugin show/hide toggles** (`n` network, `d` diskio, `f` fs,
+  `2` sidebar, `3` quicklook, `g` gpu, `k` connections, …), including `F`
+  (fs free space) — deferred here by design §5.4 of the parity-wave-1 spec:
+  `[fs] free_space` and `--fs-free-space` ship in parity wave 1, but the hotkey
+  has no home in v5 until this group builds the toggle surface.
+- **The 9 remaining data-type toggles** (`b`/`B` byte/bit, `%`, `S`, …).
+- **`F5` / `Ctrl-R`** forced refresh and the sort-navigation arrow keys.
+
+The `ViewState` mechanism this group builds on already exists
+(`glances_curses_v5.py:104`); each toggle is one `_HOTKEYS` entry plus a
+renderer gate. The exhaustive key-by-key list — v4 key, action, v5 status,
+`file:line` proof — is **not duplicated here**: see Part 3 of
+`glances-v5-v4-parity-inventory.md`.
+
 #### v4 feature parity backlog
 
 **Standing rule — every v4 feature is ported to v5.** A v4 feature is dropped or
@@ -1154,16 +1178,24 @@ backport sweep of 2026-09-10 (develop `2bf3aadb`):
 
 | Gap | v4 reference | v5 state | Target |
 |---|---|---|---|
-| `hide_zero` + `hide_threshold_bytes` | `plugins/plugin/model.py` `update_views()`, `[network]` / `[diskio]` config keys | Absent. `base_v5` only implements the regex `show=` / `hide=` item filters (§3.8). | Phase 2.X — generic mechanism in `base_v5`, wired in `network` and `diskio`, plus the WebUI row rule. Three v4 fixes are part of the spec: hide on `>` and not `>=` (v4 `cc5e2bab`), `network` must actually read `hide_threshold_bytes` (v4 `d88f9d98`), and a row stays visible while any of its `hide_zero` fields is (v4 `ff80c903`). |
 | `--process-focus` and the process filter | `glances/processes.py` + `glances/filter.py` — both shared with v5, and already carrying the v4 fixes | Never wired: `main_v5.py` does not push `args` into `glances_processes`, and `processlist/model_v5.py` records "no filter UI (deferred)". | Phase 2.X — wire the CLI args into the shared engine and add the TUI filter key. No engine work needed. |
 | `[percpu] max_cpu_display` ignored by the `percpu` plugin | `percpu/__init__.py:119` and `quicklook/__init__.py:108` — v4 reads the same key from the same `[percpu]` section in both blocks and they stay in sync. | `quicklook/model_v5.py` now honours it (npu/quicklook/vms backport, 2026-09-10), but `percpu/render_curses_v5.py:35-37` still carries the open `TODO(G2+)` and its own `_DEFAULT_MAX_CPU_DISPLAY = 4` (line 48) — a user setting `max_cpu_display=8` sees 8 bars in quicklook and 4 in percpu. | Phase 2.X — apply the pattern quicklook just established: the model reads the config key and publishes it as an `internal` payload field. |
-
+| `percpu` has no threshold colouring in v5 | v4 colours each core's `user`/`system`/`iowait` (etc.) cells from `[percpu] user_*` / `system_*` / `iowait_*` thresholds. | `percpu/model_v5.py:19-22` declares no watched field, so no `_levels` exist for any percpu field — every core cell renders uncoloured regardless of value or config. The docstring there justifies this by v4 having "no `'log': True` on percpu fields" — but `log`/`prominent` gates *alerting* (event history, background highlight, §3.2/§3.3), not *colouring* (the per-cycle `_levels` a cell reads its font colour from). v4 colours percpu cells today with or without `log`, so the justification given does not actually cover the gap it is attached to. | Phase 2.X — needs its own design: which fields become `watched` (with what `default_thresholds`), and whether `[percpu] user_careful` etc. are read through the generic `_watched_fields` pipeline or per-field `threshold_field` aliases (§3.2 precedence). |
+| `diskio` lost the latency family | `[diskio] rx_latency_*` / `tx_latency_*` (+ per-disk `<disk>_rx_latency_*` / `<disk>_tx_latency_*`, `_log`) | `diskio/model_v5.py:23-25`: `read_time`/`write_time` and the derived `read_latency`/`write_latency` of v4 are not collected at all — deferred to a later phase alongside the `--diskio-iops`/`--diskio-latency` CLI modes (also absent, `glances-v5-v4-parity-inventory.md` Part 1 §6). | Phase 2.X — collect the two counters, derive the rates, declare them `watched`, and wire `--diskio-latency` to switch the renderer from throughput to latency (v4 parity). |
 | `<stat>_log` threshold-log family | `plugins/plugin/model.py` `get_limit_log()` — `[cpu] total_log`, `[load] log`, `[network] wlan0_rx_log`, `[sensors] *_log`… decide per stat whether a transition is written to the event history. | Absent: neither `thresholds_v5.py` nor `alerts_v5.py` reads any `_log` key, so every transition at warning or above is historised with no way to opt out. | Phase 2.X — read the family in `thresholds_v5` and gate the history write in `alerts_v5`. |
-| Threshold keys renamed, one of them re-scaled | `[network] rx_*` / `tx_*` (percent), `[processlist] cpu_*` / `mem_*`, `[fs] <mnt>_careful` | v5 reads `bytes_recv_*` / `bytes_sent_*` **as a ratio in [0,1]** (`normalize_by: bytes_speed_rate_per_sec`), `cpu_percent_*` / `memory_percent_*`, `<mnt>_percent_careful`. The v4 keys — the ones the shipped `conf/glances.conf` still documents — are silently ignored. | **Decision needed** before 5.0.0: accept the v4 spellings as aliases, or keep the rename and make it a documented breaking change with a startup WARNING on an unread key. |
-| TUI — interactive process management | `glances_curses.py`: cursor (`UP`/`DOWN`), `k` kill, `+`/`-` nice, `ENTER`/`E` filter, `e` extended stats, `M` min/max reset | None of it exists in v5: `_HOTKEYS` (`glances_curses_v5.py:147-165`) carries 15 keys against v4's 62, and there is no process-selection cursor at all. | Phase 2.X / Phase 4 — the single largest TUI gap. Needs its own design (selection model + confirmation flow for `k`). |
-| TUI — per-plugin show/hide toggles | 23 keys (`n` network, `d` diskio, `f` fs, `2` sidebar, `3` quicklook, `g` gpu, `k` connections…) plus 9 of the 11 data-type toggles (`b`/`B` byte/bit, `%`, `S`, …) | Only `1` (percpu), `4` (full quicklook), `/` (short name) and `j` (programs) survive. | Phase 2.X — the `ViewState` mechanism already exists (`glances_curses_v5.py:104`); each toggle is one `_HOTKEYS` entry plus a renderer gate. |
+| Threshold keys renamed, one of them re-scaled | `[network] rx_*` / `tx_*` (percent), `[processlist] cpu_*` / `mem_*`, `[fs] <mnt>_careful` | v5 reads `bytes_recv_*` / `bytes_sent_*` **as a ratio in [0,1]** (`normalize_by: bytes_speed_rate_per_sec`), `cpu_percent_*` / `memory_percent_*`, `<mnt>_percent_careful`. The v4 keys — the ones the shipped `conf/glances.conf` still documents — are silently ignored. | **Decided** (parity wave 1, 2026-09-10): rename kept, no v4 aliases; a startup WARNING now fires on any unrecognised threshold key (`base_v5.py::_warn_unknown_threshold_keys`, §3.2 above). The rename itself is still a breaking change to document in the 5.0.0 release notes. |
 | CLI — short aliases and whole option families | `glances/main.py` argparse: `-V -p -B -u -t -w -c -q -f -0..-6`, the process family (`-f`, `--process-focus`, `--programs`, `--sort-processes`), stdout/diagnostic (`--stdout`, `--stdout-csv`, `--issue`), SNMP | 59 of v4's 86 options are absent. Client/browser and SNMP are Phase 3; the rest is not owned by any group. | Phase 2.X for display/process options; Phase 3 for client, browser and SNMP. |
-| Display filters lost outside `show=` / `hide=` | `hide_no_up`, `hide_no_ip` (network), `[fs] allow`, `[fs] free_space`, and the generic `alias` (v4 base class, consumed by `network`, `diskio`, `fs`, `sensors`) | Absent. Only `sensors` implements `alias` in v5 (`sensors/model_v5.py:194-214`). | Phase 2.X — `alias` belongs in `base_v5` next to the `show`/`hide` filters, not per plugin. |
+
+**2026-09-10 — parity wave 1 closures.** `hide_zero` + `hide_threshold_bytes`,
+`hide_no_up`/`hide_no_ip`, `[fs] allow`, `[fs] free_space` and the generic
+`alias` (network/diskio/fs; `sensors` already had its own) shipped this wave
+and are removed from the table above — see
+`docs/superpowers/specs/2026-09-10-glances-v5-parity-wave1-design.md` §5. The
+threshold-rename row above was resolved from "decision needed" to "decided" the
+same wave (§3). TUI interactive process management and the per-plugin
+show/hide toggles are removed from this table because they are now owned by
+the Phase 2.X — TUI interactive surface group above, not because they are
+closed.
 
 Every backport sweep appends what it finds here (see the sweep method in the
 maintainer notes); the table is the single list of "v4 has it, v5 does not yet".

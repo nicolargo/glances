@@ -23,11 +23,12 @@ Reference layout (default — rate display, bits/s, two columns):
 - One row per interface filtered by ``is_up`` and rate availability.
 - Rate values: bytes/s × 8 → bits/s, with K/M/G/T auto-scaling and a ``b``
   suffix (v4 ``auto_unit(int(value * 8)) + 'b'``). Sub-K values stay raw
-  (e.g. ``0b``, ``800b``).
+  (e.g. ``0b``, ``800b``). With ``view["byte"]`` truthy (``--byte``), rates
+  stay in bytes/s and drop the ``b`` suffix (v4 ``network/__init__.py:273``).
 - Long interface names are tail-truncated with a leading underscore.
 - Color of each rate cell from ``_levels[interface_name][bytes_recv|bytes_sent]``.
 
-TODO(G2+): plumb ``max_width`` and ``args`` (``--byte``, ``--network-cumul``,
+TODO(G2+): plumb ``max_width`` and ``args`` (``--network-cumul``,
 ``--network-sum``) from the painter so this renderer can replicate every
 v4 display mode. For G1 we hardcode ``name_max_width=20`` and the
 rate-bits-two-column mode (v4 default).
@@ -51,29 +52,34 @@ _NAME_MAX_WIDTH = 18
 _RATE_COL_WIDTH = 7
 
 
-def _format_bit_rate(bytes_per_sec: Any) -> str:
-    """Bytes/s → human-readable bits/s string (v4 ``auto_unit(... ) + 'b'``).
+def _format_rate(bytes_per_sec: Any, byte: bool = False) -> str:
+    """Bytes/s → human-readable rate string (v4 ``auto_unit(...) [+ 'b']``).
 
-    Multiplies by 8, scales to K/M/G/T with one decimal, suffix ``b``.
-    Sub-K bits show as raw ``Nb`` (v4 ``min_symbol='K'``).
+    Default (``byte=False``): multiplies by 8, scales to K/M/G/T with one
+    decimal, suffix ``b``. Sub-K bits show as raw ``Nb`` (v4
+    ``min_symbol='K'``).
+
+    With ``byte=True`` (``--byte``, v4 ``network/__init__.py:273``): no ×8,
+    same K/M/G/T scaling, no unit suffix.
     """
     try:
-        bits = float(bytes_per_sec) * 8.0
+        value = float(bytes_per_sec) if byte else float(bytes_per_sec) * 8.0
     except (TypeError, ValueError):
         return "-"
+    suffix = "" if byte else "b"
     for symbol, threshold in (
         ("T", 1_099_511_627_776),
         ("G", 1_073_741_824),
         ("M", 1_048_576),
         ("K", 1024),
     ):
-        if abs(bits) >= threshold:
-            return f"{bits / threshold:.1f}{symbol}b"
-    return f"{int(bits)}b"
+        if abs(value) >= threshold:
+            return f"{value / threshold:.1f}{symbol}{suffix}"
+    return f"{int(value)}{suffix}"
 
 
-def _rate_cell(value: Any, level_entry: dict[str, Any]) -> Cell:
-    text = _format_bit_rate(value).rjust(_RATE_COL_WIDTH) if value is not None else "-".rjust(_RATE_COL_WIDTH)
+def _rate_cell(value: Any, level_entry: dict[str, Any], byte: bool = False) -> Cell:
+    text = _format_rate(value, byte).rjust(_RATE_COL_WIDTH) if value is not None else "-".rjust(_RATE_COL_WIDTH)
     level = level_entry.get("level") if isinstance(level_entry, dict) else None
     role = _LEVEL_TO_ROLE.get(level, ColorRole.DEFAULT)
     prominent = bool(level_entry.get("prominent")) if isinstance(level_entry, dict) else False
@@ -87,8 +93,11 @@ def _format_if_name(name: str) -> str:
     return name.ljust(_NAME_MAX_WIDTH)
 
 
-def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
+def render(
+    payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], view: dict[str, Any] | None = None
+) -> list[Row]:
     """Render the network plugin's TUI block — mirrors v4 ``network.msg_curse``."""
+    byte = bool((view or {}).get("byte"))
     # The first header cell is the TUI block title, not a field label — it
     # stays a literal. The value columns read their labels from the schema
     # (single source of truth, shared with the WebUI).
@@ -123,6 +132,10 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         # v4 fidelity: skip interfaces in the down state (issue #765).
         if item.get("is_up") is False:
             continue
+        # hide_zero display filter (design §5.1) — sticky state computed and
+        # reduced to this one boolean by the model (issue #1787 v4 parity).
+        if item.get("hidden") is True:
+            continue
         # Skip first-cycle interfaces — rate fields are None until the
         # base class has two samples (cf. `_transform_gauge`).
         if item.get("bytes_recv") is None or item.get("bytes_sent") is None:
@@ -132,13 +145,17 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         if_levels = levels_index.get(name) if isinstance(levels_index, dict) else None
         if not isinstance(if_levels, dict):
             if_levels = {}
+        # `alias` (design §5.5, v4 parity `network/__init__.py:262`) replaces
+        # the raw interface name in the display only — `_levels` above stays
+        # keyed by the raw `name`.
+        display_name = str(item.get("alias") or name)
 
         rows.append(
             Row(
                 cells=[
-                    Cell(text=_format_if_name(name)),
-                    _rate_cell(item.get("bytes_recv"), if_levels.get("bytes_recv", {})),
-                    _rate_cell(item.get("bytes_sent"), if_levels.get("bytes_sent", {})),
+                    Cell(text=_format_if_name(display_name)),
+                    _rate_cell(item.get("bytes_recv"), if_levels.get("bytes_recv", {}), byte),
+                    _rate_cell(item.get("bytes_sent"), if_levels.get("bytes_sent", {}), byte),
                 ],
                 item_start=True,
             )

@@ -175,3 +175,50 @@ def test_item_rows_are_marked_for_the_truncation_counter(fs_payload, fs_fields):
     rows = render(fs_payload, fs_fields)
     assert rows[0].item_start is False  # header
     assert sum(r.item_start for r in rows) == len(fs_payload["data"])
+
+
+# ---------------------------------------------------------------- free_space (design §5.4)
+
+
+def test_render_shows_used_by_default(fs_payload, fs_fields):
+    """`free_space` absent from the payload -> "Used" header + used-space values."""
+    rows = render(fs_payload, fs_fields)
+    header_text = " ".join(c.text for c in rows[0].cells)
+    assert "Used" in header_text
+    assert "Free" not in header_text
+    value_cell_text = rows[1].cells[1].text
+    assert "125.0G" in value_cell_text  # root's `used`, not its `free` (375.0G)
+
+
+def test_render_shows_free_when_flag_set(fs_payload, fs_fields):
+    fs_payload["free_space"] = True
+    rows = render(fs_payload, fs_fields)
+    header_text = " ".join(c.text for c in rows[0].cells)
+    assert "Free" in header_text
+    assert "Used" not in header_text
+    value_cell_text = rows[1].cells[1].text
+    assert "375.0G" in value_cell_text  # root's `free`, not its `used` (125.0G)
+
+
+# ---------------------------------------------------------------- alias (design §5.5)
+
+
+def test_render_displays_alias_instead_of_mnt_point(fs_fields):
+    """v4 parity (`fs/__init__.py:310`): the alias REPLACES the raw
+    mountpoint in the rendered row."""
+    payload = {
+        "data": [{"mnt_point": "/", "alias": "Root", "size": 100, "used": 50, "free": 50, "percent": 50.0}],
+        "_levels": {"/": {}},
+    }
+    rows = render(payload, fs_fields)
+    name_cell = rows[1].cells[0].text
+    assert "Root" in name_cell
+
+
+def test_render_falls_back_to_mnt_point_when_no_alias(fs_fields):
+    payload = {
+        "data": [{"mnt_point": "/", "size": 100, "used": 50, "free": 50, "percent": 50.0}],
+        "_levels": {"/": {}},
+    }
+    rows = render(payload, fs_fields)
+    assert "/" in rows[1].cells[0].text

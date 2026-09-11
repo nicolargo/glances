@@ -36,6 +36,7 @@ responsible for the bold-with-no-colour rendering.
 from __future__ import annotations
 
 import asyncio
+import re
 from typing import Any, ClassVar
 
 from glances.folder_list import FolderList
@@ -43,6 +44,11 @@ from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.plugins.plugin.thresholds_v5 import compute_level
 
 _MB_TO_BYTES = 1_000_000  # v4 parity: int(threshold) * 1e6 — decimal mega, NOT 1024**2.
+
+# Threshold-key shape FolderList reads itself, outside the base class's
+# watched-field pipeline (base_v5.GlancesPluginBase._recognises_threshold_key):
+# `folder_<N>_<level>`, keyed by list position (glances/folder_list.py:74-76).
+_FOLDER_INDEX_RE = re.compile(r"^folder_\d+$")
 
 
 class PluginModel(GlancesPluginBase[list]):
@@ -122,3 +128,15 @@ class PluginModel(GlancesPluginBase[list]):
             except (TypeError, ValueError):
                 continue
         return compute_level(size, thresholds, direction="high")
+
+    def _recognises_threshold_key(self, remainder: str) -> bool:
+        """Recognise the `folder_<N>_<level>` shape `FolderList` reads itself.
+
+        `folders` declares no `watched: True` field (thresholds are
+        per-item, list-position-keyed data carried on each item, not a
+        plugin-wide config-key prefix), so the base class's generic
+        `<field>`-suffix rule never matches keys like `folder_1_careful` —
+        this hook is what keeps those recognised without special-casing
+        `folders` in `base_v5.py`.
+        """
+        return bool(_FOLDER_INDEX_RE.match(remainder))

@@ -11,6 +11,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import pytest
 
 from glances.config_v5 import GlancesConfigV5
@@ -223,6 +225,20 @@ def test_fold_excludes_non_numeric(tmp_path, monkeypatch, store):
     assert len(out) == 2  # one mean row + the ERR passthrough
 
 
+def test_generic_alias_field_not_added(tmp_path, monkeypatch, store):
+    """Sensors overrides `_expand_parameters` without calling `super()`, so
+    the generic per-item `alias` field (design §5.5) is never published —
+    sensors keeps its own label-rewriting mechanism only."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nalias=core 0:CPU Package\n")
+    p = PluginModel(store, config)
+    out = _expand(
+        p,
+        [{"label": "Core 0", "unit": "C", "value": 42, "warning": None, "critical": None, "type": "temperature_core"}],
+    )
+    assert out[0]["label"] == "CPU Package"
+    assert "alias" not in out[0]
+
+
 def test_alias_runs_before_fold(tmp_path, monkeypatch, store):
     """Aliases that introduce a shared prefix must be applied before the
     fold, so the renamed rows collapse into one `<prefix> (mean)` row."""
@@ -240,6 +256,32 @@ def test_alias_runs_before_fold(tmp_path, monkeypatch, store):
     assert len(out) == 1
     assert out[0]["label"] == "CPU (mean)"  # only possible if alias ran first
     assert out[0]["value"] == 42
+
+
+def test_apply_aliases_does_not_reparse_config_every_cycle(tmp_path, monkeypatch, store):
+    """`_apply_aliases()` must reuse `self._alias_map` (built once at
+    construction by the base class) rather than re-parsing `[sensors] alias`
+    from config on every cycle (finding 4)."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nalias=core 0:CPU Package\n")
+    p = PluginModel(store, config)
+    assert p._alias_map == {"core 0": "CPU Package"}
+
+    calls: list[tuple[str, str]] = []
+    real_get = type(config).get
+
+    def _spy(self, section, option, *args, **kwargs):
+        calls.append((section, option))
+        return real_get(self, section, option, *args, **kwargs)
+
+    monkeypatch.setattr(type(config), "get", _spy)
+
+    rows = [
+        {"label": "Core 0", "unit": "C", "value": 42, "warning": None, "critical": None, "type": "temperature_core"}
+    ]
+    _expand(p, rows)
+    _expand(p, rows)
+
+    assert ("sensors", "alias") not in calls
 
 
 def _rows_fan(*values):
@@ -449,3 +491,47 @@ def test_hardware_tier_has_no_careful(store, config):
 
 def test_emits_alerts_default_true():
     assert PluginModel.EMITS_ALERTS is True
+
+
+# ---------------------------------------------------------- unrecognised threshold key warning
+#
+# `sensors` resolves its own thresholds (`_resolve_thresholds`) outside the
+# base class's watched-field pipeline, using two tier shapes
+# (`<type>_<level>` and `<type>_<label>_<level>`) the generic <field>-suffix
+# rule in `base_v5._warn_unknown_threshold_keys` cannot express. These keys
+# must not false-positive as "unrecognised" (see
+# `PluginModel._recognises_threshold_key`), while a genuinely unknown key
+# must still warn.
+
+
+def _threshold_warnings(caplog) -> list[str]:
+    return [r.getMessage() for r in caplog.records if "unrecognised threshold key" in r.getMessage()]
+
+
+def test_shipped_temperature_core_keys_do_not_warn(tmp_path, monkeypatch, store, caplog):
+    config = _cfg_with(
+        tmp_path,
+        monkeypatch,
+        "[sensors]\ntemperature_core_careful=45\ntemperature_core_warning=65\ntemperature_core_critical=80\n",
+    )
+    with caplog.at_level(logging.WARNING):
+        PluginModel(store, config)
+    assert _threshold_warnings(caplog) == []
+
+
+def test_per_sensor_threshold_key_does_not_warn(tmp_path, monkeypatch, store, caplog):
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\ntemperature_core_core 0_critical=85\n")
+    with caplog.at_level(logging.WARNING):
+        PluginModel(store, config)
+    assert _threshold_warnings(caplog) == []
+
+
+def test_unknown_sensors_threshold_key_still_warns(tmp_path, monkeypatch, store, caplog):
+    """The hook must not turn off the whole plugin's check — a threshold key
+    that matches neither tier shape still warns."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nnonsense_careful=1\n")
+    with caplog.at_level(logging.WARNING):
+        PluginModel(store, config)
+    warnings = _threshold_warnings(caplog)
+    assert len(warnings) == 1
+    assert "nonsense_careful" in warnings[0]

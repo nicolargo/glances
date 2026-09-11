@@ -32,6 +32,7 @@ See docs/superpowers/specs/2026-07-18-glances-v5-g6b-design.md.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, ClassVar
 
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
@@ -41,6 +42,13 @@ from glances.timer import Timer
 from glances.web_list import GlancesWebList
 
 logger = logging.getLogger(__name__)
+
+# Threshold-key shape `GlancesPortsList`/`GlancesWebList` read themselves,
+# outside the base class's watched-field pipeline
+# (base_v5.GlancesPluginBase._recognises_threshold_key):
+# `port_<N>_rtt_warning` (glances/ports_list.py:86) and
+# `web_<N>_rtt_warning` (glances/web_list.py:78), both stored in [ports].
+_RTT_INDEX_RE = re.compile(r"^(port|web)_\d+_rtt$")
 
 
 class PluginModel(GlancesPluginBase[list]):
@@ -271,3 +279,16 @@ class PluginModel(GlancesPluginBase[list]):
             # `prominent = False`: v4 colours the status text only, never the
             # background.
             self._levels[indice] = {"status": {"level": level, "prominent": False}}
+
+    def _recognises_threshold_key(self, remainder: str) -> bool:
+        """Recognise the `port_<N>_rtt_warning` / `web_<N>_rtt_warning` shapes
+        `GlancesPortsList`/`GlancesWebList` read themselves.
+
+        `ports` declares no `watched: True` field (`status` is a
+        heterogeneous union with a bespoke level ladder, see
+        `_derived_parameters()` above), so the base class's generic
+        `<field>`-suffix rule never matches keys like `port_1_rtt_warning` —
+        this hook is what keeps those recognised without special-casing
+        `ports` in `base_v5.py`.
+        """
+        return bool(_RTT_INDEX_RE.match(remainder))

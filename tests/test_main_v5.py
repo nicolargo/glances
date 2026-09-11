@@ -104,6 +104,30 @@ def test_meangpu_fahrenheit_default_false():
     assert getattr(args, "fahrenheit", False) is False
 
 
+def test_disable_unicode_flag_parses():
+    parser = build_parser()
+    args = parser.parse_args(["--disable-unicode"])
+    assert args.disable_unicode is True
+
+
+def test_disable_unicode_default_false():
+    parser = build_parser()
+    args = parser.parse_args([])
+    assert args.disable_unicode is False
+
+
+def test_fs_free_space_flag_parses():
+    parser = build_parser()
+    args = parser.parse_args(["--fs-free-space"])
+    assert args.fs_free_space is True
+
+
+def test_fs_free_space_default_false():
+    parser = build_parser()
+    args = parser.parse_args([])
+    assert args.fs_free_space is False
+
+
 def test_build_parser_version_exits(capsys):
     parser = build_parser()
     with pytest.raises(SystemExit) as excinfo:
@@ -306,6 +330,22 @@ def test_shell_action_allows_operators_without_the_flag(config):
     args = build_parser().parse_args(["-s"])
     _, scheduler, _, _, _tui = assemble(args, config)
     assert scheduler.alerts.actions["action"].allow_operators() is True
+
+
+def test_fs_free_space_flag_overlays_the_config(config):
+    """`--fs-free-space` (v4 `main.py:832` config fallback, design §5.4) is
+    merged into `[fs] free_space` via the same overlay mechanism as
+    `--disable-config-exec` — the fs plugin only ever reads its own config
+    section, never `args`."""
+    args = build_parser().parse_args(["-s", "--fs-free-space"])
+    assemble(args, config)
+    assert config._merged.get("fs", {}).get("free_space") is True
+
+
+def test_fs_free_space_config_untouched_without_the_flag(config):
+    args = build_parser().parse_args(["-s"])
+    assemble(args, config)
+    assert config._merged.get("fs", {}).get("free_space") is None
 
 
 def test_assemble_resolves_bind_and_port_from_cli(config):

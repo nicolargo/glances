@@ -46,6 +46,11 @@ class PluginModel(GlancesPluginBase[list]):
     plugin_name: ClassVar[str] = "diskio"
     IS_COLLECTION: ClassVar[bool] = True
 
+    # `hide_zero` display filter (design §5.1) — v4 `diskio/__init__.py:98`
+    # (`read_bytes_rate_per_sec` / `write_bytes_rate_per_sec` there; v5 keeps
+    # the base field names since `rate: True` replaces the value in place).
+    HIDE_ZERO_FIELDS: ClassVar[list[str]] = ["read_bytes", "write_bytes"]
+
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "disk_name": {
             "description": "Disk name (e.g. sda, nvme0n1).",

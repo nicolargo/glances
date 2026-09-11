@@ -41,14 +41,24 @@ document donne l'inventaire ligne à ligne dont ils sortent.
 
 | Surface | Total | ✅ porté | ⚠️ partiel | ❌ absent | 🚫 retiré |
 |---|---:|---:|---:|---:|---:|
-| Options CLI | 86 | 14 | 12 | 59 | 1 |
-| Clés de configuration | 212 | 135 | 16 | 58 | 3 |
+| Options CLI | 86 | 16 | 10 | 59 | 1 |
+| Clés de configuration | 212 | 146 | 16 | 47 | 3 |
 | Hotkeys TUI | 62 | 15 | 0 | 47 | 0 |
-| **Total** | **360** | **164** | **28** | **164** | **4** |
+| **Total** | **360** | **177** | **26** | **153** | **4** |
+
+**2026-09-10 — parity wave 1.** 13 lignes recomptées ici sont passées de
+`⚠️ partiel`/`❌ absent` à `✅ porté` : CLI `--disable-unicode`, `--byte` (2) ;
+config `[network]` `hide_no_up`, `hide_no_ip`, `hide_zero`,
+`hide_threshold_bytes`, `alias`, `[diskio]` `hide_zero`,
+`hide_threshold_bytes`, `alias`, `[fs]` `free_space`, `allow`, `alias` (11).
+Counted by re-scanning the status column of every row in Parts 1–3 (the
+legend/vocabulary rows are not tables and are excluded), not by arithmetic on
+the prior totals. See
+`docs/superpowers/specs/2026-09-10-glances-v5-parity-wave1-design.md` §4–5.
 
 La lecture de ces chiffres demande une précaution : les trois surfaces ne pèsent
 pas le même poids. La configuration — le cœur fonctionnel, 212 clés — est portée
-à **64 %**, et l'essentiel de ce qui manque est du phasage assumé (18 exporteurs
+à **69 %**, et l'essentiel de ce qui manque est du phasage assumé (18 exporteurs
 sur 24 et le mode browser sont des chantiers de Phase 3). Le TUI et la CLI sont
 au contraire très en retard, et c'est là que se trouvent les régressions
 ressenties par un utilisateur qui lancerait v5 aujourd'hui.
@@ -72,21 +82,25 @@ Classés par ce qu'ils coûtent à un utilisateur v4 qui passerait à v5 aujourd
 5. **La famille `<...>_log` n'existe plus** : v5 historise toute transition
    ≥ warning sans possibilité d'exclusion. `[cpu] total_log`, `[load] log`,
    `[network] wlan0_rx_log`… sont des clés mortes.
-6. **Des seuils renommés en silence, dont un changement d'unité** :
+6. **Des seuils renommés, dont un changement d'unité** :
    `[network] rx_*`/`tx_*` → `bytes_recv_*`/`bytes_sent_*` **et pourcentage →
    ratio [0,1]** ; `[processlist] cpu_*` → `cpu_percent_*` ;
-   `[fs] /_careful` → `/_percent_careful`. Les anciennes clés sont ignorées sans
-   avertissement — un utilisateur ne voit pas que ses seuils ne s'appliquent plus.
-7. **Les filtres d'affichage** `hide_zero`, `hide_threshold_bytes`,
+   `[fs] /_careful` → `/_percent_careful`. Les anciennes clés restent ignorées
+   (décision maintenue, parity wave 1) mais ne sont plus **silencieuses** :
+   une clé de seuil non reconnue déclenche désormais une WARNING au démarrage
+   (`base_v5.py::_warn_unknown_threshold_keys`, `…decisions.md` §3.2).
+7. ~~**Les filtres d'affichage** `hide_zero`, `hide_threshold_bytes`,
    `hide_no_up`, `hide_no_ip`, `[fs] allow`, `[fs] free_space` sont absents, et
-   `alias` n'est porté que par `sensors` (v4 : `network`, `diskio`, `fs`,
-   `sensors`).
+   `alias` n'est porté que par `sensors`~~ — **corrigé (parity wave 1,
+   2026-09-10)** : tous portés en générique dans `base_v5` pour `network`,
+   `diskio`, `fs` ; `sensors` garde son propre mécanisme, inchangé. Voir §14,
+   §18, §19 ci-dessous.
 8. **18 exporteurs sur 24 et le mode browser** ne sont pas portés — phasage
    assumé (Phase 3), mais c'est le plus gros volume de clés inertes.
-9. **Deux options v5 déclarées mais mortes** : `--disable-unicode` est lu par
-   `main_v5.py:659` alors que le parser ne le déclare pas (`getattr` renvoie
-   toujours `False`) ; `--byte` est parsé et transmis mais le renderer réseau
-   force les bits/s (`network/render_curses_v5.py:30`, `TODO(G2+)`).
+9. ~~**Deux options v5 déclarées mais mortes** : `--disable-unicode` …
+   `--byte` …~~ — **corrigées (parity wave 1, 2026-09-10)** : `--disable-unicode`
+   est déclaré dans `build_parser()` ; `--byte` est lu par le renderer réseau.
+   Voir §4 ci-dessus.
 10. **Aucun alias court hors `-C -d -s -b`** : `-V -p -B -u -t -w -c -q -f -0..-6`
     sont absents. Chaque ligne de commande v4 un peu ancienne casse.
 
@@ -148,7 +162,7 @@ réellement le code qui la consomme. Présence dans le parser v5 ≠ portage.
 |---|---|---|---|---|
 | `-u <username>` | `glances/main.py:429` | ❌ absent | `glances/main_v5.py:78-261` ; `glances/security_v5.py:119-122` (les identifiants viennent de `[outputs] username`/`password`) | En v5 les identifiants sont **uniquement** dans `glances.conf`. |
 | `--username` (prompt) | `glances/main.py:430` | ❌ absent | idem ci-dessus | Aucun prompt interactif au démarrage en v5. |
-| `--password` (prompt) | `glances/main.py:437` | ⚠️ partiel | `glances/main_v5.py:251` (`--set-password`) ; `glances/main_v5.py:493-525` (`cli_set_password()`) | v5 offre `--set-password`, qui **génère et affiche** un hash PBKDF2 à coller dans `[outputs] password`. Ce n'est pas le même comportement : v4 définit *et persiste* le mot de passe (fichier `.pwd`) et l'utilise pour la session courante ; v5 ne modifie aucun fichier et n'a pas de prompt au démarrage. Les hashes v4 ne sont pas compatibles v5 (`glances/security_v5.py:23`). |
+| `--password` (prompt) | `glances/main.py:437` | ⚠️ partiel | `glances/main_v5.py:265` (`--set-password`) ; `glances/main_v5.py:493-525` (`cli_set_password()`) | v5 offre `--set-password`, qui **génère et affiche** un hash PBKDF2 à coller dans `[outputs] password`. Ce n'est pas le même comportement : v4 définit *et persiste* le mot de passe (fichier `.pwd`) et l'utilise pour la session courante ; v5 ne modifie aucun fichier et n'a pas de prompt au démarrage. Les hashes v4 ne sont pas compatibles v5 (`glances/security_v5.py:23`). |
 | `--snmp-community` | `glances/main.py:444` | ❌ absent | `glances/main_v5.py:78-261` | Le mode SNMP (fallback client sur machine sans Glances) n'existe pas en v5. Aucune décision écrite ne le retire explicitement — statut `absent`, pas `retiré`. |
 | `--snmp-port` | `glances/main.py:445` | ❌ absent | idem | idem. |
 | `--snmp-version` | `glances/main.py:446` | ❌ absent | idem | idem. |
@@ -180,12 +194,12 @@ réellement le code qui la consomme. Présence dans le parser v5 ≠ portage.
 | `-6`, `--meangpu` | `glances/main.py:295` | ⚠️ partiel | `glances/main_v5.py:214` (parser) ; `glances/main_v5.py:655` ; `glances/outputs/glances_curses_v5.py:242`, `:796` ; `glances/plugins/gpu/render_curses_v5.py:134` | Câblé jusqu'au renderer GPU. **Pas d'alias court `-6`.** |
 | `--fahrenheit` | `glances/main.py:633` | ✅ porté | `glances/main_v5.py:221` (parser) ; `glances/main_v5.py:656` ; `glances/outputs/glances_curses_v5.py:243`, `:797` ; `glances/plugins/sensors/render_curses_v5.py:107` ; `glances/plugins/gpu/render_curses_v5.py:135` | Appliqué aux capteurs *et* au GPU, comme en v4. |
 | `--hide-public-info` | `glances/main.py:661` | ✅ porté | `glances/main_v5.py:228` (parser) ; `glances/main_v5.py:657` ; `glances/outputs/glances_curses_v5.py:244`, `:798` ; `glances/plugins/ip/render_curses_v5.py:44` | |
-| `-b`, `--byte` | `glances/main.py:604` | ⚠️ partiel | `glances/main_v5.py:235` (parser) ; `glances/main_v5.py:658` ; `glances/outputs/glances_curses_v5.py:247`, `:799` ; `glances/plugins/containers/render_curses_v5.py:257` | **Régression fonctionnelle** : en v4 le drapeau agit sur `network` (`glances/plugins/network/__init__.py:273`) *et* `containers` (`glances/plugins/containers/__init__.py:491`). En v5 seul `containers` le lit ; le renderer réseau force les bits/s et porte le `TODO(G2+)` explicite (`glances/plugins/network/render_curses_v5.py:30`, `:54-61`). |
+| `-b`, `--byte` | `glances/main.py:604` | ✅ porté | `glances/main_v5.py:235` (parser) ; `glances/main_v5.py:658` ; `glances/outputs/glances_curses_v5.py:247`, `:799` ; `glances/plugins/containers/render_curses_v5.py:257` ; `glances/plugins/network/render_curses_v5.py:100` (`byte = bool((view or {}).get("byte"))`), `:66-69` (pas de ×8, pas de suffixe `b`) | **Corrigé (parity wave 1, 2026-09-10)** : le renderer réseau lit désormais `view["byte"]`, v4 parity (`network/__init__.py:273`). Le `TODO(G2+)` sur `max_width`/`args` reste ouvert (portée hors sujet) mais ne concerne plus `--byte`. |
 | `-0`, `--disable-irix` | `glances/main.py:246` | ❌ absent | `glances/plugins/load/render_curses_v5.py:33` (« Irix mode (v4 `args.disable_irix`) is not yet plumbed through v5 ») | Constat écrit dans le code v5. |
 | `--light`, `--enable-light` | `glances/main.py:238` | ❌ absent | `glances/main_v5.py:78-261` ; `glances/outputs/glances_curses_v5.py:226` (`[outputs] theme` = dark/light, **couleurs** et non « light mode ») | Attention au faux ami : `theme=light` en v5 est une palette de couleurs, pas le « light mode » de v4 (n'afficher que le menu du haut). |
 | `--disable-bold` | `glances/main.py:305` | ❌ absent | `glances/main_v5.py:78-261` ; `glances/outputs/glances_curses_v5.py:1408`, `:1412` (le gras est appliqué inconditionnellement au rôle HEADER) | |
 | `--disable-bg` | `glances/main.py:312` | ❌ absent | `glances/main_v5.py:78-261` ; `glances/outputs/glances_curses_v5.py:1376-1378` (paires de couleurs inversées toujours initialisées) | |
-| `--disable-unicode` | `glances/main.py:654` | ⚠️ partiel | `glances/main_v5.py:659` (`disable_unicode=getattr(args, "disable_unicode", False)`) ; `glances/outputs/glances_curses_v5.py:203`, `:252` | **Cas particulier** : la TUI v5 accepte et utilise le paramètre, mais **aucune option `--disable-unicode` n'est déclarée dans `build_parser()`** (`glances/main_v5.py:78-261`) — le `getattr` retourne donc toujours `False`. Le mécanisme existe, l'entrée CLI manque. |
+| `--disable-unicode` | `glances/main.py:654` | ✅ porté | `glances/main_v5.py:250` (`add_argument("--disable-unicode", dest="disable_unicode", ...)`) ; `glances/main_v5.py:679` (`disable_unicode=getattr(args, "disable_unicode", False)`) ; `glances/outputs/glances_curses_v5.py:203`, `:252` | **Corrigé (parity wave 1, 2026-09-10)** : l'option est désormais déclarée dans `build_parser()` ; le mécanisme consommateur existait déjà et est inchangé. |
 | `--sparkline` | `glances/main.py:647` | ❌ absent | `glances/plugins/quicklook/model_v5.py:19` (« **No sparkline** (no v5 history store yet) — bars only ») | Dépend de l'absence d'historique en v5 (voir `--disable-history`). |
 | `--disable-separator` (`enable_separator`) | `glances/main.py:329` | ❌ absent | `glances/main_v5.py:78-261` | Aucune occurrence de `enable_separator`/`disable_separator` dans les fichiers `*_v5.py`. |
 | `--disable-cursor` | `glances/main.py:336` | ❌ absent | `glances/main_v5.py:78-261` ; `glances/outputs/glances_curses_v5.py:147-165` | Il n'y a pas de curseur de sélection de processus en v5, donc rien à désactiver. |
@@ -231,13 +245,13 @@ réellement le code qui la consomme. Présence dans le parser v5 ≠ portage.
 
 | Option | v4 (file:line) | Statut v5 | Preuve v5 (file:line) | Note |
 |---|---|---|---|---|
-| `--disable-config-exec` | `glances/main.py:668` | ⚠️ partiel | `glances/main_v5.py:243` (parser) ; `glances/main_v5.py:550-556` (overlay `[global] disable_config_exec`, sens unique — CVE-2026-68519) ; `glances/actions_v5/shell/__init__.py:79` ; `glances/amps_list_v5.py:61-67` | Câblé pour les actions shell et les AMP. **Différence** : en v4 le drapeau couvre *aussi* l'exécution des backticks dans les valeurs de configuration (aide `glances/main.py:673-675`) ; côté v5 je n'ai trouvé aucune évaluation de backtick dans `glances/config_v5.py`, donc ce volet est sans objet — mais je n'ai pas de trace écrite confirmant que c'est une décision plutôt qu'un oubli. |
+| `--disable-config-exec` | `glances/main.py:668` | ⚠️ partiel | `glances/main_v5.py:257` (parser) ; `glances/main_v5.py:550-556` (overlay `[global] disable_config_exec`, sens unique — CVE-2026-68519) ; `glances/actions_v5/shell/__init__.py:79` ; `glances/amps_list_v5.py:61-67` | Câblé pour les actions shell et les AMP. **Différence** : en v4 le drapeau couvre *aussi* l'exécution des backticks dans les valeurs de configuration (aide `glances/main.py:673-675`) ; côté v5 je n'ai trouvé aucune évaluation de backtick dans `glances/config_v5.py`, donc ce volet est sans objet — mais je n'ai pas de trace écrite confirmant que c'est une décision plutôt qu'un oubli. |
 
 ### 9. Divers / diagnostic
 
 | Option | v4 (file:line) | Statut v5 | Preuve v5 (file:line) | Note |
 |---|---|---|---|---|
-| `-V`, `--version` | `glances/main.py:190` | ⚠️ partiel | `glances/main_v5.py:256-259` (`--version` seul, `version=f"Glances {_VERSION}"`) | **Pas d'alias court `-V`** ; et la sortie v5 est une seule ligne, là où v4 imprime aussi la version Python, psutil, l'API et le chemin du fichier de log (`glances/main.py:170-178`). |
+| `-V`, `--version` | `glances/main.py:190` | ⚠️ partiel | `glances/main_v5.py:270` (`--version` seul, `version=f"Glances {_VERSION}"`) | **Pas d'alias court `-V`** ; et la sortie v5 est une seule ligne, là où v4 imprime aussi la version Python, psutil, l'API et le chemin du fichier de log (`glances/main.py:170-178`). |
 | `-d`, `--debug` | `glances/main.py:191` | ✅ porté | `glances/main_v5.py:110` (parser) ; `glances/main_v5.py:736` (`setup_logging(args.debug)`) ; `glances/main_v5.py:290-299` | |
 | `-t`, `--time` | `glances/main.py:454` | ❌ absent | `glances/main_v5.py:78-261` ; `glances/scheduler_v5.py:96-102` (`[<plugin>] refresh` puis `[global] refresh` / `refresh_time`) ; `glances/main_v5.py:630-639` (cadence TUI) | Le **comportement** est disponible par configuration (`[global] refresh`), pas en ligne de commande. Un script v4 avec `-t 5` échoue. |
 | `--stdout` | `glances/main.py:543` | ❌ absent | `glances/main_v5.py:78-261` (aucune option stdout) | |
@@ -260,8 +274,8 @@ réellement le code qui la consomme. Présence dans le parser v5 ≠ portage.
 
 | Statut | Nombre |
 |---|---|
-| ✅ porté | 14 |
-| ⚠️ partiel | 12 |
+| ✅ porté | 16 |
+| ⚠️ partiel | 10 |
 | ❌ absent | 59 |
 | 🚫 retiré (décision) | 1 (`--theme-white`, en réalité déjà absent de v4) |
 | ❓ indéterminé | 0 |
@@ -275,7 +289,7 @@ shtab) ; la 86ᵉ (`--theme-white`) n'existe que dans `docs/cmds.rst`.
 
 | Option v5 | Preuve (file:line) | Note |
 |---|---|---|
-| `--set-password` | `glances/main_v5.py:251` ; `glances/main_v5.py:493-525` | Génère un hash PBKDF2 sur stdout ; ne touche pas `glances.conf`. |
+| `--set-password` | `glances/main_v5.py:265` ; `glances/main_v5.py:493-525` | Génère un hash PBKDF2 sur stdout ; ne touche pas `glances.conf`. |
 | `--api-doc` / `--no-api-doc` | `glances/main_v5.py:103-108` ; `glances/webserver_v5.py:114` | Réutilise le nom d'une option v4 au comportement totalement différent (voir §9). |
 | `--no-tui` (alias de `--quiet`) | `glances/main_v5.py:189-199` | Devenir non tranché : `docs/architecture/glances-v5-architecture-decisions.md:155-162`. |
 
@@ -284,8 +298,10 @@ shtab) ; la 86ᵉ (`--theme-white`) n'existe que dans `docs/cmds.rst`.
 1. **`--bind` change de défaut** : `0.0.0.0` (v4, `glances/main.py:425`) → `127.0.0.1` (v5, `glances/main_v5.py:71`). Impact sur *tous* les déploiements serveur non configurés, y compris les conteneurs.
 2. **`-s` change de sens** : XML-RPC (v4) → REST+WebUI (v5). Les scripts v4 utilisant `-w` cassent.
 3. **Aucun alias court n'a été porté** hors `-C`, `-d`, `-s`, `-b` : `-V -0 -1 -2 -3 -4 -5 -6 -p -B -u -t -w -c -q -f` n'existent pas en v5.
-4. **`--byte` est une régression silencieuse** : accepté par le parser v5, mais sans effet sur le plugin `network` (`glances/plugins/network/render_curses_v5.py:30`).
-5. **`--disable-unicode` est mort-né** : la TUI v5 lit `args.disable_unicode` (`glances/main_v5.py:659`) alors que le parser ne le déclare pas — le `getattr` renvoie toujours `False`.
+
+**Corrigés (parity wave 1, 2026-09-10)** — retirés de la liste ci-dessus, voir
+les lignes correspondantes dans la table §4 : `--byte` agit désormais sur le
+renderer `network` ; `--disable-unicode` est déclaré dans `build_parser()`.
 
 
 ---
@@ -478,11 +494,11 @@ et sont détaillées dans leur sous-table.
 | `<iface>_rx_<level>` / `<iface>_tx_<level>` (ex. `wlan0_rx_careful`) | `glances/plugins/plugin/model.py:964` | ⚠️ partiel | `thresholds_v5.py:124-128` | Forme v5 : `wlan0_bytes_recv_careful` / `wlan0_bytes_sent_careful`. |
 | `<iface>_rx_<level>_action` (ex. `wlan0_rx_critical_action`) | `glances/plugins/plugin/model.py:980` | ⚠️ partiel | `glances/alerts_v5.py:782` | Forme v5 : `wlan0_bytes_recv_critical_action`. |
 | `<iface>_rx_log` / `<iface>_tx_log` | `glances/plugins/plugin/model.py:1002` | ❌ absent | — | |
-| `hide_no_up` | `glances/plugins/network/__init__.py:96` | ❌ absent | — (aucune occurrence dans `*_v5.py`) | |
-| `hide_no_ip` | `glances/plugins/network/__init__.py:97` | ❌ absent | — | |
-| `hide_zero` | `glances/plugins/network/__init__.py:86` | ❌ absent | — | |
-| `hide_threshold_bytes` | `glances/plugins/network/__init__.py:87` | ❌ absent | — | |
-| `alias` | `glances/plugins/plugin/model.py:1075-1081` (`read_alias`) | ❌ absent | — (`alias` n'est lu que par `sensors` en v5) | |
+| `hide_no_up` | `glances/plugins/network/__init__.py:96` | ✅ porté | `glances/plugins/network/model_v5.py:152` (lecture) ; `:177-178` (`_grab_stats`, retire l'item) | **Corrigé (parity wave 1, 2026-09-10)**. Parité v4 : l'interface est retirée de la charge utile, pas seulement masquée. |
+| `hide_no_ip` | `glances/plugins/network/__init__.py:97` | ✅ porté | `glances/plugins/network/model_v5.py:153` (lecture) ; `:164-165`, `:179-182` (`_grab_stats`, retire l'item) | **Corrigé (parity wave 1, 2026-09-10)**. |
+| `hide_zero` | `glances/plugins/network/__init__.py:86` | ✅ porté | `glances/plugins/plugin/base_v5.py:261` (lecture générique) ; `network/model_v5.py:63` (`HIDE_ZERO_FIELDS = ["bytes_recv", "bytes_sent"]`) ; `base_v5.py:616-660` (`_compute_hide_zero`) ; `network/render_curses_v5.py:137` (le renderer saute la ligne) | **Corrigé (parity wave 1, 2026-09-10)**, mécanisme générique dans `base_v5` (§5.1 du plan). **Divergence délibérée documentée** : v5 publie un seul booléen `hidden` par item (réduction `all(...)` déjà faite côté modèle), là où v4 exposait un état par champ — les deux consommateurs v4 (`network`, `diskio`) recalculaient le même `all(...)`, donc pas de perte fonctionnelle pour le rendu. |
+| `hide_threshold_bytes` | `glances/plugins/network/__init__.py:87` | ✅ porté | `glances/plugins/plugin/base_v5.py:262` (lecture générique) ; `base_v5.py:616-660` (`_compute_hide_zero`, seuil strict `>`) | **Corrigé (parity wave 1, 2026-09-10)**. |
+| `alias` | `glances/plugins/plugin/model.py:1075-1081` (`read_alias`) | ✅ porté | `glances/plugins/plugin/base_v5.py:392-409` (`_read_alias`, générique) ; `:690-714` (`_apply_alias`) ; `network/render_curses_v5.py` affiche l'alias quand présent | **Corrigé (parity wave 1, 2026-09-10)** : `alias` est désormais générique dans `base_v5`, appliqué à `network`/`diskio`/`fs` (et matché par `show`/`hide`, v4 parity) ; `sensors` garde son propre mécanisme, plus riche, inchangé. |
 | Nouveaux seuils v5 `errors_in_<level>` / `errors_out_<level>` | — | ✅ porté | `glances/plugins/network/model_v5.py:50` (`_DEFAULT_ERROR_THRESHOLDS`) | Défauts 1/5/20 err/s ; nouveau en v5. |
 
 ### 15. `[ip]` (conf:366-399)
@@ -521,9 +537,9 @@ et sont détaillées dans leur sous-table.
 |---|---|---|---|---|
 | `disable` | `glances/main.py:734` | ✅ porté | `glances/plugins/plugin/base_v5.py:166` | |
 | `hide` / `show` | `glances/plugins/plugin/model.py:741-754` | ✅ porté | `glances/plugins/plugin/base_v5.py:202-203`, `291-309` | Filtre sur `disk_name`. |
-| `hide_zero` | `glances/plugins/diskio/__init__.py:93` | ❌ absent | — | |
-| `hide_threshold_bytes` | `glances/plugins/diskio/__init__.py:94` | ❌ absent | — | |
-| `alias` | `glances/plugins/plugin/model.py:1075` | ❌ absent | — | |
+| `hide_zero` | `glances/plugins/diskio/__init__.py:93` | ✅ porté | `glances/plugins/plugin/base_v5.py:261` (lecture générique) ; `diskio/model_v5.py:52` (`HIDE_ZERO_FIELDS = ["read_bytes", "write_bytes"]`) ; `base_v5.py:616-660` (`_compute_hide_zero`) ; `diskio/render_curses_v5.py:105` (le renderer saute la ligne) | **Corrigé (parity wave 1, 2026-09-10)**, même mécanisme générique et même divergence documentée qu'en `[network]` ci-dessus (un seul booléen `hidden` par item). |
+| `hide_threshold_bytes` | `glances/plugins/diskio/__init__.py:94` | ✅ porté | `glances/plugins/plugin/base_v5.py:262` (lecture générique) ; `base_v5.py:616-660` (`_compute_hide_zero`, seuil strict `>`) | **Corrigé (parity wave 1, 2026-09-10)**. |
+| `alias` | `glances/plugins/plugin/model.py:1075` | ✅ porté | `glances/plugins/plugin/base_v5.py:392-409` (`_read_alias`, générique) ; `:690-714` (`_apply_alias`) ; `diskio/render_curses_v5.py:120` affiche l'alias quand présent | **Corrigé (parity wave 1, 2026-09-10)** : générique dans `base_v5`, cf. la ligne `alias` de `[network]` ci-dessus. |
 | `rx_latency_<level>` / `tx_latency_<level>` (+ formes `<disk>_…`, `_log`) | `glances/plugins/plugin/model.py:964` | ❌ absent | `glances/plugins/diskio/model_v5.py:23-25` (« `read_time`/`write_time` et les `read_latency`/`write_latency` dérivés de v4 ne sont pas portés — reportés au mode `--diskio-latency` ») | Toute la famille latence disparaît. |
 | `<disk>_rx_<level>` / `<disk>_tx_<level>` (débit, ex. `dm-0_rx_careful`) | `glances/plugins/plugin/model.py:964` | ⚠️ partiel | champs v5 `read_bytes` / `write_bytes` avec `strict_thresholds=True` (`glances/plugins/diskio/model_v5.py:19`, `75`) | Forme v5 : `dm-0_read_bytes_careful` / `dm-0_write_bytes_careful`. `strict` ⇒ pas de repli sur `<level>` nu. Aucun défaut : seuils opt-in, comme en v4. |
 
@@ -532,14 +548,14 @@ et sont détaillées dans leur sous-table.
 | Clé | v4 lit où (file:line) | Statut v5 | Preuve v5 (file:line) | Note |
 |---|---|---|---|---|
 | `disable` | `glances/main.py:734` | ✅ porté | `glances/plugins/plugin/base_v5.py:166` | |
-| `free_space` | `glances/main.py:832` | ❌ absent | — (aucune occurrence dans `*_v5.py`) | Le TUI v5 affiche toujours l'espace utilisé. |
+| `free_space` | `glances/main.py:832` | ✅ porté | `glances/plugins/fs/model_v5.py:104-111` (lecture + merge CLI) ; `glances/main_v5.py:245-248` (`--fs-free-space`), `:577-582` (CLI gagne sur la clé de config, v4 parity `main.py:832`) ; `fs/render_curses_v5.py:78-80` (bascule used↔free) | **Corrigé (parity wave 1, 2026-09-10)** pour la clé de config et l'option CLI. **Reste absent** : la touche `F` du TUI v4 — délibérément différée au groupe TUI (§10, roadmap `glances-v5-architecture-decisions.md`, design §5.4), pas encore de bascule au clavier en v5. |
 | `refresh` | `glances/plugins/plugin/model.py:773` | ✅ porté | `glances/scheduler_v5.py:157-159` | |
 | `hide` / `show` | `glances/plugins/plugin/model.py:741-754` | ✅ porté | `glances/plugins/plugin/base_v5.py:202-203` | Filtre sur `mnt_point`. |
 | `careful` / `warning` / `critical` (nus) | `glances/plugins/plugin/model.py:964` | ✅ porté | champ `percent` non-strict → `<level>` nu (`thresholds_v5.py:130-137`) | |
 | `<mnt>_<level>` (ex. `/_careful`) | `glances/plugins/plugin/model.py:964` | ⚠️ partiel | `thresholds_v5.py:124-128` (formes acceptées : `<pk>_<field>_<level>`) | Forme v5 : `/_percent_careful`. `/_careful` est ignoré. |
 | `<mnt>_<level>_action` (ex. `/_critical_action`) | `glances/plugins/plugin/model.py:980` | ⚠️ partiel | `glances/alerts_v5.py:782` | Forme v5 : `/_percent_critical_action`. |
-| `allow` | `glances/plugins/fs/__init__.py:161` | ❌ absent | `glances/plugins/fs/model_v5.py:122-147` (aucun filtrage par `fstype`) | Les points de montage logiques (issue #448, ex. `shm`) ne peuvent plus être ajoutés. |
-| `alias` | `glances/plugins/plugin/model.py:1075` | ❌ absent | — | |
+| `allow` | `glances/plugins/fs/__init__.py:161` | ✅ porté | `glances/plugins/fs/model_v5.py:101-104` (lecture) ; `:122-147` (`_collect_sync`, filtrage par `fstype` en substring, v4 parity issue #448) | **Corrigé (parity wave 1, 2026-09-10)**. |
+| `alias` | `glances/plugins/plugin/model.py:1075` | ✅ porté | `glances/plugins/plugin/base_v5.py:392-409` (`_read_alias`, générique) ; `:690-714` (`_apply_alias`) ; `fs/render_curses_v5.py:113` affiche l'alias quand présent | **Corrigé (parity wave 1, 2026-09-10)** : générique dans `base_v5`, cf. la ligne `alias` de `[network]` ci-dessus. |
 
 ### 20. `[irq]` (conf:490-493)
 
@@ -603,7 +619,7 @@ et sont détaillées dans leur sous-table.
 | `<type>_<label>_<level>` (ex. `temperature_core_Ambient_careful`) | `glances/plugins/plugin/model.py:964` | ✅ porté | `glances/plugins/sensors/model_v5.py:350-352` (tier 1, issue #2058) | |
 | `<type>_<label>_log` | `glances/plugins/plugin/model.py:1002` | ❌ absent | — | |
 | `<type>_<label>_<level>_action` (ex. `temperature_core_Ambient_critical_action`) | `glances/plugins/plugin/model.py:980` | ❌ absent | `glances/alerts_v5.py:761-789` interroge `<label>_value_<level>_action`, `value_<level>_action`, `<level>_action` | Forme v4 non reconnue ; seule `<label>_value_<level>_action` (label = clé primaire) fonctionne. |
-| `alias` | `glances/plugins/plugin/model.py:1075` | ✅ porté | `glances/plugins/sensors/model_v5.py:194-214` | Seul plugin v5 à honorer `alias`. |
+| `alias` | `glances/plugins/plugin/model.py:1075` | ✅ porté | `glances/plugins/sensors/model_v5.py:194-214` | Mécanisme propre à `sensors` (label / `label_type`), inchangé. Depuis parity wave 1 (2026-09-10) un `alias` générique existe aussi dans `base_v5` pour `network`/`diskio`/`fs` (§14, §18, §19) — `sensors` n'est plus le seul, mais garde le sien, plus riche. |
 | `host` / `port` (hddtemp) | `glances/plugins/sensors/sensor/glances_hddtemp.py:30-31` | ✅ porté | `glances/plugins/sensors/model_v5.py:137-138` | Non livrées dans `[sensors]` (elles apparaissent, à tort, sous `[hddtemp]`). |
 
 ### 27. `[processcount]` (conf:604-607)
@@ -759,12 +775,18 @@ v5 n'embarque que 6 exporteurs : `csv`, `json`, `influxdb`, `influxdb2`,
 
 | Statut | Nombre de lignes |
 |---|---|
-| ✅ porté | 135 |
+| ✅ porté | 146 |
 | ⚠️ partiel | 16 |
-| ❌ absent | 58 |
+| ❌ absent | 47 |
 | 🚫 retiré (décision) | 3 |
 | ❓ indéterminé | 0 |
 | **Total** | **212 lignes sur 40 sous-tables** |
+
+**2026-09-10 — parity wave 1.** 11 lignes passées de `❌ absent` à `✅ porté` :
+`[network]` `hide_no_up`, `hide_no_ip`, `hide_zero`, `hide_threshold_bytes`,
+`alias` ; `[diskio]` `hide_zero`, `hide_threshold_bytes`, `alias` ; `[fs]`
+`free_space`, `allow`, `alias`. Voir
+`docs/superpowers/specs/2026-09-10-glances-v5-parity-wave1-design.md` §5.
 
 Les familles de seuils / actions / `min_duration` sont comptées comme **une
 ligne par section** (cf. consigne), pas clé par clé.
@@ -782,9 +804,10 @@ ligne par section** (cf. consigne), pas clé par clé.
    clés mortes.
 4. **Famille latence disque supprimée** (§18) : `rx_latency_*` / `tx_latency_*`
    et toutes leurs variantes par disque ne sont plus lues.
-5. **Filtres d'affichage réseau/diskio perdus** (§14, §18) : `hide_no_up`,
-   `hide_no_ip`, `hide_zero`, `hide_threshold_bytes`, ainsi que `alias` sur tous
-   les plugins sauf `sensors`, et `[fs] allow` / `free_space`.
+5. ~~**Filtres d'affichage réseau/diskio perdus** (§14, §18)~~ — **corrigé
+   (parity wave 1, 2026-09-10)** : `hide_no_up`, `hide_no_ip`, `hide_zero`,
+   `hide_threshold_bytes`, `alias` (§14, §18), `[fs] allow` / `free_space`
+   (§19) sont tous portés.
 
 #### Divergences de comportement par défaut à documenter en breaking change
 
@@ -976,24 +999,25 @@ same SIGINT behaviour — I did not trace `main_v5.py`'s signal wiring, which is
 
 Par ordre de valeur pour l'utilisateur, pas par ordre de difficulté.
 
-1. **Trancher la question des seuils renommés** (`rx_*` → `bytes_recv_*` et
-   pourcentage → ratio, `cpu_*` → `cpu_percent_*`, `<mnt>_careful` →
-   `<mnt>_percent_careful`). C'est le seul écart qui **casse une configuration
-   existante sans le dire**. Deux options : accepter les orthographes v4 comme
-   alias, ou assumer le renommage et émettre un WARNING au démarrage sur toute
-   clé de seuil non reconnue dans une section de plugin.
+1. ~~**Trancher la question des seuils renommés**~~ — **fait (parity wave 1,
+   2026-09-10)** : rename gardé, WARNING au démarrage sur toute clé de seuil
+   non reconnue (`base_v5.py::_warn_unknown_threshold_keys`). Reste à écrire
+   dans les notes de version 5.0.0 (breaking change).
 2. **Reconstituer le TUI interactif** — gestion des processus d'abord (curseur,
    `k`, `+`/`-`, filtre), bascules d'affichage ensuite. La mécanique existe
    déjà (`ViewState` + table `_HOTKEYS` pilotée par les données) : chaque
-   bascule est une entrée de dict plus une garde dans le renderer.
+   bascule est une entrée de dict plus une garde dans le renderer. Désormais un
+   groupe possédé dans la roadmap (`…decisions.md` §10, « Phase 2.X — TUI
+   interactive surface »), aucune implémentation encore.
 3. **Reprendre les options CLI d'affichage et de processus**, y compris les
    alias courts. Beaucoup sont un simple `parser.add_argument` plus un accès
    dans le renderer concerné.
-4. **Corriger les deux options mortes** (`--disable-unicode` non déclaré,
-   `--byte` ignoré par le renderer réseau) — c'est du défaut, pas du portage.
-5. **Porter la famille `<...>_log`** puis les filtres d'affichage restants
-   (`hide_zero`, `hide_no_up`, `hide_no_ip`, `alias` générique, `[fs] allow`,
-   `[fs] free_space`).
+4. ~~**Corriger les deux options mortes**~~ — **fait (parity wave 1,
+   2026-09-10)**.
+5. **Porter la famille `<...>_log`** — reste à faire. ~~puis les filtres
+   d'affichage restants (`hide_zero`, `hide_no_up`, `hide_no_ip`, `alias`
+   générique, `[fs] allow`, `[fs] free_space`)~~ — **faits (parity wave 1,
+   2026-09-10)**.
 6. **Écrire les notes de version des changements de défaut** identifiés ici :
    `--bind` en loopback, `-s`/`-w`, `[mem] available` affiché
    inconditionnellement, seuils renommés.

@@ -241,6 +241,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Display network rate in bytes per second (default: bits per second).",
     )
     parser.add_argument(
+        "--fs-free-space",
+        dest="fs_free_space",
+        action="store_true",
+        default=False,
+        help="Display filesystem free space instead of used space (default: used). Config fallback: [fs] free_space.",
+    )
+    parser.add_argument(
+        "--disable-unicode",
+        dest="disable_unicode",
+        action="store_true",
+        default=False,
+        help="disable unicode characters in the curses interface",
+    )
+    parser.add_argument(
         "--disable-config-exec",
         dest="disable_config_exec",
         action="store_true",
@@ -560,6 +574,12 @@ def assemble(
         # parity, issue #794). Must run before discover_plugins() below —
         # processlist/programlist compile this filter in __init__.
         config._merged.setdefault("processlist", {})["export"] = args.export_process_filter
+    if getattr(args, "fs_free_space", False):
+        # Same overlay mechanism as disable_config_exec / api_doc / enable_mcp.
+        # CLI wins over `[fs] free_space` (v4 parity, `main.py:832`
+        # `init_ui_mode`, design §5.4). Must run before discover_plugins()
+        # below — the fs plugin reads `free_space` in `__init__`.
+        config._merged.setdefault("fs", {})["free_space"] = True
     actions = discover_actions("glances.actions_v5", config)
     # Wire the process engine so the alert pipeline can drive the dynamic
     # process auto-sort (v4 parity) — the sort key follows the dominant

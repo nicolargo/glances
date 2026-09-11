@@ -52,6 +52,16 @@ def config(tmp_path, monkeypatch) -> GlancesConfigV5:
     return GlancesConfigV5()
 
 
+def _config_with(tmp_path, monkeypatch, body: str) -> GlancesConfigV5:
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text(body)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    return GlancesConfigV5()
+
+
 def _patch_psutil(parts_and_usage):
     """Build patches for psutil.disk_partitions + disk_usage from a list of
     (Partition, DiskUsage) pairs. Returns an ExitStack-like context."""
@@ -138,6 +148,69 @@ async def test_update_carries_size_used_free_percent(store, config):
     assert root["fs_type"] == "ext4"
 
 
+async def test_allow_off_by_default_does_not_call_fetch_all(store, config):
+    """`[fs] allow` absent — the built-in `disk_partitions(all=False)` list
+    is used as-is, and the extra `all=True` call is never made (v4 parity,
+    `fs/__init__.py:162-163`: "Avoid Psutil call unless mounts need to be
+    allowed")."""
+    plugin = PluginModel(store, config)
+    root, root_usage = _root()
+
+    def fake_disk_partitions(all=False):
+        assert all is False, "disk_partitions(all=True) must not be called when [fs] allow is unset"
+        return [root]
+
+    with patch("glances.plugins.fs.model_v5.psutil.disk_partitions", side_effect=fake_disk_partitions):
+        with patch("glances.plugins.fs.model_v5.psutil.disk_usage", return_value=root_usage):
+            await plugin.update()
+
+    mnts = [i["mnt_point"] for i in store.get("fs")["data"]]
+    assert mnts == ["/"]
+
+
+async def test_allow_adds_extra_fs_types_from_fetch_all(tmp_path, monkeypatch, store):
+    """`[fs] allow=tmpfs` merges logical mounts of that type from
+    `disk_partitions(all=True)` on top of the built-in list (issue #448)."""
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nallow=tmpfs\n")
+    plugin = PluginModel(store, config)
+
+    root, root_usage = _root()
+    shm = Partition("shm", "/dev/shm", "tmpfs", "rw,nosuid")
+    shm_usage = DiskUsage(1024**3, 0, 1024**3, 0.0)
+    ext4_extra = Partition("/dev/sdb1", "/mnt/extra", "ext4", "rw")  # not tmpfs -> must NOT be added
+
+    def fake_disk_partitions(all=False):
+        return [root, shm, ext4_extra] if all else [root]
+
+    usages = {"/": root_usage, "/dev/shm": shm_usage}
+
+    with patch("glances.plugins.fs.model_v5.psutil.disk_partitions", side_effect=fake_disk_partitions):
+        with patch("glances.plugins.fs.model_v5.psutil.disk_usage", side_effect=lambda mp: usages[mp]):
+            await plugin.update()
+
+    mnts = sorted(i["mnt_point"] for i in store.get("fs")["data"])
+    assert mnts == ["/", "/dev/shm"]
+
+
+async def test_allow_does_not_duplicate_already_tracked_mount(tmp_path, monkeypatch, store):
+    """A mountpoint already returned by `disk_partitions(all=False)` is not
+    added a second time even if it also matches `allow` (issue #2299)."""
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nallow=ext4\n")
+    plugin = PluginModel(store, config)
+
+    root, root_usage = _root()
+
+    def fake_disk_partitions(all=False):
+        return [root]  # same list either way -> root.fstype ('ext4') matches allow
+
+    with patch("glances.plugins.fs.model_v5.psutil.disk_partitions", side_effect=fake_disk_partitions):
+        with patch("glances.plugins.fs.model_v5.psutil.disk_usage", return_value=root_usage):
+            await plugin.update()
+
+    mnts = [i["mnt_point"] for i in store.get("fs")["data"]]
+    assert mnts == ["/"]
+
+
 async def test_update_skips_partition_when_disk_usage_raises(store, config):
     """A disk_usage() OSError on one partition (e.g. lazy-unmount) must
     not propagate — the partition is dropped from the payload."""
@@ -183,6 +256,42 @@ async def test_levels_indexed_by_mnt_point(store, config):
     # prominent: False per schema — the cell is coloured, never reversed.
     assert levels["/"]["percent"]["prominent"] is False
     assert levels["/home"]["percent"]["level"] == "ok"
+
+
+# ---------------------------------------------------------- alias (design §5.5)
+
+
+async def test_alias_published_for_matching_mountpoint(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nalias=/:Root\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root(), _home()]):
+        await plugin.update()
+    data = {i["mnt_point"]: i for i in store.get("fs")["data"]}
+    assert data["/"]["alias"] == "Root"
+    assert "alias" not in data["/home"]
+    assert data["/"]["mnt_point"] == "/"  # primary key untouched
+
+
+# ---------------------------------------------------------- free_space (design §5.4)
+
+
+async def test_free_space_off_by_default(store, config):
+    """`[fs] free_space` absent -> metadata flag stays False (v4 default,
+    `main.py:643`)."""
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root()]):
+        await plugin.update()
+    assert store.get("fs")["free_space"] is False
+
+
+async def test_free_space_reads_config_key(tmp_path, monkeypatch, store):
+    """`[fs] free_space=True` (v4 `main.py:832`) publishes the flag in the
+    payload — the renderer has no other way to reach the config."""
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nfree_space=True\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root()]):
+        await plugin.update()
+    assert store.get("fs")["free_space"] is True
 
 
 # ---------------------------------------------------------- export

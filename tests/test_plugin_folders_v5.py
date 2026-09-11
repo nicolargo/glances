@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import logging
 import textwrap
 from pathlib import Path
 
@@ -252,3 +253,43 @@ def test_refresh_timer_gates_the_folder_walk(tmp_path, monkeypatch):
     # ...and the timer was reset by that walk, so the next cycle skips again.
     folders.update()
     assert len(calls) == 2
+
+
+# ------------------------------------------------------ threshold-key warning (finding 1)
+
+
+def test_folder_n_careful_is_recognised(tmp_path, monkeypatch, store, caplog):
+    """`folder_1_careful` is the shipped conf's own documented spelling
+    (`conf/glances.conf:517`, `FolderList` at `glances/folder_list.py:74-76`)
+    — it must not warn."""
+    config = _cfg_with(
+        tmp_path,
+        monkeypatch,
+        """
+        [folders]
+        folder_1_path=/tmp
+        folder_1_careful=2500
+        """,
+    )
+    with caplog.at_level(logging.WARNING):
+        PluginModel(store, config)
+    warnings = [r.getMessage() for r in caplog.records if "unrecognised threshold key" in r.getMessage()]
+    assert warnings == []
+
+
+def test_unrelated_threshold_key_still_warns(tmp_path, monkeypatch, store, caplog):
+    """The hook answers per-shape, not per-plugin — a genuinely stale key
+    (not `folder_<N>_<level>`) must still warn."""
+    config = _cfg_with(
+        tmp_path,
+        monkeypatch,
+        """
+        [folders]
+        nonsense_careful=1
+        """,
+    )
+    with caplog.at_level(logging.WARNING):
+        PluginModel(store, config)
+    warnings = [r.getMessage() for r in caplog.records if "unrecognised threshold key" in r.getMessage()]
+    assert len(warnings) == 1
+    assert "nonsense_careful" in warnings[0]

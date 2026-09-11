@@ -193,3 +193,55 @@ def test_item_rows_are_marked_for_the_truncation_counter(diskio_payload, diskio_
     rows = render(diskio_payload, diskio_fields)
     assert rows[0].item_start is False  # header
     assert sum(r.item_start for r in rows) == len(diskio_payload["data"])
+
+
+# ---------------------------------------------------------------- hide_zero (design §5.1)
+
+
+def test_render_skips_hidden_disks(diskio_fields):
+    payload = {
+        "data": [
+            {"disk_name": "sda", "read_bytes": 100.0, "write_bytes": 50.0, "hidden": False},
+            {"disk_name": "loop0", "read_bytes": 0.0, "write_bytes": 0.0, "hidden": True},
+        ],
+        "_levels": {},
+    }
+    rows = render(payload, diskio_fields)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "sda" in flat
+    assert "loop0" not in flat
+
+
+def test_render_keeps_disk_when_hidden_key_absent(diskio_fields):
+    payload = {
+        "data": [{"disk_name": "sda", "read_bytes": 100.0, "write_bytes": 50.0}],
+        "_levels": {},
+    }
+    rows = render(payload, diskio_fields)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "sda" in flat
+
+
+# ---------------------------------------------------------------- alias (design §5.5)
+
+
+def test_render_displays_alias_instead_of_disk_name(diskio_fields):
+    """v4 parity (`diskio/__init__.py:262`): the alias REPLACES the raw
+    disk name in the rendered row."""
+    payload = {
+        "data": [{"disk_name": "sda", "alias": "SystemDisk", "read_bytes": 0.0, "write_bytes": 0.0}],
+        "_levels": {"sda": {}},
+    }
+    rows = render(payload, diskio_fields)
+    name_cell = rows[1].cells[0].text
+    assert "SystemDisk" in name_cell
+    assert name_cell.strip() != "sda"
+
+
+def test_render_falls_back_to_disk_name_when_no_alias(diskio_fields):
+    payload = {
+        "data": [{"disk_name": "sda", "read_bytes": 0.0, "write_bytes": 0.0}],
+        "_levels": {"sda": {}},
+    }
+    rows = render(payload, diskio_fields)
+    assert "sda" in rows[1].cells[0].text

@@ -57,6 +57,11 @@ class PluginModel(GlancesPluginBase[list]):
     plugin_name: ClassVar[str] = "network"
     IS_COLLECTION: ClassVar[bool] = True
 
+    # `hide_zero` display filter (design §5.1) — v4 `network/__init__.py:91`
+    # (`bytes_recv_rate_per_sec` / `bytes_sent_rate_per_sec` there; v5 keeps
+    # the base field names since `rate: True` replaces the value in place).
+    HIDE_ZERO_FIELDS: ClassVar[list[str]] = ["bytes_recv", "bytes_sent"]
+
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         # `short_name` is the compact UI label (short_name → label → field
         # name, cf. `field_label()` in curses_renderer_v5.py). The strings
@@ -139,17 +144,42 @@ class PluginModel(GlancesPluginBase[list]):
         },
     }
 
+    def __init__(self, store: Any, config: Any) -> None:
+        super().__init__(store, config)
+        # Filter interfaces that are down / have no IP (design §5.2, v4
+        # `network/__init__.py:96-100`). Both default False — behaviour is
+        # unchanged unless a user opts in.
+        self.hide_no_up: bool = self.config.get(self.plugin_name, "hide_no_up", False)
+        self.hide_no_ip: bool = self.config.get(self.plugin_name, "hide_no_ip", False)
+
     async def _grab_stats(self) -> list:
         # Two psutil calls coalesced under asyncio.gather. They are
         # independent so the underlying threads run in parallel.
-        io_counters, if_stats = await asyncio.gather(
+        # `net_if_addrs()` is only needed by `hide_no_ip` (default False) —
+        # skip the extra psutil call and thread hop when it is not in use.
+        calls = [
             asyncio.to_thread(psutil.net_io_counters, pernic=True),
             asyncio.to_thread(psutil.net_if_stats),
-        )
+        ]
+        if self.hide_no_ip:
+            calls.append(asyncio.to_thread(psutil.net_if_addrs))
+        results = await asyncio.gather(*calls)
+        io_counters, if_stats = results[0], results[1]
+        if_addrs = results[2] if self.hide_no_ip else None
 
         out: list[dict[str, Any]] = []
         for name, counters in io_counters.items():
             stats = if_stats.get(name)
+            # hide_no_up / hide_no_ip (design §5.2, v4 `__init__.py:164-173`):
+            # drop the interface entirely — v4 parity, an interface that is
+            # down or has no IP carries no meaningful rate. Unlike `hidden`
+            # (design §5.1), these DO drop the item from the payload.
+            if self.hide_no_up and not (stats is not None and stats.isup):
+                continue
+            if self.hide_no_ip:
+                addrs = if_addrs.get(name, []) if if_addrs is not None else []
+                if not any(a.family != psutil.AF_LINK for a in addrs):
+                    continue
             speed_mbits = float(getattr(stats, "speed", 0) or 0) if stats is not None else 0.0
             # Mbit/s → bytes/s, full-duplex per-direction split (see schema
             # description). 0 stays 0 — the base class skips level

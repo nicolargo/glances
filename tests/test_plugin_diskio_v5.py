@@ -231,3 +231,71 @@ async def test_read_bytes_threshold_from_config_triggers_level(tmp_path, monkeyp
     sda = store.get("diskio")["_levels"]["sda"]
     assert sda["read_bytes"]["level"] == "warning"
     assert sda["read_bytes"]["prominent"] is False
+
+
+# ---------------------------------------------------------- alias (design §5.5)
+
+
+async def test_alias_published_for_matching_disk(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\nalias=sda:SystemDisk\n")
+    plugin = PluginModel(store, config)
+    iomap = {"sda": _io(), "sdb": _io()}
+    with patch("glances.plugins.diskio.model_v5.psutil.disk_io_counters", return_value=iomap):
+        await plugin.update()
+    data = {i["disk_name"]: i for i in store.get("diskio")["data"]}
+    assert data["sda"]["alias"] == "SystemDisk"
+    assert "alias" not in data["sdb"]
+    assert data["sda"]["disk_name"] == "sda"  # primary key untouched
+
+
+# ---------------------------------------------------------- hide_zero / hide_threshold_bytes (design §5.1)
+
+
+def test_hide_zero_fields_declared(store, config):
+    assert PluginModel.HIDE_ZERO_FIELDS == ["read_bytes", "write_bytes"]
+
+
+async def test_hide_zero_off_by_default_never_hides(store, config, monkeypatch):
+    """diskio ships no `hide_zero` key in conf/glances.conf — defaults to False."""
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model_v5.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io()}):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io()}):
+        await plugin.update()
+
+    item = store.get("diskio")["data"][0]
+    assert item["hidden"] is False
+
+
+async def test_hide_zero_sticky_after_threshold_burst(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\nhide_zero=True\nhide_threshold_bytes=1000\n")
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model_v5.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io(rb=0, wb=0)}):
+        await plugin.update()  # cycle 1, rate None
+
+    assert store.get("diskio")["data"][0]["hidden"] is True
+
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io(rb=5000, wb=0)}):
+        await plugin.update()  # rb rate 5000 > 1000 -> unhide
+
+    assert store.get("diskio")["data"][0]["hidden"] is False
+
+    fake_now[0] = 102.0
+    with patch(psutil_path, return_value={"sda": _io(rb=5000, wb=0)}):
+        await plugin.update()  # unchanged counter -> rate 0 -> sticky stays visible
+
+    assert store.get("diskio")["data"][0]["hidden"] is False

@@ -38,6 +38,7 @@ from abc import ABC, abstractmethod
 from typing import Any, ClassVar, Generic, TypeVar
 
 from glances.config_v5 import GlancesConfigV5
+from glances.globals import split_esc
 from glances.plugins.plugin.thresholds_v5 import (
     compute_level,
     compute_level_categorical,
@@ -57,6 +58,31 @@ _BASE_METADATA_FIELDS: dict[str, dict[str, Any]] = {
         "description": "Seconds elapsed since the previous successful update cycle.",
         "unit": "seconds",
         "exportable": False,
+        "internal": True,
+    },
+    "hidden": {
+        "description": (
+            "hide_zero display filter (design §5.1). True only when every "
+            "HIDE_ZERO_FIELDS entry of this item is still sticky-hidden. "
+            "Set per-item by _compute_hide_zero(); absent for plugins that "
+            "do not declare HIDE_ZERO_FIELDS."
+        ),
+        "unit": "bool",
+        "exportable": False,
+        "internal": True,
+    },
+    "alias": {
+        "description": (
+            "Alias for this item's primary-key value, from "
+            "`[<plugin_name>] alias=<key>:<Name>,...` (design §5.5, v4 "
+            "`plugin/model.py:1075-1081`). Present only when the primary-key "
+            "value has a configured match; the primary key itself is never "
+            "rewritten. Set per-item by _apply_alias() (default "
+            "_expand_parameters() hook), collection plugins only. Not "
+            "applicable to `sensors`, which overrides `_expand_parameters()` "
+            "with its own richer alias mechanism (`sensors/model_v5.py:194-214`)."
+        ),
+        "unit": "string",
         "internal": True,
     },
 }
@@ -152,6 +178,23 @@ class GlancesPluginBase(Generic[T], ABC):
     ``disable=True`` (``connections``, ``npu``, ``vms``). Read by
     ``is_disabled()``."""
 
+    HIDE_ZERO_FIELDS: ClassVar[list[str]] = []
+    """Rate fields eligible for the sticky ``hide_zero`` display filter (design §5.1).
+
+    Empty by default — the filter is a no-op unless a collection plugin
+    opts in (``network``: ``bytes_recv``/``bytes_sent``; ``diskio``:
+    ``read_bytes``/``write_bytes``). A field starts hidden and is un-hidden
+    for good the first cycle its (already rate-transformed) value is
+    strictly greater than ``[<plugin_name>] hide_threshold_bytes`` — never
+    on ``None`` (no sample yet, v4 parity). See ``_compute_hide_zero()``.
+
+    v4 (`plugin/model.py:643-657`) publishes one ``hidden`` boolean per
+    field and has each renderer independently compute
+    ``all(hidden for f in hide_zero_fields)`` (`network/__init__.py:328`,
+    `diskio/__init__.py:259`). v5 does that reduction once here and
+    publishes a single row-level ``hidden`` field instead — deliberate
+    divergence recorded in design §5.1, do not "fix" it back to per-field."""
+
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {}
     """Per-field schema. See architecture §3.2."""
 
@@ -190,6 +233,8 @@ class GlancesPluginBase(Generic[T], ABC):
         ]
         self._allowed_field_names: set[str] = set(self._fields.keys())
 
+        self._warn_unknown_threshold_keys()
+
         # Collection plugins must declare exactly one field as the primary
         # key — used to index `_levels`, snapshot raw counters across cycles
         # for per-item rates, and match items between cycles.
@@ -202,6 +247,24 @@ class GlancesPluginBase(Generic[T], ABC):
         self._show_patterns: list[re.Pattern[str]] = self._compile_filter("show")
         self._hide_patterns: list[re.Pattern[str]] = self._compile_filter("hide")
 
+        # Generic `alias` (design §5.5, v4 `plugin/model.py:1075-1081`):
+        # `[<plugin_name>] alias=<key>:<Name>,...`, lower-keyed, matched
+        # against a collection item's primary-key value. Used by the
+        # show/hide filters above (v4 parity) and by `_apply_alias()`
+        # (default `_expand_parameters()` hook) to publish the per-item
+        # `alias` field. Never rewrites the primary key itself.
+        self._alias_map: dict[str, str] = self._read_alias()
+
+        # `hide_zero` / `hide_threshold_bytes` (design §5.1): sticky, per-field
+        # display filter reduced to one row-level `hidden` boolean — see
+        # HIDE_ZERO_FIELDS and _compute_hide_zero(). Read once, like show/hide.
+        self.hide_zero: bool = self.config.get(self.plugin_name, "hide_zero", False)
+        self.hide_threshold_bytes: int = self.config.get(self.plugin_name, "hide_threshold_bytes", 0)
+        # Sticky state, keyed by primary-key value then field name. Rebuilt
+        # from scratch every cycle in _compute_hide_zero() from only the
+        # items currently present — see that method's docstring.
+        self._hide_zero_state: dict[Any, dict[str, bool]] = {}
+
         self._stats: T = self._empty_stats()
         self._stats_previous: T | None = None
         # Snapshot of the raw psutil values from the previous successful
@@ -213,6 +276,97 @@ class GlancesPluginBase(Generic[T], ABC):
         self._metadata: dict[str, Any] = {}
         self._levels: dict[str, Any] = {}
         self._last_update_ts: float | None = None
+
+    def _warn_unknown_threshold_keys(self) -> None:
+        """Warn once per unrecognised threshold key found in this plugin's config section.
+
+        v5 renamed several v4 threshold keys (design §3 of the parity-wave-1
+        decision doc) and deliberately does not accept the old spellings — a
+        stale key is otherwise silently ignored and the user's threshold
+        simply stops applying, with nothing in the logs. This surfaces that
+        silently-dropped state at construction time.
+
+        Only the plugin's own config section is inspected. A key is a
+        *threshold key* when it is exactly ``careful``/``warning``/``critical``
+        or ends with ``_careful``/``_warning``/``_critical``. A threshold key
+        is recognised when, after stripping the level suffix, the remainder is
+        empty (the bare ``careful`` form, valid only when the plugin has at
+        least one watched field to apply it to) or ends with one of the
+        plugin's accepted threshold names — which covers both
+        ``<field>_<level>`` and ``<pk>_<field>_<level>`` shapes without having
+        to parse the primary-key prefix.
+        """
+        try:
+            section_keys = self.config.section_keys(self.plugin_name)
+        except AttributeError:
+            return  # config object without introspection API → skip check
+        if not section_keys:
+            return
+
+        levels = ("careful", "warning", "critical")
+        accepted = {self._threshold_key(name, schema).lower() for name, schema in self._watched_fields}
+
+        for key in section_keys:
+            key_lower = key.lower()
+            remainder: str | None = None
+            for level in levels:
+                if key_lower == level:
+                    remainder = ""
+                    break
+                suffix = f"_{level}"
+                if key_lower.endswith(suffix):
+                    remainder = key_lower[: -len(suffix)]
+                    break
+            if remainder is None:
+                continue  # not a threshold key
+
+            recognised = (remainder == "" and accepted) or any(remainder.endswith(name) for name in accepted)
+            if not recognised:
+                recognised = self._recognises_threshold_key(remainder)
+            if not recognised:
+                accepted_desc = (
+                    ", ".join(sorted(accepted)) if accepted else "none — plugin declares no generic threshold keys"
+                )
+                logger.warning(
+                    "Plugin %s: unrecognised threshold key %r in config section [%s] (accepted threshold names: %s)",
+                    self.plugin_name,
+                    key,
+                    self.plugin_name,
+                    accepted_desc,
+                )
+
+    def _recognises_threshold_key(self, remainder: str) -> bool:
+        """Extension point: does this plugin accept ``remainder`` as a threshold-key body?
+
+        ``_warn_unknown_threshold_keys()`` calls this only as a fallback,
+        after its own generic ``<field>``/``<pk>_<field>`` suffix rule
+        (built from ``_watched_fields``) has already rejected the key.
+        ``remainder`` is the config key lower-cased with its trailing
+        ``_careful``/``_warning``/``_critical`` (or the bare level itself)
+        already stripped.
+
+        Default ``False``: a plugin driven entirely by the base class's
+        watched-field pipeline (the overwhelming majority) has nothing
+        extra to recognise.
+
+        Override for a plugin that resolves its own thresholds outside
+        that pipeline (a custom ``_derived_parameters()``) and therefore
+        owns key shapes the generic ``<field>``-suffix rule cannot
+        express — e.g. ``sensors``, whose ``<type>_<level>`` and
+        ``<type>_<label>_<level>`` tiers are resolved in
+        ``sensors/model_v5.py::_resolve_thresholds`` rather than through
+        a declared watched field per threshold name. This is a hook a
+        plugin answers for its own key shapes, not a name to add to a
+        list maintained here — adding a new self-resolving plugin never
+        requires touching this file.
+
+        Called from ``GlancesPluginBase.__init__`` BEFORE the subclass's
+        own ``__init__`` body runs (a subclass calls ``super().__init__()``
+        first, then does its own setup) — an override must not read any
+        ``self.<attribute>`` the subclass sets there; it has not been
+        assigned yet. Module-level constants (as ``sensors`` does) are safe.
+        """
+        return False
 
     def _resolve_primary_key(self) -> str | None:
         if not self.IS_COLLECTION:
@@ -243,6 +397,33 @@ class GlancesPluginBase(Generic[T], ABC):
             except re.error as e:
                 logger.warning("Plugin %s: invalid %s regex %r (%s) — ignored", self.plugin_name, key, pattern, e)
         return compiled
+
+    def _read_alias(self) -> dict[str, str]:
+        """Parse `[<plugin_name>] alias=<key>:<Name>,...` into a lower-keyed map.
+
+        v4 parity (`plugin/model.py:1075-1081`). Collection plugins only —
+        an alias matches a collection item's primary-key value. Scalar
+        plugins never consult this map.
+        """
+        if not self.IS_COLLECTION:
+            return {}
+        raw = self.config.get(self.plugin_name, "alias", "")
+        if not raw:
+            return {}
+        aliases: dict[str, str] = {}
+        for pair in str(raw).split(","):
+            entry = pair.strip()
+            parts = split_esc(entry, ":")
+            if len(parts) >= 2 and parts[0]:
+                aliases[parts[0].strip().lower()] = parts[1].strip()
+            elif entry:
+                logger.warning(
+                    "Plugin %s: invalid alias entry %r in [%s] (expected <key>:<Name>) — ignored",
+                    self.plugin_name,
+                    entry,
+                    self.plugin_name,
+                )
+        return aliases
 
     def _empty_stats(self) -> T:
         return [] if self.IS_COLLECTION else {}  # type: ignore[return-value]
@@ -294,6 +475,10 @@ class GlancesPluginBase(Generic[T], ABC):
         Pattern matching uses `re.search` (substring-friendly). When `show`
         is set, only matching items pass. `hide` is then applied to drop
         matches. Both are optional and independent.
+
+        A configured alias (design §5.5) is matched too — v4 parity,
+        `plugin/model.py:1044,1059`. `_alias_map` is looked up directly
+        rather than through the item's (not yet published) `alias` field.
         """
         pk = self._primary_key
         if pk is None:
@@ -301,9 +486,16 @@ class GlancesPluginBase(Generic[T], ABC):
         kept: list[dict[str, Any]] = []
         for item in items:
             pk_value = str(item.get(pk, ""))
-            if self._show_patterns and not any(p.search(pk_value) for p in self._show_patterns):
+            alias_value = self._alias_map.get(pk_value.lower())
+            if self._show_patterns and not (
+                any(p.search(pk_value) for p in self._show_patterns)
+                or (alias_value is not None and any(p.search(alias_value) for p in self._show_patterns))
+            ):
                 continue
-            if self._hide_patterns and any(p.search(pk_value) for p in self._hide_patterns):
+            if self._hide_patterns and (
+                any(p.search(pk_value) for p in self._hide_patterns)
+                or (alias_value is not None and any(p.search(alias_value) for p in self._hide_patterns))
+            ):
                 continue
             kept.append(item)
         return kept
@@ -333,8 +525,14 @@ class GlancesPluginBase(Generic[T], ABC):
         self._last_update_ts = now
 
     def _transform(self) -> None:
-        """Run the four-step transformation pipeline (architecture §3.1)."""
+        """Run the transformation pipeline (architecture §3.1).
+
+        `_compute_hide_zero` (design §5.1) is inserted right after
+        `_transform_gauge`: it needs the just-computed rate value, and must
+        run before `_remove_parameters` strips undeclared fields.
+        """
         self._transform_gauge()
+        self._compute_hide_zero()
         self._expand_parameters()
         self._derived_parameters()
         self._remove_parameters()
@@ -432,8 +630,110 @@ class GlancesPluginBase(Generic[T], ABC):
                 continue
             stats[field_name] = max(0.0, delta / float(elapsed))
 
+    def _compute_hide_zero(self) -> None:
+        """Sticky, per-field `hide_zero` display filter, reduced to one boolean per item.
+
+        No-op when `HIDE_ZERO_FIELDS` is empty (the default) or the plugin is
+        not a collection — no `hidden` key is added to the payload at all in
+        that case. Same for an item whose primary-key value is `None`: it is
+        skipped entirely (no `hidden` key either) — sticky state is keyed by
+        primary-key value, so an item without one cannot carry any.
+
+        When `hide_zero` is False (the default, always for a plugin that has
+        not opted in), every remaining item gets `hidden = False` —
+        published, never omitted, so a consumer can rely on the field's
+        presence once a plugin declares `HIDE_ZERO_FIELDS`.
+
+        When `hide_zero` is True: for each field in `HIDE_ZERO_FIELDS`, a
+        field starts hidden and is un-hidden **for good** the first cycle its
+        value is strictly greater than `hide_threshold_bytes` (v4 `cc5e2bab`
+        — `>`, never `>=`). `None` (no sample yet, e.g. cycle 1 of a rate
+        field) never un-hides. A `HIDE_ZERO_FIELDS` entry absent from the
+        item itself counts as hidden (`fields_state.get(f, True)` below).
+        The published `hidden` is `True` only while *every* field in
+        `HIDE_ZERO_FIELDS` is still hidden (v4 `ff80c903`, structural here —
+        see `HIDE_ZERO_FIELDS` docstring for the one-boolean-per-item
+        divergence from v4).
+
+        Sticky state (`self._hide_zero_state`) is keyed by primary-key value
+        then field name, and is rebuilt from scratch every cycle from only
+        the items present in `self._stats` this cycle — mirroring v4's
+        `update_views()`, which replaces `self.views` wholesale each cycle
+        (`plugin/model.py:672-686`). An item absent for one cycle (interface
+        down, disk unplugged) therefore loses its accumulated state: if it
+        reappears later, it starts hidden again rather than resuming from
+        wherever it left off.
+        """
+        if not self.HIDE_ZERO_FIELDS or not self.IS_COLLECTION:
+            return
+        if not isinstance(self._stats, list) or self._primary_key is None:
+            return
+
+        new_state: dict[Any, dict[str, bool]] = {}
+        for item in self._stats:
+            if not isinstance(item, dict):
+                continue
+            pk_value = item.get(self._primary_key)
+            if pk_value is None:
+                continue
+
+            if not self.hide_zero:
+                item["hidden"] = False
+                continue
+
+            prev_fields = self._hide_zero_state.get(pk_value, {})
+            fields_state: dict[str, bool] = {}
+            for field_name in self.HIDE_ZERO_FIELDS:
+                if field_name not in item:
+                    continue
+                still_hidden = prev_fields.get(field_name, True)
+                value = item[field_name]
+                if still_hidden and value is not None and value > self.hide_threshold_bytes:
+                    still_hidden = False
+                fields_state[field_name] = still_hidden
+            new_state[pk_value] = fields_state
+            item["hidden"] = all(fields_state.get(f, True) for f in self.HIDE_ZERO_FIELDS)
+
+        self._hide_zero_state = new_state
+
     def _expand_parameters(self) -> None:
-        """Expand compound psutil fields (e.g. cpu_times → user/system/iowait)."""
+        """Expand compound psutil fields (e.g. cpu_times → user/system/iowait).
+
+        Default hook also applies the generic per-item `alias` field
+        (design §5.5, see `_apply_alias()`). A plugin that overrides this
+        hook WITHOUT calling `super()` opts out of the generic mechanism
+        entirely — `sensors` does this, since it rewrites its primary key
+        with its own richer alias mechanism (`sensors/model_v5.py:194-214`)
+        rather than publishing a separate `alias` field.
+        """
+        self._apply_alias()
+
+    def _apply_alias(self) -> None:
+        """Publish the generic per-item `alias` field (design §5.5).
+
+        Set only when the item's primary-key value matches a configured
+        `[<plugin_name>] alias=<key>:<Name>,...` entry (v4 parity: `network`,
+        `diskio`, `fs` published `stat['alias']` the same way —
+        `network/__init__.py:192`, `diskio/__init__.py:172-173`,
+        `fs/__init__.py:199-200`). The primary key itself is **never**
+        rewritten — `_levels`, the per-item threshold overrides
+        (`<pk>_<field>_<level>`) and the rate matching in
+        `_transform_gauge`/`_snapshot_raw` are all keyed on its raw value.
+        """
+        if not self.IS_COLLECTION or not self._alias_map or self._primary_key is None:
+            return
+        if not isinstance(self._stats, list):
+            return
+        pk = self._primary_key
+        for item in self._stats:
+            if not isinstance(item, dict):
+                continue
+            pk_value = item.get(pk)
+            if pk_value is None:
+                continue
+            alias = self._alias_map.get(str(pk_value).lower())
+            if alias is not None:
+                item["alias"] = alias
 
     def _derived_parameters(self) -> None:
         """Compute derived fields and `_levels`.

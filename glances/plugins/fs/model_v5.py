@@ -96,6 +96,24 @@ class PluginModel(GlancesPluginBase[list]):
         },
     }
 
+    def __init__(self, store: Any, config: Any) -> None:
+        super().__init__(store, config)
+        # `[fs] allow`: extra filesystem types (logical mounts) included on
+        # top of the built-in list (design §5.3, v4 `fs/__init__.py:160-170`,
+        # issue #448). Absent by default — behaviour is unchanged.
+        self.allow: list[str] = self.config.get(self.plugin_name, "allow", [])
+        # `[fs] free_space`: switches the TUI block from used to free space
+        # (design §5.4, v4 `main.py:644` CLI / `main.py:832` config
+        # fallback). The CLI flag is merged into this config key by
+        # `main_v5.assemble()` before plugin construction. Published as
+        # metadata (see `_add_metadata`) — the renderer has no other way to
+        # reach the config.
+        self.free_space: bool = self.config.get(self.plugin_name, "free_space", False)
+
+    def _add_metadata(self) -> None:
+        super()._add_metadata()
+        self._metadata["free_space"] = self.free_space
+
     async def _grab_stats(self) -> list:
         # Snap-heavy hosts routinely expose 70+ mountpoints (one per
         # installed snap revision). Calling
@@ -105,19 +123,37 @@ class PluginModel(GlancesPluginBase[list]):
         # Coalesce the whole walk inside a single worker thread so the
         # asyncio loop sees exactly one wake per fs cycle.
         try:
-            return await asyncio.to_thread(self._collect_sync)
+            return await asyncio.to_thread(self._collect_sync, self.allow)
         except (PermissionError, OSError) as exc:
             logger.debug("fs: collection failed: %s", exc)
             return []
 
     @staticmethod
-    def _collect_sync() -> list[dict[str, Any]]:
+    def _collect_sync(allow: list[str]) -> list[dict[str, Any]]:
         """Synchronous collector — runs in a single worker thread."""
         try:
             partitions = psutil.disk_partitions(all=False)
         except (PermissionError, OSError) as exc:
             logger.debug("fs: psutil.disk_partitions() failed: %s", exc)
             return []
+
+        if allow:
+            # Avoid the extra psutil call unless mounts need to be allowed
+            # (v4 `fs/__init__.py:162-163`).
+            try:
+                all_mounted = psutil.disk_partitions(all=True)
+            except (PermissionError, OSError) as exc:
+                logger.debug("fs: psutil.disk_partitions(all=True) failed: %s", exc)
+                all_mounted = []
+            # Discard duplicates (issue #2299): only add mountpoints not
+            # already tracked, matching any allowed fs type by substring
+            # (v4 parity: ``fstype.find(fs_type) >= 0``).
+            tracked_mnt_points = {p.mountpoint for p in partitions}
+            for part in all_mounted:
+                if part.mountpoint in tracked_mnt_points:
+                    continue
+                if any(fs_type in part.fstype for fs_type in allow):
+                    partitions.append(part)
 
         out: list[dict[str, Any]] = []
         for part in partitions:

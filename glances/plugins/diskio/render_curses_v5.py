@@ -100,6 +100,10 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
     for item in sorted(items, key=lambda it: str(it.get("disk_name", ""))):
         if not isinstance(item, dict):
             continue
+        # hide_zero display filter (design §5.1) — sticky state computed and
+        # reduced to this one boolean by the model (issue #1787 v4 parity).
+        if item.get("hidden") is True:
+            continue
         # Skip disks with no rate yet — cycle 1 sets read_bytes/write_bytes to None.
         if item.get("read_bytes") is None or item.get("write_bytes") is None:
             continue
@@ -110,11 +114,15 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         disk_levels = levels_index.get(name) if isinstance(levels_index, dict) else None
         if not isinstance(disk_levels, dict):
             disk_levels = {}
+        # `alias` (design §5.5, v4 parity `diskio/__init__.py:262`) replaces
+        # the raw disk name in the display only — `_levels` above stays
+        # keyed by the raw `name`.
+        display_name = str(item.get("alias") or name)
 
         rows.append(
             Row(
                 cells=[
-                    Cell(text=_format_disk_name(name)),
+                    Cell(text=_format_disk_name(display_name)),
                     _rate_cell(item.get("read_bytes"), disk_levels.get("read_bytes", {})),
                     _rate_cell(item.get("write_bytes"), disk_levels.get("write_bytes", {})),
                 ],

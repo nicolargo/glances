@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
 
@@ -463,3 +464,38 @@ def test_transform_strips_proxies_and_ssl_verify_from_the_payload(store_with, co
     assert "ssl_verify" not in p._stats[0]
     assert "key" not in p._stats[0]
     assert p._stats[0]["description"] == "My Blog"
+
+
+# ------------------------------------------------------ threshold-key warning (finding 1)
+
+
+def _threshold_warnings(caplog) -> list[str]:
+    return [r.getMessage() for r in caplog.records if "unrecognised threshold key" in r.getMessage()]
+
+
+def test_port_rtt_warning_is_recognised(store_with, config_with, caplog):
+    """`port_<N>_rtt_warning` is the shipped conf's own documented spelling
+    (`conf/glances.conf:685`, `GlancesPortsList` at `glances/ports_list.py:86`)
+    — it must not warn."""
+    with caplog.at_level(logging.WARNING):
+        _mk(store_with, config_with)  # _FULL_SECTION carries port_1_rtt_warning
+    assert _threshold_warnings(caplog) == []
+
+
+def test_web_rtt_warning_is_recognised(store_with, config_with, caplog):
+    """`web_<N>_rtt_warning` is the shipped conf's own documented spelling
+    (`conf/glances.conf:699`, `GlancesWebList` at `glances/web_list.py:78`)
+    — it must not warn."""
+    with caplog.at_level(logging.WARNING):
+        _mk(store_with, config_with)  # _FULL_SECTION carries web_1_rtt_warning
+    assert _threshold_warnings(caplog) == []
+
+
+def test_unrelated_threshold_key_still_warns(store_with, config_with, caplog):
+    """The hook answers per-shape, not per-plugin — a genuinely stale key
+    (not `port_<N>_rtt_warning` / `web_<N>_rtt_warning`) must still warn."""
+    with caplog.at_level(logging.WARNING):
+        PluginModel(store_with(), config_with({"ports": {"nonsense_warning": "1"}}))
+    warnings = _threshold_warnings(caplog)
+    assert len(warnings) == 1
+    assert "nonsense_warning" in warnings[0]

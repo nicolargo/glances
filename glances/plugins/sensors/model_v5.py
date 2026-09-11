@@ -28,7 +28,7 @@ import logging
 import re
 from typing import Any, ClassVar
 
-from glances.globals import natural_keys, split_esc
+from glances.globals import natural_keys
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.plugins.sensors import GlancesGrabSensors, sensors_definition
 from glances.plugins.sensors.sensor.glances_batpercent import GlancesGrabBat
@@ -41,6 +41,12 @@ _TEMP_CORE = "temperature_core"
 _FAN_SPEED = "fan_speed"
 _TEMP_HDD = "temperature_hdd"
 _BATTERY = "battery"
+
+# Threshold-key shapes _resolve_thresholds() reads itself, outside the base
+# class's watched-field pipeline (base_v5.GlancesPluginBase._recognises_threshold_key):
+# per-type `<type>_<level>` and per-sensor `<type>_<label>_<level>`. Derived
+# from the sensor-type constants already declared above, not a pasted list.
+_SENSOR_TYPES = frozenset({_TEMP_CORE, _FAN_SPEED, _TEMP_HDD, _BATTERY})
 
 
 def _label_prefix(label: str) -> str:
@@ -191,20 +197,17 @@ class PluginModel(GlancesPluginBase[list]):
         self._stats = self._apply_mean_fold(self._stats)
         self._stats.sort(key=lambda r: natural_keys(str(r.get("label", ""))))
 
-    def _read_aliases(self) -> dict[str, str]:
-        """Parse `[sensors] alias=<label>:<name>,...` into a lower-keyed map."""
-        raw = self.config.get("sensors", "alias", "")
-        if not raw:
-            return {}
-        aliases: dict[str, str] = {}
-        for pair in str(raw).split(","):
-            parts = split_esc(pair.strip(), ":")
-            if len(parts) >= 2 and parts[0]:
-                aliases[parts[0].strip().lower()] = parts[1].strip()
-        return aliases
-
     def _apply_aliases(self, rows: list) -> None:
-        aliases = self._read_aliases()
+        """Relabel rows from `self._alias_map` (base class, built once at
+        construction from `[sensors] alias=<label>:<name>,...` — same parser
+        every other collection plugin uses, see `base_v5._read_alias()`).
+
+        Only the parsing is shared: sensors still rewrites `label` in place
+        (never publishes the generic per-item `alias` field — see
+        `test_generic_alias_field_not_added`) and runs this before the
+        mean fold, unchanged.
+        """
+        aliases = self._alias_map
         if not aliases:
             return
         for row in rows:
@@ -363,6 +366,23 @@ class PluginModel(GlancesPluginBase[list]):
         if hw_critical is None:
             return None, None, None
         return None, _as_float(row.get("warning")), hw_critical
+
+    def _recognises_threshold_key(self, remainder: str) -> bool:
+        """Recognise the two tier shapes `_resolve_thresholds` reads itself.
+
+        - per-type:   ``<type>_<level>``        -> ``remainder == "<type>"``
+        - per-sensor: ``<type>_<label>_<level>`` -> ``remainder`` starts with
+          ``"<type>_"``
+
+        `sensors` watches a single generic `value` field (see
+        `fields_description`), so the base class's generic `<field>`-suffix
+        rule never matches keys like `temperature_core_careful` — this hook
+        is what keeps those recognised without special-casing `sensors` in
+        `base_v5.py`.
+        """
+        if remainder in _SENSOR_TYPES:
+            return True
+        return any(remainder.startswith(f"{sensor_type}_") for sensor_type in _SENSOR_TYPES)
 
     def _conf_tier(self, prefix: str) -> tuple[float | None, float | None, float | None]:
         """Read the (careful, warning, critical) triplet of one config tier."""

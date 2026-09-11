@@ -149,6 +149,31 @@ def test_render_zero_rate_keeps_b_suffix(network_payload, network_fields):
     assert "0b" in flat
 
 
+def test_render_defaults_to_bits_with_no_view(network_payload, network_fields):
+    """No `view` argument — v4 default (bits/s, `b` suffix), unchanged behaviour."""
+    rows = render(network_payload, network_fields)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "1.1Mb" in flat
+    assert "43.9Kb" in flat
+
+
+def test_render_view_byte_false_uses_bits(network_payload, network_fields):
+    rows = render(network_payload, network_fields, view={"byte": False})
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "1.1Mb" in flat
+    assert "43.9Kb" in flat
+
+
+def test_render_view_byte_true_uses_bytes_per_second(network_payload, network_fields):
+    """`--byte`: bytes/s, no `b` suffix (v4 `network/__init__.py:273`)."""
+    rows = render(network_payload, network_fields, view={"byte": True})
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "146.5K" in flat
+    assert "5.5K" in flat
+    assert "1.1Mb" not in flat
+    assert "43.9Kb" not in flat
+
+
 # ---------------------------------------------------------------- filtering
 
 
@@ -297,3 +322,65 @@ def test_item_rows_are_marked_for_the_truncation_counter(network_payload, networ
     rows = render(network_payload, network_fields)
     assert rows[0].item_start is False  # header
     assert sum(r.item_start for r in rows) == len(network_payload["data"])
+
+
+# ---------------------------------------------------------------- hide_zero (design §5.1)
+
+
+def test_render_skips_hidden_interfaces(network_fields):
+    payload = {
+        "data": [
+            {"interface_name": "eth0", "bytes_recv": 100.0, "bytes_sent": 50.0, "is_up": True, "hidden": False},
+            {"interface_name": "lo", "bytes_recv": 0.0, "bytes_sent": 0.0, "is_up": True, "hidden": True},
+        ],
+        "_levels": {},
+    }
+    rows = render(payload, network_fields)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "eth0" in flat
+    assert "lo" not in flat
+
+
+def test_render_keeps_row_when_hidden_key_absent(network_fields):
+    """Payloads produced before this feature (or by plugins with no
+    HIDE_ZERO_FIELDS) never carry `hidden` — must not be treated as hidden."""
+    payload = {
+        "data": [{"interface_name": "eth0", "bytes_recv": 100.0, "bytes_sent": 50.0, "is_up": True}],
+        "_levels": {},
+    }
+    rows = render(payload, network_fields)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "eth0" in flat
+
+
+# ---------------------------------------------------------------- alias (design §5.5)
+
+
+def test_render_displays_alias_instead_of_interface_name(network_fields):
+    """v4 parity (`network/__init__.py:262`): when an `alias` is published,
+    it REPLACES the raw interface name in the rendered row."""
+    payload = {
+        "data": [
+            {
+                "interface_name": "eth0",
+                "alias": "WAN",
+                "bytes_recv": 0.0,
+                "bytes_sent": 0.0,
+                "is_up": True,
+            },
+        ],
+        "_levels": {"eth0": {}},
+    }
+    rows = render(payload, network_fields)
+    name_cell = rows[1].cells[0].text
+    assert "WAN" in name_cell
+    assert "eth0" not in name_cell
+
+
+def test_render_falls_back_to_interface_name_when_no_alias(network_fields):
+    payload = {
+        "data": [{"interface_name": "eth0", "bytes_recv": 0.0, "bytes_sent": 0.0, "is_up": True}],
+        "_levels": {"eth0": {}},
+    }
+    rows = render(payload, network_fields)
+    assert "eth0" in rows[1].cells[0].text
