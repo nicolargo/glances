@@ -22,7 +22,12 @@
   --gl-level-careful: #5aa9e6;
   --gl-level-warning: #e0a63c;
   --gl-level-critical: #e8695c;
-  --gl-prominent-bg: #2a313a;
+  /* Text of a prominent badge: the theme background. The var() is resolved on
+   * :root, so a theme block that changes --gl-bg keeps a matching badge text
+   * (an --gl-bg override on a descendant element would not). It gives >= 5.0:1
+   * (WCAG AA) on every tier of both shipped themes, where a fixed black drops
+   * to 3.2:1 on the light theme's critical. */
+  --gl-prominent-fg: var(--gl-bg);
 
   --gl-font: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --gl-size-sm: 0.78rem;
@@ -44,7 +49,6 @@
   --gl-level-careful: #1667a8;
   --gl-level-warning: #97650a;
   --gl-level-critical: #b3261e;
-  --gl-prominent-bg: #e6eaef;
 }
 
 body {
@@ -55,14 +59,21 @@ body {
   font-size: var(--gl-size-base);
 }
 
-/* Tier classes. `prominent` adds a BACKGROUND, never a different hue --
- * spec 5.1 R3: colour is never the only signal, because contrast cannot be
- * guaranteed for a user-written theme. */
+/* Tier classes. `prominent` turns the value into a filled BADGE -- the tier
+ * colour as the background, --gl-prominent-fg as the text -- like the TUI's
+ * reverse pairs (glances_curses_v5.py `_init_colors`). The filled background
+ * is a second channel beside the hue, so spec 5.1 R3 holds for the SHIPPED
+ * themes; a user theme whose tier colour is close to --gl-bg loses both.
+ * Each badge rule sets its own text colour: a lone `.gl-prominent` rule would
+ * tie with `.gl-level-*` on specificity and depend on staying after them. */
 .gl-level-ok { color: var(--gl-level-ok); }
 .gl-level-careful { color: var(--gl-level-careful); }
 .gl-level-warning { color: var(--gl-level-warning); }
 .gl-level-critical { color: var(--gl-level-critical); }
-.gl-prominent { background: var(--gl-prominent-bg); }
+.gl-prominent.gl-level-ok { background: var(--gl-level-ok); color: var(--gl-prominent-fg); }
+.gl-prominent.gl-level-careful { background: var(--gl-level-careful); color: var(--gl-prominent-fg); }
+.gl-prominent.gl-level-warning { background: var(--gl-level-warning); color: var(--gl-prominent-fg); }
+.gl-prominent.gl-level-critical { background: var(--gl-level-critical); color: var(--gl-prominent-fg); }
 
 /* Titles and column headers are NEVER given a tier colour -- ported verbatim
  * from the TUI contract (glances/outputs/curses_renderer_v5.py:126-129): an
@@ -80,13 +91,17 @@ body {
   color: var(--gl-muted);
 }
 
-/* Plugin title row: the <h2> and the one value that belongs beside it
- * (mem's percent, load's core count). Global, like .gl-stat-grid: every
- * plugin with a title-line value reuses it. */
-.gl-plugin-title {
-  display: flex;
-  gap: var(--gl-gap);
-  align-items: baseline;
+/* Plugin title: the <h2> inside `.gl-plugin-title`, used by a collection
+ * plugin (network, gpu) and by a scalar plugin until its first payload --
+ * after that a scalar plugin's title and its value are the first pair of its
+ * .gl-stat-grid, as on the TUI's line 1. The title has the size of the text
+ * and no margin, like the TUI's title cell and like that <dt>: the browser's
+ * default <h2> margin and 1.5em size pushed `gpu`/`network` below the top
+ * edge of their neighbours, and made a scalar title jump on its first
+ * payload. Global, like .gl-stat-grid: every plugin reuses it. */
+.gl-plugin-title h2 {
+  margin: 0;
+  font-size: inherit;
 }
 
 /* Two side-by-side columns of (label, value) pairs -- the TUI-parity stat
@@ -98,21 +113,35 @@ body {
   display: flex;
   gap: calc(var(--gl-gap) * 3);
 }
+/* The value column has a width FLOOR, so a block keeps its width when its
+ * values change -- the TUI's fixed-width formats. 7ch is the worst case of
+ * formatPercent ("100.0%"), formatBytes ("1023.9G"), formatCount ("1023.9K")
+ * and a load average ("123.45"); gpu's summary values ("100%", "212F") fit
+ * with room to spare. The floor is on the grid column, NOT on the <dd>: a
+ * <dd> with a min-width would widen the prominent badge again. */
 .gl-stat-grid dl {
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto minmax(7ch, auto);
   column-gap: var(--gl-gap);
   margin: 0;
 }
+/* A column holding formatRate() values ("1023.9G/s", 9 characters). */
+.gl-stat-grid dl.gl-col-rate {
+  grid-template-columns: auto minmax(9ch, auto);
+}
 /* `tabular-nums` and NOT `.gl-num`: a scalar grid needs jitter-free digits,
  * but not .gl-num's 9ch floor -- that floor is sized for formatRate()'s worst
- * case ("1023.9G/s") in a COLLECTION table, and on a <dd> it would stretch
- * every value column (load's "0.86" in a 9ch cell) and make `mem` and
- * `memswap`, visual twins sharing this grid, render at different widths. */
+ * case ("1023.9G/s") in a COLLECTION table, is too wide for any non-rate
+ * value (load's "0.86" in a 9ch cell), and on a <dd> would widen the badge.
+ * The width floor lives on the grid column above. */
 .gl-stat-grid dd {
   margin: 0;
   text-align: right;
   font-variant-numeric: tabular-nums;
+  /* Shrink to the value and sit at the column's right edge, rather than
+   * stretch to the column width: a prominent badge's background then covers
+   * the text only, even when a wider value sets the column. */
+  justify-self: end;
 }
 
 /* Numeric table column: right-aligned, fixed-width digits, and wide enough
@@ -127,4 +156,28 @@ body {
   text-align: right;
   font-variant-numeric: tabular-nums;
   min-width: 9ch;
+}
+
+/* One-line header block (system, ip, uptime, cloud, now): its cells side by
+ * side on a baseline. The gap stands in for the single space the TUI painter
+ * inserts between cells. Global, like .gl-stat-grid: five components share
+ * it, and a scoped copy only matches the component that declares it. */
+.gl-inline {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1ch;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Ellipsis for a string too long for its line (system's OS name, ip's
+ * geolocation). Pair it with a `title` attribute carrying the full text.
+ * `min-width: 0` is load-bearing: a flex item otherwise refuses to shrink
+ * below its content, and the ellipsis never triggers. A browser truncates
+ * with the layout; never copy a terminal character count instead. */
+.gl-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }

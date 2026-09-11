@@ -24,12 +24,13 @@
 				from `payload._key` yields `item[undefined]` against a server that
 				does not publish `_key`, i.e. one duplicate key per row. -->
 				<tr v-for="item in payload.data" :key="item.interface_name">
-					<td
-						v-for="column in COLUMNS"
-						:key="column.field"
-						:class="[cellClassFor(payload, item, column.field), { 'gl-num': column.numeric }]"
-					>
-						{{ column.format(item[column.field]) }}
+					<!-- The tier goes on the <span>, not the <td>: a prominent badge's
+					background would otherwise fill the whole cell, 9ch floor and
+					padding included, instead of the value's text. -->
+					<td v-for="column in COLUMNS" :key="column.field" :class="{ 'gl-num': column.numeric }">
+						<span :class="cellClassFor(payload, item, column.field)">{{
+							column.format(item[column.field])
+						}}</span>
 					</td>
 				</tr>
 			</tbody>

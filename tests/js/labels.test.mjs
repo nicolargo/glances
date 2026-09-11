@@ -1,14 +1,10 @@
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { resolveLabels, labelFor } from "../../glances/outputs/static/js/v5/labels.js";
+import { resolveAllLabels, labelFor } from "../../glances/outputs/static/js/v5/labels.js";
 
 beforeEach(() => {
 	delete globalThis.fetch;
 });
-
-function stubInfo(body, ok = true) {
-	globalThis.fetch = async () => ({ ok, status: ok ? 200 : 500, json: async () => body });
-}
 
 test("short_name wins over label, which wins over the field name", () => {
 	const labels = { a: "SN", b: "Label", c: undefined };
@@ -18,40 +14,31 @@ test("short_name wins over label, which wins over the field name", () => {
 	assert.equal(labelFor(labels, "missing"), "missing");
 });
 
-test("resolveLabels applies the field_label precedence", async () => {
-	// Mirrors glances/outputs/curses_renderer_v5.py:243 field_label():
-	// short_name -> label -> field name. Reproducing it means a label improved
-	// in the schema improves the TUI and the WebUI at once.
-	stubInfo({
-		total: { short_name: "total", label: "Total memory" },
-		available: { label: "avail" },
-		buffers: {},
-	});
-	const labels = await resolveLabels("mem");
-	assert.equal(labels.total, "total");
-	assert.equal(labels.available, "avail");
-	assert.equal(labelFor(labels, "buffers"), "buffers");
+test("resolveAllLabels applies the field_label precedence per plugin, in one fetch", async () => {
+	const paths = [];
+	globalThis.fetch = async (path) => {
+		paths.push(path);
+		return {
+			ok: true,
+			status: 200,
+			json: async () => ({
+				mem: { total: { short_name: "total", label: "Total memory" }, available: { label: "avail" }, buffers: {} },
+				network: { bytes_recv: { short_name: "Rx/s" } },
+			}),
+		};
+	};
+	const labels = await resolveAllLabels();
+	// ONE request whatever the number of plugins -- the point of the batch.
+	assert.deepEqual(paths, ["api/5/all/info"]);
+	assert.equal(labels.mem.total, "total");
+	assert.equal(labels.mem.available, "avail");
+	assert.equal(labelFor(labels.mem, "buffers"), "buffers");
+	assert.equal(labels.network.bytes_recv, "Rx/s");
 });
 
-test("an unreachable /info degrades to field names, never to blank", async () => {
-	// A distinct plugin name from the precedence test above: resolveLabels
-	// caches by name, so reusing "mem" here would return the previous
-	// test's cached (successful) result instead of exercising this stub.
-	globalThis.fetch = async () => {
-		throw new TypeError("network error");
-	};
-	const labels = await resolveLabels("unreachable");
+test("an unreachable /all/info degrades to field names for every plugin", async () => {
+	globalThis.fetch = async () => ({ ok: false, status: 500, json: async () => ({ detail: "boom" }) });
+	const labels = await resolveAllLabels();
 	assert.deepEqual(labels, {});
-	assert.equal(labelFor(labels, "total"), "total");
-});
-
-test("resolveLabels fetches once per plugin and caches", async () => {
-	let calls = 0;
-	globalThis.fetch = async () => {
-		calls += 1;
-		return { ok: true, status: 200, json: async () => ({ x: { label: "X" } }) };
-	};
-	await resolveLabels("cachetest");
-	await resolveLabels("cachetest");
-	assert.equal(calls, 1);
+	assert.equal(labelFor(labels.mem, "total"), "total");
 });

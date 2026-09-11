@@ -18,12 +18,13 @@
 		<table v-else-if="cards.length">
 			<tbody>
 				<tr v-for="card in cards" :key="card.gpu_id">
-					<td
-						v-for="column in columns"
-						:key="column.field"
-						:class="[cellClassFor(payload, card, column.field), { 'gl-num': column.numeric }]"
-					>
-						{{ column.format(card[column.field]) }}
+					<!-- The tier goes on the <span>, not the <td>: a prominent badge's
+					background would otherwise fill the whole cell, 9ch floor and
+					padding included, instead of the value's text. -->
+					<td v-for="column in columns" :key="column.field" :class="{ 'gl-num': column.numeric }">
+						<span :class="cellClassFor(payload, card, column.field)">{{
+							column.format(card[column.field])
+						}}</span>
 					</td>
 				</tr>
 			</tbody>

@@ -6,7 +6,9 @@
 //
 // Ported from the TUI contract (glances/outputs/curses_renderer_v5.py):
 //   - four tiers: ok, careful, warning, critical
-//   - `prominent` means a BACKGROUND highlight, not a different hue
+//   - `prominent` turns the value into a filled badge (tier colour as the
+//     background, see css/v5.css), the TUI's reverse pairs; the tier itself
+//     is unchanged
 //   - an alert is signalled on the VALUE only; titles and column headers are
 //     never given a tier colour. This module therefore exposes no function
 //     that could colour a header -- the rule is enforced by omission.

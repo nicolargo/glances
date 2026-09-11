@@ -16,6 +16,7 @@ Coverage:
 - /api/5/all: returns store.as_dict() verbatim; excludes unregistered plugins
 - /api/5/<plugin>: 200 + payload (with _levels); 200 + null on cycle 0; 404 unknown
 - /api/5/<plugin>/info: 200 + fields_description; 404 unknown
+- /api/5/all/info: every registered schema, published or not; {} when empty
 - /api/5/alert: 200 + history; 404 when alerts is None
 - /api/5/config: 200 + redacted via as_dict_secure()
 - /api/5/token: Basic round-trip → JWT usable on other routes; wrong creds → 401;
@@ -237,6 +238,39 @@ def test_plugin_info_unknown_404(config_factory, store):
     with TestClient(app) as client:
         r = client.get("/api/5/missing/info")
     assert r.status_code == 404
+
+
+def test_all_info_returns_every_registered_schema(config_factory, store):
+    """One request for every schema: the WebUI resolves its labels once at
+    page load instead of one /info call per plugin (G9-5 spec §6.2).
+
+    Neither plugin is populated. Unlike /api/5/all, which skips a plugin that
+    has not published, a schema is static and must be served regardless --
+    otherwise a plugin still at cycle 0 when the tab opens would keep
+    field-name labels for the tab's whole life.
+
+    Also the route-ordering guard: before the handler exists, `all` is read as
+    a plugin name by /{plugin_name}/info and the request 404s.
+    """
+    config = config_factory()
+    scalar = FakeScalarPlugin(store, config)
+    collection = FakeCollectionPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[scalar, collection])
+    with TestClient(app) as client:
+        r = client.get("/api/5/all/info")
+    assert r.status_code == 200
+    assert r.json() == {
+        "fakescalar": FakeScalarPlugin.fields_description,
+        "fakecollection": FakeCollectionPlugin.fields_description,
+    }
+
+
+def test_all_info_empty_registry(config_factory, store):
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        r = client.get("/api/5/all/info")
+    assert r.status_code == 200
+    assert r.json() == {}
 
 
 # ------------------------------------------------------- /alert

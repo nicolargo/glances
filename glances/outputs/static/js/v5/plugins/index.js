@@ -8,6 +8,19 @@
 //
 // `spec` is what the service layer validates the payload against. `shape` is
 // "scalar" or "collection" -- the only two payload shapes v5 has.
+//
+// `slot` is where the page puts the component: "header-left",
+// "header-right", "top", "left" or "right" -- the TUI's HEADER_SLOT_LEFT,
+// HEADER_SLOT_RIGHT, TOP_SLOT, LEFT_SLOT and RIGHT_SLOT
+// (glances/outputs/curses_renderer_v5.py). Order within a slot is THIS
+// list's order, so keep entries in the TUI's order.
+//
+// This is a second copy of those tuples (G9-5 decision D4). Two tests keep it
+// honest: test_every_slot_orders_its_plugins_like_the_tui fails on a plugin
+// in the wrong slot or out of order, and
+// test_the_registry_renders_every_registered_plugin fails on a missing or
+// misspelled slot (such an entry renders in no zone at all). There is no
+// fallback slot, unlike the TUI's slot_for().
 
 import PluginMem from "../PluginMem.vue";
 import PluginNetwork from "../PluginNetwork.vue";
@@ -15,36 +28,80 @@ import PluginLoad from "../PluginLoad.vue";
 import PluginMemswap from "../PluginMemswap.vue";
 import PluginCpu from "../PluginCpu.vue";
 import PluginGpu from "../PluginGpu.vue";
+import PluginSystem from "../PluginSystem.vue";
+import PluginUptime from "../PluginUptime.vue";
+import PluginNow from "../PluginNow.vue";
+import PluginIp from "../PluginIp.vue";
+import PluginCloud from "../PluginCloud.vue";
 
 export const PLUGINS = [
+	// The header plugins declare `required: []`: a missing guard field
+	// (hostname, seconds, custom) is the component's hide rule -- the TUI
+	// renders nothing -- not a shape error for validate() to display.
 	{
-		name: "mem",
-		component: PluginMem,
-		spec: { shape: "scalar", required: ["percent", "total"] },
+		name: "system",
+		component: PluginSystem,
+		slot: "header-left",
+		spec: { shape: "scalar", required: [] },
 	},
 	{
-		name: "network",
-		component: PluginNetwork,
-		spec: { shape: "collection", required: ["interface_name"] },
+		name: "ip",
+		component: PluginIp,
+		slot: "header-left",
+		spec: { shape: "scalar", required: [] },
 	},
 	{
-		name: "load",
-		component: PluginLoad,
-		spec: { shape: "scalar", required: ["min1"] },
+		name: "uptime",
+		component: PluginUptime,
+		slot: "header-right",
+		spec: { shape: "scalar", required: [] },
 	},
 	{
-		name: "memswap",
-		component: PluginMemswap,
-		spec: { shape: "scalar", required: ["total"] },
+		name: "cloud",
+		component: PluginCloud,
+		slot: "header-right",
+		spec: { shape: "scalar", required: [] },
+	},
+	{
+		name: "now",
+		component: PluginNow,
+		slot: "header-right",
+		spec: { shape: "scalar", required: [] },
 	},
 	{
 		name: "cpu",
 		component: PluginCpu,
+		slot: "top",
 		spec: { shape: "scalar", required: ["total"] },
 	},
 	{
 		name: "gpu",
 		component: PluginGpu,
+		slot: "top",
 		spec: { shape: "collection", required: ["gpu_id"] },
+	},
+	{
+		name: "mem",
+		component: PluginMem,
+		slot: "top",
+		spec: { shape: "scalar", required: ["percent", "total"] },
+	},
+	{
+		name: "memswap",
+		component: PluginMemswap,
+		slot: "top",
+		spec: { shape: "scalar", required: ["total"] },
+	},
+	{
+		name: "load",
+		component: PluginLoad,
+		slot: "top",
+		spec: { shape: "scalar", required: ["min1"] },
+	},
+	{
+		name: "network",
+		component: PluginNetwork,
+		slot: "left",
+		spec: { shape: "collection", required: ["interface_name"] },
 	},
 ];

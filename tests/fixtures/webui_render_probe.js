@@ -219,16 +219,13 @@ const ALERT_FIXTURES = Array.from({ length: 12 }, (_, i) => ({
 	hostname: "test-host",
 }));
 
-// `fields_description` shape for `/api/5/<plugin>/info`, as labels.js
-// expects it: field -> {short_name, label}. Real enough that resolveLabels'
-// short_name -> label -> field name precedence has something to resolve,
-// rather than degrading to field names by accident. short_names for the mem
-// fields are copied from glances/plugins/mem/model_v5.py so the rendered
-// labels match the TUI ("avail", "inacti", "buffer").
-// The stub is keyed BY PLUGIN NAME: answering every `/info` with the mem
-// schema made a network header assertion meaningless (network's fields are
-// absent from it, so labelFor silently degraded to field names and any
-// expected string would have had to be the field name itself).
+// `/api/5/all/info` answer: plugin -> fields_description, as labels.js'
+// resolveAllLabels() expects it. Real enough that the short_name -> label ->
+// field name precedence has something to resolve, rather than degrading to
+// field names by accident. short_names for the mem fields are copied from
+// glances/plugins/mem/model_v5.py so the rendered labels match the TUI
+// ("avail", "inacti", "buffer"). Keyed by plugin: a single schema shared by
+// every plugin would make a network header assertion meaningless.
 const INFO_FIXTURES = {
 	mem: {
 		total: { short_name: "total", label: "Total" },
@@ -279,7 +276,38 @@ const INFO_FIXTURES = {
 		mem: { short_name: "mem" },
 		temperature: { short_name: "temperature" },
 	},
+	system: { os_name: {}, hostname: {}, platform: {}, linux_distro: {}, os_version: {}, hr_name: {} },
+	uptime: { seconds: {} },
+	now: { custom: {}, iso: {} },
+	ip: { address: {}, mask: {}, mask_cidr: {}, gateway: {}, public_address: {}, public_info_human: {} },
+	cloud: { id: {}, platform: {}, name: {}, type: {}, region: {} },
 };
+
+// `/api/5/pluginslist` default answer: every plugin a v5 server instantiates
+// when nothing is disabled -- the plugin directories carrying a model_v5.py.
+// `cloud` is included although it is disabled by default on a real server:
+// the header render tests need it instantiated. A scenario absent from
+// PLUGINSLIST_FIXTURES gets this list.
+const SERVER_PLUGINS = [
+	"amps", "cloud", "connections", "containers", "core", "cpu", "diskio", "folders", "fs", "gpu",
+	"ip", "irq", "load", "mem", "memswap", "mpp", "network", "now", "npu", "percpu", "ports",
+	"processcount", "processlist", "programlist", "psutilversion", "quicklook", "raid", "sensors",
+	"smart", "system", "uptime", "version", "vms", "wifi",
+];
+
+// Per-scenario `/api/5/pluginslist` answers. `null` means the endpoint fails
+// (HTTP 500), which must render the whole registry.
+const PLUGINSLIST_FIXTURES = {
+	"gpu-disabled": SERVER_PLUGINS.filter((name) => name !== "gpu"),
+	"pluginslist-unreachable": null,
+	// The shipped default: `[cloud] disable` is true (cloud/model_v5.py:100).
+	"cloud-disabled": SERVER_PLUGINS.filter((name) => name !== "cloud"),
+};
+
+// Scenarios whose `/api/5/all` answers with an HTTP 500, same shape as the
+// `pluginslist-unreachable` handling above -- spec §9: "`/api/5/all` fails ->
+// every visible block shows its error, header included."
+const ALL_UNREACHABLE_SCENARIOS = new Set(["all-unreachable"]);
 
 // `/api/5/all` fixtures for the `mem` render-parity tests
 // (test_mem_renders_all_eight_statistics_with_avail /
@@ -392,13 +420,58 @@ const ARGS_FIXTURES = {
 	"gpu-three-cards-mean": { meangpu: true },
 	"gpu-one-card-fahrenheit": { fahrenheit: true },
 	"gpu-first-card-colour": { meangpu: true },
+	"header-hide-public": { hide_public_info: true },
+};
+
+// Header plugin payloads, shaped like their model_v5.py `_collect()` output.
+// 273600 s is exactly 3 days 4 hours -> "3d04h".
+const SYSTEM_FIXTURE = {
+	os_name: "Linux",
+	hostname: "test-host",
+	platform: "64bit",
+	linux_distro: "Ubuntu 26.04",
+	os_version: "7.0.0-31-generic",
+	hr_name: "Ubuntu 26.04 64bit / Linux 7.0.0-31-generic",
+	_levels: {},
+};
+const UPTIME_FIXTURE = { seconds: 273600, _levels: {} };
+const NOW_FIXTURE = { iso: "2026-09-11T10:20:30+02:00", custom: "2026-09-11 10:20:30 CEST", _levels: {} };
+// Addresses from the documentation ranges (RFC 5737): 203.0.113.0/24 is
+// TEST-NET-3, never routed.
+const IP_FIXTURE = {
+	address: "192.168.1.10",
+	mask: "255.255.255.0",
+	mask_cidr: 24,
+	gateway: null,
+	public_address: "203.0.113.42",
+	public_info_human: "Paris, France (AS64496 Example Net)",
+	_levels: {},
+};
+// cloud/render_curses_v5.py's own docstring example.
+const CLOUD_FIXTURE = {
+	id: "b7c1e2d3",
+	platform: "OpenStack",
+	name: "my-vm",
+	type: "gold",
+	region: "eu-west-1a",
+	_levels: {},
 };
 
 const ALL_FIXTURES = {
 	default: {},
+	"gpu-disabled": {},
+	"pluginslist-unreachable": {},
 	"mem-with-available": { mem: MEM_FIXTURE_WITH_AVAILABLE },
 	"mem-no-available": { mem: MEM_FIXTURE_NO_AVAILABLE },
 	network: { network: NETWORK_FIXTURE },
+	// eth0's Rx rate prominent-warning: the badge must wrap the formatted
+	// value, not fill the whole .gl-num cell.
+	"network-prominent": {
+		network: { ...NETWORK_FIXTURE, _levels: { eth0: { bytes_recv: { level: "warning", prominent: true } } } },
+	},
+	// The first-card-levels cards WITHOUT --meangpu: the per-card table, where
+	// card 0's proc cell is critical.
+	"gpu-multi-levels": { gpu: GPU_FIRST_CARD_LEVELS },
 	load: {
 		load: { min1: 0.86, min5: 0.72, min15: 0.8, cpucore: 4, _levels: {} },
 	},
@@ -471,6 +544,21 @@ const ALL_FIXTURES = {
 	"gpu-first-card-colour": { gpu: GPU_FIRST_CARD_LEVELS },
 	"gpu-mixed-memory": { gpu: GPU_MIXED_MEMORY },
 	"gpu-zero-cards": { gpu: GPU_ZERO_CARDS },
+	header: { system: SYSTEM_FIXTURE, ip: IP_FIXTURE, uptime: UPTIME_FIXTURE, cloud: CLOUD_FIXTURE, now: NOW_FIXTURE },
+	// Same payloads as `header`; only ARGS_FIXTURES differs, so a masked
+	// address can only come from the flag.
+	"header-hide-public": { ip: IP_FIXTURE },
+	"ip-no-cidr": { ip: { ...IP_FIXTURE, mask_cidr: null } },
+	// Neither address: the TUI returns [] (ip/render_curses_v5.py:71).
+	"ip-no-address": { ip: { ...IP_FIXTURE, address: "", public_address: "" } },
+	// platform present, name absent: the #2485 guard hides the block.
+	"cloud-no-name": { cloud: { id: "b7c1e2d3", platform: "OpenStack", type: "gold", region: "eu-west-1a", _levels: {} } },
+	// region absent as a KEY: the TUI's `payload.get("region", "Unknown")`.
+	"cloud-no-region": { cloud: { id: "b7c1e2d3", platform: "OpenStack", name: "my-vm", type: "gold", _levels: {} } },
+	"cloud-disabled": { system: SYSTEM_FIXTURE, cloud: CLOUD_FIXTURE },
+	// The TUI's guard (system/render_curses_v5.py:25): no hostname, no block --
+	// even with an OS name to show.
+	"system-no-hostname": { system: { ...SYSTEM_FIXTURE, hostname: "" } },
 };
 
 // Every plugin that renders the SCALAR grid (<dl> of <dt>/<dd> pairs),
@@ -490,17 +578,29 @@ ALL_FIXTURES["scalar-grids"] = {
 const scenario = process.argv[3] || "default";
 
 async function fakeFetch(url) {
-	if (String(url).includes("api/5/alert")) {
+	const path = String(url);
+	if (path.includes("api/5/alert")) {
 		return { ok: true, status: 200, json: async () => ALERT_FIXTURES };
 	}
-	const info = String(url).match(/api\/5\/([^/]+)\/info/);
-	if (info) {
-		return { ok: true, status: 200, json: async () => INFO_FIXTURES[info[1]] || {} };
+	// BEFORE the `api/5/all` check below: "api/5/all/info" contains
+	// "api/5/all", and would otherwise be answered with the stats payload.
+	if (path.includes("api/5/all/info")) {
+		return { ok: true, status: 200, json: async () => INFO_FIXTURES };
 	}
-	if (String(url).includes("api/5/all")) {
+	if (path.includes("api/5/pluginslist")) {
+		const names = scenario in PLUGINSLIST_FIXTURES ? PLUGINSLIST_FIXTURES[scenario] : SERVER_PLUGINS;
+		if (names === null) {
+			return { ok: false, status: 500, json: async () => ({ detail: "boom" }) };
+		}
+		return { ok: true, status: 200, json: async () => names };
+	}
+	if (path.includes("api/5/all")) {
+		if (ALL_UNREACHABLE_SCENARIOS.has(scenario)) {
+			return { ok: false, status: 500, json: async () => ({ detail: "boom" }) };
+		}
 		return { ok: true, status: 200, json: async () => ALL_FIXTURES[scenario] || {} };
 	}
-	if (String(url).includes("api/5/args")) {
+	if (path.includes("api/5/args")) {
 		return { ok: true, status: 200, json: async () => ARGS_FIXTURES[scenario] || {} };
 	}
 	return { ok: true, status: 200, json: async () => ({}) };
@@ -546,16 +646,16 @@ const bundlePath = process.argv[2];
 const code = fs.readFileSync(bundlePath, "utf8");
 vm.runInContext(code, sandbox, { filename: bundlePath });
 
-// Every registered plugin renders as an <article class="gl-plugin"> with an
-// <h2 class="gl-header"> naming it (PluginMem.vue, PluginNetwork.vue). This
-// walks the whole tree (not just one level, like findDescendantTag) so the
-// registry test can assert on the SET of plugins that actually rendered,
-// not just the first one found.
-function findAllByClass(root, className, acc = []) {
+// Every rendered plugin root carries its registry name as `data-plugin`
+// (AppShell binds it; Vue's fallthrough puts it on the component's single
+// root). Collected by that attribute, not by `.gl-plugin`: the header
+// components are one-line <span>s, not <article class="gl-plugin"> panels.
+// Walks the whole tree so the assertions see the SET that rendered.
+function findAllByAttr(root, attr, acc = []) {
 	for (const child of root.childNodes) {
 		if (child.nodeType === ELEMENT_NODE) {
-			if (child.classList.contains(className)) acc.push(child);
-			findAllByClass(child, className, acc);
+			if (child.getAttribute(attr) !== null) acc.push(child);
+			findAllByAttr(child, attr, acc);
 		}
 	}
 	return acc;
@@ -612,6 +712,33 @@ function collect() {
 		// undeclared object prop onto the DOM), observing the render rather
 		// than the component source.
 		pluginAttrs: {},
+		// Ordered `data-plugin` values inside each `[data-slot]` container,
+		// keyed by the slot name -- what the drift guard compares against the
+		// TUI's slot tuples (curses_renderer_v5.py:58-80).
+		slots: {},
+		// Whether each plugin root is hidden by `v-show` (Vue writes
+		// `style.display = "none"`, runtime-dom's setDisplay()). The header
+		// components stay in the DOM while hidden, so presence in pluginNames
+		// says nothing about visibility -- this does.
+		pluginHidden: {},
+		// Every <dl> of a scalar plugin as its (dt, dd) text pairs, keyed by
+		// data-plugin: [[[label, value], ...], ...], one inner list per column.
+		// Lets a test observe which pair opens a column and how many lines each
+		// column has -- the TUI grid shape -- rather than a flat text blob.
+		pluginGrid: {},
+		// The class of each <dl> column of a scalar plugin, same keying and
+		// order as pluginGrid -- lets a test observe which column takes the
+		// wider formatRate() width floor (`gl-col-rate`).
+		pluginGridClasses: {},
+		// Every <td> of a collection plugin, keyed by data-plugin: the cell's
+		// own classes and those of the <span> around its value. Lets a test
+		// observe that the tier (and the prominent badge) sits on the value
+		// text, not on the whole cell.
+		pluginTableCells: {},
+		// One entry per footer alert <li>: its classes, and the text and
+		// classes of the <span> holding the level word. Lets a test observe
+		// WHERE the prominent badge lands (the level word, not the whole line).
+		footerAlerts: [],
 	};
 	const first = appDiv.childNodes[0];
 	if (first) {
@@ -624,7 +751,17 @@ function collect() {
 			result.hasHeader = !!header;
 			result.hasFooter = !!footer;
 			result.footerText = footer ? footer.textContent : null;
-			const articles = findAllByClass(first, "gl-plugin");
+			if (footer) {
+				result.footerAlerts = findAllByTag(footer, "LI").map((li) => {
+					const level = findDescendantTag(li, "SPAN");
+					return {
+						className: li.className,
+						level: level ? level.textContent : null,
+						levelClass: level ? level.className : null,
+					};
+				});
+			}
+			const articles = findAllByAttr(first, "data-plugin");
 			result.pluginHeaders = articles.map((article) => {
 				const h2 = findDescendantTag(article, "H2");
 				return h2 ? h2.textContent : null;
@@ -639,6 +776,7 @@ function collect() {
 				result.pluginNames.push(name);
 				result.pluginText[name] = article.textContent;
 				result.pluginAttrs[name] = article.getAttributeNames();
+				result.pluginHidden[name] = article.style.display === "none";
 				const ths = findAllByTag(article, "TH");
 				if (ths.length) {
 					result.pluginColumnHeaders[name] = ths.map((th) => th.textContent);
@@ -648,7 +786,32 @@ function collect() {
 				if (values.length) {
 					result.pluginValueClasses[name] = values.map((cell) => cell.className);
 				}
+				const tds = findAllByTag(article, "TD");
+				if (tds.length) {
+					result.pluginTableCells[name] = tds.map((td) => {
+						const span = findDescendantTag(td, "SPAN");
+						return { cell: td.className, value: span ? span.className : null };
+					});
+				}
+				const dls = findAllByTag(article, "DL");
+				if (dls.length) {
+					// dt and dd alternate inside a scalar <dl>, so zipping the two
+					// ordered lists yields the rendered (label, value) lines.
+					result.pluginGrid[name] = dls.map((dl) => {
+						const dds = findAllByTag(dl, "DD");
+						return findAllByTag(dl, "DT").map((dt, i) => [
+							dt.textContent.trim(),
+							dds[i] ? dds[i].textContent.trim() : null,
+						]);
+					});
+					result.pluginGridClasses[name] = dls.map((dl) => dl.className);
+				}
 			});
+			for (const section of findAllByAttr(first, "data-slot")) {
+				result.slots[section.getAttribute("data-slot")] = findAllByAttr(section, "data-plugin").map((el) =>
+					el.getAttribute("data-plugin"),
+				);
+			}
 		}
 	}
 	return result;

@@ -38,6 +38,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from glances.config_v5 import GlancesConfigV5
+from glances.outputs.curses_renderer_v5 import HEADER_SLOT_LEFT, HEADER_SLOT_RIGHT, LEFT_SLOT, RIGHT_SLOT, TOP_SLOT
 from glances.security_v5 import hash_password
 from glances.stats_store_v5 import StatsStoreV5
 from glances.webserver_v5 import build_app
@@ -688,6 +689,11 @@ def test_the_registry_renders_every_registered_plugin():
     present, not just "some markup exists": a loop that iterates only
     `PLUGINS[0]` would still produce one gl-plugin article and could pass a
     weaker assertion.
+
+    The order is the DOCUMENT order, i.e. zone by zone: a registry entry
+    whose `slot` is missing or misspelled is rendered in no zone at all, and
+    this explicit list is what catches it -- the drift guard below only sees
+    what rendered.
     """
     if not _BUNDLE_PATH.exists():
         pytest.fail(f"{_BUNDLE_PATH} is missing -- run `npm run build` in glances/outputs/static/")
@@ -702,9 +708,99 @@ def test_the_registry_renders_every_registered_plugin():
     assert result.stderr == "", f"render probe printed to stderr:\n{result.stderr}"
 
     payload = json.loads(result.stdout)
-    assert payload["pluginNames"] == ["mem", "network", "load", "memswap", "cpu", "gpu"], (
-        f"expected all registered plugins to render, got {payload['pluginNames']!r}"
-    )
+    assert payload["pluginNames"] == [
+        "system",
+        "ip",
+        "uptime",
+        "cloud",
+        "now",
+        "cpu",
+        "gpu",
+        "mem",
+        "memswap",
+        "load",
+        "network",
+    ], f"expected all registered plugins to render, got {payload['pluginNames']!r}"
+
+
+_TUI_SLOTS = {
+    "header-left": HEADER_SLOT_LEFT,
+    "header-right": HEADER_SLOT_RIGHT,
+    "top": TOP_SLOT,
+    "left": LEFT_SLOT,
+    "right": RIGHT_SLOT,
+}
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_every_slot_orders_its_plugins_like_the_tui():
+    """The drift guard G9-5's decision D4 depends on.
+
+    The WebUI keeps its own copy of the TUI's slot lists (a `slot` attribute
+    per entry in plugins/index.js, order = registry order). Nothing prevents
+    the two copies from drifting apart; this test makes drift a failure. It
+    compares the RENDERED layout -- not the registry source -- against the
+    tuples imported from glances.outputs.curses_renderer_v5, which it must
+    never restate.
+
+    For each slot container, the plugins rendered in it must be exactly the
+    TUI tuple for that slot, filtered to the plugins that rendered, in the
+    tuple's order. A plugin placed in the wrong slot is absent from that
+    slot's tuple and fails; two plugins swapped within a slot fail on order.
+    """
+    payload = _run_render_probe("default")
+    rendered = payload["pluginNames"]
+    slots = payload["slots"]
+
+    assert rendered, "vacuous: nothing rendered"
+    assert set(slots) <= set(_TUI_SLOTS), f"a slot the TUI does not have rendered: {sorted(slots)!r}"
+    placed = [name for names in slots.values() for name in names]
+    assert sorted(placed) == sorted(rendered), f"every plugin must sit in exactly one slot: {slots!r}"
+    for slot, names in slots.items():
+        expected = [name for name in _TUI_SLOTS[slot] if name in rendered]
+        assert names == expected, f"slot {slot!r}: rendered {names!r}, the TUI orders {expected!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_plugin_the_server_did_not_instantiate_is_not_rendered():
+    """A disabled plugin is never instantiated (glances/main_v5.py:372), so it
+    is never in /api/5/all, and before G9-5 the WebUI showed it as "loading…"
+    forever. `gpu-disabled` answers /api/5/pluginslist without `gpu`.
+    """
+    payload = _run_render_probe("gpu-disabled")
+    assert "gpu" not in payload["pluginNames"], f"gpu is disabled: {payload['pluginNames']!r}"
+    assert "cpu" in payload["pluginNames"], f"vacuous: the other plugins must still render: {payload['pluginNames']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_unreadable_pluginslist_renders_the_whole_registry():
+    """/api/5/pluginslist failing must degrade to the pre-G9-5 behaviour --
+    every registered plugin rendered -- never to an empty page.
+    """
+    payload = _run_render_probe("pluginslist-unreachable")
+    assert payload["pluginNames"] == [
+        "system",
+        "ip",
+        "uptime",
+        "cloud",
+        "now",
+        "cpu",
+        "gpu",
+        "mem",
+        "memswap",
+        "load",
+        "network",
+    ], f"expected the whole registry, got {payload['pluginNames']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_refresh_cadence_renders_in_the_footer():
+    """G9-5 decision D5: the top bar is gone and the cadence moved to the
+    footer. The probe answers /api/5/config with `{}`, so the cadence is
+    api.js' DEFAULT_REFRESH_SECONDS (2).
+    """
+    payload = _run_render_probe("default")
+    assert "refresh 2s" in (payload["footerText"] or ""), f"got {payload['footerText']!r}"
 
 
 # --------------------------------------------------------- mem TUI parity (G9-3 Task 5)
@@ -820,9 +916,9 @@ def test_server_args_does_not_leak_into_the_dom_as_an_attribute():
     payload = _run_render_probe("mem-with-available")
     # Without this the loop below is vacuous: an empty `pluginAttrs` (a probe
     # that stopped collecting the attribute, a render that produced no
-    # article) would pass silently. Six is the registry size asserted by
+    # article) would pass silently. Eleven is the registry size asserted by
     # test_the_registry_renders_every_registered_plugin.
-    assert len(payload["pluginAttrs"]) == 6, f"expected all six plugins' attributes, got {payload['pluginAttrs']!r}"
+    assert len(payload["pluginAttrs"]) == 11, f"expected all eleven plugins' attributes, got {payload['pluginAttrs']!r}"
     for name, attrs in payload["pluginAttrs"].items():
         assert "server-args" not in attrs, f"{name} leaked serverArgs as an attribute: {attrs!r}"
 
@@ -833,11 +929,12 @@ def test_every_scalar_grid_renders_its_values_with_the_same_classes():
 
     `.gl-num` is not only alignment: `css/v5.css` floors it at 9ch, a width
     sized for `formatRate()`'s worst case ("1023.9G/s") in a collection
-    TABLE. On a scalar <dd> that floor stretches every value column -- load's
-    "0.86" in a 9ch cell -- and makes `mem` and `memswap`, visual twins
-    sharing `.gl-stat-grid`, render at different widths. Jitter-free digits
-    come from `font-variant-numeric: tabular-nums` on `.gl-stat-grid dd`
-    instead, which costs no width.
+    TABLE. On a scalar <dd> that floor is too wide for any non-rate value --
+    load's "0.86" in a 9ch cell -- and, being on the <dd>, it would also widen
+    the prominent badge past its text. A scalar column's width floor lives on
+    the grid COLUMN instead (`.gl-stat-grid dl`, 9ch only for `gl-col-rate`),
+    and jitter-free digits come from `font-variant-numeric: tabular-nums` on
+    `.gl-stat-grid dd`, which costs no width.
 
     So the only class a scalar value cell may carry is its tier
     (`gl-level-*`), and every one of the five must agree. Observed through
@@ -876,6 +973,138 @@ def test_load_renders_the_three_averages_and_the_core_count():
     assert "cpucore" not in text, f"cpucore is internal and must not be a row: {text!r}"
 
 
+@pytest.mark.parametrize(
+    ("scenario", "name", "expected"),
+    [
+        pytest.param(
+            "mem-with-available",
+            "mem",
+            [
+                [["MEM", "53.2%"], ["total", "16.0G"], ["avail", "8.0G"], ["free", "2.0G"]],
+                [["active", "5.0G"], ["inacti", "4.0G"], ["buffer", "100.0M"], ["cached", "3.0G"]],
+            ],
+            id="mem",
+        ),
+        pytest.param(
+            "load",
+            "load",
+            [[["LOAD", "4core"], ["1 min", "0.86"], ["5 min", "0.72"], ["15 min", "0.80"]]],
+            id="load",
+        ),
+        pytest.param(
+            "memswap",
+            "memswap",
+            [[["SWAP", "25.0%"], ["total", "16.0G"], ["sin", "100.0K/s"], ["sout", "0B/s"]]],
+            id="memswap",
+        ),
+        pytest.param(
+            "cpu",
+            "cpu",
+            [
+                [["CPU", "4.5%"], ["user", "3.8%"], ["system", "0.7%"], ["iowait", "0.0%"]],
+                [["idle", "95.5%"], ["irq", "0.0%"], ["nice", "0.0%"], ["steal", "0.0%"]],
+                [["ctx_sw", "6.7K"], ["inter", "3.0K"], ["sw_int", "1.8K"], ["guest", "0.0%"]],
+            ],
+            id="cpu",
+        ),
+    ],
+)
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_scalar_title_is_the_first_pair_of_its_first_column(scenario, name, expected):
+    """TUI reference layouts (mem/memswap/load/cpu render_curses_v5.py
+    docstrings): line 1 carries the title AND its value as the first
+    (label, value) pair of column 1 -- `SWAP 25.0%`, `CPU 4.5% | idle 95.5% |
+    ctx_sw 6.7K`. So the title value shares the right-aligned value column,
+    and every column has the same four lines.
+
+    A title row rendered ABOVE the grid puts the value next to the title
+    instead of in the value column, and shifts `active`/`idle`/`ctx_sw` one
+    line below the title in mem and cpu. `pluginGrid` is every <dl> of the
+    plugin as (dt, dd) text pairs, so this observes both the pairing and the
+    per-column line count.
+    """
+    payload = _run_render_probe(scenario)
+    assert payload["pluginGrid"].get(name) == expected, (
+        f"{name}: expected the TUI grid {expected!r}, got {payload['pluginGrid'].get(name)!r}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("scenario", "name", "expected"),
+    [
+        pytest.param("memswap", "memswap", ["gl-col-rate"], id="memswap"),
+        pytest.param("mem-with-available", "mem", ["", ""], id="mem"),
+        pytest.param("load", "load", [""], id="load"),
+        pytest.param("cpu", "cpu", ["", "", ""], id="cpu"),
+    ],
+)
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_only_a_column_of_rates_takes_the_wider_floor(scenario, name, expected):
+    """Every scalar value column has a 7ch floor so a block keeps its width as
+    values change (css/v5.css). Only a column holding formatRate() values --
+    memswap's sin/sout, up to "1023.9G/s" -- needs 9ch, via `gl-col-rate`. A
+    rate column without it would still resize as the rate grows.
+    """
+    payload = _run_render_probe(scenario)
+    assert payload["pluginGridClasses"].get(name) == expected, (
+        f"{name}: expected column classes {expected!r}, got {payload['pluginGridClasses'].get(name)!r}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_loaded_scalar_plugin_still_names_itself_for_assistive_technology():
+    """Once loaded, a scalar plugin's title is a <dt> -- a heading is not
+    allowed inside <dt> -- so the <article> carries an aria-label, or a screen
+    reader navigating by landmark/heading loses mem, swap, load and cpu.
+    `scalar-grids` renders all four loaded. `data-plugin` is asserted in the
+    same breath: a template comment placed before the root <article> would
+    make a second root node and silently drop both fallthrough attributes.
+    """
+    payload = _run_render_probe("scalar-grids")
+    for name in ("mem", "memswap", "load", "cpu"):
+        attrs = payload["pluginAttrs"].get(name) or []
+        assert "aria-label" in attrs, f"{name}: the loaded article names itself: {attrs!r}"
+        assert "data-plugin" in attrs, f"{name}: data-plugin still lands on the root: {attrs!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_scalar_plugin_keeps_its_title_while_loading():
+    """The title moves into the grid only once a payload exists; before that
+    (cycle 0) the plugin must still say what it is, not show a bare
+    "loading…". Checked on the `default` scenario, which publishes nothing.
+    """
+    payload = _run_render_probe("default")
+    for name, title in (("mem", "MEM"), ("load", "LOAD"), ("memswap", "SWAP"), ("cpu", "CPU")):
+        text = payload["pluginText"].get(name, "")
+        assert text.startswith(title) and "loading" in text, f"{name}: expected {title} then loading, got {text!r}"
+        assert name not in payload["pluginGrid"], f"{name}: no grid before the first payload"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_prominent_alert_badges_its_level_word_only():
+    """TUI parity (curses_renderer_v5.py alert grid): a prominent incident
+    paints the badge on its LEVEL cell only. Now that `gl-prominent` fills
+    the tier colour as a background, putting it on the whole footer <li>
+    would turn every prominent alert into a full-width coloured band.
+
+    Every alert in the probe fixture is critical AND prominent, so the line
+    keeps the tier text colour without the badge, and the level word alone
+    carries both classes.
+    """
+    payload = _run_render_probe("default")
+    alerts = payload["footerAlerts"]
+    assert len(alerts) == 10, f"vacuous: expected the ten most recent alerts, got {alerts!r}"
+    for alert in alerts:
+        item_classes = alert["className"].split()
+        assert "gl-level-critical" in item_classes and "gl-prominent" not in item_classes, (
+            f"the line keeps the tier colour but never the badge: {alert!r}"
+        )
+        assert alert["level"] == "critical", f"the level word renders on its own: {alert!r}"
+        assert set((alert["levelClass"] or "").split()) == {"gl-level-critical", "gl-prominent"}, (
+            f"the level word carries the badge: {alert!r}"
+        )
+
+
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_network_rate_columns_are_marked_numeric():
     """The two rate columns must carry `.gl-num`, the interface one must not.
@@ -893,6 +1122,35 @@ def test_network_rate_columns_are_marked_numeric():
     assert "gl-num" not in classes[0], f"the interface column must not be numeric, got {classes[0]!r}"
     for i in (1, 2):
         assert "gl-num" in classes[i], f"expected the rate column {i} to carry gl-num, got {classes[i]!r}"
+
+
+def _tier_classes(class_name):
+    return {c for c in (class_name or "").split() if c.startswith("gl-level-") or c == "gl-prominent"}
+
+
+@pytest.mark.parametrize(
+    ("scenario", "name", "cell_index", "expected"),
+    [
+        # Columns: interface, Rx/s, Tx/s -> cell 1 is eth0's Rx.
+        pytest.param("network-prominent", "network", 1, {"gl-level-warning", "gl-prominent"}, id="network"),
+        # Columns: name, proc, mem -> cell 1 is card 0's proc.
+        pytest.param("gpu-multi-levels", "gpu", 1, {"gl-level-critical"}, id="gpu"),
+    ],
+)
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_table_value_carries_its_tier_on_the_text_not_the_cell(scenario, name, cell_index, expected):
+    """A prominent badge paints the tier colour as a BACKGROUND. On a <td>
+    that background fills the whole cell -- including `.gl-num`'s 9ch floor
+    and the padding -- so a short value like "0%" sat on a wide coloured
+    block (maintainer smoke test). The tier classes therefore go on a <span>
+    around the formatted value, like the TUI badge that covers the cell text;
+    the <td> keeps only its layout class.
+    """
+    payload = _run_render_probe(scenario)
+    cell = payload["pluginTableCells"][name][cell_index]
+    assert _tier_classes(cell["value"]) == expected, f"the value span carries the tier: {cell!r}"
+    assert _tier_classes(cell["cell"]) == set(), f"the <td> itself carries no tier class: {cell!r}"
+    assert "gl-num" in cell["cell"].split(), f"the <td> keeps its numeric layout class: {cell!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -1193,3 +1451,148 @@ def test_gpu_summary_colours_from_the_first_card_not_from_the_mean():
     assert classes, "no GPU value cells rendered"
     # Summary order is proc, mem, temperature -- proc is the first <dd>.
     assert "gl-level-critical" in classes[0], f"the proc cell must take card 0's critical tier, got {classes[0]!r}"
+
+
+# ------------------------------------------------------- header plugins (G9-5)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_header_blocks_are_hidden_while_their_plugin_has_not_published():
+    """The `default` scenario publishes nothing. The TUI renders `[]` for an
+    empty payload, so the header blocks are hidden -- not "loading…", which
+    would fill the banner with placeholders.
+
+    `mem` is asserted NOT hidden in the same run: without that, a probe that
+    reported every element as hidden would pass this test.
+    """
+    payload = _run_render_probe("default")
+    hidden = payload["pluginHidden"]
+    for name in ("system", "ip", "uptime", "cloud", "now"):
+        assert hidden.get(name) is True, f"{name} must be hidden before it publishes: {hidden!r}"
+    assert hidden.get("mem") is False, f"vacuous: a panel plugin is never hidden: {hidden!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_system_renders_the_hostname_and_the_os_name():
+    """system/render_curses_v5.py: `hostname` then `hr_name`."""
+    payload = _run_render_probe("header")
+    text = payload["pluginText"].get("system", "")
+    assert payload["pluginHidden"].get("system") is False
+    assert "test-host" in text, f"got {text!r}"
+    assert "Ubuntu 26.04 64bit / Linux 7.0.0-31-generic" in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_system_without_a_hostname_is_hidden():
+    payload = _run_render_probe("system-no-hostname")
+    assert payload["pluginHidden"].get("system") is True, f"got {payload['pluginHidden']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_uptime_renders_in_the_tui_format():
+    """uptime/render_curses_v5.py: `Uptime:` then format_seconds(seconds)."""
+    payload = _run_render_probe("header")
+    text = payload["pluginText"].get("uptime", "")
+    assert "Uptime:" in text and "3d04h" in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_now_renders_the_custom_date():
+    """now/render_curses_v5.py: the `custom` string only; `iso` is REST-only."""
+    payload = _run_render_probe("header")
+    text = payload["pluginText"].get("now", "")
+    assert text == "2026-09-11 10:20:30 CEST", f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_header_plugins_sit_in_the_header_zone():
+    payload = _run_render_probe("header")
+    assert payload["slots"].get("header-left") == ["system", "ip"], f"got {payload['slots']!r}"
+    assert payload["slots"].get("header-right") == ["uptime", "cloud", "now"], f"got {payload['slots']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_ip_renders_the_private_and_public_addresses():
+    """ip/render_curses_v5.py: `IP addr/cidr`, then `Pub addr` and the
+    geolocation string."""
+    payload = _run_render_probe("header")
+    text = payload["pluginText"].get("ip", "")
+    for expected in ("IP", "192.168.1.10/24", "Pub", "203.0.113.42", "Paris, France (AS64496 Example Net)"):
+        assert expected in text, f"expected {expected!r} in the ip text, got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_ip_without_a_cidr_shows_the_bare_address():
+    """`mask_cidr is not None` gates the suffix (ip/render_curses_v5.py:53)."""
+    payload = _run_render_probe("ip-no-cidr")
+    text = payload["pluginText"].get("ip", "")
+    assert "192.168.1.10" in text, f"got {text!r}"
+    assert "192.168.1.10/" not in text, f"no cidr -> no slash: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_ip_masks_the_public_address_with_hide_public_info():
+    """`--hide-public-info` reaches the WebUI through /api/5/args. Same payload
+    as `header`; only the args fixture differs.
+
+    Display-only, like the TUI: the API still serves the address in clear
+    (G9-5 spec §11). This test proves the rendered text, nothing more.
+    """
+    payload = _run_render_probe("header-hide-public")
+    text = payload["pluginText"].get("ip", "")
+    assert "203.0.*.*" in text, f"got {text!r}"
+    assert "113.42" not in text, f"the masked octets must not render: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_ip_with_no_address_is_hidden():
+    payload = _run_render_probe("ip-no-address")
+    assert payload["pluginHidden"].get("ip") is True, f"got {payload['pluginHidden']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_cloud_renders_the_platform_and_the_instance_summary():
+    """cloud/render_curses_v5.py docstring: `OpenStack gold instance my-vm (eu-west-1a)`."""
+    payload = _run_render_probe("header")
+    text = payload["pluginText"].get("cloud", "")
+    assert "OpenStack" in text, f"got {text!r}"
+    assert "gold instance my-vm (eu-west-1a)" in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_cloud_without_a_name_is_hidden():
+    """#2485: platform and name are both mandatory, or nothing renders."""
+    payload = _run_render_probe("cloud-no-name")
+    assert payload["pluginHidden"].get("cloud") is True, f"got {payload['pluginHidden']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_cloud_fills_a_missing_part_with_unknown():
+    payload = _run_render_probe("cloud-no-region")
+    text = payload["pluginText"].get("cloud", "")
+    assert "gold instance my-vm (Unknown)" in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_cloud_disabled_on_the_server_is_not_rendered():
+    """The shipped default. Before G9-5 this block would have sat in the header
+    as a permanent loading state for most users."""
+    payload = _run_render_probe("cloud-disabled")
+    assert "cloud" not in payload["pluginNames"], f"got {payload['pluginNames']!r}"
+    assert "system" in payload["pluginNames"], f"vacuous: the header still renders: {payload['pluginNames']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_header_blocks_show_their_error_when_all_fails():
+    """Spec §9: "`/api/5/all` fails -> every visible block shows its error,
+    header included." `fetchAll()` (api.js) turns the failed fetch into
+    `api/5/all: HTTP 500` for every requested plugin, and each header
+    component's root is `v-show="error || <guard>"` -- the `error ||` term is
+    what keeps the block visible although its guard field never arrived."""
+    payload = _run_render_probe("all-unreachable")
+    for name in ("system", "ip", "uptime", "cloud", "now"):
+        assert payload["pluginHidden"].get(name) is False, (
+            f"{name} must show its error, not hide: {payload['pluginHidden']!r}"
+        )
+        text = payload["pluginText"].get(name, "")
+        assert "HTTP 500" in text, f"{name}: expected the HTTP 500 error text, got {text!r}"

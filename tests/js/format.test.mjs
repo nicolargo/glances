@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { formatBytes, formatRate, formatPercent, formatCount, toFahrenheit } from "../../glances/outputs/static/js/v5/format.js";
+import { formatBytes, formatRate, formatPercent, formatCount, toFahrenheit, formatSeconds } from "../../glances/outputs/static/js/v5/format.js";
 
 test("formatBytes uses binary units", () => {
 	assert.equal(formatBytes(0), "0B");
@@ -67,4 +67,31 @@ test("toFahrenheit mirrors glances.globals.to_fahrenheit", () => {
 	assert.equal(toFahrenheit(0), 32);
 	assert.equal(toFahrenheit(100), 212);
 	assert.equal(toFahrenheit(55), 131);
+});
+
+test("formatSeconds mirrors the TUI's format_seconds exactly", () => {
+	// glances/outputs/curses_formatters_v5.py:66-80. Each boundary on both
+	// sides: the unit changes at 60, 3600 and 86400.
+	assert.equal(formatSeconds(0), "0s");
+	assert.equal(formatSeconds(59), "59s");
+	assert.equal(formatSeconds(60), "1m00s");
+	assert.equal(formatSeconds(3599), "59m59s");
+	assert.equal(formatSeconds(3600), "1h00m");
+	assert.equal(formatSeconds(86399), "23h59m");
+	assert.equal(formatSeconds(86400), "1d00h");
+	assert.equal(formatSeconds(273600), "3d04h");
+});
+
+test("formatSeconds truncates like int(float(value))", () => {
+	assert.equal(formatSeconds(61.9), "1m01s");
+	assert.equal(formatSeconds("61.9"), "1m01s");
+});
+
+test("formatSeconds returns the TUI's empty string for what it cannot parse", () => {
+	// NOT this module's "-": format_seconds() catches TypeError/ValueError and
+	// returns "", and the TUI then renders nothing.
+	assert.equal(formatSeconds(null), "");
+	assert.equal(formatSeconds(undefined), "");
+	assert.equal(formatSeconds(""), "");
+	assert.equal(formatSeconds("abc"), "");
 });

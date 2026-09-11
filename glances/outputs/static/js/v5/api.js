@@ -103,6 +103,22 @@ export async function resolveArgs() {
 	return argsCache;
 }
 
+export async function resolvePluginNames() {
+	// /api/5/pluginslist: the plugins the server actually instantiated. Read
+	// once per page load. When runtime plugin toggling lands (#3548), a plugin
+	// enabled after the tab opened appears on the next reload -- a known
+	// limitation, not a bug to fix with a per-tick fetch.
+	//
+	// null, never [], on failure: an empty list would hide every plugin, while
+	// null tells visiblePlugins() to fall back to the whole registry.
+	try {
+		const names = await getJson("api/5/pluginslist");
+		return Array.isArray(names) ? names : null;
+	} catch {
+		return null;
+	}
+}
+
 export async function fetchAll(specs) {
 	// ONE request per tick, not one per plugin. At 34 components and a 2 s
 	// cadence, per-plugin fan-out is 17 req/s per open tab against a loop v4

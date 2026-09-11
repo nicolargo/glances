@@ -1,15 +1,25 @@
 <template>
-	<article class="gl-plugin">
-		<div class="gl-plugin-title">
+	<article class="gl-plugin" aria-label="CPU">
+		<!-- aria-label: once loaded the title is a <dt>, not a heading. Keep this
+		comment INSIDE the root: the build keeps template comments, and one
+		before <article> would make a second root node and drop data-plugin. -->
+		<!--
+			The title stands alone only until the first payload. Once data exists
+			it is the first (label, value) pair of column 1, as on the TUI's line
+			1 (`CPU 4.5% | idle 95.5% | ctx_sw 6.7K`): the total shares the
+			right-aligned value column and all three columns have four lines.
+		-->
+		<div v-if="error || !payload" class="gl-plugin-title">
 			<h2 class="gl-header">CPU</h2>
-			<span v-if="payload" :class="levelClass(scalarLevel(payload, 'total'))">{{
-				formatPercent(payload.total)
-			}}</span>
 		</div>
 		<p v-if="error" class="gl-level-critical">{{ error }}</p>
 		<p v-else-if="!payload" class="gl-muted">loading…</p>
 		<div v-else class="gl-stat-grid">
 			<dl v-for="(column, i) in columns" :key="i">
+				<template v-if="i === 0">
+					<dt class="gl-header">CPU</dt>
+					<dd :class="levelClass(scalarLevel(payload, 'total'))">{{ formatPercent(payload.total) }}</dd>
+				</template>
 				<template v-for="(stat, j) in column" :key="j">
 					<dt class="gl-header">{{ stat.field ? labelFor(labels, stat.field) : "" }}</dt>
 					<dd :class="levelClass(scalarLevel(payload, stat.field))">{{ stat.value }}</dd>

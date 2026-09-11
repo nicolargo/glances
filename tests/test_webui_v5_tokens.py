@@ -284,3 +284,88 @@ def test_every_tier_has_a_token_in_both_themes():
         assert css.count(f"--gl-level-{tier}:") >= 2, (
             f"--gl-level-{tier} must be defined in both the default and the light block"
         )
+
+
+def test_a_prominent_value_is_a_badge_in_its_tier_colour():
+    """TUI parity: a prominent cell is a filled badge -- the tier colour as
+    BACKGROUND, a contrasting text on top (glances_curses_v5.py reverse pairs).
+    Not a neutral grey background under a tier-coloured text.
+
+    The text token is the theme background, which gives >= 5.0:1 (WCAG AA) on
+    every tier of both shipped themes; a fixed black drops to 3.2:1 on the
+    light theme's critical. CSS is not observable through the render probe,
+    so this reads the token file with comments stripped.
+    """
+    css = _strip_comments(_TOKENS.read_text())
+    assert "--gl-prominent-fg:" in css, "--gl-prominent-fg must be defined"
+    for tier in ("ok", "careful", "warning", "critical"):
+        body = _rule_body(css, f".gl-prominent.gl-level-{tier}")
+        assert re.search(rf"\bbackground:\s*var\(--gl-level-{tier}\)", body), (
+            f"a prominent {tier} value must be painted on --gl-level-{tier}: {body!r}"
+        )
+        assert re.search(r"\bcolor:\s*var\(--gl-prominent-fg\)", body), (
+            f"a prominent {tier} value sets its text colour in the same rule: {body!r}"
+        )
+    # The text colour lives IN each compound rule, never in a lone `.gl-prominent`
+    # rule: that one ties with `.gl-level-*` on specificity, so moving it above
+    # them would silently paint tier-coloured text on a tier-coloured badge.
+    assert not re.search(r"\.gl-prominent\s*\{", css), "no standalone .gl-prominent rule: it depends on rule order"
+    assert "--gl-prominent-bg" not in css, "--gl-prominent-bg is no longer read by any rule: remove it"
+
+
+def _rule_body(text: str, selector: str) -> str:
+    match = re.search(rf"{re.escape(selector)}\s*\{{([^}}]*)\}}", text)
+    assert match, f"no `{selector}` rule found"
+    return match.group(1)
+
+
+def test_a_plugin_title_has_the_text_size_and_no_margin():
+    """Maintainer smoke test: `gpu` sat lower than its neighbours. A scalar
+    plugin's title is a <dt> once loaded, while `gpu`/`network` keep an <h2>
+    whose browser defaults (margin, 1.5em) pushed it down. CSS is not
+    observable through the render probe, so this reads the token file.
+    """
+    body = _rule_body(_strip_comments(_TOKENS.read_text()), ".gl-plugin-title h2")
+    assert re.search(r"\bmargin:\s*0\s*;", body), f"the title <h2> has no margin: {body!r}"
+    assert re.search(r"\bfont-size:\s*inherit\s*;", body), f"the title <h2> has the text size: {body!r}"
+
+
+def test_a_value_column_has_a_width_floor_on_the_grid_not_the_cell():
+    """Maintainer smoke test: plugin widths followed their values, so the top
+    row reflowed on every refresh. The floor sits on the grid COLUMN: on the
+    <dd> it would widen the prominent badge past its text again.
+    """
+    css = _strip_comments(_TOKENS.read_text())
+    assert re.search(r"grid-template-columns:\s*auto\s+minmax\(7ch,\s*auto\)", _rule_body(css, ".gl-stat-grid dl")), (
+        "a scalar value column is at least 7ch (100.0%, 1023.9G, 1023.9K)"
+    )
+    assert re.search(
+        r"grid-template-columns:\s*auto\s+minmax\(9ch,\s*auto\)", _rule_body(css, ".gl-stat-grid dl.gl-col-rate")
+    ), "a column of rates is at least 9ch (1023.9G/s)"
+    assert "min-width" not in _rule_body(css, ".gl-stat-grid dd"), "no floor on the <dd>: it would widen the badge"
+
+
+def test_the_footer_sticks_to_the_bottom_of_the_viewport():
+    """Maintainer smoke test: the alert footer must sit at the bottom of the
+    screen and stay visible while the page scrolls. `.gl-app` fills at least
+    the viewport, and the footer is pushed down and made sticky, on an opaque
+    background so scrolled content does not show through it.
+    """
+    shell = _strip_comments((_V5_JS / "AppShell.vue").read_text())
+    app = _rule_body(shell, ".gl-app")
+    assert re.search(r"\bmin-height:\s*100vh\s*;", app), f".gl-app fills the viewport: {app!r}"
+    footer = _rule_body(shell, ".gl-alerts")
+    for declaration in (r"position:\s*sticky", r"bottom:\s*0", r"margin-top:\s*auto", r"background:\s*var\(--gl-bg\)"):
+        assert re.search(rf"\b{declaration}\s*;", footer), f"footer lacks `{declaration}`: {footer!r}"
+
+
+def test_the_sticky_footer_caps_its_alert_list():
+    """Review finding: a sticky footer taller than the viewport slides off its
+    TOP edge, and the alert list is newest-first -- so ten alerts on a short or
+    phone window lost the newest ones while covering the page. The list is
+    capped and scrolls inside the footer.
+    """
+    shell = _strip_comments((_V5_JS / "AppShell.vue").read_text())
+    alerts = _rule_body(shell, ".gl-alerts ul")
+    assert re.search(r"\bmax-height:\s*40vh\s*;", alerts), f"the alert list is height-capped: {alerts!r}"
+    assert re.search(r"\boverflow-y:\s*auto\s*;", alerts), f"the capped list scrolls: {alerts!r}"

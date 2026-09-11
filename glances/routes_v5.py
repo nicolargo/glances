@@ -22,6 +22,7 @@ Route inventory:
 | ``/api/5/pluginslist``        | GET    | ``app.state.plugins`` keys   |
 | ``/api/5/all``                | GET    | per-plugin ``get_api_payload()`` |
 | ``/api/5/all/limits``         | GET    | per-plugin ``get_limits()``  |
+| ``/api/5/all/info``           | GET    | per-plugin ``fields_description`` |
 | ``/api/5/alert``              | GET    | ``alerts.get_history()``     |
 | ``/api/5/config``             | GET    | ``config.as_dict_secure()``  |
 | ``/api/5/args``               | GET    | ``app.state.args``, redacted |
@@ -155,6 +156,10 @@ def build_router() -> APIRouter:
                 out[name] = limits
         return out
 
+    # Declared BEFORE /{plugin_name}/info: FastAPI matches routes in declaration
+    # order, so the dynamic route would otherwise swallow `all` as a plugin name.
+    router.add_api_route("/all/info", _all_info, methods=["GET"], name="all_info")
+
     @router.get("/alert")
     async def alert_history(request: Request) -> list[dict[str, Any]]:
         alerts = request.app.state.alerts
@@ -208,6 +213,15 @@ def _plugins(request: Request) -> dict[str, Any]:
     if not isinstance(plugins, dict):
         return {}
     return plugins
+
+
+async def _all_info(request: Request) -> dict[str, Any]:
+    """Every registered plugin's schema, published or not (G9-5).
+
+    A schema is static, unlike the payloads /all skips at cycle 0. The WebUI
+    fetches this once per page load.
+    """
+    return {name: plugin.fields_description for name, plugin in _plugins(request).items()}
 
 
 def _redact_args(args: argparse.Namespace | None) -> dict[str, Any]:

@@ -5,6 +5,7 @@ import {
 	validate,
 	resolveConfig,
 	resolveArgs,
+	resolvePluginNames,
 	fetchAll,
 	DEFAULT_REFRESH_SECONDS,
 	DEFAULT_THEME,
@@ -183,4 +184,20 @@ test("a non-object /all envelope errors every plugin instead of rejecting", asyn
 		assert.match(errors.mem, /shape/i);
 		assert.match(errors.network, /shape/i);
 	}
+});
+
+test("resolvePluginNames returns the server's plugin list", async () => {
+	stubFetch({ "api/5/pluginslist": { body: ["cpu", "mem"] } });
+	assert.deepEqual(await resolvePluginNames(), ["cpu", "mem"]);
+});
+
+test("resolvePluginNames returns null when the list cannot be read", async () => {
+	stubFetch({ "api/5/pluginslist": { status: 500, body: { detail: "boom" } } });
+	assert.equal(await resolvePluginNames(), null);
+	// A 200 carrying the wrong shape is not a list either.
+	stubFetch({ "api/5/pluginslist": { body: { detail: "nope" } } });
+	assert.equal(await resolvePluginNames(), null);
+	// Network failure: stubFetch throws for an unknown route.
+	stubFetch({});
+	assert.equal(await resolvePluginNames(), null);
 });
