@@ -74,14 +74,18 @@ class PluginModel(GlancesPluginBase[list]):
         },
         "size": {
             "description": "Total size of the filesystem in bytes.",
+            # Column labels, TUI header and WebUI alike (field_label, prefer_short).
+            "short_name": "Total",
             "unit": "bytes",
         },
         "used": {
             "description": "Used size in bytes.",
+            "short_name": "Used",
             "unit": "bytes",
         },
         "free": {
             "description": "Free size in bytes.",
+            "short_name": "Free",
             "unit": "bytes",
         },
         "percent": {

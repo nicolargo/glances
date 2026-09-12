@@ -15,15 +15,32 @@ function isNumber(value) {
 	return typeof value === "number" && Number.isFinite(value);
 }
 
-export function formatBytes(value) {
-	if (!isNumber(value)) return MISSING;
+// Mirrors _auto_unit() (glances/outputs/curses_formatters_v5.py) and the
+// renderers' copies of it: one decimal from 1K up, and below 1K the TUI's
+// int(value) -- a truncation, not a rounding: 855.6 bytes is "855B".
+// Dividing by 1024 is exact, so the tie rule below sees the true value.
+function autoUnit(value, subKiloUnit, suffix) {
 	let n = value;
 	let i = 0;
 	while (n >= 1024 && i < UNITS.length - 1) {
 		n /= 1024;
 		i += 1;
 	}
-	return i === 0 ? `${Math.round(n)}${UNITS[0]}` : `${n.toFixed(1)}${UNITS[i]}`;
+	return i === 0 ? `${Math.trunc(n)}${subKiloUnit}${suffix}` : `${toFixedHalfEven(n, 1)}${UNITS[i]}${suffix}`;
+}
+
+export function formatBytes(value) {
+	if (!isNumber(value)) return MISSING;
+	return autoUnit(value, UNITS[0], "");
+}
+
+// Mirrors network/render_curses_v5.py::_format_rate(). Bits by default --
+// bytes x 8, with a `b` on every magnitude ("800b", "8.0Mb") -- and the
+// plain byte count with no `b` suffix under --byte ("100", "1.0M").
+// No "/s": the column header carries the per-second meaning, as in the TUI.
+export function formatNetworkRate(value, byte) {
+	if (!isNumber(value)) return MISSING;
+	return byte ? autoUnit(value, "", "") : autoUnit(value * 8, "", "b");
 }
 
 export function formatRate(value) {
@@ -62,6 +79,33 @@ export function toFahrenheit(celsius) {
 	// glances/globals.py:205 -- the conversion only. Rendering (rounding,
 	// unit letter, missing marker) belongs to the caller.
 	return celsius * 1.8 + 32;
+}
+
+// Python's float formatting, which JS does not have. f"{x:.1f}" and
+// f"{x:.0f}" round the exact binary value and break an EXACT tie to the even
+// digit; toFixed() rounds the same exact value but breaks a tie away from
+// zero. The two differ on exact ties only: 1.25 is "1.2" in Python, "1.3" in
+// JS; 42.5 is "42" and "43".
+//
+// A value is a tie at `digits` exactly when value * 2 ** (digits + 1) is an
+// odd integer. That product is exact (a power-of-two multiply), unlike
+// value * 10 ** digits: 0.15 * 10 === 1.5 in floating point, although 0.15 is
+// stored below 0.15 and is no tie at all.
+export function toFixedHalfEven(value, digits) {
+	const scaled = value * 2 ** (digits + 1);
+	if (!Number.isInteger(scaled) || Math.abs(scaled) % 2 !== 1) return value.toFixed(digits);
+	// A tie: |value| * 10 ** digits is exactly k + 0.5 (a small multiple of
+	// one half is representable), so floor() yields k exactly.
+	let k = Math.floor(Math.abs(value) * 10 ** digits);
+	if (k % 2 === 1) k += 1;
+	return `${value < 0 ? "-" : ""}${(k / 10 ** digits).toFixed(digits)}`;
+}
+
+// f"{value:.0f}" -- the sensors and wifi values. Half-even on an exact tie,
+// like every Python float format.
+export function formatFixed0(value) {
+	if (!isNumber(value)) return MISSING;
+	return toFixedHalfEven(value, 0);
 }
 
 // Uptime units. Mirrors format_seconds()

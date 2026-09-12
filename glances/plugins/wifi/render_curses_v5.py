@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, field_label
 
 _NAME_MAX_WIDTH = 26
 _VALUE_COL_WIDTH = 7
@@ -55,10 +55,19 @@ def _level_role(levels: dict[str, Any], ssid: str) -> tuple[ColorRole, bool]:
 
 
 def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | None = None, view=None) -> list[Row]:
+    # The block title stays a literal; the signal column's label comes from
+    # the schema (single source of truth, shared with the WebUI).
+    fields = fields_desc or {}
     header = Row(
         cells=[
             Cell(text="WIFI".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
-            Cell(text="dBm".rjust(_VALUE_COL_WIDTH), color=ColorRole.HEADER, bold=True),
+            Cell(
+                text=field_label(fields.get("quality_level", {}), "quality_level", prefer_short=True).rjust(
+                    _VALUE_COL_WIDTH
+                ),
+                color=ColorRole.HEADER,
+                bold=True,
+            ),
         ]
     )
     rows: list[Row] = [header]

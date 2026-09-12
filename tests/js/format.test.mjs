@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { formatBytes, formatRate, formatPercent, formatCount, toFahrenheit, formatSeconds } from "../../glances/outputs/static/js/v5/format.js";
+import { formatBytes, formatRate, formatPercent, formatCount, toFahrenheit, formatSeconds, toFixedHalfEven, formatNetworkRate, formatFixed0 } from "../../glances/outputs/static/js/v5/format.js";
 
 test("formatBytes uses binary units", () => {
 	assert.equal(formatBytes(0), "0B");
@@ -94,4 +94,58 @@ test("formatSeconds returns the TUI's empty string for what it cannot parse", ()
 	assert.equal(formatSeconds(undefined), "");
 	assert.equal(formatSeconds(""), "");
 	assert.equal(formatSeconds("abc"), "");
+});
+
+test("toFixedHalfEven matches CPython's float formatting, exact ties included", () => {
+	// Expected strings are CPython's f"{value:.{digits}f}". JS toFixed agrees
+	// everywhere except on an EXACT tie, which it rounds away from zero.
+	const cases = [
+		[0.15, 1, "0.1"], // stored as 0.1499999..., no tie -- a detector using value * 10 would call it one
+		[1.25, 1, "1.2"],
+		[1.35, 1, "1.4"], // stored above 1.35, no tie
+		[0.75, 1, "0.8"],
+		[42.5, 0, "42"],
+		[43.5, 0, "44"],
+		[0.5, 0, "0"],
+		[-54.5, 0, "-54"],
+		[-54.4, 0, "-54"],
+		[108.5, 0, "108"], // 42.5 C in Fahrenheit: 42.5 * 1.8 + 32 is exactly 108.5
+	];
+	for (const [value, digits, expected] of cases) {
+		assert.equal(toFixedHalfEven(value, digits), expected, `${value} at ${digits} digit(s)`);
+	}
+});
+
+test("formatBytes truncates below 1K like the TUI's int()", () => {
+	// _auto_unit() in curses_formatters_v5.py prints int(value) below 1024.
+	assert.equal(formatBytes(855.6), "855B");
+	assert.equal(formatBytes(1023.9), "1023B");
+});
+
+test("formatBytes breaks an exact one-decimal tie to even, like the TUI", () => {
+	assert.equal(formatBytes(1280), "1.2K"); // 1.25K exactly
+	assert.equal(formatBytes(1792), "1.8K"); // 1.75K exactly
+});
+
+test("formatRate inherits the TUI's sub-K truncation", () => {
+	assert.equal(formatRate(855.6), "855B/s"); // format_bytespers(855.6)
+});
+
+test("formatNetworkRate mirrors network's _format_rate: bits, or bytes under --byte", () => {
+	assert.equal(formatNetworkRate(100, false), "800b");
+	assert.equal(formatNetworkRate(1048576, false), "8.0Mb");
+	assert.equal(formatNetworkRate(524288, false), "4.0Mb");
+	assert.equal(formatNetworkRate(100, true), "100");
+	assert.equal(formatNetworkRate(1048576, true), "1.0M");
+	assert.equal(formatNetworkRate(524288, true), "512.0K");
+	assert.equal(formatNetworkRate(null, false), "-");
+	assert.equal(formatNetworkRate(null, true), "-");
+});
+
+test("formatFixed0 is Python's :.0f, and the usual missing marker", () => {
+	assert.equal(formatFixed0(42.5), "42");
+	assert.equal(formatFixed0(-71.2), "-71");
+	assert.equal(formatFixed0(1200), "1200");
+	assert.equal(formatFixed0(null), "-");
+	assert.equal(formatFixed0("ERR"), "-");
 });

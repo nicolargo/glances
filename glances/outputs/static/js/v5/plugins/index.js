@@ -33,6 +33,10 @@ import PluginUptime from "../PluginUptime.vue";
 import PluginNow from "../PluginNow.vue";
 import PluginIp from "../PluginIp.vue";
 import PluginCloud from "../PluginCloud.vue";
+import PluginDiskio from "../PluginDiskio.vue";
+import PluginFs from "../PluginFs.vue";
+import PluginWifi from "../PluginWifi.vue";
+import PluginSensors from "../PluginSensors.vue";
 
 export const PLUGINS = [
 	// The header plugins declare `required: []`: a missing guard field
@@ -103,5 +107,29 @@ export const PLUGINS = [
 		component: PluginNetwork,
 		slot: "left",
 		spec: { shape: "collection", required: ["interface_name"] },
+	},
+	{
+		name: "wifi",
+		component: PluginWifi,
+		slot: "left",
+		spec: { shape: "collection", required: ["ssid"] },
+	},
+	{
+		name: "diskio",
+		component: PluginDiskio,
+		slot: "left",
+		spec: { shape: "collection", required: ["disk_name"] },
+	},
+	{
+		name: "fs",
+		component: PluginFs,
+		slot: "left",
+		spec: { shape: "collection", required: ["mnt_point"] },
+	},
+	{
+		name: "sensors",
+		component: PluginSensors,
+		slot: "left",
+		spec: { shape: "collection", required: ["label"] },
 	},
 ];

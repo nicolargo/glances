@@ -369,3 +369,79 @@ def test_the_sticky_footer_caps_its_alert_list():
     alerts = _rule_body(shell, ".gl-alerts ul")
     assert re.search(r"\bmax-height:\s*40vh\s*;", alerts), f"the alert list is height-capped: {alerts!r}"
     assert re.search(r"\boverflow-y:\s*auto\s*;", alerts), f"the capped list scrolls: {alerts!r}"
+
+
+def test_a_name_cell_is_capped_and_can_keep_its_tail():
+    """G9-6 D3: a left-sidebar name is capped at the TUI's name width, which
+    each component sets as --gl-name-width, on a BLOCK span (max-width on a
+    table cell is not reliably honoured). `.gl-truncate-start` puts the
+    ellipsis at the start, keeping the tail like the TUI's "_" + name[-17:].
+    CSS is not observable through the render probe, so this reads the file.
+    """
+    css = _strip_comments(_TOKENS.read_text())
+    name = _rule_body(css, ".gl-name")
+    assert re.search(r"\bdisplay:\s*block\s*;", name), f".gl-name is a block: {name!r}"
+    assert re.search(r"\bmax-width:\s*var\(--gl-name-width\)\s*;", name), f".gl-name is capped: {name!r}"
+    start = _rule_body(css, ".gl-truncate-start")
+    assert re.search(r"\bdirection:\s*rtl\s*;", start), f"the ellipsis moves to the start: {start!r}"
+    assert re.search(r"\btext-align:\s*left\s*;", start), f"a short name stays left-aligned: {start!r}"
+
+
+def test_every_collection_table_fills_the_left_column():
+    """Maintainer's call after the smoke test (spec section 13): every block of
+    the left column must have the same width.
+
+    A <table> is shrink-to-fit, so a block whose names are all short renders
+    narrower than its neighbours -- measured in headless Chrome before this
+    rule: wifi 156px (one 9-character ssid) and diskio 228px against network's
+    278px, even after both name caps were raised to the three-column budget.
+    `width: 100%` makes each table fill the column the body grid already sized
+    to the widest block, whatever the content. CSS is not observable through
+    the render probe, so this reads the token file.
+    """
+    body = _rule_body(_strip_comments(_TOKENS.read_text()), ".gl-table")
+    assert re.search(r"\bwidth:\s*100%\s*;", body), f".gl-table fills its column: {body!r}"
+
+
+def test_a_collection_table_left_aligns_only_its_non_numeric_cells():
+    """The browser centres a <th>; the TUI left-aligns names and titles and
+    right-aligns values. `:not(.gl-num)` is load-bearing: `.gl-table th`
+    outranks the global `.gl-num`, so a plain rule would stop numeric columns
+    right-aligning.
+    """
+    css = _strip_comments(_TOKENS.read_text())
+    assert re.search(r"\.gl-table\s+th:not\(\.gl-num\)\s*,", css), "the <th> rule excludes numeric columns"
+    body = _rule_body(css, ".gl-table td:not(.gl-num)")
+    assert re.search(r"\btext-align:\s*left\s*;", body), f"non-numeric cells left-align: {body!r}"
+
+
+def test_a_block_keeps_its_natural_width():
+    """Spec section 8: a block must not be squeezed by its neighbours, or the
+    zone would never report an overflow and the cascade would never run. CSS is
+    not observable through the render probe, so this reads the token file.
+    """
+    body = _rule_body(_strip_comments(_TOKENS.read_text()), ".gl-plugin")
+    assert re.search(r"\bflex:\s*0\s+0\s+auto\s*;", body), f".gl-plugin keeps its natural width: {body!r}"
+
+
+def test_the_header_and_top_zones_never_wrap():
+    """Spec goal 1: a plugin never moves to another line. The zones stop
+    wrapping and scroll horizontally once the cascade is exhausted (D4).
+
+    `.gl-slot-header-left`/`-right` also need `min-width: 0`: without it a
+    flex item's automatic minimum size stops it shrinking below its content,
+    `scrollWidth` never exceeds `clientWidth`, and the header cascade in
+    AppShell.vue's measureZone() never observes an overflow at all -- it goes
+    silently dead with no test failing.
+    """
+    shell = _strip_comments((_V5_JS / "AppShell.vue").read_text())
+    for selector in (".gl-zone-header", ".gl-slot-top"):
+        body = _rule_body(shell, selector)
+        assert re.search(r"\bflex-wrap:\s*nowrap\s*;", body), f"{selector} does not wrap: {body!r}"
+        assert re.search(r"\boverflow-x:\s*auto\s*;", body), f"{selector} scrolls instead: {body!r}"
+    for selector in (".gl-slot-header-left", ".gl-slot-header-right"):
+        body = _rule_body(shell, selector)
+        assert re.search(r"\bflex-wrap:\s*nowrap\s*;", body), f"{selector} does not wrap: {body!r}"
+        assert re.search(r"\bmin-width:\s*0\s*;", body), (
+            f"{selector} must stay shrinkable or the cascade dies: {body!r}"
+        )

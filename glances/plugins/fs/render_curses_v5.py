@@ -35,7 +35,7 @@ from __future__ import annotations
 from typing import Any
 
 from glances.outputs.curses_formatters_v5 import format_value
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, field_label
 
 # Block width capped at the v5 left-sidebar maximum (34 chars).
 #     name (_NAME_MAX_WIDTH) + 1 + used (7) + 1 + total (7) = name + 16
@@ -74,12 +74,15 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
     """Render the fs plugin's TUI block — mirrors v4 ``fs.msg_curse``."""
     free_space = bool(payload.get("free_space")) if isinstance(payload, dict) else False
     value_field = "free" if free_space else "used"
-    value_label = "Free" if free_space else "Used"
+    # The block title stays a literal; the column labels come from the schema
+    # (single source of truth, shared with the WebUI), as network's do.
+    value_label = field_label(fields_desc.get(value_field, {}), value_field, prefer_short=True)
+    total_label = field_label(fields_desc.get("size", {}), "size", prefer_short=True)
     header_row = Row(
         cells=[
             Cell(text="FILE SYS".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
             Cell(text=value_label.rjust(_USED_COL_WIDTH), color=ColorRole.HEADER, bold=True),
-            Cell(text="Total".rjust(_TOTAL_COL_WIDTH), color=ColorRole.HEADER, bold=True),
+            Cell(text=total_label.rjust(_TOTAL_COL_WIDTH), color=ColorRole.HEADER, bold=True),
         ]
     )
     rows: list[Row] = [header_row]

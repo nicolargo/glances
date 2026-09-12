@@ -33,6 +33,8 @@ export default {
 		labels: { type: Object, default: () => ({}) },
 		// READ here: `hide_public_info` is the --hide-public-info CLI flag.
 		serverArgs: { type: Object, default: () => ({}) },
+		// `hide_ip_location` (glances_curses_v5.py:87) is read below, in `publicInfo`.
+		degrade: { type: Object, default: () => ({}) },
 	},
 	computed: {
 		// Mirrors glances/plugins/ip/render_curses_v5.py: the private cells
@@ -55,9 +57,12 @@ export default {
 		publicShown() {
 			return this.serverArgs.hide_public_info ? hideIp(this.publicAddress) : String(this.publicAddress);
 		},
-		// The TUI's `hide_ip_location` is terminal-width degradation and is not
-		// reproduced (G9-5 D3): the string truncates with an ellipsis instead.
+		// `hide_ip_location` is the TUI's header step (1)
+		// (glances_curses_v5.py:87): the widest, least essential segment of the
+		// banner goes first, and both addresses survive it. G9-5 D3 said the
+		// browser would not reproduce this; the 2026-09-12 spec reverses that.
 		publicInfo() {
+			if (this.degrade.hide_ip_location) return "";
 			return this.payload?.public_info_human || "";
 		},
 	},

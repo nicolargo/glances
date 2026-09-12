@@ -5,21 +5,18 @@ from __future__ import annotations
 import pytest
 
 from glances.outputs.curses_renderer_v5 import ColorRole
+from glances.plugins.fs.model_v5 import PluginModel
 from glances.plugins.fs.render_curses_v5 import render
 
 
 @pytest.fixture
 def fs_fields():
-    return {
-        "mnt_point": {"unit": "string", "primary_key": True},
-        "device_name": {"unit": "string"},
-        "fs_type": {"unit": "string", "internal": True},
-        "options": {"unit": "string", "internal": True},
-        "size": {"unit": "bytes"},
-        "used": {"unit": "bytes"},
-        "free": {"unit": "bytes"},
-        "percent": {"unit": "percent", "watched": True, "prominent": True},
-    }
+    """The REAL schema, as production passes it (curses_renderer_v5.py:1459).
+
+    The column labels come from it (field_label), so a hand-written subset
+    without `short_name` would test a header no user ever sees.
+    """
+    return PluginModel.fields_description
 
 
 @pytest.fixture

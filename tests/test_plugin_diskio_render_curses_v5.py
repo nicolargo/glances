@@ -5,30 +5,18 @@ from __future__ import annotations
 import pytest
 
 from glances.outputs.curses_renderer_v5 import ColorRole
+from glances.plugins.diskio.model_v5 import PluginModel
 from glances.plugins.diskio.render_curses_v5 import render
 
 
 @pytest.fixture
 def diskio_fields():
-    return {
-        "disk_name": {"unit": "string", "primary_key": True},
-        "read_count": {"unit": "number", "rate": True, "internal": True},
-        "write_count": {"unit": "number", "rate": True, "internal": True},
-        "read_bytes": {
-            "unit": "bytespers",
-            "rate": True,
-            "watched": True,
-            "prominent": False,
-            "strict_thresholds": True,
-        },
-        "write_bytes": {
-            "unit": "bytespers",
-            "rate": True,
-            "watched": True,
-            "prominent": False,
-            "strict_thresholds": True,
-        },
-    }
+    """The REAL schema, as production passes it (curses_renderer_v5.py:1459).
+
+    The column labels come from it (field_label), so a hand-written subset
+    without `short_name` would test a header no user ever sees.
+    """
+    return PluginModel.fields_description
 
 
 @pytest.fixture

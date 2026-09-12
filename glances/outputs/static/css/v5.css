@@ -83,7 +83,7 @@ body {
   font-weight: var(--gl-weight-bold);
 }
 
-/* Loading/empty placeholder text ("loading…", "no interface", "No alert").
+/* Loading/empty placeholder text ("loading…", "No alert").
  * Global, not component-scoped: `<style scoped>` compiles to
  * `.gl-muted[data-v-XXXX]`, which never matches across the different scope
  * ids each plugin component gets. */
@@ -130,9 +130,10 @@ body {
   grid-template-columns: auto minmax(9ch, auto);
 }
 /* `tabular-nums` and NOT `.gl-num`: a scalar grid needs jitter-free digits,
- * but not .gl-num's 9ch floor -- that floor is sized for formatRate()'s worst
- * case ("1023.9G/s") in a COLLECTION table, is too wide for any non-rate
- * value (load's "0.86" in a 9ch cell), and on a <dd> would widen the badge.
+ * but not .gl-num's 9ch floor -- that floor is wider than any COLLECTION
+ * table value today (network's bits "1023.9Gb" is 8 characters), is too wide
+ * for any non-rate value (load's "0.86" in a 9ch cell), and on a <dd> would
+ * widen the badge.
  * The width floor lives on the grid column above. */
 .gl-stat-grid dd {
   margin: 0;
@@ -174,10 +175,65 @@ body {
  * geolocation). Pair it with a `title` attribute carrying the full text.
  * `min-width: 0` is load-bearing: a flex item otherwise refuses to shrink
  * below its content, and the ellipsis never triggers. A browser truncates
- * with the layout; never copy a terminal character count instead. */
+ * with the layout; never copy a terminal character count instead -- except
+ * the left-sidebar name cells, by the maintainer's choice (.gl-name, G9-6 D3). */
 .gl-truncate {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+}
+
+/* Left-sidebar name (G9-6 D3): capped at the TUI's name width, which each
+ * component sets as --gl-name-width (18ch, 19ch or 26ch). Put it on a block
+ * <span> inside the cell, never on the <td>: max-width on a table cell in
+ * automatic table layout is not reliably honoured. Pair with .gl-truncate
+ * and a `title` carrying the full name. */
+.gl-name {
+  display: block;
+  max-width: var(--gl-name-width);
+}
+
+/* Ellipsis at the START, keeping the tail -- the TUI's "_" + name[-17:] for
+ * interfaces, disks and mount points. The text MUST sit in a <bdi>: without
+ * it the bidi algorithm moves a leading "/" to the end, and "/boot/efi"
+ * renders "boot/efi/" (checked in headless Chrome). `text-align: left` keeps
+ * a short name aligned with its neighbours. */
+.gl-truncate-start {
+  direction: rtl;
+  text-align: left;
+}
+
+/* Collection table. Global, like .gl-stat-grid: five components share it.
+ * `:not(.gl-num)` is load-bearing: `.gl-table th` (0,1,1) outranks the global
+ * `.gl-num` (0,1,0), so a plain `text-align: left` would silently stop the
+ * numeric columns right-aligning. It also overrides the browser's centred
+ * <th>. */
+.gl-table {
+  border-collapse: collapse;
+  /* Every block of the left column has the same width (maintainer's call after
+   * the G9-6 smoke test, spec section 13). A <table> is shrink-to-fit, so a
+   * block whose names are all short rendered narrower than its neighbours
+   * (measured: wifi 156px, diskio 228px against network's 278px). Filling the
+   * column the body grid already sizes to the widest block equalises them
+   * whatever the content, and a new block inherits it with no per-component
+   * budget. The name caps still decide how much of a long name shows; the
+   * leftover width falls between the name and the values. */
+  width: 100%;
+}
+.gl-table th,
+.gl-table td {
+  padding: 0 var(--gl-gap) 0 0;
+}
+.gl-table th:not(.gl-num),
+.gl-table td:not(.gl-num) {
+  text-align: left;
+}
+
+/* A block keeps its natural width inside a zone that no longer wraps: without
+ * this, flex would squeeze the blocks and the zone would never report an
+ * overflow, so the degradation cascade (js/v5/degrade.js) would never run. The
+ * zone scrolls instead, once the cascade is exhausted. */
+.gl-plugin {
+  flex: 0 0 auto;
 }

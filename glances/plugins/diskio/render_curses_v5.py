@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, field_label
 
 # Block width capped at the v5 left-sidebar maximum (34 chars).
 #     name (_NAME_MAX_WIDTH) + 1 + rx (7) + 1 + wx (7) = name + 16
@@ -79,11 +79,20 @@ def _format_disk_name(name: str) -> str:
 
 def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
     """Render the diskio plugin's TUI block — mirrors v4 ``diskio.msg_curse``."""
+    # The first header cell is the TUI block title, not a field label -- it
+    # stays a literal. The rate columns read their labels from the schema
+    # (single source of truth, shared with the WebUI), as network's do.
     header_row = Row(
         cells=[
             Cell(text="DISK I/O".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
-            Cell(text="R/s".rjust(_RATE_COL_WIDTH), color=ColorRole.HEADER, bold=True),
-            Cell(text="W/s".rjust(_RATE_COL_WIDTH), color=ColorRole.HEADER, bold=True),
+            *(
+                Cell(
+                    text=field_label(fields_desc.get(key, {}), key, prefer_short=True).rjust(_RATE_COL_WIDTH),
+                    color=ColorRole.HEADER,
+                    bold=True,
+                )
+                for key in ("read_bytes", "write_bytes")
+            ),
         ]
     )
     rows: list[Row] = [header_row]

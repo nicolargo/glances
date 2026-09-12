@@ -55,6 +55,8 @@ class PluginModel(GlancesPluginBase[list]):
         },
         "quality_level": {
             "description": "Signal strength level.",
+            # Column label, TUI header and WebUI alike (field_label, prefer_short).
+            "short_name": "dBm",
             "unit": "dBm",
             "watched": True,
             "watch_direction": "low",

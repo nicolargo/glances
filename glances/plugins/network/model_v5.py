@@ -67,13 +67,10 @@ class PluginModel(GlancesPluginBase[list]):
         # name, cf. `field_label()` in curses_renderer_v5.py). The strings
         # feed the TUI block rendered by `render_curses_v5.render()` and the
         # WebUI alike: both resolve their column headers from this schema.
-        # The interface column is `interface` rather than the TUI's
-        # `NETWORK`: in the TUI that first header cell doubles as the block
-        # title (a literal in the renderer), which the WebUI already renders
-        # separately as <h2>NETWORK.
+        # The interface column declares none: its header cell is the block
+        # title, a literal in both outputs (G9-6 D6).
         "interface_name": {
             "description": "Network interface name.",
-            "short_name": "interface",
             "unit": "string",
             "primary_key": True,
         },

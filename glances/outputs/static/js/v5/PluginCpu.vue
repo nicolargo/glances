@@ -52,6 +52,9 @@ export default {
 		// attribute, so without this line the DOM gets
 		// server-args="[object Object]" on the article.
 		serverArgs: { type: Object, default: () => ({}) },
+		// `cpu_cols` (1..3) -- the TUI's second and third degradation notches
+		// (glances_curses_v5.py:62). Anything else means "no degradation".
+		degrade: { type: Object, default: () => ({}) },
 	},
 	computed: {
 		// Mirrors glances/plugins/cpu/render_curses_v5.py:145-200. The TUI
@@ -95,7 +98,11 @@ export default {
 			else if (p.syscalls != null) col3.push("syscalls");
 			else col3.push("");
 
-			return [col1, col2, col3].map((fields) => fields.map((f) => this.statFor(f)));
+			// cpu_cols (TUI steps b and c, glances_curses_v5.py:62) keeps the
+			// first N of the three columns; the selection rules above are
+			// untouched. Clamped like cpu/render_curses_v5.py:137.
+			const nCols = Math.max(1, Math.min(3, Number(this.degrade.cpu_cols) || 3));
+			return [col1, col2, col3].slice(0, nCols).map((fields) => fields.map((f) => this.statFor(f)));
 		},
 	},
 	methods: {

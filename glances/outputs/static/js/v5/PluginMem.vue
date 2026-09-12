@@ -23,7 +23,7 @@
 					<dd :class="levelClass(scalarLevel(payload, stat.field))">{{ stat.value }}</dd>
 				</template>
 			</dl>
-			<dl>
+			<dl v-if="col2.length">
 				<template v-for="(stat, i) in col2" :key="i">
 					<dt class="gl-header">{{ labelFor(labels, stat.field) }}</dt>
 					<dd :class="levelClass(scalarLevel(payload, stat.field))">{{ stat.value }}</dd>
@@ -50,6 +50,9 @@ export default {
 		// attribute, so without this line the DOM gets
 		// server-args="[object Object]" on the article.
 		serverArgs: { type: Object, default: () => ({}) },
+		// `mem_cols` (1 or 2) -- the TUI's first degradation notch
+		// (glances_curses_v5.py:62). Anything else means "no degradation".
+		degrade: { type: Object, default: () => ({}) },
 	},
 	computed: {
 		// Mirrors glances/plugins/mem/render_curses_v5.py: `available` (Linux,
@@ -61,7 +64,11 @@ export default {
 		col1() {
 			return ["total", this.availOrUsedField, "free"].map((field) => this.statFor(field));
 		},
+		// mem_cols=1 (TUI step a) drops the whole 2nd column. In the TUI that
+		// also drops the line-1 `active` pair; in the WebUI `active` IS the
+		// first pair of this column (G9-5 A1), so one rule covers both.
 		col2() {
+			if (this.degrade.mem_cols === 1) return [];
 			return COL2_FIELDS.map((field) => this.statFor(field));
 		},
 	},

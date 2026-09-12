@@ -18,6 +18,7 @@
 						:error="errors[plugin.name]"
 						:labels="labels[plugin.name] || {}"
 						:server-args="serverArgs"
+						:degrade="zone.name === 'header' ? degrade.header : degrade.top"
 					/>
 				</section>
 			</template>
@@ -47,6 +48,7 @@ import { levelClass } from "./levels.js";
 import { resolveAllLabels } from "./labels.js";
 import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
+import { resolveDegrade, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
 
 // The page's zones, top to bottom, and the registry slots each one holds.
 // `tag` is the element the zone renders as: the header zone stays a real
@@ -56,6 +58,30 @@ const ZONES = [
 	{ name: "top", tag: "section", slots: ["top"] },
 	{ name: "body", tag: "div", slots: ["left", "right"] },
 ];
+
+// Which flag removes which block. The TUI does the same in
+// _build_fitted_frame, by filtering frame.top -- a block that disappears is
+// the shell's business; a block that merely shrinks is the component's
+// (spec D7).
+const HIDDEN_BY = {
+	hide_cloud: "cloud",
+	hide_now: "now",
+	hide_ip: "ip",
+	hide_uptime: "uptime",
+	hide_memswap: "memswap",
+	hide_gpu: "gpu",
+};
+
+// Both cascades resolve to a flat object of primitive values (booleans/
+// numbers), never nested -- a plain key-by-key comparison is enough. Used by
+// refit() to skip its final `degrade` assignment when nothing actually
+// changed (spec section 6): `resolveDegrade` always returns a fresh object,
+// so `===` on the two flag sets would never be true even when they agree.
+function sameFlags(a, b) {
+	const aKeys = Object.keys(a);
+	const bKeys = Object.keys(b);
+	return aKeys.length === bKeys.length && aKeys.every((key) => a[key] === b[key]);
+}
 
 export default {
 	name: "AppShell",
@@ -72,6 +98,16 @@ export default {
 			refresh: null,
 			timer: null,
 			ticking: false,
+			// The flags each zone resolved. {} = nothing degraded, which is also
+			// what an environment without measurement keeps (spec section 9).
+			degrade: { header: {}, top: {} },
+			observers: [],
+			// Same guard shape as `ticking`: refit() is triggered from three
+			// independent async sources (mounted(), every tick(), every
+			// ResizeObserver callback), and measureZone() mutates `degrade` (and
+			// therefore the DOM) once per candidate notch -- a second call must
+			// not interleave with one already mid-cascade (spec section 6).
+			refitting: false,
 		};
 	},
 	computed: {
@@ -85,7 +121,12 @@ export default {
 			return visiblePlugins(PLUGINS, this.pluginNames);
 		},
 		slots() {
-			return groupBySlot(this.plugins);
+			const hidden = new Set(
+				Object.entries({ ...this.degrade.header, ...this.degrade.top })
+					.filter(([key, value]) => value && HIDDEN_BY[key])
+					.map(([key]) => HIDDEN_BY[key]),
+			);
+			return groupBySlot(this.plugins.filter((plugin) => !hidden.has(plugin.name)));
 		},
 		// Always all three: design spec section 8 stacks header, top, body
 		// unconditionally. A slot with no visible plugin renders no `<section>`
@@ -121,12 +162,40 @@ export default {
 		this.serverArgs = serverArgs;
 		this.pluginNames = pluginNames;
 		await this.tick();
+		await this.refit();
+		if (typeof ResizeObserver === "function") {
+			for (const slotName of ["header-left", "top"]) {
+				const zone = this.$el?.querySelector?.(`[data-slot="${slotName}"]`);
+				if (!zone) continue;
+				const observer = new ResizeObserver(() => {
+					// Not awaited: a rejection here would surface as an unhandled promise
+					// rejection. The in-flight guard is cleared by refit()'s own `finally`,
+					// so a failed pass simply retries on the next tick or resize.
+					this.refit().catch(() => {});
+				});
+				observer.observe(zone);
+				this.observers.push(observer);
+			}
+		}
+		// The render probe drives the cascade through this hook: its fake DOM
+		// has no ResizeObserver and no layout until the harness sets widths.
+		// `this.degrade` is reassigned (not mutated) by refit(), so the hook
+		// must republish it -- the ResizeObserver path above reads `degrade`
+		// through Vue's reactivity instead and needs no such republish.
+		if (typeof window !== "undefined") {
+			window.__glancesRefit = async () => {
+				await this.refit();
+				window.__glancesDegrade = this.degrade;
+			};
+			window.__glancesDegrade = this.degrade;
+		}
 		this.timer = setInterval(() => this.tick(), this.refresh * 1000);
 	},
 	unmounted() {
 		// The poll must stop with the component, or a hot reload leaves timers
 		// stacking up against the API.
 		if (this.timer) clearInterval(this.timer);
+		for (const observer of this.observers) observer.disconnect();
 	},
 	methods: {
 		levelClass,
@@ -158,6 +227,8 @@ export default {
 				const { results, errors } = await fetchAll(this.plugins);
 				this.results = results;
 				this.errors = errors;
+				await this.refit();
+				if (typeof window !== "undefined") window.__glancesDegrade = this.degrade;
 				// The footer alert list is its own endpoint; its failure must not
 				// disturb the plugins above it.
 				try {
@@ -173,6 +244,45 @@ export default {
 				}
 			} finally {
 				this.ticking = false;
+			}
+		},
+		// Measure one zone, apply a candidate flag set, let Vue re-render, and
+		// report what the browser says. `resolveDegrade` calls this once per
+		// notch (spec section 6).
+		async measureZone(slotName, zoneKey, flags) {
+			if (!sameFlags(flags, this.degrade[zoneKey])) this.degrade = { ...this.degrade, [zoneKey]: flags };
+			await this.$nextTick();
+			const zone = this.$el?.querySelector?.(`[data-slot="${slotName}"]`);
+			if (!zone) return { content: 0, available: 0 };
+			// Harness hook: a real element ignores this expando property; the
+			// render probe's FakeElement uses it to model scrollWidth shrinking
+			// by one CONTENT_PER_NOTCH per flag in the candidate just applied.
+			zone._notches = Object.keys(flags).length;
+			return { content: zone.scrollWidth, available: zone.clientWidth };
+		},
+		// Re-run both cascades from scratch. Starting from no flag is what gives
+		// the stats back when the window widens (spec section 6). Guarded like
+		// `tick()`: refit() is triggered from mounted(), every tick(), and every
+		// ResizeObserver callback, and measureZone() mutates `degrade` (and
+		// therefore the DOM) once per candidate notch, so a second call must not
+		// interleave with one already mid-cascade.
+		async refit() {
+			if (this.refitting) return;
+			this.refitting = true;
+			const previous = this.degrade;
+			try {
+				const header = await resolveDegrade(HEADER_CASCADE, (flags) =>
+					this.measureZone("header-left", "header", flags),
+				);
+				const top = await resolveDegrade(TOP_CASCADE, (flags) => this.measureZone("top", "top", flags));
+				// Only re-render the steady state when it actually differs from
+				// what was in effect before this pass -- this is also what stops
+				// an observer feedback loop (spec section 6).
+				if (!sameFlags(header, previous.header) || !sameFlags(top, previous.top)) {
+					this.degrade = { header, top };
+				}
+			} finally {
+				this.refitting = false;
 			}
 		},
 	},
@@ -203,32 +313,43 @@ export default {
  * spacing, not a truncation, so the character unit is legitimate here. The
  * right group is pushed to the right edge, like _paint_header() does; when the
  * line wraps it stays right-aligned on its own row. */
+/* The header never wraps: when it no longer fits, the cascade in this
+ * component hides blocks in the TUI's order (degrade.js), then the blocks
+ * crop, then this zone scrolls -- the browser's floor, where a terminal user
+ * would have resized the window (spec D4). */
 .gl-zone-header {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	align-items: baseline;
 	column-gap: 3ch;
+	overflow-x: auto;
 }
-.gl-slot-header-left,
-.gl-slot-header-right {
+.gl-slot-header-left {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	align-items: baseline;
 	column-gap: 3ch;
 	/* Lets the header's long strings shrink into their ellipsis. */
 	min-width: 0;
 }
 .gl-slot-header-right {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: baseline;
+	column-gap: 3ch;
+	min-width: 0;
 	margin-left: auto;
 }
 /* Top row: first block flush left, last flush right, gaps distributed --
- * _paint_top_row()'s rule. */
+ * _paint_top_row()'s rule. Never wraps (spec goal 1): the cascade hides
+ * blocks, then they crop, then this zone scrolls. */
 .gl-slot-top {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	justify-content: space-between;
 	gap: calc(var(--gl-gap) * 2);
 	flex: 1;
+	overflow-x: auto;
 }
 .gl-zone-top {
 	display: flex;
